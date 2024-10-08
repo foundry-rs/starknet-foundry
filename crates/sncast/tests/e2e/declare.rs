@@ -7,7 +7,7 @@ use crate::helpers::fixtures::{
 use crate::helpers::runner::runner;
 use configuration::CONFIG_FILENAME;
 use indoc::indoc;
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains, AsOutput};
 use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::AccountType;
 use starknet::core::types::Felt;
@@ -255,7 +255,11 @@ async fn test_happy_case_specify_package() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    let output = snapbox.assert().success().get_output().stdout.clone();
+    let output = snapbox.assert().success();
+
+    println!("{}\n{}", output.as_stdout(), output.as_stderr());
+
+    let output = output.get_output().stdout.clone();
 
     let hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(hash).await;

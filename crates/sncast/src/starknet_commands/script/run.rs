@@ -1,6 +1,4 @@
 use crate::starknet_commands::declare::Declare;
-use crate::starknet_commands::deploy::Deploy;
-use crate::starknet_commands::invoke::Invoke;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{get_account, WaitForTx};
 use anyhow::{anyhow, Context, Result};
@@ -45,6 +43,7 @@ use sncast::state::hashing::{
 };
 use sncast::state::state_file::StateManager;
 use starknet::accounts::{Account, SingleOwnerAccount};
+use starknet::core::types::Felt;
 use starknet::core::types::{BlockId, BlockTag::Pending};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -104,15 +103,16 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
             "call" => {
                 let contract_address = input_reader.read()?;
                 let function_selector = input_reader.read()?;
-                let calldata_felts = input_reader.read()?;
+                let calldata = input_reader.read::<Vec<Felt>>()?;
 
                 let call_result = self.tokio_runtime.block_on(call::call(
                     contract_address,
                     function_selector,
-                    calldata_felts,
+                    calldata,
                     self.provider,
                     &BlockId::Tag(Pending),
                 ));
+
                 Ok(CheatcodeHandlingResult::from_serializable(call_result))
             }
             "declare" => {
@@ -152,29 +152,19 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     selector,
                     &declare_result,
                 )?;
+
                 Ok(CheatcodeHandlingResult::from_serializable(declare_result))
             }
             "deploy" => {
                 let class_hash = input_reader.read()?;
-                let constructor_calldata = input_reader.read()?;
+                let constructor_calldata = input_reader.read::<Vec<Felt>>()?;
                 let salt = input_reader.read()?;
                 let unique = input_reader.read()?;
-                let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
+                let fee_args: ScriptFeeSettings = input_reader.read()?;
                 let nonce = input_reader.read()?;
 
-                let deploy = Deploy {
-                    class_hash,
-                    constructor_calldata,
-                    salt,
-                    unique,
-                    fee_args,
-                    nonce,
-                    version: None,
-                    rpc: RpcArgs::default(),
-                };
-
                 let deploy_tx_id =
-                    generate_deploy_tx_id(class_hash, &deploy.constructor_calldata, salt, unique);
+                    generate_deploy_tx_id(class_hash, &constructor_calldata, salt, unique);
 
                 if let Some(success_output) =
                     self.state.get_output_if_success(deploy_tx_id.as_str())
@@ -183,7 +173,12 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 }
 
                 let deploy_result = self.tokio_runtime.block_on(deploy::deploy(
-                    deploy,
+                    class_hash,
+                    &constructor_calldata,
+                    salt,
+                    unique,
+                    fee_args.into(),
+                    nonce,
                     self.account()?,
                     WaitForTx {
                         wait: true,
@@ -202,19 +197,11 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
             "invoke" => {
                 let contract_address = input_reader.read()?;
                 let function_selector = input_reader.read()?;
-                let calldata: Vec<_> = input_reader.read()?;
+
+                let calldata = input_reader.read::<Vec<Felt>>()?;
+
                 let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
-
-                let invoke = Invoke {
-                    contract_address,
-                    function: String::new(),
-                    calldata: calldata.clone(),
-                    fee_args,
-                    nonce,
-                    version: None,
-                    rpc: RpcArgs::default(),
-                };
 
                 let invoke_tx_id =
                     generate_invoke_tx_id(contract_address, function_selector, &calldata);
@@ -226,7 +213,10 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 }
 
                 let invoke_result = self.tokio_runtime.block_on(invoke::invoke(
-                    invoke,
+                    contract_address,
+                    calldata,
+                    nonce,
+                    fee_args,
                     function_selector,
                     self.account()?,
                     WaitForTx {

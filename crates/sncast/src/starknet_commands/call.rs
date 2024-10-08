@@ -18,9 +18,9 @@ pub struct Call {
     #[clap(short, long)]
     pub function: String,
 
-    /// Arguments of the called function (list of hex)
+    /// Arguments of the called function, either entirely serialized or entirely written as Cairo-like expression strings
     #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
-    pub calldata: Vec<Felt>,
+    pub calldata: Vec<String>,
 
     /// Block identifier on which call should be performed.
     /// Possible values: pending, latest, block hash (0x prefixed string)
@@ -45,6 +45,7 @@ pub async fn call(
         entry_point_selector,
         calldata,
     };
+
     let res = provider.call(function_call, block_id).await;
 
     match res {
