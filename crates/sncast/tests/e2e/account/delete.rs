@@ -114,11 +114,9 @@ pub fn test_happy_case() {
 
 #[test]
 pub fn test_happy_case_url() {
-    // Creating dummy accounts test file
     let accounts_file_name = "temp_accounts.json";
     let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
 
-    // Now delete dummy account
     let args = vec![
         "--accounts-file",
         &accounts_file_name,
@@ -130,7 +128,6 @@ pub fn test_happy_case_url() {
         "user0",
     ];
 
-    // Run test with an affirmative user input
     let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
 
     snapbox.assert().success().stdout_matches(indoc! {r"
