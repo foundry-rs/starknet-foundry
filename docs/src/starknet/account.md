@@ -14,7 +14,7 @@ To remove an account from the accounts file, you can use  `sncast account delete
 >  - Argent (with guardian set to 0)
 >  - Braavos
 
-## Example
+## Examples
 
 ### Creating an Account
 
@@ -170,8 +170,6 @@ $ sncast \
     --name some-name \
     --salt 0x1
 ```
-
-For a detailed CLI description, see [account delete command reference](../appendix/sncast/account/delete.md).
 
 #### Additional features provided with `account add/create`
 
