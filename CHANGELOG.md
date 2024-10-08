@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Short option for `--accounts-file` flag has been removed.
 - Short option for `--contract-address` is now `-d` instead of `-a`.
 - `account add` is renamed to `account import`.
-- `account import` can be now used without specifying `--private-key` or `--private-key-file` flags. Instead it will be read interactively from the user.
+- `account import` can be now used without specifying `--private-key` or `--private-key-file` flags. Instead private key will be read interactively from the user.
 
 ## [0.31.0] - 2024-09-26
 
