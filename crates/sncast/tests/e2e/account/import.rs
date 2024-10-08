@@ -259,7 +259,6 @@ pub async fn test_happy_case_add_profile() {
                     "deployed": false,
                     "private_key": "0x2",
                     "public_key": "0x759ca09377679ecd535a81e83039658bf40959283187c654c5416f439403cf5",
-                    "salt": "0x3",
                     "legacy": true,
                     "type": "open_zeppelin"
                   }
