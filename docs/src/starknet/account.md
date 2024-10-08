@@ -126,7 +126,7 @@ $ sncast \
     --network alpha-sepolia
 ```
 
-### Importing an Account
+### [`account add`](../appendix/sncast/account/add.md)
 
 To import an account into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default), use the `account add` command.
 
