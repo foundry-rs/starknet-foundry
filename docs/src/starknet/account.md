@@ -40,6 +40,8 @@ account: https://starkscan.co/search/contract/34ae54182d04754d8043189afd315a808d
 
 For a detailed CLI description, see [account create command reference](../appendix/sncast/account/create.md).
 
+See more advanced use cases below or jump directly to the section [here](#advanced-use-cases).
+
 #### Prefund generated address with tokens
 
 To deploy an account in the next step, you need to prefund it with either STRK or an equivalent amount of ETH tokens (read more about them [here](https://docs.starknet.io/architecture-and-concepts/economics-of-starknet/)).
@@ -69,35 +71,6 @@ For a detailed CLI description, see [account deploy command reference](../append
 
 > 💡 **Info**
 > You can also choose to pay in Ether by setting `--fee-token` to `eth`.
-
-### Custom Account Contract
-
-By default, `sncast` creates/deploys an account using [OpenZeppelin's account contract class hash](https://starkscan.co/class/0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6).
-It is possible to create an account using custom openzeppelin, argent or braavos contract declared to starknet. This can be achieved
-with `--class-hash` flag:
-
-```shell
-$ sncast \
-    account create \
-    --name some-name \
-    --url http://127.0.0.1:5050 \
-    --class-hash 0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6
-```
-
-
-## Advanced Use Cases
-
-### [`account create`](../appendix/sncast/account/create.md) With Salt Argument
-
-Salt will not be randomly generated if it's specified with `--salt`.
-
-```shell
-$ sncast \
-    account create \
-    --url http://127.0.0.1:5050 \
-    --name some-name \
-    --salt 0x1
-```
 
 ### [`account list`](../appendix/sncast/account/list.md)
 List all accounts saved in `accounts file`, grouped based on the networks they are defined on.
@@ -153,16 +126,61 @@ $ sncast \
     --network alpha-sepolia
 ```
 
+### Importing an Account
+
+To import an account into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default), use the `account add` command.
+
+```shell
+$ sncast \
+    account add \
+	--url http://127.0.0.1:5050 \
+    --name my_imported_account \
+    --address 0x1 \
+    --private-key 0x2 \
+    --class-hash 0x3 \
+    --type oz
+```
+
+For a detailed CLI description, see [account add command reference](../appendix/sncast/account/add.md).
+
+### Advanced Use Cases
+
+#### Custom Account Contract
+
+By default, `sncast` creates/deploys an account using [OpenZeppelin's account contract class hash](https://starkscan.co/class/0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6).
+It is possible to create an account using custom openzeppelin, argent or braavos contract declared to starknet. This can be achieved
+with `--class-hash` flag:
+
+```shell
+$ sncast \
+    account create \
+    --name some-name \
+    --url http://127.0.0.1:5050 \
+    --class-hash 0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6
+```
+
+#### [`account create`](../appendix/sncast/account/create.md) With Salt Argument
+
+Salt will not be randomly generated if it's specified with `--salt`.
+
+```shell
+$ sncast \
+    account create \
+    --url http://127.0.0.1:5050 \
+    --name some-name \
+    --salt 0x1
+```
+
 For a detailed CLI description, see [account delete command reference](../appendix/sncast/account/delete.md).
 
-### Additional features provided with `account add/create`
+#### Additional features provided with `account add/create`
 
-#### Specifying [`--accounts-file`](../appendix/sncast/account/create.md#create)
+##### Specifying [`--accounts-file`](../appendix/sncast/account/create.md#create)
 
 Account information such as `private_key`, `class_hash`, `address` etc. will be saved to the file specified by `--accounts-file` argument, 
 which is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default.
 
-#### Specifying [`--add-profile`](../appendix/sncast/account/create.md#--add-profile-name)
+##### Specifying [`--add-profile`](../appendix/sncast/account/create.md#--add-profile-name)
 
 When the `--add-profile` flag is used, you won't need to include the `--url` or `--accounts-file` parameters 
 (the latter being necessary if your account information was stored in a custom file).
@@ -184,23 +202,6 @@ $ sncast \
     --contract-name my_contract \
     --fee-token eth
 ```
-
-#### Importing an Account
-
-To import an account into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default), use the `account add` command.
-
-```shell
-$ sncast \
-    account add \
-	--url http://127.0.0.1:5050 \
-    --name my_imported_account \
-    --address 0x1 \
-    --private-key 0x2 \
-    --class-hash 0x3 \
-    --type oz
-```
-
-For a detailed CLI description, see [account add command reference](../appendix/sncast/account/add.md).
 
 ### Creating an Account With Starkli-Style Keystore
 
