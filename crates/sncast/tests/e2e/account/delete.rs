@@ -248,7 +248,11 @@ pub fn test_conflicting_arguments() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        Error: Provide either `rpc` or `network`
+        error: the argument '--url <URL>' cannot be used with '--network <NETWORK>'
+
+        Usage: sncast account delete --name <NAME> <--url <URL>|--network <NETWORK>>
+
+        For more information, try '--help'.
         "},
     );
 }

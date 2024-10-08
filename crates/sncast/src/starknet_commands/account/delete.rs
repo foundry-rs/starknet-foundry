@@ -11,7 +11,7 @@ use sncast::{chain_id_to_network_name, get_chain_id};
 #[derive(Args, Debug)]
 #[command(about = "Delete account information from the accounts file")]
 #[command(group(ArgGroup::new("networks")
-    .args(&["rpc", "network"])
+    .args(&["url", "network"])
     .required(true)
     .multiple(false)))]
 pub struct Delete {
