@@ -236,14 +236,14 @@ pub async fn test_happy_case_add_profile() {
         "--type",
         "oz",
         "--add-profile",
-        "my_account_add",
+        "my_account_import",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account import
-        add_profile: Profile my_account_add successfully added to snfoundry.toml
+        add_profile: Profile my_account_import successfully added to snfoundry.toml
     "});
     let current_dir_utf8 = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
 
@@ -272,7 +272,7 @@ pub async fn test_happy_case_add_profile() {
 
     let contents = fs::read_to_string(current_dir_utf8.join("snfoundry.toml"))
         .expect("Unable to read snfoundry.toml");
-    assert!(contents.contains("[sncast.my_account_add]"));
+    assert!(contents.contains("[sncast.my_account_import]"));
     assert!(contents.contains("account = \"my_account_import\""));
     assert!(contents.contains(&format!("url = \"{URL}\"")));
 }

@@ -63,7 +63,7 @@ This section shows how to export your private key from specific wallets.
 <br/>
 <img src="./img/braavos_export_5.png" width="300"/>
 
-## Importing an Accountx
+## Importing an Account
 
 ### Examples
 
@@ -75,7 +75,7 @@ To import an account into the file holding the accounts info (`~/.starknet_accou
 $ sncast \
     account import \
 	--url http://127.0.0.1:5050 \
-    --name my_imported_account \
+    --name account_123 \
     --address 0x1 \
     --private-key 0x2 \
     --type oz
@@ -89,11 +89,27 @@ If you don't want to pass the private key in the command (because of visibility 
 $ sncast \
     account import \
 	--url http://127.0.0.1:5050 \
-    --name my_imported_account \
+    --name account_123 \
     --address 0x1 \
     --type oz
 
 Enter private key:
+```
+
+#### Passing All Possible Flags
+
+```shell
+$ sncast \
+    account import \
+	--url http://127.0.0.1:5050 \
+    --name account_123 \
+    --address 0x1 \
+    --private-key 0x2 \
+    --class-hash 0x3 \
+    --salt 0x4 \
+    --add-profile account_123
+    --accounts-file path/to/accounts.json
+    --type oz
 ```
 
 #### Argent
