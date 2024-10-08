@@ -2,7 +2,7 @@ use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
     AccountType,
 };
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::string::TryFromHexStr;
@@ -105,7 +105,7 @@ pub async fn import(
             compute_account_address(salt, private_key, class_hash, sncast_account_type, chain_id);
         ensure!(
             computed_address == import.address,
-            "Computed address {:#x} does not match the provided address {:#x}",
+            "Computed address {:#x} does not match the provided address {:#x}. Please ensure that the provided salt, class hash, and account type are correct.",
             computed_address,
             import.address
         );
@@ -158,5 +158,5 @@ fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<Felt> {
 fn get_private_key_from_input() -> Felt {
     let private_key =
         rpassword::prompt_password("Enter private key: ").expect("Failed to read private key");
-    Felt::try_from_hex_str(&private_key).expect("Failed to parse private key into Felt")
+    Felt::try_from_hex_str(&private_key).unwrap()
 }

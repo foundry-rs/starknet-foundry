@@ -679,6 +679,6 @@ pub async fn test_invalid_address_computation() {
     let computed_address = "0xaf550326d32c8106ef08d25cbc0dba06e5cd10a2201c2e9bc5ad4cbbce45e6";
     snapbox.assert().stderr_matches(formatdoc! {r"
         command: account import
-        error: Computed address {computed_address} does not match the provided address 0x123
+        error: Computed address {computed_address} does not match the provided address 0x123. Please ensure that the provided salt, class hash, and account type are correct.
     "});
 }
