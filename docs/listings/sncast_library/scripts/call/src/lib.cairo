@@ -1,4 +1,4 @@
-use sncast_std::{call, CallResult};
+use sncast_std::call;
 use starknet::ContractAddress;
 
 fn main() {

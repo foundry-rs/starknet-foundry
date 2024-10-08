@@ -8,6 +8,7 @@ trait IReplaceBytecodeA<TContractState> {
 #[starknet::contract]
 mod ReplaceBytecodeA {
     use starknet::{SyscallResultTrait, SyscallResult, syscalls::get_execution_info_v2_syscall};
+    use starknet::storage::{StoragePointerWriteAccess, StoragePointerReadAccess};
 
     #[storage]
     struct Storage {

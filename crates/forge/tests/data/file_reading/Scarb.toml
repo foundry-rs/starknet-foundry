@@ -6,7 +6,7 @@ version = "0.1.0"
 sierra = true
 
 [dependencies]
-starknet = "2.4.0"
+starknet = "2.8.2"
 
 [dev-dependencies]
 snforge_std = { path = "../../../../../snforge_std" }

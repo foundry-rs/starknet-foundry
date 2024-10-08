@@ -147,9 +147,9 @@ impl<'a> TestCase {
                 version = "0.1.0"
 
                 [dependencies]
-                starknet = "2.4.0"
+                starknet = "2.8.2"
                 snforge_std = {{ path = "{}" }}
-                assert_macros = "0.1.0"
+                assert_macros = "2.8.2"
                 "#,
                 snforge_std_path
             ))

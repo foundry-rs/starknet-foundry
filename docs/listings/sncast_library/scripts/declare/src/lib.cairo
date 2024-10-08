@@ -1,4 +1,4 @@
-use sncast_std::{declare, DeclareResult, FeeSettings, EthFeeSettings};
+use sncast_std::{declare, FeeSettings, EthFeeSettings};
 
 fn main() {
     let max_fee = 9999999;
