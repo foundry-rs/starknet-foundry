@@ -352,7 +352,7 @@ fn update_keystore_account(account: &str, address: Felt) -> Result<()> {
     Ok(())
 }
 
-pub fn compute_account_address(
+pub(crate) fn compute_account_address(
     salt: Felt,
     private_key: &SigningKey,
     class_hash: Felt,
