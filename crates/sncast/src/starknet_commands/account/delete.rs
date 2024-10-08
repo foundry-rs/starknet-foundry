@@ -78,7 +78,7 @@ pub fn delete(
     Ok(AccountDeleteResponse { result })
 }
 
-pub async fn get_network_name(delete: &Delete, config: &CastConfig) -> Result<String> {
+pub(crate) async fn get_network_name(delete: &Delete, config: &CastConfig) -> Result<String> {
     match (&delete.rpc, &delete.network) {
         (Some(rpc), None) => {
             let provider = rpc.get_provider(config).await?;
