@@ -220,11 +220,7 @@ pub fn test_accept_only_url_or_network() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        error: the argument '--url <URL>' cannot be used with '--network <NETWORK>'
-
-        Usage: sncast account delete --name <NAME> <--url <URL>|--network <NETWORK>>
-
-        For more information, try '--help'.
+            error: the argument '--url <URL>' cannot be used with '--network <NETWORK>'
         "},
     );
 }
