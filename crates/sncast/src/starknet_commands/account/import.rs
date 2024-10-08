@@ -99,27 +99,20 @@ pub async fn import(
     };
 
     let chain_id = get_chain_id(provider).await?;
-    if import.salt.is_some() && class_hash.is_some() {
+    if let (Some(salt), Some(class_hash)) = (import.salt, class_hash) {
         let sncast_account_type = match import.account_type {
             AccountType::Argent => SNCastAccountType::Argent,
             AccountType::Braavos => SNCastAccountType::Braavos,
             AccountType::Oz => SNCastAccountType::OpenZeppelin,
         };
-        let computed_address = compute_account_address(
-            import.salt.unwrap(),
-            private_key,
-            class_hash.unwrap(),
-            sncast_account_type,
-            chain_id,
+        let computed_address =
+            compute_account_address(salt, private_key, class_hash, sncast_account_type, chain_id);
+        ensure!(
+            computed_address == import.address,
+            "Computed address {:#x} does not match the provided address {:#x}",
+            computed_address,
+            import.address
         );
-        if computed_address != import.address {
-            ensure!(
-                computed_address == import.address,
-                "Computed address {:#x} does not match the provided address {:#x}",
-                computed_address,
-                import.address
-            );
-        }
     }
 
     let legacy = check_if_legacy_contract(class_hash, import.address, provider).await?;
@@ -146,18 +139,12 @@ pub async fn import(
         add_created_profile_to_configuration(&import.add_profile, &config, &None)?;
     }
 
+    let add_profile_msg = match &import.add_profile {
+        Some(profile) => format!("Profile {profile} successfully added to snfoundry.toml"),
+        None => "--add-profile flag was not set. No profile added to snfoundry.toml".to_string(),
+    };
     Ok(AccountImportResponse {
-        add_profile: if import.add_profile.is_some() {
-            format!(
-                "Profile {} successfully added to snfoundry.toml",
-                import
-                    .add_profile
-                    .clone()
-                    .expect("Failed to get profile name")
-            )
-        } else {
-            "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
-        },
+        add_profile: add_profile_msg,
     })
 }
 
