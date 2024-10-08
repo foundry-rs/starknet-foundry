@@ -64,11 +64,6 @@ pub async fn import(
     import: &Import,
 ) -> Result<AccountImportResponse> {
     let private_key = match (&import.private_key, &import.private_key_file_path) {
-        (Some(_), Some(_)) => {
-            bail!(
-                "Both private key and private key file path were provided. Please provide only one"
-            )
-        }
         (Some(passed_private_key), None) => passed_private_key,
         (None, Some(passed_private_key_file_path)) => &{
             get_private_key_from_file(passed_private_key_file_path).with_context(|| {
@@ -76,6 +71,7 @@ pub async fn import(
             })?
         },
         (None, None) => &get_private_key_from_input(),
+        _ => unreachable!("Checked on clap level"),
     };
     let private_key = &SigningKey::from_secret_scalar(*private_key);
 
