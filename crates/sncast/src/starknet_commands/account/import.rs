@@ -139,12 +139,18 @@ pub async fn import(
         add_created_profile_to_configuration(&import.add_profile, &config, &None)?;
     }
 
-    let add_profile_msg = match &import.add_profile {
-        Some(profile) => format!("Profile {profile} successfully added to snfoundry.toml"),
-        None => "--add-profile flag was not set. No profile added to snfoundry.toml".to_string(),
-    };
     Ok(AccountImportResponse {
-        add_profile: add_profile_msg,
+        add_profile: if import.add_profile.is_some() {
+            format!(
+                "Profile {} successfully added to snfoundry.toml",
+                import
+                    .add_profile
+                    .clone()
+                    .expect("Failed to get profile name")
+            )
+        } else {
+            "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
+        },
     })
 }
 
