@@ -14,7 +14,7 @@ To remove an account from the accounts file, you can use  `sncast account delete
 >  - Argent (with guardian set to 0)
 >  - Braavos
 
-## Examples
+## Example
 
 ### Creating an Account
 
@@ -71,6 +71,8 @@ For a detailed CLI description, see [account deploy command reference](../append
 
 > 💡 **Info**
 > You can also choose to pay in Ether by setting `--fee-token` to `eth`.
+
+## Additional features
 
 ### [`account list`](../appendix/sncast/account/list.md)
 List all accounts saved in `accounts file`, grouped based on the networks they are defined on.
@@ -141,8 +143,6 @@ $ sncast \
     --type oz
 ```
 
-For a detailed CLI description, see [account add command reference](../appendix/sncast/account/add.md).
-
 ### Advanced Use Cases
 
 #### Custom Account Contract
@@ -186,7 +186,7 @@ When the `--add-profile` flag is used, you won't need to include the `--url` or 
 (the latter being necessary if your account information was stored in a custom file).
 Simply use the `--profile` argument followed by the account name in subsequent requests.
 
-### Using Keystore and Starkli Account
+#### Using Keystore and Starkli Account
 
 Accounts created and deployed with [starkli](https://book.starkli.rs/accounts#accounts) can be used by specifying the [`--keystore` argument](../appendix/sncast/common.md#--keystore--k-path_to_keystore_file).
 
@@ -203,7 +203,7 @@ $ sncast \
     --fee-token eth
 ```
 
-### Creating an Account With Starkli-Style Keystore
+#### Creating an Account With Starkli-Style Keystore
 
 It is possible to create an openzeppelin account with keystore in a similar way [starkli](https://book.starkli.rs/accounts#accounts) does.
 
