@@ -30,31 +30,6 @@ pub fn test_no_accounts_in_network() {
 }
 
 #[test]
-pub fn test_no_accounts_in_network_url() {
-    let args = vec![
-        "--accounts-file",
-        ACCOUNT_FILE_PATH,
-        "account",
-        "delete",
-        "--url",
-        URL,
-        "--name",
-        "user99",
-    ];
-
-    let snapbox = runner(&args);
-    let output = snapbox.assert().success();
-
-    assert_stderr_contains(
-        output,
-        indoc! {r"
-        command: account delete
-        error: Account with name user99 does not exist
-        "},
-    );
-}
-
-#[test]
 pub fn test_account_does_not_exist() {
     let args = vec![
         "--accounts-file",
