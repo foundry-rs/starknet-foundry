@@ -226,11 +226,9 @@ pub async fn test_happy_case_add_profile() {
         "--name",
         "my_account_import",
         "--address",
-        "0x721c21e0cc9d37aec8e176797effd1be222aff6db25f068040adefabb7cfb6d",
+        "0x1",
         "--private-key",
         "0x2",
-        "--salt",
-        "0x3",
         "--class-hash",
         DEVNET_OZ_CLASS_HASH_CAIRO_0,
         "--type",
@@ -256,7 +254,7 @@ pub async fn test_happy_case_add_profile() {
             {
                 "alpha-sepolia": {
                   "my_account_import": {
-                    "address": "0x721c21e0cc9d37aec8e176797effd1be222aff6db25f068040adefabb7cfb6d",
+                    "address": "0x1",
                     "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
                     "deployed": false,
                     "private_key": "0x2",
@@ -597,7 +595,64 @@ pub async fn test_empty_config_add_profile() {
 }
 
 #[tokio::test]
-pub async fn test_invalid_address_and_salt() {
+pub async fn test_happy_case_valid_address_computation() {
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "import",
+        "--url",
+        URL,
+        "--name",
+        "my_account_import",
+        "--address",
+        "0x721c21e0cc9d37aec8e176797effd1be222aff6db25f068040adefabb7cfb6d",
+        "--private-key",
+        "0x2",
+        "--salt",
+        "0x3",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "--type",
+        "oz",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().stdout_matches(indoc! {r"
+        command: account import
+        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+    "});
+
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file))
+        .expect("Unable to read created file");
+    let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
+    assert_eq!(
+        contents_json,
+        json!(
+            {
+                "alpha-sepolia": {
+                  "my_account_import": {
+                    "address": "0x721c21e0cc9d37aec8e176797effd1be222aff6db25f068040adefabb7cfb6d",
+                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
+                    "deployed": false,
+                    "salt": "0x3",
+                    "legacy": true,
+                    "private_key": "0x2",
+                    "public_key": "0x759ca09377679ecd535a81e83039658bf40959283187c654c5416f439403cf5",
+                    "type": "open_zeppelin"
+                  }
+                }
+            }
+        )
+    );
+}
+
+#[tokio::test]
+pub async fn test_invalid_address_computation() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
@@ -616,8 +671,6 @@ pub async fn test_invalid_address_and_salt() {
         "0x456",
         "--salt",
         "0x789",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_0,
         "--type",
         "oz",
     ];
