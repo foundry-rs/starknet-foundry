@@ -267,6 +267,27 @@ pub fn package_matches_version_requirement(
     }
 }
 
+/// collecting by name allow us to dedup targets
+/// we do it because they use same sierra and we display them without distinction anyway
+pub fn test_targets_by_name(package: &PackageMetadata) -> HashMap<String, &TargetMetadata> {
+    fn test_target_name(target: &TargetMetadata) -> String {
+        // this is logic copied from scarb: https://github.com/software-mansion/scarb/blob/90ab01cb6deee48210affc2ec1dc94d540ab4aea/extensions/scarb-cairo-test/src/main.rs#L115
+        target
+            .params
+            .get("group-id") // by unit tests grouping
+            .and_then(|v| v.as_str())
+            .map(ToString::to_string)
+            .unwrap_or(target.name.clone()) // else by integration test name
+    }
+
+    package
+        .targets
+        .iter()
+        .filter(|target| target.kind == "test")
+        .map(|target| (test_target_name(target), target))
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
