@@ -6,6 +6,8 @@ use starknet_api::block::BlockNumber;
 use std::collections::HashMap;
 use url::Url;
 
+use crate::test_filter::{NameFilter, TestsFilter};
+
 pub fn print_error_message(error: &Error) {
     let error_tag = style("ERROR").red();
     println!("[{error_tag}] {error:#}");
@@ -27,19 +29,24 @@ pub(crate) fn print_running_tests(test_target_location: TestTargetLocation, test
 }
 
 // TODO(#2574): Bring back "filtered out" number in tests summary
-pub(crate) fn print_test_summary(summaries: &[TestTargetSummary]) {
+pub(crate) fn print_test_summary(summaries: &[TestTargetSummary], tests_filter: &TestsFilter) {
     let passed: usize = summaries.iter().map(TestTargetSummary::count_passed).sum();
     let failed: usize = summaries.iter().map(TestTargetSummary::count_failed).sum();
     let skipped: usize = summaries.iter().map(TestTargetSummary::count_skipped).sum();
     let ignored: usize = summaries.iter().map(TestTargetSummary::count_ignored).sum();
+    let filtered_out = match tests_filter.name_filter {
+        NameFilter::All => "0",
+        _ => "other",
+    };
 
     println!(
-        "{}: {} passed, {} failed, {} skipped, {} ignored, other filtered out",
+        "{}: {} passed, {} failed, {} skipped, {} ignored, {} filtered out",
         style("Tests").bold(),
         passed,
         failed,
         skipped,
         ignored,
+        filtered_out
     );
 }
 

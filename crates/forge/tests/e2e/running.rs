@@ -173,7 +173,7 @@ fn with_filter() {
         Running 2 test(s) from tests/
         [PASS] simple_package_integrationtest::test_simple::test_two [..]
         [PASS] simple_package_integrationtest::test_simple::test_two_and_two [..]
-        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 11 filtered out
+        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
         "},
     );
 }
