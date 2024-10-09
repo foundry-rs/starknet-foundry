@@ -5,13 +5,14 @@ use crate::starknet_commands::account::{
 use anyhow::{ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
+use sncast::check_if_legacy_contract;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountAddResponse;
-use sncast::{check_class_hash_exists, get_chain_id};
-use sncast::{check_if_legacy_contract, get_class_hash_by_address};
-use starknet::core::types::Felt;
+use sncast::{check_class_hash_exists, get_chain_id, handle_rpc_error};
+use starknet::core::types::{BlockId, BlockTag, Felt, StarknetError};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
+use starknet::providers::{Provider, ProviderError};
 use starknet::signers::SigningKey;
 
 #[derive(Args, Debug)]
@@ -79,7 +80,15 @@ pub async fn add(
         );
     }
 
-    let fetched_class_hash = get_class_hash_by_address(provider, add.address).await?;
+    let fetched_class_hash = match provider
+        .get_class_hash_at(BlockId::Tag(BlockTag::Pending), add.address)
+        .await
+    {
+        Ok(class_hash) => Ok(Some(class_hash)),
+        Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => Ok(None),
+        Err(err) => Err(handle_rpc_error(err)),
+    }?;
+
     let deployed = fetched_class_hash.is_some();
     let class_hash = match (fetched_class_hash, add.class_hash) {
         (Some(from_provider), Some(from_user)) => {
