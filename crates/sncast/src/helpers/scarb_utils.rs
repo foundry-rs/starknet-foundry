@@ -3,7 +3,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use scarb_api::{
     get_contracts_artifacts_and_source_sierra_paths,
     metadata::{Metadata, MetadataCommand, PackageMetadata},
-    ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
+    target_dir_for_workspace, ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
 };
 use scarb_ui::args::PackagesFilter;
 use shared::{command::CommandExt, print::print_as_warning};
@@ -161,11 +161,13 @@ pub fn build_and_load_artifacts(
         .map_err(|e| anyhow!(format!("Failed to build using scarb; {e}")))?;
 
     let metadata = get_scarb_metadata_with_deps(&config.scarb_toml_path)?;
+    let target_dir = target_dir_for_workspace(&metadata);
+
     if metadata.profiles.contains(&config.profile) {
         Ok(get_contracts_artifacts_and_source_sierra_paths(
             &metadata,
-            &package.id,
-            Some(&config.profile),
+            &target_dir.join(&config.profile),
+            package,
             false,
         )?
         .into_iter()
@@ -176,15 +178,17 @@ pub fn build_and_load_artifacts(
         print_as_warning(&anyhow!(
             "Profile {profile} does not exist in scarb, using '{default_profile}' profile."
         ));
-        Ok(get_contracts_artifacts_and_source_sierra_paths(
-            &metadata,
-            &package.id,
-            Some(default_profile),
-            false,
-        )?
-        .into_iter()
-        .map(|(name, (artifacts, _))| (name, artifacts))
-        .collect())
+        Ok(
+            get_contracts_artifacts_and_source_sierra_paths(
+                &metadata,
+                &target_dir,
+                package,
+                false,
+            )?
+            .into_iter()
+            .map(|(name, (artifacts, _))| (name, artifacts))
+            .collect(),
+        )
     }
 }
 
