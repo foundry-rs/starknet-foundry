@@ -42,7 +42,7 @@ Running 1 test(s) from tests/
 Failure data:
     0x75736572206973206e6f7420616c6c6f776564 ('user is not allowed')
 
-Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, other filtered out
+Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
 Our user validation is not letting us call the contract, because the default caller address is not `123`.
@@ -67,7 +67,7 @@ Collected 1 test(s) from using_cheatcodes package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [PASS] using_cheatcodes_integrationtest::caller_address::proper_use::call_and_invoke (gas: ~239)
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
 ### Canceling the Cheat
@@ -93,7 +93,7 @@ Running 1 test(s) from tests/
 Failure data:
     0x5365636f6e642063616c6c206661696c656421 ('Second call failed!')
 
-Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, other filtered out
+Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 4 filtered out
 ```
 
 We see that the second `increase_balance` fails since we cancelled the cheatcode.
