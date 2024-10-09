@@ -99,7 +99,7 @@ fn no_optimization_flag() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] erc20_package_integrationtest::test_complex::complex[..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "},
     );
 }
