@@ -770,7 +770,7 @@ fn validate_init(temp: &TempDir, validate_snforge_std: bool) {
         Running 2 test(s) from tests/
         [PASS] test_name_integrationtest::test_contract::test_increase_balance [..]
         [PASS] test_name_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value [..]
-        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
+        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "
     );
 
