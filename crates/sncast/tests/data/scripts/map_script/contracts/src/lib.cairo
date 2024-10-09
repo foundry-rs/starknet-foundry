@@ -8,10 +8,10 @@ trait IMap<TMapState> {
 
 #[starknet::contract]
 mod Mapa {
-    use starknet::storage::Map;
+    use starknet::storage::{Map as StarknetMap};
     #[storage]
     struct Storage {
-        storage: Map::<felt252, felt252>,
+        storage: StarknetMap::<felt252, felt252>,
     }
 
     #[abi(embed_v0)]
@@ -32,6 +32,7 @@ mod Mapa {
 
 #[starknet::contract]
 mod Mapa2 {
+    use starknet::storage::{Map as StarknetMap};
     #[storage]
     struct Storage {
         storage: Map::<felt252, felt252>,
