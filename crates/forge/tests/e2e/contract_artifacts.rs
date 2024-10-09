@@ -67,7 +67,7 @@ fn simple_package_no_starknet_contract_target() {
         0x6661696c696e6720636865636b ('failing check')
 
     [PASS] simple_package_integrationtest::without_prefix::five [..]
-    Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, other filtered out
+    Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
 
     Failures:
         simple_package_integrationtest::test_simple::test_failing
