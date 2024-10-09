@@ -229,6 +229,12 @@ impl_serialize_for_num_type!(u64);
 impl_serialize_for_num_type!(u128);
 impl_serialize_for_num_type!(usize);
 
+impl_serialize_for_num_type!(i8);
+impl_serialize_for_num_type!(i16);
+impl_serialize_for_num_type!(i32);
+impl_serialize_for_num_type!(i64);
+impl_serialize_for_num_type!(i128);
+
 impl_serialize_for_tuple!();
 impl_serialize_for_tuple!(A);
 impl_serialize_for_tuple!(A, B);
