@@ -48,12 +48,12 @@ pub fn build_artifacts_with_scarb(
     features: FeaturesSpec,
     scarb_version: &Version,
     no_optimization: bool,
-    tests_filter: Option<String>,
+    test_filter: Option<String>,
 ) -> Result<()> {
     if should_compile_starknet_contract_target(scarb_version, no_optimization) {
         build_contracts_with_scarb(filter.clone(), features.clone())?;
     }
-    build_test_artifacts_with_scarb(filter, features, tests_filter)?;
+    build_test_artifacts_with_scarb(filter, features, test_filter)?;
     Ok(())
 }
 
