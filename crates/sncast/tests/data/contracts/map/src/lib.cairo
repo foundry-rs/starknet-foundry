@@ -7,9 +7,10 @@ trait IMap<TMapState> {
 
 #[starknet::contract]
 mod Map {
+    use starknet::storage::Map;
     #[storage]
     struct Storage {
-        storage: LegacyMap::<felt252, felt252>,
+        storage: Map::<felt252, felt252>,
     }
 
     #[abi(embed_v0)]
