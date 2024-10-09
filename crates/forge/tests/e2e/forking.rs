@@ -124,7 +124,7 @@ fn printing_latest_block_number() {
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
         [PASS] forking::tests::print_block_number_when_latest [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
 
         Latest block number = [..] for url = {node_rpc_url}
         "},

@@ -246,7 +246,7 @@ fn with_non_matching_filter() {
         Collected 0 test(s) from simple_package package
         Running 0 test(s) from src/
         Running 0 test(s) from tests/
-        Tests: 0 passed, 0 failed, 0 skipped, 0 ignored, 13 filtered out
+        Tests: 0 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
         "},
     );
 }

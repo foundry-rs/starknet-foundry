@@ -196,7 +196,7 @@ fn fuzzing_exit_first() {
         Failure data:
             0x32202b2062203d3d2032202b2062 ('2 + b == 2 + b')
 
-        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, other filtered out
+        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 0 filtered out
 
         Fuzzer seed: [..]
         Failures:
@@ -231,7 +231,7 @@ fn fuzzing_exit_first_single_fail() {
         Failures:
             fuzzing_integrationtest::exit_first_single_fail::exit_first_fails_test
 
-        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 17 filtered out
+        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, other filtered out
         "},
     );
 }
