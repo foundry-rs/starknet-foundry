@@ -390,7 +390,7 @@ mod tests {
                         .join("target/dev/basic_package_unittest.test.starknet_artifacts.json")
                 )
                 .unwrap(),
-                test_type: None
+                test_type: Some("unit".to_string())
             }]
         );
     }
@@ -430,15 +430,23 @@ mod tests {
 
         assert_eq!(
             path,
-            vec![ContractArtifactData {
-                path: Utf8PathBuf::from_path_buf(
-                    temp.path().join(
+            vec![
+                ContractArtifactData {
+                    path: Utf8PathBuf::from_path_buf(temp.path().join(
                         "target/dev/basic_package_integrationtest.test.starknet_artifacts.json"
+                    ))
+                    .unwrap(),
+                    test_type: Some("integration".to_string())
+                },
+                ContractArtifactData {
+                    path: Utf8PathBuf::from_path_buf(
+                        temp.path()
+                            .join("target/dev/basic_package_unittest.test.starknet_artifacts.json")
                     )
-                )
-                .unwrap(),
-                test_type: None
-            }]
+                    .unwrap(),
+                    test_type: Some("unit".to_string())
+                },
+            ]
         );
     }
 
