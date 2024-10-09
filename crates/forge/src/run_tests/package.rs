@@ -133,7 +133,6 @@ pub async fn run_for_package(
 ) -> Result<Vec<TestTargetSummary>> {
     let mut test_targets =
         test_package_with_config_resolved(test_targets, &fork_targets, block_number_map).await?;
-    let all_tests = sum_test_cases(&test_targets);
 
     for test_target in &mut test_targets {
         tests_filter.filter_tests(&mut test_target.test_cases)?;
@@ -172,8 +171,8 @@ pub async fn run_for_package(
         }
     }
 
-    let filtered = all_tests - not_filtered;
-    pretty_printing::print_test_summary(&summaries, filtered);
+    // TODO(#2574): Bring back "filtered out" number in tests summary
+    pretty_printing::print_test_summary(&summaries);
 
     let any_fuzz_test_was_run = summaries.iter().any(|test_target_summary| {
         test_target_summary
