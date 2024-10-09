@@ -913,7 +913,7 @@ fn should_panic() {
             Actual:    [0x6661696c696e6720636865636b] (failing check)
             Expected:  [0x0] ()
 
-        Tests: 5 passed, 9 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 5 passed, 9 failed, 0 skipped, 0 ignored, other filtered out
 
         Failures:
             should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
