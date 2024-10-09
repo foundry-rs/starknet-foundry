@@ -6,13 +6,17 @@ use crate::{
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_syntax::node::{ast::FunctionWithBody, db::SyntaxGroup, Terminal, TypedSyntaxNode};
 use indoc::formatdoc;
-use itertools::Itertools;
-use std::env;
+
+use std::env::{self, VarError};
 
 struct TestCollector;
 
 impl AttributeInfo for TestCollector {
     const ATTR_NAME: &'static str = "test";
+}
+
+fn get_forge_test_filter() -> Result<String, VarError> {
+    env::var("SNFORGE_TEST_FILTER")
 }
 
 #[must_use]
@@ -38,36 +42,28 @@ fn test_internal(
     let func_item = func.as_syntax_node().get_text(db);
     let name = func.declaration(db).name(db).text(db).to_string();
 
-    // TODO use const
-    let tests_to_run = env::var("SNFORGE_TEST_FILTER_NAMES");
+    let test_filter = get_forge_test_filter().ok();
 
-    if let Ok(tests_to_run) = tests_to_run {
-        let mut tests_to_run = tests_to_run.split(',');
-        if tests_to_run.contains(&name.as_str()) {
-            return Ok(formatdoc!(
-                "
+    let should_run_test = match test_filter {
+        Some(ref filter) if name.contains(filter) => true,
+        None => true,
+        _ => false,
+    };
+
+    if should_run_test {
+        Ok(formatdoc!(
+            "
             #[snforge_internal_test_executable]
             #[{config}]
             {func_item}
         "
-            ));
-        }
-
-        return Ok(formatdoc!(
+        ))
+    } else {
+        Ok(formatdoc!(
             "
             #[{config}]
             {func_item}
         "
-        ));
+        ))
     }
-
-    let result = formatdoc!(
-        "
-            #[snforge_internal_test_executable]
-            #[{config}]
-            {func_item}
-        "
-    );
-
-    Ok(result)
 }

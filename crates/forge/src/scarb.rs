@@ -10,6 +10,7 @@ use scarb_metadata::{PackageMetadata, TargetMetadata};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
 use std::collections::HashMap;
+use std::env;
 use std::fs::read_to_string;
 use std::io::ErrorKind;
 
@@ -52,12 +53,8 @@ pub fn build_artifacts_with_scarb(
     if should_compile_starknet_contract_target(scarb_version, no_optimization) {
         build_contracts_with_scarb(filter.clone(), features.clone())?;
     }
-    build_test_artifacts_with_scarb(filter, features, tests_filter.map(to_tests_filter))?;
+    build_test_artifacts_with_scarb(filter, features, tests_filter)?;
     Ok(())
-}
-
-fn to_tests_filter(tests_filter: String) -> String {
-    tests_filter + ","
 }
 
 fn build_contracts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) -> Result<()> {
@@ -70,10 +67,16 @@ fn build_contracts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) ->
     Ok(())
 }
 
+fn setup_forge_test_filter(test_filter: Option<String>) {
+    if let Some(test_filter) = test_filter {
+        env::set_var("SNFORGE_TEST_FILTER", test_filter);
+    }
+}
+
 fn build_test_artifacts_with_scarb(
     filter: PackagesFilter,
     features: FeaturesSpec,
-    tests_filter: Option<String>,
+    test_filter: Option<String>,
 ) -> Result<()> {
     let mut command = ScarbCommand::new_with_stdio();
     command
@@ -82,10 +85,7 @@ fn build_test_artifacts_with_scarb(
         .packages_filter(filter)
         .features(features);
 
-    if let Some(tests_filter) = tests_filter {
-        // TODO use const
-        command.env("SNFORGE_TEST_FILTER_NAMES", tests_filter);
-    }
+    setup_forge_test_filter(test_filter);
 
     command
         .run()
