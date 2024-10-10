@@ -199,7 +199,7 @@ fn with_filter_matching_module() {
         [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
         [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
         [PASS] simple_package_integrationtest::ext_function_test::test_simple [..]
-        Tests: 2 passed, 0 failed, 0 skipped, 1 ignored, 10 filtered out
+        Tests: 2 passed, 0 failed, 0 skipped, 1 ignored, other filtered out
         "},
     );
 }
@@ -470,7 +470,7 @@ fn with_rerun_failed_flag_and_name_filter() {
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
 
-        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 12 filtered out
+        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, other filtered out
 
         Failures:
             simple_package_integrationtest::test_simple::test_another_failing
@@ -913,7 +913,7 @@ fn should_panic() {
             Actual:    [0x6661696c696e6720636865636b] (failing check)
             Expected:  [0x0] ()
 
-        Tests: 5 passed, 9 failed, 0 skipped, 0 ignored, other filtered out
+        Tests: 5 passed, 9 failed, 0 skipped, 0 ignored, 0 filtered out
 
         Failures:
             should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
