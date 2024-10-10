@@ -166,8 +166,8 @@ fn fuzzing_incorrect_function_args() {
         [..]Finished[..]
         
         
-        Collected 2 test(s) from fuzzing package
-        Running 2 test(s) from tests/
+        Collected 1 test(s) from fuzzing package
+        Running 1 test(s) from tests/
         [ERROR] Tried to use incorrect type for fuzzing. Type = fuzzing_integrationtest::incorrect_args::MyStruct is not supported
         "},
     );
