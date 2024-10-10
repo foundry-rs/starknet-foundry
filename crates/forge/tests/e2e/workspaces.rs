@@ -498,7 +498,7 @@ fn virtual_workspace_specific_package_and_name() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] subtraction_integrationtest::nested::simple_case [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
         "},
     );
 }
