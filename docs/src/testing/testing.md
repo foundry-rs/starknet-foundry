@@ -23,7 +23,7 @@ $ snforge test
 Collected 1 test(s) from writing_tests package
 Running 1 test(s) from src/
 [PASS] writing::first_test::tests::test_sum
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored
 ```
 
 ## Failing Tests
@@ -44,7 +44,7 @@ Running 1 test(s) from src/
 Failure data:
     0x616161 ('aaa')
 
-Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 0 passed, 1 failed, 0 skipped, 0 ignored
 
 Failures:
     writing_tests::panicking_tests::tests::failing
@@ -60,20 +60,20 @@ To mark a test as expected to fail, use the `#[should_panic]` attribute.
 You can specify the expected failure message in three ways:
 
 1. **With ByteArray**:
-  ```rust
+```rust
 {{#include ../../listings/snforge_overview/crates/writing_tests/tests/expected_failures.cairo:byte_array}}
-  ```
-  With this format, the expected error message needs to be a substring of the actual error message. This is particularly useful when the error message includes dynamic data such as a hash or address.
+```
+With this format, the expected error message needs to be a substring of the actual error message. This is particularly useful when the error message includes dynamic data such as a hash or address.
 
 2. **With felt**
-  ```rust
+```rust
 {{#include ../../listings/snforge_overview/crates/writing_tests/tests/expected_failures.cairo:felt}}
-  ```
+```
 
 3. **With tuple of felts**:
-  ```rust
+```rust
 {{#include ../../listings/snforge_overview/crates/writing_tests/tests/expected_failures.cairo:tuple}}
-  ```
+```
 
 
 ```shell
@@ -82,7 +82,7 @@ Collected 1 test(s) from writing_tests package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [PASS] snforge_overview_integrationtest::should_panic_check_data
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored
 ```
 
 ## Ignoring Tests
@@ -100,7 +100,7 @@ Collected 1 test(s) from writing_tests package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [IGNORE] writing_tests_integrationtest::ignoring::ignored_test
-Tests: 0 passed, 0 failed, 0 skipped, 1 ignored, 0 filtered out
+Tests: 0 passed, 0 failed, 0 skipped, 1 ignored
 ```
 
 To run only tests marked with the  `#[ignore]` attribute use `snforge test --ignored`.

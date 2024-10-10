@@ -9,7 +9,7 @@ Running 3 test(s) from src/
 [PASS] package_name::tests::executing
 [PASS] package_name::tests::calling
 [PASS] package_name::tests::calling_another
-Tests: 3 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 3 passed, 0 failed, 0 skipped, 0 ignored
 ```
 
 ## Filtering Tests
@@ -24,7 +24,7 @@ Collected 2 test(s) from package_name package
 Running 2 test(s) from src/
 [PASS] package_name::tests::calling
 [PASS] package_name::tests::calling_another
-Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 1 filtered out
+Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
 ```
 
 ## Running a Specific Test
@@ -37,7 +37,7 @@ $ snforge test package_name::tests::calling --exact
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
 [PASS] package_name::tests::calling
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 2 filtered out
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
 ```
 
 ## Stopping Test Execution After First Failed Test
@@ -56,7 +56,7 @@ Running 6 test(s) from src/
 Failure data:
     0x6661696c696e6720636865636b ('failing check')
 
-Tests: 3 passed, 1 failed, 2 skipped, 0 ignored, 0 filtered out
+Tests: 3 passed, 1 failed, 2 skipped, 0 ignored
 
 Failures:
     package_name::tests::failing
@@ -76,7 +76,7 @@ Running 1 test(s) from src/
         builtins: ("range_check_builtin": 32)
         syscalls: (StorageWrite: 1, StorageRead: 1, CallContract: 1)
 
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored
 ```
 
 For more information about how starknet-foundry calculates those, see [gas and resource estimation](gas-and-resource-estimation.md) section.
