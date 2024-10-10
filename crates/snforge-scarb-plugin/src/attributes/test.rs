@@ -7,8 +7,8 @@ use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_syntax::node::{ast::FunctionWithBody, db::SyntaxGroup, Terminal, TypedSyntaxNode};
 use indoc::formatdoc;
 
+use shared::consts::SNFORGE_TEST_FILTER;
 use std::env::{self, VarError};
-
 struct TestCollector;
 
 impl AttributeInfo for TestCollector {
@@ -16,7 +16,7 @@ impl AttributeInfo for TestCollector {
 }
 
 fn get_forge_test_filter() -> Result<String, VarError> {
-    env::var("SNFORGE_TEST_FILTER")
+    env::var(SNFORGE_TEST_FILTER)
 }
 
 #[must_use]

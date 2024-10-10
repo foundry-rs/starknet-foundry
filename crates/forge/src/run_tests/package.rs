@@ -31,8 +31,8 @@ use forge_runner::{
 };
 use scarb_api::get_contracts_artifacts_and_source_sierra_paths;
 use scarb_metadata::{Metadata, PackageMetadata};
+use shared::consts::SNFORGE_TEST_FILTER;
 use std::{env, sync::Arc};
-
 pub struct RunForPackageArgs {
     pub test_targets: Vec<TestTargetRaw>,
     pub tests_filter: TestsFilter,
@@ -100,7 +100,7 @@ impl RunForPackageArgs {
 }
 
 fn clean_up_forge_test_filter() {
-    env::remove_var("SNFORGE_TEST_FILTER");
+    env::remove_var(SNFORGE_TEST_FILTER);
 }
 
 async fn test_package_with_config_resolved(
