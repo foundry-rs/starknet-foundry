@@ -641,6 +641,6 @@ fn check_deprecated_arguments(cli: &Cli) {
 
     for warning in warnings {
         //colors the warning message in yellow
-        println!("\x1b[33mWarning: {warning}\x1b[0m");
+        eprintln!("\x1b[33mWarning: {warning}\x1b[0m");
     }
 }
