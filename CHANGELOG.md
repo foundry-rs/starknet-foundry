@@ -35,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `--fee-token` flag - `strk` will be used by default
 
+### Cast
+
+#### Added
+
+- Add Voyager API support for `verify` subcommand [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/verify.html).
+
 ## [0.34.0] - 2024-11-26
 
 ### Forge
