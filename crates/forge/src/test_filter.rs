@@ -163,7 +163,9 @@ mod tests {
     fn filtering_tests() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            casm_program: Arc::new(
+                compile_sierra_to_casm(&program_for_testing().program, None).unwrap(),
+            ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -425,7 +427,9 @@ mod tests {
     fn filtering_with_no_tests() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            casm_program: Arc::new(
+                compile_sierra_to_casm(&program_for_testing().program, None).unwrap(),
+            ),
             test_cases: vec![],
             tests_location: TestTargetLocation::Lib,
         };
@@ -464,7 +468,9 @@ mod tests {
     fn filtering_with_exact_match() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            casm_program: Arc::new(
+                compile_sierra_to_casm(&program_for_testing().program, None).unwrap(),
+            ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -649,7 +655,9 @@ mod tests {
     fn filtering_with_only_ignored() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            casm_program: Arc::new(
+                compile_sierra_to_casm(&program_for_testing().program, None).unwrap(),
+            ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -744,7 +752,9 @@ mod tests {
     fn filtering_with_include_ignored() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            casm_program: Arc::new(
+                compile_sierra_to_casm(&program_for_testing().program, None).unwrap(),
+            ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
