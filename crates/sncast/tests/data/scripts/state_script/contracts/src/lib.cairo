@@ -8,10 +8,9 @@ trait IState<TState> {
 
 #[starknet::contract]
 mod State {
-    use starknet::storage::Map;
     #[storage]
     struct Storage {
-        storage: Map::<felt252, felt252>,
+        storage: LegacyMap::<felt252, felt252>,
     }
 
     #[abi(embed_v0)]

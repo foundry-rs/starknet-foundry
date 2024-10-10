@@ -6,11 +6,11 @@ pub trait IMapContract<State> {
 
 #[starknet::contract]
 pub mod MapContract {
-    use stgitarknet::storage::{Map as StarknetMap, StorageMapReadAccess, StorageMapWriteAccess};
+    use stgitarknet::storage::{StorageMapReadAccess, StorageMapWriteAccess};
 
     #[storage]
     struct Storage {
-        storage: StarknetMap<felt252, felt252>,
+        storage: LegacyMap<felt252, felt252>,
     }
 
     #[abi(embed_v0)]
