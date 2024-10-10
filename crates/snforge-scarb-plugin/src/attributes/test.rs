@@ -45,9 +45,8 @@ fn test_internal(
     let test_filter = get_forge_test_filter().ok();
 
     let should_run_test = match test_filter {
-        Some(ref filter) if name.contains(filter) => true,
+        Some(ref filter) => name.contains(filter),
         None => true,
-        _ => false,
     };
 
     if should_run_test {
