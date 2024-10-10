@@ -43,13 +43,17 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
         .context("Failed to find any packages matching the specified filter")?;
 
     let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
+    let test_filter = args.test_filter.clone();
+
+    let test_filter =
+        test_filter.and_then(|filter| filter.split("::").last().map(|_| filter.clone()));
 
     build_artifacts_with_scarb(
         filter.clone(),
         args.features.clone(),
         &scarb_metadata.app_version_info.version,
         args.no_optimization,
-        args.test_filter.clone(),
+        test_filter,
     )?;
 
     let mut block_number_map = BlockNumberMap::default();
