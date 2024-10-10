@@ -15,10 +15,6 @@ impl AttributeInfo for TestCollector {
     const ATTR_NAME: &'static str = "test";
 }
 
-fn get_forge_test_filter() -> Result<String, VarError> {
-    env::var(SNFORGE_TEST_FILTER)
-}
-
 #[must_use]
 pub fn test(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     into_proc_macro_result(args, item, |args, item, warns| {
@@ -65,4 +61,8 @@ fn test_internal(
         "
         ))
     }
+}
+
+fn get_forge_test_filter() -> Result<String, VarError> {
+    env::var(SNFORGE_TEST_FILTER)
 }
