@@ -50,7 +50,7 @@ fn simple_package() {
         0x6661696c696e6720636865636b ('failing check')
 
     [PASS] simple_package_integrationtest::without_prefix::five [..]
-    Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, other filtered out
+    Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
 
     Failures:
         simple_package_integrationtest::test_simple::test_failing
@@ -273,7 +273,7 @@ fn with_ignored_flag() {
         Failure data:
             0x6e6f742070617373696e67 ('not passing')
 
-        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 11 filtered out
+        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, other filtered out
 
         Failures:
             simple_package_integrationtest::ext_function_test::ignored_test
@@ -357,7 +357,7 @@ fn with_ignored_flag_and_filter() {
         Failure data:
             0x6e6f742070617373696e67 ('not passing')
 
-        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 12 filtered out
+        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, other filtered out
 
         Failures:
             simple_package_integrationtest::ext_function_test::ignored_test
@@ -391,7 +391,7 @@ fn with_include_ignored_flag_and_filter() {
         Failure data:
             0x6e6f742070617373696e67 ('not passing')
 
-        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 11 filtered out
+        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, other filtered out
 
         Failures:
             simple_package_integrationtest::ext_function_test::ignored_test
@@ -567,7 +567,7 @@ fn with_panic_data_decoding() {
             x: 5
             y: 6"
 
-        Tests: 2 passed, 6 failed, 0 skipped, 0 ignored, other filtered out
+        Tests: 2 passed, 6 failed, 0 skipped, 0 ignored, 0 filtered out
 
         Failures:
             panic_decoding_integrationtest::test_panic_decoding::test_panic_decoding2
