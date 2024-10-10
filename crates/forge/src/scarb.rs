@@ -9,9 +9,7 @@ use scarb_api::ScarbCommand;
 use scarb_metadata::{PackageMetadata, TargetMetadata};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
-use shared::consts::SNFORGE_TEST_FILTER;
 use std::collections::HashMap;
-use std::env;
 use std::fs::read_to_string;
 use std::io::ErrorKind;
 
