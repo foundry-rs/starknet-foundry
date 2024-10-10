@@ -4,6 +4,7 @@ use super::common::runner::{
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
+use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use forge::CAIRO_EDITION;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stdout_contains;
@@ -727,9 +728,11 @@ fn validate_init(temp: &TempDir, validate_snforge_std: bool) {
 
             [scripts]
             test = "snforge test"
+            {SCARB_MANIFEST_TEMPLATE_CONTENT}
         "#,
         snforge_std_assert
-    );
+    ).trim_end()
+    .to_string()+ "\n";
 
     assert_matches(&expected, &scarb_toml);
 

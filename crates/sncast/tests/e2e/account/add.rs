@@ -276,6 +276,7 @@ pub async fn test_happy_case_add_profile() {
         .expect("Unable to read snfoundry.toml");
     assert!(contents.contains("[sncast.my_account_add]"));
     assert!(contents.contains("account = \"my_account_add\""));
+    assert!(contents.contains(&format!("url = \"{URL}\"")));
 }
 
 #[tokio::test]
@@ -619,4 +620,5 @@ pub async fn test_empty_config_add_profile() {
         .expect("Unable to read snfoundry.toml");
     assert!(contents.contains("[sncast.random]"));
     assert!(contents.contains("account = \"my_account_add\""));
+    assert!(contents.contains(&format!("url = \"{URL}\"")));
 }
