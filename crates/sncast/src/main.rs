@@ -72,39 +72,39 @@ struct Cli {
     /// Account to be used for contract declaration;
     /// When using keystore (`--keystore`), this should be a path to account file
     /// When using accounts file, this should be an account name
-    #[clap(short = 'a', long, global = true)]
+    #[clap(short = 'a', long)]
     account: Option<String>,
 
     /// Path to the file holding accounts info
-    #[clap(short = 'f', long = "accounts-file", global = true)]
+    #[clap(long = "accounts-file")]
     accounts_file_path: Option<Utf8PathBuf>,
 
     /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
-    #[clap(short, long, global = true)]
+    #[clap(short, long)]
     keystore: Option<Utf8PathBuf>,
 
     /// If passed, values will be displayed as integers
-    #[clap(long, conflicts_with = "hex_format", global = true)]
+    #[clap(long, conflicts_with = "hex_format")]
     int_format: bool,
 
     /// If passed, values will be displayed as hex
-    #[clap(long, conflicts_with = "int_format", global = true)]
+    #[clap(long, conflicts_with = "int_format")]
     hex_format: bool,
 
     /// If passed, output will be displayed in json format
-    #[clap(short, long, global = true)]
+    #[clap(short, long)]
     json: bool,
 
     /// If passed, command will wait until transaction is accepted or rejected
-    #[clap(short = 'w', long, global = true)]
+    #[clap(short = 'w', long)]
     wait: bool,
 
     /// Adjusts the time after which --wait assumes transaction was not received or rejected
-    #[clap(long, global = true)]
+    #[clap(long)]
     wait_timeout: Option<u16>,
 
     /// Adjusts the time between consecutive attempts to fetch transaction by --wait flag
-    #[clap(long, global = true)]
+    #[clap(long)]
     wait_retry_interval: Option<u8>,
 
     #[command(subcommand)]
@@ -352,7 +352,6 @@ async fn run_async_command(
             account::Commands::Add(add) => {
                 let provider = add.rpc.get_provider(&config).await?;
                 let result = starknet_commands::account::add::add(
-                    &config.url,
                     &add.name.clone(),
                     &config.accounts_file,
                     &provider,
@@ -371,21 +370,18 @@ async fn run_async_command(
                 let account = if config.keystore.is_none() {
                     create
                         .name
+                        .clone()
                         .context("Required argument `--name` not provided")?
                 } else {
                     config.account
                 };
                 let result = starknet_commands::account::create::create(
-                    &config.url,
                     &account,
                     &config.accounts_file,
                     config.keystore,
                     &provider,
                     chain_id,
-                    create.account_type,
-                    create.salt,
-                    create.add_profile,
-                    create.class_hash,
+                    &create,
                 )
                 .await;
 
@@ -430,12 +426,8 @@ async fn run_async_command(
             }
 
             account::Commands::Delete(delete) => {
-                let provider = delete.rpc.get_provider(&config).await?;
-
-                let network_name = match delete.network {
-                    Some(network) => network,
-                    None => chain_id_to_network_name(get_chain_id(&provider).await?),
-                };
+                let network_name =
+                    starknet_commands::account::delete::get_network_name(&delete, &config).await?;
 
                 let result = starknet_commands::account::delete::delete(
                     &delete.name,
