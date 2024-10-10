@@ -46,11 +46,10 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
     let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
     let test_filter = args.test_filter.clone();
 
-    let test_filter =
-        test_filter.and_then(|filter| filter.split("::").last().map(|_| filter.clone()));
-
-    if test_filter.is_some() {
-        setup_forge_test_filter(test_filter);
+    if let Some(last_filter) =
+        test_filter.and_then(|filter| filter.split("::").last().map(String::from))
+    {
+        setup_forge_test_filter(last_filter);
     }
 
     build_artifacts_with_scarb(
@@ -111,8 +110,6 @@ fn extract_failed_tests(
         })
 }
 
-fn setup_forge_test_filter(test_filter: Option<String>) {
-    if let Some(test_filter) = test_filter {
-        env::set_var(SNFORGE_TEST_FILTER, test_filter.split("::").last().unwrap());
-    }
+fn setup_forge_test_filter(test_filter: String) {
+    env::set_var(SNFORGE_TEST_FILTER, test_filter);
 }
