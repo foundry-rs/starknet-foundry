@@ -147,6 +147,8 @@ enum Commands {
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
+    check_deprecated_arguments(&cli);
+
     let numbers_format = NumbersFormat::from_flags(cli.hex_format, cli.int_format);
     let output_format = OutputFormat::from_flag(cli.json);
 
@@ -602,4 +604,43 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
         ),
         clone_or_else!(cli.wait_timeout, config.wait_params.get_timeout()),
     );
+}
+
+fn check_deprecated_arguments(cli: &Cli) {
+    let mut warnings = Vec::new();
+    let warning_lhs = "In the upcoming version the";
+    let warning_rhs = "option will be removed as common argument and relocated to be an argument for a specific subcommand";
+
+    if cli.profile.is_some() {
+        warnings.push(format!("{warning_lhs} '--profile' {warning_rhs}"));
+    }
+
+    if cli.profile.is_some() {
+        warnings.push(format!("{warning_lhs} '--profile' {warning_rhs}"));
+    }
+    if cli.account.is_some() {
+        warnings.push(format!("{warning_lhs} '--account' {warning_rhs}"));
+    }
+    if cli.accounts_file_path.is_some() {
+        warnings.push(format!("{warning_lhs} '--accounts-file' {warning_rhs}"));
+    }
+    if cli.keystore.is_some() {
+        warnings.push(format!("{warning_lhs} '--keystore' {warning_rhs}"));
+    }
+    if cli.wait {
+        warnings.push(format!("{warning_lhs} '--wait' {warning_rhs}"));
+    }
+    if cli.wait_timeout.is_some() {
+        warnings.push(format!("{warning_lhs} '--wait-timeout' {warning_rhs}"));
+    }
+    if cli.wait_retry_interval.is_some() {
+        warnings.push(format!(
+            "{warning_lhs} '--wait-retry-interval' {warning_rhs}",
+        ));
+    }
+
+    for warning in warnings {
+        //colors the warning message in yellow
+        eprintln!("\x1b[33mWarning: {warning}\x1b[0m");
+    }
 }

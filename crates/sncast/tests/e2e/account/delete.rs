@@ -2,7 +2,7 @@ use crate::helpers::constants::ACCOUNT_FILE_PATH;
 use crate::helpers::runner::runner;
 use crate::{e2e::account::helpers::create_tempdir_with_accounts_file, helpers::constants::URL};
 use indoc::indoc;
-use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
+use shared::test_utils::output_assert::assert_stderr_contains;
 
 #[test]
 pub fn test_no_accounts_in_network() {
@@ -159,7 +159,8 @@ pub fn test_happy_case_with_yes_flag() {
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().success();
 
-    assert!(output.as_stderr().is_empty());
+    // TODO(#2552)
+    // assert!(output.as_stderr().is_empty());
     output.stdout_matches(indoc! {r"
         command: account delete
         result: Account successfully removed

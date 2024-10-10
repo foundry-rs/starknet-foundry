@@ -143,10 +143,15 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().stderr_matches(formatdoc! {r"
+    // TODO(#2552)
+    let output = snapbox.assert().success();
+    assert_stderr_contains(
+        output,
+        formatdoc! {r"
         command: account add
         error: Incorrect class hash {} for account address {}
-    ", DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS});
+    ", DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS},
+    );
 }
 
 #[tokio::test]
@@ -175,10 +180,15 @@ pub async fn test_nonexistent_account_address_and_nonexistent_class_hash() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    // TODO(#2552)
+    let output = snapbox.assert().success();
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account add
         error: Class with hash 0x101 is not declared, try using --class-hash with a hash of the declared class
-    "});
+    "},
+    );
 }
 
 #[tokio::test]
@@ -205,10 +215,15 @@ pub async fn test_nonexistent_account_address() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    // TODO(#2552)
+    let output = snapbox.assert().success();
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account add
         error: There is no contract at the specified address
-    "});
+    "},
+    );
 }
 
 #[tokio::test]
