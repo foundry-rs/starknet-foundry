@@ -210,7 +210,7 @@ fn fuzzing_exit_first_single_fail() {
     let temp = setup_package("fuzzing");
 
     let output = test_runner(&temp)
-        .args(["exit_first_single_fail", "-x"])
+        .args(["exit_first_single_fail::exit_first", "-x"])
         .assert()
         .code(1);
 
