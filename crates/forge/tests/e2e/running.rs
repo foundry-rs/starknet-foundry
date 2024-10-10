@@ -506,7 +506,7 @@ fn with_rerun_failed_flag() {
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
 
-        Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 11 filtered out
+        Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
 
         Failures:
             simple_package_integrationtest::test_simple::test_another_failing
