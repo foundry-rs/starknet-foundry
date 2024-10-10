@@ -9,7 +9,9 @@ use scarb_api::ScarbCommand;
 use scarb_metadata::{PackageMetadata, TargetMetadata};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
+use shared::consts::SNFORGE_TEST_FILTER;
 use std::collections::HashMap;
+use std::env;
 use std::fs::read_to_string;
 use std::io::ErrorKind;
 
@@ -66,11 +68,14 @@ fn build_contracts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) ->
 }
 
 fn build_test_artifacts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) -> Result<()> {
-    ScarbCommand::new_with_stdio()
+    let mut command = ScarbCommand::new_with_stdio();
+    command
         .arg("build")
         .arg("--test")
         .packages_filter(filter)
-        .features(features)
+        .features(features);
+
+    command
         .run()
         .context("Failed to build test artifacts with Scarb")?;
     Ok(())

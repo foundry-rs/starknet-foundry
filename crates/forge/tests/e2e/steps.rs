@@ -40,7 +40,7 @@ fn should_allow_less_than_default() {
                 Failure data:
                     Could not reach the end of the program. RunResources has no remaining steps.
 
-                Tests: 0 passed, 4 failed, 0 skipped, 0 ignored, 0 filtered out
+                Tests: 0 passed, 4 failed, 0 skipped, 0 ignored
 
                 Failures:
                     steps::tests::steps_570030
@@ -74,7 +74,7 @@ fn should_allow_more_than_10m() {
                 [PASS] steps::tests::steps_10000005 (gas: ~26667)
                 [PASS] steps::tests::steps_9999990 (gas: ~26667)
                 [PASS] steps::tests::steps_11250075 (gas: ~30001)
-                Tests: 4 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+                Tests: 4 passed, 0 failed, 0 skipped, 0 ignored
             "
         ),
     );
@@ -106,7 +106,7 @@ fn should_default_to_10m() {
                 Could not reach the end of the program. RunResources has no remaining steps.
 
             [PASS] steps::tests::steps_9999990 (gas: ~26667)
-            Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
+            Tests: 2 passed, 2 failed, 0 skipped, 0 ignored
 
             Failures:
                 steps::tests::steps_10000005

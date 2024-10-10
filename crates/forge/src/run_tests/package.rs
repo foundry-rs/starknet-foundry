@@ -31,7 +31,8 @@ use forge_runner::{
 };
 use scarb_api::get_contracts_artifacts_and_source_sierra_paths;
 use scarb_metadata::{Metadata, PackageMetadata};
-use std::sync::Arc;
+use shared::consts::SNFORGE_TEST_FILTER;
+use std::{env, sync::Arc};
 
 pub struct RunForPackageArgs {
     pub test_targets: Vec<TestTargetRaw>,
@@ -99,6 +100,10 @@ impl RunForPackageArgs {
     }
 }
 
+fn clean_up_forge_test_filter() {
+    env::remove_var(SNFORGE_TEST_FILTER);
+}
+
 async fn test_package_with_config_resolved(
     test_targets: Vec<TestTargetRaw>,
     fork_targets: &[ForkTarget],
@@ -131,9 +136,9 @@ pub async fn run_for_package(
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
 ) -> Result<Vec<TestTargetSummary>> {
+    clean_up_forge_test_filter();
     let mut test_targets =
         test_package_with_config_resolved(test_targets, &fork_targets, block_number_map).await?;
-    let all_tests = sum_test_cases(&test_targets);
 
     for test_target in &mut test_targets {
         tests_filter.filter_tests(&mut test_target.test_cases)?;
@@ -172,8 +177,8 @@ pub async fn run_for_package(
         }
     }
 
-    let filtered = all_tests - not_filtered;
-    pretty_printing::print_test_summary(&summaries, filtered);
+    // TODO(#2574): Bring back "filtered out" number in tests summary
+    pretty_printing::print_test_summary(&summaries, &tests_filter.name_filter);
 
     let any_fuzz_test_was_run = summaries.iter().any(|test_target_summary| {
         test_target_summary
@@ -186,6 +191,7 @@ pub async fn run_for_package(
     if any_fuzz_test_was_run {
         pretty_printing::print_test_seed(forge_config.test_runner_config.fuzzer_seed);
     }
+    clean_up_forge_test_filter();
 
     Ok(summaries)
 }
