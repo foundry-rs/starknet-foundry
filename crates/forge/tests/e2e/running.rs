@@ -273,7 +273,7 @@ fn with_ignored_flag() {
         Failure data:
             0x6e6f742070617373696e67 ('not passing')
 
-        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, other filtered out
+        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
         Failures:
             simple_package_integrationtest::ext_function_test::ignored_test
