@@ -16,6 +16,7 @@ use scarb_api::{
     target_dir_for_workspace, ScarbCommand,
 };
 use scarb_ui::args::PackagesFilter;
+use shared::consts::SNFORGE_TEST_FILTER;
 use std::env;
 
 #[allow(clippy::too_many_lines)]
@@ -48,12 +49,15 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
     let test_filter =
         test_filter.and_then(|filter| filter.split("::").last().map(|_| filter.clone()));
 
+    if test_filter.is_some() {
+        setup_forge_test_filter(test_filter);
+    }
+
     build_artifacts_with_scarb(
         filter.clone(),
         args.features.clone(),
         &scarb_metadata.app_version_info.version,
         args.no_optimization,
-        test_filter,
     )?;
 
     let mut block_number_map = BlockNumberMap::default();
@@ -105,4 +109,10 @@ fn extract_failed_tests(
                     | AnyTestCaseSummary::Single(TestCaseSummary::Failed { .. })
             )
         })
+}
+
+fn setup_forge_test_filter(test_filter: Option<String>) {
+    if let Some(test_filter) = test_filter {
+        env::set_var(SNFORGE_TEST_FILTER, test_filter.split("::").last().unwrap());
+    }
 }

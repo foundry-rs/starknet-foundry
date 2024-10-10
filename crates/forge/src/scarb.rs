@@ -49,12 +49,11 @@ pub fn build_artifacts_with_scarb(
     features: FeaturesSpec,
     scarb_version: &Version,
     no_optimization: bool,
-    test_filter: Option<String>,
 ) -> Result<()> {
     if should_compile_starknet_contract_target(scarb_version, no_optimization) {
         build_contracts_with_scarb(filter.clone(), features.clone())?;
     }
-    build_test_artifacts_with_scarb(filter, features, test_filter)?;
+    build_test_artifacts_with_scarb(filter, features)?;
     Ok(())
 }
 
@@ -68,25 +67,13 @@ fn build_contracts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) ->
     Ok(())
 }
 
-fn setup_forge_test_filter(test_filter: Option<String>) {
-    if let Some(test_filter) = test_filter {
-        env::set_var(SNFORGE_TEST_FILTER, test_filter);
-    }
-}
-
-fn build_test_artifacts_with_scarb(
-    filter: PackagesFilter,
-    features: FeaturesSpec,
-    test_filter: Option<String>,
-) -> Result<()> {
+fn build_test_artifacts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) -> Result<()> {
     let mut command = ScarbCommand::new_with_stdio();
     command
         .arg("build")
         .arg("--test")
         .packages_filter(filter)
         .features(features);
-
-    setup_forge_test_filter(test_filter);
 
     command
         .run()
