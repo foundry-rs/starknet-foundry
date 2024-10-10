@@ -80,7 +80,7 @@ fn fuzzing_set_runs() {
         [PASS] fuzzing::tests::uint128_arg (runs: 10, [..]
         [PASS] fuzzing::tests::uint256_arg (runs: 10, [..]
         Running 0 test(s) from tests/
-        Tests: 12 passed, 1 failed, 0 skipped, 0 ignored, 6 filtered out
+        Tests: 12 passed, 1 failed, 0 skipped, 0 ignored, other filtered out
         Fuzzer seed: [..]
 
         Failures:
