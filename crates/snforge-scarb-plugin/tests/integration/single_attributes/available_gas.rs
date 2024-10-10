@@ -49,6 +49,21 @@ fn fails_with_non_number_literal() {
 }
 
 #[test]
+fn fails_with_named() {
+    let item = TokenStream::new(EMPTY_FN.into());
+    let args = TokenStream::new(r#"(abc: "123")"#.into());
+
+    let result = available_gas(args, item);
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(
+            "#[available_gas] can be used with unnamed attributes only",
+        )],
+    );
+}
+
+#[test]
 fn work_with_number() {
     let item = TokenStream::new(EMPTY_FN.into());
     let args = TokenStream::new("(123)".into());

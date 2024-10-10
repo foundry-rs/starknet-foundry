@@ -1,5 +1,5 @@
 use self::{named::NamedArgs, unnamed::UnnamedArgs};
-use crate::attributes::{AttributeInfo, ErrorExt};
+use crate::attributes::{AttributeInfo, ErrorExt, ValidArgs, ValidArgsTypes, ValidNamedArgs};
 use cairo_lang_macro::Diagnostic;
 use cairo_lang_syntax::node::{
     ast::{ArgClause, Expr, OptionArgListParenthesized},
@@ -67,8 +67,30 @@ impl Arguments {
     }
 
     #[inline]
-    pub fn named_only<T: AttributeInfo>(&self) -> Result<&NamedArgs, Diagnostic> {
+    pub fn named_only<T: AttributeInfo + ValidArgs>(&self) -> Result<&NamedArgs, Diagnostic> {
         if self.shorthand.is_empty() && self.unnamed.is_empty() {
+            match T::VALID_ARGS {
+                ValidArgsTypes::Named(valid_named_args)
+                | ValidArgsTypes::Both { valid_named_args } => match valid_named_args {
+                    ValidNamedArgs::All => {}
+                    ValidNamedArgs::Restricted(valid_named_args) => {
+                        for (arg, _) in self.named.iter() {
+                            if !valid_named_args.contains(&arg.as_str()) {
+                                return Err(T::error(format!(
+                                    "unsupported named argument \"{arg}\" provided",
+                                )));
+                            }
+                        }
+                    }
+                },
+                ValidArgsTypes::Unnamed => panic!(
+                    "`named_only` arguments requested where only `Unnamed` arguments are valid"
+                ),
+                ValidArgsTypes::None => {
+                    panic!("`named_only` arguments requested where no arguments are valid")
+                }
+            }
+
             Ok(&self.named)
         } else {
             Err(T::error("can be used with named attributes only"))
@@ -76,8 +98,14 @@ impl Arguments {
     }
 
     #[inline]
-    pub fn unnamed_only<T: AttributeInfo>(&self) -> Result<UnnamedArgs, Diagnostic> {
+    pub fn unnamed_only<T: AttributeInfo + ValidArgs>(&self) -> Result<UnnamedArgs, Diagnostic> {
         if self.shorthand.is_empty() && self.named.is_empty() {
+            match T::VALID_ARGS {
+                ValidArgsTypes::Named(_) => panic!("`unnamed_arguments` arguments requested where only `Named` arguments are valid"),
+                ValidArgsTypes::Unnamed | ValidArgsTypes::Both { .. } => {},
+                ValidArgsTypes::None => panic!("`named_only` arguments requested where no arguments are valid")
+            }
+
             Ok(UnnamedArgs::new(&self.unnamed))
         } else {
             Err(T::error("can be used with unnamed attributes only"))
