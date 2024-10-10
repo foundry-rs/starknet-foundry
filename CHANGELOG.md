@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- Add Voyager API support for `verify` subcommand [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/verify.html).
+
 ## [0.32.0] - 2024-10-16
 
 ### Cast
