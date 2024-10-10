@@ -177,7 +177,7 @@ pub async fn run_for_package(
     }
 
     // TODO(#2574): Bring back "filtered out" number in tests summary
-    pretty_printing::print_test_summary(&summaries, &tests_filter);
+    pretty_printing::print_test_summary(&summaries, &tests_filter.name_filter);
 
     let any_fuzz_test_was_run = summaries.iter().any(|test_target_summary| {
         test_target_summary
