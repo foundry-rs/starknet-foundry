@@ -6,7 +6,7 @@ pub trait IMapContract<State> {
 
 #[starknet::contract]
 pub mod MapContract {
-    use stgitarknet::storage::{StorageMapReadAccess, StorageMapWriteAccess};
+    use starknet::storage::{StorageMapReadAccess, StorageMapWriteAccess};
 
     #[storage]
     struct Storage {
