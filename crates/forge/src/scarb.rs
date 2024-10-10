@@ -70,7 +70,7 @@ fn build_contracts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) ->
 
 fn setup_forge_test_filter(test_filter: Option<String>) {
     if let Some(test_filter) = test_filter {
-        env::set_var(SNFORGE_TEST_FILTER, test_filter.split("::").last().unwrap());
+        env::set_var(SNFORGE_TEST_FILTER, test_filter);
     }
 }
 
