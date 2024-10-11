@@ -12,6 +12,8 @@ Running 3 test(s) from src/
 Tests: 3 passed, 0 failed, 0 skipped, 0 ignored
 ```
 
+When running all tests, no information about filtered-out tests is displayed.
+
 ## Filtering Tests
 
 You can pass a filter string after the `snforge test` command to filter tests.
@@ -26,6 +28,8 @@ Running 2 test(s) from src/
 [PASS] package_name::tests::calling_another
 Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
 ```
+
+When running with a filter, `other filtered out` is displayed in the summary.
 
 ## Running a Specific Test
 
