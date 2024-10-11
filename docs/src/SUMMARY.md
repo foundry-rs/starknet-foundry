@@ -41,7 +41,7 @@
 
 * [Outline](starknet/index.md)
 * [Creating And Deploying Accounts](starknet/account.md)
-* [Importing And Exporting Accounts](starknet/account-import-export.md)
+* [Importing And Exporting Accounts](starknet/account-import.md)
 * [Declaring New Contracts](starknet/declare.md)
 * [Deploying New Contracts](starknet/deploy.md)
 * [Invoking Contracts](starknet/invoke.md)
