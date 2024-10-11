@@ -2,7 +2,7 @@ use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
     AccountType,
 };
-use anyhow::{ensure, Context, Result};
+use anyhow::{bail, ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::string::TryFromHexStr;
@@ -77,26 +77,31 @@ pub async fn import(
     let private_key = &SigningKey::from_secret_scalar(*private_key);
 
     let fetched_class_hash = get_class_hash_by_address(provider, import.address).await?;
-    let deployed = fetched_class_hash.is_some();
-    let class_hash = match (fetched_class_hash, import.class_hash) {
-        (Some(from_provider), Some(from_user)) => {
-            ensure!(
-                from_provider == from_user,
-                "Incorrect class hash {:#x} for account address {:#x}",
-                from_user,
-                import.address
-            );
-            fetched_class_hash
-        }
-        (None, Some(from_user)) => {
-            check_class_hash_exists(provider, from_user).await?;
-            Some(from_user)
-        }
-        _ => fetched_class_hash,
+    let deployed: bool = fetched_class_hash.is_some();
+    let class_hash = if let (Some(from_provider), Some(from_user)) =
+        (fetched_class_hash, import.class_hash)
+    {
+        ensure!(
+            from_provider == from_user,
+            "Incorrect class hash {:#x} for account address {:#x} was provided",
+            from_user,
+            import.address
+        );
+        from_provider
+    } else if let Some(from_user) = import.class_hash {
+        check_class_hash_exists(provider, from_user).await?;
+        from_user
+    } else if let Some(from_provider) = fetched_class_hash {
+        from_provider
+    } else {
+        bail!(
+        "Class hash for the account address {:#x} could not be found. Please provide the class hash",
+        import.address
+        );
     };
 
     let chain_id = get_chain_id(provider).await?;
-    if let (Some(salt), Some(class_hash)) = (import.salt, class_hash) {
+    if let Some(salt) = import.salt {
         // TODO(#2571)
         let sncast_account_type = match import.account_type {
             AccountType::Argent => SNCastAccountType::Argent,
@@ -113,7 +118,7 @@ pub async fn import(
         );
     }
 
-    let legacy = check_if_legacy_contract(class_hash, import.address, provider).await?;
+    let legacy = check_if_legacy_contract(Some(class_hash), import.address, provider).await?;
 
     let account_json = prepare_account_json(
         private_key,
@@ -121,7 +126,7 @@ pub async fn import(
         deployed,
         legacy,
         &import.account_type,
-        class_hash,
+        Some(class_hash),
         import.salt,
     );
 
