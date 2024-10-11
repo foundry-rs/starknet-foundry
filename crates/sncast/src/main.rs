@@ -614,10 +614,6 @@ fn check_deprecated_arguments(cli: &Cli) {
     if cli.profile.is_some() {
         warnings.push(format!("{warning_lhs} '--profile' {warning_rhs}"));
     }
-
-    if cli.profile.is_some() {
-        warnings.push(format!("{warning_lhs} '--profile' {warning_rhs}"));
-    }
     if cli.account.is_some() {
         warnings.push(format!("{warning_lhs} '--account' {warning_rhs}"));
     }
