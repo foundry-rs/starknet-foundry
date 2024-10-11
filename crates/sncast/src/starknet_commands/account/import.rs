@@ -63,15 +63,16 @@ pub async fn import(
     provider: &JsonRpcClient<HttpTransport>,
     import: &Import,
 ) -> Result<AccountImportResponse> {
-    let private_key = match (&import.private_key, &import.private_key_file_path) {
-        (Some(passed_private_key), None) => passed_private_key,
-        (None, Some(passed_private_key_file_path)) => &{
-            get_private_key_from_file(passed_private_key_file_path).with_context(|| {
-                format!("Failed to obtain private key from the file {passed_private_key_file_path}")
-            })?
-        },
-        (None, None) => &get_private_key_from_input(),
-        _ => unreachable!("Checked on clap level"),
+    let private_key = if let Some(passed_private_key) = &import.private_key {
+        passed_private_key
+    } else if let Some(passed_private_key_file_path) = &import.private_key_file_path {
+        &get_private_key_from_file(passed_private_key_file_path).with_context(|| {
+            format!("Failed to obtain private key from the file {passed_private_key_file_path}")
+        })?
+    } else if import.private_key.is_none() && import.private_key_file_path.is_none() {
+        &get_private_key_from_input()
+    } else {
+        unreachable!("Checked on clap level")
     };
     let private_key = &SigningKey::from_secret_scalar(*private_key);
 
