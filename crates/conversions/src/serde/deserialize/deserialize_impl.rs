@@ -1,7 +1,7 @@
 use super::{BufferReadError, BufferReadResult, BufferReader, CairoDeserialize};
 use crate::{byte_array::ByteArray, IntoConv};
 use num_traits::cast::ToPrimitive;
-use starknet::{core::types::FieldElement, providers::Url};
+use starknet::providers::Url;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
 use starknet_types_core::felt::Felt as Felt252;
 use std::num::NonZeroU32;
@@ -95,7 +95,6 @@ macro_rules! impl_deserialize_for_num_type {
     };
 }
 
-impl_deserialize_for_felt_type!(FieldElement);
 impl_deserialize_for_felt_type!(ClassHash);
 impl_deserialize_for_felt_type!(ContractAddress);
 impl_deserialize_for_felt_type!(Nonce);

@@ -3,7 +3,7 @@ mod tests_class_hash {
     use cairo_vm::utils::PRIME_STR;
     use conversions::string::{IntoDecStr, TryFromDecStr, TryFromHexStr};
     use conversions::{FromConv, IntoConv};
-    use starknet::core::types::FieldElement;
+    use starknet::core::types::Felt;
     use starknet_api::core::ClassHash;
     use starknet_api::core::{ContractAddress, EntryPointSelector, Nonce};
     use starknet_api::hash::StarkHash;
@@ -16,7 +16,7 @@ mod tests_class_hash {
 
         assert_eq!(class_hash, ContractAddress::from_(class_hash).into_());
         assert_eq!(class_hash, Felt252::from_(class_hash).into_());
-        assert_eq!(class_hash, FieldElement::from_(class_hash).into_());
+        assert_eq!(class_hash, Felt::from_(class_hash).into_());
         assert_eq!(class_hash, Nonce::from_(class_hash).into_());
         assert_eq!(class_hash, EntryPointSelector::from_(class_hash).into_());
         assert_eq!(class_hash, StarkHash::from_(class_hash).into_());
@@ -34,7 +34,7 @@ mod tests_class_hash {
 
         assert_eq!(class_hash, ContractAddress::from_(class_hash).into_());
         assert_eq!(class_hash, Felt252::from_(class_hash).into_());
-        assert_eq!(class_hash, FieldElement::from_(class_hash).into_());
+        assert_eq!(class_hash, Felt::from_(class_hash).into_());
         assert_eq!(class_hash, Nonce::from_(class_hash).into_());
         assert_eq!(class_hash, EntryPointSelector::from_(class_hash).into_());
         assert_eq!(class_hash, StarkHash::from_(class_hash).into_());
@@ -50,7 +50,7 @@ mod tests_class_hash {
         let mut class_hash: ClassHash = Felt252::MAX.into_();
 
         assert_eq!(class_hash, Felt252::from_(class_hash).into_());
-        assert_eq!(class_hash, FieldElement::from_(class_hash).into_());
+        assert_eq!(class_hash, Felt::from_(class_hash).into_());
         assert_eq!(class_hash, Nonce::from_(class_hash).into_());
         assert_eq!(class_hash, EntryPointSelector::from_(class_hash).into_());
         assert_eq!(class_hash, StarkHash::from_(class_hash).into_());

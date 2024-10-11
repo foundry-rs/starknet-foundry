@@ -1,14 +1,55 @@
+use crate::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use crate::CAIRO_EDITION;
-use anyhow::{anyhow, Context, Ok, Result};
+use anyhow::{anyhow, bail, Context, Ok, Result};
 use include_dir::{include_dir, Dir};
+use indoc::formatdoc;
 use scarb_api::ScarbCommand;
+use semver::Version;
 use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use toml_edit::{value, ArrayOfTables, DocumentMut, Item, Table};
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
+
+const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
+const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
+
+fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
+    fs::write(
+        path,
+        formatdoc! {r#"
+        # Visit https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html for more information
+
+        # [sncast.myprofile1]                                    # Define a profile name
+        # url = "http://127.0.0.1:5050/"                         # Url of the RPC provider
+        # accounts_file = "../account-file"                      # Path to the file with the account data
+        # account = "mainuser"                                   # Account from `accounts_file` or default account file that will be used for the transactions
+        # keystore = "~/keystore"                                # Path to the keystore file
+        # wait_params = {{ timeout = 500, retry_interval = 10 }}   # Wait for submitted transaction parameters
+        # block_explorer = "StarkScan"                           # Block explorer service used to display links to transaction details
+        "#
+        },
+    )?;
+
+    Ok(())
+}
+
+fn add_template_to_scarb_manifest(path: &PathBuf) -> Result<()> {
+    if !path.exists() {
+        bail!("Scarb.toml not found");
+    }
+
+    let mut file = OpenOptions::new()
+        .append(true)
+        .open(path)
+        .context("Failed to open Scarb.toml")?;
+
+    file.write_all(SCARB_MANIFEST_TEMPLATE_CONTENT.as_bytes())
+        .context("Failed to write to Scarb.toml")?;
+    Ok(())
+}
 
 fn overwrite_files_from_scarb_template(
     dir_to_overwrite: &str,
@@ -40,7 +81,7 @@ fn replace_project_name(contents: &[u8], project_name: &str) -> Result<Vec<u8>> 
     Ok(contents.into_bytes())
 }
 
-fn update_config(config_path: &Path) -> Result<()> {
+fn update_config(config_path: &Path, scarb: &Version) -> Result<()> {
     let config_file = fs::read_to_string(config_path)?;
     let mut document = config_file
         .parse::<DocumentMut>()
@@ -49,6 +90,7 @@ fn update_config(config_path: &Path) -> Result<()> {
     add_target_to_toml(&mut document);
     set_cairo_edition(&mut document, CAIRO_EDITION);
     add_test_script(&mut document);
+    add_assert_macros(&mut document, scarb)?;
 
     fs::write(config_path, document.to_string())?;
 
@@ -79,6 +121,22 @@ fn set_cairo_edition(document: &mut DocumentMut, cairo_edition: &str) {
     document["package"]["edition"] = value(cairo_edition);
 }
 
+fn add_assert_macros(document: &mut DocumentMut, scarb: &Version) -> Result<()> {
+    let version = if scarb < &MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS {
+        &DEFAULT_ASSERT_MACROS
+    } else {
+        scarb
+    };
+
+    document
+        .get_mut("dev-dependencies")
+        .and_then(|dep| dep.as_table_mut())
+        .context("Failed to get dev-dependencies from Scarb.toml")?
+        .insert("assert_macros", value(version.to_string()));
+
+    Ok(())
+}
+
 fn extend_gitignore(path: &Path) -> Result<()> {
     let mut file = OpenOptions::new()
         .append(true)
@@ -91,10 +149,11 @@ fn extend_gitignore(path: &Path) -> Result<()> {
 pub fn run(project_name: &str) -> Result<()> {
     let current_dir = std::env::current_dir().context("Failed to get current directory")?;
     let project_path = current_dir.join(project_name);
-    let manifest_path = project_path.join("Scarb.toml");
+    let scarb_manifest_path = project_path.join("Scarb.toml");
+    let snfoundry_manifest_path = project_path.join("snfoundry.toml");
 
     // if there is no Scarb.toml run `scarb new`
-    if !manifest_path.is_file() {
+    if !scarb_manifest_path.is_file() {
         ScarbCommand::new_with_stdio()
             .current_dir(current_dir)
             .arg("new")
@@ -105,7 +164,7 @@ pub fn run(project_name: &str) -> Result<()> {
 
         ScarbCommand::new_with_stdio()
             .current_dir(&project_path)
-            .manifest_path(manifest_path.clone())
+            .manifest_path(scarb_manifest_path.clone())
             .offline()
             .arg("remove")
             .arg("--dev")
@@ -114,12 +173,19 @@ pub fn run(project_name: &str) -> Result<()> {
             .context("Failed to remove cairo_test")?;
     }
 
+    add_template_to_scarb_manifest(&scarb_manifest_path)?;
+
+    if !snfoundry_manifest_path.is_file() {
+        create_snfoundry_manifest(&snfoundry_manifest_path)?;
+    }
+
     let version = env!("CARGO_PKG_VERSION");
+    let cairo_version = ScarbCommand::version().run()?.cairo;
 
     if env::var("DEV_DISABLE_SNFORGE_STD_DEPENDENCY").is_err() {
         ScarbCommand::new_with_stdio()
             .current_dir(&project_path)
-            .manifest_path(manifest_path.clone())
+            .manifest_path(scarb_manifest_path.clone())
             .offline()
             .arg("add")
             .arg("--dev")
@@ -132,25 +198,23 @@ pub fn run(project_name: &str) -> Result<()> {
             .context("Failed to add snforge_std")?;
     }
 
-    let cairo_version = ScarbCommand::version().run()?.cairo;
-
     ScarbCommand::new_with_stdio()
         .current_dir(&project_path)
-        .manifest_path(manifest_path.clone())
+        .manifest_path(scarb_manifest_path.clone())
         .offline()
         .arg("add")
         .arg(format!("starknet@{cairo_version}"))
         .run()
         .context("Failed to add starknet")?;
 
-    update_config(&project_path.join("Scarb.toml"))?;
+    update_config(&project_path.join("Scarb.toml"), &cairo_version)?;
     extend_gitignore(&project_path)?;
     overwrite_files_from_scarb_template("src", &project_path, project_name)?;
     overwrite_files_from_scarb_template("tests", &project_path, project_name)?;
 
     // Fetch to create lock file.
     ScarbCommand::new_with_stdio()
-        .manifest_path(manifest_path)
+        .manifest_path(scarb_manifest_path)
         .arg("fetch")
         .run()
         .context("Failed to fetch created project")?;

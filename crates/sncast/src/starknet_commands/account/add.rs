@@ -10,7 +10,7 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountAddResponse;
 use sncast::{check_class_hash_exists, get_chain_id};
 use sncast::{check_if_legacy_contract, get_class_hash_by_address};
-use starknet::core::types::FieldElement;
+use starknet::core::types::Felt;
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::signers::SigningKey;
 
@@ -23,7 +23,7 @@ pub struct Add {
 
     /// Address of the account
     #[clap(short, long, requires = "private_key_input")]
-    pub address: FieldElement,
+    pub address: Felt,
 
     /// Type of the account
     #[clap(short = 't', long = "type")]
@@ -31,11 +31,11 @@ pub struct Add {
 
     /// Class hash of the account
     #[clap(short, long)]
-    pub class_hash: Option<FieldElement>,
+    pub class_hash: Option<Felt>,
 
     /// Account private key
     #[clap(long, group = "private_key_input")]
-    pub private_key: Option<FieldElement>,
+    pub private_key: Option<Felt>,
 
     /// Path to the file holding account private key
     #[clap(long = "private-key-file", group = "private_key_input")]
@@ -43,11 +43,11 @@ pub struct Add {
 
     /// Account public key
     #[clap(long)]
-    pub public_key: Option<FieldElement>,
+    pub public_key: Option<Felt>,
 
     /// Salt for the address
     #[clap(short, long)]
-    pub salt: Option<FieldElement>,
+    pub salt: Option<Felt>,
 
     /// If passed, a profile with the provided name and corresponding data will be created in snfoundry.toml
     #[allow(clippy::struct_field_names)]
@@ -59,7 +59,6 @@ pub struct Add {
 }
 
 pub async fn add(
-    rpc_url: &str,
     account: &str,
     accounts_file: &Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
@@ -116,7 +115,7 @@ pub async fn add(
 
     if add.add_profile.is_some() {
         let config = CastConfig {
-            url: rpc_url.into(),
+            url: add.rpc.url.clone().unwrap_or_default(),
             account: account.into(),
             accounts_file: accounts_file.into(),
             ..Default::default()
@@ -136,7 +135,7 @@ pub async fn add(
     })
 }
 
-fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<FieldElement> {
+fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<Felt> {
     let private_key_string = std::fs::read_to_string(file_path.clone())?;
     Ok(private_key_string.parse()?)
 }

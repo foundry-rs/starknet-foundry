@@ -8,7 +8,7 @@ use crate::{
     pretty_printing,
     scarb::{
         config::{ForgeConfigFromScarb, ForkTarget},
-        load_test_artifacts,
+        load_test_artifacts, should_compile_starknet_contract_target,
     },
     shared_cache::FailedTestsCache,
     test_filter::TestsFilter,
@@ -52,8 +52,15 @@ impl RunForPackageArgs {
     ) -> Result<RunForPackageArgs> {
         let raw_test_targets = load_test_artifacts(snforge_target_dir_path, &package)?;
 
-        let contracts =
-            get_contracts_artifacts_and_source_sierra_paths(scarb_metadata, &package.id, None)?;
+        let contracts = get_contracts_artifacts_and_source_sierra_paths(
+            scarb_metadata,
+            &package.id,
+            None,
+            !should_compile_starknet_contract_target(
+                &scarb_metadata.app_version_info.version,
+                args.no_optimization,
+            ),
+        )?;
         let contracts_data = ContractsData::try_from(contracts)?;
 
         let forge_config_from_scarb =

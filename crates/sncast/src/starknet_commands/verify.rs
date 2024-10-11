@@ -8,7 +8,7 @@ use scarb_api::StarknetContractArtifacts;
 use serde::Serialize;
 use sncast::response::structs::VerifyResponse;
 use sncast::Network;
-use starknet::core::types::FieldElement;
+use starknet::core::types::Felt;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::{env, fmt};
@@ -22,11 +22,8 @@ struct WalnutVerificationInterface {
 #[async_trait::async_trait]
 trait VerificationInterface {
     fn new(network: Network, workspace_dir: Utf8PathBuf) -> Self;
-    async fn verify(
-        &self,
-        contract_address: FieldElement,
-        contract_name: String,
-    ) -> Result<VerifyResponse>;
+    async fn verify(&self, contract_address: Felt, contract_name: String)
+        -> Result<VerifyResponse>;
     fn gen_explorer_url(&self) -> Result<String>;
 }
 
@@ -41,7 +38,7 @@ impl VerificationInterface for WalnutVerificationInterface {
 
     async fn verify(
         &self,
-        contract_address: FieldElement,
+        contract_address: Felt,
         contract_name: String,
     ) -> Result<VerifyResponse> {
         // Read all files name along with their contents in a JSON format
@@ -117,8 +114,8 @@ impl VerificationInterface for WalnutVerificationInterface {
 #[command(about = "Verify a contract through a block explorer")]
 pub struct Verify {
     /// Address of a contract to be verified
-    #[clap(short = 'a', long)]
-    pub contract_address: FieldElement,
+    #[clap(short = 'd', long)]
+    pub contract_address: Felt,
 
     /// Name of the contract that is being verified
     #[clap(short, long)]
@@ -162,7 +159,7 @@ struct VerificationPayload {
 }
 
 pub async fn verify(
-    contract_address: FieldElement,
+    contract_address: Felt,
     contract_name: String,
     verifier: Verifier,
     network: Network,

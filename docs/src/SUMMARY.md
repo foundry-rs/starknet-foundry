@@ -15,8 +15,9 @@
 
 * [Running Tests](testing/running-tests.md)
 * [Writing Tests](testing/testing.md)
+* [Test Attributes](testing/test-attributes.md)
 * [Testing Smart Contracts](testing/contracts.md)
-* [Testing Contracts' Internals](testing/testing_contract_internals.md)
+* [Testing Contracts' Internals](testing/testing-contract-internals.md)
 * [Using Cheatcodes](testing/using-cheatcodes.md)
 * [Testing Events](testing/testing-events.md)
 * [Testing Messages to L1](testing/testing-messages-to-l1.md)
@@ -27,13 +28,15 @@
 * [Coverage](testing/coverage.md)
 
 # `snforge` Advanced Features
+
 * [Fork Testing](snforge-advanced-features/fork-testing.md)
 * [Fuzz Testing](snforge-advanced-features/fuzz-testing.md)
 * [Conditional Compilation](snforge-advanced-features/conditional-compilation.md)
 * [Direct Storage Access](snforge-advanced-features/storage-cheatcodes.md)
 * [Profiling](snforge-advanced-features/profiling.md)
 
---- 
+---
+
 # `sncast` Overview
 
 * [Outline](starknet/index.md)
@@ -54,7 +57,7 @@
 
 * [Environment Setup](development/environment-setup.md)
 
---- 
+---
 
 # Appendix
 
@@ -63,6 +66,7 @@
     * [init](appendix/snforge/init.md)
     * [clean-cache](appendix/snforge/clean-cache.md)
 * [Cheatcodes Reference](appendix/cheatcodes.md)
+    * [Cheating Globally](appendix/cheatcodes/global.md)
     * [CheatSpan](appendix/cheatcodes/cheat_span.md)
     * [caller_address](appendix/cheatcodes/caller_address.md)
     * [block_number](appendix/cheatcodes/block_number.md)
@@ -126,3 +130,5 @@
     * [get_nonce](appendix/sncast-library/get_nonce.md)
     * [tx_status](appendix/sncast-library/tx_status.md)
     * [errors](appendix/sncast-library/errors.md)
+* [ `snfoundry.toml` Reference](appendix/snfoundry-toml.md)
+* [ `Scarb.toml` Reference](appendix/scarb-toml.md)

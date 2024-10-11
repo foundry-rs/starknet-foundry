@@ -43,7 +43,7 @@ use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
 };
-use starknet::core::types::FieldElement;
+use starknet::core::types::Felt;
 use starknet::signers::SigningKey;
 use starknet_api::{core::ClassHash, deprecated_contract_class::EntryPointType::L1Handler};
 use std::collections::HashMap;
@@ -324,7 +324,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let private_key = input_reader.read()?;
                 let message_hash = input_reader.read()?;
 
-                if private_key == FieldElement::from(0_u8) {
+                if private_key == Felt::from(0_u8) {
                     return Ok(CheatcodeHandlingResult::from_serializable(Err::<(), _>(
                         SignError::InvalidSecretKey,
                     )));

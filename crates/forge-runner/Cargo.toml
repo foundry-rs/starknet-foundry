@@ -34,9 +34,12 @@ url.workspace = true
 blockifier.workspace = true
 cairo-vm.workspace = true
 itertools.workspace = true
+indoc.workspace = true
 camino.workspace = true
 thiserror.workspace = true
+toml_edit.workspace = true
 serde_json.workspace = true
+semver.workspace = true
 console.workspace = true
 serde.workspace = true
 bimap.workspace = true
@@ -50,3 +53,4 @@ scarb-api = { path = "../scarb-api" }
 shared = { path = "../shared" }
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 fs4.workspace = true
+which.workspace = true

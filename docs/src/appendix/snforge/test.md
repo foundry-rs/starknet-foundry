@@ -83,6 +83,10 @@ Activate all available features.
 ## `--no-default-features`
 Do not activate the `default` feature.
 
+## `--no-optimization`
+Build contract artifacts in a separate [starknet contract target](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#starknet-contract-target).
+Enabling this flag will slow down the compilation process, but the built contracts will more closely resemble the ones used on real networks. This is set to `true` when using Scarb version less than `2.8.3`.
+
 ## `-h`, `--help`
 
 Print help.
