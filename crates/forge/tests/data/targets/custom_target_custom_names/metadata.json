@@ -1,0 +1,527 @@
+{
+  "version": 1,
+  "app_exe": "/Users/arturmichalek/.asdf/installs/scarb/2.8.3/bin/scarb",
+  "app_version_info": {
+    "version": "2.8.3",
+    "commit_info": {
+      "short_commit_hash": "54938ce3b",
+      "commit_hash": "54938ce3b01f81959e6e0114b080cc5e1a73935b",
+      "commit_date": "2024-09-26"
+    },
+    "cairo": {
+      "version": "2.8.2",
+      "commit_info": null
+    }
+  },
+  "target_dir": "/Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/target",
+  "runtime_manifest": "/Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/Scarb.toml",
+  "workspace": {
+    "manifest_path": "/Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/Scarb.toml",
+    "root": "/Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names",
+    "members": [
+      "targets 0.1.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/Scarb.toml)"
+    ]
+  },
+  "packages": [
+    {
+      "id": "core 2.8.2 (std)",
+      "name": "core",
+      "version": "2.8.2",
+      "edition": "2024_07",
+      "source": "std",
+      "manifest_path": "/Users/arturmichalek/Library/Caches/com.swmansion.scarb/registry/std/v2.8.2/core/Scarb.toml",
+      "root": "/Users/arturmichalek/Library/Caches/com.swmansion.scarb/registry/std/v2.8.2/core",
+      "dependencies": [
+        {
+          "name": "cairo_test",
+          "version_req": "^2.8.2",
+          "source": "registry+https://scarbs.xyz/",
+          "kind": "dev"
+        }
+      ],
+      "targets": [
+        {
+          "kind": "lib",
+          "name": "core",
+          "source_path": "/Users/arturmichalek/Library/Caches/com.swmansion.scarb/registry/std/v2.8.2/core/src/lib.cairo",
+          "params": {}
+        },
+        {
+          "kind": "test",
+          "name": "core_unittest",
+          "source_path": "/Users/arturmichalek/Library/Caches/com.swmansion.scarb/registry/std/v2.8.2/core/src/lib.cairo",
+          "params": {
+            "build-external-contracts": [],
+            "test-type": "unit"
+          }
+        }
+      ],
+      "authors": null,
+      "description": null,
+      "documentation": null,
+      "homepage": null,
+      "keywords": null,
+      "license": null,
+      "license_file": null,
+      "readme": null,
+      "repository": null,
+      "urls": null,
+      "tool": null,
+      "experimental_features": [
+        "coupons",
+        "negative_impls"
+      ]
+    },
+    {
+      "id": "snforge_scarb_plugin 0.31.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/snforge-scarb-plugin/Scarb.toml)",
+      "name": "snforge_scarb_plugin",
+      "version": "0.31.0",
+      "edition": "2023_01",
+      "source": "path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/snforge-scarb-plugin/Scarb.toml",
+      "manifest_path": "/Users/arturmichalek/Coding/starknet-foundry/crates/snforge-scarb-plugin/Scarb.toml",
+      "root": "/Users/arturmichalek/Coding/starknet-foundry/crates/snforge-scarb-plugin",
+      "dependencies": [
+        {
+          "name": "core",
+          "version_req": "=2.8.2",
+          "source": "registry+https://scarbs.xyz/",
+          "kind": null
+        }
+      ],
+      "targets": [
+        {
+          "kind": "cairo-plugin",
+          "name": "snforge_scarb_plugin",
+          "source_path": "/Users/arturmichalek/Coding/starknet-foundry/crates/snforge-scarb-plugin/src/lib.cairo",
+          "params": {}
+        }
+      ],
+      "authors": null,
+      "description": null,
+      "documentation": null,
+      "homepage": null,
+      "keywords": null,
+      "license": null,
+      "license_file": null,
+      "readme": null,
+      "repository": null,
+      "urls": null,
+      "tool": null,
+      "experimental_features": []
+    },
+    {
+      "id": "snforge_std 0.31.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/snforge_std/Scarb.toml)",
+      "name": "snforge_std",
+      "version": "0.31.0",
+      "edition": "2023_10",
+      "source": "path+file:///Users/arturmichalek/Coding/starknet-foundry/snforge_std/Scarb.toml",
+      "manifest_path": "/Users/arturmichalek/Coding/starknet-foundry/snforge_std/Scarb.toml",
+      "root": "/Users/arturmichalek/Coding/starknet-foundry/snforge_std",
+      "dependencies": [
+        {
+          "name": "core",
+          "version_req": "=2.8.2",
+          "source": "registry+https://scarbs.xyz/",
+          "kind": null
+        },
+        {
+          "name": "snforge_scarb_plugin",
+          "version_req": "*",
+          "source": "path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/snforge-scarb-plugin/Scarb.toml",
+          "kind": null
+        }
+      ],
+      "targets": [
+        {
+          "kind": "lib",
+          "name": "snforge_std",
+          "source_path": "/Users/arturmichalek/Coding/starknet-foundry/snforge_std/src/lib.cairo",
+          "params": {}
+        },
+        {
+          "kind": "test",
+          "name": "snforge_std_unittest",
+          "source_path": "/Users/arturmichalek/Coding/starknet-foundry/snforge_std/src/lib.cairo",
+          "params": {
+            "build-external-contracts": [],
+            "test-type": "unit"
+          }
+        }
+      ],
+      "authors": null,
+      "description": null,
+      "documentation": null,
+      "homepage": null,
+      "keywords": null,
+      "license": null,
+      "license_file": null,
+      "readme": null,
+      "repository": null,
+      "urls": null,
+      "tool": null,
+      "experimental_features": []
+    },
+    {
+      "id": "starknet 2.8.2 (std)",
+      "name": "starknet",
+      "version": "2.8.2",
+      "edition": "2023_01",
+      "source": "std",
+      "manifest_path": "/Users/arturmichalek/Library/Caches/com.swmansion.scarb/registry/std/v2.8.2/starknet/Scarb.toml",
+      "root": "/Users/arturmichalek/Library/Caches/com.swmansion.scarb/registry/std/v2.8.2/starknet",
+      "dependencies": [
+        {
+          "name": "core",
+          "version_req": "=2.8.2",
+          "source": "registry+https://scarbs.xyz/",
+          "kind": null
+        }
+      ],
+      "targets": [
+        {
+          "kind": "cairo-plugin",
+          "name": "starknet",
+          "source_path": "/Users/arturmichalek/Library/Caches/com.swmansion.scarb/registry/std/v2.8.2/starknet/src/lib.cairo",
+          "params": {
+            "builtin": true
+          }
+        }
+      ],
+      "authors": null,
+      "description": null,
+      "documentation": null,
+      "homepage": null,
+      "keywords": null,
+      "license": null,
+      "license_file": null,
+      "readme": null,
+      "repository": null,
+      "urls": null,
+      "tool": null,
+      "experimental_features": []
+    },
+    {
+      "id": "targets 0.1.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/Scarb.toml)",
+      "name": "targets",
+      "version": "0.1.0",
+      "edition": "2023_01",
+      "source": "path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/Scarb.toml",
+      "manifest_path": "/Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/Scarb.toml",
+      "root": "/Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names",
+      "dependencies": [
+        {
+          "name": "core",
+          "version_req": "=2.8.2",
+          "source": "registry+https://scarbs.xyz/",
+          "kind": null
+        },
+        {
+          "name": "snforge_std",
+          "version_req": "*",
+          "source": "path+file:///Users/arturmichalek/Coding/starknet-foundry/snforge_std/Scarb.toml",
+          "kind": "dev"
+        },
+        {
+          "name": "starknet",
+          "version_req": "^2.7.0",
+          "source": "registry+https://scarbs.xyz/",
+          "kind": null
+        }
+      ],
+      "targets": [
+        {
+          "kind": "lib",
+          "name": "targets",
+          "source_path": "/Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/src/lib.cairo",
+          "params": {}
+        },
+        {
+          "kind": "test",
+          "name": "custom_first",
+          "source_path": "/Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/tests/tests.cairo",
+          "params": {
+            "build-external-contracts": [
+              "targets::*"
+            ],
+            "kind": "test",
+            "test-type": "integration"
+          }
+        },
+        {
+          "kind": "test",
+          "name": "custom_second",
+          "source_path": "/Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/src/lib.cairo",
+          "params": {
+            "kind": "test",
+            "test-type": "unit"
+          }
+        }
+      ],
+      "authors": null,
+      "description": null,
+      "documentation": null,
+      "homepage": null,
+      "keywords": null,
+      "license": null,
+      "license_file": null,
+      "readme": null,
+      "repository": null,
+      "urls": null,
+      "tool": {
+        "snforge": {
+          "exit_first": false
+        }
+      },
+      "experimental_features": []
+    }
+  ],
+  "compilation_units": [
+    {
+      "id": "custom_first-dm6vp9cbo1sd2",
+      "package": "custom_first 0.1.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/Scarb.toml)",
+      "target": {
+        "kind": "test",
+        "name": "custom_first",
+        "source_path": "/Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/tests/tests.cairo",
+        "params": {
+          "build-external-contracts": [
+            "targets::*"
+          ],
+          "kind": "test",
+          "test-type": "integration"
+        }
+      },
+      "compiler_config": {
+        "allow_warnings": true,
+        "enable_gas": true,
+        "inlining_strategy": "default",
+        "sierra_replace_ids": true,
+        "unstable_add_statements_code_locations_debug_info": false,
+        "unstable_add_statements_functions_debug_info": false
+      },
+      "components_data": [
+        {
+          "package": "core 2.8.2 (std)",
+          "name": "core",
+          "source_path": "/Users/arturmichalek/Library/Caches/com.swmansion.scarb/registry/std/v2.8.2/core/src/lib.cairo",
+          "cfg": [
+            [
+              "target",
+              "test"
+            ]
+          ]
+        },
+        {
+          "package": "custom_first 0.1.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/Scarb.toml)",
+          "name": "custom_first",
+          "source_path": "/Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/tests/tests.cairo",
+          "cfg": [
+            [
+              "target",
+              "test"
+            ],
+            "test"
+          ]
+        },
+        {
+          "package": "snforge_std 0.31.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/snforge_std/Scarb.toml)",
+          "name": "snforge_std",
+          "source_path": "/Users/arturmichalek/Coding/starknet-foundry/snforge_std/src/lib.cairo",
+          "cfg": [
+            [
+              "target",
+              "test"
+            ]
+          ]
+        },
+        {
+          "package": "targets 0.1.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/Scarb.toml)",
+          "name": "targets",
+          "source_path": "/Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/src/lib.cairo",
+          "cfg": [
+            [
+              "target",
+              "test"
+            ]
+          ]
+        }
+      ],
+      "cairo_plugins": [
+        {
+          "package": "snforge_scarb_plugin 0.31.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/snforge-scarb-plugin/Scarb.toml)"
+        },
+        {
+          "package": "starknet 2.8.2 (std)"
+        }
+      ],
+      "cfg": [
+        [
+          "target",
+          "test"
+        ],
+        "test"
+      ],
+      "components": [
+        "core 2.8.2 (std)",
+        "custom_first 0.1.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/Scarb.toml)",
+        "snforge_std 0.31.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/snforge_std/Scarb.toml)",
+        "targets 0.1.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/Scarb.toml)"
+      ]
+    },
+    {
+      "id": "snforge_scarb_plugin-9f1qbmldisnii",
+      "package": "snforge_scarb_plugin 0.31.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/snforge-scarb-plugin/Scarb.toml)",
+      "target": {
+        "kind": "cairo-plugin",
+        "name": "snforge_scarb_plugin",
+        "source_path": "/Users/arturmichalek/Coding/starknet-foundry/crates/snforge-scarb-plugin/src/lib.cairo",
+        "params": {}
+      },
+      "compiler_config": null,
+      "components_data": [
+        {
+          "package": "snforge_scarb_plugin 0.31.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/snforge-scarb-plugin/Scarb.toml)",
+          "name": "snforge_scarb_plugin",
+          "source_path": "/Users/arturmichalek/Coding/starknet-foundry/crates/snforge-scarb-plugin/src/lib.cairo",
+          "cfg": null
+        }
+      ],
+      "cairo_plugins": [],
+      "cfg": []
+    },
+    {
+      "id": "targets-3nil7dgpqucis",
+      "package": "targets 0.1.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/Scarb.toml)",
+      "target": {
+        "kind": "lib",
+        "name": "targets",
+        "source_path": "/Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/src/lib.cairo",
+        "params": {}
+      },
+      "compiler_config": {
+        "allow_warnings": true,
+        "enable_gas": true,
+        "inlining_strategy": "default",
+        "sierra_replace_ids": true,
+        "unstable_add_statements_code_locations_debug_info": false,
+        "unstable_add_statements_functions_debug_info": false
+      },
+      "components_data": [
+        {
+          "package": "core 2.8.2 (std)",
+          "name": "core",
+          "source_path": "/Users/arturmichalek/Library/Caches/com.swmansion.scarb/registry/std/v2.8.2/core/src/lib.cairo",
+          "cfg": null
+        },
+        {
+          "package": "targets 0.1.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/Scarb.toml)",
+          "name": "targets",
+          "source_path": "/Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/src/lib.cairo",
+          "cfg": [
+            [
+              "target",
+              "lib"
+            ]
+          ]
+        }
+      ],
+      "cairo_plugins": [
+        {
+          "package": "starknet 2.8.2 (std)"
+        }
+      ],
+      "cfg": [
+        [
+          "target",
+          "lib"
+        ]
+      ],
+      "components": [
+        "core 2.8.2 (std)",
+        "targets 0.1.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/Scarb.toml)"
+      ]
+    },
+    {
+      "id": "targets-s7j5pakf7ncfa",
+      "package": "targets 0.1.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/Scarb.toml)",
+      "target": {
+        "kind": "test",
+        "name": "custom_second",
+        "source_path": "/Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/src/lib.cairo",
+        "params": {
+          "kind": "test",
+          "test-type": "unit"
+        }
+      },
+      "compiler_config": {
+        "allow_warnings": true,
+        "enable_gas": true,
+        "inlining_strategy": "default",
+        "sierra_replace_ids": true,
+        "unstable_add_statements_code_locations_debug_info": false,
+        "unstable_add_statements_functions_debug_info": false
+      },
+      "components_data": [
+        {
+          "package": "core 2.8.2 (std)",
+          "name": "core",
+          "source_path": "/Users/arturmichalek/Library/Caches/com.swmansion.scarb/registry/std/v2.8.2/core/src/lib.cairo",
+          "cfg": [
+            [
+              "target",
+              "test"
+            ]
+          ]
+        },
+        {
+          "package": "snforge_std 0.31.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/snforge_std/Scarb.toml)",
+          "name": "snforge_std",
+          "source_path": "/Users/arturmichalek/Coding/starknet-foundry/snforge_std/src/lib.cairo",
+          "cfg": [
+            [
+              "target",
+              "test"
+            ]
+          ]
+        },
+        {
+          "package": "targets 0.1.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/Scarb.toml)",
+          "name": "targets",
+          "source_path": "/Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/src/lib.cairo",
+          "cfg": [
+            [
+              "target",
+              "test"
+            ],
+            "test"
+          ]
+        }
+      ],
+      "cairo_plugins": [
+        {
+          "package": "snforge_scarb_plugin 0.31.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/snforge-scarb-plugin/Scarb.toml)"
+        },
+        {
+          "package": "starknet 2.8.2 (std)"
+        }
+      ],
+      "cfg": [
+        [
+          "target",
+          "test"
+        ],
+        "test"
+      ],
+      "components": [
+        "core 2.8.2 (std)",
+        "snforge_std 0.31.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/snforge_std/Scarb.toml)",
+        "targets 0.1.0 (path+file:///Users/arturmichalek/Coding/starknet-foundry/crates/forge/tests/data/targets/custom_target_custom_names/Scarb.toml)"
+      ]
+    }
+  ],
+  "current_profile": "dev",
+  "profiles": [
+    "dev",
+    "release"
+  ]
+}

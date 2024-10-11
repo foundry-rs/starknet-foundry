@@ -1,0 +1,25 @@
+[package]
+name = "targets"
+version = "0.1.0"
+
+[dependencies]
+starknet = "2.7.0"
+
+[dev-dependencies]
+snforge_std = { path = "../../../../../../snforge_std" }
+
+
+[[test]]
+name = "custom_first"
+kind = "test"
+source-path = "./tests/tests.cairo"
+test-type = "integration"
+build-external-contracts = ["targets::*"]
+
+[[test]]
+name = "custom_second"
+kind = "test"
+test-type = "unit"
+
+[tool.snforge]
+exit_first = false
