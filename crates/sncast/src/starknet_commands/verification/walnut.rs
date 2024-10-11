@@ -36,17 +36,17 @@ impl VerificationInterface for WalnutVerificationInterface {
             class_hash,
             source_code,
         };
-        let url = self.gen_explorer_url()?;
+        let url = self.gen_explorer_url();
         self.base.send_verification_request(url, payload).await
     }
 
-    fn gen_explorer_url(&self) -> Result<String> {
+    fn gen_explorer_url(&self) -> String {
         let api_base_url =
             env::var("WALNUT_API_URL").unwrap_or_else(|_| "https://api.walnut.dev".to_string());
         let path = match self.base.network {
             Network::Mainnet => "/v1/sn_main/verify",
             Network::Sepolia => "/v1/sn_sepolia/verify",
         };
-        Ok(format!("{api_base_url}{path}"))
+        format!("{api_base_url}{path}")
     }
 }
