@@ -96,6 +96,7 @@ pub async fn import(
 
     let chain_id = get_chain_id(provider).await?;
     if let (Some(salt), Some(class_hash)) = (import.salt, class_hash) {
+        // TODO(#2571)
         let sncast_account_type = match import.account_type {
             AccountType::Argent => SNCastAccountType::Argent,
             AccountType::Braavos => SNCastAccountType::Braavos,
