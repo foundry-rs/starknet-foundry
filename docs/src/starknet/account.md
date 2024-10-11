@@ -196,23 +196,6 @@ $ sncast \
     --contract-name my_contract
 ```
 
-#### Importing an Account
-
-To import an account into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default), use the `account import` command.
-
-```shell
-$ sncast \
-    account import \
-	--url http://127.0.0.1:5050 \
-    --name my_imported_account \
-    --address 0x1 \
-    --private-key 0x2 \
-    --class-hash 0x3 \
-    --type oz
-```
-
-For a detailed CLI description, see [account import command reference](../appendix/sncast/account/import.md).
-
 ### Creating an Account With Starkli-Style Keystore
 
 It is possible to create an openzeppelin account with keystore in a similar way [starkli](https://book.starkli.rs/accounts#accounts) does.

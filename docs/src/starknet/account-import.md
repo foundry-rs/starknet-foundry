@@ -82,9 +82,9 @@ $ sncast \
     --type oz
 ```
 
-#### Passing Private Key in an Interactive, Obscured Mode
+#### Passing Private Key in an Interactive
 
-If you don't want to pass the private key in the command (because of visibility aspect), you can skip `--private-key` flag. You will be prompted to enter the private key in interactive mode.
+If you don't want to pass the private key in the command (because of safety aspect), you can skip `--private-key` flag. You will be prompted to enter the private key in interactive mode.
 
 ```shell
 $ sncast \
