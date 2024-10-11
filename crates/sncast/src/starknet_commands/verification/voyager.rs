@@ -36,14 +36,14 @@ impl VerificationInterface for VoyagerVerificationInterface {
             class_hash,
             source_code,
         };
-        let url = self.gen_explorer_url()?;
+        let url = self.gen_explorer_url();
         self.base.send_verification_request(url, payload).await
     }
 
-    fn gen_explorer_url(&self) -> Result<String> {
+    fn gen_explorer_url(&self) -> String {
         let custom_api_url = env::var("VOYAGER_API_URL");
         if let Ok(custom_api_url) = custom_api_url {
-            return Ok(custom_api_url);
+            return custom_api_url;
         }
 
         let api_verification_url = match self.base.network {
@@ -51,6 +51,6 @@ impl VerificationInterface for VoyagerVerificationInterface {
             Network::Sepolia => "https://sepolia-api.voyager.online/beta/class-verify-v2",
         };
 
-        Ok(api_verification_url.to_string())
+        api_verification_url.to_string()
     }
 }

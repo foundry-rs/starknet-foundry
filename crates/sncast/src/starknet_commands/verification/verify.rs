@@ -15,24 +15,31 @@ use std::fmt;
 #[derive(Parser)]
 #[command(about = "Verify a contract through a block explorer")]
 pub struct Verify {
-    #[clap(short = 'a', long)]
+    /// Contract address of the contract. Either this or class hash should be provided.
+    #[clap(short = 'd', long)]
     pub contract_address: Option<Felt>,
 
+    /// Class hash of the contract. Either this or contract address should be provided
     #[clap(short = 'x', long)]
     pub class_hash: Option<Felt>,
 
+    /// Class name of the contract to be verified
     #[clap(short, long)]
     pub class_name: String,
 
+    /// Where you want your contract to be verified
     #[clap(short, long, value_enum, default_value_t = Verifier::Walnut)]
     pub verifier: Verifier,
 
+    /// The network in which the contract is deployed
     #[clap(short, long, value_enum)]
     pub network: Network,
 
+    /// Automatic yes to confirmation prompts for verification
     #[clap(long, default_value = "false")]
     pub confirm_verification: bool,
 
+    /// Optionally specify package with the contract to be verified
     #[clap(long)]
     pub package: Option<String>,
 }

@@ -18,7 +18,7 @@ pub trait VerificationInterface {
         class_hash: Option<Felt>,
         class_name: String,
     ) -> Result<VerifyResponse>;
-    fn gen_explorer_url(&self) -> Result<String>;
+    fn gen_explorer_url(&self) -> String;
 }
 
 pub struct BaseVerificationInterface {
