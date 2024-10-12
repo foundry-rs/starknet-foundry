@@ -23,7 +23,7 @@ Changes the block number for the given target.
 Cancels the `cheat_block_number` / `start_cheat_block_number` for the given target.
 
 ## `stop_cheat_block_number_global`
-> `fn stop_cheat_block_number_global(target: ContractAddress)`
+> `fn stop_cheat_block_number_global()`
 
 Cancels the `start_cheat_block_number_global`.
 
