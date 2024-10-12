@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use camino::Utf8PathBuf;
 use reqwest::StatusCode;
 use serde::Serialize;
-use sncast::response::structs::VerifyResponse;
+use sncast::{helpers::configuration::CastConfig, response::structs::VerifyResponse};
 use starknet::core::types::Felt;
 use std::ffi::OsStr;
 use walkdir::WalkDir;
@@ -12,7 +12,7 @@ use walkdir::WalkDir;
 pub trait VerificationInterface {
     fn get_workspace_dir(&self) -> Utf8PathBuf;
 
-    fn gen_explorer_url(&self) -> String;
+    fn gen_explorer_url(&self, config: CastConfig) -> String;
 
     fn read_workspace_files(&self) -> Result<serde_json::Map<String, serde_json::Value>> {
         // Read all files name along with their contents in a JSON format
@@ -70,6 +70,7 @@ pub trait VerificationInterface {
 
     async fn verify(
         &self,
+        config: &CastConfig,
         contract_address: Option<Felt>,
         class_hash: Option<Felt>,
         class_name: String,
@@ -82,7 +83,7 @@ pub trait VerificationInterface {
             class_hash,
             source_code,
         };
-        let url = self.gen_explorer_url();
+        let url = self.gen_explorer_url(config.clone());
         self.send_verification_request(url, payload).await
     }
 }
