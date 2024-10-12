@@ -46,6 +46,16 @@ pub struct CastConfig {
     )]
     /// Print links pointing to pages with transaction details in the chosen block explorer
     pub show_explorer_links: bool,
+
+    #[serde(
+        default,
+        rename(
+            serialize = "verification-base-url",
+            deserialize = "verification-base-url"
+        )
+    )]
+    /// Custom base url to be used for verification
+    pub verification_base_url: Option<String>,
 }
 
 impl Default for CastConfig {
@@ -58,6 +68,7 @@ impl Default for CastConfig {
             wait_params: ValidatedWaitParams::default(),
             block_explorer: Some(block_explorer::Service::default()),
             show_explorer_links: show_explorer_links_default(),
+            verification_base_url: None,
         }
     }
 }

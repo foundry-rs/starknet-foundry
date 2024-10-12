@@ -1,7 +1,7 @@
 use super::base::VerificationInterface;
 use async_trait::async_trait;
 use camino::Utf8PathBuf;
-use sncast::Network;
+use sncast::{helpers::configuration::CastConfig, Network};
 use std::env;
 
 pub struct WalnutVerificationInterface {
@@ -24,9 +24,12 @@ impl VerificationInterface for WalnutVerificationInterface {
         self.workspace_dir.clone()
     }
 
-    fn gen_explorer_url(&self) -> String {
-        let api_base_url =
-            env::var("WALNUT_API_URL").unwrap_or_else(|_| "https://api.walnut.dev".to_string());
+    fn gen_explorer_url(&self, config: CastConfig) -> String {
+        let api_base_url = match config.verification_base_url {
+            Some(custom_base_api_url) => custom_base_api_url.clone(),
+            None => "https://api.walnut.dev".to_string(),
+        };
+
         let path = match self.network {
             Network::Mainnet => "/v1/sn_main/verify",
             Network::Sepolia => "/v1/sn_sepolia/verify",
