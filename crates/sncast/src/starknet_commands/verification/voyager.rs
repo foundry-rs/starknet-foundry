@@ -1,7 +1,8 @@
 use super::base::VerificationInterface;
 use async_trait::async_trait;
+use blockifier::blockifier::config;
 use camino::Utf8PathBuf;
-use sncast::Network;
+use sncast::{helpers::configuration::CastConfig, Network};
 use std::env;
 
 pub struct VoyagerVerificationInterface {
@@ -24,17 +25,15 @@ impl VerificationInterface for VoyagerVerificationInterface {
         self.workspace_dir.clone()
     }
 
-    fn gen_explorer_url(&self) -> String {
-        let custom_api_url = env::var("VOYAGER_API_URL");
-        if let Ok(custom_api_url) = custom_api_url {
-            return custom_api_url;
-        }
-
-        let api_verification_url = match self.network {
-            Network::Mainnet => "https://api.voyager.online/beta/class-verify-v2",
-            Network::Sepolia => "https://sepolia-api.voyager.online/beta/class-verify-v2",
+    fn gen_explorer_url(&self, config: CastConfig) -> String {
+        let base_api_url = match config.verification_base_url {
+            Some(custom_base_api_url) => custom_base_api_url.clone(),
+            None => match self.network {
+                Network::Mainnet => "https://api.voyager.online/beta".to_string(),
+                Network::Sepolia => "https://sepolia-api.voyager.online/beta".to_string(),
+            },
         };
 
-        api_verification_url.to_string()
+        format!("{base_api_url}/class-verify-v2")
     }
 }

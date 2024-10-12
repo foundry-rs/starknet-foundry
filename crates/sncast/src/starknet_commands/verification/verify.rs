@@ -6,6 +6,7 @@ use camino::Utf8PathBuf;
 use clap::{Parser, ValueEnum};
 use promptly::prompt;
 use scarb_api::StarknetContractArtifacts;
+use sncast::helpers::configuration::CastConfig;
 use sncast::response::structs::VerifyResponse;
 use sncast::Network;
 use starknet::core::types::Felt;
@@ -62,6 +63,7 @@ impl fmt::Display for Verifier {
 // disable too many arguments clippy warning
 #[allow(clippy::too_many_arguments)]
 pub async fn verify(
+    cast_config: &CastConfig,
     contract_address: Option<Felt>,
     class_hash: Option<Felt>,
     class_name: String,
@@ -102,13 +104,13 @@ pub async fn verify(
         Verifier::Walnut => {
             let walnut = WalnutVerificationInterface::new(network, workspace_dir.to_path_buf());
             walnut
-                .verify(contract_address, class_hash, class_name)
+                .verify(cast_config, contract_address, class_hash, class_name)
                 .await
         }
         Verifier::Voyager => {
             let voyager = VoyagerVerificationInterface::new(network, workspace_dir.to_path_buf());
             voyager
-                .verify(contract_address, class_hash, class_name)
+                .verify(cast_config, contract_address, class_hash, class_name)
                 .await
         }
     }
