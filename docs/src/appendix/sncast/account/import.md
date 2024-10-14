@@ -1,4 +1,4 @@
-# `add`
+# `import`
 Import an account to accounts file.
 
 Account information will be saved to the file specified by `--accounts-file` argument,
@@ -7,7 +7,7 @@ which is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default.
 ## `--name, -n <NAME>`
 Required.
 
-Name of the account to be added.
+Name of the account to be imported.
 
 ## `--address, -a <ADDRESS>`
 Required.
@@ -32,20 +32,14 @@ Optional.
 Class hash of the account.
 
 ## `--private-key <PRIVATE_KEY>`
-Optional. Required if `--private-key-file` is not passed.
+Optional.
 
 Account private key.
 
 ## `--private-key-file <PRIVATE_KEY_FILE_PATH>`
-Optional. Required if `--private-key-file` is not passed.
+Optional. If neither `--private-key` nor `--private-key-file` is passed, the user will be prompted to enter the account private key.
 
 Path to the file holding account private key.
-
-## `--public-key <PUBLIC_KEY>`
-Optional.
-
-Account public key.
-If not passed, will be computed from `--private-key`.
 
 ## `--salt, -s <SALT>`
 Optional.
