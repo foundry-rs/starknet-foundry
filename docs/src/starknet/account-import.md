@@ -93,23 +93,7 @@ $ sncast \
     --address 0x1 \
     --type oz
 
-Enter private key:
-```
-
-#### Passing All Possible Flags
-
-```shell
-$ sncast \
-    account import \
-	--url http://127.0.0.1:5050 \
-    --name account_123 \
-    --address 0x1 \
-    --private-key 0x2 \
-    --class-hash 0x3 \
-    --salt 0x4 \
-    --add-profile account_123
-    --accounts-file path/to/accounts.json
-    --type oz
+Type in your private key and press enter: 
 ```
 
 #### Argent
@@ -119,7 +103,10 @@ To import Argent account, set the `--type` flag to `argent`.
 ```shell
 $ sncast \
     account import \
-    ...
+	--url http://127.0.0.1:5050 \
+    --name account_argent \
+    --address 0x1 \
+    --private-key 0x2 \
     --type argent
 ```
 
@@ -130,7 +117,10 @@ To import Braavos account, set the `--type` flag to `braavos`.
 ```shell
 $ sncast \
     account import \
-    ...
+	--url http://127.0.0.1:5050 \
+    --name account_braavos \
+    --address 0x1 \
+    --private-key 0x2 \
     --type braavos
 ```
 
@@ -141,6 +131,9 @@ To import OpenZeppelin account, set the `--type` flag to `oz` or  `open_zeppelin
 ```shell
 $ sncast \
     account import \
-    ...
+	--url http://127.0.0.1:5050 \
+    --name account_oz \
+    --address 0x1 \
+    --private-key 0x2 \
     --type oz
 ```
