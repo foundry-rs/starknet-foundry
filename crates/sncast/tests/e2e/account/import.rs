@@ -145,7 +145,7 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
 
     snapbox.assert().stderr_matches(formatdoc! {r"
         command: account import
-        error: Incorrect class hash {} for account address {}
+        error: Incorrect class hash {} for account address {} was provided
     ", DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS});
 }
 
@@ -207,7 +207,7 @@ pub async fn test_nonexistent_account_address() {
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: account import
-        error: There is no contract at the specified address
+        error: Class hash for the account address 0x123 could not be found. Please provide the class hash
     "});
 }
 
