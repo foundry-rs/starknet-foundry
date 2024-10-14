@@ -2,7 +2,6 @@ use super::base::VerificationInterface;
 use async_trait::async_trait;
 use camino::Utf8PathBuf;
 use sncast::{helpers::configuration::CastConfig, Network};
-use std::env;
 
 pub struct WalnutVerificationInterface {
     pub network: Network,
