@@ -41,6 +41,7 @@
 
 * [Outline](starknet/index.md)
 * [Creating And Deploying Accounts](starknet/account.md)
+* [Importing Accounts](starknet/account-import.md)
 * [Declaring New Contracts](starknet/declare.md)
 * [Deploying New Contracts](starknet/deploy.md)
 * [Invoking Contracts](starknet/invoke.md)
@@ -104,7 +105,7 @@
 * [`sncast` Commands](appendix/sncast.md)
     * [common flags](appendix/sncast/common.md)
     * [account](appendix/sncast/account/account.md)
-        * [add](appendix/sncast/account/add.md)
+        * [import](appendix/sncast/account/import.md)
         * [create](appendix/sncast/account/create.md)
         * [deploy](appendix/sncast/account/deploy.md)
         * [delete](appendix/sncast/account/delete.md)
@@ -131,3 +132,4 @@
     * [tx_status](appendix/sncast-library/tx_status.md)
     * [errors](appendix/sncast-library/errors.md)
 * [ `snfoundry.toml` Reference](appendix/snfoundry-toml.md)
+* [ `Scarb.toml` Reference](appendix/scarb-toml.md)

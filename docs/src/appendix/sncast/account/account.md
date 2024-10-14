@@ -2,7 +2,7 @@
 Provides a set of account management commands.
 
 It has the following subcommands:
-* [`add`](./add.md)
+* [`import`](./import.md)
 * [`create`](./create.md)
 * [`deploy`](./deploy.md)
 * [`delete`](./delete.md)
