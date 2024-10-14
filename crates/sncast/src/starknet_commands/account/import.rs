@@ -170,19 +170,18 @@ fn parse_input_to_felt(input: &String) -> Result<Felt> {
             "Failed to parse value {} to felt. Invalid hex value was passed",
             input
         );
-    } else if let Ok(felt_from_hex) = Felt::try_from_hex_str(&input) {
+    } else if let Ok(felt_from_hex) = Felt::try_from_hex_str(input) {
         return Ok(felt_from_hex);
-    } else if let Ok(felt_from_dec) = Felt::try_from_dec_str(&input) {
+    } else if let Ok(felt_from_dec) = Felt::try_from_dec_str(input) {
         return Ok(felt_from_dec);
-    } else {
-        bail!("Failed to parse value {} to felt", input);
     }
+    bail!("Failed to parse value {} to felt", input);
 }
 
 fn get_private_key_from_input() -> Result<Felt> {
     let input = rpassword::prompt_password("Type in your private key and press enter: ")
         .expect("Failed to read private key from input");
-    return parse_input_to_felt(&input);
+    parse_input_to_felt(&input)
 }
 
 #[cfg(test)]
@@ -215,11 +214,11 @@ mod tests {
 
     #[test]
     fn test_parse_dec_str() {
-        let dec_str = "123456";
+        let dec_str = "123";
         let result = parse_input_to_felt(&dec_str.to_string());
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), Felt::from(123456));
+        assert_eq!(result.unwrap(), Felt::from(123));
     }
 
     #[test]
