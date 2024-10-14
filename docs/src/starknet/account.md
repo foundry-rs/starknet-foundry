@@ -74,7 +74,7 @@ For a detailed CLI description, see [account deploy command reference](../append
 
 ## Managing Accounts
 
-If you created an account with `sncast account create` it by default it will be saved in `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` file named as default file in below sections.
+If you created an account with `sncast account create` it by default it will be saved in `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` file which we call `default accounts file` in the following sections.
 
 ### [`account add`](../appendix/sncast/account/add.md)
 
@@ -142,7 +142,7 @@ $ sncast \
 
 #### [`account create`](../appendix/sncast/account/create.md) With Salt Argument
 
-Salt will not be randomly generated if it's specified with `--salt`.
+Instead of random generation, salt can be specified with `--salt`.
 
 ```shell
 $ sncast \
@@ -157,7 +157,7 @@ $ sncast \
 ##### Specifying [`--accounts-file`](../appendix/sncast/account/create.md#create)
 
 Account information such as `private_key`, `class_hash`, `address` etc. will be saved to the file specified by `--accounts-file` argument, 
-if not provided, the default file will be used.
+if not provided, the `default accounts file` will be used.
 
 
 ##### Specifying [`--add-profile`](../appendix/sncast/account/create.md#--add-profile-name)
