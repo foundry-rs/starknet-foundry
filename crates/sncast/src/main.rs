@@ -1,3 +1,4 @@
+use std::env;
 use crate::starknet_commands::account::Account;
 use crate::starknet_commands::show_config::ShowConfig;
 use crate::starknet_commands::{
@@ -66,21 +67,21 @@ Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
 #[allow(clippy::struct_excessive_bools)]
 struct Cli {
     /// Profile name in snfoundry.toml config file
-    #[clap(short, long)]
+    #[clap(short, long, global = true)]
     profile: Option<String>,
 
     /// Account to be used for contract declaration;
     /// When using keystore (`--keystore`), this should be a path to account file
     /// When using accounts file, this should be an account name
-    #[clap(short = 'a', long)]
+    #[clap(short = 'a', long, global = true)]
     account: Option<String>,
 
     /// Path to the file holding accounts info
-    #[clap(long = "accounts-file")]
+    #[clap(long = "accounts-file", global = true)]
     accounts_file_path: Option<Utf8PathBuf>,
 
     /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
-    #[clap(short, long)]
+    #[clap(short, long, global = true)]
     keystore: Option<Utf8PathBuf>,
 
     /// If passed, values will be displayed as integers
@@ -96,15 +97,15 @@ struct Cli {
     json: bool,
 
     /// If passed, command will wait until transaction is accepted or rejected
-    #[clap(short = 'w', long)]
+    #[clap(short = 'w', long, global = true)]
     wait: bool,
 
     /// Adjusts the time after which --wait assumes transaction was not received or rejected
-    #[clap(long)]
+    #[clap(long, global = true)]
     wait_timeout: Option<u16>,
 
     /// Adjusts the time between consecutive attempts to fetch transaction by --wait flag
-    #[clap(long)]
+    #[clap(long, global = true)]
     wait_retry_interval: Option<u8>,
 
     #[command(subcommand)]
@@ -606,32 +607,65 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
     );
 }
 
+fn get_args_provided_before_subcommand() -> Vec<String> {
+    let mut args = Vec::new();
+    let mut args_iter = env::args().skip(1);
+
+    let subcommands = ["declare", "deploy", "call", "invoke", "multicall", "account", "show-config", "script", "tx-status", "verify"];
+
+    while let Some(arg) = args_iter.next() {
+        if subcommands.contains(&arg.as_str()) {
+            break;
+        }
+        if arg.starts_with("-") {
+            args.push(arg.clone());
+        }
+    }
+    args
+}
+
+fn does_args_conatin(args: &Vec<String>, target: &[String]) -> bool {
+    args.iter().any(|arg| target.contains(&arg))
+}
+
 fn check_deprecated_arguments(cli: &Cli) {
     let mut warnings = Vec::new();
     let warning_lhs = "In the upcoming version the";
-    let warning_rhs = "option will be removed as common argument and relocated to be an argument for a specific subcommand";
+    let warning_rhs = "option will be removed as common argument and relocated to be an argument for a specific subcommand. Please update your usage accordingly.";
 
-    if cli.profile.is_some() {
-        warnings.push(format!("{warning_lhs} '--profile' {warning_rhs}"));
+    let args = get_args_provided_before_subcommand();
+
+
+    let profile = ["--profile".to_string(), "-p".to_string()];
+    let account = ["--account".to_string(), "-a".to_string()];
+    let accounts_file = ["--accounts-file".to_string()];
+    let keystore = ["--keystore".to_string(), "-k".to_string()];
+    let wait = ["--wait".to_string(), "-w".to_string()];
+    let wait_timeout = ["--wait-timeout".to_string()];
+    let wait_retry_interval = ["--wait-retry-interval".to_string()];
+
+
+    if cli.profile.is_some() && does_args_conatin(&args, &profile) {
+        warnings.push(format!("{warning_lhs} `{}` {warning_rhs}", profile[0]));
     }
-    if cli.account.is_some() {
-        warnings.push(format!("{warning_lhs} '--account' {warning_rhs}"));
+    if cli.account.is_some() && does_args_conatin(&args, &account) {
+        warnings.push(format!("{warning_lhs} `{}` {warning_rhs}", account[0]));
     }
-    if cli.accounts_file_path.is_some() {
-        warnings.push(format!("{warning_lhs} '--accounts-file' {warning_rhs}"));
+    if cli.accounts_file_path.is_some() && does_args_conatin(&args, &accounts_file) {
+        warnings.push(format!("{warning_lhs} `{}` {warning_rhs}", accounts_file[0]));
     }
-    if cli.keystore.is_some() {
-        warnings.push(format!("{warning_lhs} '--keystore' {warning_rhs}"));
+    if cli.keystore.is_some() && does_args_conatin(&args, &keystore) {
+        warnings.push(format!("{warning_lhs} `{}` {warning_rhs}", keystore[0]));
     }
-    if cli.wait {
-        warnings.push(format!("{warning_lhs} '--wait' {warning_rhs}"));
+    if cli.wait && does_args_conatin(&args, &wait) {
+        warnings.push(format!("{warning_lhs} `{}` {warning_rhs}", wait[0]));
     }
-    if cli.wait_timeout.is_some() {
-        warnings.push(format!("{warning_lhs} '--wait-timeout' {warning_rhs}"));
+    if cli.wait_timeout.is_some() && does_args_conatin(&args, &wait_timeout) {
+        warnings.push(format!("{warning_lhs} `{}` {warning_rhs}", wait_timeout[0]));
     }
-    if cli.wait_retry_interval.is_some() {
+    if cli.wait_retry_interval.is_some() && does_args_conatin(&args, &wait_retry_interval) {
         warnings.push(format!(
-            "{warning_lhs} '--wait-retry-interval' {warning_rhs}",
+            "{warning_lhs} `{}` {warning_rhs}", wait_retry_interval[0],
         ));
     }
 
