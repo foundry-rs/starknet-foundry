@@ -635,7 +635,7 @@ fn get_args_provided_before_subcommand() -> Vec<String> {
     args
 }
 
-fn does_args_conatin(args: &[String], target: &[String]) -> bool {
+fn args_contain_any_flag(args: &[String], target: &[String]) -> bool {
     args.iter().any(|arg| target.contains(arg))
 }
 
@@ -654,28 +654,28 @@ fn check_deprecated_arguments(cli: &Cli) {
     let wait_timeout = ["--wait-timeout".to_string()];
     let wait_retry_interval = ["--wait-retry-interval".to_string()];
 
-    if cli.profile.is_some() && does_args_conatin(&args, &profile) {
+    if cli.profile.is_some() && args_contain_any_flag(&args, &profile) {
         warnings.push(format!("{warning_lhs} `{}` {warning_rhs}", profile[0]));
     }
-    if cli.account.is_some() && does_args_conatin(&args, &account) {
+    if cli.account.is_some() && args_contain_any_flag(&args, &account) {
         warnings.push(format!("{warning_lhs} `{}` {warning_rhs}", account[0]));
     }
-    if cli.accounts_file_path.is_some() && does_args_conatin(&args, &accounts_file) {
+    if cli.accounts_file_path.is_some() && args_contain_any_flag(&args, &accounts_file) {
         warnings.push(format!(
             "{warning_lhs} `{}` {warning_rhs}",
             accounts_file[0]
         ));
     }
-    if cli.keystore.is_some() && does_args_conatin(&args, &keystore) {
+    if cli.keystore.is_some() && args_contain_any_flag(&args, &keystore) {
         warnings.push(format!("{warning_lhs} `{}` {warning_rhs}", keystore[0]));
     }
-    if cli.wait && does_args_conatin(&args, &wait) {
+    if cli.wait && args_contain_any_flag(&args, &wait) {
         warnings.push(format!("{warning_lhs} `{}` {warning_rhs}", wait[0]));
     }
-    if cli.wait_timeout.is_some() && does_args_conatin(&args, &wait_timeout) {
+    if cli.wait_timeout.is_some() && args_contain_any_flag(&args, &wait_timeout) {
         warnings.push(format!("{warning_lhs} `{}` {warning_rhs}", wait_timeout[0]));
     }
-    if cli.wait_retry_interval.is_some() && does_args_conatin(&args, &wait_retry_interval) {
+    if cli.wait_retry_interval.is_some() && args_contain_any_flag(&args, &wait_retry_interval) {
         warnings.push(format!(
             "{warning_lhs} `{}` {warning_rhs}",
             wait_retry_interval[0],
