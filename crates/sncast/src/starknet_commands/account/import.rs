@@ -164,6 +164,7 @@ fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<Felt> {
 }
 
 fn parse_input_to_felt(input: &String) -> Result<Felt> {
+    // Regex is from spec https://github.com/starkware-libs/starknet-specs/blob/6d88b7399f56260ece3821c71f9ce53ec55f830b/api/starknet_api_openrpc.json#L1303
     let felt_re = Regex::new(r"^0x(0|[a-fA-F1-9]{1}[a-fA-F0-9]{0,62})$").unwrap();
     if input.starts_with("0x") && !felt_re.is_match(input) {
         bail!(
