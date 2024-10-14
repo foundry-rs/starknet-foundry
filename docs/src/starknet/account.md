@@ -76,17 +76,17 @@ For a detailed CLI description, see [account deploy command reference](../append
 
 If you created an account with `sncast account create` it by default it will be saved in `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` file which we call `default accounts file` in the following sections.
 
-### [`account add`](../appendix/sncast/account/add.md)
+### [`account import`](../appendix/sncast/account/import.md)
 
-To import an account to the `default accounts file`, use the `account add` command.
+To import an account to the `default accounts file`, use the `account import` command.
 ```shell
 $ sncast \
-    account add \
+    account import \
 	--url http://127.0.0.1:5050 \
     --name my_imported_account \
     --address 0x1 \
     --private-key 0x2 \
-    --class-hash 0x3 \
+    --class-hash 0x046ded64ae2dead6448e247234bab192a9c483644395b66f2155f2614e5804b0 \
     --type oz
 ```
 
@@ -152,7 +152,7 @@ $ sncast \
     --salt 0x1
 ```
 
-#### Additional features provided with `account add/create`
+#### Additional features provided with `account import/create`
 
 ##### Specifying [`--accounts-file`](../appendix/sncast/account/create.md#create)
 
