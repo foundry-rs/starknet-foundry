@@ -144,7 +144,7 @@ fn with_features_fails_without_flag() {
 
     assert_stdout_contains(
         output,
-        indoc! {"
+        indoc! {r#"
     [..]Compiling[..]
     [..]Finished[..]
 
@@ -154,20 +154,20 @@ fn with_features_fails_without_flag() {
     [FAIL] targets_integrationtest::tests::declare_and_call_contract_from_lib
 
     Failure data:
-        \"Failed to get contract artifact for name = HelloStarknet.\"
+        "Failed to get contract artifact for name = HelloStarknet."
 
     Running 1 test(s) from src/
     [FAIL] targets::tests::declare_contract_from_lib
 
     Failure data:
-        \"Failed to get contract artifact for name = HelloStarknet.\"
+        "Failed to get contract artifact for name = HelloStarknet."
 
     Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
 
     Failures:
         targets_integrationtest::tests::declare_and_call_contract_from_lib
         targets::tests::declare_contract_from_lib
-    "},
+    "#},
     );
 }
 
@@ -249,8 +249,8 @@ fn custom_target_only_integration() {
 }
 
 #[test]
-// Case: We define custom test target for both unit and integration test types
-// We di `build-external-contracts = ["targets::*"]` for `integration` so the test fails
+// Case: We define custom test target for integration test type
+// We delete `build-external-contracts = ["targets::*"]` for `integration` so the test fails
 fn custom_target_only_integration_without_external() {
     let temp = setup_package("targets/custom_target_only_integration");
 
@@ -260,23 +260,30 @@ fn custom_target_only_integration_without_external() {
         .unwrap()
         .parse::<DocumentMut>()
         .unwrap();
+    let test_target = scarb_toml["test"].as_array_of_tables_mut().unwrap();
+    assert_eq!(test_target.len(), 1);
+    let test_target = test_target.get_mut(0).unwrap();
+    test_target.remove("build-external-contracts").unwrap();
+    manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
     let output = test_runner(&temp).assert().code(1);
 
-    assert!(2 == 3);
-
     assert_stdout_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
     [..]Compiling[..]
     [..]Finished[..]
 
 
     Collected 1 test(s) from targets package
     Running 1 test(s) from tests/
-    [PASS] custom_first::tests::declare_and_call_contract_from_lib (gas: ~172)
-    Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-    "},
+    [FAIL] custom_first::tests::declare_and_call_contract_from_lib
+
+    Failure data:
+        "Failed to get contract artifact for name = HelloStarknet."
+
+    Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+    "#},
     );
 }
 
