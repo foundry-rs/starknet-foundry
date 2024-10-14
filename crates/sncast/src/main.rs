@@ -1,4 +1,3 @@
-use std::env;
 use crate::starknet_commands::account::Account;
 use crate::starknet_commands::show_config::ShowConfig;
 use crate::starknet_commands::{
@@ -9,6 +8,7 @@ use anyhow::{Context, Result};
 use configuration::load_global_config;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{print_command_result, OutputFormat};
+use std::env;
 
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
@@ -609,23 +609,34 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
 
 fn get_args_provided_before_subcommand() -> Vec<String> {
     let mut args = Vec::new();
-    let mut args_iter = env::args().skip(1);
+    let args_iter = env::args().skip(1);
 
-    let subcommands = ["declare", "deploy", "call", "invoke", "multicall", "account", "show-config", "script", "tx-status", "verify"];
+    let subcommands = [
+        "declare",
+        "deploy",
+        "call",
+        "invoke",
+        "multicall",
+        "account",
+        "show-config",
+        "script",
+        "tx-status",
+        "verify",
+    ];
 
-    while let Some(arg) = args_iter.next() {
+    for arg in args_iter {
         if subcommands.contains(&arg.as_str()) {
             break;
         }
-        if arg.starts_with("-") {
+        if arg.starts_with('-') {
             args.push(arg.clone());
         }
     }
     args
 }
 
-fn does_args_conatin(args: &Vec<String>, target: &[String]) -> bool {
-    args.iter().any(|arg| target.contains(&arg))
+fn does_args_conatin(args: &[String], target: &[String]) -> bool {
+    args.iter().any(|arg| target.contains(arg))
 }
 
 fn check_deprecated_arguments(cli: &Cli) {
@@ -635,7 +646,6 @@ fn check_deprecated_arguments(cli: &Cli) {
 
     let args = get_args_provided_before_subcommand();
 
-
     let profile = ["--profile".to_string(), "-p".to_string()];
     let account = ["--account".to_string(), "-a".to_string()];
     let accounts_file = ["--accounts-file".to_string()];
@@ -644,7 +654,6 @@ fn check_deprecated_arguments(cli: &Cli) {
     let wait_timeout = ["--wait-timeout".to_string()];
     let wait_retry_interval = ["--wait-retry-interval".to_string()];
 
-
     if cli.profile.is_some() && does_args_conatin(&args, &profile) {
         warnings.push(format!("{warning_lhs} `{}` {warning_rhs}", profile[0]));
     }
@@ -652,7 +661,10 @@ fn check_deprecated_arguments(cli: &Cli) {
         warnings.push(format!("{warning_lhs} `{}` {warning_rhs}", account[0]));
     }
     if cli.accounts_file_path.is_some() && does_args_conatin(&args, &accounts_file) {
-        warnings.push(format!("{warning_lhs} `{}` {warning_rhs}", accounts_file[0]));
+        warnings.push(format!(
+            "{warning_lhs} `{}` {warning_rhs}",
+            accounts_file[0]
+        ));
     }
     if cli.keystore.is_some() && does_args_conatin(&args, &keystore) {
         warnings.push(format!("{warning_lhs} `{}` {warning_rhs}", keystore[0]));
@@ -665,7 +677,8 @@ fn check_deprecated_arguments(cli: &Cli) {
     }
     if cli.wait_retry_interval.is_some() && does_args_conatin(&args, &wait_retry_interval) {
         warnings.push(format!(
-            "{warning_lhs} `{}` {warning_rhs}", wait_retry_interval[0],
+            "{warning_lhs} `{}` {warning_rhs}",
+            wait_retry_interval[0],
         ));
     }
 
