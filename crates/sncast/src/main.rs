@@ -607,7 +607,7 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
     );
 }
 
-fn get_args_provided_before_subcommand() -> Vec<String> {
+fn get_pre_subcommand_args() -> Vec<String> {
     let mut args = Vec::new();
     let args_iter = env::args().skip(1);
 
@@ -644,7 +644,7 @@ fn check_deprecated_arguments(cli: &Cli) {
     let warning_lhs = "In the upcoming version the";
     let warning_rhs = "option will be removed as common argument and relocated to be an argument for a specific subcommand. Please update your usage accordingly.";
 
-    let args = get_args_provided_before_subcommand();
+    let args = get_pre_subcommand_args();
 
     let profile = ["--profile".to_string(), "-p".to_string()];
     let account = ["--account".to_string(), "-a".to_string()];
