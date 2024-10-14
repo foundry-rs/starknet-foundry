@@ -5,7 +5,8 @@ use crate::starknet_commands::account::{
 use anyhow::{bail, ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use conversions::string::TryFromHexStr;
+use conversions::string::{TryFromDecStr, TryFromHexStr};
+use regex::Regex;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
@@ -70,7 +71,7 @@ pub async fn import(
             format!("Failed to obtain private key from the file {passed_private_key_file_path}")
         })?
     } else if import.private_key.is_none() && import.private_key_file_path.is_none() {
-        &get_private_key_from_input()
+        &get_private_key_from_input()?
     } else {
         unreachable!("Checked on clap level")
     };
@@ -162,8 +163,82 @@ fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<Felt> {
     Ok(private_key_string.parse()?)
 }
 
-fn get_private_key_from_input() -> Felt {
-    let private_key =
-        rpassword::prompt_password("Enter private key: ").expect("Failed to read private key");
-    Felt::try_from_hex_str(&private_key).unwrap()
+fn parse_input_to_felt(input: &String) -> Result<Felt> {
+    let felt_re = Regex::new(r"^0x(0|[a-fA-F1-9]{1}[a-fA-F0-9]{0,62})$").unwrap();
+    if input.starts_with("0x") && !felt_re.is_match(input) {
+        bail!(
+            "Failed to parse value {} to felt. Invalid hex value was passed",
+            input
+        );
+    } else if let Ok(felt_from_hex) = Felt::try_from_hex_str(&input) {
+        return Ok(felt_from_hex);
+    } else if let Ok(felt_from_dec) = Felt::try_from_dec_str(&input) {
+        return Ok(felt_from_dec);
+    } else {
+        bail!("Failed to parse value {} to felt", input);
+    }
+}
+
+fn get_private_key_from_input() -> Result<Felt> {
+    let input = rpassword::prompt_password("Type in your private key and press enter: ")
+        .expect("Failed to read private key from input");
+    return parse_input_to_felt(&input);
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::starknet_commands::account::import::parse_input_to_felt;
+    use conversions::string::TryFromHexStr;
+    use starknet::core::types::Felt;
+
+    #[test]
+    fn test_parse_hex_str() {
+        let hex_str = "0x1a2b3c";
+        let result = parse_input_to_felt(&hex_str.to_string());
+
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), Felt::try_from_hex_str("0x1a2b3c").unwrap());
+    }
+
+    #[test]
+    fn test_parse_hex_str_invalid() {
+        let hex_str = "0xz";
+        let result = parse_input_to_felt(&hex_str.to_string());
+
+        assert!(result.is_err());
+        let error_message = result.unwrap_err().to_string();
+        assert_eq!(
+            "Failed to parse value 0xz to felt. Invalid hex value was passed",
+            error_message
+        );
+    }
+
+    #[test]
+    fn test_parse_dec_str() {
+        let dec_str = "123456";
+        let result = parse_input_to_felt(&dec_str.to_string());
+
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), Felt::from(123456));
+    }
+
+    #[test]
+    fn test_parse_dec_str_negative() {
+        let dec_str = "-123";
+        let result = parse_input_to_felt(&dec_str.to_string());
+
+        assert!(result.is_err());
+        let error_message = result.unwrap_err().to_string();
+        assert_eq!("Failed to parse value -123 to felt", error_message);
+    }
+
+    #[test]
+    fn test_parse_invalid_str() {
+        let invalid_str = "invalid";
+        let result = parse_input_to_felt(&invalid_str.to_string());
+
+        assert!(result.is_err());
+        let error_message = result.unwrap_err().to_string();
+        assert_eq!("Failed to parse value invalid to felt", error_message);
+    }
 }
