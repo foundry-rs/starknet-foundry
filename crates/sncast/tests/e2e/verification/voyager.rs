@@ -1,3 +1,4 @@
+use super::helpers::copy_directory_to_tempdir_with_config;
 use crate::helpers::constants::{
     ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
 };
@@ -10,14 +11,12 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 
 #[tokio::test]
 async fn test_happy_case() {
-    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
-
     let mock_server = MockServer::start().await;
 
     let verifier_response = "Contract successfully verified";
 
     Mock::given(method("POST"))
-        .and(path("/v1/sn_sepolia/verify"))
+        .and(path("/class-verify-v2"))
         .respond_with(
             ResponseTemplate::new(200)
                 .append_header("content-type", "text/plain")
@@ -25,6 +24,22 @@ async fn test_happy_case() {
         )
         .mount(&mock_server)
         .await;
+
+    let cast_config = format!(
+        r#"
+        [sncast.default]
+        url = "http://127.0.0.1:5055/rpc"
+        account = "user1"
+        verification-base-url = "{}"
+    "#,
+        mock_server.uri()
+    );
+
+    let contract_path = copy_directory_to_tempdir_with_config(
+        CONTRACTS_DIR.to_string() + "/map",
+        cast_config.to_string(),
+    )
+    .unwrap();
 
     let args = vec![
         "--accounts-file",
@@ -35,15 +50,12 @@ async fn test_happy_case() {
         "--class-name",
         "Map",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
     ];
 
-    let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
-        .current_dir(contract_path.path())
-        .stdin("Y");
+    let snapbox = runner(&args).current_dir(contract_path.path()).stdin("Y");
 
     let output = snapbox.assert().success();
 
@@ -61,14 +73,12 @@ async fn test_happy_case() {
 
 #[tokio::test]
 async fn test_happy_case_class_hash() {
-    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
-
     let mock_server = MockServer::start().await;
 
     let verifier_response = "Contract successfully verified";
 
     Mock::given(method("POST"))
-        .and(path("/v1/sn_sepolia/verify"))
+        .and(path("/class-verify-v2"))
         .respond_with(
             ResponseTemplate::new(200)
                 .append_header("content-type", "text/plain")
@@ -76,6 +86,22 @@ async fn test_happy_case_class_hash() {
         )
         .mount(&mock_server)
         .await;
+
+    let cast_config = format!(
+        r#"
+        [sncast.default]
+        url = "http://127.0.0.1:5055/rpc"
+        account = "user1"
+        verification-base-url = "{}"
+    "#,
+        mock_server.uri()
+    );
+
+    let contract_path = copy_directory_to_tempdir_with_config(
+        CONTRACTS_DIR.to_string() + "/map",
+        cast_config.to_string(),
+    )
+    .unwrap();
 
     let args = vec![
         "--accounts-file",
@@ -86,15 +112,12 @@ async fn test_happy_case_class_hash() {
         "--class-name",
         "Map",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
     ];
 
-    let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
-        .current_dir(contract_path.path())
-        .stdin("Y");
+    let snapbox = runner(&args).current_dir(contract_path.path()).stdin("Y");
 
     let output = snapbox.assert().success();
 
@@ -112,14 +135,12 @@ async fn test_happy_case_class_hash() {
 
 #[tokio::test]
 async fn test_failed_verification() {
-    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
-
     let mock_server = MockServer::start().await;
 
     let verifier_response = "An error occurred during verification: contract class isn't declared";
 
     Mock::given(method("POST"))
-        .and(path("/v1/sn_sepolia/verify"))
+        .and(path("/class-verify-v2"))
         .respond_with(
             ResponseTemplate::new(400)
                 .append_header("content-type", "text/plain")
@@ -127,6 +148,22 @@ async fn test_failed_verification() {
         )
         .mount(&mock_server)
         .await;
+
+    let cast_config = format!(
+        r#"
+        [sncast.default]
+        url = "http://127.0.0.1:5055/rpc"
+        account = "user1"
+        verification-base-url = "{}"
+    "#,
+        mock_server.uri()
+    );
+
+    let contract_path = copy_directory_to_tempdir_with_config(
+        CONTRACTS_DIR.to_string() + "/map",
+        cast_config.to_string(),
+    )
+    .unwrap();
 
     let args = vec![
         "--accounts-file",
@@ -137,15 +174,12 @@ async fn test_failed_verification() {
         "--class-name",
         "Map",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
     ];
 
-    let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
-        .current_dir(contract_path.path())
-        .stdin("Y");
+    let snapbox = runner(&args).current_dir(contract_path.path()).stdin("Y");
 
     let output = snapbox.assert().success();
 
@@ -174,7 +208,7 @@ async fn test_verification_abort() {
         "--class-name",
         "nonexistent",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
     ];
@@ -207,7 +241,7 @@ async fn test_wrong_contract_name_passed() {
         "--class-name",
         "nonexistent",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
     ];
@@ -228,15 +262,44 @@ async fn test_wrong_contract_name_passed() {
 }
 
 #[tokio::test]
-async fn test_happy_case_with_confirm_verification_flag() {
+async fn test_no_class_hash_or_contract_address_provided() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--class-name",
+        "Map",
+        "--verifier",
+        "voyager",
+        "--network",
+        "sepolia",
+    ];
+
+    let snapbox = runner(&args).current_dir(contract_path.path()).stdin("Y");
+
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        formatdoc!(
+            r"
+        command: verify
+        error: Either contract_address or class_hash must be provided
+        "
+        ),
+    );
+}
+
+#[tokio::test]
+async fn test_happy_case_with_confirm_verification_flag() {
     let mock_server = MockServer::start().await;
 
     let verifier_response = "Contract successfully verified";
 
     Mock::given(method("POST"))
-        .and(path("/v1/sn_sepolia/verify"))
+        .and(path("/class-verify-v2"))
         .respond_with(
             ResponseTemplate::new(200)
                 .append_header("content-type", "text/plain")
@@ -244,6 +307,22 @@ async fn test_happy_case_with_confirm_verification_flag() {
         )
         .mount(&mock_server)
         .await;
+
+    let cast_config = format!(
+        r#"
+        [sncast.default]
+        url = "http://127.0.0.1:5055/rpc"
+        account = "user1"
+        verification-base-url = "{}"
+    "#,
+        mock_server.uri()
+    );
+
+    let contract_path = copy_directory_to_tempdir_with_config(
+        CONTRACTS_DIR.to_string() + "/map",
+        cast_config.to_string(),
+    )
+    .unwrap();
 
     let args = vec![
         "--accounts-file",
@@ -254,15 +333,13 @@ async fn test_happy_case_with_confirm_verification_flag() {
         "--class-name",
         "Map",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
         "--confirm-verification",
     ];
 
-    let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
-        .current_dir(contract_path.path());
+    let snapbox = runner(&args).current_dir(contract_path.path());
 
     let output = snapbox.assert().success();
 
@@ -280,14 +357,12 @@ async fn test_happy_case_with_confirm_verification_flag() {
 
 #[tokio::test]
 async fn test_happy_case_specify_package() {
-    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
-
     let mock_server = MockServer::start().await;
 
     let verifier_response = "Contract successfully verified";
 
     Mock::given(method("POST"))
-        .and(path("/v1/sn_sepolia/verify"))
+        .and(path("/class-verify-v2"))
         .respond_with(
             ResponseTemplate::new(200)
                 .append_header("content-type", "text/plain")
@@ -295,6 +370,22 @@ async fn test_happy_case_specify_package() {
         )
         .mount(&mock_server)
         .await;
+
+    let cast_config = format!(
+        r#"
+        [sncast.default]
+        url = "http://127.0.0.1:5055/rpc"
+        account = "user1"
+        verification-base-url = "{}"
+    "#,
+        mock_server.uri()
+    );
+
+    let tempdir = copy_directory_to_tempdir_with_config(
+        CONTRACTS_DIR.to_string() + "/multiple_packages",
+        cast_config.to_string(),
+    )
+    .unwrap();
 
     let args = vec![
         "--accounts-file",
@@ -305,17 +396,14 @@ async fn test_happy_case_specify_package() {
         "--class-name",
         "supercomplexcode",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
         "--package",
         "main_workspace",
     ];
 
-    let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
-        .current_dir(tempdir.path())
-        .stdin("Y");
+    let snapbox = runner(&args).current_dir(tempdir.path()).stdin("Y");
 
     let output = snapbox.assert().success();
 
@@ -333,14 +421,12 @@ async fn test_happy_case_specify_package() {
 
 #[tokio::test]
 async fn test_worskpaces_package_specified_virtual_fibonacci() {
-    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
-
     let mock_server = MockServer::start().await;
 
     let verifier_response = "Contract successfully verified";
 
     Mock::given(method("POST"))
-        .and(path("/v1/sn_sepolia/verify"))
+        .and(path("/class-verify-v2"))
         .respond_with(
             ResponseTemplate::new(200)
                 .append_header("content-type", "text/plain")
@@ -348,6 +434,22 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         )
         .mount(&mock_server)
         .await;
+
+    let cast_config = format!(
+        r#"
+        [sncast.default]
+        url = "http://127.0.0.1:5055/rpc"
+        account = "user1"
+        verification-base-url = "{}"
+    "#,
+        mock_server.uri()
+    );
+
+    let tempdir = copy_directory_to_tempdir_with_config(
+        CONTRACTS_DIR.to_string() + "/virtual_workspace",
+        cast_config.to_string(),
+    )
+    .unwrap();
 
     let args = vec![
         "--accounts-file",
@@ -358,17 +460,14 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         "--class-name",
         "FibonacciContract",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
         "--package",
         "cast_fibonacci",
     ];
 
-    let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
-        .current_dir(tempdir.path())
-        .stdin("Y");
+    let snapbox = runner(&args).current_dir(tempdir.path()).stdin("Y");
 
     let output = snapbox.assert().success();
 
@@ -397,7 +496,7 @@ async fn test_worskpaces_package_no_contract() {
         "--class-name",
         "nonexistent",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
         "--package",
