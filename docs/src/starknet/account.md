@@ -74,6 +74,22 @@ For a detailed CLI description, see [account deploy command reference](../append
 
 ## Managing Accounts
 
+If you created an account with `sncast account create` it by default it will be saved in `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` file named as default file in below sections.
+
+### [`account add`](../appendix/sncast/account/add.md)
+
+To import an account to the `default accounts file`, use the `account add` command.
+```shell
+$ sncast \
+    account add \
+	--url http://127.0.0.1:5050 \
+    --name my_imported_account \
+    --address 0x1 \
+    --private-key 0x2 \
+    --class-hash 0x3 \
+    --type oz
+```
+
 ### [`account list`](../appendix/sncast/account/list.md)
 List all accounts saved in `accounts file`, grouped based on the networks they are defined on.
 
@@ -106,21 +122,6 @@ Delete an account from `accounts-file` and its associated Scarb profile. If you 
 $ sncast account delete \
     --name some-name \
     --network alpha-sepolia
-```
-
-### [`account add`](../appendix/sncast/account/add.md)
-
-To import an account into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default), use the `account add` command.
-
-```shell
-$ sncast \
-    account add \
-	--url http://127.0.0.1:5050 \
-    --name my_imported_account \
-    --address 0x1 \
-    --private-key 0x2 \
-    --class-hash 0x3 \
-    --type oz
 ```
 
 ### Advanced Use Cases
@@ -156,7 +157,8 @@ $ sncast \
 ##### Specifying [`--accounts-file`](../appendix/sncast/account/create.md#create)
 
 Account information such as `private_key`, `class_hash`, `address` etc. will be saved to the file specified by `--accounts-file` argument, 
-which is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default.
+if not provided, the default file will be used.
+
 
 ##### Specifying [`--add-profile`](../appendix/sncast/account/create.md#--add-profile-name)
 
