@@ -103,9 +103,7 @@ There is also possibility to show private keys with the `--display-private-keys`
 Delete an account from `accounts-file` and its associated Scarb profile. If you pass this command, you will be asked to confirm the deletion.
 
 ```shell
-$ sncast \
-    --accounts-file my-account-file.json \
-    account delete \
+$ sncast account delete \
     --name some-name \
     --network alpha-sepolia
 ```
