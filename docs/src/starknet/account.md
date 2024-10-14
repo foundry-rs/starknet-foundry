@@ -84,9 +84,8 @@ $ sncast \
     account import \
 	--url http://127.0.0.1:5050 \
     --name my_imported_account \
-    --address 0x1 \
+    --address 0x3a0bcb72428d8056cc7c2bbe5168ddfc844db2737dda3b4c67ff057691177e1 \
     --private-key 0x2 \
-    --class-hash 0x046ded64ae2dead6448e247234bab192a9c483644395b66f2155f2614e5804b0 \
     --type oz
 ```
 
