@@ -72,7 +72,7 @@ For a detailed CLI description, see [account deploy command reference](../append
 > 💡 **Info**
 > You can also choose to pay in Ether by setting `--fee-token` to `eth`.
 
-## Additional features
+## Managing Accounts
 
 ### [`account list`](../appendix/sncast/account/list.md)
 List all accounts saved in `accounts file`, grouped based on the networks they are defined on.
