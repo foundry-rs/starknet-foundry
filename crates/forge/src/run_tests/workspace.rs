@@ -49,7 +49,7 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
     if let Some(last_filter) =
         test_filter.and_then(|filter| filter.split("::").last().map(String::from))
     {
-        setup_forge_test_filter(last_filter);
+        set_forge_test_filter(last_filter);
     }
 
     build_artifacts_with_scarb(
@@ -110,6 +110,6 @@ fn extract_failed_tests(
         })
 }
 
-fn setup_forge_test_filter(test_filter: String) {
+fn set_forge_test_filter(test_filter: String) {
     env::set_var(SNFORGE_TEST_FILTER, test_filter);
 }

@@ -100,7 +100,7 @@ impl RunForPackageArgs {
     }
 }
 
-fn clean_up_forge_test_filter() {
+fn unsert_forge_test_filter() {
     env::remove_var(SNFORGE_TEST_FILTER);
 }
 
@@ -136,7 +136,7 @@ pub async fn run_for_package(
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
 ) -> Result<Vec<TestTargetSummary>> {
-    clean_up_forge_test_filter();
+    unsert_forge_test_filter();
     let mut test_targets =
         test_package_with_config_resolved(test_targets, &fork_targets, block_number_map).await?;
 
@@ -191,7 +191,7 @@ pub async fn run_for_package(
     if any_fuzz_test_was_run {
         pretty_printing::print_test_seed(forge_config.test_runner_config.fuzzer_seed);
     }
-    clean_up_forge_test_filter();
+    unsert_forge_test_filter();
 
     Ok(summaries)
 }
