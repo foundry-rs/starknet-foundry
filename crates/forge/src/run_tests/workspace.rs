@@ -44,6 +44,7 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
         .context("Failed to find any packages matching the specified filter")?;
 
     let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
+
     if args.exact {
         let test_filter = args.test_filter.clone();
         if let Some(last_filter) =
@@ -88,7 +89,11 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
 
     pretty_printing::print_latest_blocks_numbers(block_number_map.get_url_to_latest_block_number());
     pretty_printing::print_failures(&all_failed_tests);
-    unset_forge_test_filter();
+
+    if args.exact {
+        unset_forge_test_filter();
+    }
+
     Ok(if all_failed_tests.is_empty() {
         ExitStatus::Success
     } else {
