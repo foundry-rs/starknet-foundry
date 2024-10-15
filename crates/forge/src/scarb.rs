@@ -71,9 +71,7 @@ fn build_test_artifacts_with_scarb(filter: PackagesFilter, features: FeaturesSpe
         .arg("build")
         .arg("--test")
         .packages_filter(filter)
-        .features(features);
-
-    command
+        .features(features)
         .run()
         .context("Failed to build test artifacts with Scarb")?;
     Ok(())
