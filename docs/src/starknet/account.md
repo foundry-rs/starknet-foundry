@@ -190,7 +190,7 @@ It is possible to create an openzeppelin account with keystore in a similar way 
 $ sncast \
     --keystore my_key.json \
     --account my_account.json \
-    account create
+    account create \
     --url http://127.0.0.1:5050 
 ```
 
