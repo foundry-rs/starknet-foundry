@@ -21,13 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
-#### Added
-
 #### Changed
 
 - Test performance has been optimized - using filter and `--exact` flag will result in compilation of only the selected test.
-
-#### Fixed
 
 ## [0.31.0] - 2024-09-26
 
