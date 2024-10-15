@@ -23,6 +23,6 @@ Changes the transaction fee data availability mode for the given target.
 Cancels the `cheat_fee_data_availability_mode` / `start_cheat_fee_data_availability_mode` for the given target.
 
 ## `stop_cheat_fee_data_availability_mode_global`
-> `fn stop_cheat_fee_data_availability_mode_global(target: ContractAddress)`
+> `fn stop_cheat_fee_data_availability_mode_global()`
 
 Cancels the `start_cheat_fee_data_availability_mode_global`.

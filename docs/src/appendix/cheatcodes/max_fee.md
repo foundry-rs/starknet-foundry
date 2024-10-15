@@ -23,6 +23,6 @@ Changes the transaction max fee for the given target.
 Cancels the `cheat_max_fee` / `start_cheat_max_fee` for the given target.
 
 ## `stop_cheat_max_fee_global`
-> `fn stop_cheat_max_fee_global(target: ContractAddress)`
+> `fn stop_cheat_max_fee_global()`
 
 Cancels the `start_cheat_max_fee_global`.
