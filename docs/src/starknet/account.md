@@ -190,18 +190,8 @@ It is possible to create an openzeppelin account with keystore in a similar way 
 $ sncast \
     --keystore my_key.json \
     --account my_account.json \
-    account create \
-    --url http://127.0.0.1:5050
-    
-command: account create
-add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-address: 0x24152be8ed076062a39fc2ac8074306910308611db8d6f58ae05341f2ec9c7b
-max_fee: 30100000000000
-message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.
-
-To see account creation details, visit:
-account: https://sepolia.starkscan.co/contract/0x24152be8ed076062a39fc2ac8074306910308611db8d6f58ae05341f2ec9c7b
-
+    account create
+    --url http://127.0.0.1:5050 
 ```
 
 The command above will generate a keystore file containing the private key, as well as an account file containing the openzeppelin account info that can later be used with starkli.
