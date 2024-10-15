@@ -64,7 +64,7 @@ fn with_cache() {
         Failure data:
             0x42616c616e63652073686f756c642062652030 ('Balance should be 0')
 
-        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 1 filtered out
+        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, other filtered out
 
         Failures:
             forking::tests::test_fork_simple

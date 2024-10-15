@@ -44,12 +44,13 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
         .context("Failed to find any packages matching the specified filter")?;
 
     let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
-    let test_filter = args.test_filter.clone();
-
-    if let Some(last_filter) =
-        test_filter.and_then(|filter| filter.split("::").last().map(String::from))
-    {
-        set_forge_test_filter(last_filter);
+    if args.exact {
+        let test_filter = args.test_filter.clone();
+        if let Some(last_filter) =
+            test_filter.and_then(|filter| filter.split("::").last().map(String::from))
+        {
+            set_forge_test_filter(last_filter);
+        }
     }
 
     build_artifacts_with_scarb(
