@@ -2,7 +2,7 @@
 
 * [common flags](./sncast/common.md)
 * [account](./sncast/account/account.md)
-    * [add](./sncast/account/add.md)
+    * [import](./sncast/account/import.md)
     * [create](./sncast/account/create.md)
     * [deploy](./sncast/account/deploy.md)
     * [delete](./sncast/account/delete.md)
