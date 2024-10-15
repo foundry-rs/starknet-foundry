@@ -28,7 +28,7 @@ Collected 1 test(s) from fuzz_testing package
 Running 1 test(s) from src/
 Running 0 test(s) from tests/
 [PASS] fuzz_testing::basic_example::test_sum (runs: 256, gas: {max: ~1, min: ~1, mean: ~1.00, std deviation: ~0.00})
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 Fuzzer seed: [..]
 ```
 

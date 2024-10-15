@@ -9,7 +9,7 @@ Running 3 test(s) from src/
 [PASS] package_name::tests::executing
 [PASS] package_name::tests::calling
 [PASS] package_name::tests::calling_another
-Tests: 3 passed, 0 failed, 0 skipped, 0 ignored
+Tests: 3 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
 When running all tests, no information about filtered-out tests is displayed.
@@ -26,7 +26,7 @@ Collected 2 test(s) from package_name package
 Running 2 test(s) from src/
 [PASS] package_name::tests::calling
 [PASS] package_name::tests::calling_another
-Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
+Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 1 filtered out
 ```
 
 When running with a filter, `other filtered out` is displayed in the summary.
@@ -60,7 +60,7 @@ Running 6 test(s) from src/
 Failure data:
     0x6661696c696e6720636865636b ('failing check')
 
-Tests: 3 passed, 1 failed, 2 skipped, 0 ignored
+Tests: 3 passed, 1 failed, 2 skipped, 0 ignored, 0 filtered out
 
 Failures:
     package_name::tests::failing
@@ -80,7 +80,7 @@ Running 1 test(s) from src/
         builtins: ("range_check_builtin": 32)
         syscalls: (StorageWrite: 1, StorageRead: 1, CallContract: 1)
 
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
 For more information about how starknet-foundry calculates those, see [gas and resource estimation](gas-and-resource-estimation.md) section.
