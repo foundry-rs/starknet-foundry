@@ -11,7 +11,7 @@ use crate::{
         load_test_artifacts, should_compile_starknet_contract_target,
     },
     shared_cache::FailedTestsCache,
-    test_filter::TestsFilter,
+    test_filter::{NameFilter, TestsFilter},
     warn::{
         warn_if_available_gas_used_with_incompatible_scarb_version,
         warn_if_incompatible_rpc_version,
@@ -100,7 +100,7 @@ impl RunForPackageArgs {
     }
 }
 
-fn unsert_forge_test_filter() {
+fn unset_forge_test_filter() {
     env::remove_var(SNFORGE_TEST_FILTER);
 }
 
@@ -136,9 +136,10 @@ pub async fn run_for_package(
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
 ) -> Result<Vec<TestTargetSummary>> {
-    unsert_forge_test_filter();
+    unset_forge_test_filter();
     let mut test_targets =
         test_package_with_config_resolved(test_targets, &fork_targets, block_number_map).await?;
+    let all_tests = sum_test_cases(&test_targets);
 
     for test_target in &mut test_targets {
         tests_filter.filter_tests(&mut test_target.test_cases)?;
@@ -177,8 +178,13 @@ pub async fn run_for_package(
         }
     }
 
-    // TODO(#2574): Bring back "filtered out" number in tests summary
-    pretty_printing::print_test_summary(&summaries, &tests_filter.name_filter);
+    // TODO(#2574): Bring back "filtered out" number in tests summary with `--exact` flag
+    if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
+        pretty_printing::print_test_summary(&summaries, None);
+    } else {
+        let filtered = all_tests - not_filtered;
+        pretty_printing::print_test_summary(&summaries, Some(filtered));
+    }
 
     let any_fuzz_test_was_run = summaries.iter().any(|test_target_summary| {
         test_target_summary
@@ -191,7 +197,7 @@ pub async fn run_for_package(
     if any_fuzz_test_was_run {
         pretty_printing::print_test_seed(forge_config.test_runner_config.fuzzer_seed);
     }
-    unsert_forge_test_filter();
+    unset_forge_test_filter();
 
     Ok(summaries)
 }
