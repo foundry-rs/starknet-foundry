@@ -29,12 +29,15 @@ Running 2 test(s) from src/
 Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 1 filtered out
 ```
 
-When running with a filter, `other filtered out` is displayed in the summary.
-
 ## Running a Specific Test
 
 To run a specific test, you can pass a filter string along with an `--exact` flag.
 Note, you have to use a fully qualified test name, including a module name.
+
+> 📝 **Note**
+>
+> Running a specific test results in optimized compilation. Only the desired test will be compiled, unlike the case of running all tests where all of them are compiled.
+>
 
 ```shell
 $ snforge test package_name::tests::calling --exact

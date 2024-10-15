@@ -87,7 +87,7 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
 
     pretty_printing::print_latest_blocks_numbers(block_number_map.get_url_to_latest_block_number());
     pretty_printing::print_failures(&all_failed_tests);
-
+    unset_forge_test_filter();
     Ok(if all_failed_tests.is_empty() {
         ExitStatus::Success
     } else {
@@ -112,4 +112,8 @@ fn extract_failed_tests(
 
 fn set_forge_test_filter(test_filter: String) {
     env::set_var(SNFORGE_TEST_FILTER, test_filter);
+}
+
+fn unset_forge_test_filter() {
+    env::remove_var(SNFORGE_TEST_FILTER);
 }

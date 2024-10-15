@@ -31,8 +31,7 @@ use forge_runner::{
 };
 use scarb_api::get_contracts_artifacts_and_source_sierra_paths;
 use scarb_metadata::{Metadata, PackageMetadata};
-use shared::consts::SNFORGE_TEST_FILTER;
-use std::{env, sync::Arc};
+use std::sync::Arc;
 
 pub struct RunForPackageArgs {
     pub test_targets: Vec<TestTargetRaw>,
@@ -100,10 +99,6 @@ impl RunForPackageArgs {
     }
 }
 
-fn unset_forge_test_filter() {
-    env::remove_var(SNFORGE_TEST_FILTER);
-}
-
 async fn test_package_with_config_resolved(
     test_targets: Vec<TestTargetRaw>,
     fork_targets: &[ForkTarget],
@@ -136,7 +131,6 @@ pub async fn run_for_package(
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
 ) -> Result<Vec<TestTargetSummary>> {
-    unset_forge_test_filter();
     let mut test_targets =
         test_package_with_config_resolved(test_targets, &fork_targets, block_number_map).await?;
     let all_tests = sum_test_cases(&test_targets);
@@ -197,7 +191,6 @@ pub async fn run_for_package(
     if any_fuzz_test_was_run {
         pretty_printing::print_test_seed(forge_config.test_runner_config.fuzzer_seed);
     }
-    unset_forge_test_filter();
 
     Ok(summaries)
 }
