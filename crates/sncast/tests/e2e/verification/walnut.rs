@@ -1,4 +1,7 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA};
+use super::helpers::copy_directory_to_tempdir_with_config;
+use crate::helpers::constants::{
+    ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+};
 use crate::helpers::fixtures::copy_directory_to_tempdir;
 use crate::helpers::runner::runner;
 use indoc::formatdoc;
@@ -8,8 +11,6 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 
 #[tokio::test]
 async fn test_happy_case() {
-    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
-
     let mock_server = MockServer::start().await;
 
     let verifier_response = "Contract successfully verified";
@@ -24,13 +25,29 @@ async fn test_happy_case() {
         .mount(&mock_server)
         .await;
 
+    let cast_config = format!(
+        r#"
+        [sncast.default]
+        url = "http://127.0.0.1:5055/rpc"
+        account = "user1"
+        verification-base-url = "{}"
+    "#,
+        mock_server.uri()
+    );
+
+    let contract_path = copy_directory_to_tempdir_with_config(
+        CONTRACTS_DIR.to_string() + "/map",
+        cast_config.to_string(),
+    )
+    .unwrap();
+
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "Map",
         "--verifier",
         "walnut",
@@ -38,10 +55,69 @@ async fn test_happy_case() {
         "sepolia",
     ];
 
-    let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
-        .current_dir(contract_path.path())
-        .stdin("Y");
+    let snapbox = runner(&args).current_dir(contract_path.path()).stdin("Y");
+
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        formatdoc!(
+            r"
+        command: verify
+        message: {}
+        ",
+            verifier_response
+        ),
+    );
+}
+
+#[tokio::test]
+async fn test_happy_case_class_hash() {
+    let mock_server = MockServer::start().await;
+
+    let verifier_response = "Contract successfully verified";
+
+    Mock::given(method("POST"))
+        .and(path("/v1/sn_sepolia/verify"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .append_header("content-type", "text/plain")
+                .set_body_string(verifier_response),
+        )
+        .mount(&mock_server)
+        .await;
+
+    let cast_config = format!(
+        r#"
+        [sncast.default]
+        url = "http://127.0.0.1:5055/rpc"
+        account = "user1"
+        verification-base-url = "{}"
+    "#,
+        mock_server.uri()
+    );
+
+    let contract_path = copy_directory_to_tempdir_with_config(
+        CONTRACTS_DIR.to_string() + "/map",
+        cast_config.to_string(),
+    )
+    .unwrap();
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--class-name",
+        "Map",
+        "--verifier",
+        "walnut",
+        "--network",
+        "sepolia",
+    ];
+
+    let snapbox = runner(&args).current_dir(contract_path.path()).stdin("Y");
 
     let output = snapbox.assert().success();
 
@@ -59,8 +135,6 @@ async fn test_happy_case() {
 
 #[tokio::test]
 async fn test_failed_verification() {
-    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
-
     let mock_server = MockServer::start().await;
 
     let verifier_response = "An error occurred during verification: contract class isn't declared";
@@ -75,13 +149,29 @@ async fn test_failed_verification() {
         .mount(&mock_server)
         .await;
 
+    let cast_config = format!(
+        r#"
+        [sncast.default]
+        url = "http://127.0.0.1:5055/rpc"
+        account = "user1"
+        verification-base-url = "{}"
+    "#,
+        mock_server.uri()
+    );
+
+    let contract_path = copy_directory_to_tempdir_with_config(
+        CONTRACTS_DIR.to_string() + "/map",
+        cast_config.to_string(),
+    )
+    .unwrap();
+
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "Map",
         "--verifier",
         "walnut",
@@ -89,10 +179,7 @@ async fn test_failed_verification() {
         "sepolia",
     ];
 
-    let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
-        .current_dir(contract_path.path())
-        .stdin("Y");
+    let snapbox = runner(&args).current_dir(contract_path.path()).stdin("Y");
 
     let output = snapbox.assert().success();
 
@@ -118,7 +205,7 @@ async fn test_verification_abort() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "nonexistent",
         "--verifier",
         "walnut",
@@ -151,7 +238,7 @@ async fn test_wrong_contract_name_passed() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "nonexistent",
         "--verifier",
         "walnut",
@@ -176,8 +263,6 @@ async fn test_wrong_contract_name_passed() {
 
 #[tokio::test]
 async fn test_happy_case_with_confirm_verification_flag() {
-    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
-
     let mock_server = MockServer::start().await;
 
     let verifier_response = "Contract successfully verified";
@@ -192,13 +277,29 @@ async fn test_happy_case_with_confirm_verification_flag() {
         .mount(&mock_server)
         .await;
 
+    let cast_config = format!(
+        r#"
+        [sncast.default]
+        url = "http://127.0.0.1:5055/rpc"
+        account = "user1"
+        verification-base-url = "{}"
+    "#,
+        mock_server.uri()
+    );
+
+    let contract_path = copy_directory_to_tempdir_with_config(
+        CONTRACTS_DIR.to_string() + "/map",
+        cast_config.to_string(),
+    )
+    .unwrap();
+
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "Map",
         "--verifier",
         "walnut",
@@ -207,9 +308,7 @@ async fn test_happy_case_with_confirm_verification_flag() {
         "--confirm-verification",
     ];
 
-    let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
-        .current_dir(contract_path.path());
+    let snapbox = runner(&args).current_dir(contract_path.path());
 
     let output = snapbox.assert().success();
 
@@ -227,8 +326,6 @@ async fn test_happy_case_with_confirm_verification_flag() {
 
 #[tokio::test]
 async fn test_happy_case_specify_package() {
-    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
-
     let mock_server = MockServer::start().await;
 
     let verifier_response = "Contract successfully verified";
@@ -243,13 +340,29 @@ async fn test_happy_case_specify_package() {
         .mount(&mock_server)
         .await;
 
+    let cast_config = format!(
+        r#"
+        [sncast.default]
+        url = "http://127.0.0.1:5055/rpc"
+        account = "user1"
+        verification-base-url = "{}"
+    "#,
+        mock_server.uri()
+    );
+
+    let tempdir = copy_directory_to_tempdir_with_config(
+        CONTRACTS_DIR.to_string() + "/multiple_packages",
+        cast_config.to_string(),
+    )
+    .unwrap();
+
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "supercomplexcode",
         "--verifier",
         "walnut",
@@ -259,10 +372,7 @@ async fn test_happy_case_specify_package() {
         "main_workspace",
     ];
 
-    let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
-        .current_dir(tempdir.path())
-        .stdin("Y");
+    let snapbox = runner(&args).current_dir(tempdir.path()).stdin("Y");
 
     let output = snapbox.assert().success();
 
@@ -280,8 +390,6 @@ async fn test_happy_case_specify_package() {
 
 #[tokio::test]
 async fn test_worskpaces_package_specified_virtual_fibonacci() {
-    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
-
     let mock_server = MockServer::start().await;
 
     let verifier_response = "Contract successfully verified";
@@ -296,13 +404,29 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         .mount(&mock_server)
         .await;
 
+    let cast_config = format!(
+        r#"
+        [sncast.default]
+        url = "http://127.0.0.1:5055/rpc"
+        account = "user1"
+        verification-base-url = "{}"
+    "#,
+        mock_server.uri()
+    );
+
+    let tempdir = copy_directory_to_tempdir_with_config(
+        CONTRACTS_DIR.to_string() + "/virtual_workspace",
+        cast_config.to_string(),
+    )
+    .unwrap();
+
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "FibonacciContract",
         "--verifier",
         "walnut",
@@ -312,10 +436,7 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         "cast_fibonacci",
     ];
 
-    let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
-        .current_dir(tempdir.path())
-        .stdin("Y");
+    let snapbox = runner(&args).current_dir(tempdir.path()).stdin("Y");
 
     let output = snapbox.assert().success();
 
@@ -341,7 +462,7 @@ async fn test_worskpaces_package_no_contract() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "nonexistent",
         "--verifier",
         "walnut",

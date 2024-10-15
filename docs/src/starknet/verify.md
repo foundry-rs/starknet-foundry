@@ -26,8 +26,8 @@ Then run:
 ```shell
 $ sncast \
     verify \
-    --contract-address 0x01e4ebe3278ab4633a9d0d3f5c4290001f29bc3179a70e570b6817dd7f8264fa \
-    --contract-name SimpleBalance \
+    --contract-address 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8b \
+    --class-name SimpleBalance \
     --verifier walnut \
     --network sepolia
 

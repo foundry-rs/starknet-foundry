@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Added
+- Add Voyager API support for `verify` subcommand [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/verify.html).
+
 #### Changed
 
 - Short option for `--accounts-file` flag has been removed.
