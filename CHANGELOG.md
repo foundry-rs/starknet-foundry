@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Short option for `--accounts-file` flag has been removed.
 - Short option for `--contract-address` is now `-d` instead of `-a`.
 - Test performance has been optimized. When using a filter, only the matching tests are compiled. The summary no longer displays the number of filtered-out tests when running all tests. When a filter is applied, it now shows `other filtered out` rather than the previous `<n> filtered out`.
+- `account add` is renamed to `account import`.
+- `account import` can be now used without specifying `--private-key` or `--private-key-file` flags. Instead private key will be read interactively from the user.
 
 #### Fixed
 - `account delete` command: It is no longer necessary to provide the `--url` argument each time. Either the `--url` or `--network` argument must be provided, but not both, as they are mutually exclusive.
