@@ -26,7 +26,7 @@ pub(crate) fn print_running_tests(test_target_location: TestTargetLocation, test
     println!("{}", style(plain_text).bold());
 }
 
-// TODO(#2574): Bring back "filtered out" number in tests summary
+// TODO(#2574): Bring back "filtered out" number in tests summary with `--exact` flag
 pub(crate) fn print_test_summary(summaries: &[TestTargetSummary], filtered: Option<usize>) {
     let passed: usize = summaries.iter().map(TestTargetSummary::count_passed).sum();
     let failed: usize = summaries.iter().map(TestTargetSummary::count_failed).sum();
