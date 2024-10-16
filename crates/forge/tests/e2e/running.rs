@@ -232,7 +232,7 @@ fn with_exact_filter() {
 }
 
 #[test]
-fn test_exact_filter_with_duplicate_names() {
+fn with_exact_filter_and_duplicate_names() {
     let temp = setup_package("duplicated_test_names");
 
     let output = test_runner(&temp)
