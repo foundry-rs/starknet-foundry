@@ -1,5 +1,5 @@
 [package]
-name = "targets"
+name = "custom_target_only_integration"
 version = "0.1.0"
 
 [dependencies]
@@ -15,7 +15,7 @@ name = "custom_first"
 kind = "test"
 source-path = "./tests/tests.cairo"
 test-type = "integration"
-build-external-contracts = ["targets::*"]
+build-external-contracts = ["custom_target_only_integration::*"]
 
 [tool.snforge]
 exit_first = false

@@ -1,5 +1,5 @@
 [package]
-name = "targets"
+name = "with_features"
 version = "0.1.0"
 
 [dependencies]

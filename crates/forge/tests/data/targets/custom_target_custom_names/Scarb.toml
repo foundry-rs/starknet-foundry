@@ -1,5 +1,5 @@
 [package]
-name = "targets"
+name = "custom_target_custom_names"
 version = "0.1.0"
 
 [dependencies]
@@ -14,7 +14,7 @@ name = "custom_first"
 kind = "my_kind"
 source-path = "./tests/tests.cairo"
 test-type = "integration"
-build-external-contracts = ["targets::*"]
+build-external-contracts = ["custom_target_custom_names::*"]
 
 [[test]]
 name = "custom_second"

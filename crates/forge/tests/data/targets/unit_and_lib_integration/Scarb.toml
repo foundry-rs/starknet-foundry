@@ -1,5 +1,5 @@
 [package]
-name = "targets"
+name = "unit_and_lib_integration"
 version = "0.1.0"
 
 [dependencies]

@@ -1,5 +1,5 @@
 [package]
-name = "targets"
+name = "custom_target"
 version = "0.1.0"
 
 [dependencies]
@@ -11,13 +11,13 @@ snforge_std = { path = "../../../../../../snforge_std" }
 [[target.starknet-contract]]
 
 [[test]]
-name = "targets_integrationtest"
+name = "custom_target_integrationtest"
 kind = "test"
 source-path = "./tests/tests.cairo"
 test-type = "integration"
 
 [[test]]
-name = "targets_unittest"
+name = "custom_target_unittest"
 kind = "test"
 test-type = "unit"
 

@@ -8,8 +8,8 @@ use starknet::Felt252TryIntoContractAddress;
 use snforge_std::{declare, ContractClassTrait};
 use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 
-use targets::IHelloStarknetDispatcher;
-use targets::IHelloStarknetDispatcherTrait;
+use custom_target::IHelloStarknetDispatcher;
+use custom_target::IHelloStarknetDispatcherTrait;
 
 #[test]
 fn declare_and_call_contract_from_lib() {

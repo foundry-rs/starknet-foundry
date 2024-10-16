@@ -18,7 +18,7 @@ mod dummy {
         }
 
         #[abi(embed_v0)]
-        impl IHelloStarknetImpl of targets::IHelloStarknet<ContractState> {
+        impl IHelloStarknetImpl of with_features::IHelloStarknet<ContractState> {
             // Increases the balance by the given amount.
             fn increase_balance(ref self: ContractState, amount: felt252) {
                 self.balance.write(self.balance.read() + amount);
