@@ -16,6 +16,7 @@ use scarb_api::{
     target_dir_for_workspace, ScarbCommand,
 };
 use scarb_ui::args::PackagesFilter;
+use shared::consts::SNFORGE_TEST_FILTER;
 use std::env;
 
 #[allow(clippy::too_many_lines)]
@@ -43,6 +44,15 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
         .context("Failed to find any packages matching the specified filter")?;
 
     let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
+
+    if args.exact {
+        let test_filter = args.test_filter.clone();
+        if let Some(last_filter) =
+            test_filter.and_then(|filter| filter.split("::").last().map(String::from))
+        {
+            set_forge_test_filter(last_filter);
+        }
+    }
 
     build_artifacts_with_scarb(
         filter.clone(),
@@ -80,6 +90,10 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
     pretty_printing::print_latest_blocks_numbers(block_number_map.get_url_to_latest_block_number());
     pretty_printing::print_failures(&all_failed_tests);
 
+    if args.exact {
+        unset_forge_test_filter();
+    }
+
     Ok(if all_failed_tests.is_empty() {
         ExitStatus::Success
     } else {
@@ -100,4 +114,12 @@ fn extract_failed_tests(
                     | AnyTestCaseSummary::Single(TestCaseSummary::Failed { .. })
             )
         })
+}
+
+fn set_forge_test_filter(test_filter: String) {
+    env::set_var(SNFORGE_TEST_FILTER, test_filter);
+}
+
+fn unset_forge_test_filter() {
+    env::remove_var(SNFORGE_TEST_FILTER);
 }

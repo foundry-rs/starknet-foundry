@@ -60,20 +60,20 @@ To mark a test as expected to fail, use the `#[should_panic]` attribute.
 You can specify the expected failure message in three ways:
 
 1. **With ByteArray**:
-  ```rust
+```rust
 {{#include ../../listings/snforge_overview/crates/writing_tests/tests/expected_failures.cairo:byte_array}}
-  ```
-  With this format, the expected error message needs to be a substring of the actual error message. This is particularly useful when the error message includes dynamic data such as a hash or address.
+```
+With this format, the expected error message needs to be a substring of the actual error message. This is particularly useful when the error message includes dynamic data such as a hash or address.
 
 2. **With felt**
-  ```rust
+```rust
 {{#include ../../listings/snforge_overview/crates/writing_tests/tests/expected_failures.cairo:felt}}
-  ```
+```
 
 3. **With tuple of felts**:
-  ```rust
+```rust
 {{#include ../../listings/snforge_overview/crates/writing_tests/tests/expected_failures.cairo:tuple}}
-  ```
+```
 
 
 ```shell

@@ -4763,6 +4763,7 @@ dependencies = [
  "num-bigint",
  "regex",
  "serde_json",
+ "shared",
  "smol_str",
  "url",
 ]
