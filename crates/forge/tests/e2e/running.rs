@@ -232,6 +232,32 @@ fn with_exact_filter() {
 }
 
 #[test]
+fn test_exact_filter_with_duplicate_names() {
+    let temp = setup_package("simple_package");
+
+    let output = test_runner(&temp)
+        .arg("simple_package_integrationtest::test_simple::test_simple_3")
+        .arg("--exact")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] simple_package_integrationtest::test_simple::test_simple_3 [..]
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
+        "},
+    );
+}
+
+#[test]
 fn with_non_matching_filter() {
     let temp = setup_package("simple_package");
 
