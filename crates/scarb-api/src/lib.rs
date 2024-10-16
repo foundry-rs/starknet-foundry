@@ -96,7 +96,6 @@ fn get_starknet_artifacts_paths_from_test_targets(
 
             let test_type = metadata
                 .params
-                // TODO get rid of hardcoding
                 .get("test-type")
                 .and_then(|value| value.as_str())
                 .unwrap();
