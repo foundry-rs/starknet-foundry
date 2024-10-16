@@ -1,7 +1,7 @@
 # Library Reference
 
 > ℹ️ **Info**
-> Full documentation for the `sncast` library can be found [here](https://delevoxdg.github.io/starknet-foundry/sncast_std/).
+> Full documentation for the `sncast` library can be found [here](https://foundry-rs.github.io/starknet-foundry/sncast_std/).
 
 * [`declare`](sncast-library/declare.md) - declares a contract
 * [`deploy`](sncast-library/deploy.md) - deploys a contract

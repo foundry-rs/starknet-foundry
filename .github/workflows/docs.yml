@@ -13,9 +13,6 @@ on:
     types:
       - released
 
-  # TODO: Remove (this is for testing purposes only)
-  pull_request:
-
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
@@ -38,7 +35,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
         with:
           toolchain: stable
-
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
       - uses: actions/checkout@v4
       - name: Install mdBook
@@ -67,11 +63,11 @@ jobs:
       - name: Build with mdBook
         run: mdbook build
         working-directory: ./docs
-      - name: Copy snforge_std docs
+      - name: Add snforge_std docs
         run: |
           mkdir -p ./docs/book/html/snforge_std
           cp -r ./snforge_std/target/doc/snforge_std/book/* ./docs/book/html/snforge_std/
-      - name: Copy sncast_std docs
+      - name: Add sncast_std docs
         run: |
           mkdir -p ./docs/book/html/sncast_std
           cp -r ./sncast_std/target/doc/sncast_std/book/* ./docs/book/html/sncast_std/
