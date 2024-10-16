@@ -47,12 +47,32 @@ jobs:
       - name: Install mdBook Link-Check
         run: |
           cargo install mdbook-linkcheck
+      - name: Install Scarb
+        uses: software-mansion/setup-scarb@v1.3.3
+      - name: Generate and build snforge_std docs with mdBook
+        run: |
+          scarb doc
+          mdbook build
+        working-directory: ./snforge_std
+      - name: Generate and build sncast_std docs with mdBook
+        run: |
+          scarb doc
+          mdbook build
+        working-directory: ./sncast_std
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
       - name: Build with mdBook
         run: mdbook build
         working-directory: ./docs
+      - name: Copy snforge_std docs
+        run: |
+          mkdir -p ./docs/book/html/snforge_std
+          cp -r ./snforge_std/target/doc/snforge_std/book/* ./docs/book/html/snforge_std/
+      - name: Copy sncast_std docs
+        run: |
+          mkdir -p ./docs/book/html/sncast_std
+          cp -r ./sncast_std/target/doc/sncast_std/book/* ./docs/book/html/sncast_std/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
