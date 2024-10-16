@@ -156,10 +156,6 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
 fn load_contracts_artifacts(
     contracts_paths: &[ContractArtifactData],
 ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
-    if contracts_paths.is_empty() {
-        return Ok(HashMap::new());
-    }
-
     // TODO use const
     let base_artifacts = contracts_paths
         .iter()
