@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
+use conversions::IntoConv;
 use sncast::helpers::error::token_not_supported_for_deployment;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
@@ -122,8 +123,9 @@ pub async fn deploy(
                     deploy.class_hash,
                     &udc_uniqueness(deploy.unique, account.address()),
                     &deploy.constructor_calldata,
-                ),
-                transaction_hash: result.transaction_hash,
+                )
+                .into_(),
+                transaction_hash: result.transaction_hash.into_(),
             },
             wait_config,
         )
