@@ -507,7 +507,7 @@ dependencies = [
  "cairo-lang-starknet-classes",
  "cairo-lang-utils",
  "cairo-vm",
- "derive_more",
+ "derive_more 0.99.18",
  "indexmap 2.5.0",
  "itertools 0.10.5",
  "keccak",
@@ -620,6 +620,21 @@ name = "cached_proc_macro_types"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ade8366b8bd5ba243f0a58f036cc0ca8a2f069cff1a2351ef1cac6b083e16fc0"
+
+[[package]]
+name = "cairo-annotations"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b27bd803ae8b063e8fba0ee9a94af33b4881582d9a337e271d6be882313aa5cd"
+dependencies = [
+ "cairo-lang-sierra",
+ "cairo-lang-sierra-to-casm",
+ "camino",
+ "derive_more 1.0.0",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
 
 [[package]]
 name = "cairo-lang-casm"
@@ -1240,6 +1255,7 @@ dependencies = [
  "anyhow",
  "bimap",
  "blockifier",
+ "cairo-annotations",
  "cairo-lang-casm",
  "cairo-lang-runner",
  "cairo-lang-starknet",
@@ -1273,7 +1289,6 @@ dependencies = [
  "test-case",
  "thiserror",
  "tokio",
- "trace-data",
  "universal-sierra-compiler-api",
  "url",
 ]
@@ -1731,6 +1746,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive_more"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a9b99b9cbbe49445b21764dc0625032a89b145a2642e67603e1c936f5458d05"
+dependencies = [
+ "derive_more-impl",
+]
+
+[[package]]
+name = "derive_more-impl"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb7330aeadfbe296029522e6c40f315320aba36fc43a5b3632f3795348f3bd22"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.79",
+ "unicode-xid",
+]
+
+[[package]]
 name = "diff"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2061,6 +2097,7 @@ dependencies = [
  "assert_fs",
  "axum",
  "blockifier",
+ "cairo-annotations",
  "cairo-lang-casm",
  "cairo-lang-compiler",
  "cairo-lang-filesystem",
@@ -2113,7 +2150,6 @@ dependencies = [
  "tokio",
  "tokio-util",
  "toml_edit",
- "trace-data",
  "universal-sierra-compiler-api",
  "url",
  "walkdir",
@@ -2126,6 +2162,7 @@ dependencies = [
  "anyhow",
  "bimap",
  "blockifier",
+ "cairo-annotations",
  "cairo-lang-casm",
  "cairo-lang-compiler",
  "cairo-lang-filesystem",
@@ -2167,7 +2204,6 @@ dependencies = [
  "tokio",
  "tokio-util",
  "toml_edit",
- "trace-data",
  "universal-sierra-compiler-api",
  "url",
  "which",
@@ -5010,7 +5046,7 @@ checksum = "1b505c9c076d9fce854304bd743c93ea540ebea6b16ec96819b07343a3aa2c7c"
 dependencies = [
  "bitvec",
  "cairo-lang-starknet-classes",
- "derive_more",
+ "derive_more 0.99.18",
  "hex",
  "indexmap 2.5.0",
  "itertools 0.12.1",
@@ -5476,15 +5512,6 @@ name = "tower-service"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8df9b6e13f2d32c91b9bd719c00d1958837bc7dec474d94952798cc8e69eeec3"
-
-[[package]]
-name = "trace-data"
-version = "0.4.0"
-source = "git+https://github.com/software-mansion/cairo-profiler/?rev=e61a4a7#e61a4a78af6409714024dbdbe3f1b6be2603491a"
-dependencies = [
- "camino",
- "serde",
-]
 
 [[package]]
 name = "tracing"
