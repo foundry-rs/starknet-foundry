@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use scarb_metadata::{Metadata, PackageId, PackageMetadata, TargetMetadata};
 use semver::VersionReq;
 use serde::Deserialize;
@@ -91,8 +92,13 @@ impl StarknetArtifactsFiles {
     ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
         let mut base_artifacts = load_contracts_artifacts_and_source_sierra_paths(&self.base_file)?;
 
-        for file_path in self.other_files {
-            let artifact = load_contracts_artifacts_and_source_sierra_paths(&file_path)?;
+        let compiled_artifacts = self
+            .other_files
+            .par_iter()
+            .map(load_contracts_artifacts_and_source_sierra_paths)
+            .collect::<Result<Vec<_>>>()?;
+
+        for artifact in compiled_artifacts {
             for (key, value) in artifact {
                 base_artifacts.entry(key).or_insert(value);
             }

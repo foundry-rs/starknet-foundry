@@ -4230,6 +4230,7 @@ dependencies = [
  "assert_fs",
  "camino",
  "indoc",
+ "rayon",
  "regex",
  "scarb-metadata",
  "scarb-ui",
