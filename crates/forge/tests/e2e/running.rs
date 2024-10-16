@@ -248,7 +248,7 @@ fn with_exact_filter_and_duplicated_test_names() {
         [..]Finished[..]
 
 
-        Collected 1 test(s) from duplicated_test_names
+        Collected 1 test(s) from duplicated_test_names package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] duplicated_test_names_integrationtest::tests_a::test_simple [..]
