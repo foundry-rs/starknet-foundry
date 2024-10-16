@@ -12,8 +12,6 @@ Running 3 test(s) from src/
 Tests: 3 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
-When running all tests, no information about filtered-out tests is displayed.
-
 ## Filtering Tests
 
 You can pass a filter string after the `snforge test` command to filter tests.
