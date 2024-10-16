@@ -1,4 +1,4 @@
-# Library Functions References
+# Library Reference
 
 > ℹ️ **Info**
 > Full documentation for the `snforge` library can be found [here](https://delevoxdg.github.io/starknet-foundry/snforge_std/).
