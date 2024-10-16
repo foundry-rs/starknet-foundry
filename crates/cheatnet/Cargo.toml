@@ -19,6 +19,7 @@ cairo-lang-utils.workspace = true
 cairo-lang-starknet.workspace = true
 cairo-lang-starknet-classes.workspace = true
 cairo-vm.workspace = true
+cairo-annotations.workspace = true
 regex.workspace = true
 indoc.workspace = true
 starknet.workspace = true
@@ -33,7 +34,6 @@ tokio.workspace = true
 num-bigint.workspace = true
 conversions.workspace = true
 scarb-metadata.workspace = true
-trace-data.workspace = true
 fs2.workspace = true
 flate2.workspace = true
 scarb-api = { path = "../scarb-api" }

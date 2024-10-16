@@ -50,6 +50,7 @@ cairo-lang-starknet-classes = "2.7.0"
 cairo-lang-parser = "2.7.0"
 cairo-lang-macro = "0.1.0"
 cairo-vm = "1.0.0-rc3"
+cairo-annotations = "0.1.0"
 starknet-types-core = { version = "0.1.6", features = ["hash", "prime-bigint"] }
 anyhow = "1.0.89"
 assert_fs = "1.1.2"
@@ -66,7 +67,6 @@ serde = { version = "1.0.209", features = ["derive"] }
 serde_json = "1.0.127"
 starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "660a732" }
 starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "660a732" }
-trace-data = { git = "https://github.com/software-mansion/cairo-profiler/", rev = "e61a4a7" }
 tempfile = "3.13.0"
 thiserror = "1.0.64"
 ctor = "0.2.8"
