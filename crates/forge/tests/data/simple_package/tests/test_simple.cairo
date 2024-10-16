@@ -28,8 +28,3 @@ fn test_failing() {
 fn test_another_failing() {
     assert(2 == 3, 'failing check');
 }
-
-#[test]
-fn test_simple_3() {
-    assert(3 == 3, 'simple check');
-}

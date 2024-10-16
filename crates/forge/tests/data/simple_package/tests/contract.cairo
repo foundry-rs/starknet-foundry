@@ -26,8 +26,3 @@ fn call_and_invoke() {
     let balance = dispatcher.get_balance();
     assert(balance == 100, 'balance == 100');
 }
-
-#[test]
-fn test_simple_3() {
-    assert(3 == 3, 'simple check');
-}

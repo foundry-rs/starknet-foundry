@@ -233,10 +233,10 @@ fn with_exact_filter() {
 
 #[test]
 fn test_exact_filter_with_duplicate_names() {
-    let temp = setup_package("simple_package");
+    let temp = setup_package("duplicated_test_names");
 
     let output = test_runner(&temp)
-        .arg("simple_package_integrationtest::test_simple::test_simple_3")
+        .arg("duplicated_test_names_integrationtest::tests_a::test_simple")
         .arg("--exact")
         .assert()
         .success();
@@ -248,10 +248,10 @@ fn test_exact_filter_with_duplicate_names() {
         [..]Finished[..]
 
 
-        Collected 1 test(s) from simple_package package
+        Collected 1 test(s) from duplicated_test_names
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] simple_package_integrationtest::test_simple::test_simple_3 [..]
+        [PASS] duplicated_test_names_integrationtest::tests_a::test_simple [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
         "},
     );
