@@ -142,6 +142,16 @@ jobs:
       - name: Run Cheatnet tests
         run: cargo test --release -p cheatnet
 
+  test-data-transformer:
+    name: Test Data Transformer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+      - name: Run Data Transformer tests
+        run: cargo test --release -p data-transformer
+
   test-forge-scarb-plugin:
     name: Test Forge Scarb Plugin
     runs-on: ubuntu-latest

@@ -19,6 +19,7 @@ cairo-lang-sierra-type-size.workspace = true
 cairo-lang-sierra-gas.workspace = true
 cairo-lang-sierra-ap-change.workspace = true
 cairo-lang-test-plugin.workspace = true
+cairo-annotations.workspace = true
 starknet-types-core.workspace = true
 starknet_api.workspace = true
 starknet.workspace = true
@@ -43,7 +44,6 @@ semver.workspace = true
 console.workspace = true
 serde.workspace = true
 bimap.workspace = true
-trace-data.workspace = true
 flatten-serde-json.workspace = true
 rayon.workspace = true
 cheatnet = { path = "../cheatnet" }

@@ -226,7 +226,33 @@ fn with_exact_filter() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] simple_package_integrationtest::test_simple::test_two [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 12 filtered out
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
+        "},
+    );
+}
+
+#[test]
+fn with_exact_filter_and_duplicated_test_names() {
+    let temp = setup_package("duplicated_test_names");
+
+    let output = test_runner(&temp)
+        .arg("duplicated_test_names_integrationtest::tests_a::test_simple")
+        .arg("--exact")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from duplicated_test_names package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] duplicated_test_names_integrationtest::tests_a::test_simple [..]
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
         "},
     );
 }

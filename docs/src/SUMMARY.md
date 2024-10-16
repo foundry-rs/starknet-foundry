@@ -41,6 +41,7 @@
 
 * [Outline](starknet/index.md)
 * [Creating And Deploying Accounts](starknet/account.md)
+* [Importing Accounts](starknet/account-import.md)
 * [Declaring New Contracts](starknet/declare.md)
 * [Deploying New Contracts](starknet/deploy.md)
 * [Invoking Contracts](starknet/invoke.md)
@@ -50,6 +51,7 @@
 * [Inspecting Transactions](starknet/tx-status.md)
 * [Fees and Versions](starknet/fees-and-versions.md)
 * [Verifying Contracts](starknet/verify.md)
+* [Calldata Transformation](starknet/calldata-transformation.md)
 
 ---
 
@@ -104,7 +106,7 @@
 * [`sncast` Commands](appendix/sncast.md)
     * [common flags](appendix/sncast/common.md)
     * [account](appendix/sncast/account/account.md)
-        * [add](appendix/sncast/account/add.md)
+        * [import](appendix/sncast/account/import.md)
         * [create](appendix/sncast/account/create.md)
         * [deploy](appendix/sncast/account/deploy.md)
         * [delete](appendix/sncast/account/delete.md)

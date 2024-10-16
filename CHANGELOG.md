@@ -13,9 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Short option for `--accounts-file` flag has been removed.
 - Short option for `--contract-address` is now `-d` instead of `-a`.
+- `account add` is renamed to `account import`.
+- `account import` can be now used without specifying `--private-key` or `--private-key-file` flags. Instead private key will be read interactively from the user.
 
 #### Fixed
 - `account delete` command: It is no longer necessary to provide the `--url` argument each time. Either the `--url` or `--network` argument must be provided, but not both, as they are mutually exclusive.
+
+### Forge
+
+#### Changed
+
+- When using test name filter with `--exact` flag, forge will try to compile only the selected test.
 
 ## [0.31.0] - 2024-09-26
 
