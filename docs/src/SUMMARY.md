@@ -51,6 +51,7 @@
 * [Inspecting Transactions](starknet/tx-status.md)
 * [Fees and Versions](starknet/fees-and-versions.md)
 * [Verifying Contracts](starknet/verify.md)
+* [Calldata Transformation](starknet/calldata-transformation.md)
 
 ---
 

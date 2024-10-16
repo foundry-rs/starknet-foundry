@@ -36,6 +36,7 @@ conversions.workspace = true
 scarb-metadata.workspace = true
 fs2.workspace = true
 flate2.workspace = true
+data-transformer = { path = "../data-transformer" }
 scarb-api = { path = "../scarb-api" }
 runtime = { path = "../runtime" }
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }

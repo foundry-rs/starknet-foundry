@@ -1265,6 +1265,7 @@ dependencies = [
  "camino",
  "conversions",
  "ctor",
+ "data-transformer",
  "flate2",
  "flatten-serde-json",
  "fs2",
@@ -1475,6 +1476,7 @@ dependencies = [
  "ctor",
  "indoc",
  "itertools 0.12.1",
+ "num-bigint",
  "num-traits 0.2.19",
  "regex",
  "serde",
@@ -1482,6 +1484,7 @@ dependencies = [
  "starknet",
  "starknet-types-core",
  "starknet_api",
+ "test-case",
  "thiserror",
 ]
 
@@ -1681,6 +1684,32 @@ name = "data-encoding"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8566979429cf69b49a5c740c60791108e86440e8be149bbea4fe54d2c32d6e2"
+
+[[package]]
+name = "data-transformer"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "cairo-lang-diagnostics",
+ "cairo-lang-filesystem",
+ "cairo-lang-parser",
+ "cairo-lang-syntax",
+ "cairo-lang-utils",
+ "cairo-serde-macros",
+ "conversions",
+ "indoc",
+ "itertools 0.12.1",
+ "num-bigint",
+ "num-traits 0.2.19",
+ "primitive-types",
+ "serde",
+ "serde_json",
+ "starknet",
+ "test-case",
+ "thiserror",
+ "tokio",
+ "url",
+]
 
 [[package]]
 name = "deadpool"
@@ -4700,9 +4729,13 @@ dependencies = [
  "base16ct",
  "blockifier",
  "cairo-lang-casm",
+ "cairo-lang-diagnostics",
+ "cairo-lang-filesystem",
+ "cairo-lang-parser",
  "cairo-lang-runner",
  "cairo-lang-sierra",
  "cairo-lang-sierra-to-casm",
+ "cairo-lang-syntax",
  "cairo-lang-utils",
  "cairo-vm",
  "camino",
@@ -4712,9 +4745,11 @@ dependencies = [
  "const-hex",
  "conversions",
  "ctor",
+ "data-transformer",
  "fs_extra",
  "indoc",
  "itertools 0.12.1",
+ "num-bigint",
  "num-traits 0.2.19",
  "primitive-types",
  "project-root",

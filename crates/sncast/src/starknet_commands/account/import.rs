@@ -7,13 +7,16 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
 use regex::Regex;
+use sncast::check_if_legacy_contract;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
-use sncast::{check_class_hash_exists, get_chain_id, AccountType as SNCastAccountType};
-use sncast::{check_if_legacy_contract, get_class_hash_by_address};
-use starknet::core::types::Felt;
+use sncast::{
+    check_class_hash_exists, get_chain_id, handle_rpc_error, AccountType as SNCastAccountType,
+};
+use starknet::core::types::{BlockId, BlockTag, Felt, StarknetError};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
+use starknet::providers::{Provider, ProviderError};
 use starknet::signers::SigningKey;
 
 use super::deploy::compute_account_address;
@@ -77,7 +80,15 @@ pub async fn import(
     };
     let private_key = &SigningKey::from_secret_scalar(*private_key);
 
-    let fetched_class_hash = get_class_hash_by_address(provider, import.address).await?;
+    let fetched_class_hash = match provider
+        .get_class_hash_at(BlockId::Tag(BlockTag::Pending), import.address)
+        .await
+    {
+        Ok(class_hash) => Ok(Some(class_hash)),
+        Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => Ok(None),
+        Err(err) => Err(handle_rpc_error(err)),
+    }?;
+
     let deployed: bool = fetched_class_hash.is_some();
     let class_hash = if let (Some(from_provider), Some(from_user)) =
         (fetched_class_hash, import.class_hash)
