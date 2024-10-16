@@ -172,7 +172,7 @@ pub async fn run_for_package(
         }
     }
 
-    // TODO(#2574): Bring back "filtered out" number in tests summary with `--exact` flag
+    // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
     if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
         pretty_printing::print_test_summary(&summaries, None);
     } else {
