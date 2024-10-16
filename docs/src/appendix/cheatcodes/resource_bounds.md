@@ -23,6 +23,6 @@ Changes the transaction resource bounds for the given target.
 Cancels the `cheat_resource_bounds` / `start_cheat_resource_bounds` for the given target.
 
 ## `stop_cheat_resource_bounds_global`
-> `fn stop_cheat_resource_bounds_global(target: ContractAddress)`
+> `fn stop_cheat_resource_bounds_global()`
 
 Cancels the `start_cheat_resource_bounds_global`.

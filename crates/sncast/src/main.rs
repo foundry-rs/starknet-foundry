@@ -349,17 +349,17 @@ async fn run_async_command(
         }
 
         Commands::Account(account) => match account.command {
-            account::Commands::Add(add) => {
-                let provider = add.rpc.get_provider(&config).await?;
-                let result = starknet_commands::account::add::add(
-                    &add.name.clone(),
+            account::Commands::Import(import) => {
+                let provider = import.rpc.get_provider(&config).await?;
+                let result = starknet_commands::account::import::import(
+                    &import.name.clone(),
                     &config.accounts_file,
                     &provider,
-                    &add,
+                    &import,
                 )
                 .await;
 
-                print_command_result("account add", &result, numbers_format, output_format)?;
+                print_command_result("account import", &result, numbers_format, output_format)?;
                 Ok(())
             }
 
@@ -426,12 +426,8 @@ async fn run_async_command(
             }
 
             account::Commands::Delete(delete) => {
-                let provider = delete.rpc.get_provider(&config).await?;
-
-                let network_name = match delete.network {
-                    Some(network) => network,
-                    None => chain_id_to_network_name(get_chain_id(&provider).await?),
-                };
+                let network_name =
+                    starknet_commands::account::delete::get_network_name(&delete, &config).await?;
 
                 let result = starknet_commands::account::delete::delete(
                     &delete.name,

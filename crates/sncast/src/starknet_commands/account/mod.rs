@@ -1,7 +1,7 @@
-use crate::starknet_commands::account::add::Add;
 use crate::starknet_commands::account::create::Create;
 use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
+use crate::starknet_commands::account::import::Import;
 use crate::starknet_commands::account::list::List;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
@@ -15,10 +15,10 @@ use starknet::{core::types::Felt, signers::SigningKey};
 use std::{fmt, fs::OpenOptions, io::Write};
 use toml::Value;
 
-pub mod add;
 pub mod create;
 pub mod delete;
 pub mod deploy;
+pub mod import;
 pub mod list;
 
 #[derive(Args)]
@@ -30,7 +30,7 @@ pub struct Account {
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
-    Add(Add),
+    Import(Import),
     Create(Create),
     Deploy(Deploy),
     Delete(Delete),
