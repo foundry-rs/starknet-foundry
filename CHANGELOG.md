@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.0] - 2024-10-16
+
 ### Cast
+
+#### Added
+
+- Data transformer for passing calldata to transactions as Cairo expressions for automatic conversion instead of serialized form
 
 #### Changed
 
