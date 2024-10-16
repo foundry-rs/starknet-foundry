@@ -155,6 +155,14 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
     }
 }
 
+/// Load contract artifacts from paths represented by `ContractArtifactData`
+///
+/// If artifacts with `test_type` of `INTEGRATION_TEST_TYPE` are present, we load them first
+/// and later extend with contracts from other artifacts.
+/// If `INTEGRATION_TEST_TYPE` is not present, we take first artifacts found in `contracts_paths`.
+///
+/// # Panics
+/// If `contracts_paths` is empty
 fn load_contracts_artifacts(
     contracts_paths: &[ContractArtifactData],
 ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
