@@ -3,7 +3,7 @@ use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use std::fs;
-use toml_edit::{value, DocumentMut, Item, Value};
+use toml_edit::DocumentMut;
 
 #[test]
 fn unit_and_integration() {

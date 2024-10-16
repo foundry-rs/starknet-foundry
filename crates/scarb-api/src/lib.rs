@@ -1,8 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use scarb_metadata::{
-    CompilationUnitMetadata, Metadata, PackageId, PackageMetadata, TargetMetadata,
-};
+use scarb_metadata::{Metadata, PackageId, PackageMetadata, TargetMetadata};
 use semver::VersionReq;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -11,6 +9,7 @@ use std::str::FromStr;
 use universal_sierra_compiler_api::{compile_sierra_at_path, SierraType};
 
 pub use command::*;
+use shared::print::print_as_warning;
 
 mod command;
 pub mod metadata;
@@ -94,7 +93,14 @@ fn get_starknet_artifacts_paths_from_test_targets(
         |name: &str, metadata: &TargetMetadata| -> Option<ContractArtifactData> {
             let path = format!("{name}.test.starknet_artifacts.json");
             let path = target_dir.join(&path);
-            let path = if path.exists() { Some(path) } else { None };
+            let path = if path.exists() {
+                Some(path)
+            } else {
+                print_as_warning(&anyhow!(
+                "File = {path} missing when it should be existing, perhaps due to Scarb problem."
+            ));
+                None
+            };
 
             let test_type = metadata
                 .params
@@ -122,7 +128,16 @@ fn get_starknet_artifacts_path(
 ) -> Option<ContractArtifactData> {
     let path = format!("{target_name}.starknet_artifacts.json");
     let path = target_dir.join(&path);
-    let path = if path.exists() { Some(path) } else { None };
+    let path = if path.exists() {
+        Some(path)
+    } else {
+        print_as_warning(&anyhow!(
+            "File = {path} missing.\
+        This is most likely caused by `[[target.starknet-contract]]` being undefined in Scarb.toml\
+        No contracts will be available for deployment"
+        ));
+        None
+    };
 
     path.map(|path| ContractArtifactData {
         path,
@@ -132,7 +147,6 @@ fn get_starknet_artifacts_path(
 
 /// Get the map with `StarknetContractArtifacts` for the given package
 pub fn get_contracts_artifacts_and_source_sierra_paths(
-    metadata: &Metadata,
     target_dir: &Utf8Path,
     package: &PackageMetadata,
     use_test_target_contracts: bool,
@@ -141,10 +155,18 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
         let test_targets = test_targets_by_name(package);
         get_starknet_artifacts_paths_from_test_targets(target_dir, &test_targets)
     } else {
-        let target_name = target_name_for_package(metadata, &package.id)?;
-        get_starknet_artifacts_path(target_dir, &target_name)
-            .into_iter()
-            .collect()
+        let starknet_target_name = package
+            .targets
+            .iter()
+            .find(|target| target.kind == "starknet-contract")
+            .map(|target| target.name.clone());
+        starknet_target_name
+            .map(|starknet_target_name| {
+                get_starknet_artifacts_path(target_dir, starknet_target_name.as_str())
+                    .into_iter()
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default()
     };
 
     if contracts_paths.is_empty() {
@@ -211,28 +233,6 @@ fn load_contracts_artifacts_and_source_sierra_paths(
         map.insert(name.clone(), (contract_artifacts, sierra_path));
     }
     Ok(map)
-}
-
-fn compilation_unit_for_package<'a>(
-    metadata: &'a Metadata,
-    package: &PackageId,
-) -> Result<&'a CompilationUnitMetadata> {
-    metadata
-        .compilation_units
-        .iter()
-        .filter(|unit| unit.package == *package)
-        .min_by_key(|unit| match unit.target.kind.as_str() {
-            name @ "starknet-contract" => (0, name),
-            name @ "lib" => (1, name),
-            name => (2, name),
-        })
-        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))
-}
-
-/// Get the target name for the given package
-pub fn target_name_for_package(metadata: &Metadata, package: &PackageId) -> Result<String> {
-    let compilation_unit = compilation_unit_for_package(metadata, package)?;
-    Ok(compilation_unit.target.name.clone())
 }
 
 #[must_use]
@@ -686,13 +686,9 @@ mod tests {
         let target_dir = target_dir_for_workspace(&metadata).join("dev");
         let package = metadata.packages.first().unwrap();
 
-        let contracts = get_contracts_artifacts_and_source_sierra_paths(
-            &metadata,
-            target_dir.as_path(),
-            package,
-            false,
-        )
-        .unwrap();
+        let contracts =
+            get_contracts_artifacts_and_source_sierra_paths(target_dir.as_path(), package, false)
+                .unwrap();
 
         assert!(contracts.contains_key("ERC20"));
         assert!(contracts.contains_key("HelloStarknet"));
@@ -727,20 +723,5 @@ mod tests {
             name_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
 
         assert_eq!(&package_name, "basic_package");
-    }
-
-    #[test]
-    fn get_target_name_for_package() {
-        let temp = setup_package("basic_package");
-        let scarb_metadata = ScarbCommand::metadata()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .run()
-            .unwrap();
-
-        let target_name =
-            target_name_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
-
-        assert_eq!(target_name, "basic_package");
     }
 }

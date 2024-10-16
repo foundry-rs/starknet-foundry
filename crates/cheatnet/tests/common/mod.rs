@@ -78,13 +78,8 @@ pub fn get_contracts() -> ContractsData {
 
     let package = scarb_metadata.packages.first().unwrap();
 
-    let contracts = get_contracts_artifacts_and_source_sierra_paths(
-        &scarb_metadata,
-        &target_dir,
-        package,
-        false,
-    )
-    .unwrap();
+    let contracts =
+        get_contracts_artifacts_and_source_sierra_paths(&target_dir, package, false).unwrap();
     ContractsData::try_from(contracts).unwrap()
 }
 

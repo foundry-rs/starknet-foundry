@@ -98,16 +98,11 @@ impl Contract {
             .unwrap();
         let target_dir = target_dir_for_workspace(&scarb_metadata).join("dev");
 
-        let contract = get_contracts_artifacts_and_source_sierra_paths(
-            &scarb_metadata,
-            &target_dir,
-            package,
-            false,
-        )
-        .unwrap()
-        .remove(&self.name)
-        .ok_or(anyhow!("there is no contract with name {}", self.name))?
-        .0;
+        let contract = get_contracts_artifacts_and_source_sierra_paths(&target_dir, package, false)
+            .unwrap()
+            .remove(&self.name)
+            .ok_or(anyhow!("there is no contract with name {}", self.name))?
+            .0;
 
         Ok((contract.sierra, contract.casm))
     }
