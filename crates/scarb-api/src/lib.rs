@@ -16,6 +16,8 @@ mod command;
 pub mod metadata;
 pub mod version;
 
+const INTEGRATION_TEST_TYPE: &str = "integration";
+
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct StarknetArtifacts {
     version: u32,
@@ -156,10 +158,9 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
 fn load_contracts_artifacts(
     contracts_paths: &[ContractArtifactData],
 ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
-    // TODO use const
     let base_artifacts = contracts_paths
         .iter()
-        .find(|paths| paths.test_type == Some("integration".to_string()))
+        .find(|paths| paths.test_type == Some(INTEGRATION_TEST_TYPE.to_string()))
         .unwrap_or(
             contracts_paths
                 .first()
@@ -467,7 +468,7 @@ mod tests {
                         "target/dev/basic_package_integrationtest.test.starknet_artifacts.json"
                     ))
                     .unwrap(),
-                    test_type: Some("integration".to_string())
+                    test_type: Some(INTEGRATION_TEST_TYPE.to_string())
                 },
                 ContractArtifactData {
                     path: Utf8PathBuf::from_path_buf(
