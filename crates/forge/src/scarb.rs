@@ -66,8 +66,7 @@ fn build_contracts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) ->
 }
 
 fn build_test_artifacts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) -> Result<()> {
-    let mut command = ScarbCommand::new_with_stdio();
-    command
+    ScarbCommand::new_with_stdio()
         .arg("build")
         .arg("--test")
         .packages_filter(filter)
