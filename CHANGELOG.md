@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- Test performance has been optimized - using filter and `--exact` flag will result in compilation of only the selected test.
+- When using test name filter with `--exact` flag, forge will try to compile only the selected test.
 
 ## [0.31.0] - 2024-09-26
 

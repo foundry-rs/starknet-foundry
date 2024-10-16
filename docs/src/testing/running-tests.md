@@ -34,7 +34,7 @@ Note, you have to use a fully qualified test name, including a module name.
 
 > 📝 **Note**
 >
-> Running a specific test results in optimized compilation. Only the desired test will be compiled, unlike the case of running all tests where all of them are compiled.
+> Running a specific test results in optimized compilation. `snforge` will try to compile only the desired test, unlike the case of running all tests where all of them are compiled.
 >
 
 ```shell
