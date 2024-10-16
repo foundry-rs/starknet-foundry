@@ -52,11 +52,13 @@ jobs:
       - name: Generate and build snforge_std docs with mdBook
         run: |
           scarb doc
+          pushd target/doc/snforge_std
           mdbook build
         working-directory: ./snforge_std
       - name: Generate and build sncast_std docs with mdBook
         run: |
           scarb doc
+          pushd target/doc/sncast_std
           mdbook build
         working-directory: ./sncast_std
       - name: Setup Pages
