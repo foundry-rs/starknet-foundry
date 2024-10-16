@@ -84,16 +84,6 @@ struct ContractArtifactData {
     test_type: Option<String>,
 }
 
-fn build_target_path(target_dir: &Utf8Path, file_name: &str) -> Option<Utf8PathBuf> {
-    let path = target_dir.join(file_name);
-
-    if path.exists() {
-        Some(path)
-    } else {
-        None
-    }
-}
-
 fn get_starknet_artifacts_paths_from_test_targets(
     target_dir: &Utf8Path,
     test_targets: &HashMap<String, &TargetMetadata>,
@@ -101,7 +91,9 @@ fn get_starknet_artifacts_paths_from_test_targets(
     let starknet_artifacts_file_name =
         |name: &str, metadata: &TargetMetadata| -> Option<ContractArtifactData> {
             let path = format!("{name}.test.starknet_artifacts.json");
-            let path = build_target_path(target_dir, &path);
+            let path = target_dir.join(&path);
+            let path = if path.exists() { Some(path) } else { None };
+
             let test_type = metadata
                 .params
                 // TODO get rid of hardcoding
@@ -129,7 +121,9 @@ fn get_starknet_artifacts_path(
     target_name: &str,
 ) -> Option<ContractArtifactData> {
     let path = format!("{target_name}.starknet_artifacts.json");
-    let path = build_target_path(target_dir, &path);
+    let path = target_dir.join(&path);
+    let path = if path.exists() { Some(path) } else { None };
+
     path.map(|path| ContractArtifactData {
         path,
         test_type: None,
