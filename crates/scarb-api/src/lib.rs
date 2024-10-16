@@ -106,11 +106,11 @@ fn get_starknet_artifacts_paths_from_test_targets(
                 .params
                 .get("test-type")
                 .and_then(|value| value.as_str())
-                .unwrap();
+                .map(ToString::to_string);
 
             path.map(|path| ContractArtifactData {
                 path: Utf8PathBuf::from_str(path.as_str()).unwrap(),
-                test_type: Some(test_type.to_string()),
+                test_type,
             })
         };
 
