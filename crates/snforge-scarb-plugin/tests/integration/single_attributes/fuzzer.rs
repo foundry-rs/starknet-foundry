@@ -143,6 +143,21 @@ fn fail_with_invalid_args() {
 }
 
 #[test]
+fn fail_with_unknown_arg() {
+    let item = TokenStream::new(EMPTY_FN.into());
+    let args = TokenStream::new("(seed: 1234, runs: 20, unknown_arg: 50)".into());
+
+    let result = fuzzer(args, item);
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(
+            "#[fuzzer] unsupported named argument \"unknown_arg\" provided",
+        )],
+    );
+}
+
+#[test]
 fn is_used_once() {
     let item = TokenStream::new(formatdoc!(
         "
