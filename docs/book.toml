@@ -10,6 +10,10 @@ description = "Starknet Foundry is a toolchain for developing Starknet smart con
 warning-policy = "error"
 follow-web-links = true
 traverse-parent-directories = false
+exclude = [
+    "https://foundry-rs.github.io/starknet-foundry/snforge_std/",
+    "https://foundry-rs.github.io/starknet-foundry/sncast_std/"
+]
 
 [output.html]
 git-repository-url = "https://github.com/foundry-rs/starknet-foundry/"
