@@ -117,57 +117,50 @@ fn get_starknet_artifacts_paths_from_test_targets(
     target_dir: &Utf8Path,
     test_targets: &HashMap<String, &TargetMetadata>,
 ) -> Option<StarknetArtifactsFiles> {
-    #[derive(PartialEq, Debug, Clone)]
-    struct ContractArtifactData {
-        path: Utf8PathBuf,
-        test_type: Option<String>,
-    }
-
-    let artifact = |name: &str, metadata: &TargetMetadata| -> Option<ContractArtifactData> {
-        let path = format!("{name}.test.starknet_artifacts.json");
-        let path = target_dir.join(&path);
-        let path = if path.exists() {
-            Some(path)
-        } else {
-            print_as_warning(&anyhow!(
+    let artifact =
+        |name: &str, metadata: &TargetMetadata| -> Option<(Utf8PathBuf, Option<String>)> {
+            let path = format!("{name}.test.starknet_artifacts.json");
+            let path = target_dir.join(&path);
+            let path = if path.exists() {
+                Some(path)
+            } else {
+                print_as_warning(&anyhow!(
                 "File = {path} missing when it should be existing, perhaps due to Scarb problem."
             ));
-            None
+                None
+            };
+
+            let test_type = metadata
+                .params
+                .get("test-type")
+                .and_then(|value| value.as_str())
+                .map(ToString::to_string);
+
+            path.map(|path| (Utf8PathBuf::from_str(path.as_str()).unwrap(), test_type))
         };
-
-        let test_type = metadata
-            .params
-            .get("test-type")
-            .and_then(|value| value.as_str())
-            .map(ToString::to_string);
-
-        path.map(|path| ContractArtifactData {
-            path: Utf8PathBuf::from_str(path.as_str()).unwrap(),
-            test_type,
-        })
-    };
 
     let artifacts = test_targets
         .iter()
         .filter_map(|(target_name, metadata)| artifact(target_name, metadata))
         .collect::<Vec<_>>();
 
-    let base_artifact = artifacts
+    let base_artifact_path = artifacts
         .iter()
-        .find(|paths| paths.test_type == Some(INTEGRATION_TEST_TYPE.to_string()))
+        .find(|(_, test_type)| *test_type == Some(INTEGRATION_TEST_TYPE.to_string()))
         .cloned()
         .or_else(|| artifacts.first().cloned());
 
-    if let Some(base_artifact) = base_artifact {
-        let other_artifacts = artifacts
+    if let Some(base_artifact) = base_artifact_path {
+        let other_artifacts_paths = artifacts
             .into_iter()
             .filter(|artifact| artifact != &base_artifact)
-            .map(|artifact| artifact.path)
+            .map(|(path, _)| path)
             .collect();
+        let (base_artifact_path, _) = base_artifact;
 
         Some(StarknetArtifactsFiles {
-            base_file: base_artifact.path.clone(),
-            other_files: other_artifacts,
+            base_file: base_artifact_path,
+            other_files: other_artifacts_paths,
         })
     } else {
         None
