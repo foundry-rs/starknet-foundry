@@ -1,5 +1,5 @@
 [package]
-name = "snforge-scarb-plugin"
+name = "snforge_scarb_plugin"
 version.workspace = true
 edition.workspace = true
 publish = false
