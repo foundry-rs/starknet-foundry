@@ -162,7 +162,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1.3.3
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run Forge Scarb Plugin tests
-        run: cargo test --release -p snforge-scarb-plugin
+        run: cargo test --release -p snforge_scarb_plugin
 
   test-cast:
     name: Test Cast
