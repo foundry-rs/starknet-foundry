@@ -146,7 +146,7 @@ fn get_starknet_artifacts_paths_from_test_targets(
 
     let base_artifact_path = artifacts
         .iter()
-        .find(|(_, test_type)| *test_type == Some(INTEGRATION_TEST_TYPE.to_string()))
+        .find(|(_, test_type)| test_type.as_deref() == Some(INTEGRATION_TEST_TYPE))
         .cloned()
         .or_else(|| artifacts.first().cloned());
 
