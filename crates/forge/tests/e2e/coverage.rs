@@ -20,6 +20,21 @@ fn test_coverage_project() {
 }
 
 #[test]
+#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
+fn test_coverage_project_with_pass_flags() {
+    let temp = setup_package("coverage_project");
+
+    test_runner(&temp)
+        .arg("--coverage")
+        .arg("--output-path")
+        .arg(".")
+        .assert()
+        .success();
+
+    assert!(temp.join(OUTPUT_FILE_NAME).is_file());
+}
+
+#[test]
 #[cfg_attr(feature = "scarb_2_8_3", ignore)]
 fn test_fail_on_scarb_version_lt_2_8_0() {
     let temp = setup_package("coverage_project");
