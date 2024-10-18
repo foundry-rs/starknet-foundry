@@ -60,7 +60,7 @@ pub trait TestCaseFilter {
 
 pub fn maybe_save_trace_and_profile(
     result: &AnyTestCaseSummary,
-    execution_data_to_save: ExecutionDataToSave,
+    execution_data_to_save: &ExecutionDataToSave,
 ) -> Result<Option<PathBuf>> {
     if let AnyTestCaseSummary::Single(TestCaseSummary::Passed {
         name, trace_data, ..
@@ -78,7 +78,7 @@ pub fn maybe_save_trace_and_profile(
 }
 
 pub fn maybe_generate_coverage(
-    execution_data_to_save: ExecutionDataToSave,
+    execution_data_to_save: &ExecutionDataToSave,
     saved_trace_data_paths: &[PathBuf],
 ) -> Result<()> {
     if execution_data_to_save.coverage {
@@ -92,7 +92,7 @@ pub fn maybe_generate_coverage(
 }
 
 pub fn maybe_save_versioned_program(
-    execution_data_to_save: ExecutionDataToSave,
+    execution_data_to_save: &ExecutionDataToSave,
     test_target: &TestTargetWithResolvedConfig,
     versioned_programs_dir: &Utf8Path,
     package_name: &str,

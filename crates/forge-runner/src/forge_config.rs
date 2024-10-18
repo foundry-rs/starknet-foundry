@@ -29,7 +29,7 @@ pub struct OutputConfig {
     pub versioned_programs_dir: Utf8PathBuf,
 }
 
-#[derive(Debug, PartialEq, Clone, Copy, Default)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct ExecutionDataToSave {
     pub trace: bool,
     pub profile: bool,
