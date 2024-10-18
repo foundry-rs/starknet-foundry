@@ -124,7 +124,7 @@
         * [run](appendix/sncast/script/run.md)
     * [tx-status](appendix/sncast/tx-status.md)
     * [verify](appendix/sncast/verify.md)
-* [`sncast` Library Functions References](appendix/sncast-library.md)
+* [`sncast` Library Reference](appendix/sncast-library.md)
     * [declare](appendix/sncast-library/declare.md)
     * [deploy](appendix/sncast-library/deploy.md)
     * [invoke](appendix/sncast-library/invoke.md)
