@@ -71,6 +71,11 @@ jobs:
         run: |
           mkdir -p ./docs/book/html/sncast_std
           cp -r ./sncast_std/target/doc/sncast_std/book/* ./docs/book/html/sncast_std/
+      - name: Apply custom highlighting
+        run: |
+          curl -o highlight.js https://raw.githubusercontent.com/software-mansion/scarb/main/extensions/scarb-doc/theme/highlight.js
+          cp highlight.js ./docs/book/html/sncast_std/highlight.js
+          cp highlight.js ./docs/book/html/snforge_std/highlight.js
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
