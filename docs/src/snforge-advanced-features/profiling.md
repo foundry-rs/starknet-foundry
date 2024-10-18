@@ -20,3 +20,21 @@ If you want `snforge` to call `cairo-profiler` on generated files automatically,
 ```shell
 $ snforge test --build-profile
 ``` 
+
+## Passing arguments to `cairo-profiler`
+
+You can pass additional arguments to `cairo-profiler`:
+
+```shell
+$ snforge test --build-profile --show-inlined-functions
+```
+
+If the flag name duplicates a flag from `snforge`, you can use the `--` separator:
+
+```shell
+$ snforge test --build-profile -- --help
+```
+
+> 📝 **Note**
+>
+> Running `snforge test --help` won't show info about `cairo-profiler` flags. To see them, run `snforge test --build-profile -- --help`.
