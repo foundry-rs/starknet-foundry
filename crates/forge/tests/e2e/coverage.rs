@@ -21,17 +21,17 @@ fn test_coverage_project() {
 
 #[test]
 #[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
-fn test_coverage_project_with_pass_flags() {
+fn test_coverage_project_and_pass_args() {
     let temp = setup_package("coverage_project");
 
     test_runner(&temp)
         .arg("--coverage")
         .arg("--output-path")
-        .arg(".")
+        .arg("./my_file.lcov")
         .assert()
         .success();
 
-    assert!(temp.join(OUTPUT_FILE_NAME).is_file());
+    assert!(temp.join("my_file.lcov").is_file());
 }
 
 #[test]

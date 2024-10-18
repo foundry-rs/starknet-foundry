@@ -35,10 +35,6 @@ pub fn run_coverage(saved_trace_data_paths: &[PathBuf], coverage_args: &[OsStrin
         }
     );
 
-    let dir_to_save_coverage = PathBuf::from(COVERAGE_DIR);
-    fs::create_dir_all(&dir_to_save_coverage).context("Failed to create a coverage dir")?;
-    let path_to_save_coverage = dir_to_save_coverage.join(OUTPUT_FILE_NAME);
-
     let trace_files: Vec<&str> = saved_trace_data_paths
         .iter()
         .map(|trace_data_path| {
@@ -51,6 +47,10 @@ pub fn run_coverage(saved_trace_data_paths: &[PathBuf], coverage_args: &[OsStrin
     let mut command = Command::new(coverage);
 
     if coverage_args.iter().all(|arg| arg != "--output-path") {
+        let dir_to_save_coverage = PathBuf::from(COVERAGE_DIR);
+        fs::create_dir_all(&dir_to_save_coverage).context("Failed to create a coverage dir")?;
+        let path_to_save_coverage = dir_to_save_coverage.join(OUTPUT_FILE_NAME);
+
         command.arg("--output-path").arg(&path_to_save_coverage);
     }
 

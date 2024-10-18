@@ -29,7 +29,7 @@ fn simple_package_build_profile() {
 }
 
 #[test]
-fn simple_package_build_profile_pass_flags() {
+fn simple_package_build_profile_and_pass_args() {
     let temp = setup_package("simple_package");
 
     test_runner(&temp)
