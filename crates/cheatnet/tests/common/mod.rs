@@ -26,7 +26,9 @@ use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
 use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
-use scarb_api::{get_contracts_artifacts_and_source_sierra_paths, ScarbCommand};
+use scarb_api::{
+    get_contracts_artifacts_and_source_sierra_paths, target_dir_for_workspace, ScarbCommand,
+};
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
@@ -72,12 +74,12 @@ pub fn get_contracts() -> ContractsData {
         .manifest_path("tests/contracts/Scarb.toml")
         .run()
         .unwrap();
+    let target_dir = target_dir_for_workspace(&scarb_metadata).join("dev");
 
     let package = scarb_metadata.packages.first().unwrap();
 
     let contracts =
-        get_contracts_artifacts_and_source_sierra_paths(&scarb_metadata, &package.id, None, false)
-            .unwrap();
+        get_contracts_artifacts_and_source_sierra_paths(&target_dir, package, false).unwrap();
     ContractsData::try_from(contracts).unwrap()
 }
 
