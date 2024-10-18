@@ -44,7 +44,7 @@ jobs:
         run: |
           cargo install mdbook-linkcheck
       - name: Install Scarb
-        uses: software-mansion/setup-scarb@v1.3.3
+        uses: software-mansion/setup-scarb@v1
       - name: Generate and build snforge_std docs
         run: |
           scarb doc
