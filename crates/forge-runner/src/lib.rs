@@ -69,7 +69,7 @@ pub fn maybe_save_trace_and_profile(
         if execution_data_to_save.is_vm_trace_needed() {
             let trace_path = save_trace_data(name, trace_data)?;
             if execution_data_to_save.profile {
-                run_profiler(name, &trace_path)?;
+                run_profiler(name, &trace_path, &execution_data_to_save.additional_args)?;
             }
             return Ok(Some(trace_path));
         }
