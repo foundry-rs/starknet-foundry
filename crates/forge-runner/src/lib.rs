@@ -85,7 +85,10 @@ pub fn maybe_generate_coverage(
         if saved_trace_data_paths.is_empty() {
             print_as_warning(&anyhow!("No trace data to generate coverage from"));
         } else {
-            run_coverage(saved_trace_data_paths)?;
+            run_coverage(
+                saved_trace_data_paths,
+                &execution_data_to_save.additional_args,
+            )?;
         }
     }
     Ok(())
