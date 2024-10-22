@@ -1,21 +1,21 @@
+use crate::contracts::StarknetArtifactsRepresentation;
 use anyhow::{anyhow, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+pub use command::*;
+use itertools::Itertools;
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use scarb_metadata::{Metadata, PackageId, PackageMetadata, TargetMetadata};
 use semver::VersionReq;
+use shared::print::print_as_warning;
 use std::collections::HashMap;
 use std::str::FromStr;
-
-use crate::contracts::{
-    load_contracts_artifacts_and_source_sierra_paths, StarknetContractArtifacts,
-};
-pub use command::*;
-use shared::print::print_as_warning;
 
 mod command;
 mod contracts;
 pub mod metadata;
 pub mod version;
+
+pub use crate::contracts::StarknetContractArtifacts;
 
 const INTEGRATION_TEST_TYPE: &str = "integration";
 
@@ -29,19 +29,39 @@ impl StarknetArtifactsFiles {
     fn load_contracts_artifacts(
         self,
     ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
-        let mut base_artifacts = load_contracts_artifacts_and_source_sierra_paths(&self.base_file)?;
+        let mut base_artifacts: HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)> =
+            StarknetArtifactsRepresentation::try_from_path(self.base_file.as_path())?
+                .artifacts()
+                .into_par_iter()
+                .map(|(name, path)| {
+                    StarknetContractArtifacts::try_compile_at_path(path.as_path())
+                        .map(|artifact| (name.to_string(), (artifact, path)))
+                })
+                .collect::<Result<_>>()?;
 
-        let compiled_artifacts = self
+        let other_artifact_representations: Vec<StarknetArtifactsRepresentation> = self
             .other_files
-            .par_iter()
-            .map(load_contracts_artifacts_and_source_sierra_paths)
-            .collect::<Result<Vec<_>>>()?;
+            .iter()
+            .map(|path| StarknetArtifactsRepresentation::try_from_path(path.as_path()))
+            .collect::<Result<_>>()?;
 
-        for artifact in compiled_artifacts {
-            for (key, value) in artifact {
-                base_artifacts.entry(key).or_insert(value);
-            }
-        }
+        let other_artifacts: Vec<(String, Utf8PathBuf)> = other_artifact_representations
+            .into_iter()
+            .flat_map(StarknetArtifactsRepresentation::artifacts)
+            .unique()
+            .filter(|(name, _)| !base_artifacts.contains_key(name))
+            .collect();
+
+        let compiled_artifacts: HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)> =
+            other_artifacts
+                .into_par_iter()
+                .map(|(name, path)| {
+                    StarknetContractArtifacts::try_compile_at_path(path.as_path())
+                        .map(|artifact| (name.to_string(), (artifact, path)))
+                })
+                .collect::<Result<_>>()?;
+
+        base_artifacts.extend(compiled_artifacts);
 
         Ok(base_artifacts)
     }
