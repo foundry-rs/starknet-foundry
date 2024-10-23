@@ -1,15 +1,14 @@
-use crate::contracts::StarknetArtifactsRepresentation;
+use crate::artifacts::StarknetArtifactsFiles;
 use anyhow::{anyhow, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 pub use command::*;
-use itertools::{Itertools, Unique};
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use scarb_metadata::{Metadata, PackageId, PackageMetadata, TargetMetadata};
 use semver::VersionReq;
 use shared::print::print_as_warning;
 use std::collections::HashMap;
 use std::str::FromStr;
 
+mod artifacts;
 mod command;
 mod contracts;
 pub mod metadata;
@@ -18,63 +17,6 @@ pub mod version;
 pub use crate::contracts::StarknetContractArtifacts;
 
 const INTEGRATION_TEST_TYPE: &str = "integration";
-
-#[derive(PartialEq, Debug)]
-struct StarknetArtifactsFiles {
-    base_file: Utf8PathBuf,
-    other_files: Vec<Utf8PathBuf>,
-}
-
-impl StarknetArtifactsFiles {
-    fn load_contracts_artifacts(
-        self,
-    ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
-        let mut base_artifacts: HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)> =
-            compile_artifacts(
-                StarknetArtifactsRepresentation::try_from_path(self.base_file.as_path())?
-                    .artifacts(),
-            )?;
-
-        let other_artifact_representations: Vec<StarknetArtifactsRepresentation> = self
-            .other_files
-            .iter()
-            .map(|path| StarknetArtifactsRepresentation::try_from_path(path.as_path()))
-            .collect::<Result<_>>()?;
-
-        let other_artifacts: Vec<(String, Utf8PathBuf)> =
-            unique_artifacts(other_artifact_representations, &base_artifacts);
-
-        let compiled_artifacts = compile_artifacts(other_artifacts)?;
-
-        base_artifacts.extend(compiled_artifacts);
-
-        Ok(base_artifacts)
-    }
-}
-
-fn unique_artifacts(
-    artifact_representations: Vec<StarknetArtifactsRepresentation>,
-    current_artifacts: &HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>,
-) -> Vec<(String, Utf8PathBuf)> {
-    artifact_representations
-        .into_iter()
-        .flat_map(StarknetArtifactsRepresentation::artifacts)
-        .unique()
-        .filter(|(name, _)| !current_artifacts.contains_key(name))
-        .collect()
-}
-
-fn compile_artifacts(
-    artifacts: Vec<(String, Utf8PathBuf)>,
-) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
-    artifacts
-        .into_par_iter()
-        .map(|(name, path)| {
-            StarknetContractArtifacts::try_compile_at_path(path.as_path())
-                .map(|artifact| (name.to_string(), (artifact, path)))
-        })
-        .collect::<Result<_>>()
-}
 
 /// Constructs `StarknetArtifactsFiles` from contracts built using test target.
 ///
@@ -126,10 +68,10 @@ fn get_starknet_artifacts_paths_from_test_targets(
             .collect();
         let (base_artifact_path, _) = base_artifact;
 
-        Some(StarknetArtifactsFiles {
-            base_file: base_artifact_path,
-            other_files: other_artifacts_paths,
-        })
+        Some(StarknetArtifactsFiles::new(
+            base_artifact_path,
+            other_artifacts_paths,
+        ))
     } else {
         None
     }
@@ -154,10 +96,7 @@ fn get_starknet_artifacts_path(
         None
     };
 
-    path.map(|path| StarknetArtifactsFiles {
-        base_file: path,
-        other_files: vec![],
-    })
+    path.map(|path| StarknetArtifactsFiles::new(path, vec![]))
 }
 
 /// Get the map with `StarknetContractArtifacts` for the given package
@@ -326,14 +265,14 @@ mod tests {
 
         assert_eq!(
             path,
-            StarknetArtifactsFiles {
-                base_file: Utf8PathBuf::from_path_buf(
+            StarknetArtifactsFiles::new(
+                Utf8PathBuf::from_path_buf(
                     temp.path()
                         .join("target/dev/basic_package.starknet_artifacts.json")
                 )
                 .unwrap(),
-                other_files: vec![]
-            }
+                vec![]
+            )
         );
     }
 
@@ -368,14 +307,14 @@ mod tests {
 
         assert_eq!(
             path,
-            StarknetArtifactsFiles {
-                base_file: Utf8PathBuf::from_path_buf(
+            StarknetArtifactsFiles::new(
+                Utf8PathBuf::from_path_buf(
                     temp.path()
                         .join("target/dev/basic_package_unittest.test.starknet_artifacts.json")
                 )
                 .unwrap(),
-                other_files: vec![],
-            }
+                vec![],
+            )
         );
     }
 
@@ -423,19 +362,19 @@ mod tests {
 
         assert_eq!(
             path,
-            StarknetArtifactsFiles {
-                base_file: Utf8PathBuf::from_path_buf(
+            StarknetArtifactsFiles::new(
+                Utf8PathBuf::from_path_buf(
                     temp.path().join(
                         "target/dev/basic_package_integrationtest.test.starknet_artifacts.json"
                     )
                 )
                 .unwrap(),
-                other_files: vec![Utf8PathBuf::from_path_buf(
+                vec![Utf8PathBuf::from_path_buf(
                     temp.path()
                         .join("target/dev/basic_package_unittest.test.starknet_artifacts.json")
                 )
                 .unwrap(),]
-            },
+            ),
         );
     }
 
@@ -533,13 +472,13 @@ mod tests {
 
         assert_eq!(
             path,
-            StarknetArtifactsFiles {
-                base_file: Utf8PathBuf::from_path_buf(
+            StarknetArtifactsFiles::new(
+                Utf8PathBuf::from_path_buf(
                     temp.path().join("target/dev/essa.starknet_artifacts.json")
                 )
                 .unwrap(),
-                other_files: vec![]
-            }
+                vec![]
+            )
         );
     }
 
