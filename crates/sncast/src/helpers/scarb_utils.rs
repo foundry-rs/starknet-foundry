@@ -177,12 +177,14 @@ pub fn build_and_load_artifacts(
         print_as_warning(&anyhow!(
             "Profile {profile} does not exist in scarb, using '{default_profile}' profile."
         ));
-        Ok(
-            get_contracts_artifacts_and_source_sierra_paths(&target_dir, package, false)?
-                .into_iter()
-                .map(|(name, (artifacts, _))| (name, artifacts))
-                .collect(),
-        )
+        Ok(get_contracts_artifacts_and_source_sierra_paths(
+            &target_dir.join(default_profile),
+            package,
+            false,
+        )?
+        .into_iter()
+        .map(|(name, (artifacts, _))| (name, artifacts))
+        .collect())
     }
 }
 
