@@ -1,10 +1,6 @@
-use crate::contracts::deserialized::{artifacts_for_package, StarknetArtifacts};
-use anyhow::{anyhow, Result};
+use crate::artifacts::deserialized::{artifacts_for_package, StarknetArtifacts};
+use anyhow::anyhow;
 use camino::{Utf8Path, Utf8PathBuf};
-use std::fs;
-use universal_sierra_compiler_api::{compile_sierra_at_path, SierraType};
-
-pub mod deserialized;
 
 pub struct StarknetArtifactsRepresentation {
     path: Utf8PathBuf,
@@ -12,7 +8,7 @@ pub struct StarknetArtifactsRepresentation {
 }
 
 impl StarknetArtifactsRepresentation {
-    pub fn try_from_path(path: &Utf8Path) -> Result<Self> {
+    pub fn try_from_path(path: &Utf8Path) -> anyhow::Result<Self> {
         let artifacts = artifacts_for_package(path)?;
         let path = path
             .parent()
@@ -33,25 +29,6 @@ impl StarknetArtifactsRepresentation {
                 )
             })
             .collect()
-    }
-}
-
-/// Contains compiled Starknet artifacts
-#[derive(Debug, PartialEq, Clone)]
-pub struct StarknetContractArtifacts {
-    /// Compiled sierra code
-    pub sierra: String,
-    /// Compiled casm code
-    pub casm: String,
-}
-
-impl StarknetContractArtifacts {
-    pub fn try_compile_at_path(path: &Utf8Path) -> Result<Self> {
-        let sierra = fs::read_to_string(path)?;
-
-        let casm = compile_sierra_at_path(path.as_str(), None, &SierraType::Contract)?;
-
-        Ok(Self { sierra, casm })
     }
 }
 

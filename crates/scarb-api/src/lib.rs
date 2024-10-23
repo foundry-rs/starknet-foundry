@@ -1,5 +1,5 @@
-use crate::artifacts::StarknetArtifactsFiles;
 use anyhow::{anyhow, Result};
+use artifacts::artifacts::StarknetArtifactsFiles;
 use camino::{Utf8Path, Utf8PathBuf};
 pub use command::*;
 use scarb_metadata::{Metadata, PackageId, PackageMetadata, TargetMetadata};
@@ -10,11 +10,10 @@ use std::str::FromStr;
 
 mod artifacts;
 mod command;
-mod contracts;
 pub mod metadata;
 pub mod version;
 
-pub use crate::contracts::StarknetContractArtifacts;
+pub use crate::artifacts::artifacts::StarknetContractArtifacts;
 
 const INTEGRATION_TEST_TYPE: &str = "integration";
 
