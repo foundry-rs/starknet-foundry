@@ -179,8 +179,8 @@ fn get_starknet_artifacts_path(
         Some(path)
     } else {
         print_as_warning(&anyhow!(
-            "File = {path} missing.\
-        This is most likely caused by `[[target.starknet-contract]]` being undefined in Scarb.toml\
+            "File = {path} missing. \
+        This is most likely caused by `[[target.starknet-contract]]` being undefined in Scarb.toml \
         No contracts will be available for deployment"
         ));
         None
