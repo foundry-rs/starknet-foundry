@@ -1,7 +1,5 @@
-use super::base::VerificationInterface;
-use super::voyager::VoyagerVerificationInterface;
-use super::walnut::WalnutVerificationInterface;
 use anyhow::{anyhow, bail, Result};
+use base::VerificationInterface;
 use camino::Utf8PathBuf;
 use clap::{Parser, ValueEnum};
 use promptly::prompt;
@@ -12,6 +10,12 @@ use sncast::Network;
 use starknet::core::types::Felt;
 use std::collections::HashMap;
 use std::fmt;
+use voyager::VoyagerVerificationInterface;
+use walnut::WalnutVerificationInterface;
+
+pub mod base;
+mod voyager;
+mod walnut;
 
 #[derive(Parser)]
 #[command(about = "Verify a contract through a block explorer")]
@@ -102,15 +106,27 @@ pub async fn verify(
 
     match verifier {
         Verifier::Walnut => {
-            let walnut = WalnutVerificationInterface::new(network, workspace_dir.to_path_buf());
+            let walnut = WalnutVerificationInterface::new(network);
             walnut
-                .verify(cast_config, contract_address, class_hash, class_name)
+                .verify(
+                    cast_config,
+                    workspace_dir.to_path_buf(),
+                    contract_address,
+                    class_hash,
+                    class_name,
+                )
                 .await
         }
         Verifier::Voyager => {
-            let voyager = VoyagerVerificationInterface::new(network, workspace_dir.to_path_buf());
+            let voyager = VoyagerVerificationInterface::new(network);
             voyager
-                .verify(cast_config, contract_address, class_hash, class_name)
+                .verify(
+                    cast_config,
+                    workspace_dir.to_path_buf(),
+                    contract_address,
+                    class_hash,
+                    class_name,
+                )
                 .await
         }
     }
