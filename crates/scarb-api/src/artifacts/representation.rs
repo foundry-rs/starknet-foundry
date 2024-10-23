@@ -2,13 +2,13 @@ use crate::artifacts::deserialized::{artifacts_for_package, StarknetArtifacts};
 use anyhow::anyhow;
 use camino::{Utf8Path, Utf8PathBuf};
 
-pub struct StarknetArtifactsRepresentation {
+pub(super) struct StarknetArtifactsRepresentation {
     path: Utf8PathBuf,
     artifacts: StarknetArtifacts,
 }
 
 impl StarknetArtifactsRepresentation {
-    pub fn try_from_path(path: &Utf8Path) -> anyhow::Result<Self> {
+    pub(super) fn try_from_path(path: &Utf8Path) -> anyhow::Result<Self> {
         let artifacts = artifacts_for_package(path)?;
         let path = path
             .parent()
@@ -18,7 +18,7 @@ impl StarknetArtifactsRepresentation {
         Ok(Self { path, artifacts })
     }
 
-    pub fn artifacts(self) -> Vec<(String, Utf8PathBuf)> {
+    pub(super) fn artifacts(self) -> Vec<(String, Utf8PathBuf)> {
         self.artifacts
             .contracts
             .into_iter()

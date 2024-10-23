@@ -4,14 +4,14 @@ use serde::Deserialize;
 use std::fs;
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
-pub(crate) struct StarknetArtifacts {
+pub(super) struct StarknetArtifacts {
     pub version: u32,
     pub contracts: Vec<StarknetContract>,
 }
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug, PartialEq, Clone)]
-pub(crate) struct StarknetContract {
+pub(super) struct StarknetContract {
     pub id: String,
     pub package_name: String,
     pub contract_name: String,
@@ -20,7 +20,7 @@ pub(crate) struct StarknetContract {
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug, PartialEq, Clone)]
-pub(crate) struct StarknetContractArtifactPaths {
+pub(super) struct StarknetContractArtifactPaths {
     pub sierra: Utf8PathBuf,
 }
 
@@ -29,7 +29,7 @@ pub(crate) struct StarknetContractArtifactPaths {
 /// # Arguments
 ///
 /// * `path` - A path to `starknet_artifacts.json` file.
-pub(crate) fn artifacts_for_package(path: &Utf8Path) -> Result<StarknetArtifacts> {
+pub(super) fn artifacts_for_package(path: &Utf8Path) -> Result<StarknetArtifacts> {
     let starknet_artifacts =
         fs::read_to_string(path).with_context(|| format!("Failed to read {path:?} contents"))?;
     let starknet_artifacts: StarknetArtifacts =
