@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.0] - 2024-10-16
+
 ### Cast
+
+#### Added
+
+- Data transformer for passing calldata to transactions as Cairo expressions for automatic conversion instead of serialized form
 
 #### Changed
 
@@ -18,6 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 - `account delete` command: It is no longer necessary to provide the `--url` argument each time. Either the `--url` or `--network` argument must be provided, but not both, as they are mutually exclusive.
+
+### Forge
+
+#### Changed
+
+- When using test name filter with `--exact` flag, forge will try to compile only the selected test.
 
 ## [0.31.0] - 2024-09-26
 

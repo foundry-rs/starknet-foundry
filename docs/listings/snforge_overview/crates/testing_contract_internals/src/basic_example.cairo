@@ -5,7 +5,7 @@ trait IContract<TContractState> {}
 pub mod Contract {
     #[storage]
     pub struct Storage {
-        balance: felt252,
+        pub balance: felt252,
     }
 
     #[generate_trait]

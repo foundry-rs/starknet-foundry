@@ -11,7 +11,7 @@ use crate::{
         load_test_artifacts, should_compile_starknet_contract_target,
     },
     shared_cache::FailedTestsCache,
-    test_filter::TestsFilter,
+    test_filter::{NameFilter, TestsFilter},
     warn::{
         warn_if_available_gas_used_with_incompatible_scarb_version,
         warn_if_incompatible_rpc_version,
@@ -171,8 +171,13 @@ pub async fn run_for_package(
         }
     }
 
-    let filtered = all_tests - not_filtered;
-    pretty_printing::print_test_summary(&summaries, filtered);
+    // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
+    if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
+        pretty_printing::print_test_summary(&summaries, None);
+    } else {
+        let filtered = all_tests - not_filtered;
+        pretty_printing::print_test_summary(&summaries, Some(filtered));
+    }
 
     let any_fuzz_test_was_run = summaries.iter().any(|test_target_summary| {
         test_target_summary
