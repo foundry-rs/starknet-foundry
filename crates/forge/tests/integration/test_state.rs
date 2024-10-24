@@ -415,7 +415,7 @@ fn storage_access_default_values() {
             #[storage]
             struct Storage {
                 balance: felt252,
-                legacy_map: LegacyMap<felt252, felt252>,
+                legacy_map: Map<felt252, felt252>,
                 custom_struct: CustomStruct,
             }
         }
@@ -427,7 +427,7 @@ fn storage_access_default_values() {
             let default_felt252 = state.balance.read();
             assert(default_felt252 == 0, 'Incorrect storage value');
 
-            let default_map_value = state.legacy_map.read(22);
+            let default_map_value = state.legacy_map.entry(22).read();
             assert(default_map_value == 0, 'Incorrect map value');
 
             let default_custom_struct = state.custom_struct.read();
@@ -859,3 +859,5 @@ fn felt252_dict_usage() {
 
     assert_passed(&result);
 }
+
+

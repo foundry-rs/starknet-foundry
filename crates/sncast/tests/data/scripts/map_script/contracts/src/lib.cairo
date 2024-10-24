@@ -9,7 +9,10 @@ trait IMap<TMapState> {
 #[starknet::contract]
 mod Mapa {
     use starknet::{
-        storage::{StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map}
+        storage::{
+            StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess,
+            StoragePathEntry, Map
+        }
     };
 
     #[storage]
@@ -36,7 +39,10 @@ mod Mapa {
 #[starknet::contract]
 mod Mapa2 {
     use starknet::{
-        storage::{StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map}
+        storage::{
+            StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess,
+            StoragePathEntry, Map
+        }
     };
 
     #[storage]
