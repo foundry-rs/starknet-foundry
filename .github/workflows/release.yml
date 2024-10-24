@@ -157,7 +157,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: software-mansion/setup-scarb@v1.3.3
+      - uses: software-mansion/setup-scarb@v1
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
