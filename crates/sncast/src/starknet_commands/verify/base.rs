@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use camino::Utf8PathBuf;
 use reqwest::StatusCode;
 use serde::Serialize;
-use sncast::{helpers::configuration::CastConfig, response::structs::VerifyResponse};
+use sncast::{response::structs::VerifyResponse, Network};
 use starknet::core::types::Felt;
 use std::ffi::OsStr;
 use walkdir::WalkDir;
@@ -64,11 +64,12 @@ async fn send_verification_request(
 
 #[async_trait]
 pub trait VerificationInterface {
-    fn gen_explorer_url(&self, config: CastConfig) -> String;
+    fn new(network: Network, base_url: Option<String>) -> Self;
+
+    fn gen_explorer_url(&self) -> String;
 
     async fn verify(
         &self,
-        config: &CastConfig,
         workspace_dir: Utf8PathBuf,
         contract_address: Option<Felt>,
         class_hash: Option<Felt>,
@@ -82,7 +83,7 @@ pub trait VerificationInterface {
             class_hash,
             source_code,
         };
-        let url = self.gen_explorer_url(config.clone());
+        let url = self.gen_explorer_url();
         send_verification_request(url, payload).await
     }
 }

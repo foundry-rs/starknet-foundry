@@ -624,13 +624,13 @@ async fn run_async_command(
             )
             .expect("Failed to build contract");
             let result = starknet_commands::verify::verify(
-                &config,
-                verify.contract_address,
-                verify.class_hash,
+                verify.contract_address_or_class_hash.contract_address,
+                verify.contract_address_or_class_hash.class_hash,
                 verify.class_name,
                 verify.verifier,
                 verify.network,
                 verify.confirm_verification,
+                verify.custom_base_api_url,
                 &package_metadata.manifest_path,
                 &artifacts,
             )

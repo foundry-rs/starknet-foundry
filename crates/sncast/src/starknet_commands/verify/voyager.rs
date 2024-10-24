@@ -1,28 +1,26 @@
 use super::base::VerificationInterface;
 use async_trait::async_trait;
-use sncast::{helpers::configuration::CastConfig, Network};
+use sncast::Network;
 
 pub struct VoyagerVerificationInterface {
-    pub network: Network,
-}
-
-impl VoyagerVerificationInterface {
-    pub fn new(network: Network) -> Self {
-        VoyagerVerificationInterface { network }
-    }
+    pub base_url: String,
 }
 
 #[async_trait]
 impl VerificationInterface for VoyagerVerificationInterface {
-    fn gen_explorer_url(&self, config: CastConfig) -> String {
-        let base_api_url = match config.verification_base_url {
+    fn new(network: Network, base_url: Option<String>) -> Self {
+        let base_url = match base_url {
             Some(custom_base_api_url) => custom_base_api_url.clone(),
-            None => match self.network {
+            None => match network {
                 Network::Mainnet => "https://api.voyager.online/beta".to_string(),
                 Network::Sepolia => "https://sepolia-api.voyager.online/beta".to_string(),
             },
         };
 
-        format!("{base_api_url}/class-verify-v2")
+        VoyagerVerificationInterface { base_url }
+    }
+
+    fn gen_explorer_url(&self) -> String {
+        format!("{}/class-verify-v2", self.base_url)
     }
 }

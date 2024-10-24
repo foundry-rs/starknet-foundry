@@ -1,4 +1,3 @@
-use super::helpers::copy_directory_to_tempdir_with_config;
 use crate::helpers::constants::{
     ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
 };
@@ -25,21 +24,9 @@ async fn test_happy_case() {
         .mount(&mock_server)
         .await;
 
-    let cast_config = format!(
-        r#"
-        [sncast.default]
-        url = "http://127.0.0.1:5055/rpc"
-        account = "user1"
-        verification-base-url = "{}"
-    "#,
-        mock_server.uri()
-    );
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-    let contract_path = copy_directory_to_tempdir_with_config(
-        CONTRACTS_DIR.to_string() + "/map",
-        cast_config.to_string(),
-    )
-    .unwrap();
+    let custom_api_url = &mock_server.uri().clone();
 
     let args = vec![
         "--accounts-file",
@@ -53,6 +40,8 @@ async fn test_happy_case() {
         "voyager",
         "--network",
         "sepolia",
+        "--custom-base-api-url",
+        custom_api_url,
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path()).stdin("Y");
@@ -87,21 +76,9 @@ async fn test_happy_case_class_hash() {
         .mount(&mock_server)
         .await;
 
-    let cast_config = format!(
-        r#"
-        [sncast.default]
-        url = "http://127.0.0.1:5055/rpc"
-        account = "user1"
-        verification-base-url = "{}"
-    "#,
-        mock_server.uri()
-    );
+    let custom_api_url = &mock_server.uri().clone();
 
-    let contract_path = copy_directory_to_tempdir_with_config(
-        CONTRACTS_DIR.to_string() + "/map",
-        cast_config.to_string(),
-    )
-    .unwrap();
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
     let args = vec![
         "--accounts-file",
@@ -115,6 +92,8 @@ async fn test_happy_case_class_hash() {
         "voyager",
         "--network",
         "sepolia",
+        "--custom-base-api-url",
+        custom_api_url,
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path()).stdin("Y");
@@ -149,21 +128,9 @@ async fn test_failed_verification() {
         .mount(&mock_server)
         .await;
 
-    let cast_config = format!(
-        r#"
-        [sncast.default]
-        url = "http://127.0.0.1:5055/rpc"
-        account = "user1"
-        verification-base-url = "{}"
-    "#,
-        mock_server.uri()
-    );
+    let custom_api_url = &mock_server.uri().clone();
 
-    let contract_path = copy_directory_to_tempdir_with_config(
-        CONTRACTS_DIR.to_string() + "/map",
-        cast_config.to_string(),
-    )
-    .unwrap();
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
     let args = vec![
         "--accounts-file",
@@ -177,6 +144,8 @@ async fn test_failed_verification() {
         "voyager",
         "--network",
         "sepolia",
+        "--custom-base-api-url",
+        custom_api_url,
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path()).stdin("Y");
@@ -279,15 +248,18 @@ async fn test_no_class_hash_or_contract_address_provided() {
 
     let snapbox = runner(&args).current_dir(contract_path.path()).stdin("Y");
 
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
         formatdoc!(
             r"
-        command: verify
-        error: Either contract_address or class_hash must be provided
-        "
+            error: the following required arguments were not provided:
+              <--contract-address <CONTRACT_ADDRESS>|--class-hash <CLASS_HASH>>
+
+            Usage: sncast verify --class-name <CLASS_NAME> --network <NETWORK> --verifier <VERIFIER> <--contract-address <CONTRACT_ADDRESS>|--class-hash <CLASS_HASH>>
+
+            For more information, try '--help'."
         ),
     );
 }
@@ -308,21 +280,9 @@ async fn test_happy_case_with_confirm_verification_flag() {
         .mount(&mock_server)
         .await;
 
-    let cast_config = format!(
-        r#"
-        [sncast.default]
-        url = "http://127.0.0.1:5055/rpc"
-        account = "user1"
-        verification-base-url = "{}"
-    "#,
-        mock_server.uri()
-    );
+    let custom_api_url = &mock_server.uri();
 
-    let contract_path = copy_directory_to_tempdir_with_config(
-        CONTRACTS_DIR.to_string() + "/map",
-        cast_config.to_string(),
-    )
-    .unwrap();
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
     let args = vec![
         "--accounts-file",
@@ -336,6 +296,8 @@ async fn test_happy_case_with_confirm_verification_flag() {
         "voyager",
         "--network",
         "sepolia",
+        "--custom-base-api-url",
+        custom_api_url,
         "--confirm-verification",
     ];
 
@@ -371,21 +333,9 @@ async fn test_happy_case_specify_package() {
         .mount(&mock_server)
         .await;
 
-    let cast_config = format!(
-        r#"
-        [sncast.default]
-        url = "http://127.0.0.1:5055/rpc"
-        account = "user1"
-        verification-base-url = "{}"
-    "#,
-        mock_server.uri()
-    );
+    let custom_api_url = &mock_server.uri();
 
-    let tempdir = copy_directory_to_tempdir_with_config(
-        CONTRACTS_DIR.to_string() + "/multiple_packages",
-        cast_config.to_string(),
-    )
-    .unwrap();
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
 
     let args = vec![
         "--accounts-file",
@@ -401,6 +351,8 @@ async fn test_happy_case_specify_package() {
         "sepolia",
         "--package",
         "main_workspace",
+        "--custom-base-api-url",
+        custom_api_url,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path()).stdin("Y");
@@ -435,21 +387,9 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         .mount(&mock_server)
         .await;
 
-    let cast_config = format!(
-        r#"
-        [sncast.default]
-        url = "http://127.0.0.1:5055/rpc"
-        account = "user1"
-        verification-base-url = "{}"
-    "#,
-        mock_server.uri()
-    );
+    let custom_api_url = &mock_server.uri();
 
-    let tempdir = copy_directory_to_tempdir_with_config(
-        CONTRACTS_DIR.to_string() + "/virtual_workspace",
-        cast_config.to_string(),
-    )
-    .unwrap();
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
 
     let args = vec![
         "--accounts-file",
@@ -465,6 +405,8 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         "sepolia",
         "--package",
         "cast_fibonacci",
+        "--custom-base-api-url",
+        custom_api_url,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path()).stdin("Y");
