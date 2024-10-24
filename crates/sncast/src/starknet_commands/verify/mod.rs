@@ -1,10 +1,9 @@
 use anyhow::{anyhow, bail, Result};
 use base::VerificationInterface;
 use camino::Utf8PathBuf;
-use clap::{Parser, ValueEnum};
+use clap::{Args, Parser, ValueEnum};
 use promptly::prompt;
 use scarb_api::StarknetContractArtifacts;
-use sncast::helpers::configuration::CastConfig;
 use sncast::response::structs::VerifyResponse;
 use sncast::Network;
 use starknet::core::types::Felt;
@@ -17,18 +16,25 @@ pub mod base;
 mod voyager;
 mod walnut;
 
-#[derive(Parser)]
-#[command(about = "Verify a contract through a block explorer")]
-pub struct Verify {
+#[derive(Args, Debug, Clone)]
+#[group(required = true, multiple = false)]
+pub struct ContractAddressOrClassHashGroup {
     /// Contract address of the contract. Either this or class hash should be provided.
     #[clap(short = 'd', long)]
     pub contract_address: Option<Felt>,
 
-    /// Class hash of the contract. Either this or contract address should be provided
+    /// Class hash of the contract. Either this or contract address should be provided.
     #[clap(short = 'x', long)]
     pub class_hash: Option<Felt>,
+}
 
-    /// Class name of the contract to be verified
+#[derive(Parser)]
+#[command(about = "Verify a contract through a block explorer")]
+pub struct Verify {
+    #[clap(flatten)]
+    pub contract_address_or_class_hash: ContractAddressOrClassHashGroup,
+
+    /// Class name of the contract to be verified. Either this or class hash should be provided.
     #[clap(short, long)]
     pub class_name: String,
 
@@ -47,6 +53,10 @@ pub struct Verify {
     /// Optionally specify package with the contract to be verified
     #[clap(long)]
     pub package: Option<String>,
+
+    // Custom api to be used as a verifier's base url.
+    #[clap(long)]
+    pub custom_base_api_url: Option<String>,
 }
 
 #[derive(ValueEnum, Clone, Debug)]
@@ -67,13 +77,13 @@ impl fmt::Display for Verifier {
 // disable too many arguments clippy warning
 #[allow(clippy::too_many_arguments)]
 pub async fn verify(
-    cast_config: &CastConfig,
     contract_address: Option<Felt>,
     class_hash: Option<Felt>,
     class_name: String,
     verifier: Verifier,
     network: Network,
     confirm_verification: bool,
+    custom_base_api_url: Option<String>,
     manifest_path: &Utf8PathBuf,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<VerifyResponse> {
@@ -93,11 +103,6 @@ pub async fn verify(
         return Err(anyhow!("Contract named '{class_name}' was not found"));
     }
 
-    // ensure that either contract_address or class_hash is provided
-    if contract_address.is_none() && class_hash.is_none() {
-        bail!("Either contract_address or class_hash must be provided");
-    }
-
     // Build JSON Payload for the verification request
     // get the parent dir of the manifest path
     let workspace_dir = manifest_path
@@ -106,10 +111,9 @@ pub async fn verify(
 
     match verifier {
         Verifier::Walnut => {
-            let walnut = WalnutVerificationInterface::new(network);
+            let walnut = WalnutVerificationInterface::new(network, custom_base_api_url);
             walnut
                 .verify(
-                    cast_config,
                     workspace_dir.to_path_buf(),
                     contract_address,
                     class_hash,
@@ -118,10 +122,9 @@ pub async fn verify(
                 .await
         }
         Verifier::Voyager => {
-            let voyager = VoyagerVerificationInterface::new(network);
+            let voyager = VoyagerVerificationInterface::new(network, custom_base_api_url);
             voyager
                 .verify(
-                    cast_config,
                     workspace_dir.to_path_buf(),
                     contract_address,
                     class_hash,
