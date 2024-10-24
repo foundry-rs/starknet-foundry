@@ -5,11 +5,10 @@ use camino::Utf8Path;
 use configuration::PackageConfig;
 use forge_runner::package_tests::raw::TestTargetRaw;
 use forge_runner::package_tests::TestTargetLocation;
-use scarb_api::ScarbCommand;
-use scarb_metadata::{PackageMetadata, TargetMetadata};
+use scarb_api::{test_targets_by_name, ScarbCommand};
+use scarb_metadata::PackageMetadata;
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
-use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::io::ErrorKind;
 
@@ -74,27 +73,6 @@ fn build_test_artifacts_with_scarb(filter: PackagesFilter, features: FeaturesSpe
         .run()
         .context("Failed to build test artifacts with Scarb")?;
     Ok(())
-}
-
-/// collecting by name allow us to dedup targets
-/// we do it because they use same sierra and we display them without distinction anyway
-fn test_targets_by_name(package: &PackageMetadata) -> HashMap<String, &TargetMetadata> {
-    fn test_target_name(target: &TargetMetadata) -> String {
-        // this is logic copied from scarb: https://github.com/software-mansion/scarb/blob/90ab01cb6deee48210affc2ec1dc94d540ab4aea/extensions/scarb-cairo-test/src/main.rs#L115
-        target
-            .params
-            .get("group-id") // by unit tests grouping
-            .and_then(|v| v.as_str())
-            .map(ToString::to_string)
-            .unwrap_or(target.name.clone()) // else by integration test name
-    }
-
-    package
-        .targets
-        .iter()
-        .filter(|target| target.kind == "test")
-        .map(|target| (test_target_name(target), target))
-        .collect()
 }
 
 pub fn load_test_artifacts(
