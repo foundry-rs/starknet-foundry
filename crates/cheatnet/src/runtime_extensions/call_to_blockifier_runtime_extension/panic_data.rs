@@ -10,6 +10,10 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
     let re_string = Regex::new(r#"(?s)Execution failed\. Failure reason: "(.*?)"\."#)
         .expect("Could not create string panic_data matching regex");
 
+    let re_entry_point =
+        Regex::new(r"Entry point EntryPointSelector\((0x[0-9a-fA-F]+)\) not found in contract\.")
+            .unwrap();
+
     if let Some(captures) = re_felt_array.captures(err) {
         if let Some(panic_data_match) = captures.get(1) {
             let panic_data_felts: Vec<Felt252> = panic_data_match
@@ -27,6 +31,16 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
             let string_match_str = string_match.as_str();
             let panic_data_felts: Vec<Felt252> =
                 ByteArray::from(string_match_str).serialize_with_magic();
+            return Some(panic_data_felts);
+        }
+    }
+
+    if let Some(captures) = re_entry_point.captures(err) {
+        if let Some(_selector) = captures.get(1) {
+            let panic_data_felts = vec![
+                Felt252::from_bytes_be_slice("ENTRYPOINT_NOT_FOUND".as_bytes()),
+                Felt252::from_bytes_be_slice("ENTRYPOINT_FAILED".as_bytes()),
+            ];
             return Some(panic_data_felts);
         }
     }
