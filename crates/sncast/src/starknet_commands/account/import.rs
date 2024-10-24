@@ -1,3 +1,5 @@
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
     AccountType,
@@ -26,7 +28,7 @@ use super::deploy::compute_account_address;
 pub struct Import {
     /// Name of the account to be imported
     #[clap(short, long)]
-    pub name: String,
+    pub name: Option<String>,
 
     /// Address of the account
     #[clap(short, long)]
@@ -62,7 +64,7 @@ pub struct Import {
 }
 
 pub async fn import(
-    account: &str,
+    account: Option<String>,
     accounts_file: &Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
     import: &Import,
@@ -79,6 +81,12 @@ pub async fn import(
         unreachable!("Checked on clap level")
     };
     let private_key = &SigningKey::from_secret_scalar(*private_key);
+
+    let account = if let Some(name) = account {
+        name
+    } else {
+        generate_default_account_name()
+    };
 
     let fetched_class_hash = match provider
         .get_class_hash_at(BlockId::Tag(BlockTag::Pending), import.address)
@@ -142,7 +150,7 @@ pub async fn import(
         import.salt,
     );
 
-    write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
+    write_account_to_accounts_file(&account, accounts_file, chain_id, account_json.clone())?;
 
     if import.add_profile.is_some() {
         let config = CastConfig {
@@ -194,6 +202,15 @@ fn get_private_key_from_input() -> Result<Felt> {
     let input = rpassword::prompt_password("Type in your private key and press enter: ")
         .expect("Failed to read private key from input");
     parse_input_to_felt(&input)
+}
+
+fn generate_default_account_name() -> String {
+    let start = SystemTime::now();
+    let since_epoch = start
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards");
+    let timestamp = since_epoch.as_millis();
+    format!("account-{}", timestamp)
 }
 
 #[cfg(test)]
