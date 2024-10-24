@@ -1,6 +1,7 @@
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use std::collections::HashMap;
+use std::ffi::OsString;
 use std::num::NonZeroU32;
 use std::sync::Arc;
 
@@ -29,20 +30,27 @@ pub struct OutputConfig {
     pub versioned_programs_dir: Utf8PathBuf,
 }
 
-#[derive(Debug, PartialEq, Clone, Copy, Default)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct ExecutionDataToSave {
     pub trace: bool,
     pub profile: bool,
     pub coverage: bool,
+    pub additional_args: Vec<OsString>,
 }
 
 impl ExecutionDataToSave {
     #[must_use]
-    pub fn from_flags(save_trace_data: bool, build_profile: bool, coverage: bool) -> Self {
+    pub fn from_flags(
+        save_trace_data: bool,
+        build_profile: bool,
+        coverage: bool,
+        additional_args: &[OsString],
+    ) -> Self {
         Self {
             trace: save_trace_data,
             profile: build_profile,
             coverage,
+            additional_args: additional_args.to_vec(),
         }
     }
     #[must_use]
