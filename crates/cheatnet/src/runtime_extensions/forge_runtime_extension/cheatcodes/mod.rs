@@ -7,6 +7,7 @@ pub mod cheat_block_number;
 pub mod cheat_block_timestamp;
 pub mod cheat_caller_address;
 pub mod cheat_execution_info;
+pub mod cheat_random_felt252;
 pub mod cheat_sequencer_address;
 pub mod declare;
 pub mod deploy;

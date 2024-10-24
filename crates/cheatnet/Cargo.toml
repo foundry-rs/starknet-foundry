@@ -7,6 +7,7 @@ edition.workspace = true
 testing = []
 
 [dependencies]
+rand = "0.8.5"
 anyhow.workspace = true
 blockifier.workspace = true
 bimap.workspace = true
