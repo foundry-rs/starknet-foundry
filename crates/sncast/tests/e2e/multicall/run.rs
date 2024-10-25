@@ -226,3 +226,44 @@ async fn test_deploy_success_invoke_fails() {
         "},
     );
 }
+
+#[tokio::test]
+async fn test_numeric_inputs() {
+    let path = project_root::get_project_root().expect("failed to get project root path");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("deploy_invoke_numeric_inputs.toml");
+    let path = path.to_str().expect("failed converting path to str");
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "user5",
+        "multicall",
+        "run",
+        "--url",
+        URL,
+        "--path",
+        path,
+        "--fee-token",
+        "eth",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert();
+
+    let stderr_str = output.as_stderr();
+    assert!(
+        stderr_str.is_empty(),
+        "Multicall error, stderr: \n{stderr_str}",
+    );
+
+    output.stdout_matches(indoc! {r"
+        command: multicall run
+        transaction_hash: 0x[..]
+
+        To see invocation details, visit:
+        transaction: [..]
+    "});
+}
