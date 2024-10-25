@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- Cairo Edition set `2024_07`
+- Cairo Edition in `snforge init` template set to `2024_07`
 
 ## [0.31.0] - 2024-09-26
 
