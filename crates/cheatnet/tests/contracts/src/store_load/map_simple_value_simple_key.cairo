@@ -1,7 +1,11 @@
 #[starknet::contract]
 mod MapSimpleValueSimpleKey {
     use starknet::{
-        storage::{StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map}};
+        storage::{
+            StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess,
+            StoragePathEntry, Map
+        }
+    };
     #[storage]
     struct Storage {
         values: Map<felt252, felt252>,
