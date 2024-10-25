@@ -18,7 +18,7 @@ fn main() {
     let class_hash = match first_declare_result {
         DeclareResult::Success(declare_transaction_result) => declare_transaction_result.class_hash,
         DeclareResult::AlreadyDeclared(_) => panic!("Should not be already declared"),
-    }
+    };
 
     let declare_nonce = get_nonce('latest');
     let second_declare_result = declare(
