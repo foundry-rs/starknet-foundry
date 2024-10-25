@@ -153,7 +153,7 @@ fn parse_inputs(inputs: &Vec<Input>, contracts: &HashMap<String, String>) -> Res
                 let resolved = contracts.get(s).unwrap_or(s);
                 resolved
                     .parse()
-                    .context(format!("Failed to parse input '{}' to Felt", resolved))?
+                    .context(format!("Failed to parse input '{resolved}' to Felt"))?
             }
             Input::Number(n) => (*n).into(),
         };
