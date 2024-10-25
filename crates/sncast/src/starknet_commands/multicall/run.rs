@@ -43,9 +43,16 @@ impl_payable_transaction!(Run, token_not_supported_for_invoke,
 );
 
 #[derive(Deserialize, Debug)]
+#[serde(untagged)]
+enum Input {
+    String(String),
+    Number(i64),
+}
+
+#[derive(Deserialize, Debug)]
 struct DeployCall {
     class_hash: Felt,
-    inputs: Vec<String>,
+    inputs: Vec<Input>,
     unique: bool,
     salt: Option<Felt>,
     id: String,
@@ -55,7 +62,7 @@ struct DeployCall {
 struct InvokeCall {
     contract_address: String,
     function: String,
-    inputs: Vec<String>,
+    inputs: Vec<Input>,
 }
 
 pub async fn run(
@@ -138,10 +145,13 @@ pub async fn run(
         .map_err(handle_starknet_command_error)
 }
 
-fn parse_inputs(inputs: &Vec<String>, contracts: &HashMap<String, String>) -> Result<Vec<Felt>> {
+fn parse_inputs(inputs: &Vec<Input>, contracts: &HashMap<String, String>) -> Result<Vec<Felt>> {
     let mut parsed_inputs = Vec::new();
     for input in inputs {
-        let current_input = contracts.get(input).unwrap_or(input);
+        let current_input = match input {
+            Input::String(s) => contracts.get(s).unwrap_or(s).to_string(),
+            Input::Number(n) => n.to_string(),
+        };
         parsed_inputs.push(
             current_input
                 .parse()
