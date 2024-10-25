@@ -7,12 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.0] - 2024-10-16
+
 ### Cast
+
+#### Added
+
+- Data transformer for passing calldata to transactions as Cairo expressions for automatic conversion instead of serialized form
 
 #### Changed
 
 - Short option for `--accounts-file` flag has been removed.
 - Short option for `--contract-address` is now `-d` instead of `-a`.
+- `account add` is renamed to `account import`.
+- `account import` can be now used without specifying `--private-key` or `--private-key-file` flags. Instead private key will be read interactively from the user.
+
+#### Fixed
+- `account delete` command: It is no longer necessary to provide the `--url` argument each time. Either the `--url` or `--network` argument must be provided, but not both, as they are mutually exclusive.
+
+### Forge
+
+#### Changed
+
+- When using test name filter with `--exact` flag, forge will try to compile only the selected test.
 
 ### Forge
 
