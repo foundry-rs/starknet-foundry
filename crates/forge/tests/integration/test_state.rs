@@ -856,5 +856,6 @@ fn felt252_dict_usage() {
     ));
 
     let result = run_test_case(&test);
+    
     assert_passed(&result);
 }
