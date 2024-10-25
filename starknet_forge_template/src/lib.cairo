@@ -11,6 +11,8 @@ pub trait IHelloStarknet<TContractState> {
 /// Simple contract for managing balance.
 #[starknet::contract]
 mod HelloStarknet {
+    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+
     #[storage]
     struct Storage {
         balance: felt252,
