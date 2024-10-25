@@ -9,7 +9,11 @@ trait IState<TState> {
 #[starknet::contract]
 mod State {
     use starknet::{
-        storage::{StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map}};
+        storage::{
+            StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess,
+            StoragePathEntry, Map
+        }
+    };
 
     #[storage]
     struct Storage {

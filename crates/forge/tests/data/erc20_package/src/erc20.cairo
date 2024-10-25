@@ -21,8 +21,13 @@ trait IERC20<TContractState> {
 
 #[starknet::contract]
 mod ERC20 {
-    use starknet::{ contract_address_const, get_caller_address, ContractAddress,
-        storage::{StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map},  };
+    use starknet::{
+        contract_address_const, get_caller_address, ContractAddress,
+        storage::{
+            StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess,
+            StoragePathEntry, Map
+        },
+    };
     use zeroable::Zeroable;
     #[storage]
     struct Storage {
