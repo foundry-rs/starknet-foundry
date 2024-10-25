@@ -148,15 +148,16 @@ pub async fn run(
 fn parse_inputs(inputs: &Vec<Input>, contracts: &HashMap<String, String>) -> Result<Vec<Felt>> {
     let mut parsed_inputs = Vec::new();
     for input in inputs {
-        let current_input = match input {
-            Input::String(s) => contracts.get(s).unwrap_or(s).to_string(),
-            Input::Number(n) => n.to_string(),
+        let felt_value = match input {
+            Input::String(s) => {
+                let resolved = contracts.get(s).unwrap_or(s);
+                resolved
+                    .parse()
+                    .context(format!("Failed to parse input '{}' to Felt", resolved))?
+            }
+            Input::Number(n) => (*n).into(),
         };
-        parsed_inputs.push(
-            current_input
-                .parse()
-                .context("Failed to parse input to Felt")?,
-        );
+        parsed_inputs.push(felt_value);
     }
 
     Ok(parsed_inputs)
