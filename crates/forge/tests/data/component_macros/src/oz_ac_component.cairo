@@ -4,7 +4,10 @@
 #[starknet::component]
 mod SRC5Component {
     use starknet::{
-        storage::{StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map},
+        storage::{
+            StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess,
+            StoragePathEntry, Map
+        },
         ContractAddress
     };
 
