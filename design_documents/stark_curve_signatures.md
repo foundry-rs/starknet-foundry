@@ -3,7 +3,7 @@
 ## Context
 
 Some users would like to have a way of generating and signing with the `stark curve`. It would be useful for testing
-custom account implementations.
+custom account implementations. 
 
 ## Existing solutions
 
@@ -17,7 +17,7 @@ My proposal would be to introduce a `StarkCurveKeyPair` struct which would imple
 ```cairo
 struct StarkCurveKeyPair {
     private_key: felt252,
-    public_key: felt252
+    public_key: felt252 
 }
 
 trait StarkCurveKeyPairTrait {
@@ -36,9 +36,9 @@ use snforge_std::{StarkCurveKeyPair, StarkCurveKeyPairTrait};
 fn test_stark_curve() {
     let mut key_pair = StarkCurveKeyPairTrait::generate();
     let message_hash = 12345;
-
+    
     let signature = key_pair.sign(message_hash);
-
+    
     assert(key_pair.verify(message_hash, signature), 'Signature is incorrect');
 }
 ```
