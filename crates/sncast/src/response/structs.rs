@@ -46,10 +46,27 @@ pub struct DeployResponse {
 impl CommandResponse for DeployResponse {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
-pub struct DeclareResponse {
+pub struct DeclareTransactionResponse {
     pub class_hash: Felt,
     pub transaction_hash: Felt,
 }
+
+impl CommandResponse for DeclareTransactionResponse {}
+
+#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
+pub struct AlreadyDeclaredResponse {
+    pub class_hash: Felt,
+}
+
+impl CommandResponse for AlreadyDeclaredResponse {}
+
+#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
+#[serde(tag = "status")]
+pub enum DeclareResponse {
+    Success(DeclareTransactionResponse),
+    AlreadyDeclared(AlreadyDeclaredResponse),
+}
+
 impl CommandResponse for DeclareResponse {}
 
 #[derive(Serialize)]
@@ -167,7 +184,7 @@ impl OutputLink for DeployResponse {
     }
 }
 
-impl OutputLink for DeclareResponse {
+impl OutputLink for DeclareTransactionResponse {
     const TITLE: &'static str = "declaration";
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {

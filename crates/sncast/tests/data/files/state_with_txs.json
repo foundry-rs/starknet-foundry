@@ -5,6 +5,7 @@
       "name": "declare",
       "output": {
         "type": "DeclareResponse",
+        "status": "Success",
         "class_hash": "0x123",
         "transaction_hash": "0x321"
       },

@@ -232,12 +232,13 @@ async fn test_sncast_timed_out() {
     "});
 }
 
+// TODO investigate failure
 #[tokio::test]
 async fn test_strk_fee_settings() {
     let contract_dir = duplicate_contract_directory_with_salt(
         SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
         "dummy",
-        "100",
+        "12345",
     );
     let script_dir = copy_script_directory_to_tempdir(
         SCRIPTS_DIR.to_owned() + "/declare/",

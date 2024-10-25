@@ -310,6 +310,7 @@ fn verify_version(version: u8) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::response::structs::DeclareTransactionResponse;
     use crate::state::state_file::ScriptTransactionOutput::ErrorResponse;
     use camino::Utf8PathBuf;
     use conversions::string::TryFromHexStr;
@@ -405,10 +406,12 @@ mod tests {
         let inputs = vec![123u8, 46u8];
         let transaction = ScriptTransactionEntry {
             name: "declare".to_string(),
-            output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
-                class_hash: Felt::try_from_hex_str("0x123").unwrap(),
-                transaction_hash: Felt::try_from_hex_str("0x321").unwrap(),
-            }),
+            output: ScriptTransactionOutput::DeclareResponse(DeclareResponse::Success(
+                DeclareTransactionResponse {
+                    class_hash: Felt::try_from_hex_str("0x123").unwrap(),
+                    transaction_hash: Felt::try_from_hex_str("0x321").unwrap(),
+                },
+            )),
             status: ScriptTransactionStatus::Success,
             timestamp: 0,
             misc: None,
@@ -442,10 +445,12 @@ mod tests {
         let inputs = vec![123u8, 45u8];
         let transaction1 = ScriptTransactionEntry {
             name: "declare".to_string(),
-            output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
-                class_hash: Felt::try_from_hex_str("0x1").unwrap(),
-                transaction_hash: Felt::try_from_hex_str("0x2").unwrap(),
-            }),
+            output: ScriptTransactionOutput::DeclareResponse(DeclareResponse::Success(
+                DeclareTransactionResponse {
+                    class_hash: Felt::try_from_hex_str("0x1").unwrap(),
+                    transaction_hash: Felt::try_from_hex_str("0x2").unwrap(),
+                },
+            )),
             status: ScriptTransactionStatus::Success,
             timestamp: 0,
             misc: None,
@@ -513,10 +518,12 @@ mod tests {
         let inputs = vec![123u8, 45u8];
         let transaction1 = ScriptTransactionEntry {
             name: "declare".to_string(),
-            output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
-                class_hash: Felt::try_from_hex_str("0x1").unwrap(),
-                transaction_hash: Felt::try_from_hex_str("0x2").unwrap(),
-            }),
+            output: ScriptTransactionOutput::DeclareResponse(DeclareResponse::Success(
+                DeclareTransactionResponse {
+                    class_hash: Felt::try_from_hex_str("0x1").unwrap(),
+                    transaction_hash: Felt::try_from_hex_str("0x2").unwrap(),
+                },
+            )),
             status: ScriptTransactionStatus::Success,
             timestamp: 2,
             misc: None,
