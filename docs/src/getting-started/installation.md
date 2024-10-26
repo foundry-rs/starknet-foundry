@@ -52,6 +52,63 @@ Install the latest version:
 asdf install starknet-foundry latest
 ```
 
+### Set the installed version:
+
+- Globally (applies to all directories):
+
+```shell
+asdf global starknet-foundry 0.32.0
+```
+
+- Locally (applies only to the current directory):
+
+```shell
+asdf local starknet-foundry 0.32.0
+```
+
+Alternatively, You can create the `.tool-versions` file in your project directory with the version of the foundry by running the code below:
+
+```shell
+echo "starknet-foundry 0.32.0" > .tool-versions
+```
+
+### Version Management
+
+- Common Error
+
+Users may encounter this error when trying to use `snforge` or `sncast` without setting a version:
+
+```shell
+No version is set for command snforge
+Consider adding one of the following versions in your config file at starknet-foundry 0.32.0
+```
+
+The error code above shows that the version of `Starknet Foundry` is not set. You must set the version using the steps outlined to resolve the issue.
+
+### Checking Current Version
+
+- To verify your installation and version
+
+```shell
+snforge --version
+sncast --version
+```
+
+### Switching Versions
+
+To switch between different versions:
+
+```shell
+# Install a different version
+asdf install starknet-foundry 0.32.0
+
+# Switch global version
+asdf global starknet-foundry 0.32.0
+
+# Or switch local version
+asdf local starknet-foundry 0.32.0
+```
+
 See [asdf guide](https://asdf-vm.com/guide/getting-started.html) for more details.
 
 ### Installation on Windows
