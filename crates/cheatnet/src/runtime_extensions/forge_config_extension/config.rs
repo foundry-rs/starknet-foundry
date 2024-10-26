@@ -1,5 +1,6 @@
 use cairo_vm::Felt252;
 use conversions::{byte_array::ByteArray, serde::deserialize::CairoDeserialize};
+use serde::Deserialize;
 use std::num::NonZeroU32;
 use url::Url;
 
@@ -12,7 +13,7 @@ pub struct RawAvailableGasConfig {
 
 // fork
 
-#[derive(Debug, Clone, CairoDeserialize, PartialEq)]
+#[derive(Debug, Clone, CairoDeserialize, PartialEq, Deserialize)]
 pub enum BlockId {
     BlockTag,
     BlockHash(Felt252),

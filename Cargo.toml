@@ -71,7 +71,7 @@ starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "
 tempfile = "3.13.0"
 thiserror = "1.0.64"
 ctor = "0.2.8"
-url = "2.5.2"
+url = { "version" = "2.5.2", "features" = ["serde"] }
 tokio = { version = "1.40.0", features = ["full"] }
 tokio-util = "0.7.11"
 futures = "0.3.30"

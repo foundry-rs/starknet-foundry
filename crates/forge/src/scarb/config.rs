@@ -1,7 +1,7 @@
 use anyhow::{anyhow, bail, Result};
 use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
 use itertools::Itertools;
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 use std::{
     collections::{HashMap, HashSet},
     num::NonZeroU32,
@@ -42,7 +42,7 @@ pub const SCARB_MANIFEST_TEMPLATE_CONTENT: &str = r#"
 
 #[allow(clippy::module_name_repetitions)]
 #[allow(clippy::struct_excessive_bools)]
-#[derive(Debug, PartialEq, Default)]
+#[derive(Debug, PartialEq, Default, Deserialize)]
 pub struct ForgeConfigFromScarb {
     /// Should runner exit after first failed test
     pub exit_first: bool,
@@ -59,17 +59,73 @@ pub struct ForgeConfigFromScarb {
     /// Generate a coverage report for the executed tests which have passed and are not fuzz tests
     pub coverage: bool,
     /// Fork configuration profiles
+    #[serde(deserialize_with = "validate_forks")]
     pub fork: Vec<ForkTarget>,
     /// Limit of steps
     pub max_n_steps: Option<u32>,
 }
 
 #[non_exhaustive]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Deserialize)]
 pub struct ForkTarget {
     pub name: String,
     pub url: Url,
     pub block_id: BlockId,
+}
+
+fn validate_forks<'de, D>(deserializer: D) -> Result<Vec<ForkTarget>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    use serde::de::Error;
+
+    // deserialize to Vec<ForkTarget>
+    let raw_fork_targets = Vec::<RawForkTarget>::deserialize(deserializer)?;
+
+    // Validate
+    match validate_raw_fork_config(raw_fork_targets) {
+        Ok(forks) => Ok(forks),
+        Err(e) => Err(Error::custom(e.to_string())),
+    }
+}
+
+#[derive(Deserialize, Debug, PartialEq, Default, Clone)]
+pub(crate) struct RawForkTarget {
+    pub name: String,
+    pub url: String,
+    pub block_id: HashMap<String, String>,
+}
+
+fn validate_raw_fork_config(forks: Vec<RawForkTarget>) -> Result<Vec<ForkTarget>> {
+    let names: Vec<_> = forks.iter().map(|fork| &fork.name).collect();
+    let removed_duplicated_names: HashSet<_> = names.iter().collect();
+    let mut fork_targets = vec![];
+    if names.len() != removed_duplicated_names.len() {
+        bail!("Some fork names are duplicated");
+    }
+    for fork in forks {
+        let block_id_item = fork.block_id.iter().exactly_one();
+
+        let Ok((block_id_key, block_id_value)) = block_id_item else {
+            bail!("block_id should be set once per fork");
+        };
+
+        if !["number", "hash", "tag"].contains(&&**block_id_key) {
+            bail!("block_id = {block_id_key} is not valid. Possible values are = \"number\", \"hash\" and \"tag\"");
+        }
+
+        if block_id_key == "tag" && block_id_value != "latest" {
+            bail!("block_id.tag can only be equal to latest");
+        }
+        fork_targets.push(ForkTarget::new(
+            fork.name.as_str(),
+            fork.url.as_str(),
+            block_id_key,
+            block_id_value,
+        )?);
+    }
+
+    Ok(fork_targets)
 }
 
 impl ForkTarget {
@@ -102,94 +158,34 @@ impl ForkTarget {
 }
 
 /// Represents forge config deserialized from Scarb.toml using basic types like String etc.
-#[allow(clippy::struct_excessive_bools)]
-#[derive(Deserialize, Debug, PartialEq, Default)]
-pub(crate) struct RawForgeConfig {
-    #[serde(default)]
-    /// Should runner exit after first failed test
-    pub exit_first: bool,
-    /// How many runs should fuzzer execute
-    pub fuzzer_runs: Option<NonZeroU32>,
-    /// Seed to be used by fuzzer
-    pub fuzzer_seed: Option<u64>,
-    #[serde(default)]
-    // Display more detailed info about used resources
-    pub detailed_resources: bool,
-    #[serde(default)]
-    /// Save execution traces of all test which have passed and are not fuzz tests
-    pub save_trace_data: bool,
-    #[serde(default)]
-    /// Build profiles of all tests which have passed and are not fuzz tests
-    pub build_profile: bool,
-    #[serde(default)]
-    /// Generate a coverage report for the executed tests which have passed and are not fuzz tests
-    pub coverage: bool,
-    #[serde(default)]
-    /// Fork configuration profiles
-    pub fork: Vec<RawForkTarget>,
-    /// Limit of steps
-    pub max_n_steps: Option<u32>,
-}
-
-#[derive(Deserialize, Debug, PartialEq, Default, Clone)]
-pub(crate) struct RawForkTarget {
-    pub name: String,
-    pub url: String,
-    pub block_id: HashMap<String, String>,
-}
-
-fn validate_raw_fork_config(raw_config: RawForgeConfig) -> Result<RawForgeConfig> {
-    let forks = &raw_config.fork;
-
-    let names: Vec<_> = forks.iter().map(|fork| &fork.name).collect();
-    let removed_duplicated_names: HashSet<_> = names.iter().collect();
-
-    if names.len() != removed_duplicated_names.len() {
-        bail!("Some fork names are duplicated");
-    }
-
-    forks
-        .iter()
-        .try_for_each(|fork| match fork.block_id.len() {
-            1 => Ok(()),
-            _ => bail!("block_id should be set once per fork"),
-        })?;
-
-    Ok(raw_config)
-}
-
-impl TryFrom<RawForgeConfig> for ForgeConfigFromScarb {
-    type Error = anyhow::Error;
-
-    fn try_from(value: RawForgeConfig) -> Result<Self, Self::Error> {
-        let value = validate_raw_fork_config(value)?;
-        let mut fork_targets = vec![];
-
-        for raw_fork_target in value.fork {
-            let (block_id_type, block_id_value) =
-                raw_fork_target.block_id.iter().exactly_one().unwrap();
-
-            fork_targets.push(ForkTarget::new(
-                raw_fork_target.name.as_str(),
-                raw_fork_target.url.as_str(),
-                block_id_type,
-                block_id_value,
-            )?);
-        }
-
-        Ok(ForgeConfigFromScarb {
-            exit_first: value.exit_first,
-            fuzzer_runs: value.fuzzer_runs,
-            fuzzer_seed: value.fuzzer_seed,
-            detailed_resources: value.detailed_resources,
-            save_trace_data: value.save_trace_data,
-            build_profile: value.build_profile,
-            coverage: value.coverage,
-            fork: fork_targets,
-            max_n_steps: value.max_n_steps,
-        })
-    }
-}
+// #[allow(clippy::struct_excessive_bools)]
+// #[derive(Deserialize, Debug, PartialEq, Default)]
+// pub(crate) struct RawForgeConfig {
+//     #[serde(default)]
+//     /// Should runner exit after first failed test
+//     pub exit_first: bool,
+//     /// How many runs should fuzzer execute
+//     pub fuzzer_runs: Option<NonZeroU32>,
+//     /// Seed to be used by fuzzer
+//     pub fuzzer_seed: Option<u64>,
+//     #[serde(default)]
+//     // Display more detailed info about used resources
+//     pub detailed_resources: bool,
+//     #[serde(default)]
+//     /// Save execution traces of all test which have passed and are not fuzz tests
+//     pub save_trace_data: bool,
+//     #[serde(default)]
+//     /// Build profiles of all tests which have passed and are not fuzz tests
+//     pub build_profile: bool,
+//     #[serde(default)]
+//     /// Generate a coverage report for the executed tests which have passed and are not fuzz tests
+//     pub coverage: bool,
+//     #[serde(default)]
+//     /// Fork configuration profiles
+//     pub fork: Vec<RawForkTarget>,
+//     /// Limit of steps
+//     pub max_n_steps: Option<u32>,
+// }
 
 #[cfg(test)]
 mod tests {

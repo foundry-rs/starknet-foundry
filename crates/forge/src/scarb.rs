@@ -1,4 +1,4 @@
-use crate::scarb::config::{ForgeConfigFromScarb, RawForgeConfig};
+use crate::scarb::config::ForgeConfigFromScarb;
 use anyhow::{Context, Result};
 use cairo_lang_sierra::program::VersionedProgram;
 use camino::Utf8Path;
@@ -26,11 +26,7 @@ impl PackageConfig for ForgeConfigFromScarb {
     where
         Self: Sized,
     {
-        let raw_config = serde_json::from_value::<RawForgeConfig>(config.clone())?;
-
-        raw_config
-            .try_into()
-            .context("Invalid config in Scarb.toml: ")
+        serde_json::from_value(config.clone()).context("Invalid config in Scarb.toml: ")
     }
 }
 
