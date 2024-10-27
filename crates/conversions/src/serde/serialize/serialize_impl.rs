@@ -28,7 +28,6 @@ impl CairoSerialize for CallEntryPoint {
 
 impl CairoSerialize for ContractErrorData {
     fn serialize(&self, output: &mut BufferWriter) {
-        // self.revert_error.serialize(output);
         ByteArray::from(self.revert_error.as_str()).serialize(output);
     }
 }
@@ -36,14 +35,12 @@ impl CairoSerialize for ContractErrorData {
 impl CairoSerialize for TransactionExecutionErrorData {
     fn serialize(&self, output: &mut BufferWriter) {
         self.transaction_index.serialize(output);
-        // self.execution_error.serialize(output);
         ByteArray::from(self.execution_error.as_str()).serialize(output);
     }
 }
 
 impl CairoSerialize for anyhow::Error {
     fn serialize(&self, output: &mut BufferWriter) {
-        // self.to_string().serialize(output);
         ByteArray::from(self.to_string().as_str()).serialize(output);
     }
 }
@@ -118,19 +115,6 @@ where
         T::serialize(self, output);
     }
 }
-
-// Try remove impls for String, ByteArray should be used explicitly instead
-// impl CairoSerialize for &str {
-//     fn serialize(&self, output: &mut BufferWriter) {
-//         ByteArray::from(*self).serialize(output);
-//     }
-// }
-
-// impl CairoSerialize for String {
-//     fn serialize(&self, output: &mut BufferWriter) {
-//         self.as_str().serialize(output);
-//     }
-// }
 
 impl<T> CairoSerialize for Vec<T>
 where
