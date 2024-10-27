@@ -35,14 +35,12 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
         }
     }
 
-    if let Some(captures) = re_entry_point.captures(err) {
-        if let Some(_selector) = captures.get(1) {
-            let panic_data_felts = vec![
-                Felt252::from_bytes_be_slice("ENTRYPOINT_NOT_FOUND".as_bytes()),
-                Felt252::from_bytes_be_slice("ENTRYPOINT_FAILED".as_bytes()),
-            ];
-            return Some(panic_data_felts);
-        }
+    if let Some(_captures) = re_entry_point.captures(err) {
+        let panic_data_felts = vec![
+            Felt252::from_bytes_be_slice("ENTRYPOINT_NOT_FOUND".as_bytes()),
+            Felt252::from_bytes_be_slice("ENTRYPOINT_FAILED".as_bytes()),
+        ];
+        return Some(panic_data_felts);
     }
 
     None
