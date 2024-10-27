@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Fixed
+
+- When a contract call function via safe-dispatcher, calling non-existent entrypoint now returns `Err` instead of panicking.
+
 ## [0.32.0] - 2024-10-16
 
 ### Cast
