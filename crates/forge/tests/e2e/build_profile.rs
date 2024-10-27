@@ -34,6 +34,7 @@ fn simple_package_build_profile_and_pass_args() {
 
     test_runner(&temp)
         .arg("--build-profile")
+        .arg("--")
         .arg("--output-path")
         .arg("my_file.pb.gz")
         .assert()

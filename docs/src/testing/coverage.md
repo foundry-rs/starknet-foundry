@@ -47,16 +47,11 @@ This will generate a coverage report in the `coverage` directory named `coverage
 
 ## Passing arguments to `cairo-coverage`
 
-You can pass additional arguments to `cairo-coverage`:
+You can pass additional arguments to `cairo-coverage` by using the `--` separator. Everything after `--` will be passed
+to `cairo-coverage`:
 
 ```shell
-$ snforge test --coverage --include macros
-```
-
-If the flag name duplicates a flag from `snforge`, you can use the `--` separator:
-
-```shell
-$ snforge test --coverage -- --help
+$ snforge test --coverage -- --include macros
 ```
 
 > 📝 **Note**

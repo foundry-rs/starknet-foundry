@@ -25,13 +25,13 @@ pub fn combine_configs(
     cache_dir: Utf8PathBuf,
     versioned_programs_dir: Utf8PathBuf,
     forge_config_from_scarb: &ForgeConfigFromScarb,
-    coverage_or_profiler_args: &[OsString],
+    additional_args: &[OsString],
 ) -> ForgeConfig {
     let execution_data_to_save = ExecutionDataToSave::from_flags(
         save_trace_data || forge_config_from_scarb.save_trace_data,
         build_profile || forge_config_from_scarb.build_profile,
         coverage || forge_config_from_scarb.coverage,
-        coverage_or_profiler_args,
+        additional_args,
     );
 
     ForgeConfig {

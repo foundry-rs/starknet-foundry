@@ -26,6 +26,7 @@ fn test_coverage_project_and_pass_args() {
 
     test_runner(&temp)
         .arg("--coverage")
+        .arg("--")
         .arg("--output-path")
         .arg("./my_file.lcov")
         .assert()

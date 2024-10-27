@@ -148,9 +148,9 @@ pub struct TestArgs {
     #[arg(long)]
     no_optimization: bool,
 
-    /// Additional arguments for coverage or profiler
-    #[clap(allow_hyphen_values = true)]
-    coverage_or_profiler_args: Vec<OsString>,
+    /// Additional arguments for cairo-coverage or cairo-profiler
+    #[clap(last = true)]
+    additional_args: Vec<OsString>,
 }
 
 pub enum ExitStatus {
@@ -179,16 +179,7 @@ pub fn main_execution() -> Result<ExitStatus> {
 
             Ok(ExitStatus::Success)
         }
-        ForgeSubcommand::Test { mut args } => {
-            // clap can capture the first flag in test filter,
-            // let's move it to coverage_or_profiler_args
-            if let Some(test_filter) = &args.test_filter {
-                if test_filter.starts_with('-') {
-                    args.coverage_or_profiler_args.insert(0, test_filter.into());
-                    args.test_filter = None;
-                }
-            }
-
+        ForgeSubcommand::Test { args } => {
             let cores = if let Ok(available_cores) = available_parallelism() {
                 available_cores.get()
             } else {

@@ -23,16 +23,11 @@ $ snforge test --build-profile
 
 ## Passing arguments to `cairo-profiler`
 
-You can pass additional arguments to `cairo-profiler`:
+You can pass additional arguments to `cairo-profiler` by using the `--` separator. Everything after `--` will be passed
+to `cairo-profiler`:
 
 ```shell
-$ snforge test --build-profile --show-inlined-functions
-```
-
-If the flag name duplicates a flag from `snforge`, you can use the `--` separator:
-
-```shell
-$ snforge test --build-profile -- --help
+$ snforge test --build-profile -- --show-inlined-functions
 ```
 
 > 📝 **Note**
