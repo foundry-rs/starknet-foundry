@@ -45,21 +45,26 @@ pub const SCARB_MANIFEST_TEMPLATE_CONTENT: &str = r#"
 #[derive(Debug, PartialEq, Default, Deserialize)]
 pub struct ForgeConfigFromScarb {
     /// Should runner exit after first failed test
+    #[serde(default)]
     pub exit_first: bool,
     /// How many runs should fuzzer execute
     pub fuzzer_runs: Option<NonZeroU32>,
     /// Seed to be used by fuzzer
     pub fuzzer_seed: Option<u64>,
     /// Display more detailed info about used resources
+    #[serde(default)]
     pub detailed_resources: bool,
     /// Save execution traces of all test which have passed and are not fuzz tests
+    #[serde(default)]
     pub save_trace_data: bool,
     /// Build profiles of all tests which have passed and are not fuzz tests
+    #[serde(default)]
     pub build_profile: bool,
     /// Generate a coverage report for the executed tests which have passed and are not fuzz tests
+    #[serde(default)]
     pub coverage: bool,
     /// Fork configuration profiles
-    #[serde(deserialize_with = "validate_forks")]
+    #[serde(default, deserialize_with = "validate_forks")]
     pub fork: Vec<ForkTarget>,
     /// Limit of steps
     pub max_n_steps: Option<u32>,

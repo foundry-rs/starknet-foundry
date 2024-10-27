@@ -26,7 +26,7 @@ impl PackageConfig for ForgeConfigFromScarb {
     where
         Self: Sized,
     {
-        serde_json::from_value(config.clone()).context("Invalid config in Scarb.toml: ")
+        serde_json::from_value(config.clone()).context("Failed to parse snforge config")
     }
 }
 
