@@ -32,8 +32,9 @@ echo "Contract deployed successfully! Contract Address: $CONTRACT_ADDRESS"
 
 # This saves deployment details to a file for reference
 echo "Saving deployment details to deployment_details.txt..."
-echo "Contract Address: $CONTRACT_ADDRESS" > deployment_details.txt
-echo "RPC URL: $RPC_URL" >> deployment_details.txt
-echo "Compiled Contract Path: $COMPILED_CONTRACT_PATH" >> deployment_details.txt
+echo "Contract Address: $CONTRACT_ADDRESS" > deployment_details.txt # This line creates a new file named deployment_details.txt and writes the "Contract Address" to it 
+echo "RPC URL: $RPC_URL" >> deployment_details.txt # This line appends the "RPC URL" to the file
+echo "Compiled Contract Path: $COMPILED_CONTRACT_PATH" >> deployment_details.txt # This line appends the "Compiled Contract Path" to the file
+echo "Deployment Output: $DEPLOY_RESPONSE" >> deployment_details.txt # This line appends the "Deployment Output" to the file
 
 echo "Deployment complete! You can now find the details in deployment_details.txt."
