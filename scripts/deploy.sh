@@ -7,12 +7,12 @@ COMPILED_CONTRACT_PATH="./build/main.json"
 
 # This ensures that sncast and scarb are installed
 if ! command -v sncast &> /dev/null; then
-  echo "sncast is not found. Please install it."
+  echo "sncast not found. Please install it first."
   exit 1
 fi
 
 if ! command -v scarb &> /dev/null; then
-  echo "sncast is not found. Please install it."
+  echo "scarb not found. Please install it first."
   exit 1
 fi
 
