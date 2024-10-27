@@ -18,6 +18,7 @@ use starknet::{
 };
 use std::collections::HashMap;
 use std::sync::Arc;
+use conversions::byte_array::ByteArray;
 
 #[derive(Args)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
@@ -74,7 +75,7 @@ pub async fn declare(
         artifacts
             .get(&declare.contract)
             .ok_or(StarknetCommandError::ContractArtifactsNotFound(
-                ErrorData::new(declare.contract),
+                ErrorData::new(ByteArray::from(declare.contract.as_str())),
             ))?;
 
     let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)

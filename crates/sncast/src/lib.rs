@@ -41,6 +41,8 @@ pub mod helpers;
 pub mod response;
 pub mod state;
 
+use conversions::byte_array::ByteArray;
+
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum AccountType {
@@ -531,12 +533,12 @@ pub fn get_block_id(value: &str) -> Result<BlockId> {
 
 #[derive(Debug, CairoSerialize)]
 pub struct ErrorData {
-    pub data: String,
+    pub data: ByteArray,
 }
 
 impl ErrorData {
     #[must_use]
-    pub fn new(data: String) -> Self {
+    pub fn new(data: ByteArray) -> Self {
         ErrorData { data }
     }
 }
@@ -544,7 +546,7 @@ impl ErrorData {
 impl From<ContractErrorData> for ErrorData {
     fn from(value: ContractErrorData) -> Self {
         ErrorData {
-            data: value.revert_error,
+            data: ByteArray::from(value.revert_error.as_str()),
         }
     }
 }
@@ -625,7 +627,7 @@ async fn get_revert_reason(
     {
         Err(WaitForTransactionError::TransactionError(
             TransactionError::Reverted(ErrorData {
-                data: reason.clone(),
+                data: ByteArray::from(reason.as_str()),
             }),
         ))
     } else {

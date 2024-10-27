@@ -37,7 +37,7 @@ impl From<CallFailure> for CheatcodeError {
         match value {
             CallFailure::Panic { panic_data } => CheatcodeError::Recoverable(panic_data),
             CallFailure::Error { msg } => {
-                CheatcodeError::Unrecoverable(HintError::CustomHint(Box::from(msg)).into())
+                CheatcodeError::Unrecoverable(HintError::CustomHint(Box::from(msg.to_string())).into())
             }
         }
     }

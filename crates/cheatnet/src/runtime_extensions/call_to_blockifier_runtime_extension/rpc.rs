@@ -47,7 +47,8 @@ pub enum CallResult {
 #[derive(Debug, Clone, CairoSerialize, Serialize, Deserialize)]
 pub enum CallFailure {
     Panic { panic_data: Vec<Felt252> },
-    Error { msg: String },
+    Error { msg: ByteArray },
+    // Error { msg: ByteArray },
 }
 
 pub enum AddressOrClassHash {
@@ -74,7 +75,9 @@ impl CallFailure {
                 if err_data_str.contains("Failed to deserialize param #")
                     || err_data_str.contains("Input too long for arguments")
                 {
-                    CallFailure::Error { msg: err_data_str }
+                    CallFailure::Error { 
+                        msg: ByteArray::from(err_data_str.as_str())
+                    }
                 } else {
                     CallFailure::Panic {
                         panic_data: err_data,
@@ -115,19 +118,97 @@ impl CallFailure {
                 }
             }
             EntryPointExecutionError::StateError(StateError::StateReadError(msg)) => {
-                CallFailure::Error { msg: msg.clone() }
+                CallFailure::Error { 
+                    msg: ByteArray::from(msg.as_str())
+                }
             }
             error => {
                 let error_string = error.to_string();
                 if let Some(panic_data) = try_extract_panic_data(&error_string) {
                     CallFailure::Panic { panic_data }
                 } else {
-                    CallFailure::Error { msg: error_string }
+                    CallFailure::Error { 
+                        msg: ByteArray::from(error_string.as_str())
+                    }
                 }
             }
         }
     }
 }
+
+// impl CallFailure {
+//     /// Maps blockifier-type error, to one that can be put into memory as panic-data (or re-raised)
+//     #[must_use]
+//     pub fn from_execution_error(
+//         err: &EntryPointExecutionError,
+//         starknet_identifier: &AddressOrClassHash,
+//     ) -> Self {
+//         match err {
+//             EntryPointExecutionError::ExecutionFailed { error_data } => {
+//                 let err_data: Vec<_> = error_data
+//                     .iter()
+//                     .map(|data| Felt252::from_(*data))
+//                     .collect();
+
+//                 let err_data_str = build_readable_text(&err_data).unwrap_or_default();
+
+//                 if err_data_str.contains("Failed to deserialize param #")
+//                     || err_data_str.contains("Input too long for arguments")
+//                 {
+//                     CallFailure::Error { msg: err_data_str }
+//                 } else {
+//                     CallFailure::Panic {
+//                         panic_data: err_data,
+//                     }
+//                 }
+//             }
+//             EntryPointExecutionError::PreExecutionError(PreExecutionError::EntryPointNotFound(
+//                 selector,
+//             )) => {
+//                 let selector_hash = selector.into_hex_string();
+//                 let msg = match starknet_identifier {
+//                     AddressOrClassHash::ContractAddress(address) => format!(
+//                         "Entry point selector {selector_hash} not found in contract {}",
+//                         address.into_hex_string()
+//                     ),
+//                     AddressOrClassHash::ClassHash(class_hash) => format!(
+//                         "Entry point selector {selector_hash} not found for class hash {}",
+//                         class_hash.into_hex_string()
+//                     ),
+//                 };
+
+//                 let panic_data_felts = ByteArray::from(msg.as_str()).serialize_with_magic();
+
+//                 CallFailure::Panic {
+//                     panic_data: panic_data_felts,
+//                 }
+//             }
+//             EntryPointExecutionError::PreExecutionError(
+//                 PreExecutionError::UninitializedStorageAddress(contract_address),
+//             ) => {
+//                 let address_str = contract_address.into_hex_string();
+//                 let msg = format!("Contract not deployed at address: {address_str}");
+
+//                 let panic_data_felts = ByteArray::from(msg.as_str()).serialize_with_magic();
+
+//                 CallFailure::Panic {
+//                     panic_data: panic_data_felts,
+//                 }
+//             }
+//             EntryPointExecutionError::StateError(StateError::StateReadError(msg)) => {
+//                 CallFailure::Error { msg: msg.clone() }
+//             }
+//             error => {
+//                 let error_string = error.to_string();
+//                 if let Some(panic_data) = try_extract_panic_data(&error_string) {
+//                     CallFailure::Panic { panic_data }
+//                 } else {
+//                     CallFailure::Error { msg: error_string }
+//                 }
+//             }
+//         }
+//     }
+// }
 
 impl CallResult {
     #[must_use]

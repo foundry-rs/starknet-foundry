@@ -255,7 +255,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                         CheatcodeHandlingResult::from_serializable(Err::<(), _>(panic_data)),
                     ),
                     CallResult::Failure(CallFailure::Error { msg }) => Err(
-                        EnhancedHintError::from(HintError::CustomHint(Box::from(msg))),
+                        EnhancedHintError::from(HintError::CustomHint(Box::from(msg.to_string()))),
                     ),
                 }
             }

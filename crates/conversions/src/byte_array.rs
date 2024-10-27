@@ -5,6 +5,8 @@ use cairo_lang_runner::short_string::as_cairo_short_string_ex;
 use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
 use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
 use starknet_types_core::felt::Felt as Felt252;
+use std::fmt;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(CairoDeserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct ByteArray {
@@ -66,5 +68,34 @@ impl From<ByteArray> for String {
             as_cairo_short_string_ex(&value.pending_word, value.pending_word_len).unwrap();
 
         format!("{full_words_string}{pending_word_string}")
+    }
+}
+
+
+impl fmt::Display for ByteArray {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{self:?}") 
+    }
+}
+
+// we can implement that or dont use Serialize/Deserialize in CallResult/CallFailure in rpc.rs
+// I am not sure which is better so I leave this for now
+impl Serialize for ByteArray {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let s = self.to_string();
+        serializer.serialize_str(&s)
+    }
+}
+
+impl<'de> Deserialize<'de> for ByteArray {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Ok(ByteArray::from(s.as_str()))
     }
 }
