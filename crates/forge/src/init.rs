@@ -153,7 +153,7 @@ pub fn run(project_name: &str) -> Result<()> {
     let scarb_manifest_path = project_path.join("Scarb.toml");
     let snfoundry_manifest_path = project_path.join("snfoundry.toml");
 
-    // if there is no Scarb.toml run `scarb new`
+    
     if !scarb_manifest_path.is_file() {
         ScarbCommand::new_with_stdio()
             .current_dir(current_dir)
@@ -184,33 +184,35 @@ pub fn run(project_name: &str) -> Result<()> {
     let cairo_version = ScarbCommand::version().run()?.cairo;
 
     if env::var("DEV_DISABLE_SNFORGE_STD_DEPENDENCY").is_err() {
-        // Create the command first
-        let mut cmd = ScarbCommand::new_with_stdio();
-        
-        // Add common arguments
-        cmd.current_dir(&project_path)
-            .manifest_path(scarb_manifest_path.clone())
-            .offline()
-            .arg("add")
-            .arg("--dev")
-            .arg("snforge_std");
-
-        // Add version-specific arguments
         if cairo_version >= MINIMAL_SCARB_FOR_REGISTRY {
-            // For Scarb >= 2.7.0, use registry-based dependency
-            cmd.arg("--version")
-                .arg(version);
+           
+            ScarbCommand::new_with_stdio()
+                .current_dir(&project_path)
+                .manifest_path(scarb_manifest_path.clone())
+                .offline()
+                .arg("add")
+                .arg("--dev")
+                .arg("snforge_std")
+                .arg("--version")
+                .arg(version)
+                .run()
+                .context("Failed to add snforge_std")?;
         } else {
-            // For older Scarb versions, use GitHub-based dependency
-            cmd.arg("--git")
+       
+            ScarbCommand::new_with_stdio()
+                .current_dir(&project_path)
+                .manifest_path(scarb_manifest_path.clone())
+                .offline()
+                .arg("add")
+                .arg("--dev")
+                .arg("snforge_std")
+                .arg("--git")
                 .arg("https://github.com/foundry-rs/starknet-foundry.git")
                 .arg("--tag")
-                .arg(format!("v{version}"));
+                .arg(format!("v{version}"))
+                .run()
+                .context("Failed to add snforge_std")?;
         }
-
-        // Run the command
-        cmd.run()
-            .context("Failed to add snforge_std")?;
     }
 
     ScarbCommand::new_with_stdio()
@@ -227,7 +229,7 @@ pub fn run(project_name: &str) -> Result<()> {
     overwrite_files_from_scarb_template("src", &project_path, project_name)?;
     overwrite_files_from_scarb_template("tests", &project_path, project_name)?;
 
-    // Fetch to create lock file.
+   
     ScarbCommand::new_with_stdio()
         .manifest_path(scarb_manifest_path)
         .arg("fetch")
