@@ -166,7 +166,7 @@ sierra = true
 
 #### `casm`
 
-See more about [CASM contract class generation](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#casm-contract-class-generation) in Scarb documentation.
+Enabling `casm = true` in Scarb.toml causes unnecessary overhead. Tools like `snforge` and `sncast` recompile Sierra to CASM separately, resulting in redundant processing. This duplicates CASM generation, significantly impacting performance, especially for large Sierra programs. It increases build size by several megabytes and slows down compilation. To avoid this, leave `casm = false`(the default) and let tools handle CASM generation only when needed. The Sequencer performs CASM compilation for execution, making local generation redundant unless required for offline verification or specific development workflows. See more about [CASM contract class generation](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#casm-contract-class-generation) in Scarb documentation.
 
 ```toml
 [[target.starknet-contract]]
