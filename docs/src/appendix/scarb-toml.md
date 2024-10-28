@@ -195,7 +195,7 @@ sierra = true
 
 #### `casm`
 
-Enabling [`casm = true`](https://github.com/foundry-rs/starknet-foundry/releases/tag/v0.23.0) in Scarb.toml causes unnecessary overhead and should be disabled unless required by other tools. Tools like `snforge` and `sncast` recompile Sierra to CASM separately, resulting in redundant processing. This duplicates CASM generation, significantly impacting performance, especially for large Sierra programs.
+Enabling [`casm = true`](https://github.com/foundry-rs/starknet-foundry/releases/tag/v0.23.0) in Scarb.toml causes unnecessary overhead and should be disabled unless required by other tools. Starknet Foundry compiles Sierra to CASM separately, resulting in redundant processing. This duplicates CASM generation, significantly impacting performance, especially for large Sierra programs.
 See more about [CASM contract class generation](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#casm-contract-class-generation) in Scarb documentation.
 
 ```toml
