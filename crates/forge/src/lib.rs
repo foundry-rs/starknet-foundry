@@ -85,7 +85,6 @@ enum ColorOption {
 #[allow(clippy::struct_excessive_bools)]
 pub struct TestArgs {
     /// Name used to filter tests
-    #[clap(allow_hyphen_values = true)]
     test_filter: Option<String>,
     /// Use exact matches for `test_filter`
     #[arg(short, long)]
