@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- You can now pass arguments to `cairo-profiler` and `cairo-coverage`. Everything after `--` will be passed to it. E.g.
+- You can now pass arguments to `cairo-profiler` and `cairo-coverage`. Everything after `--` will be passed to underlying binary. E.g.
   `snforge test --build-profile -- --show-inlined-functions`
 - You can't use now `--coverage` and `--build-profile` flags at the same time. If you want to use both, you need to run
   `snforge test` twice with different flags.
