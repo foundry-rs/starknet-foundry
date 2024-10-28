@@ -184,28 +184,31 @@ pub fn run(project_name: &str) -> Result<()> {
     let cairo_version = ScarbCommand::version().run()?.cairo;
 
     if env::var("DEV_DISABLE_SNFORGE_STD_DEPENDENCY").is_err() {
-        let mut cmd = ScarbCommand::new_with_stdio()
-            .current_dir(&project_path)
+        // Create the command first
+        let mut cmd = ScarbCommand::new_with_stdio();
+        
+        // Add common arguments
+        cmd.current_dir(&project_path)
             .manifest_path(scarb_manifest_path.clone())
             .offline()
             .arg("add")
             .arg("--dev")
             .arg("snforge_std");
 
+        // Add version-specific arguments
         if cairo_version >= MINIMAL_SCARB_FOR_REGISTRY {
             // For Scarb >= 2.7.0, use registry-based dependency
-            cmd = cmd
-                .arg("--version")
+            cmd.arg("--version")
                 .arg(version);
         } else {
             // For older Scarb versions, use GitHub-based dependency
-            cmd = cmd
-                .arg("--git")
+            cmd.arg("--git")
                 .arg("https://github.com/foundry-rs/starknet-foundry.git")
                 .arg("--tag")
                 .arg(format!("v{version}"));
         }
 
+        // Run the command
         cmd.run()
             .context("Failed to add snforge_std")?;
     }
