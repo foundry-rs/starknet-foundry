@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use clap::{Args, ValueEnum};
+use conversions::byte_array::ByteArray;
 use scarb_api::StarknetContractArtifacts;
 use sncast::helpers::error::token_not_supported_for_declaration;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
@@ -18,7 +19,6 @@ use starknet::{
 };
 use std::collections::HashMap;
 use std::sync::Arc;
-use conversions::byte_array::ByteArray;
 
 #[derive(Args)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
@@ -74,9 +74,9 @@ pub async fn declare(
     let contract_artifacts =
         artifacts
             .get(&declare.contract)
-            .ok_or(StarknetCommandError::ContractArtifactsNotFound(
-                ErrorData::new(ByteArray::from(declare.contract.as_str())),
-            ))?;
+            .ok_or(StarknetCommandError::ContractArtifactsNotFound(ErrorData {
+                data: ByteArray::from(declare.contract.as_str()),
+            }))?;
 
     let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
         .context("Failed to parse sierra artifact")?;

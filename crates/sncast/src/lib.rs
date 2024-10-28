@@ -536,21 +536,6 @@ pub struct ErrorData {
     pub data: ByteArray,
 }
 
-impl ErrorData {
-    #[must_use]
-    pub fn new(data: ByteArray) -> Self {
-        ErrorData { data }
-    }
-}
-
-impl From<ContractErrorData> for ErrorData {
-    fn from(value: ContractErrorData) -> Self {
-        ErrorData {
-            data: ByteArray::from(value.revert_error.as_str()),
-        }
-    }
-}
-
 #[derive(Error, Debug, CairoSerialize)]
 pub enum TransactionError {
     #[error("Transaction has been rejected")]

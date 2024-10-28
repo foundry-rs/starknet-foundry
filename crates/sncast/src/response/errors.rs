@@ -4,7 +4,6 @@ use conversions::serde::serialize::CairoSerialize;
 
 use conversions::byte_array::ByteArray;
 
-
 use starknet::core::types::StarknetError::{
     ContractError, TransactionExecutionError, ValidationFailure,
 };
@@ -120,7 +119,9 @@ impl From<StarknetError> for SNCastStarknetError {
             StarknetError::InsufficientAccountBalance => {
                 SNCastStarknetError::InsufficientAccountBalance
             }
-            ValidationFailure(err) => SNCastStarknetError::ValidationFailure(ByteArray::from(err.as_str())),
+            ValidationFailure(err) => {
+                SNCastStarknetError::ValidationFailure(ByteArray::from(err.as_str()))
+            }
             StarknetError::CompilationFailed => SNCastStarknetError::CompilationFailed,
             StarknetError::ContractClassSizeIsTooLarge => {
                 SNCastStarknetError::ContractClassSizeIsTooLarge
