@@ -27,3 +27,18 @@ fn simple_package_build_profile() {
     // Check if it doesn't crash in case some data already exists
     test_runner(&temp).arg("--build-profile").assert().code(1);
 }
+
+#[test]
+fn simple_package_build_profile_and_pass_args() {
+    let temp = setup_package("simple_package");
+
+    test_runner(&temp)
+        .arg("--build-profile")
+        .arg("--")
+        .arg("--output-path")
+        .arg("my_file.pb.gz")
+        .assert()
+        .code(1);
+
+    assert!(temp.join("my_file.pb.gz").is_file());
+}
