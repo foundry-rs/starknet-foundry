@@ -78,6 +78,7 @@ impl RunForPackageArgs {
             cache_dir.clone(),
             versioned_programs_dir,
             &forge_config_from_scarb,
+            &args.additional_args,
         ));
 
         let test_filter = TestsFilter::from_flags(
