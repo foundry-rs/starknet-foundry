@@ -33,7 +33,7 @@ fn start_devnet() {
         }
     }
 
-    Command::new("tests/utils/devnet/starknet-devnet")
+    Command::new("tests/utils/devnet/bin/starknet-devnet")
         .args([
             "--port",
             &port,
