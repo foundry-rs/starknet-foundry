@@ -16,6 +16,46 @@ static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
 const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
 
+const DEPLOY_SCRIPT_NAME: &str = "deploy.cairo";
+
+const DEPLOY_SCRIPT_TEMPLATE: &str = r#"use sncast_std::{
+    declare, declare::DeclareResult, 
+    deploy, deploy::DeployResult,
+    get_nonce, 
+    get_balance,
+    ContractClassType,
+};
+
+// Default deployment script for {{ PROJECT_NAME }}
+fn main() {
+    // Get the current nonce for deployment
+    let nonce = get_nonce().unwrap();
+    println!("Current nonce: {}", nonce);
+    
+    // Check account balance before deployment
+    let balance = get_balance().unwrap();
+    println!("Account balance: {}", balance);
+
+    // Declare your contract
+    let declare_result = declare("{{ PROJECT_NAME }}", ContractClassType::V2).expect('Declaration failed');
+    println!("Contract declared with class hash: {}", declare_result.class_hash);
+    
+    // Deploy your contract
+    let constructor_calldata = array![];  // Add constructor arguments if needed
+    let salt = 0x1234;  // Use a unique salt or generate one
+
+    let deploy_result = deploy(
+        declare_result.class_hash, 
+        constructor_calldata.span(),
+        salt, 
+        true  // set to true to make deployment address unique
+    ).expect('Deployment failed');
+    
+    println!("Contract deployed at: {}", deploy_result.contract_address);
+    println!("Transaction hash: {}", deploy_result.transaction_hash);
+}
+"#;
+
 fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
     fs::write(
         path,
@@ -71,6 +111,17 @@ fn overwrite_files_from_scarb_template(
 
         fs::write(path, contents)?;
     }
+
+    Ok(())
+}
+
+fn create_deployment_script(base_path: &Path, project_name: &str) -> Result<()> {
+    let scripts_dir = base_path.join("scripts");
+    fs::create_dir_all(&scripts_dir)?;
+    
+    let script_path = scripts_dir.join(DEPLOY_SCRIPT_NAME);
+    let script_contents = replace_project_name(DEPLOY_SCRIPT_TEMPLATE.as_bytes(), project_name)?;
+    fs::write(script_path, script_contents)?;
 
     Ok(())
 }
@@ -211,6 +262,8 @@ pub fn run(project_name: &str) -> Result<()> {
     extend_gitignore(&project_path)?;
     overwrite_files_from_scarb_template("src", &project_path, project_name)?;
     overwrite_files_from_scarb_template("tests", &project_path, project_name)?;
+
+    create_deployment_script(&project_path, project_name)?;
 
     // Fetch to create lock file.
     ScarbCommand::new_with_stdio()
