@@ -3,6 +3,7 @@ use indoc::{formatdoc, indoc};
 use scarb_api::metadata::Metadata;
 use semver::Version;
 use shared::command::CommandExt;
+use std::ffi::OsString;
 use std::process::Stdio;
 use std::{env, fs, path::PathBuf, process::Command};
 use toml_edit::{DocumentMut, Table};
@@ -19,7 +20,7 @@ const CAIRO_COVERAGE_REQUIRED_ENTRIES: [(&str, &str); 3] = [
     ("inlining-strategy", "\"avoid\""),
 ];
 
-pub fn run_coverage(saved_trace_data_paths: &[PathBuf]) -> Result<()> {
+pub fn run_coverage(saved_trace_data_paths: &[PathBuf], coverage_args: &[OsString]) -> Result<()> {
     let coverage = env::var("CAIRO_COVERAGE")
         .map(PathBuf::from)
         .ok()
@@ -34,10 +35,6 @@ pub fn run_coverage(saved_trace_data_paths: &[PathBuf]) -> Result<()> {
         }
     );
 
-    let dir_to_save_coverage = PathBuf::from(COVERAGE_DIR);
-    fs::create_dir_all(&dir_to_save_coverage).context("Failed to create a coverage dir")?;
-    let path_to_save_coverage = dir_to_save_coverage.join(OUTPUT_FILE_NAME);
-
     let trace_files: Vec<&str> = saved_trace_data_paths
         .iter()
         .map(|trace_data_path| {
@@ -47,10 +44,19 @@ pub fn run_coverage(saved_trace_data_paths: &[PathBuf]) -> Result<()> {
         })
         .collect();
 
-    Command::new(coverage)
-        .arg("--output-path")
-        .arg(&path_to_save_coverage)
+    let mut command = Command::new(coverage);
+
+    if coverage_args.iter().all(|arg| arg != "--output-path") {
+        let dir_to_save_coverage = PathBuf::from(COVERAGE_DIR);
+        fs::create_dir_all(&dir_to_save_coverage).context("Failed to create a coverage dir")?;
+        let path_to_save_coverage = dir_to_save_coverage.join(OUTPUT_FILE_NAME);
+
+        command.arg("--output-path").arg(&path_to_save_coverage);
+    }
+
+    command
         .args(trace_files)
+        .args(coverage_args)
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .output_checked()

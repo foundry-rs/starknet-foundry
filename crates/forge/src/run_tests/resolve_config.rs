@@ -83,9 +83,9 @@ fn get_fork_target_from_runner_config<'a>(
 ) -> Result<&'a ForkTarget> {
     fork_targets
         .iter()
-        .find(|fork| fork.name == String::from(name.clone()))
+        .find(|fork| fork.name == name.to_string())
         .ok_or_else(|| {
-            let name = String::from(name.clone());
+            let name = name.to_string();
             anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
         })
 }
