@@ -355,7 +355,8 @@ mod tests {
             &scarb_metadata.workspace.members[0],
         )
         .unwrap_err();
-        assert!(format!("{err:?}").contains("block_id must contain exactly one of: tag, hash, or number"));
+        assert!(format!("{err:?}")
+            .contains("block_id must contain exactly one of: tag, hash, or number"));
     }
 
     #[test]
@@ -386,9 +387,8 @@ mod tests {
             &scarb_metadata.workspace.members[0],
         )
         .unwrap_err();
-        assert!(
-            format!("{err:?}").contains("unknown field `wrong_variant`, expected one of `tag`, `hash`, `number`")
-        );
+        assert!(format!("{err:?}")
+            .contains("unknown field `wrong_variant`, expected one of `tag`, `hash`, `number`"));
     }
 
     #[test]

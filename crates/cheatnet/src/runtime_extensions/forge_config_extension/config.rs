@@ -1,9 +1,12 @@
 use cairo_vm::Felt252;
 use conversions::{byte_array::ByteArray, serde::deserialize::CairoDeserialize};
-use serde::{de::{self, MapAccess, Visitor}, Deserialize, Deserializer};
+use serde::{
+    de::{self, MapAccess, Visitor},
+    Deserialize, Deserializer,
+};
+use std::str::FromStr;
 use std::{fmt, num::NonZeroU32};
 use url::Url;
-use std::str::FromStr;
 // available gas
 
 #[derive(Debug, Clone, CairoDeserialize)]
@@ -45,7 +48,7 @@ impl<'de> Deserialize<'de> for BlockId {
                     field_count += 1;
                     if field_count > 1 {
                         return Err(de::Error::custom(
-                            "block_id must contain exactly one of: tag, hash, or number"
+                            "block_id must contain exactly one of: tag, hash, or number",
                         ));
                     }
 
@@ -53,15 +56,27 @@ impl<'de> Deserialize<'de> for BlockId {
                         "tag" => {
                             let tag = map.next_value::<String>()?;
                             if tag != "latest" {
-                                return Err(de::Error::custom("block_id.tag can only be equal to latest"));
+                                return Err(de::Error::custom(
+                                    "block_id.tag can only be equal to latest",
+                                ));
                             }
                             BlockId::BlockTag
-                        },
-                        "hash" => {
-                                BlockId::BlockHash(Felt252::from_str(&map.next_value::<String>()?).map_err(de::Error::custom)?)                            
                         }
-                        "number" => BlockId::BlockNumber(map.next_value::<String>()?.parse().map_err(de::Error::custom)?),
-                        unknown => return Err(de::Error::unknown_field(unknown, &["tag", "hash", "number"])),
+                        "hash" => BlockId::BlockHash(
+                            Felt252::from_str(&map.next_value::<String>()?)
+                                .map_err(de::Error::custom)?,
+                        ),
+                        "number" => BlockId::BlockNumber(
+                            map.next_value::<String>()?
+                                .parse()
+                                .map_err(de::Error::custom)?,
+                        ),
+                        unknown => {
+                            return Err(de::Error::unknown_field(
+                                unknown,
+                                &["tag", "hash", "number"],
+                            ))
+                        }
                     });
                 }
 
@@ -72,7 +87,6 @@ impl<'de> Deserialize<'de> for BlockId {
         deserializer.deserialize_map(BlockIdVisitor)
     }
 }
-
 
 #[derive(Debug, Clone, CairoDeserialize, PartialEq)]
 pub struct InlineForkConfig {

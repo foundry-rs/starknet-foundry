@@ -1,10 +1,7 @@
 use anyhow::{anyhow, bail, Result};
 use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
 use serde::{Deserialize, Deserializer};
-use std::{
-    collections::HashSet,
-    num::NonZeroU32,
-};
+use std::{collections::HashSet, num::NonZeroU32};
 use url::Url;
 
 pub const SCARB_MANIFEST_TEMPLATE_CONTENT: &str = r#"
@@ -83,15 +80,14 @@ where
 {
     // deserialize to Vec<ForkTarget>
     let fork_targets = Vec::<ForkTarget>::deserialize(deserializer)?;
-    
+
     let names: Vec<_> = fork_targets.iter().map(|fork| &fork.name).collect();
-   let removed_duplicated_names: HashSet<_> = names.iter().collect();
+    let removed_duplicated_names: HashSet<_> = names.iter().collect();
     if names.len() != removed_duplicated_names.len() {
         return Err(serde::de::Error::custom("Some fork names are duplicated"));
     }
 
     Ok(fork_targets)
-
 }
 
 impl ForkTarget {
