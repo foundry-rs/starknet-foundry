@@ -309,7 +309,7 @@ mod tests {
             [[tool.snforge.fork]]
             name = "SAME_NAME"
             url = "http://some.rpc.url"
-            block_id.hash = "1"
+            block_id.hash = "0x1"
             "#
         );
         temp.child("Scarb.toml").write_str(content).unwrap();
@@ -324,7 +324,6 @@ mod tests {
             &scarb_metadata.workspace.members[0],
         )
         .unwrap_err();
-
         assert!(format!("{err:?}").contains("Some fork names are duplicated"));
     }
 
@@ -341,7 +340,7 @@ mod tests {
             name = "SAME_NAME"
             url = "http://some.rpc.url"
             block_id.number = "1"
-            block_id.hash = "2"
+            block_id.hash = "0x2"
             "#
         );
         temp.child("Scarb.toml").write_str(content).unwrap();
@@ -356,7 +355,7 @@ mod tests {
             &scarb_metadata.workspace.members[0],
         )
         .unwrap_err();
-        assert!(format!("{err:?}").contains("block_id should be set once per fork"));
+        assert!(format!("{err:?}").contains("block_id must contain exactly one of: tag, hash, or number"));
     }
 
     #[test]
@@ -388,7 +387,7 @@ mod tests {
         )
         .unwrap_err();
         assert!(
-            format!("{err:?}").contains("block_id = wrong_variant is not valid. Possible values are = \"number\", \"hash\" and \"tag\"")
+            format!("{err:?}").contains("unknown field `wrong_variant`, expected one of `tag`, `hash`, `number`")
         );
     }
 

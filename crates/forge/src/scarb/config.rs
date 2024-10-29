@@ -1,9 +1,8 @@
 use anyhow::{anyhow, bail, Result};
 use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
-use itertools::Itertools;
 use serde::{Deserialize, Deserializer};
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashSet,
     num::NonZeroU32,
 };
 use url::Url;
@@ -82,55 +81,17 @@ fn validate_forks<'de, D>(deserializer: D) -> Result<Vec<ForkTarget>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    use serde::de::Error;
-
     // deserialize to Vec<ForkTarget>
-    let raw_fork_targets = Vec::<RawForkTarget>::deserialize(deserializer)?;
-
-    // Validate
-    match validate_raw_fork_config(raw_fork_targets) {
-        Ok(forks) => Ok(forks),
-        Err(e) => Err(Error::custom(e.to_string())),
-    }
-}
-
-#[derive(Deserialize, Debug, PartialEq, Default, Clone)]
-pub(crate) struct RawForkTarget {
-    pub name: String,
-    pub url: String,
-    pub block_id: HashMap<String, String>,
-}
-
-fn validate_raw_fork_config(forks: Vec<RawForkTarget>) -> Result<Vec<ForkTarget>> {
-    let names: Vec<_> = forks.iter().map(|fork| &fork.name).collect();
-    let removed_duplicated_names: HashSet<_> = names.iter().collect();
-    let mut fork_targets = vec![];
+    let fork_targets = Vec::<ForkTarget>::deserialize(deserializer)?;
+    
+    let names: Vec<_> = fork_targets.iter().map(|fork| &fork.name).collect();
+   let removed_duplicated_names: HashSet<_> = names.iter().collect();
     if names.len() != removed_duplicated_names.len() {
-        bail!("Some fork names are duplicated");
-    }
-    for fork in forks {
-        let block_id_item = fork.block_id.iter().exactly_one();
-
-        let Ok((block_id_key, block_id_value)) = block_id_item else {
-            bail!("block_id should be set once per fork");
-        };
-
-        if !["number", "hash", "tag"].contains(&&**block_id_key) {
-            bail!("block_id = {block_id_key} is not valid. Possible values are = \"number\", \"hash\" and \"tag\"");
-        }
-
-        if block_id_key == "tag" && block_id_value != "latest" {
-            bail!("block_id.tag can only be equal to latest");
-        }
-        fork_targets.push(ForkTarget::new(
-            fork.name.as_str(),
-            fork.url.as_str(),
-            block_id_key,
-            block_id_value,
-        )?);
+        return Err(serde::de::Error::custom("Some fork names are duplicated"));
     }
 
     Ok(fork_targets)
+
 }
 
 impl ForkTarget {
@@ -161,36 +122,6 @@ impl ForkTarget {
         })
     }
 }
-
-/// Represents forge config deserialized from Scarb.toml using basic types like String etc.
-// #[allow(clippy::struct_excessive_bools)]
-// #[derive(Deserialize, Debug, PartialEq, Default)]
-// pub(crate) struct RawForgeConfig {
-//     #[serde(default)]
-//     /// Should runner exit after first failed test
-//     pub exit_first: bool,
-//     /// How many runs should fuzzer execute
-//     pub fuzzer_runs: Option<NonZeroU32>,
-//     /// Seed to be used by fuzzer
-//     pub fuzzer_seed: Option<u64>,
-//     #[serde(default)]
-//     // Display more detailed info about used resources
-//     pub detailed_resources: bool,
-//     #[serde(default)]
-//     /// Save execution traces of all test which have passed and are not fuzz tests
-//     pub save_trace_data: bool,
-//     #[serde(default)]
-//     /// Build profiles of all tests which have passed and are not fuzz tests
-//     pub build_profile: bool,
-//     #[serde(default)]
-//     /// Generate a coverage report for the executed tests which have passed and are not fuzz tests
-//     pub coverage: bool,
-//     #[serde(default)]
-//     /// Fork configuration profiles
-//     pub fork: Vec<RawForkTarget>,
-//     /// Limit of steps
-//     pub max_n_steps: Option<u32>,
-// }
 
 #[cfg(test)]
 mod tests {
