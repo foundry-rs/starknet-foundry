@@ -1,7 +1,7 @@
-use crate::starknet_commands::account::add::Add;
 use crate::starknet_commands::account::create::Create;
 use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
+use crate::starknet_commands::account::import::Import;
 use crate::starknet_commands::account::list::List;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
@@ -11,14 +11,14 @@ use configuration::{
 };
 use serde_json::json;
 use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
-use starknet::{core::types::FieldElement, signers::SigningKey};
+use starknet::{core::types::Felt, signers::SigningKey};
 use std::{fmt, fs::OpenOptions, io::Write};
 use toml::Value;
 
-pub mod add;
 pub mod create;
 pub mod delete;
 pub mod deploy;
+pub mod import;
 pub mod list;
 
 #[derive(Args)]
@@ -30,7 +30,7 @@ pub struct Account {
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
-    Add(Add),
+    Import(Import),
     Create(Create),
     Deploy(Deploy),
     Delete(Delete),
@@ -60,12 +60,12 @@ impl fmt::Display for AccountType {
 
 pub fn prepare_account_json(
     private_key: &SigningKey,
-    address: FieldElement,
+    address: Felt,
     deployed: bool,
     legacy: bool,
     account_type: &AccountType,
-    class_hash: Option<FieldElement>,
-    salt: Option<FieldElement>,
+    class_hash: Option<Felt>,
+    salt: Option<Felt>,
 ) -> serde_json::Value {
     let mut account_json = json!({
         "private_key": format!("{:#x}", private_key.secret_scalar()),
@@ -90,7 +90,7 @@ pub fn prepare_account_json(
 pub fn write_account_to_accounts_file(
     account: &str,
     accounts_file: &Utf8PathBuf,
-    chain_id: FieldElement,
+    chain_id: Felt,
     account_json: serde_json::Value,
 ) -> Result<()> {
     if !accounts_file.exists() {

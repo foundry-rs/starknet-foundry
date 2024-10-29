@@ -37,13 +37,14 @@ use cairo_vm::vm::{
 use cairo_vm::Felt252;
 use conversions::byte_array::ByteArray;
 use conversions::felt252::TryInferFormat;
-use conversions::serde::deserialize::{BufferReader, CairoDeserialize};
+use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::CairoSerialize;
+use data_transformer::cairo_types::CairoU256;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
 };
-use starknet::core::types::FieldElement;
+use starknet::core::types::Felt;
 use starknet::signers::SigningKey;
 use starknet_api::{core::ClassHash, deprecated_contract_class::EntryPointType::L1Handler};
 use std::collections::HashMap;
@@ -153,7 +154,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .hint_handler
                     .state;
 
-                let contract_name: String = input_reader.read::<ByteArray>()?.into();
+                let contract_name: String = input_reader.read::<ByteArray>()?.to_string();
 
                 handle_declare_deploy_result(declare(*state, &contract_name, self.contracts_data))
             }
@@ -202,7 +203,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::from_serializable(contract_address))
             }
             "var" => {
-                let name: String = input_reader.read::<ByteArray>()?.into();
+                let name: String = input_reader.read::<ByteArray>()?.to_string();
 
                 let env_var = self
                     .environment_variables
@@ -254,18 +255,18 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                         CheatcodeHandlingResult::from_serializable(Err::<(), _>(panic_data)),
                     ),
                     CallResult::Failure(CallFailure::Error { msg }) => Err(
-                        EnhancedHintError::from(HintError::CustomHint(Box::from(msg))),
+                        EnhancedHintError::from(HintError::CustomHint(Box::from(msg.to_string()))),
                     ),
                 }
             }
             "read_txt" => {
-                let file_path: String = input_reader.read::<ByteArray>()?.into();
+                let file_path: String = input_reader.read::<ByteArray>()?.to_string();
                 let parsed_content = file_operations::read_txt(file_path)?;
 
                 Ok(CheatcodeHandlingResult::Handled(parsed_content))
             }
             "read_json" => {
-                let file_path: String = input_reader.read::<ByteArray>()?.into();
+                let file_path: String = input_reader.read::<ByteArray>()?.to_string();
                 let parsed_content = file_operations::read_json(file_path)?;
 
                 Ok(CheatcodeHandlingResult::Handled(parsed_content))
@@ -324,7 +325,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let private_key = input_reader.read()?;
                 let message_hash = input_reader.read()?;
 
-                if private_key == FieldElement::from(0_u8) {
+                if private_key == Felt::from(0_u8) {
                     return Ok(CheatcodeHandlingResult::from_serializable(Err::<(), _>(
                         SignError::InvalidSecretKey,
                     )));
@@ -488,30 +489,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             ))),
             _ => Ok(SyscallHandlingResult::Forwarded),
         }
-    }
-}
-
-#[derive(CairoDeserialize, CairoSerialize)]
-struct CairoU256 {
-    low: u128,
-    high: u128,
-}
-
-impl CairoU256 {
-    fn from_bytes(bytes: &[u8]) -> Self {
-        Self {
-            low: u128::from_be_bytes(bytes[16..32].try_into().unwrap()),
-            high: u128::from_be_bytes(bytes[0..16].try_into().unwrap()),
-        }
-    }
-
-    fn to_be_bytes(&self) -> [u8; 32] {
-        let mut result = [0; 32];
-
-        result[16..].copy_from_slice(&self.low.to_be_bytes());
-        result[..16].copy_from_slice(&self.high.to_be_bytes());
-
-        result
     }
 }
 

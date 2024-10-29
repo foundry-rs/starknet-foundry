@@ -13,7 +13,7 @@ snforge_std = { path = "../../../../../snforge_std" }
 [[target.starknet-contract]]
 sierra = true
 
-[cairo]
+[profile.dev.cairo]
 unstable-add-statements-functions-debug-info = true
 unstable-add-statements-code-locations-debug-info = true
 inlining-strategy= "avoid"

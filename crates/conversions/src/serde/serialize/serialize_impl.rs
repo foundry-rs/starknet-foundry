@@ -1,7 +1,7 @@
 use super::{BufferWriter, CairoSerialize};
 use crate::{byte_array::ByteArray, IntoConv};
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use starknet::core::types::{ContractErrorData, FieldElement, TransactionExecutionErrorData};
+use starknet::core::types::{ContractErrorData, TransactionExecutionErrorData};
 use starknet_api::core::EthAddress;
 use starknet_api::{
     core::{ClassHash, ContractAddress, EntryPointSelector, Nonce},
@@ -28,20 +28,20 @@ impl CairoSerialize for CallEntryPoint {
 
 impl CairoSerialize for ContractErrorData {
     fn serialize(&self, output: &mut BufferWriter) {
-        self.revert_error.serialize(output);
+        ByteArray::from(self.revert_error.as_str()).serialize(output);
     }
 }
 
 impl CairoSerialize for TransactionExecutionErrorData {
     fn serialize(&self, output: &mut BufferWriter) {
         self.transaction_index.serialize(output);
-        self.execution_error.serialize(output);
+        ByteArray::from(self.execution_error.as_str()).serialize(output);
     }
 }
 
 impl CairoSerialize for anyhow::Error {
     fn serialize(&self, output: &mut BufferWriter) {
-        self.to_string().serialize(output);
+        ByteArray::from(self.to_string().as_str()).serialize(output);
     }
 }
 
@@ -113,19 +113,6 @@ where
 {
     fn serialize(&self, output: &mut BufferWriter) {
         T::serialize(self, output);
-    }
-}
-
-// Try remove impls for String, ByteArray should be used explicitly instead
-impl CairoSerialize for &str {
-    fn serialize(&self, output: &mut BufferWriter) {
-        ByteArray::from(*self).serialize(output);
-    }
-}
-
-impl CairoSerialize for String {
-    fn serialize(&self, output: &mut BufferWriter) {
-        self.as_str().serialize(output);
     }
 }
 
@@ -216,7 +203,6 @@ macro_rules! impl_serialize_for_tuple {
 }
 
 impl_serialize_for_felt_type!(Felt252);
-impl_serialize_for_felt_type!(FieldElement);
 impl_serialize_for_felt_type!(ClassHash);
 impl_serialize_for_felt_type!(ContractAddress);
 impl_serialize_for_felt_type!(Nonce);
@@ -229,6 +215,12 @@ impl_serialize_for_num_type!(u32);
 impl_serialize_for_num_type!(u64);
 impl_serialize_for_num_type!(u128);
 impl_serialize_for_num_type!(usize);
+
+impl_serialize_for_num_type!(i8);
+impl_serialize_for_num_type!(i16);
+impl_serialize_for_num_type!(i32);
+impl_serialize_for_num_type!(i64);
+impl_serialize_for_num_type!(i128);
 
 impl_serialize_for_tuple!();
 impl_serialize_for_tuple!(A);

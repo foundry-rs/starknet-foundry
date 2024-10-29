@@ -23,6 +23,6 @@ Changes the transaction version for the given target.
 Cancels the `cheat_transaction_version` / `start_cheat_transaction_version` for the given target.
 
 ## `stop_cheat_transaction_version_global`
-> `fn stop_cheat_transaction_version_global(target: ContractAddress)`
+> `fn stop_cheat_transaction_version_global()`
 
 Cancels the `start_cheat_transaction_version_global`.

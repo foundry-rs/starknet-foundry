@@ -3,6 +3,7 @@ use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
 use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
+use cairo_annotations::trace_data::VersionedCallTrace as VersionedProfilerCallTrace;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
 use cairo_vm::Felt252;
@@ -15,7 +16,6 @@ use shared::utils::build_readable_text;
 use std::cell::RefCell;
 use std::option::Option;
 use std::rc::Rc;
-use trace_data::CallTrace as ProfilerCallTrace;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasStatistics {
@@ -78,7 +78,7 @@ pub struct Single;
 impl TestType for Single {
     type GasInfo = u128;
     type TestStatistics = ();
-    type TraceData = ProfilerCallTrace;
+    type TraceData = VersionedProfilerCallTrace;
 }
 
 /// Summary of running a single test case
@@ -231,11 +231,11 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: build_profiler_call_trace(
+                        trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
                             call_trace,
                             contracts_data,
                             maybe_versioned_program_path,
-                        ),
+                        )),
                     };
                     check_available_gas(&test_case.config.available_gas, summary)
                 }
@@ -269,11 +269,11 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: build_profiler_call_trace(
+                        trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
                             call_trace,
                             contracts_data,
                             maybe_versioned_program_path,
-                        ),
+                        )),
                     },
                 },
             },
@@ -299,7 +299,9 @@ fn is_matching(data: &[Felt252], pattern: &[Felt252]) -> bool {
     }
 }
 fn convert_felts_to_byte_array_string(data: &[Felt252]) -> Option<String> {
-    ByteArray::deserialize_with_magic(data).map(Into::into).ok()
+    ByteArray::deserialize_with_magic(data)
+        .map(|byte_array| byte_array.to_string())
+        .ok()
 }
 
 /// Returns a string with the data that was produced by the test case.

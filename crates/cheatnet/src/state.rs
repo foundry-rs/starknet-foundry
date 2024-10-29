@@ -15,6 +15,7 @@ use blockifier::{
     execution::contract_class::ContractClass,
     state::state_api::{StateReader, StateResult},
 };
+use cairo_annotations::trace_data::L1Resources;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use cairo_vm::Felt252;
@@ -32,7 +33,6 @@ use starknet_api::{
 use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
-use trace_data::L1Resources;
 
 // Specifies the duration of the cheat
 #[derive(CairoDeserialize, Copy, Clone, Debug, PartialEq, Eq)]

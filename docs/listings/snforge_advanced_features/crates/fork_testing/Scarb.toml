@@ -1,0 +1,20 @@
+[package]
+name = "fork_testing"
+version = "0.1.0"
+edition = "2023_11"
+
+[dependencies]
+starknet.workspace = true
+snforge_std.workspace = true
+assert_macros.workspace = true
+
+[[target.starknet-contract]]
+sierra = true
+
+[scripts]
+test = "snforge test"
+
+[[tool.snforge.fork]]
+name = "SEPOLIA_LATEST"
+url = "https://starknet-sepolia.public.blastapi.io/rpc/v0_7"
+block_id.tag = "latest"

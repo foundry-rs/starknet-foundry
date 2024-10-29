@@ -2,12 +2,12 @@ use self::block_id::{BlockId, BlockIdVariants};
 use crate::{
     args::Arguments,
     attributes::{AttributeCollector, AttributeInfo, AttributeTypeData},
+    branch,
     cairo_expression::CairoExpression,
     config_statement::extend_with_config_cheatcodes,
     types::ParseFromExpr,
-    utils::branch,
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, Severity, TokenStream};
 use cairo_lang_syntax::node::db::SyntaxGroup;
 use indoc::formatdoc;
 use url::Url;
@@ -30,7 +30,11 @@ impl AttributeCollector for ForkCollector {
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
     ) -> Result<String, Diagnostics> {
-        let expr = branch(inline_args(db, &args), || from_file_args(db, &args))?;
+        let expr = branch!(
+            inline_args(db, &args),
+            overridden_args(db, &args),
+            from_file_args(db, &args)
+        )?;
 
         Ok(expr)
     }
@@ -69,12 +73,39 @@ fn from_file_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diag
         .unnamed_only::<ForkCollector>()?
         .of_length::<1, ForkCollector>()?;
 
-    let name = String::parse_from_expr::<ForkCollector>(db, arg, "0")?;
+    let name = String::parse_from_expr::<ForkCollector>(db, arg.1, arg.0.to_string().as_str())?;
 
     let name = name.as_cairo_expression();
 
     Ok(format!(
         r#"snforge_std::_config_types::ForkConfig::Named({name})"#
+    ))
+}
+
+fn overridden_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
+    let &[arg] = args.unnamed().of_length::<1, ForkCollector>()?;
+
+    let block_id = args.named.one_of_once(&[
+        BlockIdVariants::Hash,
+        BlockIdVariants::Number,
+        BlockIdVariants::Tag,
+    ])?;
+
+    let block_id = BlockId::parse_from_expr::<ForkCollector>(db, &block_id, block_id.0.as_ref())?;
+    let name = String::parse_from_expr::<ForkCollector>(db, arg.1, arg.0.to_string().as_str())?;
+
+    let block_id = block_id.as_cairo_expression();
+    let name = name.as_cairo_expression();
+
+    Ok(formatdoc!(
+        "
+            snforge_std::_config_types::ForkConfig::Overridden(
+                snforge_std::_config_types::OverriddenForkConfig {{
+                    block: {block_id},
+                    name: {name}
+                }}
+            )
+        "
     ))
 }
 
