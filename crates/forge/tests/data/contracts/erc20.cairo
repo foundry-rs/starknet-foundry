@@ -24,7 +24,7 @@ mod ERC20 {
     use starknet::{
         contract_address_const, get_caller_address, ContractAddress,
         storage::{
-            StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess,
+            StoragePointerWriteAccess, StorageMapReadAccess,
             StoragePathEntry, Map
         },
     };

@@ -5,7 +5,7 @@
 mod SRC5Component {
     use starknet::{
         storage::{
-            StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess,
+            StoragePointerWriteAccess, StorageMapReadAccess,
             StoragePathEntry, Map
         },
         ContractAddress
@@ -64,7 +64,7 @@ mod SRC5Component {
 #[starknet::component]
 mod AccessControlComponent {
     use starknet::{
-        storage::{StoragePointerReadAccess, StoragePointerWriteAccess, StoragePathEntry, Map},
+        storage::{StoragePointerWriteAccess, StoragePathEntry, Map},
         ContractAddress
     };
     use starknet::get_caller_address;
@@ -150,7 +150,7 @@ mod AccessControlComponent {
 
         /// Returns the admin role that controls `role`.
         fn get_role_admin(self: @ComponentState<TContractState>, role: felt252) -> felt252 {
-            self.AccessControl_role_admin.read(role)
+            self.AccessControl_role_admin.entry(role).read()
         }
 
         /// Grants `role` to `account`.

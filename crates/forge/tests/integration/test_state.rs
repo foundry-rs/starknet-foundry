@@ -407,6 +407,8 @@ fn storage_access_default_values() {
         r"
         #[starknet::contract]
         mod Contract {
+         use starknet::storage::{
+            StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map };
             #[derive(starknet::Store, Drop)]
             struct CustomStruct {
                 a: felt252,
@@ -427,7 +429,7 @@ fn storage_access_default_values() {
             let default_felt252 = state.balance.read();
             assert(default_felt252 == 0, 'Incorrect storage value');
 
-            let default_map_value = state.legacy_map.entry(22).read();
+            let default_map_value = state.legacy_map.read(22);
             assert(default_map_value == 0, 'Incorrect map value');
 
             let default_custom_struct = state.custom_struct.read();
