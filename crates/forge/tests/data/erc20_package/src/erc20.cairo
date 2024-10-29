@@ -135,7 +135,7 @@ mod ERC20 {
             let caller = get_caller_address();
             self
                 .approve_helper(
-                    caller, spender, self.allowances.read((caller, spender)) + added_value
+                    caller, spender, self.allowances.entry((caller, spender)).read() + added_value
                 );
         }
 

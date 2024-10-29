@@ -5,7 +5,7 @@ mod MapSimpleValueSimpleKey {
     };
     #[storage]
     struct Storage {
-        values: Map<felt252, felt252>, 
+        values: Map<felt252, felt252>,
     }
 
     #[external(v0)]

@@ -139,7 +139,7 @@ mod ERC20 {
             let caller = get_caller_address();
             self
                 .approve_helper(
-                    caller, spender, self.allowances.read((caller, spender)) + added_value
+                    caller, spender, self.allowances.entry((caller, spender)).read() + added_value
                 );
         }
 
@@ -149,7 +149,7 @@ mod ERC20 {
             let caller = get_caller_address();
             self
                 .approve_helper(
-                    caller, spender, self.allowances.read((caller, spender)) - subtracted_value
+                    caller, spender, self.allowances.entry((caller, spender)).read() - subtracted_value
                 );
         }
     }
@@ -172,7 +172,7 @@ mod ERC20 {
         fn spend_allowance(
             ref self: ContractState, owner: ContractAddress, spender: ContractAddress, amount: u256
         ) {
-            let current_allowance = self.allowances.read((owner, spender));
+            let current_allowance = self.allowances.entry((owner, spender)).read();
             let ONES_MASK = 0xffffffffffffffffffffffffffffffff_u128;
             let is_unlimited_allowance = current_allowance.low == ONES_MASK
                 && current_allowance.high == ONES_MASK;
