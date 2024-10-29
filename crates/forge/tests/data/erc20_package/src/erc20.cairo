@@ -102,13 +102,13 @@ mod ERC20 {
         }
 
         fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
-            self.balances.read(account)
+            self.balances.entry(account).read()
         }
 
         fn allowance(
             self: @ContractState, owner: ContractAddress, spender: ContractAddress
         ) -> u256 {
-            self.allowances.read((owner, spender))
+            self.allowances.entry((owner, spender)).read()
         }
 
         fn transfer(ref self: ContractState, recipient: ContractAddress, amount: u256) {
@@ -148,7 +148,9 @@ mod ERC20 {
             let caller = get_caller_address();
             self
                 .approve_helper(
-                    caller, spender, self.allowances.read((caller, spender)) - subtracted_value
+                    caller,
+                    spender,
+                    self.allowances.entry((caller, spender)).read() - subtracted_value
                 );
         }
     }
@@ -163,15 +165,15 @@ mod ERC20 {
         ) {
             assert(!sender.is_zero(), 'ERC20: transfer from 0');
             assert(!recipient.is_zero(), 'ERC20: transfer to 0');
-            self.balances.entry(sender).write(self.balances.read(sender) - amount);
-            self.balances.entry(recipient).write(self.balances.read(recipient) + amount);
+            self.balances.entry(sender).write(self.balances.entry(sender).read() - amount);
+            self.balances.entry(recipient).write(self.balances.entry(recipient).read() + amount);
             self.emit(Event::Transfer(Transfer { from: sender, to: recipient, value: amount }));
         }
 
         fn spend_allowance(
             ref self: ContractState, owner: ContractAddress, spender: ContractAddress, amount: u256
         ) {
-            let current_allowance = self.allowances.read((owner, spender));
+            let current_allowance = self.allowances.entry((owner, spender)).read();
             let ONES_MASK = 0xffffffffffffffffffffffffffffffff_u128;
             let is_unlimited_allowance = current_allowance.low == ONES_MASK
                 && current_allowance.high == ONES_MASK;
@@ -184,7 +186,7 @@ mod ERC20 {
             ref self: ContractState, owner: ContractAddress, spender: ContractAddress, amount: u256
         ) {
             assert(!spender.is_zero(), 'ERC20: approve from 0');
-            self.allowances.write((owner, spender), amount);
+            self.allowances.entry((owner, spender)).write(amount);
             self.emit(Event::Approval(Approval { owner, spender, value: amount }));
         }
     }
