@@ -46,33 +46,7 @@ First, add the Starknet Foundry plugin to asdf:
 asdf plugin add starknet-foundry
 ```
 
-Install the latest version:
-
-```shell
-asdf install starknet-foundry latest
-```
-
-### Set the installed version:
-
-- Globally (applies to all directories):
-
-```shell
-asdf global starknet-foundry 0.32.0
-```
-
-- Locally (applies only to the current directory):
-
-```shell
-asdf local starknet-foundry 0.32.0
-```
-
-Alternatively, You can create the `.tool-versions` file in your project directory with the version of the foundry by running the code below:
-
-```shell
-echo "starknet-foundry 0.32.0" > .tool-versions
-```
-
-### Version Management
+#### Version Management
 
 - Common Error
 
@@ -83,18 +57,9 @@ No version is set for command snforge
 Consider adding one of the following versions in your config file at starknet-foundry 0.32.0
 ```
 
-The error code above shows that the version of `Starknet Foundry` is not set. You must set the version using the steps outlined to resolve the issue.
+The error indicates that `Starknet Foundry` version is unset. Set the version as outlined to fix this
 
-### Checking Current Version
-
-- To verify your installation and version
-
-```shell
-snforge --version
-sncast --version
-```
-
-### Switching Versions
+#### Switching Versions
 
 To switch between different versions:
 
@@ -109,9 +74,9 @@ asdf global starknet-foundry 0.32.0
 asdf local starknet-foundry 0.32.0
 ```
 
-See [asdf guide](https://asdf-vm.com/guide/getting-started.html) for more details.
+"For more details on using `asdf` see this [asdf](https://asdf-vm.com/guide/getting-started.html#_6-set-a-version)"
 
-### Installation on Windows
+#### Installation on Windows
 
 As for now, Starknet Foundry on Windows needs manual installation, but necessary steps are kept to minimum:
 
@@ -133,7 +98,7 @@ snforge --version
 sncast --version
 ```
 
-### Universal-Sierra-Compiler update
+#### Universal-Sierra-Compiler update
 
 If you would like to bump the USC manually (e.g. when the new Sierra version is released) you can do it by running:
 
