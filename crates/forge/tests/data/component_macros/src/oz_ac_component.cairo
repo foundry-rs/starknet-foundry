@@ -4,10 +4,7 @@
 #[starknet::component]
 mod SRC5Component {
     use starknet::{
-        storage::{
-            StoragePointerWriteAccess, StorageMapReadAccess,
-            StoragePathEntry, Map
-        },
+        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map},
         ContractAddress
     };
 
@@ -63,10 +60,7 @@ mod SRC5Component {
 
 #[starknet::component]
 mod AccessControlComponent {
-    use starknet::{
-        storage::{StoragePointerWriteAccess, StoragePathEntry, Map},
-        ContractAddress
-    };
+    use starknet::{storage::{StoragePointerWriteAccess, StoragePathEntry, Map}, ContractAddress};
     use starknet::get_caller_address;
     use super::SRC5Component;
     use super::SRC5Component::InternalTrait as SRC5InternalTrait;
