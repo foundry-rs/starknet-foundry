@@ -8,8 +8,7 @@ use std::num::NonZeroU32;
 
 impl CairoDeserialize for Url {
     fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        let url: String = reader.read::<ByteArray>()?.into();
-
+        let url: String = reader.read::<ByteArray>()?.to_string();
         Url::parse(&url).map_err(|_| BufferReadError::ParseFailed)
     }
 }

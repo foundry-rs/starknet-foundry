@@ -155,7 +155,7 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
         matches!(
             output,
             CallResult::Failure(CallFailure::Error { msg, .. })
-            if msg.contains("Requested contract address") && msg.contains("is not deployed")
+            if msg.to_string().contains("Requested contract address") && msg.to_string().contains("is not deployed")
         ),
         "Wrong error message"
     );
