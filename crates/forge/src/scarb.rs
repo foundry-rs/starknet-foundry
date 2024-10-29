@@ -309,7 +309,7 @@ mod tests {
             [[tool.snforge.fork]]
             name = "SAME_NAME"
             url = "http://some.rpc.url"
-            block_id.hash = "0x1"
+            block_id.hash = "1"
             "#
         );
         temp.child("Scarb.toml").write_str(content).unwrap();
@@ -340,7 +340,7 @@ mod tests {
             name = "SAME_NAME"
             url = "http://some.rpc.url"
             block_id.number = "1"
-            block_id.hash = "0x2"
+            block_id.hash = "2"
             "#
         );
         temp.child("Scarb.toml").write_str(content).unwrap();
