@@ -251,22 +251,26 @@ jobs:
           TAG: ${{ steps.create-release.outputs.computed-prefix }}${{ steps.create-release.outputs.version }}
 
   upload-to-registry:
-    name: Upload new snforge_std and sncast_std versions to the registry
+    name: Upload new snforge_std, sncast_std and snforge_scarb_plugin versions to the registry
     runs-on: ubuntu-latest
     needs: [ create-release, verify-version ]
+    env:
+      SCARB_REGISTRY_AUTH_TOKEN: ${{ secrets.SCARB_REGISTRY_AUTH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       # todo: Use scarb version from tool-versions
       - uses: software-mansion/setup-scarb@v1.3.2
         with:
           scarb-version: "2.8.2"
+
+      - name: Package and upload snforge_scarb_plugin
+        working-directory: ./crates/snforge_scarb_plugin
+        run: scarb publish
+
       - name: Package and upload snforge_std
         working-directory: ./snforge_std
-        env:
-          SCARB_REGISTRY_AUTH_TOKEN: ${{ secrets.SCARB_REGISTRY_AUTH_TOKEN }}
         run: scarb publish
+
       - name: Package and upload sncast_std
         working-directory: ./sncast_std
-        env:
-          SCARB_REGISTRY_AUTH_TOKEN: ${{ secrets.SCARB_REGISTRY_AUTH_TOKEN }}
         run: scarb publish
