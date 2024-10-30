@@ -7,6 +7,8 @@ use camino::Utf8PathBuf;
 use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use forge::CAIRO_EDITION;
 use indoc::{formatdoc, indoc};
+use scarb_api::ScarbCommand;
+use semver::Version;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::assert_matches;
 use snapbox::cmd::Command as SnapboxCommand;
@@ -1100,4 +1102,35 @@ fn catch_runtime_errors() {
             "#
         ),
     );
+}
+
+#[test]
+fn test_init_project_with_registry_dependency() {
+    let temp = tempdir_with_tool_versions().unwrap();
+    
+    // Initialize new project
+    runner(&temp)
+        .args(["init", "test_name"])
+        .assert()
+        .success();
+
+    let manifest_path = temp.child("test_name/Scarb.toml");
+    let scarb_toml = std::fs::read_to_string(manifest_path.path()).unwrap();
+    let scarb_toml = DocumentMut::from_str(&scarb_toml).unwrap();
+
+    // Verify snforge_std is added from registry for Scarb >= 2.7.0
+    let version = ScarbCommand::version().run().unwrap().cairo;
+    if version >= Version::new(2, 7, 0) {
+        assert!(scarb_toml["dev-dependencies"]["snforge_std"]
+            .as_str()
+            .unwrap()
+            .starts_with(env!("CARGO_PKG_VERSION")));
+    } else {
+        assert_eq!(
+            scarb_toml["dev-dependencies"]["snforge_std"]["git"]
+                .as_str()
+                .unwrap(),
+            "https://github.com/foundry-rs/starknet-foundry.git"
+        );
+    }
 }
