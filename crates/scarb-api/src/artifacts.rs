@@ -66,7 +66,7 @@ fn unique_artifacts(
     artifact_representations
         .into_iter()
         .flat_map(StarknetArtifactsRepresentation::artifacts)
-        .unique()
+        .unique_by(|(name, _)| name.to_string())
         .filter(|(name, _)| !current_artifacts.contains_key(name))
         .collect()
 }
