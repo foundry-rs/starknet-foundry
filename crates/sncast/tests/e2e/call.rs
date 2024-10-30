@@ -37,8 +37,6 @@ fn test_happy_case() {
 #[test]
 fn test_happy_case_cairo_expression_calldata() {
     let args = vec![
-        "--accounts-file",
-        ACCOUNT_FILE_PATH,
         "call",
         "--url",
         URL,
@@ -238,7 +236,6 @@ fn test_happy_case_shell() {
 
     let snapbox = Command::new(test_path)
         .arg(binary_path)
-        .arg(ACCOUNT_FILE_PATH)
         .arg(URL)
         .arg(DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA);
     snapbox.assert().success();

@@ -389,13 +389,15 @@ fn test_too_low_max_fee() {
 
 #[tokio::test]
 async fn test_happy_case_cairo_expression_calldata() {
+    let tempdir = create_and_deploy_oz_account().await;
+
     let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
 
     let args = vec![
         "--accounts-file",
-        ACCOUNT_FILE_PATH,
+        "accounts.json",
         "--account",
-        "user12",
+        "my_account",
         "--int-format",
         "--json",
         "invoke",
@@ -413,7 +415,7 @@ async fn test_happy_case_cairo_expression_calldata() {
         "eth",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success().get_output().stdout.clone();
 
     let hash = get_transaction_hash(&output);
@@ -422,16 +424,18 @@ async fn test_happy_case_cairo_expression_calldata() {
     assert!(matches!(receipt, Invoke(_)));
 }
 
-#[test]
-fn test_happy_case_shell() {
+#[tokio::test]
+async fn test_happy_case_shell() {
+    let tempdir = create_and_deploy_oz_account().await;
+
     let test_path = PathBuf::from("tests/shell/invoke.sh")
         .canonicalize()
         .unwrap();
     let binary_path = cargo_bin!("sncast");
 
     let snapbox = Command::new(test_path)
+        .current_dir(tempdir.path())
         .arg(binary_path)
-        .arg(ACCOUNT_FILE_PATH)
         .arg(URL)
         .arg(DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA);
     snapbox.assert().success();

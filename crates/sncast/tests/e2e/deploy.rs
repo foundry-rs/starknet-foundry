@@ -288,11 +288,13 @@ async fn test_happy_case_with_constructor() {
 
 #[tokio::test]
 async fn test_happy_case_with_constructor_cairo_expression_calldata() {
+    let tempdir = create_and_deploy_oz_account().await;
+
     let args = vec![
         "--accounts-file",
-        ACCOUNT_FILE_PATH,
+        "accounts.json",
         "--account",
-        "user5",
+        "my_account",
         "--int-format",
         "--json",
         "deploy",
@@ -306,7 +308,7 @@ async fn test_happy_case_with_constructor_cairo_expression_calldata() {
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success().get_output().stdout.clone();
 
     let hash = get_transaction_hash(&output);
@@ -434,16 +436,18 @@ fn test_too_low_max_fee() {
     );
 }
 
-#[test]
-fn test_happy_case_shell() {
+#[tokio::test]
+async fn test_happy_case_shell() {
+    let tempdir = create_and_deploy_oz_account().await;
+
     let test_path = PathBuf::from("tests/shell/deploy.sh")
         .canonicalize()
         .unwrap();
     let binary_path = cargo_bin!("sncast");
 
     let snapbox = Command::new(test_path)
+        .current_dir(tempdir.path())
         .arg(binary_path)
-        .arg(ACCOUNT_FILE_PATH)
         .arg(URL)
         .arg(CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA);
     snapbox.assert().success();

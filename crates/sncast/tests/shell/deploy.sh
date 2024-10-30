@@ -1,15 +1,14 @@
 #!/bin/bash
 
 CAST_BINARY="$1"
-ACCOUNT_FILE_PATH="$2"
-URL="$3"
-CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA="$4"
+URL="$2"
+CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA="$3"
 
 $CAST_BINARY \
   --accounts-file \
-  "$ACCOUNT_FILE_PATH" \
+  accounts.json \
   --account \
-  user5 \
+  my_account \
   --int-format \
   --json \
   deploy \
