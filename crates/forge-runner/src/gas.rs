@@ -128,6 +128,8 @@ fn get_l1_data_cost(
     state: &mut CachedState<ExtendedStateReader>,
 ) -> Result<GasVector, StateError> {
     let mut state_changes = state.get_actual_state_changes()?;
+    // compiled_class_hash_updates is used only for keeping track of declares
+    // which we don't want to include in gas cost
     state_changes.0.compiled_class_hashes.clear();
 
     let state_changes_count = state_changes.count_for_fee_charge(
