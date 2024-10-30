@@ -1105,19 +1105,24 @@ fn catch_runtime_errors() {
 }
 
 #[test]
-fn test_init_project_with_registry_dependency() {
-    let temp = tempdir_with_tool_versions().unwrap();
-
+fn test_init_project_with_registry_dependency() -> Result<(), Box<dyn std::error::Error>> {
+    let temp = tempdir_with_tool_versions()?;
+    
     // Initialize new project
-    runner(&temp).args(["init", "test_name"]).assert().success();
+    runner(&temp)
+        .args(["init", "test_name"])
+        .assert()
+        .success();
 
     let manifest_path = temp.child("test_name/Scarb.toml");
-    let scarb_toml = std::fs::read_to_string(manifest_path.path()).unwrap();
-    let scarb_toml = DocumentMut::from_str(&scarb_toml).unwrap();
+    let scarb_toml = std::fs::read_to_string(manifest_path.path())?;
+    let scarb_toml = DocumentMut::from_str(&scarb_toml)?;
 
     // Verify snforge_std is added from registry
     assert!(scarb_toml["dev-dependencies"]["snforge_std"]
         .as_str()
         .unwrap()
         .starts_with(env!("CARGO_PKG_VERSION")));
+
+    Ok(())
 }
