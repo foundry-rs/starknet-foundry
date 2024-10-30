@@ -52,10 +52,11 @@ pub struct Deploy {
 #[derive(Debug, Clone, clap::Args)]
 #[group(multiple = false)]
 pub struct DeployArguments {
-    /// Arguments of the called function (serialized as a series of felts or written as comma-separated expressions in Cairo syntax)
+    /// Arguments of the called function serialized as a series of felts
     #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
     pub constructor_calldata: Option<Vec<String>>,
 
+    // Arguments of the called function as a comma-separated string of Cairo expressions 
     #[clap(long)]
     pub arguments: Option<String>,
 }
