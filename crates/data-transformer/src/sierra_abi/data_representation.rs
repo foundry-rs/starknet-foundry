@@ -1,5 +1,6 @@
 use crate::cairo_types::{CairoBytes31, CairoU256, CairoU384, CairoU512, CairoU96};
 use anyhow::{bail, Context};
+use conversions::felt252::FromShortString;
 use conversions::{
     byte_array::ByteArray,
     serde::serialize::{BufferWriter, CairoSerialize},
@@ -100,6 +101,10 @@ impl CalldataPrimitive {
             // https://github.com/starkware-libs/cairo/blob/bf48e658b9946c2d5446eeb0c4f84868e0b193b5/corelib/src/bytes_31.cairo#L14
             // It's actually felt under the hood. Although conversion from felt252 to bytes31 returns Result, it never fails.
             "bytes31" => Ok(Self::Felt(parse_with_type::<CairoBytes31>(value)?.into())),
+            "shortstring" => {
+                let felt = Felt::from_short_string(value)?;
+                Ok(Self::Felt(felt))
+            }
             "felt252" | "felt" | "ContractAddress" | "ClassHash" | "StorageAddress"
             | "EthAddress" => {
                 let felt = Felt::from_dec_str(value)
