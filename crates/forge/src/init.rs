@@ -153,7 +153,7 @@ pub fn run(project_name: &str) -> Result<()> {
     let scarb_manifest_path = project_path.join("Scarb.toml");
     let snfoundry_manifest_path = project_path.join("snfoundry.toml");
 
-     // if there is no Scarb.toml run `scarb new`
+    // if there is no Scarb.toml run `scarb new`
     if !scarb_manifest_path.is_file() {
         ScarbCommand::new_with_stdio()
             .current_dir(current_dir)
@@ -163,8 +163,7 @@ pub fn run(project_name: &str) -> Result<()> {
             .run()
             .context("Failed to initialize a new project")?;
 
-            
-         // Fetch to create lock file.
+        // Fetch to create lock file.
         ScarbCommand::new_with_stdio()
             .current_dir(&project_path)
             .manifest_path(scarb_manifest_path.clone())
@@ -187,7 +186,6 @@ pub fn run(project_name: &str) -> Result<()> {
 
     if env::var("DEV_DISABLE_SNFORGE_STD_DEPENDENCY").is_err() {
         if cairo_version >= MINIMAL_SCARB_FOR_REGISTRY {
-           
             ScarbCommand::new_with_stdio()
                 .current_dir(&project_path)
                 .manifest_path(scarb_manifest_path.clone())
@@ -200,7 +198,6 @@ pub fn run(project_name: &str) -> Result<()> {
                 .run()
                 .context("Failed to add snforge_std")?;
         } else {
-       
             ScarbCommand::new_with_stdio()
                 .current_dir(&project_path)
                 .manifest_path(scarb_manifest_path.clone())
@@ -231,7 +228,7 @@ pub fn run(project_name: &str) -> Result<()> {
     overwrite_files_from_scarb_template("src", &project_path, project_name)?;
     overwrite_files_from_scarb_template("tests", &project_path, project_name)?;
 
-   
+    // Fetch to create lock file
     ScarbCommand::new_with_stdio()
         .manifest_path(scarb_manifest_path)
         .arg("fetch")

@@ -1107,12 +1107,9 @@ fn catch_runtime_errors() {
 #[test]
 fn test_init_project_with_registry_dependency() {
     let temp = tempdir_with_tool_versions().unwrap();
-    
+
     // Initialize new project
-    runner(&temp)
-        .args(["init", "test_name"])
-        .assert()
-        .success();
+    runner(&temp).args(["init", "test_name"]).assert().success();
 
     let manifest_path = temp.child("test_name/Scarb.toml");
     let scarb_toml = std::fs::read_to_string(manifest_path.path()).unwrap();
