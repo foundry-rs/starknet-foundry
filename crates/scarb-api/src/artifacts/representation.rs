@@ -8,11 +8,11 @@ pub struct StarknetArtifactsRepresentation {
 }
 
 impl StarknetArtifactsRepresentation {
-    pub fn try_from_path(path: &Utf8Path) -> anyhow::Result<Self> {
-        let artifacts = artifacts_for_package(path)?;
-        let path = path
+    pub fn try_from_path(artifacts_path: &Utf8Path) -> anyhow::Result<Self> {
+        let artifacts = artifacts_for_package(artifacts_path)?;
+        let path = artifacts_path
             .parent()
-            .ok_or_else(|| anyhow!("Failed to get parent for path = {}", &path))?
+            .ok_or_else(|| anyhow!("Failed to get parent for path = {}", &artifacts_path))?
             .to_path_buf();
 
         Ok(Self {
