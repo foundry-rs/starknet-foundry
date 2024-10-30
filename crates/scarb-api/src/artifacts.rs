@@ -38,6 +38,7 @@ impl StarknetArtifactsFiles {
     pub(crate) fn load_contracts_artifacts(
         self,
     ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
+        // TODO(#2626) handle duplicates
         let mut base_artifacts: HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)> =
             compile_artifacts(
                 StarknetArtifactsRepresentation::try_from_path(self.base.as_path())?.artifacts(),
