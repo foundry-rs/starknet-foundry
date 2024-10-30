@@ -56,7 +56,7 @@ pub struct DeployArguments {
     #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
     pub constructor_calldata: Option<Vec<String>>,
 
-    // Arguments of the called function as a comma-separated string of Cairo expressions 
+    // Arguments of the called function as a comma-separated string of Cairo expressions
     #[clap(long)]
     pub arguments: Option<String>,
 }

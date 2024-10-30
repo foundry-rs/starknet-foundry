@@ -155,15 +155,17 @@ pub struct Arguments {
     #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
     pub calldata: Option<Vec<String>>,
 
-    // Arguments of the called function as a comma-separated string of Cairo expressions 
+    // Arguments of the called function as a comma-separated string of Cairo expressions
     #[clap(long)]
     pub arguments: Option<String>,
 }
 
 impl Arguments {
-    // TODO consider resolving
-    #[allow(clippy::wrong_self_convention)]
-    fn to_calldata(self, contract_class: ContractClass, selector: &Felt) -> Result<Vec<Felt>> {
+    fn try_into_calldata(
+        self,
+        contract_class: ContractClass,
+        selector: &Felt,
+    ) -> Result<Vec<Felt>> {
         if let Some(arguments) = self.arguments {
             Calldata::new(arguments).serialized(contract_class, selector)
         } else if let Some(calldata) = self.calldata {
@@ -304,7 +306,7 @@ async fn run_async_command(
             let contract_class = get_contract_class(deploy.class_hash, &provider).await?;
 
             let arguments: Arguments = arguments.into();
-            let calldata = arguments.to_calldata(contract_class, &selector)?;
+            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
 
             let result = starknet_commands::deploy::deploy(
                 deploy.class_hash,
@@ -346,7 +348,7 @@ async fn run_async_command(
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let calldata = arguments.to_calldata(contract_class, &selector)?;
+            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
 
             let result = starknet_commands::call::call(
                 contract_address,
@@ -395,7 +397,7 @@ async fn run_async_command(
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
-            let calldata = arguments.to_calldata(contract_class, &selector)?;
+            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
 
             let result = starknet_commands::invoke::invoke(
                 contract_address,
