@@ -18,6 +18,8 @@ thiserror.workspace = true
 which.workspace = true
 semver.workspace = true
 regex.workspace = true
+rayon.workspace = true
+itertools.workspace = true
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 
 [dev-dependencies]
