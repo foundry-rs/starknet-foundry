@@ -44,7 +44,7 @@ Additionally, the `id` can be referenced in the inputs of deploy and invoke call
 > Inputs can be either strings (like "0x123") or numbers (like 234).
 
 > 📝 **Note**
-> For numbers larger than 2^32 (that can't fit into i64), use string format (e.g., "123456789123456789") due to TOML parser limitations.
+> For numbers larger than 2^63 - 1 (that can't fit into i64), use string format (e.g., "123456789123456789") due to TOML parser limitations.
 
 ```shell
 $ sncast multicall run --path /Users/john/Desktop/multicall_example.toml --fee-token strk
