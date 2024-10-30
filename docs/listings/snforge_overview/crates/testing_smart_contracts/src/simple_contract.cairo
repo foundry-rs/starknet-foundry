@@ -13,7 +13,7 @@ pub mod SimpleContract {
 
     #[abi(embed_v0)]
     pub impl SimpleContractImpl of super::ISimpleContract<ContractState> {
-        // Increases the balance by the given amount.
+        // Increases the balance by the given amount
         fn increase_balance(ref self: ContractState, amount: felt252) {
             self.balance.write(self.balance.read() + amount);
         }

@@ -47,15 +47,14 @@ impl RunForPackageArgs {
         scarb_metadata: &Metadata,
         args: &TestArgs,
         cache_dir: &Utf8PathBuf,
-        snforge_target_dir_path: &Utf8Path,
+        artifacts_dir: &Utf8Path,
         versioned_programs_dir: Utf8PathBuf,
     ) -> Result<RunForPackageArgs> {
-        let raw_test_targets = load_test_artifacts(snforge_target_dir_path, &package)?;
+        let raw_test_targets = load_test_artifacts(artifacts_dir, &package)?;
 
         let contracts = get_contracts_artifacts_and_source_sierra_paths(
-            scarb_metadata,
-            &package.id,
-            None,
+            artifacts_dir,
+            &package,
             !should_compile_starknet_contract_target(
                 &scarb_metadata.app_version_info.version,
                 args.no_optimization,
