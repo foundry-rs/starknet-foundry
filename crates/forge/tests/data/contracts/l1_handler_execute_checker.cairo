@@ -29,7 +29,7 @@ mod l1_handler_executor {
 
     #[abi(embed_v0)]
     impl IBalanceTokenImpl of super::IBalanceToken<ContractState> {
-        // Returns the current balance.
+        // Returns the current balance
         fn get_balance(self: @ContractState) -> felt252 {
             self.balance.read()
         }
