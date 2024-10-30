@@ -49,13 +49,9 @@ impl StarknetContractArtifacts {
         base_path: &Utf8Path,
     ) -> Result<Self> {
         let sierra_path = base_path.join(starknet_contract.artifacts.sierra.clone());
-        let sierra = fs::read_to_string(sierra_path)?;
+        let sierra = fs::read_to_string(&sierra_path)?;
 
-        let casm = compile_sierra_at_path(
-            &starknet_contract.artifacts.sierra,
-            Some(base_path.as_std_path()),
-            &SierraType::Contract,
-        )?;
+        let casm = compile_sierra_at_path(&sierra_path, &SierraType::Contract)?;
 
         Ok(Self { sierra, casm })
     }

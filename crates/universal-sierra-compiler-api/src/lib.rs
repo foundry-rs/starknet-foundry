@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fmt::Display;
 use std::io::Write;
-use std::path::Path;
 use std::str::from_utf8;
 use tempfile::Builder;
 
@@ -43,13 +42,9 @@ pub fn compile_sierra_to_casm(
     sierra_file_path: Option<&Utf8PathBuf>,
 ) -> Result<AssembledProgramWithDebugInfo> {
     let assembled_with_info_raw = if let Some(sierra_file_path) = sierra_file_path {
-        compile_sierra_at_path(sierra_file_path, None, &SierraType::Raw)?
+        compile_sierra_at_path(sierra_file_path, &SierraType::Raw)?
     } else {
-        compile_sierra(
-            &serde_json::to_value(sierra_program)?,
-            None,
-            &SierraType::Raw,
-        )?
+        compile_sierra(&serde_json::to_value(sierra_program)?, &SierraType::Raw)?
     };
 
     let assembled_with_info: AssembledProgramWithDebugInfo =
@@ -58,30 +53,21 @@ pub fn compile_sierra_to_casm(
     Ok(assembled_with_info)
 }
 
-pub fn compile_sierra(
-    sierra_contract_class: &Value,
-    current_dir: Option<&Path>,
-    sierra_type: &SierraType,
-) -> Result<String> {
+pub fn compile_sierra(sierra_contract_class: &Value, sierra_type: &SierraType) -> Result<String> {
     let mut temp_sierra_file = Builder::new().tempfile()?;
     let _ = temp_sierra_file.write(serde_json::to_vec(sierra_contract_class)?.as_slice())?;
 
     compile_sierra_at_path(
         &Utf8PathBuf::from(temp_sierra_file.path().to_string_lossy().to_string()),
-        current_dir,
         sierra_type,
     )
 }
 
 pub fn compile_sierra_at_path(
     sierra_file_path: &Utf8PathBuf,
-    current_dir: Option<&Path>,
     sierra_type: &SierraType,
 ) -> Result<String> {
     let mut usc_command = UniversalSierraCompilerCommand::new();
-    if let Some(dir) = current_dir {
-        usc_command.current_dir(dir);
-    }
 
     let usc_output = usc_command
         .inherit_stderr()
