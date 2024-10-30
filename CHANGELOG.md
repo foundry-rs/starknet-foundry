@@ -16,13 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - You can't use now `--coverage` and `--build-profile` flags at the same time. If you want to use both, you need to run
   `snforge test` twice with different flags.
 
-## [0.32.0] - 2024-10-16
-
 ### Cast
 
 #### Added
 
-- Data transformer for passing calldata to transactions as Cairo expressions for automatic conversion instead of serialized form
+- New `--arguments` flag to `call`, `invoke` and `deploy` for automatic conversion of Cairo expressions instead of serialized form.
+
+## [0.32.0] - 2024-10-16
+
+### Cast
 
 #### Changed
 
