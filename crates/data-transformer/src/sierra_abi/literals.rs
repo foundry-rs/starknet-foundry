@@ -88,7 +88,7 @@ impl SupportedCalldataKind for TerminalShortString {
             .string_value(db)
             .context("Invalid shortstring passed as an argument")?;
 
-        // TODO add better handling
+        // TODO(#2623) add better handling
         let expected_type_last = expected_type.split("::").last();
         let expected_type = if let Some(expected_type_last) = expected_type_last {
             match expected_type_last {
