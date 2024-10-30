@@ -267,3 +267,42 @@ async fn test_numeric_inputs() {
         transaction: [..]
     "});
 }
+
+#[tokio::test]
+async fn test_numeric_overflow() {
+    let path = project_root::get_project_root().expect("failed to get project root path");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("deploy_invoke_numeric_overflow.toml");
+    let path = path.to_str().expect("failed converting path to str");
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "user5",
+        "multicall",
+        "run",
+        "--url",
+        URL,
+        "--path",
+        path,
+        "--fee-token",
+        "eth",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: multicall run
+        error: Failed to parse [..]
+           |
+        12 | inputs = [0x123, 9223372036854775808]
+           |                  ^
+        number too large to fit in target type
+        "},
+    );
+}

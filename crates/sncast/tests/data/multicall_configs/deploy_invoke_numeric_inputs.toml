@@ -15,4 +15,4 @@ inputs = [0x123, 234]
 call_type = "invoke"
 contract_address = "map_contract"
 function = "put"
-inputs = [0x123, 234]
+inputs = [0x123, 9223372036854775807]
