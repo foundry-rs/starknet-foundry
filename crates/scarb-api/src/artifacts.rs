@@ -34,6 +34,7 @@ impl StarknetArtifactsFiles {
         }
     }
 
+    // TODO(#2625) add unit tests
     pub(crate) fn load_contracts_artifacts(
         self,
     ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
@@ -59,6 +60,7 @@ impl StarknetArtifactsFiles {
     }
 }
 
+// TODO(#2625) add unit tests
 fn unique_artifacts(
     artifact_representations: Vec<StarknetArtifactsRepresentation>,
     current_artifacts: &HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>,
