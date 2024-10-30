@@ -22,15 +22,15 @@ pub struct StarknetContractArtifacts {
 
 #[derive(PartialEq, Debug)]
 pub(crate) struct StarknetArtifactsFiles {
-    base_file: Utf8PathBuf,
-    other_files: Vec<Utf8PathBuf>,
+    base: Utf8PathBuf,
+    other: Vec<Utf8PathBuf>,
 }
 
 impl StarknetArtifactsFiles {
     pub(crate) fn new(base_file: Utf8PathBuf, other_files: Vec<Utf8PathBuf>) -> Self {
         Self {
-            base_file,
-            other_files,
+            base: base_file,
+            other: other_files,
         }
     }
 
@@ -39,12 +39,11 @@ impl StarknetArtifactsFiles {
     ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
         let mut base_artifacts: HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)> =
             compile_artifacts(
-                StarknetArtifactsRepresentation::try_from_path(self.base_file.as_path())?
-                    .artifacts(),
+                StarknetArtifactsRepresentation::try_from_path(self.base.as_path())?.artifacts(),
             )?;
 
         let other_artifact_representations: Vec<StarknetArtifactsRepresentation> = self
-            .other_files
+            .other
             .iter()
             .map(|path| StarknetArtifactsRepresentation::try_from_path(path.as_path()))
             .collect::<Result<_>>()?;
