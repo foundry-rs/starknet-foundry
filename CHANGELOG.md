@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- Feature to import an account without requiring the `--name` flag. This will under the hood generate a default name for the account This allows for easier and more streamlined account imports.
+
+## [Unreleased]
+
 ### Forge
 
 #### Changed

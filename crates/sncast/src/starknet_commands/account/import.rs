@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
     AccountType,
@@ -7,26 +9,27 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
 use regex::Regex;
-use sncast::check_if_legacy_contract;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
 use sncast::{
     check_class_hash_exists, get_chain_id, handle_rpc_error, AccountType as SNCastAccountType,
 };
+use sncast::{check_if_legacy_contract, read_and_parse_json_file, AccountData};
 use starknet::core::types::{BlockId, BlockTag, Felt, StarknetError};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::providers::{Provider, ProviderError};
 use starknet::signers::SigningKey;
 
 use super::deploy::compute_account_address;
+use super::NestedMap;
 
 #[derive(Args, Debug)]
 #[command(about = "Add an account to the accounts file")]
 pub struct Import {
     /// Name of the account to be imported
     #[clap(short, long)]
-    pub name: String,
+    pub name: Option<String>,
 
     /// Address of the account
     #[clap(short, long)]
@@ -62,7 +65,7 @@ pub struct Import {
 }
 
 pub async fn import(
-    account: &str,
+    account: Option<String>,
     accounts_file: &Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
     import: &Import,
@@ -79,6 +82,8 @@ pub async fn import(
         unreachable!("Checked on clap level")
     };
     let private_key = &SigningKey::from_secret_scalar(*private_key);
+
+    let account = account.unwrap_or(generate_account_name(accounts_file)?);
 
     let fetched_class_hash = match provider
         .get_class_hash_at(BlockId::Tag(BlockTag::Pending), import.address)
@@ -142,12 +147,12 @@ pub async fn import(
         import.salt,
     );
 
-    write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
+    write_account_to_accounts_file(&account, accounts_file, chain_id, account_json.clone())?;
 
     if import.add_profile.is_some() {
         let config = CastConfig {
             url: import.rpc.url.clone().unwrap_or_default(),
-            account: account.into(),
+            account,
             accounts_file: accounts_file.into(),
             ..Default::default()
         };
@@ -194,6 +199,30 @@ fn get_private_key_from_input() -> Result<Felt> {
     let input = rpassword::prompt_password("Type in your private key and press enter: ")
         .expect("Failed to read private key from input");
     parse_input_to_felt(&input)
+}
+
+fn generate_account_name(accounts_file: &Utf8PathBuf) -> anyhow::Result<String> {
+    let networks: NestedMap<AccountData> = read_and_parse_json_file(accounts_file)?;
+    let mut result = HashSet::new();
+
+    for (_network, accounts) in networks {
+        for (name, _data) in accounts {
+            if let Some(id) = name
+                .strip_prefix("account-")
+                .and_then(|id| id.parse::<u32>().ok())
+            {
+                result.insert(id);
+            };
+        }
+    }
+
+    let mut id = 1;
+
+    while result.contains(&id) {
+        id += 1;
+    }
+
+    Ok(format!("account-{id}"))
 }
 
 #[cfg(test)]
