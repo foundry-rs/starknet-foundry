@@ -23,9 +23,8 @@ pub struct Deploy {
     #[clap(short = 'g', long)]
     pub class_hash: Felt,
 
-    /// Arguments of the called function (serialized as a series of felts or written as comma-separated expressions in Cairo syntax)
-    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
-    pub constructor_calldata: Option<Vec<String>>,
+    #[clap(flatten)]
+    pub arguments: DeployArguments,
 
     /// Salt for the address
     #[clap(short, long)]
@@ -48,6 +47,17 @@ pub struct Deploy {
 
     #[clap(flatten)]
     pub rpc: RpcArgs,
+}
+
+#[derive(Debug, Clone, clap::Args)]
+#[group(multiple = false)]
+pub struct DeployArguments {
+    /// Arguments of the called function (serialized as a series of felts or written as comma-separated expressions in Cairo syntax)
+    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
+    pub constructor_calldata: Option<Vec<String>>,
+
+    #[clap(long)]
+    pub arguments: Option<String>,
 }
 
 #[derive(ValueEnum, Debug, Clone)]

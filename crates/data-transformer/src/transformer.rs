@@ -43,7 +43,8 @@ pub fn transform(
 }
 
 fn split_expressions(input: &str, db: &SimpleParserDatabase) -> Result<Vec<Expr>> {
-    let expr = parse_expression(input, db)?;
+    let input = format!("({input},)");
+    let expr = parse_expression(&input, db)?;
 
     match expr {
         Expr::Tuple(tuple) => Ok(tuple.expressions(db).elements(db)),
