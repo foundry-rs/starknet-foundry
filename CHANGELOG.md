@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `snforge test` twice with different flags.
 - Contract artifacts are compiled to CASM concurrently.
 - Starknet artifacts are now loaded from all tests targets
+- Cairo Edition in `snforge init` template set to `2024_07`
 
 #### Fixed
 
@@ -46,12 +47,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - When using test name filter with `--exact` flag, forge will try to compile only the selected test.
-
-### Forge
-
-#### Changed
-
-- Cairo Edition in `snforge init` template set to `2024_07`
 
 ## [0.31.0] - 2024-09-26
 
