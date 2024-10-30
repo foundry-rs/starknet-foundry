@@ -168,7 +168,7 @@ pub fn build_and_load_artifacts(
             &target_dir.join(&config.profile),
             package,
             false,
-        )?
+        ).context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
         .into_iter()
         .map(|(name, (artifacts, _))| (name, artifacts))
         .collect())
@@ -181,7 +181,7 @@ pub fn build_and_load_artifacts(
             &target_dir.join(default_profile),
             package,
             false,
-        )?
+        ).context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
         .into_iter()
         .map(|(name, (artifacts, _))| (name, artifacts))
         .collect())
