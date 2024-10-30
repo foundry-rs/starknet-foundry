@@ -9,9 +9,11 @@ use crate::helpers::fixtures::{
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use snapbox::cmd::{cargo_bin, Command};
 use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::AccountType;
 use starknet::core::types::{Felt, TransactionReceipt::Deploy};
+use std::path::PathBuf;
 use test_case::test_case;
 
 #[test_case("oz_cairo_0"; "cairo_0_account")]
@@ -430,4 +432,19 @@ fn test_too_low_max_fee() {
         error: Max fee is smaller than the minimal transaction cost
         "},
     );
+}
+
+#[test]
+fn test_happy_case_shell() {
+    let test_path = PathBuf::from("tests/shell/deploy.sh")
+        .canonicalize()
+        .unwrap();
+    let binary_path = cargo_bin!("sncast");
+
+    let snapbox = Command::new(test_path)
+        .arg(binary_path)
+        .arg(ACCOUNT_FILE_PATH)
+        .arg(URL)
+        .arg(CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA);
+    snapbox.assert().success();
 }
