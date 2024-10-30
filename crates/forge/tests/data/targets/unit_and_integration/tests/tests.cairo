@@ -24,5 +24,5 @@ fn declare_and_call_contract_from_lib() {
     dispatcher.increase_balance(100);
 
     let balance = dispatcher.get_balance();
-    assert(balance == 100, 'balance == 100');
+    assert(balance == 100, 'balance != 100');
 }
