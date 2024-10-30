@@ -1118,19 +1118,9 @@ fn test_init_project_with_registry_dependency() {
     let scarb_toml = std::fs::read_to_string(manifest_path.path()).unwrap();
     let scarb_toml = DocumentMut::from_str(&scarb_toml).unwrap();
 
-    // Verify snforge_std is added from registry for Scarb >= 2.7.0
-    let version = ScarbCommand::version().run().unwrap().cairo;
-    if version >= Version::new(2, 7, 0) {
-        assert!(scarb_toml["dev-dependencies"]["snforge_std"]
-            .as_str()
-            .unwrap()
-            .starts_with(env!("CARGO_PKG_VERSION")));
-    } else {
-        assert_eq!(
-            scarb_toml["dev-dependencies"]["snforge_std"]["git"]
-                .as_str()
-                .unwrap(),
-            "https://github.com/foundry-rs/starknet-foundry.git"
-        );
-    }
+    // Verify snforge_std is added from registry
+    assert!(scarb_toml["dev-dependencies"]["snforge_std"]
+        .as_str()
+        .unwrap()
+        .starts_with(env!("CARGO_PKG_VERSION")));
 }
