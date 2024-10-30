@@ -34,6 +34,6 @@ pub(super) fn artifacts_for_package(path: &Utf8Path) -> Result<StarknetArtifacts
         fs::read_to_string(path).with_context(|| format!("Failed to read {path:?} contents"))?;
     let starknet_artifacts: StarknetArtifacts =
         serde_json::from_str(starknet_artifacts.as_str())
-            .with_context(|| format!("Failed to parse {path:?} contents. Make sure you have enabled sierra code generation in Scarb.toml"))?;
+            .with_context(|| format!("Failed to parse starknet artifacts from path = {path:?}."))?;
     Ok(starknet_artifacts)
 }
