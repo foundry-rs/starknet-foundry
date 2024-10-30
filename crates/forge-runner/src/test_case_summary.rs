@@ -299,7 +299,9 @@ fn is_matching(data: &[Felt252], pattern: &[Felt252]) -> bool {
     }
 }
 fn convert_felts_to_byte_array_string(data: &[Felt252]) -> Option<String> {
-    ByteArray::deserialize_with_magic(data).map(Into::into).ok()
+    ByteArray::deserialize_with_magic(data)
+        .map(|byte_array| byte_array.to_string())
+        .ok()
 }
 
 /// Returns a string with the data that was produced by the test case.

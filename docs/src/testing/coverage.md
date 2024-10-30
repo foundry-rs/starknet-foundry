@@ -45,6 +45,19 @@ $ snforge test --coverage
 
 This will generate a coverage report in the `coverage` directory named `coverage.lcov`.
 
+## Passing arguments to `cairo-coverage`
+
+You can pass additional arguments to `cairo-coverage` by using the `--` separator. Everything after `--` will be passed
+to `cairo-coverage`:
+
+```shell
+$ snforge test --coverage -- --include macros
+```
+
+> 📝 **Note**
+> 
+> Running `snforge test --help` won't show info about `cairo-coverage` flags. To see them, run `snforge test --coverage -- --help`.
+
 ## Coverage report
 
 `cairo-coverage` generates coverage data as an `.lcov` file. A summary report with aggregated data can be produced by one of many tools that accept the `lcov` format.
