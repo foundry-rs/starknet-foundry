@@ -298,8 +298,8 @@ async fn test_happy_case_with_constructor_cairo_expression_calldata() {
         URL,
         "--fee-token",
         "eth",
-        "--constructor-calldata",
-        "(0x420, 0x2137_u256)",
+        "--arguments",
+        "0x420, 0x2137_u256",
         "--class-hash",
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
     ];

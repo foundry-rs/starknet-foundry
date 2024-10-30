@@ -389,7 +389,7 @@ fn test_too_low_max_fee() {
 
 #[tokio::test]
 async fn test_happy_case_cairo_expression_calldata() {
-    let calldata = r"(NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 },)";
+    let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
 
     let args = vec![
         "--accounts-file",
@@ -405,7 +405,7 @@ async fn test_happy_case_cairo_expression_calldata() {
         DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "nested_struct_fn",
-        "--calldata",
+        "--arguments",
         calldata,
         "--max-fee",
         "99999999999999999",

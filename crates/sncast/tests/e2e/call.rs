@@ -46,8 +46,8 @@ fn test_happy_case_cairo_expression_calldata() {
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "put",
-        "--calldata",
-        "(0x0_felt252, 0x2137)",
+        "--arguments",
+        "0x0_felt252, 0x2137",
         "--block-id",
         "latest",
     ];
