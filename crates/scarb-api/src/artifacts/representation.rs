@@ -3,7 +3,7 @@ use anyhow::anyhow;
 use camino::{Utf8Path, Utf8PathBuf};
 
 pub struct StarknetArtifactsRepresentation {
-    path: Utf8PathBuf,
+    base_path: Utf8PathBuf,
     artifacts: StarknetArtifacts,
 }
 
@@ -15,7 +15,10 @@ impl StarknetArtifactsRepresentation {
             .ok_or_else(|| anyhow!("Failed to get parent for path = {}", &path))?
             .to_path_buf();
 
-        Ok(Self { path, artifacts })
+        Ok(Self {
+            base_path: path,
+            artifacts,
+        })
     }
 
     pub fn artifacts(self) -> Vec<(String, Utf8PathBuf)> {
@@ -25,7 +28,7 @@ impl StarknetArtifactsRepresentation {
             .map(|contract| {
                 (
                     contract.contract_name,
-                    self.path.join(contract.artifacts.sierra.as_path()),
+                    self.base_path.join(contract.artifacts.sierra.as_path()),
                 )
             })
             .collect()
