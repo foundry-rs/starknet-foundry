@@ -28,31 +28,33 @@ const DEPLOY_SCRIPT_TEMPLATE: &str = r#"use sncast_std::{
 
 // Default deployment script for {{ PROJECT_NAME }}
 fn main() {
-    // Get the current nonce for deployment
+    // Getting the current nonce for deployment
     let nonce = get_nonce().unwrap();
     println!("Current nonce: {}", nonce);
     
-    // Check account balance before deployment
+    // Checkinng account balance before deployment
     let balance = get_balance().unwrap();
     println!("Account balance: {}", balance);
 
-    // Declare your contract
+    // Declaring the contract using project name placeholder
+    // This will be replaced with the actual project name during initialization
     let declare_result = declare("{{ PROJECT_NAME }}", ContractClassType::V2).expect('Declaration failed');
     println!("Contract declared with class hash: {}", declare_result.class_hash);
     
-    // Deploy your contract
-    let constructor_calldata = array![];  // Add constructor arguments if needed
-    let salt = 0x1234;  // Use a unique salt or generate one
+    // Preparing to deploy your contract
+    let constructor_calldata = array![];    // empty array, incase of contracts without a constructor. You cad add constructor arguments if needed
+    let salt = 0x1234;                      // Unique value to determine contract address. (unique salt)
 
+    // Deploying the declared contract
     let deploy_result = deploy(
-        declare_result.class_hash, 
-        constructor_calldata.span(),
-        salt, 
-        true  // set to true to make deployment address unique
+        declare_result.class_hash,      // Use hash from declaration
+        constructor_calldata.span(),    // Constructor arguments
+        salt,                           // Unique salt value
+        true                            // set to true to make deployment address unique
     ).expect('Deployment failed');
     
-    println!("Contract deployed at: {}", deploy_result.contract_address);
-    println!("Transaction hash: {}", deploy_result.transaction_hash);
+    println!("Contract deployed at: {}", deploy_result.contract_address);   // Print contract address
+    println!("Transaction hash: {}", deploy_result.transaction_hash);       // Print transaction hash
 }
 "#;
 
