@@ -100,13 +100,13 @@ fn get_starknet_artifacts_path(
 
 /// Get the map with `StarknetContractArtifacts` for the given package
 pub fn get_contracts_artifacts_and_source_sierra_paths(
-    target_dir: &Utf8Path,
+    artifacts_dir: &Utf8Path,
     package: &PackageMetadata,
     use_test_target_contracts: bool,
 ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
     let starknet_artifact_files = if use_test_target_contracts {
         let test_targets = test_targets_by_name(package);
-        get_starknet_artifacts_paths_from_test_targets(target_dir, &test_targets)
+        get_starknet_artifacts_paths_from_test_targets(artifacts_dir, &test_targets)
     } else {
         let starknet_target_name = package
             .targets
@@ -114,7 +114,7 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
             .find(|target| target.kind == "starknet-contract")
             .map(|target| target.name.clone());
         starknet_target_name.and_then(|starknet_target_name| {
-            get_starknet_artifacts_path(target_dir, starknet_target_name.as_str())
+            get_starknet_artifacts_path(artifacts_dir, starknet_target_name.as_str())
         })
     };
 
