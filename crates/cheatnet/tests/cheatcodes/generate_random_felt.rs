@@ -5,9 +5,9 @@ use num_traits::One;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::generate_random_felt::generate_random_felt;
 
 #[test]
-fn test_random_felt252_range() {
-    // Check that the number is less than 2^252
+fn test_generate_random_felt_range() {
     let max_felt252: Felt252 = Felt252::from(BigUint::one() << 252);
+
     assert!(
         generate_random_felt() < max_felt252,
         "Number is out of felt252 range"
@@ -31,13 +31,26 @@ fn test_random_felt252_range() {
 }
 
 #[test]
-fn test_random_felt252_uniqueness() {
-    let random_number1: Felt252 = generate_random_felt();
-    let random_number2: Felt252 = generate_random_felt();
-
-    // Check that two consecutive calls don't produce the same number
+fn test_generate_random_felt_uniqueness() {
+    // Check consecutive calls don't produce the same number
     assert!(
-        random_number1 != random_number2,
+        generate_random_felt() != generate_random_felt(),
+        "Random numbers should not be identical"
+    );
+    assert!(
+        generate_random_felt() != generate_random_felt(),
+        "Random numbers should not be identical"
+    );
+    assert!(
+        generate_random_felt() != generate_random_felt(),
+        "Random numbers should not be identical"
+    );
+    assert!(
+        generate_random_felt() != generate_random_felt(),
+        "Random numbers should not be identical"
+    );
+    assert!(
+        generate_random_felt() != generate_random_felt(),
         "Random numbers should not be identical"
     );
 }
