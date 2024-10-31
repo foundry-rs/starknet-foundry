@@ -407,6 +407,8 @@ fn storage_access_default_values() {
         r"
         #[starknet::contract]
         mod Contract {
+         use starknet::storage::{
+            StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map };
             #[derive(starknet::Store, Drop)]
             struct CustomStruct {
                 a: felt252,
@@ -415,7 +417,7 @@ fn storage_access_default_values() {
             #[storage]
             struct Storage {
                 balance: felt252,
-                legacy_map: LegacyMap<felt252, felt252>,
+                legacy_map: Map<felt252, felt252>,
                 custom_struct: CustomStruct,
             }
         }

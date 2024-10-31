@@ -7,11 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- You can now pass arguments to `cairo-profiler` and `cairo-coverage`. Everything after `--` will be passed to underlying binary. E.g.
+  `snforge test --build-profile -- --show-inlined-functions`
+- You can't use now `--coverage` and `--build-profile` flags at the same time. If you want to use both, you need to run
+  `snforge test` twice with different flags.
+- Contract artifacts are compiled to CASM concurrently.
+- Starknet artifacts are now loaded from all tests targets
+- Cairo Edition in `snforge init` template set to `2024_07`
+
+#### Fixed
+
+- Scarb features work with optimized compilation
+- Custom test targets are now supported with optimized compilation
+
+## [0.32.0] - 2024-10-16
+
 ### Cast
 
 #### Added
 
-- It's possible to pass common arguments both before and after subcommand name, e.g. both `sncast --account default declare --contract_name name ...` and `sncast declare --account default --contract_name name ...` are allowed now.
+- Data transformer for passing calldata to transactions as Cairo expressions for automatic conversion instead of serialized form
+
+#### Changed
+
+- Short option for `--accounts-file` flag has been removed.
+- Short option for `--contract-address` is now `-d` instead of `-a`.
+- `account add` is renamed to `account import`.
+- `account import` can be now used without specifying `--private-key` or `--private-key-file` flags. Instead private key will be read interactively from the user.
+
+#### Fixed
+- `account delete` command: It is no longer necessary to provide the `--url` argument each time. Either the `--url` or `--network` argument must be provided, but not both, as they are mutually exclusive.
+
+### Forge
+
+#### Changed
+
+- When using test name filter with `--exact` flag, forge will try to compile only the selected test.
 
 ## [0.31.0] - 2024-09-26
 

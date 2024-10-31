@@ -23,6 +23,6 @@ Changes the transaction account deployment data for the given target.
 Cancels the `cheat_account_deployment_data` / `start_cheat_account_deployment_data` for the given target.
 
 ## `stop_cheat_account_deployment_data_global`
-> `fn stop_cheat_account_deployment_data_global(target: ContractAddress)`
+> `fn stop_cheat_account_deployment_data_global()`
 
 Cancels the `start_cheat_account_deployment_data_global`.

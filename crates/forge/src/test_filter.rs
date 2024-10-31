@@ -7,7 +7,7 @@ use forge_runner::TestCaseFilter;
 // Specifies what tests should be included
 pub struct TestsFilter {
     // based on name
-    name_filter: NameFilter,
+    pub(crate) name_filter: NameFilter,
     // based on `#[ignore]` attribute
     ignored_filter: IgnoredFilter,
     // based on rerun_failed flag

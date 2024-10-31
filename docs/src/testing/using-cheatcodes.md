@@ -14,6 +14,10 @@ When testing smart contracts, often there are parts of code that are dependent o
 Instead of trying to replicate these conditions in tests, you can emulate them
 using [cheatcodes](../appendix/cheatcodes.md).
 
+> ⚠️ **Warning**
+> 
+> These examples make use of `assert_macros`, so it's recommended to get familiar with them first. [Learn more about `assert_macros`](testing.md#writing-assertions-and-assert_macros-package)
+
 ## The Test Contract
 
 In this tutorial, we will be using the following Starknet contract:
@@ -97,6 +101,15 @@ Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 4 filtered out
 ```
 
 We see that the second `increase_balance` fails since we cancelled the cheatcode.
+
+### Cheating Addresses Globally
+
+In case you want to cheat the caller address for all contracts, you can use the global cheatcode which has the `_global` suffix. Note, that we don't specify target, nor the span, because this cheatcode type works globally and indefinitely.
+For more see [Cheating Globally](../appendix/cheatcodes/global.md).
+
+```rust
+{{#include ../../listings/snforge_overview/crates/using_cheatcodes/tests/caller_address/proper_use_global.cairo}}
+```
 
 ### Cheating the Constructor
 

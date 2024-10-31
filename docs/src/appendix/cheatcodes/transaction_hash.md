@@ -23,6 +23,6 @@ Changes the transaction hash for the given target.
 Cancels the `cheat_transaction_hash` / `start_cheat_transaction_hash` for the given target.
 
 ## `stop_cheat_transaction_hash_global`
-> `fn stop_cheat_transaction_hash_global(target: ContractAddress)`
+> `fn stop_cheat_transaction_hash_global()`
 
 Cancels the `start_cheat_transaction_hash_global`.

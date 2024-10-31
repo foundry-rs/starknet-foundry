@@ -4,6 +4,7 @@ use super::common::runner::{
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
+use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use forge::CAIRO_EDITION;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stdout_contains;
@@ -225,7 +226,33 @@ fn with_exact_filter() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] simple_package_integrationtest::test_simple::test_two [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 12 filtered out
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
+        "},
+    );
+}
+
+#[test]
+fn with_exact_filter_and_duplicated_test_names() {
+    let temp = setup_package("duplicated_test_names");
+
+    let output = test_runner(&temp)
+        .arg("duplicated_test_names_integrationtest::tests_a::test_simple")
+        .arg("--exact")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from duplicated_test_names package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] duplicated_test_names_integrationtest::tests_a::test_simple [..]
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
         "},
     );
 }
@@ -727,9 +754,11 @@ fn validate_init(temp: &TempDir, validate_snforge_std: bool) {
 
             [scripts]
             test = "snforge test"
+            {SCARB_MANIFEST_TEMPLATE_CONTENT}
         "#,
         snforge_std_assert
-    );
+    ).trim_end()
+    .to_string()+ "\n";
 
     assert_matches(&expected, &scarb_toml);
 
@@ -1032,7 +1061,6 @@ fn detailed_resources_flag() {
                 memory holes: [..]
                 builtins: ([..])
                 syscalls: ([..])
-
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "},
     );

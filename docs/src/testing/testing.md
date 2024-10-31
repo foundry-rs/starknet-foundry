@@ -60,20 +60,20 @@ To mark a test as expected to fail, use the `#[should_panic]` attribute.
 You can specify the expected failure message in three ways:
 
 1. **With ByteArray**:
-  ```rust
+```rust
 {{#include ../../listings/snforge_overview/crates/writing_tests/tests/expected_failures.cairo:byte_array}}
-  ```
-  With this format, the expected error message needs to be a substring of the actual error message. This is particularly useful when the error message includes dynamic data such as a hash or address.
+```
+With this format, the expected error message needs to be a substring of the actual error message. This is particularly useful when the error message includes dynamic data such as a hash or address.
 
 2. **With felt**
-  ```rust
+```rust
 {{#include ../../listings/snforge_overview/crates/writing_tests/tests/expected_failures.cairo:felt}}
-  ```
+```
 
 3. **With tuple of felts**:
-  ```rust
+```rust
 {{#include ../../listings/snforge_overview/crates/writing_tests/tests/expected_failures.cairo:tuple}}
-  ```
+```
 
 
 ```shell
@@ -105,3 +105,26 @@ Tests: 0 passed, 0 failed, 0 skipped, 1 ignored, 0 filtered out
 
 To run only tests marked with the  `#[ignore]` attribute use `snforge test --ignored`.
 To run all tests regardless of the `#[ignore]` attribute use `snforge test --include-ignored`.
+
+## Writing Assertions and `assert_macros` Package
+> ⚠️ **Recommended only for development** ️⚠️
+> 
+>***Assert macros package provides a set of macros that can be used to write assertions such as `assert_eq!`.
+In order to use it, your project must have the `assert_macros` dependency added to the `Scarb.toml` file.
+These macros are very expensive to run on Starknet, as they result a huge amount of steps and are not recommended for production use. 
+They are only meant to be used in tests.
+For snforge `v0.31.0` and later, this dependency is added automatically when creating a project using `snforge init`. But for earlier versions, you need to add it manually.***
+
+```toml
+[dev-dependencies]
+snforge_std = ...
+assert_macros = "<scarb-version>"
+```
+
+Available assert macros are 
+- `assert_eq!`
+- `assert_ne!`
+- `assert_lt!`
+- `assert_le!`
+- `assert_gt!`
+- `assert_ge!`

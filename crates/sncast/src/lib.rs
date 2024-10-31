@@ -7,6 +7,7 @@ use conversions::serde::serialize::CairoSerialize;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::rngs::OsRng;
 use rand::RngCore;
+use response::errors::SNCastStarknetError;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{Deserializer, Value};
@@ -39,6 +40,8 @@ use thiserror::Error;
 pub mod helpers;
 pub mod response;
 pub mod state;
+
+use conversions::byte_array::ByteArray;
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -266,6 +269,28 @@ pub async fn get_account<'a>(
     Ok(account)
 }
 
+pub async fn get_contract_class(
+    class_hash: Felt,
+    provider: &JsonRpcClient<HttpTransport>,
+) -> Result<ContractClass> {
+    let result = provider
+        .get_class(BlockId::Tag(BlockTag::Latest), class_hash)
+        .await;
+
+    if let Err(ProviderError::StarknetError(ClassHashNotFound)) = result {
+        // Imitate error thrown on chain to achieve particular error message (Issue #2554)
+        let artificial_transaction_revert_error = SNCastProviderError::StarknetError(
+            SNCastStarknetError::ContractError(ContractErrorData {
+                revert_error: format!("Class with hash {class_hash:#x} is not declared"),
+            }),
+        );
+
+        return Err(handle_rpc_error(artificial_transaction_revert_error));
+    }
+
+    result.map_err(handle_rpc_error)
+}
+
 async fn build_account(
     account_data: AccountData,
     chain_id: Felt,
@@ -455,15 +480,25 @@ pub async fn check_if_legacy_contract(
 pub async fn get_class_hash_by_address(
     provider: &JsonRpcClient<HttpTransport>,
     address: Felt,
-) -> Result<Option<Felt>> {
-    match provider
+) -> Result<Felt> {
+    let result = provider
         .get_class_hash_at(BlockId::Tag(Pending), address)
-        .await
-    {
-        Ok(class_hash) => Ok(Some(class_hash)),
-        Err(StarknetError(ContractNotFound)) => Ok(None),
-        Err(err) => Err(handle_rpc_error(err)),
+        .await;
+
+    if let Err(ProviderError::StarknetError(ContractNotFound)) = result {
+        // Imitate error thrown on chain to achieve particular error message (Issue #2554)
+        let artificial_transaction_revert_error = SNCastProviderError::StarknetError(
+            SNCastStarknetError::ContractError(ContractErrorData {
+                revert_error: format!("Requested contract address {address:#x} is not deployed",),
+            }),
+        );
+
+        return Err(handle_rpc_error(artificial_transaction_revert_error));
     }
+
+    result.map_err(handle_rpc_error).with_context(|| {
+        format!("Couldn't retrieve class hash of a contract with address {address:#x}")
+    })
 }
 
 #[must_use]
@@ -498,22 +533,7 @@ pub fn get_block_id(value: &str) -> Result<BlockId> {
 
 #[derive(Debug, CairoSerialize)]
 pub struct ErrorData {
-    pub data: String,
-}
-
-impl ErrorData {
-    #[must_use]
-    pub fn new(data: String) -> Self {
-        ErrorData { data }
-    }
-}
-
-impl From<ContractErrorData> for ErrorData {
-    fn from(value: ContractErrorData) -> Self {
-        ErrorData {
-            data: value.revert_error,
-        }
-    }
+    pub data: ByteArray,
 }
 
 #[derive(Error, Debug, CairoSerialize)]
@@ -592,7 +612,7 @@ async fn get_revert_reason(
     {
         Err(WaitForTransactionError::TransactionError(
             TransactionError::Reverted(ErrorData {
-                data: reason.clone(),
+                data: ByteArray::from(reason.as_str()),
             }),
         ))
     } else {
