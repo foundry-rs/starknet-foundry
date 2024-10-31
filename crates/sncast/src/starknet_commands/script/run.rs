@@ -1,4 +1,5 @@
 use crate::starknet_commands::declare::Declare;
+use crate::starknet_commands::deploy::DeployResolved;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{get_account, WaitForTx};
 use anyhow::{anyhow, Context, Result};
@@ -35,7 +36,7 @@ use shared::utils::build_readable_text;
 use sncast::get_nonce;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
-use sncast::helpers::fee::{FeeSettings, ScriptFeeSettings};
+use sncast::helpers::fee::ScriptFeeSettings;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::ScriptRunResponse;
 use sncast::state::hashing::{
@@ -158,8 +159,18 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let constructor_calldata = input_reader.read::<Vec<Felt>>()?;
                 let salt = input_reader.read()?;
                 let unique = input_reader.read()?;
-                let fee_args: FeeSettings = input_reader.read::<ScriptFeeSettings>()?.into();
+                let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
+
+                let deploy = DeployResolved {
+                    class_hash,
+                    constructor_calldata: constructor_calldata.clone(),
+                    salt,
+                    unique,
+                    fee_args,
+                    nonce,
+                    version: None,
+                };
 
                 let deploy_tx_id =
                     generate_deploy_tx_id(class_hash, &constructor_calldata, salt, unique);
@@ -171,12 +182,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 }
 
                 let deploy_result = self.tokio_runtime.block_on(deploy::deploy(
-                    class_hash,
-                    &constructor_calldata,
-                    salt,
-                    unique,
-                    fee_args,
-                    nonce,
+                    deploy,
                     self.account()?,
                     WaitForTx {
                         wait: true,

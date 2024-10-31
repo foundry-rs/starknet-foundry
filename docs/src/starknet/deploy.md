@@ -37,6 +37,20 @@ transaction: https://starkscan.co/search/0x64a62a0002...
 > 💡 **Info**
 > You can also choose to pay in Ether by setting `--fee-token` to `eth`.
 
+### Deploying contract by name
+
+A contract can also be deployed by specifying its name as a `--contract-name` argument, instead of a class hash.
+
+```shell
+$ sncast deploy \
+    --contract-name SimpleBalance \
+    --package SimplePackage
+
+command: deploy
+contract_address: 0x301316d47a81b39c5e27cca4a7b8ca4773edbf1103218588d6da4d3ed5303aa
+transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5ab1e
+```
+
 ### Deploying Contract With Constructor
 
 For such a constructor in the declared contract

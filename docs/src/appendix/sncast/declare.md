@@ -8,7 +8,7 @@ Send a declare transaction of Cairo contract to Starknet.
 ## `--contract-name, -c <CONTRACT_NAME>`
 Required.
 
-Name of the contract. Contract name is a part after the mod keyword in your contract file.
+Name of the contract. Contract name is a part after the `mod` keyword in your contract file.
 
 ## `--url, -u <RPC_URL>`
 Optional.

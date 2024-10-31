@@ -4,7 +4,7 @@ use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
     script::Script, tx_status::TxStatus,
 };
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use configuration::load_global_config;
 use data_transformer::Calldata;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
@@ -17,17 +17,19 @@ use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTEN
 use sncast::helpers::fee::PayableTransaction;
 use sncast::helpers::scarb_utils::{
     assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
-    get_scarb_metadata_with_deps, BuildConfig,
+    get_scarb_metadata_with_deps, read_manifest_and_build_artifacts, BuildConfig,
 };
 use sncast::response::errors::handle_starknet_command_error;
+use sncast::response::structs::DeclareDeployResponse;
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_class_hash_by_address,
     get_contract_class, get_default_state_file_name, NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
-use starknet::accounts::ConnectedAccount;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
 use starknet_commands::account::list::print_account_list;
+use starknet_commands::declare_deploy::DeclareDeploy;
+use starknet_commands::deploy::DeployResolved;
 use starknet_commands::verify::Verify;
 use tokio::runtime::Runtime;
 
@@ -121,6 +123,9 @@ enum Commands {
     /// Deploy a contract
     Deploy(Deploy),
 
+    // Declare a contract if it has not been yet and deploy it
+    DeclareDeploy(DeclareDeploy),
+
     /// Call a contract
     Call(Call),
 
@@ -194,18 +199,10 @@ async fn run_async_command(
                 config.keystore,
             )
             .await?;
-            let manifest_path = assert_manifest_path_exists()?;
-            let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
-            let artifacts = build_and_load_artifacts(
-                &package_metadata,
-                &BuildConfig {
-                    scarb_toml_path: manifest_path,
-                    json: cli.json,
-                    profile: cli.profile.unwrap_or("release".to_string()),
-                },
-                false,
-            )
-            .expect("Failed to build contract");
+
+            let artifacts =
+                read_manifest_and_build_artifacts(&declare.package, cli.json, &cli.profile)?;
+
             let result =
                 starknet_commands::declare::declare(declare, &account, &artifacts, wait_config)
                     .await
@@ -223,18 +220,7 @@ async fn run_async_command(
         }
 
         Commands::Deploy(deploy) => {
-            deploy.validate()?;
-
-            let fee_token = deploy.token_from_version();
-
-            let Deploy {
-                constructor_calldata,
-                fee_args,
-                rpc,
-                ..
-            } = deploy;
-
-            let provider = rpc.get_provider(&config).await?;
+            let provider = deploy.rpc.get_provider(&config).await?;
 
             let account = get_account(
                 &config.account,
@@ -244,34 +230,25 @@ async fn run_async_command(
             )
             .await?;
 
-            let fee_settings = fee_args
-                .clone()
-                .fee_token(fee_token)
-                .try_into_fee_settings(&provider, account.block_id())
-                .await?;
+            let deploy: DeployResolved = if deploy.class_hash.is_some() {
+                deploy.try_into().unwrap()
+            } else {
+                let contract =
+                    deploy.build_artifacts_and_get_compiled_contract(cli.json, &cli.profile)?;
+                let class_hash = contract.sierra_class_hash;
 
-            // safe to unwrap because "constructor" is a standardized name
-            let selector = get_selector_from_name("constructor").unwrap();
+                if !contract.is_declared(&provider).await? {
+                    bail!("Contract with class hash {:x} is not declared", class_hash);
+                }
 
-            let contract_class = get_contract_class(deploy.class_hash, &provider).await?;
+                deploy.resolved_with_class_hash(class_hash)
+            };
 
-            let serialized_calldata = constructor_calldata
-                .map(|data| Calldata::from(data).serialized(contract_class, &selector))
-                .transpose()?
-                .unwrap_or_default();
+            deploy.validate()?;
 
-            let result = starknet_commands::deploy::deploy(
-                deploy.class_hash,
-                &serialized_calldata,
-                deploy.salt,
-                deploy.unique,
-                fee_settings,
-                deploy.nonce,
-                &account,
-                wait_config,
-            )
-            .await
-            .map_err(handle_starknet_command_error);
+            let result = starknet_commands::deploy::deploy(deploy, &account, wait_config)
+                .await
+                .map_err(handle_starknet_command_error);
 
             print_command_result("deploy", &result, numbers_format, output_format)?;
             print_block_explorer_link_if_allowed(
@@ -284,29 +261,100 @@ async fn run_async_command(
             Ok(())
         }
 
-        Commands::Call(Call {
-            contract_address,
-            function,
-            calldata,
-            block_id,
-            rpc,
-        }) => {
-            let provider = rpc.get_provider(&config).await?;
+        Commands::DeclareDeploy(declare_deploy) => {
+            let provider = declare_deploy.rpc.get_provider(&config).await?;
 
-            let block_id = get_block_id(&block_id)?;
-            let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
+            let account = get_account(
+                &config.account,
+                &config.accounts_file,
+                &provider,
+                config.keystore,
+            )
+            .await?;
+
+            let declare = Declare::from(&declare_deploy);
+            let deploy = Deploy::from(declare_deploy);
+
+            let contract =
+                deploy.build_artifacts_and_get_compiled_contract(cli.json, &cli.profile)?;
+            let class_hash = contract.sierra_class_hash;
+
+            let needs_declaration = !contract.is_declared(&provider).await?;
+
+            let declare_result = if needs_declaration {
+                let result = crate::starknet_commands::declare::declare_compiled(
+                    declare,
+                    &account,
+                    contract,
+                    wait_config,
+                )
+                .await
+                .map_err(handle_starknet_command_error);
+
+                if result.is_err() {
+                    return print_command_result(
+                        "declare-deploy",
+                        &result,
+                        numbers_format,
+                        output_format,
+                    );
+                }
+
+                Some(result.unwrap())
+            } else {
+                None
+            };
+
+            let deploy = deploy.resolved_with_class_hash(class_hash);
+            deploy.validate()?;
+
+            let deploy_result = starknet_commands::deploy::deploy(deploy, &account, wait_config)
+                .await
+                .map_err(handle_starknet_command_error);
+
+            if deploy_result.is_err() {
+                return print_command_result(
+                    "declare-deploy",
+                    &deploy_result,
+                    numbers_format,
+                    output_format,
+                );
+            }
+
+            let result = Ok(DeclareDeployResponse::new(
+                &declare_result,
+                &deploy_result.unwrap(),
+            ));
+
+            print_command_result("declare-deploy", &result, numbers_format, output_format)?;
+            print_block_explorer_link_if_allowed(
+                &result,
+                output_format,
+                provider.chain_id().await?,
+                config.show_explorer_links,
+                config.block_explorer,
+            );
+            Ok(())
+        }
+
+        Commands::Call(call) => {
+            let provider = call.rpc.get_provider(&config).await?;
+
+            let block_id = get_block_id(&call.block_id)?;
+            let class_hash = get_class_hash_by_address(&provider, call.contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
-            let selector = get_selector_from_name(&function)
+            let selector = get_selector_from_name(&call.function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let serialized_calldata = calldata
+            let serialized_calldata = call
+                .calldata
                 .map(|data| Calldata::from(data).serialized(contract_class, &selector))
                 .transpose()?
                 .unwrap_or_default();
 
             let result = starknet_commands::call::call(
-                contract_address,
+                call.contract_address,
                 selector,
                 serialized_calldata,
                 &provider,

@@ -1,8 +1,11 @@
+use super::declare_deploy::DeclareDeploy;
 use anyhow::{anyhow, Result};
-use clap::{Args, ValueEnum};
+use clap::Args;
+use sncast::helpers::deploy::{DeployArgs, DeployVersion};
 use sncast::helpers::error::token_not_supported_for_deployment;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
+use sncast::helpers::scarb_utils::{read_manifest_and_build_artifacts, CompiledContract};
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::DeployResponse;
 use sncast::{extract_or_generate_salt, impl_payable_transaction, udc_uniqueness};
@@ -20,63 +23,144 @@ use starknet::signers::LocalWallet;
 #[command(about = "Deploy a contract on Starknet")]
 pub struct Deploy {
     /// Class hash of contract to deploy
-    #[clap(short = 'g', long)]
-    pub class_hash: Felt,
+    #[clap(short = 'g', long, conflicts_with = "contract_name")]
+    pub class_hash: Option<Felt>,
 
-    /// Arguments of the called function (serialized as a series of felts or written as comma-separated expressions in Cairo syntax)
-    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
-    pub constructor_calldata: Option<Vec<String>>,
+    // Name of the contract to deploy
+    #[clap(long, conflicts_with = "class_hash")]
+    pub contract_name: Option<String>,
 
-    /// Salt for the address
-    #[clap(short, long)]
-    pub salt: Option<Felt>,
-
-    /// If true, salt will be modified with an account address
-    #[clap(long)]
-    pub unique: bool,
+    #[clap(flatten)]
+    pub args: DeployArgs,
 
     #[clap(flatten)]
     pub fee_args: FeeArgs,
-
-    /// Nonce of the transaction. If not provided, nonce will be set automatically
-    #[clap(short, long)]
-    pub nonce: Option<Felt>,
-
-    /// Version of the deployment (can be inferred from fee token)
-    #[clap(short, long)]
-    pub version: Option<DeployVersion>,
 
     #[clap(flatten)]
     pub rpc: RpcArgs,
 }
 
-#[derive(ValueEnum, Debug, Clone)]
-pub enum DeployVersion {
-    V1,
-    V3,
+impl From<DeclareDeploy> for Deploy {
+    fn from(declare_deploy: DeclareDeploy) -> Self {
+        let DeclareDeploy {
+            contract_name,
+            deploy_args,
+            fee_token,
+            rpc,
+        } = declare_deploy;
+
+        let fee_args = FeeArgs {
+            fee_token: Some(fee_token),
+            ..Default::default()
+        };
+
+        Deploy {
+            class_hash: None,
+            contract_name: Some(contract_name),
+            args: deploy_args,
+            fee_args,
+            rpc,
+        }
+    }
 }
 
-impl_payable_transaction!(Deploy, token_not_supported_for_deployment,
+impl Deploy {
+    pub fn build_artifacts_and_get_compiled_contract(
+        &self,
+        json: bool,
+        profile: &Option<String>,
+    ) -> Result<CompiledContract> {
+        let contract_name = self
+            .contract_name
+            .clone()
+            .ok_or_else(|| anyhow!("Contract name and class hash unspecified"))?;
+
+        let artifacts = read_manifest_and_build_artifacts(&self.args.package, json, profile)?;
+
+        let contract_artifacts = artifacts
+            .get(&contract_name)
+            .ok_or_else(|| anyhow!("No artifacts found for contract: {}", contract_name))?;
+
+        contract_artifacts.try_into()
+    }
+
+    pub fn resolved_with_class_hash(mut self, value: Felt) -> DeployResolved {
+        self.class_hash = Some(value);
+        self.try_into().unwrap()
+    }
+}
+
+pub struct DeployResolved {
+    pub class_hash: Felt,
+    pub constructor_calldata: Vec<Felt>,
+    pub salt: Option<Felt>,
+    pub unique: bool,
+    pub fee_args: FeeArgs,
+    pub nonce: Option<Felt>,
+    pub version: Option<DeployVersion>,
+}
+
+impl TryFrom<Deploy> for DeployResolved {
+    type Error = anyhow::Error;
+
+    fn try_from(deploy: Deploy) -> Result<Self, Self::Error> {
+        let Deploy {
+            class_hash,
+            args:
+                DeployArgs {
+                    constructor_calldata,
+                    salt,
+                    unique,
+                    nonce,
+                    version,
+                    ..
+                },
+            fee_args,
+            ..
+        } = deploy;
+
+        let class_hash = class_hash.ok_or_else(|| anyhow!("Class hash unspecified"))?;
+
+        Ok(DeployResolved {
+            class_hash,
+            constructor_calldata,
+            salt,
+            unique,
+            fee_args,
+            nonce,
+            version,
+        })
+    }
+}
+
+impl_payable_transaction!(DeployResolved, token_not_supported_for_deployment,
     DeployVersion::V1 => FeeToken::Eth,
     DeployVersion::V3 => FeeToken::Strk
 );
 
 #[allow(clippy::ptr_arg, clippy::too_many_arguments)]
 pub async fn deploy(
-    class_hash: Felt,
-    calldata: &Vec<Felt>,
-    salt: Option<Felt>,
-    unique: bool,
-    fee_settings: FeeSettings,
-    nonce: Option<Felt>,
+    deploy: DeployResolved,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
 ) -> Result<DeployResponse, StarknetCommandError> {
+    let DeployResolved {
+        class_hash,
+        constructor_calldata,
+        salt,
+        unique,
+        nonce,
+        fee_args,
+        ..
+    } = deploy;
     let salt = extract_or_generate_salt(salt);
     let factory = ContractFactory::new(class_hash, account);
+    let fee_settings = fee_args
+        .try_into_fee_settings(account.provider(), account.block_id())
+        .await?;
     let result = match fee_settings {
         FeeSettings::Eth { max_fee } => {
-            let execution = factory.deploy_v1(calldata.clone(), salt, unique);
+            let execution = factory.deploy_v1(constructor_calldata.clone(), salt, unique);
             let execution = match max_fee {
                 None => execution,
                 Some(max_fee) => execution.max_fee(max_fee),
@@ -91,7 +175,7 @@ pub async fn deploy(
             max_gas,
             max_gas_unit_price,
         } => {
-            let execution = factory.deploy_v3(calldata.clone(), salt, unique);
+            let execution = factory.deploy_v3(constructor_calldata.clone(), salt, unique);
 
             let execution = match max_gas {
                 None => execution,
@@ -118,7 +202,7 @@ pub async fn deploy(
                     salt,
                     class_hash,
                     &udc_uniqueness(unique, account.address()),
-                    calldata,
+                    &constructor_calldata,
                 ),
                 transaction_hash: result.transaction_hash,
             },

@@ -6,7 +6,7 @@ use starknet::core::types::{BlockId, Felt};
 use starknet::providers::Provider;
 use starknet_types_core::felt::NonZeroFelt;
 
-#[derive(Args, Debug, Clone)]
+#[derive(Args, Debug, Clone, Default)]
 pub struct FeeArgs {
     /// Token that transaction fee will be paid in
     #[clap(long)]
