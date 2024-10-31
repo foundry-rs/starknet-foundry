@@ -30,5 +30,8 @@ starknet.workspace = true
 fibonacci = { path = "crates/fibonacci" }
 addition = { path = "crates/addition" }
 
+[dev-dependencies]
+snforge_std.workspace = true
+
 [[target.starknet-contract]]
 sierra = true
