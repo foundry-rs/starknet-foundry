@@ -265,6 +265,40 @@ async fn test_no_class_hash_or_contract_address_provided() {
 }
 
 #[tokio::test]
+async fn test_both_class_hash_or_contract_address_provided() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--class-name",
+        "Map",
+        "--verifier",
+        "walnut",
+        "--network",
+        "sepolia",
+    ];
+
+    let snapbox = runner(&args).current_dir(contract_path.path()).stdin("Y");
+
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        formatdoc!(
+            r"
+            error: the argument '--contract-address <CONTRACT_ADDRESS>' cannot be used with '--class-hash <CLASS_HASH>'
+            Usage: sncast verify --class-name <CLASS_NAME> --verifier <VERIFIER> --network <NETWORK> <--contract-address <CONTRACT_ADDRESS>|--class-hash <CLASS_HASH>>"
+        ),
+    );
+}
+
+#[tokio::test]
 async fn test_happy_case_with_confirm_verification_flag() {
     let mock_server = MockServer::start().await;
 
