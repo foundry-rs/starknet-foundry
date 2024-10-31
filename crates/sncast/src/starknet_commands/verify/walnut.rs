@@ -18,7 +18,7 @@ impl VerificationInterface for WalnutVerificationInterface {
         WalnutVerificationInterface { base_url, network }
     }
 
-    fn gen_explorer_url(&self) -> String {
+    fn explorer_url(&self) -> String {
         let path = match self.network {
             Network::Mainnet => "/v1/sn_main/verify",
             Network::Sepolia => "/v1/sn_sepolia/verify",

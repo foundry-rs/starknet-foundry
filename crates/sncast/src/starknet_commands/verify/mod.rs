@@ -39,7 +39,7 @@ pub struct Verify {
     pub class_name: String,
 
     /// Where you want your contract to be verified
-    #[clap(short, long, value_enum, default_value_t = Verifier::Walnut)]
+    #[clap(short, long, value_enum)]
     pub verifier: Verifier,
 
     /// The network in which the contract is deployed

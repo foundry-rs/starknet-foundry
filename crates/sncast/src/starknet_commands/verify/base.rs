@@ -66,7 +66,7 @@ async fn send_verification_request(
 pub trait VerificationInterface {
     fn new(network: Network, base_url: Option<String>) -> Self;
 
-    fn gen_explorer_url(&self) -> String;
+    fn explorer_url(&self) -> String;
 
     async fn verify(
         &self,
@@ -83,7 +83,7 @@ pub trait VerificationInterface {
             class_hash,
             source_code,
         };
-        let url = self.gen_explorer_url();
+        let url = self.explorer_url();
         send_verification_request(url, payload).await
     }
 }

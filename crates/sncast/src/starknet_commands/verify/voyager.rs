@@ -20,7 +20,7 @@ impl VerificationInterface for VoyagerVerificationInterface {
         VoyagerVerificationInterface { base_url }
     }
 
-    fn gen_explorer_url(&self) -> String {
+    fn explorer_url(&self) -> String {
         format!("{}/class-verify-v2", self.base_url)
     }
 }
