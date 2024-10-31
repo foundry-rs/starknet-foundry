@@ -10,10 +10,10 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
     let re_string = Regex::new(r#"(?s)Execution failed\. Failure reason: "(.*?)"\."#)
         .expect("Could not create string panic_data matching regex");
 
-    // FELT regex source: https://github.com/starkware-libs/starknet-specs/blob/6d88b7399f56260ece3821c71f9ce53ec55f830b/api/starknet_api_openrpc.json#L1303
-    let re_entry_point =
-        Regex::new(r"Entry point EntryPointSelector\((^0x(0|[a-fA-F1-9]{1}[a-fA-F0-9]{0,62})$)\) not found in contract\.")
-            .unwrap();
+    let re_entry_point = Regex::new(
+        r"Entry point EntryPointSelector\((0x[a-fA-F0-9]{0,64})\) not found in contract\.",
+    )
+    .expect("Could not create entry point panic_data matching regex");
 
     if let Some(captures) = re_felt_array.captures(err) {
         if let Some(panic_data_match) = captures.get(1) {
