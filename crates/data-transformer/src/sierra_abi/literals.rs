@@ -88,6 +88,12 @@ impl SupportedCalldataKind for TerminalShortString {
             .string_value(db)
             .context("Invalid shortstring passed as an argument")?;
 
+        // TODO(#2623) add better handling
+        let expected_type = match expected_type.split("::").last() {
+            Some("felt" | "felt252") => "shortstring",
+            _ => expected_type,
+        };
+
         Ok(AllowedCalldataArgument::Primitive(
             CalldataPrimitive::try_from_str_with_type(&value, expected_type)?,
         ))
