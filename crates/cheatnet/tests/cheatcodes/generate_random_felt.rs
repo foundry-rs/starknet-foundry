@@ -7,7 +7,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::generate_
 #[test]
 fn test_random_felt252_range() {
     // Check that the number is less than 2^252
-    let max_felt252 = Felt252::from(BigUint::one() << 252);
+    let max_felt252: Felt252 = Felt252::from(BigUint::one() << 252);
     assert!(
         generate_random_felt() < max_felt252,
         "Number is out of felt252 range"
