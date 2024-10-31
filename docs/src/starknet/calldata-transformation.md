@@ -67,9 +67,10 @@ $ sncast call \
 
 ## Using `--arguments`
 
-Instead of serializing calldata yourself, `sncast` allows passing it in far more handy, human-readable form - as a tuple
-of Cairo expressions with `--arguments` flag.
-When calldata is delivered in such form, Cast will perform serialization automatically, based on an ABI of the contract
+Instead of serializing calldata yourself, `sncast` allows passing it in a far more handy, human-readable form - as a
+list of comma-separated Cairo expressions wrapped in single quotes. This can be achieved by using the `--arguments`
+flag.
+Cast will perform serialization automatically, based on an ABI of the contract
 we interact with, following
 the [Starknet specification](https://docs.starknet.io/architecture-and-concepts/smart-contracts/serialization-of-cairo-types/).
 
