@@ -1101,3 +1101,21 @@ fn catch_runtime_errors() {
         ),
     );
 }
+
+#[test]
+fn call_nonexistent_selector() {
+    let temp = setup_package("nonexistent_selector");
+
+    let output = test_runner(&temp).assert().code(0);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        Collected 1 test(s) from nonexistent_selector package
+        Running 1 test(s) from tests/
+        [PASS] nonexistent_selector_integrationtest::test_contract::test_unwrapped_call_contract_syscall (gas: ~103)
+        Running 0 test(s) from src/
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        "},
+    );
+}
