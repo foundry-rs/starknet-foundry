@@ -1,6 +1,9 @@
 use crate::{handle_rpc_error, ErrorData, WaitForTransactionError};
 use anyhow::anyhow;
 use conversions::serde::serialize::CairoSerialize;
+
+use conversions::byte_array::ByteArray;
+
 use starknet::core::types::StarknetError::{
     ContractError, TransactionExecutionError, ValidationFailure,
 };
@@ -78,7 +81,7 @@ pub enum SNCastStarknetError {
     #[error("Account balance is too small to cover transaction fee")]
     InsufficientAccountBalance,
     #[error("Contract failed the validation = {0}")]
-    ValidationFailure(String),
+    ValidationFailure(ByteArray),
     #[error("Contract failed to compile in starknet")]
     CompilationFailed,
     #[error("Contract class size is too large")]
@@ -116,7 +119,9 @@ impl From<StarknetError> for SNCastStarknetError {
             StarknetError::InsufficientAccountBalance => {
                 SNCastStarknetError::InsufficientAccountBalance
             }
-            ValidationFailure(err) => SNCastStarknetError::ValidationFailure(err),
+            ValidationFailure(err) => {
+                SNCastStarknetError::ValidationFailure(ByteArray::from(err.as_str()))
+            }
             StarknetError::CompilationFailed => SNCastStarknetError::CompilationFailed,
             StarknetError::ContractClassSizeIsTooLarge => {
                 SNCastStarknetError::ContractClassSizeIsTooLarge

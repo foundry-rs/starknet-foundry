@@ -19,7 +19,7 @@ mod ResponseWith2Felts {
 
     #[abi(embed_v0)]
     impl IResponseWith2FeltsImpl of super::IResponseWith2Felts<ContractState> {
-        // Increases the balance by the given amount.
+        // Increases the balance by the given amount
         fn get(self: @ContractState) -> Response {
             Response { a: 8, b: 43 }
         }

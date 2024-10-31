@@ -4,6 +4,7 @@ use forge_runner::CACHE_DIR;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
+use std::ffi::OsString;
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
 use tokio::runtime::Builder;
 use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
@@ -127,11 +128,11 @@ pub struct TestArgs {
     save_trace_data: bool,
 
     /// Build profiles of all tests which have passed and are not fuzz tests using the cairo-profiler
-    #[arg(long)]
+    #[arg(long, conflicts_with = "coverage")]
     build_profile: bool,
 
     /// Generate a coverage report for the executed tests which have passed and are not fuzz tests using the cairo-coverage
-    #[arg(long)]
+    #[arg(long, conflicts_with = "build_profile")]
     coverage: bool,
 
     /// Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
@@ -145,6 +146,10 @@ pub struct TestArgs {
     /// Build contracts separately in the scarb starknet contract target
     #[arg(long)]
     no_optimization: bool,
+
+    /// Additional arguments for cairo-coverage or cairo-profiler
+    #[clap(last = true)]
+    additional_args: Vec<OsString>,
 }
 
 pub enum ExitStatus {

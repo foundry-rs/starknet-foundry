@@ -154,7 +154,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .hint_handler
                     .state;
 
-                let contract_name: String = input_reader.read::<ByteArray>()?.into();
+                let contract_name: String = input_reader.read::<ByteArray>()?.to_string();
 
                 handle_declare_deploy_result(declare(*state, &contract_name, self.contracts_data))
             }
@@ -203,7 +203,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::from_serializable(contract_address))
             }
             "var" => {
-                let name: String = input_reader.read::<ByteArray>()?.into();
+                let name: String = input_reader.read::<ByteArray>()?.to_string();
 
                 let env_var = self
                     .environment_variables
@@ -255,18 +255,18 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                         CheatcodeHandlingResult::from_serializable(Err::<(), _>(panic_data)),
                     ),
                     CallResult::Failure(CallFailure::Error { msg }) => Err(
-                        EnhancedHintError::from(HintError::CustomHint(Box::from(msg))),
+                        EnhancedHintError::from(HintError::CustomHint(Box::from(msg.to_string()))),
                     ),
                 }
             }
             "read_txt" => {
-                let file_path: String = input_reader.read::<ByteArray>()?.into();
+                let file_path: String = input_reader.read::<ByteArray>()?.to_string();
                 let parsed_content = file_operations::read_txt(file_path)?;
 
                 Ok(CheatcodeHandlingResult::Handled(parsed_content))
             }
             "read_json" => {
-                let file_path: String = input_reader.read::<ByteArray>()?.into();
+                let file_path: String = input_reader.read::<ByteArray>()?.to_string();
                 let parsed_content = file_operations::read_json(file_path)?;
 
                 Ok(CheatcodeHandlingResult::Handled(parsed_content))

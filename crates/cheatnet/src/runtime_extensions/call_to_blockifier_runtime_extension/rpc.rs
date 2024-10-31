@@ -17,7 +17,6 @@ use cairo_vm::Felt252;
 use conversions::{
     byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr, FromConv, IntoConv,
 };
-use serde::{Deserialize, Serialize};
 use shared::utils::build_readable_text;
 use starknet_api::{core::EntryPointSelector, transaction::EventContent};
 use starknet_api::{
@@ -35,7 +34,7 @@ pub struct UsedResources {
 }
 
 /// Enum representing possible call execution result, along with the data
-#[derive(Debug, Clone, CairoSerialize, Serialize, Deserialize)]
+#[derive(Debug, Clone, CairoSerialize)]
 pub enum CallResult {
     Success { ret_data: Vec<Felt252> },
     Failure(CallFailure),
@@ -44,10 +43,10 @@ pub enum CallResult {
 /// Enum representing possible call failure and its type.
 /// `Panic` - Recoverable, meant to be caught by the user.
 /// `Error` - Unrecoverable, equivalent of panic! in rust.
-#[derive(Debug, Clone, CairoSerialize, Serialize, Deserialize)]
+#[derive(Debug, Clone, CairoSerialize)]
 pub enum CallFailure {
     Panic { panic_data: Vec<Felt252> },
-    Error { msg: String },
+    Error { msg: ByteArray },
 }
 
 pub enum AddressOrClassHash {
@@ -74,7 +73,9 @@ impl CallFailure {
                 if err_data_str.contains("Failed to deserialize param #")
                     || err_data_str.contains("Input too long for arguments")
                 {
-                    CallFailure::Error { msg: err_data_str }
+                    CallFailure::Error {
+                        msg: ByteArray::from(err_data_str.as_str()),
+                    }
                 } else {
                     CallFailure::Panic {
                         panic_data: err_data,
@@ -115,14 +116,18 @@ impl CallFailure {
                 }
             }
             EntryPointExecutionError::StateError(StateError::StateReadError(msg)) => {
-                CallFailure::Error { msg: msg.clone() }
+                CallFailure::Error {
+                    msg: ByteArray::from(msg.as_str()),
+                }
             }
             error => {
                 let error_string = error.to_string();
                 if let Some(panic_data) = try_extract_panic_data(&error_string) {
                     CallFailure::Panic { panic_data }
                 } else {
-                    CallFailure::Error { msg: error_string }
+                    CallFailure::Error {
+                        msg: ByteArray::from(error_string.as_str()),
+                    }
                 }
             }
         }
