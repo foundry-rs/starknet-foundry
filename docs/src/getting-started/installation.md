@@ -46,7 +46,6 @@ First, add the Starknet Foundry plugin to asdf:
 asdf plugin add starknet-foundry
 ```
 
-#### Version Management
 
 - Common Error
 
@@ -57,26 +56,14 @@ No version is set for command snforge
 Consider adding one of the following versions in your config file at starknet-foundry 0.32.0
 ```
 
-The error indicates that `Starknet Foundry` version is unset. Set the version as outlined to fix this
-
-#### Switching Versions
-
-To switch between different versions:
+This error indicates that `Starknet Foundry` version is unset. To resolve it, set the version globally using asdf:
 
 ```shell
-# Install a different version
-asdf install starknet-foundry 0.32.0
-
-# Switch global version
 asdf global starknet-foundry 0.32.0
-
-# Or switch local version
-asdf local starknet-foundry 0.32.0
 ```
+For additional information on `asdf version management`, see the[asdf](https://asdf-vm.com/guide/getting-started.html#_6-set-a-version)
 
-"For more details on using `asdf` see this [asdf](https://asdf-vm.com/guide/getting-started.html#_6-set-a-version)"
-
-#### Installation on Windows
+### Installation on Windows
 
 As for now, Starknet Foundry on Windows needs manual installation, but necessary steps are kept to minimum:
 
@@ -98,7 +85,7 @@ snforge --version
 sncast --version
 ```
 
-#### Universal-Sierra-Compiler update
+### Universal-Sierra-Compiler update
 
 If you would like to bump the USC manually (e.g. when the new Sierra version is released) you can do it by running:
 
