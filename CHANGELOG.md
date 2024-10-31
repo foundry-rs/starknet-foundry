@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Multicall now supports numbers as inputs without quotes
+- You can now use numbers without quotes as inputs for calls in multicall config file.
 
 ## [0.32.0] - 2024-10-16
 
