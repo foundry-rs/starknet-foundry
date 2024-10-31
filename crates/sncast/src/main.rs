@@ -190,8 +190,8 @@ impl From<DeployArguments> for Arguments {
             arguments,
         } = value;
         Self {
-            arguments,
             calldata: constructor_calldata,
+            arguments,
         }
     }
 }
