@@ -137,3 +137,16 @@ $ sncast \
     --private-key 0x2 \
     --type oz
 ```
+
+#### Auto-generated Account Name
+
+To import an account with an auto-generated name, skip the `--name` flag.
+
+```shell
+$ sncast \
+    account import \
+    --url http://127.0.0.1:5050 \
+    --address 0x1 \
+    --private-key 0x2 \
+    --type oz
+```
