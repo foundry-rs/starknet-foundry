@@ -142,7 +142,7 @@ Numeric types (primitives and `felt252`) can be paseed with type suffix specifie
 > 📝 **Note**
 > In bash and similar shells indentation and whitespace matters when providing multiline strings with `\`
 >
-> Remember to **not indent** any line and to **not add whitespace before the `\` character**.
+> Remember  **not to indent** any line and **not to add whitespace before the `\` character**.
 
 Alternatively, you can continue the single quote for multiple lines.
 
