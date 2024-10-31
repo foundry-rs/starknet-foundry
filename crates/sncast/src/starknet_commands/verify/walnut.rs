@@ -7,9 +7,8 @@ pub struct WalnutVerificationInterface {
     pub network: Network,
 }
 
-#[async_trait]
-impl VerificationInterface for WalnutVerificationInterface {
-    fn new(network: Network, base_url: Option<String>) -> Self {
+impl WalnutVerificationInterface {
+    pub fn new(network: Network, base_url: Option<String>) -> Self {
         let base_url = match base_url {
             Some(custom_base_api_url) => custom_base_api_url.clone(),
             None => "https://api.walnut.dev".to_string(),
@@ -17,7 +16,10 @@ impl VerificationInterface for WalnutVerificationInterface {
 
         WalnutVerificationInterface { base_url, network }
     }
+}
 
+#[async_trait]
+impl VerificationInterface for WalnutVerificationInterface {
     fn explorer_url(&self) -> String {
         let path = match self.network {
             Network::Mainnet => "/v1/sn_main/verify",

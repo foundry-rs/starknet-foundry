@@ -257,7 +257,7 @@ async fn test_no_class_hash_or_contract_address_provided() {
             error: the following required arguments were not provided:
               <--contract-address <CONTRACT_ADDRESS>|--class-hash <CLASS_HASH>>
 
-            Usage: sncast verify --class-name <CLASS_NAME> --network <NETWORK> --verifier <VERIFIER> <--contract-address <CONTRACT_ADDRESS>|--class-hash <CLASS_HASH>>
+            Usage: sncast verify --class-name <CLASS_NAME> --verifier <VERIFIER> --network <NETWORK> <--contract-address <CONTRACT_ADDRESS>|--class-hash <CLASS_HASH>>
 
             For more information, try '--help'."
         ),

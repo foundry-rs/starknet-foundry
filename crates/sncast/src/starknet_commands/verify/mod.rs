@@ -74,6 +74,23 @@ impl fmt::Display for Verifier {
     }
 }
 
+fn get_verifier(
+    verifier: Verifier,
+    network: Network,
+    custom_base_api_url: Option<String>,
+) -> Box<dyn VerificationInterface + Sync> {
+    match verifier {
+        Verifier::Walnut => Box::new(WalnutVerificationInterface::new(
+            network,
+            custom_base_api_url,
+        )),
+        Verifier::Voyager => Box::new(VoyagerVerificationInterface::new(
+            network,
+            custom_base_api_url,
+        )),
+    }
+}
+
 // disable too many arguments clippy warning
 #[allow(clippy::too_many_arguments)]
 pub async fn verify(
@@ -109,28 +126,13 @@ pub async fn verify(
         .parent()
         .ok_or(anyhow!("Failed to obtain workspace dir"))?;
 
-    match verifier {
-        Verifier::Walnut => {
-            let walnut = WalnutVerificationInterface::new(network, custom_base_api_url);
-            walnut
-                .verify(
-                    workspace_dir.to_path_buf(),
-                    contract_address,
-                    class_hash,
-                    class_name,
-                )
-                .await
-        }
-        Verifier::Voyager => {
-            let voyager = VoyagerVerificationInterface::new(network, custom_base_api_url);
-            voyager
-                .verify(
-                    workspace_dir.to_path_buf(),
-                    contract_address,
-                    class_hash,
-                    class_name,
-                )
-                .await
-        }
-    }
+    let verifier = get_verifier(verifier, network, custom_base_api_url);
+    verifier
+        .verify(
+            workspace_dir.to_path_buf(),
+            contract_address,
+            class_hash,
+            class_name,
+        )
+        .await
 }
