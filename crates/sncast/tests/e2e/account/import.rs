@@ -684,15 +684,12 @@ pub async fn test_invalid_address_computation() {
     "});
 }
 
-#[test_case("oz", "open_zeppelin"; "oz_account_type")]
-#[test_case("argent", "argent"; "argent_account_type")]
-#[test_case("braavos", "braavos"; "braavos_account_type")]
 #[tokio::test]
-pub async fn test_happy_case_unnamed_import(input_account_type: &str, saved_type: &str) {
+pub async fn test_happy_case_unnamed_import() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    let args = vec![
+    let import_args = vec![
         "--accounts-file",
         accounts_file,
         "account",
@@ -706,11 +703,35 @@ pub async fn test_happy_case_unnamed_import(input_account_type: &str, saved_type
         "--class-hash",
         DEVNET_OZ_CLASS_HASH_CAIRO_0,
         "--type",
-        input_account_type,
+        "oz",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let delete_args = vec![
+        "--accounts-file",
+        &accounts_file,
+        "account",
+        "delete",
+        "--name",
+        "account-2",
+        "--network",
+        "alpha-sepolia",
+    ];
 
+    for _ in 0..3 {
+        let snapbox = runner(&import_args).current_dir(tempdir.path());
+        snapbox.assert().stdout_matches(indoc! {r"
+        command: account import
+        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+    "});
+    }
+
+    let snapbox = runner(&delete_args).current_dir(tempdir.path());
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        command: account delete
+        result: Account successfully removed
+    "});
+
+    let snapbox = runner(&import_args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
         command: account import
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
@@ -731,8 +752,26 @@ pub async fn test_happy_case_unnamed_import(input_account_type: &str, saved_type
                     "legacy": true,
                     "private_key": "0x456",
                     "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
-                    "type": saved_type
-                  }
+                    "type": "open_zeppelin"
+                  },
+                  "account-2": {
+                    "address": "0x123",
+                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
+                    "deployed": false,
+                    "legacy": true,
+                    "private_key": "0x456",
+                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
+                    "type": "open_zeppelin"
+                  },
+                    "account-3": {
+                        "address": "0x123",
+                        "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
+                        "deployed": false,
+                        "legacy": true,
+                        "private_key": "0x456",
+                        "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
+                        "type": "open_zeppelin"
+                    }
                 }
             }
         )
