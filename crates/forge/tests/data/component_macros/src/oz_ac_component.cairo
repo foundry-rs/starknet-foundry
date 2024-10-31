@@ -3,7 +3,10 @@
 /// The SRC5 component allows contracts to expose the interfaces they implement.
 #[starknet::component]
 mod SRC5Component {
-    use starknet::ContractAddress;
+    use starknet::{
+        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map},
+        ContractAddress
+    };
 
     const ISRC5_ID: felt252 = 0x3f918d17e5ee77373b56385708f855659a07f75997f365cf87748628532a055;
 
@@ -15,7 +18,7 @@ mod SRC5Component {
 
     #[storage]
     struct Storage {
-        SRC5_supported_interfaces: LegacyMap<felt252, bool>
+        SRC5_supported_interfaces: Map<felt252, bool>
     }
 
     mod Errors {
@@ -33,7 +36,7 @@ mod SRC5Component {
             if interface_id == ISRC5_ID {
                 return true;
             }
-            self.SRC5_supported_interfaces.read(interface_id)
+            self.SRC5_supported_interfaces.entry(interface_id).read()
         }
     }
 
@@ -43,13 +46,13 @@ mod SRC5Component {
     > of InternalTrait<TContractState> {
         /// Registers the given interface as supported by the contract.
         fn register_interface(ref self: ComponentState<TContractState>, interface_id: felt252) {
-            self.SRC5_supported_interfaces.write(interface_id, true);
+            self.SRC5_supported_interfaces.entry(interface_id).write(true);
         }
 
         /// Deregisters the given interface as supported by the contract.
         fn deregister_interface(ref self: ComponentState<TContractState>, interface_id: felt252) {
             assert(interface_id != ISRC5_ID, Errors::INVALID_ID);
-            self.SRC5_supported_interfaces.write(interface_id, false);
+            self.SRC5_supported_interfaces.entry(interface_id).write(true);
         }
     }
 }
@@ -57,7 +60,7 @@ mod SRC5Component {
 
 #[starknet::component]
 mod AccessControlComponent {
-    use starknet::ContractAddress;
+    use starknet::{storage::{StoragePointerWriteAccess, StoragePathEntry, Map}, ContractAddress};
     use starknet::get_caller_address;
     use super::SRC5Component;
     use super::SRC5Component::InternalTrait as SRC5InternalTrait;
@@ -74,8 +77,8 @@ mod AccessControlComponent {
 
     #[storage]
     struct Storage {
-        AccessControl_role_admin: LegacyMap<felt252, felt252>,
-        AccessControl_role_member: LegacyMap<(felt252, ContractAddress), bool>,
+        AccessControl_role_admin: Map<felt252, felt252>,
+        AccessControl_role_member: Map<(felt252, ContractAddress), bool>,
     }
 
     #[event]
@@ -136,12 +139,12 @@ mod AccessControlComponent {
         fn has_role(
             self: @ComponentState<TContractState>, role: felt252, account: ContractAddress
         ) -> bool {
-            self.AccessControl_role_member.read((role, account))
+            self.AccessControl_role_member.entry((role, account)).read()
         }
 
         /// Returns the admin role that controls `role`.
         fn get_role_admin(self: @ComponentState<TContractState>, role: felt252) -> felt252 {
-            self.AccessControl_role_admin.read(role)
+            self.AccessControl_role_admin.entry(role).read()
         }
 
         /// Grants `role` to `account`.
@@ -228,7 +231,7 @@ mod AccessControlComponent {
         ) {
             if !self.has_role(role, account) {
                 let caller: ContractAddress = get_caller_address();
-                self.AccessControl_role_member.write((role, account), true);
+                self.AccessControl_role_member.entry((role, account)).write(true);
                 self.emit(RoleGranted { role, account, sender: caller });
             }
         }
@@ -243,7 +246,7 @@ mod AccessControlComponent {
         ) {
             if self.has_role(role, account) {
                 let caller: ContractAddress = get_caller_address();
-                self.AccessControl_role_member.write((role, account), false);
+                self.AccessControl_role_member.entry((role, account)).write(false);
                 self.emit(RoleRevoked { role, account, sender: caller });
             }
         }
@@ -255,8 +258,9 @@ mod AccessControlComponent {
             ref self: ComponentState<TContractState>, role: felt252, admin_role: felt252
         ) {
             let previous_admin_role: felt252 = self.get_role_admin(role);
-            self.AccessControl_role_admin.write(role, admin_role);
+            self.AccessControl_role_admin.entry(role).write(admin_role);
             self.emit(RoleAdminChanged { role, previous_admin_role, new_admin_role: admin_role });
         }
     }
 }
+

@@ -4295,6 +4295,8 @@ dependencies = [
  "assert_fs",
  "camino",
  "indoc",
+ "itertools 0.12.1",
+ "rayon",
  "regex",
  "scarb-metadata",
  "scarb-ui",
