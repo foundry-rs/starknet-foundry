@@ -11,17 +11,15 @@ fn main() {
     let nonce = get_nonce().unwrap();
     println!("Current nonce: {}", nonce);
     
-    // Checkinng account balance before deployment
+    // Checking account balance before deployment
     let balance = get_balance().unwrap();
     println!("Account balance: {}", balance);
 
-    // Declaring the contract using project name placeholder
-    // This will be replaced with the actual project name during initialization
-    let declare_result = declare("{{ PROJECT_NAME }}", ContractClassType::V2).expect('Declaration failed');
+    let declare_result = declare("HelloStarknet", ContractClassType::V2).expect('Declaration failed');
     println!("Contract declared with class hash: {}", declare_result.class_hash);
     
     // Preparing to deploy your contract
-    let constructor_calldata = array![];    // empty array, incase of contracts without a constructor. You cad add constructor arguments if needed
+    let constructor_calldata = array![];    // empty array, in case of contracts without a constructor. You can add constructor arguments if needed
     let salt = 0x1234;                      // Unique value to determine contract address 'unique salt'
 
     // Deploying the declared contract
@@ -35,3 +33,4 @@ fn main() {
     println!("Contract deployed at: {}", deploy_result.contract_address);   // Print contract address
     println!("Transaction hash: {}", deploy_result.transaction_hash);       // Print transaction hash
 }
+

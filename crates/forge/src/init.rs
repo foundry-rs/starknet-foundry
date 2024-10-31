@@ -16,47 +16,8 @@ static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
 const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
 
-const DEPLOY_SCRIPT_NAME: &str = "deploy.cairo";
-
-const DEPLOY_SCRIPT_TEMPLATE: &str = r#"use sncast_std::{
-    declare, declare::DeclareResult, 
-    deploy, deploy::DeployResult,
-    get_nonce, 
-    get_balance,
-    ContractClassType,
-};
-
-// Default deployment script for {{ PROJECT_NAME }}
-fn main() {
-    // Getting the current nonce for deployment
-    let nonce = get_nonce().unwrap();
-    println!("Current nonce: {}", nonce);
-    
-    // Checkinng account balance before deployment
-    let balance = get_balance().unwrap();
-    println!("Account balance: {}", balance);
-
-    // Declaring the contract using project name placeholder
-    // This will be replaced with the actual project name during initialization
-    let declare_result = declare("{{ PROJECT_NAME }}", ContractClassType::V2).expect('Declaration failed');
-    println!("Contract declared with class hash: {}", declare_result.class_hash);
-    
-    // Preparing to deploy your contract
-    let constructor_calldata = array![];    // empty array, incase of contracts without a constructor. You cad add constructor arguments if needed
-    let salt = 0x1234;                      // Unique value to determine contract address. (unique salt)
-
-    // Deploying the declared contract
-    let deploy_result = deploy(
-        declare_result.class_hash,      // Use hash from declaration
-        constructor_calldata.span(),    // Constructor arguments
-        salt,                           // Unique salt value
-        true                            // set to true to make deployment address unique
-    ).expect('Deployment failed');
-    
-    println!("Contract deployed at: {}", deploy_result.contract_address);   // Print contract address
-    println!("Transaction hash: {}", deploy_result.transaction_hash);       // Print transaction hash
-}
-"#;
+const DEPLOY_PACKAGE_NAME: &str = "deploy";
+const SCRIPT_PACKAGE_VERSION: &str = "0.1.0";
 
 fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
     fs::write(
@@ -119,11 +80,37 @@ fn overwrite_files_from_scarb_template(
 
 fn create_deployment_script(base_path: &Path, project_name: &str) -> Result<()> {
     let scripts_dir = base_path.join("scripts");
-    fs::create_dir_all(&scripts_dir)?;
+    let deploy_dir = scripts_dir.join(DEPLOY_PACKAGE_NAME);
+    let src_dir = deploy_dir.join("src");
+    fs::create_dir_all(&src_dir)?;
     
-    let script_path = scripts_dir.join(DEPLOY_SCRIPT_NAME);
-    let script_contents = replace_project_name(DEPLOY_SCRIPT_TEMPLATE.as_bytes(), project_name)?;
-    fs::write(script_path, script_contents)?;
+    // Copying the deploy.cairo file from the template
+    let deploy_script_contents = TEMPLATE
+        .get_file("scripts/deploy/src/deploy.cairo")
+        .ok_or_else(|| anyhow!("Deploy script template not found"))?
+        .contents();
+    
+    fs::write(src_dir.join("deploy.cairo"), deploy_script_contents)?;
+
+    // Creating lib.cairo for the package
+    fs::write(
+        src_dir.join("lib.cairo"),
+        format!("mod deploy;\n")
+    )?;
+
+    // Creating Scarb.toml for the script package
+    let scarb_content = format!(
+        r#"[package]
+name = "{}"
+version = "0.1.0"
+
+[dependencies]
+starknet = ">=2.8.0"
+sncast_std = {{ git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v{{}}" }}
+"#,
+        DEPLOY_PACKAGE_NAME
+    );
+    fs::write(deploy_dir.join("Scarb.toml"), scarb_content)?;
 
     Ok(())
 }
