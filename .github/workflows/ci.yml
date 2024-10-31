@@ -44,7 +44,7 @@ jobs:
     needs: build-test-forge-e2e-nextest-archive
     strategy:
       matrix:
-        partition: [1, 2, 3, 4, 5, 6, 7, 8]
+        partition: [ 1, 2, 3, 4, 5, 6, 7, 8 ]
     steps:
       - name: Extract branch name
         if: github.event_name != 'pull_request'
@@ -119,6 +119,9 @@ jobs:
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: |
           cargo test --package forge --features scarb_2_8_3 e2e::contract_artifacts
+      - run: |
+          cargo test --package forge --features scarb_2_8_3 e2e::features
+      - run: |
           cargo test --package scarb-api --features scarb_2_8_3 get_starknet_artifacts_path
 
   test-forge-runner:
