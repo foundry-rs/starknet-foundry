@@ -33,4 +33,3 @@ fn main() {
     println!("Contract deployed at: {}", deploy_result.contract_address);   // Print contract address
     println!("Transaction hash: {}", deploy_result.transaction_hash);       // Print transaction hash
 }
-

@@ -84,7 +84,7 @@ fn create_deployment_script(base_path: &Path, project_name: &str) -> Result<()> 
     let src_dir = deploy_dir.join("src");
     fs::create_dir_all(&src_dir)?;
     
-    // Copying the deploy.cairo file from the template
+    // Copying the deploy.cairo file from template
     let deploy_script_contents = TEMPLATE
         .get_file("scripts/deploy/src/deploy.cairo")
         .ok_or_else(|| anyhow!("Deploy script template not found"))?
@@ -92,25 +92,21 @@ fn create_deployment_script(base_path: &Path, project_name: &str) -> Result<()> 
     
     fs::write(src_dir.join("deploy.cairo"), deploy_script_contents)?;
 
-    // Creating lib.cairo for the package
-    fs::write(
-        src_dir.join("lib.cairo"),
-        format!("mod deploy;\n")
-    )?;
+    // Copying lib.cairo from template
+    let lib_contents = TEMPLATE
+        .get_file("scripts/deploy/src/lib.cairo")
+        .ok_or_else(|| anyhow!("Library template not found"))?
+        .contents();
+    
+    fs::write(src_dir.join("lib.cairo"), lib_contents)?;
 
-    // Creating Scarb.toml for the script package
-    let scarb_content = format!(
-        r#"[package]
-name = "{}"
-version = "0.1.0"
-
-[dependencies]
-starknet = ">=2.8.0"
-sncast_std = {{ git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v{{}}" }}
-"#,
-        DEPLOY_PACKAGE_NAME
-    );
-    fs::write(deploy_dir.join("Scarb.toml"), scarb_content)?;
+    // Copying Scarb.toml from template
+    let scarb_contents = TEMPLATE
+        .get_file("scripts/deploy/Scarb.toml")
+        .ok_or_else(|| anyhow!("Scarb.toml template not found"))?
+        .contents();
+    
+    fs::write(deploy_dir.join("Scarb.toml"), scarb_contents)?;
 
     Ok(())
 }
