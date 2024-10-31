@@ -2,7 +2,7 @@
 
 ## Overview
 
-Starknet Foundry `sncast` supports verifying Cairo contract classes with the `sncast verify` command by submitting the source code to a selected verification provider. Verification provides transparency, making the code accessible to users and aiding debugging tools.
+Starknet Foundry `sncast` supports verifying Cairo contract classes with the `sncast verify` command by submitting the source code to a selected verification provider, selected via the `--verifier` flag. Verification provides transparency, making the code accessible to users and aiding debugging tools.
 
 The verification provider guarantees that the submitted source code aligns with the deployed contract class on the network by compiling the source code into Sierra bytecode and comparing it with the network-deployed Sierra bytecode.
 
@@ -16,6 +16,11 @@ For detailed CLI description, see [verify command reference](../appendix/sncast/
 ### Walnut
 
 Walnut is a tool for step-by-step debugging of Starknet transactions. You can learn more about Walnut here [walnut.dev](https://walnut.dev). Note that Walnut requires you to specify the Starknet version in your `Scarb.toml` config file.
+
+### Voyager
+
+[Voyager](https://voyager.online) is a block explorer for Starknet. It gives developers immediate insight into the state of the starknetnetwork. It also intends to become the one-stop location for all Starknet statistics. Note that Voyager requires you to specify the Starknet version in your `Scarb.toml` config file.
+
 
 ## Example
 
