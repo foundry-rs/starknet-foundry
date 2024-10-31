@@ -88,7 +88,7 @@ $ sncast call \
 ```
 
 getting the same result.
-Note the arguments must be:
+Note that the arguments must be:
 
 * provided as a single string
 * comma (`,`) separated
@@ -113,8 +113,7 @@ Cast supports most important Cairo corelib types:
 * `bytes31`
 * `Array` - using `array![]` macro
 
-Numeric types (primitives and `felt252`) can be paseed with type suffix specified -\
-for example `--arguments 420_u64`.
+Numeric types (primitives and `felt252`) can be paseed with type suffix specified for example `--arguments 420_u64`.
 
 > 📝 **Note**
 > Only **constant** expressions are supported. Defining and referencing variables and calling functions (either builtin,
