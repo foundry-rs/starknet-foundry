@@ -3,14 +3,15 @@ Verify Cairo contract on a chosen verification provider.
 
 ## `--contract-address, -a <CONTRACT_ADDRESS>`
 Required.
+Conflicts with: `--class-hash`
 
 The address of the contract that is to be verified. Either this or the class hash should be provided.
 
-
 ## `--class-hash, -c <CLASS_HASH>`
 Required.
+Conflicts with: `--contract-address`
 
-The class hash of the contract that is to be verified. Either this or the contract address should be provided.
+The class hash of the contract that is to be verified.
 
 ## `--class-name <CLASS NAME>`
 Required.
