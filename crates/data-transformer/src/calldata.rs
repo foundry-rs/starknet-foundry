@@ -15,9 +15,6 @@ impl Calldata {
 }
 
 impl Calldata {
-    /// Serialize the calldata.
-    /// If it's given as a list of `Felt`s, return it immediately.
-    /// Otherwise, try to interpret is as a comma-separated sequence of Cairo expressions.
     pub fn serialized(
         self,
         class_definition: ContractClass,
