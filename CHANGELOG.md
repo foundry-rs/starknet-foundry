@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- Printing information about compiling Sierra files by `universal-sierra-compiler` before tests execution
+
 #### Changed
 
 - You can now pass arguments to `cairo-profiler` and `cairo-coverage`. Everything after `--` will be passed to underlying binary. E.g.
