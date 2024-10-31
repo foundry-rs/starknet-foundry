@@ -42,7 +42,7 @@ pub fn compile_sierra_to_casm(
     sierra_file_path: Option<&Utf8PathBuf>,
 ) -> Result<AssembledProgramWithDebugInfo> {
     let assembled_with_info_raw = if let Some(sierra_file_path) = sierra_file_path {
-        compile_sierra_at_path(sierra_file_path, &SierraType::Raw)?
+        compile_sierra_at_path(sierra_file_path, true, &SierraType::Raw)?
     } else {
         compile_sierra(&serde_json::to_value(sierra_program)?, &SierraType::Raw)?
     };
@@ -59,16 +59,26 @@ pub fn compile_sierra(sierra_contract_class: &Value, sierra_type: &SierraType) -
 
     compile_sierra_at_path(
         &Utf8PathBuf::from(temp_sierra_file.path().to_string_lossy().to_string()),
+        false,
         sierra_type,
     )
 }
 
 pub fn compile_sierra_at_path(
     sierra_file_path: &Utf8PathBuf,
+    is_saved_file: bool,
     sierra_type: &SierraType,
 ) -> Result<String> {
-    let mut usc_command = UniversalSierraCompilerCommand::new();
+    // Skip printing details when compiling unsaved sierra
+    // which occurs during test execution for some cheatcodes e.g. `replace_bytecode`
+    if is_saved_file {
+        println!(
+            "Compiling Sierra to Casm ({})",
+            sierra_file_path.canonicalize_utf8()?
+        );
+    }
 
+    let mut usc_command = UniversalSierraCompilerCommand::new();
     let usc_output = usc_command
         .inherit_stderr()
         .args(vec![

@@ -25,6 +25,7 @@ fn simple_package() {
         indoc! {r"
     [..]Compiling[..]
     [..]Finished[..]
+    [..]Compiling Sierra to Casm[..]
 
 
     Collected 13 test(s) from simple_package package
