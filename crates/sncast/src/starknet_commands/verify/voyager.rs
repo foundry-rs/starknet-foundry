@@ -6,9 +6,8 @@ pub struct VoyagerVerificationInterface {
     pub base_url: String,
 }
 
-#[async_trait]
-impl VerificationInterface for VoyagerVerificationInterface {
-    fn new(network: Network, base_url: Option<String>) -> Self {
+impl VoyagerVerificationInterface {
+    pub fn new(network: Network, base_url: Option<String>) -> Self {
         let base_url = match base_url {
             Some(custom_base_api_url) => custom_base_api_url.clone(),
             None => match network {
@@ -19,7 +18,10 @@ impl VerificationInterface for VoyagerVerificationInterface {
 
         VoyagerVerificationInterface { base_url }
     }
+}
 
+#[async_trait]
+impl VerificationInterface for VoyagerVerificationInterface {
     fn explorer_url(&self) -> String {
         format!("{}/class-verify-v2", self.base_url)
     }

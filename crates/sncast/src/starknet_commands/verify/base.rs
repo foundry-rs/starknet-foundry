@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use camino::Utf8PathBuf;
 use reqwest::StatusCode;
 use serde::Serialize;
-use sncast::{response::structs::VerifyResponse, Network};
+use sncast::response::structs::VerifyResponse;
 use starknet::core::types::Felt;
 use std::ffi::OsStr;
 use walkdir::WalkDir;
@@ -64,8 +64,6 @@ async fn send_verification_request(
 
 #[async_trait]
 pub trait VerificationInterface {
-    fn new(network: Network, base_url: Option<String>) -> Self;
-
     fn explorer_url(&self) -> String;
 
     async fn verify(
