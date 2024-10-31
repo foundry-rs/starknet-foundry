@@ -1061,7 +1061,6 @@ fn detailed_resources_flag() {
                 memory holes: [..]
                 builtins: ([..])
                 syscalls: ([..])
-
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "},
     );
