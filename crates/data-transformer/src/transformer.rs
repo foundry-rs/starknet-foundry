@@ -45,7 +45,7 @@ pub fn transform(
 fn split_expressions(input: &str, db: &SimpleParserDatabase) -> Result<Vec<Expr>> {
     // We need to convert our comma-separated string of expressions into something that is a valid
     // Cairo expression, so we can parse it.
-    // 
+    //
     // We convert to tuple by wrapping in `()` with a trailing `,` to handle case of a single argument
     let input = format!("({input},)");
     let expr = parse_expression(&input, db)?;
