@@ -7,7 +7,7 @@ It's declared on Sepolia network with class hash `0x02a9b456118a86070a8c116c41b0
 
 It has a few methods accepting different types and items defined in its namespace:
 
-```cairo
+```rust
 // data_transformer_contract/src/lib.cairo
 
 pub struct SimpleStruct {
