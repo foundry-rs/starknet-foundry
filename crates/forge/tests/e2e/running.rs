@@ -726,13 +726,26 @@ pub fn append_to_path_var(path: &Path) -> OsString {
 
 fn validate_init(temp: &TempDir, validate_snforge_std: bool) {
     let manifest_path = temp.join("test_name/Scarb.toml");
+    let gitignore_path = temp.join("test_name/.gitignore");
     let scarb_toml = fs::read_to_string(manifest_path.clone()).unwrap();
+    let gitignore_content = fs::read_to_string(gitignore_path.clone()).unwrap();
 
     let snforge_std_assert = if validate_snforge_std {
         "\nsnforge_std = { git = \"https://github.com/foundry-rs/starknet-foundry\", tag = \"v[..]\" }"
     } else {
         ""
     };
+
+    let expected_gitignore = formatdoc!(
+        r#"
+        .snfoundry_cache/
+        snfoundry_trace/ 
+        .snfoundry_versioned_programs/
+        coverage/
+        "#,
+    )
+    .trim_end()
+    .to_string();
 
     let expected = formatdoc!(
         r#"
@@ -761,6 +774,7 @@ fn validate_init(temp: &TempDir, validate_snforge_std: bool) {
     .to_string()+ "\n";
 
     assert_matches(&expected, &scarb_toml);
+    assert_matches(&expected_gitignore, &gitignore_content);
 
     let mut scarb_toml = DocumentMut::from_str(&scarb_toml).unwrap();
 
