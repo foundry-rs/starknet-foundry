@@ -24,7 +24,7 @@ license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-blockifier = "0.8.0-rc.3"
+blockifier = "0.8.0"
 starknet_api = "0.13.0-dev.7"
 cairo-lang-casm = { version = "2.7.0", features = ["serde"] }
 cairo-lang-runner = "2.7.0"
@@ -52,29 +52,29 @@ cairo-lang-parser = "2.7.0"
 cairo-lang-macro = "0.1.0"
 cairo-vm = "1.0.0-rc3"
 cairo-annotations = "0.1.0"
-starknet-types-core = { version = "0.1.6", features = ["hash", "prime-bigint"] }
-anyhow = "1.0.89"
+starknet-types-core = { version = "0.1.7", features = ["hash", "prime-bigint"] }
+anyhow = "1.0.92"
 assert_fs = "1.1.2"
 camino = { version = "1.1.9", features = ["serde1"] }
-clap = { version = "4.5.18", features = ["derive"] }
+clap = { version = "4.5.20", features = ["derive"] }
 console = "0.15.8"
 include_dir = "0.7.4"
 indoc = "2"
 itertools = "0.12.1"
 num-traits = "0.2.19"
 rayon = "1.10"
-regex = "1.11.0"
-serde = { version = "1.0.209", features = ["derive"] }
-serde_json = "1.0.127"
+regex = "1.11.1"
+serde = { version = "1.0.214", features = ["derive"] }
+serde_json = "1.0.132"
 starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "660a732" }
 starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "660a732" }
 tempfile = "3.13.0"
-thiserror = "1.0.64"
+thiserror = "1.0.66"
 ctor = "0.2.8"
 url = "2.5.2"
-tokio = { version = "1.40.0", features = ["full"] }
+tokio = { version = "1.41.0", features = ["full"] }
 tokio-util = "0.7.11"
-futures = "0.3.30"
+futures = "0.3.31"
 num-bigint = { version = "0.4.6", features = ["rand"] }
 walkdir = "2.5.0"
 rand = "0.8.5"
@@ -83,7 +83,7 @@ which = "5.0.0"
 conversions = { path = "./crates/conversions" }
 shared = { path = "./crates/shared" }
 test-case = "3.1.0"
-scarb-metadata = "1.12.0"
+scarb-metadata = "1.13.0"
 flatten-serde-json = "0.1.0"
 snapbox = "0.4.17"
 smol_str = "0.2.2"
