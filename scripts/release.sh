@@ -41,15 +41,40 @@ declare -a doc_files=(
     "./docs/src/testing/using-cheatcodes.md"
 )
 
-echo "Updating version in documentation files..."
 for file in "${doc_files[@]}"; do
-    if [ -f "$file" ]; then
-        sed -i.bak -E 's/(version[[:space:]]*=[[:space:]]*"|version:[[:space:]]*)[0-9]+\.[0-9]+\.[0-9]+/\1'"${VERSION}"'/' "$file"
-        rm "${file}.bak" 2> /dev/null
-        echo "Updated $file"
-    else
-        echo "Warning: $file not found"
-    fi
+    # Use different sed patterns based on the file
+    case "$file" in
+        "./docs/src/appendix/scarb-toml.md")
+            # Specifically target snforge_std and sncast_std versions
+            sed -i.bak -E '
+                /snforge_std = \{/,/version = / s/(version = ")[0-9]+\.[0-9]+\.[0-9]+")/\1'"${VERSION}"'"/;
+                /sncast_std = \{/,/version = / s/(version = ")[0-9]+\.[0-9]+\.[0-9]+")/\1'"${VERSION}"'"/
+            ' "$file"
+            ;;
+        "./docs/src/getting-started/first-steps.md")
+            # Target lines containing snforge_std or sncast_std version specifications
+            sed -i.bak -E '
+                /snforge_std = \{/,/version = / s/(version = ")[0-9]+\.[0-9]+\.[0-9]+")/\1'"${VERSION}"'"/;
+                /sncast_std = \{/,/version = / s/(version = ")[0-9]+\.[0-9]+\.[0-9]+")/\1'"${VERSION}"'"/
+            ' "$file"
+            ;;
+        "./docs/src/starknet/script.md")
+            # Target sncast_std version specifications
+            sed -i.bak -E '/sncast_std = \{/,/version = / s/(version = ")[0-9]+\.[0-9]+\.[0-9]+")/\1'"${VERSION}"'"/' "$file"
+            ;;
+        "./docs/src/testing/"*)
+            # Target snforge_std version specifications in testing docs
+            sed -i.bak -E '/snforge_std = \{/,/version = / s/(version = ")[0-9]+\.[0-9]+\.[0-9]+")/\1'"${VERSION}"'"/' "$file"
+            ;;
+        *)
+            # For any other files, target both snforge_std and sncast_std
+            sed -i.bak -E '
+                /snforge_std = \{/,/version = / s/(version = ")[0-9]+\.[0-9]+\.[0-9]+")/\1'"${VERSION}"'"/;
+                /sncast_std = \{/,/version = / s/(version = ")[0-9]+\.[0-9]+\.[0-9]+")/\1'"${VERSION}"'"/
+            ' "$file"
+            ;;
+    esac
+    rm "${file}.bak" 2> /dev/null || exit 1
 done
 
 echo "Version update complete!"
