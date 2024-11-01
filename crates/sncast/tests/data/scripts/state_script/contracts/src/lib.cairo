@@ -8,19 +8,23 @@ trait IState<TState> {
 
 #[starknet::contract]
 mod State {
+    use starknet::{
+        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map}
+    };
+
     #[storage]
     struct Storage {
-        storage: LegacyMap::<felt252, felt252>,
+        storage: Map<felt252, felt252>,
     }
 
     #[abi(embed_v0)]
     impl State of super::IState<ContractState> {
         fn put(ref self: ContractState, key: felt252, value: felt252) {
-            self.storage.write(key, value);
+            self.storage.entry(key).write(value);
         }
 
         fn get(self: @ContractState, key: felt252) -> felt252 {
-            self.storage.read(key)
+            self.storage.entry(key).read()
         }
 
         fn dummy(self: @ContractState) -> felt252 {

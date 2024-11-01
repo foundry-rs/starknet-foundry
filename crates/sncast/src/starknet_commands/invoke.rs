@@ -1,3 +1,4 @@
+use crate::Arguments;
 use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
 use sncast::helpers::error::token_not_supported_for_invoke;
@@ -13,7 +14,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 
-#[derive(Args, Clone)]
+#[derive(Args, Clone, Debug)]
 #[command(about = "Invoke a contract on Starknet")]
 pub struct Invoke {
     /// Address of contract to invoke
@@ -24,9 +25,8 @@ pub struct Invoke {
     #[clap(short, long)]
     pub function: String,
 
-    /// Arguments of the called function (serialized as a series of felts or written as comma-separated expressions in Cairo syntax)
-    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
-    pub calldata: Option<Vec<String>>,
+    #[clap(flatten)]
+    pub arguments: Arguments,
 
     #[clap(flatten)]
     pub fee_args: FeeArgs,
