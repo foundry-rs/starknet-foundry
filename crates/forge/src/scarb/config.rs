@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::Result;
 use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
 use serde::{Deserialize, Deserializer};
 use std::{collections::HashSet, num::NonZeroU32};
@@ -66,7 +66,6 @@ pub struct ForgeConfigFromScarb {
     pub max_n_steps: Option<u32>,
 }
 
-#[non_exhaustive]
 #[derive(Debug, PartialEq, Clone, Deserialize)]
 pub struct ForkTarget {
     pub name: String,
@@ -90,39 +89,12 @@ where
     Ok(fork_targets)
 }
 
-impl ForkTarget {
-    pub fn new(name: &str, url: &str, block_id_type: &str, block_id_value: &str) -> Result<Self> {
-        let parsed_url = Url::parse(url).map_err(|_| anyhow!("Failed to parse fork url"))?;
-        let block_id = match block_id_type {
-            "number" => BlockId::BlockNumber(
-                block_id_value
-                    .parse()
-                    .map_err(|_| anyhow!("Failed to parse block number"))?,
-            ),
-            "hash" => BlockId::BlockHash(
-                block_id_value
-                    .parse()
-                    .map_err(|_| anyhow!("Failed to parse block hash"))?,
-            ),
-            "tag" => match block_id_value {
-                "latest" => BlockId::BlockTag,
-                _ => bail!("block_id.tag can only be equal to latest"),
-            },
-            block_id_key => bail!("block_id = {block_id_key} is not valid. Possible values are = \"number\", \"hash\" and \"tag\""),
-        };
-
-        Ok(Self {
-            name: name.to_string(),
-            url: parsed_url,
-            block_id,
-        })
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use num_bigint::BigInt;
+    use cairo_vm::Felt252;
+    use rstest::rstest;
+    use serde_json::json;
     use url::Url;
 
     #[test]
@@ -132,7 +104,16 @@ mod tests {
         let block_id_type = "number";
         let block_id_value = "123";
 
-        let fork_target = ForkTarget::new(name, url, block_id_type, block_id_value).unwrap();
+        let json_str = json!({
+            "name": name,
+            "url": url,
+            "block_id": {
+                block_id_type: block_id_value
+            }
+        })
+        .to_string();
+
+        let fork_target = serde_json::from_str::<ForkTarget>(&json_str).unwrap();
 
         assert_eq!(fork_target.name, name);
         assert_eq!(fork_target.url, Url::parse(url).unwrap());
@@ -147,15 +128,22 @@ mod tests {
     fn test_fork_target_new_valid_hash() {
         let name = "TestFork";
         let url = "http://example.com";
-        let block_id_type = "hash";
-        let block_id_value = "0x1";
 
-        let fork_target = ForkTarget::new(name, url, block_id_type, block_id_value).unwrap();
+        let json_str = json!({
+            "name": name,
+            "url": url,
+            "block_id": {
+                "hash": "0x1"
+            }
+        })
+        .to_string();
+
+        let fork_target = serde_json::from_str::<ForkTarget>(&json_str).unwrap();
 
         assert_eq!(fork_target.name, name);
         assert_eq!(fork_target.url, Url::parse(url).unwrap());
         if let BlockId::BlockHash(hash) = fork_target.block_id {
-            assert_eq!(hash.to_bigint(), BigInt::from(1));
+            assert_eq!(hash, Felt252::from_dec_str("1").unwrap());
         } else {
             panic!("Expected BlockId::BlockHash");
         }
@@ -165,10 +153,17 @@ mod tests {
     fn test_fork_target_new_valid_tag() {
         let name = "TestFork";
         let url = "http://example.com";
-        let block_id_type = "tag";
-        let block_id_value = "latest";
 
-        let fork_target = ForkTarget::new(name, url, block_id_type, block_id_value).unwrap();
+        let json_str = json!({
+            "name": name,
+            "url": url,
+            "block_id": {
+                "tag": "latest"
+            }
+        })
+        .to_string();
+
+        let fork_target = serde_json::from_str::<ForkTarget>(&json_str).unwrap();
 
         assert_eq!(fork_target.name, name);
         assert_eq!(fork_target.url, Url::parse(url).unwrap());
@@ -179,45 +174,45 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_fork_target_new_invalid_url() {
-        let name = "TestFork";
-        let url = "invalid_url";
-        let block_id_type = "number";
-        let block_id_value = "123";
-
-        let result = ForkTarget::new(name, url, block_id_type, block_id_value);
+    // Using rstest for parameterized invalid cases
+    #[rstest]
+    #[case(
+        json!({
+            "name": "TestFork",
+            "url": "invalid_url",
+            "block_id": {
+                "number": "123"
+            }
+        }),
+        "expected relative URL without a base"
+    )]
+    #[case(
+        json!({
+            "name": "TestFork",
+            "url": "http://example.com",
+            "block_id": {
+                "number": "invalid_number"
+            }
+        }),
+        "invalid digit found in string"
+    )]
+    #[case(
+        json!({
+            "name": "TestFork",
+            "url": "http://example.com",
+            "block_id": {
+                "hash": "invalid_hash"
+            }
+        }),
+        "Failed to create Felt from string"
+    )]
+    fn test_fork_target_invalid_cases(
+        #[case] input: serde_json::Value,
+        #[case] expected_error: &str,
+    ) {
+        let json_str = input.to_string();
+        let result = serde_json::from_str::<ForkTarget>(&json_str);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err().to_string(), "Failed to parse fork url");
-    }
-
-    #[test]
-    fn test_fork_target_new_invalid_block_id_value_number() {
-        let name = "TestFork";
-        let url = "http://example.com";
-        let block_id_type = "number";
-        let block_id_value = "invalid_number";
-
-        let result = ForkTarget::new(name, url, block_id_type, block_id_value);
-        assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err().to_string(),
-            "Failed to parse block number"
-        );
-    }
-
-    #[test]
-    fn test_fork_target_new_invalid_block_id_value_hash() {
-        let name = "TestFork";
-        let url = "http://example.com";
-        let block_id_type = "hash";
-        let block_id_value = "invalid_hash";
-
-        let result = ForkTarget::new(name, url, block_id_type, block_id_value);
-        assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err().to_string(),
-            "Failed to parse block hash"
-        );
+        assert!(result.unwrap_err().to_string().contains(expected_error));
     }
 }

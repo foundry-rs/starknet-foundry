@@ -98,6 +98,7 @@ rpassword = "7.3.1"
 promptly = "0.3.1"
 # Freeze reqwest dependency, because newer versions cause cast tests to fail on macs
 reqwest = "=0.11.18"
+rstest = "0.23.0"
 fs_extra = "1.3.0"
 schemars = { version = "0.8.21", features = ["preserve_order"] }
 ark-ff = "0.4.0-alpha.7"

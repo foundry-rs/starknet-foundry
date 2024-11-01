@@ -203,14 +203,26 @@ mod tests {
             ForgeConfigFromScarb {
                 exit_first: false,
                 fork: vec![
-                    ForkTarget::new("FIRST_FORK_NAME", "http://some.rpc.url", "number", "1",)
-                        .unwrap(),
-                    ForkTarget::new("SECOND_FORK_NAME", "http://some.rpc.url", "hash", "10",)
-                        .unwrap(),
-                    ForkTarget::new("THIRD_FORK_NAME", "http://some.rpc.url", "hash", "0xa",)
-                        .unwrap(),
-                    ForkTarget::new("FOURTH_FORK_NAME", "http://some.rpc.url", "tag", "latest",)
-                        .unwrap()
+                    ForkTarget {
+                        name: "FIRST_FORK_NAME".to_string(),
+                        url: "http://some.rpc.url".parse().expect("Should be valid url"),
+                        block_id: BlockId::BlockNumber(1),
+                    },
+                    ForkTarget {
+                        name: "SECOND_FORK_NAME".to_string(),
+                        url: "http://some.rpc.url".parse().expect("Should be valid url"),
+                        block_id: BlockId::BlockHash(0xa.into()),
+                    },
+                    ForkTarget {
+                        name: "THIRD_FORK_NAME".to_string(),
+                        url: "http://some.rpc.url".parse().expect("Should be valid url"),
+                        block_id: BlockId::BlockHash(10.into()),
+                    },
+                    ForkTarget {
+                        name: "FOURTH_FORK_NAME".to_string(),
+                        url: "http://some.rpc.url".parse().expect("Should be valid url"),
+                        block_id: BlockId::BlockTag,
+                    },
                 ],
                 fuzzer_runs: None,
                 fuzzer_seed: None,
@@ -465,13 +477,13 @@ mod tests {
             config,
             ForgeConfigFromScarb {
                 exit_first: false,
-                fork: vec![ForkTarget::new(
-                    "ENV_URL_FORK",
-                    "http://some.rpc.url_from_env",
-                    "number",
-                    "1",
-                )
-                .unwrap()],
+                fork: vec![ForkTarget {
+                    name: "ENV_URL_FORK".to_string(),
+                    url: "http://some.rpc.url_from_env"
+                        .parse()
+                        .expect("Should be valid url"),
+                    block_id: BlockId::BlockNumber(1),
+                }],
                 fuzzer_runs: None,
                 fuzzer_seed: None,
                 max_n_steps: None,
