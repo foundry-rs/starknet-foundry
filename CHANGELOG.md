@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `generate_random_felt()` for generating (pseudo) random felt value. [Read more here](https://foundry-rs.github.io/starknet-foundry/#).
+- `generate_random_felt()` for generating (pseudo) random felt value. [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/generate_random_felt.html).
 
 #### Changed
 
