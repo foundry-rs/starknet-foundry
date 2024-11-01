@@ -8,16 +8,13 @@ use blockifier::fee::gas_usage::{
     get_consumed_message_to_l2_emissions_cost, get_da_gas_cost,
     get_log_message_to_l1_emissions_cost,
 };
-use blockifier::state::cached_state::{CachedState, StorageEntry};
+use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
 use blockifier::transaction::objects::{GasVector, HasRelatedFeeType};
 use blockifier::utils::u128_from_usize;
-use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::ExtendedStateReader;
-use starknet_api::core::{ClassHash, CompiledClassHash, ContractAddress, Nonce};
 use starknet_api::transaction::EventContent;
-use std::collections::HashMap;
 
 pub fn calculate_used_gas(
     transaction_context: &TransactionContext,
@@ -126,47 +123,14 @@ fn get_messages_costs(
     starknet_gas_usage + sharp_gas_usage
 }
 
-fn clear_compiled_class_hash_update(
-    state_changes: blockifier::state::cached_state::StateChanges,
-) -> blockifier::state::cached_state::StateChanges {
-    // copy-pasted blockifier::state::cached_state::StateChanges
-    // link: https://github.com/starkware-libs/blockifier/blob/eb4958ad98d92dc8f8b493edc8dce1a79038c94d/crates/blockifier/src/state/cached_state.rs#L319
-    struct StateMapsCopy {
-        _nonces: HashMap<ContractAddress, Nonce>,
-        _class_hashes: HashMap<ContractAddress, ClassHash>,
-        _storage: HashMap<StorageEntry, Felt252>,
-        compiled_class_hashes: HashMap<ClassHash, CompiledClassHash>,
-        _declared_contracts: HashMap<ClassHash, bool>,
-    }
-
-    // use to cast blockifier::state::cached_state::StateChanges into same struct but public for us
-    union StateMapsHack {
-        origin: std::mem::ManuallyDrop<blockifier::state::cached_state::StateChanges>,
-        public: std::mem::ManuallyDrop<StateMapsCopy>,
-    }
-
-    let mut u = StateMapsHack {
-        origin: std::mem::ManuallyDrop::new(state_changes),
-    };
-    unsafe {
-        // compiled_class_hash_updates is used only for keeping track of declares
-        // which we don't want to include in gas cost
-        // clear on public struct
-        (*u.public).compiled_class_hashes.clear();
-
-        // cast back into original blockifier::state::cached_state::StateChanges
-        std::mem::ManuallyDrop::<blockifier::state::cached_state::StateChanges>::into_inner(
-            u.origin,
-        )
-    }
-}
-
 fn get_l1_data_cost(
     transaction_context: &TransactionContext,
     state: &mut CachedState<ExtendedStateReader>,
 ) -> Result<GasVector, StateError> {
-    let state_changes = state.get_actual_state_changes()?;
-    let state_changes = clear_compiled_class_hash_update(state_changes);
+    let mut state_changes = state.get_actual_state_changes()?;
+    // compiled_class_hash_updates is used only for keeping track of declares
+    // which we don't want to include in gas cost
+    state_changes.0.compiled_class_hashes.clear();
 
     let state_changes_count = state_changes.count_for_fee_charge(
         None,
