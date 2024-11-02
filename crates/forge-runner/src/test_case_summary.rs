@@ -1,5 +1,4 @@
 use crate::build_trace_data::build_profiler_call_trace;
-use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
 use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
@@ -7,6 +6,7 @@ use cairo_annotations::trace_data::VersionedCallTrace as VersionedProfilerCallTr
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
 use cairo_vm::Felt252;
+use camino::Utf8Path;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::CallTrace as InternalCallTrace;
@@ -217,7 +217,7 @@ impl TestCaseSummary<Single> {
         used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
         contracts_data: &ContractsData,
-        maybe_versioned_program_path: &Option<VersionedProgramPath>,
+        versioned_program_path: &Utf8Path,
     ) -> Self {
         let name = test_case.name.clone();
         let msg = extract_result_data(&run_result, &test_case.config.expected_result);
@@ -234,7 +234,7 @@ impl TestCaseSummary<Single> {
                         trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
                             call_trace,
                             contracts_data,
-                            maybe_versioned_program_path,
+                            versioned_program_path,
                         )),
                     };
                     check_available_gas(&test_case.config.available_gas, summary)
@@ -272,7 +272,7 @@ impl TestCaseSummary<Single> {
                         trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
                             call_trace,
                             contracts_data,
-                            maybe_versioned_program_path,
+                            versioned_program_path,
                         )),
                     },
                 },

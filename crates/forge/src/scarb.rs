@@ -9,7 +9,7 @@ use scarb_api::{test_targets_by_name, ScarbCommand};
 use scarb_metadata::PackageMetadata;
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
-use std::fs::read_to_string;
+use std::fs;
 use std::io::ErrorKind;
 
 pub mod config;
@@ -92,8 +92,9 @@ pub fn load_test_artifacts(
             };
 
         let target_file = format!("{target_name}.test.sierra.json");
+        let sierra_program_path = target_dir.join(target_file);
 
-        match read_to_string(target_dir.join(target_file)) {
+        match fs::read_to_string(&sierra_program_path) {
             Ok(value) => {
                 let versioned_program = serde_json::from_str::<VersionedProgram>(&value)?;
 
@@ -104,6 +105,7 @@ pub fn load_test_artifacts(
                 let test_target = TestTargetRaw {
                     sierra_program,
                     tests_location,
+                    sierra_program_path,
                 };
 
                 targets.push(test_target);

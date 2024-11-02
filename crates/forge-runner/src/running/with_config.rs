@@ -78,6 +78,7 @@ pub fn test_target_with_config(test_target_raw: TestTargetRaw) -> Result<TestTar
         tests_location: test_target_raw.tests_location,
         test_cases,
         sierra_program: test_target_raw.sierra_program,
+        sierra_program_path: test_target_raw.sierra_program_path.into(),
         casm_program,
     })
 }

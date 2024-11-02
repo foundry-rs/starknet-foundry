@@ -27,7 +27,6 @@ pub struct TestRunnerConfig {
 pub struct OutputConfig {
     pub detailed_resources: bool,
     pub execution_data_to_save: ExecutionDataToSave,
-    pub versioned_programs_dir: Utf8PathBuf,
 }
 
 #[derive(Debug, PartialEq, Clone, Default)]
