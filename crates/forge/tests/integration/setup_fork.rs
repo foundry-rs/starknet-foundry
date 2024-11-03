@@ -168,7 +168,7 @@ fn fork_aliased_decorator() {
                 fork_targets: vec![ForkTarget {
                     name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
                     url: node_rpc_url().as_str().parse().unwrap(),
-                    block_id: BlockId::BlockNumber(12341234),
+                    block_id: BlockId::BlockTag,
                 }],
             },
             &mut BlockNumberMap::default(),
