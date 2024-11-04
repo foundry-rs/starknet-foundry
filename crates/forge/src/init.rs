@@ -13,9 +13,8 @@ use toml_edit::{value, ArrayOfTables, DocumentMut, Item, Table};
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 
-const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
+const DEFAULT_ASSERT_MACROS: Version = Version::new(2, 8, 4);
 const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
-const MINIMAL_SCARB_FOR_REGISTRY: Version = Version::new(2, 7, 0);
 
 fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
     fs::write(
@@ -185,31 +184,15 @@ pub fn run(project_name: &str) -> Result<()> {
     let cairo_version = ScarbCommand::version().run()?.cairo;
 
     if env::var("DEV_DISABLE_SNFORGE_STD_DEPENDENCY").is_err() {
-        if cairo_version >= MINIMAL_SCARB_FOR_REGISTRY {
-            ScarbCommand::new_with_stdio()
-                .current_dir(&project_path)
-                .manifest_path(scarb_manifest_path.clone())
-                .offline()
-                .arg("add")
-                .arg("--dev")
-                .arg(format!("snforge_std@{}", version))
-                .run()
-                .context("Failed to add snforge_std")?;
-        } else {
-            ScarbCommand::new_with_stdio()
-                .current_dir(&project_path)
-                .manifest_path(scarb_manifest_path.clone())
-                .offline()
-                .arg("add")
-                .arg("--dev")
-                .arg("snforge_std")
-                .arg("--git")
-                .arg("https://github.com/foundry-rs/starknet-foundry.git")
-                .arg("--tag")
-                .arg(format!("v{version}"))
-                .run()
-                .context("Failed to add snforge_std")?;
-        }
+        ScarbCommand::new_with_stdio()
+            .current_dir(&project_path)
+            .manifest_path(scarb_manifest_path.clone())
+            .offline()
+            .arg("add")
+            .arg("--dev")
+            .arg(format!("snforge_std@{}", version))
+            .run()
+            .context("Failed to add snforge_std")?;
     }
 
     ScarbCommand::new_with_stdio()

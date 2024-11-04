@@ -1,5 +1,5 @@
 use super::common::runner::{
-    get_current_branch, get_remote_url, runner, setup_package, snforge_test_bin_path, test_runner,
+    get_current_branch, get_remote_url, runner, setup_package, test_runner,
 };
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use assert_fs::TempDir;
@@ -9,7 +9,6 @@ use forge::CAIRO_EDITION;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::assert_matches;
-use snapbox::cmd::Command as SnapboxCommand;
 use std::ffi::OsString;
 use std::{env, fs, iter, path::Path, str::FromStr};
 use test_utils::{get_local_snforge_std_absolute_path, tempdir_with_tool_versions};
@@ -701,20 +700,38 @@ fn init_new_project() {
 
 #[test]
 fn init_new_project_from_scarb() {
-    let temp = tempdir_with_tool_versions().unwrap();
+    let temp = setup_package("test_name");
+    let version = env!("CARGO_PKG_VERSION");
 
-    SnapboxCommand::new("scarb")
-        .current_dir(&temp)
-        .args(["new", "test_name"])
-        .env("SCARB_INIT_TEST_RUNNER", "starknet-foundry")
-        .env(
-            "PATH",
-            append_to_path_var(snforge_test_bin_path().parent().unwrap()),
-        )
-        .assert()
-        .success();
+    let _output = test_runner(&temp).assert().success();
 
-    validate_init(&temp, true);
+    let manifest_path = temp.join("Scarb.toml");
+    let manifest_contents = std::fs::read_to_string(manifest_path).unwrap();
+
+    let expected = [
+        indoc! {r#"
+            [package]
+            name = "test_name"
+            version = "0.1.0"
+            edition = "2024_07"
+
+            [dependencies]
+            starknet = "2.4.0"
+
+            [dev-dependencies]
+            snforge_std = ""#},
+        version,
+        indoc! {r#"
+
+            [[target.starknet-contract]]
+            sierra = true
+
+            [scripts]
+            test = "snforge test"
+        "#},
+    ].concat();
+
+    assert_eq!(manifest_contents, expected);
 }
 
 pub fn append_to_path_var(path: &Path) -> OsString {
@@ -1113,6 +1130,7 @@ fn test_init_project_with_registry_dependency() -> Result<(), Box<dyn std::error
     let manifest_path = temp.child("test_name/Scarb.toml");
     let manifest_contents = std::fs::read_to_string(manifest_path.path())?;
 
+    // Check for registry dependency format
     assert!(manifest_contents.contains(&format!(
         r#"[dev-dependencies]
 snforge_std = "{version}""#
@@ -1131,13 +1149,7 @@ fn init_new_project_from_scarb_with_registry() {
     let manifest_path = temp.join("Scarb.toml");
     let manifest_contents = std::fs::read_to_string(manifest_path).unwrap();
 
-    // Check for registry dependency format
-    assert!(manifest_contents.contains(&format!(
-        r#"[dev-dependencies]
-snforge_std = "{version}""#
-    )));
-
-    // Check full manifest structure
+    
     let expected = format!(
         indoc! {r#"
             [package]
@@ -1146,11 +1158,10 @@ snforge_std = "{version}""#
             edition = "2024_07"
 
             [dependencies]
-            starknet = "[..]"
+            starknet = "2.4.0"
 
             [dev-dependencies]
             snforge_std = "{}"
-            assert_macros = "[..]"
 
             [[target.starknet-contract]]
             sierra = true
