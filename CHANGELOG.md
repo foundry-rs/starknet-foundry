@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- You can now use numbers without quotes as inputs for calls in multicall config file.
+
 ### Forge
+
+#### Fixed
+
+- Calling contract functions via safe-dispatcher now returns an `Err` when attempting to invoke a non-existent entry point, instead of causing a panic.
 
 #### Changed
 
