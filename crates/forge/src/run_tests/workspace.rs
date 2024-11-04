@@ -35,7 +35,7 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
 
     warn_if_snforge_std_not_compatible(&scarb_metadata)?;
 
-    let snforge_target_dir_path =
+    let artifacts_dir_path =
         target_dir_for_workspace(&scarb_metadata).join(&scarb_metadata.current_profile);
 
     let packages: Vec<PackageMetadata> = args
@@ -76,7 +76,7 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
             &scarb_metadata,
             &args,
             &cache_dir,
-            &snforge_target_dir_path,
+            &artifacts_dir_path,
             versioned_programs_dir.clone(),
         )?;
 

@@ -206,7 +206,9 @@ fn write_call_response(
                 gas_counter,
                 error_data: panic_data,
             },
-            CallFailure::Error { msg } => return Err(HintError::CustomHint(Box::from(msg))),
+            CallFailure::Error { msg } => {
+                return Err(HintError::CustomHint(Box::from(msg.to_string())))
+            }
         },
     };
 

@@ -60,7 +60,7 @@ pub trait TestCaseFilter {
 
 pub fn maybe_save_trace_and_profile(
     result: &AnyTestCaseSummary,
-    execution_data_to_save: ExecutionDataToSave,
+    execution_data_to_save: &ExecutionDataToSave,
 ) -> Result<Option<PathBuf>> {
     if let AnyTestCaseSummary::Single(TestCaseSummary::Passed {
         name, trace_data, ..
@@ -69,7 +69,7 @@ pub fn maybe_save_trace_and_profile(
         if execution_data_to_save.is_vm_trace_needed() {
             let trace_path = save_trace_data(name, trace_data)?;
             if execution_data_to_save.profile {
-                run_profiler(name, &trace_path)?;
+                run_profiler(name, &trace_path, &execution_data_to_save.additional_args)?;
             }
             return Ok(Some(trace_path));
         }
@@ -78,21 +78,24 @@ pub fn maybe_save_trace_and_profile(
 }
 
 pub fn maybe_generate_coverage(
-    execution_data_to_save: ExecutionDataToSave,
+    execution_data_to_save: &ExecutionDataToSave,
     saved_trace_data_paths: &[PathBuf],
 ) -> Result<()> {
     if execution_data_to_save.coverage {
         if saved_trace_data_paths.is_empty() {
             print_as_warning(&anyhow!("No trace data to generate coverage from"));
         } else {
-            run_coverage(saved_trace_data_paths)?;
+            run_coverage(
+                saved_trace_data_paths,
+                &execution_data_to_save.additional_args,
+            )?;
         }
     }
     Ok(())
 }
 
 pub fn maybe_save_versioned_program(
-    execution_data_to_save: ExecutionDataToSave,
+    execution_data_to_save: &ExecutionDataToSave,
     test_target: &TestTargetWithResolvedConfig,
     versioned_programs_dir: &Utf8Path,
     package_name: &str,
@@ -129,7 +132,7 @@ pub fn run_for_test_case(
                 maybe_versioned_program_path,
                 send,
             )
-            .await??;
+            .await?;
             Ok(AnyTestCaseSummary::Single(res))
         })
     } else {
@@ -211,7 +214,7 @@ fn run_with_fuzzing(
 
         let mut results = vec![];
         while let Some(task) = tasks.next().await {
-            let result = task??;
+            let result = task?;
 
             results.push(result.clone());
 
