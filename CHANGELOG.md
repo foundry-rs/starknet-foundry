@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- You can now use numbers without quotes as inputs for calls in multicall config file.
+
 ### Forge
 
 #### Changed
