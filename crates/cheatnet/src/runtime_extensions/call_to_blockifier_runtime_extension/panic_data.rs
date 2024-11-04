@@ -36,6 +36,8 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
         }
     }
 
+    // These felts were chosen from `CairoHintProcessor` in order to be consistent with `cairo-test`:
+    // https://github.com/starkware-libs/cairo/blob/2ad7718591a8d2896fec2b435c509ee5a3da9fad/crates/cairo-lang-runner/src/casm_run/mod.rs#L1055-L1057
     if let Some(_captures) = re_entry_point.captures(err) {
         let panic_data_felts = vec![
             Felt252::from_bytes_be_slice("ENTRYPOINT_NOT_FOUND".as_bytes()),
