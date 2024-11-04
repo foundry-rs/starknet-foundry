@@ -83,7 +83,7 @@ pub async fn import(
     };
     let private_key = &SigningKey::from_secret_scalar(*private_key);
 
-    let account = account.unwrap_or(generate_account_name(accounts_file));
+    let account = account.unwrap_or(generate_account_name(accounts_file)?);
 
     let fetched_class_hash = match provider
         .get_class_hash_at(BlockId::Tag(BlockTag::Pending), import.address)
@@ -201,13 +201,14 @@ fn get_private_key_from_input() -> Result<Felt> {
     parse_input_to_felt(&input)
 }
 
-fn generate_account_name(accounts_file: &Utf8PathBuf) -> String {
+fn generate_account_name(accounts_file: &Utf8PathBuf) -> Result<String> {
     let mut id = 1;
 
-    let networks: NestedMap<AccountData> = match read_and_parse_json_file(accounts_file) {
-        Ok(networks) => networks,
-        Err(_) => return format!("account-{id}"),
-    };
+    if !accounts_file.exists() {
+        return Ok(format!("account-{id}"));
+    }
+
+    let networks: NestedMap<AccountData> = read_and_parse_json_file(accounts_file)?;
     let mut result = HashSet::new();
 
     for (_network, accounts) in networks {
@@ -225,7 +226,7 @@ fn generate_account_name(accounts_file: &Utf8PathBuf) -> String {
         id += 1;
     }
 
-    format!("account-{id}")
+    Ok(format!("account-{id}"))
 }
 
 #[cfg(test)]

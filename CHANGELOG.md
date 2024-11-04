@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- You can now import account without passing in the name via `--name` flag. A default name will be generated for the account. This allows for easier account imports.
+- You can skip `--name` flag when using `account import` - a default name will be generated.
 
 ## [Unreleased]
 
