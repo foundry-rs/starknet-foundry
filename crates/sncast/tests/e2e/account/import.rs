@@ -717,39 +717,24 @@ pub async fn test_happy_case_default_name_generation() {
         "alpha-sepolia",
     ];
 
-    let all_accounts_content = json!(
-        {
-            "alpha-sepolia": {
-              "account-1": {
-                "address": "0x123",
-                "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
-                "deployed": false,
-                "legacy": true,
-                "private_key": "0x456",
-                "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
-                "type": "open_zeppelin"
-              },
-              "account-2": {
-                "address": "0x123",
-                "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
-                "deployed": false,
-                "legacy": true,
-                "private_key": "0x456",
-                "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
-                "type": "open_zeppelin"
-              },
-              "account-3": {
-                "address": "0x123",
-                "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
-                "deployed": false,
-                "legacy": true,
-                "private_key": "0x456",
-                "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
-                "type": "open_zeppelin"
-              },
-            }
-        }
-    );
+    let account_info = json!({
+      "address": "0x123",
+      "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
+      "deployed": false,
+      "legacy": true,
+      "private_key": "0x456",
+      "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
+      "type": "open_zeppelin"
+    });
+
+    let mut all_accounts_content = serde_json::Value::Object(serde_json::Map::new());
+    all_accounts_content["alpha-sepolia"]["account-1"] = account_info.clone();
+    all_accounts_content["alpha-sepolia"]["account-2"] = account_info.clone();
+    all_accounts_content["alpha-sepolia"]["account-3"] = account_info.clone();
+
+    let mut accounts_content_after_delete = serde_json::Value::Object(serde_json::Map::new());
+    accounts_content_after_delete["alpha-sepolia"]["account-1"] = account_info.clone();
+    accounts_content_after_delete["alpha-sepolia"]["account-3"] = account_info.clone();
 
     for _ in 0..3 {
         let snapbox = runner(&import_args).current_dir(tempdir.path());
@@ -765,7 +750,7 @@ pub async fn test_happy_case_default_name_generation() {
 
     assert_eq!(contents_json, all_accounts_content);
 
-    let snapbox = runner(&delete_args).current_dir(tempdir.path());
+    let snapbox = runner(&delete_args).current_dir(tempdir.path()).stdin("Y");
     snapbox.assert().success().stdout_matches(indoc! {r"
         command: account delete
         result: Account successfully removed
@@ -775,33 +760,7 @@ pub async fn test_happy_case_default_name_generation() {
         .expect("Unable to read created file");
     let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
 
-    assert_eq!(
-        contents_json,
-        json!(
-            {
-                "alpha-sepolia": {
-                  "account-1": {
-                    "address": "0x123",
-                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
-                    "deployed": false,
-                    "legacy": true,
-                    "private_key": "0x456",
-                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
-                    "type": "open_zeppelin"
-                  },
-                  "account-3": {
-                    "address": "0x123",
-                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
-                    "deployed": false,
-                    "legacy": true,
-                    "private_key": "0x456",
-                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
-                    "type": "open_zeppelin"
-                  },
-                }
-            }
-        )
-    );
+    assert_eq!(contents_json, accounts_content_after_delete);
 
     let snapbox = runner(&import_args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
