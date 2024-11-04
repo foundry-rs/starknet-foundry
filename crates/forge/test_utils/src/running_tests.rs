@@ -21,17 +21,12 @@ use tokio::runtime::Runtime;
 
 #[must_use]
 pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
-    let scarb_result = ScarbCommand::new_with_stdio()
+    ScarbCommand::new_with_stdio()
         .current_dir(test.path().unwrap())
         .arg("build")
         .arg("--test")
-        .run();
-
-    if let Err(_e) = scarb_result {
-        return vec![TestTargetSummary {
-            test_case_summaries: vec![],
-        }];
-    }
+        .run()
+        .unwrap();
 
     let metadata = ScarbCommand::metadata()
         .current_dir(test.path().unwrap())
