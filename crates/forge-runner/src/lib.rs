@@ -132,7 +132,7 @@ pub fn run_for_test_case(
                 maybe_versioned_program_path,
                 send,
             )
-            .await??;
+            .await?;
             Ok(AnyTestCaseSummary::Single(res))
         })
     } else {
@@ -214,7 +214,7 @@ fn run_with_fuzzing(
 
         let mut results = vec![];
         while let Some(task) = tasks.next().await {
-            let result = task??;
+            let result = task?;
 
             results.push(result.clone());
 
