@@ -58,7 +58,7 @@ Consider adding one of the following versions in your config file at starknet-fo
 This error indicates that `Starknet Foundry` version is unset. To resolve it, set the version globally using asdf:
 
 ```shell
-asdf global starknet-foundry 0.32.0
+asdf global starknet-foundry <version>
 ```
 
 For additional information on asdf version management, see the [asdf](https://asdf-vm.com/guide/getting-started.html#_6-set-a-version)
