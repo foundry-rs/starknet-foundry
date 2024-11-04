@@ -93,8 +93,8 @@ where
 mod tests {
     use super::*;
     use cairo_vm::Felt252;
-    use rstest::rstest;
     use serde_json::json;
+    use test_case::test_case;
     use url::Url;
 
     #[test]
@@ -175,41 +175,40 @@ mod tests {
     }
 
     // Using rstest for parameterized invalid cases
-    #[rstest]
-    #[case(
-        json!({
+    #[test_case(
+        &json!({
             "name": "TestFork",
             "url": "invalid_url",
             "block_id": {
                 "number": "123"
             }
         }),
-        "expected relative URL without a base"
+        "expected relative URL without a base";
+        "invalid url"
     )]
-    #[case(
-        json!({
+    #[test_case(
+        &json!({
             "name": "TestFork",
             "url": "http://example.com",
             "block_id": {
                 "number": "invalid_number"
             }
         }),
-        "invalid digit found in string"
+        "invalid digit found in string";
+        "invalid number"
     )]
-    #[case(
-        json!({
+    #[test_case(
+        &json!({
             "name": "TestFork",
             "url": "http://example.com",
             "block_id": {
                 "hash": "invalid_hash"
             }
         }),
-        "Failed to create Felt from string"
+        "Failed to create Felt from string";
+        "invalid hash"
     )]
-    fn test_fork_target_invalid_cases(
-        #[case] input: serde_json::Value,
-        #[case] expected_error: &str,
-    ) {
+    fn test_fork_target_invalid_cases(input: &serde_json::Value, expected_error: &str) {
         let json_str = input.to_string();
         let result = serde_json::from_str::<ForkTarget>(&json_str);
         assert!(result.is_err());
