@@ -259,8 +259,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # todo: Use scarb version from tool-versions
-      - uses: software-mansion/setup-scarb@v1.3.2
+      - uses: software-mansion/setup-scarb@v1
         with:
+          #
           scarb-version: "2.8.2"
 
       - name: Package and upload snforge_scarb_plugin
