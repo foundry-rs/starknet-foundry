@@ -41,7 +41,7 @@ fn simple_declare() {
                         balance: felt252,
                     }
         
-                    // Increases the balance by the given amount.
+                    // Increases the balance by the given amount
                     #[abi(embed_v0)]
                     impl HelloStarknetImpl of super::IHelloStarknet<ContractState> {
                         fn increase_balance(ref self: ContractState, amount: felt252) {

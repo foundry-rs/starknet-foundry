@@ -28,7 +28,7 @@ pub mod CheatcodeChecker {
 
     #[abi(embed_v0)]
     impl ICheatcodeCheckerImpl of super::ICheatcodeChecker<ContractState> {
-        // Increases the balance by the given amount.
+        // Increases the balance by the given amount
         fn increase_balance(ref self: ContractState, amount: felt252) {
             assert_is_allowed_user();
             self.balance.write(self.balance.read() + amount);

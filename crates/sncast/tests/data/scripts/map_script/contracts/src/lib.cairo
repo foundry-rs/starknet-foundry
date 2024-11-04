@@ -8,19 +8,23 @@ trait IMap<TMapState> {
 
 #[starknet::contract]
 mod Mapa {
+    use starknet::{
+        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map}
+    };
+
     #[storage]
     struct Storage {
-        storage: LegacyMap::<felt252, felt252>,
+        storage: Map<felt252, felt252>
     }
 
     #[abi(embed_v0)]
-    impl Map of super::IMap<ContractState> {
+    impl MapaImpl of super::IMap<ContractState> {
         fn put(ref self: ContractState, key: felt252, value: felt252) {
-            self.storage.write(key, value);
+            self.storage.entry(key).write(value);
         }
 
         fn get(self: @ContractState, key: felt252) -> felt252 {
-            self.storage.read(key)
+            self.storage.entry(key).read()
         }
 
         fn dummy(self: @ContractState) -> felt252 {
@@ -31,19 +35,23 @@ mod Mapa {
 
 #[starknet::contract]
 mod Mapa2 {
+    use starknet::{
+        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map}
+    };
+
     #[storage]
     struct Storage {
-        storage: LegacyMap::<felt252, felt252>,
+        storage: Map<felt252, felt252>,
     }
 
     #[abi(embed_v0)]
-    impl Map of super::IMap<ContractState> {
+    impl Mapa2Impl of super::IMap<ContractState> {
         fn put(ref self: ContractState, key: felt252, value: felt252) {
-            self.storage.write(key, value);
+            self.storage.entry(key).write(value);
         }
 
         fn get(self: @ContractState, key: felt252) -> felt252 {
-            self.storage.read(key)
+            self.storage.entry(key).read()
         }
 
         fn dummy(self: @ContractState) -> felt252 {
