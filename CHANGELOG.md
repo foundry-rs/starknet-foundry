@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Fixed
+
+- Calling contract functions via safe-dispatcher now returns an `Err` when attempting to invoke a non-existent entry point, instead of causing a panic.
+
 #### Changed
 
 - You can now pass arguments to `cairo-profiler` and `cairo-coverage`. Everything after `--` will be passed to underlying binary. E.g.
