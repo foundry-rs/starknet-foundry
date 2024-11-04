@@ -10,6 +10,8 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
     let re_string = Regex::new(r#"(?s)Execution failed\. Failure reason: "(.*?)"\."#)
         .expect("Could not create string panic_data matching regex");
 
+    // CairoVM returns felts padded to 64 characters after 0x, unlike the spec's 63.
+    // This regex (0x[a-fA-F0-9]{0,64}) handles the padded form and is different from the spec.
     let re_entry_point = Regex::new(
         r"Entry point EntryPointSelector\((0x[a-fA-F0-9]{0,64})\) not found in contract\.",
     )
