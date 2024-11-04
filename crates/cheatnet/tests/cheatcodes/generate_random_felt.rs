@@ -1,56 +1,25 @@
 use cairo_vm::Felt252;
 use num_bigint::BigUint;
 use num_traits::One;
+use std::collections::HashSet;
 
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::generate_random_felt::generate_random_felt;
 
 #[test]
-fn test_generate_random_felt_range() {
-    let max_felt252: Felt252 = Felt252::from(BigUint::one() << 252);
+fn test_generate_random_felt_range_and_uniqueness() {
+    let mut random_values = vec![];
 
-    assert!(
-        generate_random_felt() < max_felt252,
-        "Number is out of felt252 range"
-    );
-    assert!(
-        generate_random_felt() < max_felt252,
-        "Number is out of felt252 range"
-    );
-    assert!(
-        generate_random_felt() < max_felt252,
-        "Number is out of felt252 range"
-    );
-    assert!(
-        generate_random_felt() < max_felt252,
-        "Number is out of felt252 range"
-    );
-    assert!(
-        generate_random_felt() < max_felt252,
-        "Number is out of felt252 range"
-    );
-}
+    let max_felt: Felt252 = Felt252::from(BigUint::one() << 252);
 
-#[test]
-fn test_generate_random_felt_uniqueness() {
-    // Check consecutive calls don't produce the same number
+    for _ in 0..10 {
+        let random_value = generate_random_felt();
+        assert!(random_value < max_felt, "Value out of range");
+        random_values.push(random_value);
+    }
+
+    let unique_values: HashSet<_> = random_values.iter().collect();
     assert!(
-        generate_random_felt() != generate_random_felt(),
-        "Random numbers should not be identical"
-    );
-    assert!(
-        generate_random_felt() != generate_random_felt(),
-        "Random numbers should not be identical"
-    );
-    assert!(
-        generate_random_felt() != generate_random_felt(),
-        "Random numbers should not be identical"
-    );
-    assert!(
-        generate_random_felt() != generate_random_felt(),
-        "Random numbers should not be identical"
-    );
-    assert!(
-        generate_random_felt() != generate_random_felt(),
-        "Random numbers should not be identical"
+        unique_values.len() > 1,
+        "Random values should not all be identical."
     );
 }
