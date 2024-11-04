@@ -163,6 +163,7 @@ pub fn run(project_name: &str) -> Result<()> {
             .run()
             .context("Failed to initialize a new project")?;
 
+        // Fetch to create lock file.
         ScarbCommand::new_with_stdio()
             .current_dir(&project_path)
             .manifest_path(scarb_manifest_path.clone())
@@ -191,7 +192,7 @@ pub fn run(project_name: &str) -> Result<()> {
                 .offline()
                 .arg("add")
                 .arg("--dev")
-                .arg(&format!("snforge_std@{version}"))
+                .arg(format!("snforge_std@{}", version))
                 .run()
                 .context("Failed to add snforge_std")?;
         } else {
@@ -225,7 +226,7 @@ pub fn run(project_name: &str) -> Result<()> {
     overwrite_files_from_scarb_template("src", &project_path, project_name)?;
     overwrite_files_from_scarb_template("tests", &project_path, project_name)?;
 
-    // Fetch to create lock file
+    
     ScarbCommand::new_with_stdio()
         .manifest_path(scarb_manifest_path)
         .arg("fetch")

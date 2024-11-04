@@ -211,11 +211,8 @@ impl<'a> TestCase {
     }
 
     #[must_use]
-    pub fn find_test_result(results: &[TestTargetSummary]) -> &TestTargetSummary {
-        results
-            .iter()
-            .find(|tc| !tc.test_case_summaries.is_empty())
-            .unwrap()
+    pub fn find_test_result(results: &[TestTargetSummary]) -> Option<&TestTargetSummary> {
+        results.iter().find(|tc| !tc.test_case_summaries.is_empty())
     }
 }
 
@@ -234,7 +231,9 @@ macro_rules! test_case {
 }
 
 pub fn assert_passed(result: &[TestTargetSummary]) {
-    let result = &TestCase::find_test_result(result).test_case_summaries;
+    let result = &TestCase::find_test_result(result)
+        .expect("No test results found")
+        .test_case_summaries;
 
     assert!(!result.is_empty(), "No test results found");
     assert!(
@@ -244,7 +243,9 @@ pub fn assert_passed(result: &[TestTargetSummary]) {
 }
 
 pub fn assert_failed(result: &[TestTargetSummary]) {
-    let result = &TestCase::find_test_result(result).test_case_summaries;
+    let result = &TestCase::find_test_result(result)
+        .expect("No test results found")
+        .test_case_summaries;
 
     assert!(!result.is_empty(), "No test results found");
     assert!(
@@ -260,7 +261,8 @@ pub fn assert_case_output_contains(
 ) {
     let test_name_suffix = format!("::{test_case_name}");
 
-    let result = TestCase::find_test_result(result);
+    let result = TestCase::find_test_result(result)
+        .expect("No test results found");
 
     assert!(result.test_case_summaries.iter().any(|any_case| {
         if any_case.is_passed() || any_case.is_failed() {
@@ -277,7 +279,7 @@ pub fn assert_case_output_contains(
 pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_gas: u128) {
     let test_name_suffix = format!("::{test_case_name}");
 
-    let result = TestCase::find_test_result(result);
+    let result = TestCase::find_test_result(result).expect("No test results found");
 
     assert!(result.test_case_summaries.iter().any(|any_case| {
         match any_case {
@@ -306,7 +308,8 @@ pub fn assert_syscall(
 ) {
     let test_name_suffix = format!("::{test_case_name}");
 
-    let result = TestCase::find_test_result(result);
+    let result = TestCase::find_test_result(result)
+        .expect("No test results found");
 
     assert!(result.test_case_summaries.iter().any(|any_case| {
         match any_case {
@@ -334,7 +337,8 @@ pub fn assert_builtin(
     expected_count: usize,
 ) {
     let test_name_suffix = format!("::{test_case_name}");
-    let result = TestCase::find_test_result(result);
+    let result = TestCase::find_test_result(result)
+        .expect("No test results found");
 
     assert!(result.test_case_summaries.iter().any(|any_case| {
         match any_case {

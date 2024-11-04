@@ -67,7 +67,7 @@ fn fuzzed_while_loop() {
 
     let test_target_summary = TestCase::find_test_result(&result);
     let AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed { gas_info, .. }) =
-        &test_target_summary.test_case_summaries[0]
+        &test_target_summary.unwrap().test_case_summaries[0]
     else {
         panic!()
     };
