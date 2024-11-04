@@ -7,17 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.0] - 2024-11-04
+
 ### Cast
 
 #### Added
 
 - You can now use numbers without quotes as inputs for calls in multicall config file.
+- New `--arguments` flag to `call`, `invoke` and `deploy` for automatic conversion of Cairo expressions instead of serialized form.
 
 ### Forge
-
-#### Fixed
-
-- Calling contract functions via safe-dispatcher now returns an `Err` when attempting to invoke a non-existent entry point, instead of causing a panic.
 
 #### Changed
 
@@ -33,12 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Scarb features work with optimized compilation
 - Custom test targets are now supported with optimized compilation
-
-### Cast
-
-#### Added
-
-- New `--arguments` flag to `call`, `invoke` and `deploy` for automatic conversion of Cairo expressions instead of serialized form.
+- Calling contract functions via safe-dispatcher now returns an `Err` when attempting to invoke a non-existent entry point, instead of causing a panic.
 
 ## [0.32.0] - 2024-10-16
 
