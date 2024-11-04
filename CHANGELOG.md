@@ -15,8 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - You can skip `--name` flag when using `account import` - a default name will be generated.
 
-## [Unreleased]
-
 ### Cast
 
 #### Added

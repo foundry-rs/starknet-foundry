@@ -736,12 +736,13 @@ pub async fn test_happy_case_default_name_generation() {
     accounts_content_after_delete["alpha-sepolia"]["account-1"] = account_info.clone();
     accounts_content_after_delete["alpha-sepolia"]["account-3"] = account_info.clone();
 
-    for _ in 0..3 {
+    for i in 0..3 {
         let snapbox = runner(&import_args).current_dir(tempdir.path());
-        snapbox.assert().stdout_matches(indoc! {r"
+        snapbox.assert().stdout_matches(formatdoc! {r"
         command: account import
+        account_name: Account imported with name: account-{id}
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-    "});
+    ", id = i + 1});
     }
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -765,6 +766,7 @@ pub async fn test_happy_case_default_name_generation() {
     let snapbox = runner(&import_args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
         command: account import
+        account_name: Account imported with name: account-2
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
     "});
 

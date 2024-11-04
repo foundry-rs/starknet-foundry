@@ -83,7 +83,9 @@ pub async fn import(
     };
     let private_key = &SigningKey::from_secret_scalar(*private_key);
 
-    let account = account.unwrap_or(generate_account_name(accounts_file)?);
+    let account_name = account
+        .clone()
+        .unwrap_or(generate_account_name(accounts_file)?);
 
     let fetched_class_hash = match provider
         .get_class_hash_at(BlockId::Tag(BlockTag::Pending), import.address)
@@ -147,12 +149,12 @@ pub async fn import(
         import.salt,
     );
 
-    write_account_to_accounts_file(&account, accounts_file, chain_id, account_json.clone())?;
+    write_account_to_accounts_file(&account_name, accounts_file, chain_id, account_json.clone())?;
 
     if import.add_profile.is_some() {
         let config = CastConfig {
             url: import.rpc.url.clone().unwrap_or_default(),
-            account,
+            account: account_name.clone(),
             accounts_file: accounts_file.into(),
             ..Default::default()
         };
@@ -160,17 +162,14 @@ pub async fn import(
     }
 
     Ok(AccountImportResponse {
-        add_profile: if import.add_profile.is_some() {
-            format!(
-                "Profile {} successfully added to snfoundry.toml",
-                import
-                    .add_profile
-                    .clone()
-                    .expect("Failed to get profile name")
-            )
-        } else {
-            "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
-        },
+        add_profile: import.add_profile.as_ref().map_or_else(
+            || "--add-profile flag was not set. No profile added to snfoundry.toml".to_string(),
+            |profile_name| format!("Profile {profile_name} successfully added to snfoundry.toml"),
+        ),
+        account_name: account.map_or_else(
+            || Some(format!("Account imported with name: {account_name}")),
+            |_| None,
+        ),
     })
 }
 
@@ -211,8 +210,8 @@ fn generate_account_name(accounts_file: &Utf8PathBuf) -> Result<String> {
     let networks: NestedMap<AccountData> = read_and_parse_json_file(accounts_file)?;
     let mut result = HashSet::new();
 
-    for (_network, accounts) in networks {
-        for (name, _data) in accounts {
+    for (_, accounts) in networks {
+        for (name, _) in accounts {
             if let Some(id) = name
                 .strip_prefix("account-")
                 .and_then(|id| id.parse::<u32>().ok())

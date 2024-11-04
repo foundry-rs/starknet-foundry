@@ -80,6 +80,7 @@ $ sncast \
     --private-key 0x2 \
     --type oz
 ```
+The `--name` can be omitted as this is optional. A default name will be generated for the account.
 
 #### Passing Private Key in an Interactive
 
@@ -133,19 +134,6 @@ $ sncast \
     account import \
 	--url http://127.0.0.1:5050 \
     --name account_oz \
-    --address 0x1 \
-    --private-key 0x2 \
-    --type oz
-```
-
-#### Auto-generated Account Name
-
-To import an account with an auto-generated name, skip the `--name` flag.
-
-```shell
-$ sncast \
-    account import \
-    --url http://127.0.0.1:5050 \
     --address 0x1 \
     --private-key 0x2 \
     --type oz
