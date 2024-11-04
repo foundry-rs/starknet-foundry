@@ -163,7 +163,6 @@ pub fn run(project_name: &str) -> Result<()> {
             .run()
             .context("Failed to initialize a new project")?;
 
-        // Fetch to create lock file.
         ScarbCommand::new_with_stdio()
             .current_dir(&project_path)
             .manifest_path(scarb_manifest_path.clone())
