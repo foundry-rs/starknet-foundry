@@ -21,27 +21,39 @@ use tokio::runtime::Runtime;
 
 #[must_use]
 pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
-    ScarbCommand::new_with_stdio()
-        .current_dir(test.path().unwrap())
+    // First ensure the test path exists and is valid
+    let test_path = test.path().expect("Test path must be valid");
+    
+    // Run scarb build with better error handling
+    let build_result = ScarbCommand::new_with_stdio()
+        .current_dir(&test_path)
         .arg("build")
         .arg("--test")
-        .run()
-        .unwrap();
+        .run();
 
-    let metadata = ScarbCommand::metadata()
-        .current_dir(test.path().unwrap())
-        .run()
-        .unwrap();
+    if let Err(e) = build_result {
+        panic!("Failed to build test package: {}", e);
+    }
+
+    let metadata = match ScarbCommand::metadata()
+        .current_dir(&test_path)
+        .run() 
+    {
+        Ok(meta) => meta,
+        Err(e) => panic!("Failed to get Scarb metadata: {}", e),
+    };
 
     let package = metadata
         .packages
         .iter()
         .find(|p| p.name == "test_package")
-        .unwrap();
+        .expect("Could not find test_package in metadata");
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
-    let raw_test_targets =
-        load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
+    let raw_test_targets = load_test_artifacts(
+        &test_path.join("target/dev"), 
+        package
+    ).expect("Failed to load test artifacts");
 
     rt.block_on(run_for_package(
         RunForPackageArgs {
@@ -49,7 +61,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
             package_name: "test_package".to_string(),
             tests_filter: TestsFilter::from_flags(
                 None,
-                false,
+                false, 
                 false,
                 false,
                 false,
