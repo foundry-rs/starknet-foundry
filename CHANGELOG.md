@@ -14,11 +14,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - You can skip `--name` flag when using `account import` - a default name will be generated.
-
-### Cast
-
-#### Added
-
 - You can now use numbers without quotes as inputs for calls in multicall config file.
 - New `--arguments` flag to `call`, `invoke` and `deploy` for automatic conversion of Cairo expressions instead of serialized form.
 
