@@ -261,7 +261,7 @@ jobs:
       # todo: Use scarb version from tool-versions
       - uses: software-mansion/setup-scarb@v1
         with:
-          #
+          # todo: Use scarb version that support publishing plugins
           scarb-version: "2.8.2"
 
       - name: Package and upload snforge_scarb_plugin
