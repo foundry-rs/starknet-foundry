@@ -31,7 +31,7 @@ unique = false
 call_type = "invoke"
 contract_address = "map_contract"
 function = "put"
-inputs = ["0x123", "234"]
+inputs = ["0x123", 234]  # Numbers can be used directly without quotes
 ```
 
 After running `sncast multicall run --path file.toml --fee-token strk`, a declared contract will be first deployed, and then its function `put` will be invoked.
@@ -39,6 +39,12 @@ After running `sncast multicall run --path file.toml --fee-token strk`, a declar
 > 📝 **Note**
 > The example above demonstrates the use of the `id` property in a deploy call, which is then referenced as the `contract address` in an invoke call.
 Additionally, the `id` can be referenced in the inputs of deploy and invoke calls 🔥
+
+> 💡 **Info**
+> Inputs can be either strings (like `"0x123"`) or numbers (like `234`).
+
+> 📝 **Note**
+> For numbers larger than 2^63 - 1 (that can't fit into `i64`), use string format (e.g., `"9223372036854775808"`) due to TOML parser limitations.
 
 ```shell
 $ sncast multicall run --path /Users/john/Desktop/multicall_example.toml --fee-token strk
