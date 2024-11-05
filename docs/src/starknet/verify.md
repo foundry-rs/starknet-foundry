@@ -19,8 +19,7 @@ Walnut is a tool for step-by-step debugging of Starknet transactions. You can le
 
 ### Voyager
 
-[Voyager](https://voyager.online) is a block explorer for Starknet. It gives developers immediate insight into the state of the starknetnetwork. It also intends to become the one-stop location for all Starknet statistics. Note that Voyager requires you to specify the Starknet version in your `Scarb.toml` config file.
-
+[Voyager](https://voyager.online) is a block explorer for Starknet. It gives developers immediate insight into the state of the Starknet network. Note that Voyager requires you to specify the Starknet version in your `Scarb.toml` config file.
 
 ## Example
 

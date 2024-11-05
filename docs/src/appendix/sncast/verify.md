@@ -5,7 +5,7 @@ Verify Cairo contract on a chosen verification provider.
 Required.
 Conflicts with: `--class-hash`
 
-The address of the contract that is to be verified. Either this or the class hash should be provided.
+The address of the contract that is to be verified.
 
 ## `--class-hash, -c <CLASS_HASH>`
 Required.

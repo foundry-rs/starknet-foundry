@@ -34,11 +34,11 @@ pub struct Verify {
     #[clap(flatten)]
     pub contract_address_or_class_hash: ContractAddressOrClassHashGroup,
 
-    /// Class name of the contract to be verified. Either this or class hash should be provided.
+    /// Class name of the contract to be verified.
     #[clap(short, long)]
     pub class_name: String,
 
-    /// Where you want your contract to be verified
+    /// Verification provider to be used
     #[clap(short, long, value_enum)]
     pub verifier: Verifier,
 
@@ -50,7 +50,7 @@ pub struct Verify {
     #[clap(long, default_value = "false")]
     pub confirm_verification: bool,
 
-    /// Optionally specify package with the contract to be verified
+    /// Specify package with the contract to be verified
     #[clap(long)]
     pub package: Option<String>,
 
