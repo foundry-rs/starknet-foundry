@@ -80,7 +80,7 @@ impl<'de> Deserialize<'de> for BlockId {
                     });
                 }
 
-                block_id.ok_or_else(|| de::Error::missing_field("block_id field"))
+                block_id.ok_or_else(|| de::Error::missing_field("block_id"))
             }
         }
 
