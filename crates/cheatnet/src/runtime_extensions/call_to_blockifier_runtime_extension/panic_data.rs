@@ -10,6 +10,13 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
     let re_string = Regex::new(r#"(?s)Execution failed\. Failure reason: "(.*?)"\."#)
         .expect("Could not create string panic_data matching regex");
 
+    // CairoVM returns felts padded to 64 characters after 0x, unlike the spec's 63.
+    // This regex (0x[a-fA-F0-9]{0,64}) handles the padded form and is different from the spec.
+    let re_entry_point = Regex::new(
+        r"Entry point EntryPointSelector\((0x[a-fA-F0-9]{0,64})\) not found in contract\.",
+    )
+    .expect("Could not create entry point panic_data matching regex");
+
     if let Some(captures) = re_felt_array.captures(err) {
         if let Some(panic_data_match) = captures.get(1) {
             let panic_data_felts: Vec<Felt252> = panic_data_match
@@ -29,6 +36,16 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
                 ByteArray::from(string_match_str).serialize_with_magic();
             return Some(panic_data_felts);
         }
+    }
+
+    // These felts were chosen from `CairoHintProcessor` in order to be consistent with `cairo-test`:
+    // https://github.com/starkware-libs/cairo/blob/2ad7718591a8d2896fec2b435c509ee5a3da9fad/crates/cairo-lang-runner/src/casm_run/mod.rs#L1055-L1057
+    if let Some(_captures) = re_entry_point.captures(err) {
+        let panic_data_felts = vec![
+            Felt252::from_bytes_be_slice("ENTRYPOINT_NOT_FOUND".as_bytes()),
+            Felt252::from_bytes_be_slice("ENTRYPOINT_FAILED".as_bytes()),
+        ];
+        return Some(panic_data_felts);
     }
 
     None
