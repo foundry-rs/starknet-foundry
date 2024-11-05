@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.0] - 2024-11-04
+
+### Cast
+
+#### Added
+
+- You can now use numbers without quotes as inputs for calls in multicall config file.
+- New `--arguments` flag to `call`, `invoke` and `deploy` for automatic conversion of Cairo expressions instead of serialized form.
+
 ### Forge
 
 #### Changed
@@ -15,14 +24,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `snforge test --build-profile -- --show-inlined-functions`
 - You can't use now `--coverage` and `--build-profile` flags at the same time. If you want to use both, you need to run
   `snforge test` twice with different flags.
+- Contract artifacts are compiled to CASM concurrently.
+- Starknet artifacts are now loaded from all tests targets
+- Cairo Edition in `snforge init` template set to `2024_07`
+
+#### Fixed
+
+- Scarb features work with optimized compilation
+- Custom test targets are now supported with optimized compilation
+- Calling contract functions via safe-dispatcher now returns an `Err` when attempting to invoke a non-existent entry point, instead of causing a panic.
 
 ## [0.32.0] - 2024-10-16
 
 ### Cast
-
-#### Added
-
-- Data transformer for passing calldata to transactions as Cairo expressions for automatic conversion instead of serialized form
 
 #### Changed
 
@@ -39,12 +53,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - When using test name filter with `--exact` flag, forge will try to compile only the selected test.
-
-### Forge
-
-#### Changed
-
-- Cairo Edition in `snforge init` template set to `2024_07`
 
 ## [0.31.0] - 2024-09-26
 
