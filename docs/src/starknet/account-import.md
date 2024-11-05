@@ -80,7 +80,8 @@ $ sncast \
     --private-key 0x2 \
     --type oz
 ```
-The `--name` can be omitted as this is optional. A default name will be generated for the account.
+> 📝 **Note** 
+> The `--name` can be omitted as this is optional. A default name will be generated for the account.
 
 #### Passing Private Key in an Interactive
 
