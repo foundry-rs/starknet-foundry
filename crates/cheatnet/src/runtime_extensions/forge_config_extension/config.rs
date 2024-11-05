@@ -42,13 +42,11 @@ impl<'de> Deserialize<'de> for BlockId {
                 A: MapAccess<'de>,
             {
                 let mut block_id = None;
-                let mut field_count = 0;
 
                 while let Some(key) = map.next_key::<String>()? {
-                    field_count += 1;
-                    if field_count > 1 {
+                    if block_id.is_some() {
                         return Err(de::Error::custom(
-                            "block_id must contain exactly one of: tag, hash, or number",
+                            "block_id must contain exactly one key: 'tag', 'hash', or 'number'",
                         ));
                     }
 
