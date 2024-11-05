@@ -741,7 +741,7 @@ fn validate_init(temp: &TempDir, validate_snforge_std: bool) {
         .snfoundry_cache/
         snfoundry_trace/ 
         .snfoundry_versioned_programs/
-        coverage/∅
+        coverage/
         "#,
     )
     .trim_end()
