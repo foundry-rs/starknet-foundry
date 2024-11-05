@@ -182,7 +182,7 @@ mod tests {
                 "number": "123"
             }
         }),
-        "expected relative URL without a base";
+        "relative URL without a base";
         "invalid url"
     )]
     #[test_case(

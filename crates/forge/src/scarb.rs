@@ -346,7 +346,7 @@ mod tests {
         )
         .unwrap_err();
         assert!(format!("{err:?}")
-            .contains("block_id must contain exactly one of: tag, hash, or number"));
+            .contains("block_id must contain exactly one key: 'tag', 'hash', or 'number'"));
     }
 
     #[test]
