@@ -276,8 +276,6 @@ jobs:
           ../scripts/pre_publish.sh $TAG
           scarb update
           scarb publish
-          ../scripts/post_publish.sh "../crates/snforge-scarb-plugin"
-          scarb update
 
       - name: Package and upload sncast_std
         working-directory: ./sncast_std
