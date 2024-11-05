@@ -85,7 +85,7 @@ pub async fn import(
 
     let account_name = account
         .clone()
-        .unwrap_or(generate_account_name(accounts_file)?);
+        .unwrap_or_else(|| generate_account_name(accounts_file).unwrap());
 
     let fetched_class_hash = match provider
         .get_class_hash_at(BlockId::Tag(BlockTag::Pending), import.address)
