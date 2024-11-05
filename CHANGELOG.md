@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- `generate_random_felt()` for generating (pseudo) random felt value.
+
 ## [0.33.0] - 2024-11-04
 
 ### Cast
@@ -17,10 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `--arguments` flag to `call`, `invoke` and `deploy` for automatic conversion of Cairo expressions instead of serialized form.
 
 ### Forge
-
-#### Added
-
-- `generate_random_felt()` for generating (pseudo) random felt value.
 
 #### Changed
 

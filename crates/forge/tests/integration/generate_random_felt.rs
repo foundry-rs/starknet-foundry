@@ -6,7 +6,7 @@ use test_utils::test_case;
 #[test]
 fn simple_generate_random_felt() {
     let test = test_case!(indoc!(
-        r#"
+        r"
         use snforge_std::generate_random_felt;
 
         #[test]
@@ -14,7 +14,6 @@ fn simple_generate_random_felt() {
             let mut random_values = array![];
             let mut unique_values = array![];
             let mut i = 10;
-            let mut k = 0;
 
         while i != 0 {
             let random_value = generate_random_felt();
@@ -23,6 +22,8 @@ fn simple_generate_random_felt() {
         };
 
         for element in random_values.span() {
+            let mut k = 0; 
+
             while k != random_values.len() {
                 if element != random_values.at(k) {
                     unique_values.append(element);
@@ -33,7 +34,7 @@ fn simple_generate_random_felt() {
 
         assert(unique_values.len() > 1, 'Identical values');
         }
-        "#
+        "
     ),);
 
     let result = run_test_case(&test);

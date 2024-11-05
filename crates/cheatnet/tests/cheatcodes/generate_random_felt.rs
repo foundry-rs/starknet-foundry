@@ -1,6 +1,4 @@
 use cairo_vm::Felt252;
-use num_bigint::BigUint;
-use num_traits::One;
 use std::collections::HashSet;
 
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::generate_random_felt::generate_random_felt;
@@ -9,7 +7,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::generate_
 fn test_generate_random_felt_range_and_uniqueness() {
     let mut random_values = vec![];
 
-    let max_felt: Felt252 = Felt252::from(BigUint::one() << 252);
+    let max_felt: Felt252 = Felt252::MAX;
 
     for _ in 0..10 {
         let random_value = generate_random_felt();
