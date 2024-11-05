@@ -17,7 +17,6 @@ const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
 const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
 
 const DEPLOY_PACKAGE_NAME: &str = "deploy";
-const SCRIPT_PACKAGE_VERSION: &str = "0.1.0";
 
 fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
     fs::write(
@@ -74,39 +73,6 @@ fn overwrite_files_from_scarb_template(
 
         fs::write(path, contents)?;
     }
-
-    Ok(())
-}
-
-fn create_deployment_script(base_path: &Path, project_name: &str) -> Result<()> {
-    let scripts_dir = base_path.join("scripts");
-    let deploy_dir = scripts_dir.join(DEPLOY_PACKAGE_NAME);
-    let src_dir = deploy_dir.join("src");
-    fs::create_dir_all(&src_dir)?;
-    
-    // Copying the deploy.cairo file from template
-    let deploy_script_contents = TEMPLATE
-        .get_file("scripts/deploy/src/deploy.cairo")
-        .ok_or_else(|| anyhow!("Deploy script template not found"))?
-        .contents();
-    
-    fs::write(src_dir.join("deploy.cairo"), deploy_script_contents)?;
-
-    // Copying lib.cairo from template
-    let lib_contents = TEMPLATE
-        .get_file("scripts/deploy/src/lib.cairo")
-        .ok_or_else(|| anyhow!("Library template not found"))?
-        .contents();
-    
-    fs::write(src_dir.join("lib.cairo"), lib_contents)?;
-
-    // Copying Scarb.toml from template
-    let scarb_contents = TEMPLATE
-        .get_file("scripts/deploy/Scarb.toml")
-        .ok_or_else(|| anyhow!("Scarb.toml template not found"))?
-        .contents();
-    
-    fs::write(deploy_dir.join("Scarb.toml"), scarb_contents)?;
 
     Ok(())
 }
@@ -188,7 +154,6 @@ pub fn run(project_name: &str) -> Result<()> {
     let scarb_manifest_path = project_path.join("Scarb.toml");
     let snfoundry_manifest_path = project_path.join("snfoundry.toml");
 
-    // if there is no Scarb.toml run `scarb new`
     if !scarb_manifest_path.is_file() {
         ScarbCommand::new_with_stdio()
             .current_dir(current_dir)
@@ -247,8 +212,7 @@ pub fn run(project_name: &str) -> Result<()> {
     extend_gitignore(&project_path)?;
     overwrite_files_from_scarb_template("src", &project_path, project_name)?;
     overwrite_files_from_scarb_template("tests", &project_path, project_name)?;
-
-    create_deployment_script(&project_path, project_name)?;
+    overwrite_files_from_scarb_template("scripts/deploy", &project_path, project_name)?;
 
     // Fetch to create lock file.
     ScarbCommand::new_with_stdio()

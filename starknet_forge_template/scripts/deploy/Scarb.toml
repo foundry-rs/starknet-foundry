@@ -1,0 +1,16 @@
+[package]
+name = "deploy"
+version = "0.1.0"
+
+[dependencies]
+starknet = "2.8.0"
+
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.31.0" }
+sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.32.0" }
+
+[[target.starknet-contract]]
+sierra = true
+casm = true
+
+[tool.snforge]
+exit_first = true

@@ -1,1 +1,4 @@
-pub mod deploy;
+mod deploy;
+#[cfg(test)]
+mod tests;
+
