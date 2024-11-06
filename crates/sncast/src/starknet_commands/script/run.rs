@@ -115,7 +115,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 Ok(CheatcodeHandlingResult::from_serializable(call_result))
             }
             "declare" => {
-                let contract: String = input_reader.read::<ByteArray>()?.into();
+                let contract: String = input_reader.read::<ByteArray>()?.to_string();
                 let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
 

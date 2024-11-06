@@ -10,6 +10,7 @@ use data_transformer::Calldata;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{print_command_result, OutputFormat};
 
+use crate::starknet_commands::deploy::DeployArguments;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use sncast::helpers::configuration::CastConfig;
@@ -26,6 +27,7 @@ use sncast::{
     get_contract_class, get_default_state_file_name, NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::accounts::ConnectedAccount;
+use starknet::core::types::{ContractClass, Felt};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
 use starknet_commands::account::list::print_account_list;
@@ -147,6 +149,54 @@ enum Commands {
     Verify(Verify),
 }
 
+#[derive(Debug, Clone, clap::Args)]
+#[group(multiple = false)]
+pub struct Arguments {
+    /// Arguments of the called function serialized as a series of felts
+    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
+    pub calldata: Option<Vec<String>>,
+
+    // Arguments of the called function as a comma-separated string of Cairo expressions
+    #[clap(long)]
+    pub arguments: Option<String>,
+}
+
+impl Arguments {
+    fn try_into_calldata(
+        self,
+        contract_class: ContractClass,
+        selector: &Felt,
+    ) -> Result<Vec<Felt>> {
+        if let Some(arguments) = self.arguments {
+            Calldata::new(arguments).serialized(contract_class, selector)
+        } else if let Some(calldata) = self.calldata {
+            calldata
+                .iter()
+                .map(|data| {
+                    Felt::from_dec_str(data)
+                        .or_else(|_| Felt::from_hex(data))
+                        .context("Failed to parse to felt")
+                })
+                .collect()
+        } else {
+            Ok(vec![])
+        }
+    }
+}
+
+impl From<DeployArguments> for Arguments {
+    fn from(value: DeployArguments) -> Self {
+        let DeployArguments {
+            constructor_calldata,
+            arguments,
+        } = value;
+        Self {
+            calldata: constructor_calldata,
+            arguments,
+        }
+    }
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
@@ -242,7 +292,7 @@ async fn run_async_command(
             let fee_token = deploy.token_from_version();
 
             let Deploy {
-                constructor_calldata,
+                arguments,
                 fee_args,
                 rpc,
                 ..
@@ -269,14 +319,12 @@ async fn run_async_command(
 
             let contract_class = get_contract_class(deploy.class_hash, &provider).await?;
 
-            let serialized_calldata = constructor_calldata
-                .map(|data| Calldata::from(data).serialized(contract_class, &selector))
-                .transpose()?
-                .unwrap_or_default();
+            let arguments: Arguments = arguments.into();
+            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
 
             let result = starknet_commands::deploy::deploy(
                 deploy.class_hash,
-                &serialized_calldata,
+                &calldata,
                 deploy.salt,
                 deploy.unique,
                 fee_settings,
@@ -301,7 +349,7 @@ async fn run_async_command(
         Commands::Call(Call {
             contract_address,
             function,
-            calldata,
+            arguments,
             block_id,
             rpc,
         }) => {
@@ -314,15 +362,12 @@ async fn run_async_command(
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let serialized_calldata = calldata
-                .map(|data| Calldata::from(data).serialized(contract_class, &selector))
-                .transpose()?
-                .unwrap_or_default();
+            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
 
             let result = starknet_commands::call::call(
                 contract_address,
                 selector,
-                serialized_calldata,
+                calldata,
                 &provider,
                 block_id.as_ref(),
             )
@@ -341,7 +386,7 @@ async fn run_async_command(
             let Invoke {
                 contract_address,
                 function,
-                calldata,
+                arguments,
                 fee_args,
                 rpc,
                 nonce,
@@ -366,14 +411,11 @@ async fn run_async_command(
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
-            let serialized_calldata = calldata
-                .map(|data| Calldata::from(data).serialized(contract_class, &selector))
-                .transpose()?
-                .unwrap_or_default();
+            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
 
             let result = starknet_commands::invoke::invoke(
                 contract_address,
-                serialized_calldata,
+                calldata,
                 nonce,
                 fee_args,
                 selector,
@@ -446,7 +488,7 @@ async fn run_async_command(
             account::Commands::Import(import) => {
                 let provider = import.rpc.get_provider(&config).await?;
                 let result = starknet_commands::account::import::import(
-                    &import.name.clone(),
+                    import.name.clone(),
                     &config.accounts_file,
                     &provider,
                     &import,

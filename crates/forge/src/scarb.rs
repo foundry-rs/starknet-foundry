@@ -1,15 +1,14 @@
-use crate::scarb::config::{ForgeConfigFromScarb, RawForgeConfig};
+use crate::scarb::config::ForgeConfigFromScarb;
 use anyhow::{Context, Result};
 use cairo_lang_sierra::program::VersionedProgram;
 use camino::Utf8Path;
 use configuration::PackageConfig;
 use forge_runner::package_tests::raw::TestTargetRaw;
 use forge_runner::package_tests::TestTargetLocation;
-use scarb_api::ScarbCommand;
-use scarb_metadata::{PackageMetadata, TargetMetadata};
+use scarb_api::{test_targets_by_name, ScarbCommand};
+use scarb_metadata::PackageMetadata;
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
-use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::io::ErrorKind;
 
@@ -26,11 +25,7 @@ impl PackageConfig for ForgeConfigFromScarb {
     where
         Self: Sized,
     {
-        let raw_config = serde_json::from_value::<RawForgeConfig>(config.clone())?;
-
-        raw_config
-            .try_into()
-            .context("Invalid config in Scarb.toml: ")
+        serde_json::from_value(config.clone()).context("Failed to parse snforge config")
     }
 }
 
@@ -74,27 +69,6 @@ fn build_test_artifacts_with_scarb(filter: PackagesFilter, features: FeaturesSpe
         .run()
         .context("Failed to build test artifacts with Scarb")?;
     Ok(())
-}
-
-/// collecting by name allow us to dedup targets
-/// we do it because they use same sierra and we display them without distinction anyway
-fn test_targets_by_name(package: &PackageMetadata) -> HashMap<String, &TargetMetadata> {
-    fn test_target_name(target: &TargetMetadata) -> String {
-        // this is logic copied from scarb: https://github.com/software-mansion/scarb/blob/90ab01cb6deee48210affc2ec1dc94d540ab4aea/extensions/scarb-cairo-test/src/main.rs#L115
-        target
-            .params
-            .get("group-id") // by unit tests grouping
-            .and_then(|v| v.as_str())
-            .map(ToString::to_string)
-            .unwrap_or(target.name.clone()) // else by integration test name
-    }
-
-    package
-        .targets
-        .iter()
-        .filter(|target| target.kind == "test")
-        .map(|target| (test_target_name(target), target))
-        .collect()
 }
 
 pub fn load_test_artifacts(
@@ -229,14 +203,26 @@ mod tests {
             ForgeConfigFromScarb {
                 exit_first: false,
                 fork: vec![
-                    ForkTarget::new("FIRST_FORK_NAME", "http://some.rpc.url", "number", "1",)
-                        .unwrap(),
-                    ForkTarget::new("SECOND_FORK_NAME", "http://some.rpc.url", "hash", "10",)
-                        .unwrap(),
-                    ForkTarget::new("THIRD_FORK_NAME", "http://some.rpc.url", "hash", "0xa",)
-                        .unwrap(),
-                    ForkTarget::new("FOURTH_FORK_NAME", "http://some.rpc.url", "tag", "latest",)
-                        .unwrap()
+                    ForkTarget {
+                        name: "FIRST_FORK_NAME".to_string(),
+                        url: "http://some.rpc.url".parse().expect("Should be valid url"),
+                        block_id: BlockId::BlockNumber(1),
+                    },
+                    ForkTarget {
+                        name: "SECOND_FORK_NAME".to_string(),
+                        url: "http://some.rpc.url".parse().expect("Should be valid url"),
+                        block_id: BlockId::BlockHash(0xa.into()),
+                    },
+                    ForkTarget {
+                        name: "THIRD_FORK_NAME".to_string(),
+                        url: "http://some.rpc.url".parse().expect("Should be valid url"),
+                        block_id: BlockId::BlockHash(10.into()),
+                    },
+                    ForkTarget {
+                        name: "FOURTH_FORK_NAME".to_string(),
+                        url: "http://some.rpc.url".parse().expect("Should be valid url"),
+                        block_id: BlockId::BlockTag,
+                    },
                 ],
                 fuzzer_runs: None,
                 fuzzer_seed: None,
@@ -328,7 +314,6 @@ mod tests {
             &scarb_metadata.workspace.members[0],
         )
         .unwrap_err();
-
         assert!(format!("{err:?}").contains("Some fork names are duplicated"));
     }
 
@@ -360,7 +345,8 @@ mod tests {
             &scarb_metadata.workspace.members[0],
         )
         .unwrap_err();
-        assert!(format!("{err:?}").contains("block_id should be set once per fork"));
+        assert!(format!("{err:?}")
+            .contains("block_id must contain exactly one key: 'tag', 'hash', or 'number'"));
     }
 
     #[test]
@@ -391,9 +377,8 @@ mod tests {
             &scarb_metadata.workspace.members[0],
         )
         .unwrap_err();
-        assert!(
-            format!("{err:?}").contains("block_id = wrong_variant is not valid. Possible values are = \"number\", \"hash\" and \"tag\"")
-        );
+        assert!(format!("{err:?}")
+            .contains("unknown field `wrong_variant`, expected one of `tag`, `hash`, `number`"));
     }
 
     #[test]
@@ -492,13 +477,13 @@ mod tests {
             config,
             ForgeConfigFromScarb {
                 exit_first: false,
-                fork: vec![ForkTarget::new(
-                    "ENV_URL_FORK",
-                    "http://some.rpc.url_from_env",
-                    "number",
-                    "1",
-                )
-                .unwrap()],
+                fork: vec![ForkTarget {
+                    name: "ENV_URL_FORK".to_string(),
+                    url: "http://some.rpc.url_from_env"
+                        .parse()
+                        .expect("Should be valid url"),
+                    block_id: BlockId::BlockNumber(1),
+                }],
                 fuzzer_runs: None,
                 fuzzer_seed: None,
                 max_n_steps: None,

@@ -5,6 +5,7 @@ use cairo_lang_runner::short_string::as_cairo_short_string_ex;
 use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
 use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
 use starknet_types_core::felt::Felt as Felt252;
+use std::fmt;
 
 #[derive(CairoDeserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct ByteArray {
@@ -54,17 +55,17 @@ impl ByteArray {
     }
 }
 
-impl From<ByteArray> for String {
-    fn from(value: ByteArray) -> Self {
-        let full_words_string = value
+impl fmt::Display for ByteArray {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let full_words_string = self
             .words
             .iter()
             .map(|word| as_cairo_short_string_ex(word, BYTES_IN_WORD).unwrap())
             .collect::<String>();
 
         let pending_word_string =
-            as_cairo_short_string_ex(&value.pending_word, value.pending_word_len).unwrap();
+            as_cairo_short_string_ex(&self.pending_word, self.pending_word_len).unwrap();
 
-        format!("{full_words_string}{pending_word_string}")
+        write!(f, "{full_words_string}{pending_word_string}")
     }
 }

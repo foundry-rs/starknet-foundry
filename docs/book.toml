@@ -11,8 +11,9 @@ warning-policy = "error"
 follow-web-links = true
 traverse-parent-directories = false
 exclude = [
-    "https://foundry-rs.github.io/starknet-foundry/snforge_std/",
-    "https://foundry-rs.github.io/starknet-foundry/sncast_std/"
+    "foundry-rs.github.io/starknet-foundry/snforge_std",
+    "foundry-rs.github.io/starknet-foundry/sncast_std",
+    "starknet-faucet.vercel.app"
 ]
 
 [output.html]
