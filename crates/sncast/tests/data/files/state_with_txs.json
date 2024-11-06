@@ -13,6 +13,17 @@
       "timestamp": 1706093159,
       "misc": null
     },
+    "111aaa111": {
+      "name": "declare",
+      "output": {
+        "type": "DeclareResponse",
+        "status": "AlreadyDeclared",
+        "class_hash": "0x123"
+      },
+      "status": "Success",
+      "timestamp": 1706093159,
+      "misc": null
+    },
     "789def420": {
       "name": "deploy",
       "output": {
