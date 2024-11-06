@@ -21,7 +21,7 @@ fn main() {
         DeclareResult::AlreadyDeclared(_) => panic!("Should not be already declared"),
     };
 
-    // Check declare result trait is implemented correcly for Success
+    // Check declare result trait is implemented correctly for Success
     assert(*first_declare_result.class_hash() == class_hash, 'Class hashes must be equal');
 
     let declare_nonce = get_nonce('latest');
@@ -40,7 +40,7 @@ fn main() {
         ),
     }
 
-    // Check declare result trait is implemented correcly for AlreadyDeclared
+    // Check declare result trait is implemented correctly for AlreadyDeclared
     assert(*second_declare_result.class_hash() == class_hash, 'Class hashes must be equal');
 
     println!("{:?}", first_declare_result);
