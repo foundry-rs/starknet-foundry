@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - You can skip `--name` flag when using `account import` - a default name will be generated.
 
+#### Changed
+
+- In scripts, changed return type of `declare` so it can handle already declared contracts without failing
+
 ## [0.33.0] - 2024-11-04
 
 ### Cast
