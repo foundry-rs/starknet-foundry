@@ -291,7 +291,7 @@ async fn test_contract_already_declared() {
         output,
         indoc! {r"
         command: declare
-        error: An error occurred [..]Class with hash[..]is already declared[..]
+        error: [..]Class with hash[..]is already declared[..]
         "},
     );
 }
