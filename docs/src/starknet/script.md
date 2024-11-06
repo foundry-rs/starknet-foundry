@@ -305,7 +305,7 @@ command: script run
 status: success
 ```
 
-whereas, when we run the same script once again with `--no-state-file` flag set, it fails (as the `Map` contract is already declared):
+whereas, when we run the same script once again with `--no-state-file` flag set, it fails (as the `Map` contract is already deployed):
 
 ```shell
 $ sncast \
@@ -316,7 +316,7 @@ $ sncast \
 
 command: script run
 message:
-    0x636f6e747261637420616c7265616479206465636c61726564 ('contract already declared')
+    0x6d6170206465706c6f79206661696c6564 ('map deploy failed')
 
 status: script panicked
 ```
