@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- You can skip `--name` flag when using `account import` - a default name will be generated.
+
 ## [0.33.0] - 2024-11-04
 
 ### Cast

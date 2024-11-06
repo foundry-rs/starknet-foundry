@@ -474,7 +474,7 @@ async fn run_async_command(
             account::Commands::Import(import) => {
                 let provider = import.rpc.get_provider(&config).await?;
                 let result = starknet_commands::account::import::import(
-                    &import.name.clone(),
+                    import.name.clone(),
                     &config.accounts_file,
                     &provider,
                     &import,
