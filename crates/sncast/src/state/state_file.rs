@@ -591,7 +591,7 @@ mod tests {
         let result = read_txs_from_state_file(&temp_state_file).expect("Failed to read state file");
         let mut entries = result.unwrap();
         let transaction_entry = entries.transactions.get(&tx_id).unwrap();
-        assert_eq!(entries.transactions.len(), 2);
+        assert_eq!(entries.transactions.len(), 3);
         assert_eq!(transaction_entry.status, ScriptTransactionStatus::Fail);
 
         let new_transaction = ScriptTransactionEntry {
@@ -613,7 +613,7 @@ mod tests {
         let result = read_txs_from_state_file(&temp_state_file).expect("Failed to read state file");
         let entries = result.unwrap();
         let transaction_entry = entries.transactions.get(&tx_id).unwrap();
-        assert_eq!(entries.transactions.len(), 2);
+        assert_eq!(entries.transactions.len(), 3);
         assert_eq!(transaction_entry.status, ScriptTransactionStatus::Success);
     }
 }
