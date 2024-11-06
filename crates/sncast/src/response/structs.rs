@@ -66,6 +66,7 @@ impl CommandResponse for AccountCreateResponse {}
 #[derive(Serialize)]
 pub struct AccountImportResponse {
     pub add_profile: String,
+    pub account_name: Option<String>,
 }
 
 impl CommandResponse for AccountImportResponse {}
