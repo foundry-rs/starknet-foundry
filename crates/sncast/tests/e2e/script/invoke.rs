@@ -68,7 +68,7 @@ async fn test_contract_does_not_exist() {
         output,
         indoc! {r#"
         [..]
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Transaction execution has failed:
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
         [..]
         [..]: Error in the called contract ([..]):
         Requested contract address [..] is not deployed.
@@ -105,7 +105,7 @@ fn test_wrong_function_name() {
         output,
         indoc! {r#"
         [..]
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Transaction execution has failed:
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
         [..]
         [..]: Error in the called contract ([..]):
         Entry point EntryPointSelector([..]) not found in contract.
@@ -142,7 +142,7 @@ fn test_wrong_calldata() {
         output,
         indoc! {r#"
         [..]
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Transaction execution has failed:
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
         [..]
         [..]: Error in the called contract ([..]):
         Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
