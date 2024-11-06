@@ -1,5 +1,5 @@
 #[starknet::interface]
-trait ICheatBlockTimestampChecker<TContractState> {
+trait ICheatBlockHashChecker<TContractState> {
     fn get_block_hash(ref self: TContractState) -> felt252;
     fn get_block_hash_and_emit_event(ref self: TContractState) -> felt252;
     fn get_block_hash_and_number(ref self: TContractState) -> (felt252, u64);
@@ -35,7 +35,7 @@ mod CheatBlockHashChecker {
             block_hash
         }
 
-        fn get_block_timestamp_and_emit_event(ref self: ContractState) -> u64 {
+        fn get_block_hash_and_emit_event(ref self: ContractState) -> u64 {
             let block_info = get_block_info().unbox();
             let block_hash = get_block_hash_syscall(block_info.block_number - 10).unwrap_syscall();
 
@@ -43,7 +43,7 @@ mod CheatBlockHashChecker {
             block_hash
         }
 
-        fn get_block_timestamp_and_number(ref self: ContractState) -> (u64, u64) {
+        fn get_block_hash_and_number(ref self: ContractState) -> (u64, u64) {
             let block_info = starknet::get_block_info().unbox();
             let block_hash = get_block_hash_syscall(block_info.block_number - 10).unwrap_syscall();
 
