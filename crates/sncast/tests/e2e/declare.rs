@@ -265,7 +265,11 @@ async fn test_happy_case_specify_package() {
 
 #[tokio::test]
 async fn test_contract_already_declared() {
-    let tempdir = duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "8512851");
+    let tempdir = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "8512851",
+    );
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -334,7 +338,11 @@ async fn test_invalid_nonce() {
 
 #[tokio::test]
 async fn test_wrong_contract_name_passed() {
-    let tempdir = duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "521754725");
+    let tempdir = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "521754725",
+    );
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -444,8 +452,11 @@ fn test_scarb_build_fails_manifest_does_not_exist() {
 
 #[test]
 fn test_too_low_max_fee() {
-    let contract_path =
-        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "2451825");
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "2451825",
+    );
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![

@@ -1,6 +1,6 @@
 use sncast_std::{
-    get_nonce, declare, DeclareResult, DeclareResultTrait, ScriptCommandError, ProviderError, StarknetError,
-    FeeSettings, EthFeeSettings
+    get_nonce, declare, DeclareResult, DeclareResultTrait, ScriptCommandError, ProviderError,
+    StarknetError, FeeSettings, EthFeeSettings
 };
 
 fn main() {
@@ -14,7 +14,7 @@ fn main() {
     )
         .expect('declare failed');
     println!("success");
-    
+
     // Check if contract was declared successfully
     let class_hash = match first_declare_result {
         DeclareResult::Success(declare_transaction_result) => declare_transaction_result.class_hash,
@@ -32,10 +32,12 @@ fn main() {
     )
         .expect('second declare failed');
 
-    // Check if already declared contract was handled correctly 
+    // Check if already declared contract was handled correctly
     match second_declare_result {
         DeclareResult::Success(_) => panic!("Should be already declare"),
-        DeclareResult::AlreadyDeclared(already_declared_result) => assert!(already_declared_result.class_hash == class_hash),
+        DeclareResult::AlreadyDeclared(already_declared_result) => assert!(
+            already_declared_result.class_hash == class_hash
+        ),
     }
 
     // Check declare result trait is implemented correcly for AlreadyDeclared

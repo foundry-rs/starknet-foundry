@@ -149,7 +149,7 @@ pub struct DeclareTransactionResult {
 
 #[derive(Drop, Copy, Debug, Serde)]
 pub struct AlreadyDeclaredResult {
-    pub class_hash: ClassHash,   
+    pub class_hash: ClassHash,
 }
 
 pub trait DeclareResultTrait {
@@ -168,8 +168,13 @@ impl DeclareResultImpl of DeclareResultTrait {
 impl DisplayDeclareResult of Display<DeclareResult> {
     fn fmt(self: @DeclareResult, ref f: Formatter) -> Result<(), Error> {
         match self {
-            DeclareResult::Success(result) =>  write!(f, "class_hash: {}, transaction_hash: {}", result.class_hash, result.transaction_hash),
-            DeclareResult::AlreadyDeclared(result) =>  write!(f, "class_hash: {}", result.class_hash)
+            DeclareResult::Success(result) => write!(
+                f,
+                "class_hash: {}, transaction_hash: {}",
+                result.class_hash,
+                result.transaction_hash
+            ),
+            DeclareResult::AlreadyDeclared(result) => write!(f, "class_hash: {}", result.class_hash)
         }
     }
 }

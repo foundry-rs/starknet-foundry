@@ -1,6 +1,6 @@
 use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeclareResultTrait, DeployResult, InvokeResult, CallResult, get_nonce,
-    FeeSettings, EthFeeSettings
+    declare, deploy, invoke, call, DeclareResult, DeclareResultTrait, DeployResult, InvokeResult,
+    CallResult, get_nonce, FeeSettings, EthFeeSettings
 };
 
 fn main() {

@@ -13,8 +13,6 @@ use test_case::test_case;
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 async fn test_happy_case(account: &str) {
-    let tempdir = create_and_deploy_oz_account().await;
-
     let path = project_root::get_project_root().expect("failed to get project root path");
     let path = Path::new(&path)
         .join(MULTICALL_CONFIGS_DIR)
@@ -23,9 +21,9 @@ async fn test_happy_case(account: &str) {
 
     let args = vec![
         "--accounts-file",
-        "accounts.json",
+        ACCOUNT_FILE_PATH,
         "--account",
-        "my_account",
+        account,
         "multicall",
         "run",
         "--url",
@@ -36,7 +34,7 @@ async fn test_happy_case(account: &str) {
         "eth",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args);
     let output = snapbox.assert();
 
     let stderr_str = output.as_stderr();
