@@ -1,6 +1,7 @@
 [package]
 name = "fibonacci"
 version.workspace = true
+edition = "2023_10"
 
 [scripts]
 test.workspace = true
