@@ -10,6 +10,7 @@ use crate::runtime_extensions::{
     forge_runtime_extension::cheatcodes::{
         declare::declare,
         deploy::{deploy, deploy_at},
+        generate_random_felt::generate_random_felt,
         get_class_hash::get_class_hash,
         l1_handler_execute::l1_handler_execute,
         storage::{calculate_variable_address, load, store},
@@ -473,6 +474,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     map_entry_address,
                 ))
             }
+            "generate_random_felt" => Ok(CheatcodeHandlingResult::from_serializable(
+                generate_random_felt(),
+            )),
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }
     }
