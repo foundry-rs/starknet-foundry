@@ -233,7 +233,6 @@ async fn test_sncast_timed_out() {
     "});
 }
 
-// TODO investigate failure
 #[tokio::test]
 async fn test_strk_fee_settings() {
     let contract_dir = duplicate_contract_directory_with_salt(
