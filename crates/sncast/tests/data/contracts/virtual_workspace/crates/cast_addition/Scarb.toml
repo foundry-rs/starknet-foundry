@@ -1,6 +1,7 @@
 [package]
 name = "cast_addition"
 version = "0.1.0"
+edition = "2023_10"
 
 [dependencies]
 starknet.workspace = true
