@@ -63,8 +63,9 @@ impl CommandResponse for AlreadyDeclaredResponse {}
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 #[serde(tag = "status")]
 pub enum DeclareResponse {
-    Success(DeclareTransactionResponse),
     AlreadyDeclared(AlreadyDeclaredResponse),
+    #[serde(untagged)]
+    Success(DeclareTransactionResponse),
 }
 
 impl CommandResponse for DeclareResponse {}

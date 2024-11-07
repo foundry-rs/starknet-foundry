@@ -137,8 +137,8 @@ pub fn call(
 
 #[derive(Drop, Copy, Debug, Serde)]
 pub enum DeclareResult {
-    Success: DeclareTransactionResult,
     AlreadyDeclared: AlreadyDeclaredResult,
+    Success: DeclareTransactionResult,
 }
 
 #[derive(Drop, Copy, Debug, Serde)]

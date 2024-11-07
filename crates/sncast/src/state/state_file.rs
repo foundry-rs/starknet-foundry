@@ -354,6 +354,17 @@ mod tests {
     }
 
     #[test]
+    fn test_load_or_create_state_file_exists_with_tx_pre_0_34_0() {
+        let state_file = Utf8PathBuf::from("tests/data/files/pre_0.34.0_state_with_tx.json");
+        let result = load_or_create_state_file(&state_file).unwrap();
+
+        assert_eq!(
+            result.transactions.unwrap().get("123abc789").unwrap().name,
+            "declare"
+        );
+    }
+
+    #[test]
     fn test_load_or_create_state_file_exists_with_txs() {
         let state_file = Utf8PathBuf::from("tests/data/files/state_with_txs.json");
         let result = load_or_create_state_file(&state_file).unwrap();
