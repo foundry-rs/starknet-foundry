@@ -1,6 +1,7 @@
 [package]
 name = "cast_fibonacci"
 version = "0.1.0"
+edition = "2023_10"
 
 [dependencies]
 cast_addition = { path = "../cast_addition" }

@@ -107,10 +107,7 @@ impl ParseFromExpr<Expr> for String {
         arg_name: &str,
     ) -> Result<Self, Diagnostic> {
         match expr {
-            Expr::String(string) => match string.string_value(db) {
-                None => Err(T::error(format!("<{arg_name}> is not a valid string"))),
-                Some(string) => Ok(string),
-            },
+            Expr::String(string) => Ok(string.text(db).trim_matches('"').to_string()),
             _ => Err(T::error(format!(
                 "<{arg_name}> invalid type, should be: double quotted string"
             ))),
