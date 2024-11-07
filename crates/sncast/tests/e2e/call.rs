@@ -1,8 +1,12 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, MAP_CONTRACT_ADDRESS_SEPOLIA, URL};
+use crate::helpers::constants::{
+    ACCOUNT_FILE_PATH, DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
+};
 use crate::helpers::fixtures::invoke_contract;
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
+use snapbox::cmd::{cargo_bin, Command};
+use std::path::PathBuf;
 
 #[test]
 fn test_happy_case() {
@@ -33,8 +37,6 @@ fn test_happy_case() {
 #[test]
 fn test_happy_case_cairo_expression_calldata() {
     let args = vec![
-        "--accounts-file",
-        ACCOUNT_FILE_PATH,
         "call",
         "--url",
         URL,
@@ -42,8 +44,8 @@ fn test_happy_case_cairo_expression_calldata() {
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "put",
-        "--calldata",
-        "(0x0_felt252, 0x2137)",
+        "--arguments",
+        "0x0_felt252, 0x2137",
         "--block-id",
         "latest",
     ];
@@ -225,4 +227,16 @@ fn test_wrong_block_id() {
         error: Block was not found
         "},
     );
+}
+
+#[test]
+fn test_happy_case_shell() {
+    let test_path = PathBuf::from("tests/shell/call.sh").canonicalize().unwrap();
+    let binary_path = cargo_bin!("sncast");
+
+    let snapbox = Command::new(test_path)
+        .arg(binary_path)
+        .arg(URL)
+        .arg(DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA);
+    snapbox.assert().success();
 }
