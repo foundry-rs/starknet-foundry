@@ -10,7 +10,7 @@ use std::io::Write;
 use std::str::from_utf8;
 use tempfile::Builder;
 
-use crate::utils::get_spinner_message;
+use crate::utils::spawn_spinner_message;
 pub use command::*;
 use shared::command::CommandExt;
 
@@ -69,7 +69,7 @@ pub fn compile_sierra_at_path(
     sierra_file_path: &Utf8PathBuf,
     sierra_type: &SierraType,
 ) -> Result<String> {
-    let printed_message = get_spinner_message(sierra_file_path)?;
+    let printed_message = spawn_spinner_message(sierra_file_path)?;
 
     let mut usc_command = UniversalSierraCompilerCommand::new();
     let usc_output = usc_command

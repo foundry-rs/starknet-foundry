@@ -4,7 +4,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use std::env;
 use std::time::Duration;
 
-pub fn get_spinner_message(sierra_file_path: &Utf8PathBuf) -> Result<ProgressBar> {
+pub fn spawn_spinner_message(sierra_file_path: &Utf8PathBuf) -> Result<ProgressBar> {
     let spinner = ProgressBar::new_spinner();
     spinner.set_style(ProgressStyle::with_template("\n{spinner} {msg}\n")?);
     spinner.enable_steady_tick(Duration::from_millis(100));
@@ -15,7 +15,7 @@ pub fn get_spinner_message(sierra_file_path: &Utf8PathBuf) -> Result<ProgressBar
         "Compiling Sierra to Casm".to_string()
     } else {
         format!(
-            "Compiling Sierra to Casm ({})",
+            "Compiling SIERRA to CASM ({})",
             sierra_file_path.canonicalize_utf8()?
         )
     };
