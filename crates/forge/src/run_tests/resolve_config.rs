@@ -147,7 +147,7 @@ mod tests {
         let mocked_tests = TestTargetWithConfig {
             sierra_program: program_for_testing(),
             casm_program: Arc::new(
-                compile_sierra_to_casm(&program_for_testing().program, None).unwrap(),
+                compile_sierra_to_casm(None, &program_for_testing().program).unwrap(),
             ),
             test_cases: vec![TestCaseWithConfig {
                 name: "crate1::do_thing".to_string(),

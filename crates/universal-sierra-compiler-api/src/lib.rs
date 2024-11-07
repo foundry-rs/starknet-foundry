@@ -38,8 +38,8 @@ pub struct AssembledCairoProgramWithSerde {
 }
 
 pub fn compile_sierra_to_casm(
-    sierra_program: &Program,
     sierra_file_path: Option<&Utf8PathBuf>,
+    sierra_program: &Program,
 ) -> Result<AssembledProgramWithDebugInfo> {
     let assembled_with_info_raw = if let Some(sierra_file_path) = sierra_file_path {
         compile_sierra_at_path(sierra_file_path, &SierraType::Raw)?
