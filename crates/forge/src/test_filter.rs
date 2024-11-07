@@ -164,7 +164,7 @@ mod tests {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
             casm_program: Arc::new(
-                compile_sierra_to_casm(&program_for_testing().program, None).unwrap(),
+                compile_sierra_to_casm(None, &program_for_testing().program).unwrap(),
             ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
@@ -428,7 +428,7 @@ mod tests {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
             casm_program: Arc::new(
-                compile_sierra_to_casm(&program_for_testing().program, None).unwrap(),
+                compile_sierra_to_casm(None, &program_for_testing().program).unwrap(),
             ),
             test_cases: vec![],
             tests_location: TestTargetLocation::Lib,
@@ -469,7 +469,7 @@ mod tests {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
             casm_program: Arc::new(
-                compile_sierra_to_casm(&program_for_testing().program, None).unwrap(),
+                compile_sierra_to_casm(None, &program_for_testing().program).unwrap(),
             ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
@@ -656,7 +656,7 @@ mod tests {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
             casm_program: Arc::new(
-                compile_sierra_to_casm(&program_for_testing().program, None).unwrap(),
+                compile_sierra_to_casm(None, &program_for_testing().program).unwrap(),
             ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
@@ -753,7 +753,7 @@ mod tests {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
             casm_program: Arc::new(
-                compile_sierra_to_casm(&program_for_testing().program, None).unwrap(),
+                compile_sierra_to_casm(None, &program_for_testing().program).unwrap(),
             ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
