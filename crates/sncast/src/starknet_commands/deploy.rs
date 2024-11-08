@@ -11,11 +11,11 @@ use sncast::{handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
 use starknet::contract::ContractFactory;
-use starknet::core::types::Felt;
 use starknet::core::utils::get_udc_deployed_address;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
+use starknet_types_core::felt::Felt;
 
 #[derive(Args)]
 #[command(about = "Deploy a contract on Starknet")]

@@ -1,9 +1,9 @@
-use cairo_vm::Felt252;
 use conversions::{byte_array::ByteArray, serde::deserialize::CairoDeserialize};
 use serde::{
     de::{self, MapAccess, Visitor},
     Deserialize, Deserializer,
 };
+use starknet_types_core::felt::Felt;
 use std::str::FromStr;
 use std::{fmt, num::NonZeroU32};
 use url::Url;
@@ -19,7 +19,7 @@ pub struct RawAvailableGasConfig {
 #[derive(Debug, Clone, CairoDeserialize, PartialEq)]
 pub enum BlockId {
     BlockTag,
-    BlockHash(Felt252),
+    BlockHash(Felt),
     BlockNumber(u64),
 }
 
@@ -61,7 +61,7 @@ impl<'de> Deserialize<'de> for BlockId {
                             BlockId::BlockTag
                         }
                         "hash" => BlockId::BlockHash(
-                            Felt252::from_str(&map.next_value::<String>()?)
+                            Felt::from_str(&map.next_value::<String>()?)
                                 .map_err(de::Error::custom)?,
                         ),
                         "number" => BlockId::BlockNumber(
@@ -117,9 +117,9 @@ pub struct RawFuzzerConfig {
 
 #[derive(Debug, Clone, CairoDeserialize)]
 pub enum Expected {
-    ShortString(Felt252),
+    ShortString(Felt),
     ByteArray(ByteArray),
-    Array(Vec<Felt252>),
+    Array(Vec<Felt>),
     Any,
 }
 

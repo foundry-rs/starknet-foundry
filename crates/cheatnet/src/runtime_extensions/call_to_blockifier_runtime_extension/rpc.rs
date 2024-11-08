@@ -13,7 +13,6 @@ use blockifier::execution::{
 };
 use blockifier::state::errors::StateError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use cairo_vm::Felt252;
 use conversions::{
     byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr, FromConv, IntoConv,
 };
@@ -23,6 +22,7 @@ use starknet_api::{
     core::{ClassHash, ContractAddress},
     deprecated_contract_class::EntryPointType,
 };
+use starknet_types_core::felt::Felt;
 
 #[derive(Clone, Debug, Default)]
 pub struct UsedResources {
@@ -36,7 +36,7 @@ pub struct UsedResources {
 /// Enum representing possible call execution result, along with the data
 #[derive(Debug, Clone, CairoSerialize)]
 pub enum CallResult {
-    Success { ret_data: Vec<Felt252> },
+    Success { ret_data: Vec<Felt> },
     Failure(CallFailure),
 }
 
@@ -45,7 +45,7 @@ pub enum CallResult {
 /// `Error` - Unrecoverable, equivalent of panic! in rust.
 #[derive(Debug, Clone, CairoSerialize)]
 pub enum CallFailure {
-    Panic { panic_data: Vec<Felt252> },
+    Panic { panic_data: Vec<Felt> },
     Error { msg: ByteArray },
 }
 
@@ -63,10 +63,7 @@ impl CallFailure {
     ) -> Self {
         match err {
             EntryPointExecutionError::ExecutionFailed { error_data } => {
-                let err_data: Vec<_> = error_data
-                    .iter()
-                    .map(|data| Felt252::from_(*data))
-                    .collect();
+                let err_data: Vec<_> = error_data.iter().map(|data| Felt::from_(*data)).collect();
 
                 let err_data_str = build_readable_text(&err_data).unwrap_or_default();
 
@@ -171,7 +168,7 @@ pub fn call_l1_handler(
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
     entry_point_selector: EntryPointSelector,
-    calldata: &[Felt252],
+    calldata: &[Felt],
 ) -> CallResult {
     let calldata = create_execute_calldata(calldata);
 

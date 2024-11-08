@@ -19,12 +19,13 @@ use starknet::accounts::{
 };
 use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
 use starknet::core::types::BlockTag::Pending;
-use starknet::core::types::{BlockId, Felt, StarknetError::ClassHashNotFound};
+use starknet::core::types::{BlockId, StarknetError::ClassHashNotFound};
 use starknet::core::utils::get_contract_address;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::ProviderError::StarknetError;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
+use starknet_types_core::felt::Felt;
 
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]

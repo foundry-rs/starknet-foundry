@@ -9,7 +9,7 @@ use runtime::EnhancedHintError;
 use std::sync::Arc;
 
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
-use cairo_vm::Felt252;
+use starknet_types_core::felt::Felt;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::cheated_syscalls;
 use starknet_api::core::{ClassHash, ContractAddress};
@@ -23,9 +23,9 @@ pub fn deploy_at(
     syscall_handler: &mut SyscallHintProcessor,
     cheatnet_state: &mut CheatnetState,
     class_hash: &ClassHash,
-    calldata: &[Felt252],
+    calldata: &[Felt],
     contract_address: ContractAddress,
-) -> Result<(ContractAddress, Vec<Felt252>), CheatcodeError> {
+) -> Result<(ContractAddress, Vec<Felt>), CheatcodeError> {
     if let Ok(class_hash) = syscall_handler.state.get_class_hash_at(contract_address) {
         if class_hash != ClassHash::default() {
             return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
@@ -74,8 +74,8 @@ pub fn deploy(
     syscall_handler: &mut SyscallHintProcessor,
     cheatnet_state: &mut CheatnetState,
     class_hash: &ClassHash,
-    calldata: &[Felt252],
-) -> Result<(ContractAddress, Vec<Felt252>), CheatcodeError> {
+    calldata: &[Felt],
+) -> Result<(ContractAddress, Vec<Felt>), CheatcodeError> {
     let contract_address = cheatnet_state.precalculate_address(class_hash, calldata);
 
     deploy_at(

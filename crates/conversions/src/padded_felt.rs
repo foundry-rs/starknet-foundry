@@ -1,17 +1,17 @@
 use crate::FromConv;
 use cairo_serde_macros::CairoSerialize;
-use conversions::from_thru_felt252;
+use conversions::from_thru_felt;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet_api::core::{ClassHash, ContractAddress};
-use starknet_types_core::felt::Felt as Felt252;
+use starknet_types_core::felt::Felt;
 use std::fmt;
 use std::fmt::{Formatter, LowerHex};
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize, CairoSerialize)]
-pub struct PaddedFelt(pub Felt252);
+pub struct PaddedFelt(pub Felt);
 
-impl FromConv<Felt252> for PaddedFelt {
-    fn from_(value: Felt252) -> Self {
+impl FromConv<Felt> for PaddedFelt {
+    fn from_(value: Felt) -> Self {
         Self(value)
     }
 }
@@ -31,5 +31,5 @@ impl LowerHex for PaddedFelt {
     }
 }
 
-from_thru_felt252!(ClassHash, PaddedFelt);
-from_thru_felt252!(ContractAddress, PaddedFelt);
+from_thru_felt!(ClassHash, PaddedFelt);
+from_thru_felt!(ContractAddress, PaddedFelt);

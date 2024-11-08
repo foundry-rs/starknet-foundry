@@ -314,7 +314,7 @@ mod tests {
     use camino::Utf8PathBuf;
     use conversions::string::TryFromHexStr;
     use conversions::IntoConv;
-    use starknet::core::types::Felt;
+    use starknet_types_core::felt::Felt;
     use tempfile::TempDir;
 
     #[test]

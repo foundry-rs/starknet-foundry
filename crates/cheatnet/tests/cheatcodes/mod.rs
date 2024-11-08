@@ -1,7 +1,7 @@
 use crate::common::felt_selector_from_name;
-use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::calculate_variable_address;
 use conversions::IntoConv;
+use starknet_types_core::felt::Felt;
 
 mod test_environment;
 
@@ -21,10 +21,10 @@ mod replace_bytecode;
 mod spy_events;
 mod store;
 
-pub fn map_entry_address(var_name: &str, key: &[Felt252]) -> Felt252 {
+pub fn map_entry_address(var_name: &str, key: &[Felt]) -> Felt {
     calculate_variable_address(felt_selector_from_name(var_name).into_(), Some(key))
 }
 
-pub fn variable_address(var_name: &str) -> Felt252 {
+pub fn variable_address(var_name: &str) -> Felt {
     calculate_variable_address(felt_selector_from_name(var_name).into_(), None)
 }

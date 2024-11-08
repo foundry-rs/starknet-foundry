@@ -1,6 +1,6 @@
 use super::print::OutputFormat;
 use crate::helpers::block_explorer::{LinkProvider, Service};
-use starknet::core::types::Felt;
+use starknet_types_core::felt::Felt;
 
 pub trait OutputLink {
     const TITLE: &'static str;

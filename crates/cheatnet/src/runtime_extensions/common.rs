@@ -1,11 +1,11 @@
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
-use cairo_vm::Felt252;
 use starknet_api::transaction::Calldata;
+use starknet_types_core::felt::Felt;
 
 #[must_use]
-pub fn create_execute_calldata(calldata: &[Felt252]) -> Calldata {
+pub fn create_execute_calldata(calldata: &[Felt]) -> Calldata {
     Calldata(calldata.to_vec().into())
 }
 

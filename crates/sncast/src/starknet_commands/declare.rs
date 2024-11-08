@@ -11,13 +11,14 @@ use sncast::response::structs::DeclareResponse;
 use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, ErrorData, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, DeclarationV2, DeclarationV3};
-use starknet::core::types::{DeclareTransactionResult, Felt};
+use starknet::core::types::DeclareTransactionResult;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
     core::types::contract::{CompiledClass, SierraClass},
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
     signers::LocalWallet,
 };
+use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::sync::Arc;
 
