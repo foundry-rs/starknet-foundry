@@ -86,7 +86,7 @@ async fn test_happy_case_human_readable() {
         indoc! {r"
         command: declare
         class_hash: 0x0[..]
-        transaction_hash: 0x[..]
+        transaction_hash: 0x0[..]
         
         To see declaration details, visit:
         class: https://[..]
