@@ -1,5 +1,5 @@
 use super::TryFromConv;
-use starknet::core::types::Felt;
+use starknet_types_core::felt::Felt;
 use thiserror;
 
 #[derive(Debug, thiserror::Error)]

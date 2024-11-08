@@ -12,7 +12,7 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::state::CheatnetState;
-use conversions::felt252::FromShortString;
+use conversions::felt::FromShortString;
 use conversions::IntoConv;
 use runtime::EnhancedHintError;
 use starknet_api::core::ContractAddress;

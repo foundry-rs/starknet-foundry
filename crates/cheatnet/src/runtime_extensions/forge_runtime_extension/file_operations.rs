@@ -1,8 +1,8 @@
 use anyhow::{anyhow, Result};
 use cairo_vm::Felt252;
+use conversions::felt::TryInferFormat;
 use conversions::{
-    byte_array::ByteArray, felt252::TryInferFormat, serde::serialize::SerializeToFeltVec,
-    string::TryFromDecStr,
+    byte_array::ByteArray, serde::serialize::SerializeToFeltVec, string::TryFromDecStr,
 };
 use flatten_serde_json::flatten;
 use runtime::EnhancedHintError;

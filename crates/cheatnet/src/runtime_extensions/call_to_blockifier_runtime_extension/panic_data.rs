@@ -1,5 +1,5 @@
 use cairo_vm::Felt252;
-use conversions::{byte_array::ByteArray, felt252::FromShortString};
+use conversions::{byte_array::ByteArray, felt::FromShortString};
 use regex::Regex;
 
 #[must_use]
@@ -56,7 +56,7 @@ mod test {
     use super::*;
     use cairo_lang_utils::byte_array::BYTE_ARRAY_MAGIC;
     use cairo_vm::Felt252;
-    use conversions::{felt252::FromShortString, string::TryFromHexStr};
+    use conversions::{felt::FromShortString, string::TryFromHexStr};
     use indoc::indoc;
 
     #[test]

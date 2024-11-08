@@ -4,7 +4,7 @@ use crate::common::{deploy_contract, felt_selector_from_name, state::create_cach
 use cairo_lang_utils::byte_array::BYTE_ARRAY_MAGIC;
 use cairo_vm::Felt252;
 use cheatnet::state::CheatnetState;
-use conversions::felt252::FromShortString;
+use conversions::felt::FromShortString;
 use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
 

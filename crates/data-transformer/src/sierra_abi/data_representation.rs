@@ -1,6 +1,6 @@
 use crate::cairo_types::{CairoBytes31, CairoU256, CairoU384, CairoU512, CairoU96};
 use anyhow::{bail, Context};
-use conversions::felt252::FromShortString;
+use conversions::felt::FromShortString;
 use conversions::{
     byte_array::ByteArray,
     serde::serialize::{BufferWriter, CairoSerialize},
