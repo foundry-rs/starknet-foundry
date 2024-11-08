@@ -1,24 +1,14 @@
-## How Contracts Are Collected
+# How Contracts Are Collected
 
-When you call `snforge test`, one of the things that `snforge` does is that it calls Scarb, particularly `scarb build`.
-It makes Scarb build all contracts from your package and save them to the `target/{current_profile}` directory
-(read more on [Scarb website](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html)).
+`snforge` supports two mechanism for collecting contracts used in tests.
+The default depends on Scarb version used and can be controlled with `--no-optimized` flag.
 
-Then, `snforge` loads compiled contracts from the package your tests are in, allowing you to declare the contracts in tests.
+- If using Scarb version greater or equal to 2.8.3, [optimized mechanism](contract-collection/new-mechanism.md) is used
+  by default.
+- If using Scarb version below 2.8.3 or using `--no-optimized` flag with
+  `snforge test` [old, slower mechanism](contract-collection/old-mechanism.md) is used.
 
-> ⚠️ **Warning**
+> 📝 **Note**
 >
-> Make sure to define `[[target.starknet-contract]]` section in your `Scarb.toml`, otherwise Scarb won't build your contracts.
-
-
-## Using External Contracts In Tests
-
-If you wish to use contracts from your dependencies inside your tests (e.g. an ERC20 token, an account contract),
-you must first make Scarb build them. You can do that by using `build-external-contracts` property in `Scarb.toml`, e.g.: 
-
-```toml
-[[target.starknet-contract]]
-build-external-contracts = ["openzeppelin::account::account::Account"]
-```
-
-For more information about `build-external-contracts`, see [Scarb documentation](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#compiling-external-contracts).
+> When using Scarb versions older than 2.8.3 it is **not possible** to enable new mechanism.
+> Migrating to new Scarb version is required.
