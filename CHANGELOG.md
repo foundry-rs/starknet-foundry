@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- In scripts, changed return type of `declare` so it can handle already declared contracts without failing
+- Changed return type of `declare` in Cairo Deployment Scripts so it can handle already declared contracts without failing
 
 ## [0.33.0] - 2024-11-04
 
