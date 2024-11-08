@@ -44,7 +44,7 @@ mod CheatBlockHashChecker {
         }
 
         fn get_block_hash_and_number(ref self: ContractState) -> (felt252, u64) {
-            let block_info = starknet::get_block_info().unbox();
+            let block_info = get_block_info().unbox();
             let block_hash = get_block_hash_syscall(block_info.block_number - 10).unwrap_syscall();
 
             (block_hash, block_info.block_number)
