@@ -10,6 +10,7 @@ pub mod cheat_execution_info;
 pub mod cheat_sequencer_address;
 pub mod declare;
 pub mod deploy;
+pub mod generate_random_felt;
 pub mod get_class_hash;
 pub mod l1_handler_execute;
 pub mod mock_call;
@@ -36,9 +37,9 @@ impl From<CallFailure> for CheatcodeError {
     fn from(value: CallFailure) -> Self {
         match value {
             CallFailure::Panic { panic_data } => CheatcodeError::Recoverable(panic_data),
-            CallFailure::Error { msg } => {
-                CheatcodeError::Unrecoverable(HintError::CustomHint(Box::from(msg)).into())
-            }
+            CallFailure::Error { msg } => CheatcodeError::Unrecoverable(
+                HintError::CustomHint(Box::from(msg.to_string())).into(),
+            ),
         }
     }
 }

@@ -1,10 +1,13 @@
 use super::common::runner::{setup_package, test_runner};
 use crate::e2e::common::get_trace_from_trace_node;
+use cairo_annotations::trace_data::{
+    CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
+    VersionedCallTrace as VersionedProfilerCallTrace,
+};
 use cairo_lang_sierra::program::VersionedProgram;
 use cairo_lang_starknet_classes::contract_class::ContractClass;
 use forge_runner::build_trace_data::{TEST_CODE_CONTRACT_NAME, TEST_CODE_FUNCTION_NAME, TRACE_DIR};
 use std::fs;
-use trace_data::{CallTrace as ProfilerCallTrace, CallTraceNode as ProfilerCallTraceNode};
 
 #[test]
 fn simple_package_save_trace() {
@@ -34,7 +37,7 @@ fn simple_package_save_trace() {
     )
     .unwrap();
 
-    let call_trace: ProfilerCallTrace =
+    let VersionedProfilerCallTrace::V1(call_trace) =
         serde_json::from_str(&trace_data).expect("Failed to parse call_trace");
 
     assert!(call_trace.nested_calls.is_empty());
@@ -152,14 +155,14 @@ fn trace_has_deploy_with_no_constructor_phantom_nodes() {
     // 3 first calls are deploys with empty constructors
     matches!(
         call_trace.nested_calls[0],
-        trace_data::CallTraceNode::DeployWithoutConstructor
+        cairo_annotations::trace_data::CallTraceNode::DeployWithoutConstructor
     );
     matches!(
         call_trace.nested_calls[1],
-        trace_data::CallTraceNode::DeployWithoutConstructor
+        cairo_annotations::trace_data::CallTraceNode::DeployWithoutConstructor
     );
     matches!(
         call_trace.nested_calls[2],
-        trace_data::CallTraceNode::DeployWithoutConstructor
+        cairo_annotations::trace_data::CallTraceNode::DeployWithoutConstructor
     );
 }

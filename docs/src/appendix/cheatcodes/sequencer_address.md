@@ -23,6 +23,6 @@ Changes the sequencer address for the given target.
 Cancels the `cheat_sequencer_address` / `start_cheat_sequencer_address` for the given target.
 
 ## `stop_cheat_sequencer_address_global`
-> `fn stop_cheat_sequencer_address_global(target: ContractAddress)`
+> `fn stop_cheat_sequencer_address_global()`
 
 Cancels the `start_cheat_sequencer_address_global`.

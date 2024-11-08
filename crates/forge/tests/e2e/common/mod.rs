@@ -1,4 +1,6 @@
-use trace_data::{CallTrace as ProfilerCallTrace, CallTraceNode as ProfilerCallTraceNode};
+use cairo_annotations::trace_data::{
+    CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
+};
 
 pub mod runner;
 

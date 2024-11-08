@@ -1,3 +1,4 @@
+use crate::Arguments;
 use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
 use conversions::IntoConv;
@@ -14,20 +15,19 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 
-#[derive(Args, Clone)]
+#[derive(Args, Clone, Debug)]
 #[command(about = "Invoke a contract on Starknet")]
 pub struct Invoke {
     /// Address of contract to invoke
-    #[clap(short = 'a', long)]
+    #[clap(short = 'd', long)]
     pub contract_address: Felt,
 
     /// Name of the function to invoke
     #[clap(short, long)]
     pub function: String,
 
-    /// Calldata for the invoked function
-    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
-    pub calldata: Vec<Felt>,
+    #[clap(flatten)]
+    pub arguments: Arguments,
 
     #[clap(flatten)]
     pub fee_args: FeeArgs,
@@ -56,23 +56,21 @@ impl_payable_transaction!(Invoke, token_not_supported_for_invoke,
 );
 
 pub async fn invoke(
-    invoke: Invoke,
+    contract_address: Felt,
+    calldata: Vec<Felt>,
+    nonce: Option<Felt>,
+    fee_args: FeeArgs,
     function_selector: Felt,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse, StarknetCommandError> {
-    let fee_args = invoke
-        .fee_args
-        .clone()
-        .fee_token(invoke.token_from_version());
-
     let call = Call {
-        to: invoke.contract_address,
+        to: contract_address,
         selector: function_selector,
-        calldata: invoke.calldata.clone(),
+        calldata,
     };
 
-    execute_calls(account, vec![call], fee_args, invoke.nonce, wait_config).await
+    execute_calls(account, vec![call], fee_args, nonce, wait_config).await
 }
 
 pub async fn execute_calls(

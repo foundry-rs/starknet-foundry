@@ -12,6 +12,7 @@ mod cheat_execution_info;
 mod cheat_sequencer_address;
 mod declare;
 mod deploy;
+mod generate_random_felt;
 mod get_class_hash;
 mod load;
 mod mock_call;

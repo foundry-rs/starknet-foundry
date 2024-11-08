@@ -65,11 +65,12 @@ pub struct AccountCreateResponse {
 impl CommandResponse for AccountCreateResponse {}
 
 #[derive(Serialize)]
-pub struct AccountAddResponse {
+pub struct AccountImportResponse {
     pub add_profile: String,
+    pub account_name: Option<String>,
 }
 
-impl CommandResponse for AccountAddResponse {}
+impl CommandResponse for AccountImportResponse {}
 
 #[derive(Serialize)]
 pub struct AccountDeleteResponse {

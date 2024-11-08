@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use clap::{Args, ValueEnum};
+use conversions::byte_array::ByteArray;
 use conversions::IntoConv;
 use scarb_api::StarknetContractArtifacts;
 use sncast::helpers::error::token_not_supported_for_declaration;
@@ -74,9 +75,9 @@ pub async fn declare(
     let contract_artifacts =
         artifacts
             .get(&declare.contract)
-            .ok_or(StarknetCommandError::ContractArtifactsNotFound(
-                ErrorData::new(declare.contract),
-            ))?;
+            .ok_or(StarknetCommandError::ContractArtifactsNotFound(ErrorData {
+                data: ByteArray::from(declare.contract.as_str()),
+            }))?;
 
     let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
         .context("Failed to parse sierra artifact")?;

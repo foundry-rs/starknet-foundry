@@ -6,9 +6,11 @@ use crate::starknet_commands::{
 };
 use anyhow::{Context, Result};
 use configuration::load_global_config;
+use data_transformer::Calldata;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{print_command_result, OutputFormat};
 
+use crate::starknet_commands::deploy::DeployArguments;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use sncast::helpers::configuration::CastConfig;
@@ -20,9 +22,11 @@ use sncast::helpers::scarb_utils::{
 };
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::{
-    chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_default_state_file_name,
-    NumbersFormat, ValidatedWaitParams, WaitForTx,
+    chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_class_hash_by_address,
+    get_contract_class, get_default_state_file_name, NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
+use starknet::accounts::ConnectedAccount;
+use starknet::core::types::{ContractClass, Felt};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
 use starknet_commands::account::list::print_account_list;
@@ -72,39 +76,39 @@ struct Cli {
     /// Account to be used for contract declaration;
     /// When using keystore (`--keystore`), this should be a path to account file
     /// When using accounts file, this should be an account name
-    #[clap(short = 'a', long, global = true)]
+    #[clap(short = 'a', long)]
     account: Option<String>,
 
     /// Path to the file holding accounts info
-    #[clap(short = 'f', long = "accounts-file", global = true)]
+    #[clap(long = "accounts-file")]
     accounts_file_path: Option<Utf8PathBuf>,
 
     /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
-    #[clap(short, long, global = true)]
+    #[clap(short, long)]
     keystore: Option<Utf8PathBuf>,
 
     /// If passed, values will be displayed as integers
-    #[clap(long, conflicts_with = "hex_format", global = true)]
+    #[clap(long, conflicts_with = "hex_format")]
     int_format: bool,
 
     /// If passed, values will be displayed as hex
-    #[clap(long, conflicts_with = "int_format", global = true)]
+    #[clap(long, conflicts_with = "int_format")]
     hex_format: bool,
 
     /// If passed, output will be displayed in json format
-    #[clap(short, long, global = true)]
+    #[clap(short, long)]
     json: bool,
 
     /// If passed, command will wait until transaction is accepted or rejected
-    #[clap(short = 'w', long, global = true)]
+    #[clap(short = 'w', long)]
     wait: bool,
 
     /// Adjusts the time after which --wait assumes transaction was not received or rejected
-    #[clap(long, global = true)]
+    #[clap(long)]
     wait_timeout: Option<u16>,
 
     /// Adjusts the time between consecutive attempts to fetch transaction by --wait flag
-    #[clap(long, global = true)]
+    #[clap(long)]
     wait_retry_interval: Option<u8>,
 
     #[command(subcommand)]
@@ -142,6 +146,54 @@ enum Commands {
 
     /// Verify a contract
     Verify(Verify),
+}
+
+#[derive(Debug, Clone, clap::Args)]
+#[group(multiple = false)]
+pub struct Arguments {
+    /// Arguments of the called function serialized as a series of felts
+    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
+    pub calldata: Option<Vec<String>>,
+
+    // Arguments of the called function as a comma-separated string of Cairo expressions
+    #[clap(long)]
+    pub arguments: Option<String>,
+}
+
+impl Arguments {
+    fn try_into_calldata(
+        self,
+        contract_class: ContractClass,
+        selector: &Felt,
+    ) -> Result<Vec<Felt>> {
+        if let Some(arguments) = self.arguments {
+            Calldata::new(arguments).serialized(contract_class, selector)
+        } else if let Some(calldata) = self.calldata {
+            calldata
+                .iter()
+                .map(|data| {
+                    Felt::from_dec_str(data)
+                        .or_else(|_| Felt::from_hex(data))
+                        .context("Failed to parse to felt")
+                })
+                .collect()
+        } else {
+            Ok(vec![])
+        }
+    }
+}
+
+impl From<DeployArguments> for Arguments {
+    fn from(value: DeployArguments) -> Self {
+        let DeployArguments {
+            constructor_calldata,
+            arguments,
+        } = value;
+        Self {
+            calldata: constructor_calldata,
+            arguments,
+        }
+    }
 }
 
 fn main() -> Result<()> {
@@ -221,9 +273,19 @@ async fn run_async_command(
         }
 
         Commands::Deploy(deploy) => {
-            let provider = deploy.rpc.get_provider(&config).await?;
-
             deploy.validate()?;
+
+            let fee_token = deploy.token_from_version();
+
+            let Deploy {
+                arguments,
+                fee_args,
+                rpc,
+                ..
+            } = deploy;
+
+            let provider = rpc.get_provider(&config).await?;
+
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
@@ -232,9 +294,32 @@ async fn run_async_command(
             )
             .await?;
 
-            let result = starknet_commands::deploy::deploy(deploy, &account, wait_config)
-                .await
-                .map_err(handle_starknet_command_error);
+            let fee_settings = fee_args
+                .clone()
+                .fee_token(fee_token)
+                .try_into_fee_settings(&provider, account.block_id())
+                .await?;
+
+            // safe to unwrap because "constructor" is a standardized name
+            let selector = get_selector_from_name("constructor").unwrap();
+
+            let contract_class = get_contract_class(deploy.class_hash, &provider).await?;
+
+            let arguments: Arguments = arguments.into();
+            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
+
+            let result = starknet_commands::deploy::deploy(
+                deploy.class_hash,
+                &calldata,
+                deploy.salt,
+                deploy.unique,
+                fee_settings,
+                deploy.nonce,
+                &account,
+                wait_config,
+            )
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("deploy", &result, numbers_format, output_format)?;
             print_block_explorer_link_if_allowed(
@@ -247,16 +332,28 @@ async fn run_async_command(
             Ok(())
         }
 
-        Commands::Call(call) => {
-            let provider = call.rpc.get_provider(&config).await?;
+        Commands::Call(Call {
+            contract_address,
+            function,
+            arguments,
+            block_id,
+            rpc,
+        }) => {
+            let provider = rpc.get_provider(&config).await?;
 
-            let block_id = get_block_id(&call.block_id)?;
+            let block_id = get_block_id(&block_id)?;
+            let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
+            let contract_class = get_contract_class(class_hash, &provider).await?;
+
+            let selector = get_selector_from_name(&function)
+                .context("Failed to convert entry point selector to FieldElement")?;
+
+            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
 
             let result = starknet_commands::call::call(
-                call.contract_address,
-                get_selector_from_name(&call.function)
-                    .context("Failed to convert entry point selector to FieldElement")?,
-                call.calldata,
+                contract_address,
+                selector,
+                calldata,
                 &provider,
                 block_id.as_ref(),
             )
@@ -268,9 +365,21 @@ async fn run_async_command(
         }
 
         Commands::Invoke(invoke) => {
-            let provider = invoke.rpc.get_provider(&config).await?;
-
             invoke.validate()?;
+
+            let fee_token = invoke.token_from_version();
+
+            let Invoke {
+                contract_address,
+                function,
+                arguments,
+                fee_args,
+                rpc,
+                nonce,
+                ..
+            } = invoke;
+
+            let provider = rpc.get_provider(&config).await?;
 
             let account = get_account(
                 &config.account,
@@ -279,10 +388,23 @@ async fn run_async_command(
                 config.keystore,
             )
             .await?;
+
+            let fee_args = fee_args.fee_token(fee_token);
+
+            let selector = get_selector_from_name(&function)
+                .context("Failed to convert entry point selector to FieldElement")?;
+
+            let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
+            let contract_class = get_contract_class(class_hash, &provider).await?;
+
+            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
+
             let result = starknet_commands::invoke::invoke(
-                invoke.clone(),
-                get_selector_from_name(&invoke.function)
-                    .context("Failed to convert entry point selector to FieldElement")?,
+                contract_address,
+                calldata,
+                nonce,
+                fee_args,
+                selector,
                 &account,
                 wait_config,
             )
@@ -349,18 +471,17 @@ async fn run_async_command(
         }
 
         Commands::Account(account) => match account.command {
-            account::Commands::Add(add) => {
-                let provider = add.rpc.get_provider(&config).await?;
-                let result = starknet_commands::account::add::add(
-                    &config.url,
-                    &add.name.clone(),
+            account::Commands::Import(import) => {
+                let provider = import.rpc.get_provider(&config).await?;
+                let result = starknet_commands::account::import::import(
+                    import.name.clone(),
                     &config.accounts_file,
                     &provider,
-                    &add,
+                    &import,
                 )
                 .await;
 
-                print_command_result("account add", &result, numbers_format, output_format)?;
+                print_command_result("account import", &result, numbers_format, output_format)?;
                 Ok(())
             }
 
@@ -371,21 +492,18 @@ async fn run_async_command(
                 let account = if config.keystore.is_none() {
                     create
                         .name
+                        .clone()
                         .context("Required argument `--name` not provided")?
                 } else {
                     config.account
                 };
                 let result = starknet_commands::account::create::create(
-                    &config.url,
                     &account,
                     &config.accounts_file,
                     config.keystore,
                     &provider,
                     chain_id,
-                    create.account_type,
-                    create.salt,
-                    create.add_profile,
-                    create.class_hash,
+                    &create,
                 )
                 .await;
 
@@ -430,12 +548,8 @@ async fn run_async_command(
             }
 
             account::Commands::Delete(delete) => {
-                let provider = delete.rpc.get_provider(&config).await?;
-
-                let network_name = match delete.network {
-                    Some(network) => network,
-                    None => chain_id_to_network_name(get_chain_id(&provider).await?),
-                };
+                let network_name =
+                    starknet_commands::account::delete::get_network_name(&delete, &config).await?;
 
                 let result = starknet_commands::account::delete::delete(
                     &delete.name,

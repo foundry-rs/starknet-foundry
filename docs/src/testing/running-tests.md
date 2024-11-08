@@ -32,12 +32,17 @@ Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 1 filtered out
 To run a specific test, you can pass a filter string along with an `--exact` flag.
 Note, you have to use a fully qualified test name, including a module name.
 
+> 📝 **Note**
+>
+> Running a specific test results in optimized compilation. `snforge` will try to compile only the desired test, unlike the case of running all tests where all of them are compiled.
+>
+
 ```shell
 $ snforge test package_name::tests::calling --exact
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
 [PASS] package_name::tests::calling
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 2 filtered out
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
 ```
 
 ## Stopping Test Execution After First Failed Test

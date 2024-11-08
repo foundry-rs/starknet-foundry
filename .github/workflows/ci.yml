@@ -15,8 +15,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
-      - uses: software-mansion/setup-scarb@v1.3.2
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+      - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: cargo test --release --lib -p forge
       - run: cargo test --release --bin snforge
@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
       - name: Install nextest
         uses: taiki-e/install-action@nextest
       - name: Build and archive tests
@@ -44,7 +44,7 @@ jobs:
     needs: build-test-forge-e2e-nextest-archive
     strategy:
       matrix:
-        partition: [1, 2, 3, 4, 5, 6, 7, 8]
+        partition: [ 1, 2, 3, 4, 5, 6, 7, 8 ]
     steps:
       - name: Extract branch name
         if: github.event_name != 'pull_request'
@@ -78,8 +78,8 @@ jobs:
 
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
-      - uses: software-mansion/setup-scarb@v1.3.2
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+      - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - uses: taiki-e/install-action@nextest
       - uses: actions/download-artifact@v4
@@ -94,8 +94,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
-      - uses: software-mansion/setup-scarb@v1.3.2
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+      - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: "2.8.3"
       - uses: software-mansion/setup-universal-sierra-compiler@v1
@@ -112,13 +112,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
-      - uses: software-mansion/setup-scarb@v1.3.2
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+      - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: "2.8.3"
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: |
           cargo test --package forge --features scarb_2_8_3 e2e::contract_artifacts
+      - run: |
+          cargo test --package forge --features scarb_2_8_3 e2e::features
+      - run: |
           cargo test --package scarb-api --features scarb_2_8_3 get_starknet_artifacts_path
 
   test-forge-runner:
@@ -127,7 +130,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
       - run: cargo test --release -p forge_runner
 
   test-cheatnet:
@@ -136,11 +139,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
-      - uses: software-mansion/setup-scarb@v1.3.2
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+      - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run Cheatnet tests
         run: cargo test --release -p cheatnet
+
+  test-data-transformer:
+    name: Test Data Transformer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+      - name: Run Data Transformer tests
+        run: cargo test --release -p data-transformer
 
   test-forge-scarb-plugin:
     name: Test Forge Scarb Plugin
@@ -148,11 +161,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
-      - uses: software-mansion/setup-scarb@v1.3.2
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+      - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run Forge Scarb Plugin tests
-        run: cargo test --release -p snforge-scarb-plugin
+        run: cargo test --release -p snforge_scarb_plugin
 
   test-cast:
     name: Test Cast
@@ -162,15 +175,17 @@ jobs:
       - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
       - name: Install starknet-devnet-rs
         run: ./scripts/install_devnet.sh
-      - uses: software-mansion/setup-scarb@v1.3.2
+      - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: "2.7.0"
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests
         run: cargo test --release -p sncast
+      - name: Run test in debug profile
+        run: cargo test -p sncast test_happy_case_common_arguments_after_subcommand
 
   test-conversions:
     name: Test Conversions
@@ -180,7 +195,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
       - name: Run tests
         run: cargo test --release -p conversions
 
@@ -190,7 +205,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
       - run: cargo test --release -p shared
 
   test-scarb-api:
@@ -200,8 +215,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: software-mansion/setup-universal-sierra-compiler@v1
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
-      - uses: software-mansion/setup-scarb@v1.3.2
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+      - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: cargo test --release -p scarb-api
 
@@ -209,7 +224,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: software-mansion/setup-scarb@v1.3.2
+      - uses: software-mansion/setup-scarb@v1
       - name: Check cairo files format
         run: |
           output=$(find . -type f -name "Scarb.toml" -execdir sh -c '
@@ -229,7 +244,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
       - name: Check formatting
         run: cargo fmt --check
 
@@ -243,7 +258,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
       - run: cargo lint
 
   build-docs:
@@ -255,9 +270,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
       - uses: actions/checkout@v4
-      - uses: software-mansion/setup-scarb@v1.3.2
+      - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Install mdBook
         run: |
@@ -281,4 +296,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: typos-action
-        uses: crate-ci/typos@v1.24.5
+        uses: crate-ci/typos@v1.26.8

@@ -104,7 +104,7 @@ jobs:
           toolchain: stable
           target: ${{ matrix.target }}
 
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
         with:
           workspaces: starknet-foundry
 
@@ -157,7 +157,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: software-mansion/setup-scarb@v1.3.2
+      - uses: software-mansion/setup-scarb@v1
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -237,6 +237,7 @@ jobs:
         uses: taiki-e/create-gh-release-action@72d65cee1f8033ef0c8b5d79eaf0c45c7c578ce3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
           changelog: CHANGELOG.md
           allow-missing-changelog: false
           title: $version
@@ -248,13 +249,3 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.create-release.outputs.computed-prefix }}${{ steps.create-release.outputs.version }}
-
-  deploy-docs:
-    name: Deploy documentation
-    needs: [ create-release, verify-version ]
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    if: ${{ !contains(needs.verify-version.outputs.version, '-')  }}
-    uses: ./.github/workflows/docs.yml

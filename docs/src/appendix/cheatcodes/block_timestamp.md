@@ -23,6 +23,6 @@ Changes the block timestamp for the given target.
 Cancels the `cheat_block_timestamp` / `start_cheat_block_timestamp` for the given target.
 
 ## `stop_cheat_block_timestamp_global`
-> `fn stop_cheat_block_timestamp_global(target: ContractAddress)`
+> `fn stop_cheat_block_timestamp_global()`
 
 Cancels the `start_cheat_block_timestamp_global`.
