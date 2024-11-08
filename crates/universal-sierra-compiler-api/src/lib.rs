@@ -10,12 +10,12 @@ use std::io::Write;
 use std::str::from_utf8;
 use tempfile::Builder;
 
-use crate::utils::spawn_spinner_message;
+use crate::spinner::spawn_spinner_message;
 pub use command::*;
 use shared::command::CommandExt;
 
 mod command;
-mod utils;
+mod spinner;
 
 pub type CasmCodeOffset = usize;
 pub type CasmInstructionIdx = usize;
@@ -69,7 +69,7 @@ pub fn compile_sierra_at_path(
     sierra_file_path: &Utf8PathBuf,
     sierra_type: &SierraType,
 ) -> Result<String> {
-    let printed_message = spawn_spinner_message(sierra_file_path)?;
+    let spinner = spawn_spinner_message(sierra_file_path)?;
 
     let mut usc_command = UniversalSierraCompilerCommand::new();
     let usc_output = usc_command
@@ -87,7 +87,7 @@ pub fn compile_sierra_at_path(
             Contact us if it doesn't help",
         )?;
 
-    printed_message.finish_and_clear();
+    spinner.finish_and_clear();
 
     Ok(from_utf8(&usc_output.stdout)?.to_string())
 }
