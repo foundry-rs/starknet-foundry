@@ -48,7 +48,7 @@ pub async fn test_happy_case(account_type: &str) {
         indoc! {r"
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-        address: 0x[..]
+        address: 0x0[..]
         max_fee: [..]
         message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.
 
@@ -139,7 +139,7 @@ pub async fn test_happy_case_generate_salt() {
     snapbox.assert().success().stdout_matches(indoc! {r"
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-        address: 0x[..]
+        address: 0x0[..]
         max_fee: [..]
         message: Account successfully created[..]
 
@@ -219,7 +219,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
     snapbox.assert().success().stdout_matches(indoc! {r"
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-        address: 0x[..]
+        address: 0x0[..]
         max_fee: [..]
         message: Account successfully created[..]
 
@@ -319,7 +319,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     snapbox.assert().stdout_matches(indoc! {r"
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-        address: 0x[..]
+        address: 0x0[..]
         max_fee: [..]
         message: Account successfully created[..]
 
@@ -555,7 +555,7 @@ pub async fn test_happy_case_keystore_hex_format() {
     snapbox.assert().stdout_matches(indoc! {r"
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-        address: 0x[..]
+        address: 0x0[..]
         max_fee: 0x[..]
         message: Account successfully created[..]
 

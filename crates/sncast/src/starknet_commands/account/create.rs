@@ -5,6 +5,7 @@ use crate::starknet_commands::account::{
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
+use conversions::IntoConv;
 use serde_json::json;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::CastConfig;
@@ -74,7 +75,7 @@ pub async fn create(
     let (account_json, max_fee) =
         generate_account(provider, salt, class_hash, &create.account_type).await?;
 
-    let address = account_json["address"]
+    let address: Felt = account_json["address"]
         .as_str()
         .context("Invalid address")?
         .parse()?;
@@ -118,7 +119,7 @@ pub async fn create(
     }
 
     Ok(AccountCreateResponse {
-        address,
+        address: address.into_(),
         max_fee,
         add_profile: if add_profile.is_some() {
             format!(

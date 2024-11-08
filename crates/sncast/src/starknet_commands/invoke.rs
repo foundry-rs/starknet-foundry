@@ -1,6 +1,7 @@
 use crate::Arguments;
 use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
+use conversions::IntoConv;
 use sncast::helpers::error::token_not_supported_for_invoke;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
@@ -108,7 +109,9 @@ pub async fn execute_calls(
         Ok(InvokeTransactionResult { transaction_hash }) => handle_wait_for_tx(
             account.provider(),
             transaction_hash,
-            InvokeResponse { transaction_hash },
+            InvokeResponse {
+                transaction_hash: transaction_hash.into_(),
+            },
             wait_config,
         )
         .await

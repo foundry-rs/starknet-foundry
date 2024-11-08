@@ -62,7 +62,6 @@ async fn test_happy_case_human_readable() {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "deploy",
         "--url",
         URL,
@@ -74,7 +73,7 @@ async fn test_happy_case_human_readable() {
         "--max-fee",
         "99999999999999999",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -85,8 +84,8 @@ async fn test_happy_case_human_readable() {
         indoc! {
             "
             command: deploy
-            contract_address: [..]
-            transaction_hash: [..]
+            contract_address: 0x0[..]
+            transaction_hash: 0x0[..]
 
             To see deployment details, visit:
             contract: [..]
