@@ -3,6 +3,7 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::Felt252;
 use runtime::EnhancedHintError;
 
+pub mod cheat_block_hash;
 pub mod cheat_block_number;
 pub mod cheat_block_timestamp;
 pub mod cheat_caller_address;

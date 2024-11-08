@@ -5,6 +5,7 @@ use conversions::IntoConv;
 
 mod test_environment;
 
+mod cheat_block_hash;
 mod cheat_block_number;
 mod cheat_block_timestamp;
 mod cheat_caller_address;

@@ -51,6 +51,7 @@ pub struct TxInfoMock {
 pub struct BlockInfoMock {
     pub block_number: CheatStatus<u64>,
     pub block_timestamp: CheatStatus<u64>,
+    pub block_hash: CheatStatus<Felt252>,
     pub sequencer_address: CheatStatus<ContractAddress>,
 }
 
@@ -82,6 +83,7 @@ pub struct TxInfoMockOperations {
 pub struct BlockInfoMockOperations {
     pub block_number: Operation<u64>,
     pub block_timestamp: Operation<u64>,
+    pub block_hash: Operation<Felt252>,
     pub sequencer_address: Operation<ContractAddress>,
 }
 
@@ -98,6 +100,7 @@ macro_rules! for_all_fields {
 
         $macro!(block_info.block_number);
         $macro!(block_info.block_timestamp);
+        $macro!(block_info.block_hash);
         $macro!(block_info.sequencer_address);
 
         $macro!(tx_info.version);
