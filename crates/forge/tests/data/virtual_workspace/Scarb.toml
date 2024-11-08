@@ -15,6 +15,7 @@ snforge_std = { path = "../../../../../snforge_std" }
 
 [workspace.package]
 version = "0.1.0"
+edition = "2023_10"
 
 [scripts]
 test.workspace = true

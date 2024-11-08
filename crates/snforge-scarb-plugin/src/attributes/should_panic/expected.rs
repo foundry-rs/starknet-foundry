@@ -5,7 +5,7 @@ use crate::{
     types::{Felt, ParseFromExpr},
 };
 use cairo_lang_macro::Diagnostic;
-use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup};
+use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup, Terminal};
 
 #[derive(Debug, Clone, Default)]
 pub enum Expected {
@@ -58,7 +58,7 @@ impl ParseFromExpr<Expr> for Expected {
                 ))
             }
             Expr::String(string) => {
-                let string = string.string_value(db).unwrap();
+                let string = string.text(db).trim_matches('"').to_string();
 
                 Ok(Self::ByteArray(string))
             }
