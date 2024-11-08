@@ -48,7 +48,6 @@ impl RunForPackageArgs {
         args: &TestArgs,
         cache_dir: &Utf8PathBuf,
         artifacts_dir: &Utf8Path,
-        versioned_programs_dir: Utf8PathBuf,
     ) -> Result<RunForPackageArgs> {
         let raw_test_targets = load_test_artifacts(artifacts_dir, &package)?;
 
@@ -75,7 +74,6 @@ impl RunForPackageArgs {
             args.max_n_steps,
             contracts_data,
             cache_dir.clone(),
-            versioned_programs_dir,
             &forge_config_from_scarb,
             &args.additional_args,
         ));
@@ -155,8 +153,7 @@ pub async fn run_for_package(
 
         let forge_config = forge_config.clone();
 
-        let summary =
-            run_for_test_target(test_target, forge_config, &tests_filter, &package_name).await?;
+        let summary = run_for_test_target(test_target, forge_config, &tests_filter).await?;
 
         match summary {
             TestTargetRunResult::Ok(summary) => {

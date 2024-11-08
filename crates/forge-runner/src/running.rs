@@ -1,4 +1,3 @@
-use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
@@ -10,7 +9,7 @@ use cairo_lang_runner::{RunResult, SierraCasmRunner};
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::Felt252;
-use camino::Utf8Path;
+use camino::{Utf8Path, Utf8PathBuf};
 use casm::{get_assembled_program, run_assembled_program};
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
@@ -49,7 +48,7 @@ pub fn run_test(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
-    maybe_versioned_program_path: Arc<Option<VersionedProgramPath>>,
+    versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
@@ -78,7 +77,7 @@ pub fn run_test(
             &case,
             vec![],
             &test_runner_config.contracts_data,
-            &maybe_versioned_program_path,
+            &versioned_program_path,
         )
     })
 }
@@ -88,7 +87,7 @@ pub(crate) fn run_fuzz_test(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
-    maybe_versioned_program_path: Arc<Option<VersionedProgramPath>>,
+    versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
     fuzzing_send: Sender<()>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
@@ -119,7 +118,7 @@ pub(crate) fn run_fuzz_test(
             &case,
             args,
             &test_runner_config.contracts_data,
-            &maybe_versioned_program_path,
+            &versioned_program_path,
         )
     })
 }
@@ -277,7 +276,7 @@ fn extract_test_case_summary(
     case: &TestCaseWithResolvedConfig,
     args: Vec<Felt252>,
     contracts_data: &ContractsData,
-    maybe_versioned_program_path: &Option<VersionedProgramPath>,
+    versioned_program_path: &Utf8Path,
 ) -> TestCaseSummary<Single> {
     match run_result {
         Ok(result_with_info) => {
@@ -290,7 +289,7 @@ fn extract_test_case_summary(
                     result_with_info.used_resources,
                     &result_with_info.call_trace,
                     contracts_data,
-                    maybe_versioned_program_path,
+                    versioned_program_path,
                 ),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(error) => TestCaseSummary::Failed {
