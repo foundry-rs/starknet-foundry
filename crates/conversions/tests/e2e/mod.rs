@@ -4,4 +4,5 @@ mod entrypoint_selector;
 mod felt252;
 mod field_elements;
 mod nonce;
+mod padded_felt;
 mod string;
