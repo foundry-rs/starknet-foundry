@@ -4,7 +4,7 @@ use anyhow::Result;
 use itertools::Itertools;
 use serde::{Serialize, Serializer};
 use serde_json::Value;
-use starknet::core::types::Felt;
+use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, fmt::Display, str::FromStr};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

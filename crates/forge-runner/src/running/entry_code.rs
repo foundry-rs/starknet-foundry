@@ -1,11 +1,12 @@
 use crate::package_tests::TestDetails;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::{Arg, SierraCasmRunner};
-use cairo_vm::{types::builtin_name::BuiltinName, Felt252};
+use cairo_vm::types::builtin_name::BuiltinName;
+use starknet_types_core::felt::Felt;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
 pub fn create_entry_code(
-    args: Vec<Felt252>,
+    args: Vec<Felt>,
     test_details: &TestDetails,
     casm_program: &AssembledProgramWithDebugInfo,
 ) -> (Vec<Instruction>, Vec<BuiltinName>) {

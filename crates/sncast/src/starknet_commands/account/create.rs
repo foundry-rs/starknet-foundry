@@ -21,10 +21,11 @@ use sncast::{
 use starknet::accounts::{
     AccountDeploymentV1, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
 };
-use starknet::core::types::{FeeEstimate, Felt};
+use starknet::core::types::FeeEstimate;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::{LocalWallet, SigningKey};
+use starknet_types_core::felt::Felt;
 
 #[derive(Args, Debug)]
 #[command(about = "Create an account with all important secrets")]

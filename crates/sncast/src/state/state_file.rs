@@ -313,7 +313,7 @@ mod tests {
     use crate::state::state_file::ScriptTransactionOutput::ErrorResponse;
     use camino::Utf8PathBuf;
     use conversions::string::TryFromHexStr;
-    use starknet::core::types::Felt;
+    use starknet_types_core::felt::Felt;
     use tempfile::TempDir;
 
     #[test]

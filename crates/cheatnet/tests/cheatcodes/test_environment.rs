@@ -2,13 +2,13 @@ use crate::common::assertions::ClassHashAssert;
 use crate::common::{call_contract, deploy_wrapper};
 use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
 use blockifier::state::cached_state::CachedState;
-use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use starknet_api::core::ClassHash;
 use starknet_api::core::ContractAddress;
+use starknet_types_core::felt::Felt;
 
 pub struct TestEnvironment {
     pub cached_state: CachedState<ExtendedStateReader>,
@@ -31,7 +31,7 @@ impl TestEnvironment {
             .unwrap_success()
     }
 
-    pub fn deploy(&mut self, contract_name: &str, calldata: &[Felt252]) -> ContractAddress {
+    pub fn deploy(&mut self, contract_name: &str, calldata: &[Felt]) -> ContractAddress {
         deploy_contract(
             &mut self.cached_state,
             &mut self.cheatnet_state,
@@ -40,11 +40,7 @@ impl TestEnvironment {
         )
     }
 
-    pub fn deploy_wrapper(
-        &mut self,
-        class_hash: &ClassHash,
-        calldata: &[Felt252],
-    ) -> ContractAddress {
+    pub fn deploy_wrapper(&mut self, class_hash: &ClassHash, calldata: &[Felt]) -> ContractAddress {
         deploy_wrapper(
             &mut self.cached_state,
             &mut self.cheatnet_state,
@@ -58,7 +54,7 @@ impl TestEnvironment {
         &mut self,
         contract_address: &ContractAddress,
         selector: &str,
-        calldata: &[Felt252],
+        calldata: &[Felt],
     ) -> CallResult {
         call_contract(
             &mut self.cached_state,
@@ -74,10 +70,7 @@ impl TestEnvironment {
         class_hash: &ClassHash,
         calldata: &[u128],
     ) -> ContractAddress {
-        let calldata = calldata
-            .iter()
-            .map(|x| Felt252::from(*x))
-            .collect::<Vec<_>>();
+        let calldata = calldata.iter().map(|x| Felt::from(*x)).collect::<Vec<_>>();
         self.cheatnet_state
             .precalculate_address(class_hash, &calldata)
     }

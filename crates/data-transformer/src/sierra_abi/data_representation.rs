@@ -5,7 +5,7 @@ use conversions::{
     byte_array::ByteArray,
     serde::serialize::{BufferWriter, CairoSerialize},
 };
-use starknet::core::types::Felt;
+use starknet_types_core::felt::Felt;
 use std::{any::type_name, str::FromStr};
 
 fn neat_parsing_error_message(value: &str, parsing_type: &str, reason: Option<&str>) -> String {

@@ -4,7 +4,7 @@ use camino::Utf8PathBuf;
 use conversions::serde::serialize::CairoSerialize;
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize, Serializer};
-use starknet::core::types::Felt;
+use starknet_types_core::felt::Felt;
 
 pub struct Decimal(pub u64);
 

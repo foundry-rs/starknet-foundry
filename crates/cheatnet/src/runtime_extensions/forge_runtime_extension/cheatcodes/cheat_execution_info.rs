@@ -2,9 +2,9 @@ use crate::{
     state::{CheatSpan, CheatStatus},
     CheatnetState,
 };
-use cairo_vm::Felt252;
 use conversions::serde::{deserialize::CairoDeserialize, serialize::CairoSerialize};
 use starknet_api::core::ContractAddress;
+use starknet_types_core::felt::Felt;
 
 #[derive(CairoDeserialize, Clone, Debug)]
 pub struct CheatArguments<T> {
@@ -25,26 +25,26 @@ pub enum Operation<T> {
 
 #[derive(CairoDeserialize, CairoSerialize, Clone, Default, Debug, Eq, PartialEq)]
 pub struct ResourceBounds {
-    pub resource: Felt252,
+    pub resource: Felt,
     pub max_amount: u64,
     pub max_price_per_unit: u128,
 }
 
 #[derive(Clone, Default, Debug, PartialEq, Eq)]
 pub struct TxInfoMock {
-    pub version: CheatStatus<Felt252>,
-    pub account_contract_address: CheatStatus<Felt252>,
-    pub max_fee: CheatStatus<Felt252>,
-    pub signature: CheatStatus<Vec<Felt252>>,
-    pub transaction_hash: CheatStatus<Felt252>,
-    pub chain_id: CheatStatus<Felt252>,
-    pub nonce: CheatStatus<Felt252>,
+    pub version: CheatStatus<Felt>,
+    pub account_contract_address: CheatStatus<Felt>,
+    pub max_fee: CheatStatus<Felt>,
+    pub signature: CheatStatus<Vec<Felt>>,
+    pub transaction_hash: CheatStatus<Felt>,
+    pub chain_id: CheatStatus<Felt>,
+    pub nonce: CheatStatus<Felt>,
     pub resource_bounds: CheatStatus<Vec<ResourceBounds>>,
-    pub tip: CheatStatus<Felt252>,
-    pub paymaster_data: CheatStatus<Vec<Felt252>>,
-    pub nonce_data_availability_mode: CheatStatus<Felt252>,
-    pub fee_data_availability_mode: CheatStatus<Felt252>,
-    pub account_deployment_data: CheatStatus<Vec<Felt252>>,
+    pub tip: CheatStatus<Felt>,
+    pub paymaster_data: CheatStatus<Vec<Felt>>,
+    pub nonce_data_availability_mode: CheatStatus<Felt>,
+    pub fee_data_availability_mode: CheatStatus<Felt>,
+    pub account_deployment_data: CheatStatus<Vec<Felt>>,
 }
 
 #[derive(Clone, Default, Debug, PartialEq, Eq)]
@@ -63,19 +63,19 @@ pub struct ExecutionInfoMock {
 
 #[derive(CairoDeserialize, Clone, Default, Debug)]
 pub struct TxInfoMockOperations {
-    pub version: Operation<Felt252>,
-    pub account_contract_address: Operation<Felt252>,
-    pub max_fee: Operation<Felt252>,
-    pub signature: Operation<Vec<Felt252>>,
-    pub transaction_hash: Operation<Felt252>,
-    pub chain_id: Operation<Felt252>,
-    pub nonce: Operation<Felt252>,
+    pub version: Operation<Felt>,
+    pub account_contract_address: Operation<Felt>,
+    pub max_fee: Operation<Felt>,
+    pub signature: Operation<Vec<Felt>>,
+    pub transaction_hash: Operation<Felt>,
+    pub chain_id: Operation<Felt>,
+    pub nonce: Operation<Felt>,
     pub resource_bounds: Operation<Vec<ResourceBounds>>,
-    pub tip: Operation<Felt252>,
-    pub paymaster_data: Operation<Vec<Felt252>>,
-    pub nonce_data_availability_mode: Operation<Felt252>,
-    pub fee_data_availability_mode: Operation<Felt252>,
-    pub account_deployment_data: Operation<Vec<Felt252>>,
+    pub tip: Operation<Felt>,
+    pub paymaster_data: Operation<Vec<Felt>>,
+    pub nonce_data_availability_mode: Operation<Felt>,
+    pub fee_data_availability_mode: Operation<Felt>,
+    pub account_deployment_data: Operation<Vec<Felt>>,
 }
 
 #[derive(CairoDeserialize, Clone, Default, Debug)]

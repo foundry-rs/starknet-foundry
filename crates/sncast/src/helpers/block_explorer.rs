@@ -1,7 +1,6 @@
-use serde::{Deserialize, Serialize};
-use starknet::core::types::Felt;
-
 use crate::{response::explorer_link::ExplorerError, Network};
+use serde::{Deserialize, Serialize};
+use starknet_types_core::felt::Felt;
 
 const STARKSCAN: &str = "starkscan.co";
 const VOYAGER: &str = "voyager.online";

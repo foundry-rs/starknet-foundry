@@ -1,10 +1,10 @@
 use crate::common::state::create_fork_cached_state;
 use crate::common::{call_contract, felt_selector_from_name};
-use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use cheatnet::state::CheatnetState;
 use conversions::string::TryFromHexStr;
 use starknet_api::core::ContractAddress;
+use starknet_types_core::felt::Felt;
 use tempfile::TempDir;
 use test_case::test_case;
 
@@ -62,7 +62,7 @@ fn cheat_caller_address_cairo0_contract(selector: &str) {
     };
     let uncheated_caller_address = &ret_data[0];
 
-    assert_eq!(cheated_caller_address, &Felt252::from(123));
+    assert_eq!(cheated_caller_address, &Felt::from(123));
     assert_eq!(uncheated_caller_address, caller);
 }
 
@@ -116,7 +116,7 @@ fn cheat_block_number_cairo0_contract(selector: &str) {
     };
     let uncheated_block_number = &ret_data[0];
 
-    assert_eq!(cheated_block_number, &Felt252::from(123));
+    assert_eq!(cheated_block_number, &Felt::from(123));
     assert_eq!(uncheated_block_number, block_number);
 }
 
@@ -169,6 +169,6 @@ fn cheat_block_timestamp_cairo0_contract(selector: &str) {
     };
     let uncheated_block_timestamp = &ret_data[0];
 
-    assert_eq!(cheated_block_timestamp, &Felt252::from(123));
+    assert_eq!(cheated_block_timestamp, &Felt::from(123));
     assert_eq!(uncheated_block_timestamp, block_timestamp);
 }

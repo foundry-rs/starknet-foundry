@@ -9,10 +9,11 @@ use sncast::response::structs::InvokeResponse;
 use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, ExecutionV1, ExecutionV3, SingleOwnerAccount};
-use starknet::core::types::{Call, Felt, InvokeTransactionResult};
+use starknet::core::types::{Call, InvokeTransactionResult};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
+use starknet_types_core::felt::Felt;
 
 #[derive(Args, Clone, Debug)]
 #[command(about = "Invoke a contract on Starknet")]
