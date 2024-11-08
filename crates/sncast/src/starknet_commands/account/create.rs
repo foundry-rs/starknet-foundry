@@ -5,7 +5,6 @@ use crate::starknet_commands::account::{
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use conversions::padded_felt::PaddedFelt;
 use conversions::IntoConv;
 use serde_json::json;
 use sncast::helpers::braavos::BraavosAccountFactory;

@@ -312,7 +312,6 @@ mod tests {
     use super::*;
     use crate::state::state_file::ScriptTransactionOutput::ErrorResponse;
     use camino::Utf8PathBuf;
-    use conversions::padded_felt::PaddedFelt;
     use conversions::string::TryFromHexStr;
     use conversions::IntoConv;
     use starknet::core::types::Felt;
