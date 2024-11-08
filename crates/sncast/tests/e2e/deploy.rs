@@ -85,7 +85,7 @@ async fn test_happy_case_human_readable() {
             "
             command: deploy
             contract_address: 0x0[..]
-            transaction_hash: 0x[..]
+            transaction_hash: 0x0[..]
 
             To see deployment details, visit:
             contract: [..]
