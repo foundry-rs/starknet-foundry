@@ -6,6 +6,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::padded_felt::PaddedFelt;
+use conversions::IntoConv;
 use serde_json::json;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::CastConfig;
@@ -119,7 +120,7 @@ pub async fn create(
     }
 
     Ok(AccountCreateResponse {
-        address: PaddedFelt(address),
+        address: address.into_(),
         max_fee,
         add_profile: if add_profile.is_some() {
             format!(

@@ -408,7 +408,7 @@ mod tests {
         let transaction = ScriptTransactionEntry {
             name: "declare".to_string(),
             output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
-                class_hash: PaddedFelt(Felt::try_from_hex_str("0x123").unwrap()),
+                class_hash: Felt::try_from_hex_str("0x123").unwrap().into_(),
                 transaction_hash: Felt::try_from_hex_str("0x321").unwrap().into_(),
             }),
             status: ScriptTransactionStatus::Success,
@@ -445,7 +445,7 @@ mod tests {
         let transaction1 = ScriptTransactionEntry {
             name: "declare".to_string(),
             output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
-                class_hash: PaddedFelt(Felt::try_from_hex_str("0x1").unwrap()),
+                class_hash: Felt::try_from_hex_str("0x1").unwrap().into_(),
                 transaction_hash: Felt::try_from_hex_str("0x2").unwrap().into_(),
             }),
             status: ScriptTransactionStatus::Success,
@@ -516,7 +516,7 @@ mod tests {
         let transaction1 = ScriptTransactionEntry {
             name: "declare".to_string(),
             output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
-                class_hash: PaddedFelt(Felt::try_from_hex_str("0x1").unwrap()),
+                class_hash: Felt::try_from_hex_str("0x1").unwrap().into_(),
                 transaction_hash: Felt::try_from_hex_str("0x2").unwrap().into_(),
             }),
             status: ScriptTransactionStatus::Success,
@@ -593,7 +593,7 @@ mod tests {
             name: "deploy".to_string(),
             output: ScriptTransactionOutput::DeployResponse(DeployResponse {
                 transaction_hash: Felt::try_from_hex_str("0x3").unwrap().into_(),
-                contract_address: PaddedFelt(Felt::try_from_hex_str("0x333").unwrap()),
+                contract_address: Felt::try_from_hex_str("0x333").unwrap().into_(),
             }),
             status: ScriptTransactionStatus::Success,
             timestamp: 1,
