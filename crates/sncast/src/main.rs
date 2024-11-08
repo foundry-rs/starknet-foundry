@@ -271,7 +271,7 @@ async fn run_async_command(
                     declare_transaction_response
                 }
                 DeclareResponse::AlreadyDeclared(_) => {
-                    unreachable!("Argument skip_on_already_declared is false")
+                    unreachable!("Argument `skip_on_already_declared` is false")
                 }
             });
 

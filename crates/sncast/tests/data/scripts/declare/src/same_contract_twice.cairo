@@ -34,7 +34,7 @@ fn main() {
 
     // Check if already declared contract was handled correctly
     match second_declare_result {
-        DeclareResult::Success(_) => panic!("Should be already declare"),
+        DeclareResult::Success(_) => panic!("Should be already declared"),
         DeclareResult::AlreadyDeclared(already_declared_result) => assert!(
             already_declared_result.class_hash == class_hash
         ),
