@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use clap::{Args, ValueEnum};
 use conversions::byte_array::ByteArray;
+use conversions::IntoConv;
 use scarb_api::StarknetContractArtifacts;
 use sncast::helpers::error::token_not_supported_for_declaration;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
@@ -126,8 +127,8 @@ pub async fn declare(
             account.provider(),
             transaction_hash,
             DeclareResponse {
-                class_hash,
-                transaction_hash,
+                class_hash: class_hash.into_(),
+                transaction_hash: transaction_hash.into_(),
             },
             wait_config,
         )

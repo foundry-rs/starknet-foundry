@@ -7,9 +7,12 @@ pub mod entrypoint_selector;
 pub mod eth_address;
 pub mod felt;
 pub mod nonce;
+pub mod padded_felt;
 pub mod primitive;
 pub mod serde;
 pub mod string;
+
+extern crate self as conversions;
 
 pub trait FromConv<T>: Sized {
     fn from_(value: T) -> Self;

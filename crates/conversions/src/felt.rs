@@ -4,6 +4,7 @@ use crate::{
     string::{TryFromDecStr, TryFromHexStr},
     FromConv, IntoConv,
 };
+use conversions::padded_felt::PaddedFelt;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
 use starknet_types_core::felt::{Felt, FromStrError};
 use std::vec;
@@ -28,6 +29,12 @@ impl FromConv<Nonce> for Felt {
 
 impl FromConv<EntryPointSelector> for Felt {
     fn from_(value: EntryPointSelector) -> Felt {
+        value.0.into_()
+    }
+}
+
+impl FromConv<PaddedFelt> for Felt {
+    fn from_(value: PaddedFelt) -> Felt {
         value.0.into_()
     }
 }
