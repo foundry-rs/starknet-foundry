@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - You can skip `--name` flag when using `account import` - a default name will be generated.
+- Addresses outputted when calling `sncast account create`, `sncast deploy` and `sncast declare` are now padded to 64 characters length and prefixed with `0x0`
 
 ## [0.33.0] - 2024-11-04
 
@@ -65,10 +66,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - When using test name filter with `--exact` flag, forge will try to compile only the selected test.
-
-#### Changed
-
-- Addresses outputted when calling `sncast account create`, `sncast deploy` and `sncast declare` are now padded to 64 characters length and prefixed with `0x0`
 
 ## [0.31.0] - 2024-09-26
 
