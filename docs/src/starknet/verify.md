@@ -24,18 +24,25 @@ First, ensure that you have created a `Scarb.toml` file for your contract (it sh
 Then run:
 
 ```shell
-$ sncast \
+sncast \
     verify \
     --contract-address 0x01e4ebe3278ab4633a9d0d3f5c4290001f29bc3179a70e570b6817dd7f8264fa \
     --contract-name SimpleBalance \
     --verifier walnut \
     --network sepolia
+```
 
+<details>
+<summary>Click to expand output</summary>
+
+```shell
 You are about to submit the entire workspace's code to the third-party chosen verifier at walnut, and the code will be publicly available through walnut's APIs. Are you sure? (Y/n) Y
 
 command: verify
 message: Contract verification has started. You can check the verification status at the following link: https://api.walnut.dev/v1/verification/77f1d905-fdb4-4280-b7d6-57cd029d1259/status.
 ```
+</details>
+<br>
 
 > 📝 **Note**
 > Contract name is a part after the `mod` keyword in your contract file. It may differ from package name defined in `Scarb.toml` file.

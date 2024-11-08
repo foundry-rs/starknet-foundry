@@ -14,14 +14,21 @@ replace any subcommand (and its parameters) with `show-config` and it will show 
 ### General Example
 
 ```shell
-$ sncast \
+sncast \
   --account user1 \
   show-config \
   --url http://127.0.0.1:5050
+```
 
+<details>
+<summary>Click to expand output</summary>
+
+```shell
 command: show-config
 account: user1
 chain_id: alpha-sepolia
 keystore: ../keystore
 rpc_url: http://127.0.0.1:5050/rpc
 ```
+</details>
+<br>

@@ -67,7 +67,10 @@ Most common directory structures include:
 ### 1. `scripts` directory with all the scripts in the same workspace with cairo contracts (default for `sncast script init`)
 
 ```shell
-$ tree
+tree
+```
+
+```shell
 .
 ├── scripts
 │   └── my_script
@@ -91,7 +94,10 @@ You can also have multiple scripts as separate packages, or multiple modules ins
 #### 1a. multiple scripts in one package
 
 ```shell
-$ tree
+tree
+```
+
+```shell
 .
 ├── scripts
 │   └── my_script
@@ -109,7 +115,10 @@ $ tree
 #### 1b. multiple scripts as separate packages
 
 ```shell
-$ tree
+tree
+```
+
+```shell
 .
 ├── scripts
 │   ├── Scarb.toml
@@ -132,7 +141,10 @@ $ tree
 #### 1c. single script with flat directory structure
 
 ```shell
-$ tree
+tree
+```
+
+```shell
 .
 ├── Scarb.toml
 ├── scripts
@@ -147,7 +159,10 @@ $ tree
 ### 2. scripts disjointed from the workspace with cairo contracts
 
 ```shell
-$ tree
+tree
+```
+
+```shell
 .
 ├── Scarb.toml
 └── src
@@ -167,7 +182,7 @@ This setup can be seen in action in [Full Example below](#full-example-with-cont
 To get started, a deployment script with all required elements can be initialized using the following command:
 
 ```shell
-$ sncast script init my_script
+sncast script init my_script
 ```
 
 For more details, see [init command](../appendix/sncast/script/init.md).
@@ -187,7 +202,10 @@ This example shows how to call an already deployed contract. Please find full ex
 The script should be included in a Scarb package. The directory structure and config for this example looks like this:
 
 ```shell
-$ tree
+tree
+```
+
+```shell
 .
 ├── src
 │   ├── my_script.cairo
@@ -208,14 +226,20 @@ sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag =
 To run the script, do:
 
 ```shell
-$ sncast \
+sncast \
   script run my_script
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
+```
 
+<details>
+<summary>Click to expand output</summary>
+
+```shell
 CallResult { data: [0, 96231036770510887841935600920878740513, 16] }
 command: script run
 status: success
 ```
+</details>
 
 ### Full Example (With Contract Deployment)
 
@@ -234,7 +258,10 @@ We prepare a script:
 The script should be included in a Scarb package. The directory structure and config for this example looks like this:
 
 ```shell
-$ tree
+tree
+```
+
+```shell
 .
 ├── contracts
 │    ├── Scarb.toml
@@ -272,11 +299,16 @@ Please note that `map` contract was specified as the dependency. In our example,
 To run the script, do:
 
 ```shell
-$ sncast \
+sncast \
   --account example_user \
   script run map_script \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
+```
 
+<details>
+<summary>Click to expand output</summary>
+
+```shell
 Class hash of the declared contract: 685896493695476540388232336434993540241192267040651919145140488413686992233
 ...
 Deployed the contract to address: 2993684914933159551622723238457226804366654523161908704282792530334498925876
@@ -287,16 +319,23 @@ Call result: [2]
 command: script run
 status: success
 ```
+</details>
+<br>
 
 As [an idempotency](#state-file) feature is turned on by default, executing the same script once again ends with a success
 and only `call` functions are being executed (as they do not change the network state):
 
 ```shell
-$ sncast \
+sncast \
   --account example_user \
   script run map_script \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
+```
 
+<details>
+<summary>Click to expand output</summary>
+
+```shell
 Class hash of the declared contract: 1922774777685257258886771026518018305931014651657879651971507142160195873652
 Deployed the contract to address: 3478557462226312644848472512920965457566154264259286784215363579593349825684
 Invoke tx hash is: 1373185562410761200747829131886166680837022579434823960660735040169785115611
@@ -304,22 +343,32 @@ Call result: [2]
 command: script run
 status: success
 ```
+</details>
+<br>
+
 
 whereas, when we run the same script once again with `--no-state-file` flag set, it fails (as the `Map` contract is already declared):
 
 ```shell
-$ sncast \
+sncast \
   --account example_user \
   script run map_script \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7 \
   --no-state-file
+```
 
+<details>
+<summary>Click to expand output</summary>
+
+```shell
 command: script run
 message:
     0x636f6e747261637420616c7265616479206465636c61726564 ('contract already declared')
 
 status: script panicked
 ```
+</details>
+<br>
 
 ## Error handling
 

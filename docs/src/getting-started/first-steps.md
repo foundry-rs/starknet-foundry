@@ -6,14 +6,14 @@ We demonstrate how to create a new project, compile, and test it.
 To start a new project with Starknet Foundry, run `snforge init`
 
 ```shell
-$ snforge init project_name
+snforge init project_name
 ```
 
 Let's check out the project structure
 
 ```shell
-$ cd project_name
-$ tree . -L 1
+cd project_name
+tree . -L 1
 .
 ├── Scarb.lock
 ├── Scarb.toml
@@ -31,7 +31,7 @@ $ tree . -L 1
 And run tests with `snforge test`
 
 ```shell
-$ snforge test
+snforge test
    Compiling project_name v0.1.0 (project_name/Scarb.toml)
     Finished release target(s) in 1 second
 
@@ -60,7 +60,7 @@ snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag 
 Make sure that the version in `tag` matches `snforge`. You can check the currently installed version with
 
 ```shell
-$ snforge --version
+snforge --version
 snforge 0.27.0
 ```
 
@@ -69,7 +69,7 @@ using [`scarb add`](https://docs.swmansion.com/scarb/docs/guides/dependencies.ht
 command.
 
 ```shell
-$ scarb add snforge_std \ 
+scarb add snforge_std \ 
  --dev \
  --git https://github.com/foundry-rs/starknet-foundry.git \
  --tag v0.27.0
@@ -80,3 +80,4 @@ Additionally, ensure that starknet-contract target is enabled in the `Scarb.toml
 ```toml
 # ...
 [[target.starknet-contract]]
+```

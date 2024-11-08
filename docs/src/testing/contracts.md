@@ -39,13 +39,21 @@ Let's write a test that will deploy the `HelloStarknet` contract and call some f
 > `HelloStarknet` contract has no constructor, so the calldata remains empty in the example above.
 
 ```shell
-$ snforge test
+snforge test
+```
+
+<details>
+<summary>Click to expand output</summary>
+
+```shell
 Collected 1 test(s) from testing_smart_contracts package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [PASS] tests::call_and_invoke
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
+</details>
+<br>
 
 ## Handling Errors
 
@@ -67,7 +75,13 @@ If we called this function in a test, it would result in a failure.
 ```
 
 ```shell
-$ snforge test
+snforge test
+```
+
+<details>
+<summary>Click to expand output</summary>
+
+```shell
 Collected 1 test(s) from testing_smart_contracts package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
@@ -81,6 +95,8 @@ Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 Failures:
     tests::failing
 ```
+</details>
+<br>
 
 ### `SafeDispatcher`
 
@@ -97,13 +113,21 @@ They allow using the contract without automatically unwrapping the result, which
 Now the test passes as expected.
 
 ```shell
-$ snforge test
+snforge test
+```
+
+<details>
+<summary>Click to expand output</summary>
+
+```shell
 Collected 1 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [PASS] tests::handling_errors
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
+</details>
+<br>
 
 Similarly, you can handle the panics which use `ByteArray` as an argument (like an `assert!` or `panic!` macro)
 

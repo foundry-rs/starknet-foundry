@@ -24,7 +24,10 @@ then it is treated as an entrypoint to the `tests` package from which tests are 
 For example, for a package structured this way:
 
 ```shell
-$ tree .
+tree .
+```
+
+```shell
 .
 ├── Scarb.toml
 ├── tests/
@@ -64,7 +67,10 @@ Then this virtual `lib.cairo` is treated as an entrypoint to the `tests` package
 For example, for a package structured this way:
 
 ```shell
-$ tree .
+tree .
+```
+
+```shell
 .
 ├── Scarb.toml
 ├── tests/

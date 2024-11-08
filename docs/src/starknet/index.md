@@ -12,7 +12,7 @@ Starknet Foundry `sncast` is a command line tool for performing Starknet RPC cal
 
 To use `sncast`, run the `sncast` command followed by a subcommand (see [available commands](../appendix/sncast.md)):
 ```shell
-$ sncast <subcommand>
+sncast <subcommand>
 ```
 
 If `snfoundry.toml` is present and configured with `[sncast.default]`, `url`, `accounts-file` and `account` name will be taken from it.
@@ -28,17 +28,24 @@ You can, however, overwrite their values by supplying them as flags directly to 
 Let's use `sncast` to call a contract's function:
 
 ```shell
-$ sncast --account myuser \
+sncast --account myuser \
     call \
     --url http://127.0.0.1:5050 \
     --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
     --function get \
     --calldata 0x0 \
     --block-id latest
+```
 
+<details>
+<summary>Click to expand output</summary>
+
+```shell
 command: call
 response: [0x0]
 ```
+</details>
+<br>
 
 > 📝 **Note**
 > In the above example we supply `sncast` with `--account` and `--url` flags. If `snfoundry.toml` is present, and have these properties set, values provided using these flags will override values from `snfoundry.toml`. Learn more about `snfoundry.toml` configuration [here](../projects/configuration.md#sncast).
@@ -64,12 +71,17 @@ It is also possible to pass calldata in more friendly, human readable form thank
 Let's invoke a transaction and wait for it to be `ACCEPTED_ON_L2`.
 
 ```shell
-$ sncast --account myuser \
+sncast --account myuser \
     --wait \
     deploy \
 	--url http://127.0.0.1:5050 \
     --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
+```
 
+<details>
+<summary>Click to expand output</summary>
+
+```shell
 Transaction hash: 0x3062310a1e40d4b66d8987ba7447d1c7317381d0295d62cb12f2fe3f11e6983
 Waiting for transaction to be received. Retries left: 11
 Waiting for transaction to be received. Retries left: 10
@@ -84,12 +96,14 @@ Received transaction. Status: Pending
 Received transaction. Status: Pending
 command: deploy
 contract_address: 0x1d91599ec661e97fdcbb10c642a1c4f920986f1a7a9659d157d0db09baaa29e
-transaction_hash: 0x3062310a1e40d4b66d8987ba7447d1c7317381d0295d62cb12f2fe3f11e6983
+transaction_hash: 0x3062310a1e40d4b66d8987ba7447d1c7317381d0295d62cb12f2fe3f11e6983```
 
 To see deployment details, visit:
 contract: https://starkscan.co/search/0x1d91599ec6...
 transaction: https://starkscan.co/search/0x3062310a1e...
 ```
+</details>
+<br>
 
 As you can see command waited for the transaction until it was `ACCEPTED_ON_L2`.
 
