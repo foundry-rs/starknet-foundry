@@ -27,7 +27,12 @@ sncast \
     account create \
     --url http://127.0.0.1:5050 \
     --name some-name
+```
 
+<details>
+<summary>Click to expand output</summary>
+
+```shell
 command: account create
 add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
 address: 0x34ae54182d04754d8043189afd315a808d4bea1a63862b3b05aa78b37756d7b
@@ -37,6 +42,8 @@ message: Account successfully created. Prefund generated address with at least <
 To see account creation details, visit:
 account: https://starkscan.co/search/contract/34ae54182d04754d8043189afd315a808d4bea1a63862b3b05aa78b37756d7b
 ```
+<details>
+<br>
 
 For a detailed CLI description, see [account create command reference](../appendix/sncast/account/create.md).
 

@@ -52,7 +52,6 @@ sncast account deploy \
 or set `--version` to `v1`:
 
 ```shell
-```shell
 sncast account deploy \
     --name some-name \
     --version v1 \
