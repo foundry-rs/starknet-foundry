@@ -11,7 +11,7 @@ Install the latest stable [Rust](https://www.rust-lang.org/tools/install) versio
 If you already have Rust installed make sure to upgrade it by running
 
 ```shell
-rustup update
+$ rustup update
 ```
 
 ### Scarb
@@ -86,7 +86,7 @@ Starknet Foundry uses [typos](https://github.com/marketplace/actions/typos-actio
 You can run the checker with
 
 ```shell
-typos
+$ typos
 ```
 
 Some typos can be automatically fixed by running```
@@ -95,7 +95,7 @@ Some typos can be automatically fixed by running```
 <summary>Output:</summary>
 
 ```shell
-typos -w
+$ typos -w
 ```
 </details>
 

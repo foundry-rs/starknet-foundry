@@ -80,10 +80,15 @@ As for now, Starknet Foundry on Windows needs manual installation, but necessary
 3. Add path to the snfoundry\bin directory to your PATH environment variable.
 4. Verify installation by running the following command in new terminal session:
 
-```shell
-$ snforge --version
-$ sncast --version
-```
+   ```shell
+   $ snforge --version
+   ```
+
+   and
+
+   ```
+   $ sncast --version
+   ```
 
 ### Universal-Sierra-Compiler update
 

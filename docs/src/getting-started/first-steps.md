@@ -12,8 +12,8 @@ $ snforge init project_name
 Let's check out the project structure
 
 ```shell
-cd project_name
-tree . -L 1
+$ cd project_name
+$ tree . -L 1
 ```
 
 ```shell
@@ -88,7 +88,7 @@ using [`scarb add`](https://docs.swmansion.com/scarb/docs/guides/dependencies.ht
 command.
 
 ```shell
-scarb add snforge_std \ 
+$ scarb add snforge_std \ 
  --dev \
  --git https://github.com/foundry-rs/starknet-foundry.git \
  --tag v0.27.0
