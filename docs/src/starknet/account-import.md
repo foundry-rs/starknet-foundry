@@ -72,7 +72,7 @@ This section shows how to export your private key from specific wallets.
 To import an account into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default), use the `account import` command.
 
 ```shell
-$ sncast \
+sncast \
     account import \
 	--url http://127.0.0.1:5050 \
     --name account_123 \
@@ -88,7 +88,7 @@ $ sncast \
 If you don't want to pass the private key in the command (because of safety aspect), you can skip `--private-key` flag. You will be prompted to enter the private key in interactive mode.
 
 ```shell
-$ sncast \
+sncast \
     account import \
 	--url http://127.0.0.1:5050 \
     --name account_123 \
@@ -110,7 +110,7 @@ Type in your private key and press enter:
 To import Argent account, set the `--type` flag to `argent`.
 
 ```shell
-$ sncast \
+sncast \
     account import \
 	--url http://127.0.0.1:5050 \
     --name account_argent \
@@ -124,7 +124,7 @@ $ sncast \
 To import Braavos account, set the `--type` flag to `braavos`.
 
 ```shell
-$ sncast \
+sncast \
     account import \
 	--url http://127.0.0.1:5050 \
     --name account_braavos \
@@ -138,7 +138,7 @@ $ sncast \
 To import OpenZeppelin account, set the `--type` flag to `oz` or  `open_zeppelin`.
 
 ```shell
-$ sncast \
+sncast \
     account import \
 	--url http://127.0.0.1:5050 \
     --name account_oz \

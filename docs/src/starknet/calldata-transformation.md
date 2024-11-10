@@ -53,7 +53,7 @@ pub mod DataTransformerContract {
 A default form of calldata passed to commands requiring it is a series of hex-encoded felts:
 
 ```shell
-$ sncast call \
+sncast call \
     --url http://127.0.0.1:5050 \
     --contract-address 0x016ad425af4585102e139d4fb2c76ce786d1aaa1cfcd88a51f3ed66601b23cdd \
     --function tuple_fn \
@@ -79,7 +79,7 @@ the [Starknet specification](https://docs.starknet.io/architecture-and-concepts/
 We can write the same command as above, but with arguments:
 
 ```shell
-$ sncast call \
+sncast call \
     --url http://127.0.0.1:5050 \
     --contract-address 0x016ad425af4585102e139d4fb2c76ce786d1aaa1cfcd88a51f3ed66601b23cdd \
     --function tuple_fn \
@@ -124,7 +124,7 @@ Numeric types (primitives and `felt252`) can be paseed with type suffix specifie
 1. `complex_fn` - different data types:
 
 ```shell
-$ sncast call \
+sncast call \
     --url http://127.0.0.1:5050 \
     --contract-address 0x016ad425af4585102e139d4fb2c76ce786d1aaa1cfcd88a51f3ed66601b23cdd \
     --function complex_fn \
@@ -147,7 +147,7 @@ $ sncast call \
 Alternatively, you can continue the single quote for multiple lines.
 
 ```shell
-$ sncast call \
+sncast call \
     --url http://127.0.0.1:5050 \
     --contract-address 0x016ad425af4585102e139d4fb2c76ce786d1aaa1cfcd88a51f3ed66601b23cdd \
     --function complex_fn \
@@ -169,7 +169,7 @@ true,
 2. `nested_struct_fn` - struct nesting:
 
 ```shell
-$ sncast call \
+sncast call \
     --url http://127.0.0.1:5050 \
     --contract-address 0x016ad425af4585102e139d4fb2c76ce786d1aaa1cfcd88a51f3ed66601b23cdd \
     --function nested_struct_fn \

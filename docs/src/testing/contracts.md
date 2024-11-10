@@ -39,7 +39,7 @@ Let's write a test that will deploy the `HelloStarknet` contract and call some f
 > `HelloStarknet` contract has no constructor, so the calldata remains empty in the example above.
 
 ```shell
-$ snforge test
+snforge test
 ```
 
 <details open>
@@ -75,7 +75,7 @@ If we called this function in a test, it would result in a failure.
 ```
 
 ```shell
-$ snforge test
+snforge test
 ```
 
 <details open>
@@ -113,7 +113,7 @@ They allow using the contract without automatically unwrapping the result, which
 Now the test passes as expected.
 
 ```shell
-$ snforge test
+snforge test
 ```
 
 <details open>

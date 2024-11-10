@@ -38,7 +38,7 @@ We can try to create a test that will increase and verify the balance.
 This test fails, which means that `increase_balance` method panics as we expected.
 
 ```shell
-$ snforge test
+snforge test
 ```
 
 <details open>
@@ -74,7 +74,7 @@ address, so it passes our validation.
 The test will now pass without an error
 
 ```shell
-$ snforge test
+snforge test
 ```
 
 <details open>
@@ -104,7 +104,7 @@ We will demonstrate its behavior using `SafeDispatcher` to show when exactly the
 ```
 
 ```shell
-$ snforge test
+snforge test
 ```
 
 <details open>

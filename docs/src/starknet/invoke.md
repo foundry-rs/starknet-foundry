@@ -17,7 +17,7 @@ For detailed CLI description, see [invoke command reference](../appendix/sncast/
 ### General Example
 
 ```shell
-$ sncast \
+sncast \
   --account example_user \
   invoke \
   --url http://127.0.0.1:5050 \
@@ -51,7 +51,7 @@ transaction: https://starkscan.co/tx/0x7ad0d6e449...
 Not every function accepts parameters. Here is how to call it.
 
 ```shell
-$ sncast invoke \
+sncast invoke \
   --fee-token strk \
   --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
   --function "function_without_params"

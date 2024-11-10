@@ -6,7 +6,7 @@ We demonstrate how to create a new project, compile, and test it.
 To start a new project with Starknet Foundry, run `snforge init`
 
 ```shell
-$ snforge init project_name
+snforge init project_name
 ```
 
 Let's check out the project structure
@@ -34,7 +34,7 @@ tree . -L 1
 And run tests with `snforge test`
 
 ```shell
-$ snforge test
+snforge test
 ```
 
 <details open>
@@ -71,14 +71,14 @@ snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag 
 Make sure that the version in `tag` matches `snforge`. You can check the currently installed version with
 
 ```shell
-$ snforge --version
+snforge --version
 ```
 
 <details>
 <summary>Click to expand</summary>
 
 ```shell
-$ snforge 0.27.0
+snforge 0.27.0
 ```
 </details>
 <br>
