@@ -78,7 +78,7 @@ $ snforge --version
 <summary>Click to expand</summary>
 
 ```shell
-$ snforge 0.27.0
+snforge 0.27.0
 ```
 </details>
 <br>
