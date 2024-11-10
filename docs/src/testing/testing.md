@@ -19,7 +19,7 @@ You can find a detailed explanation of how `snforge` collects tests [here](test-
 Now run `snforge` using a command:
 
 ```shell
-snforge test
+$ snforge test
 ```
 
 <details open>
@@ -44,7 +44,7 @@ If your code panics, the test is considered failed. Here's an example of a faili
 ```
 
 ```shell
-snforge test
+$ snforge test
 ```
 
 <details open>
@@ -92,7 +92,7 @@ With this format, the expected error message needs to be a substring of the actu
 ```
 
 ```shell
-snforge test
+$ snforge test
 ```
 
 <details open>
@@ -118,7 +118,7 @@ You can achieve it using `#[ignore]` - tests marked with this attribute will be 
 ```
 
 ```shell
-snforge test
+$ snforge test
 ```
 
 <details open>

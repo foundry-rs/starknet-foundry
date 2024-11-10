@@ -23,7 +23,7 @@ The test will be run many times against different randomly generated values.
 Then run `snforge test` like usual.
 
 ```shell
-snforge test
+$ snforge test
 ```
 
 <details open>
@@ -65,7 +65,7 @@ It is possible to configure the number of runs of the random fuzzer as well as i
 It can also be configured globally, via command line arguments:
 
 ```shell
-snforge test --fuzzer-runs 1234 --fuzzer-seed 1111
+$ snforge test --fuzzer-runs 1234 --fuzzer-seed 1111
 ```
 
 Or in `Scarb.toml` file:

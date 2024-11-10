@@ -119,7 +119,7 @@ If a test case has a custom name, it should be displayed to the user.
 An example output could look similarly to this:
 
 ```shell
-snforge test
+$ snforge test
 [PASS] tests::parametrized(a = 1, b = 2)              # unnamed test case
 [PASS] tests::parametrized[a_test](a = 3, b = 5)      # named test case
 [FAIL] tests::parametrized[my_case](a = 4, b = 5)     # named test case

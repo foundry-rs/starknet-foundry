@@ -31,7 +31,7 @@ Usage details and limitations are also described there - make sure to check it o
 All you have to do is use the [`--save-trace-data`](../appendix/snforge/test.md#--save-trace-data) flag:
 
 ```shell
-snforge test --save-trace-data
+$ snforge test --save-trace-data
 ```
 
 The files with traces will be saved to `snfoundry_trace` directory. Each one of these files can then be used as an input
@@ -40,7 +40,7 @@ for the [cairo-coverage](https://github.com/software-mansion/cairo-coverage).
 If you want `snforge` to call `cairo-coverage` on generated files automatically, use [`--coverage`](../appendix/snforge/test.md#--coverage) flag:
 
 ```shell
-snforge test --coverage
+$ snforge test --coverage
 ```
 
 This will generate a coverage report in the `coverage` directory named `coverage.lcov`.
@@ -51,7 +51,7 @@ You can pass additional arguments to `cairo-coverage` by using the `--` separato
 to `cairo-coverage`:
 
 ```shell
-snforge test --coverage -- --include macros
+$ snforge test --coverage -- --include macros
 ```
 
 > 📝 **Note**

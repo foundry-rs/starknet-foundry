@@ -12,7 +12,7 @@ Starknet Foundry `sncast` is a command line tool for performing Starknet RPC cal
 
 To use `sncast`, run the `sncast` command followed by a subcommand (see [available commands](../appendix/sncast.md)):
 ```shell
-sncast <subcommand>
+$ sncast <subcommand>
 ```
 
 If `snfoundry.toml` is present and configured with `[sncast.default]`, `url`, `accounts-file` and `account` name will be taken from it.
@@ -28,7 +28,7 @@ You can, however, overwrite their values by supplying them as flags directly to 
 Let's use `sncast` to call a contract's function:
 
 ```shell
-sncast --account myuser \
+$ sncast --account myuser \
     call \
     --url http://127.0.0.1:5050 \
     --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
@@ -71,7 +71,7 @@ It is also possible to pass calldata in more friendly, human readable form thank
 Let's invoke a transaction and wait for it to be `ACCEPTED_ON_L2`.
 
 ```shell
-sncast --account myuser \
+$ sncast --account myuser \
     --wait \
     deploy \
 	--url http://127.0.0.1:5050 \
