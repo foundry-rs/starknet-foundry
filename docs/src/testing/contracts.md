@@ -42,8 +42,8 @@ Let's write a test that will deploy the `HelloStarknet` contract and call some f
 snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from testing_smart_contracts package
@@ -78,8 +78,8 @@ If we called this function in a test, it would result in a failure.
 snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from testing_smart_contracts package
@@ -116,8 +116,8 @@ Now the test passes as expected.
 snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from package_name package

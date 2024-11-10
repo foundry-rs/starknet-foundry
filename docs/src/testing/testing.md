@@ -22,8 +22,8 @@ Now run `snforge` using a command:
 snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from writing_tests package
@@ -47,8 +47,8 @@ If your code panics, the test is considered failed. Here's an example of a faili
 snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from writing_tests package
@@ -95,8 +95,8 @@ With this format, the expected error message needs to be a substring of the actu
 snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from writing_tests package
@@ -121,8 +121,8 @@ You can achieve it using `#[ignore]` - tests marked with this attribute will be 
 snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from writing_tests package

@@ -32,8 +32,8 @@ sncast \
     --network sepolia
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 You are about to submit the entire workspace's code to the third-party chosen verifier at walnut, and the code will be publicly available through walnut's APIs. Are you sure? (Y/n) Y

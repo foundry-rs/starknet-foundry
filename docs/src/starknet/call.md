@@ -23,8 +23,8 @@ sncast call \
   --calldata 1 2 3
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 command: call
@@ -48,8 +48,8 @@ sncast call \
   --block-id 1234```
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 command: call

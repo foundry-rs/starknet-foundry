@@ -19,8 +19,8 @@ sncast \
  --url http://127.0.0.1:5050
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 command: tx-status

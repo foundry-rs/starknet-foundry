@@ -26,8 +26,8 @@ Then run `snforge test` like usual.
 snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from fuzz_testing package

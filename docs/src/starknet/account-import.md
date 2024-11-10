@@ -96,8 +96,8 @@ sncast \
     --type oz
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Type in your private key and press enter: 

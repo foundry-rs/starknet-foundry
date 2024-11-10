@@ -231,8 +231,8 @@ sncast \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 CallResult { data: [0, 96231036770510887841935600920878740513, 16] }
@@ -305,8 +305,8 @@ sncast \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Class hash of the declared contract: 685896493695476540388232336434993540241192267040651919145140488413686992233
@@ -332,8 +332,8 @@ sncast \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Class hash of the declared contract: 1922774777685257258886771026518018305931014651657879651971507142160195873652
@@ -357,8 +357,8 @@ sncast \
   --no-state-file
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 command: script run

@@ -41,8 +41,8 @@ This test fails, which means that `increase_balance` method panics as we expecte
 snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from using_cheatcodes package
@@ -77,8 +77,8 @@ The test will now pass without an error
 snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from using_cheatcodes package
@@ -107,8 +107,8 @@ We will demonstrate its behavior using `SafeDispatcher` to show when exactly the
 snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from using_cheatcodes package

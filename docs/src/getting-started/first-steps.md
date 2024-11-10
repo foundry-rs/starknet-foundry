@@ -37,8 +37,8 @@ And run tests with `snforge test`
 snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
    Compiling project_name v0.1.0 (project_name/Scarb.toml)

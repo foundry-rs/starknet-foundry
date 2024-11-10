@@ -91,12 +91,11 @@ typos
 
 Some typos can be automatically fixed by running```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
-```shell
-$ typos -w
+typos -w
 ```
 </details>
 

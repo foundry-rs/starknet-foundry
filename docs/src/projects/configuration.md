@@ -58,8 +58,8 @@ sncast --profile myprofile \
     --block-id latest
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 command: call
@@ -95,8 +95,8 @@ sncast call \
     --block-id latest
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 command: call

@@ -29,8 +29,8 @@ sncast \
     --name some-name
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 command: account create

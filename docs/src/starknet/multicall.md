@@ -50,8 +50,8 @@ Additionally, the `id` can be referenced in the inputs of deploy and invoke call
 sncast multicall run --path /Users/john/Desktop/multicall_example.toml --fee-token strk
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 command: multicall
@@ -77,8 +77,8 @@ You can also generate multicall template with `multicall new` command, specifyin
 sncast multicall new ./template.toml
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Multicall template successfully saved in ./template.toml
@@ -113,8 +113,8 @@ If there is a file with the same name as provided, it can be overwritten.
 sncast multicall new ./template.toml --overwrite
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Multicall template successfully saved in ./new_multicall_template.toml

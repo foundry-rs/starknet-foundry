@@ -37,8 +37,8 @@ only the tests in `./src` and `./tests` folders will be executed.
 snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from hello_workspaces package
@@ -56,8 +56,8 @@ You can also run `snforge test` from the package directory to achieve the same e
 snforge test --package addition
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 2 test(s) from addition package
@@ -76,8 +76,8 @@ You can also pass `--workspace` flag to run tests for all packages in the worksp
 snforge test --workspace
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 2 test(s) from addition package

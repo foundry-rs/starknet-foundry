@@ -27,8 +27,8 @@ sncast \
   --calldata 1 2 0x1e
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 command: invoke
@@ -57,8 +57,8 @@ sncast invoke \
   --function "function_without_params"
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 command: invoke
