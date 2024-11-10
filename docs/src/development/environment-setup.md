@@ -55,7 +55,7 @@ Install the latest [universal-sierra-compiler](https://github.com/software-mansi
 Tests can be run with:
 
 ```shell
-cargo test
+$ cargo test
 ```
 
 
@@ -64,19 +64,19 @@ cargo test
 Starknet Foundry uses [rustfmt](https://github.com/rust-lang/rustfmt) for formatting. You can run the formatter with
 
 ```shell
-cargo fmt
+$ cargo fmt
 ```
 
 For linting, it uses [clippy](https://github.com/rust-lang/rust-clippy). You can run it with this command:
 
 ```shell
-cargo clippy --all-targets --all-features -- --no-deps -W clippy::pedantic -A clippy::missing_errors_doc -A clippy::missing_panics_doc -A clippy::default_trait_access
+$ cargo clippy --all-targets --all-features -- --no-deps -W clippy::pedantic -A clippy::missing_errors_doc -A clippy::missing_panics_doc -A clippy::default_trait_access
 ```
 
 Or using our defined alias
 
 ```shell
-cargo lint
+$ cargo lint
 ```
 
 ## Spelling

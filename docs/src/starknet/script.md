@@ -67,7 +67,7 @@ Most common directory structures include:
 ### 1. `scripts` directory with all the scripts in the same workspace with cairo contracts (default for `sncast script init`)
 
 ```shell
-tree
+$ tree
 ```
 
 <details open>
@@ -99,7 +99,7 @@ You can also have multiple scripts as separate packages, or multiple modules ins
 #### 1a. multiple scripts in one package
 
 ```shell
-tree
+$ tree
 ```
 
 <details open>
@@ -125,7 +125,7 @@ tree
 #### 1b. multiple scripts as separate packages
 
 ```shell
-tree
+$ tree
 ```
 
 <details open>
@@ -156,7 +156,7 @@ tree
 #### 1c. single script with flat directory structure
 
 ```shell
-tree
+$ tree
 ```
 
 <details open>
@@ -179,7 +179,7 @@ tree
 ### 2. scripts disjointed from the workspace with cairo contracts
 
 ```shell
-tree
+$ tree
 ```
 
 <details open>
@@ -207,7 +207,7 @@ This setup can be seen in action in [Full Example below](#full-example-with-cont
 To get started, a deployment script with all required elements can be initialized using the following command:
 
 ```shell
-sncast script init my_script
+$ sncast script init my_script
 ```
 
 For more details, see [init command](../appendix/sncast/script/init.md).
@@ -227,7 +227,7 @@ This example shows how to call an already deployed contract. Please find full ex
 The script should be included in a Scarb package. The directory structure and config for this example looks like this:
 
 ```shell
-tree
+$ tree
 ```
 
 <details open>
@@ -256,7 +256,7 @@ sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag =
 To run the script, do:
 
 ```shell
-sncast \
+$ sncast \
   script run my_script
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
 ```
@@ -288,7 +288,7 @@ We prepare a script:
 The script should be included in a Scarb package. The directory structure and config for this example looks like this:
 
 ```shell
-tree
+$ tree
 ```
 
 <details open>
@@ -334,7 +334,7 @@ Please note that `map` contract was specified as the dependency. In our example,
 To run the script, do:
 
 ```shell
-sncast \
+$ sncast \
   --account example_user \
   script run map_script \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
@@ -361,7 +361,7 @@ As [an idempotency](#state-file) feature is turned on by default, executing the 
 and only `call` functions are being executed (as they do not change the network state):
 
 ```shell
-sncast \
+$ sncast \
   --account example_user \
   script run map_script \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
@@ -385,7 +385,7 @@ status: success
 whereas, when we run the same script once again with `--no-state-file` flag set, it fails (as the `Map` contract is already declared):
 
 ```shell
-sncast \
+$ sncast \
   --account example_user \
   script run map_script \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7 \

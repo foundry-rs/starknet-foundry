@@ -14,7 +14,7 @@ replace any subcommand (and its parameters) with `show-config` and it will show 
 ### General Example
 
 ```shell
-sncast \
+$ sncast \
   --account user1 \
   show-config \
   --url http://127.0.0.1:5050

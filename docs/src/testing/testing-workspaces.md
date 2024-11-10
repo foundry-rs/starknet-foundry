@@ -11,7 +11,7 @@ When running `snforge test` in a Scarb workspace with a root package, it will on
 For a project structure like this
 
 ```shell
-tree . -L 3
+$ tree . -L 3
 ```
 
 <details open>
@@ -39,7 +39,7 @@ tree . -L 3
 only the tests in `./src` and `./tests` folders will be executed.
 
 ```shell
-snforge test
+$ snforge test
 ```
 
 <details open>
@@ -58,7 +58,7 @@ To select the specific package to test, pass a `--package package_name` (or `-p 
 You can also run `snforge test` from the package directory to achieve the same effect.
 
 ```shell
-snforge test --package addition
+$ snforge test --package addition
 ```
 
 <details open>
@@ -78,7 +78,7 @@ Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 You can also pass `--workspace` flag to run tests for all packages in the workspace.
 
 ```shell
-snforge test --workspace
+$ snforge test --workspace
 ```
 
 <details open>

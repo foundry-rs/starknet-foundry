@@ -5,7 +5,7 @@
 Install mdBook
 
 ```shell
-cargo install mdbook
+$ cargo install mdbook
 ```
 
 ## Building

@@ -50,7 +50,7 @@ defined in the profile.
 > the rest of them using CLI flags. You can also override parameters from the configuration using CLI flags.
 
 ```shell
-sncast --profile myprofile \
+$ sncast --profile myprofile \
     call \
     --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
     --function get \
@@ -88,7 +88,7 @@ url = "http://127.0.0.1:5050/rpc"
 With this, there's no need to include the `--profile` argument when using `sncast`.
 
 ```shell
-sncast call \
+$ sncast call \
     --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
     --function get \
     --calldata 0x0 \
