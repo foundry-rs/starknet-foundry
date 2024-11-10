@@ -14,6 +14,9 @@ For a project structure like this
 tree . -L 3
 ```
 
+<details open>
+<summary>Output:</summary>
+
 ```shell
 .
 ├── Scarb.toml
@@ -30,6 +33,8 @@ tree . -L 3
 └── src
     └── lib.cairo
 ```
+</details>
+<br>
 
 only the tests in `./src` and `./tests` folders will be executed.
 

@@ -70,6 +70,9 @@ Most common directory structures include:
 tree
 ```
 
+<details open>
+<summary>Output:</summary>
+
 ```shell
 .
 ├── scripts
@@ -83,6 +86,8 @@ tree
 │   └── lib.cairo
 └── Scarb.toml
 ```
+</details>
+<br>
 
 > 📝 **Note**
 > You should add `scripts` to `members` field in your top-level Scarb.toml to be able to run the script from
@@ -96,6 +101,9 @@ You can also have multiple scripts as separate packages, or multiple modules ins
 ```shell
 tree
 ```
+
+<details open>
+<summary>Output:</summary>
 
 ```shell
 .
@@ -111,12 +119,17 @@ tree
 │   └── lib.cairo
 └── Scarb.toml
 ```
+</details>
+<br>
 
 #### 1b. multiple scripts as separate packages
 
 ```shell
 tree
 ```
+
+<details open>
+<summary>Output:</summary>
 
 ```shell
 .
@@ -137,12 +150,17 @@ tree
 │   └── lib.cairo
 └── Scarb.toml
 ```
+</details>
+<br>
 
 #### 1c. single script with flat directory structure
 
 ```shell
 tree
 ```
+
+<details open>
+<summary>Output:</summary>
 
 ```shell
 .
@@ -155,12 +173,17 @@ tree
 └── src
     └── lib.cairo
 ```
+</details>
+<br>
 
 ### 2. scripts disjointed from the workspace with cairo contracts
 
 ```shell
 tree
 ```
+
+<details open>
+<summary>Output:</summary>
 
 ```shell
 .
@@ -169,6 +192,8 @@ tree
     ├── lib.cairo
     └── my_script.cairo
 ```
+</details>
+<br>
 
 In order to use this directory structure you must set any contracts you're using as dependencies in script's Scarb.toml,
 and override `build-external-contracts` property to build those contracts. To learn more consult [Scarb documentation](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#compiling-external-contracts).
@@ -205,6 +230,9 @@ The script should be included in a Scarb package. The directory structure and co
 tree
 ```
 
+<details open>
+<summary>Output:</summary>
+
 ```shell
 .
 ├── src
@@ -212,6 +240,8 @@ tree
 │   └── lib.cairo
 └── Scarb.toml
 ```
+</details>
+<br>
 
 ```toml
 [package]
@@ -261,6 +291,9 @@ The script should be included in a Scarb package. The directory structure and co
 tree
 ```
 
+<details open>
+<summary>Output:</summary>
+
 ```shell
 .
 ├── contracts
@@ -273,6 +306,8 @@ tree
         ├── lib.cairo
         └── map_script.cairo
 ```
+</details>
+<br>
 
 ```toml
 [package]

@@ -27,6 +27,9 @@ For example, for a package structured this way:
 tree .
 ```
 
+<details open>
+<summary>Output:</summary>
+
 ```shell
 .
 ├── Scarb.toml
@@ -40,6 +43,8 @@ tree .
 └── src/
     └── lib.cairo
 ```
+</details>
+<br>
 
 with `tests/lib.cairo` content:
 
@@ -70,6 +75,9 @@ For example, for a package structured this way:
 tree .
 ```
 
+<details open>
+<summary>Output:</summary>
+
 ```shell
 .
 ├── Scarb.toml
@@ -83,6 +91,8 @@ tree .
 └── src/
     └── lib.cairo
 ```
+</details>
+<br>
 
 and `tests/common.cairo` content:
 
