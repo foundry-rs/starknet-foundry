@@ -14,14 +14,14 @@ replace any subcommand (and its parameters) with `show-config` and it will show 
 ### General Example
 
 ```shell
-sncast \
+$ sncast \
   --account user1 \
   show-config \
   --url http://127.0.0.1:5050
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 command: show-config

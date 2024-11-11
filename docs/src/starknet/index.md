@@ -12,7 +12,7 @@ Starknet Foundry `sncast` is a command line tool for performing Starknet RPC cal
 
 To use `sncast`, run the `sncast` command followed by a subcommand (see [available commands](../appendix/sncast.md)):
 ```shell
-sncast <subcommand>
+$ sncast <subcommand>
 ```
 
 If `snfoundry.toml` is present and configured with `[sncast.default]`, `url`, `accounts-file` and `account` name will be taken from it.
@@ -28,7 +28,7 @@ You can, however, overwrite their values by supplying them as flags directly to 
 Let's use `sncast` to call a contract's function:
 
 ```shell
-sncast --account myuser \
+$ sncast --account myuser \
     call \
     --url http://127.0.0.1:5050 \
     --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
@@ -37,8 +37,8 @@ sncast --account myuser \
     --block-id latest
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 command: call
@@ -71,15 +71,15 @@ It is also possible to pass calldata in more friendly, human readable form thank
 Let's invoke a transaction and wait for it to be `ACCEPTED_ON_L2`.
 
 ```shell
-sncast --account myuser \
+$ sncast --account myuser \
     --wait \
     deploy \
 	--url http://127.0.0.1:5050 \
     --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Transaction hash: 0x3062310a1e40d4b66d8987ba7447d1c7317381d0295d62cb12f2fe3f11e6983

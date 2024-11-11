@@ -39,11 +39,11 @@ Let's write a test that will deploy the `HelloStarknet` contract and call some f
 > `HelloStarknet` contract has no constructor, so the calldata remains empty in the example above.
 
 ```shell
-snforge test
+$ snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from testing_smart_contracts package
@@ -75,11 +75,11 @@ If we called this function in a test, it would result in a failure.
 ```
 
 ```shell
-snforge test
+$ snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from testing_smart_contracts package
@@ -113,11 +113,11 @@ They allow using the contract without automatically unwrapping the result, which
 Now the test passes as expected.
 
 ```shell
-snforge test
+$ snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from package_name package

@@ -38,11 +38,11 @@ We can try to create a test that will increase and verify the balance.
 This test fails, which means that `increase_balance` method panics as we expected.
 
 ```shell
-snforge test
+$ snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from using_cheatcodes package
@@ -74,11 +74,11 @@ address, so it passes our validation.
 The test will now pass without an error
 
 ```shell
-snforge test
+$ snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from using_cheatcodes package
@@ -104,11 +104,11 @@ We will demonstrate its behavior using `SafeDispatcher` to show when exactly the
 ```
 
 ```shell
-snforge test
+$ snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from using_cheatcodes package

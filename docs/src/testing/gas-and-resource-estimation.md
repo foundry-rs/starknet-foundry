@@ -37,11 +37,11 @@ It is possible to enable more detailed breakdown of resources, on which the gas 
 In order to run tests with this feature, run the `test` command with the appropriate flag:
 
 ```shell
-snforge test --detailed-resources
+$ snforge test --detailed-resources
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 ...

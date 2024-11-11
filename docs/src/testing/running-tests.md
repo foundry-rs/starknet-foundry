@@ -3,11 +3,11 @@
 To run tests with `snforge`, simply run the `snforge test` command from the package directory.
 
 ```shell
-snforge test
+$ snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 3 test(s) from package_name package
@@ -27,11 +27,11 @@ By default, any test with an [absolute module tree path](https://book.cairo-lang
  matching the filter will be run.
 
 ```shell
-snforge test calling
+$ snforge test calling
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 2 test(s) from package_name package
@@ -54,11 +54,11 @@ Note, you have to use a fully qualified test name, including a module name.
 >
 
 ```shell
-snforge test package_name::tests::calling --exact
+$ snforge test package_name::tests::calling --exact
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from package_name package
@@ -74,11 +74,11 @@ Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
 To stop the test execution after first failed test, you can pass an `--exit-first` flag along with `snforge test` command.
 
 ```shell
-snforge test --exit-first
+$ snforge test --exit-first
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 6 test(s) from package_name package
@@ -104,11 +104,11 @@ Failures:
 To track resources like `builtins` / `syscalls` that are used when running tests, use `snforge test --detailed-resources`.
 
 ```shell
-snforge test --detailed-resources
+$ snforge test --detailed-resources
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from package_name package

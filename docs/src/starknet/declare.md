@@ -18,15 +18,15 @@ First make sure that you have created a `Scarb.toml` file for your contract (it 
 Then run:
 
 ```shell
-sncast --account myuser \
+$ sncast --account myuser \
     declare \
 	--url http://127.0.0.1:5050/rpc \ 
     --fee-token strk \
     --contract-name SimpleBalance
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 command: declare

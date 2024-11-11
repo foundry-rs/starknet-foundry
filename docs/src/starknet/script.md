@@ -67,8 +67,11 @@ Most common directory structures include:
 ### 1. `scripts` directory with all the scripts in the same workspace with cairo contracts (default for `sncast script init`)
 
 ```shell
-tree
+$ tree
 ```
+
+<details open>
+<summary>Output:</summary>
 
 ```shell
 .
@@ -83,6 +86,8 @@ tree
 │   └── lib.cairo
 └── Scarb.toml
 ```
+</details>
+<br>
 
 > 📝 **Note**
 > You should add `scripts` to `members` field in your top-level Scarb.toml to be able to run the script from
@@ -94,8 +99,11 @@ You can also have multiple scripts as separate packages, or multiple modules ins
 #### 1a. multiple scripts in one package
 
 ```shell
-tree
+$ tree
 ```
+
+<details open>
+<summary>Output:</summary>
 
 ```shell
 .
@@ -111,12 +119,17 @@ tree
 │   └── lib.cairo
 └── Scarb.toml
 ```
+</details>
+<br>
 
 #### 1b. multiple scripts as separate packages
 
 ```shell
-tree
+$ tree
 ```
+
+<details open>
+<summary>Output:</summary>
 
 ```shell
 .
@@ -137,12 +150,17 @@ tree
 │   └── lib.cairo
 └── Scarb.toml
 ```
+</details>
+<br>
 
 #### 1c. single script with flat directory structure
 
 ```shell
-tree
+$ tree
 ```
+
+<details open>
+<summary>Output:</summary>
 
 ```shell
 .
@@ -155,12 +173,17 @@ tree
 └── src
     └── lib.cairo
 ```
+</details>
+<br>
 
 ### 2. scripts disjointed from the workspace with cairo contracts
 
 ```shell
-tree
+$ tree
 ```
+
+<details open>
+<summary>Output:</summary>
 
 ```shell
 .
@@ -169,6 +192,8 @@ tree
     ├── lib.cairo
     └── my_script.cairo
 ```
+</details>
+<br>
 
 In order to use this directory structure you must set any contracts you're using as dependencies in script's Scarb.toml,
 and override `build-external-contracts` property to build those contracts. To learn more consult [Scarb documentation](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#compiling-external-contracts).
@@ -182,7 +207,7 @@ This setup can be seen in action in [Full Example below](#full-example-with-cont
 To get started, a deployment script with all required elements can be initialized using the following command:
 
 ```shell
-sncast script init my_script
+$ sncast script init my_script
 ```
 
 For more details, see [init command](../appendix/sncast/script/init.md).
@@ -202,8 +227,11 @@ This example shows how to call an already deployed contract. Please find full ex
 The script should be included in a Scarb package. The directory structure and config for this example looks like this:
 
 ```shell
-tree
+$ tree
 ```
+
+<details open>
+<summary>Output:</summary>
 
 ```shell
 .
@@ -212,6 +240,8 @@ tree
 │   └── lib.cairo
 └── Scarb.toml
 ```
+</details>
+<br>
 
 ```toml
 [package]
@@ -226,13 +256,13 @@ sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag =
 To run the script, do:
 
 ```shell
-sncast \
+$ sncast \
   script run my_script
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 CallResult { data: [0, 96231036770510887841935600920878740513, 16] }
@@ -258,8 +288,11 @@ We prepare a script:
 The script should be included in a Scarb package. The directory structure and config for this example looks like this:
 
 ```shell
-tree
+$ tree
 ```
+
+<details open>
+<summary>Output:</summary>
 
 ```shell
 .
@@ -273,6 +306,8 @@ tree
         ├── lib.cairo
         └── map_script.cairo
 ```
+</details>
+<br>
 
 ```toml
 [package]
@@ -299,14 +334,14 @@ Please note that `map` contract was specified as the dependency. In our example,
 To run the script, do:
 
 ```shell
-sncast \
+$ sncast \
   --account example_user \
   script run map_script \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Class hash of the declared contract: 685896493695476540388232336434993540241192267040651919145140488413686992233
@@ -326,14 +361,14 @@ As [an idempotency](#state-file) feature is turned on by default, executing the 
 and only `call` functions are being executed (as they do not change the network state):
 
 ```shell
-sncast \
+$ sncast \
   --account example_user \
   script run map_script \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Class hash of the declared contract: 1922774777685257258886771026518018305931014651657879651971507142160195873652
@@ -350,15 +385,15 @@ status: success
 whereas, when we run the same script once again with `--no-state-file` flag set, it fails (as the `Map` contract is already declared):
 
 ```shell
-sncast \
+$ sncast \
   --account example_user \
   script run map_script \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7 \
   --no-state-file
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 command: script run

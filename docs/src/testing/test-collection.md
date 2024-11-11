@@ -24,8 +24,11 @@ then it is treated as an entrypoint to the `tests` package from which tests are 
 For example, for a package structured this way:
 
 ```shell
-tree .
+$ tree .
 ```
+
+<details open>
+<summary>Output:</summary>
 
 ```shell
 .
@@ -40,6 +43,8 @@ tree .
 └── src/
     └── lib.cairo
 ```
+</details>
+<br>
 
 with `tests/lib.cairo` content:
 
@@ -67,8 +72,11 @@ Then this virtual `lib.cairo` is treated as an entrypoint to the `tests` package
 For example, for a package structured this way:
 
 ```shell
-tree .
+$ tree .
 ```
+
+<details open>
+<summary>Output:</summary>
 
 ```shell
 .
@@ -83,6 +91,8 @@ tree .
 └── src/
     └── lib.cairo
 ```
+</details>
+<br>
 
 and `tests/common.cairo` content:
 

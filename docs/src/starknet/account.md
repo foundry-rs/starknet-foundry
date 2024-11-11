@@ -23,14 +23,14 @@ Do the following to start interacting with the Starknet:
 #### Create account with the `sncast account create` command
 
 ```shell
-sncast \
+$ sncast \
     account create \
     --url http://127.0.0.1:5050 \
     --name some-name
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 command: account create
@@ -94,7 +94,7 @@ If you created an account with `sncast account create` it by default it will be 
 
 To import an account to the `default accounts file`, use the `account import` command.
 ```shell
-sncast \
+$ sncast \
     account import \
 	--url http://127.0.0.1:5050 \
     --name my_imported_account \
@@ -107,7 +107,7 @@ sncast \
 List all accounts saved in `accounts file`, grouped based on the networks they are defined on.
 
 ```shell
-sncast account list
+$ sncast account list
 ```
 
 ```
@@ -132,7 +132,7 @@ There is also possibility to show private keys with the `--display-private-keys`
 Delete an account from `accounts-file` and its associated Scarb profile. If you pass this command, you will be asked to confirm the deletion.
 
 ```shell
-sncast account delete \
+$ sncast account delete \
     --name some-name \
     --network alpha-sepolia
 ```
@@ -146,7 +146,7 @@ It is possible to create an account using custom openzeppelin, argent or braavos
 with `--class-hash` flag:
 
 ```shell
-sncast \
+$ sncast \
     account create \
     --name some-name \
     --url http://127.0.0.1:5050 \
@@ -159,7 +159,7 @@ sncast \
 Instead of random generation, salt can be specified with `--salt`.
 
 ```shell
-sncast \
+$ sncast \
     account create \
     --url http://127.0.0.1:5050 \
     --name some-name \
@@ -188,7 +188,7 @@ Accounts created and deployed with [starkli](https://book.starkli.rs/accounts#ac
 > When passing the `--keystore` argument, `--account` argument must be a path to the starkli account JSON file.
 
 ```shell
-sncast \
+$ sncast \
     --keystore keystore.json \
     --account account.json  \
     declare \
@@ -202,7 +202,7 @@ sncast \
 It is possible to create an openzeppelin account with keystore in a similar way [starkli](https://book.starkli.rs/accounts#accounts) does.
 
 ```shell
-sncast \
+$ sncast \
     --keystore my_key.json \
     --account my_account.json \
     account create \

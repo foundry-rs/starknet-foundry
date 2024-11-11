@@ -19,11 +19,11 @@ You can find a detailed explanation of how `snforge` collects tests [here](test-
 Now run `snforge` using a command:
 
 ```shell
-snforge test
+$ snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from writing_tests package
@@ -44,11 +44,11 @@ If your code panics, the test is considered failed. Here's an example of a faili
 ```
 
 ```shell
-snforge test
+$ snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from writing_tests package
@@ -91,12 +91,13 @@ With this format, the expected error message needs to be a substring of the actu
 {{#include ../../listings/snforge_overview/crates/writing_tests/tests/expected_failures.cairo:tuple}}
 ```
 
+
 ```shell
-snforge test
+$ snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from writing_tests package
@@ -118,11 +119,11 @@ You can achieve it using `#[ignore]` - tests marked with this attribute will be 
 ```
 
 ```shell
-snforge test
+$ snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 Collected 1 test(s) from writing_tests package

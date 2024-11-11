@@ -6,14 +6,14 @@ We demonstrate how to create a new project, compile, and test it.
 To start a new project with Starknet Foundry, run `snforge init`
 
 ```shell
-snforge init project_name
+$ snforge init project_name
 ```
 
 Let's check out the project structure
 
 ```shell
-cd project_name
-tree . -L 1
+$ cd project_name
+$ tree . -L 1
 ```
 
 ```shell
@@ -34,11 +34,11 @@ tree . -L 1
 And run tests with `snforge test`
 
 ```shell
-snforge test
+$ snforge test
 ```
 
-<details>
-<summary>Click to expand output</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
    Compiling project_name v0.1.0 (project_name/Scarb.toml)
@@ -71,7 +71,7 @@ snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag 
 Make sure that the version in `tag` matches `snforge`. You can check the currently installed version with
 
 ```shell
-snforge --version
+$ snforge --version
 ```
 
 <details>
@@ -88,7 +88,7 @@ using [`scarb add`](https://docs.swmansion.com/scarb/docs/guides/dependencies.ht
 command.
 
 ```shell
-scarb add snforge_std \ 
+$ scarb add snforge_std \ 
  --dev \
  --git https://github.com/foundry-rs/starknet-foundry.git \
  --tag v0.27.0
