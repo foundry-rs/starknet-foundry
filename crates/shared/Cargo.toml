@@ -13,3 +13,4 @@ starknet.workspace = true
 url.workspace = true
 regex.workspace = true
 snapbox.workspace = true
+shell-words = "1.0.0"
