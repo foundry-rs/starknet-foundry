@@ -14,8 +14,8 @@
 > ℹ️ **Info**
 > To use the library functions you need to add `sncast_std` package as a dependency in
 > your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#adding-a-dependency)
-> using appropriate release tag.
+> using the appropriate version.
 >```toml
 > [dependencies]
-> sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.22.0" }
+> sncast_std = "0.33.0"
 > ```
