@@ -6,8 +6,8 @@
       "output": {
         "type": "DeclareResponse",
         "status": "Success",
-        "class_hash": "0x123",
-        "transaction_hash": "0x321"
+        "class_hash": "0x0000000000000000000000000000000000000000000000000000000000000123",
+        "transaction_hash": "0x0000000000000000000000000000000000000000000000000000000000000321"
       },
       "status": "Success",
       "timestamp": 1706093159,
@@ -18,7 +18,7 @@
       "output": {
         "type": "DeclareResponse",
         "status": "AlreadyDeclared",
-        "class_hash": "0x123"
+        "class_hash": "0x0000000000000000000000000000000000000000000000000000000000000123"
       },
       "status": "Success",
       "timestamp": 1706093159,
