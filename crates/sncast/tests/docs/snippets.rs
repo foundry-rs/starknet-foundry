@@ -4,20 +4,22 @@ use shared::test_utils::docs_validation::{
     extract_from_directory, get_parent_dir, parse_snippet_str_to_command_args,
 };
 use tempfile::tempdir;
+
 #[test]
 fn test_docs_snippets() {
     let tempdir: tempfile::TempDir = tempdir().expect("Unable to create a temporary directory");
     let root_dir = get_parent_dir(2);
 
-    let re = Regex::new(r"(?ms)```shell\n\$ sncast(.*?)").expect("Invalid regex pattern");
+    let re = Regex::new(r"(?ms)```shell\n\$ sncast(.*?)\n```").expect("Invalid regex pattern");
     let extension = Some("md");
     let snippets = extract_from_directory(&root_dir, &re, extension)
         .expect("Failed to extract sncast command snippets");
 
+    // Snippets with following args are skipped
     let skipped_args = [
         // snippet "$ sncast <subcommand>"
         vec!["<subcommand>"],
-        // snippet with interactive import example
+        // snippet with interactive account import example
         vec![
             "account",
             "import",
@@ -45,8 +47,14 @@ fn test_docs_snippets() {
         let exit_code = output.status.code().unwrap_or_default();
         let stderr = String::from_utf8_lossy(&output.stderr);
 
-        assert_ne!(exit_code, 2, "The command failed. Stderr: {stderr}");
-    }
+        assert_ne!(
+            exit_code, 2,
+            "The command {snippet} failed. Stderr: {stderr}"
+        );
 
-    println!("count: {}", snippets.len());
+        println!(
+            "Validated {} sncast command snippets in the docs",
+            snippets.len()
+        );
+    }
 }
