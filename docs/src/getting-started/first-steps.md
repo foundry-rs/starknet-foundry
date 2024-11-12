@@ -16,6 +16,9 @@ $ cd project_name
 $ tree . -L 1
 ```
 
+<details open>
+<summary>Output:</summary>
+
 ```shell
 .
 ├── Scarb.lock
@@ -25,6 +28,8 @@ $ tree . -L 1
 
 2 directories, 2 files
 ```
+</details>
+<br>
 
 * `src/` contains source code of all your contracts.
 * `tests/` contains tests.
