@@ -16,7 +16,7 @@ use starknet::accounts::{AccountFactory, AccountFactoryError};
 use starknet::core::types::{
     BlockId, BlockTag,
     BlockTag::{Latest, Pending},
-    ContractClass, ContractErrorData, Felt,
+    ContractClass, ContractErrorData,
     StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
 };
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
@@ -30,6 +30,7 @@ use starknet::{
     },
     signers::{LocalWallet, SigningKey},
 };
+use starknet_types_core::felt::Felt;
 use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;

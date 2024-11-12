@@ -12,11 +12,12 @@ use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::structs::InvokeResponse;
 use sncast::{extract_or_generate_salt, impl_payable_transaction, udc_uniqueness, WaitForTx};
 use starknet::accounts::{Account, SingleOwnerAccount};
-use starknet::core::types::{Call, Felt};
+use starknet::core::types::Call;
 use starknet::core::utils::{get_selector_from_name, get_udc_deployed_address};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
+use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 
 #[derive(Args, Debug, Clone)]
