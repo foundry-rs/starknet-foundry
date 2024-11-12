@@ -144,6 +144,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait: true,
                         wait_params: self.config.wait_params,
                     },
+                    true,
                 ));
 
                 self.state.maybe_insert_tx_entry(
