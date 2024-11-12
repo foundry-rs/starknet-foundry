@@ -1,6 +1,7 @@
 use crate::Arguments;
 use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
+use conversions::IntoConv;
 use sncast::helpers::error::token_not_supported_for_invoke;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
@@ -9,10 +10,11 @@ use sncast::response::structs::InvokeResponse;
 use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, ExecutionV1, ExecutionV3, SingleOwnerAccount};
-use starknet::core::types::{Call, Felt, InvokeTransactionResult};
+use starknet::core::types::{Call, InvokeTransactionResult};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
+use starknet_types_core::felt::Felt;
 
 #[derive(Args, Clone, Debug)]
 #[command(about = "Invoke a contract on Starknet")]
@@ -108,7 +110,9 @@ pub async fn execute_calls(
         Ok(InvokeTransactionResult { transaction_hash }) => handle_wait_for_tx(
             account.provider(),
             transaction_hash,
-            InvokeResponse { transaction_hash },
+            InvokeResponse {
+                transaction_hash: transaction_hash.into_(),
+            },
             wait_config,
         )
         .await

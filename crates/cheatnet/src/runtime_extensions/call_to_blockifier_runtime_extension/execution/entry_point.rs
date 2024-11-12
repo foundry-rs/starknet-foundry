@@ -26,7 +26,7 @@ use starknet_api::{
 use std::collections::HashSet;
 use std::rc::Rc;
 use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
-use cairo_vm::Felt252;
+use starknet_types_core::felt::Felt;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use conversions::FromConv;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
@@ -66,10 +66,8 @@ pub fn execute_call_entry_point(
     if let Some(cheat_status) = get_mocked_function_cheat_status(entry_point, cheatnet_state) {
         if let CheatStatus::Cheated(ret_data, _) = (*cheat_status).clone() {
             cheat_status.decrement_cheat_span();
-            let ret_data_f252: Vec<Felt252> = ret_data
-                .iter()
-                .map(|datum| Felt252::from_(*datum))
-                .collect();
+            let ret_data_f252: Vec<Felt> =
+                ret_data.iter().map(|datum| Felt::from_(*datum)).collect();
             cheatnet_state.trace_data.exit_nested_call(
                 resources,
                 Default::default(),
@@ -109,7 +107,7 @@ pub fn execute_call_entry_point(
     // endregion
 
     // Hack to prevent version 0 attack on argent accounts.
-    if context.tx_context.tx_info.version() == TransactionVersion(Felt252::from(0_u8))
+    if context.tx_context.tx_info.version() == TransactionVersion(Felt::from(0_u8))
         && class_hash
             == TryFromHexStr::try_from_hex_str(FAULTY_CLASS_HASH)
                 .expect("A class hash must be a felt.")
@@ -250,7 +248,7 @@ pub fn execute_constructor_entry_point(
 fn get_mocked_function_cheat_status<'a>(
     call: &CallEntryPoint,
     cheatnet_state: &'a mut CheatnetState,
-) -> Option<&'a mut CheatStatus<Vec<Felt252>>> {
+) -> Option<&'a mut CheatStatus<Vec<Felt>>> {
     if call.call_type == CallType::Delegate {
         return None;
     }
@@ -261,7 +259,7 @@ fn get_mocked_function_cheat_status<'a>(
         .and_then(|contract_functions| contract_functions.get_mut(&call.entry_point_selector))
 }
 
-fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt252>) -> CallInfo {
+fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {
     CallInfo {
         call,
         execution: CallExecution {

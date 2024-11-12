@@ -4,15 +4,15 @@ use crate::common::{
     state::create_cached_state,
 };
 use blockifier::state::state_api::State;
-use cairo_vm::Felt252;
 use cheatnet::state::CheatnetState;
 use starknet_api::core::ContractAddress;
+use starknet_types_core::felt::Felt;
 
 fn check_block(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
-) -> (Felt252, Felt252, Felt252, Felt252) {
+) -> (Felt, Felt, Felt, Felt) {
     let write_block = felt_selector_from_name("write_block");
     let read_block_number = felt_selector_from_name("read_block_number");
     let read_block_timestamp = felt_selector_from_name("read_block_timestamp");

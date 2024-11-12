@@ -1,5 +1,5 @@
-use starknet::core::types::Felt;
 use starknet::macros::felt;
+use starknet_types_core::felt::Felt;
 
 pub static DEFAULT_MULTICALL_CONTENTS: &str = r#"[[call]]
 call_type = "deploy"

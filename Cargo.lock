@@ -1706,6 +1706,7 @@ dependencies = [
  "serde",
  "serde_json",
  "starknet",
+ "starknet-types-core",
  "test-case",
  "thiserror",
  "tokio",
@@ -4949,7 +4950,6 @@ dependencies = [
  "num-bigint",
  "regex",
  "serde_json",
- "shared",
  "smol_str",
  "url",
 ]

@@ -1,7 +1,7 @@
 // Our custom structs used to prevent name changes in structs on side of cairo compiler from breaking the test collector backwards compatibility
 use cairo_lang_test_plugin::test_config::{PanicExpectation, TestExpectation};
-use cairo_vm::Felt252;
 use serde::Deserialize;
+use starknet_types_core::felt::Felt;
 
 /// Expectation for a panic case.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
@@ -9,7 +9,7 @@ pub enum ExpectedPanicValue {
     /// Accept any panic value.
     Any,
     /// Accept only this specific vector of panics.
-    Exact(Vec<Felt252>),
+    Exact(Vec<Felt>),
 }
 
 impl From<PanicExpectation> for ExpectedPanicValue {

@@ -10,8 +10,8 @@ use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::AccountType;
-use starknet::core::types::Felt;
 use starknet::core::types::TransactionReceipt::Declare;
+use starknet_types_core::felt::Felt;
 use std::fs;
 use test_case::test_case;
 
@@ -50,6 +50,49 @@ async fn test_happy_case_eth(account: &str) {
     let receipt = get_transaction_receipt(hash).await;
 
     assert!(matches!(receipt, Declare(_)));
+}
+
+#[tokio::test]
+async fn test_happy_case_human_readable() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "human_readable",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+        "--max-fee",
+        "99999999999999999",
+        "--fee-token",
+        "strk",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        command: declare
+        class_hash: 0x0[..]
+        transaction_hash: 0x0[..]
+        
+        To see declaration details, visit:
+        class: https://[..]
+        transaction: https://[..]
+    " },
+    );
 }
 
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
