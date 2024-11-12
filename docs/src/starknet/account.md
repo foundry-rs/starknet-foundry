@@ -42,7 +42,7 @@ message: Account successfully created. Prefund generated address with at least <
 To see account creation details, visit:
 account: https://starkscan.co/search/contract/34ae54182d04754d8043189afd315a808d4bea1a63862b3b05aa78b37756d7b
 ```
-<details>
+</details>
 <br>
 
 For a detailed CLI description, see [account create command reference](../appendix/sncast/account/create.md).
@@ -68,7 +68,7 @@ $ sncast \
 	--max-fee 9999999999999
 ```
 
-<details>
+<details open>
 <summary>Output:</summary>
 
 ```shell

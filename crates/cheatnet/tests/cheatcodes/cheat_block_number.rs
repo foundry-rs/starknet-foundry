@@ -1,9 +1,9 @@
 use crate::{common::assertions::assert_success, common::get_contracts};
-use cairo_vm::Felt252;
 use cheatnet::state::CheatSpan;
 use conversions::IntoConv;
 use runtime::starknet::context::DEFAULT_BLOCK_NUMBER;
 use starknet_api::core::ContractAddress;
+use starknet_types_core::felt::Felt;
 
 use super::test_environment::TestEnvironment;
 
@@ -49,7 +49,7 @@ fn cheat_block_number_simple() {
     test_env.start_cheat_block_number(contract_address, 123);
 
     let output = test_env.call_contract(&contract_address, "get_block_number", &[]);
-    assert_success(output, &[Felt252::from(123)]);
+    assert_success(output, &[Felt::from(123)]);
 }
 
 #[test]
@@ -61,7 +61,7 @@ fn cheat_block_number_with_other_syscall() {
     test_env.start_cheat_block_number(contract_address, 123);
 
     let output = test_env.call_contract(&contract_address, "get_block_number_and_emit_event", &[]);
-    assert_success(output, &[Felt252::from(123)]);
+    assert_success(output, &[Felt::from(123)]);
 }
 
 #[test]
@@ -78,7 +78,7 @@ fn cheat_block_number_in_constructor() {
     assert_eq!(precalculated_address, contract_address);
 
     let output = test_env.call_contract(&contract_address, "get_stored_block_number", &[]);
-    assert_success(output, &[Felt252::from(123)]);
+    assert_success(output, &[Felt::from(123)]);
 }
 
 #[test]
@@ -91,14 +91,14 @@ fn cheat_block_number_stop() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env.stop_cheat_block_number(contract_address);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(DEFAULT_BLOCK_NUMBER)],
+        &[Felt::from(DEFAULT_BLOCK_NUMBER)],
     );
 }
 
@@ -113,14 +113,14 @@ fn cheat_block_number_double() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env.stop_cheat_block_number(contract_address);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(DEFAULT_BLOCK_NUMBER)],
+        &[Felt::from(DEFAULT_BLOCK_NUMBER)],
     );
 }
 
@@ -137,14 +137,14 @@ fn cheat_block_number_proxy() {
 
     assert_success(
         test_env.call_contract(&proxy_address, proxy_selector, &[contract_address.into_()]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env.stop_cheat_block_number(contract_address);
 
     assert_success(
         test_env.call_contract(&proxy_address, proxy_selector, &[contract_address.into_()]),
-        &[Felt252::from(DEFAULT_BLOCK_NUMBER)],
+        &[Felt::from(DEFAULT_BLOCK_NUMBER)],
     );
 }
 
@@ -162,13 +162,13 @@ fn cheat_block_number_library_call() {
 
     assert_success(
         test_env.call_contract(&lib_call_address, lib_call_selector, &[class_hash.into_()]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     test_env.stop_cheat_block_number(lib_call_address);
 
     assert_success(
         test_env.call_contract(&lib_call_address, lib_call_selector, &[class_hash.into_()]),
-        &[Felt252::from(DEFAULT_BLOCK_NUMBER)],
+        &[Felt::from(DEFAULT_BLOCK_NUMBER)],
     );
 }
 
@@ -181,7 +181,7 @@ fn cheat_block_number_all_simple() {
     test_env.cheatnet_state.start_cheat_block_number_global(123);
 
     let output = test_env.call_contract(&contract_address, "get_block_number", &[]);
-    assert_success(output, &[Felt252::from(123)]);
+    assert_success(output, &[Felt::from(123)]);
 }
 
 #[test]
@@ -194,7 +194,7 @@ fn cheat_block_number_all_then_one() {
     test_env.start_cheat_block_number(contract_address, 123);
 
     let output = test_env.call_contract(&contract_address, "get_block_number", &[]);
-    assert_success(output, &[Felt252::from(123)]);
+    assert_success(output, &[Felt::from(123)]);
 }
 
 #[test]
@@ -207,7 +207,7 @@ fn cheat_block_number_one_then_all() {
     test_env.cheatnet_state.start_cheat_block_number_global(321);
 
     let output = test_env.call_contract(&contract_address, "get_block_number", &[]);
-    assert_success(output, &[Felt252::from(321)]);
+    assert_success(output, &[Felt::from(321)]);
 }
 
 #[test]
@@ -221,21 +221,21 @@ fn cheat_block_number_all_stop() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env.cheatnet_state.stop_cheat_block_number_global();
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(DEFAULT_BLOCK_NUMBER)],
+        &[Felt::from(DEFAULT_BLOCK_NUMBER)],
     );
 
     let contract_address = test_env.deploy_wrapper(&cheat_block_number_checker, &[]);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(DEFAULT_BLOCK_NUMBER)],
+        &[Felt::from(DEFAULT_BLOCK_NUMBER)],
     );
 }
 
@@ -258,11 +258,11 @@ fn cheat_block_number_multiple() {
 
     assert_success(
         test_env.call_contract(&contract_address1, "get_block_number", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address2, "get_block_number", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env
@@ -274,11 +274,11 @@ fn cheat_block_number_multiple() {
 
     assert_success(
         test_env.call_contract(&contract_address1, "get_block_number", &[]),
-        &[Felt252::from(DEFAULT_BLOCK_NUMBER)],
+        &[Felt::from(DEFAULT_BLOCK_NUMBER)],
     );
     assert_success(
         test_env.call_contract(&contract_address2, "get_block_number", &[]),
-        &[Felt252::from(DEFAULT_BLOCK_NUMBER)],
+        &[Felt::from(DEFAULT_BLOCK_NUMBER)],
     );
 }
 
@@ -292,15 +292,15 @@ fn cheat_block_number_simple_with_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(DEFAULT_BLOCK_NUMBER)],
+        &[Felt::from(DEFAULT_BLOCK_NUMBER)],
     );
 }
 
@@ -339,15 +339,15 @@ fn cheat_block_number_in_constructor_with_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(DEFAULT_BLOCK_NUMBER)],
+        &[Felt::from(DEFAULT_BLOCK_NUMBER)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_stored_block_number", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 }
 
@@ -367,11 +367,11 @@ fn cheat_block_number_no_constructor_with_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(DEFAULT_BLOCK_NUMBER)],
+        &[Felt::from(DEFAULT_BLOCK_NUMBER)],
     );
 }
 
@@ -385,25 +385,25 @@ fn cheat_block_number_override_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env.cheat_block_number(contract_address, 321, CheatSpan::Indefinite);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(321)],
+        &[Felt::from(321)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(321)],
+        &[Felt::from(321)],
     );
 
     test_env.stop_cheat_block_number(contract_address);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(DEFAULT_BLOCK_NUMBER)],
+        &[Felt::from(DEFAULT_BLOCK_NUMBER)],
     );
 }
 
@@ -421,10 +421,10 @@ fn cheat_block_number_library_call_with_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
-        &[Felt252::from(DEFAULT_BLOCK_NUMBER)],
+        &[Felt::from(DEFAULT_BLOCK_NUMBER)],
     );
 }

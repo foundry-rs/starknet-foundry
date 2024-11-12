@@ -16,6 +16,9 @@ $ cd project_name
 $ tree . -L 1
 ```
 
+<details open>
+<summary>Output:</summary>
+
 ```shell
 .
 ├── Scarb.lock
@@ -25,6 +28,8 @@ $ tree . -L 1
 
 2 directories, 2 files
 ```
+</details>
+<br>
 
 * `src/` contains source code of all your contracts.
 * `tests/` contains tests.
@@ -74,8 +79,8 @@ Make sure that the version in `tag` matches `snforge`. You can check the current
 $ snforge --version
 ```
 
-<details>
-<summary>Click to expand</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 snforge 0.27.0

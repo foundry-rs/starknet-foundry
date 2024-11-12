@@ -9,15 +9,13 @@ use blockifier::state::errors::StateError::{self, StateReadError, UndeclaredClas
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_utils::bigint::BigUintAsHex;
-use cairo_vm::Felt252;
 use camino::Utf8Path;
 use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
 use runtime::starknet::context::SerializableGasPrices;
 use starknet::core::types::{
-    BlockId, ContractClass as ContractClassStarknet, Felt, MaybePendingBlockWithTxHashes,
-    StarknetError,
+    BlockId, ContractClass as ContractClassStarknet, MaybePendingBlockWithTxHashes, StarknetError,
 };
 use starknet::core::utils::parse_cairo_short_string;
 use starknet::providers::jsonrpc::HttpTransport;
@@ -28,6 +26,7 @@ use starknet_api::deprecated_contract_class::{
     ContractClass as DeprecatedContractClass, EntryPoint, EntryPointType,
 };
 use starknet_api::state::StorageKey;
+use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::io::Read;
@@ -121,7 +120,7 @@ impl StateReader for ForkStateReader {
         &self,
         contract_address: ContractAddress,
         key: StorageKey,
-    ) -> StateResult<Felt252> {
+    ) -> StateResult<Felt> {
         if let Some(cache_hit) = self.cache.borrow().get_storage_at(&contract_address, &key) {
             return Ok(cache_hit);
         }
