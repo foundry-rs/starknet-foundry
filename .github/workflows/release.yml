@@ -285,8 +285,7 @@ jobs:
         if: steps.check-plugins.outputs.snforge_std != 'true'
         working-directory: ./snforge_std
         run: |
-          TAG=${GITHUB_REF##*/v}
-          ../scripts/pre_publish.sh $TAG
+          ../scripts/set_plugin_version.sh
           scarb publish --allow-dirty
 
       - name: Package and upload sncast_std
