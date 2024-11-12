@@ -7,16 +7,15 @@ collection and contract collection steps.
 When running `snforge test`, snforge will, under the hood, call the `scarb build --test` command. This command builds
 all the test and contracts along them. Snforge collects these contracts and makes them available for declaring in tests.
 
-Tests are collected from both `src` and `tests` directory, including modules marked with `#[cfg(test)]`.
-Internally, snforge collects tests and contracts from all `[[test]]` targets compiled by Scarb.
-You can read more about them in [test collection](../test-collection.md) documentation.
-
-[//]: # (TODO link to old collection mechanism, --no-optimize)
+Contracts are collected from both `src` and `tests` directory, including modules marked with `#[cfg(test)]`.
+Internally, snforge collects contracts from all `[[test]]` targets compiled by Scarb.
+You can read more about that in [test collection](../test-collection.md) documentation.
 
 ## Collection Order
 
 When multiple `[[test]]` targets are present, snforge will first try to collect contracts from `integration` `test-type`
-target. If `integration` is not present, snforge will first collect contracts from first-encountered `[[test]]` target.
+target. If `integration` is not present, snforge will first collect contracts from the first encountered `[[test]]`
+target.
 
 After collecting from initial `[[test]]` target, snforge will collect contracts from any other encountered contracts.
 No specific order of collection is guaranteed.
