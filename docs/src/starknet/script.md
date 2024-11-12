@@ -250,7 +250,7 @@ version = "0.1.0"
 
 [dependencies]
 starknet = ">=2.8.0"
-sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.30.0" }
+sncast_std = "0.33.0"
 ```
 
 To run the script, do:
@@ -316,7 +316,7 @@ version = "0.1.0"
 
 [dependencies]
 starknet = ">=2.8.0"
-sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.30.0" }
+sncast_std = "0.33.0"
 map = { path = "../contracts" }
 
 [lib]
@@ -382,7 +382,7 @@ status: success
 <br>
 
 
-whereas, when we run the same script once again with `--no-state-file` flag set, it fails (as the `Map` contract is already declared):
+whereas, when we run the same script once again with `--no-state-file` flag set, it fails (as the `Map` contract is already deployed):
 
 ```shell
 $ sncast \
@@ -398,7 +398,7 @@ $ sncast \
 ```shell
 command: script run
 message:
-    0x636f6e747261637420616c7265616479206465636c61726564 ('contract already declared')
+    0x6d6170206465706c6f79206661696c6564 ('map deploy failed')
 
 status: script panicked
 ```

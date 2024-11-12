@@ -13,4 +13,16 @@ mod tests {
         assert_eq!(padded_felt, ContractAddress::from_(padded_felt).into_());
         assert_eq!(padded_felt, ClassHash::from_(padded_felt).into_());
     }
+
+    #[test]
+    fn test_padded_felt_serialize() {
+        let felt = Felt::ONE;
+        let padded_felt = PaddedFelt(felt);
+
+        let serialized = serde_json::to_string(&padded_felt).unwrap();
+        assert_eq!(
+            serialized,
+            "\"0x0000000000000000000000000000000000000000000000000000000000000001\"".to_string()
+        );
+    }
 }

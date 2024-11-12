@@ -342,7 +342,7 @@ fn test_wrong_calldata() {
         output,
         indoc! {r"
         command: deploy
-        error: An error occurred in the called contract[..]('Input too long for arguments')[..]
+        error: [..]('Input too long for arguments')[..]
         "},
     );
 }
@@ -397,7 +397,7 @@ fn test_contract_already_deployed() {
         output,
         indoc! {r"
         command: deploy
-        error: An error occurred [..]Requested ContractAddress[..]is unavailable for deployment[..]
+        error: [..]Requested ContractAddress[..]is unavailable for deployment[..]
         "},
     );
 }
