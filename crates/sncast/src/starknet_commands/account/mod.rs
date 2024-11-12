@@ -11,7 +11,8 @@ use configuration::{
 };
 use serde_json::json;
 use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
-use starknet::{core::types::Felt, signers::SigningKey};
+use starknet::signers::SigningKey;
+use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, fmt, fs::OpenOptions, io::Write};
 use toml::Value;
 

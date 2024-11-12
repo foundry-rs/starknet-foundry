@@ -202,7 +202,7 @@ version = "0.1.0"
 
 [dependencies]
 starknet = ">=2.8.0"
-sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.30.0" }
+sncast_std = "0.33.0"
 ```
 
 To run the script, do:
@@ -254,7 +254,7 @@ version = "0.1.0"
 
 [dependencies]
 starknet = ">=2.8.0"
-sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.30.0" }
+sncast_std = "0.33.0"
 map = { path = "../contracts" }
 
 [lib]

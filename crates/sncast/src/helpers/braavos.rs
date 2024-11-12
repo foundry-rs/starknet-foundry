@@ -4,11 +4,12 @@ use starknet::{
         AccountFactory, PreparedAccountDeploymentV1, PreparedAccountDeploymentV3,
         RawAccountDeploymentV1, RawAccountDeploymentV3,
     },
-    core::types::{BlockId, BlockTag, Felt},
+    core::types::{BlockId, BlockTag},
     providers::Provider,
     signers::{Signer, SignerInteractivityContext},
 };
 use starknet_crypto::poseidon_hash_many;
+use starknet_types_core::felt::Felt;
 
 // Adapted from strakli as there is currently no implementation of braavos account factory in starknet-rs
 pub struct BraavosAccountFactory<S, P> {

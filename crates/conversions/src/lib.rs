@@ -5,11 +5,14 @@ pub mod class_hash;
 pub mod contract_address;
 pub mod entrypoint_selector;
 pub mod eth_address;
-pub mod felt252;
+pub mod felt;
 pub mod nonce;
+pub mod padded_felt;
 pub mod primitive;
 pub mod serde;
 pub mod string;
+
+extern crate self as conversions;
 
 pub trait FromConv<T>: Sized {
     fn from_(value: T) -> Self;
@@ -76,11 +79,11 @@ where
 }
 
 #[macro_export]
-macro_rules! from_thru_felt252 {
+macro_rules! from_thru_felt {
     ($from:ty, $to:ty) => {
         impl FromConv<$from> for $to {
             fn from_(value: $from) -> Self {
-                Self::from_(Felt252::from_(value))
+                Self::from_(Felt::from_(value))
             }
         }
     };

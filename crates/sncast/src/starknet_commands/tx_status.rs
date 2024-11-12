@@ -2,9 +2,10 @@ use clap::Args;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{ExecutionStatus, FinalityStatus, TransactionStatusResponse};
-use starknet::core::types::{Felt, TransactionExecutionStatus, TransactionStatus};
+use starknet::core::types::{TransactionExecutionStatus, TransactionStatus};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
+use starknet_types_core::felt::Felt;
 
 #[derive(Args)]
 #[command(about = "Get the status of a transaction")]

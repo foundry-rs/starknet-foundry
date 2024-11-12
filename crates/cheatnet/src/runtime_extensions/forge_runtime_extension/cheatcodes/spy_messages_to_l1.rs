@@ -2,13 +2,13 @@ use crate::state::CheatnetState;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
 use conversions::serde::serialize::CairoSerialize;
 use starknet_api::core::{ContractAddress, EthAddress};
-use starknet_types_core::felt::Felt as Felt252;
+use starknet_types_core::felt::Felt;
 
 #[derive(CairoSerialize, Clone)]
 pub struct MessageToL1 {
     from_address: ContractAddress,
     to_address: EthAddress,
-    payload: Vec<Felt252>,
+    payload: Vec<Felt>,
 }
 
 impl MessageToL1 {

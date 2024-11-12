@@ -207,7 +207,7 @@ edition = "2023_11"
 starknet = "2.8.2"
 
 [dev-dependencies]
-snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v0.30.0" }
+snforge_std = "0.33.0"
 starknet = ">=2.8.2"
 openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", branch = "cairo-2" }
 

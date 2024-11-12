@@ -1,8 +1,8 @@
 use crate::fuzzer::RunParams;
 use anyhow::Result;
-use cairo_vm::Felt252;
 use rand::prelude::StdRng;
 use rand::SeedableRng;
+use starknet_types_core::felt::Felt;
 use std::num::NonZeroU32;
 
 #[derive(Debug, Clone)]
@@ -19,7 +19,7 @@ impl RandomFuzzer {
         Ok(Self { rng, run_params })
     }
 
-    pub fn next_args(&mut self) -> Vec<Felt252> {
+    pub fn next_args(&mut self) -> Vec<Felt> {
         assert!(self.run_params.executed_runs < self.run_params.total_runs.get());
 
         self.next_run();
@@ -78,7 +78,7 @@ mod tests {
         }
     }
 
-    fn all_values_different(vec1: &[Felt252], vec2: &[Felt252]) -> bool {
+    fn all_values_different(vec1: &[Felt], vec2: &[Felt]) -> bool {
         vec1.iter().zip(vec2).all(|(i, j)| {
             i.to_biguint() != j.to_biguint()
                 && i.to_biguint() != BigUint::zero()

@@ -1,11 +1,11 @@
 use super::test_environment::TestEnvironment;
 use crate::{common::assertions::assert_success, common::get_contracts};
-use cairo_vm::Felt252;
 use cheatnet::state::CheatSpan;
 use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
 use runtime::starknet::context::SEQUENCER_ADDRESS;
 use starknet_api::core::ContractAddress;
+use starknet_types_core::felt::Felt;
 
 trait CheatSequencerAddressTrait {
     fn cheat_sequencer_address(
@@ -63,7 +63,7 @@ fn cheat_sequencer_address_simple() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 }
 
@@ -77,7 +77,7 @@ fn cheat_sequencer_address_with_other_syscall() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_seq_addr_and_emit_event", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 }
 
@@ -97,7 +97,7 @@ fn cheat_sequencer_address_in_constructor() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_stored_sequencer_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 }
 
@@ -111,7 +111,7 @@ fn cheat_sequencer_address_stop() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env
@@ -135,7 +135,7 @@ fn cheat_sequencer_address_double() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[Felt252::from(222)],
+        &[Felt::from(222)],
     );
 
     test_env.stop_cheat_sequencer_address(contract_address);
@@ -158,7 +158,7 @@ fn cheat_sequencer_address_proxy() {
     let selector = "get_cheated_sequencer_address";
     assert_success(
         test_env.call_contract(&proxy_address, selector, &[contract_address.into_()]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env.stop_cheat_sequencer_address(contract_address);
@@ -183,7 +183,7 @@ fn cheat_sequencer_address_library_call() {
 
     assert_success(
         test_env.call_contract(&lib_call_address, lib_call_selector, &[class_hash.into_()]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env.stop_cheat_sequencer_address(lib_call_address);
@@ -206,7 +206,7 @@ fn cheat_sequencer_address_all_simple() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 }
 
@@ -224,7 +224,7 @@ fn cheat_sequencer_address_all_then_one() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[Felt252::from(222)],
+        &[Felt::from(222)],
     );
 }
 
@@ -241,7 +241,7 @@ fn cheat_sequencer_address_one_then_all() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[Felt252::from(222)],
+        &[Felt::from(222)],
     );
 }
 
@@ -259,7 +259,7 @@ fn cheat_sequencer_address_all_stop() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env
@@ -294,11 +294,11 @@ fn cheat_sequencer_address_multiple() {
 
     assert_success(
         test_env.call_contract(&contract_address1, "get_sequencer_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address2, "get_sequencer_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env
@@ -328,11 +328,11 @@ fn cheat_sequencer_address_simple_with_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
@@ -383,7 +383,7 @@ fn cheat_sequencer_address_in_constructor_with_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
@@ -391,7 +391,7 @@ fn cheat_sequencer_address_in_constructor_with_span() {
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_stored_sequencer_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 }
 
@@ -413,7 +413,7 @@ fn cheat_sequencer_address_no_constructor_with_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
@@ -431,18 +431,18 @@ fn cheat_sequencer_address_override_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env.cheat_sequencer_address(contract_address, 321, CheatSpan::Indefinite);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[Felt252::from(321)],
+        &[Felt::from(321)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[Felt252::from(321)],
+        &[Felt::from(321)],
     );
 
     test_env.stop_cheat_sequencer_address(contract_address);
@@ -467,7 +467,7 @@ fn cheat_sequencer_address_library_call_with_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
