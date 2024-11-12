@@ -7,6 +7,7 @@ mod color;
 mod components;
 mod contract_artifacts;
 mod coverage;
+mod docs_snippets;
 mod env;
 mod features;
 mod fork_warning;
