@@ -24,7 +24,7 @@ fn test_docs_snippets() {
         let output = snapbox.output().expect("Failed to execute the command");
         let exit_code = output.status.code().unwrap_or_default();
         let stderr = String::from_utf8_lossy(&output.stderr);
-        println!("snippet: {}", snippet);
+
         assert_ne!(
             exit_code, 2,
             "The command {snippet} failed. Stderr: {stderr}"
