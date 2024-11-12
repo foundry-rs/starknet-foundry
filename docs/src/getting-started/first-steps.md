@@ -74,8 +74,8 @@ Make sure that the version in `tag` matches `snforge`. You can check the current
 $ snforge --version
 ```
 
-<details>
-<summary>Click to expand</summary>
+<details open>
+<summary>Output:</summary>
 
 ```shell
 snforge 0.27.0
