@@ -92,8 +92,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cairo_vm::Felt252;
     use serde_json::json;
+    use starknet_types_core::felt::Felt;
     use test_case::test_case;
     use url::Url;
 
@@ -143,7 +143,7 @@ mod tests {
         assert_eq!(fork_target.name, name);
         assert_eq!(fork_target.url, Url::parse(url).unwrap());
         if let BlockId::BlockHash(hash) = fork_target.block_id {
-            assert_eq!(hash, Felt252::from_dec_str("1").unwrap());
+            assert_eq!(hash, Felt::from_dec_str("1").unwrap());
         } else {
             panic!("Expected BlockId::BlockHash");
         }

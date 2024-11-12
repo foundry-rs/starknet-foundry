@@ -13,7 +13,7 @@ use conversions::string::IntoHexStr;
 use sncast::{get_account, ValidatedWaitParams};
 use sncast::{handle_wait_for_tx, wait_for_tx, WaitForTx};
 use starknet::contract::ContractFactory;
-use starknet::core::types::Felt;
+use starknet_types_core::felt::Felt;
 
 #[tokio::test]
 async fn test_happy_path() {

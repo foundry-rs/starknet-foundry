@@ -1,10 +1,11 @@
 use super::explorer_link::OutputLink;
 use crate::helpers::block_explorer::LinkProvider;
 use camino::Utf8PathBuf;
+use conversions::padded_felt::PaddedFelt;
 use conversions::serde::serialize::CairoSerialize;
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize, Serializer};
-use starknet::core::types::Felt;
+use starknet_types_core::felt::Felt;
 
 pub struct Decimal(pub u64);
 
@@ -34,27 +35,27 @@ impl CommandResponse for CallResponse {}
 
 #[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct InvokeResponse {
-    pub transaction_hash: Felt,
+    pub transaction_hash: PaddedFelt,
 }
 impl CommandResponse for InvokeResponse {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeployResponse {
-    pub contract_address: Felt,
-    pub transaction_hash: Felt,
+    pub contract_address: PaddedFelt,
+    pub transaction_hash: PaddedFelt,
 }
 impl CommandResponse for DeployResponse {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeclareResponse {
-    pub class_hash: Felt,
-    pub transaction_hash: Felt,
+    pub class_hash: PaddedFelt,
+    pub transaction_hash: PaddedFelt,
 }
 impl CommandResponse for DeclareResponse {}
 
 #[derive(Serialize)]
 pub struct AccountCreateResponse {
-    pub address: Felt,
+    pub address: PaddedFelt,
     #[serde(serialize_with = "crate::response::structs::serialize_as_decimal")]
     pub max_fee: Felt,
     pub add_profile: String,

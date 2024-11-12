@@ -1,5 +1,7 @@
 use std::collections::HashSet;
 
+use super::deploy::compute_account_address;
+use super::NestedMap;
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
     AccountType,
@@ -16,13 +18,11 @@ use sncast::{
     check_class_hash_exists, get_chain_id, handle_rpc_error, AccountType as SNCastAccountType,
 };
 use sncast::{check_if_legacy_contract, read_and_parse_json_file, AccountData};
-use starknet::core::types::{BlockId, BlockTag, Felt, StarknetError};
+use starknet::core::types::{BlockId, BlockTag, StarknetError};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::providers::{Provider, ProviderError};
 use starknet::signers::SigningKey;
-
-use super::deploy::compute_account_address;
-use super::NestedMap;
+use starknet_types_core::felt::Felt;
 
 #[derive(Args, Debug)]
 #[command(about = "Add an account to the accounts file")]
@@ -232,7 +232,7 @@ fn generate_account_name(accounts_file: &Utf8PathBuf) -> Result<String> {
 mod tests {
     use crate::starknet_commands::account::import::parse_input_to_felt;
     use conversions::string::TryFromHexStr;
-    use starknet::core::types::Felt;
+    use starknet_types_core::felt::Felt;
 
     #[test]
     fn test_parse_hex_str() {
