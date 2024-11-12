@@ -3,19 +3,18 @@ mod tests_nonce {
     use cairo_vm::utils::PRIME_STR;
     use conversions::string::{IntoDecStr, TryFromDecStr, TryFromHexStr};
     use conversions::{FromConv, IntoConv};
-    use starknet::core::types::Felt;
     use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
     use starknet_api::hash::StarkHash;
-    use starknet_types_core::felt::Felt as Felt252;
+    use starknet_types_core::felt::Felt;
 
     #[test]
     fn test_nonce_conversions_happy_case() {
-        let felt = Felt252::from_bytes_be(&[1u8; 32]);
+        let felt = Felt::from_bytes_be(&[1u8; 32]);
         let nonce = Nonce(felt);
 
         assert_eq!(nonce, ClassHash::from_(nonce).into_());
         assert_eq!(nonce, ContractAddress::from_(nonce).into_());
-        assert_eq!(nonce, Felt252::from_(nonce).into_());
+        assert_eq!(nonce, Felt::from_(nonce).into_());
         assert_eq!(nonce, Felt::from_(nonce).into_());
         assert_eq!(nonce, StarkHash::from_(nonce).into_());
         assert_eq!(nonce, EntryPointSelector::from_(nonce).into_());
@@ -28,12 +27,12 @@ mod tests_nonce {
 
     #[test]
     fn test_nonce_conversions_zero() {
-        let felt = Felt252::ZERO;
+        let felt = Felt::ZERO;
         let nonce = Nonce(felt);
 
         assert_eq!(nonce, ClassHash::from_(nonce).into_());
         assert_eq!(nonce, ContractAddress::from_(nonce).into_());
-        assert_eq!(nonce, Felt252::from_(nonce).into_());
+        assert_eq!(nonce, Felt::from_(nonce).into_());
         assert_eq!(nonce, Felt::from_(nonce).into_());
         assert_eq!(nonce, StarkHash::from_(nonce).into_());
         assert_eq!(nonce, EntryPointSelector::from_(nonce).into_());
@@ -46,9 +45,9 @@ mod tests_nonce {
 
     #[test]
     fn test_nonce_conversions_limit() {
-        let mut nonce: Nonce = Felt252::MAX.into_();
+        let mut nonce: Nonce = Felt::MAX.into_();
 
-        assert_eq!(nonce, Felt252::from_(nonce).into_());
+        assert_eq!(nonce, Felt::from_(nonce).into_());
         assert_eq!(nonce, Felt::from_(nonce).into_());
         assert_eq!(nonce, ClassHash::from_(nonce).into_());
         assert_eq!(nonce, StarkHash::from_(nonce).into_());
@@ -71,6 +70,6 @@ mod tests_nonce {
 
     #[test]
     fn test_nonce_conversions_out_of_range() {
-        assert!(Nonce::try_from_hex_str(PRIME_STR).unwrap() == Felt252::from(0_u8).into_());
+        assert!(Nonce::try_from_hex_str(PRIME_STR).unwrap() == Felt::from(0_u8).into_());
     }
 }

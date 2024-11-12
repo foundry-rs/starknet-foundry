@@ -10,12 +10,12 @@ use blockifier::{
     state::{cached_state::CachedState, state_api::StateReader},
 };
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::forge_config_extension::{
     config::RawForgeConfig, ForgeConfigExtension,
 };
 use runtime::{starknet::context::build_context, ExtendedRuntime, StarknetRuntime};
 use starknet_api::block::{BlockNumber, BlockTimestamp};
+use starknet_types_core::felt::Felt;
 use std::{default::Default, num::NonZeroU128};
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 struct PhantomStateReader;
@@ -51,14 +51,14 @@ impl StateReader for PhantomStateReader {
         &self,
         _contract_address: starknet_api::core::ContractAddress,
         _key: starknet_api::state::StorageKey,
-    ) -> blockifier::state::state_api::StateResult<Felt252> {
+    ) -> blockifier::state::state_api::StateResult<Felt> {
         unreachable!()
     }
 }
 
 #[allow(clippy::too_many_lines)]
 pub fn run_config_pass(
-    args: Vec<Felt252>,
+    args: Vec<Felt>,
     test_details: &TestDetails,
     casm_program: &AssembledProgramWithDebugInfo,
 ) -> Result<RawForgeConfig> {

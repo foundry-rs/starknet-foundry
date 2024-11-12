@@ -1,4 +1,4 @@
-use cairo_vm::Felt252;
+use starknet_types_core::felt::Felt;
 use std::collections::HashSet;
 
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::generate_random_felt::generate_random_felt;
@@ -7,7 +7,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::generate_
 fn test_generate_random_felt_range_and_uniqueness() {
     let mut random_values = vec![];
 
-    let max_felt: Felt252 = Felt252::MAX;
+    let max_felt: Felt = Felt::MAX;
 
     for _ in 0..10 {
         let random_value = generate_random_felt();

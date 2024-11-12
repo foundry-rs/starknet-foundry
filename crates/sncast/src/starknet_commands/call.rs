@@ -4,9 +4,10 @@ use clap::Args;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::CallResponse;
-use starknet::core::types::{BlockId, Felt, FunctionCall};
+use starknet::core::types::{BlockId, FunctionCall};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
+use starknet_types_core::felt::Felt;
 
 #[derive(Args)]
 #[command(about = "Call a contract instance on Starknet", long_about = None)]

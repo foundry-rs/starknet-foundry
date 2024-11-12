@@ -26,11 +26,12 @@ use sncast::{
     get_contract_class, get_default_state_file_name, NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::accounts::ConnectedAccount;
-use starknet::core::types::{ContractClass, Felt};
+use starknet::core::types::ContractClass;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
 use starknet_commands::account::list::print_account_list;
 use starknet_commands::verify::Verify;
+use starknet_types_core::felt::Felt;
 use tokio::runtime::Runtime;
 
 mod starknet_commands;
