@@ -5,6 +5,7 @@ use crate::{
 use conversions::serde::{deserialize::CairoDeserialize, serialize::CairoSerialize};
 use starknet_api::core::ContractAddress;
 use starknet_types_core::felt::Felt;
+use cairo_vm::Felt252;
 
 #[derive(CairoDeserialize, Clone, Debug)]
 pub struct CheatArguments<T> {
