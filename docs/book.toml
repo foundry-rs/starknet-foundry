@@ -1,6 +1,29 @@
 [book]
-authors = ["pedro rosalba"]
+authors = ["Starknet Foundry"]
 language = "en"
 multilingual = false
 src = "src"
-title = "idk"
+title = "The Starknet Foundry Book"
+description = "Starknet Foundry is a toolchain for developing Starknet smart contracts. It helps with writing, deploying, and testing your smart contracts written in Cairo. It is inspired by Foundry."
+
+[output.linkcheck]
+warning-policy = "error"
+follow-web-links = true
+traverse-parent-directories = false
+exclude = [
+    "foundry-rs.github.io/starknet-foundry/snforge_std",
+    "foundry-rs.github.io/starknet-foundry/sncast_std",
+    "starknet-faucet.vercel.app"
+]
+
+[output.html]
+git-repository-url = "https://github.com/foundry-rs/starknet-foundry/"
+edit-url-template = "https://github.com/foundry-rs/starknet-foundry/edit/master/docs/{path}"
+additional-js = ["count.js"]
+
+[output.html.playground]
+runnable = false
+
+[output.html.fold]
+enable = true
+level = 0
