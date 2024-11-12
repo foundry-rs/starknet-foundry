@@ -38,11 +38,6 @@ pub fn extract_from_directory(
                     all_snippets.extend(snippets);
                 }
             }
-        } else {
-            let snippets = extract_content_from_file(&path, re)?;
-            if !snippets.is_empty() {
-                all_snippets.extend(snippets);
-            }
         }
     }
 
