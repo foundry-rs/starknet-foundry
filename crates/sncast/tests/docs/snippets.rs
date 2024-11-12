@@ -51,10 +51,10 @@ fn test_docs_snippets() {
             exit_code, 2,
             "The command {snippet} failed. Stderr: {stderr}"
         );
-
-        println!(
-            "Validated {} sncast command snippets in the docs",
-            snippets.len()
-        );
     }
+
+    println!(
+        "Validated {} sncast command snippets in the docs",
+        snippets.len()
+    );
 }
