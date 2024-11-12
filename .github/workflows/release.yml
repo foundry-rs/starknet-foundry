@@ -259,11 +259,15 @@ jobs:
       SCARB_REGISTRY_AUTH_TOKEN: ${{ secrets.SCARB_REGISTRY_AUTH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-      # todo: Use scarb version from tool-versions
+
+      - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
+        with:
+          toolchain: stable
+
       - uses: software-mansion/setup-scarb@v1
         with:
-          # todo: Use scarb version that support publishing plugins (after 2.8.4)
-          scarb-version: "2.8.4"
+          # todo: Use scarb stable version that support publishing plugins (after 2.8.4)
+          scarb-version: "nightly-2024-11-09"
 
       - name: Package and upload snforge_scarb_plugin
         working-directory: ./crates/snforge_scarb_plugin
@@ -274,9 +278,8 @@ jobs:
         run: |
           TAG=${GITHUB_REF##*/v}
           ../scripts/pre_publish.sh $TAG
-          scarb update
-          scarb publish
+          scarb publish --allow-dirty
 
       - name: Package and upload sncast_std
         working-directory: ./sncast_std
-        run: scarb publish
+        run: scarb publish --allow-dirty
