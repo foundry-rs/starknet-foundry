@@ -10,7 +10,7 @@ fn test_docs_snippets() {
     let tempdir: tempfile::TempDir = tempdir().expect("Unable to create a temporary directory");
     let root_dir = get_parent_dir(2);
 
-    let re = Regex::new(r"(?ms)```shell\n\$ sncast (.+?)\n```").expect("Invalid regex pattern");
+    let re = Regex::new(r"(?ms)```shell\n\$ sncast(.+?)\n```").expect("Invalid regex pattern");
     let extension = Some("md");
     let snippets = extract_matches_from_directory(&root_dir, &re, extension)
         .expect("Failed to extract sncast command snippets");
@@ -41,8 +41,7 @@ fn test_docs_snippets() {
         if skipped_args.contains(&args) {
             continue;
         }
-        println!("SNCAST SNIPPET: {}", snippet);
-        println!("SNCAST ARGS: {:?}", args);
+
         let snapbox = runner(&args).current_dir(tempdir.path());
         let output = snapbox.output().expect("Failed to execute the command");
         let exit_code = output.status.code().unwrap_or_default();
