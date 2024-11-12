@@ -14,6 +14,7 @@ members = [
     "crates/configuration",
     "crates/universal-sierra-compiler-api",
     "crates/snforge-scarb-plugin",
+    "crates/docs",
 ]
 
 [workspace.package]
@@ -82,6 +83,7 @@ project-root = "0.2.2"
 which = "5.0.0"
 conversions = { path = "./crates/conversions" }
 shared = { path = "./crates/shared" }
+docs = { path = "./crates/docs" }
 test-case = "3.1.0"
 scarb-metadata = "1.13.0"
 flatten-serde-json = "0.1.0"

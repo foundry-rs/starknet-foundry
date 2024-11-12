@@ -67,6 +67,7 @@ url.workspace = true
 fs_extra.workspace = true
 project-root.workspace = true
 indoc.workspace = true
+docs.workspace = true
 
 [[bin]]
 name = "snforge"
