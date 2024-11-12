@@ -17,7 +17,7 @@ fn test_docs_snippets() {
         .expect("Failed to extract snforge command snippets");
 
     for snippet in snippets.clone() {
-        println!("SNIPPET: {}", snippet);
+        println!("SNIPPET: {snippet}");
         let args = parse_snippet_str_to_command_args(snippet.as_str());
         let args: Vec<&str> = args.iter().map(String::as_str).collect();
 
