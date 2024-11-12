@@ -2,9 +2,9 @@ use anyhow::{bail, ensure, Result};
 use clap::{Args, ValueEnum};
 use conversions::serde::deserialize::CairoDeserialize;
 use conversions::TryIntoConv;
-use starknet::core::types::{BlockId, Felt};
+use starknet::core::types::BlockId;
 use starknet::providers::Provider;
-use starknet_types_core::felt::NonZeroFelt;
+use starknet_types_core::felt::{Felt, NonZeroFelt};
 
 #[derive(Args, Debug, Clone)]
 pub struct FeeArgs {

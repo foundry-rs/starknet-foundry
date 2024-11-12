@@ -2,11 +2,11 @@ use crate::common::assertions::{assert_error, assert_panic};
 use crate::common::call_contract;
 use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
 use cairo_lang_utils::byte_array::BYTE_ARRAY_MAGIC;
-use cairo_vm::Felt252;
 use cheatnet::state::CheatnetState;
-use conversions::felt252::FromShortString;
+use conversions::felt::FromShortString;
 use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
+use starknet_types_core::felt::Felt;
 
 #[test]
 fn call_contract_error() {
@@ -23,7 +23,7 @@ fn call_contract_error() {
         &mut cheatnet_state,
         &contract_address,
         selector,
-        &[Felt252::from(420)],
+        &[Felt::from(420)],
     );
 
     assert_error(output, "\n    0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 ('Input too long for arguments')\n");
@@ -50,10 +50,10 @@ fn call_contract_panic() {
     assert_panic(
         output,
         &[
-            Felt252::from_short_string("shortstring").unwrap(),
-            Felt252::from(0),
-            Felt252::MAX,
-            Felt252::from_short_string("shortstring2").unwrap(),
+            Felt::from_short_string("shortstring").unwrap(),
+            Felt::from(0),
+            Felt::MAX,
+            Felt::from_short_string("shortstring2").unwrap(),
         ],
     );
 }
@@ -89,12 +89,12 @@ fn call_proxied_contract_bytearray_panic() {
     assert_panic(
         output,
         &[
-            Felt252::try_from_hex_str(&format!("0x{BYTE_ARRAY_MAGIC}")).unwrap(),
-            Felt252::from(2),
-            Felt252::from_short_string("This is a very long\n and multi ").unwrap(),
-            Felt252::from_short_string("line string, that will for sure").unwrap(),
-            Felt252::from_short_string(" saturate the pending_word").unwrap(),
-            Felt252::from(26),
+            Felt::try_from_hex_str(&format!("0x{BYTE_ARRAY_MAGIC}")).unwrap(),
+            Felt::from(2),
+            Felt::from_short_string("This is a very long\n and multi ").unwrap(),
+            Felt::from_short_string("line string, that will for sure").unwrap(),
+            Felt::from_short_string(" saturate the pending_word").unwrap(),
+            Felt::from(26),
         ],
     );
 }

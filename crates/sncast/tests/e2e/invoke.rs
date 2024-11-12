@@ -12,7 +12,8 @@ use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_co
 use snapbox::cmd::{cargo_bin, Command};
 use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::AccountType;
-use starknet::core::types::{Felt, TransactionReceipt::Invoke};
+use starknet::core::types::TransactionReceipt::Invoke;
+use starknet_types_core::felt::Felt;
 use std::path::PathBuf;
 use test_case::test_case;
 

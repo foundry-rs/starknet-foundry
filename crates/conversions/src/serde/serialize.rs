@@ -1,4 +1,4 @@
-use starknet_types_core::felt::Felt as Felt252;
+use starknet_types_core::felt::Felt;
 
 pub use cairo_serde_macros::CairoSerialize;
 
@@ -6,7 +6,7 @@ pub mod raw;
 mod serialize_impl;
 
 pub struct BufferWriter {
-    output: Vec<Felt252>,
+    output: Vec<Felt>,
 }
 
 impl BufferWriter {
@@ -14,7 +14,7 @@ impl BufferWriter {
         Self { output: vec![] }
     }
 
-    pub fn write_felt(&mut self, felt: Felt252) {
+    pub fn write_felt(&mut self, felt: Felt) {
         self.output.push(felt);
     }
 
@@ -26,7 +26,7 @@ impl BufferWriter {
     }
 
     #[must_use]
-    pub fn to_vec(self) -> Vec<Felt252> {
+    pub fn to_vec(self) -> Vec<Felt> {
         self.output
     }
 }
@@ -36,14 +36,14 @@ pub trait CairoSerialize {
 }
 
 pub trait SerializeToFeltVec {
-    fn serialize_to_vec(&self) -> Vec<Felt252>;
+    fn serialize_to_vec(&self) -> Vec<Felt>;
 }
 
 impl<T> SerializeToFeltVec for T
 where
     T: CairoSerialize,
 {
-    fn serialize_to_vec(&self) -> Vec<Felt252> {
+    fn serialize_to_vec(&self) -> Vec<Felt> {
         let mut buffer = BufferWriter::new();
 
         self.serialize(&mut buffer);

@@ -1,11 +1,11 @@
 use conversions::serde::deserialize::{BufferReader, CairoDeserialize};
-use starknet_types_core::felt::Felt as Felt252;
+use starknet_types_core::felt::Felt;
 
 macro_rules! from_felts {
     ($($exprs:expr),*) => {
         CairoDeserialize::deserialize(&mut BufferReader::new(&[
             $(
-                Felt252::from($exprs)
+                Felt::from($exprs)
             ),*
         ])).unwrap()
     };
@@ -15,17 +15,12 @@ macro_rules! from_felts {
 fn work_on_struct() {
     #[derive(CairoDeserialize, Debug, PartialEq, Eq)]
     struct Foo {
-        a: Felt252,
+        a: Felt,
     }
 
     let value: Foo = from_felts!(123);
 
-    assert_eq!(
-        value,
-        Foo {
-            a: Felt252::from(123)
-        }
-    );
+    assert_eq!(value, Foo { a: Felt::from(123) });
 }
 
 #[test]
@@ -41,11 +36,11 @@ fn work_on_empty_struct() {
 #[test]
 fn work_on_tuple_struct() {
     #[derive(CairoDeserialize, Debug, PartialEq, Eq)]
-    struct Foo(Felt252);
+    struct Foo(Felt);
 
     let value: Foo = from_felts!(123);
 
-    assert_eq!(value, Foo(Felt252::from(123)));
+    assert_eq!(value, Foo(Felt::from(123)));
 }
 
 #[test]
@@ -73,23 +68,18 @@ fn work_on_enum() {
     #[derive(CairoDeserialize, Debug, PartialEq, Eq)]
     enum Foo {
         A,
-        B(Felt252),
-        C { a: Felt252 },
+        B(Felt),
+        C { a: Felt },
     }
 
     let value: Foo = from_felts!(0);
     assert_eq!(value, Foo::A);
 
     let value: Foo = from_felts!(1, 123);
-    assert_eq!(value, Foo::B(Felt252::from(123)));
+    assert_eq!(value, Foo::B(Felt::from(123)));
 
     let value: Foo = from_felts!(2, 123);
-    assert_eq!(
-        value,
-        Foo::C {
-            a: Felt252::from(123)
-        }
-    );
+    assert_eq!(value, Foo::C { a: Felt::from(123) });
 }
 
 #[test]
@@ -106,13 +96,13 @@ fn work_with_nested() {
     #[derive(CairoDeserialize, Debug, PartialEq, Eq)]
     enum Foo {
         A,
-        B(Felt252),
+        B(Felt),
         C { a: Bar },
     }
 
     #[derive(CairoDeserialize, Debug, PartialEq, Eq)]
     struct Bar {
-        a: Felt252,
+        a: Felt,
     }
 
     let value: Foo = from_felts!(2, 123);
@@ -120,9 +110,7 @@ fn work_with_nested() {
     assert_eq!(
         value,
         Foo::C {
-            a: Bar {
-                a: Felt252::from(123)
-            }
+            a: Bar { a: Felt::from(123) }
         }
     );
 }
@@ -132,8 +120,8 @@ fn work_with_nested() {
 fn fail_on_too_short_data() {
     #[derive(CairoDeserialize, Debug, PartialEq, Eq)]
     struct Foo {
-        a: Felt252,
-        b: Felt252,
+        a: Felt,
+        b: Felt,
     }
 
     let _: Foo = from_felts!(123);

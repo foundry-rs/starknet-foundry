@@ -8,10 +8,10 @@ use crate::{
     },
 };
 use blockifier::state::state_api::State;
-use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::state::CheatnetState;
 use starknet_api::core::ContractAddress;
+use starknet_types_core::felt::Felt;
 // We've decided that the nonce should not change in tests
 // and should remain 0 at all times, this may be revised in the future.
 
@@ -19,7 +19,7 @@ fn check_nonce(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
-) -> Felt252 {
+) -> Felt {
     let write_nonce = felt_selector_from_name("write_nonce");
     let read_nonce = felt_selector_from_name("read_nonce");
 
@@ -42,7 +42,7 @@ fn nonce_transactions() {
     let old_nonce = check_nonce(&mut cached_state, &mut cheatnet_state, &contract_address);
     let new_nonce = check_nonce(&mut cached_state, &mut cheatnet_state, &contract_address);
 
-    assert_eq!(old_nonce, Felt252::from(0));
+    assert_eq!(old_nonce, Felt::from(0));
     assert_eq!(old_nonce, new_nonce);
 }
 
@@ -67,7 +67,7 @@ fn nonce_declare_deploy() {
 
     let nonce3 = check_nonce(&mut cached_state, &mut cheatnet_state, &contract_address);
 
-    assert_eq!(nonce1, Felt252::from(0));
+    assert_eq!(nonce1, Felt::from(0));
     assert_eq!(nonce1, nonce2);
     assert_eq!(nonce2, nonce3);
 }
