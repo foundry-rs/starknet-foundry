@@ -251,7 +251,7 @@ jobs:
           TAG: ${{ steps.create-release.outputs.computed-prefix }}${{ steps.create-release.outputs.version }}
 
   upload-to-registry:
-    name: Upload new snforge_std, sncast_std and snforge_scarb_plugin versions to the registry
+    name: Upload packages to the registry
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     needs: [ create-release, verify-version ]
@@ -269,11 +269,20 @@ jobs:
           # todo: Use scarb stable version that support publishing plugins (after 2.8.4)
           scarb-version: "nightly-2024-11-09"
 
+      - name: Check if package version exist in the registry
+        run: |
+          set -eo pipefail
+          echo "snforge_scarb_plugin=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version "${{ steps.scarb-init.outputs.CAIRO_VERSION }}" '[.[] | select(.v == $version)] | length > 0')" >> $GITHUB_OUTPUT
+          echo "snforge_std=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_std.json | jq --arg version "${{ steps.scarb-init.outputs.CAIRO_VERSION }}" '[.[] | select(.v == $version)] | length > 0')" >> $GITHUB_OUTPUT
+          echo "sncast_std=$(curl -s https://scarbs.xyz/api/v1/index/sn/ca/sncast_std.json | jq --arg version "${{ steps.scarb-init.outputs.CAIRO_VERSION }}" '[.[] | select(.v == $version)] | length > 0')" >> $GITHUB_OUTPUT
+
       - name: Package and upload snforge_scarb_plugin
+        if: steps.check-plugins.outputs.snforge_scarb_plugin != 'true'
         working-directory: ./crates/snforge_scarb_plugin
         run: scarb publish
 
       - name: Package and upload snforge_std
+        if: steps.check-plugins.outputs.snforge_std != 'true'
         working-directory: ./snforge_std
         run: |
           TAG=${GITHUB_REF##*/v}
@@ -281,5 +290,6 @@ jobs:
           scarb publish --allow-dirty
 
       - name: Package and upload sncast_std
+        if: steps.check-plugins.outputs.sncast_std != 'true'
         working-directory: ./sncast_std
         run: scarb publish --allow-dirty
