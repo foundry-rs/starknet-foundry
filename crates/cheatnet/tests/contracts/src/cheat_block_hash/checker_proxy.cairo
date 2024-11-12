@@ -26,9 +26,7 @@ mod CheatBlockHashCheckerProxy {
     struct Storage {}
 
     #[abi(embed_v0)]
-    impl ICheatBlockHashCheckerProxy of super::ICheatBlockHashCheckerProxy<
-        ContractState
-    > {
+    impl ICheatBlockHashCheckerProxy of super::ICheatBlockHashCheckerProxy<ContractState> {
         fn get_cheated_block_hash(self: @ContractState, address: ContractAddress) -> felt252 {
             let cheat_block_hash_checker = ICheatBlockHashCheckerDispatcher {
                 contract_address: address
@@ -40,13 +38,11 @@ mod CheatBlockHashCheckerProxy {
             let block_info = get_block_info().unbox();
             let block_hash = get_block_hash_syscall(block_info.block_number - 10).unwrap_syscall();
 
-            block_hash        
+            block_hash
         }
 
         fn call_proxy(self: @ContractState, address: ContractAddress) -> (felt252, felt252) {
-            let dispatcher = ICheatBlockHashCheckerProxyDispatcher {
-                contract_address: address
-            };
+            let dispatcher = ICheatBlockHashCheckerProxyDispatcher { contract_address: address };
             let hash = self.get_block_hash();
             let res = dispatcher.get_cheated_block_hash(get_contract_address());
             (hash, res)

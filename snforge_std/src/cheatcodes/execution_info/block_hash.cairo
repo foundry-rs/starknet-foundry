@@ -13,9 +13,7 @@ fn cheat_block_hash(contract_address: ContractAddress, block_hash: felt252, span
     execution_info
         .block_info
         .block_hash =
-            Operation::Start(
-                CheatArguments { value: block_hash, span, target: contract_address, }
-            );
+            Operation::Start(CheatArguments { value: block_hash, span, target: contract_address, });
 
     cheat_execution_info(execution_info);
 }

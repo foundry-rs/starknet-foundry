@@ -13,9 +13,7 @@ trait ICheatBlockHashCheckerLibCall<TContractState> {
 
 #[starknet::contract]
 mod CheatBlockHashCheckerLibCall {
-    use super::{
-        ICheatBlockHashCheckerDispatcherTrait, ICheatBlockHashCheckerLibraryDispatcher
-    };
+    use super::{ICheatBlockHashCheckerDispatcherTrait, ICheatBlockHashCheckerLibraryDispatcher};
     use core::starknet::SyscallResultTrait;
     use starknet::ClassHash;
     use starknet::{get_block_info, get_block_hash_syscall};
@@ -24,15 +22,9 @@ mod CheatBlockHashCheckerLibCall {
     struct Storage {}
 
     #[abi(embed_v0)]
-    impl ICheatBlockHashCheckerLibCall of super::ICheatBlockHashCheckerLibCall<
-        ContractState
-    > {
-        fn get_block_hash_with_lib_call(
-            ref self: ContractState, class_hash: ClassHash
-        ) -> felt252 {
-            let cheat_block_hash_checker = ICheatBlockHashCheckerLibraryDispatcher {
-                class_hash
-            };
+    impl ICheatBlockHashCheckerLibCall of super::ICheatBlockHashCheckerLibCall<ContractState> {
+        fn get_block_hash_with_lib_call(ref self: ContractState, class_hash: ClassHash) -> felt252 {
+            let cheat_block_hash_checker = ICheatBlockHashCheckerLibraryDispatcher { class_hash };
             cheat_block_hash_checker.get_block_hash()
         }
 
