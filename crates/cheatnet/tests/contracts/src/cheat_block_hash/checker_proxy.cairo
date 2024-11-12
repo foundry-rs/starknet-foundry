@@ -6,7 +6,7 @@ trait ICheatBlockHashChecker<TContractState> {
 }
 
 #[starknet::interface]
-trait ICheatBlockHashCheckerProxy<TContractState> {
+trait   <TContractState> {
     fn get_cheated_block_hash(self: @TContractState, address: ContractAddress) -> felt252;
     fn get_block_hash(self: @TContractState) -> felt252;
     fn call_proxy(self: @TContractState, address: ContractAddress) -> (felt252, felt252);

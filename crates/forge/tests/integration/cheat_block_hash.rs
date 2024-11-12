@@ -19,16 +19,16 @@ fn cheat_block_hash_basic() {
             use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_block_hash, stop_cheat_block_hash, start_cheat_block_number, start_cheat_block_hash_global, stop_cheat_block_hash_global };
 
             #[starknet::interface]
-            trait ICheatBlockhashChecker<TContractState> {
+            trait ICheatBlockHashChecker<TContractState> {
                 fn get_block_hash(ref self: TContractState) -> felt252;
                 fn get_block_hash_and_emit_event(ref self: TContractState) -> felt252;
                 fn get_block_hash_and_number(ref self: TContractState) -> (felt252, u64);
             }
 
-            fn deploy_cheat_block_hash_checker()  -> ICheatBlockhashCheckerDispatcher {
-                let contract = declare("CheatBlockhashChecker").unwrap().contract_class();
+            fn deploy_cheat_block_hash_checker()  -> ICheatBlockHashCheckerDispatcher {
+                let contract = declare("CheatBlockHashChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                ICheatBlockhashCheckerDispatcher { contract_address }
+                ICheatBlockHashCheckerDispatcher { contract_address }
             }
 
             #[test]
@@ -67,13 +67,13 @@ fn cheat_block_hash_basic() {
 
             #[test]
             fn cheat_block_hash_multiple() {
-                let contract = declare("CheatBlockhashChecker").unwrap().contract_class();
+                let contract = declare("CheatBlockHashChecker").unwrap().contract_class();
 
                 let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
 
-                let cheat_block_hash_checker1 = ICheatBlockhashCheckerDispatcher { contract_address: contract_address1 };
-                let cheat_block_hash_checker2 = ICheatBlockhashCheckerDispatcher { contract_address: contract_address2 };
+                let cheat_block_hash_checker1 = ICheatBlockHashCheckerDispatcher { contract_address: contract_address1 };
+                let cheat_block_hash_checker2 = ICheatBlockHashCheckerDispatcher { contract_address: contract_address2 };
 
                 let old_block_hash1 = cheat_block_hash_checker1.get_block_hash();
                 let old_block_hash2 = cheat_block_hash_checker2.get_block_hash();
@@ -99,13 +99,13 @@ fn cheat_block_hash_basic() {
 
             #[test]
             fn cheat_block_hash_all() {
-                let contract = declare("CheatBlockhashChecker").unwrap().contract_class();
+                let contract = declare("CheatBlockHashChecker").unwrap().contract_class();
 
                 let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
 
-                let cheat_block_hash_checker1 = ICheatBlockhashCheckerDispatcher { contract_address: contract_address1 };
-                let cheat_block_hash_checker2 = ICheatBlockhashCheckerDispatcher { contract_address: contract_address2 };
+                let cheat_block_hash_checker1 = ICheatBlockHashCheckerDispatcher { contract_address: contract_address1 };
+                let cheat_block_hash_checker2 = ICheatBlockHashCheckerDispatcher { contract_address: contract_address2 };
 
                 let old_block_hash1 = cheat_block_hash_checker1.get_block_hash();
                 let old_block_hash2 = cheat_block_hash_checker2.get_block_hash();
@@ -129,7 +129,7 @@ fn cheat_block_hash_basic() {
         "#
         ),
         Contract::from_code_path(
-            "CheatBlockhashChecker".to_string(),
+            "CheatBlockHashChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_hash_checker.cairo"),
         )
         .unwrap()
@@ -155,27 +155,27 @@ fn cheat_block_hash_complex() {
             use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_block_hash, stop_cheat_block_hash, start_cheat_block_number, start_cheat_block_hash_global };
 
             #[starknet::interface]
-            trait ICheatBlockhashChecker<TContractState> {
+            trait ICheatBlockHashChecker<TContractState> {
                 fn get_block_hash(ref self: TContractState) -> felt252;
                 fn get_block_hash_and_emit_event(ref self: TContractState) -> felt252;
                 fn get_block_hash_and_number(ref self: TContractState) -> (felt252, u64);
             }
 
-            fn deploy_cheat_block_hash_checker()  -> ICheatBlockhashCheckerDispatcher {
-                let contract = declare("CheatBlockhashChecker").unwrap().contract_class();
+            fn deploy_cheat_block_hash_checker()  -> ICheatBlockHashCheckerDispatcher {
+                let contract = declare("CheatBlockHashChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                ICheatBlockhashCheckerDispatcher { contract_address }
+                ICheatBlockHashCheckerDispatcher { contract_address }
             }
 
             #[test]
             fn cheat_block_hash_complex() {
-                let contract = declare("CheatBlockhashChecker").unwrap().contract_class();
+                let contract = declare("CheatBlockHashChecker").unwrap().contract_class();
 
                 let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
 
-                let cheat_block_hash_checker1 = ICheatBlockhashCheckerDispatcher { contract_address: contract_address1 };
-                let cheat_block_hash_checker2 = ICheatBlockhashCheckerDispatcher { contract_address: contract_address2 };
+                let cheat_block_hash_checker1 = ICheatBlockHashCheckerDispatcher { contract_address: contract_address1 };
+                let cheat_block_hash_checker2 = ICheatBlockHashCheckerDispatcher { contract_address: contract_address2 };
 
                 let old_block_hash2 = cheat_block_hash_checker2.get_block_hash();
 
@@ -215,7 +215,7 @@ fn cheat_block_hash_complex() {
         "#
         ),
         Contract::from_code_path(
-            "CheatBlockhashChecker".to_string(),
+            "CheatBlockHashChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_hash_checker.cairo"),
         )
         .unwrap()
@@ -240,13 +240,13 @@ fn cheat_block_hash_with_span() {
             use snforge_std::{ test_address, declare, ContractClassTrait, DeclareResultTrait, cheat_block_hash, start_cheat_block_hash, stop_cheat_block_hash, CheatSpan };
 
             #[starknet::interface]
-            trait ICheatBlockhashChecker<TContractState> {
+            trait ICheatBlockHashChecker<TContractState> {
                 fn get_block_hash(ref self: TContractState) -> felt252;
             }
 
-            fn deploy_cheat_block_hash_checker() -> ICheatBlockhashCheckerDispatcher {
-                let (contract_address, _) = declare("CheatBlockhashChecker").unwrap().contract_class().deploy(@ArrayTrait::new()).unwrap();
-                ICheatBlockhashCheckerDispatcher { contract_address }
+            fn deploy_cheat_block_hash_checker() -> ICheatBlockHashCheckerDispatcher {
+                let (contract_address, _) = declare("CheatBlockHashChecker").unwrap().contract_class().deploy(@ArrayTrait::new()).unwrap();
+                ICheatBlockHashCheckerDispatcher { contract_address }
             }
 
             #[test]
@@ -312,7 +312,7 @@ fn cheat_block_hash_with_span() {
         "#
         ),
         Contract::from_code_path(
-            "CheatBlockhashChecker".to_string(),
+            "CheatBlockHashChecker".to_string(),
             Path::new("tests/data/contracts/cheat_block_hash_checker.cairo"),
         )
         .unwrap()

@@ -46,7 +46,7 @@ impl CheatBlockHashTrait for TestEnvironment {
 fn cheat_block_hash_simple() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatBlockhashChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockHashChecker", &[]);
 
     test_env.start_cheat_block_hash(contract_address, Felt252::from(123));
 
@@ -58,7 +58,7 @@ fn cheat_block_hash_simple() {
 fn cheat_block_hash_with_other_syscall() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatBlockhashChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockHashChecker", &[]);
 
     test_env.start_cheat_block_hash(contract_address, Felt252::from(123));
     let selector = "get_block_hash_and_emit_event";
@@ -72,7 +72,7 @@ fn cheat_block_hash_in_constructor() {
     let mut test_env = TestEnvironment::new();
     let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("ConstructorCheatBlockhashChecker", &contracts_data);
+    let class_hash = test_env.declare("ConstructorCheatBlockHashChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
     test_env.start_cheat_block_hash(precalculated_address, Felt252::from(123));
@@ -89,7 +89,7 @@ fn cheat_block_hash_in_constructor() {
 fn cheat_block_hash_stop() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatBlockhashChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockHashChecker", &[]);
 
     test_env.start_cheat_block_hash(contract_address, Felt252::from(123));
 
@@ -110,7 +110,7 @@ fn cheat_block_hash_stop() {
 fn cheat_block_hash_double() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatBlockhashChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockHashChecker", &[]);
 
     test_env.start_cheat_block_hash(contract_address, Felt252::from(123));
     test_env.start_cheat_block_hash(contract_address, Felt252::from(123));
@@ -132,8 +132,8 @@ fn cheat_block_hash_double() {
 fn cheat_block_hash_proxy() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatBlockhashChecker", &[]);
-    let proxy_address = test_env.deploy("CheatBlockhashCheckerProxy", &[]);
+    let contract_address = test_env.deploy("CheatBlockHashChecker", &[]);
+    let proxy_address = test_env.deploy("CheatBlockHashCheckerProxy", &[]);
     let proxy_selector = "get_cheated_block_hash";
 
     test_env.start_cheat_block_hash(contract_address, Felt252::from(123));
@@ -156,9 +156,9 @@ fn cheat_block_hash_library_call() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
-    let class_hash = test_env.declare("CheatBlockhashChecker", &contracts_data);
+    let class_hash = test_env.declare("CheatBlockHashChecker", &contracts_data);
 
-    let lib_call_address = test_env.deploy("CheatBlockhashCheckerLibCall", &[]);
+    let lib_call_address = test_env.deploy("CheatBlockHashCheckerLibCall", &[]);
     let lib_call_selector = "get_block_hash_with_lib_call";
 
     test_env.start_cheat_block_hash(lib_call_address, Felt252::from(123));
@@ -179,9 +179,11 @@ fn cheat_block_hash_library_call() {
 fn cheat_block_hash_all_simple() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatBlockhashChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockHashChecker", &[]);
 
-    test_env.cheatnet_state.start_cheat_block_hash_global(Felt252::from(123));
+    test_env
+        .cheatnet_state
+        .start_cheat_block_hash_global(Felt252::from(123));
 
     let output = test_env.call_contract(&contract_address, "get_block_hash", &[]);
     assert_success(output, &[Felt252::from(123)]);
@@ -191,9 +193,11 @@ fn cheat_block_hash_all_simple() {
 fn cheat_block_hash_all_then_one() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatBlockhashChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockHashChecker", &[]);
 
-    test_env.cheatnet_state.start_cheat_block_hash_global(Felt252::from(321));
+    test_env
+        .cheatnet_state
+        .start_cheat_block_hash_global(Felt252::from(321));
 
     test_env.start_cheat_block_hash(contract_address, Felt252::from(123));
 
@@ -205,11 +209,13 @@ fn cheat_block_hash_all_then_one() {
 fn cheat_block_hash_one_then_all() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatBlockhashChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockHashChecker", &[]);
 
     test_env.start_cheat_block_hash(contract_address, Felt252::from(123));
 
-    test_env.cheatnet_state.start_cheat_block_hash_global(Felt252::from(321));
+    test_env
+        .cheatnet_state
+        .start_cheat_block_hash_global(Felt252::from(321));
 
     let output = test_env.call_contract(&contract_address, "get_block_hash", &[]);
     assert_success(output, &[Felt252::from(321)]);
@@ -219,11 +225,13 @@ fn cheat_block_hash_one_then_all() {
 fn cheat_block_hash_all_stop() {
     let mut test_env = TestEnvironment::new();
 
-    let cheat_block_hash_checker = test_env.declare("CheatBlockhashChecker", &get_contracts());
+    let cheat_block_hash_checker = test_env.declare("CheatBlockHashChecker", &get_contracts());
 
     let contract_address = test_env.deploy_wrapper(&cheat_block_hash_checker, &[]);
 
-    test_env.cheatnet_state.start_cheat_block_hash_global(Felt252::from(123));
+    test_env
+        .cheatnet_state
+        .start_cheat_block_hash_global(Felt252::from(123));
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_hash", &[]),
@@ -250,7 +258,7 @@ fn cheat_block_hash_multiple() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
-    let class_hash = test_env.declare("CheatBlockhashChecker", &contracts_data);
+    let class_hash = test_env.declare("CheatBlockHashChecker", &contracts_data);
 
     let contract_address1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address2 = test_env.deploy_wrapper(&class_hash, &[]);
@@ -292,9 +300,13 @@ fn cheat_block_hash_multiple() {
 fn cheat_block_hash_simple_with_span() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatBlockhashChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockHashChecker", &[]);
 
-    test_env.cheat_block_hash(contract_address, Felt252::from(123), CheatSpan::TargetCalls(2));
+    test_env.cheat_block_hash(
+        contract_address,
+        Felt252::from(123),
+        CheatSpan::TargetCalls(2),
+    );
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_hash", &[]),
@@ -315,11 +327,15 @@ fn cheat_block_hash_proxy_with_span() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
-    let class_hash = test_env.declare("CheatBlockhashCheckerProxy", &contracts_data);
+    let class_hash = test_env.declare("CheatBlockHashCheckerProxy", &contracts_data);
     let contract_address_1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address_2 = test_env.deploy_wrapper(&class_hash, &[]);
 
-    test_env.cheat_block_hash(contract_address_1, Felt252::from(123), CheatSpan::TargetCalls(1));
+    test_env.cheat_block_hash(
+        contract_address_1,
+        Felt252::from(123),
+        CheatSpan::TargetCalls(1),
+    );
 
     let output = test_env.call_contract(
         &contract_address_1,
@@ -335,10 +351,14 @@ fn cheat_block_hash_in_constructor_with_span() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("ConstructorCheatBlockhashChecker", &contracts_data);
+    let class_hash = test_env.declare("ConstructorCheatBlockHashChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
-    test_env.cheat_block_hash(precalculated_address, Felt252::from(123), CheatSpan::TargetCalls(2));
+    test_env.cheat_block_hash(
+        precalculated_address,
+        Felt252::from(123),
+        CheatSpan::TargetCalls(2),
+    );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
     assert_eq!(precalculated_address, contract_address);
@@ -363,10 +383,14 @@ fn cheat_block_hash_no_constructor_with_span() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("CheatBlockhashChecker", &contracts_data);
+    let class_hash = test_env.declare("CheatBlockHashChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
-    test_env.cheat_block_hash(precalculated_address, Felt252::from(123), CheatSpan::TargetCalls(1));
+    test_env.cheat_block_hash(
+        precalculated_address,
+        Felt252::from(123),
+        CheatSpan::TargetCalls(1),
+    );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
     assert_eq!(precalculated_address, contract_address);
@@ -385,9 +409,13 @@ fn cheat_block_hash_no_constructor_with_span() {
 fn cheat_block_hash_override_span() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatBlockhashChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockHashChecker", &[]);
 
-    test_env.cheat_block_hash(contract_address, Felt252::from(123), CheatSpan::TargetCalls(2));
+    test_env.cheat_block_hash(
+        contract_address,
+        Felt252::from(123),
+        CheatSpan::TargetCalls(2),
+    );
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_hash", &[]),
@@ -418,10 +446,14 @@ fn cheat_block_hash_library_call_with_span() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
-    let class_hash = test_env.declare("CheatBlockhashChecker", &contracts_data);
-    let contract_address = test_env.deploy("CheatBlockhashCheckerLibCall", &[]);
+    let class_hash = test_env.declare("CheatBlockHashChecker", &contracts_data);
+    let contract_address = test_env.deploy("CheatBlockHashCheckerLibCall", &[]);
 
-    test_env.cheat_block_hash(contract_address, Felt252::from(123), CheatSpan::TargetCalls(1));
+    test_env.cheat_block_hash(
+        contract_address,
+        Felt252::from(123),
+        CheatSpan::TargetCalls(1),
+    );
 
     let lib_call_selector = "get_block_hash_with_lib_call";
 
