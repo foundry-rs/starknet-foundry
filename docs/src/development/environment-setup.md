@@ -89,7 +89,7 @@ You can run the checker with
 $ typos
 ```
 
-Some typos can be automatically fixed by running```
+Some typos can be automatically fixed by running
 
 <details open>
 <summary>Output:</summary>
