@@ -30,8 +30,8 @@ use starknet::core::types::ContractClass;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
 use starknet_commands::account::list::print_account_list;
-use starknet_types_core::felt::Felt;
 use starknet_commands::verify::Verify;
+use starknet_types_core::felt::Felt;
 use tokio::runtime::Runtime;
 
 mod starknet_commands;
@@ -626,7 +626,7 @@ async fn run_async_command(
             let result = starknet_commands::verify::verify(
                 verify.contract_address_or_class_hash.contract_address,
                 verify.contract_address_or_class_hash.class_hash,
-                verify.class_name,
+                verify.contract_name,
                 verify.verifier,
                 verify.network,
                 verify.confirm_verification,

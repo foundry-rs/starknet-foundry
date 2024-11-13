@@ -71,12 +71,12 @@ pub trait VerificationInterface {
         workspace_dir: Utf8PathBuf,
         contract_address: Option<Felt>,
         class_hash: Option<Felt>,
-        class_name: String,
+        contract_name: String,
     ) -> Result<VerifyResponse> {
         let file_data = read_workspace_files(workspace_dir)?;
         let source_code = serde_json::Value::Object(file_data);
         let payload = VerificationPayload {
-            class_name,
+            contract_name,
             contract_address,
             class_hash,
             source_code,
@@ -88,7 +88,7 @@ pub trait VerificationInterface {
 
 #[derive(Serialize, Debug)]
 pub struct VerificationPayload {
-    pub class_name: String,
+    pub contract_name: String,
     pub contract_address: Option<Felt>,
     pub class_hash: Option<Felt>,
     pub source_code: serde_json::Value,

@@ -13,7 +13,7 @@ Conflicts with: `--contract-address`
 
 The class hash of the contract that is to be verified.
 
-## `--class-name <CLASS NAME>`
+## `--contract-name <CONTRACT_NAME>`
 Required.
 
 The name of the contract class. The contract name is the part after the `mod` keyword in your contract file.

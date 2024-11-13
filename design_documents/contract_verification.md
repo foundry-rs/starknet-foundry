@@ -26,7 +26,7 @@ The `verify` command will perform following actions:
 
 #### Parameters
 
-#### `--class-name`
+#### `--contract-name`
 
 Required.
 Name of the contract to be submitted for verification.
@@ -91,7 +91,7 @@ const url = `${voyager.testnet.url}/contract/`
 const payload = serde_json::json!({
         "contract_address": "0x0", // this is optional if class_hash is provided
         "class_hash": "0x0", // this is optional if contract_address is provided
-        "class_name": "balance",
+        "contract_name": "balance",
         "source_code": {
             "Scarb.toml" : {
                 """

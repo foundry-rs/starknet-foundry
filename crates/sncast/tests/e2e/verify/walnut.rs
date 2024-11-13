@@ -34,7 +34,7 @@ async fn test_happy_case() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--class-name",
+        "--contract-name",
         "Map",
         "--verifier",
         "walnut",
@@ -86,7 +86,7 @@ async fn test_happy_case_class_hash() {
         "verify",
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
-        "--class-name",
+        "--contract-name",
         "Map",
         "--verifier",
         "walnut",
@@ -138,7 +138,7 @@ async fn test_failed_verification() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--class-name",
+        "--contract-name",
         "Map",
         "--verifier",
         "walnut",
@@ -174,7 +174,7 @@ async fn test_verification_abort() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--class-name",
+        "--contract-name",
         "nonexistent",
         "--verifier",
         "walnut",
@@ -207,7 +207,7 @@ async fn test_wrong_contract_name_passed() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--class-name",
+        "--contract-name",
         "nonexistent",
         "--verifier",
         "walnut",
@@ -238,7 +238,7 @@ async fn test_no_class_hash_or_contract_address_provided() {
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "verify",
-        "--class-name",
+        "--contract-name",
         "Map",
         "--verifier",
         "walnut",
@@ -257,7 +257,7 @@ async fn test_no_class_hash_or_contract_address_provided() {
             error: the following required arguments were not provided:
               <--contract-address <CONTRACT_ADDRESS>|--class-hash <CLASS_HASH>>
 
-            Usage: sncast verify --class-name <CLASS_NAME> --verifier <VERIFIER> --network <NETWORK> <--contract-address <CONTRACT_ADDRESS>|--class-hash <CLASS_HASH>>
+            Usage: sncast verify --contract-name <CONTRACT_NAME> --verifier <VERIFIER> --network <NETWORK> <--contract-address <CONTRACT_ADDRESS>|--class-hash <CLASS_HASH>>
 
             For more information, try '--help'."
         ),
@@ -276,7 +276,7 @@ async fn test_both_class_hash_or_contract_address_provided() {
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
-        "--class-name",
+        "--contract-name",
         "Map",
         "--verifier",
         "walnut",
@@ -293,7 +293,7 @@ async fn test_both_class_hash_or_contract_address_provided() {
         formatdoc!(
             r"
             error: the argument '--contract-address <CONTRACT_ADDRESS>' cannot be used with '--class-hash <CLASS_HASH>'
-            Usage: sncast verify --class-name <CLASS_NAME> --verifier <VERIFIER> --network <NETWORK> <--contract-address <CONTRACT_ADDRESS>|--class-hash <CLASS_HASH>>"
+            Usage: sncast verify --contract-name <CONTRACT_NAME> --verifier <VERIFIER> --network <NETWORK> <--contract-address <CONTRACT_ADDRESS>|--class-hash <CLASS_HASH>>"
         ),
     );
 }
@@ -324,7 +324,7 @@ async fn test_happy_case_with_confirm_verification_flag() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--class-name",
+        "--contract-name",
         "Map",
         "--verifier",
         "walnut",
@@ -377,7 +377,7 @@ async fn test_happy_case_specify_package() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--class-name",
+        "--contract-name",
         "supercomplexcode",
         "--verifier",
         "walnut",
@@ -431,7 +431,7 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--class-name",
+        "--contract-name",
         "FibonacciContract",
         "--verifier",
         "walnut",
@@ -469,7 +469,7 @@ async fn test_worskpaces_package_no_contract() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--class-name",
+        "--contract-name",
         "nonexistent",
         "--verifier",
         "walnut",
