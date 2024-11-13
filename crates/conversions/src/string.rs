@@ -1,5 +1,5 @@
 use crate::IntoConv;
-use starknet_types_core::felt::{Felt as Felt252, FromStrError};
+use starknet_types_core::felt::{Felt, FromStrError};
 
 pub trait TryFromDecStr {
     fn try_from_dec_str(str: &str) -> Result<Self, FromStrError>
@@ -22,7 +22,7 @@ pub trait IntoHexStr {
 
 impl<T> IntoDecStr for T
 where
-    T: IntoConv<Felt252>,
+    T: IntoConv<Felt>,
 {
     fn into_dec_string(self) -> String {
         self.into_().to_string()
@@ -31,7 +31,7 @@ where
 
 impl<T> IntoHexStr for T
 where
-    T: IntoConv<Felt252>,
+    T: IntoConv<Felt>,
 {
     fn into_hex_string(self) -> String {
         self.into_().to_hex_string()

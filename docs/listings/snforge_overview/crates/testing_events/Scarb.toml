@@ -1,0 +1,14 @@
+[package]
+name = "testing_events"
+version = "0.1.0"
+edition = "2023_11"
+
+[dependencies]
+starknet.workspace = true
+snforge_std.workspace = true
+
+[[target.starknet-contract]]
+sierra = true
+
+[scripts]
+test = "snforge test"

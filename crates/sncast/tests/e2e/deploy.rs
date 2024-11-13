@@ -9,9 +9,12 @@ use crate::helpers::fixtures::{
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use snapbox::cmd::{cargo_bin, Command};
 use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::AccountType;
-use starknet::core::types::{Felt, TransactionReceipt::Deploy};
+use starknet::core::types::TransactionReceipt::Deploy;
+use starknet_types_core::felt::Felt;
+use std::path::PathBuf;
 use test_case::test_case;
 
 #[test_case("oz_cairo_0"; "cairo_0_account")]
@@ -60,7 +63,6 @@ async fn test_happy_case_human_readable() {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "deploy",
         "--url",
         URL,
@@ -72,7 +74,7 @@ async fn test_happy_case_human_readable() {
         "--max-fee",
         "99999999999999999",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -83,8 +85,8 @@ async fn test_happy_case_human_readable() {
         indoc! {
             "
             command: deploy
-            contract_address: [..]
-            transaction_hash: [..]
+            contract_address: 0x0[..]
+            transaction_hash: 0x0[..]
 
             To see deployment details, visit:
             contract: [..]
@@ -252,6 +254,7 @@ async fn test_invalid_version_and_token_combination(fee_token: &str, version: &s
         format!("Error: {fee_token} fee token is not supported for {version} deployment."),
     );
 }
+
 #[tokio::test]
 async fn test_happy_case_with_constructor() {
     let args = vec![
@@ -283,6 +286,37 @@ async fn test_happy_case_with_constructor() {
     assert!(matches!(receipt, Deploy(_)));
 }
 
+#[tokio::test]
+async fn test_happy_case_with_constructor_cairo_expression_calldata() {
+    let tempdir = create_and_deploy_oz_account().await;
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "--int-format",
+        "--json",
+        "deploy",
+        "--url",
+        URL,
+        "--fee-token",
+        "eth",
+        "--arguments",
+        "0x420, 0x2137_u256",
+        "--class-hash",
+        CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success().get_output().stdout.clone();
+
+    let hash = get_transaction_hash(&output);
+    let receipt = get_transaction_receipt(hash).await;
+
+    assert!(matches!(receipt, Deploy(_)));
+}
+
 #[test]
 fn test_wrong_calldata() {
     let args = vec![
@@ -298,7 +332,7 @@ fn test_wrong_calldata() {
         "--class-hash",
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
         "--constructor-calldata",
-        "0x1 0x1",
+        "0x1 0x2 0x3 0x4",
     ];
 
     let snapbox = runner(&args);
@@ -308,7 +342,7 @@ fn test_wrong_calldata() {
         output,
         indoc! {r"
         command: deploy
-        error: An error occurred in the called contract[..]Failed to deserialize param #2[..]
+        error: [..]('Input too long for arguments')[..]
         "},
     );
 }
@@ -330,14 +364,11 @@ async fn test_contract_not_declared() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
-        indoc! {r"
-        command: deploy
-        error: An error occurred in the called contract[..]Class with hash[..]is not declared[..]
-        "},
+        "Error: An error occurred in the called contract[..]Class with hash[..]is not declared[..]",
     );
 }
 
@@ -366,7 +397,7 @@ fn test_contract_already_deployed() {
         output,
         indoc! {r"
         command: deploy
-        error: An error occurred [..]Requested ContractAddress[..]is unavailable for deployment[..]
+        error: [..]Requested ContractAddress[..]is unavailable for deployment[..]
         "},
     );
 }
@@ -403,4 +434,21 @@ fn test_too_low_max_fee() {
         error: Max fee is smaller than the minimal transaction cost
         "},
     );
+}
+
+#[tokio::test]
+async fn test_happy_case_shell() {
+    let tempdir = create_and_deploy_oz_account().await;
+
+    let test_path = PathBuf::from("tests/shell/deploy.sh")
+        .canonicalize()
+        .unwrap();
+    let binary_path = cargo_bin!("sncast");
+
+    let snapbox = Command::new(test_path)
+        .current_dir(tempdir.path())
+        .arg(binary_path)
+        .arg(URL)
+        .arg(CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA);
+    snapbox.assert().success();
 }

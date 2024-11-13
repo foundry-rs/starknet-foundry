@@ -17,27 +17,28 @@ These arguments can then be used in the test body.
 The test will be run many times against different randomly generated values.
 
 ```rust
-fn sum(a: felt252, b: felt252) -> felt252 {
-    return a + b;
-}
-
-#[test]
-fn test_sum(x: felt252, y: felt252) {
-    assert(sum(x, y) == x + y, 'sum incorrect');
-}
+{{#include ../../listings/snforge_advanced_features/crates/fuzz_testing/src/basic_example.cairo}}
 ```
 
 Then run `snforge test` like usual.
 
 ```shell
 $ snforge test
-Collected 1 test(s) from package_name package
-Running 0 test(s) from src/
-Running 1 test(s) from tests/
-[PASS] tests::test_sum (runs: 256)
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Collected 1 test(s) from fuzz_testing package
+Running 1 test(s) from src/
+Running 0 test(s) from tests/
+[PASS] fuzz_testing::basic_example::test_sum (runs: 256, gas: {max: ~1, min: ~1, mean: ~1.00, std deviation: ~0.00})
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 Fuzzer seed: [..]
 ```
+</details>
+<br>
 
 ## Types Supported by the Fuzzer
 
@@ -58,11 +59,7 @@ Trying to use arguments of different type in test definition will result in an e
 It is possible to configure the number of runs of the random fuzzer as well as its seed for a specific test case:
 
 ```rust
-#[test]
-#[fuzzer(runs: 22, seed: 38)]
-fn test_sum(x: felt252, y: felt252) {
-    assert(sum(x, y) == x + y, 'sum incorrect');
-}
+{{#include ../../listings/snforge_advanced_features/crates/fuzz_testing/src/with_parameters.cairo}}
 ```
 
 It can also be configured globally, via command line arguments:

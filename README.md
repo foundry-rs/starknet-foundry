@@ -35,19 +35,19 @@ Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/
 To install Starknet Foundry, first install `snfoundryup` by running:
 
 ```shell
-curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
+$ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
 ```
 
 Follow the instructions and then run
 
 ```shell
-snfoundryup
+$ snfoundryup
 ```
 
 You can also specify a version you wish to install:
 
 ```shell
-snfoundryup -v 0.9.0
+$ snfoundryup -v 0.9.0
 ```
 
 To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
@@ -74,8 +74,8 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 - [x] Deployment scripts written in Cairo
 - [ ] Transactions profiling 🏗️
 - [ ] Debugging utilities 🏗️
+- [ ] Test coverage reports (check out [cairo-coverage](https://github.com/software-mansion/cairo-coverage)) 🏗️ 
 - [ ] L1 ↔ L2 messaging and cross-chain testing
-- [ ] Test coverage reports
 
 ## Performance
 

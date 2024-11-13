@@ -7,11 +7,5 @@ Gets nonce of an account for a given block tag (`pending` or `latest`) and retur
 - `block_tag` - block tag name, one of `pending` or `latest`.
 
 ```rust
-use sncast_std::{get_nonce};
-
-fn main() {
-    let nonce = get_nonce('latest');
-    println!("nonce: {}", nonce);
-    println!("debug nonce: {:?}", nonce);
-}
+{{#include ../../../listings/sncast_library/scripts/get_nonce/src/lib.cairo}}
 ```

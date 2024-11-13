@@ -42,30 +42,9 @@ pub struct StrkFeeSettings {
 - `constructor_calldata` - calldata for the contract constructor.
 - `salt` - salt for the contract address.
 - `unique` - determines if salt should be further modified with the account address.
-- `fee_settings` - fee settings for the transaction. Can be `Eth` or `Strk`. Read more about it [here](../../starknet/fees-and-versions.md) 
+- `fee_settings` - fee settings for the transaction. Can be `Eth` or `Strk`. Read more about it [here](../../starknet/fees-and-versions.md)
 - `nonce` - nonce for declare transaction. If not provided, nonce will be set automatically.
 
 ```rust
-use sncast_std::{deploy, DeployResult, FeeSettings, EthFeeSettings};
-
-fn main() {
-    let max_fee = 9999999;
-    let salt = 0x1;
-    let nonce = 0x1;
-    let class_hash: ClassHash = 0x03a8b191831033ba48ee176d5dde7088e71c853002b02a1cfa5a760aa98be046
-        .try_into()
-        .expect('Invalid class hash value');
-
-    let deploy_result = deploy(
-        class_hash,
-        ArrayTrait::new(),
-        Option::Some(salt),
-        true,
-        FeeSettings::Eth(EthFeeSettings {max_fee: Option::Some(max_fee)}),
-        Option::Some(deploy_nonce)
-    ).expect('deploy failed');
-
-    println!("deploy_result: {}", deploy_result);
-    println!("debug deploy_result: {:?}", deploy_result);
-}
+{{#include ../../../listings/sncast_library/scripts/deploy/src/lib.cairo}}
 ```

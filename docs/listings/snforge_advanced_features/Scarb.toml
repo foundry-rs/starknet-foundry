@@ -1,0 +1,13 @@
+[workspace]
+members = ["crates/*"]
+
+[workspace.dependencies]
+starknet = "2.7.0"
+assert_macros = "0.1.0"
+snforge_std = { path = "../../../snforge_std" }
+
+[[target.starknet-contract]]
+sierra = true
+
+[scripts]
+test = "snforge test"

@@ -1,4 +1,4 @@
-use crate::tempdir_with_tool_versions;
+use crate::{get_assert_macros_version, tempdir_with_tool_versions};
 use anyhow::{anyhow, Context, Result};
 use assert_fs::{
     fixture::{FileTouch, FileWriteStr, PathChild},
@@ -13,8 +13,8 @@ use forge_runner::{
 };
 use indoc::formatdoc;
 use scarb_api::{
-    get_contracts_artifacts_and_source_sierra_paths, metadata::MetadataCommandExt, ScarbCommand,
-    StarknetContractArtifacts,
+    get_contracts_artifacts_and_source_sierra_paths, metadata::MetadataCommandExt,
+    target_dir_for_workspace, ScarbCommand, StarknetContractArtifacts,
 };
 use shared::command::CommandExt;
 use std::{
@@ -96,9 +96,10 @@ impl Contract {
             .iter()
             .find(|package| package.name == "contract")
             .unwrap();
+        let artifacts_dir = target_dir_for_workspace(&scarb_metadata).join("dev");
 
         let contract =
-            get_contracts_artifacts_and_source_sierra_paths(&scarb_metadata, &package.id, None)
+            get_contracts_artifacts_and_source_sierra_paths(&artifacts_dir, package, false)
                 .unwrap()
                 .remove(&self.name)
                 .ok_or(anyhow!("there is no contract with name {}", self.name))?
@@ -134,10 +135,11 @@ impl<'a> TestCase {
             .to_string()
             .replace('\\', "/");
 
+        let assert_macros_version = get_assert_macros_version()?.to_string();
+
         let scarb_toml_path = dir.child("Scarb.toml");
-        scarb_toml_path
-            .write_str(&formatdoc!(
-                r#"
+        scarb_toml_path.write_str(&formatdoc!(
+            r#"
                 [package]
                 name = "test_package"
                 version = "0.1.0"
@@ -145,11 +147,11 @@ impl<'a> TestCase {
                 [dependencies]
                 starknet = "2.4.0"
                 snforge_std = {{ path = "{}" }}
-                assert_macros = "0.1.0"
+                assert_macros = "{}"
                 "#,
-                snforge_std_path
-            ))
-            .unwrap();
+            snforge_std_path,
+            assert_macros_version
+        ))?;
 
         Ok(Self {
             dir,

@@ -17,7 +17,7 @@
 * [Writing Tests](testing/testing.md)
 * [Test Attributes](testing/test-attributes.md)
 * [Testing Smart Contracts](testing/contracts.md)
-* [Testing Contracts' Internals](testing/testing_contract_internals.md)
+* [Testing Contracts' Internals](testing/testing-contract-internals.md)
 * [Using Cheatcodes](testing/using-cheatcodes.md)
 * [Testing Events](testing/testing-events.md)
 * [Testing Messages to L1](testing/testing-messages-to-l1.md)
@@ -35,12 +35,13 @@
 * [Direct Storage Access](snforge-advanced-features/storage-cheatcodes.md)
 * [Profiling](snforge-advanced-features/profiling.md)
 
---- 
+---
 
 # `sncast` Overview
 
 * [Outline](starknet/index.md)
 * [Creating And Deploying Accounts](starknet/account.md)
+* [Importing Accounts](starknet/account-import.md)
 * [Declaring New Contracts](starknet/declare.md)
 * [Deploying New Contracts](starknet/deploy.md)
 * [Invoking Contracts](starknet/invoke.md)
@@ -50,6 +51,7 @@
 * [Inspecting Transactions](starknet/tx-status.md)
 * [Fees and Versions](starknet/fees-and-versions.md)
 * [Verifying Contracts](starknet/verify.md)
+* [Calldata Transformation](starknet/calldata-transformation.md)
 
 ---
 
@@ -57,7 +59,7 @@
 
 * [Environment Setup](development/environment-setup.md)
 
---- 
+---
 
 # Appendix
 
@@ -66,6 +68,7 @@
     * [init](appendix/snforge/init.md)
     * [clean-cache](appendix/snforge/clean-cache.md)
 * [Cheatcodes Reference](appendix/cheatcodes.md)
+    * [Cheating Globally](appendix/cheatcodes/global.md)
     * [CheatSpan](appendix/cheatcodes/cheat_span.md)
     * [caller_address](appendix/cheatcodes/caller_address.md)
     * [block_number](appendix/cheatcodes/block_number.md)
@@ -92,6 +95,7 @@
     * [spy_messages_to_l1](appendix/cheatcodes/spy_messages_to_l1.md)
     * [store](appendix/cheatcodes/store.md)
     * [load](appendix/cheatcodes/load.md)
+    * [generate_random_felt](appendix/cheatcodes/generate_random_felt.md)
 * [`snforge` Library Reference](appendix/snforge-library.md)
     * [byte_array](appendix/snforge-library/byte_array.md)
     * [declare](appendix/snforge-library/declare.md)
@@ -103,7 +107,7 @@
 * [`sncast` Commands](appendix/sncast.md)
     * [common flags](appendix/sncast/common.md)
     * [account](appendix/sncast/account/account.md)
-        * [add](appendix/sncast/account/add.md)
+        * [import](appendix/sncast/account/import.md)
         * [create](appendix/sncast/account/create.md)
         * [deploy](appendix/sncast/account/deploy.md)
         * [delete](appendix/sncast/account/delete.md)
@@ -121,7 +125,7 @@
         * [run](appendix/sncast/script/run.md)
     * [tx-status](appendix/sncast/tx-status.md)
     * [verify](appendix/sncast/verify.md)
-* [`sncast` Library Functions References](appendix/sncast-library.md)
+* [`sncast` Library Reference](appendix/sncast-library.md)
     * [declare](appendix/sncast-library/declare.md)
     * [deploy](appendix/sncast-library/deploy.md)
     * [invoke](appendix/sncast-library/invoke.md)
@@ -130,3 +134,4 @@
     * [tx_status](appendix/sncast-library/tx_status.md)
     * [errors](appendix/sncast-library/errors.md)
 * [ `snfoundry.toml` Reference](appendix/snfoundry-toml.md)
+* [ `Scarb.toml` Reference](appendix/scarb-toml.md)

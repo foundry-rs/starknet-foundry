@@ -1,0 +1,4 @@
+[sncast.default]
+url = "http://127.0.0.1:5050/rpc"
+# [sncast.default]
+# url = "https://starknet-sepolia.public.blastapi.io/rpc/v0_7"

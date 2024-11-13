@@ -7,7 +7,8 @@ edition.workspace = true
 
 [features]
 smoke = []
-scarb_2_8_1 = []
+scarb_2_7_1 = []
+scarb_2_8_3 = []
 
 [dependencies]
 anyhow.workspace = true
@@ -32,6 +33,7 @@ cairo-lang-starknet.workspace = true
 cairo-lang-compiler.workspace = true
 cairo-lang-filesystem.workspace = true
 cairo-lang-test-plugin.workspace = true
+cairo-annotations.workspace = true
 starknet-types-core.workspace = true
 itertools.workspace = true
 regex.workspace = true
@@ -63,7 +65,6 @@ tokio-util.workspace = true
 futures.workspace = true
 num-integer.workspace = true
 url.workspace = true
-trace-data.workspace = true
 fs_extra.workspace = true
 project-root.workspace = true
 indoc.workspace = true
@@ -81,3 +82,4 @@ lazy_static.workspace = true
 tempfile.workspace = true
 cairo-lang-starknet-classes.workspace = true
 walkdir.workspace = true
+test-case.workspace = true

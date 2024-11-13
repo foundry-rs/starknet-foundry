@@ -1,6 +1,7 @@
 [package]
 name = "state_script"
 version = "0.1.0"
+edition = "2024_07"
 
 [dependencies]
 starknet = ">=2.4.0"

@@ -4,6 +4,7 @@ use super::common::runner::{
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
+use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use forge::CAIRO_EDITION;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stdout_contains;
@@ -144,13 +145,13 @@ fn with_failing_scarb_build() {
         ))
         .unwrap();
 
-    let output = test_runner(&temp).assert().code(2);
+    let output = test_runner(&temp).arg("--no-optimization").assert().code(2);
 
     assert_stdout_contains(
         output,
         indoc!(
             r"
-                [ERROR] Failed to build test artifacts with Scarb: `scarb` exited with error
+                [ERROR] Failed to build contracts with Scarb: `scarb` exited with error
             "
         ),
     );
@@ -225,7 +226,33 @@ fn with_exact_filter() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] simple_package_integrationtest::test_simple::test_two [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 12 filtered out
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
+        "},
+    );
+}
+
+#[test]
+fn with_exact_filter_and_duplicated_test_names() {
+    let temp = setup_package("duplicated_test_names");
+
+    let output = test_runner(&temp)
+        .arg("duplicated_test_names_integrationtest::tests_a::test_simple")
+        .arg("--exact")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from duplicated_test_names package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] duplicated_test_names_integrationtest::tests_a::test_simple [..]
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
         "},
     );
 }
@@ -663,9 +690,13 @@ fn with_exit_first_flag() {
 fn init_new_project() {
     let temp = tempdir_with_tool_versions().unwrap();
 
-    runner(&temp).args(["init", "test_name"]).assert().success();
+    runner(&temp)
+        .args(["init", "test_name"])
+        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
+        .assert()
+        .success();
 
-    validate_init(&temp);
+    validate_init(&temp, false);
 }
 
 #[test]
@@ -683,7 +714,7 @@ fn init_new_project_from_scarb() {
         .assert()
         .success();
 
-    validate_init(&temp);
+    validate_init(&temp, true);
 }
 
 pub fn append_to_path_var(path: &Path) -> OsString {
@@ -693,9 +724,15 @@ pub fn append_to_path_var(path: &Path) -> OsString {
     env::join_paths(script_path.chain(other_paths)).unwrap()
 }
 
-fn validate_init(temp: &TempDir) {
+fn validate_init(temp: &TempDir, validate_snforge_std: bool) {
     let manifest_path = temp.join("test_name/Scarb.toml");
     let scarb_toml = fs::read_to_string(manifest_path.clone()).unwrap();
+
+    let snforge_std_assert = if validate_snforge_std {
+        "\nsnforge_std = { git = \"https://github.com/foundry-rs/starknet-foundry\", tag = \"v[..]\" }"
+    } else {
+        ""
+    };
 
     let expected = formatdoc!(
         r#"
@@ -709,8 +746,7 @@ fn validate_init(temp: &TempDir) {
             [dependencies]
             starknet = "[..]"
 
-            [dev-dependencies]
-            snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v[..]" }}
+            [dev-dependencies]{}
             assert_macros = "[..]"
 
             [[target.starknet-contract]]
@@ -718,8 +754,11 @@ fn validate_init(temp: &TempDir) {
 
             [scripts]
             test = "snforge test"
-        "#
-    );
+            {SCARB_MANIFEST_TEMPLATE_CONTENT}
+        "#,
+        snforge_std_assert
+    ).trim_end()
+    .to_string()+ "\n";
 
     assert_matches(&expected, &scarb_toml);
 
@@ -752,7 +791,7 @@ fn validate_init(temp: &TempDir) {
 
     let expected = indoc!(
         r"
-        [..]Compiling test_name v0.1.0[..]
+        [..]Compiling[..]
         [..]Finished[..]
 
         Collected 2 test(s) from test_name package
@@ -920,38 +959,6 @@ fn should_panic() {
 }
 
 #[test]
-fn printing_in_contracts() {
-    let temp = setup_package("contract_printing");
-
-    let output = test_runner(&temp).assert().success();
-
-    assert_stdout_contains(
-        output,
-        indoc! {r#"
-        [..]Compiling[..]
-        warn: libfunc `print` is not allowed in the libfuncs list `Default libfunc list`
-         --> contract: HelloStarknet
-        help: try compiling with the `experimental` list
-         --> Scarb.toml
-            [[target.starknet-contract]]
-            allowed-libfuncs-list.name = "experimental"
-
-        [..]Finished[..]
-
-
-        Collected 2 test(s) from contract_printing package
-        Running 0 test(s) from src/
-        Running 2 test(s) from tests/
-        Hello world!
-        [PASS] contract_printing_integrationtest::test_contract::test_increase_balance [..]
-        [PASS] contract_printing_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value [..]
-        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "#},
-    );
-}
-
-#[test]
-#[ignore] //TODO(#2253) unignore when there exists previous version that supports new attributes
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
@@ -963,7 +970,7 @@ fn incompatible_snforge_std_version_warning() {
     scarb_toml["dev-dependencies"]["snforge_std"]["path"] = Item::None;
     scarb_toml["dev-dependencies"]["snforge_std"]["git"] =
         value("https://github.com/foundry-rs/starknet-foundry.git");
-    scarb_toml["dev-dependencies"]["snforge_std"]["tag"] = value("v0.10.1");
+    scarb_toml["dev-dependencies"]["snforge_std"]["tag"] = value("v0.28.0");
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
     let output = test_runner(&temp).assert().failure();
@@ -980,22 +987,22 @@ fn incompatible_snforge_std_version_warning() {
         Collected 4 test(s) from steps package
         Running 4 test(s) from src/
         [PASS] steps::tests::steps_570030 [..]
-        [FAIL] steps::tests::steps_4000005
+        [FAIL] steps::tests::steps_10000005
 
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
 
-        [FAIL] steps::tests::steps_5699625
+        [FAIL] steps::tests::steps_11250075
 
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
 
-        [PASS] steps::tests::steps_3999990 [..]
+        [PASS] steps::tests::steps_9999990 [..]
         Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
 
         Failures:
-            steps::tests::steps_4000005
-            steps::tests::steps_5699625
+            steps::tests::steps_10000005
+            steps::tests::steps_11250075
         "},
     );
 }
@@ -1023,7 +1030,6 @@ fn detailed_resources_flag() {
                 memory holes: [..]
                 builtins: ([..])
                 syscalls: ([..])
-
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "},
     );
@@ -1061,5 +1067,23 @@ fn catch_runtime_errors() {
                 [PASS] simple_package_integrationtest::test::catch_no_such_file [..]
             "#
         ),
+    );
+}
+
+#[test]
+fn call_nonexistent_selector() {
+    let temp = setup_package("nonexistent_selector");
+
+    let output = test_runner(&temp).assert().code(0);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        Collected 1 test(s) from nonexistent_selector package
+        Running 1 test(s) from tests/
+        [PASS] nonexistent_selector_integrationtest::test_contract::test_unwrapped_call_contract_syscall (gas: ~103)
+        Running 0 test(s) from src/
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        "},
     );
 }

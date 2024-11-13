@@ -1,15 +1,22 @@
+use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
+use crate::response::errors::SNCastProviderError;
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
+use conversions::serde::serialize::CairoSerialize;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::rngs::OsRng;
 use rand::RngCore;
+use response::errors::SNCastStarknetError;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{Deserializer, Value};
+use shared::rpc::create_rpc_client;
+use starknet::accounts::{AccountFactory, AccountFactoryError};
 use starknet::core::types::{
     BlockId, BlockTag,
     BlockTag::{Latest, Pending},
-    ContractClass, ContractErrorData, Felt,
+    ContractClass, ContractErrorData,
     StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
 };
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
@@ -23,13 +30,7 @@ use starknet::{
     },
     signers::{LocalWallet, SigningKey},
 };
-
-use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
-use crate::response::errors::SNCastProviderError;
-use conversions::serde::serialize::CairoSerialize;
-use serde::de::DeserializeOwned;
-use shared::rpc::create_rpc_client;
-use starknet::accounts::{AccountFactory, AccountFactoryError};
+use starknet_types_core::felt::Felt;
 use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
@@ -40,6 +41,8 @@ use thiserror::Error;
 pub mod helpers;
 pub mod response;
 pub mod state;
+
+use conversions::byte_array::ByteArray;
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -69,10 +72,30 @@ impl Display for AccountType {
     }
 }
 
-#[derive(ValueEnum, Clone, Debug)]
+pub const MAINNET: Felt =
+    Felt::from_hex_unchecked(const_hex::const_encode::<7, true>(b"SN_MAIN").as_str());
+
+pub const SEPOLIA: Felt =
+    Felt::from_hex_unchecked(const_hex::const_encode::<10, true>(b"SN_SEPOLIA").as_str());
+
+#[derive(ValueEnum, Clone, Copy, Debug)]
 pub enum Network {
     Mainnet,
     Sepolia,
+}
+
+impl TryFrom<Felt> for Network {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Felt) -> std::result::Result<Self, Self::Error> {
+        if value == MAINNET {
+            Ok(Network::Mainnet)
+        } else if value == SEPOLIA {
+            Ok(Network::Sepolia)
+        } else {
+            bail!("Given network is neither Mainnet nor Sepolia")
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -245,6 +268,28 @@ pub async fn get_account<'a>(
     let account = build_account(account_data, chain_id, provider).await?;
 
     Ok(account)
+}
+
+pub async fn get_contract_class(
+    class_hash: Felt,
+    provider: &JsonRpcClient<HttpTransport>,
+) -> Result<ContractClass> {
+    let result = provider
+        .get_class(BlockId::Tag(BlockTag::Latest), class_hash)
+        .await;
+
+    if let Err(ProviderError::StarknetError(ClassHashNotFound)) = result {
+        // Imitate error thrown on chain to achieve particular error message (Issue #2554)
+        let artificial_transaction_revert_error = SNCastProviderError::StarknetError(
+            SNCastStarknetError::ContractError(ContractErrorData {
+                revert_error: format!("Class with hash {class_hash:#x} is not declared"),
+            }),
+        );
+
+        return Err(handle_rpc_error(artificial_transaction_revert_error));
+    }
+
+    result.map_err(handle_rpc_error)
 }
 
 async fn build_account(
@@ -436,15 +481,25 @@ pub async fn check_if_legacy_contract(
 pub async fn get_class_hash_by_address(
     provider: &JsonRpcClient<HttpTransport>,
     address: Felt,
-) -> Result<Option<Felt>> {
-    match provider
+) -> Result<Felt> {
+    let result = provider
         .get_class_hash_at(BlockId::Tag(Pending), address)
-        .await
-    {
-        Ok(class_hash) => Ok(Some(class_hash)),
-        Err(StarknetError(ContractNotFound)) => Ok(None),
-        Err(err) => Err(handle_rpc_error(err)),
+        .await;
+
+    if let Err(ProviderError::StarknetError(ContractNotFound)) = result {
+        // Imitate error thrown on chain to achieve particular error message (Issue #2554)
+        let artificial_transaction_revert_error = SNCastProviderError::StarknetError(
+            SNCastStarknetError::ContractError(ContractErrorData {
+                revert_error: format!("Requested contract address {address:#x} is not deployed",),
+            }),
+        );
+
+        return Err(handle_rpc_error(artificial_transaction_revert_error));
     }
+
+    result.map_err(handle_rpc_error).with_context(|| {
+        format!("Couldn't retrieve class hash of a contract with address {address:#x}")
+    })
 }
 
 #[must_use]
@@ -479,22 +534,7 @@ pub fn get_block_id(value: &str) -> Result<BlockId> {
 
 #[derive(Debug, CairoSerialize)]
 pub struct ErrorData {
-    pub data: String,
-}
-
-impl ErrorData {
-    #[must_use]
-    pub fn new(data: String) -> Self {
-        ErrorData { data }
-    }
-}
-
-impl From<ContractErrorData> for ErrorData {
-    fn from(value: ContractErrorData) -> Self {
-        ErrorData {
-            data: value.revert_error,
-        }
-    }
+    pub data: ByteArray,
 }
 
 #[derive(Error, Debug, CairoSerialize)]
@@ -573,7 +613,7 @@ async fn get_revert_reason(
     {
         Err(WaitForTransactionError::TransactionError(
             TransactionError::Reverted(ErrorData {
-                data: reason.clone(),
+                data: ByteArray::from(reason.as_str()),
             }),
         ))
     } else {

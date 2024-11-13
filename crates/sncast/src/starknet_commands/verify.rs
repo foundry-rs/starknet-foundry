@@ -8,7 +8,7 @@ use scarb_api::StarknetContractArtifacts;
 use serde::Serialize;
 use sncast::response::structs::VerifyResponse;
 use sncast::Network;
-use starknet::core::types::Felt;
+use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::{env, fmt};
@@ -114,7 +114,7 @@ impl VerificationInterface for WalnutVerificationInterface {
 #[command(about = "Verify a contract through a block explorer")]
 pub struct Verify {
     /// Address of a contract to be verified
-    #[clap(short = 'a', long)]
+    #[clap(short = 'd', long)]
     pub contract_address: Felt,
 
     /// Name of the contract that is being verified

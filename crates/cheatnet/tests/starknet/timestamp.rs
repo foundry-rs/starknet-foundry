@@ -4,15 +4,15 @@ use crate::{
     common::{deploy_contract, felt_selector_from_name, recover_data, state::create_cached_state},
 };
 use blockifier::state::state_api::State;
-use cairo_vm::Felt252;
 use cheatnet::state::CheatnetState;
 use starknet_api::core::ContractAddress;
+use starknet_types_core::felt::Felt;
 
 fn check_timestamp(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
-) -> Felt252 {
+) -> Felt {
     let write_timestamp = felt_selector_from_name("write_timestamp");
     let read_timestamp = felt_selector_from_name("read_timestamp");
 

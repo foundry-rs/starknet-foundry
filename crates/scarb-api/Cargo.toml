@@ -3,6 +3,9 @@ name = "scarb-api"
 version = "1.0.0"
 edition.workspace = true
 
+[features]
+scarb_2_8_3 = []
+
 [dependencies]
 anyhow.workspace = true
 shared.workspace = true
@@ -15,6 +18,8 @@ thiserror.workspace = true
 which.workspace = true
 semver.workspace = true
 regex.workspace = true
+rayon.workspace = true
+itertools.workspace = true
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 
 [dev-dependencies]

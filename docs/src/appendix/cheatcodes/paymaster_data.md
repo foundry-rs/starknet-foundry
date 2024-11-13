@@ -23,6 +23,6 @@ Changes the transaction paymaster data for the given target.
 Cancels the `cheat_paymaster_data` / `start_cheat_paymaster_data` for the given target.
 
 ## `stop_cheat_paymaster_data_global`
-> `fn stop_cheat_paymaster_data_global(target: ContractAddress)`
+> `fn stop_cheat_paymaster_data_global()`
 
 Cancels the `start_cheat_paymaster_data_global`.

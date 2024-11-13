@@ -78,8 +78,6 @@ impl ParseFromExpr<(BlockIdVariants, &Expr)> for BlockId {
                     BlockIdVariants::Hash.as_ref(),
                 )?;
 
-                // TODO(#1179): Add hash range validation here
-
                 Ok(Self::Hash(hash))
             }
             BlockIdVariants::Number => {

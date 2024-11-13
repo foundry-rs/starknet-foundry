@@ -1,5 +1,6 @@
+use crate::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use crate::CAIRO_EDITION;
-use anyhow::{anyhow, Context, Ok, Result};
+use anyhow::{anyhow, bail, Context, Ok, Result};
 use include_dir::{include_dir, Dir};
 use indoc::formatdoc;
 use scarb_api::ScarbCommand;
@@ -32,6 +33,21 @@ fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
         },
     )?;
 
+    Ok(())
+}
+
+fn add_template_to_scarb_manifest(path: &PathBuf) -> Result<()> {
+    if !path.exists() {
+        bail!("Scarb.toml not found");
+    }
+
+    let mut file = OpenOptions::new()
+        .append(true)
+        .open(path)
+        .context("Failed to open Scarb.toml")?;
+
+    file.write_all(SCARB_MANIFEST_TEMPLATE_CONTENT.as_bytes())
+        .context("Failed to write to Scarb.toml")?;
     Ok(())
 }
 
@@ -156,6 +172,8 @@ pub fn run(project_name: &str) -> Result<()> {
             .run()
             .context("Failed to remove cairo_test")?;
     }
+
+    add_template_to_scarb_manifest(&scarb_manifest_path)?;
 
     if !snfoundry_manifest_path.is_file() {
         create_snfoundry_manifest(&snfoundry_manifest_path)?;

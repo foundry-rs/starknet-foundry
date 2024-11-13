@@ -12,6 +12,12 @@ For a project structure like this
 
 ```shell
 $ tree . -L 3
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 .
 ├── Scarb.toml
 ├── crates
@@ -27,24 +33,39 @@ $ tree . -L 3
 └── src
     └── lib.cairo
 ```
+</details>
+<br>
 
 only the tests in `./src` and `./tests` folders will be executed.
 
+```shell
+$ snforge test
+```
+
+<details>
+<summary>Output:</summary>
 
 ```shell
-
-$ snforge test
 Collected 1 test(s) from hello_workspaces package
 Running 1 test(s) from src/
 [PASS] hello_workspaces::tests::test_simple
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
+</details>
+<br>
 
 To select the specific package to test, pass a `--package package_name` (or `-p package_name` for short) flag.
 You can also run `snforge test` from the package directory to achieve the same effect.
 
+<!-- package_name=hello_workspaces -->
 ```shell
 $ snforge test --package addition
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 Collected 2 test(s) from addition package
 Running 1 test(s) from src/
 [PASS] addition::tests::it_works
@@ -52,11 +73,19 @@ Running 1 test(s) from tests/
 [PASS] tests::test_simple::simple_case
 Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
+</details>
+<br>
 
 You can also pass `--workspace` flag to run tests for all packages in the workspace.
 
 ```shell
 $ snforge test --workspace
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 Collected 2 test(s) from addition package
 Running 1 test(s) from src/
 [PASS] addition::tests::it_works
@@ -76,6 +105,8 @@ Running 1 test(s) from src/
 [PASS] hello_workspaces::tests::test_simple
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
+</details>
+<br>
 
 `--package` and `--workspace` flags are mutually exclusive, adding both of them to a `snforge test` command will result in an error.
 

@@ -23,6 +23,6 @@ Changes the transaction chain_id for the given target.
 Cancels the `cheat_chain_id` / `start_cheat_chain_id` for the given target.
 
 ## `stop_cheat_chain_id_global`
-> `fn stop_cheat_chain_id_global(target: ContractAddress)`
+> `fn stop_cheat_chain_id_global()`
 
 Cancels the `start_cheat_chain_id_global`.

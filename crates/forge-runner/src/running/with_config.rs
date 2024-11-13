@@ -16,7 +16,7 @@ use cairo_lang_sierra::{
 };
 use cairo_lang_sierra_type_size::get_type_size_map;
 use cairo_lang_utils::unordered_hash_map::UnorderedHashMap;
-use cairo_vm::Felt252;
+use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, sync::Arc};
 use universal_sierra_compiler_api::compile_sierra_to_casm;
 
@@ -108,7 +108,7 @@ fn build_test_details(
 fn prepare_args(
     func: &GenFunction<StatementIdx>,
     type_declarations: &HashMap<u64, &TypeDeclaration>,
-) -> Vec<Felt252> {
+) -> Vec<Felt> {
     let args = function_args(func, type_declarations);
 
     // trick to fix current fuzzer,
@@ -133,5 +133,5 @@ fn prepare_args(
         })
         .count();
 
-    vec![Felt252::from(0_u8); args.len() + u256_occurrences]
+    vec![Felt::from(0_u8); args.len() + u256_occurrences]
 }

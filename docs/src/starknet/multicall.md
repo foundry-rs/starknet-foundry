@@ -31,7 +31,7 @@ unique = false
 call_type = "invoke"
 contract_address = "map_contract"
 function = "put"
-inputs = ["0x123", "234"]
+inputs = ["0x123", 234]  # Numbers can be used directly without quotes
 ```
 
 After running `sncast multicall run --path file.toml --fee-token strk`, a declared contract will be first deployed, and then its function `put` will be invoked.
@@ -40,15 +40,28 @@ After running `sncast multicall run --path file.toml --fee-token strk`, a declar
 > The example above demonstrates the use of the `id` property in a deploy call, which is then referenced as the `contract address` in an invoke call.
 Additionally, the `id` can be referenced in the inputs of deploy and invoke calls 🔥
 
+> 💡 **Info**
+> Inputs can be either strings (like `"0x123"`) or numbers (like `234`).
+
+> 📝 **Note**
+> For numbers larger than 2^63 - 1 (that can't fit into `i64`), use string format (e.g., `"9223372036854775808"`) due to TOML parser limitations.
+
 ```shell
 $ sncast multicall run --path /Users/john/Desktop/multicall_example.toml --fee-token strk
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: multicall
 transaction_hash: 0x38fb8a0432f71bf2dae746a1b4f159a75a862e253002b48599c9611fa271dcb
 
 To see invocation details, visit:
-transaction: https://starkscan.co/search/0x38fb8a0432...
+transaction: https://starkscan.co/tx/0x38fb8a0432...
 ```
+</details>
+<br>
 
 > 💡 **Info**
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
@@ -62,9 +75,16 @@ transaction: https://starkscan.co/search/0x38fb8a0432...
 You can also generate multicall template with `multicall new` command, specifying output path.
 ```shell
 $ sncast multicall new ./template.toml
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 Multicall template successfully saved in ./template.toml
 ```
+</details>
+<br>
 
 Resulting in output:
 ```toml
@@ -91,6 +111,12 @@ If there is a file with the same name as provided, it can be overwritten.
 
 ```shell
 $ sncast multicall new ./template.toml --overwrite
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 Multicall template successfully saved in ./new_multicall_template.toml
 ```
+</details>

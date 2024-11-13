@@ -4,9 +4,10 @@ use crate::{
     common::{into_proc_macro_result, with_parsed_values},
 };
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
-use cairo_lang_syntax::node::{ast::FunctionWithBody, db::SyntaxGroup, TypedSyntaxNode};
+use cairo_lang_syntax::node::{ast::FunctionWithBody, db::SyntaxGroup, Terminal, TypedSyntaxNode};
 use indoc::formatdoc;
 
+use std::env::{self, VarError};
 struct TestCollector;
 
 impl AttributeInfo for TestCollector {
@@ -34,14 +35,33 @@ fn test_internal(
     let config = InternalConfigStatementCollector::ATTR_NAME;
 
     let func_item = func.as_syntax_node().get_text(db);
+    let name = func.declaration(db).name(db).text(db).to_string();
 
-    let result = formatdoc!(
-        "
+    let test_filter = get_forge_test_filter().ok();
+
+    let should_run_test = match test_filter {
+        Some(ref filter) => name.contains(filter),
+        None => true,
+    };
+
+    if should_run_test {
+        Ok(formatdoc!(
+            "
             #[snforge_internal_test_executable]
             #[{config}]
             {func_item}
         "
-    );
+        ))
+    } else {
+        Ok(formatdoc!(
+            "
+            #[{config}]
+            {func_item}
+        "
+        ))
+    }
+}
 
-    Ok(result)
+fn get_forge_test_filter() -> Result<String, VarError> {
+    env::var("SNFORGE_TEST_FILTER")
 }

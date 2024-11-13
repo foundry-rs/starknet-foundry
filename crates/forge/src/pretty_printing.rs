@@ -26,21 +26,33 @@ pub(crate) fn print_running_tests(test_target_location: TestTargetLocation, test
     println!("{}", style(plain_text).bold());
 }
 
-pub(crate) fn print_test_summary(summaries: &[TestTargetSummary], filtered: usize) {
+// TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
+pub(crate) fn print_test_summary(summaries: &[TestTargetSummary], filtered: Option<usize>) {
     let passed: usize = summaries.iter().map(TestTargetSummary::count_passed).sum();
     let failed: usize = summaries.iter().map(TestTargetSummary::count_failed).sum();
     let skipped: usize = summaries.iter().map(TestTargetSummary::count_skipped).sum();
     let ignored: usize = summaries.iter().map(TestTargetSummary::count_ignored).sum();
 
-    println!(
-        "{}: {} passed, {} failed, {} skipped, {} ignored, {} filtered out",
-        style("Tests").bold(),
-        passed,
-        failed,
-        skipped,
-        ignored,
-        filtered,
-    );
+    if let Some(filtered) = filtered {
+        println!(
+            "{}: {} passed, {} failed, {} skipped, {} ignored, {} filtered out",
+            style("Tests").bold(),
+            passed,
+            failed,
+            skipped,
+            ignored,
+            filtered
+        );
+    } else {
+        println!(
+            "{}: {} passed, {} failed, {} skipped, {} ignored, other filtered out",
+            style("Tests").bold(),
+            passed,
+            failed,
+            skipped,
+            ignored
+        );
+    }
 }
 
 pub(crate) fn print_test_seed(seed: u64) {

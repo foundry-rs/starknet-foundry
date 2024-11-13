@@ -2,9 +2,9 @@ use anyhow::{bail, ensure, Result};
 use clap::{Args, ValueEnum};
 use conversions::serde::deserialize::CairoDeserialize;
 use conversions::TryIntoConv;
-use starknet::core::types::{BlockId, Felt};
+use starknet::core::types::BlockId;
 use starknet::providers::Provider;
-use starknet_types_core::felt::NonZeroFelt;
+use starknet_types_core::felt::{Felt, NonZeroFelt};
 
 #[derive(Args, Debug, Clone)]
 pub struct FeeArgs {
@@ -167,6 +167,22 @@ pub enum FeeSettings {
         max_gas: Option<u64>,
         max_gas_unit_price: Option<u128>,
     },
+}
+
+impl From<ScriptFeeSettings> for FeeSettings {
+    fn from(value: ScriptFeeSettings) -> Self {
+        match value {
+            ScriptFeeSettings::Eth { max_fee } => FeeSettings::Eth { max_fee },
+            ScriptFeeSettings::Strk {
+                max_gas,
+                max_gas_unit_price,
+                ..
+            } => FeeSettings::Strk {
+                max_gas,
+                max_gas_unit_price,
+            },
+        }
+    }
 }
 
 pub trait PayableTransaction {

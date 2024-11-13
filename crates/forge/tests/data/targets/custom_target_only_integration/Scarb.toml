@@ -1,0 +1,22 @@
+[package]
+name = "custom_target_only_integration"
+version = "0.1.0"
+edition = "2023_01"
+
+[dependencies]
+starknet = "2.7.0"
+
+[dev-dependencies]
+snforge_std = { path = "../../../../../../snforge_std" }
+
+[[target.starknet-contract]]
+
+[[test]]
+name = "custom_first"
+kind = "test"
+source-path = "./tests/tests.cairo"
+test-type = "integration"
+build-external-contracts = ["custom_target_only_integration::*"]
+
+[tool.snforge]
+exit_first = false

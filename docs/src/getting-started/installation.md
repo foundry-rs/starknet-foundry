@@ -25,13 +25,13 @@ Snfoundryup is the Starknet Foundry toolchain installer.
 You can install it by running:
 
 ```shell
-curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
+$ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
 ```
 
 Follow the instructions and then run:
 
 ```shell
-snfoundryup
+$ snfoundryup
 ```
 
 See `snfoundryup --help` for more options.
@@ -43,16 +43,25 @@ To verify that the Starknet Foundry is installed correctly, run `snforge --versi
 First, add the Starknet Foundry plugin to asdf:
 
 ```shell
-asdf plugin add starknet-foundry
+$ asdf plugin add starknet-foundry
 ```
 
-Install the latest version:
+#### Common Error
+
+Users may encounter this error when trying to use `snforge` or `sncast` without setting a version:
 
 ```shell
-asdf install starknet-foundry latest
+No version is set for command snforge
+Consider adding one of the following versions in your config file at starknet-foundry 0.32.0
 ```
 
-See [asdf guide](https://asdf-vm.com/guide/getting-started.html) for more details.
+This error indicates that `Starknet Foundry` version is unset. To resolve it, set the version globally using asdf:
+
+```shell
+$ asdf global starknet-foundry <version>
+```
+
+For additional information on asdf version management, see the [asdf](https://asdf-vm.com/guide/getting-started.html#_6-set-a-version)
 
 ### Installation on Windows
 
@@ -71,17 +80,22 @@ As for now, Starknet Foundry on Windows needs manual installation, but necessary
 3. Add path to the snfoundry\bin directory to your PATH environment variable.
 4. Verify installation by running the following command in new terminal session:
 
-```shell
-snforge --version
-sncast --version
-```
+   ```shell
+   $ snforge --version
+   ```
+
+   and
+
+   ```
+   $ sncast --version
+   ```
 
 ### Universal-Sierra-Compiler update
 
 If you would like to bump the USC manually (e.g. when the new Sierra version is released) you can do it by running:
 
 ```shell
-curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
+$ curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
 ```
 
 ## How to build Starknet Foundry from source code

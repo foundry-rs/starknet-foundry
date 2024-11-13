@@ -9,6 +9,15 @@ use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
+use cairo_annotations::trace_data::{
+    CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint,
+    CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
+    CallType as ProfilerCallType, CasmLevelInfo, ContractAddress,
+    DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector,
+    EntryPointSelector as ProfilerEntryPointSelector, EntryPointType as ProfilerEntryPointType,
+    ExecutionResources as ProfilerExecutionResources, TraceEntry as ProfilerTraceEntry,
+    VersionedCallTrace as VersionedProfilerCallTrace, VmExecutionResources,
+};
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use camino::Utf8PathBuf;
@@ -20,14 +29,6 @@ use conversions::IntoConv;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::{ClassHash, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
-use trace_data::{
-    CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint, CallTrace as ProfilerCallTrace,
-    CallTraceNode as ProfilerCallTraceNode, CallType as ProfilerCallType, CasmLevelInfo,
-    ContractAddress, DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector,
-    EntryPointSelector as ProfilerEntryPointSelector, EntryPointType as ProfilerEntryPointType,
-    ExecutionResources as ProfilerExecutionResources, TraceEntry as ProfilerTraceEntry,
-    VmExecutionResources,
-};
 
 pub mod test_sierra_program_path;
 
@@ -173,7 +174,7 @@ pub fn build_profiler_call_entry_point(
     let function_name = get_function_name(&entry_point_selector, contracts_data);
 
     ProfilerCallEntryPoint {
-        class_hash: class_hash.map(|ch| trace_data::ClassHash(ch.to_string())),
+        class_hash: class_hash.map(|ch| cairo_annotations::trace_data::ClassHash(ch.to_string())),
         entry_point_type: build_profiler_entry_point_type(entry_point_type),
         entry_point_selector: ProfilerEntryPointSelector(format!("{}", entry_point_selector.0)),
         contract_address: ContractAddress(format!("{}", storage_address.0.key())),
@@ -306,7 +307,10 @@ fn build_profiler_trace_entry(value: &RelocatedTraceEntry) -> ProfilerTraceEntry
     }
 }
 
-pub fn save_trace_data(test_name: &String, trace_data: &ProfilerCallTrace) -> Result<PathBuf> {
+pub fn save_trace_data(
+    test_name: &String,
+    trace_data: &VersionedProfilerCallTrace,
+) -> Result<PathBuf> {
     let serialized_trace =
         serde_json::to_string(trace_data).expect("Failed to serialize call trace");
     let dir_to_save_trace = PathBuf::from(TRACE_DIR);

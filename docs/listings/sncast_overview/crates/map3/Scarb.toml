@@ -1,0 +1,17 @@
+[package]
+name = "map3"
+version = "0.1.0"
+edition = "2024_07"
+
+[[target.starknet-contract]]
+sierra = true
+
+[[target.lib]]
+sierra = false
+
+[dependencies]
+snforge_std.workspace = true
+starknet.workspace = true
+
+[scripts]
+test = "snforge test"

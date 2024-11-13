@@ -1,7 +1,7 @@
-use crate::starknet_commands::account::add::Add;
 use crate::starknet_commands::account::create::Create;
 use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
+use crate::starknet_commands::account::import::Import;
 use crate::starknet_commands::account::list::List;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
@@ -11,15 +11,18 @@ use configuration::{
 };
 use serde_json::json;
 use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
-use starknet::{core::types::Felt, signers::SigningKey};
-use std::{fmt, fs::OpenOptions, io::Write};
+use starknet::signers::SigningKey;
+use starknet_types_core::felt::Felt;
+use std::{collections::HashMap, fmt, fs::OpenOptions, io::Write};
 use toml::Value;
 
-pub mod add;
 pub mod create;
 pub mod delete;
 pub mod deploy;
+pub mod import;
 pub mod list;
+
+type NestedMap<T> = HashMap<String, HashMap<String, T>>;
 
 #[derive(Args)]
 #[command(about = "Creates and deploys an account to the Starknet")]
@@ -30,7 +33,7 @@ pub struct Account {
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
-    Add(Add),
+    Import(Import),
     Create(Create),
     Deploy(Deploy),
     Delete(Delete),

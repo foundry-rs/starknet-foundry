@@ -8,10 +8,10 @@ use crate::{
     pretty_printing,
     scarb::{
         config::{ForgeConfigFromScarb, ForkTarget},
-        load_test_artifacts,
+        load_test_artifacts, should_compile_starknet_contract_target,
     },
     shared_cache::FailedTestsCache,
-    test_filter::TestsFilter,
+    test_filter::{NameFilter, TestsFilter},
     warn::{
         warn_if_available_gas_used_with_incompatible_scarb_version,
         warn_if_incompatible_rpc_version,
@@ -47,13 +47,19 @@ impl RunForPackageArgs {
         scarb_metadata: &Metadata,
         args: &TestArgs,
         cache_dir: &Utf8PathBuf,
-        snforge_target_dir_path: &Utf8Path,
+        artifacts_dir: &Utf8Path,
         versioned_programs_dir: Utf8PathBuf,
     ) -> Result<RunForPackageArgs> {
-        let raw_test_targets = load_test_artifacts(snforge_target_dir_path, &package)?;
+        let raw_test_targets = load_test_artifacts(artifacts_dir, &package)?;
 
-        let contracts =
-            get_contracts_artifacts_and_source_sierra_paths(scarb_metadata, &package.id, None)?;
+        let contracts = get_contracts_artifacts_and_source_sierra_paths(
+            artifacts_dir,
+            &package,
+            !should_compile_starknet_contract_target(
+                &scarb_metadata.app_version_info.version,
+                args.no_optimization,
+            ),
+        )?;
         let contracts_data = ContractsData::try_from(contracts)?;
 
         let forge_config_from_scarb =
@@ -71,6 +77,7 @@ impl RunForPackageArgs {
             cache_dir.clone(),
             versioned_programs_dir,
             &forge_config_from_scarb,
+            &args.additional_args,
         ));
 
         let test_filter = TestsFilter::from_flags(
@@ -165,8 +172,13 @@ pub async fn run_for_package(
         }
     }
 
-    let filtered = all_tests - not_filtered;
-    pretty_printing::print_test_summary(&summaries, filtered);
+    // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
+    if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
+        pretty_printing::print_test_summary(&summaries, None);
+    } else {
+        let filtered = all_tests - not_filtered;
+        pretty_printing::print_test_summary(&summaries, Some(filtered));
+    }
 
     let any_fuzz_test_was_run = summaries.iter().any(|test_target_summary| {
         test_target_summary

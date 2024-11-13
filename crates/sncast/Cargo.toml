@@ -28,6 +28,7 @@ indoc.workspace = true
 tempfile.workspace = true
 runtime = { path = "../runtime" }
 conversions = { path = "../conversions" }
+data-transformer = { path = "../data-transformer" }
 configuration = { path = "../configuration" }
 shared = { path = "../shared" }
 cairo-lang-runner.workspace = true
@@ -35,8 +36,13 @@ cairo-lang-casm.workspace = true
 cairo-lang-sierra-to-casm.workspace = true
 cairo-lang-utils.workspace = true
 cairo-lang-sierra.workspace = true
+cairo-lang-parser.workspace = true
+cairo-lang-syntax.workspace = true
+cairo-lang-diagnostics.workspace = true
+cairo-lang-filesystem.workspace = true
 itertools.workspace = true
 num-traits.workspace = true
+num-bigint.workspace = true
 starknet-types-core.workspace = true
 cairo-vm.workspace = true
 blockifier.workspace = true
@@ -48,6 +54,8 @@ starknet-crypto.workspace = true
 async-trait.workspace = true
 serde_path_to_error.workspace = true
 walkdir.workspace = true
+const-hex.workspace = true
+regex.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true

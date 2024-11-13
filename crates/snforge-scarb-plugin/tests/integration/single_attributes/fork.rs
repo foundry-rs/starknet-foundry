@@ -15,9 +15,10 @@ fn fails_without_block() {
         &[
            Diagnostic::error(formatdoc!(
                 "
-                    Both options failed
-                    First variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
-                    Second variant: #[fork] can be used with unnamed attributes only
+                    All options failed
+                    - variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
+                    - variant: #[fork] expected 1 arguments, got: 0
+                    - variant: #[fork] can be used with unnamed attributes only
                     Resolve at least one of them
                 "
             ))
@@ -36,9 +37,10 @@ fn fails_without_url() {
         &result,
         &[Diagnostic::error(formatdoc!(
             "
-                Both options failed
-                First variant: <url> argument is missing
-                Second variant: #[fork] can be used with unnamed attributes only
+                All options failed
+                - variant: <url> argument is missing
+                - variant: #[fork] expected 1 arguments, got: 0
+                - variant: #[fork] can be used with unnamed attributes only
                 Resolve at least one of them
             "
         ))],
@@ -54,15 +56,15 @@ fn fails_without_args() {
 
     assert_diagnostics(
         &result,
-        &[
-          Diagnostic::error(formatdoc!(
+        &[Diagnostic::error(formatdoc!(
             "
-                Both options failed
-                First variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
-                Second variant: #[fork] expected 1 arguments, got: 0
+                All options failed
+                - variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
+                - variant: #[fork] expected 1 arguments, got: 0
+                - variant: #[fork] expected 1 arguments, got: 0
                 Resolve at least one of them
-            "))
-        ],
+            "
+        ))],
     );
 }
 
@@ -77,9 +79,10 @@ fn fails_with_invalid_url() {
         &result,
         &[Diagnostic::error(formatdoc!(
             "
-                Both options failed
-                First variant: #[fork] <url> is not a valid url
-                Second variant: #[fork] can be used with unnamed attributes only
+                All options failed
+                - variant: #[fork] <url> is not a valid url
+                - variant: #[fork] expected 1 arguments, got: 0
+                - variant: #[fork] can be used with unnamed attributes only
                 Resolve at least one of them
             "
         ))],
@@ -158,6 +161,74 @@ fn accepts_inline_config() {
                         snforge_std::_config_types::InlineForkConfig {
                             url: "http://example.com/",
                             block: snforge_std::_config_types::BlockId::BlockNumber(0x17)
+                        }
+                    )
+                    .serialize(ref data);
+
+                    starknet::testing::cheatcode::<'set_config_fork'>(data.span());
+
+                    return;
+                }
+            }
+        "#,
+    );
+}
+
+#[test]
+fn overriding_config_name_first() {
+    let item = TokenStream::new(EMPTY_FN.into());
+    let args = TokenStream::new(r#"("MAINNET", block_number: 23)"#.into());
+
+    let result = fork(args, item);
+
+    assert_diagnostics(&result, &[]);
+
+    assert_output(
+        &result,
+        r#"
+            fn empty_fn() {
+                if snforge_std::_cheatcode::_is_config_run() {
+
+                    let mut data = array![];
+
+                    snforge_std::_config_types::ForkConfig::Overridden(
+                        snforge_std::_config_types::OverriddenForkConfig {
+                            block: snforge_std::_config_types::BlockId::BlockNumber(0x17),
+                            name: "MAINNET"
+                        }
+                     )
+                    .serialize(ref data);
+
+                    starknet::testing::cheatcode::<'set_config_fork'>(data.span());
+
+                    return;
+                }
+            }
+        "#,
+    );
+}
+
+#[test]
+fn overriding_config_name_second() {
+    let item = TokenStream::new(EMPTY_FN.into());
+    let args = TokenStream::new(r#"(block_number: 23, "MAINNET")"#.into());
+
+    let result = fork(args, item);
+
+    assert_diagnostics(&result, &[]);
+
+    assert_output(
+        &result,
+        r#"
+            fn empty_fn() {
+                if snforge_std::_cheatcode::_is_config_run() {
+
+                    let mut data = array![];
+
+                    snforge_std::_config_types::ForkConfig::Overridden(
+                        snforge_std::_config_types::OverriddenForkConfig {
+                            block: snforge_std::_config_types::BlockId::BlockNumber(0x17),
+                            name: "MAINNET"
                         }
                     )
                     .serialize(ref data);

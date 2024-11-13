@@ -6,6 +6,7 @@ use forge_runner::forge_config::{
 };
 use rand::{thread_rng, RngCore};
 use std::env;
+use std::ffi::OsString;
 use std::num::NonZeroU32;
 use std::sync::Arc;
 
@@ -24,11 +25,13 @@ pub fn combine_configs(
     cache_dir: Utf8PathBuf,
     versioned_programs_dir: Utf8PathBuf,
     forge_config_from_scarb: &ForgeConfigFromScarb,
+    additional_args: &[OsString],
 ) -> ForgeConfig {
     let execution_data_to_save = ExecutionDataToSave::from_flags(
         save_trace_data || forge_config_from_scarb.save_trace_data,
         build_profile || forge_config_from_scarb.build_profile,
         coverage || forge_config_from_scarb.coverage,
+        additional_args,
     );
 
     ForgeConfig {
@@ -73,6 +76,7 @@ mod tests {
             Default::default(),
             Default::default(),
             &Default::default(),
+            &[],
         );
         let config2 = combine_configs(
             false,
@@ -87,6 +91,7 @@ mod tests {
             Default::default(),
             Default::default(),
             &Default::default(),
+            &[],
         );
 
         assert_ne!(config.test_runner_config.fuzzer_seed, 0);
@@ -112,6 +117,7 @@ mod tests {
             Default::default(),
             Default::default(),
             &Default::default(),
+            &[],
         );
         assert_eq!(
             config,
@@ -162,6 +168,7 @@ mod tests {
             Default::default(),
             Default::default(),
             &config_from_scarb,
+            &[],
         );
         assert_eq!(
             config,
@@ -182,6 +189,7 @@ mod tests {
                         trace: true,
                         profile: true,
                         coverage: true,
+                        additional_args: vec![],
                     },
                     versioned_programs_dir: Default::default(),
                 }),
@@ -215,6 +223,7 @@ mod tests {
             Default::default(),
             Default::default(),
             &config_from_scarb,
+            &[],
         );
 
         assert_eq!(
@@ -236,6 +245,7 @@ mod tests {
                         trace: true,
                         profile: true,
                         coverage: true,
+                        additional_args: vec![],
                     },
                     versioned_programs_dir: Default::default(),
                 }),

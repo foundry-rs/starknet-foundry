@@ -3,19 +3,19 @@ use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
 use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
+use cairo_annotations::trace_data::VersionedCallTrace as VersionedProfilerCallTrace;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
-use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::CallTrace as InternalCallTrace;
 use conversions::byte_array::ByteArray;
 use num_traits::Pow;
 use shared::utils::build_readable_text;
+use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::option::Option;
 use std::rc::Rc;
-use trace_data::CallTrace as ProfilerCallTrace;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasStatistics {
@@ -78,7 +78,7 @@ pub struct Single;
 impl TestType for Single {
     type GasInfo = u128;
     type TestStatistics = ();
-    type TraceData = ProfilerCallTrace;
+    type TraceData = VersionedProfilerCallTrace;
 }
 
 /// Summary of running a single test case
@@ -91,7 +91,7 @@ pub enum TestCaseSummary<T: TestType> {
         /// Message to be printed after the test case run
         msg: Option<String>,
         /// Arguments used in the test case run
-        arguments: Vec<Felt252>,
+        arguments: Vec<Felt>,
         /// Information on used gas
         gas_info: <T as TestType>::GasInfo,
         /// Resources used during test
@@ -108,7 +108,7 @@ pub enum TestCaseSummary<T: TestType> {
         /// Message returned by the test case run
         msg: Option<String>,
         /// Arguments used in the test case run
-        arguments: Vec<Felt252>,
+        arguments: Vec<Felt>,
         /// Statistics of the test run
         test_statistics: <T as TestType>::TestStatistics,
     },
@@ -212,7 +212,7 @@ impl TestCaseSummary<Single> {
     pub(crate) fn from_run_result_and_info(
         run_result: RunResult,
         test_case: &TestCaseWithResolvedConfig,
-        arguments: Vec<Felt252>,
+        arguments: Vec<Felt>,
         gas: u128,
         used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
@@ -231,11 +231,11 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: build_profiler_call_trace(
+                        trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
                             call_trace,
                             contracts_data,
                             maybe_versioned_program_path,
-                        ),
+                        )),
                     };
                     check_available_gas(&test_case.config.available_gas, summary)
                 }
@@ -269,11 +269,11 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: build_profiler_call_trace(
+                        trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
                             call_trace,
                             contracts_data,
                             maybe_versioned_program_path,
-                        ),
+                        )),
                     },
                 },
             },
@@ -281,14 +281,14 @@ impl TestCaseSummary<Single> {
     }
 }
 
-fn join_short_strings(data: &[Felt252]) -> String {
+fn join_short_strings(data: &[Felt]) -> String {
     data.iter()
         .map(|felt| as_cairo_short_string(felt).unwrap_or_default())
         .collect::<Vec<String>>()
         .join(", ")
 }
 
-fn is_matching(data: &[Felt252], pattern: &[Felt252]) -> bool {
+fn is_matching(data: &[Felt], pattern: &[Felt]) -> bool {
     let data_str = convert_felts_to_byte_array_string(data);
     let pattern_str = convert_felts_to_byte_array_string(pattern);
 
@@ -298,8 +298,10 @@ fn is_matching(data: &[Felt252], pattern: &[Felt252]) -> bool {
         data == pattern // Otherwise, data should be equal to pattern
     }
 }
-fn convert_felts_to_byte_array_string(data: &[Felt252]) -> Option<String> {
-    ByteArray::deserialize_with_magic(data).map(Into::into).ok()
+fn convert_felts_to_byte_array_string(data: &[Felt]) -> Option<String> {
+    ByteArray::deserialize_with_magic(data)
+        .map(|byte_array| byte_array.to_string())
+        .ok()
 }
 
 /// Returns a string with the data that was produced by the test case.

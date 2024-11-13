@@ -1,13 +1,19 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
-use clap::Args;
+use clap::{ArgGroup, Args};
 use promptly::prompt;
 use serde_json::Map;
+use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountDeleteResponse;
+use sncast::{chain_id_to_network_name, get_chain_id};
 
 #[derive(Args, Debug)]
 #[command(about = "Delete account information from the accounts file")]
+#[command(group(ArgGroup::new("networks")
+    .args(&["url", "network"])
+    .required(true)
+    .multiple(false)))]
 pub struct Delete {
     /// Name of the account to be deleted
     #[clap(short, long)]
@@ -22,7 +28,7 @@ pub struct Delete {
     pub yes: bool,
 
     #[clap(flatten)]
-    pub rpc: RpcArgs,
+    pub rpc: Option<RpcArgs>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -70,4 +76,16 @@ pub fn delete(
     std::fs::write(path.clone(), serde_json::to_string_pretty(&items).unwrap())?;
     let result = "Account successfully removed".to_string();
     Ok(AccountDeleteResponse { result })
+}
+
+pub(crate) async fn get_network_name(delete: &Delete, config: &CastConfig) -> Result<String> {
+    match (&delete.rpc, &delete.network) {
+        (Some(rpc), None) => {
+            let provider = rpc.get_provider(config).await?;
+            let network_name = chain_id_to_network_name(get_chain_id(&provider).await?);
+            Ok(network_name)
+        }
+        (None, Some(network)) => Ok(network.clone()),
+        _ => unreachable!("Checked on clap level"),
+    }
 }

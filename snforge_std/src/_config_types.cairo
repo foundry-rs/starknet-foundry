@@ -17,9 +17,16 @@ struct InlineForkConfig {
 }
 
 #[derive(Drop, Serde)]
+struct OverriddenForkConfig {
+    name: ByteArray,
+    block: BlockId
+}
+
+#[derive(Drop, Serde)]
 enum ForkConfig {
     Inline: InlineForkConfig,
-    Named: ByteArray
+    Named: ByteArray,
+    Overridden: OverriddenForkConfig
 }
 
 #[derive(Drop, Serde)]

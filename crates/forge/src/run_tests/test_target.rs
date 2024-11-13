@@ -39,7 +39,7 @@ pub async fn run_for_test_target(
     let (send, mut rec) = channel(1);
 
     let maybe_versioned_program_path = Arc::new(maybe_save_versioned_program(
-        forge_config.output_config.execution_data_to_save,
+        &forge_config.output_config.execution_data_to_save,
         &tests,
         &forge_config.output_config.versioned_programs_dir,
         package_name,
@@ -95,7 +95,7 @@ pub async fn run_for_test_target(
 
         let trace_path = maybe_save_trace_and_profile(
             &result,
-            forge_config.output_config.execution_data_to_save,
+            &forge_config.output_config.execution_data_to_save,
         )?;
         if let Some(path) = trace_path {
             saved_trace_data_paths.push(path);
@@ -110,7 +110,7 @@ pub async fn run_for_test_target(
     }
 
     maybe_generate_coverage(
-        forge_config.output_config.execution_data_to_save,
+        &forge_config.output_config.execution_data_to_save,
         &saved_trace_data_paths,
     )?;
 

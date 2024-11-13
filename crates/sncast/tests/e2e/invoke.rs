@@ -1,5 +1,6 @@
 use crate::helpers::constants::{
-    ACCOUNT, ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
+    ACCOUNT, ACCOUNT_FILE_PATH, DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA,
+    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
 };
 use crate::helpers::fixtures::{
     create_and_deploy_account, create_and_deploy_oz_account, get_transaction_hash,
@@ -8,9 +9,12 @@ use crate::helpers::fixtures::{
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use snapbox::cmd::{cargo_bin, Command};
 use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::AccountType;
-use starknet::core::types::{Felt, TransactionReceipt::Invoke};
+use starknet::core::types::TransactionReceipt::Invoke;
+use starknet_types_core::felt::Felt;
+use std::path::PathBuf;
 use test_case::test_case;
 
 #[test_case("oz_cairo_0"; "cairo_0_account")]
@@ -278,14 +282,11 @@ async fn test_contract_does_not_exist() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
-        indoc! {r"
-        command: invoke
-        error: An error occurred in the called contract[..]Requested contract address[..]is not deployed[..]
-        "},
+        "Error: An error occurred in the called contract[..]Requested contract address[..]is not deployed[..]"
     );
 }
 
@@ -312,9 +313,9 @@ fn test_wrong_function_name() {
 
     assert_stderr_contains(
         output,
-        indoc! {r"
-        command: invoke
-        error: An error occurred in the called contract[..]Entry point[..]not found in contract[..]
+        indoc! {"
+            command: invoke
+            error: [..]Entry point[..]not found in contract[..]
         "},
     );
 }
@@ -346,7 +347,7 @@ fn test_wrong_calldata() {
         output,
         indoc! {r"
         command: invoke
-        error: An error occurred in the called contract[..]Failed to deserialize param #2[..]
+        error: [..]Failed to deserialize param #2[..]
         "},
     );
 }
@@ -385,4 +386,58 @@ fn test_too_low_max_fee() {
         error: Max fee is smaller than the minimal transaction cost
         "},
     );
+}
+
+#[tokio::test]
+async fn test_happy_case_cairo_expression_calldata() {
+    let tempdir = create_and_deploy_oz_account().await;
+
+    let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "--int-format",
+        "--json",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "nested_struct_fn",
+        "--arguments",
+        calldata,
+        "--max-fee",
+        "99999999999999999",
+        "--fee-token",
+        "eth",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success().get_output().stdout.clone();
+
+    let hash = get_transaction_hash(&output);
+    let receipt = get_transaction_receipt(hash).await;
+
+    assert!(matches!(receipt, Invoke(_)));
+}
+
+#[tokio::test]
+async fn test_happy_case_shell() {
+    let tempdir = create_and_deploy_oz_account().await;
+
+    let test_path = PathBuf::from("tests/shell/invoke.sh")
+        .canonicalize()
+        .unwrap();
+    let binary_path = cargo_bin!("sncast");
+
+    let snapbox = Command::new(test_path)
+        .current_dir(tempdir.path())
+        .arg(binary_path)
+        .arg(URL)
+        .arg(DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA);
+    snapbox.assert().success();
 }

@@ -113,6 +113,11 @@ impl Arguments {
     }
 
     #[inline]
+    pub fn unnamed(&self) -> UnnamedArgs {
+        UnnamedArgs::new(&self.unnamed)
+    }
+
+    #[inline]
     pub fn assert_is_empty<T: AttributeInfo>(&self) -> Result<(), Diagnostic> {
         if self.is_empty() {
             Ok(())

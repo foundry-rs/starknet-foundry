@@ -9,6 +9,10 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+  release:
+    types:
+      - released
+
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
@@ -31,6 +35,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
         with:
           toolchain: stable
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
       - uses: actions/checkout@v4
       - name: Install mdBook
         run: |
@@ -38,12 +43,41 @@ jobs:
       - name: Install mdBook Link-Check
         run: |
           cargo install mdbook-linkcheck
+      - name: Install Scarb
+        uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: nightly
+      - name: Generate and build snforge_std docs
+        run: |
+          scarb doc
+          pushd target/doc/snforge_std
+          mdbook build
+        working-directory: ./snforge_std
+      - name: Generate and build sncast_std docs
+        run: |
+          scarb doc
+          pushd target/doc/sncast_std
+          mdbook build
+        working-directory: ./sncast_std
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
       - name: Build with mdBook
         run: mdbook build
         working-directory: ./docs
+      - name: Add snforge_std docs
+        run: |
+          mkdir -p ./docs/book/html/snforge_std
+          cp -r ./snforge_std/target/doc/snforge_std/book/* ./docs/book/html/snforge_std/
+      - name: Add sncast_std docs
+        run: |
+          mkdir -p ./docs/book/html/sncast_std
+          cp -r ./sncast_std/target/doc/sncast_std/book/* ./docs/book/html/sncast_std/
+      - name: Apply custom highlighting
+        run: |
+          curl -o highlight.js https://raw.githubusercontent.com/software-mansion/scarb/main/extensions/scarb-doc/theme/highlight.js
+          cp highlight.js ./docs/book/html/sncast_std/highlight.js
+          cp highlight.js ./docs/book/html/snforge_std/highlight.js
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

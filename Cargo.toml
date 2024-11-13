@@ -8,6 +8,7 @@ members = [
     "crates/cheatnet",
     "crates/conversions",
     "crates/conversions/cairo-serde-macros",
+    "crates/data-transformer",
     "crates/runtime",
     "crates/scarb-api",
     "crates/configuration",
@@ -16,14 +17,14 @@ members = [
 ]
 
 [workspace.package]
-version = "0.30.0"
+version = "0.33.0"
 edition = "2021"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-blockifier = "0.8.0-rc.3"
+blockifier = "0.8.0"
 starknet_api = "0.13.0-dev.7"
 cairo-lang-casm = { version = "2.7.0", features = ["serde"] }
 cairo-lang-runner = "2.7.0"
@@ -50,30 +51,30 @@ cairo-lang-starknet-classes = "2.7.0"
 cairo-lang-parser = "2.7.0"
 cairo-lang-macro = "0.1.0"
 cairo-vm = "1.0.0-rc3"
-starknet-types-core = { version = "0.1.2", features = ["hash", "prime-bigint"] }
-anyhow = "1.0.86"
+cairo-annotations = "0.1.0"
+starknet-types-core = { version = "0.1.7", features = ["hash", "prime-bigint"] }
+anyhow = "1.0.92"
 assert_fs = "1.1.2"
 camino = { version = "1.1.9", features = ["serde1"] }
-clap = { version = "4.5.16", features = ["derive"] }
+clap = { version = "4.5.20", features = ["derive"] }
 console = "0.15.8"
 include_dir = "0.7.4"
 indoc = "2"
 itertools = "0.12.1"
 num-traits = "0.2.19"
 rayon = "1.10"
-regex = "1.10.6"
-serde = { version = "1.0.209", features = ["derive"] }
-serde_json = "1.0.127"
+regex = "1.11.1"
+serde = { version = "1.0.214", features = ["derive"] }
+serde_json = "1.0.132"
 starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "660a732" }
 starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "660a732" }
-trace-data = { git = "https://github.com/software-mansion/cairo-profiler/", rev = "e61a4a7" }
-tempfile = "3.12.0"
-thiserror = "1.0.63"
+tempfile = "3.13.0"
+thiserror = "1.0.67"
 ctor = "0.2.8"
-url = "2.5.2"
-tokio = { version = "1.40.0", features = ["full"] }
+url = { "version" = "2.5.3", "features" = ["serde"] }
+tokio = { version = "1.41.0", features = ["full"] }
 tokio-util = "0.7.11"
-futures = "0.3.30"
+futures = "0.3.31"
 num-bigint = { version = "0.4.6", features = ["rand"] }
 walkdir = "2.5.0"
 rand = "0.8.5"
@@ -82,7 +83,7 @@ which = "5.0.0"
 conversions = { path = "./crates/conversions" }
 shared = { path = "./crates/shared" }
 test-case = "3.1.0"
-scarb-metadata = "1.12.0"
+scarb-metadata = "1.13.0"
 flatten-serde-json = "0.1.0"
 snapbox = "0.4.17"
 smol_str = "0.2.2"
@@ -104,17 +105,18 @@ ark-std = "0.4.0"
 ark-secp256k1 = "0.4.0"
 ark-secp256r1 = "0.4.0"
 openssl = { version = "0.10", features = ["vendored"] }
-toml_edit = "0.22.12"
-axum = "0.7.5"
+toml_edit = "0.22.22"
+axum = "0.7.7"
 lazy_static = "1.5.0"
 fs2 = "0.4.3"
-flate2 = "1.0.33"
-k256 = { version = "0.13.2", features = ["sha256", "ecdsa", "serde"] }
+flate2 = "1.0.34"
+k256 = { version = "0.13.4", features = ["sha256", "ecdsa", "serde"] }
 p256 = { version = "0.13.2", features = ["sha256", "ecdsa", "serde"] }
 glob = "0.3.1"
 sha3 = "0.10.8"
 base16ct = { version = "0.2.0", features = ["alloc"] }
 fs4 = "0.7"
-async-trait = "0.1.82"
+async-trait = "0.1.83"
 serde_path_to_error = "0.1.16"
 wiremock = "0.6.0"
+const-hex = "1.13.1"

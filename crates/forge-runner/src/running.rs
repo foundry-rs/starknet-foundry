@@ -3,12 +3,12 @@ use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
 use crate::test_case_summary::{Single, TestCaseSummary};
-use anyhow::{bail, ensure, Result};
+use anyhow::{ensure, Result};
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::state::cached_state::CachedState;
-use cairo_lang_runner::{RunResult, RunnerError, SierraCasmRunner};
+use cairo_lang_runner::{RunResult, SierraCasmRunner};
+use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use cairo_vm::Felt252;
 use camino::Utf8Path;
 use casm::{get_assembled_program, run_assembled_program};
 use cheatnet::constants as cheatnet_constants;
@@ -26,6 +26,7 @@ use entry_code::create_entry_code;
 use hints::{hints_by_representation, hints_to_params};
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
+use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::default::Default;
 use std::marker::PhantomData;
@@ -50,13 +51,13 @@ pub fn run_test(
     test_runner_config: Arc<TestRunnerConfig>,
     maybe_versioned_program_path: Arc<Option<VersionedProgramPath>>,
     send: Sender<()>,
-) -> JoinHandle<Result<TestCaseSummary<Single>>> {
+) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
         // a channel is used to receive information indicating
         // that the execution of the task is no longer necessary.
         if send.is_closed() {
-            return Ok(TestCaseSummary::Skipped {});
+            return TestCaseSummary::Skipped {};
         }
         let run_result = run_test_case(
             vec![],
@@ -69,7 +70,7 @@ pub fn run_test(
         // remove it after improve exit-first tests
         // issue #1043
         if send.is_closed() {
-            return Ok(TestCaseSummary::Skipped {});
+            return TestCaseSummary::Skipped {};
         }
 
         extract_test_case_summary(
@@ -83,20 +84,20 @@ pub fn run_test(
 }
 
 pub(crate) fn run_fuzz_test(
-    args: Vec<Felt252>,
+    args: Vec<Felt>,
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
     maybe_versioned_program_path: Arc<Option<VersionedProgramPath>>,
     send: Sender<()>,
     fuzzing_send: Sender<()>,
-) -> JoinHandle<Result<TestCaseSummary<Single>>> {
+) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
         // a channel is used to receive information indicating
         // that the execution of the task is no longer necessary.
         if send.is_closed() | fuzzing_send.is_closed() {
-            return Ok(TestCaseSummary::Skipped {});
+            return TestCaseSummary::Skipped {};
         }
 
         let run_result = run_test_case(
@@ -110,7 +111,7 @@ pub(crate) fn run_fuzz_test(
         // remove it after improve exit-first tests
         // issue #1043
         if send.is_closed() {
-            return Ok(TestCaseSummary::Skipped {});
+            return TestCaseSummary::Skipped {};
         }
 
         extract_test_case_summary(
@@ -124,7 +125,7 @@ pub(crate) fn run_fuzz_test(
 }
 
 pub struct RunResultWithInfo {
-    pub(crate) run_result: Result<RunResult, RunnerError>,
+    pub(crate) run_result: Result<RunResult, Box<CairoRunError>>,
     pub(crate) call_trace: Rc<RefCell<CallTrace>>,
     pub(crate) gas_used: u128,
     pub(crate) used_resources: UsedResources,
@@ -132,7 +133,7 @@ pub struct RunResultWithInfo {
 
 #[allow(clippy::too_many_lines)]
 pub fn run_test_case(
-    args: Vec<Felt252>,
+    args: Vec<Felt>,
     case: &TestCaseWithResolvedConfig,
     casm_program: &AssembledProgramWithDebugInfo,
     runtime_config: &RuntimeConfig,
@@ -242,7 +243,7 @@ pub fn run_test_case(
 
                 Ok((gas_counter, runner.relocated_memory, value))
             }
-            Err(err) => Err(RunnerError::CairoRunError(err)),
+            Err(err) => Err(err),
         };
 
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
@@ -274,14 +275,14 @@ pub fn run_test_case(
 fn extract_test_case_summary(
     run_result: Result<RunResultWithInfo>,
     case: &TestCaseWithResolvedConfig,
-    args: Vec<Felt252>,
+    args: Vec<Felt>,
     contracts_data: &ContractsData,
     maybe_versioned_program_path: &Option<VersionedProgramPath>,
-) -> Result<TestCaseSummary<Single>> {
+) -> TestCaseSummary<Single> {
     match run_result {
         Ok(result_with_info) => {
             match result_with_info.run_result {
-                Ok(run_result) => Ok(TestCaseSummary::from_run_result_and_info(
+                Ok(run_result) => TestCaseSummary::from_run_result_and_info(
                     run_result,
                     case,
                     args,
@@ -290,9 +291,9 @@ fn extract_test_case_summary(
                     &result_with_info.call_trace,
                     contracts_data,
                     maybe_versioned_program_path,
-                )),
+                ),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
-                Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
+                Err(error) => TestCaseSummary::Failed {
                     name: case.name.clone(),
                     msg: Some(format!(
                         "\n    {}\n",
@@ -300,18 +301,17 @@ fn extract_test_case_summary(
                     )),
                     arguments: args,
                     test_statistics: (),
-                }),
-                Err(err) => bail!(err),
+                },
             }
         }
         // `ForkStateReader.get_block_info`, `get_fork_state_reader, `calculate_used_gas` may return an error
         // `available_gas` may be specified with Scarb ~2.4
-        Err(error) => Ok(TestCaseSummary::Failed {
+        Err(error) => TestCaseSummary::Failed {
             name: case.name.clone(),
             msg: Some(error.to_string()),
             arguments: args,
             test_statistics: (),
-        }),
+        },
     }
 }
 

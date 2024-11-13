@@ -1,7 +1,7 @@
 use crate::state::{CheatSpan, CheatStatus};
 use crate::CheatnetState;
-use cairo_vm::Felt252;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
+use starknet_types_core::felt::Felt;
 use std::collections::hash_map::Entry;
 
 impl CheatnetState {
@@ -9,7 +9,7 @@ impl CheatnetState {
         &mut self,
         contract_address: ContractAddress,
         function_selector: EntryPointSelector,
-        ret_data: &[Felt252],
+        ret_data: &[Felt],
         span: CheatSpan,
     ) {
         let contract_mocked_functions = self.mocked_functions.entry(contract_address).or_default();
@@ -24,7 +24,7 @@ impl CheatnetState {
         &mut self,
         contract_address: ContractAddress,
         function_selector: EntryPointSelector,
-        ret_data: &[Felt252],
+        ret_data: &[Felt],
     ) {
         self.mock_call(
             contract_address,

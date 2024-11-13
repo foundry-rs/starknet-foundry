@@ -12,11 +12,12 @@ use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::structs::InvokeResponse;
 use sncast::{extract_or_generate_salt, impl_payable_transaction, udc_uniqueness, WaitForTx};
 use starknet::accounts::{Account, SingleOwnerAccount};
-use starknet::core::types::{Call, Felt};
+use starknet::core::types::Call;
 use starknet::core::utils::{get_selector_from_name, get_udc_deployed_address};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
+use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 
 #[derive(Args, Debug, Clone)]
@@ -43,9 +44,16 @@ impl_payable_transaction!(Run, token_not_supported_for_invoke,
 );
 
 #[derive(Deserialize, Debug)]
+#[serde(untagged)]
+enum Input {
+    String(String),
+    Number(i64),
+}
+
+#[derive(Deserialize, Debug)]
 struct DeployCall {
     class_hash: Felt,
-    inputs: Vec<String>,
+    inputs: Vec<Input>,
     unique: bool,
     salt: Option<Felt>,
     id: String,
@@ -55,7 +63,7 @@ struct DeployCall {
 struct InvokeCall {
     contract_address: String,
     function: String,
-    inputs: Vec<String>,
+    inputs: Vec<Input>,
 }
 
 pub async fn run(
@@ -138,15 +146,19 @@ pub async fn run(
         .map_err(handle_starknet_command_error)
 }
 
-fn parse_inputs(inputs: &Vec<String>, contracts: &HashMap<String, String>) -> Result<Vec<Felt>> {
+fn parse_inputs(inputs: &Vec<Input>, contracts: &HashMap<String, String>) -> Result<Vec<Felt>> {
     let mut parsed_inputs = Vec::new();
     for input in inputs {
-        let current_input = contracts.get(input).unwrap_or(input);
-        parsed_inputs.push(
-            current_input
-                .parse()
-                .context("Failed to parse input to Felt")?,
-        );
+        let felt_value = match input {
+            Input::String(s) => {
+                let resolved = contracts.get(s).unwrap_or(s);
+                resolved
+                    .parse()
+                    .context(format!("Failed to parse input '{resolved}' to Felt"))?
+            }
+            Input::Number(n) => (*n).into(),
+        };
+        parsed_inputs.push(felt_value);
     }
 
     Ok(parsed_inputs)

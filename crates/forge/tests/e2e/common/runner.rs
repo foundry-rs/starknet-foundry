@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
 use std::{env, fs};
-use test_utils::tempdir_with_tool_versions;
+use test_utils::{get_assert_macros_version, tempdir_with_tool_versions};
 use toml_edit::{value, DocumentMut};
 use walkdir::WalkDir;
 
@@ -56,6 +56,8 @@ pub(crate) fn setup_package_with_file_patterns(
         .unwrap();
     scarb_toml["dev-dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
     scarb_toml["dependencies"]["starknet"] = value("2.4.0");
+    scarb_toml["dependencies"]["assert_macros"] =
+        value(get_assert_macros_version().unwrap().to_string());
     scarb_toml["target.starknet-contract"]["sierra"] = value(true);
 
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
@@ -137,6 +139,8 @@ pub(crate) fn setup_hello_workspace() -> TempDir {
                 fibonacci = {{ path = "crates/fibonacci" }}
                 addition = {{ path = "crates/addition" }}
 
+                [dev-dependencies]
+                snforge_std.workspace = true
                 "#,
             snforge_std_path
         ))

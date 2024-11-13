@@ -1,4 +1,4 @@
-use starknet_types_core::felt::Felt as Felt252;
+use starknet_types_core::felt::Felt;
 use thiserror::Error;
 
 pub use cairo_serde_macros::CairoDeserialize;
@@ -16,7 +16,7 @@ pub enum BufferReadError {
 pub type BufferReadResult<T> = Result<T, BufferReadError>;
 
 pub struct BufferReader<'a> {
-    buffer: &'a [Felt252],
+    buffer: &'a [Felt],
     idx: usize,
 }
 
@@ -26,11 +26,11 @@ pub trait CairoDeserialize: Sized {
 
 impl<'b> BufferReader<'b> {
     #[must_use]
-    pub fn new<'a>(buffer: &'a [Felt252]) -> BufferReader<'a> {
+    pub fn new<'a>(buffer: &'a [Felt]) -> BufferReader<'a> {
         BufferReader::<'a> { buffer, idx: 0 }
     }
 
-    pub fn read_felt(&mut self) -> BufferReadResult<Felt252> {
+    pub fn read_felt(&mut self) -> BufferReadResult<Felt> {
         let felt = self.buffer.get(self.idx).copied();
 
         self.idx += 1;

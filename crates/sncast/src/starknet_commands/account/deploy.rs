@@ -1,6 +1,7 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Args, ValueEnum};
+use conversions::IntoConv;
 use serde_json::Map;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
@@ -18,12 +19,13 @@ use starknet::accounts::{
 };
 use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
 use starknet::core::types::BlockTag::Pending;
-use starknet::core::types::{BlockId, Felt, StarknetError::ClassHashNotFound};
+use starknet::core::types::{BlockId, StarknetError::ClassHashNotFound};
 use starknet::core::utils::get_contract_address;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::ProviderError::StarknetError;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
+use starknet_types_core::felt::Felt;
 
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]
@@ -134,26 +136,7 @@ async fn deploy_from_keystore(
         .class_hash
         .context("Failed to get class hash from keystore")?;
 
-    let address = match account_type {
-        AccountType::Argent => get_contract_address(
-            salt,
-            class_hash,
-            &[private_key.verifying_key().scalar(), Felt::ZERO],
-            Felt::ZERO,
-        ),
-        AccountType::OpenZeppelin => get_contract_address(
-            salt,
-            class_hash,
-            &[private_key.verifying_key().scalar()],
-            chain_id,
-        ),
-        AccountType::Braavos => get_contract_address(
-            salt,
-            BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-            &[private_key.verifying_key().scalar()],
-            chain_id,
-        ),
-    };
+    let address = compute_account_address(salt, &private_key, class_hash, account_type, chain_id);
 
     let result = if provider
         .get_class_hash_at(BlockId::Tag(Pending), address)
@@ -161,7 +144,7 @@ async fn deploy_from_keystore(
         .is_ok()
     {
         InvokeResponse {
-            transaction_hash: Felt::ZERO,
+            transaction_hash: Felt::ZERO.into_(),
         }
     } else {
         get_deployment_result(
@@ -313,7 +296,7 @@ where
         Err(_) => Err(anyhow!("Unknown AccountFactoryError")),
         Ok(result) => {
             let return_value = InvokeResponse {
-                transaction_hash: result.transaction_hash,
+                transaction_hash: result.transaction_hash.into_(),
             };
             if let Err(message) = handle_wait_for_tx(
                 provider,
@@ -369,4 +352,33 @@ fn update_keystore_account(account: &str, address: Felt) -> Result<()> {
         .context("Failed to write to account file")?;
 
     Ok(())
+}
+
+pub(crate) fn compute_account_address(
+    salt: Felt,
+    private_key: &SigningKey,
+    class_hash: Felt,
+    account_type: AccountType,
+    chain_id: Felt,
+) -> Felt {
+    match account_type {
+        AccountType::Argent => get_contract_address(
+            salt,
+            class_hash,
+            &[private_key.verifying_key().scalar(), Felt::ZERO],
+            Felt::ZERO,
+        ),
+        AccountType::OpenZeppelin => get_contract_address(
+            salt,
+            class_hash,
+            &[private_key.verifying_key().scalar()],
+            chain_id,
+        ),
+        AccountType::Braavos => get_contract_address(
+            salt,
+            BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
+            &[private_key.verifying_key().scalar()],
+            chain_id,
+        ),
+    }
 }
