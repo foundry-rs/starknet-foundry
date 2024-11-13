@@ -20,7 +20,7 @@ $ sncast \
   --url http://127.0.0.1:5050
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

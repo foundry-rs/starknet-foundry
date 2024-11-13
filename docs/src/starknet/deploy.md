@@ -23,7 +23,7 @@ $ sncast \
     --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -64,7 +64,7 @@ $ sncast deploy \
     --constructor-calldata 0x1 0x1 0x0
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -95,7 +95,7 @@ $ sncast deploy \
     --salt 0x123
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -122,7 +122,7 @@ $ sncast deploy \
     --unique
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
     
 ```shell

@@ -38,7 +38,7 @@ $ sncast --account myuser \
     --contract-name SimpleBalance
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -56,7 +56,7 @@ $ sncast declare \
     --contract-name SimpleBalance
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -76,7 +76,7 @@ $ sncast --account myuser \
     deploy --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -93,7 +93,7 @@ With arguments taken from `snfoundry.toml` file (default profile name):
 $ sncast deploy --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -116,7 +116,7 @@ $ sncast --url http://127.0.0.1:5050 \
     --calldata 1 2 3
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -136,7 +136,7 @@ $ sncast invoke \
     --calldata 1 2 3
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -156,7 +156,7 @@ $ sncast --url http://127.0.0.1:5050 \
     --calldata 1 2 3
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -176,7 +176,7 @@ $ sncast call \
     --calldata 1 2 3
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -198,7 +198,7 @@ To verify, run:
 $ which scarb
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

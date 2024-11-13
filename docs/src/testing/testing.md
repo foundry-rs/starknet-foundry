@@ -22,7 +22,7 @@ Now run `snforge` using a command:
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -47,7 +47,7 @@ If your code panics, the test is considered failed. Here's an example of a faili
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -96,7 +96,7 @@ With this format, the expected error message needs to be a substring of the actu
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -122,7 +122,7 @@ You can achieve it using `#[ignore]` - tests marked with this attribute will be 
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

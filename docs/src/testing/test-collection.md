@@ -27,7 +27,7 @@ For example, for a package structured this way:
 $ tree .
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -75,7 +75,7 @@ For example, for a package structured this way:
 $ tree .
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

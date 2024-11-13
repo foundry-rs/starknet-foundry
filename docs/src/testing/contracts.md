@@ -42,7 +42,7 @@ Let's write a test that will deploy the `HelloStarknet` contract and call some f
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -78,7 +78,7 @@ If we called this function in a test, it would result in a failure.
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -116,7 +116,7 @@ Now the test passes as expected.
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

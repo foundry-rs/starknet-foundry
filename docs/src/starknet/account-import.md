@@ -96,7 +96,7 @@ $ sncast \
     --type oz
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

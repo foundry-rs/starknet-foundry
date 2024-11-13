@@ -25,7 +25,7 @@ $ sncast \
   --calldata 1 2 3
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -50,7 +50,7 @@ $ sncast call \
   --block-id 1234
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

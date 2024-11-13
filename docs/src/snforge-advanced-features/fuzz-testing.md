@@ -26,7 +26,7 @@ Then run `snforge test` like usual.
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

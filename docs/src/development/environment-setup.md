@@ -91,7 +91,7 @@ $ typos
 
 Some typos can be automatically fixed by running
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

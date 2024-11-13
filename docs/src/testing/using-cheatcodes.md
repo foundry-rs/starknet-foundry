@@ -41,7 +41,7 @@ This test fails, which means that `increase_balance` method panics as we expecte
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -77,7 +77,7 @@ The test will now pass without an error
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -107,7 +107,7 @@ We will demonstrate its behavior using `SafeDispatcher` to show when exactly the
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

@@ -70,7 +70,7 @@ Most common directory structures include:
 $ tree
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -102,7 +102,7 @@ You can also have multiple scripts as separate packages, or multiple modules ins
 $ tree
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -128,7 +128,7 @@ $ tree
 $ tree
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -159,7 +159,7 @@ $ tree
 $ tree
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -182,7 +182,7 @@ $ tree
 $ tree
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -230,7 +230,7 @@ The script should be included in a Scarb package. The directory structure and co
 $ tree
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -261,7 +261,7 @@ $ sncast \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -291,7 +291,7 @@ The script should be included in a Scarb package. The directory structure and co
 $ tree
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -340,7 +340,7 @@ $ sncast \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -367,7 +367,7 @@ $ sncast \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -392,7 +392,7 @@ $ sncast \
   --no-state-file
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

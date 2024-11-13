@@ -16,7 +16,7 @@ $ cd project_name
 $ tree . -L 1
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -42,7 +42,7 @@ And run tests with `snforge test`
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -79,7 +79,7 @@ Make sure that the above version matches the installed `snforge` version. You ca
 $ snforge --version
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

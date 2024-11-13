@@ -58,7 +58,7 @@ $ sncast --profile myprofile \
     --block-id latest
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -95,7 +95,7 @@ $ sncast call \
     --block-id latest
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
