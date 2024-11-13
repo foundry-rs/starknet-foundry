@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_sierra::program::Program;
-use camino::Utf8PathBuf;
+use camino::Utf8Path;
 use num_bigint::BigInt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -52,13 +52,13 @@ pub fn compile_sierra(sierra_json: &Value, sierra_type: &SierraType) -> Result<S
     let _ = temp_sierra_file.write(serde_json::to_vec(sierra_json)?.as_slice())?;
 
     compile_sierra_at_path(
-        &Utf8PathBuf::from(temp_sierra_file.path().to_string_lossy().to_string()),
+        Utf8Path::new(&temp_sierra_file.path().to_string_lossy().to_string()),
         sierra_type,
     )
 }
 
 pub fn compile_sierra_at_path(
-    sierra_file_path: &Utf8PathBuf,
+    sierra_file_path: &Utf8Path,
     sierra_type: &SierraType,
 ) -> Result<String> {
     let mut usc_command = UniversalSierraCompilerCommand::new();

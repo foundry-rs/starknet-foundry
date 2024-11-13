@@ -1,7 +1,7 @@
 use anyhow::Result;
 
 use crate::artifacts::representation::StarknetArtifactsRepresentation;
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use itertools::Itertools;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::collections::HashMap;
@@ -85,7 +85,7 @@ fn compile_artifacts(
         .collect::<Result<_>>()
 }
 
-fn compile_artifact_at_path(path: &Utf8PathBuf) -> Result<StarknetContractArtifacts> {
+fn compile_artifact_at_path(path: &Utf8Path) -> Result<StarknetContractArtifacts> {
     let sierra = fs::read_to_string(path)?;
 
     let casm = compile_sierra_at_path(path, &SierraType::Contract)?;
