@@ -37,25 +37,19 @@ pub struct AssembledCairoProgramWithSerde {
     pub hints: Vec<(usize, Vec<Hint>)>,
 }
 
-pub fn compile_sierra_to_casm(
-    sierra_file_path: Option<&Utf8PathBuf>,
-    sierra_program: &Program,
-) -> Result<AssembledProgramWithDebugInfo> {
-    let assembled_with_info_raw = if let Some(sierra_file_path) = sierra_file_path {
-        compile_sierra_at_path(sierra_file_path, &SierraType::Raw)?
-    } else {
-        compile_sierra(&serde_json::to_value(sierra_program)?, &SierraType::Raw)?
-    };
-
-    let assembled_with_info: AssembledProgramWithDebugInfo =
-        serde_json::from_str(&assembled_with_info_raw)?;
-
-    Ok(assembled_with_info)
+impl From<String> for AssembledProgramWithDebugInfo {
+    fn from(value: String) -> Self {
+        serde_json::from_str(&value).expect("Failed to deserialize Casm from Json string")
+    }
 }
 
-pub fn compile_sierra(sierra_contract_class: &Value, sierra_type: &SierraType) -> Result<String> {
+pub fn compile_sierra_program(sierra_program: &Program) -> Result<String> {
+    compile_sierra(&serde_json::to_value(sierra_program)?, &SierraType::Raw)
+}
+
+pub fn compile_sierra(sierra_json: &Value, sierra_type: &SierraType) -> Result<String> {
     let mut temp_sierra_file = Builder::new().tempfile()?;
-    let _ = temp_sierra_file.write(serde_json::to_vec(sierra_contract_class)?.as_slice())?;
+    let _ = temp_sierra_file.write(serde_json::to_vec(sierra_json)?.as_slice())?;
 
     compile_sierra_at_path(
         &Utf8PathBuf::from(temp_sierra_file.path().to_string_lossy().to_string()),

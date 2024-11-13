@@ -132,7 +132,7 @@ mod tests {
     };
     use forge_runner::package_tests::{TestDetails, TestTargetLocation};
     use std::sync::Arc;
-    use universal_sierra_compiler_api::compile_sierra_to_casm;
+    use universal_sierra_compiler_api::compile_sierra_program;
 
     fn program_for_testing() -> ProgramArtifact {
         ProgramArtifact {
@@ -164,7 +164,9 @@ mod tests {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
             casm_program: Arc::new(
-                compile_sierra_to_casm(None, &program_for_testing().program).unwrap(),
+                compile_sierra_program(&program_for_testing().program)
+                    .unwrap()
+                    .into(),
             ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
@@ -428,7 +430,9 @@ mod tests {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
             casm_program: Arc::new(
-                compile_sierra_to_casm(None, &program_for_testing().program).unwrap(),
+                compile_sierra_program(&program_for_testing().program)
+                    .unwrap()
+                    .into(),
             ),
             test_cases: vec![],
             tests_location: TestTargetLocation::Lib,
@@ -469,7 +473,9 @@ mod tests {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
             casm_program: Arc::new(
-                compile_sierra_to_casm(None, &program_for_testing().program).unwrap(),
+                compile_sierra_program(&program_for_testing().program)
+                    .unwrap()
+                    .into(),
             ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
@@ -656,7 +662,9 @@ mod tests {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
             casm_program: Arc::new(
-                compile_sierra_to_casm(None, &program_for_testing().program).unwrap(),
+                compile_sierra_program(&program_for_testing().program)
+                    .unwrap()
+                    .into(),
             ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
@@ -753,7 +761,9 @@ mod tests {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
             casm_program: Arc::new(
-                compile_sierra_to_casm(None, &program_for_testing().program).unwrap(),
+                compile_sierra_program(&program_for_testing().program)
+                    .unwrap()
+                    .into(),
             ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
