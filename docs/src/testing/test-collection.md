@@ -1,111 +1,109 @@
-## Test Collection
+# How Tests Are Collected
 
-`snforge` considers all functions in your project marked with `#[test]` attribute as tests.
-By default, test functions run without any arguments.
-However, adding any arguments to function signature will enable [fuzz testing](../snforge-advanced-features/fuzz-testing.md) for this
-test case.
+Snforge executes tests however it does not compile them.  
+Instead, to compile tests, snforge internally runs `scarb build --test` command.
 
-`snforge` will collect tests only from these places:
+The `snforge_scarb_plugin` dependency, which is included with `snforge_std` dependency makes all functions
+marked with `#[test]` executable and indicates to Scarb they should be compiled.
+Without the plugin, no snforge tests can be compiled, that's why `snforge_std` dependency is always required in all
+snforge projects.
 
-- any files reachable from the package root (declared as `mod` in `lib.cairo` or its children) - 
-these have to be in a module annotated with `#[cfg(test)]`
-- files inside the [`tests`](#the-tests-directory) directory
+Thanks to that, Scarb collects all functions marked with `#[test]`
+from [valid locations](https://docs.swmansion.com/scarb/docs/extensions/testing.html#tests-organization) and compiles
+them into tests that are executed by snforge.
 
-## The `tests` Directory
+## `[[test]]` Target
 
-`snforge` collects tests from `tests` directory.
-Depending on the presence of `tests/lib.cairo` file, the behavior of the test collector will be different.
+Under the hood, Scarb utilizes the `[[test]]` target mechanism to compile the tests. More information about the
+`[[test]]` target is available in
+the [Scarb documentation](https://docs.swmansion.com/scarb/docs/reference/targets.html#test-targets).
 
-### With `tests/lib.cairo`
+By default, `[[test]]]` target is implicitly configured and user does not have to define it.
+See [Scarb documentation](https://docs.swmansion.com/scarb/docs/reference/targets.html#auto-detection-of-test-targets)
+for more details about the mechanism.
 
-If there is a `lib.cairo` file in `tests` folder,
-then it is treated as an entrypoint to the `tests` package from which tests are collected.
+## Tests Organization
 
-For example, for a package structured this way:
+Test can be placed in both `src` and `test` directories. When adding tests to files in `src` you must wrap them in tests
+module.
 
-```shell
-$ tree .
-```
+You can read more about tests organization
+in [Scarb documentation](https://docs.swmansion.com/scarb/docs/extensions/testing.html#tests-organization).
 
-<details>
-<summary>Output:</summary>
+### Unit Tests
 
-```shell
-.
-├── Scarb.toml
-├── tests/
-│   ├── lib.cairo
-│   ├── common/
-│   │   └── utils.cairo
-│   ├── common.cairo
-│   ├── test_contract.cairo
-│   └── not_included.cairo
-└── src/
-    └── lib.cairo
-```
-</details>
-<br>
-
-with `tests/lib.cairo` content:
+Test placed in `src` directory are often called unit tests.
+For these test to function in snforge, they must be wrapped in a module marked with `test` attribute.
 
 ```rust
-mod common;
-mod test_contract;
+// src/example.rs
+// ...
+
+// This test is not in module marked with `#[cfg(test)]` so it won't work
+#[test]
+fn my_invalid_test() {
+    // ...
+}
+
+#[cfg(test)]
+mod tests {
+    // This test is in module marked with `#[cfg(test)]` so it will work
+    #[test]
+    fn my_test() {
+        // ..
+    }
+}
 ```
 
-and `tests/common.cairo` content:
+### Integration Tests
+
+Integration tests are placed in `tests` directory.
+This directory is a special directory in Scarb.
+Tests do not have to be wrapped in `#[cfg(test)]` and each file is treated as a separate module.
 
 ```rust
-mod utils;
+// tests/example.rs
+// ...
+
+// This test is in `tests` directory
+// so it works without being in module with `#[cfg(test)]` 
+#[test]
+fn my_test_1() {
+    // ..
+}
 ```
 
-tests from `tests/lib.cairo`, `tests/test_contract.cairo`, `tests/common.cairo`
-and `tests/common/utils.cairo` will be collected.
+#### Modules and `lib.cairo`
 
-### Without `tests/lib.cairo`
-
-When there is no `lib.cairo` present in `tests` folder, 
-all test files **directly** in `tests` directory (i.e., not in its subdirectories)
-are treated as modules and added to a single virtual `lib.cairo`. 
-Then this virtual `lib.cairo` is treated as an entrypoint to the `tests` package from which tests are collected.
-
-For example, for a package structured this way:
+As written above, each file in `tests` directory is treated as a separate module
 
 ```shell
-$ tree .
+tests/
+├── module1.cairo <-- is collected
+├── module2.cairo <-- is collected
+└── module3.cairo <-- is collected
 ```
 
-<details>
-<summary>Output:</summary>
+Scarb will collect each of the file and compile it as a
+separate [test target](https://docs.swmansion.com/scarb/docs/reference/targets.html#test-targets).
+Each of this target will be run separately by `snforge`.
+
+However, it is also possible to define `lib.cairo` file in `tests`.
+This stops files in `tests` from being treated as separate modules.
+Instead, Scarb will only create a single test target for that `lib.cairo` file.
+Only tests that are reachable from this file will be collected and compiled.
 
 ```shell
-.
-├── Scarb.toml
-├── tests/
-│   ├── common/
-│   │   └── utils.cairo
-│   ├── common.cairo
-│   ├── test_contract.cairo
-│   └── not_included/
-│       └── ignored.cairo
-└── src/
-    └── lib.cairo
+tests/
+├── lib.cairo
+├── module1.cairo  <-- is collected
+├── module2.cairo  <-- is collected
+└── module3.cairo  <-- is not collected
 ```
-</details>
-<br>
-
-and `tests/common.cairo` content:
 
 ```rust
-mod utils;
+// tests/lib.cairo
+
+mod module1;
+mod module2;
 ```
-
-tests from `tests/test_contract.cairo`, `tests/common.cairo` and `tests/common/utils.cairo` will be collected.
-
-### Sharing Code Between Tests
-
-Sometimes you may want a share some code between tests to organize them. 
-The package structure of tests makes it easy! 
-In both of the above examples, you can
-make the functions from `tests/common/utils.cairo` available in `tests/test_contract.cairo` 
-by using a relative import: `use super::common::utils;`.
