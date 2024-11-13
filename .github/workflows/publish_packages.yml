@@ -2,7 +2,7 @@ name: publish_packages.yml
 on:
   release:
     types:
-      - published
+      - released
   workflow_dispatch:
 
 jobs:
