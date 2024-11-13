@@ -127,7 +127,7 @@ mod tests {
     use forge_runner::package_tests::TestTargetLocation;
     use forge_runner::{expected_result::ExpectedTestResult, package_tests::TestDetails};
     use std::sync::Arc;
-    use universal_sierra_compiler_api::compile_sierra_program;
+    use universal_sierra_compiler_api::{compile_sierra, SierraType};
     use url::Url;
 
     fn program_for_testing() -> ProgramArtifact {
@@ -147,9 +147,11 @@ mod tests {
         let mocked_tests = TestTargetWithConfig {
             sierra_program: program_for_testing(),
             casm_program: Arc::new(
-                compile_sierra_program(&program_for_testing().program)
-                    .unwrap()
-                    .into(),
+                compile_sierra(
+                    &serde_json::to_value(&program_for_testing().program).unwrap(),
+                    &SierraType::Raw,
+                )
+                .unwrap(),
             ),
             test_cases: vec![TestCaseWithConfig {
                 name: "crate1::do_thing".to_string(),

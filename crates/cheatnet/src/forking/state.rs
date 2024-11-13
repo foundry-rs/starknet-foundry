@@ -240,7 +240,7 @@ impl StateReader for ForkStateReader {
                     "entry_points_by_type": flattened_class.entry_points_by_type
                 });
 
-                match compile_sierra(&sierra_contract_class, &SierraType::Contract) {
+                match compile_sierra::<String>(&sierra_contract_class, &SierraType::Contract) {
                     Ok(casm_contract_class_raw) => {
                         let casm_contract_class: CasmContractClass =
                             serde_json::from_str(&casm_contract_class_raw)

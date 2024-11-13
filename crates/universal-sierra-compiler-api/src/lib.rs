@@ -1,6 +1,5 @@
 use anyhow::{Context, Result};
 use cairo_lang_casm::hints::Hint;
-use cairo_lang_sierra::program::Program;
 use camino::Utf8Path;
 use num_bigint::BigInt;
 use serde::{Deserialize, Serialize};
@@ -37,17 +36,26 @@ pub struct AssembledCairoProgramWithSerde {
     pub hints: Vec<(usize, Vec<Hint>)>,
 }
 
-impl From<String> for AssembledProgramWithDebugInfo {
-    fn from(value: String) -> Self {
-        serde_json::from_str(&value).expect("Failed to deserialize Casm from Json string")
+pub trait UscOutputTransformer {
+    fn transform(output: String) -> Self;
+}
+
+impl UscOutputTransformer for String {
+    fn transform(output: String) -> Self {
+        output
     }
 }
 
-pub fn compile_sierra_program(sierra_program: &Program) -> Result<String> {
-    compile_sierra(&serde_json::to_value(sierra_program)?, &SierraType::Raw)
+impl UscOutputTransformer for AssembledProgramWithDebugInfo {
+    fn transform(output: String) -> Self {
+        serde_json::from_str(&output).expect("Failed to deserialize casm from json string")
+    }
 }
 
-pub fn compile_sierra(sierra_json: &Value, sierra_type: &SierraType) -> Result<String> {
+pub fn compile_sierra<T: UscOutputTransformer>(
+    sierra_json: &Value,
+    sierra_type: &SierraType,
+) -> Result<T> {
     let mut temp_sierra_file = Builder::new().tempfile()?;
     let _ = temp_sierra_file.write(serde_json::to_vec(sierra_json)?.as_slice())?;
 
@@ -57,10 +65,10 @@ pub fn compile_sierra(sierra_json: &Value, sierra_type: &SierraType) -> Result<S
     )
 }
 
-pub fn compile_sierra_at_path(
+pub fn compile_sierra_at_path<T: UscOutputTransformer>(
     sierra_file_path: &Utf8Path,
     sierra_type: &SierraType,
-) -> Result<String> {
+) -> Result<T> {
     let mut usc_command = UniversalSierraCompilerCommand::new();
 
     let usc_output = usc_command
@@ -78,7 +86,7 @@ pub fn compile_sierra_at_path(
             Contact us if it doesn't help",
         )?;
 
-    Ok(from_utf8(&usc_output.stdout)?.to_string())
+    Ok(T::transform(from_utf8(&usc_output.stdout)?.to_string()))
 }
 
 pub enum SierraType {

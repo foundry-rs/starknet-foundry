@@ -37,9 +37,10 @@ pub fn test_target_with_config(test_target_raw: TestTargetRaw) -> Result<TestTar
     let funcs = by_id!(funcs);
     let type_declarations = by_id!(type_declarations);
 
-    let casm_program = Arc::new(
-        compile_sierra_at_path(&test_target_raw.sierra_file_path, &SierraType::Raw)?.into(),
-    );
+    let casm_program = Arc::new(compile_sierra_at_path(
+        &test_target_raw.sierra_file_path,
+        &SierraType::Raw,
+    )?);
 
     let sierra_program_registry =
         ProgramRegistry::<CoreType, CoreLibfunc>::new(&test_target_raw.sierra_program.program)?;
