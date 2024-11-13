@@ -102,9 +102,10 @@ fn fails_with_unknown_argument() {
         &result,
         &[Diagnostic::error(formatdoc!(
             "
-                Both options failed
-                First variant: #[fork] unsupported named argument \"unknow_arg\" provided
-                Second variant: #[fork] can be used with unnamed attributes only
+                All options failed
+                - variant: #[fork] unsupported named argument \"unknow_arg\" provided
+                - variant: #[fork] expected 1 arguments, got: 0
+                - variant: #[fork] can be used with unnamed attributes only
                 Resolve at least one of them
             "
         ))],
