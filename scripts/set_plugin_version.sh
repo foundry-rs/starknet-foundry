@@ -2,7 +2,7 @@
 
 PLUGIN_FILE_PATH="../crates/snforge-scarb-plugin/Scarb.toml"
 
-VERSION=$(grep '^version' "$PLUGIN_FILE_PATH" | sed -E 's/version = "([^"]*)"/\1/')
+VERSION=$(cat "$PLUGIN_FILE_PATH" | grep version | cut -d '"' -f 2)
 
 STD_FILE_PATH="../snforge_std/Scarb.toml"
 
