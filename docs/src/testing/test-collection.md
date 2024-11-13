@@ -78,6 +78,7 @@ fn my_test_1() {
 As written above, each file in `tests` directory is treated as a separate module
 
 ```shell
+$ tree
 tests/
 ├── module1.cairo <-- is collected
 ├── module2.cairo <-- is collected
@@ -94,6 +95,7 @@ Instead, Scarb will only create a single test target for that `lib.cairo` file.
 Only tests that are reachable from this file will be collected and compiled.
 
 ```shell
+$ tree
 tests/
 ├── lib.cairo
 ├── module1.cairo  <-- is collected
