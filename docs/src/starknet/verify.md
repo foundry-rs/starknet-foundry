@@ -31,7 +31,7 @@ Then run:
 $ sncast \
     verify \
     --contract-address 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8b \
-    --class-name SimpleBalance \
+    --contract-name SimpleBalance \
     --verifier walnut \
     --network sepolia
 

@@ -34,9 +34,9 @@ pub struct Verify {
     #[clap(flatten)]
     pub contract_address_or_class_hash: ContractAddressOrClassHashGroup,
 
-    /// Class name of the contract to be verified.
+    /// Name of the contract that is being verified
     #[clap(short, long)]
-    pub class_name: String,
+    pub contract_name: String,
 
     /// Verification provider to be used
     #[clap(short, long, value_enum)]
@@ -96,7 +96,7 @@ fn get_verifier(
 pub async fn verify(
     contract_address: Option<Felt>,
     class_hash: Option<Felt>,
-    class_name: String,
+    contract_name: String,
     verifier: Verifier,
     network: Network,
     confirm_verification: bool,
@@ -116,8 +116,8 @@ pub async fn verify(
         }
     }
 
-    if !artifacts.contains_key(&class_name) {
-        return Err(anyhow!("Contract named '{class_name}' was not found"));
+    if !artifacts.contains_key(&contract_name) {
+        return Err(anyhow!("Contract named '{contract_name}' was not found"));
     }
 
     // Build JSON Payload for the verification request
@@ -132,7 +132,7 @@ pub async fn verify(
             workspace_dir.to_path_buf(),
             contract_address,
             class_hash,
-            class_name,
+            contract_name,
         )
         .await
 }
