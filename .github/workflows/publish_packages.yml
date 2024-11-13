@@ -26,9 +26,14 @@ jobs:
       - name: Check if package version exist in the registry
         run: |
           set -eo pipefail
-          snforge_scarb_plugin=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version "${{ steps.scarb-init.outputs.CAIRO_VERSION }}" '[.[] | select(.v == $version)] | length > 0')
-          snforge_std=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_std.json | jq --arg version "${{ steps.scarb-init.outputs.CAIRO_VERSION }}" '[.[] | select(.v == $version)] | length > 0')
-          sncast_std=$(curl -s https://scarbs.xyz/api/v1/index/sn/ca/sncast_std.json | jq --arg version "${{ steps.scarb-init.outputs.CAIRO_VERSION }}" '[.[] | select(.v == $version)] | length > 0')
+          
+          snforge_std_version=$(cat snforge_std/Scarb.toml | grep version | cut -d '"' -f 2)
+          snforge_scarb_plugin_version=$(cat crates/snforge-scarb-plugin/Scarb.toml | grep version | cut -d '"' -f 2)
+          sncast_std_version=$(cat sncast_std/Scarb.toml | grep version | cut -d '"' -f 2)
+          
+          snforge_scarb_plugin=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version "${{ snforge_scarb_plugin_version }}" '[.[] | select(.v == $version)] | length > 0')
+          snforge_std=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_std.json | jq --arg version "${{ snforge_scarb_plugin_version }}" '[.[] | select(.v == $version)] | length > 0')
+          sncast_std=$(curl -s https://scarbs.xyz/api/v1/index/sn/ca/sncast_std.json | jq --arg version "${{ sncast_std_version }}" '[.[] | select(.v == $version)] | length > 0')
 
           echo "snforge_scarb_plugin=$snforge_scarb_plugin"
           echo "snforge_std=$snforge_std"
