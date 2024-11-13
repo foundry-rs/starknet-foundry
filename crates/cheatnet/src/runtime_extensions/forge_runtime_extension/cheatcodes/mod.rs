@@ -1,7 +1,7 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallFailure;
 use cairo_vm::vm::errors::hint_errors::HintError;
-use cairo_vm::Felt252;
 use runtime::EnhancedHintError;
+use starknet_types_core::felt::Felt;
 
 pub mod cheat_block_number;
 pub mod cheat_block_timestamp;
@@ -10,6 +10,7 @@ pub mod cheat_execution_info;
 pub mod cheat_sequencer_address;
 pub mod declare;
 pub mod deploy;
+pub mod generate_random_felt;
 pub mod get_class_hash;
 pub mod l1_handler_execute;
 pub mod mock_call;
@@ -22,7 +23,7 @@ pub mod storage;
 /// A structure used for returning cheatcode errors in tests
 #[derive(Debug)]
 pub enum CheatcodeError {
-    Recoverable(Vec<Felt252>),        // Return error result in cairo
+    Recoverable(Vec<Felt>),           // Return error result in cairo
     Unrecoverable(EnhancedHintError), // Fail whole test
 }
 

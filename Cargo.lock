@@ -1275,6 +1275,7 @@ dependencies = [
  "num-bigint",
  "num-traits 0.2.19",
  "p256",
+ "rand",
  "rayon",
  "regex",
  "runtime",
@@ -1705,6 +1706,7 @@ dependencies = [
  "serde",
  "serde_json",
  "starknet",
+ "starknet-types-core",
  "test-case",
  "thiserror",
  "tokio",
@@ -2185,6 +2187,7 @@ dependencies = [
  "starknet-types-core",
  "starknet_api",
  "tempfile",
+ "test-case",
  "test_utils",
  "thiserror",
  "tokio",
@@ -4947,7 +4950,6 @@ dependencies = [
  "num-bigint",
  "regex",
  "serde_json",
- "shared",
  "smol_str",
  "url",
 ]
@@ -5787,9 +5789,9 @@ dependencies = [
 
 [[package]]
 name = "unicode-ident"
-version = "1.0.12"
+version = "1.0.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
+checksum = "e91b56cd4cadaeb79bbf1a5645f6b4f8dc5bde8834ad5894a8db35fda9efa1fe"
 
 [[package]]
 name = "unicode-segmentation"
@@ -5839,6 +5841,7 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+ "serde",
 ]
 
 [[package]]

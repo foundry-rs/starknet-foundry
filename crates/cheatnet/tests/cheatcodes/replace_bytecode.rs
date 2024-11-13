@@ -2,11 +2,11 @@ use crate::{
     cheatcodes::test_environment::TestEnvironment,
     common::{assertions::assert_success, get_contracts, state::create_fork_cached_state_at},
 };
-use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use conversions::string::TryFromHexStr;
 use num_traits::Zero;
 use starknet_api::core::{ClassHash, ContractAddress};
+use starknet_types_core::felt::Felt;
 use tempfile::TempDir;
 
 trait ReplaceBytecodeTrait {
@@ -45,14 +45,14 @@ fn fork() {
 
     assert!(matches!(
         output,
-        CallResult::Success { ret_data, .. } if ret_data != [Felt252::zero()],
+        CallResult::Success { ret_data, .. } if ret_data != [Felt::zero()],
     ));
 
     test_env.replace_class_for_contract(contract, class_hash);
 
     let output = test_env.call_contract(&contract, "get_owner", &[]);
 
-    assert_success(output, &[Felt252::zero()]);
+    assert_success(output, &[Felt::zero()]);
 }
 
 #[test]
@@ -66,13 +66,13 @@ fn override_entrypoint() {
 
     let output = test_env.call_contract(&contract_address, "get_const", &[]);
 
-    assert_success(output, &[Felt252::from(2137)]);
+    assert_success(output, &[Felt::from(2137)]);
 
     test_env.replace_class_for_contract(contract_address, class_hash_b);
 
     let output = test_env.call_contract(&contract_address, "get_const", &[]);
 
-    assert_success(output, &[Felt252::from(420)]);
+    assert_success(output, &[Felt::from(420)]);
 }
 
 #[test]
@@ -90,13 +90,13 @@ fn keep_storage() {
 
     let output = test_env.call_contract(&contract_address, "get", &[]);
 
-    assert_success(output, &[Felt252::from(456)]);
+    assert_success(output, &[Felt::from(456)]);
 
     test_env.replace_class_for_contract(contract_address, class_hash_b);
 
     let output = test_env.call_contract(&contract_address, "get", &[]);
 
-    assert_success(output, &[Felt252::from(556)]);
+    assert_success(output, &[Felt::from(556)]);
 }
 
 #[test]
@@ -114,5 +114,5 @@ fn allow_setting_original_class() {
 
     let output = test_env.call_contract(&contract_address, "get_const", &[]);
 
-    assert_success(output, &[Felt252::from(2137)]);
+    assert_success(output, &[Felt::from(2137)]);
 }

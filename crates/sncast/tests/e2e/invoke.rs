@@ -12,7 +12,8 @@ use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_co
 use snapbox::cmd::{cargo_bin, Command};
 use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::AccountType;
-use starknet::core::types::{Felt, TransactionReceipt::Invoke};
+use starknet::core::types::TransactionReceipt::Invoke;
+use starknet_types_core::felt::Felt;
 use std::path::PathBuf;
 use test_case::test_case;
 
@@ -314,7 +315,7 @@ fn test_wrong_function_name() {
         output,
         indoc! {"
             command: invoke
-            error: An error occurred in the called contract[..]Entry point[..]not found in contract[..]
+            error: [..]Entry point[..]not found in contract[..]
         "},
     );
 }
@@ -346,7 +347,7 @@ fn test_wrong_calldata() {
         output,
         indoc! {r"
         command: invoke
-        error: An error occurred in the called contract[..]Failed to deserialize param #2[..]
+        error: [..]Failed to deserialize param #2[..]
         "},
     );
 }

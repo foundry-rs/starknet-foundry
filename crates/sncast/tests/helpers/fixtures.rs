@@ -21,12 +21,13 @@ use sncast::{get_account, get_provider};
 use starknet::accounts::{
     Account, AccountFactory, ArgentAccountFactory, ExecutionV1, OpenZeppelinAccountFactory,
 };
-use starknet::core::types::{Call, Felt, InvokeTransactionResult, TransactionReceipt};
+use starknet::core::types::{Call, InvokeTransactionResult, TransactionReceipt};
 use starknet::core::utils::get_contract_address;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::{LocalWallet, SigningKey};
+use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::env;
 use std::fs;

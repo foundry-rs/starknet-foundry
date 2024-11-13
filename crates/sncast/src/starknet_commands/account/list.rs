@@ -14,6 +14,8 @@ use sncast::{
 use std::collections::HashMap;
 use std::fmt::Display;
 
+use super::NestedMap;
+
 #[derive(Args, Debug)]
 #[command(
     name = "list",
@@ -84,8 +86,6 @@ impl AccountDataRepresentation {
         self.network = Some(network.to_owned());
     }
 }
-
-type NestedMap<T> = HashMap<String, HashMap<String, T>>;
 
 fn read_and_flatten(
     accounts_file: &Utf8PathBuf,

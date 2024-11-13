@@ -8,7 +8,7 @@ use scarb_api::StarknetContractArtifacts;
 use serde::Serialize;
 use sncast::response::structs::VerifyResponse;
 use sncast::Network;
-use starknet::core::types::Felt;
+use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::{env, fmt};

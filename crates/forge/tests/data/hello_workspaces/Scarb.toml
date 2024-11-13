@@ -18,6 +18,7 @@ version = "0.1.0"
 [package]
 name = "hello_workspaces"
 version.workspace = true
+edition = "2023_10"
 
 [scripts]
 test.workspace = true

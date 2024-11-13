@@ -13,6 +13,7 @@ mod dispatchers;
 mod env;
 mod fuzzing;
 mod gas;
+mod generate_random_felt;
 mod get_class_hash;
 mod l1_handler_executor;
 mod message_to_l1;

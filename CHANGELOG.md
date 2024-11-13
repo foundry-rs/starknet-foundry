@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- `generate_random_felt()` for generating (pseudo) random felt value.
+
+### Cast
+
+#### Added
+
+- You can skip `--name` flag when using `account import` - a default name will be generated.
+- Addresses outputted when calling `sncast account create`, `sncast deploy` and `sncast declare` are now padded to 64 characters length and prefixed with `0x0`
+
+#### Changed
+
+- Changed return type of `declare` in Cairo Deployment Scripts so it can handle already declared contracts without failing
+
 ## [0.33.0] - 2024-11-04
 
 ### Cast

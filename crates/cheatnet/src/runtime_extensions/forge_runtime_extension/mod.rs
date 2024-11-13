@@ -10,6 +10,7 @@ use crate::runtime_extensions::{
     forge_runtime_extension::cheatcodes::{
         declare::declare,
         deploy::{deploy, deploy_at},
+        generate_random_felt::generate_random_felt,
         get_class_hash::get_class_hash,
         l1_handler_execute::l1_handler_execute,
         storage::{calculate_variable_address, load, store},
@@ -34,9 +35,8 @@ use cairo_vm::vm::{
     errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
     vm_core::VirtualMachine,
 };
-use cairo_vm::Felt252;
 use conversions::byte_array::ByteArray;
-use conversions::felt252::TryInferFormat;
+use conversions::felt::TryInferFormat;
 use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::CairoSerialize;
 use data_transformer::cairo_types::CairoU256;
@@ -44,9 +44,9 @@ use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
 };
-use starknet::core::types::Felt;
 use starknet::signers::SigningKey;
 use starknet_api::{core::ClassHash, deprecated_contract_class::EntryPointType::L1Handler};
+use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 
 pub mod cheatcodes;
@@ -210,7 +210,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .get(&name)
                     .with_context(|| format!("Failed to read from env var = {name}"))?;
 
-                let parsed_env_var = Felt252::infer_format_and_parse(env_var)
+                let parsed_env_var = Felt::infer_format_and_parse(env_var)
                     .map_err(|_| anyhow!("Failed to parse value = {env_var} to felt"))?;
 
                 Ok(CheatcodeHandlingResult::Handled(parsed_env_var))
@@ -473,6 +473,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     map_entry_address,
                 ))
             }
+            "generate_random_felt" => Ok(CheatcodeHandlingResult::from_serializable(
+                generate_random_felt(),
+            )),
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }
     }
