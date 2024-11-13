@@ -9,6 +9,7 @@ mod cheat_tx_info;
 mod cheat_sequencer_address;
 mod starknet;
 mod cheat_block_timestamp;
+mod cheat_block_hash;
 mod segment_arena_user;
 mod panic_call;
 mod store_load;
