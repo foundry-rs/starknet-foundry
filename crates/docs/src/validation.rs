@@ -5,7 +5,10 @@ use std::io;
 use std::path::Path;
 use std::path::PathBuf;
 
-fn extract_matches_from_file(file_path: &Path, re: &Regex) -> Result<Vec<String>, std::io::Error> {
+pub fn extract_matches_from_file(
+    file_path: &Path,
+    re: &Regex,
+) -> Result<Vec<String>, std::io::Error> {
     let content = fs::read_to_string(file_path)?;
     let matches: Vec<String> = re
         .captures_iter(&content)
@@ -31,6 +34,7 @@ pub fn extract_matches_from_directory(
         } else if let Some(ext) = extension {
             if path.extension().and_then(|e| e.to_str()) == Some(ext) {
                 let snippets = extract_matches_from_file(&path, re)?;
+
                 if !snippets.is_empty() {
                     all_snippets.extend(snippets);
                 }
