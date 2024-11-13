@@ -18,13 +18,12 @@ fn test_docs_snippets() {
     let docs_snippets = extract_matches_from_directory(&docs_dir_path, &re, extension)
         .expect("Failed to extract sncast command snippets");
 
-    println!("sncast_readme_path: {:?}", sncast_readme_path);
     let readme_snippets = extract_matches_from_file(&sncast_readme_path, &re)
         .expect("Failed to extract sncast command snippets");
 
     let snippets = docs_snippets
         .into_iter()
-        .chain(readme_snippets.into_iter())
+        .chain(readme_snippets)
         .collect::<Vec<String>>();
 
     let skipped_args = [
