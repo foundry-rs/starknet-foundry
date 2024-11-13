@@ -74,12 +74,15 @@ impl Arguments {
                 | ValidArgsTypes::Both { valid_named_args } => match valid_named_args {
                     ValidNamedArgs::All => {}
                     ValidNamedArgs::Restricted(valid_named_args) => {
-                        for (arg, _) in self.named.iter() {
-                            if !valid_named_args.contains(&arg.as_str()) {
-                                return Err(T::error(format!(
-                                    "unsupported named argument \"{arg}\" provided",
-                                )));
-                            }
+                        if let Some(arg) = self
+                            .named
+                            .iter()
+                            .map(|(arg, _)| arg)
+                            .find(|arg| !valid_named_args.contains(&arg.as_str()))
+                        {
+                            return Err(T::error(format!(
+                                "unsupported named argument \"{arg}\" provided",
+                            )));
                         }
                     }
                 },
