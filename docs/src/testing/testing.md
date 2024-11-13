@@ -20,11 +20,19 @@ Now run `snforge` using a command:
 
 ```shell
 $ snforge test
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 Collected 1 test(s) from writing_tests package
 Running 1 test(s) from src/
 [PASS] writing::first_test::tests::test_sum
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
+</details>
+<br>
 
 ## Failing Tests
 
@@ -37,6 +45,12 @@ If your code panics, the test is considered failed. Here's an example of a faili
 
 ```shell
 $ snforge test
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 Collected 1 test(s) from writing_tests package
 Running 1 test(s) from src/
 [FAIL] writing_tests::panicking_tests::tests::failing
@@ -49,6 +63,8 @@ Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 Failures:
     writing_tests::panicking_tests::tests::failing
 ```
+</details>
+<br>
 
 ## Expected Failures
 
@@ -78,12 +94,20 @@ With this format, the expected error message needs to be a substring of the actu
 
 ```shell
 $ snforge test
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 Collected 1 test(s) from writing_tests package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [PASS] snforge_overview_integrationtest::should_panic_check_data
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
+</details>
+<br>
 
 ## Ignoring Tests
 
@@ -96,12 +120,20 @@ You can achieve it using `#[ignore]` - tests marked with this attribute will be 
 
 ```shell
 $ snforge test
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 Collected 1 test(s) from writing_tests package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [IGNORE] writing_tests_integrationtest::ignoring::ignored_test
 Tests: 0 passed, 0 failed, 0 skipped, 1 ignored, 0 filtered out
 ```
+</details>
+<br>
 
 To run only tests marked with the  `#[ignore]` attribute use `snforge test --ignored`.
 To run all tests regardless of the `#[ignore]` attribute use `snforge test --include-ignored`.
