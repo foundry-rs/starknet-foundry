@@ -120,6 +120,12 @@ An example output could look similarly to this:
 
 ```shell
 $ snforge test
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 [PASS] tests::parametrized(a = 1, b = 2)              # unnamed test case
 [PASS] tests::parametrized[a_test](a = 3, b = 5)      # named test case
 [FAIL] tests::parametrized[my_case](a = 4, b = 5)     # named test case
@@ -130,6 +136,8 @@ Failure data:
 [PASS] tests::parametrized(a = 5, b = 7)
 # ...
 ```
+</details>
+<br>
 
 ## Deterministic Test Output Order
 

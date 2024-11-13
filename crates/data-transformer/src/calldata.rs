@@ -1,6 +1,7 @@
 use super::transformer::transform;
 use serde::{Deserialize, Serialize};
-use starknet::core::types::{ContractClass, Felt};
+use starknet::core::types::ContractClass;
+use starknet_types_core::felt::Felt;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Calldata {

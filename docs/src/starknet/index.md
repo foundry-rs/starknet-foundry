@@ -35,10 +35,17 @@ $ sncast --account myuser \
     --function get \
     --calldata 0x0 \
     --block-id latest
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: call
 response: [0x0]
 ```
+</details>
+<br>
 
 > 📝 **Note**
 > In the above example we supply `sncast` with `--account` and `--url` flags. If `snfoundry.toml` is present, and have these properties set, values provided using these flags will override values from `snfoundry.toml`. Learn more about `snfoundry.toml` configuration [here](../projects/configuration.md#sncast).
@@ -69,7 +76,12 @@ $ sncast --account myuser \
     deploy \
 	--url http://127.0.0.1:5050 \
     --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 Transaction hash: 0x3062310a1e40d4b66d8987ba7447d1c7317381d0295d62cb12f2fe3f11e6983
 Waiting for transaction to be received. Retries left: 11
 Waiting for transaction to be received. Retries left: 10
@@ -90,6 +102,8 @@ To see deployment details, visit:
 contract: https://starkscan.co/search/0x1d91599ec6...
 transaction: https://starkscan.co/search/0x3062310a1e...
 ```
+</details>
+<br>
 
 As you can see command waited for the transaction until it was `ACCEPTED_ON_L2`.
 

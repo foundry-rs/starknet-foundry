@@ -21,16 +21,18 @@ use sncast::helpers::scarb_utils::{
     get_scarb_metadata_with_deps, BuildConfig,
 };
 use sncast::response::errors::handle_starknet_command_error;
+use sncast::response::structs::DeclareResponse;
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_class_hash_by_address,
     get_contract_class, get_default_state_file_name, NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::accounts::ConnectedAccount;
-use starknet::core::types::{ContractClass, Felt};
+use starknet::core::types::ContractClass;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
 use starknet_commands::account::list::print_account_list;
 use starknet_commands::verify::Verify;
+use starknet_types_core::felt::Felt;
 use tokio::runtime::Runtime;
 
 mod starknet_commands;
@@ -256,10 +258,23 @@ async fn run_async_command(
                 false,
             )
             .expect("Failed to build contract");
-            let result =
-                starknet_commands::declare::declare(declare, &account, &artifacts, wait_config)
-                    .await
-                    .map_err(handle_starknet_command_error);
+            let result = starknet_commands::declare::declare(
+                declare,
+                &account,
+                &artifacts,
+                wait_config,
+                false,
+            )
+            .await
+            .map_err(handle_starknet_command_error)
+            .map(|result| match result {
+                DeclareResponse::Success(declare_transaction_response) => {
+                    declare_transaction_response
+                }
+                DeclareResponse::AlreadyDeclared(_) => {
+                    unreachable!("Argument `skip_on_already_declared` is false")
+                }
+            });
 
             print_command_result("declare", &result, numbers_format, output_format)?;
             print_block_explorer_link_if_allowed(

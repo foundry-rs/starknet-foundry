@@ -94,9 +94,16 @@ $ sncast \
     --name account_123 \
     --address 0x1 \
     --type oz
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 Type in your private key and press enter: 
 ```
+</details>
+<br>
 
 #### Argent
 

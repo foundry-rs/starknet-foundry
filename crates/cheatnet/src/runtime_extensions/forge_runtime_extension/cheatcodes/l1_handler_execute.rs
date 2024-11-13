@@ -3,16 +3,16 @@ use crate::{
     state::CheatnetState,
 };
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use cairo_vm::Felt252;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
+use starknet_types_core::felt::Felt;
 
 pub fn l1_handler_execute(
     syscall_handler: &mut SyscallHintProcessor,
     cheatnet_state: &mut CheatnetState,
     contract_address: ContractAddress,
     function_selector: EntryPointSelector,
-    from_address: Felt252,
-    payload: &[Felt252],
+    from_address: Felt,
+    payload: &[Felt],
 ) -> CallResult {
     let mut calldata = vec![from_address];
     calldata.extend_from_slice(payload);

@@ -12,7 +12,8 @@ use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_co
 use snapbox::cmd::{cargo_bin, Command};
 use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::AccountType;
-use starknet::core::types::{Felt, TransactionReceipt::Deploy};
+use starknet::core::types::TransactionReceipt::Deploy;
+use starknet_types_core::felt::Felt;
 use std::path::PathBuf;
 use test_case::test_case;
 
@@ -62,7 +63,6 @@ async fn test_happy_case_human_readable() {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "deploy",
         "--url",
         URL,
@@ -74,7 +74,7 @@ async fn test_happy_case_human_readable() {
         "--max-fee",
         "99999999999999999",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -85,8 +85,8 @@ async fn test_happy_case_human_readable() {
         indoc! {
             "
             command: deploy
-            contract_address: [..]
-            transaction_hash: [..]
+            contract_address: 0x0[..]
+            transaction_hash: 0x0[..]
 
             To see deployment details, visit:
             contract: [..]
@@ -342,7 +342,7 @@ fn test_wrong_calldata() {
         output,
         indoc! {r"
         command: deploy
-        error: An error occurred in the called contract[..]('Input too long for arguments')[..]
+        error: [..]('Input too long for arguments')[..]
         "},
     );
 }
@@ -397,7 +397,7 @@ fn test_contract_already_deployed() {
         output,
         indoc! {r"
         command: deploy
-        error: An error occurred [..]Requested ContractAddress[..]is unavailable for deployment[..]
+        error: [..]Requested ContractAddress[..]is unavailable for deployment[..]
         "},
     );
 }

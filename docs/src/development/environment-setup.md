@@ -91,9 +91,13 @@ $ typos
 
 Some typos can be automatically fixed by running
 
+<details>
+<summary>Output:</summary>
+
 ```shell
 $ typos -w
 ```
+</details>
 
 ## Contributing
 
