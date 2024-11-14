@@ -39,6 +39,12 @@ This test fails, which means that `increase_balance` method panics as we expecte
 
 ```shell
 $ snforge test
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 Collected 1 test(s) from using_cheatcodes package
 Running 1 test(s) from tests/
 [FAIL] using_cheatcodes_tests::caller_address::failing::call_and_invoke
@@ -48,6 +54,8 @@ Failure data:
 
 Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
+</details>
+<br>
 
 Our user validation is not letting us call the contract, because the default caller address is not `123`.
 
@@ -67,12 +75,20 @@ The test will now pass without an error
 
 ```shell
 $ snforge test
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 Collected 1 test(s) from using_cheatcodes package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [PASS] using_cheatcodes_integrationtest::caller_address::proper_use::call_and_invoke (gas: ~239)
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
+</details>
+<br>
 
 ### Canceling the Cheat
 
@@ -89,6 +105,12 @@ We will demonstrate its behavior using `SafeDispatcher` to show when exactly the
 
 ```shell
 $ snforge test
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 Collected 1 test(s) from using_cheatcodes package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
@@ -99,6 +121,8 @@ Failure data:
 
 Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 4 filtered out
 ```
+</details>
+<br>
 
 We see that the second `increase_balance` fails since we cancelled the cheatcode.
 

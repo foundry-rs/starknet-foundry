@@ -36,23 +36,37 @@ $ sncast --account myuser \
     --url http://127.0.0.1:5050/rpc \
     declare \
     --contract-name SimpleBalance
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: Declare
 class_hash: 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
 transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
 ```
-
+</details>
+<br>
 
 With arguments taken from `snfoundry.toml` file (default profile name):
 
 ```shell
 $ sncast declare \
     --contract-name SimpleBalance
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: Declare
 class_hash: 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
 transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
 ```
+</details>
+<br>
+
 
 ### Deploy a contract
 
@@ -60,22 +74,35 @@ transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee2
 $ sncast --account myuser \
     --url http://127.0.0.1:5050/rpc \
     deploy --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: Deploy
 contract_address: 0x301316d47a81b39c5e27cca4a7b8ca4773edbf1103218588d6da4d3ed53035a
 transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5ab1e
 ```
-
+</details>
+<br>
 
 With arguments taken from `snfoundry.toml` file (default profile name):
 
 ```shell
 $ sncast deploy --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: Deploy
 contract_address: 0x301316d47a81b39c5e27cca4a7b8ca4773edbf1103218588d6da4d3ed53035a
 transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5ab1e
 ```
+</details>
+<br>
 
 
 ### Invoke a contract
@@ -87,10 +114,17 @@ $ sncast --url http://127.0.0.1:5050 \
     --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
     --function "some_function" \
     --calldata 1 2 3
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: Invoke
 transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
 ```
+</details>
+<br>
 
 
 With arguments taken from `snfoundry.toml` file (default profile name):
@@ -100,10 +134,17 @@ $ sncast invoke \
     --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
     --function "some_function" \
     --calldata 1 2 3
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: Invoke
 transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
 ```
+</details>
+<br>
 
 ### Call a contract
 
@@ -113,10 +154,17 @@ $ sncast --url http://127.0.0.1:5050 \
     --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
     --function "some_function" \
     --calldata 1 2 3
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: call
 response: [0x0]
 ```
+</details>
+<br>
 
 
 With arguments taken from `snfoundry.toml` file (default profile name):
@@ -126,10 +174,17 @@ $ sncast call \
     --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
     --function some_function \
     --calldata 1 2 3
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: call
 response: [0x0]
 ```
+</details>
+<br>
 
 
 ## Development
@@ -141,7 +196,15 @@ To verify, run:
 
 ```shell
 $ which scarb
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 $HOME/.asdf/shims/scarb
 ```
+</details>
+<br>
 
 If you previously installed scarb using official installer, you may need to remove this installation or modify your PATH to make sure asdf installed one is always used.

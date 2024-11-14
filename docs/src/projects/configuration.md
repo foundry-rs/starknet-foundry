@@ -56,10 +56,17 @@ $ sncast --profile myprofile \
     --function get \
     --calldata 0x0 \
     --block-id latest
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: call
 response: [0x0]
 ```
+</details>
+<br>
 
 ### Multiple Profiles
 
@@ -86,10 +93,17 @@ $ sncast call \
     --function get \
     --calldata 0x0 \
     --block-id latest
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: call
 response: [0x1, 0x23, 0x4]
 ```
+</details>
+<br>
 
 ## Environmental variables
 

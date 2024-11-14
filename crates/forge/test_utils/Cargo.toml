@@ -29,6 +29,7 @@ tokio.workspace = true
 project-root.workspace = true
 regex.workspace = true
 snapbox.workspace = true
+semver.workspace = true
 forge = { path = "../../forge" }
 scarb-api = { path = "../../scarb-api" }
 forge_runner = { path = "../../forge-runner" }
