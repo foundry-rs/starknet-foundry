@@ -122,7 +122,7 @@ An example output could look similarly to this:
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

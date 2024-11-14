@@ -14,7 +14,7 @@ For a project structure like this
 $ tree . -L 3
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -42,7 +42,7 @@ only the tests in `./src` and `./tests` folders will be executed.
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -57,11 +57,12 @@ Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 To select the specific package to test, pass a `--package package_name` (or `-p package_name` for short) flag.
 You can also run `snforge test` from the package directory to achieve the same effect.
 
+<!-- package_name=hello_workspaces -->
 ```shell
 $ snforge test --package addition
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -81,7 +82,7 @@ You can also pass `--workspace` flag to run tests for all packages in the worksp
 $ snforge test --workspace
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

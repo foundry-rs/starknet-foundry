@@ -70,7 +70,7 @@ Most common directory structures include:
 $ tree
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -102,7 +102,7 @@ You can also have multiple scripts as separate packages, or multiple modules ins
 $ tree
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -128,7 +128,7 @@ $ tree
 $ tree
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -159,7 +159,7 @@ $ tree
 $ tree
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -182,7 +182,7 @@ $ tree
 $ tree
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -230,7 +230,7 @@ The script should be included in a Scarb package. The directory structure and co
 $ tree
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -250,7 +250,7 @@ version = "0.1.0"
 
 [dependencies]
 starknet = ">=2.8.0"
-sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.30.0" }
+sncast_std = "0.33.0"
 ```
 
 To run the script, do:
@@ -261,7 +261,7 @@ $ sncast \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -291,7 +291,7 @@ The script should be included in a Scarb package. The directory structure and co
 $ tree
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -316,7 +316,7 @@ version = "0.1.0"
 
 [dependencies]
 starknet = ">=2.8.0"
-sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.30.0" }
+sncast_std = "0.33.0"
 map = { path = "../contracts" }
 
 [lib]
@@ -340,7 +340,7 @@ $ sncast \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -367,7 +367,7 @@ $ sncast \
   --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -382,7 +382,7 @@ status: success
 <br>
 
 
-whereas, when we run the same script once again with `--no-state-file` flag set, it fails (as the `Map` contract is already declared):
+whereas, when we run the same script once again with `--no-state-file` flag set, it fails (as the `Map` contract is already deployed):
 
 ```shell
 $ sncast \
@@ -392,13 +392,13 @@ $ sncast \
   --no-state-file
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
 command: script run
 message:
-    0x636f6e747261637420616c7265616479206465636c61726564 ('contract already declared')
+    0x6d6170206465706c6f79206661696c6564 ('map deploy failed')
 
 status: script panicked
 ```

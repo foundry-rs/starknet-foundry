@@ -16,7 +16,7 @@ $ cd project_name
 $ tree . -L 1
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -42,7 +42,7 @@ And run tests with `snforge test`
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -70,20 +70,22 @@ Add the following line under `[dev-dependencies]` section in the `Scarb.toml` fi
 # ...
 
 [dev-dependencies]
-snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.27.0" }
+snforge_std = "0.33.0"
 ```
 
-Make sure that the version in `tag` matches `snforge`. You can check the currently installed version with
+Make sure that the above version matches the installed `snforge` version. You can check the currently installed version with
 
 ```shell
 $ snforge --version
 ```
+</details>
+<br>
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
-snforge 0.27.0
+snforge 0.33.0
 ```
 </details>
 <br>
@@ -93,10 +95,7 @@ using [`scarb add`](https://docs.swmansion.com/scarb/docs/guides/dependencies.ht
 command.
 
 ```shell
-$ scarb add snforge_std \ 
- --dev \
- --git https://github.com/foundry-rs/starknet-foundry.git \
- --tag v0.27.0
+$ scarb add snforge_std@0.33.0 --dev
 ```
 
 Additionally, ensure that starknet-contract target is enabled in the `Scarb.toml` file.

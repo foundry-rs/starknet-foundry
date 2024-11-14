@@ -5,10 +5,10 @@
 > To use the library functions designed for testing smart contracts,
 > you need to add `snforge_std` package as a dependency in
 > your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#development-dependencies)
-> using appropriate release tag.
+> using the appropriate version.
 >```toml
 > [dev-dependencies]
-> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
+> snforge_std = "0.33.0"
 > ```
 
 Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when
@@ -42,7 +42,7 @@ Let's write a test that will deploy the `HelloStarknet` contract and call some f
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -78,7 +78,7 @@ If we called this function in a test, it would result in a failure.
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -116,7 +116,7 @@ Now the test passes as expected.
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

@@ -7,11 +7,14 @@ use sncast::helpers::error::token_not_supported_for_declaration;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
-use sncast::response::structs::DeclareResponse;
+use sncast::response::structs::{
+    AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
+};
 use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, ErrorData, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, DeclarationV2, DeclarationV3};
-use starknet::core::types::DeclareTransactionResult;
+use starknet::core::types::{DeclareTransactionResult, StarknetError};
+use starknet::providers::ProviderError;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
     core::types::contract::{CompiledClass, SierraClass},
@@ -65,6 +68,7 @@ pub async fn declare(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
     wait_config: WaitForTx,
+    skip_on_already_declared: bool,
 ) -> Result<DeclareResponse, StarknetCommandError> {
     let fee_settings = declare
         .fee_args
@@ -86,6 +90,10 @@ pub async fn declare(
         serde_json::from_str(&contract_artifacts.casm).context("Failed to parse casm artifact")?;
 
     let casm_class_hash = casm_contract_definition
+        .class_hash()
+        .map_err(anyhow::Error::from)?;
+
+    let class_hash = contract_definition
         .class_hash()
         .map_err(anyhow::Error::from)?;
 
@@ -126,14 +134,21 @@ pub async fn declare(
         }) => handle_wait_for_tx(
             account.provider(),
             transaction_hash,
-            DeclareResponse {
+            DeclareResponse::Success(DeclareTransactionResponse {
                 class_hash: class_hash.into_(),
                 transaction_hash: transaction_hash.into_(),
-            },
+            }),
             wait_config,
         )
         .await
         .map_err(StarknetCommandError::from),
+        Err(Provider(ProviderError::StarknetError(StarknetError::ClassAlreadyDeclared)))
+            if skip_on_already_declared =>
+        {
+            Ok(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse {
+                class_hash: class_hash.into_(),
+            }))
+        }
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
         _ => Err(anyhow!("Unknown RPC error").into()),
     }

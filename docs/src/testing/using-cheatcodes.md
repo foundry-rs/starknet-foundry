@@ -3,11 +3,11 @@
 > ℹ️ **Info**
 > To use cheatcodes you need to add `snforge_std` package as a dependency in
 > your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#development-dependencies)
-> using appropriate release tag.
+> using the appropriate version.
 >
 > ```toml
 > [dev-dependencies]
-> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.9.0" }
+> snforge_std = "0.33.0"
 > ```
 
 When testing smart contracts, often there are parts of code that are dependent on a specific blockchain state.
@@ -41,7 +41,7 @@ This test fails, which means that `increase_balance` method panics as we expecte
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -77,7 +77,7 @@ The test will now pass without an error
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -107,7 +107,7 @@ We will demonstrate its behavior using `SafeDispatcher` to show when exactly the
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

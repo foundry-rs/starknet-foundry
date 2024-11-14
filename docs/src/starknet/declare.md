@@ -25,7 +25,7 @@ $ sncast --account myuser \
     --contract-name SimpleBalance
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

@@ -32,7 +32,7 @@ $ sncast \
     --network sepolia
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

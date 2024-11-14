@@ -6,7 +6,7 @@ To run tests with `snforge`, simply run the `snforge test` command from the pack
 $ snforge test
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -30,7 +30,7 @@ By default, any test with an [absolute module tree path](https://book.cairo-lang
 $ snforge test calling
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -57,7 +57,7 @@ Note, you have to use a fully qualified test name, including a module name.
 $ snforge test package_name::tests::calling --exact
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -77,7 +77,7 @@ To stop the test execution after first failed test, you can pass an `--exit-firs
 $ snforge test --exit-first
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -107,7 +107,7 @@ To track resources like `builtins` / `syscalls` that are used when running tests
 $ snforge test --detailed-resources
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

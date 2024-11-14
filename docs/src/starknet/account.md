@@ -29,7 +29,7 @@ $ sncast \
     --name some-name
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -68,7 +68,7 @@ $ sncast \
 	--max-fee 9999999999999
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

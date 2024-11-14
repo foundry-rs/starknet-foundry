@@ -315,7 +315,7 @@ fn test_wrong_function_name() {
         output,
         indoc! {"
             command: invoke
-            error: An error occurred in the called contract[..]Entry point[..]not found in contract[..]
+            error: [..]Entry point[..]not found in contract[..]
         "},
     );
 }
@@ -347,7 +347,7 @@ fn test_wrong_calldata() {
         output,
         indoc! {r"
         command: invoke
-        error: An error occurred in the called contract[..]Failed to deserialize param #2[..]
+        error: [..]Failed to deserialize param #2[..]
         "},
     );
 }

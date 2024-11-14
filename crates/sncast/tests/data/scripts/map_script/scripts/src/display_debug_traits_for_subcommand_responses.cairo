@@ -1,6 +1,6 @@
 use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce,
-    FeeSettings, EthFeeSettings
+    declare, deploy, invoke, call, DeclareResult, DeclareResultTrait, DeployResult, InvokeResult,
+    CallResult, get_nonce, FeeSettings, EthFeeSettings
 };
 
 fn main() {
@@ -21,10 +21,10 @@ fn main() {
     println!("declare_result: {}", declare_result);
     println!("debug declare_result: {:?}", declare_result);
 
-    let class_hash = declare_result.class_hash;
+    let class_hash = declare_result.class_hash();
     let deploy_nonce = get_nonce('pending');
     let deploy_result = deploy(
-        class_hash,
+        *class_hash,
         ArrayTrait::new(),
         Option::Some(salt),
         true,

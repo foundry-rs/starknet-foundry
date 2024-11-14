@@ -34,12 +34,10 @@ All subcommand usages are shown for two scenarios - when all necessary arguments
 ```shell
 $ sncast --account myuser \
     declare \
-    --url http://127.0.0.1:5050/rpc \
-    --contract-name SimpleBalance \
-    --version v3
+    --contract-name SimpleBalance
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -57,7 +55,7 @@ $ sncast declare \
     --contract-name SimpleBalance
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -75,10 +73,10 @@ transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee2
 $ sncast --account myuser \
     deploy --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a \
     --url http://127.0.0.1:5050/rpc \
-    --version v3
+    deploy --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -95,7 +93,7 @@ With arguments taken from `snfoundry.toml` file (default profile name):
 $ sncast deploy --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -115,12 +113,10 @@ $ sncast \
     invoke \
     --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
     --function "some_function" \
-    --calldata 1 2 3 \
-    --url http://127.0.0.1:5050 \
-    --version v3
+    --calldata 1 2 3
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -140,7 +136,7 @@ $ sncast invoke \
     --calldata 1 2 3
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -157,11 +153,10 @@ $ sncast \
     call \
     --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
     --function "some_function" \
-    --calldata 1 2 3 \
-    --url http://127.0.0.1:5050
+    --calldata 1 2 3
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -181,7 +176,7 @@ $ sncast call \
     --calldata 1 2 3
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell
@@ -203,7 +198,7 @@ To verify, run:
 $ which scarb
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

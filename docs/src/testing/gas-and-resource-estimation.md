@@ -40,7 +40,7 @@ In order to run tests with this feature, run the `test` command with the appropr
 $ snforge test --detailed-resources
 ```
 
-<details open>
+<details>
 <summary>Output:</summary>
 
 ```shell

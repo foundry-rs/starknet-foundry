@@ -127,7 +127,7 @@ mod tests {
     use forge_runner::package_tests::TestTargetLocation;
     use forge_runner::{expected_result::ExpectedTestResult, package_tests::TestDetails};
     use std::sync::Arc;
-    use universal_sierra_compiler_api::compile_sierra_to_casm;
+    use universal_sierra_compiler_api::{compile_sierra, SierraType};
     use url::Url;
 
     fn program_for_testing() -> ProgramArtifact {
@@ -146,7 +146,13 @@ mod tests {
     async fn to_runnable_non_existent_id() {
         let mocked_tests = TestTargetWithConfig {
             sierra_program: program_for_testing(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            casm_program: Arc::new(
+                compile_sierra(
+                    &serde_json::to_value(&program_for_testing().program).unwrap(),
+                    &SierraType::Raw,
+                )
+                .unwrap(),
+            ),
             test_cases: vec![TestCaseWithConfig {
                 name: "crate1::do_thing".to_string(),
                 config: TestCaseConfig {
