@@ -12,10 +12,10 @@ pub fn spawn_spinner_message(sierra_file_path: &Utf8Path) -> Result<ProgressBar>
     // Skip printing path when compiling unsaved sierra
     // which occurs during test execution for some cheatcodes e.g. `replace_bytecode`
     let message = if is_temp_file(sierra_file_path)? {
-        "Compiling SIERRA to CASM".to_string()
+        "Compiling Sierra to Casm".to_string()
     } else {
         format!(
-            "Compiling SIERRA to CASM ({})",
+            "Compiling Sierra to Casm ({})",
             sierra_file_path.canonicalize_utf8()?
         )
     };
