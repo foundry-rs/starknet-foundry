@@ -5819,6 +5819,7 @@ dependencies = [
  "anyhow",
  "cairo-lang-casm",
  "cairo-lang-sierra",
+ "camino",
  "num-bigint",
  "serde",
  "serde_json",

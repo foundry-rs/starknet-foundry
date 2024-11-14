@@ -88,7 +88,7 @@ fn compile_artifacts(
 fn compile_artifact_at_path(path: &Utf8Path) -> Result<StarknetContractArtifacts> {
     let sierra = fs::read_to_string(path)?;
 
-    let casm = compile_sierra_at_path(path.as_str(), None, &SierraType::Contract)?;
+    let casm = compile_sierra_at_path(path, &SierraType::Contract)?;
 
     Ok(StarknetContractArtifacts { sierra, casm })
 }
