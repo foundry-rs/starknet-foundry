@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use cairo_lang_casm::hints::Hint;
 use camino::Utf8Path;
 use num_bigint::BigInt;
@@ -36,36 +36,37 @@ pub struct AssembledCairoProgramWithSerde {
     pub hints: Vec<(usize, Vec<Hint>)>,
 }
 
-pub trait UscOutputTransformer {
-    fn transform(output: String) -> Self;
+pub trait UniversalSierraCompilerOutput {
+    fn convert(output: String) -> Self;
 }
 
-impl UscOutputTransformer for String {
-    fn transform(output: String) -> Self {
+impl UniversalSierraCompilerOutput for String {
+    fn convert(output: String) -> Self {
         output
     }
 }
 
-impl UscOutputTransformer for AssembledProgramWithDebugInfo {
-    fn transform(output: String) -> Self {
+impl UniversalSierraCompilerOutput for AssembledProgramWithDebugInfo {
+    fn convert(output: String) -> Self {
         serde_json::from_str(&output).expect("Failed to deserialize casm from json string")
     }
 }
 
-pub fn compile_sierra<T: UscOutputTransformer>(
+pub fn compile_sierra<T: UniversalSierraCompilerOutput>(
     sierra_json: &Value,
     sierra_type: &SierraType,
 ) -> Result<T> {
     let mut temp_sierra_file = Builder::new().tempfile()?;
-    let _ = temp_sierra_file.write(serde_json::to_vec(sierra_json)?.as_slice())?;
+    temp_sierra_file.write_all(serde_json::to_vec(sierra_json)?.as_slice())?;
 
     compile_sierra_at_path(
-        Utf8Path::new(&temp_sierra_file.path().to_string_lossy().to_string()),
+        Utf8Path::from_path(temp_sierra_file.path())
+            .ok_or_else(|| anyhow!("Failed to create Utf8Path from temp file path"))?,
         sierra_type,
     )
 }
 
-pub fn compile_sierra_at_path<T: UscOutputTransformer>(
+pub fn compile_sierra_at_path<T: UniversalSierraCompilerOutput>(
     sierra_file_path: &Utf8Path,
     sierra_type: &SierraType,
 ) -> Result<T> {
@@ -86,7 +87,7 @@ pub fn compile_sierra_at_path<T: UscOutputTransformer>(
             Contact us if it doesn't help",
         )?;
 
-    Ok(T::transform(from_utf8(&usc_output.stdout)?.to_string()))
+    Ok(T::convert(from_utf8(&usc_output.stdout)?.to_string()))
 }
 
 pub enum SierraType {
