@@ -23,10 +23,17 @@ $ sncast \
   --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
   --function "some_function" \
   --calldata 1 2 3
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: call
 response: [0x1, 0x23, 0x4]
 ```
+</details>
+<br>
 
 > 📝 **Note**
 > Call does not require passing account-connected parameters (`account` and `accounts-file`) because it doesn't create a transaction.
@@ -41,7 +48,13 @@ $ sncast call \
   --function "some_function" \
   --calldata 1 2 3 \
   --block-id 1234
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: call
 response: [0x1, 0x23]
 ```
+</details>

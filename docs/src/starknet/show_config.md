@@ -18,10 +18,17 @@ $ sncast \
   --account user1 \
   show-config \
   --url http://127.0.0.1:5050
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: show-config
 account: user1
 chain_id: alpha-sepolia
 keystore: ../keystore
 rpc_url: http://127.0.0.1:5050/rpc
 ```
+</details>
+<br>

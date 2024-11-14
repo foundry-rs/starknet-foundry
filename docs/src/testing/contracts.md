@@ -5,10 +5,10 @@
 > To use the library functions designed for testing smart contracts,
 > you need to add `snforge_std` package as a dependency in
 > your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#development-dependencies)
-> using appropriate release tag.
+> using the appropriate version.
 >```toml
 > [dev-dependencies]
-> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
+> snforge_std = "0.33.0"
 > ```
 
 Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when
@@ -40,12 +40,20 @@ Let's write a test that will deploy the `HelloStarknet` contract and call some f
 
 ```shell
 $ snforge test
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 Collected 1 test(s) from testing_smart_contracts package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [PASS] tests::call_and_invoke
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
+</details>
+<br>
 
 ## Handling Errors
 
@@ -68,6 +76,12 @@ If we called this function in a test, it would result in a failure.
 
 ```shell
 $ snforge test
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 Collected 1 test(s) from testing_smart_contracts package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
@@ -81,6 +95,8 @@ Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 Failures:
     tests::failing
 ```
+</details>
+<br>
 
 ### `SafeDispatcher`
 
@@ -98,12 +114,20 @@ Now the test passes as expected.
 
 ```shell
 $ snforge test
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 Collected 1 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [PASS] tests::handling_errors
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
+</details>
+<br>
 
 Similarly, you can handle the panics which use `ByteArray` as an argument (like an `assert!` or `panic!` macro)
 

@@ -1,21 +1,21 @@
 use anyhow::{anyhow, Result};
-use cairo_vm::Felt252;
+use conversions::felt::TryInferFormat;
 use conversions::{
-    byte_array::ByteArray, felt252::TryInferFormat, serde::serialize::SerializeToFeltVec,
-    string::TryFromDecStr,
+    byte_array::ByteArray, serde::serialize::SerializeToFeltVec, string::TryFromDecStr,
 };
 use flatten_serde_json::flatten;
 use runtime::EnhancedHintError;
 use serde_json::{Map, Value};
+use starknet_types_core::felt::Felt;
 use starknet_types_core::felt::FromStrError;
 use std::fs::read_to_string;
 
-pub(super) fn read_txt(path: String) -> Result<Vec<Felt252>, EnhancedHintError> {
+pub(super) fn read_txt(path: String) -> Result<Vec<Felt>, EnhancedHintError> {
     Ok(read_to_string(&path)?
         .lines()
         .filter(|line| !line.is_empty())
         .map(str::trim)
-        .map(Felt252::infer_format_and_parse)
+        .map(Felt::infer_format_and_parse)
         .collect::<Result<Vec<_>, _>>()
         .map_err(|_| EnhancedHintError::FileParsing { path })?
         .into_iter()
@@ -23,7 +23,7 @@ pub(super) fn read_txt(path: String) -> Result<Vec<Felt252>, EnhancedHintError> 
         .collect())
 }
 
-pub(super) fn read_json(path: String) -> Result<Vec<Felt252>, EnhancedHintError> {
+pub(super) fn read_json(path: String) -> Result<Vec<Felt>, EnhancedHintError> {
     let content = read_to_string(&path)?;
 
     let json: Map<String, Value> = serde_json::from_str(&content)
@@ -42,7 +42,7 @@ pub(super) fn read_json(path: String) -> Result<Vec<Felt252>, EnhancedHintError>
     Ok(result)
 }
 
-fn value_into_vec(value: &Value, output: &mut Vec<Felt252>) -> Result<(), FromStrError> {
+fn value_into_vec(value: &Value, output: &mut Vec<Felt>) -> Result<(), FromStrError> {
     match value {
         Value::Array(vec) => {
             output.push(vec.len().into());
@@ -54,7 +54,7 @@ fn value_into_vec(value: &Value, output: &mut Vec<Felt252>) -> Result<(), FromSt
             Ok(())
         }
         Value::Number(num) => {
-            output.push(Felt252::try_from_dec_str(&num.to_string())?);
+            output.push(Felt::try_from_dec_str(&num.to_string())?);
 
             Ok(())
         }
@@ -72,8 +72,8 @@ fn value_into_vec(value: &Value, output: &mut Vec<Felt252>) -> Result<(), FromSt
 #[cfg(test)]
 mod tests {
     use super::read_json;
-    use cairo_vm::Felt252;
     use conversions::{byte_array::ByteArray, serde::serialize::SerializeToFeltVec};
+    use starknet_types_core::felt::Felt;
     use std::fs;
     use tempfile::TempDir;
 
@@ -100,12 +100,8 @@ mod tests {
         }"#;
         let (_temp, file_path) = create_file(string);
         let result = read_json(file_path).unwrap();
-        let mut expected_result = vec![
-            Felt252::from(1),
-            Felt252::from(2),
-            Felt252::from(12),
-            Felt252::from(43),
-        ];
+        let mut expected_result =
+            vec![Felt::from(1), Felt::from(2), Felt::from(12), Felt::from(43)];
         expected_result.extend(ByteArray::from("Joh").serialize_to_vec());
 
         assert_eq!(result, expected_result);
@@ -118,11 +114,11 @@ mod tests {
         let (_temp, file_path) = create_file(string);
         let result = read_json(file_path).unwrap();
         let mut expected_result = ByteArray::from("string").serialize_to_vec();
-        expected_result.push(Felt252::from(4));
+        expected_result.push(Felt::from(4));
         expected_result.extend(ByteArray::from("1").serialize_to_vec());
-        expected_result.push(Felt252::from(2));
+        expected_result.push(Felt::from(2));
         expected_result.extend(ByteArray::from("3").serialize_to_vec());
-        expected_result.push(Felt252::from(4));
+        expected_result.push(Felt::from(4));
 
         assert_eq!(result, expected_result);
     }

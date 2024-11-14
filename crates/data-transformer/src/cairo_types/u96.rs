@@ -1,5 +1,5 @@
 use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
-use starknet::core::types::Felt;
+use starknet_types_core::felt::Felt;
 use std::{
     num::{IntErrorKind, ParseIntError},
     str::FromStr,

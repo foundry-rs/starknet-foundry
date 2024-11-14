@@ -1,16 +1,16 @@
 use crate::CheatnetState;
 use blockifier::execution::call_info::OrderedEvent;
-use cairo_vm::Felt252;
 use conversions::{serde::serialize::CairoSerialize, FromConv};
 use starknet_api::core::ContractAddress;
+use starknet_types_core::felt::Felt;
 
 /// Represents an emitted event. It is used in the `CheatnetState` to keep track of events
 /// emitted in the `cheatnet::src::rpc::call_contract`
 #[derive(CairoSerialize, Debug, PartialEq, Clone)]
 pub struct Event {
     pub from: ContractAddress,
-    pub keys: Vec<Felt252>,
-    pub data: Vec<Felt252>,
+    pub keys: Vec<Felt>,
+    pub data: Vec<Felt>,
 }
 
 impl Event {
@@ -25,14 +25,14 @@ impl Event {
                 .event
                 .keys
                 .iter()
-                .map(|key| Felt252::from_(key.0))
+                .map(|key| Felt::from_(key.0))
                 .collect(),
             data: ordered_event
                 .event
                 .data
                 .0
                 .iter()
-                .map(|el| Felt252::from_(*el))
+                .map(|el| Felt::from_(*el))
                 .collect(),
         }
     }

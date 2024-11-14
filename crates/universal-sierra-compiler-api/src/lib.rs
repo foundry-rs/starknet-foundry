@@ -1,7 +1,6 @@
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use cairo_lang_casm::hints::Hint;
-use cairo_lang_sierra::program::Program;
-use camino::Utf8PathBuf;
+use camino::Utf8Path;
 use num_bigint::BigInt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -39,36 +38,40 @@ pub struct AssembledCairoProgramWithSerde {
     pub hints: Vec<(usize, Vec<Hint>)>,
 }
 
-pub fn compile_sierra_to_casm(
-    sierra_file_path: Option<&Utf8PathBuf>,
-    sierra_program: &Program,
-) -> Result<AssembledProgramWithDebugInfo> {
-    let assembled_with_info_raw = if let Some(sierra_file_path) = sierra_file_path {
-        compile_sierra_at_path(sierra_file_path, &SierraType::Raw)?
-    } else {
-        compile_sierra(&serde_json::to_value(sierra_program)?, &SierraType::Raw)?
-    };
-
-    let assembled_with_info: AssembledProgramWithDebugInfo =
-        serde_json::from_str(&assembled_with_info_raw)?;
-
-    Ok(assembled_with_info)
+pub trait UniversalSierraCompilerOutput {
+    fn convert(output: String) -> Self;
 }
 
-pub fn compile_sierra(sierra_contract_class: &Value, sierra_type: &SierraType) -> Result<String> {
+impl UniversalSierraCompilerOutput for String {
+    fn convert(output: String) -> Self {
+        output
+    }
+}
+
+impl UniversalSierraCompilerOutput for AssembledProgramWithDebugInfo {
+    fn convert(output: String) -> Self {
+        serde_json::from_str(&output).expect("Failed to deserialize casm from json string")
+    }
+}
+
+pub fn compile_sierra<T: UniversalSierraCompilerOutput>(
+    sierra_json: &Value,
+    sierra_type: &SierraType,
+) -> Result<T> {
     let mut temp_sierra_file = Builder::new().tempfile()?;
-    let _ = temp_sierra_file.write(serde_json::to_vec(sierra_contract_class)?.as_slice())?;
+    temp_sierra_file.write_all(serde_json::to_vec(sierra_json)?.as_slice())?;
 
     compile_sierra_at_path(
-        &Utf8PathBuf::from(temp_sierra_file.path().to_string_lossy().to_string()),
+        Utf8Path::from_path(temp_sierra_file.path())
+            .ok_or_else(|| anyhow!("Failed to create Utf8Path from temp file path"))?,
         sierra_type,
     )
 }
 
-pub fn compile_sierra_at_path(
-    sierra_file_path: &Utf8PathBuf,
+pub fn compile_sierra_at_path<T: UniversalSierraCompilerOutput>(
+    sierra_file_path: &Utf8Path,
     sierra_type: &SierraType,
-) -> Result<String> {
+) -> Result<T> {
     let spinner = spawn_spinner_message(sierra_file_path)?;
 
     let mut usc_command = UniversalSierraCompilerCommand::new();
@@ -89,7 +92,7 @@ pub fn compile_sierra_at_path(
 
     spinner.finish_and_clear();
 
-    Ok(from_utf8(&usc_output.stdout)?.to_string())
+    Ok(T::convert(from_utf8(&usc_output.stdout)?.to_string()))
 }
 
 pub enum SierraType {

@@ -1,5 +1,4 @@
 use crate::state::{CheatedData, CheatedTxInfo};
-use cairo_vm::Felt252;
 use cairo_vm::{
     types::relocatable::{MaybeRelocatable, Relocatable},
     vm::vm_core::VirtualMachine,
@@ -8,6 +7,7 @@ use conversions::{
     serde::serialize::{raw::RawFeltVec, SerializeToFeltVec},
     IntoConv,
 };
+use starknet_types_core::felt::Felt;
 
 fn get_cheated_block_info_ptr(
     vm: &mut VirtualMachine,
@@ -169,10 +169,7 @@ pub fn get_cheated_exec_info_ptr(
     ptr_cheated_exec_info
 }
 
-fn add_vec_memory_segment(
-    vector: &[Felt252],
-    vm: &mut VirtualMachine,
-) -> (Relocatable, Relocatable) {
+fn add_vec_memory_segment(vector: &[Felt], vm: &mut VirtualMachine) -> (Relocatable, Relocatable) {
     let vector_len = vector.len();
     let vector_start_ptr = vm.add_memory_segment();
     let vector_end_ptr = (vector_start_ptr + vector_len).unwrap();

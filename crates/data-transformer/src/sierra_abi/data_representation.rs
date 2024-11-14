@@ -1,11 +1,11 @@
 use crate::cairo_types::{CairoBytes31, CairoU256, CairoU384, CairoU512, CairoU96};
 use anyhow::{bail, Context};
-use conversions::felt252::FromShortString;
+use conversions::felt::FromShortString;
 use conversions::{
     byte_array::ByteArray,
     serde::serialize::{BufferWriter, CairoSerialize},
 };
-use starknet::core::types::Felt;
+use starknet_types_core::felt::Felt;
 use std::{any::type_name, str::FromStr};
 
 fn neat_parsing_error_message(value: &str, parsing_type: &str, reason: Option<&str>) -> String {
