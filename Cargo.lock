@@ -2162,7 +2162,6 @@ dependencies = [
  "fs_extra",
  "futures",
  "include_dir",
- "indicatif",
  "indoc",
  "itertools 0.12.1",
  "lazy_static",
