@@ -1,3 +1,4 @@
+use crate::backtrace::add_back_trace_footer;
 use crate::build_trace_data::build_profiler_call_trace;
 use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
@@ -8,7 +9,7 @@ use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use cheatnet::state::CallTrace as InternalCallTrace;
+use cheatnet::state::{CallTrace as InternalCallTrace, EncounteredError};
 use conversions::byte_array::ByteArray;
 use num_traits::Pow;
 use shared::utils::build_readable_text;
@@ -216,11 +217,13 @@ impl TestCaseSummary<Single> {
         gas: u128,
         used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
+        encountered_errors: &[EncounteredError],
         contracts_data: &ContractsData,
         maybe_versioned_program_path: &Option<VersionedProgramPath>,
     ) -> Self {
         let name = test_case.name.clone();
-        let msg = extract_result_data(&run_result, &test_case.config.expected_result);
+        let msg = extract_result_data(&run_result, &test_case.config.expected_result)
+            .map(|msg| add_back_trace_footer(msg, contracts_data, encountered_errors));
         match run_result.value {
             RunResultValue::Success(_) => match &test_case.config.expected_result {
                 ExpectedTestResult::Success => {
