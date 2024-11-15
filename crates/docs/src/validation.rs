@@ -1,9 +1,8 @@
 use regex::Regex;
-use std::env;
-use std::fs;
-use std::io;
-use std::path::Path;
-use std::path::PathBuf;
+use std::{
+    env, fs, io,
+    path::{Path, PathBuf},
+};
 
 pub fn extract_matches_from_file(
     file_path: &Path,
@@ -26,19 +25,15 @@ pub fn extract_matches_from_directory(
     let mut all_snippets = Vec::new();
 
     for entry in fs::read_dir(dir_path)? {
-        let entry = entry?;
-        let path = entry.path();
+        let path = entry?.path();
 
         if path.is_dir() {
             all_snippets.extend(extract_matches_from_directory(&path, re, extension)?);
-        } else if let Some(ext) = extension {
-            if path.extension().and_then(|e| e.to_str()) == Some(ext) {
-                let snippets = extract_matches_from_file(&path, re)?;
-
-                if !snippets.is_empty() {
-                    all_snippets.extend(snippets);
-                }
-            }
+        } else if extension.map_or(true, |ext| {
+            path.extension().and_then(|path_ext| path_ext.to_str()) == Some(ext)
+        }) {
+            let snippets = extract_matches_from_file(&path, re)?;
+            all_snippets.extend(snippets);
         }
     }
 

@@ -64,8 +64,7 @@ fn test_docs_snippets() {
 
         assert_ne!(
             exit_code, 2,
-            "Found invalid sncast snippet in the docs: {:?}\n{}",
-            snippet, stderr
+            "Found invalid sncast snippet in the docs: {snippet}\n{stderr}"
         );
     }
 }
