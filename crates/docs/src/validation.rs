@@ -59,7 +59,7 @@ pub fn get_parent_dir(levels_up: usize) -> PathBuf {
     dir
 }
 
-pub fn parse_snippet_str_to_command_args(snippet: &str) -> Vec<String> {
+pub fn snippet_to_command_args(snippet: &str) -> Vec<String> {
     let cleaned_snippet = snippet
         .lines()
         .map(str::trim_end)
