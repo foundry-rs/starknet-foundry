@@ -7,6 +7,8 @@ use tempfile::tempdir;
 
 use crate::helpers::runner::runner;
 
+// TODO(#2678)
+// While refactoring, please refer to respective test in forge
 #[test]
 fn test_docs_snippets() {
     let tempdir: tempfile::TempDir = tempdir().expect("Unable to create a temporary directory");
