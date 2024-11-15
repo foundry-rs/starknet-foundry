@@ -57,7 +57,6 @@ $ sncast account deploy \
     --version v1 \
     --max-fee 9999999999999
 ```
-</details>
 
 > 📝 **Note**
 > The unit used in `--max-fee` flag is the smallest unit of the given fee token. For ETH it is Wei, for STRK it is Fri.

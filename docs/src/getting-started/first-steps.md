@@ -78,8 +78,6 @@ Make sure that the above version matches the installed `snforge` version. You ca
 ```shell
 $ snforge --version
 ```
-</details>
-<br>
 
 <details>
 <summary>Output:</summary>
