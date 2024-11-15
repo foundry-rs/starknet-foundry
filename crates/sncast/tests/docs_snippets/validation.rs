@@ -1,19 +1,21 @@
-use crate::helpers::runner::runner;
 use docs::validation::{
     extract_matches_from_directory, extract_matches_from_file, get_parent_dir,
-    parse_snippet_str_to_command_args,
+    snippet_to_command_args,
 };
 use regex::Regex;
 use tempfile::tempdir;
 
+use crate::helpers::runner::runner;
+
 #[test]
 fn test_docs_snippets() {
     let tempdir: tempfile::TempDir = tempdir().expect("Unable to create a temporary directory");
+
     let root_dir_path = get_parent_dir(2);
     let docs_dir_path = root_dir_path.join("docs/src");
     let sncast_readme_path = root_dir_path.join("crates/sncast/README.md");
 
-    let re = Regex::new(r"(?ms)```shell\n\$ sncast(.+?)\n```").expect("Invalid regex pattern");
+    let re = Regex::new(r"(?ms)```shell\n\$ (sncast .+?)\n```").expect("Invalid regex pattern");
     let extension = Some("md");
     let docs_snippets = extract_matches_from_directory(&docs_dir_path, &re, extension)
         .expect("Failed to extract sncast command snippets");
@@ -45,8 +47,9 @@ fn test_docs_snippets() {
     ];
 
     for snippet in snippets.clone() {
-        let args = parse_snippet_str_to_command_args(snippet.as_str());
-        let args: Vec<&str> = args.iter().map(String::as_str).collect();
+        let args = snippet_to_command_args(snippet.as_str());
+        let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
+        args.remove(0);
 
         if skipped_args.contains(&args) {
             continue;
@@ -59,12 +62,8 @@ fn test_docs_snippets() {
 
         assert_ne!(
             exit_code, 2,
-            "The command {snippet} failed. Stderr: {stderr}"
+            "Found invalid sncast snippet in the docs: {:?}\n{}",
+            snippet, stderr
         );
     }
-
-    println!(
-        "Validated {} sncast command snippets in the docs",
-        snippets.len()
-    );
 }
