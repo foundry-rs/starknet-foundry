@@ -136,14 +136,46 @@ pub fn call(
 }
 
 #[derive(Drop, Copy, Debug, Serde)]
-pub struct DeclareResult {
+pub enum DeclareResult {
+    AlreadyDeclared: AlreadyDeclaredResult,
+    Success: DeclareTransactionResult,
+}
+
+#[derive(Drop, Copy, Debug, Serde)]
+pub struct DeclareTransactionResult {
     pub class_hash: ClassHash,
     pub transaction_hash: felt252,
 }
 
+#[derive(Drop, Copy, Debug, Serde)]
+pub struct AlreadyDeclaredResult {
+    pub class_hash: ClassHash,
+}
+
+pub trait DeclareResultTrait {
+    fn class_hash(self: @DeclareResult) -> @ClassHash;
+}
+
+impl DeclareResultImpl of DeclareResultTrait {
+    fn class_hash(self: @DeclareResult) -> @ClassHash {
+        match self {
+            DeclareResult::Success(result) => result.class_hash,
+            DeclareResult::AlreadyDeclared(result) => result.class_hash
+        }
+    }
+}
+
 impl DisplayDeclareResult of Display<DeclareResult> {
     fn fmt(self: @DeclareResult, ref f: Formatter) -> Result<(), Error> {
-        write!(f, "class_hash: {}, transaction_hash: {}", *self.class_hash, *self.transaction_hash)
+        match self {
+            DeclareResult::Success(result) => write!(
+                f,
+                "class_hash: {}, transaction_hash: {}",
+                result.class_hash,
+                result.transaction_hash
+            ),
+            DeclareResult::AlreadyDeclared(result) => write!(f, "class_hash: {}", result.class_hash)
+        }
     }
 }
 

@@ -78,13 +78,14 @@ async fn test_same_contract_twice() {
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
-    snapbox.assert().success().stdout_matches(indoc! {r#"
+    snapbox.assert().success().stdout_matches(indoc! {"
         ...
         success
-        ScriptCommandError::ProviderError(ProviderError::UnknownError(ErrorData { msg: "JSON-RPC error: code=-1, message="Class with hash [..] is already declared."" }))
+        DeclareResult::Success(DeclareTransactionResult { class_hash: [..], transaction_hash: [..] })
+        DeclareResult::AlreadyDeclared(AlreadyDeclaredResult { class_hash: [..] })
         command: script run
         status: success
-    "#});
+    "});
 }
 
 #[tokio::test]

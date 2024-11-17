@@ -88,8 +88,9 @@ pub fn load_test_artifacts(
             };
 
         let target_file = format!("{target_name}.test.sierra.json");
+        let sierra_file_path = target_dir.join(target_file);
 
-        match read_to_string(target_dir.join(target_file)) {
+        match read_to_string(&sierra_file_path) {
             Ok(value) => {
                 let versioned_program = serde_json::from_str::<VersionedProgram>(&value)?;
 
@@ -98,6 +99,7 @@ pub fn load_test_artifacts(
                 };
 
                 let test_target = TestTargetRaw {
+                    sierra_file_path,
                     sierra_program,
                     tests_location,
                 };

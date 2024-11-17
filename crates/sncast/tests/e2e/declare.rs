@@ -308,7 +308,11 @@ async fn test_happy_case_specify_package() {
 
 #[tokio::test]
 async fn test_contract_already_declared() {
-    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    let tempdir = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "8512851",
+    );
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -334,7 +338,7 @@ async fn test_contract_already_declared() {
         output,
         indoc! {r"
         command: declare
-        error: An error occurred [..]Class with hash[..]is already declared[..]
+        error: [..]Class with hash[..]is already declared[..]
         "},
     );
 }
@@ -377,7 +381,11 @@ async fn test_invalid_nonce() {
 
 #[tokio::test]
 async fn test_wrong_contract_name_passed() {
-    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    let tempdir = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "521754725",
+    );
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -487,8 +495,11 @@ fn test_scarb_build_fails_manifest_does_not_exist() {
 
 #[test]
 fn test_too_low_max_fee() {
-    let contract_path =
-        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "2");
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "2451825",
+    );
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -677,7 +688,7 @@ async fn test_worskpaces_package_no_contract() {
 #[tokio::test]
 async fn test_no_scarb_profile() {
     let contract_path =
-        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "69");
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "694215");
     fs::copy(
         "tests/data/files/correct_snfoundry.toml",
         contract_path.path().join(CONFIG_FILENAME),
