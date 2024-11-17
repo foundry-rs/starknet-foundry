@@ -7,6 +7,8 @@ trait IConstructorCheatBlockHashChecker<TContractState> {
 #[starknet::contract]
 mod ConstructorCheatBlockHashChecker {
     use box::BoxTrait;
+    use starknet::{get_block_info, get_block_hash_syscall};
+
     #[storage]
     struct Storage {
         blk_hash: felt252,
