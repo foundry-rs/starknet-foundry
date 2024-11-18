@@ -16,6 +16,8 @@ use cairo_lang_sierra::{
 };
 use cairo_lang_sierra_type_size::get_type_size_map;
 use cairo_lang_utils::unordered_hash_map::UnorderedHashMap;
+use rayon::iter::IntoParallelRefIterator;
+use rayon::iter::ParallelIterator;
 use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, sync::Arc};
 use universal_sierra_compiler_api::{compile_sierra_at_path, SierraType};
@@ -58,7 +60,7 @@ pub fn test_target_with_config(test_target_raw: TestTargetRaw) -> Result<TestTar
         .unwrap_or(&default_executables);
 
     let test_cases = executables
-        .iter()
+        .par_iter()
         .map(|case| -> Result<TestCaseWithConfig> {
             let func = funcs[&case.id];
 
