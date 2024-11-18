@@ -79,11 +79,19 @@ As written above, each file in `tests` directory is treated as a separate module
 
 ```shell
 $ tree
+```
+
+<details open>
+<summary>Output:</summary>
+
+```shell
 tests/
 ├── module1.cairo <-- is collected
 ├── module2.cairo <-- is collected
 └── module3.cairo <-- is collected
 ```
+
+</details>
 
 Scarb will collect each file and compile it as a
 separate [test target](https://docs.swmansion.com/scarb/docs/reference/targets.html#test-targets).
@@ -96,12 +104,20 @@ Only tests that are reachable from this file will be collected and compiled.
 
 ```shell
 $ tree
+```
+
+<details open>
+<summary>Output:</summary>
+
+```shell
 tests/
 ├── lib.cairo
 ├── module1.cairo  <-- is collected
 ├── module2.cairo  <-- is collected
 └── module3.cairo  <-- is not collected
 ```
+
+</details>
 
 ```rust
 // tests/lib.cairo
