@@ -34,3 +34,6 @@ To use contract from dependencies in tests `Scarb.toml` must be updated to inclu
 [[target.starknet-contract]]
 build-external-contracts = ["path::to::Contract1", "other::path::to::Contract2"]
 ```
+
+For more information about `build-external-contracts`,
+see [Scarb documentation](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#compiling-external-contracts).
