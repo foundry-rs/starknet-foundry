@@ -4,7 +4,7 @@ When you call `snforge test`, one of the things that `snforge` does is that it c
 It makes Scarb build all contracts from your package and save them to the `target/{current_profile}` directory
 (read more on [Scarb website](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html)).
 
-Then, `snforge` loads compiled contracts from the package your tests are in, allowing you to declare the contracts in
+Then, `snforge` loads compiled contracts from the package your tests are located, allowing you to declare the contracts in
 tests.
 
 Only contracts from `src/` directory are loaded. Contracts from `/tests` and modules marked with `#[cfg(test)]` are not
