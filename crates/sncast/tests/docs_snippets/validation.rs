@@ -71,5 +71,5 @@ fn test_docs_snippets() {
     println!(
         "Successfully validated {} sncast docs snippets",
         snippets.len()
-    )
+    );
 }

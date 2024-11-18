@@ -39,5 +39,5 @@ fn test_docs_snippets() {
     println!(
         "Successfully validated {} snforge docs snippets",
         snippets.len()
-    )
+    );
 }
