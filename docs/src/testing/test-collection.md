@@ -85,9 +85,9 @@ tests/
 └── module3.cairo <-- is collected
 ```
 
-Scarb will collect each of the file and compile it as a
+Scarb will collect each file and compile it as a
 separate [test target](https://docs.swmansion.com/scarb/docs/reference/targets.html#test-targets).
-Each of this target will be run separately by `snforge`.
+Each of these targets will be run separately by `snforge`.
 
 However, it is also possible to define `lib.cairo` file in `tests`.
 This stops files in `tests` from being treated as separate modules.
