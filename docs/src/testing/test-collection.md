@@ -33,7 +33,7 @@ in [Scarb documentation](https://docs.swmansion.com/scarb/docs/extensions/testin
 ### Unit Tests
 
 Test placed in `src` directory are often called unit tests.
-For these test to function in snforge, they must be wrapped in a module marked with `test` attribute.
+For these test to function in snforge, they must be wrapped in a module marked with `#[cfg(test)]` attribute.
 
 ```rust
 // src/example.rs
