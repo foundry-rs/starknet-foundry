@@ -1,5 +1,7 @@
 use clap::Parser;
-use docs::validation::{extract_matches_from_directory, get_parent_dir, snippet_to_command_args};
+use docs::validation::{
+    assert_valid_snippet, extract_snippets_from_directory, get_parent_dir, print_success_message,
+};
 use forge::Cli;
 use regex::Regex;
 #[test]
@@ -10,7 +12,7 @@ fn test_docs_snippets() {
     let re = Regex::new(r"(?ms)```shell\n\$ (snforge .+?)\n```").expect("Invalid regex pattern");
     let extension = Some("md");
 
-    let snippets = extract_matches_from_directory(&docs_dir, &re, extension)
+    let snippets = extract_snippets_from_directory(&docs_dir, &re, extension)
         .expect("Failed to extract snforge command snippets");
 
     let skipped_args = [
@@ -19,7 +21,7 @@ fn test_docs_snippets() {
     ];
 
     for snippet in &snippets {
-        let args = snippet_to_command_args(snippet.as_str());
+        let args = snippet.to_command_args();
         let args: Vec<&str> = args.iter().map(String::as_str).collect();
 
         if skipped_args.contains(&args) {
@@ -28,16 +30,13 @@ fn test_docs_snippets() {
 
         let parse_result = Cli::try_parse_from(args);
 
-        assert!(
+        assert_valid_snippet(
             parse_result.is_ok(),
-            "Found invalid snforge snippet in the docs: {:?}\n{}",
             snippet,
-            parse_result.err().unwrap()
+            "snforge",
+            parse_result.err().unwrap().to_string().as_str(),
         );
     }
 
-    println!(
-        "Successfully validated {} snforge docs snippets",
-        snippets.len()
-    );
+    print_success_message(snippets.len(), "snforge");
 }

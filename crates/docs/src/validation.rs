@@ -4,35 +4,72 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub fn extract_matches_from_file(
-    file_path: &Path,
-    re: &Regex,
-) -> Result<Vec<String>, std::io::Error> {
-    let content = fs::read_to_string(file_path)?;
-    let matches: Vec<String> = re
-        .captures_iter(&content)
-        .filter_map(|caps| caps.get(1).map(|m| m.as_str().to_string()))
-        .collect();
-
-    Ok(matches)
+pub struct Snippet {
+    pub command: String,
+    pub file_path: String,
+    pub line_start: usize,
 }
 
-pub fn extract_matches_from_directory(
+impl Snippet {
+    pub fn to_command_args(&self) -> Vec<String> {
+        let cleaned_command = self
+            .command
+            .lines()
+            .map(str::trim_end)
+            .collect::<Vec<&str>>()
+            .join(" ")
+            .replace(" \\", "");
+
+        shell_words::split(&cleaned_command)
+            .expect("Failed to parse snippet string")
+            .into_iter()
+            .map(|arg| arg.trim().to_string())
+            .collect()
+    }
+}
+
+pub fn extract_snippets_from_file(
+    file_path: &Path,
+    re: &Regex,
+) -> Result<Vec<Snippet>, std::io::Error> {
+    let content = fs::read_to_string(file_path)?;
+    let mut snippets = Vec::new();
+
+    for caps in re.captures_iter(&content) {
+        if let Some(command_match) = caps.get(1) {
+            let match_position = content[..caps.get(0).unwrap().start()].lines().count();
+            let file_path = file_path
+                .to_str()
+                .expect("Failed to get file path")
+                .to_string();
+
+            snippets.push(Snippet {
+                command: command_match.as_str().to_string(),
+                file_path,
+                line_start: match_position + 1, // Line numbers are 1-based
+            });
+        }
+    }
+
+    Ok(snippets)
+}
+
+pub fn extract_snippets_from_directory(
     dir_path: &Path,
     re: &Regex,
     extension: Option<&str>,
-) -> io::Result<Vec<String>> {
+) -> io::Result<Vec<Snippet>> {
     let mut all_snippets = Vec::new();
 
     for entry in fs::read_dir(dir_path)? {
         let path = entry?.path();
 
         if path.is_dir() {
-            all_snippets.extend(extract_matches_from_directory(&path, re, extension)?);
+            all_snippets.extend(extract_snippets_from_directory(&path, re, extension)?);
         } else if extension.map_or(true, |ext| {
             path.extension().and_then(|path_ext| path_ext.to_str()) == Some(ext)
         }) {
-            let snippets = extract_matches_from_file(&path, re)?;
+            let snippets = extract_snippets_from_file(&path, re)?;
             all_snippets.extend(snippets);
         }
     }
@@ -54,17 +91,19 @@ pub fn get_parent_dir(levels_up: usize) -> PathBuf {
     dir
 }
 
-pub fn snippet_to_command_args(snippet: &str) -> Vec<String> {
-    let cleaned_snippet = snippet
-        .lines()
-        .map(str::trim_end)
-        .collect::<Vec<&str>>()
-        .join(" ")
-        .replace(" \\", "");
+pub fn assert_valid_snippet(
+    condition: bool,
+    snippet: &Snippet,
+    tool_name: &str,
+    err_message: &str,
+) {
+    assert!(
+        condition,
+        "Found invalid {} snippet '{}' in the docs in file: {} at line {}\n{}",
+        tool_name, snippet.command, snippet.file_path, snippet.line_start, err_message
+    );
+}
 
-    shell_words::split(&cleaned_snippet)
-        .expect("Failed to parse snippet string")
-        .into_iter()
-        .map(|arg| arg.trim().to_string())
-        .collect()
+pub fn print_success_message(snippets_len: usize, tool_name: &str) {
+    println!("Successfully validated {snippets_len} {tool_name} docs snippets");
 }
