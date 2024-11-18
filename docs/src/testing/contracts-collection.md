@@ -8,8 +8,7 @@ The default one depends on Scarb version used and can be controlled with `--no-o
 
 > 📝 **Note**
 >
-> When using Scarb versions older than 2.8.3 it is **not possible** to enable new mechanism.
-> Migrating to new Scarb version is required.
+> Enabling new mechanism **requires** Scarb version >= 2.8.3.
 
 ## Differences Between Collection Mechanisms
 
