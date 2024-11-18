@@ -23,6 +23,7 @@ $ tree . -L 1
 .
 ├── Scarb.lock
 ├── Scarb.toml
+├── snfoundry.toml
 ├── src
 └── tests
 
