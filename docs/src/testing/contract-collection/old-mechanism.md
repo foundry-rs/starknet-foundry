@@ -19,7 +19,7 @@ see [conditional compilation](../../snforge-advanced-features/conditional-compil
 ## Using External Contracts In Tests
 
 If you wish to use contracts from your dependencies inside your tests (e.g. an ERC20 token, an account contract),
-you must first make Scarb build them. You can do that by using `build-external-contracts` property in `Scarb.toml`,
+you must first make Scarb build them. You can do that by using `build-external-contracts` key in `Scarb.toml`,
 e.g.:
 
 ```toml
