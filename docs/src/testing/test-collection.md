@@ -1,7 +1,7 @@
 # How Tests Are Collected
 
-Snforge executes tests however it does not compile them.  
-Instead, to compile tests, snforge internally runs `scarb build --test` command.
+Snforge executes tests, but it does not compile them directly.
+Instead, it compiles tests by internally running `scarb build --test` command.
 
 The `snforge_scarb_plugin` dependency, which is included with `snforge_std` dependency makes all functions
 marked with `#[test]` executable and indicates to Scarb they should be compiled.
