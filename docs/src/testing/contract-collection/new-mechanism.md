@@ -27,7 +27,7 @@ No specific order of collection is guaranteed.
 
 ## Using External Contracts in Tests
 
-To use contract from dependencies in tests `Scarb.toml` must be updated to include these contracts under
+To use contract from dependencies in tests, `Scarb.toml` must be updated to include these contracts under
 `[[target.starknet-contract]]`.
 
 ```toml
