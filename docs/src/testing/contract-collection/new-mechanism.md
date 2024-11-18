@@ -17,7 +17,7 @@ When multiple `[[test]]` targets are present, snforge will first try to collect 
 target. If `integration` is not present, snforge will first collect contracts from the first encountered `[[test]]`
 target.
 
-After collecting from initial `[[test]]` target, snforge will collect contracts from any other encountered contracts.
+After collecting from initial `[[test]]` target, snforge will collect contracts from any other encountered targets.
 No specific order of collection is guaranteed.
 
 > 📝 **Note**
