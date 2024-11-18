@@ -11,10 +11,10 @@ function get_all_patch_versions() {
 }
 
 function get_latest_patch_version() {
-  get_all_patch_versions $1 | sort -u | tail -1
+  get_all_patch_versions $1 | sort -uV | tail -1
 }
 
-major_minor_versions=($(get_all_patch_versions | cut -d . -f 1,2 | sort -u | tail -3))
+major_minor_versions=($(get_all_patch_versions | cut -d . -f 1,2 | sort -uV | tail -3))
 
 scarb_versions=()
 
