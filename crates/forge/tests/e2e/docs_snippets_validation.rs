@@ -29,13 +29,12 @@ fn test_docs_snippets() {
         }
 
         let parse_result = Cli::try_parse_from(args);
-
-        assert_valid_snippet(
-            parse_result.is_ok(),
-            snippet,
-            "snforge",
-            parse_result.err().unwrap().to_string().as_str(),
-        );
+        let err_message = if let Err(err) = &parse_result {
+            err.to_string()
+        } else {
+            "".to_string()
+        };
+        assert_valid_snippet(parse_result.is_ok(), snippet, "snforge", &err_message);
     }
 
     print_success_message(snippets.len(), "snforge");
