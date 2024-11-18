@@ -24,6 +24,12 @@ Then run `snforge test` like usual.
 
 ```shell
 $ snforge test
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 Collected 1 test(s) from fuzz_testing package
 Running 1 test(s) from src/
 Running 0 test(s) from tests/
@@ -31,6 +37,8 @@ Running 0 test(s) from tests/
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 Fuzzer seed: [..]
 ```
+</details>
+<br>
 
 ## Types Supported by the Fuzzer
 

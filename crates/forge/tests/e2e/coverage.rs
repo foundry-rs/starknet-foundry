@@ -36,7 +36,7 @@ fn test_coverage_project_and_pass_args() {
 }
 
 #[test]
-#[cfg_attr(feature = "scarb_2_8_3", ignore)]
+#[cfg_attr(not(feature = "scarb_2_7_1"), ignore)]
 fn test_fail_on_scarb_version_lt_2_8_0() {
     let temp = setup_package("coverage_project");
 

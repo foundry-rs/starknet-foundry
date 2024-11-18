@@ -123,12 +123,12 @@ Numeric types (primitives and `felt252`) can be paseed with type suffix specifie
 
 1. `complex_fn` - different data types:
 
-  ```shell
-  $ sncast call \
-      --url http://127.0.0.1:5050 \
-      --contract-address 0x016ad425af4585102e139d4fb2c76ce786d1aaa1cfcd88a51f3ed66601b23cdd \
-      --function complex_fn \
-      --arguments \
+```shell
+$ sncast call \
+    --url http://127.0.0.1:5050 \
+    --contract-address 0x016ad425af4585102e139d4fb2c76ce786d1aaa1cfcd88a51f3ed66601b23cdd \
+    --function complex_fn \
+    --arguments \
 'array![array![1, 2], array![3, 4, 5], array![6]],'\
 '12,'\
 '-128_i8,'\
@@ -136,8 +136,8 @@ Numeric types (primitives and `felt252`) can be paseed with type suffix specifie
 "('a shortstring', 32_u32),"\
 'true,'\
 '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' \
-      --block-id latest
-  ```
+    --block-id latest
+```
 
 > 📝 **Note**
 > In bash and similar shells indentation and whitespace matters when providing multiline strings with `\`
@@ -146,20 +146,20 @@ Numeric types (primitives and `felt252`) can be paseed with type suffix specifie
 
 Alternatively, you can continue the single quote for multiple lines.
 
-  ```shell
-  $ sncast call \
-      --url http://127.0.0.1:5050 \
-      --contract-address 0x016ad425af4585102e139d4fb2c76ce786d1aaa1cfcd88a51f3ed66601b23cdd \
-      --function complex_fn \
-      --arguments 'array![array![1, 2], array![3, 4, 5], array![6]],
+```shell
+$ sncast call \
+    --url http://127.0.0.1:5050 \
+    --contract-address 0x016ad425af4585102e139d4fb2c76ce786d1aaa1cfcd88a51f3ed66601b23cdd \
+    --function complex_fn \
+    --arguments 'array![array![1, 2], array![3, 4, 5], array![6]],
 12,
 -128_i8,
 "Some string (a ByteArray)",
 ('\''a shortstring'\'', 32_u32),
 true,
 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' \
-      --block-id latest
-  ```
+    --block-id latest
+```
 
 > 📝 **Note**
 > In bash and similar shells any `'` must be escaped correctly.
@@ -168,15 +168,15 @@ true,
 
 2. `nested_struct_fn` - struct nesting:
 
-  ```shell
-  $ sncast call \
-      --url http://127.0.0.1:5050 \
-      --contract-address 0x016ad425af4585102e139d4fb2c76ce786d1aaa1cfcd88a51f3ed66601b23cdd \
-      --function nested_struct_fn \
-      --arguments \
+```shell
+$ sncast call \
+    --url http://127.0.0.1:5050 \
+    --contract-address 0x016ad425af4585102e139d4fb2c76ce786d1aaa1cfcd88a51f3ed66601b23cdd \
+    --function nested_struct_fn \
+    --arguments \
 'data_transformer_contract::NestedStructWithField {'\
 '    a: data_transformer_contract::SimpleStruct { a: 10 },'\
 '    b: 12'\
 '}'\
       --block-id latest
-  ```
+```

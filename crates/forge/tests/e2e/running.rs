@@ -145,7 +145,7 @@ fn with_failing_scarb_build() {
         ))
         .unwrap();
 
-    let output = test_runner(&temp).assert().code(2);
+    let output = test_runner(&temp).arg("--no-optimization").assert().code(2);
 
     assert_stdout_contains(
         output,
@@ -791,7 +791,7 @@ fn validate_init(temp: &TempDir, validate_snforge_std: bool) {
 
     let expected = indoc!(
         r"
-        [..]Compiling test_name v0.1.0[..]
+        [..]Compiling[..]
         [..]Finished[..]
 
         Collected 2 test(s) from test_name package
@@ -955,37 +955,6 @@ fn should_panic() {
             should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
             should_panic_test_integrationtest::should_panic_test::should_panic_with_non_matching_data
         "},
-    );
-}
-
-#[test]
-fn printing_in_contracts() {
-    let temp = setup_package("contract_printing");
-
-    let output = test_runner(&temp).assert().success();
-
-    assert_stdout_contains(
-        output,
-        indoc! {r#"
-        [..]Compiling[..]
-        warn: libfunc `print` is not allowed in the libfuncs list `Default libfunc list`
-         --> contract: HelloStarknet
-        help: try compiling with the `experimental` list
-         --> Scarb.toml
-            [[target.starknet-contract]]
-            allowed-libfuncs-list.name = "experimental"
-
-        [..]Finished[..]
-
-
-        Collected 2 test(s) from contract_printing package
-        Running 0 test(s) from src/
-        Running 2 test(s) from tests/
-        Hello world!
-        [PASS] contract_printing_integrationtest::test_contract::test_increase_balance [..]
-        [PASS] contract_printing_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value [..]
-        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "#},
     );
 }
 

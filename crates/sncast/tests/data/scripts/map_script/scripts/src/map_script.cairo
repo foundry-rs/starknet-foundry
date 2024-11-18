@@ -1,6 +1,6 @@
 use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce,
-    FeeSettings, EthFeeSettings
+    declare, deploy, invoke, call, DeclareResult, DeployResult, DeclareResultTrait, InvokeResult,
+    CallResult, get_nonce, FeeSettings, EthFeeSettings
 };
 
 fn second_contract() {
@@ -10,7 +10,7 @@ fn second_contract() {
         .expect('mapa2 declare failed');
 
     let deploy_result = deploy(
-        declare_result.class_hash,
+        *declare_result.class_hash(),
         ArrayTrait::new(),
         Option::None,
         false,
@@ -47,10 +47,10 @@ fn main() {
     )
         .expect('mapa declare failed');
 
-    let class_hash = declare_result.class_hash;
+    let class_hash = declare_result.class_hash();
     let deploy_nonce = get_nonce('pending');
     let deploy_result = deploy(
-        class_hash,
+        *class_hash,
         ArrayTrait::new(),
         Option::Some(salt),
         true,

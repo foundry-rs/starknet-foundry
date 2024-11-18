@@ -25,6 +25,12 @@ For example, for a package structured this way:
 
 ```shell
 $ tree .
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 .
 ├── Scarb.toml
 ├── tests/
@@ -37,6 +43,8 @@ $ tree .
 └── src/
     └── lib.cairo
 ```
+</details>
+<br>
 
 with `tests/lib.cairo` content:
 
@@ -65,6 +73,12 @@ For example, for a package structured this way:
 
 ```shell
 $ tree .
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 .
 ├── Scarb.toml
 ├── tests/
@@ -77,6 +91,8 @@ $ tree .
 └── src/
     └── lib.cairo
 ```
+</details>
+<br>
 
 and `tests/common.cairo` content:
 
