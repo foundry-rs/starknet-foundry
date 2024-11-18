@@ -68,7 +68,6 @@ url.workspace = true
 fs_extra.workspace = true
 project-root.workspace = true
 indoc.workspace = true
-docs = { workspace = true, features = ["testing"] }
 
 [[bin]]
 name = "snforge"
@@ -84,3 +83,4 @@ tempfile.workspace = true
 cairo-lang-starknet-classes.workspace = true
 walkdir.workspace = true
 test-case.workspace = true
+docs = { workspace = true, features = ["testing"] }
