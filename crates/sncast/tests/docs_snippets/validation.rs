@@ -7,8 +7,6 @@ use tempfile::tempdir;
 
 use crate::helpers::runner::runner;
 
-// TODO(#2678)
-// While refactoring, please refer to respective test in forge
 #[test]
 fn test_docs_snippets() {
     let tempdir: tempfile::TempDir = tempdir().expect("Unable to create a temporary directory");
@@ -56,6 +54,8 @@ fn test_docs_snippets() {
         if skipped_args.contains(&args) {
             continue;
         }
+
+        // TODO(#2678): Before running the command we should check it it's at least valid
 
         let snapbox = runner(&args).current_dir(tempdir.path());
         let output = snapbox.output().expect("Failed to execute the command");
