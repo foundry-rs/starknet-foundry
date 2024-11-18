@@ -1895,6 +1895,7 @@ version = "0.33.0"
 dependencies = [
  "regex",
  "shell-words",
+ "walkdir",
 ]
 
 [[package]]

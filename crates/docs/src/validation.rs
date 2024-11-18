@@ -4,6 +4,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+const EXTENSION: Option<&str> = Some("md");
+
 pub struct Snippet {
     pub command: String,
     pub file_path: String,
@@ -28,10 +30,7 @@ impl Snippet {
     }
 }
 
-pub fn extract_snippets_from_file(
-    file_path: &Path,
-    re: &Regex,
-) -> Result<Vec<Snippet>, std::io::Error> {
+pub fn extract_snippets_from_file(file_path: &Path, re: &Regex) -> io::Result<Vec<Snippet>> {
     let content = fs::read_to_string(file_path)?;
     let mut snippets = Vec::new();
 
@@ -54,22 +53,22 @@ pub fn extract_snippets_from_file(
     Ok(snippets)
 }
 
-pub fn extract_snippets_from_directory(
-    dir_path: &Path,
-    re: &Regex,
-    extension: Option<&str>,
-) -> io::Result<Vec<Snippet>> {
+pub fn extract_snippets_from_directory(dir_path: &Path, re: &Regex) -> io::Result<Vec<Snippet>> {
     let mut all_snippets = Vec::new();
 
-    for entry in fs::read_dir(dir_path)? {
-        let path = entry?.path();
+    let entries = walkdir::WalkDir::new(dir_path)
+        .into_iter()
+        .filter_map(Result::ok);
 
-        if path.is_dir() {
-            all_snippets.extend(extract_snippets_from_directory(&path, re, extension)?);
-        } else if extension.map_or(true, |ext| {
-            path.extension().and_then(|path_ext| path_ext.to_str()) == Some(ext)
-        }) {
-            let snippets = extract_snippets_from_file(&path, re)?;
+    for entry in entries {
+        let path = entry.path();
+
+        if path.is_file()
+            && EXTENSION.map_or(true, |ext| {
+                path.extension().and_then(|path_ext| path_ext.to_str()) == Some(ext)
+            })
+        {
+            let snippets = extract_snippets_from_file(path, re)?;
             all_snippets.extend(snippets);
         }
     }
@@ -99,11 +98,18 @@ pub fn assert_valid_snippet(
 ) {
     assert!(
         condition,
-        "Found invalid {} snippet '{}' in the docs in file: {} at line {}\n{}",
-        tool_name, snippet.command, snippet.file_path, snippet.line_start, err_message
+        "Found invalid {} snippet in the docs in file: {} at line {}\n{}",
+        tool_name, snippet.file_path, snippet.line_start, err_message
     );
 }
 
 pub fn print_success_message(snippets_len: usize, tool_name: &str) {
     println!("Successfully validated {snippets_len} {tool_name} docs snippets");
+}
+
+pub fn print_skipped_snippet_message(snippet: &Snippet, tool_name: &str) {
+    println!(
+        "Skipped validation of {} snippet in the docs in file: {} at line {}",
+        tool_name, snippet.file_path, snippet.line_start
+    );
 }

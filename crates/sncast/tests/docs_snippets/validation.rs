@@ -1,6 +1,6 @@
 use docs::validation::{
     assert_valid_snippet, extract_snippets_from_directory, extract_snippets_from_file,
-    get_parent_dir, print_success_message, Snippet,
+    get_parent_dir, print_skipped_snippet_message, print_success_message, Snippet,
 };
 use regex::Regex;
 use tempfile::tempdir;
@@ -15,9 +15,9 @@ fn test_docs_snippets() {
     let docs_dir_path = root_dir_path.join("docs/src");
     let sncast_readme_path = root_dir_path.join("crates/sncast/README.md");
 
-    let re = Regex::new(r"(?ms)```shell\n\$ (sncast .+?)\n```").expect("Invalid regex pattern");
-    let extension = Some("md");
-    let docs_snippets = extract_snippets_from_directory(&docs_dir_path, &re, extension)
+    let re = Regex::new(r"(?ms)```shell\n\$ sncast(.+?)\n```").expect("Invalid regex pattern");
+
+    let docs_snippets = extract_snippets_from_directory(&docs_dir_path, &re)
         .expect("Failed to extract sncast command snippets");
 
     let readme_snippets = extract_snippets_from_file(&sncast_readme_path, &re)
@@ -28,6 +28,7 @@ fn test_docs_snippets() {
         .chain(readme_snippets)
         .collect::<Vec<Snippet>>();
 
+    // TODO(#2684)
     let skipped_args = [
         // snippet "$ sncast <subcommand>"
         vec!["<subcommand>"],
@@ -48,10 +49,10 @@ fn test_docs_snippets() {
 
     for snippet in &snippets {
         let args = snippet.to_command_args();
-        let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
-        args.remove(0);
+        let args: Vec<&str> = args.iter().map(String::as_str).collect();
 
         if skipped_args.contains(&args) {
+            print_skipped_snippet_message(snippet, "sncast");
             continue;
         }
 

@@ -8,3 +8,7 @@ license.workspace = true
 [dependencies]
 regex = "1.11.1"
 shell-words = "1.1.0"
+walkdir.workspace = true
+
+[features]
+testing = []
