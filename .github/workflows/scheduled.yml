@@ -6,7 +6,7 @@ on:
       - scripts/get_scarb_versions.sh
       - .github/workflows/scheduled.yml
   schedule:
-    - cron: '0 0 * * 3,6'
+    - cron: '0 0 * * 3,7'
 
 jobs:
   get-scarb-versions:
