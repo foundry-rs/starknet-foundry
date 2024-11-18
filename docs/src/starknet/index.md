@@ -32,7 +32,7 @@ $ sncast call \
     --url http://127.0.0.1:5050 \
     --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \
     --function "pokemon" \
-    --arguments '"Charizard"'
+    --arguments '"Charizard"' \
     --block-id latest
 ```
 
