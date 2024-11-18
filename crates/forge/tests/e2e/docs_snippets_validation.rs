@@ -18,7 +18,7 @@ fn test_docs_snippets() {
         vec!["snforge", "--version"],
     ];
 
-    for snippet in snippets {
+    for snippet in &snippets {
         let args = snippet_to_command_args(snippet.as_str());
         let args: Vec<&str> = args.iter().map(String::as_str).collect();
 
@@ -35,4 +35,9 @@ fn test_docs_snippets() {
             parse_result.err().unwrap()
         );
     }
+
+    println!(
+        "Successfully validated {} snforge docs snippets",
+        snippets.len()
+    )
 }

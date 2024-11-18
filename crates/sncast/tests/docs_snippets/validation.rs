@@ -46,7 +46,7 @@ fn test_docs_snippets() {
         ],
     ];
 
-    for snippet in snippets.clone() {
+    for snippet in &snippets {
         let args = snippet_to_command_args(snippet.as_str());
         let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
         args.remove(0);
@@ -55,7 +55,7 @@ fn test_docs_snippets() {
             continue;
         }
 
-        // TODO(#2678): Before running the command we should check it it's at least valid
+        // TODO(#2678):
 
         let snapbox = runner(&args).current_dir(tempdir.path());
         let output = snapbox.output().expect("Failed to execute the command");
@@ -67,4 +67,9 @@ fn test_docs_snippets() {
             "Found invalid sncast snippet in the docs: {snippet}\n{stderr}"
         );
     }
+
+    println!(
+        "Successfully validated {} sncast docs snippets",
+        snippets.len()
+    )
 }
