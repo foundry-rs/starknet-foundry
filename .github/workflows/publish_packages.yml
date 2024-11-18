@@ -28,9 +28,9 @@ jobs:
         run: |
           set -eo pipefail
 
-          snforge_std_version=$(cat snforge_std/Scarb.toml | grep version | cut -d '"' -f 2)
-          snforge_scarb_plugin_version=$(cat crates/snforge-scarb-plugin/Scarb.toml | grep version | cut -d '"' -f 2)
-          sncast_std_version=$(cat sncast_std/Scarb.toml | grep version | cut -d '"' -f 2)
+          snforge_std_version=$(grep version snforge_std/Scarb.toml | cut -d '"' -f 2)
+          snforge_scarb_plugin_version=$(grep version crates/snforge-scarb-plugin/Scarb.toml | cut -d '"' -f 2)
+          sncast_std_version=$(grep version sncast_std/Scarb.toml | cut -d '"' -f 2)
 
           snforge_scarb_plugin=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version $snforge_scarb_plugin_version '[.[] | select(.v == $version)] | length > 0')
           snforge_std=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_std.json | jq --arg version $snforge_std_version '[.[] | select(.v == $version)] | length > 0')
