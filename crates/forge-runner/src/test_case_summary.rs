@@ -1,4 +1,4 @@
-use crate::backtrace::add_back_trace_footer;
+use crate::backtrace::add_backtrace_footer;
 use crate::build_trace_data::build_profiler_call_trace;
 use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
@@ -223,7 +223,7 @@ impl TestCaseSummary<Single> {
     ) -> Self {
         let name = test_case.name.clone();
         let msg = extract_result_data(&run_result, &test_case.config.expected_result)
-            .map(|msg| add_back_trace_footer(msg, contracts_data, encountered_errors));
+            .map(|msg| add_backtrace_footer(msg, contracts_data, encountered_errors));
         match run_result.value {
             RunResultValue::Success(_) => match &test_case.config.expected_result {
                 ExpectedTestResult::Success => {

@@ -1,4 +1,4 @@
-use crate::backtrace::add_back_trace_footer;
+use crate::backtrace::add_backtrace_footer;
 use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
@@ -314,7 +314,7 @@ fn extract_test_case_summary(
                         error.to_string().replace(" Custom Hint Error: ", "\n    ")
                     ))
                     .map(|msg| {
-                        add_back_trace_footer(
+                        add_backtrace_footer(
                             msg,
                             contracts_data,
                             &result_with_info.encountered_errors,

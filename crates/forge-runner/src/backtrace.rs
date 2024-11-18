@@ -21,7 +21,7 @@ use std::{env, fmt};
 
 const BACKTRACE_ENV: &str = "SNFORGE_BACKTRACE";
 
-pub fn add_back_trace_footer(
+pub fn add_backtrace_footer(
     message: String,
     contracts_data: &ContractsData,
     encountered_errors: &[EncounteredError],
@@ -137,17 +137,19 @@ impl ContractBacktraceData {
             .statements_functions
             .get(&sierra_statement_idx)?;
 
+        let stack = code_locations
+            .iter()
+            .zip(function_names)
+            .map(|(code_location, function_name)| Backtrace {
+                code_location,
+                function_name,
+            })
+            .collect();
+
         Some(BacktraceStack {
             pc,
             contract_name: &self.contract_name,
-            origins: code_locations
-                .iter()
-                .zip(function_names)
-                .map(|(code_location, function_name)| Backtrace {
-                    code_location,
-                    function_name,
-                })
-                .collect(),
+            stack,
         })
     }
 }
@@ -187,7 +189,7 @@ struct Backtrace<'a> {
 struct BacktraceStack<'a> {
     pc: usize,
     contract_name: &'a str,
-    origins: Vec<Backtrace<'a>>,
+    stack: Vec<Backtrace<'a>>,
 }
 
 impl Display for Backtrace<'_> {
@@ -209,8 +211,8 @@ impl Display for BacktraceStack<'_> {
             self.contract_name, self.pc
         )?;
         writeln!(f, "possible stack backtrace:")?;
-        for (i, pc_origin) in self.origins.iter().enumerate() {
-            writeln!(f, "   {i}: {pc_origin}")?;
+        for (i, backtrace) in self.stack.iter().enumerate() {
+            writeln!(f, "   {i}: {backtrace}")?;
         }
         Ok(())
     }

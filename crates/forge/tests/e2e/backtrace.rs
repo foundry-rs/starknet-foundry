@@ -1,7 +1,7 @@
 use super::common::runner::{setup_package, test_runner};
 use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::indoc;
-use shared::test_utils::output_assert::{assert_stdout_contains, AsOutput};
+use shared::test_utils::output_assert::assert_stdout_contains;
 use std::fs;
 use toml_edit::{value, DocumentMut};
 
@@ -60,7 +60,7 @@ fn test_backtrace() {
 
 #[test]
 #[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
-fn test_wrong_configuration() {
+fn test_wrong_scarb_toml_configuration() {
     let temp = setup_package("backtrace_vm_error");
 
     let manifest_path = temp.child("Scarb.toml");
@@ -102,9 +102,6 @@ fn test_backtrace_panic() {
         .env("SNFORGE_BACKTRACE", "1")
         .assert()
         .failure();
-
-    println!("{}", output.as_stdout());
-    println!("{}", output.as_stderr());
 
     assert_stdout_contains(
         output,
