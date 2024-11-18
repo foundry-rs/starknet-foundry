@@ -28,12 +28,11 @@ You can, however, overwrite their values by supplying them as flags directly to 
 Let's use `sncast` to call a contract's function:
 
 ```shell
-$ sncast --account myuser \
-    call \
+$ sncast call \
     --url http://127.0.0.1:5050 \
-    --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
-    --function get \
-    --calldata 0x0 \
+    --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \
+    --function "pokemon" \
+    --arguments '"Charizard"'
     --block-id latest
 ```
 
@@ -42,7 +41,7 @@ $ sncast --account myuser \
 
 ```shell
 command: call
-response: [0x0]
+response: [0x0, 0x0, 0x43686172697a617264, 0x9, 0x0, 0x0, 0x41a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7766661ad02bf]
 ```
 </details>
 <br>
@@ -51,14 +50,16 @@ response: [0x0]
 > In the above example we supply `sncast` with `--account` and `--url` flags. If `snfoundry.toml` is present, and have these properties set, values provided using these flags will override values from `snfoundry.toml`. Learn more about `snfoundry.toml` configuration [here](../projects/configuration.md#sncast).
 
 
-### Calldata
+### Arguments and Calldata
 
 Some `sncast` commands (namely `call`, `deploy` and `invoke`) allow passing *calldata* - a series of arguments to perform an action with on blockchain.
 
-In the example above we called a function with an argument: `0x0`, passed using `--calldata` flag.
+In the example above we called a function with an argument: `'"Charizard"'`, passed using `--arguments` flag, but it can
+be also obtained by passing a serialized form in this example equivalent to passing `--calldata` with the following value: `0x0 0x43686172697a617264 0x9`.
 
 Please note the notation of the argument. The default way of passing calldata is a list of hexadecimally encoded field elements - the *serialized* calldata.
 To obtain the serialized form of the wished data, one must write a Cairo program calling `Serde::serialize` on subsequent arguments and displaying the results.
+Read more about it in the [Cairo documentation](https://book.cairo-lang.org/appendix-03-derivable-traits.html?highlight=seri#serializing-with-serde).
 
 It is also possible to pass calldata in more friendly, human readable form thanks to the [calldata transformation](./calldata-transformation.md) feature present in Cast.
 
