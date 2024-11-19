@@ -1,0 +1,26 @@
+name: publish_plugin.yml
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  upload-to-registry:
+    name: Upload plugin to the registry
+    runs-on: ubuntu-latest
+    env:
+      SCARB_REGISTRY_AUTH_TOKEN: ${{ secrets.SCARB_REGISTRY_AUTH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
+        with:
+          toolchain: stable
+
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          # todo: Use scarb stable version that support publishing plugins (after 2.8.4)
+          scarb-version: "nightly-2024-11-09"
+
+      - name: Publish snforge_scarb_plugin
+        working-directory: crates/snforge-scarb-plugin
+        run: scarb publish
