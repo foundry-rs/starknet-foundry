@@ -55,7 +55,7 @@ response: [0x0, 0x0, 0x43686172697a617264, 0x9, 0x0, 0x0, 0x41a78e741e5af2fec34b
 Some `sncast` commands (namely `call`, `deploy` and `invoke`) allow passing *calldata* - a series of arguments to perform an action with on blockchain.
 
 In the example above we called a function with an argument: `'"Charizard"'`, passed using `--arguments` flag, but it can
-be also obtained by passing a serialized form in this example equivalent to passing `--calldata` with the following value: `0x0 0x43686172697a617264 0x9`.
+be also obtained by passing a serialized form, in this example equivalent to passing `--calldata` with the following value: `0x0 0x43686172697a617264 0x9`.
 
 Please note the notation of the argument. The default way of passing calldata is a list of hexadecimally encoded field elements - the *serialized* calldata.
 To obtain the serialized form of the wished data, one must write a Cairo program calling `Serde::serialize` on subsequent arguments and displaying the results.
