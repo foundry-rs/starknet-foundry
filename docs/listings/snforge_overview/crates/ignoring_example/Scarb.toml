@@ -1,5 +1,5 @@
 [package]
-name = "writing_tests"
+name = "ignoring_example"
 version = "0.1.0"
 edition = "2023_11"
 

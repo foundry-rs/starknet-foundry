@@ -1,14 +1,11 @@
 [package]
-name = "using_cheatcodes"
+name = "testing_smart_contracts_writing_tests"
 version = "0.1.0"
 edition = "2023_11"
 
 [dependencies]
 starknet.workspace = true
 snforge_std.workspace = true
-
-[dev-dependencies]
-assert_macros.workspace = true
 
 [[target.starknet-contract]]
 sierra = true

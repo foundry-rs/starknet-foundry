@@ -1,6 +1,6 @@
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
 
-use testing_smart_contracts::simple_contract::{
+use testing_smart_contracts_handling_errors::{
     ISimpleContractDispatcher, ISimpleContractDispatcherTrait
 };
 

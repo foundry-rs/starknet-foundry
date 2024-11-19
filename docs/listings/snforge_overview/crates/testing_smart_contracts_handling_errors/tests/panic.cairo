@@ -1,13 +1,12 @@
 //ANCHOR:first_half
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
 
-use testing_smart_contracts::handling_errors::{
+use testing_smart_contracts_handling_errors::{
     IPanicContractDispatcher, IPanicContractDispatcherTrait
 };
 
 #[test]
 //ANCHOR_END:first_half
-#[should_panic(expected: ('PANIC', 'DAYTAH'))]
 //ANCHOR:second_half
 fn failing() {
     let contract = declare("PanicContract").unwrap().contract_class();
