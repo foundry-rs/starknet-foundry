@@ -27,7 +27,7 @@ $ tree . -L 1
 ├── src
 └── tests
 
-2 directories, 2 files
+2 directories, 3 files
 ```
 </details>
 <br>
