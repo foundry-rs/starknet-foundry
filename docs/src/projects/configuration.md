@@ -108,7 +108,7 @@ response: [0x1, 0x23, 0x4]
 ### Global configuration
 
 Since version 0.34.0 `sncast` will use the global configuration to combine configuration from local configs.
-Global configuration file will be automatically generated if it does not already exist, and will contain predefined `default` profile.
+Global configuration file is usual [`snfoundry.toml`](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html), but placed in specific directory. 
 
 #### Global Configuration File Location
 The global configuration is stored in a specific location depending on the operating system:
@@ -116,17 +116,17 @@ The global configuration is stored in a specific location depending on the opera
 - macOS/Linux : The global configuration file is located at `$HOME/.config/starknet-foundry/snfoundry.toml`
 - Windows : The file can be found at `C:\Users\<user>\AppData\Roaming\starknet-foundry\snfoundry.toml`
 
+> 📝 **Note**
+> Global configuration file will be created automatically if it does not exist and contain predefined `default` profile.
+
+
 #### Interaction between Local and Global profiles
 The interaction between local and global configurations follow to a clear set of overriding rules:
 
-By specifying `--profile` argument, you choose profile to set 
+Interaction between global and local config is based on the overriding mechanism, the local config will be used to override 
+the global profile of the same name or in case it is not defined to override the default global profile.
 
-- Local Configuration Priority: If there is a profile with the same name in both the local and global configurations, the settings from the local configuration will override those in the global configuration.
-
-- Global Default: In the absence of a local profile, the configuration will fall back to and override the default settings in the global profile, maintaining consistency across projects where explicit local configurations are not specified.
-Contents of the Global Configuration
-
-The global configuration file typically contains default profiles and shared settings that apply across all projects.
+If `--profile` is not provided, the default profile from the local (if present) and global configuration will be used.
 
 ## Environmental variables
 
