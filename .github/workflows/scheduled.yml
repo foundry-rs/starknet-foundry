@@ -44,9 +44,6 @@ jobs:
         with:
           scarb-version: ${{ matrix.version }}
       - uses: software-mansion/setup-universal-sierra-compiler@v1
-      - name: Install cairo-profiler
-        run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/cairo-profiler/main/scripts/install.sh | sh
 
       - run: cargo test --release --lib -p forge
       - run: cargo test --release -p forge integration
