@@ -5,7 +5,7 @@ edition = "2023_11"
 
 [dependencies]
 starknet.workspace = true
-snforge_std = { path = "../../../../snforge_std" }
+snforge_std.workspace = true
 
 [[target.starknet-contract]]
 sierra = true
