@@ -18,6 +18,39 @@ all installed and added to your `PATH` environment variable.
 > `Universal-Sierra-Compiler` will be automatically installed if you use `snfoundryup` or `asdf`.
 > You can also create `UNIVERSAL_SIERRA_COMPILER` env var to make it visible for `snforge`.
 
+
+
+### Installation via [asdf](https://asdf-vm.com/)
+
+First, add the Starknet Foundry plugin to asdf:
+
+```shell
+$ asdf plugin add starknet-foundry
+```
+
+Now, install the latest version for starknet-foundry
+
+```shell
+$ asdf install starknet-foundry latest
+```
+
+#### Common Error
+
+Users may encounter this error when trying to use `snforge` or `sncast` without setting a version:
+
+```shell
+No version is set for command snforge
+Consider adding one of the following versions in your config file at starknet-foundry 0.32.0
+```
+
+This error indicates that `Starknet Foundry` version is unset. To resolve it, set the version globally using asdf:
+
+```shell
+$ asdf global starknet-foundry <version>
+```
+
+For additional information on asdf version management, see the [asdf](https://asdf-vm.com/guide/getting-started.html#_6-set-a-version)
+
 ### Install via `snfoundryup`
 
 Snfoundryup is the Starknet Foundry toolchain installer.
@@ -37,31 +70,6 @@ $ snfoundryup
 See `snfoundryup --help` for more options.
 
 To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
-
-### Installation via [asdf](https://asdf-vm.com/)
-
-First, add the Starknet Foundry plugin to asdf:
-
-```shell
-$ asdf plugin add starknet-foundry
-```
-
-#### Common Error
-
-Users may encounter this error when trying to use `snforge` or `sncast` without setting a version:
-
-```shell
-No version is set for command snforge
-Consider adding one of the following versions in your config file at starknet-foundry 0.32.0
-```
-
-This error indicates that `Starknet Foundry` version is unset. To resolve it, set the version globally using asdf:
-
-```shell
-$ asdf global starknet-foundry <version>
-```
-
-For additional information on asdf version management, see the [asdf](https://asdf-vm.com/guide/getting-started.html#_6-set-a-version)
 
 ### Installation on Windows
 
