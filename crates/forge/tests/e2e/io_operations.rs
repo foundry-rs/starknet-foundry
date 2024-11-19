@@ -7,7 +7,7 @@ use shared::test_utils::output_assert::assert_stdout_contains;
 #[allow(clippy::too_many_lines)]
 fn file_reading() {
     let temp = setup_package_with_file_patterns(
-        "file_reading",
+        "tests/data/file_reading",
         &[BASE_FILE_PATTERNS, &["**/*.txt", "**/*.json"]].concat(),
     );
 

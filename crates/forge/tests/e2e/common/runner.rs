@@ -34,12 +34,17 @@ pub(crate) fn test_runner(temp_dir: &TempDir) -> SnapboxCommand {
 pub(crate) static BASE_FILE_PATTERNS: &[&str] = &["**/*.cairo", "**/*.toml"];
 
 pub(crate) fn setup_package_with_file_patterns(
-    package_name: &str,
+    package_path: &str,
     file_patterns: &[&str],
 ) -> TempDir {
     let temp = tempdir_with_tool_versions().unwrap();
-    temp.copy_from(format!("tests/data/{package_name}"), file_patterns)
-        .unwrap();
+    let package_path = Utf8PathBuf::from_str(package_path)
+        .unwrap()
+        .canonicalize_utf8()
+        .unwrap()
+        .to_string()
+        .replace('\\', "/");
+    temp.copy_from(package_path, file_patterns).unwrap();
 
     let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
         .unwrap()
@@ -69,7 +74,13 @@ pub(crate) fn setup_package_with_file_patterns(
 }
 
 pub(crate) fn setup_package(package_name: &str) -> TempDir {
-    setup_package_with_file_patterns(package_name, BASE_FILE_PATTERNS)
+    let package_path = "tests/data/".to_string() + package_name;
+    setup_package_with_file_patterns(&package_path, BASE_FILE_PATTERNS)
+}
+
+pub(crate) fn setup_package_from_docs_listings(package_name: &str) -> TempDir {
+    let package_path = "../../docs/listings/snforge_overview/crates/".to_string() + package_name;
+    setup_package_with_file_patterns(&package_path, BASE_FILE_PATTERNS)
 }
 
 fn replace_node_rpc_url_placeholders(dir_path: &Path) {

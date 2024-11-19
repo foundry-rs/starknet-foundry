@@ -8,7 +8,7 @@ use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
 fn without_cache() {
-    let temp = setup_package_with_file_patterns("forking", BASE_FILE_PATTERNS);
+    let temp = setup_package_with_file_patterns("tests/data/forking", BASE_FILE_PATTERNS);
 
     let output = test_runner(&temp)
         .arg("forking::tests::test_fork_simple")
@@ -40,7 +40,7 @@ fn without_cache() {
 /// The test that passed when using data from network, should fail for fabricated data.
 fn with_cache() {
     let temp = setup_package_with_file_patterns(
-        "forking",
+        "tests/data/forking",
         &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
     );
 
@@ -75,7 +75,7 @@ fn with_cache() {
 #[test]
 fn with_clean_cache() {
     let temp = setup_package_with_file_patterns(
-        "forking",
+        "tests/data/forking",
         &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
     );
 
@@ -104,7 +104,7 @@ fn with_clean_cache() {
 #[test]
 fn printing_latest_block_number() {
     let temp = setup_package_with_file_patterns(
-        "forking",
+        "tests/data/forking",
         &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
     );
     let node_rpc_url = node_rpc_url();
