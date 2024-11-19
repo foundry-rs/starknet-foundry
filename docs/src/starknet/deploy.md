@@ -21,7 +21,12 @@ $ sncast \
     --url http://127.0.0.1:5050/rpc \
 	--fee-token strk \
     --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: Deploy
 contract_address: 0x301316d47a81b39c5e27cca4a7b8ca4773edbf1103218588d6da4d3ed53035a
 transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5ab1e
@@ -30,6 +35,8 @@ To see deployment details, visit:
 contract: https://starkscan.co/search/0x301316d47a...
 transaction: https://starkscan.co/search/0x64a62a0002...
 ```
+</details>
+<br>
 
 > 💡 **Info**
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
@@ -55,7 +62,12 @@ $ sncast deploy \
     --fee-token strk \
     --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a \
     --constructor-calldata 0x1 0x1 0x0
-    
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 command: deploy
 contract_address: 0x301316d47a81b39c5e27cca4a7b8ca4773edbf1103218588d6da4d3ed53035a
 transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5ab1e
@@ -64,6 +76,8 @@ To see deployment details, visit:
 contract: https://starkscan.co/search/0x301316d47a...
 transaction: https://starkscan.co/search/0x64a62a0002...
 ```
+</details>
+<br>
 
 > 📝 **Note**
 > Although the constructor has only two params you have to pass more because u256 is serialized to two felts.
@@ -79,7 +93,12 @@ $ sncast deploy \
     --fee-token strk \
     --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a \
     --salt 0x123
-    
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 command: deploy
 contract_address: 0x301316d47a81b39c5e27cca4a7b8ca4773edbf1103218588d6da4d3ed5303bc
 transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5ab1e
@@ -88,6 +107,8 @@ To see deployment details, visit:
 contract: https://starkscan.co/search/0x301316d47a...
 transaction: https://starkscan.co/search/0x64a62a0002...
 ```
+</details>
+<br>
 
 ### Passing `unique` Argument
 
@@ -99,7 +120,12 @@ $ sncast deploy \
     --fee-token strk \
     --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a \
     --unique
+```
+
+<details>
+<summary>Output:</summary>
     
+```shell
 command: deploy
 contract_address: 0x301316d47a81b39c5e27cca4a7b8ca4773edbf1103218588d6da4d3ed5303aa
 transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5ab1e
@@ -108,3 +134,4 @@ Details:
 contract: https://starkscan.co/search/0x301316d47a...
 transaction: https://starkscan.co/search/0x64a62a0002...
 ```
+</details>

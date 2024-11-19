@@ -48,13 +48,20 @@ Additionally, the `id` can be referenced in the inputs of deploy and invoke call
 
 ```shell
 $ sncast multicall run --path /Users/john/Desktop/multicall_example.toml --fee-token strk
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: multicall
 transaction_hash: 0x38fb8a0432f71bf2dae746a1b4f159a75a862e253002b48599c9611fa271dcb
 
 To see invocation details, visit:
 transaction: https://starkscan.co/tx/0x38fb8a0432...
 ```
+</details>
+<br>
 
 > 💡 **Info**
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
@@ -68,9 +75,16 @@ transaction: https://starkscan.co/tx/0x38fb8a0432...
 You can also generate multicall template with `multicall new` command, specifying output path.
 ```shell
 $ sncast multicall new ./template.toml
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 Multicall template successfully saved in ./template.toml
 ```
+</details>
+<br>
 
 Resulting in output:
 ```toml
@@ -97,6 +111,12 @@ If there is a file with the same name as provided, it can be overwritten.
 
 ```shell
 $ sncast multicall new ./template.toml --overwrite
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 Multicall template successfully saved in ./new_multicall_template.toml
 ```
+</details>

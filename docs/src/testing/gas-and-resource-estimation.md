@@ -35,8 +35,15 @@ It is possible to enable more detailed breakdown of resources, on which the gas 
 
 ### Usage
 In order to run tests with this feature, run the `test` command with the appropriate flag:
+
 ```shell
 $ snforge test --detailed-resources
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 ...
 [PASS] package_name::tests::resources (gas: ~2213)
         steps: 881
@@ -45,6 +52,9 @@ $ snforge test --detailed-resources
         syscalls: (StorageWrite: 1, StorageRead: 1, CallContract: 1)
 ...
 ```
+</details>
+<br>
+
 This displays the resources used by the VM during the test execution.
 
 ## Analyzing the results

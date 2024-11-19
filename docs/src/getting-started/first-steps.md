@@ -14,6 +14,12 @@ Let's check out the project structure
 ```shell
 $ cd project_name
 $ tree . -L 1
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 .
 ├── Scarb.lock
 ├── Scarb.toml
@@ -22,6 +28,8 @@ $ tree . -L 1
 
 2 directories, 2 files
 ```
+</details>
+<br>
 
 * `src/` contains source code of all your contracts.
 * `tests/` contains tests.
@@ -32,6 +40,12 @@ And run tests with `snforge test`
 
 ```shell
 $ snforge test
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
    Compiling project_name v0.1.0 (project_name/Scarb.toml)
     Finished release target(s) in 1 second
 
@@ -42,6 +56,8 @@ Running 2 test(s) from tests/
 [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value (gas: ~104)
 Tests: 2 passed, 0 failed, 0 skipped, 0 ignored
 ```
+</details>
+<br>
 
 ## Using `snforge` With Existing Scarb Projects
 
@@ -61,8 +77,16 @@ Make sure that the above version matches the installed `snforge` version. You ca
 
 ```shell
 $ snforge --version
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 snforge 0.33.0
 ```
+</details>
+<br>
 
 It is also possible to add this dependency
 using [`scarb add`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#adding-a-dependency-via-scarb-add)
@@ -77,3 +101,4 @@ Additionally, ensure that starknet-contract target is enabled in the `Scarb.toml
 ```toml
 # ...
 [[target.starknet-contract]]
+```
