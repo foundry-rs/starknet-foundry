@@ -32,23 +32,24 @@ impl Snippet {
 
 pub fn extract_snippets_from_file(file_path: &Path, re: &Regex) -> io::Result<Vec<Snippet>> {
     let content = fs::read_to_string(file_path)?;
-    let mut snippets = Vec::new();
+    let file_path_str = file_path
+        .to_str()
+        .expect("Failed to get file path")
+        .to_string();
 
-    for caps in re.captures_iter(&content) {
-        if let Some(command_match) = caps.get(1) {
-            let match_position = content[..caps.get(0).unwrap().start()].lines().count();
-            let file_path = file_path
-                .to_str()
-                .expect("Failed to get file path")
-                .to_string();
+    let snippets = re
+        .captures_iter(&content)
+        .filter_map(|caps| {
+            let command_match = caps.get(1)?; // Explicit handling of Option
+            let match_start = caps.get(0)?.start();
 
-            snippets.push(Snippet {
+            Some(Snippet {
                 command: command_match.as_str().to_string(),
-                file_path,
-                line_start: match_position + 1, // Line numbers are 1-based
-            });
-        }
-    }
+                file_path: file_path_str.clone(),
+                line_start: content[..match_start].lines().count() + 1, // 1-based line number
+            })
+        })
+        .collect();
 
     Ok(snippets)
 }
