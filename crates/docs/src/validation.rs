@@ -56,18 +56,17 @@ pub fn extract_snippets_from_file(file_path: &Path, re: &Regex) -> io::Result<Ve
 pub fn extract_snippets_from_directory(dir_path: &Path, re: &Regex) -> io::Result<Vec<Snippet>> {
     let mut all_snippets = Vec::new();
 
-    let entries = walkdir::WalkDir::new(dir_path)
+    let files = walkdir::WalkDir::new(dir_path)
         .into_iter()
-        .filter_map(Result::ok);
+        .map(|entry| entry.expect("Failed to read directory"))
+        .filter(|entry| entry.path().is_file());
 
-    for entry in entries {
-        let path = entry.path();
+    for file in files {
+        let path = file.path();
 
-        if path.is_file()
-            && EXTENSION.map_or(true, |ext| {
-                path.extension().and_then(|path_ext| path_ext.to_str()) == Some(ext)
-            })
-        {
+        if EXTENSION.map_or(true, |ext| {
+            path.extension().and_then(|path_ext| path_ext.to_str()) == Some(ext)
+        }) {
             let snippets = extract_snippets_from_file(path, re)?;
             all_snippets.extend(snippets);
         }
