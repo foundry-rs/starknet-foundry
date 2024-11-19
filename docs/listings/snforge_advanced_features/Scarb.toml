@@ -5,6 +5,7 @@ members = ["crates/*"]
 starknet = "2.7.0"
 assert_macros = "0.1.0"
 snforge_std = { path = "../../../snforge_std" }
+edition = "2024_07"
 
 [[target.starknet-contract]]
 sierra = true

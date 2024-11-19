@@ -5,6 +5,7 @@ members = ["scripts/*"]
 starknet = "2.7.0"
 snforge_std = { path = "../../../snforge_std" }
 sncast_std = { path = "../../../sncast_std" }
+edition = "2024_07"
 
 [[target.starknet-contract]]
 sierra = true
