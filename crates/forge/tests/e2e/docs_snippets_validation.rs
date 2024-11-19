@@ -5,6 +5,7 @@ use docs::validation::{
 };
 use forge::Cli;
 use regex::Regex;
+
 #[test]
 fn test_docs_snippets() {
     let root_dir = get_parent_dir(2);

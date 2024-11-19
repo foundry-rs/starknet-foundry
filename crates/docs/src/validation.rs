@@ -1,4 +1,6 @@
+use anyhow::anyhow;
 use regex::Regex;
+use shared::print::print_as_warning;
 use std::{
     env, fs, io,
     path::{Path, PathBuf},
@@ -108,8 +110,10 @@ pub fn print_success_message(snippets_len: usize, tool_name: &str) {
 }
 
 pub fn print_skipped_snippet_message(snippet: &Snippet, tool_name: &str) {
-    println!(
+    print_as_warning(&anyhow!(
         "Skipped validation of {} snippet in the docs in file: {} at line {}",
-        tool_name, snippet.file_path, snippet.line_start
-    );
+        tool_name,
+        snippet.file_path,
+        snippet.line_start
+    ));
 }
