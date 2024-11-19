@@ -21,4 +21,5 @@ The default one depends on Scarb version used and can be controlled with `--no-o
 | Using contracts from modules marked with `#[cfg(test)]` | ❌             | ✅                   |
 | Using contracts from dependencies                       | ✅             | ✅                   |
 | Contracts more closely resemble ones from real network  | ✅             | ❌                   |
+| Less compilation steps required (faster compilation)    | ❌             | ✅                   |
 | Additional compilation step required (`scarb build`)    | ✅             | ❌                   |
