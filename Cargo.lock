@@ -4897,6 +4897,7 @@ dependencies = [
  "conversions",
  "ctor",
  "data-transformer",
+ "dirs",
  "fs_extra",
  "indoc",
  "itertools 0.12.1",

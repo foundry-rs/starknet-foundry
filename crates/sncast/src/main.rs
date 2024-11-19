@@ -16,6 +16,7 @@ use clap::{Parser, Subcommand};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::fee::PayableTransaction;
+use sncast::helpers::global_config::get_global_config_path;
 use sncast::helpers::scarb_utils::{
     assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
     get_scarb_metadata_with_deps, BuildConfig,
@@ -209,8 +210,7 @@ fn main() -> Result<()> {
     if let Commands::Script(script) = &cli.command {
         run_script_command(&cli, runtime, script, numbers_format, output_format)
     } else {
-        let mut config = load_global_config::<CastConfig>(&None, &cli.profile)?;
-        update_cast_config(&mut config, &cli);
+        let config = get_cast_config(&cli)?;
 
         runtime.block_on(run_async_command(
             cli,
@@ -657,11 +657,8 @@ fn run_script_command(
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &run.package)?;
 
-            let mut config = load_global_config::<CastConfig>(
-                &Some(package_metadata.root.clone()),
-                &cli.profile,
-            )?;
-            update_cast_config(&mut config, cli);
+            let config = get_cast_config(cli)?;
+
             let provider = runtime.block_on(run.rpc.get_provider(&config))?;
 
             let mut artifacts = build_and_load_artifacts(
@@ -739,4 +736,44 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
         ),
         clone_or_else!(cli.wait_timeout, config.wait_params.get_timeout()),
     );
+}
+
+fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
+    let global_config_path = get_global_config_path().unwrap_or(Utf8PathBuf::new());
+    let mut global_config =
+        load_global_config::<CastConfig>(&Some(global_config_path.clone()), &cli.profile)
+            .unwrap_or_else(|_| {
+                load_global_config::<CastConfig>(&Some(global_config_path), &None).unwrap()
+            });
+
+    let config = load_global_config::<CastConfig>(&None, &cli.profile)?;
+
+    combine_cast_configs(&mut global_config, &config);
+
+    update_cast_config(&mut global_config, &cli);
+    Ok(global_config)
+}
+
+fn combine_cast_configs(global_config: &mut CastConfig, config: &CastConfig) {
+    if config.url != String::default() {
+        global_config.url = config.url.clone();
+    }
+    if config.account != String::default() {
+        global_config.account = config.account.clone();
+    }
+    if config.accounts_file != Utf8PathBuf::default() {
+        global_config.accounts_file = config.accounts_file.clone();
+    }
+    if config.keystore != Option::default() {
+        global_config.keystore = config.keystore.clone();
+    }
+    if config.wait_params != ValidatedWaitParams::default() {
+        global_config.wait_params = config.wait_params.clone();
+    }
+    if config.block_explorer != Option::default() {
+        global_config.block_explorer = config.block_explorer.clone();
+    }
+    if config.show_explorer_links != true {
+        global_config.show_explorer_links = config.show_explorer_links;
+    }
 }

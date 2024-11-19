@@ -20,15 +20,17 @@ fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
     fs::write(
         path,
         formatdoc! {r#"
-        # Visit https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html for more information
+        # Visit https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html
+        # and https://foundry-rs.github.io/starknet-foundry/projects/configuration.html for more information
 
-        # [sncast.myprofile1]                                    # Define a profile name
-        # url = "http://127.0.0.1:5050/"                         # Url of the RPC provider
-        # accounts_file = "../account-file"                      # Path to the file with the account data
+        # [sncast.default]                                       # Define a profile name
+        # url = "https://starknet-sepolia.public.blastapi.io"    # Url of the RPC provider
+        # accounts-file = "../account-file"                      # Path to the file with the account data
         # account = "mainuser"                                   # Account from `accounts_file` or default account file that will be used for the transactions
         # keystore = "~/keystore"                                # Path to the keystore file
-        # wait_params = {{ timeout = 500, retry_interval = 10 }}   # Wait for submitted transaction parameters
-        # block_explorer = "StarkScan"                           # Block explorer service used to display links to transaction details
+        # wait-params = {{ timeout = 500, retry-interval = 10 }}   # Wait for submitted transaction parameters
+        # block-explorer = "StarkScan"                           # Block explorer service used to display links to transaction details
+        # show-explorer-links = true                             # Print links pointing to pages with transaction details in the chosen block explorer
         "#
         },
     )?;

@@ -56,6 +56,7 @@ serde_path_to_error.workspace = true
 walkdir.workspace = true
 const-hex.workspace = true
 regex.workspace = true
+dirs = "5.0.1"
 
 [dev-dependencies]
 ctor.workspace = true
