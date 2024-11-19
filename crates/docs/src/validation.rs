@@ -40,13 +40,13 @@ pub fn extract_snippets_from_file(file_path: &Path, re: &Regex) -> io::Result<Ve
     let snippets = re
         .captures_iter(&content)
         .filter_map(|caps| {
-            let command_match = caps.get(1)?; // Explicit handling of Option
+            let command_match = caps.get(1)?;
             let match_start = caps.get(0)?.start();
 
             Some(Snippet {
                 command: command_match.as_str().to_string(),
                 file_path: file_path_str.clone(),
-                line_start: content[..match_start].lines().count() + 1, // 1-based line number
+                line_start: content[..match_start].lines().count() + 1,
             })
         })
         .collect();
