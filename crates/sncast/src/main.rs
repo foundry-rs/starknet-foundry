@@ -739,7 +739,7 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
 }
 
 fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
-    let global_config_path = get_global_config_path().unwrap_or(Utf8PathBuf::new());
+    let global_config_path = get_global_config_path().unwrap_or_default();
     let mut global_config =
         load_global_config::<CastConfig>(&Some(global_config_path.clone()), &cli.profile)
             .unwrap_or_else(|_| {
@@ -750,30 +750,30 @@ fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
 
     combine_cast_configs(&mut global_config, &config);
 
-    update_cast_config(&mut global_config, &cli);
+    update_cast_config(&mut global_config, cli);
     Ok(global_config)
 }
 
 fn combine_cast_configs(global_config: &mut CastConfig, config: &CastConfig) {
     if config.url != String::default() {
-        global_config.url = config.url.clone();
+        global_config.url.clone_from(&config.url);
     }
     if config.account != String::default() {
-        global_config.account = config.account.clone();
+        global_config.account.clone_from(&config.account);
     }
     if config.accounts_file != Utf8PathBuf::default() {
         global_config.accounts_file = config.accounts_file.clone();
     }
     if config.keystore != Option::default() {
-        global_config.keystore = config.keystore.clone();
+        global_config.keystore.clone_from(&config.keystore);
     }
     if config.wait_params != ValidatedWaitParams::default() {
-        global_config.wait_params = config.wait_params.clone();
+        global_config.wait_params = config.wait_params;
     }
     if config.block_explorer != Option::default() {
-        global_config.block_explorer = config.block_explorer.clone();
+        global_config.block_explorer = config.block_explorer;
     }
-    if config.show_explorer_links != true {
+    if !config.show_explorer_links {
         global_config.show_explorer_links = config.show_explorer_links;
     }
 }
