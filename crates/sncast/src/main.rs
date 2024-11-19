@@ -762,7 +762,7 @@ fn combine_cast_configs(global_config: &mut CastConfig, config: &CastConfig) {
         global_config.account.clone_from(&config.account);
     }
     if config.accounts_file != Utf8PathBuf::default() {
-        global_config.accounts_file = config.accounts_file.clone();
+        global_config.accounts_file.clone_from(&config.accounts_file);
     }
     if config.keystore != Option::default() {
         global_config.keystore.clone_from(&config.keystore);
