@@ -121,7 +121,6 @@ The global configuration is stored in a specific location depending on the opera
 
 
 #### Interaction between Local and Global profiles
-The interaction between local and global configurations follow to a clear set of overriding rules:
 
 Interaction between global and local config is based on the overriding mechanism, the local config will be used to override 
 the global profile of the same name or in case it is not defined to override the default global profile.
