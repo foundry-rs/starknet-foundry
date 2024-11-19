@@ -21,7 +21,7 @@ pub struct Event {
 
 /// An event spy structure allowing to get events emitted only after its creation.
 #[derive(Drop, Serde)]
-struct EventSpy {
+pub struct EventSpy {
     _event_offset: usize
 }
 

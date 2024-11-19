@@ -1,7 +1,7 @@
 use super::{
     ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress
 };
-use starknet::info::v2::ResourceBounds;
+use starknet::ResourcesBounds;
 
 
 /// Changes the transaction resource bounds for the given contract address and span.
@@ -9,8 +9,8 @@ use starknet::info::v2::ResourceBounds;
 /// - `resource_bounds` - transaction resource bounds to be set
 /// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
 /// applied
-fn cheat_resource_bounds(
-    contract_address: ContractAddress, resource_bounds: Span<ResourceBounds>, span: CheatSpan
+pub fn cheat_resource_bounds(
+    contract_address: ContractAddress, resource_bounds: Span<ResourcesBounds>, span: CheatSpan
 ) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
@@ -26,7 +26,7 @@ fn cheat_resource_bounds(
 
 /// Changes the transaction resource bounds.
 /// - `resource_bounds` - transaction resource bounds to be set
-fn start_cheat_resource_bounds_global(resource_bounds: Span<ResourceBounds>) {
+pub fn start_cheat_resource_bounds_global(resource_bounds: Span<ResourcesBounds>) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.resource_bounds = Operation::StartGlobal(resource_bounds);
@@ -35,7 +35,7 @@ fn start_cheat_resource_bounds_global(resource_bounds: Span<ResourceBounds>) {
 }
 
 /// Cancels the `start_cheat_resource_bounds_global`.
-fn stop_cheat_resource_bounds_global() {
+pub fn stop_cheat_resource_bounds_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.resource_bounds = Operation::StopGlobal;
@@ -46,8 +46,8 @@ fn stop_cheat_resource_bounds_global() {
 /// Changes the transaction resource bounds for the given contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `resource_bounds` - transaction resource bounds to be set
-fn start_cheat_resource_bounds(
-    contract_address: ContractAddress, resource_bounds: Span<ResourceBounds>
+pub fn start_cheat_resource_bounds(
+    contract_address: ContractAddress, resource_bounds: Span<ResourcesBounds>
 ) {
     cheat_resource_bounds(contract_address, resource_bounds, CheatSpan::Indefinite);
 }
@@ -55,7 +55,7 @@ fn start_cheat_resource_bounds(
 /// Cancels the `cheat_resource_bounds` / `start_cheat_resource_bounds` for the given
 /// contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
-fn stop_cheat_resource_bounds(contract_address: ContractAddress) {
+pub fn stop_cheat_resource_bounds(contract_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.resource_bounds = Operation::Stop(contract_address);

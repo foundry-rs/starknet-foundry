@@ -7,7 +7,7 @@ use super::{
 /// - `caller_address` - caller address to be set
 /// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
 /// applied
-fn cheat_caller_address(
+pub fn cheat_caller_address(
     contract_address: ContractAddress, caller_address: ContractAddress, span: CheatSpan
 ) {
     let mut execution_info: ExecutionInfoMock = Default::default();
@@ -23,7 +23,7 @@ fn cheat_caller_address(
 
 /// Changes the caller address.
 /// - `caller_address` - caller address to be set
-fn start_cheat_caller_address_global(caller_address: ContractAddress) {
+pub fn start_cheat_caller_address_global(caller_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.caller_address = Operation::StartGlobal(caller_address);
@@ -32,7 +32,7 @@ fn start_cheat_caller_address_global(caller_address: ContractAddress) {
 }
 
 /// Cancels the `start_cheat_caller_address_global`.
-fn stop_cheat_caller_address_global() {
+pub fn stop_cheat_caller_address_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.caller_address = Operation::StopGlobal;
@@ -43,14 +43,14 @@ fn stop_cheat_caller_address_global() {
 /// Changes the caller address for the given contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `caller_address` - caller address to be set
-fn start_cheat_caller_address(contract_address: ContractAddress, caller_address: ContractAddress) {
+pub fn start_cheat_caller_address(contract_address: ContractAddress, caller_address: ContractAddress) {
     cheat_caller_address(contract_address, caller_address, CheatSpan::Indefinite);
 }
 
 /// Cancels the `cheat_caller_address` / `start_cheat_caller_address` for the given
 /// contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
-fn stop_cheat_caller_address(contract_address: ContractAddress) {
+pub fn stop_cheat_caller_address(contract_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.caller_address = Operation::Stop(contract_address);
