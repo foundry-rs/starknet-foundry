@@ -210,7 +210,7 @@ impl Display for BacktraceStack<'_> {
             "error occurred in contract '{}' at pc: '{}'",
             self.contract_name, self.pc
         )?;
-        writeln!(f, "possible stack backtrace:")?;
+        writeln!(f, "stack backtrace:")?;
         for (i, backtrace) in self.stack.iter().enumerate() {
             writeln!(f, "   {i}: {backtrace}")?;
         }
