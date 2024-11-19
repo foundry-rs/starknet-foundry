@@ -1893,9 +1893,7 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 name = "docs"
 version = "0.33.0"
 dependencies = [
- "anyhow",
  "regex",
- "shared",
  "shell-words",
  "walkdir",
 ]
