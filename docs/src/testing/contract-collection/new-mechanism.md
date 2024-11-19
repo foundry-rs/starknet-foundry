@@ -1,6 +1,6 @@
 # How Contracts Are Collected
 
-For the [`declare`](../../appendix/snforge-library/declare.md) to function, snforge must collect and call build on
+For the [`declare`](../../appendix/snforge-library/declare.md) to work, snforge must collect and call build on
 contracts in the package. By default, if using Scarb version >= 2.8.3, snforge will combine test
 collection and contract collection steps.
 
