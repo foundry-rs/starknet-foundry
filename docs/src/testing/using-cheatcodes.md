@@ -90,7 +90,7 @@ Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 </details>
 <br>
 
-### Canceling the Cheat
+### Cancelling the Cheat
 
 Most cheatcodes come with corresponding `start_` and `stop_` functions that can be used to start and stop the state
 change.
