@@ -2,7 +2,7 @@ use snforge_std::{
     declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address_global,
     stop_cheat_caller_address_global
 };
-use using_cheatcodes::{ICheatcodeCheckerDispatcher, ICheatcodeCheckerDispatcherTrait};
+use using_cheatcodes_others::{ICheatcodeCheckerDispatcher, ICheatcodeCheckerDispatcherTrait};
 
 #[test]
 fn call_and_invoke_global() {

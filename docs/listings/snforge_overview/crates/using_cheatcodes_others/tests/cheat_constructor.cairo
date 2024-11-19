@@ -3,7 +3,7 @@ use snforge_std::{
     start_cheat_block_timestamp
 };
 
-use using_cheatcodes::{ICheatcodeCheckerDispatcher, ICheatcodeCheckerDispatcherTrait};
+use using_cheatcodes_others::{ICheatcodeCheckerDispatcher, ICheatcodeCheckerDispatcherTrait};
 
 #[test]
 fn call_and_invoke() {

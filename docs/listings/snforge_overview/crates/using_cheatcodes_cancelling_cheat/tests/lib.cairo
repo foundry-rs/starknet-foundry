@@ -1,15 +1,13 @@
-//ANCHOR:first_half
 use snforge_std::{
     declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address,
     stop_cheat_caller_address
 };
 
-use using_cheatcodes::{ICheatcodeCheckerSafeDispatcher, ICheatcodeCheckerSafeDispatcherTrait};
+use using_cheatcodes_canelling_cheat::{
+    ICheatcodeCheckerSafeDispatcher, ICheatcodeCheckerSafeDispatcherTrait
+};
 
 #[test]
-//ANCHOR_END:first_half
-#[should_panic(expected: 'Second call failed!')]
-//ANCHOR:second_half
 #[feature("safe_dispatcher")]
 fn call_and_invoke() {
     let contract = declare("CheatcodeChecker").unwrap().contract_class();
@@ -37,6 +35,3 @@ fn call_and_invoke() {
     let balance = dispatcher.get_balance();
     assert_eq!(balance, Result::Ok(100));
 }
-//ANCHOR_END:second_half
-
-mod dummy {} // trick `scarb fmt -c`
