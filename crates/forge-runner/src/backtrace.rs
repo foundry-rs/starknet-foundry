@@ -37,11 +37,11 @@ pub fn add_backtrace_footer(
         );
     }
 
-    BacktraceContractFormatter::new(contracts_data, encountered_errors)
-        .map(|formatter| {
+    BacktraceContractRepository::new(contracts_data, encountered_errors)
+        .map(|repository| {
             encountered_errors
                 .iter()
-                .filter_map(|error| formatter.get_backtrace(error.pc, error.class_hash))
+                .filter_map(|error| repository.get_backtrace(error.pc, error.class_hash))
                 .map(|backtrace| backtrace.to_string())
                 .collect::<Vec<_>>()
                 .join("\n")
@@ -154,9 +154,9 @@ impl ContractBacktraceData {
     }
 }
 
-struct BacktraceContractFormatter(HashMap<ClassHash, ContractBacktraceData>);
+struct BacktraceContractRepository(HashMap<ClassHash, ContractBacktraceData>);
 
-impl BacktraceContractFormatter {
+impl BacktraceContractRepository {
     fn new(
         contracts_data: &ContractsData,
         encountered_errors: &[EncounteredError],
