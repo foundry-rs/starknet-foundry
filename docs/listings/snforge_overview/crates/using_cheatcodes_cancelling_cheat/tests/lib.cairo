@@ -3,7 +3,7 @@ use snforge_std::{
     stop_cheat_caller_address
 };
 
-use using_cheatcodes_canelling_cheat::{
+use using_cheatcodes_cancelling_cheat::{
     ICheatcodeCheckerSafeDispatcher, ICheatcodeCheckerSafeDispatcherTrait
 };
 

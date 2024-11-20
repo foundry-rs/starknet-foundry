@@ -1,21 +1,26 @@
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
+#[starknet::interface]
+pub trait ISimpleContract<TContractState> {
+    fn increase_balance(ref self: TContractState, amount: felt252);
+    fn get_balance(self: @TContractState) -> felt252;
+}
 
-use testing_smart_contracts_handling_errors::{
-    IPanicContractSafeDispatcher, IPanicContractSafeDispatcherTrait
-};
+#[starknet::contract]
+pub mod SimpleContract {
+    #[storage]
+    struct Storage {
+        balance: felt252,
+    }
 
-#[test]
-#[feature("safe_dispatcher")]
-fn handling_errors() {
-    let contract = declare("PanicContract").unwrap().contract_class();
-    let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    let safe_dispatcher = IPanicContractSafeDispatcher { contract_address };
-
-    match safe_dispatcher.do_a_panic() {
-        Result::Ok(_) => panic!("Entrypoint did not panic"),
-        Result::Err(panic_data) => {
-            assert(*panic_data.at(0) == 'PANIC', *panic_data.at(0));
-            assert(*panic_data.at(1) == 'DAYTAH', *panic_data.at(1));
+    #[abi(embed_v0)]
+    pub impl SimpleContractImpl of super::ISimpleContract<ContractState> {
+        // Increases the balance by the given amount
+        fn increase_balance(ref self: ContractState, amount: felt252) {
+            self.balance.write(self.balance.read() + amount);
         }
-    };
+
+        // Gets the balance.
+        fn get_balance(self: @ContractState) -> felt252 {
+            self.balance.read()
+        }
+    }
 }

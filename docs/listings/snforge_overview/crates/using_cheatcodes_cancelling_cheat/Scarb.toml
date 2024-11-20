@@ -1,14 +1,14 @@
 [package]
-name = "using_cheatcodes_canelling_cheat"
+name = "using_cheatcodes_cancelling_cheat"
 version = "0.1.0"
 edition = "2023_11"
 
 [dependencies]
 starknet.workspace = true
-snforge_std.workspace = true
+assert_macros.workspace = true
 
 [dev-dependencies]
-assert_macros.workspace = true
+snforge_std.workspace = true
 
 [[target.starknet-contract]]
 sierra = true

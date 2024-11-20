@@ -4,8 +4,11 @@ version = "0.1.0"
 edition = "2023_11"
 
 [dependencies]
-snforge_std.workspace = true
+starknet.workspace = true
 assert_macros.workspace = true
+
+[dev-dependencies]
+snforge_std.workspace = true
 
 [[target.lib]]
 sierra = true

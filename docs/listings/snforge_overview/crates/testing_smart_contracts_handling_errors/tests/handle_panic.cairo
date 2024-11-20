@@ -2,7 +2,7 @@
 use snforge_std::byte_array::try_deserialize_bytearray_error;
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
 
-use testing_smart_contracts::handling_errors::{
+use testing_smart_contracts_handling_errors::{
     IPanicContractSafeDispatcher, IPanicContractSafeDispatcherTrait
 };
 
