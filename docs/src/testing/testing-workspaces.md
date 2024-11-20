@@ -72,7 +72,6 @@ Failures:
 To select the specific package to test, pass a `--package package_name` (or `-p package_name` for short) flag.
 You can also run `snforge test` from the package directory to achieve the same effect.
 
-<!-- package_name=hello_workspaces -->
 ```shell
 $ snforge test --package addition
 ```

@@ -46,11 +46,19 @@ $ snforge test
 <summary>Output:</summary>
 
 ```shell
-Collected 1 test(s) from testing_smart_contracts_writing_tests package
-Running 1 test(s) from tests/
-[PASS] testing_smart_contracts_writing_tests_integrationtest::simple_contract::call_and_invoke (gas: ~172)
+Collected 2 test(s) from testing_smart_contracts_handling_errors package
+Running 2 test(s) from tests/
+[FAIL] testing_smart_contracts_handling_errors_integrationtest::panic::failing
+
+Failure data:
+    (0x50414e4943 ('PANIC'), 0x444159544148 ('DAYTAH'))
+
+[PASS] testing_smart_contracts_handling_errors_integrationtest::handle_panic::handling_string_errors (gas: ~103)
 Running 0 test(s) from src/
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+
+Failures:
+    testing_smart_contracts_handling_errors_integrationtest::panic::failing
 ```
 </details>
 <br>
@@ -82,15 +90,16 @@ $ snforge test
 <summary>Output:</summary>
 
 ```shell
-Collected 1 test(s) from testing_smart_contracts_handling_errors package
-Running 1 test(s) from tests/
+Collected 2 test(s) from testing_smart_contracts_handling_errors package
+Running 2 test(s) from tests/
 [FAIL] testing_smart_contracts_handling_errors_integrationtest::panic::failing
 
 Failure data:
     (0x50414e4943 ('PANIC'), 0x444159544148 ('DAYTAH'))
 
+[PASS] testing_smart_contracts_handling_errors_integrationtest::handle_panic::handling_string_errors (gas: ~103)
 Running 0 test(s) from src/
-Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 Failures:
     testing_smart_contracts_handling_errors_integrationtest::panic::failing

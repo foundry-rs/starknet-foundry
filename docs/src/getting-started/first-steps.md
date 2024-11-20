@@ -6,13 +6,13 @@ We demonstrate how to create a new project, compile, and test it.
 To start a new project with Starknet Foundry, run `snforge init`
 
 ```shell
-$ snforge init project_name
+$ snforge init hello_starknet
 ```
 
 Let's check out the project structure
 
 ```shell
-$ cd project_name
+$ cd hello_starknet
 $ tree . -L 1
 ```
 
@@ -47,15 +47,12 @@ $ snforge test
 <summary>Output:</summary>
 
 ```shell
-   Compiling project_name v0.1.0 (project_name/Scarb.toml)
-    Finished release target(s) in 1 second
-
-Collected 2 test(s) from project_name package
+Collected 2 test(s) from hello_starknet package
 Running 0 test(s) from src/
 Running 2 test(s) from tests/
-[PASS] tests::test_contract::test_increase_balance (gas: ~170)
-[PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value (gas: ~104)
-Tests: 2 passed, 0 failed, 0 skipped, 0 ignored
+[PASS] hello_starknet_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value (gas: ~105)
+[PASS] hello_starknet_integrationtest::test_contract::test_increase_balance (gas: ~172)
+Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 </details>
 <br>

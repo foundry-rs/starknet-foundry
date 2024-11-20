@@ -113,9 +113,9 @@ $ snforge test
 <summary>Output:</summary>
 
 ```shell
-Collected 1 test(s) from using_cheatcodes_canelling_cheat package
+Collected 1 test(s) from using_cheatcodes_cancelling_cheat package
 Running 1 test(s) from tests/
-[FAIL] using_cheatcodes_canelling_cheat_tests::call_and_invoke
+[FAIL] using_cheatcodes_cancelling_cheat_tests::call_and_invoke
 
 Failure data:
     0x5365636f6e642063616c6c206661696c656421 ('Second call failed!')
@@ -124,7 +124,7 @@ Running 0 test(s) from src/
 Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 Failures:
-    using_cheatcodes_canelling_cheat_tests::call_and_invoke
+    using_cheatcodes_cancelling_cheat_tests::call_and_invoke
 ```
 </details>
 <br>

@@ -44,16 +44,22 @@ $ snforge test --detailed-resources
 <summary>Output:</summary>
 
 ```shell
-Collected 1 test(s) from hello_starknet package
-Running 0 test(s) from src/
-Running 1 test(s) from tests/
+Collected 2 test(s) from hello_starknet package
+Running 2 test(s) from tests/
+[PASS] hello_starknet_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value (gas: ~105)
+        steps: 3405
+        memory holes: 22
+        builtins: ([..])
+        syscalls: ([..])
+        
 [PASS] hello_starknet_integrationtest::test_contract::test_increase_balance (gas: ~172)
         steps: 4535
         memory holes: 15
-        builtins: (range_check: 95, pedersen: 7)
-        syscalls: (StorageRead: 3, CallContract: 3, StorageWrite: 1, Deploy: 1)
+        builtins: ([..])
+        syscalls: ([..])
         
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Running 0 test(s) from src/
+Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 </details>
 <br>

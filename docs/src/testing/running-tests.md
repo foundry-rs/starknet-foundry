@@ -11,11 +11,11 @@ $ snforge test
 
 ```shell
 Collected 3 test(s) from hello_snforge package
+Running 0 test(s) from src/
 Running 3 test(s) from tests/
-[PASS] hello_snforge_integrationtest::test_contract::test_another (gas: ~1)
 [PASS] hello_snforge_integrationtest::test_contract::test_calling (gas: ~1)
 [PASS] hello_snforge_integrationtest::test_contract::test_executing (gas: ~1)
-Running 0 test(s) from src/
+[PASS] hello_snforge_integrationtest::test_contract::test_calling_another (gas: ~1)
 Tests: 3 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 </details>
@@ -86,19 +86,18 @@ $ snforge test --exit-first
 
 ```shell
 Collected 3 test(s) from failing_example package
-Running 0 test(s) from src/
 Running 3 test(s) from tests/
-[FAIL] failing_example_integrationtest::test_contract::test_failing
+[FAIL] failing_example_tests::test_failing
 
 Failure data:
     0x6661696c696e6720636865636b ('failing check')
 
-[PASS] failing_example_integrationtest::test_contract::test_abc (gas: ~1)
-[PASS] failing_example_integrationtest::test_contract::test_xyz (gas: ~1)
+[PASS] failing_example_tests::test_abc (gas: ~1)
+[PASS] failing_example_tests::test_xyz (gas: ~1)
 Tests: 2 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 Failures:
-    failing_example_integrationtest::test_contract::test_failing
+    failing_example_tests::test_failing
 ```
 </details>
 <br>
@@ -115,16 +114,22 @@ $ snforge test --detailed-resources
 <summary>Output:</summary>
 
 ```shell
-Collected 1 test(s) from hello_starknet package
-Running 0 test(s) from src/
-Running 1 test(s) from tests/
+Collected 2 test(s) from hello_starknet package
+Running 2 test(s) from tests/
+[PASS] hello_starknet_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value (gas: ~105)
+        steps: 3405
+        memory holes: 22
+        builtins: ([..])
+        syscalls: ([..])
+        
 [PASS] hello_starknet_integrationtest::test_contract::test_increase_balance (gas: ~172)
         steps: 4535
         memory holes: 15
-        builtins: (range_check: 95, pedersen: 7)
-        syscalls: (StorageRead: 3, CallContract: 3, StorageWrite: 1, Deploy: 1)
+        builtins: ([..])
+        syscalls: ([..])
         
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Running 0 test(s) from src/
+Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 </details>
 <br>
