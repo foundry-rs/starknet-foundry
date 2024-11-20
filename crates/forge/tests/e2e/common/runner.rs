@@ -99,14 +99,9 @@ pub(crate) fn setup_package_from_docs_listings(
     package_name: &str,
     packages_mapping: &HashMap<String, Vec<String>>,
 ) -> TempDir {
-    let listing_name = get_listing_name(package_name, &packages_mapping).expect(&format!(
-        "Couldn't find listing for package {}",
-        package_name
-    ));
-    let package_path = format!(
-        "../../docs/listings/{}/crates/{}",
-        listing_name, package_name
-    );
+    let listing_name = get_listing_name(package_name, packages_mapping)
+        .unwrap_or_else(|| panic!("Couldn't find listing for package {package_name}"));
+    let package_path = format!("../../docs/listings/{listing_name}/crates/{package_name}",);
 
     setup_package_with_file_patterns(&package_path, BASE_FILE_PATTERNS)
 }

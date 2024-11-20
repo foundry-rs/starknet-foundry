@@ -16,7 +16,7 @@ fn is_package_from_docs_listings(
     package: &str,
     listings_to_packages_mapping: &HashMap<String, Vec<String>>,
 ) -> bool {
-    for (_, packages) in listings_to_packages_mapping {
+    for packages in listings_to_packages_mapping.values() {
         if packages.contains(&package.to_string()) {
             return true;
         }
@@ -79,7 +79,7 @@ fn test_docs_snippets() {
                 if package == "hello_workspaces" {
                     setup_hello_workspace()
                 } else {
-                    setup_package(&package)
+                    setup_package(package)
                 }
             };
             let output = test_runner(&temp).args(args).assert();
