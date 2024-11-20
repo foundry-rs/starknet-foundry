@@ -53,7 +53,7 @@ Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
 )]
 #[command(about = "snforge - a testing tool for Starknet contracts", long_about = None)]
 #[clap(name = "snforge")]
-struct Cli {
+pub struct Cli {
     #[command(subcommand)]
     subcommand: ForgeSubcommand,
 }
