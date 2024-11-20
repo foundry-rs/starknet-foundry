@@ -1,8 +1,7 @@
 use docs::validation::{
     assert_valid_snippet, extract_snippets_from_directory, extract_snippets_from_file,
-    get_parent_dir, print_skipped_snippet_message, print_success_message, Snippet,
+    get_parent_dir, print_skipped_snippet_message, print_success_message, Snippet, SnippetType,
 };
-use regex::Regex;
 use tempfile::tempdir;
 
 use crate::helpers::runner::runner;
@@ -15,12 +14,12 @@ fn test_docs_snippets() {
     let docs_dir_path = root_dir_path.join("docs/src");
     let sncast_readme_path = root_dir_path.join("crates/sncast/README.md");
 
-    let re = Regex::new(r"(?ms)```shell\n\$ sncast(.+?)\n```").expect("Invalid regex pattern");
+    let snippet_type = SnippetType::Sncast;
 
-    let docs_snippets = extract_snippets_from_directory(&docs_dir_path, &re)
+    let docs_snippets = extract_snippets_from_directory(&docs_dir_path, &snippet_type)
         .expect("Failed to extract sncast command snippets");
 
-    let readme_snippets = extract_snippets_from_file(&sncast_readme_path, &re)
+    let readme_snippets = extract_snippets_from_file(&sncast_readme_path, &snippet_type)
         .expect("Failed to extract sncast command snippets");
 
     let snippets = docs_snippets

@@ -15,13 +15,15 @@ pub enum SnippetType {
 }
 
 impl SnippetType {
-    pub fn as_str(&self) -> &'static str {
+    #[must_use]
+    pub fn as_str(&self) -> &str {
         match self {
             SnippetType::Forge => "snforge",
             SnippetType::Sncast => "sncast",
         }
     }
 
+    #[must_use]
     pub fn get_re(&self) -> Regex {
         let pattern = format!(
             r"(?ms)^```shell\n\$ ({} [^\n]+)\n```\s*(?:<details>\n<summary>Output:</summary>\n\n```shell\n([\s\S]+?)\n```\s*<\/details>)?",
@@ -58,11 +60,12 @@ impl Snippet {
             .collect()
     }
 
+    #[must_use]
     pub fn capture_package_from_output(&self) -> Option<String> {
         let re =
             Regex::new(r"Collected \d+ test\(s\) from ([a-zA-Z_][a-zA-Z0-9_]*) package").unwrap();
 
-        re.captures_iter(&self.output.as_ref()?)
+        re.captures_iter(self.output.as_ref()?)
             .filter_map(|caps| caps.get(1))
             .last()
             .map(|m| m.as_str().to_string())
@@ -116,7 +119,7 @@ pub fn extract_snippets_from_directory(
         if EXTENSION.map_or(true, |ext| {
             path.extension().and_then(|path_ext| path_ext.to_str()) == Some(ext)
         }) {
-            let snippets = extract_snippets_from_file(path, &snippet_type)?;
+            let snippets = extract_snippets_from_file(path, snippet_type)?;
             all_snippets.extend(snippets);
         }
     }
@@ -189,7 +192,7 @@ pub fn create_listings_to_packages_mapping() -> HashMap<String, Vec<String>> {
     mapping
 }
 
-fn list_packages_in_directory(dir_path: &PathBuf) -> Vec<String> {
+fn list_packages_in_directory(dir_path: &Path) -> Vec<String> {
     let crates_path = dir_path.join("");
 
     if crates_path.exists() && crates_path.is_dir() {
