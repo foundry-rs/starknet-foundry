@@ -1,8 +1,10 @@
 use regex::Regex;
 use std::{
+    collections::HashMap,
     env, fs, io,
     path::{Path, PathBuf},
 };
+use walkdir::WalkDir;
 
 const EXTENSION: Option<&str> = Some("md");
 
@@ -158,4 +160,53 @@ pub fn print_skipped_snippet_message(snippet: &Snippet, tool_name: &str) {
         "Skipped validation of {} snippet in the docs in file: {} at line {}",
         tool_name, snippet.file_path, snippet.line_start
     );
+}
+
+pub fn create_listings_to_packages_mapping() -> HashMap<String, Vec<String>> {
+    let docs_listings_path = "../../docs/listings";
+    let mut mapping = HashMap::new();
+
+    for listing in WalkDir::new(docs_listings_path)
+        .min_depth(1)
+        .max_depth(1)
+        .into_iter()
+        .filter_map(Result::ok)
+        .filter(|e| e.file_type().is_dir())
+    {
+        let listing_path = listing.path();
+        let crates_dir = listing_path.join("crates");
+
+        if crates_dir.is_dir() {
+            let packages = list_packages_in_directory(&crates_dir);
+            if let Some(listing_name) = listing_path.file_name().and_then(|x| x.to_str()) {
+                if !packages.is_empty() {
+                    mapping.insert(listing_name.to_string(), packages);
+                }
+            }
+        }
+    }
+
+    mapping
+}
+
+fn list_packages_in_directory(dir_path: &PathBuf) -> Vec<String> {
+    let crates_path = dir_path.join("");
+
+    if crates_path.exists() && crates_path.is_dir() {
+        WalkDir::new(crates_path)
+            .min_depth(1)
+            .max_depth(1)
+            .into_iter()
+            .filter_map(Result::ok)
+            .filter(|e| e.path().is_dir())
+            .filter_map(|e| {
+                e.path()
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .map(String::from)
+            })
+            .collect()
+    } else {
+        Vec::new()
+    }
 }
