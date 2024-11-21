@@ -78,6 +78,7 @@ macro_rules! clone_field {
     };
 }
 
+#[must_use]
 pub fn combine_cast_configs(global_config: &CastConfig, local_config: &CastConfig) -> CastConfig {
     let default_cast_config = CastConfig::default();
 
