@@ -46,11 +46,11 @@ fn build_default_manifest() -> String {
 
         [sncast.default]
         url = "{default_url}"
-        accounts-file = "{default_accounts_file}"
         block-explorer = "{default_block_explorer}"
         wait-params = {{ timeout = {default_wait_timeout}, retry-interval = {default_wait_retry_interval} }}
         show-explorer-links = {default_show_explorer_links}
-        account = "{default_account}"
+        # accounts-file = "{default_accounts_file}"
+        # account = "{default_account}"
         # keystore = "{default_keystore}"
         "#,
         default_url = FREE_RPC_PROVIDER_URL,
