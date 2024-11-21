@@ -107,7 +107,7 @@ response: [0x1, 0x23, 0x4]
 
 ### Global configuration
 
-Since version 0.34.0 `sncast` will use the global configuration to combine configuration from local configs.
+Since version, 0.34.0 `sncast` will use the global configuration to combine configuration from local configs.
 Global configuration file is usual [`snfoundry.toml`](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html), but placed in specific directory. 
 
 #### Global Configuration File Location
