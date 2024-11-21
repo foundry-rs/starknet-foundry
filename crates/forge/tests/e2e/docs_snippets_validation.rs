@@ -35,7 +35,7 @@ fn test_docs_snippets() {
     let snippet_type = SnippetType::Forge;
 
     let snippets = extract_snippets_from_directory(&docs_dir, &snippet_type)
-        .expect("Failed to extract snforge command snippets");
+        .expect("Failed to extract command snippets");
 
     // TODO(#2684)
     let skipped_args = [
