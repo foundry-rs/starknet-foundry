@@ -95,8 +95,6 @@ fn compile_artifact_at_path(path: &Utf8Path) -> Result<StarknetContractArtifacts
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
-
     use super::*;
     use crate::ScarbCommand;
     use camino::Utf8PathBuf;
@@ -155,18 +153,14 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
     fn test_load_contracts_artifacts() {
         let temp = crate::tests::setup_package("basic_package");
 
         ScarbCommand::new_with_stdio()
             .current_dir(temp.path())
             .arg("build")
-            .run()
-            .unwrap();
-
-        ScarbCommand::new_with_stdio()
-            .current_dir(temp.path())
-            .arg("test")
+            .arg("--test")
             .run()
             .unwrap();
 
@@ -175,22 +169,15 @@ mod tests {
 
         // Get the base artifact
         let base_file = Utf8PathBuf::from_path_buf(
-            base_artifacts_path.join("basic_package.starknet_artifacts.json"),
+            base_artifacts_path.join("basic_package_integrationtest.test.starknet_artifacts.json"),
         )
         .unwrap();
 
         // Load other artifact files and add them to the temporary directory
-        let other_files = vec![
-            Utf8PathBuf::from_path_buf(
-                base_artifacts_path
-                    .join("basic_package_integrationtest.test.starknet_artifacts.json"),
-            )
-            .unwrap(),
-            Utf8PathBuf::from_path_buf(
-                base_artifacts_path.join("basic_package_unittest.test.starknet_artifacts.json"),
-            )
-            .unwrap(),
-        ];
+        let other_files = vec![Utf8PathBuf::from_path_buf(
+            base_artifacts_path.join("basic_package_unittest.test.starknet_artifacts.json"),
+        )
+        .unwrap()];
 
         // Create `StarknetArtifactsFiles`
         let artifacts_files = StarknetArtifactsFiles::new(base_file, other_files);
@@ -200,7 +187,12 @@ mod tests {
 
         // Ensure no errors and non-empty result
         assert!(result.is_ok());
+
+        // Assert the Contract Artifacts are loaded.
         let artifacts_map = result.unwrap();
+        println!("{:?}", artifacts_map);
         assert!(!artifacts_map.is_empty());
+        assert!(artifacts_map.contains_key("ERC20"));
+        assert!(artifacts_map.contains_key("HelloStarknet"));
     }
 }
