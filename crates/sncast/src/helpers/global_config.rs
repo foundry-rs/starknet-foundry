@@ -51,7 +51,7 @@ fn build_default_manifest() -> String {
         wait-params = {{ timeout = {default_wait_timeout}, retry-interval = {default_wait_retry_interval} }}
         show-explorer-links = {default_show_explorer_links}
         account = "{default_account}"
-        keystore = "{default_keystore}"
+        # keystore = "{default_keystore}"
         "#,
         default_url = FREE_RPC_PROVIDER_URL,
         default_accounts_file = "~/.starknet_accounts/starknet_open_zeppelin_accounts.json",

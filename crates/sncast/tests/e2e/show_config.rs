@@ -15,6 +15,7 @@ async fn test_show_config_from_snfoundry_toml() {
         accounts_file_path: ../account-file
         chain_id: alpha-sepolia
         rpc_url: {}
+        show_explorer_links: true
         wait_retry_interval: 5
         wait_timeout: 300
     ", URL});
@@ -44,6 +45,7 @@ async fn test_show_config_from_cli() {
         chain_id: alpha-sepolia
         keystore: ../keystore
         rpc_url: {}
+        show_explorer_links: true
         wait_retry_interval: 1
         wait_timeout: 2
     ", URL});
@@ -60,9 +62,11 @@ async fn test_show_config_from_cli_and_snfoundry_toml() {
         command: show-config
         account: user2
         accounts_file_path: ../account-file
+        block_explorer: StarkScan
         chain_id: alpha-sepolia
         profile: profile2
         rpc_url: {}
+        show_explorer_links: true
         wait_retry_interval: 5
         wait_timeout: 300
     ", URL});
@@ -82,6 +86,7 @@ async fn test_show_config_when_no_keystore() {
         chain_id: alpha-sepolia
         profile: profile4
         rpc_url: {}
+        show_explorer_links: true
         wait_retry_interval: 5
         wait_timeout: 300
     ", URL});
@@ -101,6 +106,7 @@ async fn test_show_config_when_keystore() {
         keystore: ../keystore
         profile: profile3
         rpc_url: {}
+        show_explorer_links: true
         wait_retry_interval: 5
         wait_timeout: 300
     ", URL});
