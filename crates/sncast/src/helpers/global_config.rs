@@ -29,12 +29,11 @@ pub fn get_global_config_path() -> Result<Utf8PathBuf> {
     let global_config_path =
         Utf8PathBuf::from_path_buf(global_config_dir.join("snfoundry.toml")).unwrap();
 
-    if global_config_path.exists() {
-        Ok(global_config_path)
-    } else {
+    if !global_config_path.exists() {
         create_global_config(global_config_path.clone())?;
-        Ok(global_config_path)
     }
+
+    Ok(global_config_path)
 }
 
 fn build_default_manifest() -> String {
