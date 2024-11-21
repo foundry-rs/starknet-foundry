@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use assert_fs::TempDir;
 use clap::Parser;
 use docs::validation::{
     assert_valid_snippet, create_listings_to_packages_mapping, extract_snippets_from_directory,
@@ -63,24 +64,17 @@ fn test_docs_snippets() {
         args.retain(|element| element != &"snforge" && element != &"test");
 
         if let Some(snippet_output) = &snippet.output {
-            let package = snippet
+            let package_name = snippet
                 .capture_package_from_output()
                 .expect("Failed to capture package from command output");
 
-            let temp = if is_package_from_docs_listings(&package, &listings_to_packages_mapping) {
-                setup_package_from_docs_listings(&package, &listings_to_packages_mapping)
-            } else {
-                let package = if ["addition", "fibonacci"].contains(&package.as_str()) {
-                    "hello_workspaces"
+            let temp =
+                if is_package_from_docs_listings(&package_name, &listings_to_packages_mapping) {
+                    setup_package_from_docs_listings(&package_name, &listings_to_packages_mapping)
                 } else {
-                    &package
+                    resolve_package_name(&package_name)
                 };
-                if package == "hello_workspaces" {
-                    setup_hello_workspace()
-                } else {
-                    setup_package(package)
-                }
-            };
+
             let output = test_runner(&temp).args(args).assert();
 
             assert_stdout_contains(output, snippet_output);
@@ -88,4 +82,11 @@ fn test_docs_snippets() {
     }
 
     print_success_message(snippets.len(), snippet_type.as_str());
+}
+
+fn resolve_package_name(package_name: &str) -> TempDir {
+    match package_name {
+        "addition" | "fibonacci" => setup_hello_workspace(),
+        _ => setup_package(package_name),
+    }
 }
