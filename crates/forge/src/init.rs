@@ -5,6 +5,7 @@ use include_dir::{include_dir, Dir};
 use indoc::formatdoc;
 use scarb_api::ScarbCommand;
 use semver::Version;
+use shared::consts::FREE_RPC_PROVIDER_URL;
 use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
@@ -23,15 +24,16 @@ fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
         # Visit https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html
         # and https://foundry-rs.github.io/starknet-foundry/projects/configuration.html for more information
 
-        # [sncast.default]                                       # Define a profile name
-        # url = "https://starknet-sepolia.public.blastapi.io"    # Url of the RPC provider
-        # accounts-file = "../account-file"                      # Path to the file with the account data
-        # account = "mainuser"                                   # Account from `accounts_file` or default account file that will be used for the transactions
-        # keystore = "~/keystore"                                # Path to the keystore file
-        # wait-params = {{ timeout = 500, retry-interval = 10 }}   # Wait for submitted transaction parameters
-        # block-explorer = "StarkScan"                           # Block explorer service used to display links to transaction details
-        # show-explorer-links = true                             # Print links pointing to pages with transaction details in the chosen block explorer
-        "#
+        # [sncast.default]                                         # Define a profile name
+        # url = "{default_rpc_url}" # Url of the RPC provider
+        # accounts-file = "../account-file"                        # Path to the file with the account data
+        # account = "mainuser"                                     # Account from `accounts_file` or default account file that will be used for the transactions
+        # keystore = "~/keystore"                                  # Path to the keystore file
+        # wait-params = {{ timeout = 300, retry-interval = 10 }}     # Wait for submitted transaction parameters
+        # block-explorer = "StarkScan"                             # Block explorer service used to display links to transaction details
+        # show-explorer-links = true                               # Print links pointing to pages with transaction details in the chosen block explorer
+        "#,
+            default_rpc_url = FREE_RPC_PROVIDER_URL,
         },
     )?;
 
