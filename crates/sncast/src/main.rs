@@ -759,27 +759,29 @@ fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
 }
 
 fn combine_cast_configs(global_config: &mut CastConfig, config: &CastConfig) {
-    if config.url != String::default() {
+    let default_cast_config = CastConfig::default();
+
+    if config.url != default_cast_config.url {
         global_config.url.clone_from(&config.url);
     }
-    if config.account != String::default() {
+    if config.account != default_cast_config.account {
         global_config.account.clone_from(&config.account);
     }
-    if config.accounts_file != Utf8PathBuf::default() {
+    if config.accounts_file != default_cast_config.accounts_file {
         global_config
             .accounts_file
             .clone_from(&config.accounts_file);
     }
-    if config.keystore != Option::default() {
+    if config.keystore != default_cast_config.keystore {
         global_config.keystore.clone_from(&config.keystore);
     }
-    if config.wait_params != ValidatedWaitParams::default() {
+    if config.wait_params != default_cast_config.wait_params {
         global_config.wait_params = config.wait_params;
     }
-    if config.block_explorer != Some(Service::default()) {
+    if config.block_explorer != default_cast_config.block_explorer {
         global_config.block_explorer = config.block_explorer;
     }
-    if config.show_explorer_links != show_explorer_links_default() {
+    if config.show_explorer_links != default_cast_config.show_explorer_links {
         global_config.show_explorer_links = config.show_explorer_links;
     }
 }

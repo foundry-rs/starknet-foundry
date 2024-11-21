@@ -1,10 +1,10 @@
+use super::block_explorer;
 use crate::ValidatedWaitParams;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use configuration::GlobalConfig;
 use serde::{Deserialize, Serialize};
-
-use super::block_explorer;
+use shared::consts::FREE_RPC_PROVIDER_URL;
 
 #[must_use]
 pub const fn show_explorer_links_default() -> bool {
@@ -52,7 +52,7 @@ pub struct CastConfig {
 impl Default for CastConfig {
     fn default() -> Self {
         Self {
-            url: String::default(),
+            url: FREE_RPC_PROVIDER_URL.to_string(),
             account: String::default(),
             accounts_file: Utf8PathBuf::default(),
             keystore: None,
