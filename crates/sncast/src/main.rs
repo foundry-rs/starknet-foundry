@@ -1,8 +1,6 @@
-use crate::starknet_commands::account::Account;
-use crate::starknet_commands::show_config::ShowConfig;
 use crate::starknet_commands::{
-    account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
-    script::Script, tx_status::TxStatus,
+    account, account::Account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke,
+    multicall::Multicall, script::Script, show_config::ShowConfig, tx_status::TxStatus,
 };
 use anyhow::{Context, Result};
 use configuration::load_global_config;

@@ -34,6 +34,8 @@ pub async fn show_config(
     }
     let wait_timeout = Some(cast_config.wait_params.get_timeout());
     let wait_retry_interval = Some(cast_config.wait_params.get_retry_interval());
+    let block_explorer = cast_config.block_explorer;
+    let show_explorer_links = cast_config.show_explorer_links;
 
     Ok(ShowConfigResponse {
         profile,
@@ -44,5 +46,7 @@ pub async fn show_config(
         keystore,
         wait_timeout: wait_timeout.map(|x| Decimal(u64::from(x))),
         wait_retry_interval: wait_retry_interval.map(|x| Decimal(u64::from(x))),
+        block_explorer,
+        show_explorer_links,
     })
 }

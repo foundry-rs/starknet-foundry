@@ -1,4 +1,5 @@
 use super::explorer_link::OutputLink;
+use crate::helpers::block_explorer;
 use crate::helpers::block_explorer::LinkProvider;
 use camino::Utf8PathBuf;
 use conversions::padded_felt::PaddedFelt;
@@ -114,6 +115,8 @@ pub struct ShowConfigResponse {
     pub keystore: Option<Utf8PathBuf>,
     pub wait_timeout: Option<Decimal>,
     pub wait_retry_interval: Option<Decimal>,
+    pub block_explorer: Option<block_explorer::Service>,
+    pub show_explorer_links: bool,
 }
 impl CommandResponse for ShowConfigResponse {}
 
