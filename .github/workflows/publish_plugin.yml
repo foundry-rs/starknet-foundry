@@ -1,4 +1,5 @@
-name: publish_plugin.yml
+name: Publish snforge_scarb_plugin
+
 on:
   workflow_call:
   workflow_dispatch:
@@ -18,8 +19,7 @@ jobs:
 
       - uses: software-mansion/setup-scarb@v1
         with:
-          # todo: Use scarb stable version that support publishing plugins (after 2.8.4)
-          scarb-version: "nightly-2024-11-09"
+          scarb-version: "2.8.5"
 
       - name: Publish snforge_scarb_plugin
         working-directory: crates/snforge-scarb-plugin

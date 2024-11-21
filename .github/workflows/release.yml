@@ -250,7 +250,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.create-release.outputs.computed-prefix }}${{ steps.create-release.outputs.version }}
 
-  check-plugin-version:
+  upload-plugin-version:
     name: Check if plugin version exist in the registry and upload if not
     runs-on: ubuntu-latest
     steps:
@@ -259,23 +259,21 @@ jobs:
       - name: Check version
         id: check-version
         run: |
-          set -eo pipefail
+          set -exo pipefail
 
           snforge_scarb_plugin_version=$(grep version crates/snforge-scarb-plugin/Scarb.toml | cut -d '"' -f 2)
-          snforge_scarb_plugin=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version $snforge_scarb_plugin_version '[.[] | select(.v == $version)] | length > 0')
-          echo "snforge_scarb_plugin=$snforge_scarb_plugin"
-          echo "snforge_scarb_plugin=$snforge_scarb_plugin" >> $GITHUB_OUTPUT
+          snforge_scarb_plugin_uploaded=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version "$snforge_scarb_plugin_version" '[.[] | select(.v == $version)] | length > 0')
+          echo "snforge_scarb_plugin_uploaded=snforge_scarb_plugin_uploaded" >> $GITHUB_OUTPUT
 
       - name: Publish snforge_scarb_plugin
-        if: steps.check-version.outputs.snforge_scarb_plugin == 'false'
+        if: steps.check-version.outputs.snforge_scarb_plugin_uploaded == 'false'
         uses: ./.github/workflows/publish_plugin.yml
         run: echo "Publishing snforge_scarb_plugin"
 
-  upload-to-registry:
+  publish-to-registry:
     name: Upload packages to the registry
     runs-on: ubuntu-latest
-    needs: [ check-plugin-version, verify-version ]
-    if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
+    needs: [ create-release, upload-plugin-version ]
     env:
       SCARB_REGISTRY_AUTH_TOKEN: ${{ secrets.SCARB_REGISTRY_AUTH_TOKEN }}
     steps:
@@ -287,8 +285,7 @@ jobs:
 
       - uses: software-mansion/setup-scarb@v1
         with:
-          # todo: Use scarb stable version that support publishing plugins (after 2.8.4)
-          scarb-version: "nightly-2024-11-09"
+          scarb-version: "2.8.5"
 
       - name: Publish sncast_std
         working-directory: sncast_std
