@@ -66,11 +66,12 @@ In the example above we called a function with a deserialized argument: `'"Chari
 
 ### Using Serialized Calldata
 
-Equivalent to the previous example, the same result can be obtained by passing serialized calldata - a list of hexadecimal encoded field elements.
+The same result can be achieved by passing serialized calldata, which is a list of hexadecimal-encoded field elements.
 
-In this example equivalent to passing `--calldata` with the following value: `0x0 0x43686172697a617264 0x9`.
+For example, this is equivalent to using the --calldata option with the following value: 0x0 0x43686172697a617264  0x9.
 
-To obtain the serialized form of the wished data, one must write a Cairo program calling `Serde::serialize` on subsequent arguments and displaying the results.
+To obtain the serialized form of the wished data, you can write a Cairo program that calls `Serde::serialize` on subsequent arguments and displays the results.
+
 Read more about it in the [Cairo documentation](https://book.cairo-lang.org/appendix-03-derivable-traits.html?highlight=seri#serializing-with-serde).
 
 ### How to Use `--wait` Flag
