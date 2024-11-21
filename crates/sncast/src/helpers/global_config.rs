@@ -9,18 +9,17 @@ use std::fs::File;
 use std::io::Write;
 
 pub fn get_global_config_path() -> Result<Utf8PathBuf> {
-    let config_dir = if cfg!(target_os = "windows") {
-        dirs::config_dir()
-    } else {
-        dirs::home_dir()
-    }
-    .ok_or_else(|| anyhow::anyhow!("Could not determine config directory"))?;
-
-    let global_config_dir = config_dir.join(if cfg!(target_os = "windows") {
-        "starknet-foundry"
-    } else {
-        ".config/starknet-foundry"
-    });
+    let global_config_dir = {
+        if cfg!(target_os = "windows") {
+            dirs::config_dir()
+                .ok_or_else(|| anyhow::anyhow!("Could not determine config directory"))?
+                .join("starknet-foundry")
+        } else {
+            dirs::home_dir()
+                .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?
+                .join(".config/starknet-foundry")
+        }
+    };
 
     if !global_config_dir.exists() {
         fs::create_dir_all(&global_config_dir)?;
@@ -43,11 +42,11 @@ fn build_default_manifest() -> String {
         # Visit https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html
         # and https://foundry-rs.github.io/starknet-foundry/projects/configuration.html for more information
 
-        [sncast.default]
-        url = "{default_url}"
-        block-explorer = "{default_block_explorer}"
-        wait-params = {{ timeout = {default_wait_timeout}, retry-interval = {default_wait_retry_interval} }}
-        show-explorer-links = {default_show_explorer_links}
+        # [sncast.default]
+        # url = "{default_url}"
+        # block-explorer = "{default_block_explorer}"
+        # wait-params = {{ timeout = {default_wait_timeout}, retry-interval = {default_wait_retry_interval} }}
+        # show-explorer-links = {default_show_explorer_links}
         # accounts-file = "{default_accounts_file}"
         # account = "{default_account}"
         # keystore = "{default_keystore}"
