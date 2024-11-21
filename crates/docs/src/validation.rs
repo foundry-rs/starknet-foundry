@@ -99,6 +99,7 @@ pub fn extract_snippets_from_file(
             })
         })
         .collect();
+
     Ok(snippets)
 }
 
