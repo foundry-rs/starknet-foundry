@@ -25,9 +25,9 @@ $ sncast \
   --function "add" \
   --fee-token eth \
   --arguments 'pokemons::model::PokemonData {'\ 
-    ' name: "Magmar",'\
-    ' element: pokemons::model::Element::Fire'\ 
-    '}'
+  'name: "Magmar",'\
+  'element: pokemons::model::Element::Fire'\ 
+  '}'
 ```
 
 <details>
