@@ -250,7 +250,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.create-release.outputs.computed-prefix }}${{ steps.create-release.outputs.version }}
 
-  upload-plugin-version:
+  publish-snforge-scarb-plugin:
     name: Check if plugin version exist in the registry and upload if not
     runs-on: ubuntu-latest
     steps:
@@ -268,12 +268,11 @@ jobs:
       - name: Publish snforge_scarb_plugin
         if: steps.check-version.outputs.snforge_scarb_plugin_uploaded == 'false'
         uses: ./.github/workflows/publish_plugin.yml
-        run: echo "Publishing snforge_scarb_plugin"
 
   publish-to-registry:
     name: Upload packages to the registry
     runs-on: ubuntu-latest
-    needs: [ create-release, upload-plugin-version ]
+    needs: [ create-release, publish-snforge-scarb-plugin ]
     env:
       SCARB_REGISTRY_AUTH_TOKEN: ${{ secrets.SCARB_REGISTRY_AUTH_TOKEN }}
     steps:
