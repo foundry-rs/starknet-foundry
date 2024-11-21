@@ -1,3 +1,5 @@
+use crate::helpers::configuration::show_explorer_links_default;
+use crate::ValidatedWaitParams;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use indoc::formatdoc;
@@ -34,24 +36,36 @@ pub fn get_global_config_path() -> Result<Utf8PathBuf> {
     }
 }
 
-fn create_global_config(global_config_path: Utf8PathBuf) -> Result<()> {
-    let mut file = File::create(global_config_path)?;
-    file.write_all(
-        formatdoc! {r#"
+fn build_default_config() -> String {
+    let default_url = "https://starknet-sepolia.public.blastapi.io";
+    let default_accounts_file = "~/.starknet_accounts/starknet_open_zeppelin_accounts.json";
+    let default_wait_params = ValidatedWaitParams::default();
+    let default_wait_timeout = default_wait_params.timeout;
+    let default_wait_retry_interval = default_wait_params.retry_interval;
+    let default_block_explorer = "StarkScan";
+    let default_show_explorer_links = show_explorer_links_default();
+    let default_account = "default";
+    let default_keystore = "";
+
+    formatdoc! {r#"
         # Visit https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html
         # and https://foundry-rs.github.io/starknet-foundry/projects/configuration.html for more information
 
         [sncast.default]
-        url = "https://starknet-sepolia.public.blastapi.io"
-        # accounts-file = "~/.starknet_accounts/starknet_open_zeppelin_accounts.json"
-        # wait-params = {{ timeout = 500, retry-interval = 10 }}
-        # block-explorer = "StarkScan"
-        # show-explorer-links = true
-        # account = "default"
-        # keystore = ""
+        url = "{default_url}"
+        accounts-file = "{default_accounts_file}"
+        block-explorer = "{default_block_explorer}"
+        wait-params = {{ timeout = {default_wait_timeout}, retry-interval = {default_wait_retry_interval} }}
+        show-explorer-links = {default_show_explorer_links}
+        account = "{default_account}"
+        keystore = "{default_keystore}"
         "#
-        }.as_bytes(),
-    )?;
+    }
+}
+
+fn create_global_config(global_config_path: Utf8PathBuf) -> Result<()> {
+    let mut file = File::create(global_config_path)?;
+    file.write_all(build_default_config().as_bytes())?;
 
     Ok(())
 }

@@ -11,6 +11,8 @@ use sncast::response::print::{print_command_result, OutputFormat};
 use crate::starknet_commands::deploy::DeployArguments;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
+use sncast::helpers::block_explorer::Service;
+use sncast::helpers::configuration::show_explorer_links_default;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::fee::PayableTransaction;
@@ -737,7 +739,11 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
 }
 
 fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
-    let global_config_path = get_global_config_path().unwrap_or_default();
+    let global_config_path = get_global_config_path().unwrap_or_else(|err| {
+        eprintln!("Error getting global config path: {err}");
+        Utf8PathBuf::new()
+    });
+
     let mut global_config =
         load_global_config::<CastConfig>(&Some(global_config_path.clone()), &cli.profile)
             .unwrap_or_else(|_| {
@@ -770,10 +776,10 @@ fn combine_cast_configs(global_config: &mut CastConfig, config: &CastConfig) {
     if config.wait_params != ValidatedWaitParams::default() {
         global_config.wait_params = config.wait_params;
     }
-    if config.block_explorer != Option::default() {
+    if config.block_explorer != Some(Service::default()) {
         global_config.block_explorer = config.block_explorer;
     }
-    if !config.show_explorer_links {
+    if config.show_explorer_links != show_explorer_links_default() {
         global_config.show_explorer_links = config.show_explorer_links;
     }
 }

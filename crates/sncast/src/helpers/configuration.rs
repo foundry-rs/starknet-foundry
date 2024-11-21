@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 
 use super::block_explorer;
 
-const fn show_explorer_links_default() -> bool {
+#[must_use]
+pub const fn show_explorer_links_default() -> bool {
     true
 }
 
@@ -57,7 +58,7 @@ impl Default for CastConfig {
             keystore: None,
             wait_params: ValidatedWaitParams::default(),
             block_explorer: Some(block_explorer::Service::default()),
-            show_explorer_links: true,
+            show_explorer_links: show_explorer_links_default(),
         }
     }
 }
