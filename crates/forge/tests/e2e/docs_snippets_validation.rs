@@ -39,7 +39,6 @@ fn test_docs_snippets() {
     // TODO(#2684)
     let skipped_args = [
         // For some reason `try_parse_from` fails on `--version` flag, it returns Err but produces the expected output
-        // Not sure if this edge case is worth handling
         vec!["snforge", "--version"],
     ];
 
