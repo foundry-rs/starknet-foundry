@@ -53,6 +53,7 @@ cairo-lang-parser = "2.7.0"
 cairo-lang-macro = "0.1.0"
 cairo-vm = "1.0.0-rc3"
 cairo-annotations = "0.1.0"
+dirs = "5.0.1"
 starknet-types-core = { version = "0.1.7", features = ["hash", "prime-bigint"] }
 anyhow = "1.0.92"
 assert_fs = "1.1.2"
