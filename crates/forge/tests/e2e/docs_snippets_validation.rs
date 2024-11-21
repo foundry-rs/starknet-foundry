@@ -83,7 +83,7 @@ fn resolve_temp_dir(
 ) -> TempDir {
     if is_package_from_docs_listings(package_name, listings_to_packages_mapping) {
         setup_package_from_docs_listings(package_name, listings_to_packages_mapping)
-    } else if ["addition", "fibonacci"].contains(&package_name) {
+    } else if ["addition", "fibonacci", "hello_workspaces"].contains(&package_name) {
         setup_hello_workspace()
     } else {
         setup_package(package_name)
