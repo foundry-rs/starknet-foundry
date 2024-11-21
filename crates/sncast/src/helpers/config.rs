@@ -1,4 +1,4 @@
-use crate::helpers::configuration::show_explorer_links_default;
+use crate::helpers::configuration::{show_explorer_links_default, CastConfig};
 use crate::ValidatedWaitParams;
 use anyhow::Result;
 use camino::Utf8PathBuf;
@@ -67,4 +67,47 @@ fn create_global_config(global_config_path: Utf8PathBuf) -> Result<()> {
     file.write_all(build_default_manifest().as_bytes())?;
 
     Ok(())
+}
+macro_rules! clone_field {
+    ($global_config:expr, $local_config:expr, $default_config:expr, $field:ident) => {
+        if $local_config.$field != $default_config.$field {
+            $local_config.$field.clone()
+        } else {
+            $global_config.$field.clone()
+        }
+    };
+}
+
+pub fn combine_cast_configs(global_config: &CastConfig, local_config: &CastConfig) -> CastConfig {
+    let default_cast_config = CastConfig::default();
+
+    CastConfig {
+        url: clone_field!(global_config, local_config, default_cast_config, url),
+        account: clone_field!(global_config, local_config, default_cast_config, account),
+        accounts_file: clone_field!(
+            global_config,
+            local_config,
+            default_cast_config,
+            accounts_file
+        ),
+        keystore: clone_field!(global_config, local_config, default_cast_config, keystore),
+        wait_params: clone_field!(
+            global_config,
+            local_config,
+            default_cast_config,
+            wait_params
+        ),
+        block_explorer: clone_field!(
+            global_config,
+            local_config,
+            default_cast_config,
+            block_explorer
+        ),
+        show_explorer_links: clone_field!(
+            global_config,
+            local_config,
+            default_cast_config,
+            show_explorer_links
+        ),
+    }
 }

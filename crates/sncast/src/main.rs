@@ -3,7 +3,6 @@ use crate::starknet_commands::{
     multicall::Multicall, script::Script, show_config::ShowConfig, tx_status::TxStatus,
 };
 use anyhow::{Context, Result};
-use configuration::load_global_config;
 use data_transformer::Calldata;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{print_command_result, OutputFormat};
@@ -11,10 +10,11 @@ use sncast::response::print::{print_command_result, OutputFormat};
 use crate::starknet_commands::deploy::DeployArguments;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
+use configuration::load_global_config;
+use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::fee::PayableTransaction;
-use sncast::helpers::global_config::get_global_config_path;
 use sncast::helpers::scarb_utils::{
     assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
     get_scarb_metadata_with_deps, BuildConfig,
@@ -754,48 +754,4 @@ fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
 
     update_cast_config(&mut combined_config, cli);
     Ok(combined_config)
-}
-
-macro_rules! clone_field {
-    ($global_config:expr, $local_config:expr, $default_config:expr, $field:ident) => {
-        if $local_config.$field != $default_config.$field {
-            $local_config.$field.clone()
-        } else {
-            $global_config.$field.clone()
-        }
-    };
-}
-
-fn combine_cast_configs(global_config: &CastConfig, local_config: &CastConfig) -> CastConfig {
-    let default_cast_config = CastConfig::default();
-
-    CastConfig {
-        url: clone_field!(global_config, local_config, default_cast_config, url),
-        account: clone_field!(global_config, local_config, default_cast_config, account),
-        accounts_file: clone_field!(
-            global_config,
-            local_config,
-            default_cast_config,
-            accounts_file
-        ),
-        keystore: clone_field!(global_config, local_config, default_cast_config, keystore),
-        wait_params: clone_field!(
-            global_config,
-            local_config,
-            default_cast_config,
-            wait_params
-        ),
-        block_explorer: clone_field!(
-            global_config,
-            local_config,
-            default_cast_config,
-            block_explorer
-        ),
-        show_explorer_links: clone_field!(
-            global_config,
-            local_config,
-            default_cast_config,
-            show_explorer_links
-        ),
-    }
 }
