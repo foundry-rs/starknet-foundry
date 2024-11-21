@@ -72,6 +72,7 @@ fn test_docs_snippets() {
                 .capture_package_from_output()
                 .expect("Failed to capture package from command output");
 
+            // TODO(#2698)
             let temp =
                 if is_package_from_docs_listings(&package_name, &listings_to_packages_mapping) {
                     setup_package_from_docs_listings(&package_name, &listings_to_packages_mapping)
