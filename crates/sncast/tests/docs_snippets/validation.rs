@@ -48,7 +48,10 @@ fn test_docs_snippets() {
 
     for snippet in &snippets {
         let args = snippet.to_command_args();
-        let args: Vec<&str> = args.iter().map(String::as_str).collect();
+        let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
+
+        // remove "sncast" from the args
+        args.remove(0);
 
         if skipped_args.contains(&args) {
             print_skipped_snippet_message(snippet, "sncast");

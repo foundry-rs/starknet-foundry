@@ -26,7 +26,7 @@ impl SnippetType {
     #[must_use]
     pub fn get_re(&self) -> Regex {
         let pattern = format!(
-            r"(?ms)^```shell\n\$ ({} [^\n]+)\n```\s*(?:<details>\n<summary>Output:</summary>\n\n```shell\n([\s\S]+?)\n```\s*<\/details>)?",
+            r"(?ms)^```shell\n\$ ({} .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n([\s\S]+?)\n```[\s]*<\/details>)?",
             self.as_str()
         );
 
