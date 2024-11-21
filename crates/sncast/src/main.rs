@@ -758,30 +758,26 @@ fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
     Ok(global_config)
 }
 
-fn combine_cast_configs(global_config: &mut CastConfig, config: &CastConfig) {
+macro_rules! clone_field {
+    ($global_config:expr, $local_config:expr, $default_config:expr, $field:ident) => {
+        if $local_config.$field != $default_config.$field {
+            $local_config.$field.clone()
+        } else {
+            $global_config.$field.clone()
+        }
+    };
+}
+
+fn combine_cast_configs(global_config: &mut CastConfig, local_config: &CastConfig) -> CastConfig{
     let default_cast_config = CastConfig::default();
 
-    if config.url != default_cast_config.url {
-        global_config.url.clone_from(&config.url);
-    }
-    if config.account != default_cast_config.account {
-        global_config.account.clone_from(&config.account);
-    }
-    if config.accounts_file != default_cast_config.accounts_file {
-        global_config
-            .accounts_file
-            .clone_from(&config.accounts_file);
-    }
-    if config.keystore != default_cast_config.keystore {
-        global_config.keystore.clone_from(&config.keystore);
-    }
-    if config.wait_params != default_cast_config.wait_params {
-        global_config.wait_params = config.wait_params;
-    }
-    if config.block_explorer != default_cast_config.block_explorer {
-        global_config.block_explorer = config.block_explorer;
-    }
-    if config.show_explorer_links != default_cast_config.show_explorer_links {
-        global_config.show_explorer_links = config.show_explorer_links;
+    CastConfig {
+        url: clone_field!(global_config, local_config, default_cast_config, url),
+        account: clone_field!(global_config, local_config, default_cast_config, account),
+        accounts_file: clone_field!(global_config, local_config, default_cast_config, accounts_file),
+        keystore: clone_field!(global_config, local_config, default_cast_config, keystore),
+        wait_params: clone_field!(global_config, local_config, default_cast_config, wait_params),
+        block_explorer: clone_field!(global_config, local_config, default_cast_config, block_explorer),
+        show_explorer_links: clone_field!(global_config, local_config, default_cast_config, show_explorer_links),
     }
 }
