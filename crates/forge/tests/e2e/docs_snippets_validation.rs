@@ -67,13 +67,7 @@ fn test_docs_snippets() {
                 .expect("Failed to capture package from command output");
 
             // TODO(#2698)
-            let temp =
-                if is_package_from_docs_listings(&package_name, &listings_to_packages_mapping) {
-                    setup_package_from_docs_listings(&package_name, &listings_to_packages_mapping)
-                } else {
-                    resolve_package_name(&package_name)
-                };
-
+            let temp = resolve_temp_dir(&package_name, &listings_to_packages_mapping);
             let output = test_runner(&temp).args(args).assert();
 
             assert_stdout_contains(output, snippet_output);
@@ -83,9 +77,15 @@ fn test_docs_snippets() {
     print_success_message(snippets.len(), snippet_type.as_str());
 }
 
-fn resolve_package_name(package_name: &str) -> TempDir {
-    match package_name {
-        "addition" | "fibonacci" => setup_hello_workspace(),
-        _ => setup_package(package_name),
+fn resolve_temp_dir(
+    package_name: &str,
+    listings_to_packages_mapping: &HashMap<String, Vec<String>>,
+) -> TempDir {
+    if is_package_from_docs_listings(package_name, listings_to_packages_mapping) {
+        setup_package_from_docs_listings(package_name, listings_to_packages_mapping)
+    } else if ["addition", "fibonacci"].contains(&package_name) {
+        setup_hello_workspace()
+    } else {
+        setup_package(package_name)
     }
 }
