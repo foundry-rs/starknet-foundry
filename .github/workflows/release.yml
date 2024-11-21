@@ -263,7 +263,7 @@ jobs:
 
           snforge_scarb_plugin_version=$(grep version crates/snforge-scarb-plugin/Scarb.toml | cut -d '"' -f 2)
           snforge_scarb_plugin_uploaded=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version "$snforge_scarb_plugin_version" '[.[] | select(.v == $version)] | length > 0')
-          echo "snforge_scarb_plugin_uploaded=snforge_scarb_plugin_uploaded" >> $GITHUB_OUTPUT
+          echo "snforge_scarb_plugin_uploaded=$snforge_scarb_plugin_uploaded" >> $GITHUB_OUTPUT
 
       - name: Publish snforge_scarb_plugin
         if: steps.check-version.outputs.snforge_scarb_plugin_uploaded == 'false'
