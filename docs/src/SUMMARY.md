@@ -24,6 +24,8 @@
 * [Testing Workspaces](testing/testing-workspaces.md)
 * [Test Collection](testing/test-collection.md)
 * [Contract Collection](testing/contracts-collection.md)
+    * [Optimized Mechanism](testing/contract-collection/new-mechanism.md)
+    * [Old Mechanism](testing/contract-collection/old-mechanism.md)
 * [Gas and VM Resources Estimation](testing/gas-and-resource-estimation.md)
 * [Coverage](testing/coverage.md)
 
