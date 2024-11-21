@@ -42,7 +42,6 @@ async fn test_show_config_from_cli() {
     snapbox.assert().success().stdout_eq(formatdoc! {r"
         command: show-config
         account: /path/to/account.json
-        block_explorer: StarkScan
         chain_id: alpha-sepolia
         keystore: ../keystore
         rpc_url: {}
