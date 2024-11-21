@@ -25,8 +25,8 @@ pub fn get_global_config_path() -> Result<Utf8PathBuf> {
         fs::create_dir_all(&global_config_dir)?;
     }
 
-    let global_config_path =
-        Utf8PathBuf::from_path_buf(global_config_dir.join("snfoundry.toml")).unwrap();
+    let global_config_path = Utf8PathBuf::from_path_buf(global_config_dir.join("snfoundry.toml"))
+        .expect("Failed to convert PathBuf to Utf8PathBuf for global configuration");
 
     if !global_config_path.exists() {
         create_global_config(global_config_path.clone())?;
