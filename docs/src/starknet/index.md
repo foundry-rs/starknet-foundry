@@ -50,21 +50,28 @@ response: [0x0, 0x0, 0x43686172697a617264, 0x9, 0x0, 0x0, 0x41a78e741e5af2fec34b
 > In the above example we supply `sncast` with `--account` and `--url` flags. If `snfoundry.toml` is present, and have these properties set, values provided using these flags will override values from `snfoundry.toml`. Learn more about `snfoundry.toml` configuration [here](../projects/configuration.md#sncast).
 
 
-### Arguments and Calldata
+### Arguments
 
-Some `sncast` commands (namely `call`, `deploy` and `invoke`) allow passing *calldata* - a series of arguments to perform an action with on blockchain.
+Some `sncast` commands (namely `call`, `deploy` and `invoke`) allow passing arguments to perform an action with on the blockchain.
 
-In the example above we called a function with an argument: `'"Charizard"'`, passed using `--arguments` flag, but it can
-be also obtained by passing a serialized form, in this example equivalent to passing `--calldata` with the following value: `0x0 0x43686172697a617264 0x9`.
+Under the hood cast always send request with serialized form of arguments, but it can be passed in 
+human-readable form thanks to the [calldata transformation](./calldata-transformation.md) feature present in Cast.
 
-To obtain the serialized form of the wished data, one must write a Cairo program calling `Serde::serialize` on subsequent arguments and displaying the results.
-Read more about it in the [Cairo documentation](https://book.cairo-lang.org/appendix-03-derivable-traits.html?highlight=seri#serializing-with-serde).
-
-It is also possible to pass calldata in more friendly, human readable form thanks to the [calldata transformation](./calldata-transformation.md) feature present in Cast.
+In the example above we called a function with a deserialized argument: `'"Charizard"'`, passed using `--arguments` flag.
 
 > ⚠️ **Warning**
 > Cast will not verify the serialized calldata. Any errors caused by passing improper calldata in a serialized form will originate from the network.
 > Basic static analysis is possible only when passing expressions - see [calldata transformation](./calldata-transformation.md).
+
+
+### Using Serialized Calldata
+
+Equivalent to the previous example, the same result can be obtained by passing serialized calldata - a list of hexadecimal encoded field elements.
+
+In this example equivalent to passing `--calldata` with the following value: `0x0 0x43686172697a617264 0x9`.
+
+To obtain the serialized form of the wished data, one must write a Cairo program calling `Serde::serialize` on subsequent arguments and displaying the results.
+Read more about it in the [Cairo documentation](https://book.cairo-lang.org/appendix-03-derivable-traits.html?highlight=seri#serializing-with-serde).
 
 ### How to Use `--wait` Flag
 
