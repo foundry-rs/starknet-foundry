@@ -113,7 +113,7 @@ $ sncast --url http://127.0.0.1:5050 \
     invoke \
     --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
     --function "some_function" \
-    --arguments '0x1, 0x2, 0x3'
+    --arguments '1, 2, 3'
 ```
 
 <details>
@@ -133,7 +133,7 @@ With arguments taken from `snfoundry.toml` file (default profile name):
 $ sncast invoke \
     --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
     --function "some_function" \
-    --arguments '0x1, 0x2, 0x3'
+    --arguments '1, 2, 3'
 ```
 
 <details>
@@ -153,7 +153,7 @@ $ sncast --url http://127.0.0.1:5050 \
     call \
     --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
     --function "some_function" \
-    --arguments '0x1, 0x2, 0x3'
+    --arguments '1, 2, 3'
 ```
 
 <details>
@@ -173,7 +173,7 @@ With arguments taken from `snfoundry.toml` file (default profile name):
 $ sncast call \
     --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
     --function "some_function" \
-    --arguments '0x1, 0x2, 0x3'
+    --arguments '1, 2, 3'
 ```
 
 <details>

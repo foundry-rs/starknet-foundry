@@ -57,7 +57,6 @@ Some `sncast` commands (namely `call`, `deploy` and `invoke`) allow passing *cal
 In the example above we called a function with an argument: `'"Charizard"'`, passed using `--arguments` flag, but it can
 be also obtained by passing a serialized form, in this example equivalent to passing `--calldata` with the following value: `0x0 0x43686172697a617264 0x9`.
 
-Please note the notation of the argument. The default way of passing calldata is a list of hexadecimally encoded field elements - the *serialized* calldata.
 To obtain the serialized form of the wished data, one must write a Cairo program calling `Serde::serialize` on subsequent arguments and displaying the results.
 Read more about it in the [Cairo documentation](https://book.cairo-lang.org/appendix-03-derivable-traits.html?highlight=seri#serializing-with-serde).
 
