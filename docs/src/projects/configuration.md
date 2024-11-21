@@ -117,8 +117,7 @@ The global configuration is stored in a specific location depending on the opera
 - Windows : The file can be found at `C:\Users\<user>\AppData\Roaming\starknet-foundry\snfoundry.toml`
 
 > 📝 **Note**
-> Global configuration file will be created automatically if it does not exist and contain predefined `default` profile.
-
+> If missing, global configuration file will be created automatically on running any `sncast` command for the first time.
 
 #### Interaction between Local and Global profiles
 
