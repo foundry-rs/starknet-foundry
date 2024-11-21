@@ -32,7 +32,7 @@ fn test_docs_snippets() {
     let root_dir = get_parent_dir(2);
     let docs_dir = root_dir.join("docs/src");
 
-    let snippet_type = SnippetType::Forge;
+    let snippet_type = SnippetType::forge();
 
     let snippets = extract_snippets_from_directory(&docs_dir, &snippet_type)
         .expect("Failed to extract command snippets");

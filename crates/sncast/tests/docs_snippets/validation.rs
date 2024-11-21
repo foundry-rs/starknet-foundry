@@ -14,7 +14,7 @@ fn test_docs_snippets() {
     let docs_dir_path = root_dir_path.join("docs/src");
     let sncast_readme_path = root_dir_path.join("crates/sncast/README.md");
 
-    let snippet_type = SnippetType::Sncast;
+    let snippet_type = SnippetType::sncast();
 
     let docs_snippets = extract_snippets_from_directory(&docs_dir_path, &snippet_type)
         .expect("Failed to extract command snippets");

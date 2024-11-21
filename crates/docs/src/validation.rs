@@ -9,25 +9,29 @@ use walkdir::WalkDir;
 const EXTENSION: Option<&str> = Some("md");
 
 #[derive(Clone, Debug)]
-pub enum SnippetType {
-    Forge,
-    Sncast,
-}
+pub struct SnippetType(String);
 
 impl SnippetType {
     #[must_use]
+    pub fn forge() -> Self {
+        SnippetType("snforge".to_string())
+    }
+
+    #[must_use]
+    pub fn sncast() -> Self {
+        SnippetType("sncast".to_string())
+    }
+
+    #[must_use]
     pub fn as_str(&self) -> &str {
-        match self {
-            SnippetType::Forge => "snforge",
-            SnippetType::Sncast => "sncast",
-        }
+        &self.0
     }
 
     #[must_use]
     pub fn get_re(&self) -> Regex {
+        let escaped_command = regex::escape(self.as_str());
         let pattern = format!(
-            r"(?ms)^(?:<!--\s*(.*?)\s*-->\n)?```shell\n\$ ({} .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n([\s\S]+?)\n```[\s]*<\/details>)?",
-            self.as_str()
+            r"(?ms)^(?:<!--\s*(.*?)\s*-->\n)?```shell\n\$ ({escaped_command} .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n([\s\S]+?)\n```[\s]*<\/details>)?"
         );
 
         Regex::new(&pattern).unwrap()
@@ -197,7 +201,7 @@ pub fn create_listings_to_packages_mapping() -> HashMap<String, Vec<String>> {
 }
 
 fn list_packages_in_directory(dir_path: &Path) -> Vec<String> {
-    let crates_path = dir_path.join("");
+    let crates_path = dir_path.to_owned();
 
     if crates_path.exists() && crates_path.is_dir() {
         WalkDir::new(crates_path)
