@@ -87,6 +87,7 @@ $ sncast \
 
 If you don't want to pass the private key in the command (because of safety aspect), you can skip `--private-key` flag. You will be prompted to enter the private key in interactive mode.
 
+<!-- ignore -->
 ```shell
 $ sncast \
     account import \

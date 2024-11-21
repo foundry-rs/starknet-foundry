@@ -26,7 +26,7 @@ impl SnippetType {
     #[must_use]
     pub fn get_re(&self) -> Regex {
         let pattern = format!(
-            r"(?ms)^```shell\n\$ ({} .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n([\s\S]+?)\n```[\s]*<\/details>)?",
+            r"(?ms)^(?:<!--\s*(.*?)\s*-->\n)?```shell\n\$ ({} .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n([\s\S]+?)\n```[\s]*<\/details>)?",
             self.as_str()
         );
 
@@ -41,6 +41,7 @@ pub struct Snippet {
     pub file_path: String,
     pub line_start: usize,
     pub snippet_type: SnippetType,
+    pub ignored: bool,
 }
 
 impl Snippet {
@@ -86,9 +87,10 @@ pub fn extract_snippets_from_file(
         .get_re()
         .captures_iter(&content)
         .filter_map(|caps| {
-            let command_match = caps.get(1)?;
+            let command_match = caps.get(2)?;
             let match_start = caps.get(0)?.start();
-            let output = caps.get(2).map(|m| m.as_str().to_string());
+            let output = caps.get(3).map(|m| m.as_str().to_string());
+            let ignored = caps.get(1).map_or(false, |m| m.as_str().contains("ignore"));
 
             Some(Snippet {
                 command: command_match.as_str().to_string(),
@@ -96,6 +98,7 @@ pub fn extract_snippets_from_file(
                 file_path: file_path_str.clone(),
                 line_start: content[..match_start].lines().count() + 1,
                 snippet_type: snippet_type.clone(),
+                ignored,
             })
         })
         .collect();

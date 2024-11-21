@@ -27,25 +27,6 @@ fn test_docs_snippets() {
         .chain(readme_snippets)
         .collect::<Vec<Snippet>>();
 
-    // TODO(#2684)
-    let skipped_args = [
-        // snippet "$ sncast <subcommand>"
-        vec!["<subcommand>"],
-        // snippet with interactive account import example
-        vec![
-            "account",
-            "import",
-            "--url",
-            "http://127.0.0.1:5050",
-            "--name",
-            "account_123",
-            "--address",
-            "0x1",
-            "--type",
-            "oz",
-        ],
-    ];
-
     for snippet in &snippets {
         let args = snippet.to_command_args();
         let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
@@ -53,7 +34,7 @@ fn test_docs_snippets() {
         // remove "sncast" from the args
         args.remove(0);
 
-        if skipped_args.contains(&args) {
+        if snippet.ignored {
             print_skipped_snippet_message(snippet);
             continue;
         }

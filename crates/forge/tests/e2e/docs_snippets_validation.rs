@@ -37,17 +37,11 @@ fn test_docs_snippets() {
     let snippets = extract_snippets_from_directory(&docs_dir, &snippet_type)
         .expect("Failed to extract command snippets");
 
-    // TODO(#2684)
-    let skipped_args = [
-        // For some reason `try_parse_from` fails on `--version` flag, it returns Err but produces the expected output
-        vec!["snforge", "--version"],
-    ];
-
     for snippet in &snippets {
         let args = snippet.to_command_args();
         let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
 
-        if skipped_args.contains(&args) {
+        if snippet.ignored {
             print_skipped_snippet_message(snippet);
             continue;
         }

@@ -11,6 +11,8 @@ Starknet Foundry `sncast` is a command line tool for performing Starknet RPC cal
 ## How to Use `sncast`
 
 To use `sncast`, run the `sncast` command followed by a subcommand (see [available commands](../appendix/sncast.md)):
+
+<!-- ignore -->
 ```shell
 $ sncast <subcommand>
 ```

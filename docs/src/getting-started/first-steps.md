@@ -73,6 +73,7 @@ snforge_std = "0.33.0"
 
 Make sure that the above version matches the installed `snforge` version. You can check the currently installed version with
 
+<!-- ignore -->
 ```shell
 $ snforge --version
 ```
