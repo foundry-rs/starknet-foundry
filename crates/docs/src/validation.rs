@@ -141,16 +141,14 @@ pub fn get_parent_dir(levels_up: usize) -> PathBuf {
     dir
 }
 
-pub fn assert_valid_snippet(
-    condition: bool,
-    snippet: &Snippet,
-    tool_name: &str,
-    err_message: &str,
-) {
+pub fn assert_valid_snippet(condition: bool, snippet: &Snippet, err_message: &str) {
     assert!(
         condition,
         "Found invalid {} snippet in the docs in at {}:{}:1\n{}",
-        tool_name, snippet.file_path, snippet.line_start, err_message
+        snippet.snippet_type.as_str(),
+        snippet.file_path,
+        snippet.line_start,
+        err_message
     );
 }
 
@@ -158,10 +156,12 @@ pub fn print_success_message(snippets_len: usize, tool_name: &str) {
     println!("Successfully validated {snippets_len} {tool_name} docs snippets");
 }
 
-pub fn print_skipped_snippet_message(snippet: &Snippet, tool_name: &str) {
+pub fn print_skipped_snippet_message(snippet: &Snippet) {
     println!(
         "Skipped validation of {} snippet in the docs in file: {} at line {}",
-        tool_name, snippet.file_path, snippet.line_start
+        snippet.snippet_type.as_str(),
+        snippet.file_path,
+        snippet.line_start,
     );
 }
 

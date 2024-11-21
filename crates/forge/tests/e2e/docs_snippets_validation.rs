@@ -48,7 +48,7 @@ fn test_docs_snippets() {
         let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
 
         if skipped_args.contains(&args) {
-            print_skipped_snippet_message(snippet, snippet_type.as_str());
+            print_skipped_snippet_message(snippet);
             continue;
         }
 
@@ -59,9 +59,13 @@ fn test_docs_snippets() {
             String::new()
         };
 
-        assert_valid_snippet(parse_result.is_ok(), snippet, "snforge", &err_message);
+        assert_valid_snippet(parse_result.is_ok(), snippet, &err_message);
 
-        args.retain(|element| element != &"snforge" && element != &"test");
+        // Remove "snforge" from the args
+        args.remove(0);
+
+        // Remove "test" from the args
+        args.retain(|element| element != &"test");
 
         if let Some(snippet_output) = &snippet.output {
             let package_name = snippet

@@ -17,10 +17,10 @@ fn test_docs_snippets() {
     let snippet_type = SnippetType::Sncast;
 
     let docs_snippets = extract_snippets_from_directory(&docs_dir_path, &snippet_type)
-        .expect("Failed to extract sncast command snippets");
+        .expect("Failed to extract command snippets");
 
     let readme_snippets = extract_snippets_from_file(&sncast_readme_path, &snippet_type)
-        .expect("Failed to extract sncast command snippets");
+        .expect("Failed to extract command snippets");
 
     let snippets = docs_snippets
         .into_iter()
@@ -54,7 +54,7 @@ fn test_docs_snippets() {
         args.remove(0);
 
         if skipped_args.contains(&args) {
-            print_skipped_snippet_message(snippet, "sncast");
+            print_skipped_snippet_message(snippet);
             continue;
         }
 
@@ -65,8 +65,8 @@ fn test_docs_snippets() {
         let exit_code = output.status.code().unwrap_or_default();
         let stderr = String::from_utf8_lossy(&output.stderr);
 
-        assert_valid_snippet(exit_code != 2, snippet, "sncast", &stderr);
+        assert_valid_snippet(exit_code != 2, snippet, &stderr);
     }
 
-    print_success_message(snippets.len(), "sncast");
+    print_success_message(snippets.len(), snippet_type.as_str());
 }
