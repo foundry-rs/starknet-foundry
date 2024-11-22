@@ -9,7 +9,7 @@ use std::ffi::OsStr;
 use walkdir::WalkDir;
 
 fn read_workspace_files(
-    workspace_dir: Utf8PathBuf,
+    workspace_dir: &Utf8PathBuf,
 ) -> Result<serde_json::Map<String, serde_json::Value>> {
     // Read all files name along with their contents in a JSON format
     // in the workspace dir recursively
@@ -73,7 +73,7 @@ pub trait VerificationInterface {
         class_hash: Option<Felt>,
         contract_name: String,
     ) -> Result<VerifyResponse> {
-        let file_data = read_workspace_files(workspace_dir)?;
+        let file_data = read_workspace_files(&workspace_dir)?;
         let source_code = serde_json::Value::Object(file_data);
         let payload = VerificationPayload {
             contract_name,

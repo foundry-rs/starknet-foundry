@@ -59,7 +59,7 @@ pub struct Verify {
     pub custom_base_api_url: Option<String>,
 }
 
-#[derive(ValueEnum, Clone, Debug)]
+#[derive(ValueEnum, Clone, Copy, Debug)]
 pub enum Verifier {
     Walnut,
     Voyager,
