@@ -39,8 +39,8 @@ enable_for_tests = []
 
 Then, to use the contract in tests `snforge test` must be provided with a flag defined above:
 
-```
-snforge test --features enable_for_tests
+```shell
+$ snforge test --features enable_for_tests
 ```
 
 Also, we can specify which features are going to be enabled by default:

@@ -1,24 +1,25 @@
-## How Contracts Are Collected
+# How Contracts Are Collected
 
-When you call `snforge test`, one of the things that `snforge` does is that it calls Scarb, particularly `scarb build`.
-It makes Scarb build all contracts from your package and save them to the `target/{current_profile}` directory
-(read more on [Scarb website](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html)).
+`snforge` supports two mechanisms for collecting contracts used in tests.
+The default one depends on Scarb version used and can be controlled with `--no-optimization` flag.
 
-Then, `snforge` loads compiled contracts from the package your tests are in, allowing you to declare the contracts in tests.
+- If using Scarb version >= 2.8.3, [optimized collection mechanism](contract-collection/new-mechanism.md) is used by
+  default.
+- If using Scarb version < 2.8.3 or running `snforge test` with `--no-optimization` flag,
+  the [old collection mechanism](contract-collection/old-mechanism.md) is used.
 
-> ⚠️ **Warning**
+> 📝 **Note**
 >
-> Make sure to define `[[target.starknet-contract]]` section in your `Scarb.toml`, otherwise Scarb won't build your contracts.
+> Enabling new mechanism **requires** Scarb version >= 2.8.3.
 
+## Differences Between Collection Mechanisms
 
-## Using External Contracts In Tests
-
-If you wish to use contracts from your dependencies inside your tests (e.g. an ERC20 token, an account contract),
-you must first make Scarb build them. You can do that by using `build-external-contracts` property in `Scarb.toml`, e.g.: 
-
-```toml
-[[target.starknet-contract]]
-build-external-contracts = ["openzeppelin::account::account::Account"]
-```
-
-For more information about `build-external-contracts`, see [Scarb documentation](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#compiling-external-contracts).
+| Feature                                                 | Old Mechanism | Optimised Mechanism |
+|---------------------------------------------------------|---------------|---------------------|
+| Using contracts from `/src`                             | ✅             | ✅                   |
+| Using contracts from `/tests`                           | ❌             | ✅                   |
+| Using contracts from modules marked with `#[cfg(test)]` | ❌             | ✅                   |
+| Using contracts from dependencies                       | ✅             | ✅                   |
+| Contracts more closely resemble ones from real network  | ✅             | ❌                   |
+| Less compilation steps required (faster compilation)    | ❌             | ✅                   |
+| Additional compilation step required (`scarb build`)    | ✅             | ❌                   |

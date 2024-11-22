@@ -1890,6 +1890,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
+name = "docs"
+version = "0.33.0"
+dependencies = [
+ "regex",
+ "shell-words",
+ "walkdir",
+]
+
+[[package]]
 name = "dyn-clone"
 version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2157,6 +2166,7 @@ dependencies = [
  "configuration",
  "console",
  "conversions",
+ "docs",
  "flatten-serde-json",
  "forge_runner",
  "fs_extra",
@@ -4780,6 +4790,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "shell-words"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24188a676b6ae68c3b2cb3a01be17fbf7240ce009799bb56d5b1409051e78fde"
+
+[[package]]
 name = "shellexpand"
 version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4897,6 +4913,7 @@ dependencies = [
  "conversions",
  "ctor",
  "data-transformer",
+ "docs",
  "fs_extra",
  "indoc",
  "itertools 0.12.1",
