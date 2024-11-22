@@ -34,11 +34,11 @@ With the spy ready to use, you can execute some code, and make the assertions:
 1. Either with the spy directly by using `assert_sent`/`assert_not_sent` methods from `MessageToL1SpyAssertionsTrait` trait:
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/testing_messages_to_l1/tests/simple.cairo}}
+{{#include ../../listings/testing_messages_to_l1/tests/simple.cairo}}
 ```
 
 2. Or use the messages' contents directly via `get_messages()` method of the `MessageToL1SpyTrait`:
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/testing_messages_to_l1/tests/detailed.cairo}}
+{{#include ../../listings/testing_messages_to_l1/tests/detailed.cairo}}
 ```

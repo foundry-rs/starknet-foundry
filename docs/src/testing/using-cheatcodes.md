@@ -23,7 +23,7 @@ using [cheatcodes](../appendix/cheatcodes.md).
 In this tutorial, we will be using the following Starknet contract:
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/using_cheatcodes/src/lib.cairo}}
+{{#include ../../listings/using_cheatcodes/src/lib.cairo}}
 ```
 
 ## Writing Tests
@@ -31,7 +31,7 @@ In this tutorial, we will be using the following Starknet contract:
 We can try to create a test that will increase and verify the balance.
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/using_cheatcodes/tests/lib.cairo}}
+{{#include ../../listings/using_cheatcodes/tests/lib.cairo}}
 ```
 
 This test fails, which means that `increase_balance` method panics as we expected.
@@ -71,7 +71,7 @@ address, so it passes our validation.
 ### Cheating an Address
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/using_cheatcodes_cheat_address/tests/lib.cairo}}
+{{#include ../../listings/using_cheatcodes_cheat_address/tests/lib.cairo}}
 ```
 
 The test will now pass without an error
@@ -102,7 +102,7 @@ using [`stop_cheat_caller_address`](../appendix/cheatcodes/caller_address.md#sto
 We will demonstrate its behavior using `SafeDispatcher` to show when exactly the fail occurs:
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/using_cheatcodes_cancelling_cheat/tests/lib.cairo}}
+{{#include ../../listings/using_cheatcodes_cancelling_cheat/tests/lib.cairo}}
 ```
 
 ```shell
@@ -137,7 +137,7 @@ In case you want to cheat the caller address for all contracts, you can use the 
 For more see [Cheating Globally](../appendix/cheatcodes/global.md).
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/using_cheatcodes_others/tests/caller_address/proper_use_global.cairo}}
+{{#include ../../listings/using_cheatcodes_others/tests/caller_address/proper_use_global.cairo}}
 ```
 
 ### Cheating the Constructor
@@ -149,7 +149,7 @@ Let's say, that you have a contract that saves the caller address (deployer) in 
 To `cheat_caller_address` the constructor, you need to `start_cheat_caller_address` before it is invoked, with the right address. To achieve this, you need to precalculate the address of the contract by using the `precalculate_address` function of `ContractClassTrait` on the declared contract, and then use it in `start_cheat_caller_address` as an argument:
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/using_cheatcodes_others/tests/cheat_constructor.cairo}}
+{{#include ../../listings/using_cheatcodes_others/tests/cheat_constructor.cairo}}
 ```
 
 ### Setting Cheatcode Span
@@ -183,5 +183,5 @@ Of course the cheatcode can still be canceled before its `CheatSpan` goes down t
 To better understand the functionality of `CheatSpan`, here's a full example:
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/using_cheatcodes_others/tests/caller_address/span.cairo}}
+{{#include ../../listings/using_cheatcodes_others/tests/caller_address/span.cairo}}
 ```

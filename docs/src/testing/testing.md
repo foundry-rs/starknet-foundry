@@ -8,7 +8,7 @@ should write as many unit tests as possible as these are faster than integration
 First, add the following code to the `src/lib.cairo` file:
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/first_test/src/lib.cairo}}
+{{#include ../../listings/first_test/src/lib.cairo}}
 ```
 
 It is a common practice to keep your unit tests in the same file as the tested code.
@@ -39,8 +39,8 @@ Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 If your code panics, the test is considered failed. Here's an example of a failing test.
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/panicking_test/src/lib.cairo:first_half}}
-{{#include ../../listings/snforge_overview/crates/panicking_test/src/lib.cairo:second_half}}
+{{#include ../../listings/panicking_test/src/lib.cairo:first_half}}
+{{#include ../../listings/panicking_test/src/lib.cairo:second_half}}
 ```
 
 ```shell
@@ -77,18 +77,18 @@ You can specify the expected failure message in three ways:
 
 1. **With ByteArray**:
 ```rust
-{{#include ../../listings/snforge_overview/crates/should_panic_test/src/lib.cairo:byte_array}}
+{{#include ../../listings/should_panic_test/src/lib.cairo:byte_array}}
 ```
 With this format, the expected error message needs to be a substring of the actual error message. This is particularly useful when the error message includes dynamic data such as a hash or address.
 
 2. **With felt**
 ```rust
-{{#include ../../listings/snforge_overview/crates/should_panic_test/src/lib.cairo:felt}}
+{{#include ../../listings/should_panic_test/src/lib.cairo:felt}}
 ```
 
 3. **With tuple of felts**:
 ```rust
-{{#include ../../listings/snforge_overview/crates/should_panic_test/src/lib.cairo:tuple}}
+{{#include ../../listings/should_panic_test/src/lib.cairo:tuple}}
 ```
 
 
@@ -118,7 +118,7 @@ Sometimes you may have tests that you want to exclude during most runs of `snfor
 You can achieve it using `#[ignore]` - tests marked with this attribute will be skipped by default.
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/ignoring_example/src/lib.cairo}}
+{{#include ../../listings/ignoring_example/src/lib.cairo}}
 ```
 
 ```shell
