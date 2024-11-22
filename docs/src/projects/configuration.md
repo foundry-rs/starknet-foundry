@@ -109,15 +109,15 @@ response: [0x1, 0x23, 0x4]
 
 Global configuration file is usual [`snfoundry.toml`](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html), 
 which is a common storage for configurations to apply to multiple projects across various directories.
-This file is stored in a predefined location and is managed differently compared to the local configuration file, which can be found in any parent directory.
-Profiles from global configurations are used to combine configuration with local profiles.
+This file is stored in a predefined location and is used to store profiles that can be used from any location on your computer.
 
 #### Interaction between Local and Global profiles
 
-Interaction between global and local config is based on the overriding mechanism
+Global config can be overridden by a local config.
 
-The local configuration will be used to override a global profile of the same name, or if no matching profile exists, it will override the global default profile. 
-If `--profile` is not explicitly specified, the default profiles from both the local and global configurations (if any is present) will be used.
+If both local and global profiles with the same name are present, local profile will be combined with global profile. That is for any setting defined both in global and local profiles, local setting will be used. For settings not defined in local profile, value from the global profile will be used instead.
+
+This same behavior applies for default profiles as well. A local default profile will override a global default profile.
 
 #### Global Configuration File Location
 The global configuration is stored in a specific location depending on the operating system:
