@@ -1,0 +1,15 @@
+[package]
+name = "addition"
+version.workspace = true
+edition = "2023_10"
+
+[dependencies]
+starknet.workspace = true
+
+[dev-dependencies]
+snforge_std.workspace = true
+
+[[target.starknet-contract]]
+sierra = true
+
+[lib]

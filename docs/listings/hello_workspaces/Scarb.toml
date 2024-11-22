@@ -1,0 +1,39 @@
+[workspace]
+members = [
+    "crates/*",
+]
+
+[workspace.scripts]
+test = "snforge"
+
+[workspace.tool.snforge]
+
+[workspace.dependencies]
+starknet = "2.7.0"
+
+[workspace.dev-dependencies]
+snforge_std = { path = "../../snforge_std" }
+
+[workspace.package]
+version = "0.1.0"
+
+[package]
+name = "hello_workspaces"
+version.workspace = true
+edition = "2023_10"
+
+[scripts]
+test.workspace = true
+
+[tool]
+snforge.workspace = true
+
+[dependencies]
+fibonacci = { path = "crates/fibonacci" }
+addition = { path = "crates/addition" }
+
+[dev-dependencies]
+snforge_std.workspace = true
+
+[[target.starknet-contract]]
+sierra = true
