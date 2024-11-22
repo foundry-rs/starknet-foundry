@@ -114,8 +114,7 @@ pub fn extract_snippets_from_file(
             let output = caps.get(3).map(|m| m.as_str().to_string());
             let config_str = caps
                 .get(1)
-                .map(|m| m.as_str().to_string())
-                .unwrap_or_else(String::new);
+                .map_or_else(String::new, |m| m.as_str().to_string());
 
             let config = if config_str.is_empty() {
                 SnippetConfig::default()
