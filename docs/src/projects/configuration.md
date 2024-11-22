@@ -117,7 +117,7 @@ Global config can be overridden by a local config.
 
 If both local and global profiles with the same name are present, local profile will be combined with global profile. That is for any setting defined both in global and local profiles, local setting will be used. For settings not defined in local profile, value from the global profile will be used instead.
 
-This same behavior applies for default profiles as well. A local default profile will override a global default profile.
+This same behavior applies for [default profiles](#default-profile) as well. A local default profile will override a global default profile.
 
 #### Global Configuration File Location
 The global configuration is stored in a specific location depending on the operating system:
