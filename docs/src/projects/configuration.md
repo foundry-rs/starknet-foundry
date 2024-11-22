@@ -107,8 +107,17 @@ response: [0x1, 0x23, 0x4]
 
 ### Global configuration
 
-Since version, 0.34.0 `sncast` will use the global configuration to combine configuration from local configs.
-Global configuration file is usual [`snfoundry.toml`](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html), but placed in specific directory. 
+Global configuration file is usual [`snfoundry.toml`](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html), 
+which is a common storage for configurations to apply to multiple projects across various directories.
+This file is stored in a predefined location and is managed differently compared to the local configuration file, which can be found in any parent directory.
+Profiles from global configurations are used to combine configuration with local profiles.
+
+#### Interaction between Local and Global profiles
+
+Interaction between global and local config is based on the overriding mechanism
+
+The local configuration will be used to override a global profile of the same name, or if no matching profile exists, it will override the global default profile. 
+If `--profile` is not explicitly specified, the default profiles from both the local and global configurations (if any is present) will be used.
 
 #### Global Configuration File Location
 The global configuration is stored in a specific location depending on the operating system:
@@ -119,12 +128,32 @@ The global configuration is stored in a specific location depending on the opera
 > 📝 **Note**
 > If missing, global configuration file will be created automatically on running any `sncast` command for the first time.
 
-#### Interaction between Local and Global profiles
+### Config interaction example
 
-Interaction between global and local config is based on the overriding mechanism, the local config will be used to override 
-the global profile of the same name or in case it is not defined to override the default global profile.
+```
+root/
+├── .config/
+│   └── starknet-foundry/
+│       └── snfoundry.toml -> A
+└── /../../
+        └── projects/
+            ├── snfoundry.toml -> B
+            └── cairo-projects/
+                └── opus magnum/
+```
 
-If `--profile` is not provided, the default profile from the local (if present) and global configuration will be used.
+**Glossary:**
+
+- **A:** Global configuration file containing the profiles `default` and `testnet`.
+- **B:** Local configuration file containing the profiles `default` and `mainnet`.
+
+In any directory in the file system, a user can run the `sncast` command using the `default` and `testnet` profiles, 
+because they are located in global config. 
+If no profiles are explicitly specified, the `default` profile from the global configuration file will be used.
+
+When running `sncast` from the `opus magnum` directory, there is a configuration file in the parent directory (B). 
+This setup allows for the use of the following profiles: `default`, `testnet`, and `mainnet`. If the `mainnet` profile is specified, 
+the configuration from the local file will be used to override the global `default` profile, as the `mainnet` profile does not exist in the global configuration.
 
 ## Environmental variables
 
