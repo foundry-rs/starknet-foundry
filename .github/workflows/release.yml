@@ -250,27 +250,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.create-release.outputs.computed-prefix }}${{ steps.create-release.outputs.version }}
 
-  check-snforge-scarb-plugin-version:
-    name: Check if plugin version exist in the registry
-    runs-on: ubuntu-latest
-    outputs:
-      snforge_scarb_plugin_uploaded: ${{ steps.check-version.outputs.snforge_scarb_plugin_uploaded }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Check version
-        id: check-version
-        run: |
-          set -exo pipefail
-
-          snforge_scarb_plugin_version=$(grep version crates/snforge-scarb-plugin/Scarb.toml | cut -d '"' -f 2)
-          snforge_scarb_plugin_uploaded=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version "$snforge_scarb_plugin_version" '[.[] | select(.v == $version)] | length > 0')
-          echo "snforge_scarb_plugin_uploaded=$snforge_scarb_plugin_uploaded" >> $GITHUB_ENV
-
   publish-snforge-scarb-plugin:
     name: Publish snforge_scarb_plugin
-    needs: check-snforge-scarb-plugin-version
-    if: steps.check-version.outputs.snforge_scarb_plugin_uploaded == 'false'
     uses: ./.github/workflows/publish_plugin.yml
     secrets: inherit
 
