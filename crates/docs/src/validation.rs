@@ -178,7 +178,7 @@ pub fn get_parent_dir(levels_up: usize) -> PathBuf {
 pub fn assert_valid_snippet(condition: bool, snippet: &Snippet, err_message: &str) {
     assert!(
         condition,
-        "Found invalid {} snippet in the docs in at {}:{}:1\n{}",
+        "Found invalid {} snippet in the docs at {}:{}:1\n{}",
         snippet.snippet_type.as_str(),
         snippet.file_path,
         snippet.line_start,
