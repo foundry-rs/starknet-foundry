@@ -13,10 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
-        with:
-          toolchain: stable
-
       - name: Check version
         id: check-version
         run: |
@@ -25,6 +21,10 @@ jobs:
           snforge_scarb_plugin_version=$(grep version crates/snforge-scarb-plugin/Scarb.toml | cut -d '"' -f 2)
           snforge_scarb_plugin_uploaded=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version "$snforge_scarb_plugin_version" '[.[] | select(.v == $version)] | length > 0')
           echo "snforge_scarb_plugin_uploaded=$snforge_scarb_plugin_uploaded" >> $GITHUB_OUTPUT
+
+      - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
+        with:
+          toolchain: stable
 
       - uses: software-mansion/setup-scarb@v1
         with:

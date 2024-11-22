@@ -256,7 +256,7 @@ jobs:
     secrets: inherit
 
   publish-to-registry:
-    name: Upload packages to the registry
+    name: Publish packages to the registry
     runs-on: ubuntu-latest
     needs: [ create-release, publish-snforge-scarb-plugin ]
     env:
@@ -274,7 +274,7 @@ jobs:
 
       - name: Publish sncast_std
         working-directory: sncast_std
-        run: scarb publish
+        run: scarb publish --allow-dirty
 
       - name: Publish snforge_std
         working-directory: snforge_std
