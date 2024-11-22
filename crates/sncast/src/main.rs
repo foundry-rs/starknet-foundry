@@ -710,7 +710,7 @@ fn run_script_command(
     Ok(())
 }
 
-fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
+fn update_config_with_cli(config: &mut CastConfig, cli: &Cli) {
     macro_rules! clone_or_else {
         ($field:expr, $config_field:expr) => {
             $field.clone().unwrap_or_else(|| $config_field.clone())
@@ -752,6 +752,6 @@ fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
 
     let mut combined_config = combine_cast_configs(&global_config, &local_config);
 
-    update_cast_config(&mut combined_config, cli);
+    update_config_with_cli(&mut combined_config, cli);
     Ok(combined_config)
 }
