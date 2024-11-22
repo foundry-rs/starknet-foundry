@@ -5,7 +5,6 @@ use indoc::formatdoc;
 use shared::command::CommandExt;
 use shared::test_utils::node_url::node_rpc_url;
 use snapbox::cmd::{cargo_bin, Command as SnapboxCommand};
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
@@ -34,18 +33,35 @@ pub(crate) fn test_runner(temp_dir: &TempDir) -> SnapboxCommand {
 
 pub(crate) static BASE_FILE_PATTERNS: &[&str] = &["**/*.cairo", "**/*.toml"];
 
+fn is_package_from_docs_listings(package: &str) -> bool {
+    fs::read_dir("../../docs/listings")
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name().into_string().unwrap())
+        .any(|entry| entry == package)
+}
+
 pub(crate) fn setup_package_with_file_patterns(
-    package_path: &str,
+    package_name: &str,
     file_patterns: &[&str],
 ) -> TempDir {
     let temp = tempdir_with_tool_versions().unwrap();
-    let package_path = Utf8PathBuf::from_str(package_path)
+
+    let is_from_docs_listings = is_package_from_docs_listings(package_name);
+
+    let package_path = if is_from_docs_listings {
+        format!("../../docs/listings/{package_name}",)
+    } else {
+        format!("tests/data/{package_name}",)
+    };
+
+    let package_path = Utf8PathBuf::from_str(&package_path)
         .unwrap()
         .canonicalize_utf8()
         .unwrap()
         .to_string()
         .replace('\\', "/");
-    temp.copy_from(package_path.clone(), file_patterns).unwrap();
+
+    temp.copy_from(package_path, file_patterns).unwrap();
 
     let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
         .unwrap()
@@ -66,7 +82,7 @@ pub(crate) fn setup_package_with_file_patterns(
         value(get_assert_macros_version().unwrap().to_string());
     scarb_toml["target.starknet-contract"]["sierra"] = value(true);
 
-    if package_path.contains("docs/listings") {
+    if is_from_docs_listings {
         scarb_toml["dev-dependencies"]["snforge_std"]
             .as_table_mut()
             .and_then(|snforge_std| snforge_std.remove("workspace"));
@@ -81,29 +97,7 @@ pub(crate) fn setup_package_with_file_patterns(
 }
 
 pub(crate) fn setup_package(package_name: &str) -> TempDir {
-    let package_path = "tests/data/".to_string() + package_name;
-    setup_package_with_file_patterns(&package_path, BASE_FILE_PATTERNS)
-}
-
-fn get_listing_name(
-    package: &str,
-    packages_mapping: &HashMap<String, Vec<String>>,
-) -> Option<String> {
-    packages_mapping
-        .iter()
-        .find(|(_, packages)| packages.contains(&package.to_string()))
-        .map(|(listing_name, _)| listing_name.clone())
-}
-
-pub(crate) fn setup_package_from_docs_listings(
-    package_name: &str,
-    packages_mapping: &HashMap<String, Vec<String>>,
-) -> TempDir {
-    let listing_name = get_listing_name(package_name, packages_mapping)
-        .unwrap_or_else(|| panic!("Couldn't find listing for package {package_name}"));
-    let package_path = format!("../../docs/listings/{listing_name}/crates/{package_name}",);
-
-    setup_package_with_file_patterns(&package_path, BASE_FILE_PATTERNS)
+    setup_package_with_file_patterns(package_name, BASE_FILE_PATTERNS)
 }
 
 fn replace_node_rpc_url_placeholders(dir_path: &Path) {

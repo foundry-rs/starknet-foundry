@@ -34,12 +34,10 @@ fn test_docs_snippets() {
         // remove "sncast" from the args
         args.remove(0);
 
-        if snippet.ignored {
+        if snippet.config.ignored.unwrap_or(false) {
             print_skipped_snippet_message(snippet);
             continue;
         }
-
-        // TODO(#2678)
 
         let snapbox = runner(&args).current_dir(tempdir.path());
         let output = snapbox.output().expect("Failed to execute the command");
