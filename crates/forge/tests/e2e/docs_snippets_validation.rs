@@ -1,34 +1,15 @@
-use std::collections::HashMap;
-
-use assert_fs::TempDir;
 use clap::Parser;
 use docs::validation::{
-    assert_valid_snippet, create_listings_to_packages_mapping, extract_snippets_from_directory,
-    get_parent_dir, print_skipped_snippet_message, print_success_message, SnippetType,
+    assert_valid_snippet, extract_snippets_from_directory, get_parent_dir,
+    print_skipped_snippet_message, print_success_message, SnippetType,
 };
 use forge::Cli;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
-use super::common::runner::{
-    setup_hello_workspace, setup_package, setup_package_from_docs_listings, test_runner,
-};
-
-fn is_package_from_docs_listings(
-    package: &str,
-    listings_to_packages_mapping: &HashMap<String, Vec<String>>,
-) -> bool {
-    for packages in listings_to_packages_mapping.values() {
-        if packages.contains(&package.to_string()) {
-            return true;
-        }
-    }
-    false
-}
+use super::common::runner::{setup_package, test_runner};
 
 #[test]
 fn test_docs_snippets() {
-    let listings_to_packages_mapping = create_listings_to_packages_mapping();
-
     let root_dir = get_parent_dir(2);
     let docs_dir = root_dir.join("docs/src");
 
@@ -41,7 +22,7 @@ fn test_docs_snippets() {
         let args = snippet.to_command_args();
         let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
 
-        if snippet.ignored {
+        if snippet.config.ignored.unwrap_or(false) {
             print_skipped_snippet_message(snippet);
             continue;
         }
@@ -63,11 +44,13 @@ fn test_docs_snippets() {
 
         if let Some(snippet_output) = &snippet.output {
             let package_name = snippet
-                .capture_package_from_output()
-                .expect("Failed to capture package from command output");
+                .config
+                .package_name
+                .clone()
+                .or_else(|| snippet.capture_package_from_output())
+                .expect("Cannot find package name in command output or snippet config");
 
-            // TODO(#2698)
-            let temp = resolve_temp_dir(&package_name, &listings_to_packages_mapping);
+            let temp = setup_package(&package_name);
             let output = test_runner(&temp).args(args).assert();
 
             assert_stdout_contains(output, snippet_output);
@@ -75,17 +58,4 @@ fn test_docs_snippets() {
     }
 
     print_success_message(snippets.len(), snippet_type.as_str());
-}
-
-fn resolve_temp_dir(
-    package_name: &str,
-    listings_to_packages_mapping: &HashMap<String, Vec<String>>,
-) -> TempDir {
-    if is_package_from_docs_listings(package_name, listings_to_packages_mapping) {
-        setup_package_from_docs_listings(package_name, listings_to_packages_mapping)
-    } else if ["addition", "fibonacci", "hello_workspaces"].contains(&package_name) {
-        setup_hello_workspace()
-    } else {
-        setup_package(package_name)
-    }
 }

@@ -1,10 +1,9 @@
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 use std::{
-    collections::HashMap,
     env, fs, io,
     path::{Path, PathBuf},
 };
-use walkdir::WalkDir;
 
 const EXTENSION: Option<&str> = Some("md");
 
@@ -38,6 +37,25 @@ impl SnippetType {
     }
 }
 
+#[derive(Debug, Deserialize, Serialize, Default)]
+pub struct SnippetConfig {
+    pub ignored: Option<bool>,
+    pub package_name: Option<String>,
+}
+
+impl SnippetConfig {
+    pub fn from_json(json_str: &str) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(json_str)
+    }
+
+    fn default() -> Self {
+        SnippetConfig {
+            ignored: None,
+            package_name: None,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct Snippet {
     pub command: String,
@@ -45,7 +63,7 @@ pub struct Snippet {
     pub file_path: String,
     pub line_start: usize,
     pub snippet_type: SnippetType,
-    pub ignored: bool,
+    pub config: SnippetConfig,
 }
 
 impl Snippet {
@@ -94,7 +112,16 @@ pub fn extract_snippets_from_file(
             let command_match = caps.get(2)?;
             let match_start = caps.get(0)?.start();
             let output = caps.get(3).map(|m| m.as_str().to_string());
-            let ignored = caps.get(1).map_or(false, |m| m.as_str().contains("ignore"));
+            let config_str = caps
+                .get(1)
+                .map(|m| m.as_str().to_string())
+                .unwrap_or_else(String::new);
+
+            let config = if config_str.is_empty() {
+                SnippetConfig::default()
+            } else {
+                SnippetConfig::from_json(&config_str).expect("Failed to parse snippet config")
+            };
 
             Some(Snippet {
                 command: command_match.as_str().to_string(),
@@ -102,7 +129,7 @@ pub fn extract_snippets_from_file(
                 file_path: file_path_str.clone(),
                 line_start: content[..match_start].lines().count() + 1,
                 snippet_type: snippet_type.clone(),
-                ignored,
+                config,
             })
         })
         .collect();
@@ -171,53 +198,4 @@ pub fn print_skipped_snippet_message(snippet: &Snippet) {
         snippet.file_path,
         snippet.line_start,
     );
-}
-
-pub fn create_listings_to_packages_mapping() -> HashMap<String, Vec<String>> {
-    let docs_listings_path = "../../docs/listings";
-    let mut mapping = HashMap::new();
-
-    for listing in WalkDir::new(docs_listings_path)
-        .min_depth(1)
-        .max_depth(1)
-        .into_iter()
-        .filter_map(Result::ok)
-        .filter(|e| e.file_type().is_dir())
-    {
-        let listing_path = listing.path();
-        let crates_dir = listing_path.join("crates");
-
-        if crates_dir.is_dir() {
-            let packages = list_packages_in_directory(&crates_dir);
-            if let Some(listing_name) = listing_path.file_name().and_then(|x| x.to_str()) {
-                if !packages.is_empty() {
-                    mapping.insert(listing_name.to_string(), packages);
-                }
-            }
-        }
-    }
-
-    mapping
-}
-
-fn list_packages_in_directory(dir_path: &Path) -> Vec<String> {
-    let crates_path = dir_path.to_owned();
-
-    if crates_path.exists() && crates_path.is_dir() {
-        WalkDir::new(crates_path)
-            .min_depth(1)
-            .max_depth(1)
-            .into_iter()
-            .filter_map(Result::ok)
-            .filter(|e| e.path().is_dir())
-            .filter_map(|e| {
-                e.path()
-                    .file_name()
-                    .and_then(|name| name.to_str())
-                    .map(String::from)
-            })
-            .collect()
-    } else {
-        Vec::new()
-    }
 }
