@@ -68,7 +68,7 @@ In the example above we called a function with a deserialized argument: `'"Chari
 
 The same result can be achieved by passing serialized calldata, which is a list of hexadecimal-encoded field elements.
 
-For example, this is equivalent to using the --calldata option with the following value: 0x0 0x43686172697a617264  0x9.
+For example, this is equivalent to using the --calldata option with the following value: 0x0 0x43686172697a617264 0x9.
 
 To obtain the serialized form of the wished data, you can write a Cairo program that calls `Serde::serialize` on subsequent arguments and displays the results.
 
