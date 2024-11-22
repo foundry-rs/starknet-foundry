@@ -41,7 +41,7 @@
 
 # `sncast` Overview
 
-* [Outline](starknet/index.md)
+* [Outline](starknet/sncast-overview.md)
 * [Creating And Deploying Accounts](starknet/account.md)
 * [Importing Accounts](starknet/account-import.md)
 * [Declaring New Contracts](starknet/declare.md)
