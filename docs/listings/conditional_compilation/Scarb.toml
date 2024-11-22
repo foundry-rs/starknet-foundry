@@ -8,11 +8,11 @@ default = ["enable_for_tests"]
 enable_for_tests = []
 
 [dependencies]
-starknet.workspace = true
-assert_macros.workspace = true
+starknet = "2.7.0"
+assert_macros = "0.1.0"
 
 [dev-dependencies]
-snforge_std.workspace = true
+snforge_std = { path = "../../snforge_std" }
 
 [[target.starknet-contract]]
 sierra = true
