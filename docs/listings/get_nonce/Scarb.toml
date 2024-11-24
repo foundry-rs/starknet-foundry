@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2023_11"
 
 [dependencies]
-starknet.workspace = true
-snforge_std.workspace = true
-sncast_std.workspace = true
+starknet.workspace = "2.7.0"
+snforge_std = { path = "../../../snforge_std" }
+sncast_std = { path = "../../../sncast_std" }
 
 [[target.starknet-contract]]
 sierra = true

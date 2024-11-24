@@ -10,8 +10,8 @@ sierra = true
 sierra = false
 
 [dependencies]
-snforge_std.workspace = true
-starknet.workspace = true
+snforge_std = { path = "../../../snforge_std" }
+starknet = "2.7.0"
 
 [scripts]
 test = "snforge test"
