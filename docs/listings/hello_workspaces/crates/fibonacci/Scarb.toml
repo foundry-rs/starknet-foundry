@@ -15,10 +15,10 @@ sncast_std = { path = "../../../sncast_std" }
 [dependencies]
 addition = { path = "../addition" }
 starknet = "2.7.0"
+sncast_std = { path = "../../../sncast_std" }
 
 [dev-dependencies]
 snforge_stdstarknet = "2.7.0"
-sncast_std = { path = "../../../sncast_std" }
 
 [[target.starknet-contract]]
 sierra = true
