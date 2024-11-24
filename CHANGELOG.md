@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Tests config run is now executed in parallel resulting in faster `snforge test` setup in some cases
+- `snforge_scarb_plugin` no will also return warnings when errors are present
 
 ### Cast
 
