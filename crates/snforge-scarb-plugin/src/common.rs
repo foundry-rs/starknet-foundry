@@ -14,7 +14,7 @@ pub fn into_proc_macro_result(
     item: TokenStream,
     handler: impl Fn(&TokenStream, &TokenStream, &mut Vec<Diagnostic>) -> Result<String, Diagnostics>,
 ) -> ProcMacroResult {
-    let mut warns = vec![]; 
+    let mut warns = vec![]; // `Vec<Diagnostic>` instead of `Diagnostics` because `Diagnostics` does not allow to push ready `Diagnostic`
     
     match handler(&args, &item, &mut warns) {
         Ok(item) => ProcMacroResult::new(TokenStream::new(item)).with_diagnostics(warns.into()),
