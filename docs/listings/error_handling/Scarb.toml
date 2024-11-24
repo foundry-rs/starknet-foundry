@@ -8,7 +8,7 @@ edition = "2024_07"
 [dependencies]
 snforge_std = { path = "../../../snforge_std" }
 sncast_std = { path = "../../../sncast_std" }
-starknet.workspace = "2.7.0"
+starknet = "2.7.0"
 assert_macros = "0.1.0"
 
 [[target.lib]]

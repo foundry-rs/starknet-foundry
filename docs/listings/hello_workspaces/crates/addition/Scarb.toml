@@ -1,13 +1,15 @@
 [package]
 name = "addition"
-version.workspace = true
+versionstarknet = "2.7.0"
+sncast_std = { path = "../../../sncast_std" }
 edition = "2023_10"
 
 [dependencies]
 starknet = "2.7.0"
 
 [dev-dependencies]
-snforge_std.workspace = true
+snforge_stdstarknet = "2.7.0"
+sncast_std = { path = "../../../sncast_std" }
 
 [[target.starknet-contract]]
 sierra = true
