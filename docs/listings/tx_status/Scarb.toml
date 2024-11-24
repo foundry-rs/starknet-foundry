@@ -5,8 +5,8 @@ edition = "2023_11"
 
 [dependencies]
 starknet = "2.7.0"
-snforge_std = { path = "../../snforge_std" }
-sncast_std = { path = "../../sncast_std" }
+snforge_std = { path = "../../../snforge_std" }
+sncast_std = { path = "../../../sncast_std" }
 
 [[target.starknet-contract]]
 sierra = true
