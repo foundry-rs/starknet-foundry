@@ -76,7 +76,15 @@ pub(crate) fn setup_package_with_file_patterns(
         .unwrap()
         .parse::<DocumentMut>()
         .unwrap();
-    scarb_toml["dev-dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
+
+    let is_workspace = scarb_toml.get("workspace").is_some();
+
+    if is_workspace {
+        scarb_toml["workspace"]["dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
+    } else {
+        scarb_toml["dev-dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
+    }
+
     scarb_toml["dependencies"]["starknet"] = value("2.4.0");
     scarb_toml["dependencies"]["assert_macros"] =
         value(get_assert_macros_version().unwrap().to_string());
