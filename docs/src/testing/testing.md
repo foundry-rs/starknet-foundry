@@ -77,18 +77,18 @@ You can specify the expected failure message in three ways:
 
 1. **With ByteArray**:
 ```rust
-{{#include ../../listings/should_panic_test/src/lib.cairo:byte_array}}
+{{#include ../../listings/should_panic_example/src/lib.cairo:byte_array}}
 ```
 With this format, the expected error message needs to be a substring of the actual error message. This is particularly useful when the error message includes dynamic data such as a hash or address.
 
 2. **With felt**
 ```rust
-{{#include ../../listings/should_panic_test/src/lib.cairo:felt}}
+{{#include ../../listings/should_panic_example/src/lib.cairo:felt}}
 ```
 
 3. **With tuple of felts**:
 ```rust
-{{#include ../../listings/should_panic_test/src/lib.cairo:tuple}}
+{{#include ../../listings/should_panic_example/src/lib.cairo:tuple}}
 ```
 
 
@@ -100,13 +100,13 @@ $ snforge test
 <summary>Output:</summary>
 
 ```shell
-Collected 5 test(s) from should_panic_test package
+Collected 5 test(s) from should_panic_example package
 Running 5 test(s) from src/
-[PASS] should_panic_test::tests::should_panic_felt_matching (gas: ~1)
-[PASS] should_panic_test::tests::should_panic_multiple_messages (gas: ~1)
-[PASS] should_panic_test::tests::should_panic_exact (gas: ~1)
-[PASS] should_panic_test::tests::should_panic_expected_is_substring (gas: ~1)
-[PASS] should_panic_test::tests::should_panic_check_data (gas: ~1)
+[PASS] should_panic_example::tests::should_panic_felt_matching (gas: ~1)
+[PASS] should_panic_example::tests::should_panic_multiple_messages (gas: ~1)
+[PASS] should_panic_example::tests::should_panic_exact (gas: ~1)
+[PASS] should_panic_example::tests::should_panic_expected_is_substring (gas: ~1)
+[PASS] should_panic_example::tests::should_panic_check_data (gas: ~1)
 Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 </details>
