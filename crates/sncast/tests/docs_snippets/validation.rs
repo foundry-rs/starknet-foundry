@@ -1,6 +1,5 @@
 use std::fs;
 
-use configuration::CONFIG_FILENAME;
 use docs::snippet::{Snippet, SnippetType};
 use docs::utils::{
     assert_valid_snippet, get_parent_dir, print_skipped_snippet_message, print_success_message,
