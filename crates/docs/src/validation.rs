@@ -28,6 +28,18 @@ impl SnippetType {
 
     #[must_use]
     pub fn get_re(&self) -> Regex {
+        // The regex pattern is used to match the snippet, its config and the output. Example:
+        // <!-- { "ignored": true, "package_name": "xyz" } -->
+        // ```shell
+        // $ <snforge or sncast command with args>
+        // ```
+        // <details>
+        // <summary>Output:</summary>
+        // ```shell
+        // <output>
+        // ```
+        // </details>
+
         let escaped_command = regex::escape(self.as_str());
         let pattern = format!(
             r"(?ms)^(?:<!--\s*(.*?)\s*-->\n)?```shell\n\$ ({escaped_command} .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n([\s\S]+?)\n```[\s]*<\/details>)?"
