@@ -92,12 +92,11 @@ Running 3 test(s) from tests/
 Failure data:
     0x6661696c696e6720636865636b ('failing check')
 
-[PASS] failing_example_tests::test_abc (gas: ~1)
-[PASS] failing_example_tests::test_xyz (gas: ~1)
-Tests: 2 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 Failures:
     failing_example_tests::test_failing
+
+Tests: 0 passed, 1 failed, 2 skipped, 0 ignored, 0 filtered out
 ```
 </details>
 <br>
