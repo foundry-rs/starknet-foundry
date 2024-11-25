@@ -49,12 +49,6 @@ pub struct SnippetConfig {
     pub package_name: Option<String>,
 }
 
-impl SnippetConfig {
-    pub fn from_json(json_str: &str) -> Result<Self, serde_json::Error> {
-        serde_json::from_str(json_str)
-    }
-}
-
 #[derive(Debug)]
 pub struct Snippet {
     pub command: String,

@@ -28,7 +28,7 @@ pub fn extract_snippets_from_file(
             let config = if config_str.is_empty() {
                 SnippetConfig::default()
             } else {
-                SnippetConfig::from_json(&config_str).expect("Failed to parse snippet config")
+                serde_json::from_str(&config_str).expect("Failed to parse snippet config")
             };
 
             Some(Snippet {
