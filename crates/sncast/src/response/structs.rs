@@ -107,13 +107,14 @@ impl CommandResponse for MulticallNewResponse {}
 #[derive(Serialize)]
 pub struct ShowConfigResponse {
     pub profile: Option<String>,
-    pub chain_id: String,
+    pub chain_id: Option<String>,
     pub rpc_url: Option<String>,
     pub account: Option<String>,
     pub accounts_file_path: Option<Utf8PathBuf>,
     pub keystore: Option<Utf8PathBuf>,
     pub wait_timeout: Option<Decimal>,
     pub wait_retry_interval: Option<Decimal>,
+    pub show_explorer_links: bool,
 }
 impl CommandResponse for ShowConfigResponse {}
 
