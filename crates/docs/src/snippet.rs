@@ -60,6 +60,7 @@ pub struct Snippet {
 }
 
 impl Snippet {
+    #[must_use]
     pub fn to_command_args(&self) -> Vec<String> {
         let cleaned_command = self
             .command
