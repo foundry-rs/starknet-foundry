@@ -13,17 +13,14 @@ version = "0.1.0"
 
 [package]
 name = "hello_workspaces"
-versionstarknet = "2.7.0"
-sncast_std = { path = "../../../sncast_std" }
+version.workspace = true
 edition = "2023_10"
 
 [scripts]
-teststarknet = "2.7.0"
-sncast_std = { path = "../../../sncast_std" }
+test.workspace = true
 
 [tool]
-snforgestarknet = "2.7.0"
-sncast_std = { path = "../../../sncast_std" }
+snforge.workspace = true
 
 [dependencies]
 fibonacci = { path = "crates/fibonacci" }

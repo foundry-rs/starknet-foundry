@@ -1,24 +1,20 @@
 [package]
 name = "fibonacci"
-versionstarknet = "2.7.0"
-sncast_std = { path = "../../../sncast_std" }
+version.workspace = true
 edition = "2023_10"
 
 [scripts]
-teststarknet = "2.7.0"
-sncast_std = { path = "../../../sncast_std" }
+test.workspace = true
 
 [tool]
-snforgestarknet = "2.7.0"
-sncast_std = { path = "../../../sncast_std" }
+snforge.workspace = true
 
 [dependencies]
 addition = { path = "../addition" }
 starknet = "2.7.0"
-sncast_std = { path = "../../../sncast_std" }
 
 [dev-dependencies]
-snforge_stdstarknet = "2.7.0"
+snforge_std.workspace = true
 
 [[target.starknet-contract]]
 sierra = true
