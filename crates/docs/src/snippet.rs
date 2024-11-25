@@ -53,13 +53,6 @@ impl SnippetConfig {
     pub fn from_json(json_str: &str) -> Result<Self, serde_json::Error> {
         serde_json::from_str(json_str)
     }
-
-    fn default() -> Self {
-        SnippetConfig {
-            ignored: None,
-            package_name: None,
-        }
-    }
 }
 
 #[derive(Debug)]
