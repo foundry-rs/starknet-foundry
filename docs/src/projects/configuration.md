@@ -105,17 +105,17 @@ response: [0x1, 0x23, 0x4]
 </details>
 <br>
 
-### Global configuration
+### Global Configuration
 
-Global configuration file is usual [`snfoundry.toml`](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html), 
+Global configuration file is a [`snfoundry.toml`](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html), 
 which is a common storage for configurations to apply to multiple projects across various directories.
 This file is stored in a predefined location and is used to store profiles that can be used from any location on your computer.
 
-#### Interaction between Local and Global profiles
+#### Interaction Between Local and Global Profiles
 
 Global config can be overridden by a local config.
 
-If both local and global profiles with the same name are present, local profile will be combined with global profile. That is for any setting defined both in global and local profiles, local setting will be used. For settings not defined in local profile, value from the global profile will be used instead.
+If both local and global profiles with the same name are present, local profile will be combined with global profile. That is for any setting defined both in global and local profiles, local setting will be used. For settings not defined in local profile, values from the global profile will be used instead.
 
 This same behavior applies for [default profiles](#default-profile) as well. A local default profile will override a global default profile.
 
@@ -128,7 +128,7 @@ The global configuration is stored in a specific location depending on the opera
 > 📝 **Note**
 > If missing, global configuration file will be created automatically on running any `sncast` command for the first time.
 
-### Config interaction example
+### Config Interaction Example
 
 ```
 root/
@@ -148,14 +148,15 @@ root/
 - **B:** Local configuration file containing the profiles `default` and `mainnet`.
 
 In any directory in the file system, a user can run the `sncast` command using the `default` and `testnet` profiles, 
-because they are located in global config. 
+because they are defined in global config (file A). 
+
 If no profiles are explicitly specified, the `default` profile from the global configuration file will be used.
 
-When running `sncast` from the `opus-magnum` directory, there is a configuration file in the parent directory (B). 
+When running `sncast` from the `opus-magnum` directory, there is a configuration file in the parent directory (file B). 
 This setup allows for the use of the following profiles: `default`, `testnet`, and `mainnet`. If the `mainnet` profile is specified, 
 the configuration from the local file will be used to override the global `default` profile, as the `mainnet` profile does not exist in the global configuration.
 
-## Environmental variables
+## Environmental Variables
 
 Programmers can use environmental variables in both `Scarb.toml::tool::snforge` and in `snfoundry.toml`. To use an environmental variable as a value, use its name prefixed with `$`. 
 This might be useful, for example, to hide node urls in the public repositories. 
