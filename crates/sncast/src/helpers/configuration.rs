@@ -4,7 +4,6 @@ use anyhow::Result;
 use camino::Utf8PathBuf;
 use configuration::GlobalConfig;
 use serde::{Deserialize, Serialize};
-use shared::consts::FREE_RPC_PROVIDER_URL;
 
 #[must_use]
 pub const fn show_explorer_links_default() -> bool {
@@ -52,7 +51,7 @@ pub struct CastConfig {
 impl Default for CastConfig {
     fn default() -> Self {
         Self {
-            url: FREE_RPC_PROVIDER_URL.to_string(),
+            url: String::default(),
             account: String::default(),
             accounts_file: Utf8PathBuf::default(),
             keystore: None,

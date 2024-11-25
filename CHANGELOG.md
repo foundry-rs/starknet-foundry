@@ -26,7 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Addresses outputted when calling `sncast account create`, `sncast deploy` and `sncast declare` are now padded to 64 characters length and prefixed with `0x0`
 - Globally available configuration to store profiles to share between projects.
 - Missing fields in `show-config` command, `block_explorer` and `show_explorer_links`.
-- Default free sepolia testnet RPC URL for any `sncast` command. 
 
 #### Changed
 
