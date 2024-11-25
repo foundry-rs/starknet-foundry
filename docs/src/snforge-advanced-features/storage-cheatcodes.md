@@ -49,3 +49,10 @@ And perform a test checking `load` and `store` behavior in context of those stru
 > 📝 **Note**
 >
 > The `load` cheatcode will return zeros for memory you haven't written into yet (it is a default storage value for Starknet contracts' storage).
+
+## Example with `storage_address_from_base`
+This example uses `storage_address_from_base` with `address` function of the storage variable.
+
+```rust
+{{#include ../../listings/snforge_advanced_features/crates/direct_storage_access/tests/using_storage_address_from_base.cairo}}
+```

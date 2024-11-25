@@ -2,7 +2,7 @@
 pub trait ISimpleStorageContract<TState> {}
 
 #[starknet::contract]
-mod SimpleStorageContract {
+pub mod SimpleStorageContract {
     use starknet::storage::Map;
 
     #[storage]
