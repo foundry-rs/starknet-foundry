@@ -109,12 +109,12 @@ pub fn extract_snippets_from_file(
         .get_re()
         .captures_iter(&content)
         .filter_map(|caps| {
-            let command_match = caps.get(2)?;
             let match_start = caps.get(0)?.start();
-            let output = caps.get(3).map(|m| m.as_str().to_string());
             let config_str = caps
                 .get(1)
                 .map_or_else(String::new, |m| m.as_str().to_string());
+            let command_match = caps.get(2)?;
+            let output = caps.get(3).map(|m| m.as_str().to_string());
 
             let config = if config_str.is_empty() {
                 SnippetConfig::default()
