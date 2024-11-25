@@ -3,7 +3,7 @@ use std::{env, path::PathBuf};
 use crate::snippet::Snippet;
 
 #[must_use]
-pub fn get_parent_dir(levels_up: usize) -> PathBuf {
+pub fn get_nth_ancestor(levels_up: usize) -> PathBuf {
     let mut dir = env::current_dir().expect("Failed to get the current directory");
 
     for _ in 0..levels_up {

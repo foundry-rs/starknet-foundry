@@ -1,7 +1,7 @@
 use clap::Parser;
 use docs::snippet::SnippetType;
 use docs::utils::{
-    assert_valid_snippet, get_parent_dir, print_skipped_snippet_message, print_success_message,
+    assert_valid_snippet, get_nth_ancestor, print_skipped_snippet_message, print_success_message,
 };
 use docs::validation::extract_snippets_from_directory;
 use forge::Cli;
@@ -11,7 +11,7 @@ use super::common::runner::{runner, setup_package};
 
 #[test]
 fn test_docs_snippets() {
-    let root_dir = get_parent_dir(2);
+    let root_dir = get_nth_ancestor(2);
     let docs_dir = root_dir.join("docs/src");
 
     let snippet_type = SnippetType::forge();
