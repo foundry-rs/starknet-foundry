@@ -39,8 +39,7 @@ Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 If your code panics, the test is considered failed. Here's an example of a failing test.
 
 ```rust
-{{#include ../../listings/panicking_test/src/lib.cairo:first_half}}
-{{#include ../../listings/panicking_test/src/lib.cairo:second_half}}
+{{#include ../../listings/panicking_test/src/lib.cairo}}
 ```
 
 ```shell
