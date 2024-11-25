@@ -36,7 +36,7 @@ impl SnippetType {
 
         let escaped_command = regex::escape(self.as_str());
         let pattern = format!(
-            r"(?ms)^(?:<!--\s*(.*?)\s*-->\n)?```shell\n\$ ({escaped_command} .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n([\s\S]+?)\n```[\s]*<\/details>)?"
+            r"(?ms)^(?:<!--\s*(?P<config>.*?)\s*-->\n)?```shell\n\$ (?P<command>{escaped_command} .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n(?P<output>[\s\S]+?)\n```[\s]*<\/details>)?"
         );
 
         Regex::new(&pattern).unwrap()

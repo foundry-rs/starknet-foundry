@@ -20,10 +20,10 @@ pub fn extract_snippets_from_file(
         .filter_map(|caps| {
             let match_start = caps.get(0)?.start();
             let config_str = caps
-                .get(1)
+                .name("config")
                 .map_or_else(String::new, |m| m.as_str().to_string());
-            let command_match = caps.get(2)?;
-            let output = caps.get(3).map(|m| m.as_str().to_string());
+            let command_match = caps.name("command")?;
+            let output = caps.name("output").map(|m| m.as_str().to_string());
 
             let config = if config_str.is_empty() {
                 SnippetConfig::default()
