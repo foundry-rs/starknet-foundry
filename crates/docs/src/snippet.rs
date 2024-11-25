@@ -64,7 +64,7 @@ impl Snippet {
         let cleaned_command = self
             .command
             .lines()
-            .map(str::trim_end)
+            .map(str::trim)
             .collect::<Vec<&str>>()
             .join(" ")
             .replace(" \\", "");
