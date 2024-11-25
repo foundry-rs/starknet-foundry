@@ -1,8 +1,7 @@
 use starknet::storage::StorageAsPointer;
 use starknet::storage::StoragePathEntry;
-use starknet::ContractAddress;
 
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, store, map_entry_address, load};
+use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, store, load};
 use starknet::storage_access::{storage_address_from_base};
 
 use direct_storage_access::felts_only::{SimpleStorageContract};
