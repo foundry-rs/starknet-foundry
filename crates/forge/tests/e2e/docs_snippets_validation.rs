@@ -7,7 +7,7 @@ use docs::validation::extract_snippets_from_directory;
 use forge::Cli;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
-use super::common::runner::{setup_package, test_runner};
+use super::common::runner::{runner, setup_package};
 
 #[test]
 fn test_docs_snippets() {
@@ -40,9 +40,6 @@ fn test_docs_snippets() {
         // Remove "snforge" from the args
         args.remove(0);
 
-        // Remove "test" from the args
-        args.retain(|element| element != &"test");
-
         if let Some(snippet_output) = &snippet.output {
             let package_name = snippet
                 .config
@@ -52,7 +49,7 @@ fn test_docs_snippets() {
                 .expect("Cannot find package name in command output or snippet config");
 
             let temp = setup_package(&package_name);
-            let output = test_runner(&temp).args(args).assert();
+            let output = runner(&temp).args(args).assert();
 
             assert_stdout_contains(output, snippet_output);
         }
