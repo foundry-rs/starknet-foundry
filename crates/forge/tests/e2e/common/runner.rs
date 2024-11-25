@@ -39,19 +39,15 @@ pub(crate) fn setup_package_with_file_patterns(
 ) -> TempDir {
     let temp = tempdir_with_tool_versions().unwrap();
 
-    let listings_path = fs::canonicalize("../../docs/listings")
-        .expect("Failed to canonicalize the 'docs/listings' path");
-
-    let package_full_path = PathBuf::from("../../docs/listings").join(package_name);
-    let canonical_package_path = fs::canonicalize(&package_full_path)
-        .unwrap_or_else(|_| panic!("Failed to canonicalize the path for package: {package_name}"));
-
-    let is_from_docs_listings = canonical_package_path.starts_with(&listings_path);
+    let is_from_docs_listings = fs::read_dir("../../docs/listings")
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name().into_string().unwrap())
+        .any(|entry| entry == package_name);
 
     let package_path = if is_from_docs_listings {
-        format!("{}/{}", listings_path.display(), package_name)
+        format!("../../docs/listings/{package_name}",)
     } else {
-        format!("tests/data/{package_name}")
+        format!("tests/data/{package_name}",)
     };
 
     let package_path = Utf8PathBuf::from_str(&package_path)
