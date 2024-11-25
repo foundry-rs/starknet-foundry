@@ -139,7 +139,7 @@ root/
         └── projects/
             ├── snfoundry.toml -> B
             └── cairo-projects/
-                └── opus magnum/
+                └── opus-magnum/
 ```
 
 **Glossary:**
@@ -151,7 +151,7 @@ In any directory in the file system, a user can run the `sncast` command using t
 because they are located in global config. 
 If no profiles are explicitly specified, the `default` profile from the global configuration file will be used.
 
-When running `sncast` from the `opus magnum` directory, there is a configuration file in the parent directory (B). 
+When running `sncast` from the `opus-magnum` directory, there is a configuration file in the parent directory (B). 
 This setup allows for the use of the following profiles: `default`, `testnet`, and `mainnet`. If the `mainnet` profile is specified, 
 the configuration from the local file will be used to override the global `default` profile, as the `mainnet` profile does not exist in the global configuration.
 
