@@ -4,11 +4,7 @@ use anyhow::Result;
 use camino::Utf8PathBuf;
 use configuration::GlobalConfig;
 use serde::{Deserialize, Serialize};
-
-#[must_use]
-pub const fn show_explorer_links_default() -> bool {
-    true
-}
+use crate::helpers::constants::DEFAULT_SHOW_EXPLORER_LINKS;
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
 pub struct CastConfig {
@@ -57,7 +53,7 @@ impl Default for CastConfig {
             keystore: None,
             wait_params: ValidatedWaitParams::default(),
             block_explorer: Some(block_explorer::Service::default()),
-            show_explorer_links: show_explorer_links_default(),
+            show_explorer_links: DEFAULT_SHOW_EXPLORER_LINKS,
         }
     }
 }
