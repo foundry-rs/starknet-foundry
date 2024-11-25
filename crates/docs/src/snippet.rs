@@ -25,12 +25,12 @@ impl SnippetType {
         // The regex pattern is used to match the snippet, its config and the output. Example:
         // <!-- { "ignored": true, "package_name": "xyz" } -->
         // ```shell
-        // $ <snforge or sncast command with args>
+        // $ snforge or sncast command with args...
         // ```
         // <details>
         // <summary>Output:</summary>
         // ```shell
-        // <output>
+        // Output of the command...
         // ```
         // </details>
 
