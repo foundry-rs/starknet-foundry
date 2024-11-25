@@ -1,7 +1,11 @@
-use docs::validation::{
-    assert_valid_snippet, extract_snippets_from_directory, extract_snippets_from_file,
-    get_parent_dir, print_skipped_snippet_message, print_success_message, Snippet, SnippetType,
+use std::fs;
+
+use configuration::CONFIG_FILENAME;
+use docs::snippet::{Snippet, SnippetType};
+use docs::utils::{
+    assert_valid_snippet, get_parent_dir, print_skipped_snippet_message, print_success_message,
 };
+use docs::validation::{extract_snippets_from_directory, extract_snippets_from_file};
 use tempfile::tempdir;
 
 use crate::helpers::runner::runner;

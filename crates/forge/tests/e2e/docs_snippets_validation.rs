@@ -1,8 +1,9 @@
 use clap::Parser;
-use docs::validation::{
-    assert_valid_snippet, extract_snippets_from_directory, get_parent_dir,
-    print_skipped_snippet_message, print_success_message, SnippetType,
+use docs::snippet::SnippetType;
+use docs::utils::{
+    assert_valid_snippet, get_parent_dir, print_skipped_snippet_message, print_success_message,
 };
+use docs::validation::extract_snippets_from_directory;
 use forge::Cli;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
