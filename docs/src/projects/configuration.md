@@ -54,7 +54,7 @@ $ sncast --profile myprofile \
     call \
     --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
     --function get \
-    --calldata 0x0 \
+    --arguments '0' \
     --block-id latest
 ```
 
@@ -91,7 +91,7 @@ With this, there's no need to include the `--profile` argument when using `sncas
 $ sncast call \
     --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
     --function get \
-    --calldata 0x0 \
+    --arguments '0' \
     --block-id latest
 ```
 
