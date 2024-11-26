@@ -66,6 +66,8 @@ Failures:
 </details>
 <br>
 
+When contract fails, you can get backtrace information by setting the `SNFORGE_BACKTRACE=1` environment variable. Read more about it [here](../snforge-advanced-features/backtrace.md).
+
 ## Expected Failures
 
 Sometimes you want to mark a test as expected to fail. This is useful when you want to verify that an action fails as
