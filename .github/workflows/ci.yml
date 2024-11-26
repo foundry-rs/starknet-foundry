@@ -88,8 +88,8 @@ jobs:
       - name: nextest partition ${{ matrix.partition }}/8
         run: cargo nextest run --partition 'count:${{ matrix.partition }}/8' --archive-file 'nextest-archive.tar.zst' e2e
 
-  test-coverage:
-    name: Test coverage
+  test-scarb-2-8-3:
+    name: Test scarb 2.8.3
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -105,6 +105,7 @@ jobs:
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
       - run: cargo test --package forge --features scarb_2_8_3 --test main e2e::coverage
+      - run: cargo test --package forge --features scarb_2_8_3 --test main e2e::backtrace
 
   test-coverage-error:
     name: Test coverage error

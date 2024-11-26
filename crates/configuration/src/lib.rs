@@ -10,7 +10,7 @@ pub const CONFIG_FILENAME: &str = "snfoundry.toml";
 
 /// Defined in snfoundry.toml
 /// Configuration not associated with any specific package
-pub trait GlobalConfig {
+pub trait Config {
     #[must_use]
     fn tool_name() -> &'static str;
 
@@ -53,7 +53,7 @@ pub fn get_profile(
     }
 }
 
-pub fn load_global_config<T: GlobalConfig + Default>(
+pub fn load_config<T: Config + Default>(
     path: &Option<Utf8PathBuf>,
     profile: &Option<String>,
 ) -> Result<T> {
@@ -243,7 +243,7 @@ mod tests {
         #[serde(default)]
         pub account: String,
     }
-    impl GlobalConfig for StubConfig {
+    impl Config for StubConfig {
         fn tool_name() -> &'static str {
             "stubtool"
         }
@@ -255,7 +255,7 @@ mod tests {
     #[test]
     fn load_config_happy_case_with_profile() {
         let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None).unwrap();
-        let config = load_global_config::<StubConfig>(
+        let config = load_config::<StubConfig>(
             &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
             &Some(String::from("profile1")),
         )
@@ -267,7 +267,7 @@ mod tests {
     #[test]
     fn load_config_happy_case_default_profile() {
         let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None).unwrap();
-        let config = load_global_config::<StubConfig>(
+        let config = load_config::<StubConfig>(
             &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
             &None,
         )
@@ -279,7 +279,7 @@ mod tests {
     #[test]
     fn load_config_not_found() {
         let tempdir = tempdir().expect("Failed to create a temporary directory");
-        let config = load_global_config::<StubConfig>(
+        let config = load_config::<StubConfig>(
             &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
             &None,
         )
@@ -310,7 +310,7 @@ mod tests {
         url_nested: f32,
     }
 
-    impl GlobalConfig for StubComplexConfig {
+    impl Config for StubComplexConfig {
         fn tool_name() -> &'static str {
             "stubtool"
         }
@@ -325,7 +325,7 @@ mod tests {
         let temp_dir = tempdir().expect("Failed to create a temporary directory");
         File::create(temp_dir.path().join(CONFIG_FILENAME)).unwrap();
 
-        load_global_config::<StubConfig>(
+        load_config::<StubConfig>(
             &Some(Utf8PathBuf::try_from(temp_dir.path().to_path_buf()).unwrap()),
             &None,
         )
@@ -344,7 +344,7 @@ mod tests {
         )
         .expect("Failed to copy config file to temp dir");
         // missing env variables
-        if load_global_config::<StubConfig>(
+        if load_config::<StubConfig>(
             &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
             &Some(String::from("with-envs")),
         )
@@ -359,7 +359,7 @@ mod tests {
         env::set_var("VALUE_FLOAT123132", "321.312");
         env::set_var("VALUE_BOOL1231321", "true");
         env::set_var("VALUE_BOOL1231322", "false");
-        let config = load_global_config::<StubComplexConfig>(
+        let config = load_config::<StubComplexConfig>(
             &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
             &Some(String::from("with-envs")),
         )
