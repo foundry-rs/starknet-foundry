@@ -119,6 +119,10 @@ If both local and global profiles with the same name are present, local profile 
 
 This same behavior applies for [default profiles](#default-profile) as well. A local default profile will override a global default profile.
 
+> 📝 **Note**
+> Remember that arguments passed in the CLI have the highest priority and will always override the configuration file settings.
+
+
 #### Global Configuration File Location
 The global configuration is stored in a specific location depending on the operating system:
 
