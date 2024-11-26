@@ -584,7 +584,7 @@ async fn run_async_command(
         },
 
         Commands::ShowConfig(show) => {
-            let provider = show.rpc.get_provider(&config).await?;
+            let provider = show.rpc.get_provider(&config).await.ok();
 
             let result =
                 starknet_commands::show_config::show_config(&show, &provider, config, cli.profile)

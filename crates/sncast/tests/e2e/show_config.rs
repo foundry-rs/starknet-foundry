@@ -110,3 +110,21 @@ async fn test_show_config_when_keystore() {
         wait_timeout: 300
     ", URL});
 }
+
+#[tokio::test]
+async fn test_show_config_no_url() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let args = vec!["--profile", "profile6", "show-config"];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_eq(formatdoc! {r"
+        command: show-config
+        account: user1
+        accounts_file_path: /path/to/account.json
+        profile: profile6
+        show_explorer_links: false
+        wait_retry_interval: 10
+        wait_timeout: 500
+    "});
+}
