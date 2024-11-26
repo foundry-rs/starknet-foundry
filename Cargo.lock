@@ -4914,6 +4914,7 @@ dependencies = [
  "conversions",
  "ctor",
  "data-transformer",
+ "dirs",
  "docs",
  "fs_extra",
  "indoc",
