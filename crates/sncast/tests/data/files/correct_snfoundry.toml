@@ -25,3 +25,9 @@ account = "user3"
 [sncast.profile5]
 url = "http://127.0.0.1:5055/rpc"
 account = "user8"
+
+[sncast.profile6]
+accounts-file = "/path/to/account.json"
+account = "user1"
+wait-params = { timeout = 500, retry-interval = 10 }
+show-explorer-links = false
