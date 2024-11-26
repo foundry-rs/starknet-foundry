@@ -742,11 +742,8 @@ fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
         Utf8PathBuf::new()
     });
 
-    let global_config =
-        load_config::<CastConfig>(&Some(global_config_path.clone()), &cli.profile)
-            .unwrap_or_else(|_| {
-                load_config::<CastConfig>(&Some(global_config_path), &None).unwrap()
-            });
+    let global_config = load_config::<CastConfig>(&Some(global_config_path.clone()), &cli.profile)
+        .unwrap_or_else(|_| load_config::<CastConfig>(&Some(global_config_path), &None).unwrap());
 
     let local_config = load_config::<CastConfig>(&None, &cli.profile)?;
 

@@ -1,4 +1,5 @@
-use crate::helpers::configuration::CastConfig;
+use crate::helpers::configuration::{show_explorer_links_default, CastConfig};
+use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use crate::ValidatedWaitParams;
 use anyhow::Result;
 use camino::Utf8PathBuf;
@@ -7,7 +8,6 @@ use shared::consts::FREE_RPC_PROVIDER_URL;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
-use crate::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_SHOW_EXPLORER_LINKS};
 
 pub fn get_global_config_path() -> Result<Utf8PathBuf> {
     let global_config_dir = {
@@ -57,7 +57,7 @@ fn build_default_manifest() -> String {
         default_wait_timeout = default_wait_params.timeout,
         default_wait_retry_interval = default_wait_params.retry_interval,
         default_block_explorer = "StarkScan",
-        default_show_explorer_links = DEFAULT_SHOW_EXPLORER_LINKS,
+        default_show_explorer_links = show_explorer_links_default(),
         default_account = "default",
         default_keystore = ""
     }
