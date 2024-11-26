@@ -115,7 +115,7 @@ This file is stored in a predefined location and is used to store profiles that 
 
 Global config can be overridden by a local config.
 
-If both local and global profiles with the same name are present, local profile will be combined with global profile. That is for any setting defined both in global and local profiles, local setting will be used. For settings not defined in local profile, values from the global profile will be used instead.
+If both local and global profiles with the same name are present, local profile will be combined with global profile. For any setting defined in both profiles, the local setting will take precedence. For settings not defined in the local profile, values from the corresponding global profile will be used, or if not defined, values from the global default profile will be used instead.
 
 This same behavior applies for [default profiles](#default-profile) as well. A local default profile will override a global default profile.
 
