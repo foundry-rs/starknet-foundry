@@ -7,7 +7,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Args, Subcommand, ValueEnum};
 use configuration::{
-    find_config_file, load_global_config, search_config_upwards_relative_to, CONFIG_FILENAME,
+    find_config_file, load_config, search_config_upwards_relative_to, CONFIG_FILENAME,
 };
 use serde_json::json;
 use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
@@ -128,7 +128,7 @@ pub fn add_created_profile_to_configuration(
     cast_config: &CastConfig,
     path: &Option<Utf8PathBuf>,
 ) -> Result<()> {
-    if !load_global_config::<CastConfig>(path, profile)
+    if !load_config::<CastConfig>(path, profile)
         .unwrap_or_default()
         .account
         .is_empty()

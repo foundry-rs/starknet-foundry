@@ -10,7 +10,7 @@ use sncast::response::print::{print_command_result, OutputFormat};
 use crate::starknet_commands::deploy::DeployArguments;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
-use configuration::load_global_config;
+use configuration::load_config;
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
@@ -743,12 +743,12 @@ fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
     });
 
     let global_config =
-        load_global_config::<CastConfig>(&Some(global_config_path.clone()), &cli.profile)
+        load_config::<CastConfig>(&Some(global_config_path.clone()), &cli.profile)
             .unwrap_or_else(|_| {
-                load_global_config::<CastConfig>(&Some(global_config_path), &None).unwrap()
+                load_config::<CastConfig>(&Some(global_config_path), &None).unwrap()
             });
 
-    let local_config = load_global_config::<CastConfig>(&None, &cli.profile)?;
+    let local_config = load_config::<CastConfig>(&None, &cli.profile)?;
 
     let mut combined_config = combine_cast_configs(&global_config, &local_config);
 

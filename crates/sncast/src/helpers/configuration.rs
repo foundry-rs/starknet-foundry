@@ -2,7 +2,7 @@ use super::block_explorer;
 use crate::ValidatedWaitParams;
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use configuration::GlobalConfig;
+use configuration::Config;
 use serde::{Deserialize, Serialize};
 use crate::helpers::constants::DEFAULT_SHOW_EXPLORER_LINKS;
 
@@ -58,7 +58,7 @@ impl Default for CastConfig {
     }
 }
 
-impl GlobalConfig for CastConfig {
+impl Config for CastConfig {
     #[must_use]
     fn tool_name() -> &'static str {
         "sncast"
