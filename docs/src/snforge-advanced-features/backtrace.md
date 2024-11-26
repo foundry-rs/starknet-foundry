@@ -35,11 +35,9 @@ this:
 
 
 <!-- { "ignored": false, "package_name": "backtrace_panic" } -->
-
 ```shell
 $ snforge test
 ```
-
 <details>
 <summary>Output:</summary>
 
@@ -48,7 +46,6 @@ Failure data:
     (0x454e545259504f494e545f4e4f545f464f554e44 ('ENTRYPOINT_NOT_FOUND'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
 note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
 ```
-
 </details>
 <br>
 
@@ -58,12 +55,10 @@ To enable backtraces, simply set the `SNFORGE_BACKTRACE=1` environment variable 
 When enabled, the backtrace will display the call tree of the execution, including the specific line numbers in the
 contracts where the errors occurred. Here's an example of what you might see:
 
-<!-- { "ignored": false, "package_name": "backtrace_panic" } -->
-
+<!-- { "ignored": true, "package_name": "backtrace_panic" } -->
 ```shell
 $ SNFORGE_BACKTRACE=1 snforge test
 ```
-
 <details>
 <summary>Output:</summary>
 
@@ -89,7 +84,6 @@ Stack backtrace:
    2: backtrace_vm_error::OuterContract::__wrapper__OuterContract__outer
        at [..]/src/lib.cairo:15:9
 ```
-
 </details>
 <br>
 
