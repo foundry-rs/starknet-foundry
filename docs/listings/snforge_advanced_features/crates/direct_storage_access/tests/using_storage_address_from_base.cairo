@@ -4,7 +4,9 @@ use starknet::storage::StoragePathEntry;
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, store, load};
 use starknet::storage_access::{storage_address_from_base};
 
-use direct_storage_access::felts_only::{SimpleStorageContract};
+use direct_storage_access::felts_only::{
+    SimpleStorageContract, ISimpleStorageContractDispatcher, ISimpleStorageContractDispatcherTrait
+};
 
 #[test]
 fn update_mapping() {
@@ -15,6 +17,7 @@ fn update_mapping() {
         .contract_class()
         .deploy(@array![])
         .unwrap();
+    let dispatcher = ISimpleStorageContractDispatcher { contract_address };
     let mut state = SimpleStorageContract::contract_state_for_testing();
 
     let storage_address = storage_address_from_base(
@@ -23,10 +26,6 @@ fn update_mapping() {
     let storage_value: Span<felt252> = array![data.into()].span();
     store(contract_address, storage_address.into(), storage_value);
 
-    let read_data = load(contract_address, storage_address.into(), 1)
-        .at(key.try_into().unwrap())
-        .try_into()
-        .unwrap();
-
-    assert_eq!(read_data, @data, "Storage update failed")
+    let read_data = dispatcher.get_value(key.into());
+    assert_eq!(read_data, data, "Storage update failed")
 }
