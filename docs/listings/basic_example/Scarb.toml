@@ -10,9 +10,6 @@ starknet = "2.7.0"
 snforge_std = { path = "../../../snforge_std" }
 sncast_std = { path = "../../../sncast_std" }
 
-[[target.starknet-contract]]
-sncast_std = { path = "../../../sncast_std" }
-
 [[target.lib]]
 sierra = true
 
