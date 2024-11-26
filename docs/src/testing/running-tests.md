@@ -75,6 +75,7 @@ Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
 
 To stop the test execution after first failed test, you can pass an `--exit-first` flag along with `snforge test` command.
 
+<!-- { "ignored": true } -->
 ```shell
 $ snforge test --exit-first
 ```
