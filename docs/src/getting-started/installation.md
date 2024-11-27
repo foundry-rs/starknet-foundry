@@ -5,6 +5,10 @@ In this section, we will walk through the process of installing Starknet Foundry
 
 ### Requirements
 
+> 📝 **Note**
+> Ensure all requirements are installed and follow the required minimum versions.
+> Starknet Foundry will not run if not following these requirements.
+
 To use Starknet Foundry, you need:
 
 - [Scarb](https://docs.swmansion.com/scarb/download.html)
@@ -18,7 +22,9 @@ all installed and added to your `PATH` environment variable.
 > `Universal-Sierra-Compiler` will be automatically installed if you use `snfoundryup` or `asdf`.
 > You can also create `UNIVERSAL_SIERRA_COMPILER` env var to make it visible for `snforge`.
 
-### Installation via [asdf](https://asdf-vm.com/)
+### Installation on Linux and macOS
+
+#### Installation via [asdf](https://asdf-vm.com/)
 
 First, add the Starknet Foundry plugin to asdf:
 
@@ -26,7 +32,7 @@ First, add the Starknet Foundry plugin to asdf:
 $ asdf plugin add starknet-foundry
 ```
 
-#### Common Error
+##### Common Error
 
 Users may encounter this error when trying to use `snforge` or `sncast` without setting a version:
 
@@ -41,9 +47,10 @@ This error indicates that `Starknet Foundry` version is unset. To resolve it, se
 $ asdf global starknet-foundry <version>
 ```
 
-For additional information on asdf version management, see the [asdf](https://asdf-vm.com/guide/getting-started.html#_6-set-a-version)
+For additional information on asdf version management, see
+the [asdf](https://asdf-vm.com/guide/getting-started.html#_6-set-a-version)
 
-### Install via `snfoundryup`
+#### Install via `snfoundryup`
 
 Snfoundryup is the Starknet Foundry toolchain installer.
 
@@ -63,7 +70,6 @@ See `snfoundryup --help` for more options.
 
 To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
 
-
 ### Installation on Windows
 
 As for now, Starknet Foundry on Windows needs manual installation, but necessary steps are kept to minimum:
@@ -71,7 +77,8 @@ As for now, Starknet Foundry on Windows needs manual installation, but necessary
 1. [Download the release](https://github.com/foundry-rs/starknet-foundry/releases) archive matching your CPU
    architecture.
 2. Extract it to a location where you would like to have Starknet Foundry installed. A folder named snfoundry in
-   your [`%LOCALAPPDATA%\Programs`](https://learn.microsoft.com/en-us/windows/win32/shell/knownfolderid?redirectedfrom=MSDN#FOLDERID_UserProgramFiles)
+   your [
+   `%LOCALAPPDATA%\Programs`](https://learn.microsoft.com/en-us/windows/win32/shell/knownfolderid?redirectedfrom=MSDN#FOLDERID_UserProgramFiles)
    directory will suffice:
 
 ```batch
