@@ -21,7 +21,7 @@ and [Blockifier](https://github.com/starkware-libs/blockifier), written in Rust 
 Need help getting started with Starknet Foundry? Read the
 📖 [Starknet Foundry Book](https://foundry-rs.github.io/starknet-foundry/)!
 
-![Example run](.github/images/demo-gif/demo.gif)
+![Example run](.github/images/demo.gif)
 
 Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/foundry), consists of different modules
 
