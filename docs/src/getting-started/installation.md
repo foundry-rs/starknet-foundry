@@ -19,7 +19,7 @@ all installed and added to your `PATH` environment variable.
 
 > 📝 **Note**
 >
-> `Universal-Sierra-Compiler` will be automatically installed if you use `snfoundryup` or `asdf`.
+> `Universal-Sierra-Compiler` will be automatically installed if you use `asdf` or `snfoundryup`.
 > You can also create `UNIVERSAL_SIERRA_COMPILER` env var to make it visible for `snforge`.
 
 ### Installation on Linux and macOS
