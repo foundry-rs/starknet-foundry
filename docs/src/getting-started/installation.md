@@ -1,6 +1,6 @@
 # Installation
 
-Starknet Foundry is easy to install on Linux, Mac and Windows systems.
+Starknet Foundry is easy to install on Linux, macOS and Windows.
 In this section, we will walk through the process of installing Starknet Foundry.
 
 ### Requirements
