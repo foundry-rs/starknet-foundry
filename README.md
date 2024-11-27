@@ -104,6 +104,57 @@ or
 sncast --version
 ```
 
+### Windows
+
+#### Install Rust >= 1.80.1
+
+Go to https://www.rust-lang.org/tools/install and follow the installation instructions.
+
+To verify that correct Rust version was installed, run
+
+```shell
+rustc --version
+```
+
+See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
+
+#### Install Scarb
+
+1. Download the release archive matching your CPU architecture
+   from https://docs.swmansion.com/scarb/download.html#precompiled-packages.
+2. Extract it to a location where you would like to have Scarb installed. We recommend `%LOCALAPPDATA%\Programs\scarb`.
+3. From this directory, get the full path to `scarb\bin` and add it to PATH.
+   See [this article](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) for instructions on
+   Windows 10 and 11.
+
+To verify that Scarb was correctly installed, run
+
+```shell
+scarb --version
+```
+
+#### Install Starknet Foundry
+
+1. Download the release archive matching your CPU architecture
+   from https://github.com/foundry-rs/starknet-foundry/releases/latest. Look for package with `windows` in the name e.g.
+   `starknet-foundry-v0.34.0-x86_64-pc-windows-msvc.zip`.
+2. Extract it to a location where you would like to have Starknet Foundry installed. We recommend `%LOCALAPPDATA%\Programs\snfoundry`.
+3. From this directory, get the full path to `snfoundry\bin` and add it to PATH.
+   See [this article](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) for instructions on
+   Windows 10 and 11.
+
+To verify that Starknet Foundry was correctly installed, run
+
+```shell
+snforge --version
+```
+
+or
+
+```shell
+sncast --version
+```
+
 ## Features
 
 - Fast testing framework `snforge` written in Rust
