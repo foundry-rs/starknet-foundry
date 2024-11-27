@@ -18,26 +18,6 @@ all installed and added to your `PATH` environment variable.
 > `Universal-Sierra-Compiler` will be automatically installed if you use `snfoundryup` or `asdf`.
 > You can also create `UNIVERSAL_SIERRA_COMPILER` env var to make it visible for `snforge`.
 
-### Install via `snfoundryup`
-
-Snfoundryup is the Starknet Foundry toolchain installer.
-
-You can install it by running:
-
-```shell
-$ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
-```
-
-Follow the instructions and then run:
-
-```shell
-$ snfoundryup
-```
-
-See `snfoundryup --help` for more options.
-
-To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
-
 ### Installation via [asdf](https://asdf-vm.com/)
 
 First, add the Starknet Foundry plugin to asdf:
@@ -62,6 +42,27 @@ $ asdf global starknet-foundry <version>
 ```
 
 For additional information on asdf version management, see the [asdf](https://asdf-vm.com/guide/getting-started.html#_6-set-a-version)
+
+### Install via `snfoundryup`
+
+Snfoundryup is the Starknet Foundry toolchain installer.
+
+You can install it by running:
+
+```shell
+$ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
+```
+
+Follow the instructions and then run:
+
+```shell
+$ snfoundryup
+```
+
+See `snfoundryup --help` for more options.
+
+To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
+
 
 ### Installation on Windows
 
