@@ -1894,6 +1894,8 @@ name = "docs"
 version = "0.34.0"
 dependencies = [
  "regex",
+ "serde",
+ "serde_json",
  "shell-words",
  "walkdir",
 ]

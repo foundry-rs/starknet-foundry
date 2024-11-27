@@ -19,7 +19,7 @@ writing smart contracts, you often want to test their interactions with the bloc
 Let's consider a simple smart contract with two methods.
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/testing_smart_contracts/src/simple_contract.cairo}}
+{{#include ../../listings/testing_smart_contracts_writing_tests/src/lib.cairo}}
 ```
 
 Note that the name after `mod` will be used as the contract name for testing purposes.
@@ -29,7 +29,7 @@ Note that the name after `mod` will be used as the contract name for testing pur
 Let's write a test that will deploy the `HelloStarknet` contract and call some functions.
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/testing_smart_contracts/tests/simple_contract.cairo}}
+{{#include ../../listings/testing_smart_contracts_writing_tests/tests/simple_contract.cairo}}
 ```
 
 > 📝 **Note**
@@ -46,11 +46,19 @@ $ snforge test
 <summary>Output:</summary>
 
 ```shell
-Collected 1 test(s) from testing_smart_contracts package
+Collected 2 test(s) from testing_smart_contracts_handling_errors package
+Running 2 test(s) from tests/
+[FAIL] testing_smart_contracts_handling_errors_integrationtest::panic::failing
+
+Failure data:
+    (0x50414e4943 ('PANIC'), 0x444159544148 ('DAYTAH'))
+
+[PASS] testing_smart_contracts_handling_errors_integrationtest::handle_panic::handling_string_errors (gas: ~103)
 Running 0 test(s) from src/
-Running 1 test(s) from tests/
-[PASS] tests::call_and_invoke
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+
+Failures:
+    testing_smart_contracts_handling_errors_integrationtest::panic::failing
 ```
 </details>
 <br>
@@ -64,14 +72,14 @@ panicking.
 First, let's add a new, panicking function to our contract.
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/testing_smart_contracts/src/handling_errors.cairo}}
+{{#include ../../listings/testing_smart_contracts_handling_errors/src/lib.cairo}}
 ```
 
 If we called this function in a test, it would result in a failure.
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/testing_smart_contracts/tests/panic.cairo:first_half}}
-{{#include ../../listings/snforge_overview/crates/testing_smart_contracts/tests/panic.cairo:second_half}}
+{{#include ../../listings/testing_smart_contracts_handling_errors/tests/panic.cairo:first_half}}
+{{#include ../../listings/testing_smart_contracts_handling_errors/tests/panic.cairo:second_half}}
 ```
 
 ```shell
@@ -82,18 +90,19 @@ $ snforge test
 <summary>Output:</summary>
 
 ```shell
-Collected 1 test(s) from testing_smart_contracts package
-Running 0 test(s) from src/
-Running 1 test(s) from tests/
-[FAIL] tests::failing
+Collected 2 test(s) from testing_smart_contracts_handling_errors package
+Running 2 test(s) from tests/
+[FAIL] testing_smart_contracts_handling_errors_integrationtest::panic::failing
 
 Failure data:
     (0x50414e4943 ('PANIC'), 0x444159544148 ('DAYTAH'))
 
-Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+[PASS] testing_smart_contracts_handling_errors_integrationtest::handle_panic::handling_string_errors (gas: ~103)
+Running 0 test(s) from src/
+Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 Failures:
-    tests::failing
+    testing_smart_contracts_handling_errors_integrationtest::panic::failing
 ```
 </details>
 <br>
@@ -107,7 +116,7 @@ but are available for testing purposes.
 They allow using the contract without automatically unwrapping the result, which allows to catch the error like shown below.
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/testing_smart_contracts/tests/safe_dispatcher.cairo}}
+{{#include ../../listings/testing_smart_contracts_safe_dispatcher/tests/safe_dispatcher.cairo}}
 ```
 
 Now the test passes as expected.
@@ -120,10 +129,10 @@ $ snforge test
 <summary>Output:</summary>
 
 ```shell
-Collected 1 test(s) from package_name package
+Collected 1 test(s) from testing_smart_contracts_safe_dispatcher package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
-[PASS] tests::handling_errors
+[PASS] testing_smart_contracts_safe_dispatcher_integrationtest::safe_dispatcher::handling_errors (gas: ~103)
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 </details>
@@ -132,7 +141,7 @@ Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 Similarly, you can handle the panics which use `ByteArray` as an argument (like an `assert!` or `panic!` macro)
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/testing_smart_contracts/tests/handle_panic.cairo}}
+{{#include ../../listings/testing_smart_contracts_handling_errors/tests/handle_panic.cairo}}
 ```
 You also could skip the de-serialization of the `panic_data`, and not use `try_deserialize_bytearray_error`, but this way you can actually use assertions on the `ByteArray` that was used to panic.
 
