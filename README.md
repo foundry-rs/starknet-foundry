@@ -32,25 +32,77 @@ Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/
 
 ## Installation
 
-To install Starknet Foundry, first install `snfoundryup` by running:
+### Linux and MacOS
+
+#### Install Rust >= 1.80.1
 
 ```shell
-$ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-Follow the instructions and then run
+To verify that correct Rust version was installed, run
 
 ```shell
-$ snfoundryup
+rustc --version
 ```
 
-You can also specify a version you wish to install:
+See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
+
+#### Install ASDF
+
+Follow the instructions from [asdf docs](https://asdf-vm.com/guide/getting-started.html#getting-started).
+
+To verify that ASDF was correctly installed, run
 
 ```shell
-$ snfoundryup -v 0.9.0
+asdf --version
 ```
 
-To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
+#### Install Scarb
+
+First, add Scarb plugin to ASDF
+
+```shell
+asdf plugin add scarb
+```
+
+Install Scarb
+
+```shell
+asdf install scarb latest
+```
+
+To verify that Scarb was correctly installed, run
+
+```shell
+scarb --version
+```
+
+#### Install Starknet Foundry
+
+First, add Starknet Foundry plugin to ASDF
+
+```shell
+asdf plugin add starknet-foundry
+```
+
+Install Starknet Foundry
+
+```shell
+asdf install starknet-foundry latest
+```
+
+To verify that Starknet Foundry was correctly installed, run
+
+```shell
+snforge --version
+```
+
+or
+
+```shell
+sncast --version
+```
 
 ## Features
 
@@ -74,7 +126,7 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 - [x] Deployment scripts written in Cairo
 - [ ] Transactions profiling 🏗️
 - [ ] Debugging utilities 🏗️
-- [ ] Test coverage reports (check out [cairo-coverage](https://github.com/software-mansion/cairo-coverage)) 🏗️ 
+- [ ] Test coverage reports (check out [cairo-coverage](https://github.com/software-mansion/cairo-coverage)) 🏗️
 - [ ] L1 ↔ L2 messaging and cross-chain testing
 
 ## Performance
