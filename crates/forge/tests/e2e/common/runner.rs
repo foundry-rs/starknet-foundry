@@ -34,10 +34,8 @@ pub(crate) fn test_runner(temp_dir: &TempDir) -> SnapboxCommand {
 pub(crate) static BASE_FILE_PATTERNS: &[&str] = &["**/*.cairo", "**/*.toml"];
 
 fn is_package_from_docs_listings(package: &str) -> bool {
-    fs::read_dir("../../docs/listings")
-        .unwrap()
-        .map(|entry| entry.unwrap().file_name().into_string().unwrap())
-        .any(|entry| entry == package)
+    let package_path = Path::new("../../docs/listings").join(package);
+    fs::canonicalize(&package_path).is_ok()
 }
 
 pub(crate) fn setup_package_with_file_patterns(
