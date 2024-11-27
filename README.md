@@ -155,12 +155,6 @@ or
 sncast --version
 ```
 
-## Features
-
-- Fast testing framework `snforge` written in Rust
-- High-quality dependency management using [scarb](https://github.com/software-mansion/scarb)
-- Intuitive interactions and deployment of Starknet contracts through `sncast`
-
 ## Roadmap
 
 Starknet Foundry is under active development! Expect a lot of new features to appear soon! 🔥
