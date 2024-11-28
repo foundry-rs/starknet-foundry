@@ -1,9 +1,11 @@
+use crate::compatibility_check::{Requirement, RequirementsChecker};
 use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge_runner::CACHE_DIR;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
+use semver::Version;
 use std::ffi::OsString;
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
 use tokio::runtime::Builder;
@@ -11,6 +13,7 @@ use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
 pub mod block_number_map;
 mod combine_configs;
+mod compatibility_check;
 mod init;
 pub mod pretty_printing;
 pub mod run_tests;
@@ -162,6 +165,24 @@ pub fn main_execution() -> Result<ExitStatus> {
 
     ScarbCommand::new().ensure_available()?;
     UniversalSierraCompilerCommand::ensure_available()?;
+
+    let mut requirements_checker = RequirementsChecker::new();
+    requirements_checker.add_requirement(Requirement {
+        name: "Rust".to_string(),
+        command: "rustc --version | cut -d ' ' -f 2".to_string(),
+        minimal_version: Version::new(1, 81, 0),
+    });
+    requirements_checker.add_requirement(Requirement {
+        name: "Scarb".to_string(),
+        command: "scarb --version | cut -d ' ' -f 2 | head -n 1".to_string(),
+        minimal_version: Version::new(2, 9, 0),
+    });
+    requirements_checker.add_requirement(Requirement {
+        name: "Universal Sierra Compiler".to_string(),
+        command: "universal-sierra-compiler --version | cut -d ' ' -f 2".to_string(),
+        minimal_version: Version::new(2, 0, 0),
+    });
+    requirements_checker.validate()?;
 
     match cli.subcommand {
         ForgeSubcommand::Init { name } => {
