@@ -286,9 +286,7 @@ async fn run_async_command(
         }
 
         Commands::Deploy(deploy) => {
-            deploy.validate()?;
-
-            let fee_token = deploy.token_from_version();
+            let fee_token = deploy.validate_and_get_token()?;
 
             let Deploy {
                 arguments,
@@ -309,7 +307,7 @@ async fn run_async_command(
 
             let fee_settings = fee_args
                 .clone()
-                .fee_token(fee_token)
+                .fee_token_1(fee_token)
                 .try_into_fee_settings(&provider, account.block_id())
                 .await?;
 

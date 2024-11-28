@@ -6,6 +6,11 @@ use starknet::core::types::BlockId;
 use starknet::providers::Provider;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 
+#[test]
+fn test_impl_payable_transaction() {
+    println!("{:?}", FeeToken::default())
+}
+
 #[derive(Args, Debug, Clone)]
 pub struct FeeArgs {
     /// Token that transaction fee will be paid in
@@ -53,6 +58,14 @@ impl FeeArgs {
     pub fn fee_token(self, fee_token: Option<FeeToken>) -> Self {
         Self {
             fee_token: fee_token.or(self.fee_token),
+            ..self
+        }
+    }
+
+    #[must_use]
+    pub fn fee_token_1(self, fee_token: FeeToken) -> Self {
+        Self {
+            fee_token: Some(fee_token),
             ..self
         }
     }
@@ -138,9 +151,10 @@ impl FeeArgs {
     }
 }
 
-#[derive(ValueEnum, Debug, Clone, PartialEq)]
+#[derive(ValueEnum, Default, Debug, Clone, PartialEq)]
 pub enum FeeToken {
     Eth,
+    #[default]
     Strk,
 }
 
@@ -188,6 +202,7 @@ impl From<ScriptFeeSettings> for FeeSettings {
 pub trait PayableTransaction {
     fn error_message(&self, token: &str, version: &str) -> String;
     fn validate(&self) -> Result<()>;
+    fn validate_and_get_token(&self) -> Result<FeeToken>;
     fn token_from_version(&self) -> Option<FeeToken>;
 }
 
@@ -206,15 +221,39 @@ macro_rules! impl_payable_transaction {
                 ) {
                     (Some(token_from_version), Some(token)) if token_from_version != token => {
                         Err(anyhow!(self.error_message(
-                            &format!("{token:?}").to_lowercase(),
+                            &format!("{:?}", token).to_lowercase(),
                             &format!("{:?}", self.version.clone().unwrap()).to_lowercase()
                         )))
-                    }
-                    (None, None) => {
-                        Err(anyhow!("Either --fee-token or --version must be provided"))
-                    }
+                    },
+
                     _ => Ok(()),
                 }
+            }
+
+            fn validate_and_get_token(&self) -> Result<FeeToken> {
+
+                match (
+                    &self.token_from_version(),
+                    &self.fee_args.fee_token,
+                ) {
+                    (Some(token_from_version), Some(token)) if token_from_version != token => {
+                        Err(anyhow!(self.error_message(
+                            &format!("{:?}", token).to_lowercase(),
+                            &format!("{:?}", self.version.clone().unwrap()).to_lowercase()
+                        )))
+                    },
+                    (None, Some(token)) => {
+                        Ok(token.clone())
+                    },
+                    (Some(token_from_version), None) => {
+                        Ok(token_from_version.clone())
+                    },
+                    (None, None) => {
+                        Ok(FeeToken::default())
+                    },
+                    _ =>  Ok(self.fee_args.fee_token.clone().unwrap_or_else(|| self.token_from_version().unwrap_or_else(|| unreachable!())))
+                }
+
             }
 
             fn token_from_version(&self) -> Option<FeeToken> {
