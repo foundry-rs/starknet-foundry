@@ -25,7 +25,7 @@ Do the following to start interacting with the Starknet:
 ```shell
 $ sncast \
     account create \
-    --url http://127.0.0.1:5050 \
+    --url http://127.0.0.1:5055 \
     --name some-name
 ```
 
@@ -62,7 +62,7 @@ You can do it both by sending tokens from another starknet account or by bridgin
 ```shell
 $ sncast \
     account deploy \
-    --url http://127.0.0.1:5050 \
+    --url http://127.0.0.1:5055 \
 	--name some-name \
 	--fee-token strk \
 	--max-fee 9999999999999
@@ -96,7 +96,7 @@ To import an account to the `default accounts file`, use the `account import` co
 ```shell
 $ sncast \
     account import \
-	--url http://127.0.0.1:5050 \
+	--url http://127.0.0.1:5055 \
     --name my_imported_account \
     --address 0x3a0bcb72428d8056cc7c2bbe5168ddfc844db2737dda3b4c67ff057691177e1 \
     --private-key 0x2 \
@@ -149,7 +149,7 @@ with `--class-hash` flag:
 $ sncast \
     account create \
     --name some-name \
-    --url http://127.0.0.1:5050 \
+    --url http://127.0.0.1:5055 \
     --class-hash 0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6
     --type oz
 ```
@@ -161,7 +161,7 @@ Instead of random generation, salt can be specified with `--salt`.
 ```shell
 $ sncast \
     account create \
-    --url http://127.0.0.1:5050 \
+    --url http://127.0.0.1:5055 \
     --name some-name \
     --salt 0x1
 ```
@@ -187,12 +187,13 @@ Accounts created and deployed with [starkli](https://book.starkli.rs/accounts#ac
 > 💡 **Info**
 > When passing the `--keystore` argument, `--account` argument must be a path to the starkli account JSON file.
 
+<!-- { "ignored": true } -->
 ```shell
 $ sncast \
     --keystore keystore.json \
     --account account.json  \
     declare \
-	--url http://127.0.0.1:5050 \
+	--url http://127.0.0.1:5055 \
     --contract-name my_contract \
     --fee-token eth
 ```
@@ -201,6 +202,7 @@ $ sncast \
 
 It is possible to create an openzeppelin account with keystore in a similar way [starkli](https://book.starkli.rs/accounts#accounts) does.
 
+<!-- { "ignored": true } -->
 ```shell
 $ sncast \
     --keystore my_key.json \

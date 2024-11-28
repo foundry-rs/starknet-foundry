@@ -18,9 +18,9 @@ For detailed CLI description, see [invoke command reference](../appendix/sncast/
 
 ```shell
 $ sncast \
-  --account example_user \
+  --account user0 \
   invoke \
-  --url http://127.0.0.1:5050 \
+  --url http://127.0.0.1:5055 \
   --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \
   --function "add" \
   --fee-token eth \
@@ -53,11 +53,12 @@ transaction: https://sepolia.starkscan.co/tx/0x504f830428d0fcf462b4b814e2f67e12d
 
 Not every function accepts parameters. Here is how to call it.
 
+<!-- { "contract_name": "HelloStarknet" } -->
 ```shell
 $ sncast invoke \
   --fee-token strk \
-  --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
-  --function "function_without_params"
+  --contract-address 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
+  --function "get_balance"
 ```
 
 <details>

@@ -49,12 +49,12 @@ defined in the profile.
 > Not all parameters have to be present in the configuration - you can choose to include only some of them and supply
 > the rest of them using CLI flags. You can also override parameters from the configuration using CLI flags.
 
+<!-- { "contract_name": "HelloStarknet" } -->
 ```shell
 $ sncast --profile myprofile \
     call \
-    --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
-    --function get \
-    --arguments '0' \
+    --contract-address 0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008 \
+    --function get_balance \
     --block-id latest
 ```
 
@@ -87,11 +87,11 @@ url = "http://127.0.0.1:5050/rpc"
 
 With this, there's no need to include the `--profile` argument when using `sncast`.
 
+<!-- { "contract_name": "HelloStarknet" } -->
 ```shell
 $ sncast call \
-    --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
-    --function get \
-    --arguments '0' \
+    --contract-address 0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008 \
+    --function get_balance \
     --block-id latest
 ```
 

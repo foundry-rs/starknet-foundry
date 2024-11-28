@@ -29,9 +29,10 @@ You can, however, overwrite their values by supplying them as flags directly to 
 
 Let's use `sncast` to call a contract's function:
 
+<!-- { "ignored": true } -->
 ```shell
 $ sncast call \
-    --url http://127.0.0.1:5050 \
+    --url http://127.0.0.1:5055 \
     --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \
     --function "pokemon" \
     --arguments '"Charizard"' \
@@ -80,12 +81,14 @@ Read more about it in the [Cairo documentation](https://book.cairo-lang.org/appe
 
 Let's invoke a transaction and wait for it to be `ACCEPTED_ON_L2`.
 
+<!-- { "contract_name": "HelloStarknet" } -->
 ```shell
-$ sncast --account myuser \
+$ sncast --account user0 \
     --wait \
     deploy \
-	--url http://127.0.0.1:5050 \
-    --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
+	--url http://127.0.0.1:5055 \
+    --class-hash 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
+    --fee-token strk
 ```
 
 <details>
