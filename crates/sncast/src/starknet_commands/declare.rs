@@ -69,11 +69,12 @@ pub async fn declare(
     artifacts: &HashMap<String, StarknetContractArtifacts>,
     wait_config: WaitForTx,
     skip_on_already_declared: bool,
+    fee_token: FeeToken,
 ) -> Result<DeclareResponse, StarknetCommandError> {
     let fee_settings = declare
         .fee_args
         .clone()
-        .fee_token(declare.token_from_version())
+        .fee_token_1(fee_token)
         .try_into_fee_settings(account.provider(), account.block_id())
         .await?;
 

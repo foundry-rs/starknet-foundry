@@ -66,10 +66,9 @@ pub async fn deploy(
     account: &str,
     keystore_path: Option<Utf8PathBuf>,
 ) -> Result<InvokeResponse> {
-    let fee_args = deploy_args
-        .fee_args
-        .clone()
-        .fee_token(deploy_args.token_from_version());
+    let fee_token = deploy_args.validate_and_get_token()?;
+
+    let fee_args = deploy_args.fee_args.clone().fee_token_1(fee_token);
 
     if let Some(keystore_path_) = keystore_path {
         deploy_from_keystore(

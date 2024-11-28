@@ -35,7 +35,7 @@ use shared::utils::build_readable_text;
 use sncast::get_nonce;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
-use sncast::helpers::fee::{FeeSettings, ScriptFeeSettings};
+use sncast::helpers::fee::{FeeSettings, FeeToken, ScriptFeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::ScriptRunResponse;
 use sncast::state::hashing::{
@@ -145,6 +145,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait_params: self.config.wait_params,
                     },
                     true,
+                    FeeToken::default(),
                 ));
 
                 self.state.maybe_insert_tx_entry(
