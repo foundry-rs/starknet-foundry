@@ -226,6 +226,9 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         max_fee: [..]
         message: Account successfully created[..]
 
+        After prefunding the address run:
+        sncast account deploy --url http://127.0.0.1:5055/rpc --name my_account --fee-token strk
+
         To see account creation details, visit:
         account: [..]
         "});
