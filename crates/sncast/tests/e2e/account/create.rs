@@ -43,8 +43,6 @@ pub async fn test_happy_case(account_type: &str) {
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().success();
 
-    println!("{:?}", output.get_output());
-
     assert_stdout_contains(
         output,
         indoc! {r"
