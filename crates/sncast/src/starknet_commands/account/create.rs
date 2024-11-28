@@ -11,7 +11,7 @@ use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
-    CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
+    CREATE_KEYSTORE_PASSWORD_ENV_VAR, DEFAULT_ACCOUNTS_FILE, OZ_CLASS_HASH,
 };
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountCreateResponse;
@@ -57,6 +57,7 @@ pub struct Create {
 
 #[allow(clippy::too_many_arguments)]
 pub async fn create(
+    rpc_url: String,
     account: &str,
     accounts_file: &Utf8PathBuf,
     keystore: Option<Utf8PathBuf>,
@@ -80,6 +81,8 @@ pub async fn create(
         .as_str()
         .context("Invalid address")?
         .parse()?;
+
+    let mut message = "Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.".to_string();
 
     if let Some(keystore) = keystore.clone() {
         let account_path = Utf8PathBuf::from(&account);
@@ -106,11 +109,25 @@ pub async fn create(
         )?;
     } else {
         write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
+        message.push_str(
+            format!(
+                "\n\nAfter prefunding the address run:\n\
+                sncast{} account deploy --url {} --name {} --fee-token strk",
+                if accounts_file.to_string().contains(DEFAULT_ACCOUNTS_FILE) {
+                    format!(" --accounts-file {accounts_file}")
+                } else {
+                    String::new()
+                },
+                rpc_url,
+                account
+            )
+            .as_str(),
+        );
     }
 
     if add_profile.is_some() {
         let config = CastConfig {
-            url: create.rpc.url.clone().unwrap_or_default(),
+            url: rpc_url,
             account: account.into(),
             accounts_file: accounts_file.into(),
             keystore,
@@ -131,7 +148,7 @@ pub async fn create(
             "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
         },
         message: if account_json["deployed"] == json!(false) {
-            "Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.".to_string()
+            message
         } else {
             "Account already deployed".to_string()
         },

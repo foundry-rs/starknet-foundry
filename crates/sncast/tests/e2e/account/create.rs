@@ -43,6 +43,8 @@ pub async fn test_happy_case(account_type: &str) {
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().success();
 
+    println!("{:?}", output.get_output());
+
     assert_stdout_contains(
         output,
         indoc! {r"
@@ -51,6 +53,9 @@ pub async fn test_happy_case(account_type: &str) {
         address: 0x0[..]
         max_fee: [..]
         message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.
+
+        After prefunding the address run:
+        sncast account deploy --url http://127.0.0.1:5055/rpc --name my_account --fee-token strk
 
         To see account creation details, visit:
         account: [..]
