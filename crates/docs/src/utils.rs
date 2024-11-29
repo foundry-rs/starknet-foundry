@@ -32,9 +32,10 @@ pub fn assert_valid_snippet(condition: bool, snippet: &Snippet, err_message: &st
 pub fn print_success_message(snippets: &[Snippet], tool_name: &str) {
     let validated_snippets_count = snippets
         .iter()
-        .filter(|snippet| !snippet.config.ignored.unwrap_or(false)) // Filter out ignored snippets
+        .filter(|snippet| !snippet.config.ignored.unwrap_or(false))
         .count();
     let ignored_snippets_count = snippets.len() - validated_snippets_count;
+
     println!("Finished validation of {tool_name} docs snippets\nValidated: {validated_snippets_count}, Ignored: {ignored_snippets_count}");
 }
 
@@ -47,22 +48,18 @@ pub fn print_skipped_snippet_message(snippet: &Snippet) {
     );
 }
 
+fn get_canonical_path(relative_path: &str) -> Result<String, Box<dyn std::error::Error>> {
+    Ok(Utf8PathBuf::from_str(relative_path)?
+        .canonicalize_utf8()?
+        .to_string()
+        .replace('\\', "/"))
+}
+
 pub fn update_scarb_toml_dependencies(temp: &TempDir) -> Result<(), Box<dyn std::error::Error>> {
-    let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
-        .unwrap()
-        .canonicalize_utf8()
-        .unwrap()
-        .to_string()
-        .replace('\\', "/");
-
-    let sncast_std_path = Utf8PathBuf::from_str("../../sncast_std")
-        .unwrap()
-        .canonicalize_utf8()
-        .unwrap()
-        .to_string()
-        .replace('\\', "/");
-
+    let snforge_std_path = get_canonical_path("../../snforge_std")?;
+    let sncast_std_path = get_canonical_path("../../sncast_std")?;
     let scarb_toml_path = temp.path().join("Scarb.toml");
+
     let mut scarb_toml = fs::read_to_string(&scarb_toml_path)
         .unwrap()
         .parse::<DocumentMut>()
