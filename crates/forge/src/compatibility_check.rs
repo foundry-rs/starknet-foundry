@@ -2,9 +2,12 @@ use anyhow::{anyhow, Context, Result};
 use semver::Version;
 use std::process::Command;
 
+type VersionParser = dyn Fn(&str) -> Result<Version>;
+
 pub struct Requirement {
     pub name: String,
     pub command: String,
+    pub version_parser: Box<VersionParser>,
     pub minimal_version: Version,
 }
 
@@ -28,7 +31,8 @@ impl RequirementsChecker {
         let mut is_valid = true;
 
         for requirement in &self.requirements {
-            let version = get_version(&requirement.name, &requirement.command)?;
+            let raw_version = get_raw_version(&requirement.name, &requirement.command)?;
+            let version = (requirement.version_parser)(&raw_version)?;
             let valid = version >= requirement.minimal_version;
             let output = if valid {
                 format!("✅ {} {}", requirement.name, version)
@@ -53,14 +57,13 @@ impl RequirementsChecker {
     }
 }
 
-fn get_version(name: &str, raw_command: &str) -> Result<Version> {
+fn get_raw_version(name: &str, raw_command: &str) -> Result<String> {
     let mut command = Command::new("sh");
     command.arg("-c").arg(raw_command);
     let raw_current_version = command
         .output()
         .with_context(|| format!("Failed to run version command for {name}"))?;
-    let raw_current_version = String::from_utf8_lossy(&raw_current_version.stdout)
+    Ok(String::from_utf8_lossy(&raw_current_version.stdout)
         .trim()
-        .to_string();
-    Version::parse(&raw_current_version).context("Failed to parse version")
+        .to_string())
 }

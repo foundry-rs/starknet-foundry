@@ -1,7 +1,8 @@
 use crate::compatibility_check::{Requirement, RequirementsChecker};
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand, ValueEnum};
 use forge_runner::CACHE_DIR;
+use regex::Regex;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
@@ -169,18 +170,54 @@ pub fn main_execution() -> Result<ExitStatus> {
     let mut requirements_checker = RequirementsChecker::new();
     requirements_checker.add_requirement(Requirement {
         name: "Rust".to_string(),
-        command: "rustc --version | cut -d ' ' -f 2".to_string(),
+        command: "rustc --version".to_string(),
+        version_parser: Box::new(|raw_version| {
+            let regex = Regex::new(r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)")?;
+            let matches = regex
+                .captures(raw_version)
+                .context("Failed to match version from rustc output")?;
+            let version = matches
+                .name("version")
+                .context("Failed to get version from rustc output")?
+                .as_str();
+
+            Version::parse(version).context("Failed to parse version")
+        }),
         minimal_version: Version::new(1, 81, 0),
     });
     requirements_checker.add_requirement(Requirement {
         name: "Scarb".to_string(),
-        command: "scarb --version | cut -d ' ' -f 2 | head -n 1".to_string(),
+        command: "scarb --version".to_string(),
         minimal_version: Version::new(2, 9, 0),
+        version_parser: Box::new(|raw_version| {
+            let regex = Regex::new(r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)")?;
+            let matches = regex
+                .captures(raw_version)
+                .context("Failed to match version from rustc output")?;
+            let version = matches
+                .name("version")
+                .context("Failed to get version from rustc output")?
+                .as_str();
+
+            Version::parse(version).context("Failed to parse version")
+        }),
     });
     requirements_checker.add_requirement(Requirement {
         name: "Universal Sierra Compiler".to_string(),
-        command: "universal-sierra-compiler --version | cut -d ' ' -f 2".to_string(),
+        command: "universal-sierra-compiler --version".to_string(),
         minimal_version: Version::new(2, 0, 0),
+        version_parser: Box::new(|raw_version| {
+            let regex = Regex::new(r"universal-sierra-compiler (?<version>[0-9]+.[0-9]+.[0-9]+)")?;
+            let matches = regex
+                .captures(raw_version)
+                .context("Failed to match version from rustc output")?;
+            let version = matches
+                .name("version")
+                .context("Failed to get version from rustc output")?
+                .as_str();
+
+            Version::parse(version).context("Failed to parse version")
+        }),
     });
     requirements_checker.validate()?;
 
