@@ -2,6 +2,7 @@ use super::common::runner::{setup_package, test_runner};
 use forge_runner::profiler_api::PROFILE_DIR;
 
 #[test]
+#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn simple_package_build_profile() {
     let temp = setup_package("simple_package");
 
@@ -29,6 +30,7 @@ fn simple_package_build_profile() {
 }
 
 #[test]
+#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn simple_package_build_profile_and_pass_args() {
     let temp = setup_package("simple_package");
 

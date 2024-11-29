@@ -75,14 +75,6 @@ jobs:
       - name: Get branch name
         run: echo 'The branch name is' $BRANCH_NAME
 
-      - name: Install cairo-profiler
-        run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/cairo-profiler/main/scripts/install.sh | sh
-
-      - name: Install cairo-coverage
-        run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
-
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
@@ -111,8 +103,13 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
+      - name: Install cairo-profiler
+        run: |
+          curl -L https://raw.githubusercontent.com/software-mansion/cairo-profiler/main/scripts/install.sh | sh
+
       - run: cargo test --package forge --features scarb_2_8_3 --test main e2e::coverage
       - run: cargo test --package forge --features scarb_2_8_3 --test main e2e::backtrace
+      - run: cargo test --package forge --features scarb_2_8_3 --test main e2e::build_profile
 
   test-coverage-error:
     name: Test coverage error
