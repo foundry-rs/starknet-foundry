@@ -100,7 +100,7 @@ $ sncast call \
 
 ```shell
 command: call
-response: [0x1, 0x23, 0x4]
+response: [0x0]
 ```
 </details>
 <br>

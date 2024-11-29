@@ -16,6 +16,8 @@ For detailed CLI description, see [invoke command reference](../appendix/sncast/
 
 ### General Example
 
+<!-- TODO: Add pokemon contract or modify example so the output will be ckeched -->
+<!-- { "ignore_output": true } -->
 ```shell
 $ sncast \
   --account user0 \
@@ -35,10 +37,10 @@ $ sncast \
 
 ```shell
 command: invoke
-transaction_hash: 0x504f830428d0fcf462b4b814e2f67e12dfbcf3dc7847c1e36ba39d3eb7ac313
+transaction_hash: [..]
 
 To see invocation details, visit:
-transaction: https://sepolia.starkscan.co/tx/0x504f830428d0fcf462b4b814e2f67e12dfbcf3dc7847c1e36ba39d3eb7ac313
+transaction: [..]
 ```
 </details>
 <br>
@@ -66,9 +68,9 @@ $ sncast invoke \
 
 ```shell
 command: invoke
-transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
+transaction_hash: [..]
 
 To see invocation details, visit:
-transaction: https://starkscan.co/tx/0x7ad0d6e449...
+transaction: [..]
 ```
 </details>

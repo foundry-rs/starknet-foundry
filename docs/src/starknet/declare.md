@@ -17,11 +17,11 @@ First make sure that you have created a `Scarb.toml` file for your contract (it 
 
 Then run:
 
-<!-- { "contract_name": "HelloStarknet" } -->
+<!-- { "contract_name": "HelloStarknet", "ignored": true } -->
 ```shell
 $ sncast --account user0 \
     declare \
-	--url http://127.0.0.1:5055 \ 
+	--url http://127.0.0.1:5055 \
     --fee-token strk \
     --contract-name HelloStarknet
 ```
@@ -31,12 +31,12 @@ $ sncast --account user0 \
 
 ```shell
 command: declare
-class_hash: 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799
+class_hash: [..]
 transaction_hash: [..]
 
 To see declaration details, visit:
-class: https://starkscan.co/search/0x8448a68b5e...
-transaction: https://starkscan.co/search/0x7ad0d6e449...
+class: [..]
+transaction: [..]
 ```
 </details>
 <br>

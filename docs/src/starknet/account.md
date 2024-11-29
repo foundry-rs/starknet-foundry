@@ -26,7 +26,7 @@ Do the following to start interacting with the Starknet:
 $ sncast \
     account create \
     --url http://127.0.0.1:5055 \
-    --name some-name
+    --name new_account
 ```
 
 <details>
@@ -35,12 +35,12 @@ $ sncast \
 ```shell
 command: account create
 add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-address: 0x34ae54182d04754d8043189afd315a808d4bea1a63862b3b05aa78b37756d7b
-max_fee: 180527346330500
+address: [..]
+max_fee: [..]
 message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.
 
 To see account creation details, visit:
-account: https://starkscan.co/search/contract/34ae54182d04754d8043189afd315a808d4bea1a63862b3b05aa78b37756d7b
+account: [..]
 ```
 </details>
 <br>
@@ -59,11 +59,12 @@ You can do it both by sending tokens from another starknet account or by bridgin
 >![image](images/starknet-faucet-sepolia.png)
 #### Deploy account with the `sncast account deploy` command
 
+<!-- { "ignored": true } -->
 ```shell
 $ sncast \
     account deploy \
     --url http://127.0.0.1:5055 \
-	--name some-name \
+	--name new_account \
 	--fee-token strk \
 	--max-fee 9999999999999
 ```
@@ -73,10 +74,10 @@ $ sncast \
 
 ```shell
 command: account deploy
-transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
+transaction_hash: [..]
 
 To see invocation details, visit:
-transaction: https://starkscan.co/search/0x20b20896ce...
+transaction: [..]
 ```
 </details>
 <br>
@@ -133,7 +134,7 @@ Delete an account from `accounts-file` and its associated Scarb profile. If you 
 
 ```shell
 $ sncast account delete \
-    --name some-name \
+    --name new_account \
     --network alpha-sepolia
 ```
 
@@ -148,7 +149,7 @@ with `--class-hash` flag:
 ```shell
 $ sncast \
     account create \
-    --name some-name \
+    --name new_account_2 \
     --url http://127.0.0.1:5055 \
     --class-hash 0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6
     --type oz
@@ -162,7 +163,7 @@ Instead of random generation, salt can be specified with `--salt`.
 $ sncast \
     account create \
     --url http://127.0.0.1:5055 \
-    --name some-name \
+    --name another_account_3 \
     --salt 0x1
 ```
 

@@ -79,13 +79,14 @@ the [Starknet specification](https://docs.starknet.io/architecture-and-concepts/
 
 We can write the same command as above, but with arguments:
 
-<!-- { "contract_name": "DataTransformerContract" } -->
+<!-- TODO: Fix problem with non found selector in contract ABI -->
+<!-- { "contract_name": "DataTransformerContract", "ignored": true } -->
 ```shell
 $ sncast call \
     --url http://127.0.0.1:5055 \
     --contract-address 0xcd7bbe72e64e86a894de5c8c9afa0ba9f0434765c52df822f18f5c93cc395f \
     --function tuple_fn \
-    --arguments '0x10, 3, data_stransformer_contract::Enum::One' \
+    --arguments '0x10, 3, data_transformer_contract::Enum::One' \
     --block-id latest
 ```
 

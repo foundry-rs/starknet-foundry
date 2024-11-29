@@ -63,7 +63,7 @@ $ sncast declare \
 
 ```shell
 command: Declare
-class_hash: 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799
+class_hash: [..]
 transaction_hash: [..]
 ```
 </details>
@@ -85,7 +85,7 @@ $ sncast --account user0 \
 
 ```shell
 command: Deploy
-contract_address: 2545627361586725870760320986020069125077312730415714481413957911720773997114
+contract_address: [..]
 transaction_hash: [..]
 ```
 </details>
@@ -106,7 +106,7 @@ $ sncast deploy \
 
 ```shell
 command: Deploy
-contract_address: 2545627361586725870760320986020069125077312730415714481413957911720773997114
+contract_address: [..]
 transaction_hash: [..]
 ```
 </details>
@@ -132,7 +132,7 @@ $ sncast \
 
 ```shell
 command: Invoke
-transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
+transaction_hash: [..]
 ```
 </details>
 <br>
@@ -155,7 +155,7 @@ $ sncast invoke \
 
 ```shell
 command: Invoke
-transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
+transaction_hash: [..]
 ```
 </details>
 <br>
