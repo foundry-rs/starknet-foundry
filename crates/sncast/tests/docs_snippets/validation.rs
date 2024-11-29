@@ -199,7 +199,7 @@ fn test_docs_snippets() {
         let snapbox = runner(&args).current_dir(tempdir.path());
         let output = snapbox.assert().success();
 
-        if snippet.output.is_some() && !snippet.config.ignore_output.unwrap_or(false) {
+        if snippet.output.is_some() && !snippet.config.ignored_output.unwrap_or(false) {
             assert_stdout_contains(output, snippet.output.as_ref().unwrap());
         }
     }

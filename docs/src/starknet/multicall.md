@@ -47,7 +47,7 @@ Additionally, the `id` can be referenced in the inputs of deploy and invoke call
 > For numbers larger than 2^63 - 1 (that can't fit into `i64`), use string format (e.g., `"9223372036854775808"`) due to TOML parser limitations.
 
 <!-- TODO: Adjust snippet and check remove ignoring output -->
-<!-- { "ignore_output": true } -->
+<!-- { "ignored_output": true } -->
 ```shell
 $ sncast multicall run --path multicall_example.toml --fee-token strk
 ```

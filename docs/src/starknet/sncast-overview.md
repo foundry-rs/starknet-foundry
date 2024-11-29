@@ -81,7 +81,7 @@ Read more about it in the [Cairo documentation](https://book.cairo-lang.org/appe
 
 Let's invoke a transaction and wait for it to be `ACCEPTED_ON_L2`.
 
-<!-- { "contract_name": "HelloStarknet", "ignore_output": true } -->
+<!-- { "contract_name": "HelloStarknet", "ignored_output": true } -->
 ```shell
 $ sncast --account user0 \
     --wait \

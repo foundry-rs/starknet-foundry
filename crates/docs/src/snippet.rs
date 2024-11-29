@@ -58,7 +58,7 @@ pub struct SnippetConfig {
     pub ignored: Option<bool>,
     pub package_name: Option<String>,
     pub contract_name: Option<String>,
-    pub ignore_output: Option<bool>,
+    pub ignored_output: Option<bool>,
 }
 
 #[derive(Debug)]
