@@ -24,7 +24,7 @@ pub trait CairoDeserialize: Sized {
     fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self>;
 }
 
-impl<'b> BufferReader<'b> {
+impl BufferReader<'_> {
     #[must_use]
     pub fn new<'a>(buffer: &'a [Felt]) -> BufferReader<'a> {
         BufferReader::<'a> { buffer, idx: 0 }
