@@ -41,14 +41,14 @@ pub fn print_success_message(snippets: &[Snippet], tool_name: &str) {
 
 pub fn print_skipped_snippet_message(snippet: &Snippet) {
     println!(
-        "Ignoring {} docs snippet, file: {} :{}:1",
+        "Ignoring {} docs snippet, file: {}:{}:1",
         snippet.snippet_type.as_str(),
         snippet.file_path,
         snippet.line_start,
     );
 }
 
-fn get_canonical_path(relative_path: &str) -> Result<String, Box<dyn std::error::Error>> {
+pub fn get_canonical_path(relative_path: &str) -> Result<String, Box<dyn std::error::Error>> {
     Ok(Utf8PathBuf::from_str(relative_path)?
         .canonicalize_utf8()?
         .to_string()

@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::str::FromStr;
+use std::fs;
 
 use camino::Utf8PathBuf;
 use docs::snippet::{Snippet, SnippetType};
@@ -10,7 +10,6 @@ use docs::utils::{
 use docs::validation::{extract_snippets_from_directory, extract_snippets_from_file};
 use regex::Regex;
 use shared::test_utils::output_assert::{assert_stdout_contains, AsOutput};
-use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use tempfile::TempDir;
 
 use crate::helpers::constants::URL;
@@ -20,6 +19,28 @@ use crate::helpers::runner::runner;
 struct Contract {
     class_hash: String,
     contract_address: String,
+}
+
+fn prepare_accounts_file(temp: &TempDir) -> Utf8PathBuf {
+    // Account from predeployed accounts in starknet-devnet-rs
+    let accounts = r#"
+    {
+        "alpha-sepolia": {
+            "user0": {
+            "address": "0x6f4621e7ad43707b3f69f9df49425c3d94fdc5ab2e444bfa0e7e4edeff7992d",
+            "deployed": true,
+            "private_key": "0x0000000000000000000000000000000056c12e097e49ea382ca8eadec0839401",
+            "public_key": "0x048234b9bc6c1e749f4b908d310d8c53dae6564110b05ccf79016dca8ce7dfac",
+            "type": "open_zeppelin"
+            }
+        }
+    }
+    "#;
+
+    let accounts_path = temp.path().join("accounts.json");
+    fs::write(&accounts_path, accounts).expect("Failed to write accounts.json");
+
+    Utf8PathBuf::from_path_buf(accounts_path).expect("Invalid UTF-8 path")
 }
 
 fn declare_and_deploy_contract(
@@ -86,7 +107,10 @@ fn declare_and_deploy_contract(
     }
 }
 
-fn setup_contracts_map(tempdir: &TempDir) -> HashMap<String, Contract> {
+fn setup_contracts_map(
+    tempdir: &TempDir,
+    account_json_path: &Utf8PathBuf,
+) -> HashMap<String, Contract> {
     let mut contracts: HashMap<String, Contract> = HashMap::new();
     let contract_names = [
         "HelloStarknet",
@@ -94,10 +118,9 @@ fn setup_contracts_map(tempdir: &TempDir) -> HashMap<String, Contract> {
         "ConstructorContract",
     ];
 
-    let accounts_json_path = Utf8PathBuf::from_str(DEFAULT_ACCOUNTS_FILE).unwrap();
     for contract_name in &contract_names {
         let contract =
-            declare_and_deploy_contract(contract_name, accounts_json_path.as_str(), tempdir);
+            declare_and_deploy_contract(contract_name, account_json_path.as_str(), tempdir);
         contracts.insert((*contract_name).to_string(), contract);
     }
 
@@ -139,10 +162,11 @@ fn test_docs_snippets() {
         Utf8PathBuf::from_path_buf(root_dir_path.join("docs/listings/sncast_example"))
             .expect("Invalid UTF-8 path");
     let tempdir = copy_directory_to_tempdir(&sncast_example_dir);
+    let accounts_json_path = prepare_accounts_file(&tempdir);
 
     update_scarb_toml_dependencies(&tempdir).unwrap();
 
-    let contracts = setup_contracts_map(&tempdir);
+    let contracts = setup_contracts_map(&tempdir, &accounts_json_path);
 
     for snippet in &snippets {
         if snippet.config.ignored.unwrap_or(false) {
@@ -155,6 +179,9 @@ fn test_docs_snippets() {
 
         // remove "sncast" from the args
         args.remove(0);
+
+        args.insert(0, "--accounts-file");
+        args.insert(1, accounts_json_path.as_str());
 
         if let Some(contract_name) = &snippet.config.contract_name {
             let contract = contracts.get(contract_name).expect("Contract not found");

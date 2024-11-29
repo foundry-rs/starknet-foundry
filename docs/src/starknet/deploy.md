@@ -33,8 +33,8 @@ contract_address: [..]
 transaction_hash: [..]
 
 To see deployment details, visit:
-contract: https://starkscan.co/search/[..]
-transaction: https://starkscan.co/search/[..]
+contract: https://sepolia.starkscan.co/contract/[..]
+transaction: https://sepolia.starkscan.co/tx/[..]
 ```
 </details>
 <br>
@@ -75,8 +75,8 @@ contract_address: [..]
 transaction_hash: [..]
 
 To see deployment details, visit:
-contract: https://starkscan.co/search/[..]
-transaction: https://starkscan.co/search/[..]
+contract: https://sepolia.starkscan.co/contract/[..]
+transaction: https://sepolia.starkscan.co/tx/[..]
 ```
 </details>
 <br>
@@ -107,8 +107,8 @@ contract_address: [..]
 transaction_hash: [..]
 
 To see deployment details, visit:
-contract: https://starkscan.co/search/[..]
-transaction: https://starkscan.co/search/[..]
+contract: https://sepolia.starkscan.co/contract/[..]
+transaction: https://sepolia.starkscan.co/tx/[..]
 ```
 </details>
 <br>
