@@ -396,7 +396,8 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "No such file or directory (os error 2)")]
+    #[should_panic]
+    // TODO handle system specific panics
     fn test_load_state_file_invalid_path() {
         let state_file = Utf8PathBuf::from("bla/bla/crypto.json");
         load_state_file(&state_file).unwrap();
