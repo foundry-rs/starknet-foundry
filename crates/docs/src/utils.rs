@@ -40,7 +40,7 @@ pub fn print_success_message(snippets: &[Snippet], tool_name: &str) {
 
 pub fn print_skipped_snippet_message(snippet: &Snippet) {
     println!(
-        "Ignoring {} docs snippet, file: {} :{}:1\n",
+        "Ignoring {} docs snippet, file: {} :{}:1",
         snippet.snippet_type.as_str(),
         snippet.file_path,
         snippet.line_start,
