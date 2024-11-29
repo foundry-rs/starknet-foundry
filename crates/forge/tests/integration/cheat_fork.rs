@@ -4,6 +4,7 @@ use test_utils::runner::assert_passed;
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn cheat_caller_address_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -52,6 +53,7 @@ fn cheat_caller_address_cairo0_contract() {
     assert_passed(&result);
 }
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn cheat_block_number_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -100,6 +102,7 @@ fn cheat_block_number_cairo0_contract() {
     assert_passed(&result);
 }
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn cheat_block_timestamp_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -151,47 +154,6 @@ fn cheat_block_timestamp_cairo0_contract() {
 }
 
 #[test]
-fn mock_call_cairo0_contract() {
-    let test = test_case!(formatdoc!(
-        r#"
-            use starknet::{{contract_address_const}};
-            use snforge_std::{{start_mock_call, stop_mock_call}};
-
-            #[starknet::interface]
-            trait IERC20<TContractState> {{
-                fn name(self: @TContractState) -> felt252;
-            }}
-
-            #[test]
-            #[fork(url: "{}", block_number: 54060)]
-            fn mock_call_cairo0_contract() {{
-                let eth_dispatcher = IERC20Dispatcher {{
-                    contract_address: contract_address_const::<
-                        0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
-                    >()
-                }};
-
-                assert(eth_dispatcher.name() == 'Ether', 'invalid name');
-
-                start_mock_call(eth_dispatcher.contract_address, selector!("name"), 'NotEther');
-
-                assert(eth_dispatcher.name() == 'NotEther', 'invalid mocked name');
-
-                stop_mock_call(eth_dispatcher.contract_address, selector!("name"));
-
-                assert(eth_dispatcher.name() == 'Ether', 'invalid name after mock');
-            }}
-        "#,
-        node_rpc_url(),
-    )
-    .as_str());
-
-    let result = run_test_case(&test);
-
-    assert_passed(&result);
-}
-
-#[test]
 fn store_load_cairo0_contract() {
     let test = test_case!(formatdoc!(
         r#"
@@ -225,6 +187,48 @@ fn store_load_cairo0_contract() {
                 let name = load(eth_dispatcher.contract_address, selector!("ERC20_name"), 1);
                 
                 assert(name == array!['NotEther'], 'invalid load2 name');
+            }}
+        "#,
+        node_rpc_url(),
+    )
+    .as_str());
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+}
+
+#[cfg(not(target_os = "windows"))]
+#[test]
+fn mock_call_cairo0_contract() {
+    let test = test_case!(formatdoc!(
+        r#"
+            use starknet::{{contract_address_const}};
+            use snforge_std::{{start_mock_call, stop_mock_call}};
+
+            #[starknet::interface]
+            trait IERC20<TContractState> {{
+                fn name(self: @TContractState) -> felt252;
+            }}
+
+            #[test]
+            #[fork(url: "{}", block_number: 54060)]
+            fn mock_call_cairo0_contract() {{
+                let eth_dispatcher = IERC20Dispatcher {{
+                    contract_address: contract_address_const::<
+                        0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
+                    >()
+                }};
+
+                assert(eth_dispatcher.name() == 'Ether', 'invalid name');
+
+                start_mock_call(eth_dispatcher.contract_address, selector!("name"), 'NotEther');
+
+                assert(eth_dispatcher.name() == 'NotEther', 'invalid mocked name');
+
+                stop_mock_call(eth_dispatcher.contract_address, selector!("name"));
+
+                assert(eth_dispatcher.name() == 'Ether', 'invalid name after mock');
             }}
         "#,
         node_rpc_url(),

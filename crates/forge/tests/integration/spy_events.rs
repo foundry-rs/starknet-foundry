@@ -632,6 +632,7 @@ fn assert_not_emitted_fails() {
     assert_case_output_contains(&result, "assert_not_emitted_fails", "keys was emitted");
 }
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn capture_cairo0_event() {
     let test = test_case!(

@@ -27,6 +27,7 @@ use test_utils::runner::{assert_case_output_contains, assert_failed, assert_pass
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn fork_simple_decorator() {
     let test = test_case!(formatdoc!(
@@ -70,6 +71,7 @@ fn fork_simple_decorator() {
     assert_passed(&result);
 }
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn fork_aliased_decorator() {
     let test = test_case!(indoc!(
@@ -178,6 +180,7 @@ fn fork_aliased_decorator() {
     assert_passed(&result);
 }
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn fork_aliased_decorator_overrding() {
     let test = test_case!(indoc!(
@@ -268,6 +271,7 @@ fn fork_aliased_decorator_overrding() {
     assert_passed(&result);
 }
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn fork_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -298,6 +302,7 @@ fn fork_cairo0_contract() {
     assert_passed(&result);
 }
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn get_block_info_in_forked_block() {
     let test = test_case!(formatdoc!(
@@ -398,6 +403,7 @@ fn get_block_info_in_forked_block() {
     assert_passed(&result);
 }
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn fork_get_block_info_fails() {
     let test = test_case!(formatdoc!(
