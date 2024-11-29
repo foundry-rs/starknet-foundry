@@ -55,5 +55,5 @@ fn test_docs_snippets() {
         }
     }
 
-    print_success_message(snippets.len(), snippet_type.as_str());
+    print_success_message(&snippets, snippet_type.as_str());
 }
