@@ -205,7 +205,7 @@ jobs:
       - name: Install starknet-devnet-rs
         run: |
           if [[ "${{ runner.os }}" == "Windows" ]]; then
-            powershell .\scripts\install_devnet.ps1
+            powershell ./scripts/install_devnet.ps1
           else
             ./scripts/install_devnet.sh
           fi
