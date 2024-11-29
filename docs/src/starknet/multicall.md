@@ -46,8 +46,10 @@ Additionally, the `id` can be referenced in the inputs of deploy and invoke call
 > 📝 **Note**
 > For numbers larger than 2^63 - 1 (that can't fit into `i64`), use string format (e.g., `"9223372036854775808"`) due to TOML parser limitations.
 
+<!-- TODO: Adjust snippet and check remove ignoring output -->
+<!-- { "ignore_output": true } -->
 ```shell
-$ sncast multicall run --path /Users/john/Desktop/multicall_example.toml --fee-token strk
+$ sncast multicall run --path multicall_example.toml --fee-token strk
 ```
 
 <details>
@@ -81,14 +83,8 @@ $ sncast multicall new ./template.toml
 <summary>Output:</summary>
 
 ```shell
-Multicall template successfully saved in ./template.toml
-```
-</details>
-<br>
-
-Resulting in output:
-```toml
-[[call]]
+command: multicall new
+content: [[call]]
 call_type = "deploy"
 class_hash = ""
 inputs = []
@@ -100,7 +96,11 @@ call_type = "invoke"
 contract_address = ""
 function = ""
 inputs = []
+
+path: ./template.toml
 ```
+</details>
+<br>
 
 > ⚠️ **Warning**
 > Trying to pass any existing file as an output for `multicall new` will result in error, as the command doesn't overwrite by default.
@@ -117,6 +117,20 @@ $ sncast multicall new ./template.toml --overwrite
 <summary>Output:</summary>
 
 ```shell
-Multicall template successfully saved in ./new_multicall_template.toml
+command: multicall new
+content: [[call]]
+call_type = "deploy"
+class_hash = ""
+inputs = []
+id = ""
+unique = false
+
+[[call]]
+call_type = "invoke"
+contract_address = ""
+function = ""
+inputs = []
+
+path: ./template.toml
 ```
 </details>

@@ -103,7 +103,7 @@ $ sncast deploy \
 
 ```shell
 command: deploy
-contract_address: 0x4500ae3e6429dc6dbac43a1ce92a5da24f1c87d49ad78610f71015dd3f6c61a
+contract_address: [..]
 transaction_hash: [..]
 
 To see deployment details, visit:

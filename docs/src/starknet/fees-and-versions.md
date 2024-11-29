@@ -27,7 +27,7 @@ When paying in STRK, you need to either set `--fee-token` to `strk`:
 
 ```shell
 $ sncast account deploy \
-    --name some-name \
+    --name example-name \
     --fee-token strk \
     --max-fee 9999999999999
 ```
@@ -35,7 +35,7 @@ or set `--version` to `v3`:
 
 ```shell
 $ sncast account deploy \
-    --name some-name \
+    --name example-name \
     --version v3 \
     --max-fee 9999999999999
 ```
@@ -44,7 +44,7 @@ In case of paying in ETH, same rules apply. You need to set either `--fee-token`
 
 ```shell
 $ sncast account deploy \
-    --name some-name \
+    --name example-name \
     --fee-token eth \
     --max-fee 9999999999999
 ```
@@ -53,7 +53,7 @@ or set `--version` to `v1`:
 
 ```shell
 $ sncast account deploy \
-    --name some-name \
+    --name example-name \
     --version v1 \
     --max-fee 9999999999999
 ```

@@ -31,7 +31,7 @@ All subcommand usages are shown for two scenarios - when all necessary arguments
 
 ### Declare a contract
 
-<!-- { "contract_name": "HelloStarknet" } -->
+<!-- { "contract_name": "HelloStarknet", "ignored": true } -->
 ```shell
 $ sncast --account user0 \
     declare \
@@ -52,9 +52,10 @@ transaction_hash: [..]
 
 With arguments taken from `snfoundry.toml` file (default profile name):
 
+<!-- { "contract_name": "HelloStarknet", "ignored": true } -->
 ```shell
 $ sncast declare \
-    --contract-name HellloStarknet \
+    --contract-name HelloStarknet \
     --fee-token strk
 ```
 
@@ -72,7 +73,7 @@ transaction_hash: [..]
 
 ### Deploy a contract
 
-<!-- { "contract_name": "HelloStarknet" } -->
+<!-- { "contract_name": "HelloStarknet", "ignored": true } -->
 ```shell
 $ sncast --account user0 \
     deploy --class-hash 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
@@ -93,7 +94,7 @@ transaction_hash: [..]
 
 With arguments taken from `snfoundry.toml` file (default profile name):
 
-<!-- { "contract_name": "HelloStarknet" } -->
+<!-- { "contract_name": "HelloStarknet", "ignored": true } -->
 ```shell
 $ sncast deploy \
 --class-hash 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
@@ -131,8 +132,11 @@ $ sncast \
 <summary>Output:</summary>
 
 ```shell
-command: Invoke
+command: invoke
 transaction_hash: [..]
+
+To see invocation details, visit:
+transaction: https://sepolia.starkscan.co/tx/[..]
 ```
 </details>
 <br>
@@ -154,8 +158,11 @@ $ sncast invoke \
 <summary>Output:</summary>
 
 ```shell
-command: Invoke
+command: invoke
 transaction_hash: [..]
+
+To see invocation details, visit:
+transaction: https://sepolia.starkscan.co/tx/[..]
 ```
 </details>
 <br>
@@ -177,7 +184,7 @@ $ sncast \
 
 ```shell
 command: call
-response: [0x0]
+response: [0x6]
 ```
 </details>
 <br>
@@ -199,7 +206,7 @@ $ sncast call \
 
 ```shell
 command: call
-response: [0x0]
+response: [0x6]
 ```
 </details>
 <br>
