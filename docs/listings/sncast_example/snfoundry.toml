@@ -1,0 +1,9 @@
+[sncast.default]
+account = "user0"
+accounts-file = "accounts.json"
+url = "http://127.0.0.1:5055"
+
+[sncast.myprofile]
+account = "user0"
+accounts-file = "accounts.json"
+url = "http://127.0.0.1:5055"
