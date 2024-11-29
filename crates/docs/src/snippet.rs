@@ -1,5 +1,15 @@
+use std::sync::LazyLock;
+
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+
+static RE_SNCAST: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new( r"(?ms)^(?:<!--\s*(?P<config>\{.*?\})\s*-->\n)?```shell\n\$ (?P<command>sncast .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n(?P<output>[\s\S]+?)\n```[\s]*<\/details>)?").expect("Failed to create regex for normalizing loop function names")
+});
+
+static RE_SNFORGE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new( r"(?ms)^(?:<!--\s*(?P<config>\{.*?\})\s*-->\n)?```shell\n\$ (?P<command>snforge .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n(?P<output>[\s\S]+?)\n```[\s]*<\/details>)?").expect("Failed to create regex for normalizing loop function names")
+});
 
 #[derive(Clone, Debug)]
 pub struct SnippetType(String);
@@ -21,7 +31,7 @@ impl SnippetType {
     }
 
     #[must_use]
-    pub fn get_re(&self) -> Regex {
+    pub fn get_re(&self) -> &'static Regex {
         // The regex pattern is used to match the snippet, its config and the output. Example:
         // <!-- { "ignored": true, "package_name": "xyz" } -->
         // ```shell
@@ -34,12 +44,12 @@ impl SnippetType {
         // ```
         // </details>
 
-        let escaped_command = regex::escape(self.as_str());
-        let pattern = format!(
-            r"(?ms)^(?:<!--\s*(?P<config>.*?)\s*-->\n)?```shell\n\$ (?P<command>{escaped_command} .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n(?P<output>[\s\S]+?)\n```[\s]*<\/details>)?"
-        );
-
-        Regex::new(&pattern).unwrap()
+        // Regex::new(&pattern).unwrap()
+        match self.as_str() {
+            "snforge" => &RE_SNFORGE,
+            "sncast" => &RE_SNCAST,
+            _ => panic!("Regex for snippet type {} not found", self.as_str()),
+        }
     }
 }
 
@@ -47,6 +57,8 @@ impl SnippetType {
 pub struct SnippetConfig {
     pub ignored: Option<bool>,
     pub package_name: Option<String>,
+    pub contract_name: Option<String>,
+    pub ignore_output: Option<bool>,
 }
 
 #[derive(Debug)]
