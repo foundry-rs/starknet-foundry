@@ -1893,10 +1893,13 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 name = "docs"
 version = "0.34.0"
 dependencies = [
+ "camino",
  "regex",
  "serde",
  "serde_json",
  "shell-words",
+ "tempfile",
+ "toml_edit",
  "walkdir",
 ]
 

@@ -11,6 +11,9 @@ shell-words = "1.1.0"
 walkdir.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+toml_edit.workspace = true
+camino.workspace = true
+tempfile.workspace = true
 
 [features]
 testing = []
