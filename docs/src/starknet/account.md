@@ -77,7 +77,7 @@ command: account deploy
 transaction_hash: [..]
 
 To see invocation details, visit:
-transaction: [..]
+transaction: https://sepolia.starkscan.co/tx/[..]
 ```
 </details>
 <br>

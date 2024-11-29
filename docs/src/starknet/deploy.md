@@ -135,7 +135,7 @@ contract_address: [..]
 transaction_hash: [..]
 
 Details:
-contract: [..]
-transaction: [..]
+contract: https://sepolia.starkscan.co/contract/[..]
+transaction: https://sepolia.starkscan.co/tx/[..]
 ```
 </details>
