@@ -209,6 +209,7 @@ jobs:
           else
             ./scripts/install_devnet.sh
           fi
+        shell: bash
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: "2.7.0"
