@@ -85,7 +85,7 @@ jobs:
         with:
           name: nextest-archive-${{ matrix.os }}
       - name: nextest partition ${{ matrix.partition }}/8
-        run: cargo nextest run --partition 'count:${{ matrix.partition }}/8' --archive-file 'nextest-archive-${{ matrix.platform.os }}.tar.zst' e2e
+        run: cargo nextest run --partition 'count:${{ matrix.partition }}/8' --archive-file 'nextest-archive-${{ matrix.os }}.tar.zst' e2e
 
   test-scarb-2-8-3:
     name: Test scarb 2.8.3
