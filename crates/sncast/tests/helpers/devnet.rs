@@ -33,7 +33,7 @@ fn start_devnet() {
         }
     }
 
-    let mut devnet = Command::new("tests/utils/devnet/starknet-devnet")
+    Command::new("tests/utils/devnet/starknet-devnet")
         .args([
             "--port",
             &port,
@@ -53,7 +53,6 @@ fn start_devnet() {
         .stdout(Stdio::null())
         .spawn()
         .expect("Failed to start devnet!");
-    devnet.wait().expect("Failed to wait for devnet");
 
     let now = Instant::now();
     let timeout = Duration::from_secs(30);
@@ -80,12 +79,11 @@ fn start_devnet() {
 #[dtor]
 fn stop_devnet() {
     let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
-    let mut pkill = Command::new("pkill")
+    Command::new("pkill")
         .args([
             "-f",
             &format!("starknet-devnet.*{}.*{}", &port, &SEED.to_string())[..],
         ])
         .spawn()
         .expect("Failed to kill devnet processes");
-    pkill.wait().expect("Failed to wait for pkill");
 }
