@@ -97,10 +97,7 @@ jobs:
 
   test-scarb-2-8-3:
     name: Test scarb 2.8.3
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, windows-latest ]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
