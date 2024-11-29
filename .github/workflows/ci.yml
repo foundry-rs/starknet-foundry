@@ -202,14 +202,14 @@ jobs:
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
-      - name: Install starknet-devnet-rs
+      - name: Install starknet-devnet-rs on Linux/Macos
+        if: runner.os != 'Windows'
         run: |
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            powershell ./scripts/install_devnet.ps1
-          else
-            ./scripts/install_devnet.sh
-          fi
-        shell: bash
+          ./scripts/install_devnet.sh
+      - name: Install starknet-devnet-rs on Windows
+        if: runner.os == 'Windows'
+        run: |
+          powershell .\scripts\install_devnet.ps1
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: "2.7.0"
