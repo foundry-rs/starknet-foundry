@@ -4,7 +4,7 @@ use std::fs;
 use camino::Utf8PathBuf;
 use docs::snippet::{Snippet, SnippetType};
 use docs::utils::{
-    get_nth_ancestor, print_skipped_snippet_message, print_success_message,
+    get_nth_ancestor, print_ignored_snippet_message, print_snippets_validation_summary,
     update_scarb_toml_dependencies,
 };
 use docs::validation::{extract_snippets_from_directory, extract_snippets_from_file};
@@ -170,7 +170,7 @@ fn test_docs_snippets() {
 
     for snippet in &snippets {
         if snippet.config.ignored.unwrap_or(false) {
-            print_skipped_snippet_message(snippet);
+            print_ignored_snippet_message(snippet);
             continue;
         }
 
@@ -205,5 +205,5 @@ fn test_docs_snippets() {
         }
     }
 
-    print_success_message(&snippets, snippet_type.as_str());
+    print_snippets_validation_summary(&snippets, snippet_type.as_str());
 }

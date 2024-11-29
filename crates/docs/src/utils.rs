@@ -29,7 +29,7 @@ pub fn assert_valid_snippet(condition: bool, snippet: &Snippet, err_message: &st
     );
 }
 
-pub fn print_success_message(snippets: &[Snippet], tool_name: &str) {
+pub fn print_snippets_validation_summary(snippets: &[Snippet], tool_name: &str) {
     let validated_snippets_count = snippets
         .iter()
         .filter(|snippet| !snippet.config.ignored.unwrap_or(false))
@@ -39,7 +39,7 @@ pub fn print_success_message(snippets: &[Snippet], tool_name: &str) {
     println!("Finished validation of {tool_name} docs snippets\nValidated: {validated_snippets_count}, Ignored: {ignored_snippets_count}");
 }
 
-pub fn print_skipped_snippet_message(snippet: &Snippet) {
+pub fn print_ignored_snippet_message(snippet: &Snippet) {
     println!(
         "Ignoring {} docs snippet, file: {}:{}:1",
         snippet.snippet_type.as_str(),

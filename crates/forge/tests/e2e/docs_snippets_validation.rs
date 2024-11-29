@@ -1,7 +1,8 @@
 use clap::Parser;
 use docs::snippet::SnippetType;
 use docs::utils::{
-    assert_valid_snippet, get_nth_ancestor, print_skipped_snippet_message, print_success_message,
+    assert_valid_snippet, get_nth_ancestor, print_ignored_snippet_message,
+    print_snippets_validation_summary,
 };
 use docs::validation::extract_snippets_from_directory;
 use forge::Cli;
@@ -24,7 +25,7 @@ fn test_docs_snippets() {
         let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
 
         if snippet.config.ignored.unwrap_or(false) {
-            print_skipped_snippet_message(snippet);
+            print_ignored_snippet_message(snippet);
             continue;
         }
 
@@ -55,5 +56,5 @@ fn test_docs_snippets() {
         }
     }
 
-    print_success_message(&snippets, snippet_type.as_str());
+    print_snippets_validation_summary(&snippets, snippet_type.as_str());
 }
