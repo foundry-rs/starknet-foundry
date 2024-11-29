@@ -26,7 +26,7 @@ $ sncast \
 command: show-config
 account: user0
 chain_id: alpha-sepolia
-rpc_url: http://127.0.0.1:5055
+rpc_url: http://127.0.0.1:5055/rpc
 ```
 </details>
 <br>

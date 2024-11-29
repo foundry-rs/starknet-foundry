@@ -40,7 +40,7 @@ max_fee: [..]
 message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.
 
 To see account creation details, visit:
-account: [..]
+account: https://starkscan.co/search/contract/[..]
 ```
 </details>
 <br>

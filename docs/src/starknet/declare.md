@@ -35,8 +35,8 @@ class_hash: [..]
 transaction_hash: [..]
 
 To see declaration details, visit:
-class: [..]
-transaction: [..]
+class: https://starkscan.co/search/[..]
+transaction: https://starkscan.co/search/[..]
 ```
 </details>
 <br>

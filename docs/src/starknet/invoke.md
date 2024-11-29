@@ -40,7 +40,7 @@ command: invoke
 transaction_hash: [..]
 
 To see invocation details, visit:
-transaction: [..]
+transaction: https://sepolia.starkscan.co/tx/[..]
 ```
 </details>
 <br>
@@ -71,6 +71,6 @@ command: invoke
 transaction_hash: [..]
 
 To see invocation details, visit:
-transaction: [..]
+transaction: https://sepolia.starkscan.co/tx/[..]
 ```
 </details>

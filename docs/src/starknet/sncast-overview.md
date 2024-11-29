@@ -112,8 +112,8 @@ contract_address: [..]
 transaction_hash: [..]
 
 To see deployment details, visit:
-contract: [..]
-transaction: [..]
+contract: https://starkscan.co/search/[..]
+transaction: https://starkscan.co/search/[..]
 ```
 </details>
 <br>
