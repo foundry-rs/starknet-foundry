@@ -11,7 +11,10 @@ on:
 jobs:
   test-forge-unit-and-integration:
     name: Test Forge / Unit and Integration Tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -23,7 +26,10 @@ jobs:
       - run: cargo test --release integration -p forge
 
   build-test-forge-e2e-nextest-archive:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -35,16 +41,17 @@ jobs:
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v4
         with:
-          name: nextest-archive
-          path: nextest-archive.tar.zst
+          name: nextest-archive-${{ matrix.os }}
+          path: nextest-archive-${{ matrix.os }}.tar.zst
 
   test-forge-e2e:
     name: Test Forge / E2E Tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     needs: build-test-forge-e2e-nextest-archive
     strategy:
       matrix:
         partition: [ 1, 2, 3, 4, 5, 6, 7, 8 ]
+        os: [ ubuntu-latest, windows-latest ]
     steps:
       - name: Extract branch name
         if: github.event_name != 'pull_request'
@@ -84,13 +91,16 @@ jobs:
       - uses: taiki-e/install-action@nextest
       - uses: actions/download-artifact@v4
         with:
-          name: nextest-archive
+          name: nextest-archive-${{ matrix.os }}
       - name: nextest partition ${{ matrix.partition }}/8
-        run: cargo nextest run --partition 'count:${{ matrix.partition }}/8' --archive-file 'nextest-archive.tar.zst' e2e
+        run: cargo nextest run --partition 'count:${{ matrix.partition }}/8' --archive-file 'nextest-archive-${{ matrix.platform.os }}.tar.zst' e2e
 
   test-scarb-2-8-3:
     name: Test scarb 2.8.3
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -188,7 +198,10 @@ jobs:
 
   test-cast:
     name: Test Cast
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
@@ -229,7 +242,10 @@ jobs:
 
   test-scarb-api:
     name: Test Scarb Api
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
