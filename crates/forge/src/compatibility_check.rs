@@ -57,9 +57,22 @@ impl RequirementsChecker {
     }
 }
 
+fn os_specific_command() -> Command {
+    if cfg!(target_os = "windows") {
+        let mut command = Command::new("cmd");
+        command.arg("/C");
+        command
+    } else {
+        let mut command = Command::new("sh");
+        command.arg("-c");
+        command
+    }
+}
+
 fn get_raw_version(name: &str, raw_command: &str) -> Result<String> {
-    let mut command = Command::new("sh");
-    command.arg("-c").arg(raw_command);
+    let mut command = os_specific_command();
+    command.arg(raw_command);
+
     let raw_current_version = command
         .output()
         .with_context(|| format!("Failed to run version command for {name}"))?;
