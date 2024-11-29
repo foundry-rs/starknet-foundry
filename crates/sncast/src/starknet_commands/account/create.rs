@@ -116,7 +116,7 @@ pub async fn create(
             keystore,
             ..Default::default()
         };
-        add_created_profile_to_configuration(&create.add_profile, &config, &None)?;
+        add_created_profile_to_configuration(create.add_profile.as_deref(), &config, None)?;
     }
 
     Ok(AccountCreateResponse {
