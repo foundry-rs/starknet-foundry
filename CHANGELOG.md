@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `generate_random_felt()` for generating (pseudo) random felt value.
 - Printing information about compiling Sierra using `universal-sierra-compiler`
+- Displaying backtrace when contract call fails
 
 #### Changed
 
