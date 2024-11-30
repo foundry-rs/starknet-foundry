@@ -80,7 +80,7 @@ the [Starknet specification](https://docs.starknet.io/architecture-and-concepts/
 We can write the same command as above, but with arguments:
 
 <!-- TODO: Fix problem with non found selector in contract ABI -->
-<!-- { "contract_name": "DataTransformerContract", "ignored": true } -->
+<!-- { "contract_name": "DataTransformerContract" } -->
 ```shell
 $ sncast call \
     --url http://127.0.0.1:5055 \
@@ -126,7 +126,7 @@ Numeric types (primitives and `felt252`) can be paseed with type suffix specifie
 
 1. `complex_fn` - different data types:
 
-<!-- { "contract_name": "DataTransformerContract", "ignored": true } -->
+<!-- { "contract_name": "DataTransformerContract" } -->
 ```shell
 $ sncast call \
     --url http://127.0.0.1:5055 \
@@ -150,7 +150,7 @@ $ sncast call \
 
 Alternatively, you can continue the single quote for multiple lines.
 
-<!-- { "contract_name": "DataTransformerContract", "ignored": true } -->
+<!-- { "contract_name": "DataTransformerContract" } -->
 ```shell
 $ sncast call \
     --url http://127.0.0.1:5055 \
@@ -173,7 +173,7 @@ true,
 
 2. `nested_struct_fn` - struct nesting:
 
-<!-- { "contract_name": "DataTransformerContract", "ignored": true } -->
+<!-- { "contract_name": "DataTransformerContract" } -->
 ```shell
 $ sncast call \
     --url http://127.0.0.1:5055 \
