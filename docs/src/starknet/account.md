@@ -59,6 +59,7 @@ You can do it both by sending tokens from another starknet account or by bridgin
 >![image](images/starknet-faucet-sepolia.png)
 #### Deploy account with the `sncast account deploy` command
 
+<!-- TODO(#2736) -->
 <!-- { "ignored": true } -->
 ```shell
 $ sncast \
@@ -188,6 +189,7 @@ Accounts created and deployed with [starkli](https://book.starkli.rs/accounts#ac
 > 💡 **Info**
 > When passing the `--keystore` argument, `--account` argument must be a path to the starkli account JSON file.
 
+<!-- Snippets is ignored, because typing password for keystore uses interactive mode -->
 <!-- { "ignored": true } -->
 ```shell
 $ sncast \
@@ -203,6 +205,7 @@ $ sncast \
 
 It is possible to create an openzeppelin account with keystore in a similar way [starkli](https://book.starkli.rs/accounts#accounts) does.
 
+<!-- Snippets is ignored, because typing password for keystore uses interactive mode -->
 <!-- { "ignored": true } -->
 ```shell
 $ sncast \
