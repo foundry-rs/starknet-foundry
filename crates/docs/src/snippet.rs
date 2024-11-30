@@ -33,7 +33,7 @@ impl SnippetType {
     #[must_use]
     pub fn get_re(&self) -> &'static Regex {
         // The regex pattern is used to match the snippet, its config and the output. Example:
-        // <!-- { "ignored": true, "package_name": "xyz" } -->
+        // <!-- { content of snippet config JSON } -->
         // ```shell
         // $ snforge or sncast command with args...
         // ```
@@ -44,11 +44,10 @@ impl SnippetType {
         // ```
         // </details>
 
-        // Regex::new(&pattern).unwrap()
         match self.as_str() {
             "snforge" => &RE_SNFORGE,
             "sncast" => &RE_SNCAST,
-            _ => panic!("Regex for snippet type {} not found", self.as_str()),
+            _ => panic!("Regex for {} not found", self.as_str()),
         }
     }
 }

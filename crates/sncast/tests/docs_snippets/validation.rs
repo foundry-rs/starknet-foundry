@@ -141,7 +141,7 @@ fn is_command(args: &[&str], commands: &[&str]) -> bool {
 
 #[test]
 fn test_docs_snippets() {
-    let root_dir_path: std::path::PathBuf = get_nth_ancestor(2);
+    let root_dir_path = get_nth_ancestor(2);
     let docs_dir_path = root_dir_path.join("docs/src");
     let sncast_readme_path = root_dir_path.join("crates/sncast/README.md");
 
