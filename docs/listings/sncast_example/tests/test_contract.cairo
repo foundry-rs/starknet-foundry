@@ -6,7 +6,10 @@ use hello_starknet::hello_starknet::IHelloStarknetSafeDispatcher;
 use hello_starknet::hello_starknet::IHelloStarknetSafeDispatcherTrait;
 use hello_starknet::hello_starknet::IHelloStarknetDispatcher;
 use hello_starknet::hello_starknet::IHelloStarknetDispatcherTrait;
-
+use hello_starknet::data_transformer_contract::DataTransformerContractSafeDispatcher;
+use hello_starknet::data_transformer_contract::DataTransformerContractSafeDispatcherTrait;
+use hello_starknet::data_transformer_contract::DataTransformerContractDispatcher;
+use hello_starknet::data_transformer_contract::DataTransformerContractDispatcherTrait;
 fn deploy_contract(name: ByteArray) -> ContractAddress {
     let contract = declare(name).unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -44,4 +47,13 @@ fn test_cannot_increase_balance_with_zero_value() {
             assert(*panic_data.at(0) == 'Amount cannot be 0', *panic_data.at(0));
         }
     };
+}
+
+#[test]
+fn test_increase_balance() {
+    let contract_address = deploy_contract("DataTransformerContract");
+
+    let dispatcher = DataTransformerContractDispatcher { contract_address };
+
+    dispatcher.complex_fn();
 }
