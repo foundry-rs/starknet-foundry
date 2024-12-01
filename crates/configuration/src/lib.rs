@@ -10,7 +10,7 @@ pub const CONFIG_FILENAME: &str = "snfoundry.toml";
 
 /// Defined in snfoundry.toml
 /// Configuration not associated with any specific package
-pub trait GlobalConfig {
+pub trait Config {
     #[must_use]
     fn tool_name() -> &'static str;
 
@@ -40,9 +40,9 @@ fn get_with_ownership(config: serde_json::Value, key: &str) -> Option<serde_json
 pub fn get_profile(
     raw_config: serde_json::Value,
     tool: &str,
-    profile: &Option<String>,
+    profile: Option<&str>,
 ) -> Result<serde_json::Value> {
-    let profile_name = profile.as_deref().unwrap_or("default");
+    let profile_name = profile.unwrap_or("default");
     let tool_config = get_with_ownership(raw_config, tool)
         .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
 
@@ -53,9 +53,9 @@ pub fn get_profile(
     }
 }
 
-pub fn load_global_config<T: GlobalConfig + Default>(
-    path: &Option<Utf8PathBuf>,
-    profile: &Option<String>,
+pub fn load_config<T: Config + Default>(
+    path: Option<&Utf8PathBuf>,
+    profile: Option<&str>,
 ) -> Result<T> {
     let config_path = path
         .as_ref()
@@ -146,7 +146,7 @@ pub fn search_config_upwards_relative_to(current_dir: &Utf8PathBuf) -> Result<Ut
 
 pub fn find_config_file() -> Result<Utf8PathBuf> {
     search_config_upwards_relative_to(&Utf8PathBuf::try_from(
-        std::env::current_dir().expect("Failed to get current directory"),
+        env::current_dir().expect("Failed to get current directory"),
     )?)
 }
 
@@ -243,7 +243,7 @@ mod tests {
         #[serde(default)]
         pub account: String,
     }
-    impl GlobalConfig for StubConfig {
+    impl Config for StubConfig {
         fn tool_name() -> &'static str {
             "stubtool"
         }
@@ -255,9 +255,9 @@ mod tests {
     #[test]
     fn load_config_happy_case_with_profile() {
         let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None).unwrap();
-        let config = load_global_config::<StubConfig>(
-            &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
-            &Some(String::from("profile1")),
+        let config = load_config::<StubConfig>(
+            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            Some(&String::from("profile1")),
         )
         .unwrap();
         assert_eq!(config.account, String::from("user3"));
@@ -267,9 +267,9 @@ mod tests {
     #[test]
     fn load_config_happy_case_default_profile() {
         let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None).unwrap();
-        let config = load_global_config::<StubConfig>(
-            &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
-            &None,
+        let config = load_config::<StubConfig>(
+            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            None,
         )
         .unwrap();
         assert_eq!(config.account, String::from("user1"));
@@ -279,9 +279,9 @@ mod tests {
     #[test]
     fn load_config_not_found() {
         let tempdir = tempdir().expect("Failed to create a temporary directory");
-        let config = load_global_config::<StubConfig>(
-            &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
-            &None,
+        let config = load_config::<StubConfig>(
+            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            None,
         )
         .unwrap();
 
@@ -310,7 +310,7 @@ mod tests {
         url_nested: f32,
     }
 
-    impl GlobalConfig for StubComplexConfig {
+    impl Config for StubComplexConfig {
         fn tool_name() -> &'static str {
             "stubtool"
         }
@@ -325,9 +325,9 @@ mod tests {
         let temp_dir = tempdir().expect("Failed to create a temporary directory");
         File::create(temp_dir.path().join(CONFIG_FILENAME)).unwrap();
 
-        load_global_config::<StubConfig>(
-            &Some(Utf8PathBuf::try_from(temp_dir.path().to_path_buf()).unwrap()),
-            &None,
+        load_config::<StubConfig>(
+            Some(&Utf8PathBuf::try_from(temp_dir.path().to_path_buf()).unwrap()),
+            None,
         )
         .unwrap();
     }
@@ -344,9 +344,9 @@ mod tests {
         )
         .expect("Failed to copy config file to temp dir");
         // missing env variables
-        if load_global_config::<StubConfig>(
-            &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
-            &Some(String::from("with-envs")),
+        if load_config::<StubConfig>(
+            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            Some(&String::from("with-envs")),
         )
         .is_ok()
         {
@@ -359,9 +359,9 @@ mod tests {
         env::set_var("VALUE_FLOAT123132", "321.312");
         env::set_var("VALUE_BOOL1231321", "true");
         env::set_var("VALUE_BOOL1231322", "false");
-        let config = load_global_config::<StubComplexConfig>(
-            &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
-            &Some(String::from("with-envs")),
+        let config = load_config::<StubComplexConfig>(
+            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            Some(&String::from("with-envs")),
         )
         .unwrap();
         assert_eq!(config.url, String::from("nfsaufbnsailfbsbksdabfnkl"));

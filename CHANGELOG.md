@@ -13,12 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
  - `snforge_scarb_plugin` will now also emit warnings when errors occur
 
+## [0.34.0] - 2024-11-26
+
 ### Forge
 
 #### Added
 
 - `generate_random_felt()` for generating (pseudo) random felt value.
 - Printing information about compiling Sierra using `universal-sierra-compiler`
+- Displaying backtrace when contract call fails
 
 #### Changed
 
@@ -30,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - You can skip `--name` flag when using `account import` - a default name will be generated.
 - Addresses outputted when calling `sncast account create`, `sncast deploy` and `sncast declare` are now padded to 64 characters length and prefixed with `0x0`
+- Globally available configuration to store profiles to share between projects.
 
 #### Changed
 

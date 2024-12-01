@@ -1891,9 +1891,11 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
 name = "docs"
-version = "0.33.0"
+version = "0.34.0"
 dependencies = [
  "regex",
+ "serde",
+ "serde_json",
  "shell-words",
  "walkdir",
 ]
@@ -2138,7 +2140,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.33.0"
+version = "0.34.0"
 dependencies = [
  "anyhow",
  "ark-ff",
@@ -2210,7 +2212,7 @@ dependencies = [
 
 [[package]]
 name = "forge_runner"
-version = "0.33.0"
+version = "0.34.0"
 dependencies = [
  "anyhow",
  "bimap",
@@ -2226,6 +2228,7 @@ dependencies = [
  "cairo-lang-sierra-to-casm",
  "cairo-lang-sierra-type-size",
  "cairo-lang-starknet",
+ "cairo-lang-starknet-classes",
  "cairo-lang-test-plugin",
  "cairo-lang-utils",
  "cairo-vm",
@@ -4889,7 +4892,7 @@ dependencies = [
 
 [[package]]
 name = "sncast"
-version = "0.33.0"
+version = "0.34.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4913,6 +4916,7 @@ dependencies = [
  "conversions",
  "ctor",
  "data-transformer",
+ "dirs",
  "docs",
  "fs_extra",
  "indoc",
@@ -4953,7 +4957,7 @@ dependencies = [
 
 [[package]]
 name = "snforge_scarb_plugin"
-version = "0.33.0"
+version = "0.34.0"
 dependencies = [
  "cairo-lang-diagnostics",
  "cairo-lang-filesystem",

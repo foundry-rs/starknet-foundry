@@ -40,7 +40,7 @@ pub const TEST_CODE_FUNCTION_NAME: &str = "SNFORGE_TEST_CODE_FUNCTION";
 pub fn build_profiler_call_trace(
     value: &Rc<RefCell<CallTrace>>,
     contracts_data: &ContractsData,
-    maybe_versioned_program_path: &Option<VersionedProgramPath>,
+    maybe_versioned_program_path: Option<&VersionedProgramPath>,
 ) -> ProfilerCallTrace {
     let value = value.borrow();
 
@@ -79,7 +79,7 @@ fn build_cairo_execution_info(
     entry_point: &CallEntryPoint,
     vm_trace: Option<Vec<ProfilerTraceEntry>>,
     contracts_data: &ContractsData,
-    maybe_test_sierra_program_path: &Option<VersionedProgramPath>,
+    maybe_test_sierra_program_path: Option<&VersionedProgramPath>,
     run_with_call_header: bool,
 ) -> Option<CairoExecutionInfo> {
     let contract_name = get_contract_name(entry_point.class_hash, contracts_data);
@@ -104,13 +104,12 @@ fn build_cairo_execution_info(
 fn get_source_sierra_path(
     contract_name: &str,
     contracts_data: &ContractsData,
-    maybe_versioned_program_path: &Option<VersionedProgramPath>,
+    maybe_versioned_program_path: Option<&VersionedProgramPath>,
 ) -> Option<Utf8PathBuf> {
     if contract_name == TEST_CODE_CONTRACT_NAME {
         Some(
             maybe_versioned_program_path
-                .clone()
-                .map_or_else(Utf8PathBuf::new, Into::into),
+                .map_or_else(Utf8PathBuf::new, |v| Utf8PathBuf::from(v.clone())),
         )
     } else {
         contracts_data
@@ -122,7 +121,7 @@ fn get_source_sierra_path(
 fn build_profiler_call_trace_node(
     value: &CallTraceNode,
     contracts_data: &ContractsData,
-    maybe_versioned_program_path: &Option<VersionedProgramPath>,
+    maybe_versioned_program_path: Option<&VersionedProgramPath>,
 ) -> ProfilerCallTraceNode {
     match value {
         CallTraceNode::EntryPointCall(trace) => ProfilerCallTraceNode::EntryPointCall(

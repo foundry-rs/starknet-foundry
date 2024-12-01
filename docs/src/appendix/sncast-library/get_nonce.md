@@ -7,5 +7,5 @@ Gets nonce of an account for a given block tag (`pending` or `latest`) and retur
 - `block_tag` - block tag name, one of `pending` or `latest`.
 
 ```rust
-{{#include ../../../listings/sncast_library/scripts/get_nonce/src/lib.cairo}}
+{{#include ../../../listings/get_nonce/src/lib.cairo}}
 ```

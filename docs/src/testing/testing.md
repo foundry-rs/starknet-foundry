@@ -8,7 +8,7 @@ should write as many unit tests as possible as these are faster than integration
 First, add the following code to the `src/lib.cairo` file:
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/writing_tests/src/first_test.cairo}}
+{{#include ../../listings/first_test/src/lib.cairo}}
 ```
 
 It is a common practice to keep your unit tests in the same file as the tested code.
@@ -26,9 +26,9 @@ $ snforge test
 <summary>Output:</summary>
 
 ```shell
-Collected 1 test(s) from writing_tests package
+Collected 1 test(s) from first_test package
 Running 1 test(s) from src/
-[PASS] writing::first_test::tests::test_sum
+[PASS] first_test::tests::test_sum (gas: ~1)
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 </details>
@@ -39,8 +39,7 @@ Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 If your code panics, the test is considered failed. Here's an example of a failing test.
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/writing_tests/src/panicking_tests.cairo:first_half}}
-{{#include ../../listings/snforge_overview/crates/writing_tests/src/panicking_tests.cairo:second_half}}
+{{#include ../../listings/panicking_test/src/lib.cairo}}
 ```
 
 ```shell
@@ -51,20 +50,22 @@ $ snforge test
 <summary>Output:</summary>
 
 ```shell
-Collected 1 test(s) from writing_tests package
+Collected 1 test(s) from panicking_test package
 Running 1 test(s) from src/
-[FAIL] writing_tests::panicking_tests::tests::failing
+[FAIL] panicking_test::tests::failing
 
 Failure data:
-    0x616161 ('aaa')
+    0x70616e6963206d657373616765 ('panic message')
 
 Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 Failures:
-    writing_tests::panicking_tests::tests::failing
+    panicking_test::tests::failing
 ```
 </details>
 <br>
+
+When contract fails, you can get backtrace information by setting the `SNFORGE_BACKTRACE=1` environment variable. Read more about it [here](../snforge-advanced-features/backtrace.md).
 
 ## Expected Failures
 
@@ -77,18 +78,18 @@ You can specify the expected failure message in three ways:
 
 1. **With ByteArray**:
 ```rust
-{{#include ../../listings/snforge_overview/crates/writing_tests/tests/expected_failures.cairo:byte_array}}
+{{#include ../../listings/should_panic_example/src/lib.cairo:byte_array}}
 ```
 With this format, the expected error message needs to be a substring of the actual error message. This is particularly useful when the error message includes dynamic data such as a hash or address.
 
 2. **With felt**
 ```rust
-{{#include ../../listings/snforge_overview/crates/writing_tests/tests/expected_failures.cairo:felt}}
+{{#include ../../listings/should_panic_example/src/lib.cairo:felt}}
 ```
 
 3. **With tuple of felts**:
 ```rust
-{{#include ../../listings/snforge_overview/crates/writing_tests/tests/expected_failures.cairo:tuple}}
+{{#include ../../listings/should_panic_example/src/lib.cairo:tuple}}
 ```
 
 
@@ -100,11 +101,14 @@ $ snforge test
 <summary>Output:</summary>
 
 ```shell
-Collected 1 test(s) from writing_tests package
-Running 0 test(s) from src/
-Running 1 test(s) from tests/
-[PASS] snforge_overview_integrationtest::should_panic_check_data
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Collected 5 test(s) from should_panic_example package
+Running 5 test(s) from src/
+[PASS] should_panic_example::tests::should_panic_felt_matching (gas: ~1)
+[PASS] should_panic_example::tests::should_panic_multiple_messages (gas: ~1)
+[PASS] should_panic_example::tests::should_panic_exact (gas: ~1)
+[PASS] should_panic_example::tests::should_panic_expected_is_substring (gas: ~1)
+[PASS] should_panic_example::tests::should_panic_check_data (gas: ~1)
+Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 </details>
 <br>
@@ -115,7 +119,7 @@ Sometimes you may have tests that you want to exclude during most runs of `snfor
 You can achieve it using `#[ignore]` - tests marked with this attribute will be skipped by default.
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/writing_tests/tests/ignoring.cairo}}
+{{#include ../../listings/ignoring_example/src/lib.cairo}}
 ```
 
 ```shell
@@ -126,10 +130,9 @@ $ snforge test
 <summary>Output:</summary>
 
 ```shell
-Collected 1 test(s) from writing_tests package
-Running 0 test(s) from src/
-Running 1 test(s) from tests/
-[IGNORE] writing_tests_integrationtest::ignoring::ignored_test
+Collected 1 test(s) from ignoring_example package
+Running 1 test(s) from src/
+[IGNORE] ignoring_example::tests::ignored_test
 Tests: 0 passed, 0 failed, 0 skipped, 1 ignored, 0 filtered out
 ```
 </details>

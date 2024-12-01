@@ -1,11 +1,8 @@
-use crate::starknet_commands::account::Account;
-use crate::starknet_commands::show_config::ShowConfig;
 use crate::starknet_commands::{
-    account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
-    script::Script, tx_status::TxStatus,
+    account, account::Account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke,
+    multicall::Multicall, script::Script, show_config::ShowConfig, tx_status::TxStatus,
 };
 use anyhow::{Context, Result};
-use configuration::load_global_config;
 use data_transformer::Calldata;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{print_command_result, OutputFormat};
@@ -13,6 +10,8 @@ use sncast::response::print::{print_command_result, OutputFormat};
 use crate::starknet_commands::deploy::DeployArguments;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
+use configuration::load_config;
+use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::fee::PayableTransaction;
@@ -209,8 +208,7 @@ fn main() -> Result<()> {
     if let Commands::Script(script) = &cli.command {
         run_script_command(&cli, runtime, script, numbers_format, output_format)
     } else {
-        let mut config = load_global_config::<CastConfig>(&None, &cli.profile)?;
-        update_cast_config(&mut config, &cli);
+        let config = get_cast_config(&cli)?;
 
         runtime.block_on(run_async_command(
             cli,
@@ -588,9 +586,13 @@ async fn run_async_command(
         Commands::ShowConfig(show) => {
             let provider = show.rpc.get_provider(&config).await.ok();
 
-            let result =
-                starknet_commands::show_config::show_config(&show, &provider, config, cli.profile)
-                    .await;
+            let result = starknet_commands::show_config::show_config(
+                &show,
+                provider.as_ref(),
+                config,
+                cli.profile,
+            )
+            .await;
 
             print_command_result("show-config", &result, numbers_format, output_format)?;
 
@@ -657,11 +659,8 @@ fn run_script_command(
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &run.package)?;
 
-            let mut config = load_global_config::<CastConfig>(
-                &Some(package_metadata.root.clone()),
-                &cli.profile,
-            )?;
-            update_cast_config(&mut config, cli);
+            let config = get_cast_config(cli)?;
+
             let provider = runtime.block_on(run.rpc.get_provider(&config))?;
 
             let mut artifacts = build_and_load_artifacts(
@@ -715,7 +714,7 @@ fn run_script_command(
     Ok(())
 }
 
-fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
+fn config_with_cli(config: &mut CastConfig, cli: &Cli) {
     macro_rules! clone_or_else {
         ($field:expr, $config_field:expr) => {
             $field.clone().unwrap_or_else(|| $config_field.clone())
@@ -739,4 +738,24 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
         ),
         clone_or_else!(cli.wait_timeout, config.wait_params.get_timeout()),
     );
+}
+
+fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
+    let global_config_path = get_global_config_path().unwrap_or_else(|err| {
+        eprintln!("Error getting global config path: {err}");
+        Utf8PathBuf::new()
+    });
+
+    let global_config =
+        load_config::<CastConfig>(Some(&global_config_path.clone()), cli.profile.as_deref())
+            .unwrap_or_else(|_| {
+                load_config::<CastConfig>(Some(&global_config_path), None).unwrap()
+            });
+
+    let local_config = load_config::<CastConfig>(None, cli.profile.as_deref())?;
+
+    let mut combined_config = combine_cast_configs(&global_config, &local_config);
+
+    config_with_cli(&mut combined_config, cli);
+    Ok(combined_config)
 }
