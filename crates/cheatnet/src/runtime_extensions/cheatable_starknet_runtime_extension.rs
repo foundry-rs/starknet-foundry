@@ -78,6 +78,15 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                 )
                 .map(|()| SyscallHandlingResult::Handled),
             _ => Ok(SyscallHandlingResult::Forwarded),
+            SyscallSelector::GetBlockHash => self
+                .execute_syscall(
+                    syscall_handler,
+                    vm,
+                    cheated_syscalls::get_block_hash_syscall,
+                    SyscallSelector::Deploy,
+                )
+                .map(|()| SyscallHandlingResult::Handled),
+            _ => Ok(SyscallHandlingResult::Forwarded),
         }
     }
 

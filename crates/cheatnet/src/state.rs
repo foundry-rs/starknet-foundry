@@ -419,6 +419,14 @@ impl CheatnetState {
         ContractAddressSalt(Felt::from(self.deploy_salt_base))
     }
 
+    // #[must_use]
+    // pub fn get_cheated_block_hash(&mut self, address: ContractAddress) -> Option<Felt> {
+    //     self.get_cheated_execution_info_for_contract(address)
+    //         .block_info
+    //         .block_hash
+    //         .as_value()
+    // } not sure about impl this one
+    
     #[must_use]
     pub fn get_cheated_block_number(&mut self, address: ContractAddress) -> Option<u64> {
         self.get_cheated_execution_info_for_contract(address)

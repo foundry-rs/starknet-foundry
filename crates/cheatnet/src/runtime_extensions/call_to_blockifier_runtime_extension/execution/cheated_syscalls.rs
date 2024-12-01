@@ -2,7 +2,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::{
-    DeployRequest, DeployResponse, LibraryCallRequest, SyscallResponse, SyscallResult,
+    DeployRequest, DeployResponse, GetBlockHashRequest, GetBlockHashResponse, LibraryCallRequest, SyscallResponse, SyscallResult
 };
 use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
 use blockifier::execution::{
@@ -55,6 +55,30 @@ pub fn get_execution_info_syscall(
     Ok(GetExecutionInfoResponse {
         execution_info_ptr: ptr_cheated_exec_info,
     })
+}
+
+pub fn get_block_hash_syscall(
+    request: GetBlockHashRequest,
+    vm: &mut VirtualMachine,
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
+    _remaining_gas: &mut u64,
+) -> SyscallResult<GetBlockHashResponse> {
+
+    let execution_info_ptr = syscall_handler.get_or_allocate_execution_info_segment(vm)?;
+
+    let cheated_data = cheatnet_state.get_cheated_data(syscall_handler.storage_address());
+
+    let ptr_cheated_block_info = get_cheated_block_info_ptr(vm, execution_info_ptr, &cheated_data);
+
+    //TODO: how to get the cheated block number using the ptr_cheated_block_info?
+    //why is the get_cheated_block_info not public?
+    //why is BlockHash not public?
+
+    let cheated_block_hash = BlockHash(syscall_handler.state.get_storage_at(block_hash_contract_address, key)?);
+
+    Ok(GetBlockHashResponse { block_hash: cheated_block_hash })
+
 }
 
 // blockifier/src/execution/syscalls/mod.rs:222 (deploy_syscall)

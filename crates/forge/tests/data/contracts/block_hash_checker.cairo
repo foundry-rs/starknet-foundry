@@ -24,7 +24,7 @@ mod BlockHashChecker {
         fn write_block(ref self: ContractState) {
             let block_info = get_block_info().unbox();
 
-            let block_hash = get_block_hash_syscall(block_info.block_number - 10).unwrap_syscall();
+            let block_hash = get_block_hash_syscall(block_info.block_number).unwrap_syscall();
             self.block_hash.write(block_hash);
         }
 

@@ -17,7 +17,7 @@ mod ConstructorCheatBlockHashChecker {
     #[constructor]
     fn constructor(ref self: ContractState) {
         let block_info = get_block_info().unbox();
-        let blk_hash = get_block_hash_syscall(block_info.block_number - 10).unwrap_syscall();
+        let blk_hash = get_block_hash_syscall(block_info.block_number).unwrap_syscall();
         self.blk_hash.write(blk_hash);
     }
 
@@ -31,7 +31,7 @@ mod ConstructorCheatBlockHashChecker {
 
         fn get_block_hash(ref self: ContractState) -> felt252 {
             let block_info = get_block_info().unbox();
-            let block_hash = get_block_hash_syscall(block_info.block_number - 10).unwrap_syscall();
+            let block_hash = get_block_hash_syscall(block_info.block_number).unwrap_syscall();
 
             block_hash
         }
