@@ -8,46 +8,7 @@ It's declared on Sepolia network with class hash `0x02a9b456118a86070a8c116c41b0
 It has a few methods accepting different types and items defined in its namespace:
 
 ```rust
-// data_transformer_contract/src/lib.cairo
-
-pub struct SimpleStruct {
-    a: felt252
-}
-
-pub struct NestedStructWithField {
-    a: SimpleStruct,
-    b: felt252
-}
-
-pub enum Enum {
-    One: (),
-    Two: u128,
-    Three: NestedStructWithField
-}
-
-#[starknet::contract]
-pub mod DataTransformerContract {
-    /* ... */
-
-    use super::*;
-
-    fn tuple_fn(self: @ContractState, a: (felt252, u8, Enum)) { ... }
-
-    fn nested_struct_fn(self: @ContractState, a: NestedStructWithField) { ... }
-
-    fn complex_fn(
-        self: @ContractState,
-        arr: Array<Array<felt252>>,
-        one: u8,
-        two: i16,
-        three: ByteArray,
-        four: (felt252, u32),
-        five: bool,
-        six: u256
-    ) {
-        ...
-    }
-}
+{{#include ../../listings/hello_sncast/src/data_transformer_contract.cairo}}
 ```
 
 A default form of calldata passed to commands requiring it is a series of hex-encoded felts:
