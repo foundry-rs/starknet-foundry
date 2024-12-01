@@ -135,6 +135,11 @@ fn swap_next_element<'a>(args: &mut [&'a str], target: &str, new_value: &'a str)
     }
 }
 
+fn get_contract_name_from_args(args: &[&str]) -> Option<String> {
+    let index = args.iter().position(|&x| x == "--contract-name")?;
+    args.get(index + 1).copied().map(String::from)
+}
+
 fn is_command(args: &[&str], commands: &[&str]) -> bool {
     commands.iter().any(|&cmd| args.contains(&cmd))
 }
@@ -183,8 +188,12 @@ fn test_docs_snippets() {
         args.insert(0, "--accounts-file");
         args.insert(1, accounts_json_path.as_str());
 
-        if let Some(contract_name) = &snippet.config.contract_name {
-            let contract = contracts.get(contract_name).expect("Contract not found");
+        if let Some(contract_name) =
+            get_contract_name_from_args(&args).or_else(|| snippet.config.contract_name.clone())
+        {
+            let contract = contracts
+                .get(contract_name.as_str())
+                .unwrap_or_else(|| panic!("Contract {contract_name} not found"));
 
             // In case of invoke/call/verify, we need to replace contract address insnippet's
             // args with prepared contract's address

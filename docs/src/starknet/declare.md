@@ -18,7 +18,7 @@ First make sure that you have created a `Scarb.toml` file for your contract (it 
 Then run:
 
 <!-- TODO(#2736) -->
-<!-- { "contract_name": "HelloSncast", "ignored": true } -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast --account user0 \
     declare \
