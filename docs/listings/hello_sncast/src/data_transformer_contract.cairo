@@ -57,5 +57,4 @@ pub mod DataTransformerContract {
             six: u256
         ) {}
     }
-    
 }

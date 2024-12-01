@@ -32,7 +32,7 @@ All subcommand usages are shown for two scenarios - when all necessary arguments
 ### Declare a contract
 
 <!-- TODO(#2736) -->
-<!-- { "contract_name": "HelloSncast", "ignored": true } -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast --account user0 \
     declare \
@@ -54,7 +54,7 @@ transaction_hash: [..]
 With arguments taken from `snfoundry.toml` file (default profile name):
 
 <!-- TODO(#2736) -->
-<!-- { "contract_name": "HelloSncast", "ignored": true } -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast declare \
     --contract-name HelloSncast \
