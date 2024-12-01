@@ -113,7 +113,7 @@ fn setup_contracts_map(
 ) -> HashMap<String, Contract> {
     let mut contracts: HashMap<String, Contract> = HashMap::new();
     let contract_names = [
-        "HelloStarknet",
+        "HelloSncast",
         "DataTransformerContract",
         "ConstructorContract",
     ];
@@ -158,10 +158,10 @@ fn test_docs_snippets() {
         .chain(readme_snippets)
         .collect::<Vec<Snippet>>();
 
-    let sncast_example_dir =
-        Utf8PathBuf::from_path_buf(root_dir_path.join("docs/listings/sncast_example"))
+    let hello_sncast_dir =
+        Utf8PathBuf::from_path_buf(root_dir_path.join("docs/listings/hello_sncast"))
             .expect("Invalid UTF-8 path");
-    let tempdir = copy_directory_to_tempdir(&sncast_example_dir);
+    let tempdir = copy_directory_to_tempdir(&hello_sncast_dir);
     let accounts_json_path = prepare_accounts_file(&tempdir);
 
     update_scarb_toml_dependencies(&tempdir).unwrap();

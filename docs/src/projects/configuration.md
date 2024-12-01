@@ -49,7 +49,7 @@ defined in the profile.
 > Not all parameters have to be present in the configuration - you can choose to include only some of them and supply
 > the rest of them using CLI flags. You can also override parameters from the configuration using CLI flags.
 
-<!-- { "contract_name": "HelloStarknet" } -->
+<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast --profile myprofile \
     call \
@@ -87,7 +87,7 @@ url = "http://127.0.0.1:5050/rpc"
 
 With this, there's no need to include the `--profile` argument when using `sncast`.
 
-<!-- { "contract_name": "HelloStarknet" } -->
+<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast call \
     --contract-address 0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008 \

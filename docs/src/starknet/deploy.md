@@ -14,7 +14,7 @@ For detailed CLI description, see [deploy command reference](../appendix/sncast/
 
 After [declaring your contract](./declare.md), you can deploy it the following way:
 
-<!-- { "contract_name": "HelloStarknet" } -->
+<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast \
     --account user0 \
@@ -90,7 +90,7 @@ transaction: https://sepolia.starkscan.co/tx/[..]
 
 Salt is a parameter which modifies contract's address, if not passed it will be automatically generated.
 
-<!-- { "contract_name": "HelloStarknet" } -->
+<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast deploy \
     --fee-token strk \
@@ -118,7 +118,7 @@ transaction: https://sepolia.starkscan.co/tx/[..]
 Unique is a parameter which modifies contract's salt with the deployer address.
 It can be passed even if the `salt` argument was not provided.
 
-<!-- { "contract_name": "HelloStarknet" } -->
+<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast deploy \
     --fee-token strk \

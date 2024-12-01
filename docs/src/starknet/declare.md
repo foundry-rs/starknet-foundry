@@ -17,13 +17,13 @@ First make sure that you have created a `Scarb.toml` file for your contract (it 
 
 Then run:
 
-<!-- { "contract_name": "HelloStarknet", "ignored": true } -->
+<!-- { "contract_name": "HelloSncast", "ignored": true } -->
 ```shell
 $ sncast --account user0 \
     declare \
 	--url http://127.0.0.1:5055 \
     --fee-token strk \
-    --contract-name HelloStarknet
+    --contract-name HelloSncast
 ```
 
 <details>

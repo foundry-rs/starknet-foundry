@@ -55,7 +55,7 @@ transaction: https://sepolia.starkscan.co/tx/[..]
 
 Not every function accepts parameters. Here is how to call it.
 
-<!-- { "contract_name": "HelloStarknet" } -->
+<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast invoke \
   --fee-token strk \

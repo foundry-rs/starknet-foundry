@@ -32,11 +32,11 @@ All subcommand usages are shown for two scenarios - when all necessary arguments
 ### Declare a contract
 
 <!-- TODO(#2736) -->
-<!-- { "contract_name": "HelloStarknet", "ignored": true } -->
+<!-- { "contract_name": "HelloSncast", "ignored": true } -->
 ```shell
 $ sncast --account user0 \
     declare \
-    --contract-name HelloStarknet \
+    --contract-name HelloSncast \
     --fee-token strk
 ```
 
@@ -54,10 +54,10 @@ transaction_hash: [..]
 With arguments taken from `snfoundry.toml` file (default profile name):
 
 <!-- TODO(#2736) -->
-<!-- { "contract_name": "HelloStarknet", "ignored": true } -->
+<!-- { "contract_name": "HelloSncast", "ignored": true } -->
 ```shell
 $ sncast declare \
-    --contract-name HelloStarknet \
+    --contract-name HelloSncast \
     --fee-token strk
 ```
 
@@ -76,7 +76,7 @@ transaction_hash: [..]
 ### Deploy a contract
 
 <!-- TODO(#2736) -->
-<!-- { "contract_name": "HelloStarknet", "ignored": true } -->
+<!-- { "contract_name": "HelloSncast", "ignored": true } -->
 ```shell
 $ sncast --account user0 \
     deploy --class-hash 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
@@ -98,7 +98,7 @@ transaction_hash: [..]
 With arguments taken from `snfoundry.toml` file (default profile name):
 
 <!-- TODO(#2736) -->
-<!-- { "contract_name": "HelloStarknet", "ignored": true } -->
+<!-- { "contract_name": "HelloSncast", "ignored": true } -->
 ```shell
 $ sncast deploy \
 --class-hash 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
@@ -120,7 +120,7 @@ transaction_hash: [..]
 
 ### Invoke a contract
 
-<!-- { "contract_name": "HelloStarknet" } -->
+<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast \
     --account user0 \
@@ -148,7 +148,7 @@ transaction: https://sepolia.starkscan.co/tx/[..]
 
 With arguments taken from `snfoundry.toml` file (default profile name):
 
-<!-- { "contract_name": "HelloStarknet" } -->
+<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast invoke \
     --contract-address 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
@@ -173,7 +173,7 @@ transaction: https://sepolia.starkscan.co/tx/[..]
 
 ### Call a contract
 
-<!-- { "contract_name": "HelloStarknet" } -->
+<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast \
     call \
@@ -196,7 +196,7 @@ response: [0x6]
 
 With arguments taken from `snfoundry.toml` file (default profile name):
 
-<!-- { "contract_name": "HelloStarknet" } -->
+<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast call \
     --contract-address 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
