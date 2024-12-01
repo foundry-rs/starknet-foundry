@@ -115,7 +115,7 @@ jobs:
     needs: [ test-forge-unit-and-integration, test-forge-e2e, test-cast ]
     steps:
       - name: Notify that the workflow has failed
-        uses: slackapi/slack-github-action@v1.27.0
+        uses: slackapi/slack-github-action@v2.0.0
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_SCHEDULED_TESTS_FAILURE_WEBHOOK_URL }}
         with:
