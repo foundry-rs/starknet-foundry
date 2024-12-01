@@ -16,5 +16,3 @@ To configure a snippet, you need to add a comment block right before it. The com
 - `package_name` - the name of the Scarb package in which the snippet should be run.
 - `contract_name` - the name of the contract which snippet should use. If present, class hash of predefined contract will be used instead of the one from snippet.
 - `ignored_output` - if set to `true`, the output of exeucted command will be ignored.
-
-
