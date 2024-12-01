@@ -16,7 +16,7 @@ For detailed CLI description, see [invoke command reference](../appendix/sncast/
 
 ### General Example
 
-<!-- TODO: Add pokemon contract or modify example so the output will be ckeched -->
+<!-- TODO(#2736) -->
 <!-- { "ignored_output": true } -->
 ```shell
 $ sncast \

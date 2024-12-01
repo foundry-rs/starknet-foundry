@@ -29,6 +29,7 @@ You can, however, overwrite their values by supplying them as flags directly to 
 
 Let's use `sncast` to call a contract's function:
 
+<!-- TODO(#2736) -->
 <!-- { "ignored": true } -->
 ```shell
 $ sncast call \
