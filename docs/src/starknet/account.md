@@ -108,23 +108,36 @@ $ sncast \
 ### [`account list`](../appendix/sncast/account/list.md)
 List all accounts saved in `accounts file`, grouped based on the networks they are defined on.
 
+<!-- TODO(#2736) -->
+<!-- { "ignored_output": true } -->
 ```shell
 $ sncast account list
 ```
 
-```
-Available accounts (at /Users/<username>/.starknet_accounts/starknet_open_zeppelin_accounts.json):
-- user0
-public key: 0x2f91ed13f8f0f7d39b942c80bfcd3d0967809d99e0cc083606cbe59033d2b39
-network: alpha-sepolia
-address: 0x4f5f24ceaae64434fa2bc2befd08976b51cf8f6a5d8257f7ec3616f61de263a
-type: OpenZeppelin
-deployed: false
-legacy: false
+<details>
+<summary>Output:</summary>
 
-- user1
-[...]
+```shell
+Available accounts (at [..]):
+- new_account:
+  network: alpha-sepolia
+  public key: [..]
+  address: [..]
+  salt: [..]
+  class hash: [..]
+  deployed: false
+  legacy: false
+  type: OpenZeppelin
+
+- user0:
+  network: alpha-sepolia
+  public key: 0x48234b9bc6c1e749f4b908d310d8c53dae6564110b05ccf79016dca8ce7dfac
+  address: 0x6f4621e7ad43707b3f69f9df49425c3d94fdc5ab2e444bfa0e7e4edeff7992d
+  deployed: true
+  type: OpenZeppelin
 ```
+</details>
+<br>
 
 You can specify a custom location for the accounts file with the `--accounts-file` or `-f` flag.
 There is also possibility to show private keys with the `--display-private-keys` or `-p` flag.
