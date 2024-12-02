@@ -428,6 +428,7 @@ fn fork_get_block_info_fails() {
     );
 }
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 // found in: https://github.com/foundry-rs/starknet-foundry/issues/1175
 fn incompatible_abi() {
