@@ -35,7 +35,7 @@ fn start_devnet() {
     }
 
     let devnet_path = if cfg!(target_os = "windows") {
-        "tests/utils/devnet/starknet-devnet/bin/starknet-devnet.exe"
+        "tests/utils/devnet/bin/starknet-devnet.exe"
     } else {
         "tests/utils/devnet/starknet-devnet"
     };
