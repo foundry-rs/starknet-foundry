@@ -1,0 +1,21 @@
+name: My workflow
+on:
+  push:
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: foundry-rs/setup-snfoundry@v3
+
+      - name: Show snforge and sncast versions
+        run: |
+            snforge --version
+            sncast --version
+
+      - name: Cache Starknet Foundry
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.setup-starknet-foundry.outputs.starknet-foundry-prefix }}
+          key: ${{ runner.os }}-snfoundry-${{ steps.setup-starknet-foundry.outputs.starknet-foundry-version }}
