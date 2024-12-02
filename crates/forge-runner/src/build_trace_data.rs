@@ -307,7 +307,7 @@ fn build_profiler_trace_entry(value: &RelocatedTraceEntry) -> ProfilerTraceEntry
 }
 
 pub fn save_trace_data(
-    test_name: &String,
+    test_name: &str,
     trace_data: &VersionedProfilerCallTrace,
 ) -> Result<PathBuf> {
     let serialized_trace =
