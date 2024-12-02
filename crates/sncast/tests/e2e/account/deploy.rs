@@ -375,7 +375,6 @@ async fn test_default_fee_token() {
         To see invocation details, visit:
         transaction: [..]
     "});
-
 }
 
 #[tokio::test]

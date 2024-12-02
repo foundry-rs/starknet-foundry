@@ -6,11 +6,6 @@ use starknet::core::types::BlockId;
 use starknet::providers::Provider;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 
-#[test]
-fn test_impl_payable_transaction() {
-    println!("{:?}", FeeToken::default())
-}
-
 #[derive(Args, Debug, Clone)]
 pub struct FeeArgs {
     /// Token that transaction fee will be paid in
