@@ -34,7 +34,13 @@ fn start_devnet() {
         }
     }
 
-    Command::new("tests/utils/devnet/starknet-devnet")
+    let devnet_path = if cfg!(target_os = "windows") {
+        "tests/utils/devnet/starknet-devnet/bin/starknet-devnet.exe"
+    } else {
+        "tests/utils/devnet/starknet-devnet"
+    };
+
+    Command::new(devnet_path)
         .args([
             "--port",
             &port,
