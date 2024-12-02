@@ -6,9 +6,30 @@
 
 To configure a snippet, you need to add a comment block right before it. The comment block should contain the configuration in JSON format. Example:
 
-```markdown
+`````markdown
 <!-- { "package_name": "hello_starknet", "ignore_output": true } -->
+```shell
+$ sncast \
+    account create \
+    --url http://127.0.0.1:5055 \
+    --name new_account
 ```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+command: account create
+add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+address: [..]
+max_fee: [..]
+message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.
+
+To see account creation details, visit:
+account: https://sepolia.starkscan.co/contract/[..]
+```
+</details>
+`````
 
 ## Available configuration options
 
