@@ -1,3 +1,4 @@
+use crate::backtrace::add_backtrace_footer;
 use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
@@ -21,7 +22,9 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
     get_all_used_resources, update_top_call_execution_resources, update_top_call_l1_resources,
     update_top_call_vm_trace, ForgeExtension, ForgeRuntime,
 };
-use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
+use cheatnet::state::{
+    BlockInfoReader, CallTrace, CheatnetState, EncounteredError, ExtendedStateReader,
+};
 use entry_code::create_entry_code;
 use hints::{hints_by_representation, hints_to_params};
 use runtime::starknet::context::{build_context, set_max_steps};
@@ -129,6 +132,7 @@ pub struct RunResultWithInfo {
     pub(crate) call_trace: Rc<RefCell<CallTrace>>,
     pub(crate) gas_used: u128,
     pub(crate) used_resources: UsedResources,
+    pub(crate) encountered_errors: Vec<EncounteredError>,
 }
 
 #[allow(clippy::too_many_lines)]
@@ -246,6 +250,14 @@ pub fn run_test_case(
             Err(err) => Err(err),
         };
 
+    let encountered_errors = forge_runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .encountered_errors
+        .clone();
+
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
     update_top_call_execution_resources(&mut forge_runtime);
@@ -269,6 +281,7 @@ pub fn run_test_case(
         gas_used: gas,
         used_resources,
         call_trace: call_trace_ref,
+        encountered_errors,
     })
 }
 
@@ -289,6 +302,7 @@ fn extract_test_case_summary(
                     result_with_info.gas_used,
                     result_with_info.used_resources,
                     &result_with_info.call_trace,
+                    &result_with_info.encountered_errors,
                     contracts_data,
                     maybe_versioned_program_path,
                 ),
@@ -298,7 +312,14 @@ fn extract_test_case_summary(
                     msg: Some(format!(
                         "\n    {}\n",
                         error.to_string().replace(" Custom Hint Error: ", "\n    ")
-                    )),
+                    ))
+                    .map(|msg| {
+                        add_backtrace_footer(
+                            msg,
+                            contracts_data,
+                            &result_with_info.encountered_errors,
+                        )
+                    }),
                     arguments: args,
                     test_statistics: (),
                 },

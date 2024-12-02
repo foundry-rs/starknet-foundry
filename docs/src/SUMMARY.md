@@ -36,12 +36,13 @@
 * [Conditional Compilation](snforge-advanced-features/conditional-compilation.md)
 * [Direct Storage Access](snforge-advanced-features/storage-cheatcodes.md)
 * [Profiling](snforge-advanced-features/profiling.md)
+* [Backtrace](snforge-advanced-features/backtrace.md)
 
 ---
 
 # `sncast` Overview
 
-* [Outline](starknet/index.md)
+* [Outline](starknet/sncast-overview.md)
 * [Creating And Deploying Accounts](starknet/account.md)
 * [Importing Accounts](starknet/account-import.md)
 * [Declaring New Contracts](starknet/declare.md)
