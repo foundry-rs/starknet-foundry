@@ -57,13 +57,17 @@ pub struct Create {
 
 #[allow(clippy::too_many_arguments)]
 pub async fn create(
-    account: &str,
+    account: Option<String>,
     accounts_file: &Utf8PathBuf,
     keystore: Option<Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: Felt,
     create: &Create,
 ) -> Result<AccountCreateResponse> {
+    let account_name = account
+        .clone()
+        .unwrap_or_else(|| generate_account_name(accounts_file).unwrap());
+
     let add_profile = create.add_profile.clone();
     let salt = extract_or_generate_salt(create.salt);
     let class_hash = create.class_hash.unwrap_or(match create.account_type {
@@ -82,7 +86,7 @@ pub async fn create(
         .parse()?;
 
     if let Some(keystore) = keystore.clone() {
-        let account_path = Utf8PathBuf::from(&account);
+        let account_path = Utf8PathBuf::from(&account_name);
         if account_path == Utf8PathBuf::default() {
             bail!("Argument `--account` must be passed and be a path when using `--keystore`");
         }
@@ -105,18 +109,18 @@ pub async fn create(
             legacy,
         )?;
     } else {
-        write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
+        write_account_to_accounts_file(&account_name, accounts_file, chain_id, account_json.clone())?;
     }
 
     if add_profile.is_some() {
         let config = CastConfig {
             url: create.rpc.url.clone().unwrap_or_default(),
-            account: account.into(),
+            account: account_name.into(),
             accounts_file: accounts_file.into(),
             keystore,
             ..Default::default()
         };
-        add_created_profile_to_configuration(create.add_profile.as_deref(), &config, None)?;
+        add_created_profile_to_configuration(&create.add_profile, &config, &None)?;
     }
 
     Ok(AccountCreateResponse {
