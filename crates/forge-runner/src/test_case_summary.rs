@@ -219,7 +219,7 @@ impl TestCaseSummary<Single> {
         call_trace: &Rc<RefCell<InternalCallTrace>>,
         encountered_errors: &[EncounteredError],
         contracts_data: &ContractsData,
-        maybe_versioned_program_path: &Option<VersionedProgramPath>,
+        maybe_versioned_program_path: Option<&VersionedProgramPath>,
     ) -> Self {
         let name = test_case.name.clone();
         let msg = extract_result_data(&run_result, &test_case.config.expected_result)
@@ -240,7 +240,7 @@ impl TestCaseSummary<Single> {
                             maybe_versioned_program_path,
                         )),
                     };
-                    check_available_gas(&test_case.config.available_gas, summary)
+                    check_available_gas(test_case.config.available_gas, summary)
                 }
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,

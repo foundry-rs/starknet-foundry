@@ -146,7 +146,7 @@ fn get_l1_data_cost(
 }
 
 pub fn check_available_gas(
-    available_gas: &Option<usize>,
+    available_gas: Option<usize>,
     summary: TestCaseSummary<Single>,
 ) -> TestCaseSummary<Single> {
     match summary {

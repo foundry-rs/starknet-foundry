@@ -587,9 +587,13 @@ async fn run_async_command(
         Commands::ShowConfig(show) => {
             let provider = show.rpc.get_provider(&config).await.ok();
 
-            let result =
-                starknet_commands::show_config::show_config(&show, &provider, config, cli.profile)
-                    .await;
+            let result = starknet_commands::show_config::show_config(
+                &show,
+                provider.as_ref(),
+                config,
+                cli.profile,
+            )
+            .await;
 
             print_command_result("show-config", &result, numbers_format, output_format)?;
 
@@ -743,10 +747,13 @@ fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
         Utf8PathBuf::new()
     });
 
-    let global_config = load_config::<CastConfig>(&Some(global_config_path.clone()), &cli.profile)
-        .unwrap_or_else(|_| load_config::<CastConfig>(&Some(global_config_path), &None).unwrap());
+    let global_config =
+        load_config::<CastConfig>(Some(&global_config_path.clone()), cli.profile.as_deref())
+            .unwrap_or_else(|_| {
+                load_config::<CastConfig>(Some(&global_config_path), None).unwrap()
+            });
 
-    let local_config = load_config::<CastConfig>(&None, &cli.profile)?;
+    let local_config = load_config::<CastConfig>(None, cli.profile.as_deref())?;
 
     let mut combined_config = combine_cast_configs(&global_config, &local_config);
 
