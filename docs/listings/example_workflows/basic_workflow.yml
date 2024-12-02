@@ -7,9 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: foundry-rs/setup-snfoundry@v3
-
-      - name: Show snforge and sncast versions
+      - name: Setup Starknet Foundry
+        uses: foundry-rs/setup-snfoundry@v3
+      - name: Check versions
         run: |
-            snforge --version
-            sncast --version
+          snforge --version
+          sncast --version
