@@ -1,6 +1,6 @@
 # Shell Snippets in Documentation
 
-Snforge/sncast snippets and their outputs present in the docs are automatically run and tested. Some of them need to be configured with specific values to work correctly.
+`snforge` and `sncast` snippets and their outputs present in the docs are automatically run and tested. Some of them need to be configured with specific values to work correctly.
 
 ## Snippet configuration
 
