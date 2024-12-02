@@ -8,9 +8,13 @@ trait IHelloStarknet<TContractState> {
 
 #[starknet::contract]
 mod HelloStarknet {
-    use array::ArrayTrait;
+  use core::array::ArrayTrait;
+  use core::starknet::storage::StoragePointerWriteAccess;
+  use core::starknet::storage::StoragePointerReadAccess;
 
-    #[storage]
+    
+
+#[storage]
     struct Storage {
         balance: felt252,
     }
@@ -29,7 +33,7 @@ mod HelloStarknet {
 
         // Panics
         fn do_a_panic(self: @ContractState) {
-            let mut arr = ArrayTrait::new();
+            let mut arr: core::array::Array<felt252> = ArrayTrait::new();
             arr.append('PANIC');
             arr.append('DAYTAH');
             panic(arr);

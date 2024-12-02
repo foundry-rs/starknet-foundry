@@ -10,8 +10,9 @@ trait IHelloStarknet<TContractState> {
 mod dummy {
     #[starknet::contract]
     mod HelloStarknet {
-        use array::ArrayTrait;
-
+        use core::array::ArrayTrait;
+        use core::starknet::storage::StoragePointerWriteAccess;
+        use core::starknet::storage::StoragePointerReadAccess;
         #[storage]
         struct Storage {
             balance: felt252,
