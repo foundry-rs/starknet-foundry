@@ -4,11 +4,11 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 static RE_SNCAST: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new( r"(?ms)^(?:<!--\s*(?P<config>\{.*?\})\s*-->\n)?```shell\n\$ (?P<command>sncast .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n(?P<output>[\s\S]+?)\n```[\s]*<\/details>)?").expect("Failed to create regex for normalizing loop function names")
+    Regex::new( r"(?ms)^(?:<!--\s*(?P<config>\{.*?\})\s*-->\n)?```shell\n\$ (?P<command>sncast .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n(?P<output>[\s\S]+?)\n```[\s]*<\/details>)?").expect("Failed to create regex for sncast snippet")
 });
 
 static RE_SNFORGE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new( r"(?ms)^(?:<!--\s*(?P<config>\{.*?\})\s*-->\n)?```shell\n\$ (?P<command>snforge .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n(?P<output>[\s\S]+?)\n```[\s]*<\/details>)?").expect("Failed to create regex for normalizing loop function names")
+    Regex::new( r"(?ms)^(?:<!--\s*(?P<config>\{.*?\})\s*-->\n)?```shell\n\$ (?P<command>snforge .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n(?P<output>[\s\S]+?)\n```[\s]*<\/details>)?").expect("Failed to create regex for snforge snippet")
 });
 
 #[derive(Clone, Debug)]
