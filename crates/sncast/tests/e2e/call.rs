@@ -231,7 +231,10 @@ fn test_wrong_block_id() {
 
 #[test]
 fn test_happy_case_shell() {
-    let test_path = PathBuf::from("tests/shell/call.sh").canonicalize().unwrap();
+    let script_extension = if cfg!(windows) { ".ps1" } else { ".sh" };
+    let test_path = PathBuf::from(format!("tests/shell/call{script_extension}"))
+        .canonicalize()
+        .unwrap();
     let binary_path = cargo_bin!("sncast");
 
     let snapbox = Command::new(test_path)
