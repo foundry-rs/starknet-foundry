@@ -81,7 +81,7 @@ pub fn run_test(
             &case,
             vec![],
             &test_runner_config.contracts_data,
-            &maybe_versioned_program_path,
+            maybe_versioned_program_path.as_ref().as_ref(),
         )
     })
 }
@@ -122,7 +122,7 @@ pub(crate) fn run_fuzz_test(
             &case,
             args,
             &test_runner_config.contracts_data,
-            &maybe_versioned_program_path,
+            maybe_versioned_program_path.as_ref().as_ref(),
         )
     })
 }
@@ -158,7 +158,7 @@ pub fn run_test_case(
         dict_state_reader: cheatnet_constants::build_testing_state(),
         fork_state_reader: get_fork_state_reader(
             runtime_config.cache_dir,
-            &case.config.fork_config,
+            case.config.fork_config.as_ref(),
         )?,
     };
     let block_info = state_reader.get_block_info()?;
@@ -290,7 +290,7 @@ fn extract_test_case_summary(
     case: &TestCaseWithResolvedConfig,
     args: Vec<Felt>,
     contracts_data: &ContractsData,
-    maybe_versioned_program_path: &Option<VersionedProgramPath>,
+    maybe_versioned_program_path: Option<&VersionedProgramPath>,
 ) -> TestCaseSummary<Single> {
     match run_result {
         Ok(result_with_info) => {
@@ -338,7 +338,7 @@ fn extract_test_case_summary(
 
 fn get_fork_state_reader(
     cache_dir: &Utf8Path,
-    fork_config: &Option<ResolvedForkConfig>,
+    fork_config: Option<&ResolvedForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
     fork_config
         .as_ref()

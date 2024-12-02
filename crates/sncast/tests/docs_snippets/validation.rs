@@ -1,8 +1,8 @@
-use docs::validation::{
-    assert_valid_snippet, extract_snippets_from_directory, extract_snippets_from_file,
-    get_parent_dir, print_skipped_snippet_message, print_success_message, Snippet,
+use docs::snippet::{Snippet, SnippetType};
+use docs::utils::{
+    assert_valid_snippet, get_nth_ancestor, print_skipped_snippet_message, print_success_message,
 };
-use regex::Regex;
+use docs::validation::{extract_snippets_from_directory, extract_snippets_from_file};
 use tempfile::tempdir;
 
 use crate::helpers::runner::runner;
@@ -11,60 +11,42 @@ use crate::helpers::runner::runner;
 fn test_docs_snippets() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
 
-    let root_dir_path = get_parent_dir(2);
+    let root_dir_path = get_nth_ancestor(2);
     let docs_dir_path = root_dir_path.join("docs/src");
     let sncast_readme_path = root_dir_path.join("crates/sncast/README.md");
 
-    let re = Regex::new(r"(?ms)```shell\n\$ sncast(.+?)\n```").expect("Invalid regex pattern");
+    let snippet_type = SnippetType::sncast();
 
-    let docs_snippets = extract_snippets_from_directory(&docs_dir_path, &re)
-        .expect("Failed to extract sncast command snippets");
+    let docs_snippets = extract_snippets_from_directory(&docs_dir_path, &snippet_type)
+        .expect("Failed to extract command snippets");
 
-    let readme_snippets = extract_snippets_from_file(&sncast_readme_path, &re)
-        .expect("Failed to extract sncast command snippets");
+    let readme_snippets = extract_snippets_from_file(&sncast_readme_path, &snippet_type)
+        .expect("Failed to extract command snippets");
 
     let snippets = docs_snippets
         .into_iter()
         .chain(readme_snippets)
         .collect::<Vec<Snippet>>();
 
-    // TODO(#2684)
-    let skipped_args = [
-        // snippet "$ sncast <subcommand>"
-        vec!["<subcommand>"],
-        // snippet with interactive account import example
-        vec![
-            "account",
-            "import",
-            "--url",
-            "http://127.0.0.1:5050",
-            "--name",
-            "account_123",
-            "--address",
-            "0x1",
-            "--type",
-            "oz",
-        ],
-    ];
-
     for snippet in &snippets {
         let args = snippet.to_command_args();
-        let args: Vec<&str> = args.iter().map(String::as_str).collect();
+        let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
 
-        if skipped_args.contains(&args) {
-            print_skipped_snippet_message(snippet, "sncast");
+        // remove "sncast" from the args
+        args.remove(0);
+
+        if snippet.config.ignored.unwrap_or(false) {
+            print_skipped_snippet_message(snippet);
             continue;
         }
-
-        // TODO(#2678)
 
         let snapbox = runner(&args).current_dir(tempdir.path());
         let output = snapbox.output().expect("Failed to execute the command");
         let exit_code = output.status.code().unwrap_or_default();
         let stderr = String::from_utf8_lossy(&output.stderr);
 
-        assert_valid_snippet(exit_code != 2, snippet, "sncast", &stderr);
+        assert_valid_snippet(exit_code != 2, snippet, &stderr);
     }
 
-    print_success_message(snippets.len(), "sncast");
+    print_success_message(snippets.len(), snippet_type.as_str());
 }

@@ -46,5 +46,5 @@ pub struct StrkFeeSettings {
 - `nonce` - nonce for declare transaction. If not provided, nonce will be set automatically.
 
 ```rust
-{{#include ../../../listings/sncast_library/scripts/deploy/src/lib.cairo}}
+{{#include ../../../listings/deploy/src/lib.cairo}}
 ```
