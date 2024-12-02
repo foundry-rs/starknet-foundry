@@ -52,7 +52,7 @@ pub async fn test_happy_case(account_type: &str) {
         max_fee: [..]
         message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.
 
-        After prefunding the address run:
+        After prefunding the address, run:
         sncast account deploy --url http://127.0.0.1:5055/rpc --name my_account --fee-token strk
 
         To see account creation details, visit:
@@ -146,7 +146,7 @@ pub async fn test_happy_case_generate_salt() {
         max_fee: [..]
         message: Account successfully created[..]
 
-        After prefunding the address run:
+        After prefunding the address, run:
         sncast account deploy --url http://127.0.0.1:5055/rpc --name my_account --fee-token strk
 
         To see account creation details, visit:
@@ -229,7 +229,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         max_fee: [..]
         message: Account successfully created[..]
 
-        After prefunding the address run:
+        After prefunding the address, run:
         sncast account deploy --url http://127.0.0.1:5055/rpc --name my_account --fee-token strk
 
         To see account creation details, visit:
