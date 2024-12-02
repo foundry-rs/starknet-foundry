@@ -1,6 +1,7 @@
 use crate::helpers::constants::{
     ACCOUNT, ACCOUNT_FILE_PATH, CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
-    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
+    DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA, DEVNET_OZ_CLASS_HASH_CAIRO_0,
+    MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
 };
 use crate::helpers::fixtures::{
     create_and_deploy_account, create_and_deploy_oz_account, get_transaction_hash,
@@ -446,7 +447,13 @@ async fn test_happy_case_shell() {
         .unwrap();
     let binary_path = cargo_bin!("sncast");
 
-    let snapbox = Command::new(test_path)
+    let command = if cfg!(windows) {
+        Command::new("powershell").arg(test_path)
+    } else {
+        Command::new(test_path)
+    };
+
+    let snapbox = command
         .current_dir(tempdir.path())
         .arg(binary_path)
         .arg(URL)

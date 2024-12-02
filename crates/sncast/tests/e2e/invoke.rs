@@ -435,7 +435,13 @@ async fn test_happy_case_shell() {
         .unwrap();
     let binary_path = cargo_bin!("sncast");
 
-    let snapbox = Command::new(test_path)
+    let command = if cfg!(windows) {
+        Command::new("powershell").arg(test_path)
+    } else {
+        Command::new(test_path)
+    };
+
+    let snapbox = command
         .current_dir(tempdir.path())
         .arg(binary_path)
         .arg(URL)
