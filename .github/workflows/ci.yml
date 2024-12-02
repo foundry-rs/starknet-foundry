@@ -56,24 +56,30 @@ jobs:
       - name: Extract branch name
         if: github.event_name != 'pull_request'
         run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+        shell: bash
 
       - name: Extract branch name on pull request
         if: github.event_name == 'pull_request'
         run: echo "BRANCH_NAME=$(echo $GITHUB_HEAD_REF)" >> $GITHUB_ENV
+        shell: bash
 
       - name: Extract repo name and owner
         if: github.event_name != 'pull_request'
         run: echo "REPO_NAME=$(echo ${{ github.repository }}.git)" >> $GITHUB_ENV
+        shell: bash
 
       - name: Extract repo name and owner on pull request
         if: github.event_name == 'pull_request'
         run: echo "REPO_NAME=$(echo ${{ github.event.pull_request.head.repo.full_name }}.git)" >> $GITHUB_ENV
+        shell: bash
 
       - name: Print repo name
         run: echo 'The repo name is' $REPO_NAME
+        shell: bash
 
       - name: Get branch name
         run: echo 'The branch name is' $BRANCH_NAME
+        shell: bash
 
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
