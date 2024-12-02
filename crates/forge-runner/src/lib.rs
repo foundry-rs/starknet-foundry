@@ -68,7 +68,7 @@ pub fn maybe_save_trace_and_profile(
     }) = result
     {
         if execution_data_to_save.is_vm_trace_needed() {
-            let name = sanitize_filename::sanitize(name);
+            let name = sanitize_filename::sanitize(name.replace("::", "_"));
             let trace_path = save_trace_data(&name, trace_data)?;
             if execution_data_to_save.profile {
                 run_profiler(&name, &trace_path, &execution_data_to_save.additional_args)?;
