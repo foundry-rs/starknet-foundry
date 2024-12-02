@@ -109,20 +109,9 @@ pub async fn create(
         )?;
     } else {
         write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
-        message.push_str(
-            format!(
-                "\n\nAfter prefunding the address run:\n\
-                sncast{} account deploy --url {} --name {} --fee-token strk",
-                if accounts_file.to_string().contains(DEFAULT_ACCOUNTS_FILE) {
-                    format!(" --accounts-file {accounts_file}")
-                } else {
-                    String::new()
-                },
-                rpc_url,
-                account
-            )
-            .as_str(),
-        );
+
+        let deploy_command = generate_deploy_command(accounts_file, &rpc_url, account);
+        message.push_str(&deploy_command);
     }
 
     if add_profile.is_some() {
@@ -330,4 +319,17 @@ fn write_account_to_file(
         serde_json::to_string_pretty(&account_json).unwrap(),
     )?;
     Ok(())
+}
+
+fn generate_deploy_command(accounts_file: &Utf8PathBuf, rpc_url: &str, account: &str) -> String {
+    let accounts_flag = if accounts_file.to_string().contains(DEFAULT_ACCOUNTS_FILE) {
+        format!(" --accounts-file {accounts_file}")
+    } else {
+        String::new()
+    };
+
+    format!(
+        "\n\nAfter prefunding the address, run:\n\
+        sncast{accounts_flag} account deploy --url {rpc_url} --name {account} --fee-token strk"
+    )
 }
