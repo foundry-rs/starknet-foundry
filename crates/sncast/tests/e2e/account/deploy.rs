@@ -349,7 +349,7 @@ async fn test_invalid_version_and_token_combination(fee_token: &str, version: &s
 }
 
 #[tokio::test]
-async fn test_no_version_and_token() {
+async fn test_default_fee_token() {
     let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
     let accounts_file = "accounts.json";
 
@@ -367,11 +367,13 @@ async fn test_no_version_and_token() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    let output = snapbox.assert().failure();
-    assert_stderr_contains(
-        output,
-        "Error: Either --fee-token or --version must be provided",
-    );
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        command: account deploy
+        transaction_hash: [..]
+
+        To see invocation details, visit:
+        transaction: [..]
+    "});
 }
 
 #[tokio::test]
