@@ -7,7 +7,7 @@
 To configure a snippet, you need to add a comment block right before it. The comment block should contain the configuration in JSON format. Example:
 
 `````markdown
-<!-- { "ignored": "ignore_output": true } -->
+<!-- { "package_name": "hello_starknet", "ignored_output": true } -->
 ```shell
 $ sncast \
     account create \
