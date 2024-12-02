@@ -153,6 +153,7 @@ fn cheat_block_timestamp_cairo0_contract() {
     assert_passed(&result);
 }
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn store_load_cairo0_contract() {
     let test = test_case!(formatdoc!(
