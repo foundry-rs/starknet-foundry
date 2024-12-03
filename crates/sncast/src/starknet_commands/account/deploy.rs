@@ -37,8 +37,7 @@ pub struct Deploy {
     #[clap(flatten)]
     pub fee_args: FeeArgs,
 
-    /// Version of the account deployment (can be inferred from fee token)
-    #[clap(short, long)]
+    #[clap(short, long, default_value = "v3")]
     pub version: Option<AccountDeployVersion>,
 
     #[clap(flatten)]
