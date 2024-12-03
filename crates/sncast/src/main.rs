@@ -308,7 +308,7 @@ async fn run_async_command(
 
             let fee_settings = fee_args
                 .clone()
-                .fee_token_1(fee_token)
+                .fee_token(fee_token)
                 .try_into_fee_settings(&provider, account.block_id())
                 .await?;
 
@@ -399,7 +399,7 @@ async fn run_async_command(
             )
             .await?;
 
-            let fee_args = fee_args.fee_token_1(fee_token);
+            let fee_args = fee_args.fee_token(fee_token);
 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;

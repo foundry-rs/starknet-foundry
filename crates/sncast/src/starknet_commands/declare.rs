@@ -74,7 +74,7 @@ pub async fn declare(
     let fee_settings = declare
         .fee_args
         .clone()
-        .fee_token_1(fee_token)
+        .fee_token(fee_token)
         .try_into_fee_settings(account.provider(), account.block_id())
         .await?;
 

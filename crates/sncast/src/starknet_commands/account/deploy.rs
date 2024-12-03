@@ -68,7 +68,7 @@ pub async fn deploy(
 ) -> Result<InvokeResponse> {
     let fee_token = deploy_args.validate_and_get_token()?;
 
-    let fee_args = deploy_args.fee_args.clone().fee_token_1(fee_token);
+    let fee_args = deploy_args.fee_args.clone().fee_token(fee_token);
 
     if let Some(keystore_path_) = keystore_path {
         deploy_from_keystore(

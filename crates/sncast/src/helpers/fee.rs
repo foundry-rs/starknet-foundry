@@ -50,15 +50,7 @@ impl From<ScriptFeeSettings> for FeeArgs {
 
 impl FeeArgs {
     #[must_use]
-    pub fn fee_token(self, fee_token: Option<FeeToken>) -> Self {
-        Self {
-            fee_token: fee_token.or(self.fee_token),
-            ..self
-        }
-    }
-
-    #[must_use]
-    pub fn fee_token_1(self, fee_token: FeeToken) -> Self {
+    pub fn fee_token(self, fee_token: FeeToken) -> Self {
         Self {
             fee_token: Some(fee_token),
             ..self

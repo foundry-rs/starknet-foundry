@@ -73,7 +73,7 @@ pub async fn run(
 ) -> Result<InvokeResponse> {
     let fee_token = run.validate_and_get_token()?;
 
-    let fee_args = run.fee_args.clone().fee_token_1(fee_token);
+    let fee_args = run.fee_args.clone().fee_token(fee_token);
 
     let contents = std::fs::read_to_string(&run.path)?;
     let items_map: HashMap<String, Vec<toml::Value>> =
