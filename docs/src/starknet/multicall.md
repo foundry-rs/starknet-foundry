@@ -67,7 +67,7 @@ transaction: https://starkscan.co/tx/0x38fb8a0432...
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
 
 > 💡 **Info**
-> You can also choose to pay in Ether by setting `--fee-token` to `eth`.
+> You can also choose to pay in Ether by setting `--fee-token` to `eth` and specifying transaction version `--version`.
 
 
 ### `multicall new` Example

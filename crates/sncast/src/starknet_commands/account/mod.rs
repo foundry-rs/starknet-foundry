@@ -47,7 +47,7 @@ pub enum AccountType {
     Oz,
     /// Argent account implementation
     Argent,
-    /// Braavos account implementation
+    /// Braavos account implementatio
     Braavos,
 }
 
