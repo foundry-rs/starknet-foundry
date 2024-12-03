@@ -421,7 +421,7 @@ fn test_too_low_max_fee() {
         "--max-fee",
         "1",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args);
