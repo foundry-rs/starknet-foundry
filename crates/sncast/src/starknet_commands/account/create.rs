@@ -107,6 +107,9 @@ pub async fn create(
             &account_path,
             legacy,
         )?;
+
+        let deploy_command = generate_deploy_command_with_keystore(account, keystore, &rpc_url);
+        message.push_str(&deploy_command);
     } else {
         write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
 
@@ -334,5 +337,16 @@ fn generate_deploy_command(accounts_file: &Utf8PathBuf, rpc_url: &str, account: 
     format!(
         "\n\nAfter prefunding the address, run:\n\
         sncast{accounts_flag} account deploy --url {rpc_url} --name {account} --fee-token strk"
+    )
+}
+
+fn generate_deploy_command_with_keystore(
+    account: &str,
+    keystore: Utf8PathBuf,
+    rpc_url: &str,
+) -> String {
+    format!(
+        "\n\nAfter prefunding the address, run:\n\
+        sncast --account {account} --keystore {keystore} account deploy --url {rpc_url} --fee-token strk"
     )
 }
