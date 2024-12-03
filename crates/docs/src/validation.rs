@@ -1,5 +1,6 @@
 use crate::snippet::{Snippet, SnippetConfig, SnippetType};
 use regex::Regex;
+use std::sync::LazyLock;
 use std::{fs, io, path::Path};
 
 const EXTENSION: Option<&str> = Some("md");
@@ -24,7 +25,7 @@ pub fn extract_snippets_from_file(
                 .map_or_else(String::new, |m| m.as_str().to_string());
             let command_match = caps.name("command")?;
             let output = caps.name("output").map(|m| {
-               static GAS_RE: LazyLock<Regex> =
+                static GAS_RE: LazyLock<Regex> =
                     LazyLock::new(|| Regex::new(r"gas: ~\d+").unwrap());
                 static EXECUTION_RESOURCES_RE: LazyLock<Regex> = LazyLock::new(|| {
                     Regex::new(r"(steps|memory holes|builtins|syscalls): (\d+|\(.+\))").unwrap()
