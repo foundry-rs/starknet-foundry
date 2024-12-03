@@ -48,7 +48,7 @@ pub fn print_ignored_snippet_message(snippet: &Snippet) {
     );
 }
 
-pub fn get_canonical_path(relative_path: &str) -> Result<String, Box<dyn std::error::Error>> {
+fn get_canonical_path(relative_path: &str) -> Result<String, Box<dyn std::error::Error>> {
     Ok(Utf8PathBuf::from_str(relative_path)?
         .canonicalize_utf8()?
         .to_string()
