@@ -26,8 +26,7 @@ fn token_not_supported_error_msg(
 
     formatdoc! {
         r"
-        {} fee token is not supported for {} {}.
-        {}
+        {} fee token is not supported for {} {}.{}
 
         Possible values:
         +---------+-----------+
@@ -43,8 +42,8 @@ fn token_not_supported_error_msg(
 
 fn deprecation_info(fee_token: &str, deployment: &str) -> String {
     if fee_token == "eth" && deployment == "v3" {
-        String::from("Fee payment in `eth` will be deprecated in the future. Please specify `--version` while using eth.")
+        String::from("\nFee payment in `eth` will be deprecated in the future. Please specify `--version` while using eth.")
     } else {
-        String::from("")
+        String::new()
     }
 }
