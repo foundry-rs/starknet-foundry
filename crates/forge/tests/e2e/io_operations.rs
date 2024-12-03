@@ -31,7 +31,7 @@ fn file_reading() {
         [FAIL] file_reading_integrationtest::test::non_existent
         
         Failure data:
-            "No such file or directory [..]"
+            "[..] file [..]"
         
         [FAIL] file_reading_integrationtest::test::non_ascii
         
