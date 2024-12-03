@@ -38,7 +38,7 @@ Optional.
 Maximum gas unit price for the `declare` transaction paid in Fri. When not used, defaults to auto-estimation. (Only for STRK fee payment)
 
 ## `--version, -v <VERSION>`
-Optional. Required if `--fee-token` is not provided.
+Optional. Required if `--fee-token eth` is provided.
 
 Version of the deployment transaction. Possible values: v2, v3.
 
