@@ -222,12 +222,12 @@ jobs:
         id: windows-devnet-cache
         uses: actions/cache@v4
         with:
-          path: ${{ github.workspace }}\starknet-foundry\crates\sncast\tests\utils\devnet
+          path: ${{ github.workspace }}\crates\sncast\tests\utils\devnet
           key: ${{ runner.os }}-devnet-${{ env.DEVNET_TAG }}
       - name: Install devnet
         if: runner.os == 'Windows' && steps.windows-devnet-cache.outputs.cache-hit != 'true'
         run: |
-          $DEVNET_INSTALL_DIR = "${{ github.workspace }}\starknet-foundry\crates\sncast\tests\utils\devnet"
+          $DEVNET_INSTALL_DIR = "${{ github.workspace }}\crates\sncast\tests\utils\devnet"
           cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --tag ${{ env.DEVNET_TAG }} --root $DEVNET_INSTALL_DIR
       - uses: software-mansion/setup-scarb@v1
         with:
