@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### `snforge_scarb_plugin`
+
+#### Changed
+
+ - `snforge_scarb_plugin` will now also emit warnings when errors occur
+
 ## [0.34.0] - 2024-11-26
 
 ### Forge
