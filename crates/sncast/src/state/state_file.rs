@@ -396,7 +396,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Failed to load state file")]
     // TODO handle system specific panics
     fn test_load_state_file_invalid_path() {
         let state_file = Utf8PathBuf::from("bla/bla/crypto.json");
