@@ -367,11 +367,14 @@ async fn test_no_version_and_token() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    let output = snapbox.assert().failure();
-    assert_stderr_contains(
-        output,
-        "Error: Either --fee-token or --version must be provided",
-    );
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        Transaction hash = [..]
+        command: account deploy
+        transaction_hash: [..]
+
+        To see invocation details, visit:
+        transaction: https://sepolia.starkscan.co/tx/[..]
+    "});
 }
 
 #[tokio::test]
