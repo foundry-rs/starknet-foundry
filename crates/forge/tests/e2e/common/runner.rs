@@ -88,12 +88,6 @@ pub(crate) fn setup_package_with_file_patterns(
         value(get_assert_macros_version().unwrap().to_string());
     scarb_toml["target.starknet-contract"]["sierra"] = value(true);
 
-    if is_from_docs_listings {
-        scarb_toml["dev-dependencies"]["snforge_std"]
-            .as_table_mut()
-            .and_then(|snforge_std| snforge_std.remove("workspace"));
-    }
-
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
     // TODO (#2074): do that on .cairo.template files only
