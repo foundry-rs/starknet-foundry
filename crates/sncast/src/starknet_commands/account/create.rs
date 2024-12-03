@@ -108,7 +108,7 @@ pub async fn create(
             legacy,
         )?;
 
-        let deploy_command = generate_deploy_command_with_keystore(account, keystore, &rpc_url);
+        let deploy_command = generate_deploy_command_with_keystore(account, &keystore, &rpc_url);
         message.push_str(&deploy_command);
     } else {
         write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
@@ -342,7 +342,7 @@ fn generate_deploy_command(accounts_file: &Utf8PathBuf, rpc_url: &str, account: 
 
 fn generate_deploy_command_with_keystore(
     account: &str,
-    keystore: Utf8PathBuf,
+    keystore: &Utf8PathBuf,
     rpc_url: &str,
 ) -> String {
     format!(

@@ -2,7 +2,7 @@ use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0,
 use crate::helpers::fixtures::copy_file;
 use crate::helpers::runner::runner;
 use configuration::copy_config_to_tempdir;
-use indoc::indoc;
+use indoc::{formatdoc, indoc};
 
 use conversions::string::IntoHexStr;
 use serde_json::{json, to_string_pretty};
@@ -332,6 +332,8 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         max_fee: [..]
         message: Account successfully created[..]
 
+
+
         To see account creation details, visit:
         account: [..]
     "});
@@ -561,16 +563,19 @@ pub async fn test_happy_case_keystore_hex_format() {
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
 
-    snapbox.assert().stdout_matches(indoc! {r"
+    snapbox.assert().stdout_matches(formatdoc! {r"
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
         max_fee: 0x[..]
         message: Account successfully created[..]
 
+        After prefunding the address, run:
+        sncast --account {} --keystore {} account deploy --url {} --fee-token strk
+
         To see account creation details, visit:
         account: [..]
-    "});
+    ", account_file, keystore_file, URL});
 
     let contents = fs::read_to_string(temp_dir.path().join(account_file))
         .expect("Unable to read created file");
