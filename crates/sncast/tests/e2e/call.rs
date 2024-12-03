@@ -238,7 +238,11 @@ fn test_happy_case_shell() {
     let binary_path = cargo_bin!("sncast");
 
     let command = if cfg!(windows) {
-        Command::new("powershell").arg(test_path)
+        Command::new("powershell")
+            .arg("-ExecutionPolicy")
+            .arg("Bypass")
+            .arg("-File")
+            .arg(test_path)
     } else {
         Command::new(test_path)
     };
