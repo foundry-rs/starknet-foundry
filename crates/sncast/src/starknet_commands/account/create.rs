@@ -11,7 +11,7 @@ use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
-    CREATE_KEYSTORE_PASSWORD_ENV_VAR, DEFAULT_ACCOUNTS_FILE, OZ_CLASS_HASH,
+    CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
 };
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountCreateResponse;
@@ -322,10 +322,13 @@ fn write_account_to_file(
 }
 
 fn generate_deploy_command(accounts_file: &Utf8PathBuf, rpc_url: &str, account: &str) -> String {
-    let accounts_flag = if accounts_file.to_string().contains(DEFAULT_ACCOUNTS_FILE) {
-        format!(" --accounts-file {accounts_file}")
-    } else {
+    let accounts_flag = if accounts_file
+        .to_string()
+        .contains("starknet_accounts/starknet_open_zeppelin_accounts.json")
+    {
         String::new()
+    } else {
+        format!(" --accounts-file {accounts_file}")
     };
 
     format!(
