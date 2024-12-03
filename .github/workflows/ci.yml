@@ -1,5 +1,8 @@
 name: CI
 
+env:
+  DEVNET_TAG: "v0.2.2"
+
 on:
   pull_request:
   merge_group:
@@ -214,10 +217,18 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           ./scripts/install_devnet.sh
-      - name: Install starknet-devnet-rs on Windows
+      - name: Cache devnet build
         if: runner.os == 'Windows'
+        id: windows-devnet-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}\starknet-foundry\crates\sncast\tests\utils\devnet
+          key: ${{ runner.os }}-devnet-${{ env.DEVNET_TAG }}
+      - name: Install devnet
+        if: runner.os == 'Windows' && steps.windows-devnet-cache.outputs.cache-hit != 'true'
         run: |
-          powershell .\scripts\install_devnet.ps1
+          $DEVNET_INSTALL_DIR = "${{ github.workspace }}\starknet-foundry\crates\sncast\tests\utils\devnet"
+          cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --tag ${{ env.DEVNET_TAG }} --root $DEVNET_INSTALL_DIR
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: "2.7.0"
