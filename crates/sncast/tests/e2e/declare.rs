@@ -42,7 +42,7 @@ async fn test_happy_case_eth(account: &str) {
         "--fee-token",
         "eth",
         "--version",
-        "v1",
+        "v2",
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path());

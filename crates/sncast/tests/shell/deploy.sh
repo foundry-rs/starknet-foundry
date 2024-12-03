@@ -21,4 +21,4 @@ $CAST_BINARY \
   --max-fee \
   99999999999999999 \
   --fee-token \
-  eth
+  strk
