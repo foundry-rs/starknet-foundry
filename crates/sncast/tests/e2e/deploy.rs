@@ -43,6 +43,8 @@ async fn test_happy_case_eth(account: &str) {
         "99999999999999999",
         "--fee-token",
         "eth",
+        "--version",
+        "v1"
     ];
 
     let snapbox = runner(&args);
