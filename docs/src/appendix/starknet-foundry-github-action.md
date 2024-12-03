@@ -1,6 +1,6 @@
 # Starknet Foundry Github Action
 
-If you wish to use Starknet Foundry in your Github Actions workflow, you can use the [`setup-snfoundry`](https://github.com/foundry-rs/setup-snfoundry) action. This action installs the necessary `snforge` and `sncast` binaries.
+If you wish to use Starknet Foundry in your Github Actions workflow, you can use the [`setup-snfoundry`](https://github.com/marketplace/actions/setup-starknet-foundry) action. This action installs the necessary `snforge` and `sncast` binaries.
 
 ## Example workflow
 
