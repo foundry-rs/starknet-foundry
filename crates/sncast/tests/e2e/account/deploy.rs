@@ -425,7 +425,7 @@ pub async fn test_valid_no_max_fee() {
         "--name",
         "my_account",
         "--fee-token",
-        "strk"
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());

@@ -328,7 +328,7 @@ async fn test_contract_already_declared() {
         "--contract-name",
         "Map",
         "--fee-token",
-        "strk"
+        "strk",
     ];
 
     runner(&args).current_dir(tempdir.path()).assert().success();
@@ -572,7 +572,7 @@ fn test_scarb_no_casm_artifact() {
         "--contract-name",
         "minimal_contract",
         "--fee-token",
-        "strk"
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -607,7 +607,7 @@ async fn test_many_packages_default() {
         "--max-fee",
         "99999999999999999",
         "--fee-token",
-        "strk"
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -640,7 +640,7 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         "--max-fee",
         "99999999999999999",
         "--fee-token",
-        "strk"
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
