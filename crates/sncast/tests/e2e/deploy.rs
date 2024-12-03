@@ -268,7 +268,7 @@ async fn test_happy_case_with_constructor() {
         "--url",
         URL,
         "--fee-token",
-        "eth",
+        "strk",
         "--constructor-calldata",
         "0x1",
         "0x1",
@@ -301,7 +301,7 @@ async fn test_happy_case_with_constructor_cairo_expression_calldata() {
         "--url",
         URL,
         "--fee-token",
-        "eth",
+        "strk",
         "--arguments",
         "0x420, 0x2137_u256",
         "--class-hash",
@@ -328,7 +328,7 @@ fn test_wrong_calldata() {
         "--url",
         URL,
         "--fee-token",
-        "eth",
+        "strk",
         "--class-hash",
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
         "--constructor-calldata",
@@ -360,7 +360,7 @@ async fn test_contract_not_declared() {
         "--class-hash",
         "0x1",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args);
@@ -387,7 +387,7 @@ fn test_contract_already_deployed() {
         "--salt",
         "0x1",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args);

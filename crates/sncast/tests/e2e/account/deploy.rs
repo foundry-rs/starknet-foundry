@@ -301,9 +301,7 @@ async fn test_too_low_max_fee() {
         "--max-fee",
         "1",
         "--fee-token",
-        "eth",
-        "--version",
-        "v1",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -427,9 +425,7 @@ pub async fn test_valid_no_max_fee() {
         "--name",
         "my_account",
         "--fee-token",
-        "eth",
-        "--version",
-        "v1",
+        "strk"
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -618,7 +614,7 @@ pub async fn test_keystore_key_mismatch() {
         "--max-fee",
         "10000000000000000",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -658,7 +654,7 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
         "--max-fee",
         "10000000000000000",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -698,7 +694,7 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
         "--max-fee",
         "10000000000000000",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -742,7 +738,7 @@ pub async fn test_deploy_keystore_no_status() {
         "--max-fee",
         "10000000000000000",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -799,7 +795,7 @@ pub async fn test_deploy_keystore_other_args() {
         "--max-fee",
         "99999999999999999",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
