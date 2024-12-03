@@ -18,6 +18,6 @@ array![array![1, 2], array![3, 4, 5], array![6]],
 ('a shortstring', 32_u32),
 true,
 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-'@
+'@ `
     --max-fee 99999999999999999 `
     --fee-token eth
