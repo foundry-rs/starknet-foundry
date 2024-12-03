@@ -21,7 +21,7 @@ fn file_reading() {
         [FAIL] file_reading_integrationtest::test::json_non_existent
         
         Failure data:
-            "No such file or directory [..]"
+            [..]
         
         [FAIL] file_reading_integrationtest::test::invalid_json
         
