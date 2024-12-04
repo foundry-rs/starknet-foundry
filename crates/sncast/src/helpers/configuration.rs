@@ -34,7 +34,7 @@ pub struct CastConfig {
     pub wait_params: ValidatedWaitParams,
 
     #[serde(
-        default,
+        default = "default_block_explorer",
         rename(serialize = "block-explorer", deserialize = "block-explorer")
     )]
     /// A block explorer service, used to display links to transaction details
@@ -46,6 +46,11 @@ pub struct CastConfig {
     )]
     /// Print links pointing to pages with transaction details in the chosen block explorer
     pub show_explorer_links: bool,
+}
+
+/// Default block explorer function
+fn default_block_explorer() -> Option<block_explorer::Service> {
+    Some(block_explorer::Service::default())
 }
 
 impl Default for CastConfig {
