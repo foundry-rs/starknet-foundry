@@ -167,6 +167,7 @@ fn declare_and_deploy_contract(
     }
 }
 
+#[must_use]
 pub fn prepare_accounts_file(temp: &TempDir) -> Utf8PathBuf {
     // Account from predeployed accounts in starknet-devnet-rs
     let accounts = r#"
@@ -189,6 +190,7 @@ pub fn prepare_accounts_file(temp: &TempDir) -> Utf8PathBuf {
     Utf8PathBuf::from_path_buf(accounts_path).expect("Invalid UTF-8 path")
 }
 
+#[must_use]
 pub fn setup_contracts_map(
     tempdir: &TempDir,
     account_json_path: &Utf8PathBuf,
