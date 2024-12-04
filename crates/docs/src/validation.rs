@@ -1,6 +1,7 @@
-use std::{fs, io, path::Path};
-
 use crate::snippet::{Snippet, SnippetConfig, SnippetType};
+use regex::Regex;
+use std::sync::LazyLock;
+use std::{fs, io, path::Path};
 
 const EXTENSION: Option<&str> = Some("md");
 
@@ -23,7 +24,18 @@ pub fn extract_snippets_from_file(
                 .name("config")
                 .map_or_else(String::new, |m| m.as_str().to_string());
             let command_match = caps.name("command")?;
-            let output = caps.name("output").map(|m| m.as_str().to_string());
+            let output = caps.name("output").map(|m| {
+                static GAS_RE: LazyLock<Regex> =
+                    LazyLock::new(|| Regex::new(r"gas: ~\d+").unwrap());
+                static EXECUTION_RESOURCES_RE: LazyLock<Regex> = LazyLock::new(|| {
+                    Regex::new(r"(steps|memory holes|builtins|syscalls): (\d+|\(.+\))").unwrap()
+                });
+
+                let output = GAS_RE.replace_all(m.as_str(), "gas: ~[..]").to_string();
+                EXECUTION_RESOURCES_RE
+                    .replace_all(output.as_str(), "${1}: [..]")
+                    .to_string()
+            });
 
             let config = if config_str.is_empty() {
                 SnippetConfig::default()
