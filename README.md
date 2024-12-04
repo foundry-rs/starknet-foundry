@@ -126,6 +126,8 @@ See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#in
 
 #### Install Scarb version >= 2.7.0
 
+Follow the instructions from [Scarb docs](https://docs.swmansion.com/scarb/download.html#windows).
+
 1. Download the release archive matching your CPU architecture
    from https://docs.swmansion.com/scarb/download.html#precompiled-packages.
 2. Extract it to a location where you would like to have Scarb installed. We recommend `%LOCALAPPDATA%\Programs\scarb`.
