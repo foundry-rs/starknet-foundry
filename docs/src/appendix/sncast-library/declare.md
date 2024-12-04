@@ -9,7 +9,7 @@ Declares a contract and returns `DeclareResult`.
 - `nonce` - nonce for declare transaction. If not provided, nonce will be set automatically.
 
 ```rust
-{{#include ../../../listings/sncast_library/scripts/declare/src/lib.cairo}}
+{{#include ../../../listings/declare/src/lib.cairo}}
 ```
 
 ## Returned Type

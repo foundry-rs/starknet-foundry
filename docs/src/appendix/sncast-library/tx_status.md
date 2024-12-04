@@ -7,7 +7,7 @@ Gets the status of a transaction using its hash and returns `TxStatusResult`.
 - `transaction_hash` - hash of the transaction
 
 ```rust
-{{#include ../../../listings/sncast_library/scripts/tx_status/src/lib.cairo}}
+{{#include ../../../listings/tx_status/src/lib.cairo}}
 ```
 
 Structures used by the command:

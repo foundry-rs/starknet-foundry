@@ -1,0 +1,17 @@
+[package]
+name = "basic_example"
+version = "0.1.0"
+edition = "2024_07"
+
+# See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
+
+[dependencies]
+starknet = "2.7.0"
+snforge_std = { path = "../../../snforge_std" }
+sncast_std = { path = "../../../sncast_std" }
+
+[[target.lib]]
+sierra = true
+
+[scripts]
+test = "snforge test"

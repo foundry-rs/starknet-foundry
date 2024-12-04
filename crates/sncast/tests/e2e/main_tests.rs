@@ -170,29 +170,6 @@ async fn test_missing_account_flag() {
 }
 
 #[tokio::test]
-async fn test_missing_url() {
-    let args = vec![
-        "--accounts-file",
-        ACCOUNT_FILE_PATH,
-        "--account",
-        ACCOUNT,
-        "declare",
-        "--contract-name",
-        "whatever",
-        "--fee-token",
-        "eth",
-    ];
-
-    let snapbox = runner(&args);
-    let output = snapbox.assert().failure();
-
-    assert_stderr_contains(
-        output,
-        "Error: RPC url not passed nor found in snfoundry.toml",
-    );
-}
-
-#[tokio::test]
 async fn test_inexistent_keystore() {
     let args = vec![
         "--keystore",

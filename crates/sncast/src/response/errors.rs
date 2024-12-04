@@ -4,9 +4,6 @@ use conversions::serde::serialize::CairoSerialize;
 
 use conversions::byte_array::ByteArray;
 
-use starknet::core::types::StarknetError::{
-    ContractError, TransactionExecutionError, ValidationFailure,
-};
 use starknet::core::types::{ContractErrorData, StarknetError, TransactionExecutionErrorData};
 use starknet::providers::ProviderError;
 use thiserror::Error;
@@ -111,15 +108,17 @@ impl From<StarknetError> for SNCastStarknetError {
             StarknetError::InvalidTransactionIndex => SNCastStarknetError::InvalidTransactionIndex,
             StarknetError::ClassHashNotFound => SNCastStarknetError::ClassHashNotFound,
             StarknetError::TransactionHashNotFound => SNCastStarknetError::TransactionHashNotFound,
-            ContractError(err) => SNCastStarknetError::ContractError(err),
-            TransactionExecutionError(err) => SNCastStarknetError::TransactionExecutionError(err),
+            StarknetError::ContractError(err) => SNCastStarknetError::ContractError(err),
+            StarknetError::TransactionExecutionError(err) => {
+                SNCastStarknetError::TransactionExecutionError(err)
+            }
             StarknetError::ClassAlreadyDeclared => SNCastStarknetError::ClassAlreadyDeclared,
             StarknetError::InvalidTransactionNonce => SNCastStarknetError::InvalidTransactionNonce,
             StarknetError::InsufficientMaxFee => SNCastStarknetError::InsufficientMaxFee,
             StarknetError::InsufficientAccountBalance => {
                 SNCastStarknetError::InsufficientAccountBalance
             }
-            ValidationFailure(err) => {
+            StarknetError::ValidationFailure(err) => {
                 SNCastStarknetError::ValidationFailure(ByteArray::from(err.as_str()))
             }
             StarknetError::CompilationFailed => SNCastStarknetError::CompilationFailed,

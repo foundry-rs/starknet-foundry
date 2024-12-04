@@ -63,7 +63,7 @@ pub struct StarknetRuntime<'a> {
     pub hint_handler: SyscallHintProcessor<'a>,
 }
 
-impl<'a> SyscallPtrAccess for StarknetRuntime<'a> {
+impl SyscallPtrAccess for StarknetRuntime<'_> {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
         &mut self.hint_handler.syscall_ptr
     }
@@ -73,7 +73,7 @@ impl<'a> SyscallPtrAccess for StarknetRuntime<'a> {
     }
 }
 
-impl<'a> ResourceTracker for StarknetRuntime<'a> {
+impl ResourceTracker for StarknetRuntime<'_> {
     fn consumed(&self) -> bool {
         self.hint_handler.context.vm_run_resources.consumed()
     }
@@ -91,7 +91,7 @@ impl<'a> ResourceTracker for StarknetRuntime<'a> {
     }
 }
 
-impl<'a> SignalPropagator for StarknetRuntime<'a> {
+impl SignalPropagator for StarknetRuntime<'_> {
     fn propagate_system_call_signal(
         &mut self,
         _selector: DeprecatedSyscallSelector,
@@ -121,7 +121,7 @@ fn fetch_cheatcode_input(
     Ok(inputs)
 }
 
-impl<'a> HintProcessorLogic for StarknetRuntime<'a> {
+impl HintProcessorLogic for StarknetRuntime<'_> {
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,

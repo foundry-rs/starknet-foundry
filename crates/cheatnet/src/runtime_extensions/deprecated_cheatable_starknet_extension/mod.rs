@@ -201,7 +201,7 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
     }
 }
 
-impl<'a> DeprecatedCheatableStarknetRuntimeExtension<'a> {
+impl DeprecatedCheatableStarknetRuntimeExtension<'_> {
     // crates/blockifier/src/execution/deprecated_syscalls/hint_processor.rs:233
     fn execute_syscall<Request, Response, ExecuteCallback>(
         &mut self,

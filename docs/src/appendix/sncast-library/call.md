@@ -11,7 +11,7 @@ Calls a contract and returns `CallResult`.
 - `calldata` - inputs to the function to be called.
 
 ```rust
-{{#include ../../../listings/sncast_library/scripts/call/src/lib.cairo}}
+{{#include ../../../listings/call/src/lib.cairo}}
 ```
 
 Structure used by the command:

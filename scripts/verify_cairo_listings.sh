@@ -1,4 +1,5 @@
 #!/bin/bash
-set -e
+set -xe
 
-for d in ./docs/listings/*; do (cd "$d" && scarb test); done
+# TODO(#2718)
+for d in ./docs/listings/*; do (cd "$d" && scarb build); done

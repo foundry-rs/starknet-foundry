@@ -25,19 +25,19 @@ The `url` field specifies the address of RPC provider.
 url = "http://example.com"
 ```
 
-#### `accounts_file`
+#### `accounts-file`
 
-The `accounts_file` field specifies the path to a file containing account information. 
+The `accounts-file` field specifies the path to a file containing account information. 
 If not provided, the default path is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json`.
 
 ```toml
 [sncast.myprofile]
-accounts_file = "path/to/accounts.json"
+accounts-file = "path/to/accounts.json"
 ```
 
 #### `account`
 
-The `account` field specifies which account from the `accounts_file` to use for transactions.
+The `account` field specifies which account from the `accounts-file` to use for transactions.
 
 ```toml
 [sncast.myprofile]
@@ -53,19 +53,27 @@ The `keystore` field specifies the path to the keystore file.
 keystore = "path/to/keystore"
 ```
 
-#### `wait_params`
+#### `wait-params`
 
-The `wait_params` field defines the waiting parameters for transactions. By default, timeout (in seconds) is set to `300` and retry_interval (in seconds) to `5`. 
+The `wait-params` field defines the waiting parameters for transactions. By default, timeout (in seconds) is set to `300` and retry-interval (in seconds) to `5`. 
 This means transactions will be checked every `5 seconds`, with a total of `60 attempts` before timing out.
 
 ```toml
 [sncast.myprofile]
-wait_params = { timeout = 300, retry-interval = 5 }
+wait-params = { timeout = 300, retry-interval = 5 }
 ```
 
-#### `block_explorer`
+#### `show-explorer-links`
+Enable printing links pointing to pages with transaction details in the chosen block explorer
 
-The `block_explorer` field specifies the block explorer service used to display links to transaction details. 
+```toml
+[sncast.myprofile]
+show-explorer-links = true
+```
+
+#### `block-explorer`
+
+The `block-explorer` field specifies the block explorer service used to display links to transaction details. 
 
 | Value     | URL                                    |
 |-----------|----------------------------------------|
@@ -77,7 +85,7 @@ The `block_explorer` field specifies the block explorer service used to display 
 
 ```toml
 [sncast.myprofile]
-block_explorer = "StarkScan"
+block-explorer = "StarkScan"
 ```
 
 #### Complete Example of `snfoundry.toml` File
@@ -85,11 +93,12 @@ block_explorer = "StarkScan"
 ```toml
 [sncast.myprofile1]
 url = "http://127.0.0.1:5050/"
-accounts_file = "../account-file"
+accounts-file = "../account-file"
 account = "mainuser"
 keystore = "~/keystore"
-wait_params = { timeout = 500, retry_interval = 10 }
-block_explorer = "StarkScan" 
+wait-params = { timeout = 500, retry-interval = 10 }
+block-explorer = "StarkScan"
+show-explorer-links = true
 
 [sncast.dev]
 url = "http://127.0.0.1:5056/rpc"

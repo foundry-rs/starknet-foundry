@@ -61,7 +61,6 @@ impl StarknetArtifactsFiles {
     }
 }
 
-// TODO(#2625) add unit tests
 fn unique_artifacts(
     artifact_representations: Vec<StarknetArtifactsRepresentation>,
     current_artifacts: &HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>,
@@ -97,8 +96,10 @@ fn compile_artifact_at_path(path: &Utf8Path) -> Result<StarknetContractArtifacts
 mod tests {
     use super::*;
     use crate::ScarbCommand;
+    use assert_fs::fixture::{FileWriteStr, PathChild};
     use camino::Utf8PathBuf;
     use deserialized::{StarknetArtifacts, StarknetContract, StarknetContractArtifactPaths};
+    use indoc::indoc;
 
     #[test]
     fn test_unique_artifacts() {
@@ -156,6 +157,19 @@ mod tests {
     #[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
     fn test_load_contracts_artifacts() {
         let temp = crate::tests::setup_package("basic_package");
+        let tests_dir = temp.join("tests");
+        fs::create_dir(&tests_dir).unwrap();
+
+        temp.child(tests_dir.join("test.cairo"))
+            .write_str(indoc!(
+                r"
+                    #[test]
+                    fn mock_test() {
+                        assert!(true);
+                    }
+                "
+            ))
+            .unwrap();
 
         ScarbCommand::new_with_stdio()
             .current_dir(temp.path())
@@ -184,13 +198,13 @@ mod tests {
 
         // Load the contracts
         let result = artifacts_files.load_contracts_artifacts();
+        println!("{result:?}");
 
         // Ensure no errors and non-empty result
         assert!(result.is_ok());
 
         // Assert the Contract Artifacts are loaded.
         let artifacts_map = result.unwrap();
-        println!("{:?}", artifacts_map);
         assert!(!artifacts_map.is_empty());
         assert!(artifacts_map.contains_key("ERC20"));
         assert!(artifacts_map.contains_key("HelloStarknet"));

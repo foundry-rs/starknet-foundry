@@ -221,7 +221,7 @@ For more details, see [init command](../appendix/sncast/script/init.md).
 This example shows how to call an already deployed contract. Please find full example with contract deployment [here](#full-example-with-contract-deployment).
 
 ```rust
-{{#include ../../listings/sncast_overview/scripts/basic_example/src/basic_example.cairo}}
+{{#include ../../listings/basic_example/src/basic_example.cairo}}
 ```
 
 The script should be included in a Scarb package. The directory structure and config for this example looks like this:
@@ -276,13 +276,13 @@ status: success
 This example script declares, deploys and interacts with an example `MapContract`:
 
 ```rust
-{{#include ../../listings/sncast_overview/crates/map3/src/lib.cairo}}
+{{#include ../../listings/map3/src/lib.cairo}}
 ```
 
 We prepare a script:
 
 ```rust
-{{#include ../../listings/sncast_overview/scripts/full_example/src/full_example.cairo}}
+{{#include ../../listings/full_example/src/full_example.cairo}}
 ```
 
 The script should be included in a Scarb package. The directory structure and config for this example looks like this:
@@ -414,7 +414,7 @@ Script errors implement `Debug` trait, allowing the error to be printed to stdou
 ### Minimal example with `assert!` and `println!`
 
 ```rust
-{{#include ../../listings/sncast_overview/scripts/error_handling/src/error_handling.cairo}}
+{{#include ../../listings/error_handling/src/error_handling.cairo}}
 ```
 
 More on deployment scripts errors [here](../appendix/sncast-library/errors.md).

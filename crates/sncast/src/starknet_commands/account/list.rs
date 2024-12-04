@@ -115,23 +115,23 @@ fn print_as_json(networks: &HashMap<String, AccountDataRepresentation>) -> anyho
     Ok(())
 }
 
-fn print_if_some<T: Display>(title: &str, item: &Option<T>) {
-    if let Some(ref item) = item {
+fn print_if_some<T: Display>(title: &str, item: Option<&T>) {
+    if let Some(item) = item {
         println!("  {title}: {item}");
     }
 }
 
 fn print_pretty(data: &AccountDataRepresentation, name: &str) {
     println!("- {name}:");
-    print_if_some("network", &data.network);
-    print_if_some("private key", &data.private_key);
+    print_if_some("network", data.network.as_ref());
+    print_if_some("private key", data.private_key.as_ref());
     println!("  public key: {}", data.public_key);
-    print_if_some("address", &data.address);
-    print_if_some("salt", &data.salt);
-    print_if_some("class hash", &data.class_hash);
-    print_if_some("deployed", &data.deployed);
-    print_if_some("legacy", &data.legacy);
-    print_if_some("type", &data.account_type);
+    print_if_some("address", data.address.as_ref());
+    print_if_some("salt", data.salt.as_ref());
+    print_if_some("class hash", data.class_hash.as_ref());
+    print_if_some("deployed", data.deployed.as_ref());
+    print_if_some("legacy", data.legacy.as_ref());
+    print_if_some("type", data.account_type.as_ref());
     println!();
 }
 

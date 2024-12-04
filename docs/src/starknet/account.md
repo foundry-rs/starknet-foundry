@@ -61,11 +61,12 @@ You can do it both by sending tokens from another starknet account or by bridgin
 
 ```shell
 $ sncast \
-	account deploy \
+    account deploy \
     --url http://127.0.0.1:5050 \
 	--name some-name \
 	--fee-token strk \
 	--max-fee 9999999999999
+```
 
 <details>
 <summary>Output:</summary>
@@ -150,6 +151,7 @@ $ sncast \
     --name some-name \
     --url http://127.0.0.1:5050 \
     --class-hash 0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6
+    --type oz
 ```
 
 #### [`account create`](../appendix/sncast/account/create.md) With Salt Argument

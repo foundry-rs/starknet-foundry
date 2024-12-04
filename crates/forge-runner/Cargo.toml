@@ -19,6 +19,7 @@ cairo-lang-sierra-type-size.workspace = true
 cairo-lang-sierra-gas.workspace = true
 cairo-lang-sierra-ap-change.workspace = true
 cairo-lang-test-plugin.workspace = true
+cairo-lang-starknet-classes.workspace = true
 cairo-annotations.workspace = true
 starknet-types-core.workspace = true
 starknet_api.workspace = true

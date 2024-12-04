@@ -15,6 +15,7 @@ async fn test_show_config_from_snfoundry_toml() {
         accounts_file_path: ../account-file
         chain_id: alpha-sepolia
         rpc_url: {}
+        show_explorer_links: true
         wait_retry_interval: 5
         wait_timeout: 300
     ", URL});
@@ -44,6 +45,7 @@ async fn test_show_config_from_cli() {
         chain_id: alpha-sepolia
         keystore: ../keystore
         rpc_url: {}
+        show_explorer_links: true
         wait_retry_interval: 1
         wait_timeout: 2
     ", URL});
@@ -63,6 +65,7 @@ async fn test_show_config_from_cli_and_snfoundry_toml() {
         chain_id: alpha-sepolia
         profile: profile2
         rpc_url: {}
+        show_explorer_links: true
         wait_retry_interval: 5
         wait_timeout: 300
     ", URL});
@@ -82,6 +85,7 @@ async fn test_show_config_when_no_keystore() {
         chain_id: alpha-sepolia
         profile: profile4
         rpc_url: {}
+        show_explorer_links: true
         wait_retry_interval: 5
         wait_timeout: 300
     ", URL});
@@ -101,7 +105,26 @@ async fn test_show_config_when_keystore() {
         keystore: ../keystore
         profile: profile3
         rpc_url: {}
+        show_explorer_links: true
         wait_retry_interval: 5
         wait_timeout: 300
     ", URL});
+}
+
+#[tokio::test]
+async fn test_show_config_no_url() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let args = vec!["--profile", "profile6", "show-config"];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_eq(formatdoc! {r"
+        command: show-config
+        account: user1
+        accounts_file_path: /path/to/account.json
+        profile: profile6
+        show_explorer_links: false
+        wait_retry_interval: 10
+        wait_timeout: 500
+    "});
 }

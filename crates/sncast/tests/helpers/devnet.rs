@@ -11,6 +11,7 @@ use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 use url::Url;
 
+#[allow(clippy::zombie_processes)]
 #[cfg(test)]
 #[ctor]
 fn start_devnet() {
@@ -75,6 +76,7 @@ fn start_devnet() {
     rt.block_on(deploy_braavos_account());
 }
 
+#[allow(clippy::zombie_processes)]
 #[cfg(test)]
 #[dtor]
 fn stop_devnet() {

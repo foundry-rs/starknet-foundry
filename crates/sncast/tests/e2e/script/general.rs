@@ -135,7 +135,7 @@ async fn test_incompatible_sncast_std_version() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        [WARNING] Package sncast_std version does not meet the recommended version requirement =0.33.0, it might result in unexpected behaviour
+        [WARNING] Package sncast_std version does not meet the recommended version requirement =0.34.0, it might result in unexpected behaviour
         ...
     "});
 }

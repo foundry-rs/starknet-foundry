@@ -2,7 +2,7 @@
 Examples are based on the following `SpyEventsChecker` contract implementation:
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/testing_events/src/contract.cairo}}
+{{#include ../../listings/testing_events/src/contract.cairo}}
 ```
 
 ## Asserting emission with `assert_emitted` method
@@ -11,7 +11,7 @@ This is the simpler way, in which you don't have to fetch the events explicitly.
 See the below code for reference:
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/testing_events/tests/assert_emitted.cairo}}
+{{#include ../../listings/testing_events/tests/assert_emitted.cairo}}
 ```
 
 Let's go through the code:
@@ -52,7 +52,7 @@ Simply call `get_events()` on your `EventSpy` and access `events`  field on the 
 Then, you can access the events and assert data by yourself.
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/testing_events/tests/assert_manually.cairo}}
+{{#include ../../listings/testing_events/tests/assert_manually.cairo}}
 ```
 
 Let's go through important parts of the provided code:
@@ -75,7 +75,7 @@ Sometimes, when you assert the events manually, you might not want to get all th
 a particular address. You can address that by using the method `emitted_by` on the `Events` structure.
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/testing_events/tests/filter.cairo}}
+{{#include ../../listings/testing_events/tests/filter.cairo}}
 ```
 
 `events_from_first_address` has events emitted by the first contract only.
@@ -89,13 +89,13 @@ They can also be asserted with `spy.assert_emitted` method.
 Let's extend our `SpyEventsChecker` with `emit_event_with_syscall` method:
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/testing_events/src/syscall_dummy.cairo}}
+{{#include ../../listings/testing_events/src/syscall_dummy.cairo}}
 ```
 
 And add a test for it:
 
 ```rust
-{{#include ../../listings/snforge_overview/crates/testing_events/tests/syscall.cairo}}
+{{#include ../../listings/testing_events/tests/syscall.cairo}}
 ```
 
 Using `Event` struct from the `snforge_std` library we can easily assert nonstandard events.
