@@ -30,7 +30,7 @@ pub struct DeprecatedStarknetRuntime<'a> {
     pub hint_handler: DeprecatedSyscallHintProcessor<'a>,
 }
 
-impl<'a> SyscallPtrAccess for DeprecatedStarknetRuntime<'a> {
+impl SyscallPtrAccess for DeprecatedStarknetRuntime<'_> {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
         &mut self.hint_handler.syscall_ptr
     }
@@ -46,7 +46,7 @@ impl<'a> SyscallPtrAccess for DeprecatedStarknetRuntime<'a> {
     }
 }
 
-impl<'a> ResourceTracker for DeprecatedStarknetRuntime<'a> {
+impl ResourceTracker for DeprecatedStarknetRuntime<'_> {
     fn consumed(&self) -> bool {
         self.hint_handler.context.vm_run_resources.consumed()
     }
@@ -64,7 +64,7 @@ impl<'a> ResourceTracker for DeprecatedStarknetRuntime<'a> {
     }
 }
 
-impl<'a> HintProcessorLogic for DeprecatedStarknetRuntime<'a> {
+impl HintProcessorLogic for DeprecatedStarknetRuntime<'_> {
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,

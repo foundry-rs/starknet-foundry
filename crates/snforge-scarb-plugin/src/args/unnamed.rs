@@ -31,6 +31,6 @@ impl<'a> UnnamedArgs<'a> {
     ) -> Result<&[(usize, &'a Expr); N], Diagnostic> {
         self.as_slice()
             .try_into()
-            .map_err(|_| T::error(format!("expected {} arguments, got: {}", N, self.len())))
+            .map_err(|_| T::error(format!("expected arguments: {}, got: {}", N, self.len())))
     }
 }

@@ -124,9 +124,9 @@ pub fn write_account_to_accounts_file(
 }
 
 pub fn add_created_profile_to_configuration(
-    profile: &Option<String>,
+    profile: Option<&str>,
     cast_config: &CastConfig,
-    path: &Option<Utf8PathBuf>,
+    path: Option<&Utf8PathBuf>,
 ) -> Result<()> {
     if !load_config::<CastConfig>(path, profile)
         .unwrap_or_default()
@@ -135,7 +135,7 @@ pub fn add_created_profile_to_configuration(
     {
         bail!(
             "Failed to add profile = {} to the snfoundry.toml. Profile already exists",
-            profile.as_ref().unwrap_or(&"default".to_string())
+            profile.unwrap_or("default")
         );
     }
 
@@ -157,9 +157,7 @@ pub fn add_created_profile_to_configuration(
         }
         let mut profile_config = toml::value::Table::new();
         profile_config.insert(
-            profile
-                .clone()
-                .unwrap_or_else(|| cast_config.account.clone()),
+            profile.map_or_else(|| cast_config.account.clone(), ToString::to_string),
             Value::Table(new_profile),
         );
 
@@ -208,9 +206,9 @@ mod tests {
             ..Default::default()
         };
         let res = add_created_profile_to_configuration(
-            &Some(String::from("some-name")),
+            Some(&String::from("some-name")),
             &config,
-            &Some(path.clone()),
+            Some(&path.clone()),
         );
         assert!(res.is_ok());
 
@@ -233,9 +231,9 @@ mod tests {
             ..Default::default()
         };
         let res = add_created_profile_to_configuration(
-            &Some(String::from("default")),
+            Some(&String::from("default")),
             &config,
-            &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
         );
         assert!(res.is_err());
     }

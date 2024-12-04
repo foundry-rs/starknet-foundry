@@ -26,7 +26,7 @@ Note that the name after `mod` will be used as the contract name for testing pur
 
 ## Writing Tests
 
-Let's write a test that will deploy the `HelloStarknet` contract and call some functions.
+Let's write a test that will deploy the `SimpleContract` contract and call some functions.
 
 ```rust
 {{#include ../../listings/testing_smart_contracts_writing_tests/tests/simple_contract.cairo}}
@@ -36,7 +36,7 @@ Let's write a test that will deploy the `HelloStarknet` contract and call some f
 >
 > Notice that the arguments to the contract's constructor (the `deploy`'s `calldata` argument) need to be serialized with `Serde`.
 >
-> `HelloStarknet` contract has no constructor, so the calldata remains empty in the example above.
+> `SimpleContract` contract has no constructor, so the calldata remains empty in the example above.
 
 ```shell
 $ snforge test

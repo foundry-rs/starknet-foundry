@@ -55,10 +55,10 @@ cairo-vm = "1.0.0-rc3"
 cairo-annotations = "0.1.0"
 dirs = "5.0.1"
 starknet-types-core = { version = "0.1.7", features = ["hash", "prime-bigint"] }
-anyhow = "1.0.92"
+anyhow = "1.0.93"
 assert_fs = "1.1.2"
 camino = { version = "1.1.9", features = ["serde1"] }
-clap = { version = "4.5.20", features = ["derive"] }
+clap = { version = "4.5.21", features = ["derive"] }
 console = "0.15.8"
 include_dir = "0.7.4"
 indoc = "2"
@@ -66,15 +66,15 @@ itertools = "0.12.1"
 num-traits = "0.2.19"
 rayon = "1.10"
 regex = "1.11.1"
-serde = { version = "1.0.214", features = ["derive"] }
-serde_json = "1.0.132"
+serde = { version = "1.0.215", features = ["derive"] }
+serde_json = "1.0.133"
 starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "660a732" }
 starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "660a732" }
-tempfile = "3.13.0"
-thiserror = "1.0.67"
-ctor = "0.2.8"
-url = { "version" = "2.5.3", "features" = ["serde"] }
-tokio = { version = "1.41.0", features = ["full"] }
+tempfile = "3.14.0"
+thiserror = "1.0.69"
+ctor = "0.2.9"
+url = { "version" = "2.5.4", "features" = ["serde"] }
+tokio = { version = "1.41.1", features = ["full"] }
 tokio-util = "0.7.11"
 futures = "0.3.31"
 num-bigint = { version = "0.4.6", features = ["rand"] }
@@ -109,10 +109,10 @@ ark-secp256k1 = "0.4.0"
 ark-secp256r1 = "0.4.0"
 openssl = { version = "0.10", features = ["vendored"] }
 toml_edit = "0.22.22"
-axum = "0.7.7"
+axum = "0.7.9"
 lazy_static = "1.5.0"
 fs2 = "0.4.3"
-flate2 = "1.0.34"
+flate2 = "1.0.35"
 k256 = { version = "0.13.4", features = ["sha256", "ecdsa", "serde"] }
 p256 = { version = "0.13.2", features = ["sha256", "ecdsa", "serde"] }
 glob = "0.3.1"
@@ -122,5 +122,5 @@ fs4 = "0.7"
 async-trait = "0.1.83"
 serde_path_to_error = "0.1.16"
 wiremock = "0.6.0"
-const-hex = "1.13.1"
-indicatif = "0.17.8"
+const-hex = "1.14.0"
+indicatif = "0.17.9"
