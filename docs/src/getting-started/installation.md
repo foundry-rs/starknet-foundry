@@ -3,7 +3,7 @@
 Starknet Foundry is easy to install on Linux, macOS and Windows.
 In this section, we will walk through the process of installing Starknet Foundry.
 
-### Requirements
+## Requirements
 
 > 📝 **Note**
 > Ensure all requirements are installed and follow the required minimum versions.
@@ -22,9 +22,9 @@ all installed and added to your `PATH` environment variable.
 > `Universal-Sierra-Compiler` will be automatically installed if you use `asdf` or `snfoundryup`.
 > You can also create `UNIVERSAL_SIERRA_COMPILER` env var to make it visible for `snforge`.
 
-### Installation on Linux and macOS
+## Installation on Linux and macOS
 
-#### Installation via [asdf](https://asdf-vm.com/)
+### Installation via [asdf](https://asdf-vm.com/)
 
 First, add the Starknet Foundry plugin to asdf:
 
@@ -32,7 +32,7 @@ First, add the Starknet Foundry plugin to asdf:
 $ asdf plugin add starknet-foundry
 ```
 
-#### Install via `snfoundryup`
+### Install via `snfoundryup`
 
 Snfoundryup is the Starknet Foundry toolchain installer.
 
@@ -52,7 +52,7 @@ See `snfoundryup --help` for more options.
 
 To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
 
-### Installation on Windows
+## Installation on Windows
 
 As for now, Starknet Foundry on Windows needs manual installation, but necessary steps are kept to minimum:
 
@@ -80,7 +80,7 @@ As for now, Starknet Foundry on Windows needs manual installation, but necessary
    $ sncast --version
    ```
 
-### Universal-Sierra-Compiler update
+## Universal-Sierra-Compiler update
 
 If you would like to bump the USC manually (e.g. when the new Sierra version is released) you can do it by running:
 
@@ -90,7 +90,7 @@ $ curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-co
 
 ## Common Errors
 
-### No version set
+### No Version Set
 
 Users may encounter this error when trying to use `snforge` or `sncast` without setting a version:
 
@@ -108,7 +108,7 @@ $ asdf global starknet-foundry <version>
 For additional information on asdf version management, see
 the [asdf](https://asdf-vm.com/guide/getting-started.html#_6-set-a-version)
 
-### Invalid Rust version
+### Invalid Rust Version
 
 When running any `snforge` command, error similar to this is displayed
 
