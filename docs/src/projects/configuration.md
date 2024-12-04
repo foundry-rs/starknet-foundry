@@ -175,4 +175,4 @@ url = "$NODE_URL"
 # ...
 ```
 
-Variable value are automatically resolved to numbers and booleans (strings `true`, `false`) if it is possible.
+Variable values are automatically resolved to numbers and booleans (strings `true`, `false`) where possible.
