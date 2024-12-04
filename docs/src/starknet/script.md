@@ -255,7 +255,7 @@ sncast_std = "0.33.0"
 
 To run the script, do:
 
-<!-- TODO: Add script example and remove ignoring output -->
+<!-- TODO(#2736) -->
 <!-- { "ignored_output": true } -->
 ```shell
 $ sncast \
