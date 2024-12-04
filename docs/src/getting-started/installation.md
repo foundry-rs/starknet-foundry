@@ -32,24 +32,6 @@ First, add the Starknet Foundry plugin to asdf:
 $ asdf plugin add starknet-foundry
 ```
 
-##### Common Error
-
-Users may encounter this error when trying to use `snforge` or `sncast` without setting a version:
-
-```shell
-No version is set for command snforge
-Consider adding one of the following versions in your config file at starknet-foundry 0.32.0
-```
-
-This error indicates that `Starknet Foundry` version is unset. To resolve it, set the version globally using asdf:
-
-```shell
-$ asdf global starknet-foundry <version>
-```
-
-For additional information on asdf version management, see
-the [asdf](https://asdf-vm.com/guide/getting-started.html#_6-set-a-version)
-
 #### Install via `snfoundryup`
 
 Snfoundryup is the Starknet Foundry toolchain installer.
@@ -104,6 +86,56 @@ If you would like to bump the USC manually (e.g. when the new Sierra version is 
 
 ```shell
 $ curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
+```
+
+## Common Errors
+
+### No version set
+
+Users may encounter this error when trying to use `snforge` or `sncast` without setting a version:
+
+```shell
+No version is set for command snforge
+Consider adding one of the following versions in your config file at starknet-foundry 0.32.0
+```
+
+This error indicates that `Starknet Foundry` version is unset. To resolve it, set the version globally using asdf:
+
+```shell
+$ asdf global starknet-foundry <version>
+```
+
+For additional information on asdf version management, see
+the [asdf](https://asdf-vm.com/guide/getting-started.html#_6-set-a-version)
+
+### Invalid Rust version
+
+When running any `snforge` command, error similar to this is displayed
+
+```shell
+Compiling snforge_scarb_plugin v0.34.0
+error: package `snforge_scarb_plugin v0.34.0 cannot be built because it requires rustc 1.80.1 or newer, while the currently active rustc version is 1.76.0
+```
+
+This indicates incorrect Rust version is installed or set.
+
+Verify if rust version >= 1.80.1 is installed
+
+```shell
+$ rustc --version
+1.80.1
+```
+
+If the version is incorrect or the error persists, try changing the global version of Rust
+
+```shell
+$ rustup default stable
+```
+
+and local version of Rust
+
+```shell
+$ rustup override set stable
 ```
 
 ## How to build Starknet Foundry from source code
