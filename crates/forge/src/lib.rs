@@ -163,9 +163,6 @@ pub enum ExitStatus {
 pub fn main_execution() -> Result<ExitStatus> {
     let cli = Cli::parse();
 
-    ScarbCommand::new().ensure_available()?;
-    UniversalSierraCompilerCommand::ensure_available()?;
-
     let mut requirements_checker = RequirementsChecker::new();
     requirements_checker.add_requirement(Requirement {
         name: "Rust".to_string(),
