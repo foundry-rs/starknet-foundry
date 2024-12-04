@@ -11,9 +11,9 @@ In this section, we will walk through the process of installing Starknet Foundry
 
 To use Starknet Foundry, you need:
 
-- [Scarb](https://docs.swmansion.com/scarb/download.html)
+- [Scarb](https://docs.swmansion.com/scarb/download.html) version >= 2.7.0
 - [Universal-Sierra-Compiler](https://github.com/software-mansion/universal-sierra-compiler)
-- [Rust](https://www.rust-lang.org/tools/install) >= 1.80.1
+- [Rust](https://www.rust-lang.org/tools/install) version >= 1.80.1
 
 all installed and added to your `PATH` environment variable.
 
