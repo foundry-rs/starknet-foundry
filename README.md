@@ -48,11 +48,11 @@ rustc --version
 
 See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
 
-#### Install ASDF
+#### Install asdf
 
 Follow the instructions from [asdf docs](https://asdf-vm.com/guide/getting-started.html#getting-started).
 
-To verify that ASDF was correctly installed, run
+To verify that asdf was correctly installed, run
 
 ```shell
 asdf --version
@@ -60,7 +60,7 @@ asdf --version
 
 #### Install Scarb
 
-First, add Scarb plugin to ASDF
+First, add Scarb plugin to asdf
 
 ```shell
 asdf plugin add scarb
@@ -80,7 +80,7 @@ scarb --version
 
 #### Install Starknet Foundry
 
-First, add Starknet Foundry plugin to ASDF
+First, add Starknet Foundry plugin to asdf
 
 ```shell
 asdf plugin add starknet-foundry
