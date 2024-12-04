@@ -195,7 +195,7 @@ fn test_docs_snippets() {
                 .get(contract_name.as_str())
                 .unwrap_or_else(|| panic!("Contract {contract_name} not found"));
 
-            // In case of invoke/call/verify, we need to replace contract address insnippet's
+            // In case of invoke/call/verify, we need to replace contract address in snippet's
             // args with prepared contract's address
             if is_command(&args, &["invoke", "call", "verify"]) {
                 swap_next_element(&mut args, "--contract-address", &contract.contract_address);
