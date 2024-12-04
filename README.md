@@ -138,7 +138,8 @@ scarb --version
 1. Download the release archive matching your CPU architecture
    from https://github.com/foundry-rs/starknet-foundry/releases/latest. Look for package with `windows` in the name e.g.
    `starknet-foundry-v0.34.0-x86_64-pc-windows-msvc.zip`.
-2. Extract it to a location where you would like to have Starknet Foundry installed. We recommend `%LOCALAPPDATA%\Programs\snfoundry`.
+2. Extract it to a location where you would like to have Starknet Foundry installed. We recommend
+   `%LOCALAPPDATA%\Programs\snfoundry`.
 3. From this directory, get the full path to `snfoundry\bin` and add it to PATH.
    See [this article](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) for instructions on
    Windows 10 and 11.
@@ -154,6 +155,16 @@ or
 ```shell
 sncast --version
 ```
+
+## FAQ
+
+> Why do I have to install Rust?
+
+`snforge` relies on Scarb's [_procedural macros_](https://github.com/foundry-rs/starknet-foundry/issues/2299) to create
+`snforge_scarb_plugin` which is a part of `snforge_std`.
+This plugin is required for `snforge` test to work.
+Currently, _procedural macros_ require Rust installation to function.
+This will be changed in the upcoming versions of Scarb.
 
 ## Roadmap
 
