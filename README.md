@@ -34,7 +34,7 @@ Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/
 
 ### Linux and MacOS
 
-#### Install Rust >= 1.80.1
+#### Install Rust version >= 1.80.1
 
 ```shell
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -45,6 +45,8 @@ To verify that correct Rust version was installed, run
 ```shell
 rustc --version
 ```
+
+and verify that version is >= 1.80.1
 
 See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
 
@@ -58,7 +60,7 @@ To verify that asdf was installed, run
 asdf --version
 ```
 
-#### Install Scarb
+#### Install Scarb version >= 2.7.0
 
 First, add Scarb plugin to asdf
 
@@ -77,6 +79,8 @@ To verify that Scarb was installed, run
 ```shell
 scarb --version
 ```
+
+and verify that version is >= 2.7.0
 
 #### Install Starknet Foundry
 
@@ -106,7 +110,7 @@ sncast --version
 
 ### Windows
 
-#### Install Rust >= 1.80.1
+#### Install Rust version >= 1.80.1
 
 Go to https://www.rust-lang.org/tools/install and follow the installation instructions.
 
@@ -116,9 +120,11 @@ To verify that correct Rust version was installed, run
 rustc --version
 ```
 
+and verify that version is >= 1.80.1
+
 See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
 
-#### Install Scarb
+#### Install Scarb version >= 2.7.0
 
 1. Download the release archive matching your CPU architecture
    from https://docs.swmansion.com/scarb/download.html#precompiled-packages.
@@ -132,6 +138,8 @@ To verify that Scarb was installed, run
 ```shell
 scarb --version
 ```
+
+and verify that version is >= 2.7.0
 
 #### Install Starknet Foundry
 
