@@ -3,27 +3,27 @@ use regex::Regex;
 use semver::Version;
 use std::process::Command;
 
-type VersionParser = Box<dyn Fn(&str) -> Result<Version>>;
+type VersionParser<'a> = dyn Fn(&str) -> Result<Version> + 'a;
 
-pub struct Requirement {
+pub struct Requirement<'a> {
     pub name: String,
     pub command: String,
-    pub version_parser: VersionParser,
+    pub version_parser: Box<VersionParser<'a>>,
     pub minimal_version: Version,
 }
 
-pub struct RequirementsChecker {
-    requirements: Vec<Requirement>,
+pub struct RequirementsChecker<'a> {
+    requirements: Vec<Requirement<'a>>,
 }
 
-impl RequirementsChecker {
+impl<'a> RequirementsChecker<'a> {
     pub(crate) fn new() -> Self {
         Self {
             requirements: Vec::new(),
         }
     }
 
-    pub fn add_requirement(&mut self, requirement: Requirement) {
+    pub fn add_requirement(&mut self, requirement: Requirement<'a>) {
         self.requirements.push(requirement);
     }
 
@@ -58,7 +58,7 @@ impl RequirementsChecker {
     }
 }
 
-pub fn create_version_parser<'a>(name: &'a str, pattern: &'a str) -> VersionParser {
+pub fn create_version_parser<'a>(name: &'a str, pattern: &'a str) -> Box<VersionParser<'a>> {
     let regex = Regex::new(pattern).unwrap();
     Box::new(move |raw_version: &str| {
         let matches = regex.captures(raw_version).with_context(|| {

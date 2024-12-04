@@ -1,8 +1,7 @@
 use crate::compatibility_check::{create_version_parser, Requirement, RequirementsChecker};
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge_runner::CACHE_DIR;
-use regex::Regex;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
@@ -171,14 +170,14 @@ pub fn main_execution() -> Result<ExitStatus> {
     requirements_checker.add_requirement(Requirement {
         name: "Rust".to_string(),
         command: "rustc --version".to_string(),
-        version_parser: create_version_parser("Rust", r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)")?,
+        version_parser: create_version_parser("Rust", r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)"),
         minimal_version: Version::new(1, 81, 0),
     });
     requirements_checker.add_requirement(Requirement {
         name: "Scarb".to_string(),
         command: "scarb --version".to_string(),
         minimal_version: Version::new(2, 9, 0),
-        version_parser: create_version_parser("Scarb", r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)")?,
+        version_parser: create_version_parser("Scarb", r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)"),
     });
     requirements_checker.add_requirement(Requirement {
         name: "Universal Sierra Compiler".to_string(),
@@ -187,7 +186,7 @@ pub fn main_execution() -> Result<ExitStatus> {
         version_parser: create_version_parser(
             "Universal Sierra Compiler",
             r"universal-sierra-compiler (?<version>[0-9]+.[0-9]+.[0-9]+)",
-        )?,
+        ),
     });
     requirements_checker.validate()?;
 
