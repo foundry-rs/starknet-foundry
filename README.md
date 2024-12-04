@@ -166,6 +166,16 @@ This plugin is required for `snforge` test to work.
 Currently, _procedural macros_ require Rust installation to function.
 This will be changed in the upcoming versions of Scarb.
 
+> Why `scarb test` isn't running my tests correctly?
+
+By default, `scarb test` doesn't use `snforge` to run tests, and it needs to be configured.
+Make sure to include this section in `Scarb.toml`
+
+```toml
+[scripts]
+test = "snforge test"
+```
+
 ## Roadmap
 
 Starknet Foundry is under active development! Expect a lot of new features to appear soon! 🔥
