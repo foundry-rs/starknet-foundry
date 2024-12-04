@@ -235,8 +235,6 @@ jobs:
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests
         run: cargo test --release -p sncast
-      - name: Run test in debug profile
-        run: cargo test -p sncast test_happy_case_common_arguments_after_subcommand
 
   test-conversions:
     name: Test Conversions
