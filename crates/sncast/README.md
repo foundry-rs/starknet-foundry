@@ -34,7 +34,7 @@ All subcommand usages are shown for two scenarios - when all necessary arguments
 <!-- TODO(#2736) -->
 <!-- { "ignored": true } -->
 ```shell
-$ sncast --account my_user \
+$ sncast --account my_account \
     declare \
     --contract-name HelloSncast \
     --fee-token strk
@@ -78,7 +78,7 @@ transaction_hash: [..]
 <!-- TODO(#2736) -->
 <!-- { "contract_name": "HelloSncast", "ignored": true } -->
 ```shell
-$ sncast --account my_user \
+$ sncast --account my_account \
     deploy --class-hash 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
     --url http://127.0.0.1:5055 \
     --fee-token strk
@@ -123,7 +123,7 @@ transaction_hash: [..]
 <!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast \
-    --account my_user \
+    --account my_account \
     invoke \
     --contract-address 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
     --function "sum_numbers" \
