@@ -32,7 +32,7 @@ pub fn assert_valid_snippet(condition: bool, snippet: &Snippet, err_message: &st
 pub fn print_snippets_validation_summary(snippets: &[Snippet], tool_name: &str) {
     let validated_snippets_count = snippets
         .iter()
-        .filter(|snippet| !snippet.config.ignored.unwrap_or(false))
+        .filter(|snippet| !snippet.config.ignored)
         .count();
     let ignored_snippets_count = snippets.len() - validated_snippets_count;
 

@@ -174,7 +174,7 @@ fn test_docs_snippets() {
     let contracts = setup_contracts_map(&tempdir, &accounts_json_path);
 
     for snippet in &snippets {
-        if snippet.config.ignored.unwrap_or(false) {
+        if snippet.config.ignored {
             print_ignored_snippet_message(snippet);
             continue;
         }
@@ -209,7 +209,7 @@ fn test_docs_snippets() {
         let snapbox = runner(&args).current_dir(tempdir.path());
         let output = snapbox.assert().success();
 
-        if snippet.output.is_some() && !snippet.config.ignored_output.unwrap_or(false) {
+        if snippet.output.is_some() && !snippet.config.ignored_output {
             assert_stdout_contains(output, snippet.output.as_ref().unwrap());
         }
     }
