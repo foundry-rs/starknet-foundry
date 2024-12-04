@@ -96,7 +96,8 @@ Users may encounter this error when trying to use `snforge` or `sncast` without 
 
 ```shell
 No version is set for command snforge
-Consider adding one of the following versions in your config file at starknet-foundry 0.32.0
+Consider adding one of the following versions in your config file at $HOME/.tool_versions
+starknet-foundry 0.32.0
 ```
 
 This error indicates that `Starknet Foundry` version is unset. To resolve it, set the version globally using asdf:
