@@ -51,8 +51,7 @@ pub fn print_ignored_snippet_message(snippet: &Snippet) {
 fn get_canonical_path(relative_path: &str) -> Result<String, Box<dyn std::error::Error>> {
     Ok(Utf8PathBuf::from_str(relative_path)?
         .canonicalize_utf8()?
-        .to_string()
-        .replace('\\', "/"))
+        .to_string())
 }
 
 pub fn update_scarb_toml_dependencies(temp: &TempDir) -> Result<(), Box<dyn std::error::Error>> {
