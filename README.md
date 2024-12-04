@@ -52,7 +52,7 @@ See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#in
 
 Follow the instructions from [asdf docs](https://asdf-vm.com/guide/getting-started.html#getting-started).
 
-To verify that asdf was correctly installed, run
+To verify that asdf was installed, run
 
 ```shell
 asdf --version
@@ -72,7 +72,7 @@ Install Scarb
 asdf install scarb latest
 ```
 
-To verify that Scarb was correctly installed, run
+To verify that Scarb was installed, run
 
 ```shell
 scarb --version
@@ -92,7 +92,7 @@ Install Starknet Foundry
 asdf install starknet-foundry latest
 ```
 
-To verify that Starknet Foundry was correctly installed, run
+To verify that Starknet Foundry was installed, run
 
 ```shell
 snforge --version
@@ -127,7 +127,7 @@ See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#in
    See [this article](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) for instructions on
    Windows 10 and 11.
 
-To verify that Scarb was correctly installed, run
+To verify that Scarb was installed, run
 
 ```shell
 scarb --version
@@ -144,7 +144,7 @@ scarb --version
    See [this article](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) for instructions on
    Windows 10 and 11.
 
-To verify that Starknet Foundry was correctly installed, run
+To verify that Starknet Foundry was installed, run
 
 ```shell
 snforge --version
