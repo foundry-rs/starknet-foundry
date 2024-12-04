@@ -1,13 +1,14 @@
 use anyhow::{anyhow, Context, Result};
+use regex::Regex;
 use semver::Version;
 use std::process::Command;
 
-type VersionParser = dyn Fn(&str) -> Result<Version>;
+type VersionParser = Box<dyn Fn(&str) -> Result<Version>>;
 
 pub struct Requirement {
     pub name: String,
     pub command: String,
-    pub version_parser: Box<VersionParser>,
+    pub version_parser: VersionParser,
     pub minimal_version: Version,
 }
 
@@ -55,6 +56,20 @@ impl RequirementsChecker {
 
         Ok(())
     }
+}
+
+pub fn create_version_parser<'a>(name: &'a str, pattern: &'a str) -> VersionParser {
+    let regex = Regex::new(pattern).unwrap();
+    Box::new(move |raw_version: &str| {
+        let matches = regex.captures(raw_version).with_context(|| {
+            format!("Failed to match {name} version from output: {raw_version}",)
+        })?;
+        let version_str = matches
+            .name("version")
+            .with_context(|| format!("Failed to parse {name} version"))?
+            .as_str();
+        Version::parse(version_str).with_context(|| "Failed to parse version")
+    })
 }
 
 fn os_specific_command() -> Command {

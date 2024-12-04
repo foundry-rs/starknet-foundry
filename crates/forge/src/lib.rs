@@ -1,4 +1,4 @@
-use crate::compatibility_check::{Requirement, RequirementsChecker};
+use crate::compatibility_check::{create_version_parser, Requirement, RequirementsChecker};
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand, ValueEnum};
 use forge_runner::CACHE_DIR;
@@ -171,53 +171,23 @@ pub fn main_execution() -> Result<ExitStatus> {
     requirements_checker.add_requirement(Requirement {
         name: "Rust".to_string(),
         command: "rustc --version".to_string(),
-        version_parser: Box::new(|raw_version| {
-            let regex = Regex::new(r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)")?;
-            let matches = regex
-                .captures(raw_version)
-                .context("Failed to match version from rustc output")?;
-            let version = matches
-                .name("version")
-                .context("Failed to get version from rustc output")?
-                .as_str();
-
-            Version::parse(version).context("Failed to parse version")
-        }),
+        version_parser: create_version_parser("Rust", r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)")?,
         minimal_version: Version::new(1, 81, 0),
     });
     requirements_checker.add_requirement(Requirement {
         name: "Scarb".to_string(),
         command: "scarb --version".to_string(),
         minimal_version: Version::new(2, 9, 0),
-        version_parser: Box::new(|raw_version| {
-            let regex = Regex::new(r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)")?;
-            let matches = regex
-                .captures(raw_version)
-                .context("Failed to match version from rustc output")?;
-            let version = matches
-                .name("version")
-                .context("Failed to get version from rustc output")?
-                .as_str();
-
-            Version::parse(version).context("Failed to parse version")
-        }),
+        version_parser: create_version_parser("Scarb", r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)")?,
     });
     requirements_checker.add_requirement(Requirement {
         name: "Universal Sierra Compiler".to_string(),
         command: "universal-sierra-compiler --version".to_string(),
         minimal_version: Version::new(2, 0, 0),
-        version_parser: Box::new(|raw_version| {
-            let regex = Regex::new(r"universal-sierra-compiler (?<version>[0-9]+.[0-9]+.[0-9]+)")?;
-            let matches = regex
-                .captures(raw_version)
-                .context("Failed to match version from rustc output")?;
-            let version = matches
-                .name("version")
-                .context("Failed to get version from rustc output")?
-                .as_str();
-
-            Version::parse(version).context("Failed to parse version")
-        }),
+        version_parser: create_version_parser(
+            "Universal Sierra Compiler",
+            r"universal-sierra-compiler (?<version>[0-9]+.[0-9]+.[0-9]+)",
+        )?,
     });
     requirements_checker.validate()?;
 
