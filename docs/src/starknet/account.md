@@ -129,7 +129,7 @@ Available accounts (at [..]):
   legacy: false
   type: OpenZeppelin
 
-- user0:
+- my_account:
   network: alpha-sepolia
   public key: 0x48234b9bc6c1e749f4b908d310d8c53dae6564110b05ccf79016dca8ce7dfac
   address: 0x6f4621e7ad43707b3f69f9df49425c3d94fdc5ab2e444bfa0e7e4edeff7992d

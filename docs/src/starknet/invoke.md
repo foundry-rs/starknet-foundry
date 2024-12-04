@@ -20,7 +20,7 @@ For detailed CLI description, see [invoke command reference](../appendix/sncast/
 <!-- { "ignored_output": true } -->
 ```shell
 $ sncast \
-  --account user0 \
+  --account my_account \
   invoke \
   --url http://127.0.0.1:5055 \
   --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \

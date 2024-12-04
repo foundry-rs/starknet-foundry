@@ -26,7 +26,7 @@ fn prepare_accounts_file(temp: &TempDir) -> Utf8PathBuf {
     let accounts = r#"
     {
         "alpha-sepolia": {
-            "user0": {
+            "my_account": {
             "address": "0x6f4621e7ad43707b3f69f9df49425c3d94fdc5ab2e444bfa0e7e4edeff7992d",
             "deployed": true,
             "private_key": "0x0000000000000000000000000000000056c12e097e49ea382ca8eadec0839401",
@@ -52,7 +52,7 @@ fn declare_and_deploy_contract(
         "--accounts-file",
         accounts_file,
         "--account",
-        "user0",
+        "my_account",
         "declare",
         "--url",
         URL,
@@ -78,7 +78,7 @@ fn declare_and_deploy_contract(
         "--accounts-file",
         accounts_file,
         "--account",
-        "user0",
+        "my_account",
         "deploy",
         "--url",
         URL,

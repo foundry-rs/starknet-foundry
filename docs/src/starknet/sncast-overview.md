@@ -84,7 +84,7 @@ Let's invoke a transaction and wait for it to be `ACCEPTED_ON_L2`.
 
 <!-- { "contract_name": "HelloSncast", "ignored_output": true } -->
 ```shell
-$ sncast --account user0 \
+$ sncast --account my_account \
     --wait \
     deploy \
 	--url http://127.0.0.1:5055 \

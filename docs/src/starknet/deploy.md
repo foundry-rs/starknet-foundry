@@ -17,7 +17,7 @@ After [declaring your contract](./declare.md), you can deploy it the following w
 <!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast \
-    --account user0 \
+    --account my_account \
     deploy \
     --url http://127.0.0.1:5055/rpc \
 	--fee-token strk \
