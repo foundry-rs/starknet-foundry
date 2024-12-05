@@ -20,3 +20,4 @@ mod steps;
 mod trace_print;
 mod trace_resources;
 mod workspaces;
+mod requirements;
