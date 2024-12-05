@@ -31,26 +31,7 @@ impl<'a> RequirementsChecker<'a> {
     }
 
     pub fn validate(&self) -> Result<()> {
-        let mut validation_output = "Validating requirements\n\n".to_string();
-        let mut is_valid = true;
-
-        for requirement in &self.requirements {
-            let raw_version = get_raw_version(&requirement.name, &requirement.command)?;
-            let version = (requirement.version_parser)(&raw_version)?;
-            let valid = version >= requirement.minimal_version;
-            let output = if valid {
-                format!("✅ {} {}", requirement.name, version)
-            } else {
-                is_valid = false;
-                format!(
-                    "❌ {} Version {} doesn't satisfy minimum {}\n{}",
-                    requirement.name, version, requirement.minimal_version, requirement.helper_text
-                )
-            };
-
-            validation_output += output.as_str();
-            validation_output += "\n";
-        }
+        let (validation_output, is_valid) = self.validate_with_output()?;
 
         if !is_valid || self.output_on_success {
             println!("{validation_output}");
@@ -62,8 +43,32 @@ impl<'a> RequirementsChecker<'a> {
 
         Ok(())
     }
-}
 
+    fn validate_with_output(&self) -> Result<(String, bool)> {
+        let mut validation_output = "Validating requirements\n\n".to_string();
+        let mut is_valid = true;
+
+        for requirement in &self.requirements {
+            let raw_version = get_raw_version(&requirement.name, &requirement.command)?;
+            let version = (requirement.version_parser)(&raw_version)?;
+            let valid = version >= requirement.minimal_version;
+            let command_output = if valid {
+                format!("✅ {} {}", requirement.name, version)
+            } else {
+                is_valid = false;
+                format!(
+                    "❌ {} Version {} doesn't satisfy minimum {}\n{}",
+                    requirement.name, version, requirement.minimal_version, requirement.helper_text
+                )
+            };
+
+            validation_output += command_output.as_str();
+            validation_output += "\n";
+        }
+
+        Ok((validation_output, is_valid))
+    }
+}
 pub fn create_version_parser<'a>(name: &'a str, pattern: &'a str) -> Box<VersionParser<'a>> {
     let regex = Regex::new(pattern).unwrap();
     Box::new(move |raw_version: &str| {
@@ -100,4 +105,69 @@ fn get_raw_version(name: &str, raw_command: &str) -> Result<String> {
     Ok(String::from_utf8_lossy(&raw_current_version.stdout)
         .trim()
         .to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn happy_case() {
+        let mut requirements_checker = RequirementsChecker::new(true);
+        requirements_checker.add_requirement(Requirement {
+            name: "Rust".to_string(),
+            command: "rustc --version".to_string(),
+            version_parser: create_version_parser(
+                "Rust",
+                r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)",
+            ),
+            helper_text: "Follow instructions from https://www.rust-lang.org/tools/install"
+                .to_string(),
+            minimal_version: Version::new(1, 81, 0),
+        });
+        requirements_checker.add_requirement(Requirement {
+            name: "Scarb".to_string(),
+            command: "scarb --version".to_string(),
+            minimal_version: Version::new(2, 7, 0),
+            helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
+                .to_string(),
+            version_parser: create_version_parser(
+                "Scarb",
+                r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)",
+            ),
+        });
+        requirements_checker.add_requirement(Requirement {
+            name: "Universal Sierra Compiler".to_string(),
+            command: "universal-sierra-compiler --version".to_string(),
+            minimal_version: Version::new(2, 0, 0),
+            helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),
+            version_parser: create_version_parser(
+                "Universal Sierra Compiler",
+                r"universal-sierra-compiler (?<version>[0-9]+.[0-9]+.[0-9]+)",
+            ),
+        });
+
+        assert!(requirements_checker.validate().is_ok());
+    }
+
+    #[test]
+    fn failing_requirements() {
+        let mut requirements_checker = RequirementsChecker::new(true);
+        requirements_checker.add_requirement(Requirement {
+            name: "Rust".to_string(),
+            command: "rustc --version".to_string(),
+            version_parser: create_version_parser(
+                "Rust",
+                r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)",
+            ),
+            helper_text: "Follow instructions from https://www.rust-lang.org/tools/install"
+                .to_string(),
+            minimal_version: Version::new(999, 0, 0),
+        });
+
+        let (validation_output, is_valid) = requirements_checker.validate_with_output().unwrap();
+        assert!(!is_valid);
+        assert!(validation_output.contains("❌ Rust Version"));
+        assert!(validation_output.contains("doesn't satisfy minimum 999.0.0"));
+    }
 }
