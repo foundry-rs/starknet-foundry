@@ -532,6 +532,7 @@ pub async fn test_happy_case_keystore_int_format() {
 
         After prefunding the address, run:
         sncast --account {} --keystore {} account deploy --url {} --fee-token strk
+
         To see account creation details, visit:
         account: [..]
     ", account_file, keystore_file, URL});
