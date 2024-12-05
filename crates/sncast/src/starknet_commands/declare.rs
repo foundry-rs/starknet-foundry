@@ -150,6 +150,6 @@ pub async fn declare(
             }))
         }
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
-        _ => Err(anyhow!("Unknown RPC error").into()),
+        Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
     }
 }

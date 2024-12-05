@@ -75,6 +75,7 @@ impl From<Value> for OutputValue {
                     .collect(),
             ),
             Value::String(s) => OutputValue::String(s.to_string()),
+            Value::Bool(b) => OutputValue::String(b.to_string()),
             s => panic!("{s:?} cannot be auto-serialized to output"),
         }
     }
