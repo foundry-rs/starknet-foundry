@@ -316,16 +316,12 @@ async fn test_too_low_max_fee() {
     );
 }
 
-// #[test_case("eth", "v3"; "eth-v3")]
-// #[test_case("strk", "v1"; "strk-v3")]
+#[test_case("eth", "v3"; "eth-v3")]
+#[test_case("strk", "v1"; "strk-v3")]
 #[tokio::test]
-// async fn test_invalid_version_and_token_combination(fee_token: &str, version: &str) {
-async fn test_invalid_version_and_token_combination() {
+async fn test_invalid_version_and_token_combination(fee_token: &str, version: &str) {
     let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
     let accounts_file = "accounts.json";
-
-    let fee_token = "eth";
-    let version = "v3";
 
     let args = vec![
         "--accounts-file",
