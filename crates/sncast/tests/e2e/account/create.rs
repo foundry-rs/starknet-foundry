@@ -53,7 +53,7 @@ pub async fn test_happy_case(account_type: &str) {
         message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.
 
         After prefunding the address, run:
-        sncast account deploy --url http://127.0.0.1:5055/rpc --name my_account --fee-token strk
+        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account --fee-token strk
 
         To see account creation details, visit:
         account: [..]
@@ -147,7 +147,7 @@ pub async fn test_happy_case_generate_salt() {
         message: Account successfully created[..]
 
         After prefunding the address, run:
-        sncast account deploy --url http://127.0.0.1:5055/rpc --name my_account --fee-token strk
+        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account --fee-token strk
 
         To see account creation details, visit:
         account: [..]
@@ -230,7 +230,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         message: Account successfully created[..]
 
         After prefunding the address, run:
-        sncast account deploy --url http://127.0.0.1:5055/rpc --name my_account --fee-token strk
+        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account --fee-token strk
 
         To see account creation details, visit:
         account: [..]
@@ -325,18 +325,19 @@ pub async fn test_happy_case_keystore(account_type: &str) {
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
 
-    snapbox.assert().stdout_matches(indoc! {r"
+    snapbox.assert().stdout_matches(formatdoc! {r"
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
         max_fee: [..]
         message: Account successfully created[..]
 
-
+        After prefunding the address, run:
+        sncast --account {} --keystore {} account deploy --url {} --fee-token strk
 
         To see account creation details, visit:
         account: [..]
-    "});
+    ", account_file, keystore_file, URL});
 
     assert!(temp_dir.path().join(keystore_file).exists());
 
@@ -522,16 +523,18 @@ pub async fn test_happy_case_keystore_int_format() {
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
 
-    snapbox.assert().stdout_matches(indoc! {r"
+    snapbox.assert().stdout_matches(formatdoc! {r"
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: [..]
         max_fee: [..]
         message: Account successfully created[..]
 
+        After prefunding the address, run:
+        sncast --account {} --keystore {} account deploy --url {} --fee-token strk
         To see account creation details, visit:
         account: [..]
-    "});
+    ", account_file, keystore_file, URL});
 
     let contents = fs::read_to_string(temp_dir.path().join(account_file))
         .expect("Unable to read created file");
