@@ -6,31 +6,31 @@ use super::_cheatcode::handle_cheatcode;
 /// Tree-like structure which contains all of the starknet calls and sub-calls along with the
 /// results
 #[derive(Drop, Serde, PartialEq, Clone, Debug)]
-struct CallTrace {
-    entry_point: CallEntryPoint,
+pub struct CallTrace {
+    pub entry_point: CallEntryPoint,
     /// All the calls that happened in the scope of `entry_point`
-    nested_calls: Array<CallTrace>,
-    result: CallResult,
+    pub nested_calls: Array<CallTrace>,
+    pub result: CallResult,
 }
 
 /// A single function entry point summary
 #[derive(Drop, Serde, PartialEq, Clone, Debug)]
-struct CallEntryPoint {
-    entry_point_type: EntryPointType,
+pub struct CallEntryPoint {
+    pub entry_point_type: EntryPointType,
     /// Hashed selector of the invoked function
-    entry_point_selector: felt252,
+    pub entry_point_selector: felt252,
     /// Serialized arguments calldata
-    calldata: Array<felt252>,
+    pub calldata: Array<felt252>,
     /// Contract address targeted by the call
-    contract_address: ContractAddress,
+    pub contract_address: ContractAddress,
     /// Address that the call originates from
-    caller_address: ContractAddress,
-    call_type: CallType,
+    pub caller_address: ContractAddress,
+    pub call_type: CallType,
 }
 
 /// Type of the function being invoked
 #[derive(Drop, Serde, PartialEq, Clone, Debug)]
-enum EntryPointType {
+pub enum EntryPointType {
     /// Constructor of a contract
     Constructor,
     /// Contract interface entry point
@@ -67,7 +67,7 @@ enum CallFailure {
 }
 
 /// Returns current call trace of the test, up to the last call made to a contract
-fn get_call_trace() -> CallTrace {
+pub fn get_call_trace() -> CallTrace {
     let mut output = handle_cheatcode(cheatcode::<'get_call_trace'>(array![].span()));
     Serde::deserialize(ref output).unwrap()
 }

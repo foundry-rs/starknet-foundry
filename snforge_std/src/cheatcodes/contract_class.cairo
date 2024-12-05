@@ -8,7 +8,7 @@ use core::traits::Into;
 
 #[derive(Drop, Serde, Copy)]
 pub struct ContractClass {
-    class_hash: ClassHash,
+    pub class_hash: ClassHash,
 }
 
 #[derive(Drop, Serde, Clone)]

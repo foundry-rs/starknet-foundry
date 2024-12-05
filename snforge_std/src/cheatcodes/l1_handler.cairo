@@ -5,8 +5,8 @@ use super::super::_cheatcode::handle_cheatcode;
 
 #[derive(Drop, Clone)]
 pub struct L1Handler {
-    target: ContractAddress,
-    selector: felt252,
+    pub target: ContractAddress,
+    pub selector: felt252,
 }
 
 pub trait L1HandlerTrait {
