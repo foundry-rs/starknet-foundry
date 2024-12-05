@@ -65,11 +65,8 @@ pub async fn deploy(
     wait_config: WaitForTx,
     account: &str,
     keystore_path: Option<Utf8PathBuf>,
+    fee_args: FeeArgs,
 ) -> Result<InvokeResponse> {
-    let fee_token = deploy_args.validate_and_get_token()?;
-
-    let fee_args = deploy_args.fee_args.clone().fee_token(fee_token);
-
     if let Some(keystore_path_) = keystore_path {
         deploy_from_keystore(
             provider,

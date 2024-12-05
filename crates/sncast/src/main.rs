@@ -529,6 +529,10 @@ async fn run_async_command(
             account::Commands::Deploy(deploy) => {
                 let provider = deploy.rpc.get_provider(&config).await?;
 
+                let fee_token = deploy.validate_and_get_token()?;
+
+                let fee_args = deploy.fee_args.clone().fee_token(fee_token);
+
                 let chain_id = get_chain_id(&provider).await?;
                 let keystore_path = config.keystore.clone();
                 let result = starknet_commands::account::deploy::deploy(
@@ -539,6 +543,7 @@ async fn run_async_command(
                     wait_config,
                     &config.account,
                     keystore_path,
+                    fee_args,
                 )
                 .await;
 
