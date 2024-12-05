@@ -4,7 +4,6 @@ use test_utils::runner::assert_passed;
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
-#[cfg(not(target_os = "windows"))]
 #[test]
 fn cheat_caller_address_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -53,7 +52,6 @@ fn cheat_caller_address_cairo0_contract() {
     assert_passed(&result);
 }
 
-#[cfg(not(target_os = "windows"))]
 #[test]
 fn cheat_block_number_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -102,7 +100,6 @@ fn cheat_block_number_cairo0_contract() {
     assert_passed(&result);
 }
 
-#[cfg(not(target_os = "windows"))]
 #[test]
 fn cheat_block_timestamp_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -153,7 +150,6 @@ fn cheat_block_timestamp_cairo0_contract() {
     assert_passed(&result);
 }
 
-#[cfg(not(target_os = "windows"))]
 #[test]
 fn mock_call_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -195,7 +191,6 @@ fn mock_call_cairo0_contract() {
     assert_passed(&result);
 }
 
-#[cfg(not(target_os = "windows"))]
 #[test]
 fn store_load_cairo0_contract() {
     let test = test_case!(formatdoc!(
