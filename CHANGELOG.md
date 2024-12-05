@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- Requirements validation during `snforge` runtime
+
+#### Changed
+
+ - `snforge_scarb_plugin` will now also emit warnings when errors occur
+
 ## [0.34.0] - 2024-11-26
 
 ### Forge
@@ -15,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `generate_random_felt()` for generating (pseudo) random felt value.
 - Printing information about compiling Sierra using `universal-sierra-compiler`
-- Requirements validation during `snforge` runtime
+- Displaying backtrace when contract call fails
 
 #### Changed
 

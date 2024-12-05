@@ -118,6 +118,6 @@ pub async fn execute_calls(
         .await
         .map_err(StarknetCommandError::from),
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
-        _ => Err(anyhow!("Unknown RPC error").into()),
+        Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
     }
 }
