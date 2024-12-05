@@ -188,7 +188,6 @@ impl From<ScriptFeeSettings> for FeeSettings {
 
 pub trait PayableTransaction {
     fn error_message(&self, token: &str, version: &str) -> String;
-    fn validate(&self) -> Result<()>;
     fn validate_and_get_token(&self) -> Result<FeeToken>;
     fn token_from_version(&self) -> Option<FeeToken>;
 }
@@ -201,24 +200,7 @@ macro_rules! impl_payable_transaction {
                 $err_func(token, version)
             }
 
-            fn validate(&self) -> Result<()> {
-                match (
-                    &self.token_from_version(),
-                    &self.fee_args.fee_token,
-                ) {
-                    (Some(token_from_version), Some(token)) if token_from_version != token => {
-                        Err(anyhow!(self.error_message(
-                            &format!("{:?}", token).to_lowercase(),
-                            &format!("{:?}", self.version.clone().unwrap()).to_lowercase()
-                        )))
-                    },
-
-                    _ => Ok(()),
-                }
-            }
-
             fn validate_and_get_token(&self) -> Result<FeeToken> {
-
                 match (
                     &self.token_from_version(),
                     &self.fee_args.fee_token,
@@ -240,7 +222,6 @@ macro_rules! impl_payable_transaction {
                     },
                     _ =>  Ok(self.fee_args.fee_token.clone().unwrap_or_else(|| self.token_from_version().unwrap_or_else(|| unreachable!())))
                 }
-
             }
 
             fn token_from_version(&self) -> Option<FeeToken> {
