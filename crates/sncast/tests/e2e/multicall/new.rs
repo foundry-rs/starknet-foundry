@@ -77,7 +77,7 @@ async fn test_directory_non_existent() {
         output,
         indoc! {r"
         command: multicall new
-        error: [..]
+        error: [..]file[..]
         "},
     );
 }

@@ -122,7 +122,7 @@ async fn test_invalid_path() {
         output,
         indoc! {r"
         command: multicall run
-        error: [..]
+        error: [..]file[..]
         "},
     );
 }
