@@ -147,7 +147,11 @@ mod tests {
             ),
         });
 
-        assert!(requirements_checker.validate().is_ok());
+        let (validation_output, is_valid) = requirements_checker.validate_with_output().unwrap();
+        assert!(is_valid);
+        assert!(validation_output.contains("✅ Rust"));
+        assert!(validation_output.contains("✅ Scarb"));
+        assert!(validation_output.contains("✅ Universal Sierra Compiler"));
     }
 
     #[test]
