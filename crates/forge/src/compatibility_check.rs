@@ -9,6 +9,7 @@ pub struct Requirement<'a> {
     pub name: String,
     pub command: String,
     pub version_parser: Box<VersionParser<'a>>,
+    pub helper_text: String,
     pub minimal_version: Version,
 }
 
@@ -40,8 +41,8 @@ impl<'a> RequirementsChecker<'a> {
             } else {
                 is_valid = false;
                 format!(
-                    "❌ {} Version {} doesn't satisfy minimum {}",
-                    requirement.name, version, requirement.minimal_version
+                    "❌ {} Version {} doesn't satisfy minimum {}\n{}",
+                    requirement.name, version, requirement.minimal_version, requirement.helper_text
                 )
             };
 

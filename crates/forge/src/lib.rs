@@ -9,7 +9,6 @@ use semver::Version;
 use std::ffi::OsString;
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
 use tokio::runtime::Builder;
-use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
 pub mod block_number_map;
 mod combine_configs;
@@ -168,21 +167,25 @@ pub fn main_execution() -> Result<ExitStatus> {
         name: "Rust".to_string(),
         command: "rustc --version".to_string(),
         version_parser: create_version_parser("Rust", r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)"),
+        helper_text: "Follow instructions from https://www.rust-lang.org/tools/install".to_string(),
         minimal_version: Version::new(1, 81, 0),
     });
     requirements_checker.add_requirement(Requirement {
         name: "Scarb".to_string(),
         command: "scarb --version".to_string(),
-        minimal_version: Version::new(2, 9, 0),
+        minimal_version: Version::new(2, 7, 0),
+        helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
+            .to_string(),
         version_parser: create_version_parser("Scarb", r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)"),
     });
     requirements_checker.add_requirement(Requirement {
         name: "Universal Sierra Compiler".to_string(),
         command: "universal-sierra-compiler --version".to_string(),
         minimal_version: Version::new(2, 0, 0),
+        helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),
         version_parser: create_version_parser(
-            "Universal Sierra Compiler",
-            r"universal-sierra-compiler (?<version>[0-9]+.[0-9]+.[0-9]+)",
+        "Universal Sierra Compiler",
+        r"universal-sierra-compiler (?<version>[0-9]+.[0-9]+.[0-9]+)",
         ),
     });
     requirements_checker.validate()?;
