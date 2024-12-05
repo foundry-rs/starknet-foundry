@@ -14,12 +14,14 @@ pub struct Requirement<'a> {
 }
 
 pub struct RequirementsChecker<'a> {
+    output_on_success: bool,
     requirements: Vec<Requirement<'a>>,
 }
 
 impl<'a> RequirementsChecker<'a> {
-    pub(crate) fn new() -> Self {
+    pub(crate) fn new(output_on_success: bool) -> Self {
         Self {
+            output_on_success,
             requirements: Vec::new(),
         }
     }
@@ -50,8 +52,11 @@ impl<'a> RequirementsChecker<'a> {
             validation_output += "\n";
         }
 
-        if !is_valid {
+        if !is_valid || self.output_on_success {
             println!("{validation_output}");
+            if is_valid {
+                return Ok(());
+            }
             return Err(anyhow!("Requirements not satisfied"));
         }
 
