@@ -17,16 +17,14 @@ impl Secp256k1CurveKeyPairImpl of KeyPairTrait<u256, Secp256k1Point> {
 
         let (secret_key, pk_x, pk_y): (u256, u256, u256) = Serde::deserialize(ref output).unwrap();
 
-        let public_key = Secp256Trait::secp256_ec_new_syscall(pk_x, pk_y)
-            .unwrap_syscall()
-            .unwrap();
+        let public_key = Secp256Trait::secp256_ec_new_syscall(pk_x, pk_y).unwrap_syscall().unwrap();
 
         KeyPair { secret_key, public_key }
     }
 
     fn from_secret_key(secret_key: u256) -> KeyPair<u256, Secp256k1Point> {
-
-        if (secret_key == 0_u256 || secret_key >= Secp256Trait::<Secp256k1Point>::get_curve_size()) {
+        if (secret_key == 0_u256
+            || secret_key >= Secp256Trait::<Secp256k1Point>::get_curve_size()) {
             core::panic_with_felt252('invalid secret_key');
         }
 

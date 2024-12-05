@@ -7,7 +7,9 @@ use super::{
 /// - `signature` - transaction signature to be set
 /// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
 /// applied
-pub fn cheat_signature(contract_address: ContractAddress, signature: Span<felt252>, span: CheatSpan) {
+pub fn cheat_signature(
+    contract_address: ContractAddress, signature: Span<felt252>, span: CheatSpan
+) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info

@@ -43,7 +43,9 @@ pub fn stop_cheat_caller_address_global() {
 /// Changes the caller address for the given contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `caller_address` - caller address to be set
-pub fn start_cheat_caller_address(contract_address: ContractAddress, caller_address: ContractAddress) {
+pub fn start_cheat_caller_address(
+    contract_address: ContractAddress, caller_address: ContractAddress
+) {
     cheat_caller_address(contract_address, caller_address, CheatSpan::Indefinite);
 }
 

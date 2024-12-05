@@ -44,7 +44,9 @@ pub fn stop_cheat_paymaster_data_global() {
 /// Changes the transaction paymaster data for the given contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `paymaster_data` - transaction paymaster data to be set
-pub fn start_cheat_paymaster_data(contract_address: ContractAddress, paymaster_data: Span<felt252>) {
+pub fn start_cheat_paymaster_data(
+    contract_address: ContractAddress, paymaster_data: Span<felt252>
+) {
     cheat_paymaster_data(contract_address, paymaster_data, CheatSpan::Indefinite);
 }
 
