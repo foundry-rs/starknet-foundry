@@ -1,15 +1,12 @@
-use array::ArrayTrait;
-use result::ResultTrait;
-use option::OptionTrait;
-use traits::TryInto;
-use starknet::ContractAddress;
-use starknet::Felt252TryIntoContractAddress;
+use core::array::ArrayTrait;
+use core::result::ResultTrait;
+pub use core::starknet::contract_address;
 
 use snforge_std::{declare, ContractClassTrait};
 use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 
-use simple_package::hello_starknet::IHelloStarknetDispatcher;
-use simple_package::hello_starknet::IHelloStarknetDispatcherTrait;
+pub use simple_package::hello_starknet::IHelloStarknetDispatcher;
+pub use simple_package::hello_starknet::IHelloStarknetDispatcherTrait;
 
 #[test]
 fn call_and_invoke() {

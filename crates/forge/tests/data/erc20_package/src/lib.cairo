@@ -1,1 +1,1 @@
-mod erc20;
+pub mod erc20;

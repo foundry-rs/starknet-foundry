@@ -1,15 +1,16 @@
-use array::ArrayTrait;
+use core::array::ArrayTrait;
+use core::panics::panic;
 
 #[test]
 #[should_panic]
 fn should_panic_no_data() {
-    panic_with_felt252(0);
+    panic!("0");
 }
 
 #[test]
 #[should_panic(expected: ('panic message',))]
 fn should_panic_check_data() {
-    panic_with_felt252('panic message');
+    panic!('panic message');
 }
 
 #[test]

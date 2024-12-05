@@ -1,13 +1,13 @@
 use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 use starknet::ContractAddress;
-use starknet::Felt252TryIntoContractAddress;
+pub use core::starknet::contract_address;
 
 use snforge_std::{
     declare, ContractClassTrait, test_address, start_cheat_caller_address, stop_cheat_caller_address
 };
 
-use erc20_package::erc20::IERC20Dispatcher;
-use erc20_package::erc20::IERC20DispatcherTrait;
+pub use erc20_package::erc20::IERC20Dispatcher;
+pub use erc20_package::erc20::IERC20DispatcherTrait;
 
 const NAME: felt252 = 'TOKEN';
 const SYMBOL: felt252 = 'TKN';
