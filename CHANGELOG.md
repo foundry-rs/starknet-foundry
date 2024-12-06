@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - Requirements validation during `snforge` runtime
+- `snforge validate-requirements` command
 
 #### Changed
 
