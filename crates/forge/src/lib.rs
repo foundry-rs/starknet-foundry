@@ -74,6 +74,7 @@ enum ForgeSubcommand {
     },
     /// Clean Forge cache directory
     CleanCache {},
+    /// Validate if all `snforge` requirements are installed
     ValidateRequirements,
 }
 
