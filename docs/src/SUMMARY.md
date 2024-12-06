@@ -61,6 +61,7 @@
 # Foundry Development
 
 * [Environment Setup](development/environment-setup.md)
+* [Shell snippets](development/shell-snippets.md)
 
 ---
 
