@@ -54,5 +54,5 @@ And perform a test checking `load` and `store` behavior in context of those stru
 This example uses `storage_address_from_base` with entry's of the storage variable.
 
 ```rust
-{{#include ../../listings/snforge_advanced_features/crates/direct_storage_access/tests/using_storage_address_from_base.cairo}}
+{{#include ../../listings/direct_storage_access/tests/using_storage_address_from_base.cairo}}
 ```
