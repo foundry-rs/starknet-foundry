@@ -560,7 +560,7 @@ pub async fn wait_for_tx(
     tx_hash: Felt,
     wait_params: ValidatedWaitParams,
 ) -> Result<&str, WaitForTransactionError> {
-    println!("Transaction hash = {tx_hash:#x}");
+    println!("Transaction hash: {tx_hash:#x}");
 
     let retries = wait_params.get_retries();
     for i in (1..retries).rev() {

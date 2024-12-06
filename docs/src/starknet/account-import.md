@@ -74,7 +74,7 @@ To import an account into the file holding the accounts info (`~/.starknet_accou
 ```shell
 $ sncast \
     account import \
-	--url http://127.0.0.1:5050 \
+	--url http://127.0.0.1:5055 \
     --name account_123 \
     --address 0x1 \
     --private-key 0x2 \
@@ -91,7 +91,7 @@ If you don't want to pass the private key in the command (because of safety aspe
 ```shell
 $ sncast \
     account import \
-	--url http://127.0.0.1:5050 \
+	--url http://127.0.0.1:5055 \
     --name account_123 \
     --address 0x1 \
     --type oz
@@ -113,7 +113,7 @@ To import Argent account, set the `--type` flag to `argent`.
 ```shell
 $ sncast \
     account import \
-	--url http://127.0.0.1:5050 \
+	--url http://127.0.0.1:5055 \
     --name account_argent \
     --address 0x1 \
     --private-key 0x2 \
@@ -127,7 +127,7 @@ To import Braavos account, set the `--type` flag to `braavos`.
 ```shell
 $ sncast \
     account import \
-	--url http://127.0.0.1:5050 \
+	--url http://127.0.0.1:5055 \
     --name account_braavos \
     --address 0x1 \
     --private-key 0x2 \
@@ -141,7 +141,7 @@ To import OpenZeppelin account, set the `--type` flag to `oz` or  `open_zeppelin
 ```shell
 $ sncast \
     account import \
-	--url http://127.0.0.1:5050 \
+	--url http://127.0.0.1:5055 \
     --name account_oz \
     --address 0x1 \
     --private-key 0x2 \

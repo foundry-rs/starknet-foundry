@@ -238,13 +238,13 @@ async fn test_run_script_display_debug_traits() {
         test
         declare_nonce: [..]
         debug declare_nonce: [..]
-        Transaction hash = 0x[..]
+        Transaction hash: 0x[..]
         declare_result: class_hash: [..], transaction_hash: [..]
         debug declare_result: DeclareResult::Success(DeclareTransactionResult { class_hash: [..], transaction_hash: [..] })
-        Transaction hash = 0x[..]
+        Transaction hash: 0x[..]
         deploy_result: contract_address: [..], transaction_hash: [..]
         debug deploy_result: DeployResult { contract_address: [..], transaction_hash: [..] }
-        Transaction hash = 0x[..]
+        Transaction hash: 0x[..]
         invoke_result: [..]
         debug invoke_result: InvokeResult { transaction_hash: [..] }
         call_result: [2]
