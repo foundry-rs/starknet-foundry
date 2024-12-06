@@ -21,7 +21,7 @@ and [Blockifier](https://github.com/starkware-libs/blockifier), written in Rust 
 Need help getting started with Starknet Foundry? Read the
 📖 [Starknet Foundry Book](https://foundry-rs.github.io/starknet-foundry/)!
 
-![Example run](.github/images/demo-gif/demo.gif)
+![Example run](.github/images/demo.gif)
 
 Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/foundry), consists of different modules
 
@@ -32,31 +32,159 @@ Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/
 
 ## Installation
 
-To install Starknet Foundry, first install `snfoundryup` by running:
+### Linux and MacOS
+
+#### Install Rust version >= 1.80.1
 
 ```shell
-$ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-Follow the instructions and then run
+To verify that correct Rust version was installed, run
 
 ```shell
-$ snfoundryup
+rustc --version
 ```
 
-You can also specify a version you wish to install:
+and verify that version is >= 1.80.1
+
+See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
+
+#### Install asdf
+
+Follow the instructions from [asdf docs](https://asdf-vm.com/guide/getting-started.html#getting-started).
+
+To verify that asdf was installed, run
 
 ```shell
-$ snfoundryup -v 0.9.0
+asdf --version
 ```
 
-To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
+#### Install Scarb version >= 2.7.0
 
-## Features
+First, add Scarb plugin to asdf
 
-- Fast testing framework `snforge` written in Rust
-- High-quality dependency management using [scarb](https://github.com/software-mansion/scarb)
-- Intuitive interactions and deployment of Starknet contracts through `sncast`
+```shell
+asdf plugin add scarb
+```
+
+Install Scarb
+
+```shell
+asdf install scarb latest
+```
+
+To verify that Scarb was installed, run
+
+```shell
+scarb --version
+```
+
+and verify that version is >= 2.7.0
+
+#### Install Starknet Foundry
+
+First, add Starknet Foundry plugin to asdf
+
+```shell
+asdf plugin add starknet-foundry
+```
+
+Install Starknet Foundry
+
+```shell
+asdf install starknet-foundry latest
+```
+
+To verify that Starknet Foundry was installed, run
+
+```shell
+snforge --version
+```
+
+or
+
+```shell
+sncast --version
+```
+
+### Windows
+
+#### Install Rust version >= 1.80.1
+
+Go to https://www.rust-lang.org/tools/install and follow the installation instructions.
+
+To verify that correct Rust version was installed, run
+
+```shell
+rustc --version
+```
+
+and verify that version is >= 1.80.1
+
+See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
+
+#### Install Scarb version >= 2.7.0
+
+Follow the instructions from [Scarb docs](https://docs.swmansion.com/scarb/download.html#windows).
+
+1. Download the release archive matching your CPU architecture
+   from https://docs.swmansion.com/scarb/download.html#precompiled-packages.
+2. Extract it to a location where you would like to have Scarb installed. We recommend `%LOCALAPPDATA%\Programs\scarb`.
+3. From this directory, get the full path to `scarb\bin` and add it to PATH.
+   See [this article](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) for instructions on
+   Windows 10 and 11.
+
+To verify that Scarb was installed, run
+
+```shell
+scarb --version
+```
+
+and verify that version is >= 2.7.0
+
+#### Install Starknet Foundry
+
+1. Download the release archive matching your CPU architecture
+   from https://github.com/foundry-rs/starknet-foundry/releases/latest. Look for package with `windows` in the name e.g.
+   `starknet-foundry-v0.34.0-x86_64-pc-windows-msvc.zip`.
+2. Extract it to a location where you would like to have Starknet Foundry installed. We recommend
+   `%LOCALAPPDATA%\Programs\snfoundry`.
+3. From this directory, get the full path to `snfoundry\bin` and add it to PATH.
+   See [this article](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) for instructions on
+   Windows 10 and 11.
+
+To verify that Starknet Foundry was installed, run
+
+```shell
+snforge --version
+```
+
+or
+
+```shell
+sncast --version
+```
+
+## FAQ
+
+> Why do I have to install Rust?
+
+`snforge` relies on Scarb's [_procedural macros_](https://github.com/foundry-rs/starknet-foundry/issues/2299) to create
+`snforge_scarb_plugin` which is a part of `snforge_std`.
+This plugin is required for `snforge` test to work.
+Currently, _procedural macros_ require Rust installation to function.
+This will be changed in the upcoming versions of Scarb.
+
+> Why `scarb test` isn't running my tests correctly?
+
+By default, `scarb test` doesn't use `snforge` to run tests, and it needs to be configured.
+Make sure to include this section in `Scarb.toml`
+
+```toml
+[scripts]
+test = "snforge test"
+```
 
 ## Roadmap
 
@@ -74,7 +202,7 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 - [x] Deployment scripts written in Cairo
 - [ ] Transactions profiling 🏗️
 - [ ] Debugging utilities 🏗️
-- [ ] Test coverage reports (check out [cairo-coverage](https://github.com/software-mansion/cairo-coverage)) 🏗️ 
+- [ ] Test coverage reports (check out [cairo-coverage](https://github.com/software-mansion/cairo-coverage)) 🏗️
 - [ ] L1 ↔ L2 messaging and cross-chain testing
 
 ## Performance

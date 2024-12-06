@@ -1,22 +1,36 @@
 # Installation
 
-Starknet Foundry is easy to install on Linux, Mac and Windows systems.
+Starknet Foundry is easy to install on Linux, macOS and Windows.
 In this section, we will walk through the process of installing Starknet Foundry.
 
-### Requirements
+## Requirements
+
+> 📝 **Note**
+> Ensure all requirements are installed and follow the required minimum versions.
+> Starknet Foundry will not run if not following these requirements.
 
 To use Starknet Foundry, you need:
 
-- [Scarb](https://docs.swmansion.com/scarb/download.html)
+- [Scarb](https://docs.swmansion.com/scarb/download.html) version >= 2.7.0
 - [Universal-Sierra-Compiler](https://github.com/software-mansion/universal-sierra-compiler)
-- [Rust](https://www.rust-lang.org/tools/install) >= 1.80.1
+- [Rust](https://www.rust-lang.org/tools/install) version >= 1.80.1
 
 all installed and added to your `PATH` environment variable.
 
 > 📝 **Note**
 >
-> `Universal-Sierra-Compiler` will be automatically installed if you use `snfoundryup` or `asdf`.
+> `Universal-Sierra-Compiler` will be automatically installed if you use `asdf` or `snfoundryup`.
 > You can also create `UNIVERSAL_SIERRA_COMPILER` env var to make it visible for `snforge`.
+
+## Installation on Linux and macOS
+
+### Installation via [asdf](https://asdf-vm.com/)
+
+First, add the Starknet Foundry plugin to asdf:
+
+```shell
+$ asdf plugin add starknet-foundry
+```
 
 ### Install via `snfoundryup`
 
@@ -38,39 +52,15 @@ See `snfoundryup --help` for more options.
 
 To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
 
-### Installation via [asdf](https://asdf-vm.com/)
-
-First, add the Starknet Foundry plugin to asdf:
-
-```shell
-$ asdf plugin add starknet-foundry
-```
-
-#### Common Error
-
-Users may encounter this error when trying to use `snforge` or `sncast` without setting a version:
-
-```shell
-No version is set for command snforge
-Consider adding one of the following versions in your config file at starknet-foundry 0.32.0
-```
-
-This error indicates that `Starknet Foundry` version is unset. To resolve it, set the version globally using asdf:
-
-```shell
-$ asdf global starknet-foundry <version>
-```
-
-For additional information on asdf version management, see the [asdf](https://asdf-vm.com/guide/getting-started.html#_6-set-a-version)
-
-### Installation on Windows
+## Installation on Windows
 
 As for now, Starknet Foundry on Windows needs manual installation, but necessary steps are kept to minimum:
 
 1. [Download the release](https://github.com/foundry-rs/starknet-foundry/releases) archive matching your CPU
    architecture.
 2. Extract it to a location where you would like to have Starknet Foundry installed. A folder named snfoundry in
-   your [`%LOCALAPPDATA%\Programs`](https://learn.microsoft.com/en-us/windows/win32/shell/knownfolderid?redirectedfrom=MSDN#FOLDERID_UserProgramFiles)
+   your [
+   `%LOCALAPPDATA%\Programs`](https://learn.microsoft.com/en-us/windows/win32/shell/knownfolderid?redirectedfrom=MSDN#FOLDERID_UserProgramFiles)
    directory will suffice:
 
 ```batch
@@ -90,12 +80,63 @@ As for now, Starknet Foundry on Windows needs manual installation, but necessary
    $ sncast --version
    ```
 
-### Universal-Sierra-Compiler update
+## Universal-Sierra-Compiler update
 
 If you would like to bump the USC manually (e.g. when the new Sierra version is released) you can do it by running:
 
 ```shell
 $ curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
+```
+
+## Common Errors
+
+### No Version Set
+
+Users may encounter this error when trying to use `snforge` or `sncast` without setting a version:
+
+```shell
+No version is set for command snforge
+Consider adding one of the following versions in your config file at $HOME/.tool_versions
+starknet-foundry 0.32.0
+```
+
+This error indicates that `Starknet Foundry` version is unset. To resolve it, set the version globally using asdf:
+
+```shell
+$ asdf global starknet-foundry <version>
+```
+
+For additional information on asdf version management, see
+the [asdf](https://asdf-vm.com/guide/getting-started.html#_6-set-a-version)
+
+### Invalid Rust Version
+
+When running any `snforge` command, error similar to this is displayed
+
+```shell
+Compiling snforge_scarb_plugin v0.34.0
+error: package `snforge_scarb_plugin v0.34.0 cannot be built because it requires rustc 1.80.1 or newer, while the currently active rustc version is 1.76.0
+```
+
+This indicates incorrect Rust version is installed or set.
+
+Verify if rust version >= 1.80.1 is installed
+
+```shell
+$ rustc --version
+1.80.1
+```
+
+If the version is incorrect or the error persists, try changing the global version of Rust
+
+```shell
+$ rustup default stable
+```
+
+and local version of Rust
+
+```shell
+$ rustup override set stable
 ```
 
 ## How to build Starknet Foundry from source code
