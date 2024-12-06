@@ -41,6 +41,8 @@ async fn test_happy_case_eth(account: &str) {
         "99999999999999999",
         "--fee-token",
         "eth",
+        "--version",
+        "v2",
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path());
@@ -293,7 +295,7 @@ async fn test_happy_case_specify_package() {
         "--max-fee",
         "99999999999999999",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -326,7 +328,7 @@ async fn test_contract_already_declared() {
         "--contract-name",
         "Map",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     runner(&args).current_dir(tempdir.path()).assert().success();
@@ -364,7 +366,7 @@ async fn test_invalid_nonce() {
         "--nonce",
         "12345",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path());
@@ -399,7 +401,7 @@ async fn test_wrong_contract_name_passed() {
         "--contract-name",
         "nonexistent",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -429,7 +431,7 @@ fn test_scarb_build_fails_when_wrong_cairo_path() {
         "--contract-name",
         "BuildFails",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -457,7 +459,7 @@ fn test_scarb_build_fails_scarb_toml_does_not_exist() {
         "--contract-name",
         "BuildFails",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     runner(&args).current_dir(tempdir.path()).assert().success();
@@ -479,7 +481,7 @@ fn test_scarb_build_fails_manifest_does_not_exist() {
         "--contract-name",
         "BuildFails",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -516,7 +518,7 @@ fn test_too_low_max_fee() {
         "--max-fee",
         "1",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path());
@@ -548,7 +550,7 @@ fn test_scarb_no_sierra_artifact() {
         "--contract-name",
         "minimal_contract",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     runner(&args).current_dir(tempdir.path()).assert().success();
@@ -570,7 +572,7 @@ fn test_scarb_no_casm_artifact() {
         "--contract-name",
         "minimal_contract",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -605,7 +607,7 @@ async fn test_many_packages_default() {
         "--max-fee",
         "99999999999999999",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -638,7 +640,7 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         "--max-fee",
         "99999999999999999",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -670,7 +672,7 @@ async fn test_worskpaces_package_no_contract() {
         "--max-fee",
         "99999999999999999",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -708,7 +710,7 @@ async fn test_no_scarb_profile() {
         "--max-fee",
         "99999999999999999",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path());

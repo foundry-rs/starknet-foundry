@@ -34,6 +34,6 @@ Optional.
 Maximum gas unit price for the `deploy_account` transaction paid in Fri. When not used, defaults to auto-estimation. (Only for STRK fee payment)
 
 ## `--version, -v <VERSION>`
-Optional. Required if `--fee-token` is not provided.
+Optional. Required if `--fee-token eth` is provided.
 
 Version of the account deployment transaction. Possible values: v1, v3.

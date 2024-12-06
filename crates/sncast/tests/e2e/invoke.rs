@@ -23,7 +23,6 @@ use test_case::test_case;
 #[test_case("argent"; "argent_account")]
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
-
 async fn test_happy_case(account: &str) {
     let args = vec![
         "--accounts-file",
@@ -44,7 +43,7 @@ async fn test_happy_case(account: &str) {
         "--max-fee",
         "99999999999999999",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args);
@@ -78,7 +77,7 @@ async fn test_happy_case_human_readable() {
         "--max-fee",
         "99999999999999999",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -278,7 +277,7 @@ async fn test_contract_does_not_exist() {
         "--function",
         "put",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args);
@@ -305,7 +304,7 @@ fn test_wrong_function_name() {
         "--function",
         "nonexistent_put",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args);
@@ -337,7 +336,7 @@ fn test_wrong_calldata() {
         "--calldata",
         "0x1",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args);
@@ -373,7 +372,7 @@ fn test_too_low_max_fee() {
         "--max-fee",
         "1",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args);
@@ -413,7 +412,7 @@ async fn test_happy_case_cairo_expression_calldata() {
         "--max-fee",
         "99999999999999999",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());

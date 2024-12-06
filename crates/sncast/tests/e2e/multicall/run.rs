@@ -31,7 +31,7 @@ async fn test_happy_case(account: &str) {
         "--path",
         path,
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args);
@@ -74,7 +74,7 @@ async fn test_calldata_ids() {
         "--path",
         path,
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -111,7 +111,7 @@ async fn test_invalid_path() {
         "--path",
         "non-existent",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -149,7 +149,7 @@ async fn test_deploy_fail() {
         "--path",
         path,
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -186,7 +186,7 @@ async fn test_invoke_fail() {
         "--path",
         path,
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -223,7 +223,7 @@ async fn test_deploy_success_invoke_fails() {
         "--path",
         path,
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -260,7 +260,7 @@ async fn test_numeric_inputs() {
         "--path",
         path,
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -303,7 +303,7 @@ async fn test_numeric_overflow() {
         "--path",
         path,
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());

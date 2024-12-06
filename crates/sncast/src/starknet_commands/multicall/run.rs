@@ -30,8 +30,7 @@ pub struct Run {
     #[clap(flatten)]
     pub fee_args: FeeArgs,
 
-    /// Version of invoke (can be inferred from fee token)
-    #[clap(short, long)]
+    #[clap(short, long, default_value = "v3")]
     pub version: Option<InvokeVersion>,
 
     #[clap(flatten)]

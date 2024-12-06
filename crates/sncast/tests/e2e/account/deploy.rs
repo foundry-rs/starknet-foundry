@@ -41,6 +41,8 @@ pub async fn test_happy_case_eth(class_hash: &str, account_type: &str) {
         "99999999999999999",
         "--fee-token",
         "eth",
+        "--version",
+        "v1",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -238,7 +240,7 @@ pub async fn test_happy_case_add_profile() {
         "--max-fee",
         "99999999999999999",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -273,8 +275,6 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
         "my_account",
         "--max-fee",
         "10000000000000000",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -301,7 +301,7 @@ async fn test_too_low_max_fee() {
         "--max-fee",
         "1",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -367,11 +367,14 @@ async fn test_no_version_and_token() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    let output = snapbox.assert().failure();
-    assert_stderr_contains(
-        output,
-        "Error: Either --fee-token or --version must be provided",
-    );
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        Transaction hash = [..]
+        command: account deploy
+        transaction_hash: [..]
+
+        To see invocation details, visit:
+        transaction: https://sepolia.starkscan.co/tx/[..]
+    "});
 }
 
 #[tokio::test]
@@ -391,7 +394,7 @@ pub async fn test_valid_class_hash() {
         "--max-fee",
         "10000000000000000",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -422,7 +425,7 @@ pub async fn test_valid_no_max_fee() {
         "--name",
         "my_account",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -516,7 +519,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         "--max-fee",
         "99999999999999999",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -566,7 +569,7 @@ pub async fn test_keystore_already_deployed() {
         "--max-fee",
         "10000000000000000",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -611,7 +614,7 @@ pub async fn test_keystore_key_mismatch() {
         "--max-fee",
         "10000000000000000",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -651,7 +654,7 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
         "--max-fee",
         "10000000000000000",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -691,7 +694,7 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
         "--max-fee",
         "10000000000000000",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -735,7 +738,7 @@ pub async fn test_deploy_keystore_no_status() {
         "--max-fee",
         "10000000000000000",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -792,7 +795,7 @@ pub async fn test_deploy_keystore_other_args() {
         "--max-fee",
         "99999999999999999",
         "--fee-token",
-        "eth",
+        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());

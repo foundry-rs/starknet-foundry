@@ -42,8 +42,7 @@ pub struct Deploy {
     #[clap(short, long)]
     pub nonce: Option<Felt>,
 
-    /// Version of the deployment (can be inferred from fee token)
-    #[clap(short, long)]
+    #[clap(short, long, default_value = "v3")]
     pub version: Option<DeployVersion>,
 
     #[clap(flatten)]
