@@ -1,4 +1,5 @@
 use crate::snippet::Snippet;
+use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
 use std::{env, fs, path::PathBuf, str::FromStr};
 use tempfile::TempDir;
@@ -48,9 +49,11 @@ pub fn print_ignored_snippet_message(snippet: &Snippet) {
     );
 }
 
-fn get_canonical_path(relative_path: &str) -> Result<String, Box<dyn std::error::Error>> {
-    Ok(Utf8PathBuf::from_str(relative_path)?
-        .canonicalize_utf8()?
+fn get_canonical_path(relative_path: &str) -> Result<String> {
+    Ok(Utf8PathBuf::from_str(relative_path)
+        .map_err(|e| anyhow!("Failed to create Utf8PathBuf: {}", e))?
+        .canonicalize_utf8()
+        .map_err(|e| anyhow!("Failed to canonicalize path: {}", e))?
         .to_string())
 }
 
