@@ -30,7 +30,7 @@ $ sncast \
 
 ```shell
 command: call
-response: [0x1, 0x0]
+response: [0x0, 0x0]
 ```
 </details>
 <br>
