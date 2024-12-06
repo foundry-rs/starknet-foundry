@@ -14,14 +14,13 @@ For detailed CLI description, see [deploy command reference](../appendix/sncast/
 
 After [declaring your contract](./declare.md), you can deploy it the following way:
 
-<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast \
     --account my_account \
     deploy \
     --url http://127.0.0.1:5055/rpc \
 	--fee-token strk \
-    --class-hash 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799
+    --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02
 ```
 
 <details>
@@ -58,11 +57,10 @@ fn constructor(ref self: ContractState, first: felt252, second: u256) {
 
 you have to pass constructor calldata to deploy it.
 
-<!-- { "contract_name": "ConstructorContract" } -->
 ```shell
 $ sncast deploy \
     --fee-token strk \
-    --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a \
+    --class-hash 0x02e93ad9922ac92f3eed232be8ca2601fe19f843b7af8233a2e722c9975bc4ea \
     --constructor-calldata 0x1 0x2 0x3
 ```
 
@@ -90,11 +88,10 @@ transaction: https://sepolia.starkscan.co/tx/[..]
 
 Salt is a parameter which modifies contract's address, if not passed it will be automatically generated.
 
-<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast deploy \
     --fee-token strk \
-    --class-hash 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
+    --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
     --salt 0x123
 ```
 
@@ -118,11 +115,10 @@ transaction: https://sepolia.starkscan.co/tx/[..]
 Unique is a parameter which modifies contract's salt with the deployer address.
 It can be passed even if the `salt` argument was not provided.
 
-<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast deploy \
     --fee-token strk \
-    --class-hash 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
+    --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
     --unique
 ```
 

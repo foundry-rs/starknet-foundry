@@ -79,7 +79,7 @@ transaction_hash: [..]
 <!-- { "contract_name": "HelloSncast", "ignored": true } -->
 ```shell
 $ sncast --account my_account \
-    deploy --class-hash 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
+    deploy --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
     --url http://127.0.0.1:5055 \
     --fee-token strk
 ```
@@ -101,7 +101,7 @@ With arguments taken from `snfoundry.toml` file (default profile name):
 <!-- { "contract_name": "HelloSncast", "ignored": true } -->
 ```shell
 $ sncast deploy \
---class-hash 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
+--class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
 --fee-token strk
 
 ```
@@ -120,12 +120,11 @@ transaction_hash: [..]
 
 ### Invoke a contract
 
-<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast \
     --account my_account \
     invoke \
-    --contract-address 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
+    --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
     --function "sum_numbers" \
     --arguments '1, 2, 3' \
     --url http://127.0.0.1:5055/rpc \
@@ -148,10 +147,9 @@ transaction: https://sepolia.starkscan.co/tx/[..]
 
 With arguments taken from `snfoundry.toml` file (default profile name):
 
-<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast invoke \
-    --contract-address 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
+    --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
     --function "sum_numbers" \
     --arguments '1, 2, 3' \
     --url http://127.0.0.1:5055/rpc \
@@ -173,11 +171,10 @@ transaction: https://sepolia.starkscan.co/tx/[..]
 
 ### Call a contract
 
-<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast \
     call \
-    --contract-address 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
+    --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
     --function "sum_numbers" \
     --arguments '1, 2, 3' \
     --url http://127.0.0.1:5055/rpc
@@ -196,10 +193,9 @@ response: [0x6]
 
 With arguments taken from `snfoundry.toml` file (default profile name):
 
-<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast call \
-    --contract-address 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
+    --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
     --function "sum_numbers" \
     --arguments '1, 2, 3' \
     --url http://127.0.0.1:5055/rpc

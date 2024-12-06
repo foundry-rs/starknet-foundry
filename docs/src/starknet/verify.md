@@ -27,7 +27,7 @@ Then run:
 ```shell
 $ sncast \
     verify \
-    --contract-address 0x01e4ebe3278ab4633a9d0d3f5c4290001f29bc3179a70e570b6817dd7f8264fa \
+    --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
     --contract-name HelloSncast \
     --verifier walnut \
     --network sepolia
