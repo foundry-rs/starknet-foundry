@@ -22,4 +22,9 @@ impl RpcArgs {
 
         Ok(provider)
     }
+
+    #[must_use]
+    pub fn get_url(&self, config: &CastConfig) -> String {
+        self.url.clone().unwrap_or_else(|| config.url.clone())
+    }
 }
