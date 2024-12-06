@@ -76,7 +76,7 @@ transaction_hash: [..]
 ### Deploy a contract
 
 <!-- TODO(#2736) -->
-<!-- { "contract_name": "HelloSncast", "ignored": true } -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast --account my_account \
     deploy --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
@@ -98,7 +98,7 @@ transaction_hash: [..]
 With arguments taken from `snfoundry.toml` file (default profile name):
 
 <!-- TODO(#2736) -->
-<!-- { "contract_name": "HelloSncast", "ignored": true } -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast deploy \
 --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \

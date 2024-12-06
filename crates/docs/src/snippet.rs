@@ -57,7 +57,6 @@ pub struct SnippetConfig {
     #[serde(default)]
     pub ignored: bool,
     pub package_name: Option<String>,
-    pub contract_name: Option<String>,
     #[serde(default)]
     pub ignored_output: bool,
 }

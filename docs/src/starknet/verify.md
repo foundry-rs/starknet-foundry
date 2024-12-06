@@ -23,7 +23,7 @@ First, ensure that you have created a `Scarb.toml` file for your contract (it sh
 
 Then run:
 
-<!-- { "contract_name": "HelloSncast", "ignored_output": true } -->
+<!-- { "ignored_output": true } -->
 ```shell
 $ sncast \
     verify \
