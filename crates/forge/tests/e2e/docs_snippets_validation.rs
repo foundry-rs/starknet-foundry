@@ -21,7 +21,7 @@ fn test_docs_snippets() {
         .expect("Failed to extract command snippets");
 
     for snippet in &snippets {
-        if snippet.config.ignored.unwrap_or(false) {
+        if snippet.config.ignored {
             print_ignored_snippet_message(snippet);
             continue;
         }

@@ -20,7 +20,7 @@ For detailed CLI description, see [invoke command reference](../appendix/sncast/
 <!-- { "ignored_output": true } -->
 ```shell
 $ sncast \
-  --account user0 \
+  --account my_account \
   invoke \
   --url http://127.0.0.1:5055 \
   --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \
@@ -55,11 +55,10 @@ transaction: https://sepolia.starkscan.co/tx/[..]
 
 Not every function accepts parameters. Here is how to call it.
 
-<!-- { "contract_name": "HelloSncast" } -->
 ```shell
 $ sncast invoke \
   --fee-token strk \
-  --contract-address 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
+  --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
   --function "get_balance"
 ```
 

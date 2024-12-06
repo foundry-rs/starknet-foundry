@@ -20,7 +20,7 @@ Then run:
 <!-- TODO(#2736) -->
 <!-- { "ignored": true } -->
 ```shell
-$ sncast --account user0 \
+$ sncast --account my_account \
     declare \
 	--url http://127.0.0.1:5055 \
     --fee-token strk \

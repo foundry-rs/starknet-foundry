@@ -82,13 +82,13 @@ Read more about it in the [Cairo documentation](https://book.cairo-lang.org/appe
 
 Let's invoke a transaction and wait for it to be `ACCEPTED_ON_L2`.
 
-<!-- { "contract_name": "HelloSncast", "ignored_output": true } -->
+<!-- { "ignored_output": true } -->
 ```shell
-$ sncast --account user0 \
+$ sncast --account my_account \
     --wait \
     deploy \
 	--url http://127.0.0.1:5055 \
-    --class-hash 0x0555d84fd95ab9fa84a826382ca91127336d4b3c640d8571c32c4e7717e38799 \
+    --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
     --fee-token strk
 ```
 

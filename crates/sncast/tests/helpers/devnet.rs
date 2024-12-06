@@ -3,11 +3,14 @@ use crate::helpers::fixtures::{
     deploy_argent_account, deploy_braavos_account, deploy_cairo_0_account, deploy_keystore_account,
     deploy_latest_oz_account,
 };
+use camino::Utf8PathBuf;
 use ctor::{ctor, dtor};
+use std::fs;
 use std::net::TcpStream;
 use std::process::{Command, Stdio};
 use std::string::ToString;
 use std::time::{Duration, Instant};
+use tempfile::TempDir;
 use tokio::runtime::Runtime;
 use url::Url;
 
@@ -88,4 +91,27 @@ fn stop_devnet() {
         ])
         .spawn()
         .expect("Failed to kill devnet processes");
+}
+
+#[must_use]
+pub fn prepare_accounts_file(temp: &TempDir) -> Utf8PathBuf {
+    // Account from predeployed accounts in starknet-devnet-rs
+    let accounts = r#"
+    {
+        "alpha-sepolia": {
+            "my_account": {
+            "address": "0x6f4621e7ad43707b3f69f9df49425c3d94fdc5ab2e444bfa0e7e4edeff7992d",
+            "deployed": true,
+            "private_key": "0x0000000000000000000000000000000056c12e097e49ea382ca8eadec0839401",
+            "public_key": "0x048234b9bc6c1e749f4b908d310d8c53dae6564110b05ccf79016dca8ce7dfac",
+            "type": "open_zeppelin"
+            }
+        }
+    }
+    "#;
+
+    let accounts_path = temp.path().join("accounts.json");
+    fs::write(&accounts_path, accounts).expect("Failed to write accounts.json");
+
+    Utf8PathBuf::from_path_buf(accounts_path).expect("Invalid UTF-8 path")
 }

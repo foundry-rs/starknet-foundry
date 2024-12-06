@@ -1,4 +1,5 @@
 use crate::snippet::Snippet;
+use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
 use std::{env, fs, path::PathBuf, str::FromStr};
 use tempfile::TempDir;
@@ -32,7 +33,7 @@ pub fn assert_valid_snippet(condition: bool, snippet: &Snippet, err_message: &st
 pub fn print_snippets_validation_summary(snippets: &[Snippet], tool_name: &str) {
     let validated_snippets_count = snippets
         .iter()
-        .filter(|snippet| !snippet.config.ignored.unwrap_or(false))
+        .filter(|snippet| !snippet.config.ignored)
         .count();
     let ignored_snippets_count = snippets.len() - validated_snippets_count;
 
@@ -48,11 +49,12 @@ pub fn print_ignored_snippet_message(snippet: &Snippet) {
     );
 }
 
-fn get_canonical_path(relative_path: &str) -> Result<String, Box<dyn std::error::Error>> {
-    Ok(Utf8PathBuf::from_str(relative_path)?
-        .canonicalize_utf8()?
-        .to_string()
-        .replace('\\', "/"))
+fn get_canonical_path(relative_path: &str) -> Result<String> {
+    Ok(Utf8PathBuf::from_str(relative_path)
+        .map_err(|e| anyhow!("Failed to create Utf8PathBuf: {}", e))?
+        .canonicalize_utf8()
+        .map_err(|e| anyhow!("Failed to canonicalize path: {}", e))?
+        .to_string())
 }
 
 pub fn update_scarb_toml_dependencies(temp: &TempDir) -> Result<(), Box<dyn std::error::Error>> {

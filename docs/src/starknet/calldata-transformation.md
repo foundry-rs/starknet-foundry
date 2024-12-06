@@ -13,11 +13,10 @@ It has a few methods accepting different types and items defined in its namespac
 
 A default form of calldata passed to commands requiring it is a series of hex-encoded felts:
 
-<!-- { "contract_name": "DataTransformerContract" } -->
 ```shell
 $ sncast call \
     --url http://127.0.0.1:5055 \
-    --contract-address 0xcd7bbe72e64e86a894de5c8c9afa0ba9f0434765c52df822f18f5c93cc395f \
+    --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
     --function tuple_fn \
     --calldata 0x10 0x3 0x0 \
     --block-id latest
@@ -40,11 +39,10 @@ the [Starknet specification](https://docs.starknet.io/architecture-and-concepts/
 
 We can write the same command as above, but with arguments:
 
-<!-- { "contract_name": "DataTransformerContract" } -->
 ```shell
 $ sncast call \
     --url http://127.0.0.1:5055 \
-    --contract-address 0xcd7bbe72e64e86a894de5c8c9afa0ba9f0434765c52df822f18f5c93cc395f \
+    --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
     --function tuple_fn \
     --arguments '(0x10, 3, hello_sncast::data_transformer_contract::Enum::One)' \
     --block-id latest
@@ -86,11 +84,10 @@ Numeric types (primitives and `felt252`) can be paseed with type suffix specifie
 
 1. `complex_fn` - different data types:
 
-<!-- { "contract_name": "DataTransformerContract" } -->
 ```shell
 $ sncast call \
     --url http://127.0.0.1:5055 \
-    --contract-address 0xcd7bbe72e64e86a894de5c8c9afa0ba9f0434765c52df822f18f5c93cc395f \
+    --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
     --function complex_fn \
     --arguments \
 'array![array![1, 2], array![3, 4, 5], array![6]],'\
@@ -110,11 +107,10 @@ $ sncast call \
 
 Alternatively, you can continue the single quote for multiple lines.
 
-<!-- { "contract_name": "DataTransformerContract" } -->
 ```shell
 $ sncast call \
     --url http://127.0.0.1:5055 \
-    --contract-address 0xcd7bbe72e64e86a894de5c8c9afa0ba9f0434765c52df822f18f5c93cc395f \
+    --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
     --function complex_fn \
     --arguments 'array![array![1, 2], array![3, 4, 5], array![6]],
 12,
@@ -133,11 +129,10 @@ true,
 
 2. `nested_struct_fn` - struct nesting:
 
-<!-- { "contract_name": "DataTransformerContract" } -->
 ```shell
 $ sncast call \
     --url http://127.0.0.1:5055 \
-    --contract-address 0xcd7bbe72e64e86a894de5c8c9afa0ba9f0434765c52df822f18f5c93cc395f \
+    --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
     --function nested_struct_fn \
     --arguments \
 'hello_sncast::data_transformer_contract::NestedStructWithField {'\

@@ -54,10 +54,11 @@ impl SnippetType {
 
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct SnippetConfig {
-    pub ignored: Option<bool>,
+    #[serde(default)]
+    pub ignored: bool,
     pub package_name: Option<String>,
-    pub contract_name: Option<String>,
-    pub ignored_output: Option<bool>,
+    #[serde(default)]
+    pub ignored_output: bool,
 }
 
 #[derive(Debug)]
