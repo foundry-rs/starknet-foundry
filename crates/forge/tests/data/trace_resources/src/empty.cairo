@@ -1,5 +1,5 @@
 #[starknet::contract]
-mod Empty {
+pub mod Empty {
     #[storage]
-    struct Storage {}
+    pub struct Storage {}
 }

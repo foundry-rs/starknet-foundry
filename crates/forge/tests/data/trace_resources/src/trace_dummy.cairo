@@ -4,11 +4,8 @@ trait ITraceDummy<T> {
 }
 
 #[starknet::contract]
-mod TraceDummy {
-    use starknet::{
-        SyscallResultTrait, ClassHash, get_block_hash_syscall, get_execution_info_syscall,
-        emit_event_syscall, send_message_to_l1_syscall
-    };
+pub mod TraceDummy {
+    pub use starknet::{ClassHash};
     use super::super::use_builtins_and_syscalls;
 
     #[storage]
@@ -17,7 +14,7 @@ mod TraceDummy {
     }
 
     #[abi(embed_v0)]
-    impl ITraceDummyImpl of super::ITraceDummy<ContractState> {
+    pub impl ITraceDummyImpl of super::ITraceDummy<ContractState> {
         fn from_proxy_dummy(ref self: ContractState, empty_hash: ClassHash, salt: felt252) {
             use_builtins_and_syscalls(empty_hash, salt);
         }
