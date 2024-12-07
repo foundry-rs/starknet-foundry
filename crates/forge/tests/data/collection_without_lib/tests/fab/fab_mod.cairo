@@ -1,4 +1,4 @@
-use super::fab_fn;
+pub use super::fab_fn;
 
 #[test]
 fn test_fab() {

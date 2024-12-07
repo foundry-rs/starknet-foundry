@@ -1,4 +1,4 @@
-use snforge_std::{declare, DeclareResultTrait, ContractClass, ContractClassTrait};
+use snforge_std::{declare, DeclareResultTrait, ContractClassTrait};
 use features::{IContractDispatcher, IContractDispatcherTrait};
 
 #[cfg(feature: 'snforge_test_only')]

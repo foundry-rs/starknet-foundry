@@ -1,27 +1,25 @@
 use starknet::ContractAddress;
 
 #[derive(Drop, Serde, Clone)]
-struct RecursiveCall {
+pub struct RecursiveCall {
     contract_address: ContractAddress,
     payload: Array<RecursiveCall>
 }
 
 #[starknet::interface]
-trait RecursiveCaller<T> {
+pub trait RecursiveCaller<T> {
     fn execute_calls(self: @T, calls: Array<RecursiveCall>);
 }
 
 #[starknet::interface]
-trait Failing<TContractState> {
+pub trait Failing<TContractState> {
     fn fail(self: @TContractState, data: Array<felt252>);
 }
 
 #[starknet::contract]
-mod SimpleContract {
+pub mod SimpleContract {
     use core::array::ArrayTrait;
-    use core::traits::Into;
-    use starknet::ContractAddress;
-    use starknet::get_contract_address;
+    pub use starknet::get_contract_address;
     use super::{
         RecursiveCaller, RecursiveCallerDispatcher, RecursiveCallerDispatcherTrait, RecursiveCall,
         Failing

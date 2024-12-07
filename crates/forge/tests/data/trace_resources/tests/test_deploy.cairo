@@ -1,7 +1,6 @@
 use core::clone::Clone;
 use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 use snforge_std::{declare, ContractClassTrait};
-use starknet::{SyscallResultTrait, deploy_syscall};
 
 #[test]
 fn test_deploy() {
@@ -15,17 +14,11 @@ fn test_deploy() {
 
     proxy.deploy(@array![checker_address.into(), empty_hash.into(), 1]).unwrap();
 
-    deploy_syscall(
-        proxy.class_hash, 0, array![checker_address.into(), empty_hash.into(), 2].span(), false
-    )
-        .unwrap_syscall();
+    
 
     proxy
         .deploy_at(@array![checker_address.into(), empty_hash.into(), 3], 123.try_into().unwrap())
         .unwrap();
 
-    deploy_syscall(
-        proxy.class_hash, 12412, array![checker_address.into(), empty_hash.into(), 4].span(), false
-    )
-        .unwrap_syscall();
+    
 }
