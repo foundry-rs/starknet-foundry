@@ -128,3 +128,40 @@ async fn test_show_config_no_url() {
         wait_timeout: 500
     "});
 }
+
+#[tokio::test]
+async fn test_show_config_default_block_explorer() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let args = vec!["show-config"];
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    snapbox.assert().success().stdout_eq(formatdoc! {r"
+        command: show-config
+        account: user1
+        accounts_file_path: ../account-file
+        chain_id: alpha-sepolia
+        rpc_url: {}
+        block_explorer: etherscan
+        show_explorer_links: true
+        wait_retry_interval: 5
+        wait_timeout: 300
+    ", URL});
+}
+
+#[tokio::test]
+async fn test_show_config_custom_block_explorer() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let args = vec!["--profile", "profile5", "show-config"];
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    snapbox.assert().success().stdout_eq(formatdoc! {r"
+        command: show-config
+        account: user3
+        accounts_file_path: ../account-file
+        chain_id: alpha-sepolia
+        profile: profile5
+        rpc_url: {}
+        block_explorer: blockscout
+        show_explorer_links: true
+        wait_retry_interval: 5
+        wait_timeout: 300
+    ", URL});
+}
