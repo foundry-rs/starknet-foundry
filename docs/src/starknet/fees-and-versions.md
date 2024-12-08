@@ -11,8 +11,8 @@ Cast allows you to specify either the version of the transaction you want to sen
 the `--version` and `--fee-token` flags.
 
 > ⚠️ **Warning**
-> `--fee-token` flag will be deprecated in the future due to [SNIP-16: Deprecation of Transaction Versions 0,1,2](https://community.starknet.io/t/snip-16-deprecation-of-transaction-versions-0-1-2/114443)
-> so it is recommended to use `--version` flag instead or let the version be inferred automatically.
+> `--fee-token` flag will be deprecated in the future due to [SNIP-16: Deprecation of Transaction Versions 0,1,2](https://community.starknet.io/t/snip-16-deprecation-of-transaction-versions-0-1-2/114443).
+> It is recommended to use `--version` flag instead or let the version be inferred automatically.
 
 
 > 💡 **Info**
