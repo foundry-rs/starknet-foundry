@@ -45,8 +45,6 @@ transaction: https://sepolia.starkscan.co/tx/0x504f830428d0fcf462b4b814e2f67e12d
 > 💡 **Info**
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
 
-> 💡 **Info**
-> You can also choose to pay in Ether by setting `--fee-token` to `eth`.
 
 ### Invoking Function Without Arguments
 
