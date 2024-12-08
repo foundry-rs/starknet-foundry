@@ -15,13 +15,13 @@ This example uses only felts for simplicity.
 1. Exact storage fields
 
 ```rust
-{{#include ../../listings/snforge_advanced_features/crates/direct_storage_access/tests/felts_only/field.cairo}}
+{{#include ../../listings/direct_storage_access/tests/felts_only/field.cairo}}
 ```
 
 2. Map entries
 
 ```rust
-{{#include ../../listings/snforge_advanced_features/crates/direct_storage_access/tests/felts_only/map_entry.cairo}}
+{{#include ../../listings/direct_storage_access/tests/felts_only/map_entry.cairo}}
 ```
 
 ## Example: Complex structures in storage
@@ -30,13 +30,13 @@ This example uses a complex key and value, with default derived serialization me
 We use a contract along with helper structs:
 
 ```rust
-{{#include ../../listings/snforge_advanced_features/crates/direct_storage_access/src/complex_structures.cairo}}
+{{#include ../../listings/direct_storage_access/src/complex_structures.cairo}}
 ```
 
 And perform a test checking `load` and `store` behavior in context of those structs:
 
 ```rust
-{{#include ../../listings/snforge_advanced_features/crates/direct_storage_access/tests/complex_structures.cairo}}
+{{#include ../../listings/direct_storage_access/tests/complex_structures.cairo}}
 ```
 
 > ⚠️ **Warning**
@@ -54,5 +54,5 @@ And perform a test checking `load` and `store` behavior in context of those stru
 This example uses `storage_address_from_base` with entry's of the storage variable.
 
 ```rust
-{{#include ../../listings/snforge_advanced_features/crates/direct_storage_access/tests/using_storage_address_from_base.cairo}}
+{{#include ../../listings/direct_storage_access/tests/using_storage_address_from_base.cairo}}
 ```

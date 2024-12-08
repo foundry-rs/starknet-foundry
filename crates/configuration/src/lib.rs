@@ -40,9 +40,9 @@ fn get_with_ownership(config: serde_json::Value, key: &str) -> Option<serde_json
 pub fn get_profile(
     raw_config: serde_json::Value,
     tool: &str,
-    profile: &Option<String>,
+    profile: Option<&str>,
 ) -> Result<serde_json::Value> {
-    let profile_name = profile.as_deref().unwrap_or("default");
+    let profile_name = profile.unwrap_or("default");
     let tool_config = get_with_ownership(raw_config, tool)
         .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
 
@@ -54,8 +54,8 @@ pub fn get_profile(
 }
 
 pub fn load_config<T: Config + Default>(
-    path: &Option<Utf8PathBuf>,
-    profile: &Option<String>,
+    path: Option<&Utf8PathBuf>,
+    profile: Option<&str>,
 ) -> Result<T> {
     let config_path = path
         .as_ref()
@@ -146,7 +146,7 @@ pub fn search_config_upwards_relative_to(current_dir: &Utf8PathBuf) -> Result<Ut
 
 pub fn find_config_file() -> Result<Utf8PathBuf> {
     search_config_upwards_relative_to(&Utf8PathBuf::try_from(
-        std::env::current_dir().expect("Failed to get current directory"),
+        env::current_dir().expect("Failed to get current directory"),
     )?)
 }
 
@@ -256,8 +256,8 @@ mod tests {
     fn load_config_happy_case_with_profile() {
         let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None).unwrap();
         let config = load_config::<StubConfig>(
-            &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
-            &Some(String::from("profile1")),
+            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            Some(&String::from("profile1")),
         )
         .unwrap();
         assert_eq!(config.account, String::from("user3"));
@@ -268,8 +268,8 @@ mod tests {
     fn load_config_happy_case_default_profile() {
         let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None).unwrap();
         let config = load_config::<StubConfig>(
-            &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
-            &None,
+            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            None,
         )
         .unwrap();
         assert_eq!(config.account, String::from("user1"));
@@ -280,8 +280,8 @@ mod tests {
     fn load_config_not_found() {
         let tempdir = tempdir().expect("Failed to create a temporary directory");
         let config = load_config::<StubConfig>(
-            &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
-            &None,
+            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            None,
         )
         .unwrap();
 
@@ -326,8 +326,8 @@ mod tests {
         File::create(temp_dir.path().join(CONFIG_FILENAME)).unwrap();
 
         load_config::<StubConfig>(
-            &Some(Utf8PathBuf::try_from(temp_dir.path().to_path_buf()).unwrap()),
-            &None,
+            Some(&Utf8PathBuf::try_from(temp_dir.path().to_path_buf()).unwrap()),
+            None,
         )
         .unwrap();
     }
@@ -345,8 +345,8 @@ mod tests {
         .expect("Failed to copy config file to temp dir");
         // missing env variables
         if load_config::<StubConfig>(
-            &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
-            &Some(String::from("with-envs")),
+            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            Some(&String::from("with-envs")),
         )
         .is_ok()
         {
@@ -360,8 +360,8 @@ mod tests {
         env::set_var("VALUE_BOOL1231321", "true");
         env::set_var("VALUE_BOOL1231322", "false");
         let config = load_config::<StubComplexConfig>(
-            &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
-            &Some(String::from("with-envs")),
+            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            Some(&String::from("with-envs")),
         )
         .unwrap();
         assert_eq!(config.url, String::from("nfsaufbnsailfbsbksdabfnkl"));

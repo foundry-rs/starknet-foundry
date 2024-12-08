@@ -9,6 +9,8 @@ license.workspace = true
 regex = "1.11.1"
 shell-words = "1.1.0"
 walkdir.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 
 [features]
 testing = []

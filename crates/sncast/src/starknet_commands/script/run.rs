@@ -81,7 +81,7 @@ pub struct CastScriptExtension<'a> {
     pub state: StateManager,
 }
 
-impl<'a> CastScriptExtension<'a> {
+impl CastScriptExtension<'_> {
     pub fn account(
         &self,
     ) -> Result<&SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>> {
