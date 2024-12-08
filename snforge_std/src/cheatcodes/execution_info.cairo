@@ -1,36 +1,36 @@
 use starknet::{ContractAddress, testing::cheatcode, contract_address_const};
-use starknet::info::v2::ResourceBounds;
+use starknet::ResourcesBounds;
 use snforge_std::cheatcodes::CheatSpan;
 use super::super::_cheatcode::handle_cheatcode;
 
-mod caller_address;
-mod block_number;
-mod block_timestamp;
-mod sequencer_address;
-mod version;
-mod max_fee;
-mod signature;
-mod transaction_hash;
-mod chain_id;
-mod nonce;
-mod resource_bounds;
-mod tip;
-mod paymaster_data;
-mod nonce_data_availability_mode;
-mod fee_data_availability_mode;
-mod account_deployment_data;
-mod account_contract_address;
+pub mod caller_address;
+pub mod block_number;
+pub mod block_timestamp;
+pub mod sequencer_address;
+pub mod version;
+pub mod max_fee;
+pub mod signature;
+pub mod transaction_hash;
+pub mod chain_id;
+pub mod nonce;
+pub mod resource_bounds;
+pub mod tip;
+pub mod paymaster_data;
+pub mod nonce_data_availability_mode;
+pub mod fee_data_availability_mode;
+pub mod account_deployment_data;
+pub mod account_contract_address;
 
 
 #[derive(Serde, Drop, Copy)]
-struct CheatArguments<T> {
-    value: T,
-    span: CheatSpan,
-    target: ContractAddress,
+pub struct CheatArguments<T> {
+    pub value: T,
+    pub span: CheatSpan,
+    pub target: ContractAddress,
 }
 
 #[derive(Serde, Drop, Copy)]
-enum Operation<T> {
+pub enum Operation<T> {
     StartGlobal: T,
     Start: CheatArguments<T>,
     Stop: ContractAddress,
@@ -46,21 +46,21 @@ enum Operation<T> {
 /// - `StartGlobal` - changed for all contracts until overridden or stopped
 /// - `StopGlobal` - reset to the initial value for all contracts
 #[derive(Copy, Drop, Serde)]
-struct TxInfoMock {
-    version: Operation<felt252>,
-    account_contract_address: Operation<ContractAddress>,
-    max_fee: Operation<u128>,
-    signature: Operation<Span<felt252>>,
-    transaction_hash: Operation<felt252>,
-    chain_id: Operation<felt252>,
-    nonce: Operation<felt252>,
+pub struct TxInfoMock {
+    pub version: Operation<felt252>,
+    pub account_contract_address: Operation<ContractAddress>,
+    pub max_fee: Operation<u128>,
+    pub signature: Operation<Span<felt252>>,
+    pub transaction_hash: Operation<felt252>,
+    pub chain_id: Operation<felt252>,
+    pub nonce: Operation<felt252>,
     // starknet::info::v2::TxInfo fields
-    resource_bounds: Operation<Span<ResourceBounds>>,
-    tip: Operation<u128>,
-    paymaster_data: Operation<Span<felt252>>,
-    nonce_data_availability_mode: Operation<u32>,
-    fee_data_availability_mode: Operation<u32>,
-    account_deployment_data: Operation<Span<felt252>>,
+    pub resource_bounds: Operation<Span<ResourcesBounds>>,
+    pub tip: Operation<u128>,
+    pub paymaster_data: Operation<Span<felt252>>,
+    pub nonce_data_availability_mode: Operation<u32>,
+    pub fee_data_availability_mode: Operation<u32>,
+    pub account_deployment_data: Operation<Span<felt252>>,
 }
 
 impl TxInfoMockImpl of Default<TxInfoMock> {
@@ -93,13 +93,13 @@ impl TxInfoMockImpl of Default<TxInfoMock> {
 /// - `StartGlobal` - changed for all contracts until overridden or stopped
 /// - `StopGlobal` - reset to the initial value for all contracts
 #[derive(Copy, Drop, Serde)]
-struct BlockInfoMock {
-    block_number: Operation<u64>,
-    block_timestamp: Operation<u64>,
-    sequencer_address: Operation<ContractAddress>,
+pub struct BlockInfoMock {
+    pub block_number: Operation<u64>,
+    pub block_timestamp: Operation<u64>,
+    pub sequencer_address: Operation<ContractAddress>,
 }
 
-impl BlockInfoMockImpl of Default<BlockInfoMock> {
+pub impl BlockInfoMockImpl of Default<BlockInfoMock> {
     /// Returns a default object initialized with Operation::Retain for each field
     /// Useful for setting only a few of fields instead of all of them
     fn default() -> BlockInfoMock {
@@ -119,13 +119,13 @@ impl BlockInfoMockImpl of Default<BlockInfoMock> {
 /// - `StartGlobal` - changed for all contracts until overridden or stopped
 /// - `StopGlobal` - reset to the initial value for all contracts
 #[derive(Copy, Drop, Serde)]
-struct ExecutionInfoMock {
-    block_info: BlockInfoMock,
-    tx_info: TxInfoMock,
-    caller_address: Operation<ContractAddress>,
+pub struct ExecutionInfoMock {
+    pub block_info: BlockInfoMock,
+    pub tx_info: TxInfoMock,
+    pub caller_address: Operation<ContractAddress>,
 }
 
-impl ExecutionInfoMockImpl of Default<ExecutionInfoMock> {
+pub impl ExecutionInfoMockImpl of Default<ExecutionInfoMock> {
     /// Returns a default object initialized with Operation::Retain for each field
     /// Useful for setting only a few of fields instead of all of them
     fn default() -> ExecutionInfoMock {
@@ -140,7 +140,7 @@ impl ExecutionInfoMockImpl of Default<ExecutionInfoMock> {
 /// Changes `ExecutionInfo` returned by `get_execution_info()`
 /// - `execution_info_mock` - a struct with same structure as `ExecutionInfo` (returned by
 /// `get_execution_info()`)
-fn cheat_execution_info(execution_info_mock: ExecutionInfoMock) {
+pub fn cheat_execution_info(execution_info_mock: ExecutionInfoMock) {
     let mut inputs = array![];
 
     execution_info_mock.serialize(ref inputs);
