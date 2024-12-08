@@ -15,20 +15,20 @@ pub fn spy_events() -> EventSpy {
 /// Raw event format (as seen via the RPC-API), can be used for asserting the emitted events.
 #[derive(Drop, Clone, Serde, Debug)]
 pub struct Event {
-    keys: Array<felt252>,
-    data: Array<felt252>
+    pub keys: Array<felt252>,
+    pub data: Array<felt252>
 }
 
 /// An event spy structure allowing to get events emitted only after its creation.
 #[derive(Drop, Serde)]
 pub struct EventSpy {
-    _event_offset: usize
+    pub _event_offset: usize
 }
 
 /// A wrapper structure on an array of events to handle filtering smoothly.
 #[derive(Drop, Serde, Clone, Debug)]
 pub struct Events {
-    events: Array<(ContractAddress, Event)>
+    pub events: Array<(ContractAddress, Event)>
 }
 
 pub trait EventSpyTrait {

@@ -1,6 +1,6 @@
-mod secp256k1_curve;
-mod secp256r1_curve;
-mod stark_curve;
+pub mod secp256k1_curve;
+pub mod secp256r1_curve;
+pub mod stark_curve;
 
 #[derive(Copy, Drop)]
 pub struct KeyPair<SK, PK> {

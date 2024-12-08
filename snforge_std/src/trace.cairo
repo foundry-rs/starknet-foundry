@@ -41,7 +41,7 @@ pub enum EntryPointType {
 
 /// Denotes type of the call
 #[derive(Drop, Serde, PartialEq, Clone, Debug)]
-enum CallType {
+pub enum CallType {
     /// Regular call
     Call,
     /// Library call
@@ -50,7 +50,7 @@ enum CallType {
 
 /// Result of a contract or a library call
 #[derive(Drop, Serde, PartialEq, Clone, Debug)]
-enum CallResult {
+pub enum CallResult {
     /// A successful call with it's result
     Success: Array<felt252>,
     /// A failed call along with it's panic data
@@ -59,7 +59,7 @@ enum CallResult {
 
 /// Represents a pre-processed failure of a call
 #[derive(Drop, Serde, PartialEq, Clone, Debug)]
-enum CallFailure {
+pub enum CallFailure {
     /// Contains raw panic data
     Panic: Array<felt252>,
     /// Contains panic data in parsed form, if parsing is applicable

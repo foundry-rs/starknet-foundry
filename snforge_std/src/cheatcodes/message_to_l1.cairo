@@ -16,21 +16,21 @@ pub fn spy_messages_to_l1() -> MessageToL1Spy {
 #[derive(Drop, Clone, Serde)]
 pub struct MessageToL1 {
     /// An ethereum address where the message is destined to go
-    to_address: EthAddress,
+    pub to_address: EthAddress,
     /// Actual payload which will be delivered to L1 contract
-    payload: Array<felt252>
+    pub payload: Array<felt252>
 }
 
 /// A message spy structure allowing to get messages emitted only after its creation.
 #[derive(Drop, Serde)]
 pub struct MessageToL1Spy {
-    _message_offset: usize
+    pub _message_offset: usize
 }
 
 /// A wrapper structure on an array of messages to handle filtering smoothly.
 #[derive(Drop, Serde)]
 pub struct MessagesToL1 {
-    messages: Array<(ContractAddress, MessageToL1)>
+    pub messages: Array<(ContractAddress, MessageToL1)>
 }
 
 pub trait MessageToL1SpyTrait {

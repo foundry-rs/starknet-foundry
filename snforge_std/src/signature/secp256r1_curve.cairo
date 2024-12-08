@@ -6,7 +6,7 @@ use super::super::_cheatcode::handle_cheatcode;
 use super::SignError;
 use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 
-impl Secp256r1CurveKeyPairImpl of KeyPairTrait<u256, Secp256r1Point> {
+pub impl Secp256r1CurveKeyPairImpl of KeyPairTrait<u256, Secp256r1Point> {
     fn generate() -> KeyPair<u256, Secp256r1Point> {
         let mut output = handle_cheatcode(
             cheatcode::<'generate_ecdsa_keys'>(array!['Secp256r1'].span())
@@ -33,7 +33,9 @@ impl Secp256r1CurveKeyPairImpl of KeyPairTrait<u256, Secp256r1Point> {
     }
 }
 
-impl Secp256r1CurveSignerImpl of SignerTrait<KeyPair<u256, Secp256r1Point>, u256, (u256, u256)> {
+pub impl Secp256r1CurveSignerImpl of SignerTrait<
+    KeyPair<u256, Secp256r1Point>, u256, (u256, u256)
+> {
     fn sign(
         self: KeyPair<u256, Secp256r1Point>, message_hash: u256
     ) -> Result<(u256, u256), SignError> {
@@ -47,7 +49,7 @@ impl Secp256r1CurveSignerImpl of SignerTrait<KeyPair<u256, Secp256r1Point>, u256
     }
 }
 
-impl Secp256r1CurveVerifierImpl of VerifierTrait<
+pub impl Secp256r1CurveVerifierImpl of VerifierTrait<
     KeyPair<u256, Secp256r1Point>, u256, (u256, u256)
 > {
     fn verify(

@@ -24,9 +24,9 @@ pub mod account_contract_address;
 
 #[derive(Serde, Drop, Copy)]
 pub struct CheatArguments<T> {
-    value: T,
-    span: CheatSpan,
-    target: ContractAddress,
+    pub value: T,
+    pub span: CheatSpan,
+    pub target: ContractAddress,
 }
 
 #[derive(Serde, Drop, Copy)]
@@ -47,20 +47,20 @@ pub enum Operation<T> {
 /// - `StopGlobal` - reset to the initial value for all contracts
 #[derive(Copy, Drop, Serde)]
 pub struct TxInfoMock {
-    version: Operation<felt252>,
-    account_contract_address: Operation<ContractAddress>,
-    max_fee: Operation<u128>,
-    signature: Operation<Span<felt252>>,
-    transaction_hash: Operation<felt252>,
-    chain_id: Operation<felt252>,
-    nonce: Operation<felt252>,
+    pub version: Operation<felt252>,
+    pub account_contract_address: Operation<ContractAddress>,
+    pub max_fee: Operation<u128>,
+    pub signature: Operation<Span<felt252>>,
+    pub transaction_hash: Operation<felt252>,
+    pub chain_id: Operation<felt252>,
+    pub nonce: Operation<felt252>,
     // starknet::info::v2::TxInfo fields
-    resource_bounds: Operation<Span<ResourcesBounds>>,
-    tip: Operation<u128>,
-    paymaster_data: Operation<Span<felt252>>,
-    nonce_data_availability_mode: Operation<u32>,
-    fee_data_availability_mode: Operation<u32>,
-    account_deployment_data: Operation<Span<felt252>>,
+    pub resource_bounds: Operation<Span<ResourcesBounds>>,
+    pub tip: Operation<u128>,
+    pub paymaster_data: Operation<Span<felt252>>,
+    pub nonce_data_availability_mode: Operation<u32>,
+    pub fee_data_availability_mode: Operation<u32>,
+    pub account_deployment_data: Operation<Span<felt252>>,
 }
 
 impl TxInfoMockImpl of Default<TxInfoMock> {
@@ -93,10 +93,10 @@ impl TxInfoMockImpl of Default<TxInfoMock> {
 /// - `StartGlobal` - changed for all contracts until overridden or stopped
 /// - `StopGlobal` - reset to the initial value for all contracts
 #[derive(Copy, Drop, Serde)]
-struct BlockInfoMock {
-    block_number: Operation<u64>,
-    block_timestamp: Operation<u64>,
-    sequencer_address: Operation<ContractAddress>,
+pub struct BlockInfoMock {
+    pub block_number: Operation<u64>,
+    pub block_timestamp: Operation<u64>,
+    pub sequencer_address: Operation<ContractAddress>,
 }
 
 pub impl BlockInfoMockImpl of Default<BlockInfoMock> {
@@ -120,9 +120,9 @@ pub impl BlockInfoMockImpl of Default<BlockInfoMock> {
 /// - `StopGlobal` - reset to the initial value for all contracts
 #[derive(Copy, Drop, Serde)]
 pub struct ExecutionInfoMock {
-    block_info: BlockInfoMock,
-    tx_info: TxInfoMock,
-    caller_address: Operation<ContractAddress>,
+    pub block_info: BlockInfoMock,
+    pub tx_info: TxInfoMock,
+    pub caller_address: Operation<ContractAddress>,
 }
 
 pub impl ExecutionInfoMockImpl of Default<ExecutionInfoMock> {
