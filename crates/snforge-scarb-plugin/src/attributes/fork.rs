@@ -1,4 +1,5 @@
 use self::block_id::{BlockId, BlockIdVariants};
+use crate::attributes::{ValidArgs, ValidArgsTypes, ValidNamedArgs};
 use crate::{
     args::Arguments,
     attributes::{AttributeCollector, AttributeInfo, AttributeTypeData},
@@ -22,6 +23,17 @@ impl AttributeInfo for ForkCollector {
 
 impl AttributeTypeData for ForkCollector {
     const CHEATCODE_NAME: &'static str = "set_config_fork";
+}
+
+impl ValidArgs for ForkCollector {
+    const VALID_ARGS: ValidArgsTypes<'_> = ValidArgsTypes::Both {
+        valid_named_args: ValidNamedArgs::Restricted(&[
+            "block_hash",
+            "block_number",
+            "block_tag",
+            "url",
+        ]),
+    };
 }
 
 impl AttributeCollector for ForkCollector {
