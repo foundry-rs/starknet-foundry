@@ -71,7 +71,9 @@ pub async fn run(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
-    let fee_args = run.fee_args.clone().fee_token(run.token_from_version());
+    let fee_token = run.validate_and_get_token()?;
+
+    let fee_args = run.fee_args.clone().fee_token(fee_token);
 
     let contents = std::fs::read_to_string(&run.path)?;
     let items_map: HashMap<String, Vec<toml::Value>> =

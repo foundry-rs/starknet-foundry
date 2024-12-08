@@ -19,7 +19,6 @@ $ sncast \
     --account myuser \
     deploy \
     --url http://127.0.0.1:5050/rpc \
-	--fee-token strk \
     --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
 ```
 
@@ -41,8 +40,6 @@ transaction: https://starkscan.co/search/0x64a62a0002...
 > 💡 **Info**
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
 
-> 💡 **Info**
-> You can also choose to pay in Ether by setting `--fee-token` to `eth`.
 
 ### Deploying Contract With Constructor
 
@@ -59,7 +56,6 @@ you have to pass constructor calldata to deploy it.
 
 ```shell
 $ sncast deploy \
-    --fee-token strk \
     --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a \
     --constructor-calldata 0x1 0x1 0x0
 ```
@@ -90,7 +86,6 @@ Salt is a parameter which modifies contract's address, if not passed it will be 
 
 ```shell
 $ sncast deploy \
-    --fee-token strk \
     --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a \
     --salt 0x123
 ```
@@ -117,7 +112,6 @@ It can be passed even if the `salt` argument was not provided.
 
 ```shell
 $ sncast deploy \
-    --fee-token strk \
     --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a \
     --unique
 ```
