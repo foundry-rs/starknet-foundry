@@ -1,7 +1,7 @@
 use starknet::ContractAddress;
 
 #[starknet::interface]
-trait IERC20<TContractState> {
+pub trait IERC20<TContractState> {
     fn get_name(self: @TContractState) -> felt252;
     fn get_symbol(self: @TContractState) -> felt252;
     fn get_decimals(self: @TContractState) -> u8;
@@ -20,12 +20,13 @@ trait IERC20<TContractState> {
 }
 
 #[starknet::contract]
-mod ERC20 {
+pub mod ERC20 {
     use starknet::{
         contract_address_const, get_caller_address, ContractAddress,
-        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map},
+        storage::{StoragePointerWriteAccess, StoragePathEntry, Map},
     };
-    use zeroable::Zeroable;
+    use core::starknet::storage::StoragePointerReadAccess;
+    use core::num::traits::zero::Zero;
     #[storage]
     struct Storage {
         name: felt252,

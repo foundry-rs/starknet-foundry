@@ -1,7 +1,7 @@
 use core::clone::Clone;
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
 
-use trace_resources::{
+pub use trace_resources::{
     trace_info_checker::{ITraceInfoCheckerDispatcherTrait, ITraceInfoCheckerDispatcher},
     trace_info_proxy::{ITraceInfoProxyDispatcherTrait, ITraceInfoProxyDispatcher}
 };

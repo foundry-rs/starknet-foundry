@@ -1,2 +1,2 @@
-mod example;
-mod oz_ac_component;
+pub mod example;
+pub mod oz_ac_component;

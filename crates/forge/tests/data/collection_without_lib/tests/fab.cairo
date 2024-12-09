@@ -1,4 +1,4 @@
-use super::fibfabfob::fab_fn;
+pub use super::fibfabfob::fab_fn;
 
 mod fab_mod;
 
