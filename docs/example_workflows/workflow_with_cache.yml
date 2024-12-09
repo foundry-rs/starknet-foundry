@@ -22,8 +22,8 @@ jobs:
         uses: foundry-rs/setup-snfoundry@v3
         with:
           starknet-foundry-version: ${{ env.STARKNET_FOUNDRY_VERSION }}
-      - run: snforge
-      
+      - run: echo "Installed Starknet Foundry version ${{ steps.setup-snfoundry.outputs.starknet-foundry-version }}"
+
       - name: Cache Starknet Foundry
         if: steps.cache-snfoundry.outputs.cache-hit != 'true'
         uses: actions/cache@v4
