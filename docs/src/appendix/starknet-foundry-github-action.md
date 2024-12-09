@@ -5,7 +5,7 @@ If you wish to use Starknet Foundry in your Github Actions workflow, you can use
 ## Example workflow
 
 ```yml
-{{#include ../../listings/example_workflows/basic_workflow.yml}}
+{{#include ../../example_workflows/basic_workflow.yml}}
 ```
 
 ## Caching
@@ -13,5 +13,5 @@ If you wish to use Starknet Foundry in your Github Actions workflow, you can use
 In order to optimize the workflow, you should cache Starknet Foundry. Here is an example of how to do it:
 
 ```yaml
-{{#include ../../listings/example_workflows/workflow_with_cache.yml}}
+{{#include ../../example_workflows/workflow_with_cache.yml}}
 ```
