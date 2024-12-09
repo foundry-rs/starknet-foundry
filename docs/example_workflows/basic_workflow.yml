@@ -9,4 +9,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup Starknet Foundry
         uses: foundry-rs/setup-snfoundry@v3
-      - run: echo "Installed Starknet Foundry version ${{ steps.setup-snfoundry.outputs.starknet-foundry-version }}"
+
+      - run: snforge --version
