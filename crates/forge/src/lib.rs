@@ -1,16 +1,18 @@
+use crate::compatibility_check::{create_version_parser, Requirement, RequirementsChecker};
 use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge_runner::CACHE_DIR;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
+use semver::Version;
 use std::ffi::OsString;
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
 use tokio::runtime::Builder;
-use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
 pub mod block_number_map;
 mod combine_configs;
+mod compatibility_check;
 mod init;
 pub mod pretty_printing;
 pub mod run_tests;
@@ -72,6 +74,8 @@ enum ForgeSubcommand {
     },
     /// Clean Forge cache directory
     CleanCache {},
+    /// Validate if all `snforge` requirements are installed
+    ValidateRequirements,
 }
 
 #[derive(ValueEnum, Debug, Clone)]
@@ -160,8 +164,7 @@ pub enum ExitStatus {
 pub fn main_execution() -> Result<ExitStatus> {
     let cli = Cli::parse();
 
-    ScarbCommand::new().ensure_available()?;
-    UniversalSierraCompilerCommand::ensure_available()?;
+    validate_requirements(false)?;
 
     match cli.subcommand {
         ForgeSubcommand::Init { name } => {
@@ -193,5 +196,39 @@ pub fn main_execution() -> Result<ExitStatus> {
 
             rt.block_on(run_for_workspace(args))
         }
+        ForgeSubcommand::ValidateRequirements => {
+            validate_requirements(true)?;
+            Ok(ExitStatus::Success)
+        }
     }
+}
+
+fn validate_requirements(output_on_success: bool) -> Result<()> {
+    let mut requirements_checker = RequirementsChecker::new(output_on_success);
+    requirements_checker.add_requirement(Requirement {
+        name: "Rust".to_string(),
+        command: "rustc --version".to_string(),
+        version_parser: create_version_parser("Rust", r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)"),
+        helper_text: "Follow instructions from https://www.rust-lang.org/tools/install".to_string(),
+        minimal_version: Version::new(1, 81, 0),
+    });
+    requirements_checker.add_requirement(Requirement {
+        name: "Scarb".to_string(),
+        command: "scarb --version".to_string(),
+        minimal_version: Version::new(2, 7, 0),
+        helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
+            .to_string(),
+        version_parser: create_version_parser("Scarb", r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)"),
+    });
+    requirements_checker.add_requirement(Requirement {
+        name: "Universal Sierra Compiler".to_string(),
+        command: "universal-sierra-compiler --version".to_string(),
+        minimal_version: Version::new(2, 0, 0),
+        helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),
+        version_parser: create_version_parser(
+            "Universal Sierra Compiler",
+            r"universal-sierra-compiler (?<version>[0-9]+.[0-9]+.[0-9]+)",
+        ),
+    });
+    requirements_checker.validate()
 }
