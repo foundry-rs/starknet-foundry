@@ -123,10 +123,6 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
-      - name: Install cairo-profiler
-        run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/cairo-profiler/main/scripts/install.sh | sh
-
       - run: cargo test --package forge --features scarb_2_8_3 --test main e2e::coverage
       - run: cargo test --package forge --features scarb_2_8_3 --test main e2e::backtrace
 
