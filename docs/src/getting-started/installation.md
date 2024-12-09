@@ -80,14 +80,6 @@ As for now, Starknet Foundry on Windows needs manual installation, but necessary
    $ sncast --version
    ```
 
-## Universal-Sierra-Compiler update
-
-If you would like to bump the USC manually (e.g. when the new Sierra version is released) you can do it by running:
-
-```shell
-$ curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
-```
-
 ## Common Errors
 
 ### No Version Set
@@ -137,6 +129,14 @@ and local version of Rust
 
 ```shell
 $ rustup override set stable
+```
+
+## Universal-Sierra-Compiler update
+
+If you would like to bump the USC manually (e.g. when the new Sierra version is released) you can do it by running:
+
+```shell
+$ curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
 ```
 
 ## How to build Starknet Foundry from source code
