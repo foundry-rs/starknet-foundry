@@ -3,6 +3,28 @@
 Starknet Foundry is easy to install on Linux, macOS and Windows.
 In this section, we will walk through the process of installing Starknet Foundry.
 
+## Contents
+
+<!-- TOC -->
+* [Installation](#installation)
+  * [Contents](#contents)
+  * [Requirements](#requirements)
+  * [Linux and MacOS](#linux-and-macos)
+    * [Install Rust version >= 1.80.1](#install-rust-version--1801)
+    * [Install asdf](#install-asdf)
+    * [Install Scarb version >= 2.7.0](#install-scarb-version--270)
+    * [Install Starknet Foundry](#install-starknet-foundry)
+  * [Windows](#windows)
+    * [Install Rust version >= 1.80.1](#install-rust-version--1801-1)
+    * [Install Scarb version >= 2.7.0](#install-scarb-version--270-1)
+    * [Install Starknet Foundry](#install-starknet-foundry-1)
+  * [Common Errors](#common-errors)
+    * [No Version Set](#no-version-set)
+    * [Invalid Rust Version](#invalid-rust-version)
+  * [Universal-Sierra-Compiler update](#universal-sierra-compiler-update)
+  * [How to build Starknet Foundry from source code](#how-to-build-starknet-foundry-from-source-code)
+<!-- TOC -->
+
 ## Requirements
 
 > 📝 **Note**
