@@ -25,35 +25,43 @@ When deploying an account, you can specify the version of the transaction and th
 
 When paying in STRK, you need to either set `--fee-token` to `strk`:
 
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast account deploy \
-    --name some-name \
+    --name example-name \
     --fee-token strk \
     --max-fee 9999999999999
 ```
 or set `--version` to `v3`:
 
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast account deploy \
-    --name some-name \
+    --name example-name \
     --version v3 \
     --max-fee 9999999999999
 ```
 
 In case of paying in ETH, same rules apply. You need to set either `--fee-token` to `eth`:
 
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast account deploy \
-    --name some-name \
+    --name example-name \
     --fee-token eth \
     --max-fee 9999999999999
 ```
 
 or set `--version` to `v1`:
 
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast account deploy \
-    --name some-name \
+    --name example-name \
     --version v1 \
     --max-fee 9999999999999
 ```
