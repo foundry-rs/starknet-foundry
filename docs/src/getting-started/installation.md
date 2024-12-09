@@ -21,6 +21,7 @@ In this section, we will walk through the process of installing Starknet Foundry
   * [Common Errors](#common-errors)
     * [No Version Set](#no-version-set)
     * [Invalid Rust Version](#invalid-rust-version)
+    * [`scarb test` Isn’t Running Tests Correctly](#scarb-test-isnt-running-tests-correctly)
   * [Universal-Sierra-Compiler update](#universal-sierra-compiler-update)
   * [How to build Starknet Foundry from source code](#how-to-build-starknet-foundry-from-source-code)
 <!-- TOC -->
@@ -47,6 +48,14 @@ all installed and added to your `PATH` environment variable.
 ## Linux and MacOS
 
 ### Install Rust version >= 1.80.1
+
+> ℹ️ **Info**
+> `snforge` relies on Scarb's [_procedural macros_](https://github.com/foundry-rs/starknet-foundry/issues/2299) to
+> create
+`snforge_scarb_plugin` which is a part of `snforge_std`.
+> This plugin is required for `snforge` test to work.
+> Currently, _procedural macros_ require Rust installation to function.
+> This will be changed in the upcoming versions of Scarb.
 
 ```shell
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -123,6 +132,14 @@ sncast --version
 ## Windows
 
 ### Install Rust version >= 1.80.1
+
+> ℹ️ **Info**
+> `snforge` relies on Scarb's [_procedural macros_](https://github.com/foundry-rs/starknet-foundry/issues/2299) to
+> create
+`snforge_scarb_plugin` which is a part of `snforge_std`.
+> This plugin is required for `snforge` test to work.
+> Currently, _procedural macros_ require Rust installation to function.
+> This will be changed in the upcoming versions of Scarb.
 
 Go to https://www.rust-lang.org/tools/install and follow the installation instructions.
 
@@ -227,6 +244,16 @@ and local version of Rust
 
 ```shell
 $ rustup override set stable
+```
+
+### `scarb test` Isn’t Running Tests Correctly
+
+By default, `scarb test` doesn't use `snforge` to run tests, and it needs to be configured.
+Make sure to include this section in `Scarb.toml`
+
+```toml
+[scripts]
+test = "snforge test"
 ```
 
 ## Universal-Sierra-Compiler update
