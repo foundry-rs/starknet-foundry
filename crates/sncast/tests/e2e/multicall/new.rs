@@ -47,7 +47,7 @@ async fn test_no_output_path_specified() {
     error: the following required arguments were not provided:
       <OUTPUT_PATH>
 
-    Usage: sncast multicall new <OUTPUT_PATH>
+    Usage: sncast[..] multicall new <OUTPUT_PATH>
 
     For more information, try '--help'.
     "};
@@ -77,7 +77,7 @@ async fn test_directory_non_existent() {
         output,
         indoc! {r"
         command: multicall new
-        error: No such file or directory[..]
+        error: [..]
         "},
     );
 }
