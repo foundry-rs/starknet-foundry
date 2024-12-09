@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Determine cache dir and os triplet
+      - name: Determine cache path and key
         run: |
           set -e
 
