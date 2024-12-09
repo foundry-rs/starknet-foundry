@@ -6,15 +6,46 @@ env:
   STARKNET_FOUNDRY_VERSION: 0.34.0
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Determine cache dir and os triplet
+        run: |
+          set -e
+
+          case "${{ runner.arch }}" in
+            X64) ARCH="x86_64" ;;
+            ARM64) ARCH="aarch64" ;;
+            *) echo "unsupported architecture: ${{ runner.arch }}"; exit 1 ;;
+          esac
+
+          case "${{ runner.os }}" in
+            Linux) PLATFORM="unknown-linux-gnu" ;;
+            macOS) PLATFORM="apple-darwin" ;;
+            Windows) PLATFORM="pc-windows-msvc" ;;
+            *) echo "unsupported platform: ${{ runner.os }}"; exit 1 ;;
+          esac
+
+          if [ "$PLATFORM" = "unknown-linux-gnu" ]; then
+            CACHE_DIR="/opt/hostedtoolcache"
+          elif [ "$PLATFORM" = "apple-darwin" ]; then
+            CACHE_DIR="/Users/runner/hostedtoolcache"
+          elif [ "$PLATFORM" = "pc-windows-msvc" ]; then
+            CACHE_DIR="C:\\hostedtoolcache\\windows"
+          fi
+
+          OS_TRIPLET="${ARCH}-${PLATFORM}"
+
+          echo "CACHE_DIR=$CACHE_DIR/starknet-foundry" >> $GITHUB_ENV
+          echo "OS_TRIPLET=$OS_TRIPLET" >> $GITHUB_ENV
+ 
       - name: Restore Starknet Foundry installation from cache
         uses: actions/cache@v4
         id: cache-snfoundry
         with:
-          path: /opt/hostedtoolcache/starknet-foundry/${{ env.STARKNET_FOUNDRY_VERSION }}/x86_64-unknown-linux-gnu
-          key: snfoundry-${{ env.STARKNET_FOUNDRY_VERSION }}-x86_64-unknown-linux-gnu
+          path: ${{ env.CACHE_DIR }}/${{ env.STARKNET_FOUNDRY_VERSION }}/${{ env.OS_TRIPLET}}
+          key: snfoundry-${{ env.STARKNET_FOUNDRY_VERSION }}-${{ env.OS_TRIPLET }}
 
       - name: Setup Starknet Foundry
         if: steps.cache-snfoundry.outputs.cache-hit != 'true'
@@ -25,7 +56,7 @@ jobs:
 
       - name: Add Starknet Foundry to PATH
         if: steps.cache-snfoundry.outputs.cache-hit == 'true'
-        run: echo "/opt/hostedtoolcache/starknet-foundry/${{ env.STARKNET_FOUNDRY_VERSION }}/x86_64-unknown-linux-gnu/bin" >> $GITHUB_PATH
+        run: echo "${{ env.CACHE_DIR }}/${{ env.STARKNET_FOUNDRY_VERSION }}/${{ env.OS_TRIPLET }}/bin" >> $GITHUB_PATH
 
       - run: snforge --version
 
@@ -33,5 +64,5 @@ jobs:
         if: steps.cache-snfoundry.outputs.cache-hit != 'true'
         uses: actions/cache@v4
         with:
-          path: /opt/hostedtoolcache/starknet-foundry/${{ env.STARKNET_FOUNDRY_VERSION }}/x86_64-unknown-linux-gnu
-          key: snfoundry-${{ env.STARKNET_FOUNDRY_VERSION }}-x86_64-unknown-linux-gnu
+          path: ${{ env.CACHE_DIR }}/${{ env.STARKNET_FOUNDRY_VERSION }}/${{ env.OS_TRIPLET}}
+          key: snfoundry-${{ env.STARKNET_FOUNDRY_VERSION }}-${{ env.OS_TRIPLET }}
