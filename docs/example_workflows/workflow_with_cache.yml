@@ -6,7 +6,7 @@ env:
   STARKNET_FOUNDRY_VERSION: 0.34.0
 jobs:
   check:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
