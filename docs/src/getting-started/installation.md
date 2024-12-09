@@ -22,63 +22,139 @@ all installed and added to your `PATH` environment variable.
 > `Universal-Sierra-Compiler` will be automatically installed if you use `asdf` or `snfoundryup`.
 > You can also create `UNIVERSAL_SIERRA_COMPILER` env var to make it visible for `snforge`.
 
-## Installation on Linux and macOS
+## Linux and MacOS
 
-### Installation via [asdf](https://asdf-vm.com/)
-
-First, add the Starknet Foundry plugin to asdf:
+### Install Rust version >= 1.80.1
 
 ```shell
-$ asdf plugin add starknet-foundry
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-### Install via `snfoundryup`
-
-Snfoundryup is the Starknet Foundry toolchain installer.
-
-You can install it by running:
+To verify that correct Rust version was installed, run
 
 ```shell
-$ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
+rustc --version
 ```
 
-Follow the instructions and then run:
+and verify that version is >= 1.80.1
+
+See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
+
+### Install asdf
+
+Follow the instructions from [asdf docs](https://asdf-vm.com/guide/getting-started.html#getting-started).
+
+To verify that asdf was installed, run
 
 ```shell
-$ snfoundryup
+asdf --version
 ```
 
-See `snfoundryup --help` for more options.
+### Install Scarb version >= 2.7.0
 
-To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
+First, add Scarb plugin to asdf
 
-## Installation on Windows
-
-As for now, Starknet Foundry on Windows needs manual installation, but necessary steps are kept to minimum:
-
-1. [Download the release](https://github.com/foundry-rs/starknet-foundry/releases) archive matching your CPU
-   architecture.
-2. Extract it to a location where you would like to have Starknet Foundry installed. A folder named snfoundry in
-   your [
-   `%LOCALAPPDATA%\Programs`](https://learn.microsoft.com/en-us/windows/win32/shell/knownfolderid?redirectedfrom=MSDN#FOLDERID_UserProgramFiles)
-   directory will suffice:
-
-```batch
-%LOCALAPPDATA%\Programs\snfoundry
+```shell
+asdf plugin add scarb
 ```
 
-3. Add path to the snfoundry\bin directory to your PATH environment variable.
-4. Verify installation by running the following command in new terminal session:
+Install Scarb
 
-   ```shell
-   $ snforge --version
-   ```
+```shell
+asdf install scarb latest
+```
 
-   and
+To verify that Scarb was installed, run
 
-   ```
-   $ sncast --version
-   ```
+```shell
+scarb --version
+```
+
+and verify that version is >= 2.7.0
+
+### Install Starknet Foundry
+
+First, add Starknet Foundry plugin to asdf
+
+```shell
+asdf plugin add starknet-foundry
+```
+
+Install Starknet Foundry
+
+```shell
+asdf install starknet-foundry latest
+```
+
+To verify that Starknet Foundry was installed, run
+
+```shell
+snforge --version
+```
+
+or
+
+```shell
+sncast --version
+```
+
+## Windows
+
+### Install Rust version >= 1.80.1
+
+Go to https://www.rust-lang.org/tools/install and follow the installation instructions.
+
+To verify that correct Rust version was installed, run
+
+```shell
+rustc --version
+```
+
+and verify that version is >= 1.80.1
+
+See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
+
+### Install Scarb version >= 2.7.0
+
+Follow the instructions from [Scarb docs](https://docs.swmansion.com/scarb/download.html#windows).
+
+1. Download the release archive matching your CPU architecture
+   from https://docs.swmansion.com/scarb/download.html#precompiled-packages.
+2. Extract it to a location where you would like to have Scarb installed. We recommend `%LOCALAPPDATA%\Programs\scarb`.
+3. From this directory, get the full path to `scarb\bin` and add it to PATH.
+   See [this article](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) for instructions on
+   Windows 10 and 11.
+
+To verify that Scarb was installed, run
+
+```shell
+scarb --version
+```
+
+and verify that version is >= 2.7.0
+
+### Install Starknet Foundry
+
+1. Download the release archive matching your CPU architecture
+   from https://github.com/foundry-rs/starknet-foundry/releases/latest. Look for package with `windows` in the name e.g.
+   `starknet-foundry-v0.34.0-x86_64-pc-windows-msvc.zip`.
+2. Extract it to a location where you would like to have Starknet Foundry installed. We recommend
+   `%LOCALAPPDATA%\Programs\snfoundry`.
+3. From this directory, get the full path to `snfoundry\bin` and add it to PATH.
+   See [this article](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) for instructions on
+   Windows 10 and 11.
+
+To verify that Starknet Foundry was installed, run
+
+```shell
+snforge --version
+```
+
+or
+
+```shell
+sncast --version
+```
 
 ## Common Errors
 
