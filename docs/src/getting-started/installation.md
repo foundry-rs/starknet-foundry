@@ -29,6 +29,7 @@ In this section, we will walk through the process of installing Starknet Foundry
 ## Requirements
 
 > 📝 **Note**
+>
 > Ensure all requirements are installed and follow the required minimum versions.
 > Starknet Foundry will not run if not following these requirements.
 
@@ -50,6 +51,7 @@ all installed and added to your `PATH` environment variable.
 ### Install Rust version >= 1.80.1
 
 > ℹ️ **Info**
+>
 > `snforge` relies on Scarb's [_procedural macros_](https://github.com/foundry-rs/starknet-foundry/issues/2299) to
 > create
 `snforge_scarb_plugin` which is a part of `snforge_std`.
@@ -134,6 +136,7 @@ sncast --version
 ### Install Rust version >= 1.80.1
 
 > ℹ️ **Info**
+>
 > `snforge` relies on Scarb's [_procedural macros_](https://github.com/foundry-rs/starknet-foundry/issues/2299) to
 > create
 `snforge_scarb_plugin` which is a part of `snforge_std`.
