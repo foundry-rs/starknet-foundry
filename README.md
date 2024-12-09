@@ -34,26 +34,6 @@ Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/
 
 [Follow the installation manual](https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html)
 
-## FAQ
-
-> Why do I have to install Rust?
-
-`snforge` relies on Scarb's [_procedural macros_](https://github.com/foundry-rs/starknet-foundry/issues/2299) to create
-`snforge_scarb_plugin` which is a part of `snforge_std`.
-This plugin is required for `snforge` test to work.
-Currently, _procedural macros_ require Rust installation to function.
-This will be changed in the upcoming versions of Scarb.
-
-> Why `scarb test` isn't running my tests correctly?
-
-By default, `scarb test` doesn't use `snforge` to run tests, and it needs to be configured.
-Make sure to include this section in `Scarb.toml`
-
-```toml
-[scripts]
-test = "snforge test"
-```
-
 ## Roadmap
 
 Starknet Foundry is under active development! Expect a lot of new features to appear soon! 🔥
