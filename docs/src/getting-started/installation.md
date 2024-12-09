@@ -115,7 +115,7 @@ When running any `snforge` command, error similar to this is displayed
 
 ```shell
 Compiling snforge_scarb_plugin v0.34.0
-error: package `snforge_scarb_plugin v0.34.0 cannot be built because it requires rustc 1.80.1 or newer, while the currently active rustc version is 1.76.0
+error: package snforge_scarb_plugin v0.34.0 cannot be built because it requires rustc 1.80.1 or newer, while the currently active rustc version is 1.76.0
 ```
 
 This indicates incorrect Rust version is installed or set.
