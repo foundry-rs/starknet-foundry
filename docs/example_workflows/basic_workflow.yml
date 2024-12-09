@@ -9,5 +9,4 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup Starknet Foundry
         uses: foundry-rs/setup-snfoundry@v3
-
       - run: snforge --version
