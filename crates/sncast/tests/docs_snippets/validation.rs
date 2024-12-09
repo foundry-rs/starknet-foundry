@@ -1,4 +1,5 @@
-use crate::helpers::devnet::prepare_accounts_file;
+use std::fs;
+
 use crate::helpers::fixtures::copy_directory_to_tempdir;
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
@@ -33,8 +34,11 @@ fn test_docs_snippets() {
         Utf8PathBuf::from_path_buf(root_dir_path.join("docs/listings/hello_sncast"))
             .expect("Invalid UTF-8 path");
     let tempdir = copy_directory_to_tempdir(&hello_sncast_dir);
-    let accounts_json_path = prepare_accounts_file(&tempdir);
+    let source_accouns_json_path = hello_sncast_dir.join("accounts.json");
+    let target_accounts_json_path = tempdir.path().join("accounts.json");
 
+    fs::copy(&source_accouns_json_path, &target_accounts_json_path)
+        .expect("Failed to copy accounts.json");
     update_scarb_toml_dependencies(&tempdir).unwrap();
 
     for snippet in &snippets {
@@ -50,7 +54,7 @@ fn test_docs_snippets() {
         args.remove(0);
 
         args.insert(0, "--accounts-file");
-        args.insert(1, accounts_json_path.as_str());
+        args.insert(1, target_accounts_json_path.to_str().unwrap());
 
         let snapbox = runner(&args).current_dir(tempdir.path());
         let output = snapbox.assert().success();
