@@ -37,15 +37,15 @@ jobs:
 
           OS_TRIPLET="${ARCH}-${PLATFORM}"
 
-          echo "CACHE_DIR=$CACHE_DIR/starknet-foundry" >> $GITHUB_ENV
-          echo "OS_TRIPLET=$OS_TRIPLET" >> $GITHUB_ENV
- 
+          echo "CACHE_PATH=$CACHE_DIR/starknet-foundry/$STARKNET_FOUNDRY_VERSION/$OS_TRIPLET/bin" >> $GITHUB_ENV
+          echo "CACHE_KEY=snfoundry-$STARKNET_FOUNDRY_VERSION-$OS_TRIPLET" >> $GITHUB_ENV
+
       - name: Restore Starknet Foundry installation from cache
         uses: actions/cache@v4
         id: cache-snfoundry
         with:
-          path: ${{ env.CACHE_DIR }}/${{ env.STARKNET_FOUNDRY_VERSION }}/${{ env.OS_TRIPLET}}
-          key: snfoundry-${{ env.STARKNET_FOUNDRY_VERSION }}-${{ env.OS_TRIPLET }}
+          path: ${{ env.CACHE_PATH }}
+          key: ${{ env.CACHE_KEY }}
 
       - name: Setup Starknet Foundry
         if: steps.cache-snfoundry.outputs.cache-hit != 'true'
@@ -56,7 +56,7 @@ jobs:
 
       - name: Add Starknet Foundry to PATH
         if: steps.cache-snfoundry.outputs.cache-hit == 'true'
-        run: echo "${{ env.CACHE_DIR }}/${{ env.STARKNET_FOUNDRY_VERSION }}/${{ env.OS_TRIPLET }}/bin" >> $GITHUB_PATH
+        run: echo ${{ env.CACHE_PATH }}>> $GITHUB_PATH
 
       - run: snforge --version
 
@@ -64,5 +64,5 @@ jobs:
         if: steps.cache-snfoundry.outputs.cache-hit != 'true'
         uses: actions/cache@v4
         with:
-          path: ${{ env.CACHE_DIR }}/${{ env.STARKNET_FOUNDRY_VERSION }}/${{ env.OS_TRIPLET}}
-          key: snfoundry-${{ env.STARKNET_FOUNDRY_VERSION }}-${{ env.OS_TRIPLET }}
+          path: ${{ env.CACHE_PATH }}
+          key: ${{ env.CACHE_KEY }}
