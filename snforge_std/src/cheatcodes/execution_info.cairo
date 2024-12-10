@@ -30,7 +30,7 @@ struct CheatArguments<T> {
 }
 
 #[derive(Serde, Drop, Copy)]
-pub enum Operation<T> {
+enum Operation<T> {
     StartGlobal: T,
     Start: CheatArguments<T>,
     Stop: ContractAddress,
