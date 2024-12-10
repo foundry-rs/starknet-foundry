@@ -5,11 +5,12 @@ use conversions::TryIntoConv;
 use starknet::core::types::BlockId;
 use starknet::providers::Provider;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
+use std::str::FromStr;
 
 #[derive(Args, Debug, Clone)]
 pub struct FeeArgs {
     /// Token that transaction fee will be paid in
-    #[clap(long)]
+    #[clap(long, value_parser = parse_fee_token)]
     pub fee_token: Option<FeeToken>,
 
     /// Max fee for the transaction. If not provided, will be automatically estimated.
@@ -231,4 +232,25 @@ macro_rules! impl_payable_transaction {
             }
         }
     };
+}
+
+impl FromStr for FeeToken {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "eth" => Ok(FeeToken::Eth),
+            "strk" => Ok(FeeToken::Strk),
+            _ => Err(String::from("Possible values: eth, strk")),
+        }
+    }
+}
+
+fn parse_fee_token(s: &str) -> Result<FeeToken, String> {
+    match s.to_lowercase().as_str() {
+        "eth" => eprintln!("\x1b[33mwarning:\x1b[0m Specifying '--fee-token' flag will be deprecated in the future and eth transactions will not be supported due to 'SNIP-16'. It is recomended to use '--version' insted"),
+        _ => eprintln!("\x1b[33mwarning:\x1b[0m Specifying '--fee-token' flag will be deprecated in the future. It is recomended to use '--version' insted"),
+    }
+    let parsed_token: FeeToken = s.parse()?;
+    Ok(parsed_token)
 }
