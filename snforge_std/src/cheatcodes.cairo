@@ -1,7 +1,7 @@
 use starknet::{ContractAddress, ClassHash, contract_address_const};
 use starknet::testing::cheatcode;
 use super::_cheatcode::handle_cheatcode;
-pub use execution_info::{cheat_execution_info, ExecutionInfoMock, CheatArguments, Operation};
+pub use execution_info::{cheat_execution_info, ExecutionInfoMock, Operation};
 
 pub mod events;
 pub mod l1_handler;

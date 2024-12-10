@@ -23,10 +23,10 @@ pub mod account_contract_address;
 
 
 #[derive(Serde, Drop, Copy)]
-pub struct CheatArguments<T> {
-    pub value: T,
-    pub span: CheatSpan,
-    pub target: ContractAddress,
+struct CheatArguments<T> {
+    value: T,
+    span: CheatSpan,
+    target: ContractAddress,
 }
 
 #[derive(Serde, Drop, Copy)]
