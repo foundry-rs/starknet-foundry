@@ -1,4 +1,4 @@
-# `snforge validate-requirements`
+# `snforge check-requirements`
 
 Validate if all `snforge` requirements are installed.
 

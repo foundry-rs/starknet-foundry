@@ -5,7 +5,7 @@ use shared::test_utils::output_assert::assert_stdout_contains;
 #[test]
 fn happy_path() {
     let temp = setup_package("simple_package");
-    let output = runner(&temp).arg("validate-requirements").assert();
+    let output = runner(&temp).arg("check-requirements").assert();
 
     assert_stdout_contains(
         output,

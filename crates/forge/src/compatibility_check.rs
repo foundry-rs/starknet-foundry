@@ -30,8 +30,8 @@ impl<'a> RequirementsChecker<'a> {
         self.requirements.push(requirement);
     }
 
-    pub fn validate(&self) -> Result<()> {
-        let (validation_output, is_valid) = self.validate_with_output()?;
+    pub fn check(&self) -> Result<()> {
+        let (validation_output, is_valid) = self.check_with_output()?;
 
         if !is_valid || self.output_on_success {
             println!("{validation_output}");
@@ -44,7 +44,7 @@ impl<'a> RequirementsChecker<'a> {
         Ok(())
     }
 
-    fn validate_with_output(&self) -> Result<(String, bool)> {
+    fn check_with_output(&self) -> Result<(String, bool)> {
         let mut validation_output = "Validating requirements\n\n".to_string();
         let mut is_valid = true;
 
@@ -147,7 +147,7 @@ mod tests {
             ),
         });
 
-        let (validation_output, is_valid) = requirements_checker.validate_with_output().unwrap();
+        let (validation_output, is_valid) = requirements_checker.check_with_output().unwrap();
         assert!(is_valid);
         assert!(validation_output.contains("✅ Rust"));
         assert!(validation_output.contains("✅ Scarb"));
@@ -169,7 +169,7 @@ mod tests {
             minimal_version: Version::new(999, 0, 0),
         });
 
-        let (validation_output, is_valid) = requirements_checker.validate_with_output().unwrap();
+        let (validation_output, is_valid) = requirements_checker.check_with_output().unwrap();
         assert!(!is_valid);
         assert!(validation_output.contains("❌ Rust Version"));
         assert!(validation_output.contains("doesn't satisfy minimum 999.0.0"));

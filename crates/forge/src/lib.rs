@@ -74,8 +74,8 @@ enum ForgeSubcommand {
     },
     /// Clean Forge cache directory
     CleanCache {},
-    /// Validate if all `snforge` requirements are installed
-    ValidateRequirements,
+    /// Check if all `snforge` requirements are installed
+    CheckRequirements,
 }
 
 #[derive(ValueEnum, Debug, Clone)]
@@ -164,7 +164,7 @@ pub enum ExitStatus {
 pub fn main_execution() -> Result<ExitStatus> {
     let cli = Cli::parse();
 
-    validate_requirements(false)?;
+    check_requirements(false)?;
 
     match cli.subcommand {
         ForgeSubcommand::Init { name } => {
@@ -196,14 +196,14 @@ pub fn main_execution() -> Result<ExitStatus> {
 
             rt.block_on(run_for_workspace(args))
         }
-        ForgeSubcommand::ValidateRequirements => {
-            validate_requirements(true)?;
+        ForgeSubcommand::CheckRequirements => {
+            check_requirements(true)?;
             Ok(ExitStatus::Success)
         }
     }
 }
 
-fn validate_requirements(output_on_success: bool) -> Result<()> {
+fn check_requirements(output_on_success: bool) -> Result<()> {
     let mut requirements_checker = RequirementsChecker::new(output_on_success);
     requirements_checker.add_requirement(Requirement {
         name: "Rust".to_string(),
@@ -230,5 +230,5 @@ fn validate_requirements(output_on_success: bool) -> Result<()> {
             r"universal-sierra-compiler (?<version>[0-9]+.[0-9]+.[0-9]+)",
         ),
     });
-    requirements_checker.validate()
+    requirements_checker.check()
 }
