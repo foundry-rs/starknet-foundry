@@ -368,7 +368,7 @@ async fn test_default_fee_token() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
-        Transaction hash = [..]
+        Transaction hash: [..]
         command: account deploy
         transaction_hash: [..]
 
