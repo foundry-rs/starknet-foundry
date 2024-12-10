@@ -34,7 +34,7 @@ function = "put"
 inputs = ["0x123", 234]  # Numbers can be used directly without quotes
 ```
 
-After running `sncast multicall run --path file.toml --fee-token strk`, a declared contract will be first deployed, and then its function `put` will be invoked.
+After running `sncast multicall run --path file.toml`, a declared contract will be first deployed, and then its function `put` will be invoked.
 
 > 📝 **Note**
 > The example above demonstrates the use of the `id` property in a deploy call, which is then referenced as the `contract address` in an invoke call.
@@ -49,7 +49,7 @@ Additionally, the `id` can be referenced in the inputs of deploy and invoke call
 <!-- TODO: Adjust snippet and check remove ignoring output -->
 <!-- { "ignored_output": true } -->
 ```shell
-$ sncast multicall run --path multicall_example.toml --fee-token strk
+$ sncast multicall run --path multicall_example.toml
 ```
 
 <details>
@@ -67,10 +67,6 @@ transaction: https://sepolia.starkscan.co/tx/[..]
 
 > 💡 **Info**
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
-
-> 💡 **Info**
-> You can also choose to pay in Ether by setting `--fee-token` to `eth`.
-
 
 ### `multicall new` Example
 
