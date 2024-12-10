@@ -46,16 +46,16 @@ impl<'a> RequirementsChecker<'a> {
 
     fn check_with_output(&self) -> Result<(String, bool)> {
         let mut validation_output = "Validating requirements\n\n".to_string();
-        let mut is_valid = true;
+        let mut all_valid = true;
 
         for requirement in &self.requirements {
             let raw_version = get_raw_version(&requirement.name, &requirement.command)?;
             let version = (requirement.version_parser)(&raw_version)?;
-            let valid = version >= requirement.minimal_version;
-            let command_output = if valid {
+            let is_valid = version >= requirement.minimal_version;
+            let command_output = if is_valid {
                 format!("✅ {} {}", requirement.name, version)
             } else {
-                is_valid = false;
+                all_valid = false;
                 format!(
                     "❌ {} Version {} doesn't satisfy minimum {}\n{}",
                     requirement.name, version, requirement.minimal_version, requirement.helper_text
@@ -66,7 +66,7 @@ impl<'a> RequirementsChecker<'a> {
             validation_output += "\n";
         }
 
-        Ok((validation_output, is_valid))
+        Ok((validation_output, all_valid))
     }
 }
 
