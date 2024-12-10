@@ -39,7 +39,6 @@ pub use cheatcodes::stop_mock_call;
 pub use cheatcodes::replace_bytecode;
 pub use cheatcodes::cheat_execution_info;
 pub use cheatcodes::execution_info::ExecutionInfoMock;
-pub use cheatcodes::execution_info::BlockInfoMockImpl;
 pub use cheatcodes::execution_info::TxInfoMock;
 pub use cheatcodes::execution_info::Operation;
 pub use cheatcodes::execution_info::CheatArguments;

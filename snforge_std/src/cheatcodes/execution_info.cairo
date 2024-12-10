@@ -99,7 +99,7 @@ pub struct BlockInfoMock {
     pub sequencer_address: Operation<ContractAddress>,
 }
 
-pub impl BlockInfoMockImpl of Default<BlockInfoMock> {
+impl BlockInfoMockImpl of Default<BlockInfoMock> {
     /// Returns a default object initialized with Operation::Retain for each field
     /// Useful for setting only a few of fields instead of all of them
     fn default() -> BlockInfoMock {
