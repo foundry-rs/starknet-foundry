@@ -222,7 +222,7 @@ sncast --version
 
 ## Common Errors
 
-### No Version Set
+### No Version Set (Linux and macOS Only)
 
 Users may encounter this error when trying to use `snforge` or `sncast` without setting a version:
 
