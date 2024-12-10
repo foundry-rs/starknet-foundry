@@ -31,17 +31,17 @@ impl<'a> RequirementsChecker<'a> {
     }
 
     pub fn check(&self) -> Result<()> {
-        let (validation_output, is_valid) = self.check_with_output()?;
+        let (validation_output, all_requirements_valid) = self.check_with_output()?;
 
-        if !is_valid || self.output_on_success {
+        if self.output_on_success || !all_requirements_valid {
             println!("{validation_output}");
-            if is_valid {
-                return Ok(());
-            }
-            return Err(anyhow!("Requirements not satisfied"));
         }
 
-        Ok(())
+        if all_requirements_valid {
+            Ok(())
+        } else {
+            Err(anyhow!("Requirements not satisfied"))
+        }
     }
 
     fn check_with_output(&self) -> Result<(String, bool)> {
