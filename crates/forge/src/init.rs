@@ -193,11 +193,7 @@ pub fn run(project_name: &str) -> Result<()> {
             .offline()
             .arg("add")
             .arg("--dev")
-            .arg("snforge_std")
-            .arg("--git")
-            .arg("https://github.com/foundry-rs/starknet-foundry.git")
-            .arg("--tag")
-            .arg(format!("v{version}"))
+            .arg(format!("snforge_std@{version}"))
             .run()
             .context("Failed to add snforge_std")?;
     }
