@@ -9,7 +9,7 @@ pub fn spy_messages_to_l1() -> MessageToL1Spy {
     let mut message_offset = handle_cheatcode(cheatcode::<'spy_messages_to_l1'>(array![].span()));
     let parsed_message_offset: usize = Serde::<usize>::deserialize(ref message_offset).unwrap();
 
-    MessageToL1Spy { _message_offset: parsed_message_offset }
+    MessageToL1Spy { message_offset: parsed_message_offset }
 }
 
 /// Raw message to L1 format (as seen via the RPC-API), can be used for asserting the sent messages.
@@ -24,7 +24,7 @@ pub struct MessageToL1 {
 /// A message spy structure allowing to get messages emitted only after its creation.
 #[derive(Drop, Serde)]
 pub struct MessageToL1Spy {
-    pub _message_offset: usize
+    message_offset: usize
 }
 
 /// A wrapper structure on an array of messages to handle filtering smoothly.
@@ -41,7 +41,7 @@ pub trait MessageToL1SpyTrait {
 impl MessageToL1SpyTraitImpl of MessageToL1SpyTrait {
     fn get_messages(ref self: MessageToL1Spy) -> MessagesToL1 {
         let mut output = handle_cheatcode(
-            cheatcode::<'get_messages_to_l1'>(array![self._message_offset.into()].span())
+            cheatcode::<'get_messages_to_l1'>(array![self.message_offset.into()].span())
         );
         let messages = Serde::<Array<(ContractAddress, MessageToL1)>>::deserialize(ref output)
             .unwrap();
