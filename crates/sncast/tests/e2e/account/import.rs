@@ -451,12 +451,18 @@ pub async fn test_invalid_private_key_file_path() {
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
 
+    let expected_file_error = if cfg!(target_os = "windows") {
+        "The system cannot find the file specified[..]"
+    } else {
+        "No such file or directory [..]"
+    };
+
     assert_stderr_contains(
         output,
-        indoc! {r"
+        formatdoc! {r"
         command: account import
-        error: Failed to obtain private key from the file my_private_key: No such file or directory (os error 2)
-        "},
+        error: Failed to obtain private key from the file my_private_key: {}
+        ", expected_file_error},
     );
 }
 
