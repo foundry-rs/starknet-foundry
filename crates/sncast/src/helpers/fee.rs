@@ -251,10 +251,10 @@ fn parse_fee_token(s: &str) -> Result<FeeToken, String> {
 
     match s.to_lowercase().as_str() {
         "eth" => {
-            println!("{}", deprecation_message);
+            println!("{deprecation_message}");
             println!("\x1b[33mwarning:\x1b[0m Eth transactions will stop being supported in the future due to 'SNIP-16'");
-        },
-        _ => println!("{}", deprecation_message),
+        }
+        _ => println!("{deprecation_message}"),
     }
     let parsed_token: FeeToken = s.parse()?;
     Ok(parsed_token)
