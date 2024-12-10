@@ -1,3 +1,3 @@
 mod env_vars;
 
-use env_vars::var;
+pub use env_vars::var;

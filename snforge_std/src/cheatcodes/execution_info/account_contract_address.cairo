@@ -8,7 +8,7 @@ use super::{
 /// - `account_contract_address` - transaction account deployment data to be set
 /// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
 /// applied
-fn cheat_account_contract_address(
+pub fn cheat_account_contract_address(
     contract_address: ContractAddress, account_contract_address: ContractAddress, span: CheatSpan
 ) {
     let mut execution_info: ExecutionInfoMock = Default::default();
@@ -25,7 +25,7 @@ fn cheat_account_contract_address(
 
 /// Changes the address of an account which the transaction originates from.
 /// - `account_contract_address` - transaction account deployment data to be set
-fn start_cheat_account_contract_address_global(account_contract_address: ContractAddress) {
+pub fn start_cheat_account_contract_address_global(account_contract_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
@@ -36,7 +36,7 @@ fn start_cheat_account_contract_address_global(account_contract_address: Contrac
 }
 
 /// Cancels the `start_cheat_account_contract_address_global`.
-fn stop_cheat_account_contract_address_global() {
+pub fn stop_cheat_account_contract_address_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.account_contract_address = Operation::StopGlobal;
@@ -48,7 +48,7 @@ fn stop_cheat_account_contract_address_global() {
 /// contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `account_contract_address` - transaction account deployment data to be set
-fn start_cheat_account_contract_address(
+pub fn start_cheat_account_contract_address(
     contract_address: ContractAddress, account_contract_address: ContractAddress
 ) {
     cheat_account_contract_address(
@@ -59,7 +59,7 @@ fn start_cheat_account_contract_address(
 /// Cancels the `cheat_account_contract_address` / `start_cheat_account_contract_address` for the
 /// given contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
-fn stop_cheat_account_contract_address(contract_address: ContractAddress) {
+pub fn stop_cheat_account_contract_address(contract_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.account_contract_address = Operation::Stop(contract_address);

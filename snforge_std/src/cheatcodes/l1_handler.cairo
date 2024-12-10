@@ -4,12 +4,12 @@ use starknet::{ContractAddress, testing::cheatcode, SyscallResult};
 use super::super::_cheatcode::handle_cheatcode;
 
 #[derive(Drop, Clone)]
-struct L1Handler {
+pub struct L1Handler {
     target: ContractAddress,
     selector: felt252,
 }
 
-trait L1HandlerTrait {
+pub trait L1HandlerTrait {
     fn new(target: ContractAddress, selector: felt252) -> L1Handler;
     fn execute(
         self: L1Handler, from_address: felt252, payload: Span::<felt252>

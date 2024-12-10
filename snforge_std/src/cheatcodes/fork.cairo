@@ -1,11 +1,11 @@
 #[derive(Drop, Copy, Serde)]
-enum BlockTag {
+pub enum BlockTag {
     Latest,
     Pending,
 }
 
 #[derive(Drop, Copy, Serde)]
-enum BlockId {
+pub enum BlockId {
     Tag: BlockTag,
     Hash: felt252,
     Number: u64,

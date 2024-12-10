@@ -7,7 +7,7 @@ use super::{
 /// - `nonce_data_availability_mode` - transaction nonce data availability mode to be set
 /// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
 /// applied
-fn cheat_nonce_data_availability_mode(
+pub fn cheat_nonce_data_availability_mode(
     contract_address: ContractAddress, nonce_data_availability_mode: u32, span: CheatSpan
 ) {
     let mut execution_info: ExecutionInfoMock = Default::default();
@@ -26,7 +26,7 @@ fn cheat_nonce_data_availability_mode(
 
 /// Changes the transaction nonce data availability mode.
 /// - `nonce_data_availability_mode` - transaction nonce data availability mode to be set
-fn start_cheat_nonce_data_availability_mode_global(nonce_data_availability_mode: u32) {
+pub fn start_cheat_nonce_data_availability_mode_global(nonce_data_availability_mode: u32) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
@@ -37,7 +37,7 @@ fn start_cheat_nonce_data_availability_mode_global(nonce_data_availability_mode:
 }
 
 /// Cancels the `start_cheat_nonce_data_availability_mode_global`.
-fn stop_cheat_nonce_data_availability_mode_global() {
+pub fn stop_cheat_nonce_data_availability_mode_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.nonce_data_availability_mode = Operation::StopGlobal;
@@ -48,7 +48,7 @@ fn stop_cheat_nonce_data_availability_mode_global() {
 /// Changes the transaction nonce data availability mode for the given contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `nonce_data_availability_mode` - transaction nonce data availability mode to be set
-fn start_cheat_nonce_data_availability_mode(
+pub fn start_cheat_nonce_data_availability_mode(
     contract_address: ContractAddress, nonce_data_availability_mode: u32
 ) {
     cheat_nonce_data_availability_mode(
@@ -59,7 +59,7 @@ fn start_cheat_nonce_data_availability_mode(
 /// Cancels the `cheat_nonce_data_availability_mode` / `start_cheat_nonce_data_availability_mode`
 /// for the given contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
-fn stop_cheat_nonce_data_availability_mode(contract_address: ContractAddress) {
+pub fn stop_cheat_nonce_data_availability_mode(contract_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.nonce_data_availability_mode = Operation::Stop(contract_address);
