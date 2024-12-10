@@ -393,8 +393,6 @@ pub async fn test_valid_class_hash() {
         "my_account",
         "--max-fee",
         "10000000000000000",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -424,8 +422,6 @@ pub async fn test_valid_no_max_fee() {
         URL,
         "--name",
         "my_account",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -518,8 +514,6 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         URL,
         "--max-fee",
         "99999999999999999",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -794,8 +788,6 @@ pub async fn test_deploy_keystore_other_args() {
         "some-name",
         "--max-fee",
         "99999999999999999",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());

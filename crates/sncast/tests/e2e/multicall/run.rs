@@ -2,7 +2,7 @@ use crate::helpers::constants::{ACCOUNT_FILE_PATH, MULTICALL_CONFIGS_DIR, URL};
 use crate::helpers::fixtures::create_and_deploy_oz_account;
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains, AsOutput};
 use std::path::Path;
 use test_case::test_case;
 
@@ -30,8 +30,6 @@ async fn test_happy_case(account: &str) {
         URL,
         "--path",
         path,
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args);
@@ -73,8 +71,6 @@ async fn test_calldata_ids() {
         URL,
         "--path",
         path,
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -110,8 +106,6 @@ async fn test_invalid_path() {
         URL,
         "--path",
         "non-existent",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -259,8 +253,6 @@ async fn test_numeric_inputs() {
         URL,
         "--path",
         path,
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
