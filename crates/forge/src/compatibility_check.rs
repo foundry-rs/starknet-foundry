@@ -45,7 +45,7 @@ impl<'a> RequirementsChecker<'a> {
     }
 
     fn check_with_output(&self) -> Result<(String, bool)> {
-        let mut validation_output = "Validating requirements\n\n".to_string();
+        let mut validation_output = "Checking requirements\n\n".to_string();
         let mut all_valid = true;
 
         for requirement in &self.requirements {

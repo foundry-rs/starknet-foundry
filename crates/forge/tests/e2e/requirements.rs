@@ -10,7 +10,7 @@ fn happy_path() {
     assert_stdout_contains(
         output,
         indoc! {r"
-    Validating requirements
+    Checking requirements
 
     ✅ Rust [..]
     ✅ Scarb [..]
