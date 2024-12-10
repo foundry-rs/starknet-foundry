@@ -23,6 +23,10 @@ mod warn;
 
 pub const CAIRO_EDITION: &str = "2024_07";
 
+const MINIMAL_RUST_VERSION: Version = Version::new(1, 81, 0);
+const MINIMAL_SCARB_VERSION: Version = Version::new(2, 7, 0);
+const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
+
 #[derive(Parser, Debug)]
 #[command(
     version,
@@ -208,14 +212,14 @@ fn check_requirements(output_on_success: bool) -> Result<()> {
     requirements_checker.add_requirement(Requirement {
         name: "Rust".to_string(),
         command: "rustc --version".to_string(),
+        minimal_version: MINIMAL_RUST_VERSION,
         version_parser: create_version_parser("Rust", r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)"),
         helper_text: "Follow instructions from https://www.rust-lang.org/tools/install".to_string(),
-        minimal_version: Version::new(1, 81, 0),
     });
     requirements_checker.add_requirement(Requirement {
         name: "Scarb".to_string(),
         command: "scarb --version".to_string(),
-        minimal_version: Version::new(2, 7, 0),
+        minimal_version: MINIMAL_SCARB_VERSION,
         helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
             .to_string(),
         version_parser: create_version_parser("Scarb", r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)"),
@@ -223,7 +227,7 @@ fn check_requirements(output_on_success: bool) -> Result<()> {
     requirements_checker.add_requirement(Requirement {
         name: "Universal Sierra Compiler".to_string(),
         command: "universal-sierra-compiler --version".to_string(),
-        minimal_version: Version::new(2, 0, 0),
+        minimal_version: MINIMAL_USC_VERSION,
         helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),
         version_parser: create_version_parser(
             "Universal Sierra Compiler",
