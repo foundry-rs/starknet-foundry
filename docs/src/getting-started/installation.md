@@ -213,7 +213,7 @@ starknet-foundry 0.32.0
 This error indicates that `Starknet Foundry` version is unset. To resolve it, set the version globally using asdf:
 
 ```shell
-$ asdf global starknet-foundry <version>
+asdf global starknet-foundry <version>
 ```
 
 For additional information on asdf version management, see
@@ -233,20 +233,20 @@ This indicates incorrect Rust version is installed or set.
 Verify if rust version >= 1.80.1 is installed
 
 ```shell
-$ rustc --version
+rustc --version
 1.80.1
 ```
 
 If the version is incorrect or the error persists, try changing the global version of Rust
 
 ```shell
-$ rustup default stable
+rustup default stable
 ```
 
 and local version of Rust
 
 ```shell
-$ rustup override set stable
+rustup override set stable
 ```
 
 ### `scarb test` Isn’t Running Tests Correctly
@@ -264,7 +264,7 @@ test = "snforge test"
 If you would like to bump the USC manually (e.g. when the new Sierra version is released) you can do it by running:
 
 ```shell
-$ curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
+curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
 ```
 
 ## How to build Starknet Foundry from source code
