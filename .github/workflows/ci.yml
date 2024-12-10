@@ -1,7 +1,7 @@
 name: CI
 
 env:
-  DEVNET_TAG: "v0.2.2"
+  DEVNET_REV: "ef789b700770fa27a2fc057b3d1c610771be27d9"
 
 on:
   pull_request:
@@ -227,12 +227,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}\crates\sncast\tests\utils\devnet
-          key: ${{ runner.os }}-devnet-${{ env.DEVNET_TAG }}
+          key: ${{ runner.os }}-devnet-${{ env.DEVNET_REV }}
       - name: Install devnet
         if: runner.os == 'Windows' && steps.windows-devnet-cache.outputs.cache-hit != 'true'
         run: |
           $DEVNET_INSTALL_DIR = "${{ github.workspace }}\crates\sncast\tests\utils\devnet"
-          cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --tag ${{ env.DEVNET_TAG }} --root $DEVNET_INSTALL_DIR
+          cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev ${{ env.DEVNET_REV }} --root $DEVNET_INSTALL_DIR
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: "2.7.0"
