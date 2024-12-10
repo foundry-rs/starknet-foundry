@@ -10,5 +10,11 @@ jobs:
 
       - name: Setup Starknet Foundry
         uses: foundry-rs/setup-snfoundry@v3
-        
-      - run: snforge --version
+
+      - name: Setup Scarb
+        uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-lock: ./hello_starknet/Scarb.lock
+
+      - name: Run tests
+        run: cd hello_starknet && snforge test
