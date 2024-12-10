@@ -24,7 +24,7 @@ In this section, we will walk through the process of installing Starknet Foundry
     * [Invalid Rust Version](#invalid-rust-version)
       * [Linux and MacOS](#linux-and-macos-1)
       * [Windows](#windows-1)
-    * [`scarb test` Isn’t Running Tests Correctly](#scarb-test-isnt-running-tests-correctly)
+    * [`scarb test` Isn’t Running `snforge`](#scarb-test-isnt-running-snforge)
   * [Universal-Sierra-Compiler update](#universal-sierra-compiler-update)
     * [Linux and MacOS](#linux-and-macos-2)
     * [Windows](#windows-2)
@@ -286,7 +286,7 @@ rustup override set stable
 Follow [Rust installation](https://www.rust-lang.org/tools/install) and ensure correct version of rust was added to
 PATH.
 
-### `scarb test` Isn’t Running Tests Correctly
+### `scarb test` Isn’t Running `snforge`
 
 By default, `scarb test` doesn't use `snforge` to run tests, and it needs to be configured.
 Make sure to include this section in `Scarb.toml`
