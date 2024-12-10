@@ -1,8 +1,24 @@
+use crate::abi::constants;
+use self::hint_processor::{
+    create_retdata_segment,
+    execute_inner_call,
+    execute_library_call,
+    felt_to_bool,
+    read_call_params,
+    read_calldata,
+    read_felt_array,
+    write_segment,
+    EmitEventError,
+    SyscallExecutionError,
+    SyscallHintProcessor,
+    BLOCK_NUMBER_OUT_OF_RANGE_ERROR,
+};
+
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_constructor_entry_point;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::{
-    DeployRequest, DeployResponse, LibraryCallRequest, SyscallResponse, SyscallResult,
+    DeployRequest, DeployResponse, GetBlockHashRequest, GetBlockHashResponse, LibraryCallRequest, SyscallResponse, SyscallResult
 };
 use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
 use blockifier::execution::{
@@ -55,6 +71,45 @@ pub fn get_execution_info_syscall(
     Ok(GetExecutionInfoResponse {
         execution_info_ptr: ptr_cheated_exec_info,
     })
+}
+
+pub fn get_block_hash_syscall(
+    request: GetBlockHashRequest,
+    vm: &mut VirtualMachine,
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
+    _remaining_gas: &mut u64,
+) -> SyscallResult<GetBlockHashResponse> {
+
+    // let execution_info_ptr = syscall_handler.get_or_allocate_execution_info_segment(vm)?;
+
+    // let cheated_data = cheatnet_state.get_cheated_data(syscall_handler.storage_address());
+
+    // let ptr_cheated_block_info = get_cheated_block_info_ptr(vm, execution_info_ptr, &cheated_data);
+
+    let cheated_block_number = cheatnet_state.block_info.block_number;
+
+    let requested_block_number = request.block_number;
+
+    if cheated_block_number < constants::STORED_BLOCK_HASH_BUFFER
+        || requested_block_number > cheated_block_number - constants::STORED_BLOCK_HASH_BUFFER
+    {
+        let out_of_range_error =
+            Felt::from_hex(BLOCK_NUMBER_OUT_OF_RANGE_ERROR).map_err(SyscallExecutionError::from)?;
+        return Err(SyscallExecutionError::SyscallError { error_data: vec![out_of_range_error] });
+    }
+
+    let key = StorageKey::try_from(Felt::from(requested_block_number))?;
+
+    let block_hash_contract_address =
+        ContractAddress::try_from(Felt::from(constants::BLOCK_HASH_CONTRACT_ADDRESS))?;
+
+    //should I get the contractAddress from the cheated block number? how do I do that?
+
+    let cheated_block_hash = BlockHash(syscall_handler.state.get_storage_at(block_hash_contract_address, key)?);
+
+    Ok(GetBlockHashResponse { block_hash: cheated_block_hash })
+
 }
 
 // blockifier/src/execution/syscalls/mod.rs:222 (deploy_syscall)
