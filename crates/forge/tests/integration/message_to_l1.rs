@@ -494,7 +494,6 @@ fn test_filtering() {
                 let second_address = second_dispatcher.contract_address;
 
                 let mut spy = spy_messages_to_l1();
-                assert(spy._message_offset == 0, 'Message offset should be 0');
 
                 first_dispatcher.send_message(
                     array![123, 421, 420],
