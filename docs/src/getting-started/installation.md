@@ -17,12 +17,16 @@ In this section, we will walk through the process of installing Starknet Foundry
   * [Windows](#windows)
     * [Install Rust version >= 1.80.1](#install-rust-version--1801-1)
     * [Install Scarb version >= 2.7.0](#install-scarb-version--270-1)
+    * [Install Universal Sierra Compiler](#install-universal-sierra-compiler)
     * [Install Starknet Foundry](#install-starknet-foundry-1)
   * [Common Errors](#common-errors)
     * [No Version Set](#no-version-set)
     * [Invalid Rust Version](#invalid-rust-version)
+      * [Linux and macOS Only](#linux-and-macos-only)
     * [`scarb test` Isn’t Running Tests Correctly](#scarb-test-isnt-running-tests-correctly)
   * [Universal-Sierra-Compiler update](#universal-sierra-compiler-update)
+    * [Linux and macOS](#linux-and-macos-1)
+    * [Windows](#windows-1)
   * [How to build Starknet Foundry from source code](#how-to-build-starknet-foundry-from-source-code)
 <!-- TOC -->
 
@@ -175,6 +179,24 @@ scarb --version
 
 and verify that version is >= 2.7.0
 
+### Install Universal Sierra Compiler
+
+1. Download the release archive matching your CPU architecture
+   from https://github.com/software-mansion/universal-sierra-compiler/releases/latest. Look for package with `windows`
+   in the name e.g.
+   `universal-sierra-compiler-v2.3.0-x86_64-pc-windows-msvc.zip`.
+2. Extract it to a location where you would like to have Starknet Foundry installed. We recommend
+   `%LOCALAPPDATA%\Programs\universal-sierra-compiler`.
+3. From this directory, get the full path to `universal-sierra-compiler\bin` and add it to PATH.
+   See [this article](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) for instructions on
+   Windows 10 and 11.
+
+To verify that Starknet Foundry was installed, run
+
+```shell
+universal-sierra-compiler --version
+```
+
 ### Install Starknet Foundry
 
 1. Download the release archive matching your CPU architecture
@@ -237,6 +259,8 @@ rustc --version
 1.80.1
 ```
 
+#### Linux and macOS Only
+
 If the version is incorrect or the error persists, try changing the global version of Rust
 
 ```shell
@@ -263,9 +287,15 @@ test = "snforge test"
 
 If you would like to bump the USC manually (e.g. when the new Sierra version is released) you can do it by running:
 
+### Linux and macOS
+
 ```shell
 curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
 ```
+
+### Windows
+
+Follow [Universal Sierra Compiler installation for Windows](#install-universal-sierra-compiler).
 
 ## How to build Starknet Foundry from source code
 
