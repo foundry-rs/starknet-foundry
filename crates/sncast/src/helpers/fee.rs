@@ -248,8 +248,8 @@ impl FromStr for FeeToken {
 
 fn parse_fee_token(s: &str) -> Result<FeeToken, String> {
     match s.to_lowercase().as_str() {
-        "eth" => eprintln!("\x1b[33mwarning:\x1b[0m Specifying '--fee-token' flag will be deprecated in the future and eth transactions will not be supported due to 'SNIP-16'. It is recomended to use '--version' insted"),
-        _ => eprintln!("\x1b[33mwarning:\x1b[0m Specifying '--fee-token' flag will be deprecated in the future. It is recomended to use '--version' insted"),
+        "eth" => eprintln!("\x1b[33mwarning:\x1b[0m Specifying '--fee-token' flag will be deprecated in the future and eth transactions will not be supported due to 'SNIP-16'. It is recommended to use '--version' instead"),
+        _ => eprintln!("\x1b[33mwarning:\x1b[0m Specifying '--fee-token' flag will be deprecated in the future. It is recommended to use '--version' instead"),
     }
     let parsed_token: FeeToken = s.parse()?;
     Ok(parsed_token)
