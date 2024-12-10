@@ -20,13 +20,13 @@ In this section, we will walk through the process of installing Starknet Foundry
     * [Install Universal Sierra Compiler](#install-universal-sierra-compiler)
     * [Install Starknet Foundry](#install-starknet-foundry-1)
   * [Common Errors](#common-errors)
-    * [No Version Set (Linux and macOS Only)](#no-version-set-linux-and-macos-only)
+    * [No Version Set (Linux and MacOS Only)](#no-version-set-linux-and-macos-only)
     * [Invalid Rust Version](#invalid-rust-version)
       * [Linux and MacOS](#linux-and-macos-1)
       * [Windows](#windows-1)
     * [`scarb test` Isn’t Running Tests Correctly](#scarb-test-isnt-running-tests-correctly)
   * [Universal-Sierra-Compiler update](#universal-sierra-compiler-update)
-    * [Linux and macOS](#linux-and-macos-2)
+    * [Linux and MacOS](#linux-and-macos-2)
     * [Windows](#windows-2)
   * [How to build Starknet Foundry from source code](#how-to-build-starknet-foundry-from-source-code)
 <!-- TOC -->
@@ -223,7 +223,7 @@ sncast --version
 
 ## Common Errors
 
-### No Version Set (Linux and macOS Only)
+### No Version Set (Linux and MacOS Only)
 
 Users may encounter this error when trying to use `snforge` or `sncast` without setting a version:
 
@@ -295,7 +295,7 @@ test = "snforge test"
 
 If you would like to bump the USC manually (e.g. when the new Sierra version is released) you can do it by running:
 
-### Linux and macOS
+### Linux and MacOS
 
 ```shell
 curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
