@@ -5,7 +5,7 @@ use super::super::_cheatcode::handle_cheatcode;
 
 #[derive(Drop, Clone)]
 pub struct File {
-    pub path: ByteArray
+    path: ByteArray
 }
 
 pub trait FileTrait {
