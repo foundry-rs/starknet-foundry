@@ -585,7 +585,6 @@ fn spy_events_simple() {
             fn spy_events_simple() {
                 let contract_address = test_address();
                 let mut spy = spy_events();
-                assert(spy._event_offset == 0, 'Events offset should be 0');
 
                 starknet::emit_event_syscall(array![1234].span(), array![2345].span()).unwrap_syscall();
 

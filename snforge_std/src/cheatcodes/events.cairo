@@ -9,7 +9,7 @@ pub fn spy_events() -> EventSpy {
     let mut event_offset = handle_cheatcode(cheatcode::<'spy_events'>(array![].span()));
     let parsed_event_offset: usize = Serde::<usize>::deserialize(ref event_offset).unwrap();
 
-    EventSpy { _event_offset: parsed_event_offset }
+    EventSpy { event_offset: parsed_event_offset }
 }
 
 /// Raw event format (as seen via the RPC-API), can be used for asserting the emitted events.
@@ -22,7 +22,7 @@ pub struct Event {
 /// An event spy structure allowing to get events emitted only after its creation.
 #[derive(Drop, Serde)]
 pub struct EventSpy {
-    pub _event_offset: usize
+    event_offset: usize
 }
 
 /// A wrapper structure on an array of events to handle filtering smoothly.
@@ -39,7 +39,7 @@ pub trait EventSpyTrait {
 impl EventSpyTraitImpl of EventSpyTrait {
     fn get_events(ref self: EventSpy) -> Events {
         let mut output = handle_cheatcode(
-            cheatcode::<'get_events'>(array![self._event_offset.into()].span())
+            cheatcode::<'get_events'>(array![self.event_offset.into()].span())
         );
         let events = Serde::<Array<(ContractAddress, Event)>>::deserialize(ref output).unwrap();
 

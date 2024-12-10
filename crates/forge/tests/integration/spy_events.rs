@@ -49,7 +49,6 @@ fn spy_events_simple() {
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
                 let mut spy = spy_events();
-                assert(spy._event_offset == 0, 'Event offset should be 0');
 
                 dispatcher.emit_one_event(123);
 
@@ -779,7 +778,6 @@ fn test_filtering() {
                 let second_dispatcher = ISpyEventsCheckerDispatcher { contract_address: second_address };
 
                 let mut spy = spy_events();
-                assert(spy._event_offset == 0, 'Event offset should be 0');
 
                 first_dispatcher.emit_one_event(123);
                 second_dispatcher.emit_one_event(234);
