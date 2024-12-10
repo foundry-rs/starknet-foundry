@@ -461,7 +461,7 @@ fn simple_cheatcodes() {
             start_cheat_block_number, stop_cheat_block_number,
             start_cheat_block_timestamp, stop_cheat_block_timestamp,
             start_cheat_transaction_hash, stop_cheat_transaction_hash,
-            test_address, TxInfoMock, CheatSpan
+            test_address, CheatSpan
         };
         use starknet::{
             SyscallResultTrait, SyscallResult, syscalls::get_execution_info_v2_syscall,

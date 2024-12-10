@@ -111,7 +111,7 @@ fn start_cheat_transaction_hash_cancel_mock_by_setting_attribute_to_none() {
             use serde::Serde;
             use starknet::ContractAddress;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_transaction_hash, stop_cheat_transaction_hash, TxInfoMock, CheatSpan };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_transaction_hash, stop_cheat_transaction_hash, CheatSpan };
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
@@ -189,7 +189,7 @@ fn start_cheat_transaction_hash_multiple() {
             use starknet::ContractAddress;
             use starknet::ContractAddressIntoFelt252;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_transaction_hash, TxInfoMock, CheatSpan};
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_transaction_hash, CheatSpan};
 
             #[starknet::interface]
             trait ICheatTxInfoChecker<TContractState> {
@@ -242,7 +242,7 @@ fn start_cheat_transaction_hash_complex() {
             use starknet::ContractAddress;
             use starknet::ContractAddressIntoFelt252;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_transaction_hash, start_cheat_transaction_hash_global, TxInfoMock, CheatSpan };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_transaction_hash, start_cheat_transaction_hash_global, CheatSpan };
 
             #[starknet::interface]
             trait ICheatTxInfoChecker<TContractState> {

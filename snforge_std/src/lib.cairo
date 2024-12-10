@@ -38,8 +38,6 @@ pub use cheatcodes::start_mock_call;
 pub use cheatcodes::stop_mock_call;
 pub use cheatcodes::replace_bytecode;
 pub use cheatcodes::cheat_execution_info;
-pub use cheatcodes::execution_info::ExecutionInfoMock;
-pub use cheatcodes::execution_info::TxInfoMock;
 
 pub use cheatcodes::execution_info::caller_address::cheat_caller_address;
 pub use cheatcodes::execution_info::caller_address::start_cheat_caller_address_global;
