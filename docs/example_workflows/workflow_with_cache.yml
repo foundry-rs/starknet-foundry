@@ -2,67 +2,19 @@ name: My workflow
 on:
   push:
   pull_request:
-env:
-  STARKNET_FOUNDRY_VERSION: 0.34.0
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Determine cache path and key
-        run: |
-          set -e
-
-          case "${{ runner.arch }}" in
-            X64) ARCH="x86_64" ;;
-            ARM64) ARCH="aarch64" ;;
-            *) echo "unsupported architecture: ${{ runner.arch }}"; exit 1 ;;
-          esac
-
-          case "${{ runner.os }}" in
-            Linux) PLATFORM="unknown-linux-gnu" ;;
-            macOS) PLATFORM="apple-darwin" ;;
-            Windows) PLATFORM="pc-windows-msvc" ;;
-            *) echo "unsupported platform: ${{ runner.os }}"; exit 1 ;;
-          esac
-
-          if [ "$PLATFORM" = "unknown-linux-gnu" ]; then
-            CACHE_DIR="/opt/hostedtoolcache"
-          elif [ "$PLATFORM" = "apple-darwin" ]; then
-            CACHE_DIR="/Users/runner/hostedtoolcache"
-          elif [ "$PLATFORM" = "pc-windows-msvc" ]; then
-            CACHE_DIR="C:\\hostedtoolcache\\windows"
-          fi
-
-          OS_TRIPLET="${ARCH}-${PLATFORM}"
-
-          echo "CACHE_PATH=$CACHE_DIR/starknet-foundry/$STARKNET_FOUNDRY_VERSION/$OS_TRIPLET/bin" >> $GITHUB_ENV
-          echo "CACHE_KEY=snfoundry-$STARKNET_FOUNDRY_VERSION-$OS_TRIPLET" >> $GITHUB_ENV
-
-      - name: Restore Starknet Foundry installation from cache
-        uses: actions/cache@v4
-        id: cache-snfoundry
-        with:
-          path: ${{ env.CACHE_PATH }}
-          key: ${{ env.CACHE_KEY }}
-
       - name: Setup Starknet Foundry
-        if: steps.cache-snfoundry.outputs.cache-hit != 'true'
-        id: setup-snfoundry
         uses: foundry-rs/setup-snfoundry@v3
+
+      - name: Setup Scarb
+        uses: software-mansion/setup-scarb@v1
         with:
-          starknet-foundry-version: ${{ env.STARKNET_FOUNDRY_VERSION }}
+          scarb-lock: ./hello_starknet/Scarb.lock
 
-      - name: Add Starknet Foundry to PATH
-        if: steps.cache-snfoundry.outputs.cache-hit == 'true'
-        run: echo ${{ env.CACHE_PATH }}>> $GITHUB_PATH
-
-      - run: snforge --version
-
-      - name: Cache Starknet Foundry
-        if: steps.cache-snfoundry.outputs.cache-hit != 'true'
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.CACHE_PATH }}
-          key: ${{ env.CACHE_KEY }}
+      - name: Run tests
+        run: cd hello_starknet && snforge test
