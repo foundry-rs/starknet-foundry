@@ -71,6 +71,7 @@
     * [test](appendix/snforge/test.md)
     * [init](appendix/snforge/init.md)
     * [clean-cache](appendix/snforge/clean-cache.md)
+    * [check-requirements](appendix/snforge/check-requirements)
 * [Cheatcodes Reference](appendix/cheatcodes.md)
     * [Cheating Globally](appendix/cheatcodes/global.md)
     * [CheatSpan](appendix/cheatcodes/cheat_span.md)
