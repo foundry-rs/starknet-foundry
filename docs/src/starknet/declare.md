@@ -17,11 +17,13 @@ First make sure that you have created a `Scarb.toml` file for your contract (it 
 
 Then run:
 
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
 ```shell
-$ sncast --account myuser \
+$ sncast --account my_account \
     declare \
-	--url http://127.0.0.1:5050/rpc \ 
-    --contract-name SimpleBalance
+	--url http://127.0.0.1:5055 \
+    --contract-name HelloSncast
 ```
 
 <details>
@@ -29,12 +31,12 @@ $ sncast --account myuser \
 
 ```shell
 command: declare
-class_hash: 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
-transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
+class_hash: [..]
+transaction_hash: [..]
 
 To see declaration details, visit:
-class: https://starkscan.co/search/0x8448a68b5e...
-transaction: https://starkscan.co/search/0x7ad0d6e449...
+class: https://starkscan.co/search/[..]
+transaction: https://starkscan.co/search/[..]
 ```
 </details>
 <br>

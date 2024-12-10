@@ -503,9 +503,10 @@ async fn run_async_command(
                         .clone()
                         .context("Required argument `--name` not provided")?
                 } else {
-                    config.account
+                    config.account.clone()
                 };
                 let result = starknet_commands::account::create::create(
+                    create.rpc.get_url(&config),
                     &account,
                     &config.accounts_file,
                     config.keystore,
