@@ -53,6 +53,11 @@ all installed and added to your `PATH` environment variable.
 
 ## Linux and MacOS
 
+> ℹ️ **Info**
+>
+> If you already have installed Rust, Scarb and asdf simply run
+> `asdf plugin add starknet-foundry`
+
 ### Install Rust version >= 1.80.1
 
 > ℹ️ **Info**
