@@ -69,6 +69,7 @@ impl<'a> RequirementsChecker<'a> {
         Ok((validation_output, is_valid))
     }
 }
+
 pub fn create_version_parser<'a>(name: &'a str, pattern: &'a str) -> Box<VersionParser<'a>> {
     let regex = Regex::new(pattern).unwrap();
     Box::new(move |raw_version: &str| {
