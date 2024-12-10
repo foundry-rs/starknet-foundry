@@ -125,7 +125,7 @@ pub struct ExecutionInfoMock {
     pub caller_address: Operation<ContractAddress>,
 }
 
-pub impl ExecutionInfoMockImpl of Default<ExecutionInfoMock> {
+impl ExecutionInfoMockImpl of Default<ExecutionInfoMock> {
     /// Returns a default object initialized with Operation::Retain for each field
     /// Useful for setting only a few of fields instead of all of them
     fn default() -> ExecutionInfoMock {
