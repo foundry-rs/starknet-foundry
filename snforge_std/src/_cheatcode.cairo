@@ -3,7 +3,7 @@ use core::array::ArrayTrait;
 use core::traits::Into;
 use core::array::SpanTrait;
 
-pub fn handle_cheatcode(input: Span<felt252>) -> Span<felt252> {
+pub(crate) fn handle_cheatcode(input: Span<felt252>) -> Span<felt252> {
     let first = *input.at(0);
     let input = input.slice(1, input.len() - 1);
 
