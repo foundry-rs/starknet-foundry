@@ -33,6 +33,7 @@ impl From<&str> for ByteArray {
 }
 
 impl ByteArray {
+    #[must_use]
     pub fn new(words: Vec<Felt>, pending_word: Felt, pending_word_len: usize) -> Self {
         Self {
             words,
