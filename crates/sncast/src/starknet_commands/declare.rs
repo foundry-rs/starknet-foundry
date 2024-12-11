@@ -165,7 +165,7 @@ fn generate_message(class_hash: Felt, transaction_hash: Felt, rpc_url: Option<St
     let padded_transaction_hash: PaddedFelt = transaction_hash.into_();
     let padded_class_hash: PaddedFelt = class_hash.into_();
     let rpc_url = if let Some(url) = rpc_url {
-        format!(" --url {}", url)
+        format!(" --url {url}")
     } else {
         String::new()
     };

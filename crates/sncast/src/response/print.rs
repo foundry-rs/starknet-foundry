@@ -205,7 +205,7 @@ impl OutputData {
 
     fn to_lines(&self) -> String {
         if let Some((_, message)) = self.0.iter().find(|(key, _)| key == "message") {
-            format!("{}", message)
+            format!("{message}")
         } else {
             let fields = self
                 .0
@@ -213,7 +213,7 @@ impl OutputData {
                 .map(|(key, val)| format!("{key}: {val}"))
                 .join("\n");
 
-            format!("{fields}")
+            fields.to_string()
         }
     }
 
