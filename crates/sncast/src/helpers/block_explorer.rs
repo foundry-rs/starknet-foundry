@@ -177,7 +177,7 @@ mod tests {
     };
 
     async fn assert_valid_links(input: &str) {
-        let pattern = Regex::new(r"transaction: |contract: |class: ").unwrap();
+        let pattern = Regex::new(r"Transaction: |Contract: |Class: ").unwrap();
         let links = pattern.replace_all(input, "");
         let mut links = links.split('\n');
 
