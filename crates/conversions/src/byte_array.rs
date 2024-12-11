@@ -15,6 +15,16 @@ pub struct ByteArray {
     pending_word_len: usize,
 }
 
+impl Default for ByteArray {
+    fn default() -> Self {
+        ByteArray {
+            words: Vec::new(),
+            pending_word: Felt::ZERO,
+            pending_word_len: 0,
+        }
+    }
+}
+
 impl From<&str> for ByteArray {
     fn from(value: &str) -> Self {
         let chunks = value.as_bytes().chunks_exact(BYTES_IN_WORD);

@@ -51,6 +51,7 @@ impl CommandResponse for DeployResponse {}
 pub struct DeclareTransactionResponse {
     pub class_hash: PaddedFelt,
     pub transaction_hash: PaddedFelt,
+    #[serde(skip)]
     pub message: ByteArray,
 }
 
