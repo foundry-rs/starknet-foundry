@@ -11,7 +11,7 @@ mod tests {
         let padded_felt = PaddedFelt(felt);
 
         assert_eq!(
-            format!("{:x}", padded_felt),
+            format!("{padded_felt:x}"),
             "0x0000000000000000000000000000000000000000000000000000000000000123".to_string()
         );
     }
