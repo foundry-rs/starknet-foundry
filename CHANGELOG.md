@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### `snforge_scarb_plugin`
+### Forge
+
+#### Added
+
+- Requirements validation during `snforge` runtime
+- `snforge check-requirements` command
 
 #### Changed
 
