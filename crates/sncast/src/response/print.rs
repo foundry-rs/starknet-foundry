@@ -91,7 +91,8 @@ fn byte_array_object_to_string(value: Value) -> OutputValue {
                 .collect();
             let pending_word =
                 Felt::from_str(obj.get("pending_word").unwrap().as_str().unwrap()).unwrap();
-            let pending_word_len = obj.get("pending_word_len").unwrap().as_u64().unwrap() as usize;
+            let pending_word_len =
+                usize::try_from(obj.get("pending_word_len").unwrap().as_u64().unwrap()).unwrap();
             let byte_array = ByteArray::new(words, pending_word, pending_word_len);
             OutputValue::String(byte_array.to_string())
         } else {
