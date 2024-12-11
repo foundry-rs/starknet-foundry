@@ -6,6 +6,17 @@ mod tests {
     use starknet_types_core::felt::Felt;
 
     #[test]
+    fn test_padded_felt_lower_hex() {
+        let felt = Felt::from_hex("0x123").unwrap();
+        let padded_felt = PaddedFelt(felt);
+
+        assert_eq!(
+            format!("{:x}", padded_felt),
+            "0x0000000000000000000000000000000000000000000000000000000000000123".to_string()
+        );
+    }
+
+    #[test]
     fn test_padded_felt_conversions_happy_case() {
         let felt = Felt::from_bytes_be(&[1u8; 32]);
         let padded_felt = PaddedFelt(felt);
