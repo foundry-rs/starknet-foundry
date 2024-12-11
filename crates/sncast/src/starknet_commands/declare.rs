@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use clap::{Args, ValueEnum};
 use conversions::byte_array::ByteArray;
+use conversions::padded_felt::PaddedFelt;
 use conversions::IntoConv;
 use scarb_api::StarknetContractArtifacts;
 use sncast::helpers::error::token_not_supported_for_declaration;
@@ -131,15 +132,21 @@ pub async fn declare(
         Ok(DeclareTransactionResult {
             transaction_hash,
             class_hash,
-        }) => handle_wait_for_tx(
-            account.provider(),
-            transaction_hash,
-            DeclareResponse::Success(DeclareTransactionResponse {
-                class_hash: class_hash.into_(),
-                transaction_hash: transaction_hash.into_(),
-            }),
-            wait_config,
-        )
+        }) => {
+            let message = ByteArray::from(
+                generate_message(class_hash, transaction_hash, declare.rpc.url).as_str(),
+            );
+            handle_wait_for_tx(
+                account.provider(),
+                transaction_hash,
+                DeclareResponse::Success(DeclareTransactionResponse {
+                    class_hash: class_hash.into_(),
+                    transaction_hash: transaction_hash.into_(),
+                    message,
+                }),
+                wait_config,
+            )
+        }
         .await
         .map_err(StarknetCommandError::from),
         Err(Provider(ProviderError::StarknetError(StarknetError::ClassAlreadyDeclared)))
@@ -152,4 +159,22 @@ pub async fn declare(
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
         Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
     }
+}
+
+fn generate_message(class_hash: Felt, transaction_hash: Felt, rpc_url: Option<String>) -> String {
+    let padded_transaction_hash: PaddedFelt = transaction_hash.into_();
+    let padded_class_hash: PaddedFelt = class_hash.into_();
+    let rpc_url = if let Some(url) = rpc_url {
+        format!(" --url {}", url)
+    } else {
+        String::new()
+    };
+
+    format!(
+        "Contract successfully declared!\n\n\
+        Class hash: {padded_transaction_hash:#x}\n\
+        Transaction hash: {padded_transaction_hash:#x}\n\n\
+        In order to deploy it, run:\n\
+        sncast deploy --class-hash {padded_class_hash:#x} --fee-token strk{rpc_url}",
+    )
 }

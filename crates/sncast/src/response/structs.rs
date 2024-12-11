@@ -2,8 +2,8 @@ use super::explorer_link::OutputLink;
 use crate::helpers::block_explorer;
 use crate::helpers::block_explorer::LinkProvider;
 use camino::Utf8PathBuf;
-use conversions::padded_felt::PaddedFelt;
 use conversions::serde::serialize::CairoSerialize;
+use conversions::{byte_array::ByteArray, padded_felt::PaddedFelt};
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet_types_core::felt::Felt;
@@ -51,6 +51,7 @@ impl CommandResponse for DeployResponse {}
 pub struct DeclareTransactionResponse {
     pub class_hash: PaddedFelt,
     pub transaction_hash: PaddedFelt,
+    pub message: ByteArray,
 }
 
 impl CommandResponse for DeclareTransactionResponse {}
@@ -169,7 +170,7 @@ impl OutputLink for InvokeResponse {
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
         format!(
-            "transaction: {}",
+            "Transaction: {}",
             provider.transaction(self.transaction_hash)
         )
     }
@@ -181,8 +182,8 @@ impl OutputLink for DeployResponse {
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
         formatdoc!(
             "
-            contract: {}
-            transaction: {}
+            Contract: {}
+            Transaction: {}
             ",
             provider.contract(self.contract_address),
             provider.transaction(self.transaction_hash)
@@ -196,8 +197,8 @@ impl OutputLink for DeclareTransactionResponse {
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
         formatdoc!(
             "
-            class: {}
-            transaction: {}
+            Class: {}
+            Transaction: {}
             ",
             provider.class(self.class_hash),
             provider.transaction(self.transaction_hash)
@@ -209,6 +210,6 @@ impl OutputLink for AccountCreateResponse {
     const TITLE: &'static str = "account creation";
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
-        format!("account: {}", provider.contract(self.address))
+        format!("Account: {}", provider.contract(self.address))
     }
 }

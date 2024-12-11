@@ -27,7 +27,7 @@ impl Serialize for PaddedFelt {
 
 impl LowerHex for PaddedFelt {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        fmt::LowerHex::fmt(&self.0, f)
+        write!(f, "{:#064x}", self.0)
     }
 }
 

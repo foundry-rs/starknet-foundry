@@ -1,11 +1,16 @@
 use super::structs::CommandResponse;
 use crate::NumbersFormat;
 use anyhow::Result;
+use conversions::byte_array::ByteArray;
 use itertools::Itertools;
 use serde::{Serialize, Serializer};
 use serde_json::Value;
 use starknet_types_core::felt::Felt;
-use std::{collections::HashMap, fmt::Display, str::FromStr};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Display,
+    str::FromStr,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OutputFormat {
@@ -66,6 +71,39 @@ impl Display for OutputValue {
     }
 }
 
+fn byte_array_object_to_string(value: Value) -> OutputValue {
+    let byte_array_keys: HashSet<String> = ["pending_word", "pending_word_len", "words"]
+        .iter()
+        .map(|&s| s.to_string())
+        .collect();
+
+    if let Value::Object(obj) = value {
+        let obj_keys: HashSet<_> = obj.keys().cloned().collect();
+
+        if obj_keys == byte_array_keys {
+            let words: Vec<Felt> = obj
+                .get("words")
+                .unwrap()
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|v| Felt::from_str(v.as_str().unwrap()).unwrap())
+                .collect();
+            let pending_word =
+                Felt::from_str(obj.get("pending_word").unwrap().as_str().unwrap()).unwrap();
+            let pending_word_len = obj.get("pending_word_len").unwrap().as_u64().unwrap() as usize;
+            let byte_array = ByteArray::new(words, pending_word, pending_word_len);
+            OutputValue::String(byte_array.to_string())
+        } else {
+            panic!(
+                "Object keys do not match expected byte array keys. Can only serialize byte arrays"
+            );
+        }
+    } else {
+        panic!("Expected an object");
+    }
+}
+
 impl From<Value> for OutputValue {
     fn from(value: Value) -> Self {
         match value {
@@ -76,6 +114,7 @@ impl From<Value> for OutputValue {
             ),
             Value::String(s) => OutputValue::String(s.to_string()),
             Value::Bool(b) => OutputValue::String(b.to_string()),
+            Value::Object(obj) => byte_array_object_to_string(Value::Object(obj)),
             s => panic!("{s:?} cannot be auto-serialized to output"),
         }
     }
@@ -164,20 +203,24 @@ impl OutputData {
         serde_json::to_string(&mapping).map_err(anyhow::Error::from)
     }
 
-    fn to_lines(&self, command: &str) -> String {
-        let fields = self
-            .0
-            .iter()
-            .map(|(key, val)| format!("{key}: {val}"))
-            .join("\n");
+    fn to_lines(&self) -> String {
+        if let Some((_, message)) = self.0.iter().find(|(key, _)| key == "message") {
+            format!("{}", message)
+        } else {
+            let fields = self
+                .0
+                .iter()
+                .map(|(key, val)| format!("{key}: {val}"))
+                .join("\n");
 
-        format!("command: {command}\n{fields}")
+            format!("{fields}")
+        }
     }
 
     fn to_string_pretty(&self, command: &str, output_format: OutputFormat) -> Result<String> {
         match output_format {
             OutputFormat::Json => self.to_json(command),
-            OutputFormat::Human => Ok(self.to_lines(command)),
+            OutputFormat::Human => Ok(self.to_lines()),
         }
     }
 }
