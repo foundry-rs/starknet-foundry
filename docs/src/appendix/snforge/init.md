@@ -9,3 +9,7 @@ Name of a new project.
 ## `-h`, `--help`
 
 Print help.
+
+> ⚠️ **Warning**
+>
+> The `snforge init` command has been deprecated. Please use the [`snforge new`](./new.md) command instead.
