@@ -15,6 +15,7 @@ use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::fee::PayableTransaction;
+use sncast::helpers::interactive::ask_to_add_as_default;
 use sncast::helpers::scarb_utils::{
     assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
     get_scarb_metadata_with_deps, BuildConfig,
@@ -520,6 +521,10 @@ async fn run_async_command(
                     &create,
                 )
                 .await;
+
+                if result.is_ok() {
+                    ask_to_add_as_default(&account).expect("Failed");
+                }
 
                 print_command_result("account create", &result, numbers_format, output_format)?;
                 print_block_explorer_link_if_allowed(

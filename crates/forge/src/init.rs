@@ -17,7 +17,7 @@ static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
 const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
 
-fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
+pub fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
     fs::write(
         path,
         formatdoc! {r#"
