@@ -15,13 +15,18 @@ replace any subcommand (and its parameters) with `show-config` and it will show 
 
 ```shell
 $ sncast \
-  --account user1 \
-  show-config \
-  --url http://127.0.0.1:5050
-
-command: show-config
-account: user1
-chain_id: alpha-sepolia
-keystore: ../keystore
-rpc_url: http://127.0.0.1:5050/rpc
+  --account my_account \
+  show-config 
 ```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+command: show-config
+account: my_account
+chain_id: alpha-sepolia
+rpc_url: http://127.0.0.1:5055/rpc
+```
+</details>
+<br>

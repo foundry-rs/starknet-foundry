@@ -21,7 +21,7 @@ and [Blockifier](https://github.com/starkware-libs/blockifier), written in Rust 
 Need help getting started with Starknet Foundry? Read the
 📖 [Starknet Foundry Book](https://foundry-rs.github.io/starknet-foundry/)!
 
-![Example run](.github/images/demo-gif/demo.gif)
+![Example run](.github/images/demo.gif)
 
 Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/foundry), consists of different modules
 
@@ -32,31 +32,7 @@ Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/
 
 ## Installation
 
-To install Starknet Foundry, first install `snfoundryup` by running:
-
-```shell
-curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
-```
-
-Follow the instructions and then run
-
-```shell
-snfoundryup
-```
-
-You can also specify a version you wish to install:
-
-```shell
-snfoundryup -v 0.9.0
-```
-
-To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
-
-## Features
-
-- Fast testing framework `snforge` written in Rust
-- High-quality dependency management using [scarb](https://github.com/software-mansion/scarb)
-- Intuitive interactions and deployment of Starknet contracts through `sncast`
+[Follow the installation manual](https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html)
 
 ## Roadmap
 
@@ -74,7 +50,7 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 - [x] Deployment scripts written in Cairo
 - [ ] Transactions profiling 🏗️
 - [ ] Debugging utilities 🏗️
-- [ ] Test coverage reports (check out [cairo-coverage](https://github.com/software-mansion/cairo-coverage)) 🏗️ 
+- [ ] Test coverage reports (check out [cairo-coverage](https://github.com/software-mansion/cairo-coverage)) 🏗️
 - [ ] L1 ↔ L2 messaging and cross-chain testing
 
 ## Performance

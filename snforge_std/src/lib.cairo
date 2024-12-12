@@ -130,6 +130,8 @@ use cheatcodes::execution_info::account_contract_address::stop_cheat_account_con
 use cheatcodes::execution_info::account_contract_address::stop_cheat_account_contract_address_global;
 use cheatcodes::execution_info::account_contract_address::start_cheat_account_contract_address;
 
+use cheatcodes::generate_random_felt::generate_random_felt;
+
 
 mod fs;
 

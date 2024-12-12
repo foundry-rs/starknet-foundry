@@ -30,6 +30,7 @@ pub mod profiler_api;
 pub mod test_case_summary;
 pub mod test_target_summary;
 
+mod backtrace;
 mod fuzzer;
 mod gas;
 pub mod printing;

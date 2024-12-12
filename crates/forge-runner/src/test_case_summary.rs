@@ -1,3 +1,4 @@
+use crate::backtrace::add_backtrace_footer;
 use crate::build_trace_data::build_profiler_call_trace;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
@@ -5,14 +6,14 @@ use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use cairo_annotations::trace_data::VersionedCallTrace as VersionedProfilerCallTrace;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
-use cairo_vm::Felt252;
 use camino::Utf8Path;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use cheatnet::state::CallTrace as InternalCallTrace;
+use cheatnet::state::{CallTrace as InternalCallTrace, EncounteredError};
 use conversions::byte_array::ByteArray;
 use num_traits::Pow;
 use shared::utils::build_readable_text;
+use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::option::Option;
 use std::rc::Rc;
@@ -91,7 +92,7 @@ pub enum TestCaseSummary<T: TestType> {
         /// Message to be printed after the test case run
         msg: Option<String>,
         /// Arguments used in the test case run
-        arguments: Vec<Felt252>,
+        arguments: Vec<Felt>,
         /// Information on used gas
         gas_info: <T as TestType>::GasInfo,
         /// Resources used during test
@@ -108,7 +109,7 @@ pub enum TestCaseSummary<T: TestType> {
         /// Message returned by the test case run
         msg: Option<String>,
         /// Arguments used in the test case run
-        arguments: Vec<Felt252>,
+        arguments: Vec<Felt>,
         /// Statistics of the test run
         test_statistics: <T as TestType>::TestStatistics,
     },
@@ -212,15 +213,17 @@ impl TestCaseSummary<Single> {
     pub(crate) fn from_run_result_and_info(
         run_result: RunResult,
         test_case: &TestCaseWithResolvedConfig,
-        arguments: Vec<Felt252>,
+        arguments: Vec<Felt>,
         gas: u128,
         used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
+        encountered_errors: &[EncounteredError],
         contracts_data: &ContractsData,
         versioned_program_path: &Utf8Path,
     ) -> Self {
         let name = test_case.name.clone();
-        let msg = extract_result_data(&run_result, &test_case.config.expected_result);
+        let msg = extract_result_data(&run_result, &test_case.config.expected_result)
+            .map(|msg| add_backtrace_footer(msg, contracts_data, encountered_errors));
         match run_result.value {
             RunResultValue::Success(_) => match &test_case.config.expected_result {
                 ExpectedTestResult::Success => {
@@ -237,7 +240,7 @@ impl TestCaseSummary<Single> {
                             versioned_program_path,
                         )),
                     };
-                    check_available_gas(&test_case.config.available_gas, summary)
+                    check_available_gas(test_case.config.available_gas, summary)
                 }
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
@@ -281,14 +284,14 @@ impl TestCaseSummary<Single> {
     }
 }
 
-fn join_short_strings(data: &[Felt252]) -> String {
+fn join_short_strings(data: &[Felt]) -> String {
     data.iter()
         .map(|felt| as_cairo_short_string(felt).unwrap_or_default())
         .collect::<Vec<String>>()
         .join(", ")
 }
 
-fn is_matching(data: &[Felt252], pattern: &[Felt252]) -> bool {
+fn is_matching(data: &[Felt], pattern: &[Felt]) -> bool {
     let data_str = convert_felts_to_byte_array_string(data);
     let pattern_str = convert_felts_to_byte_array_string(pattern);
 
@@ -298,7 +301,7 @@ fn is_matching(data: &[Felt252], pattern: &[Felt252]) -> bool {
         data == pattern // Otherwise, data should be equal to pattern
     }
 }
-fn convert_felts_to_byte_array_string(data: &[Felt252]) -> Option<String> {
+fn convert_felts_to_byte_array_string(data: &[Felt]) -> Option<String> {
     ByteArray::deserialize_with_magic(data)
         .map(|byte_array| byte_array.to_string())
         .ok()

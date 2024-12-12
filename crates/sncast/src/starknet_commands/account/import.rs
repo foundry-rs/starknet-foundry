@@ -1,3 +1,7 @@
+use std::collections::HashSet;
+
+use super::deploy::compute_account_address;
+use super::NestedMap;
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
     AccountType,
@@ -7,26 +11,25 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
 use regex::Regex;
-use sncast::check_if_legacy_contract;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
 use sncast::{
     check_class_hash_exists, get_chain_id, handle_rpc_error, AccountType as SNCastAccountType,
 };
-use starknet::core::types::{BlockId, BlockTag, Felt, StarknetError};
+use sncast::{check_if_legacy_contract, read_and_parse_json_file, AccountData};
+use starknet::core::types::{BlockId, BlockTag, StarknetError};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::providers::{Provider, ProviderError};
 use starknet::signers::SigningKey;
-
-use super::deploy::compute_account_address;
+use starknet_types_core::felt::Felt;
 
 #[derive(Args, Debug)]
 #[command(about = "Add an account to the accounts file")]
 pub struct Import {
     /// Name of the account to be imported
     #[clap(short, long)]
-    pub name: String,
+    pub name: Option<String>,
 
     /// Address of the account
     #[clap(short, long)]
@@ -62,7 +65,7 @@ pub struct Import {
 }
 
 pub async fn import(
-    account: &str,
+    account: Option<String>,
     accounts_file: &Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
     import: &Import,
@@ -79,6 +82,10 @@ pub async fn import(
         unreachable!("Checked on clap level")
     };
     let private_key = &SigningKey::from_secret_scalar(*private_key);
+
+    let account_name = account
+        .clone()
+        .unwrap_or_else(|| generate_account_name(accounts_file).unwrap());
 
     let fetched_class_hash = match provider
         .get_class_hash_at(BlockId::Tag(BlockTag::Pending), import.address)
@@ -142,30 +149,27 @@ pub async fn import(
         import.salt,
     );
 
-    write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
+    write_account_to_accounts_file(&account_name, accounts_file, chain_id, account_json.clone())?;
 
     if import.add_profile.is_some() {
         let config = CastConfig {
             url: import.rpc.url.clone().unwrap_or_default(),
-            account: account.into(),
+            account: account_name.clone(),
             accounts_file: accounts_file.into(),
             ..Default::default()
         };
-        add_created_profile_to_configuration(&import.add_profile, &config, &None)?;
+        add_created_profile_to_configuration(import.add_profile.as_deref(), &config, None)?;
     }
 
     Ok(AccountImportResponse {
-        add_profile: if import.add_profile.is_some() {
-            format!(
-                "Profile {} successfully added to snfoundry.toml",
-                import
-                    .add_profile
-                    .clone()
-                    .expect("Failed to get profile name")
-            )
-        } else {
-            "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
-        },
+        add_profile: import.add_profile.as_ref().map_or_else(
+            || "--add-profile flag was not set. No profile added to snfoundry.toml".to_string(),
+            |profile_name| format!("Profile {profile_name} successfully added to snfoundry.toml"),
+        ),
+        account_name: account.map_or_else(
+            || Some(format!("Account imported with name: {account_name}")),
+            |_| None,
+        ),
     })
 }
 
@@ -196,11 +200,39 @@ fn get_private_key_from_input() -> Result<Felt> {
     parse_input_to_felt(&input)
 }
 
+fn generate_account_name(accounts_file: &Utf8PathBuf) -> Result<String> {
+    let mut id = 1;
+
+    if !accounts_file.exists() {
+        return Ok(format!("account-{id}"));
+    }
+
+    let networks: NestedMap<AccountData> = read_and_parse_json_file(accounts_file)?;
+    let mut result = HashSet::new();
+
+    for (_, accounts) in networks {
+        for (name, _) in accounts {
+            if let Some(id) = name
+                .strip_prefix("account-")
+                .and_then(|id| id.parse::<u32>().ok())
+            {
+                result.insert(id);
+            };
+        }
+    }
+
+    while result.contains(&id) {
+        id += 1;
+    }
+
+    Ok(format!("account-{id}"))
+}
+
 #[cfg(test)]
 mod tests {
     use crate::starknet_commands::account::import::parse_input_to_felt;
     use conversions::string::TryFromHexStr;
-    use starknet::core::types::Felt;
+    use starknet_types_core::felt::Felt;
 
     #[test]
     fn test_parse_hex_str() {

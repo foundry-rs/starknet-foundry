@@ -5,7 +5,7 @@ Account information will be saved to the file specified by `--accounts-file` arg
 which is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default.
 
 ## `--name, -n <NAME>`
-Required.
+Optional.
 
 Name of the account to be imported.
 
@@ -49,4 +49,4 @@ Salt for the account address.
 ## `--add-profile <NAME>`
 Optional.
 
-If passed, a profile with corresponding name will be added to snfoundry.toml.
+If passed, a profile with corresponding name will be added to the local snfoundry.toml.

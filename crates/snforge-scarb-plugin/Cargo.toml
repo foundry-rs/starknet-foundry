@@ -3,6 +3,7 @@ name = "snforge_scarb_plugin"
 version.workspace = true
 edition.workspace = true
 publish = false
+rust-version = "1.80.1"
 
 [lib]
 crate-type = ["rlib", "cdylib"]
@@ -14,15 +15,11 @@ cairo-lang-utils.workspace = true
 cairo-lang-syntax.workspace = true
 cairo-lang-diagnostics.workspace = true
 cairo-lang-filesystem.workspace = true
-cairo-lang-sierra.workspace = true
-
 url.workspace = true
 indoc.workspace = true
-serde_json.workspace = true
 smol_str.workspace = true
 num-bigint.workspace = true
-shared.workspace = true
 
 [dev-dependencies]
-lazy_static = "1.4.0"
-regex = "1.11.0"
+lazy_static.workspace = true
+regex.workspace = true

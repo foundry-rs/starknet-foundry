@@ -1,5 +1,5 @@
-use starknet::core::types::Felt;
 use starknet::macros::felt;
+use starknet_types_core::felt::Felt;
 
 pub const ACCOUNT: &str = "user1";
 pub const ACCOUNT_FILE_PATH: &str = "tests/data/accounts/accounts.json";
@@ -10,7 +10,7 @@ pub const NETWORK: &str = "testnet";
 pub const SEED: u32 = 1_053_545_548;
 
 // Block number used by devnet to fork the Sepolia testnet network in the tests
-pub const FORK_BLOCK_NUMBER: u32 = 100_000;
+pub const FORK_BLOCK_NUMBER: u32 = 369_169;
 
 pub const CONTRACTS_DIR: &str = "tests/data/contracts";
 pub const SCRIPTS_DIR: &str = "tests/data/scripts";

@@ -1,6 +1,7 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Args, ValueEnum};
+use conversions::IntoConv;
 use serde_json::Map;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
@@ -18,12 +19,13 @@ use starknet::accounts::{
 };
 use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
 use starknet::core::types::BlockTag::Pending;
-use starknet::core::types::{BlockId, Felt, StarknetError::ClassHashNotFound};
+use starknet::core::types::{BlockId, StarknetError::ClassHashNotFound};
 use starknet::core::utils::get_contract_address;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::ProviderError::StarknetError;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
+use starknet_types_core::felt::Felt;
 
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]
@@ -142,7 +144,7 @@ async fn deploy_from_keystore(
         .is_ok()
     {
         InvokeResponse {
-            transaction_hash: Felt::ZERO,
+            transaction_hash: Felt::ZERO.into_(),
         }
     } else {
         get_deployment_result(
@@ -294,7 +296,7 @@ where
         Err(_) => Err(anyhow!("Unknown AccountFactoryError")),
         Ok(result) => {
             let return_value = InvokeResponse {
-                transaction_hash: result.transaction_hash,
+                transaction_hash: result.transaction_hash.into_(),
             };
             if let Err(message) = handle_wait_for_tx(
                 provider,

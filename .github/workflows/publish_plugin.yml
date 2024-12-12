@@ -1,0 +1,37 @@
+name: Publish snforge_scarb_plugin
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  upload-to-registry:
+    name: Upload plugin to the registry
+    runs-on: ubuntu-latest
+    env:
+      SCARB_REGISTRY_AUTH_TOKEN: ${{ secrets.SCARB_REGISTRY_AUTH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check version
+        id: check-version
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        run: |
+          set -exo pipefail
+
+          snforge_scarb_plugin_version=$(grep version crates/snforge-scarb-plugin/Scarb.toml | cut -d '"' -f 2)
+          snforge_scarb_plugin_uploaded=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version "$snforge_scarb_plugin_version" '[.[] | select(.v == $version)] | length > 0')
+          echo "snforge_scarb_plugin_uploaded=$snforge_scarb_plugin_uploaded" >> $GITHUB_OUTPUT
+
+      - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
+        with:
+          toolchain: stable
+
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: "2.8.5"
+
+      - name: Publish snforge_scarb_plugin
+        if: ${{ steps.check-version.outputs.snforge_scarb_plugin_uploaded == 'false' || github.event_name == 'workflow_dispatch' }}
+        working-directory: crates/snforge-scarb-plugin
+        run: scarb publish

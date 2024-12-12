@@ -35,8 +35,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - name: Install sitemap CLI
+        run: |
+          npm i -g static-sitemap-cli
       - name: Install mdBook
         run: |
           cargo install --version ${MDBOOK_VERSION} mdbook
@@ -78,6 +82,10 @@ jobs:
           curl -o highlight.js https://raw.githubusercontent.com/software-mansion/scarb/main/extensions/scarb-doc/theme/highlight.js
           cp highlight.js ./docs/book/html/sncast_std/highlight.js
           cp highlight.js ./docs/book/html/snforge_std/highlight.js
+      - name: Generate sitemap
+        run: |
+          sscli --base https://foundry-rs.github.io/starknet-foundry
+        working-directory: ./docs/book/html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

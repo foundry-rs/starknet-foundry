@@ -132,7 +132,7 @@ mod tests {
     };
     use forge_runner::package_tests::{TestDetails, TestTargetLocation};
     use std::sync::Arc;
-    use universal_sierra_compiler_api::compile_sierra_to_casm;
+    use universal_sierra_compiler_api::{compile_sierra, SierraType};
 
     fn program_for_testing() -> ProgramArtifact {
         ProgramArtifact {
@@ -164,7 +164,13 @@ mod tests {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
             sierra_program_path: Default::default(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            casm_program: Arc::new(
+                compile_sierra(
+                    &serde_json::to_value(&program_for_testing().program).unwrap(),
+                    &SierraType::Raw,
+                )
+                .unwrap(),
+            ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -427,7 +433,13 @@ mod tests {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
             sierra_program_path: Default::default(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            casm_program: Arc::new(
+                compile_sierra(
+                    &serde_json::to_value(&program_for_testing().program).unwrap(),
+                    &SierraType::Raw,
+                )
+                .unwrap(),
+            ),
             test_cases: vec![],
             tests_location: TestTargetLocation::Lib,
         };
@@ -467,7 +479,13 @@ mod tests {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
             sierra_program_path: Default::default(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            casm_program: Arc::new(
+                compile_sierra(
+                    &serde_json::to_value(&program_for_testing().program).unwrap(),
+                    &SierraType::Raw,
+                )
+                .unwrap(),
+            ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -653,7 +671,13 @@ mod tests {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
             sierra_program_path: Default::default(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            casm_program: Arc::new(
+                compile_sierra(
+                    &serde_json::to_value(&program_for_testing().program).unwrap(),
+                    &SierraType::Raw,
+                )
+                .unwrap(),
+            ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -749,7 +773,13 @@ mod tests {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
             sierra_program_path: Default::default(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            casm_program: Arc::new(
+                compile_sierra(
+                    &serde_json::to_value(&program_for_testing().program).unwrap(),
+                    &SierraType::Raw,
+                )
+                .unwrap(),
+            ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),

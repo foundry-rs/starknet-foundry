@@ -43,11 +43,11 @@ use sncast::state::hashing::{
 };
 use sncast::state::state_file::StateManager;
 use starknet::accounts::{Account, SingleOwnerAccount};
-use starknet::core::types::Felt;
 use starknet::core::types::{BlockId, BlockTag::Pending};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
+use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::fs;
 use tokio::runtime::Runtime;
@@ -81,7 +81,7 @@ pub struct CastScriptExtension<'a> {
     pub state: StateManager,
 }
 
-impl<'a> CastScriptExtension<'a> {
+impl CastScriptExtension<'_> {
     pub fn account(
         &self,
     ) -> Result<&SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>> {
@@ -144,6 +144,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait: true,
                         wait_params: self.config.wait_params,
                     },
+                    true,
                 ));
 
                 self.state.maybe_insert_tx_entry(

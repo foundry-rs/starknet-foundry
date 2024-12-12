@@ -8,54 +8,15 @@ It's declared on Sepolia network with class hash `0x02a9b456118a86070a8c116c41b0
 It has a few methods accepting different types and items defined in its namespace:
 
 ```rust
-// data_transformer_contract/src/lib.cairo
-
-pub struct SimpleStruct {
-    a: felt252
-}
-
-pub struct NestedStructWithField {
-    a: SimpleStruct,
-    b: felt252
-}
-
-pub enum Enum {
-    One: (),
-    Two: u128,
-    Three: NestedStructWithField
-}
-
-#[starknet::contract]
-pub mod DataTransformerContract {
-    /* ... */
-
-    use super::*;
-
-    fn tuple_fn(self: @ContractState, a: (felt252, u8, Enum)) { ... }
-
-    fn nested_struct_fn(self: @ContractState, a: NestedStructWithField) { ... }
-
-    fn complex_fn(
-        self: @ContractState,
-        arr: Array<Array<felt252>>,
-        one: u8,
-        two: i16,
-        three: ByteArray,
-        four: (felt252, u32),
-        five: bool,
-        six: u256
-    ) {
-        ...
-    }
-}
+{{#include ../../listings/hello_sncast/src/data_transformer_contract.cairo}}
 ```
 
 A default form of calldata passed to commands requiring it is a series of hex-encoded felts:
 
 ```shell
 $ sncast call \
-    --url http://127.0.0.1:5050 \
-    --contract-address 0x016ad425af4585102e139d4fb2c76ce786d1aaa1cfcd88a51f3ed66601b23cdd \
+    --url http://127.0.0.1:5055 \
+    --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
     --function tuple_fn \
     --calldata 0x10 0x3 0x0 \
     --block-id latest
@@ -80,10 +41,10 @@ We can write the same command as above, but with arguments:
 
 ```shell
 $ sncast call \
-    --url http://127.0.0.1:5050 \
-    --contract-address 0x016ad425af4585102e139d4fb2c76ce786d1aaa1cfcd88a51f3ed66601b23cdd \
+    --url http://127.0.0.1:5055 \
+    --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
     --function tuple_fn \
-    --arguments '0x10, 3, data_stransformer_contract::Enum::One' \
+    --arguments '(0x10, 3, hello_sncast::data_transformer_contract::Enum::One)' \
     --block-id latest
 ```
 
@@ -123,12 +84,12 @@ Numeric types (primitives and `felt252`) can be paseed with type suffix specifie
 
 1. `complex_fn` - different data types:
 
-  ```shell
-  $ sncast call \
-      --url http://127.0.0.1:5050 \
-      --contract-address 0x016ad425af4585102e139d4fb2c76ce786d1aaa1cfcd88a51f3ed66601b23cdd \
-      --function complex_fn \
-      --arguments \
+```shell
+$ sncast call \
+    --url http://127.0.0.1:5055 \
+    --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
+    --function complex_fn \
+    --arguments \
 'array![array![1, 2], array![3, 4, 5], array![6]],'\
 '12,'\
 '-128_i8,'\
@@ -136,8 +97,8 @@ Numeric types (primitives and `felt252`) can be paseed with type suffix specifie
 "('a shortstring', 32_u32),"\
 'true,'\
 '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' \
-      --block-id latest
-  ```
+    --block-id latest
+```
 
 > 📝 **Note**
 > In bash and similar shells indentation and whitespace matters when providing multiline strings with `\`
@@ -146,20 +107,20 @@ Numeric types (primitives and `felt252`) can be paseed with type suffix specifie
 
 Alternatively, you can continue the single quote for multiple lines.
 
-  ```shell
-  $ sncast call \
-      --url http://127.0.0.1:5050 \
-      --contract-address 0x016ad425af4585102e139d4fb2c76ce786d1aaa1cfcd88a51f3ed66601b23cdd \
-      --function complex_fn \
-      --arguments 'array![array![1, 2], array![3, 4, 5], array![6]],
+```shell
+$ sncast call \
+    --url http://127.0.0.1:5055 \
+    --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
+    --function complex_fn \
+    --arguments 'array![array![1, 2], array![3, 4, 5], array![6]],
 12,
 -128_i8,
 "Some string (a ByteArray)",
 ('\''a shortstring'\'', 32_u32),
 true,
 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' \
-      --block-id latest
-  ```
+    --block-id latest
+```
 
 > 📝 **Note**
 > In bash and similar shells any `'` must be escaped correctly.
@@ -168,15 +129,15 @@ true,
 
 2. `nested_struct_fn` - struct nesting:
 
-  ```shell
-  $ sncast call \
-      --url http://127.0.0.1:5050 \
-      --contract-address 0x016ad425af4585102e139d4fb2c76ce786d1aaa1cfcd88a51f3ed66601b23cdd \
-      --function nested_struct_fn \
-      --arguments \
-'data_transformer_contract::NestedStructWithField {'\
-'    a: data_transformer_contract::SimpleStruct { a: 10 },'\
+```shell
+$ sncast call \
+    --url http://127.0.0.1:5055 \
+    --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
+    --function nested_struct_fn \
+    --arguments \
+'hello_sncast::data_transformer_contract::NestedStructWithField {'\
+'    a: hello_sncast::data_transformer_contract::SimpleStruct { a: 10 },'\
 '    b: 12'\
 '}'\
       --block-id latest
-  ```
+```

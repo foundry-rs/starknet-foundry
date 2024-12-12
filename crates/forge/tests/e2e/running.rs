@@ -145,7 +145,7 @@ fn with_failing_scarb_build() {
         ))
         .unwrap();
 
-    let output = test_runner(&temp).assert().code(2);
+    let output = test_runner(&temp).arg("--no-optimization").assert().code(2);
 
     assert_stdout_contains(
         output,
@@ -729,7 +729,7 @@ fn validate_init(temp: &TempDir, validate_snforge_std: bool) {
     let scarb_toml = fs::read_to_string(manifest_path.clone()).unwrap();
 
     let snforge_std_assert = if validate_snforge_std {
-        "\nsnforge_std = { git = \"https://github.com/foundry-rs/starknet-foundry\", tag = \"v[..]\" }"
+        "\nsnforge_std = \"[..]\""
     } else {
         ""
     };
@@ -791,7 +791,7 @@ fn validate_init(temp: &TempDir, validate_snforge_std: bool) {
 
     let expected = indoc!(
         r"
-        [..]Compiling test_name v0.1.0[..]
+        [..]Compiling[..]
         [..]Finished[..]
 
         Collected 2 test(s) from test_name package
@@ -959,37 +959,6 @@ fn should_panic() {
 }
 
 #[test]
-fn printing_in_contracts() {
-    let temp = setup_package("contract_printing");
-
-    let output = test_runner(&temp).assert().success();
-
-    assert_stdout_contains(
-        output,
-        indoc! {r#"
-        [..]Compiling[..]
-        warn: libfunc `print` is not allowed in the libfuncs list `Default libfunc list`
-         --> contract: HelloStarknet
-        help: try compiling with the `experimental` list
-         --> Scarb.toml
-            [[target.starknet-contract]]
-            allowed-libfuncs-list.name = "experimental"
-
-        [..]Finished[..]
-
-
-        Collected 2 test(s) from contract_printing package
-        Running 0 test(s) from src/
-        Running 2 test(s) from tests/
-        Hello world!
-        [PASS] contract_printing_integrationtest::test_contract::test_increase_balance [..]
-        [PASS] contract_printing_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value [..]
-        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "#},
-    );
-}
-
-#[test]
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
@@ -1098,5 +1067,23 @@ fn catch_runtime_errors() {
                 [PASS] simple_package_integrationtest::test::catch_no_such_file [..]
             "#
         ),
+    );
+}
+
+#[test]
+fn call_nonexistent_selector() {
+    let temp = setup_package("nonexistent_selector");
+
+    let output = test_runner(&temp).assert().code(0);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        Collected 1 test(s) from nonexistent_selector package
+        Running 1 test(s) from tests/
+        [PASS] nonexistent_selector_integrationtest::test_contract::test_unwrapped_call_contract_syscall (gas: ~103)
+        Running 0 test(s) from src/
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        "},
     );
 }

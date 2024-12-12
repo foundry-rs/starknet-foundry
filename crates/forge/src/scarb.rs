@@ -1,4 +1,4 @@
-use crate::scarb::config::{ForgeConfigFromScarb, RawForgeConfig};
+use crate::scarb::config::ForgeConfigFromScarb;
 use anyhow::{Context, Result};
 use cairo_lang_sierra::program::VersionedProgram;
 use camino::Utf8Path;
@@ -25,11 +25,7 @@ impl PackageConfig for ForgeConfigFromScarb {
     where
         Self: Sized,
     {
-        let raw_config = serde_json::from_value::<RawForgeConfig>(config.clone())?;
-
-        raw_config
-            .try_into()
-            .context("Invalid config in Scarb.toml: ")
+        serde_json::from_value(config.clone()).context("Failed to parse snforge config")
     }
 }
 
@@ -104,8 +100,8 @@ pub fn load_test_artifacts(
 
                 let test_target = TestTargetRaw {
                     sierra_program,
-                    tests_location,
                     sierra_program_path,
+                    tests_location,
                 };
 
                 targets.push(test_target);
@@ -209,14 +205,26 @@ mod tests {
             ForgeConfigFromScarb {
                 exit_first: false,
                 fork: vec![
-                    ForkTarget::new("FIRST_FORK_NAME", "http://some.rpc.url", "number", "1",)
-                        .unwrap(),
-                    ForkTarget::new("SECOND_FORK_NAME", "http://some.rpc.url", "hash", "10",)
-                        .unwrap(),
-                    ForkTarget::new("THIRD_FORK_NAME", "http://some.rpc.url", "hash", "0xa",)
-                        .unwrap(),
-                    ForkTarget::new("FOURTH_FORK_NAME", "http://some.rpc.url", "tag", "latest",)
-                        .unwrap()
+                    ForkTarget {
+                        name: "FIRST_FORK_NAME".to_string(),
+                        url: "http://some.rpc.url".parse().expect("Should be valid url"),
+                        block_id: BlockId::BlockNumber(1),
+                    },
+                    ForkTarget {
+                        name: "SECOND_FORK_NAME".to_string(),
+                        url: "http://some.rpc.url".parse().expect("Should be valid url"),
+                        block_id: BlockId::BlockHash(0xa.into()),
+                    },
+                    ForkTarget {
+                        name: "THIRD_FORK_NAME".to_string(),
+                        url: "http://some.rpc.url".parse().expect("Should be valid url"),
+                        block_id: BlockId::BlockHash(10.into()),
+                    },
+                    ForkTarget {
+                        name: "FOURTH_FORK_NAME".to_string(),
+                        url: "http://some.rpc.url".parse().expect("Should be valid url"),
+                        block_id: BlockId::BlockTag,
+                    },
                 ],
                 fuzzer_runs: None,
                 fuzzer_seed: None,
@@ -308,7 +316,6 @@ mod tests {
             &scarb_metadata.workspace.members[0],
         )
         .unwrap_err();
-
         assert!(format!("{err:?}").contains("Some fork names are duplicated"));
     }
 
@@ -340,7 +347,8 @@ mod tests {
             &scarb_metadata.workspace.members[0],
         )
         .unwrap_err();
-        assert!(format!("{err:?}").contains("block_id should be set once per fork"));
+        assert!(format!("{err:?}")
+            .contains("block_id must contain exactly one key: 'tag', 'hash', or 'number'"));
     }
 
     #[test]
@@ -371,9 +379,8 @@ mod tests {
             &scarb_metadata.workspace.members[0],
         )
         .unwrap_err();
-        assert!(
-            format!("{err:?}").contains("block_id = wrong_variant is not valid. Possible values are = \"number\", \"hash\" and \"tag\"")
-        );
+        assert!(format!("{err:?}")
+            .contains("unknown field `wrong_variant`, expected one of `tag`, `hash`, `number`"));
     }
 
     #[test]
@@ -472,13 +479,13 @@ mod tests {
             config,
             ForgeConfigFromScarb {
                 exit_first: false,
-                fork: vec![ForkTarget::new(
-                    "ENV_URL_FORK",
-                    "http://some.rpc.url_from_env",
-                    "number",
-                    "1",
-                )
-                .unwrap()],
+                fork: vec![ForkTarget {
+                    name: "ENV_URL_FORK".to_string(),
+                    url: "http://some.rpc.url_from_env"
+                        .parse()
+                        .expect("Should be valid url"),
+                    block_id: BlockId::BlockNumber(1),
+                }],
                 fuzzer_runs: None,
                 fuzzer_seed: None,
                 max_n_steps: None,

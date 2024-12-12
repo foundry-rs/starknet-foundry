@@ -9,6 +9,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- Requirements validation during `snforge` runtime
+- `snforge check-requirements` command
+
+#### Changed
+
+ - `snforge_scarb_plugin` will now also emit warnings when errors occur
+
+## [0.34.0] - 2024-11-26
+
+### Forge
+
+#### Added
+
+- `generate_random_felt()` for generating (pseudo) random felt value.
+- Printing information about compiling Sierra using `universal-sierra-compiler`
+- Displaying backtrace when contract call fails
+
+#### Changed
+
+- Tests config run is now executed in parallel resulting in faster `snforge test` setup in some cases
+
+### Cast
+
+#### Added
+
+- You can skip `--name` flag when using `account import` - a default name will be generated.
+- Addresses outputted when calling `sncast account create`, `sncast deploy` and `sncast declare` are now padded to 64 characters length and prefixed with `0x0`
+- Globally available configuration to store profiles to share between projects.
+
+#### Changed
+
+- Changed return type of `declare` in Cairo Deployment Scripts so it can handle already declared contracts without failing
+- Allow using `show-config` command without providing rpc url
+
+## [0.33.0] - 2024-11-04
+
+### Cast
+
+#### Added
+
+- You can now use numbers without quotes as inputs for calls in multicall config file.
+- New `--arguments` flag to `call`, `invoke` and `deploy` for automatic conversion of Cairo expressions instead of serialized form.
+
+### Forge
+
 #### Changed
 
 - You can now pass arguments to `cairo-profiler` and `cairo-coverage`. Everything after `--` will be passed to underlying binary. E.g.
@@ -23,12 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Scarb features work with optimized compilation
 - Custom test targets are now supported with optimized compilation
-
-### Cast
-
-#### Added
-
-- New `--arguments` flag to `call`, `invoke` and `deploy` for automatic conversion of Cairo expressions instead of serialized form.
+- Calling contract functions via safe-dispatcher now returns an `Err` when attempting to invoke a non-existent entry point, instead of causing a panic.
 
 ## [0.32.0] - 2024-10-16
 

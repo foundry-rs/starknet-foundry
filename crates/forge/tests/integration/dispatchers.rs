@@ -782,7 +782,7 @@ fn nonexistent_libcall_function() {
     assert_case_output_contains(
         &result,
         "nonexistent_libcall_function",
-        "Entry point EntryPointSelector(0x1fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485) not found in contract"
+        "(0x454e545259504f494e545f4e4f545f464f554e44 ('ENTRYPOINT_NOT_FOUND'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))"
     );
 }
 

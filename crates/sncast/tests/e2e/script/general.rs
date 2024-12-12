@@ -135,7 +135,7 @@ async fn test_incompatible_sncast_std_version() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        [WARNING] Package sncast_std version does not meet the recommended version requirement =0.32.0, it might result in unexpected behaviour
+        [WARNING] Package sncast_std version does not meet the recommended version requirement =0.34.0, it might result in unexpected behaviour
         ...
     "});
 }
@@ -238,13 +238,13 @@ async fn test_run_script_display_debug_traits() {
         test
         declare_nonce: [..]
         debug declare_nonce: [..]
-        Transaction hash = 0x[..]
+        Transaction hash: 0x[..]
         declare_result: class_hash: [..], transaction_hash: [..]
-        debug declare_result: DeclareResult { class_hash: [..], transaction_hash: [..] }
-        Transaction hash = 0x[..]
+        debug declare_result: DeclareResult::Success(DeclareTransactionResult { class_hash: [..], transaction_hash: [..] })
+        Transaction hash: 0x[..]
         deploy_result: contract_address: [..], transaction_hash: [..]
         debug deploy_result: DeployResult { contract_address: [..], transaction_hash: [..] }
-        Transaction hash = 0x[..]
+        Transaction hash: 0x[..]
         invoke_result: [..]
         debug invoke_result: InvokeResult { transaction_hash: [..] }
         call_result: [2]

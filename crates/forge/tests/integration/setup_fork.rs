@@ -1,3 +1,4 @@
+use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
 use indoc::{formatdoc, indoc};
 use std::num::NonZeroU32;
 use std::path::Path;
@@ -158,13 +159,11 @@ fn fork_aliased_decorator() {
                         execution_data_to_save: ExecutionDataToSave::default(),
                     }),
                 }),
-                fork_targets: vec![ForkTarget::new(
-                    "FORK_NAME_FROM_SCARB_TOML",
-                    node_rpc_url().as_str(),
-                    "tag",
-                    "latest",
-                )
-                .unwrap()],
+                fork_targets: vec![ForkTarget {
+                    name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
+                    url: node_rpc_url().as_str().parse().unwrap(),
+                    block_id: BlockId::BlockTag,
+                }],
             },
             &mut BlockNumberMap::default(),
         ))
@@ -245,13 +244,11 @@ fn fork_aliased_decorator_overrding() {
                         execution_data_to_save: ExecutionDataToSave::default(),
                     }),
                 }),
-                fork_targets: vec![ForkTarget::new(
-                    "FORK_NAME_FROM_SCARB_TOML",
-                    node_rpc_url().as_str(),
-                    "number",
-                    "12341234",
-                )
-                .unwrap()],
+                fork_targets: vec![ForkTarget {
+                    name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
+                    url: node_rpc_url().as_str().parse().unwrap(),
+                    block_id: BlockId::BlockNumber(12_341_234),
+                }],
             },
             &mut BlockNumberMap::default(),
         ))

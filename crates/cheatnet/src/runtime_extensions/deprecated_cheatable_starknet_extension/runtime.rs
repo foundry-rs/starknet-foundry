@@ -21,16 +21,16 @@ use cairo_vm::{
         runners::cairo_runner::{ResourceTracker, RunResources},
         vm_core::VirtualMachine,
     },
-    Felt252,
 };
 use runtime::{SyscallHandlingResult, SyscallPtrAccess};
+use starknet_types_core::felt::Felt;
 use std::{any::Any, collections::HashMap};
 
 pub struct DeprecatedStarknetRuntime<'a> {
     pub hint_handler: DeprecatedSyscallHintProcessor<'a>,
 }
 
-impl<'a> SyscallPtrAccess for DeprecatedStarknetRuntime<'a> {
+impl SyscallPtrAccess for DeprecatedStarknetRuntime<'_> {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
         &mut self.hint_handler.syscall_ptr
     }
@@ -46,7 +46,7 @@ impl<'a> SyscallPtrAccess for DeprecatedStarknetRuntime<'a> {
     }
 }
 
-impl<'a> ResourceTracker for DeprecatedStarknetRuntime<'a> {
+impl ResourceTracker for DeprecatedStarknetRuntime<'_> {
     fn consumed(&self) -> bool {
         self.hint_handler.context.vm_run_resources.consumed()
     }
@@ -64,13 +64,13 @@ impl<'a> ResourceTracker for DeprecatedStarknetRuntime<'a> {
     }
 }
 
-impl<'a> HintProcessorLogic for DeprecatedStarknetRuntime<'a> {
+impl HintProcessorLogic for DeprecatedStarknetRuntime<'_> {
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt252>,
+        constants: &HashMap<String, Felt>,
     ) -> Result<(), HintError> {
         self.hint_handler
             .execute_hint(vm, exec_scopes, hint_data, constants)
@@ -101,7 +101,7 @@ impl<Extension: DeprecatedExtensionLogic> HintProcessorLogic
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt252>,
+        constants: &HashMap<String, Felt>,
     ) -> Result<(), HintError> {
         let hint = hint_data
             .downcast_ref::<HintProcessorData>()
@@ -141,7 +141,7 @@ impl<Extension: DeprecatedExtensionLogic> DeprecatedExtendedRuntime<Extension> {
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
         ids_data: &HashMap<String, HintReference>,
-        constants: &HashMap<String, Felt252>,
+        constants: &HashMap<String, Felt>,
         ap_tracking: &ApTracking,
     ) -> Result<(), HintError> {
         let initial_syscall_ptr = get_ptr_from_var_name("syscall_ptr", vm, ids_data, ap_tracking)?;

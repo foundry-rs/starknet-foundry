@@ -8,7 +8,7 @@ use starknet_api::{
     deprecated_contract_class::EntryPointType,
     transaction::Calldata,
 };
-use starknet_types_core::felt::Felt as Felt252;
+use starknet_types_core::felt::Felt;
 use std::{
     cell::{Ref, RefCell},
     rc::Rc,
@@ -73,9 +73,9 @@ impl CairoSerialize for CallType {
 impl CairoSerialize for bool {
     fn serialize(&self, output: &mut BufferWriter) {
         if *self {
-            Felt252::from(1).serialize(output);
+            Felt::from(1).serialize(output);
         } else {
-            Felt252::from(0).serialize(output);
+            Felt::from(0).serialize(output);
         }
     }
 }
@@ -133,11 +133,11 @@ impl<T: CairoSerialize, E: CairoSerialize> CairoSerialize for Result<T, E> {
     fn serialize(&self, output: &mut BufferWriter) {
         match self {
             Ok(val) => {
-                output.write_felt(Felt252::from(0));
+                output.write_felt(Felt::from(0));
                 val.serialize(output);
             }
             Err(err) => {
-                output.write_felt(Felt252::from(1));
+                output.write_felt(Felt::from(1));
                 err.serialize(output);
             }
         }
@@ -148,10 +148,10 @@ impl<T: CairoSerialize> CairoSerialize for Option<T> {
     fn serialize(&self, output: &mut BufferWriter) {
         match self {
             Some(val) => {
-                output.write_felt(Felt252::from(0));
+                output.write_felt(Felt::from(0));
                 val.serialize(output);
             }
-            None => output.write_felt(Felt252::from(1)),
+            None => output.write_felt(Felt::from(1)),
         }
     }
 }
@@ -179,7 +179,7 @@ macro_rules! impl_serialize_for_num_type {
     ($type:ty) => {
         impl CairoSerialize for $type {
             fn serialize(&self, output: &mut BufferWriter) {
-                Felt252::from(*self).serialize(output);
+                Felt::from(*self).serialize(output);
             }
         }
     };
@@ -202,7 +202,7 @@ macro_rules! impl_serialize_for_tuple {
     };
 }
 
-impl_serialize_for_felt_type!(Felt252);
+impl_serialize_for_felt_type!(Felt);
 impl_serialize_for_felt_type!(ClassHash);
 impl_serialize_for_felt_type!(ContractAddress);
 impl_serialize_for_felt_type!(Nonce);

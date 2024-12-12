@@ -19,7 +19,6 @@ use ::runtime::SyscallHandlingResult;
 use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use cairo_vm::Felt252;
 use num_traits::ToPrimitive;
 use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_api::core::{
@@ -27,6 +26,7 @@ use starknet_api::core::{
 };
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::transaction::Calldata;
+use starknet_types_core::felt::Felt;
 
 use self::runtime::{
     DeprecatedExtendedRuntime, DeprecatedExtensionLogic, DeprecatedStarknetRuntime,
@@ -201,7 +201,7 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
     }
 }
 
-impl<'a> DeprecatedCheatableStarknetRuntimeExtension<'a> {
+impl DeprecatedCheatableStarknetRuntimeExtension<'_> {
     // crates/blockifier/src/execution/deprecated_syscalls/hint_processor.rs:233
     fn execute_syscall<Request, Response, ExecuteCallback>(
         &mut self,
@@ -384,7 +384,7 @@ fn execute_inner_call(
     let retdata = &call_info.execution.retdata.0;
     let retdata: Vec<MaybeRelocatable> = retdata
         .iter()
-        .map(|&x| MaybeRelocatable::from(Felt252::from_(x)))
+        .map(|&x| MaybeRelocatable::from(Felt::from_(x)))
         .collect();
     let retdata_segment_start_ptr = syscall_handler.read_only_segments.allocate(vm, &retdata)?;
 

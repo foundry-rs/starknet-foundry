@@ -17,20 +17,28 @@ These arguments can then be used in the test body.
 The test will be run many times against different randomly generated values.
 
 ```rust
-{{#include ../../listings/snforge_advanced_features/crates/fuzz_testing/src/basic_example.cairo}}
+{{#include ../../listings/fuzz_testing/src/basic_example.cairo}}
 ```
 
 Then run `snforge test` like usual.
 
 ```shell
 $ snforge test
-Collected 1 test(s) from fuzz_testing package
-Running 1 test(s) from src/
-Running 0 test(s) from tests/
-[PASS] fuzz_testing::basic_example::test_sum (runs: 256, gas: {max: ~1, min: ~1, mean: ~1.00, std deviation: ~0.00})
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Collected 2 test(s) from fuzz_testing package
+Running 2 test(s) from src/
+[PASS] fuzz_testing::with_parameters::tests::test_sum (runs: 22, gas: {max: ~1, min: ~1, mean: ~1.00, std deviation: ~0.00})
+[PASS] fuzz_testing::basic_example::tests::test_sum (runs: 256, gas: {max: ~1, min: ~1, mean: ~1.00, std deviation: ~0.00})
+Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 Fuzzer seed: [..]
 ```
+</details>
+<br>
 
 ## Types Supported by the Fuzzer
 
@@ -51,7 +59,7 @@ Trying to use arguments of different type in test definition will result in an e
 It is possible to configure the number of runs of the random fuzzer as well as its seed for a specific test case:
 
 ```rust
-{{#include ../../listings/snforge_advanced_features/crates/fuzz_testing/src/with_parameters.cairo}}
+{{#include ../../listings/fuzz_testing/src/with_parameters.cairo}}
 ```
 
 It can also be configured globally, via command line arguments:

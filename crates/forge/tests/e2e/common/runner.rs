@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
 use std::{env, fs};
-use test_utils::tempdir_with_tool_versions;
+use test_utils::{get_assert_macros_version, tempdir_with_tool_versions};
 use toml_edit::{value, DocumentMut};
 use walkdir::WalkDir;
 
@@ -33,13 +33,33 @@ pub(crate) fn test_runner(temp_dir: &TempDir) -> SnapboxCommand {
 
 pub(crate) static BASE_FILE_PATTERNS: &[&str] = &["**/*.cairo", "**/*.toml"];
 
+fn is_package_from_docs_listings(package: &str) -> bool {
+    let package_path = Path::new("../../docs/listings").join(package);
+    fs::canonicalize(&package_path).is_ok()
+}
+
 pub(crate) fn setup_package_with_file_patterns(
     package_name: &str,
     file_patterns: &[&str],
 ) -> TempDir {
     let temp = tempdir_with_tool_versions().unwrap();
-    temp.copy_from(format!("tests/data/{package_name}"), file_patterns)
-        .unwrap();
+
+    let is_from_docs_listings = is_package_from_docs_listings(package_name);
+
+    let package_path = if is_from_docs_listings {
+        format!("../../docs/listings/{package_name}",)
+    } else {
+        format!("tests/data/{package_name}",)
+    };
+
+    let package_path = Utf8PathBuf::from_str(&package_path)
+        .unwrap()
+        .canonicalize_utf8()
+        .unwrap()
+        .to_string()
+        .replace('\\', "/");
+
+    temp.copy_from(package_path, file_patterns).unwrap();
 
     let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
         .unwrap()
@@ -54,8 +74,18 @@ pub(crate) fn setup_package_with_file_patterns(
         .unwrap()
         .parse::<DocumentMut>()
         .unwrap();
-    scarb_toml["dev-dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
+
+    let is_workspace = scarb_toml.get("workspace").is_some();
+
+    if is_workspace {
+        scarb_toml["workspace"]["dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
+    } else {
+        scarb_toml["dev-dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
+    }
+
     scarb_toml["dependencies"]["starknet"] = value("2.4.0");
+    scarb_toml["dependencies"]["assert_macros"] =
+        value(get_assert_macros_version().unwrap().to_string());
     scarb_toml["target.starknet-contract"]["sierra"] = value(true);
 
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
@@ -137,6 +167,8 @@ pub(crate) fn setup_hello_workspace() -> TempDir {
                 fibonacci = {{ path = "crates/fibonacci" }}
                 addition = {{ path = "crates/addition" }}
 
+                [dev-dependencies]
+                snforge_std.workspace = true
                 "#,
             snforge_std_path
         ))
@@ -205,12 +237,7 @@ pub(crate) fn get_remote_url() -> String {
             .output_checked()
             .unwrap();
 
-        String::from_utf8(output.stdout)
-            .unwrap()
-            .trim()
-            .strip_prefix("git@github.com:")
-            .unwrap()
-            .to_string()
+        String::from_utf8(output.stdout).unwrap().trim().to_string()
     }
 }
 

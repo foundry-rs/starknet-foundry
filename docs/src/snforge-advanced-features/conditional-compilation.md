@@ -16,7 +16,7 @@ Additionally, for utilizing features the `snforge test` command exposes the foll
 Firstly, define a contract in the `src` directory with a `#[cfg(feature: '<FEATURE_NAME>')]` attribute:
 
 ```rust
-{{#include ../../listings/snforge_advanced_features/crates/conditional_compilation/src/lib.cairo}}
+{{#include ../../listings/conditional_compilation/src/lib.cairo}}
 ```
 
 > 📝 **Note**
@@ -27,7 +27,7 @@ Firstly, define a contract in the `src` directory with a `#[cfg(feature: '<FEATU
 Next, create a test that uses the above contract:
 
 ```rust
-{{#include ../../listings/snforge_advanced_features/crates/conditional_compilation/tests/test.cairo}}
+{{#include ../../listings/conditional_compilation/tests/test.cairo}}
 ```
 
 The `Scarb.toml` file needs to be updated so it includes the following lines:
@@ -39,8 +39,8 @@ enable_for_tests = []
 
 Then, to use the contract in tests `snforge test` must be provided with a flag defined above:
 
-```
-snforge test --features enable_for_tests
+```shell
+$ snforge test --features enable_for_tests
 ```
 
 Also, we can specify which features are going to be enabled by default:
@@ -59,5 +59,5 @@ enable_for_tests = []
 Features are not limited to conditionally compiling contracts and can be used with other parts of the code, like functions:
 
 ```rust
-{{#include ../../listings/snforge_advanced_features/crates/conditional_compilation/src/function.cairo}}
+{{#include ../../listings/conditional_compilation/src/function.cairo}}
 ```

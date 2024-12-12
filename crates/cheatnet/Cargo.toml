@@ -33,7 +33,6 @@ rayon.workspace = true
 tokio.workspace = true
 num-bigint.workspace = true
 conversions.workspace = true
-scarb-metadata.workspace = true
 fs2.workspace = true
 flate2.workspace = true
 data-transformer = { path = "../data-transformer" }
@@ -43,6 +42,7 @@ universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 k256.workspace = true
 p256.workspace = true
 shared.workspace = true
+rand.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true

@@ -523,7 +523,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account deploy
-        transaction_hash: 0x[..]
+        transaction_hash: 0x0[..]
 
         To see invocation details, visit:
         transaction: [..]
@@ -798,7 +798,7 @@ pub async fn test_deploy_keystore_other_args() {
     let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
         command: account deploy
-        transaction_hash: 0x[..]
+        transaction_hash: 0x0[..]
 
         To see invocation details, visit:
         transaction: [..]

@@ -1,6 +1,6 @@
 [package]
 name = "snforge_std"
-version = "0.32.0"
+version = "0.34.0"
 edition = "2023_10"
 description = "Cairo testing library"
 documentation = "https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library.html"

@@ -9,16 +9,42 @@ Declares a contract and returns `DeclareResult`.
 - `nonce` - nonce for declare transaction. If not provided, nonce will be set automatically.
 
 ```rust
-{{#include ../../../listings/sncast_library/scripts/declare/src/lib.cairo}}
+{{#include ../../../listings/declare/src/lib.cairo}}
 ```
 
-Structures used by the command:
+## Returned Type
+
+* If the contract has not been declared, `DeclareResult::Success` is returned containing respective transaction hash.
+* If the contract has already been declared, `DeclareResult::AlreadyDeclared` is returned.
+
+## Getting the Class Hash
+
+Both variants contain `class_hash` of the declared contract. Import `DeclareResultTrait` to access it.
 
 ```rust
-#[derive(Drop, Clone, Debug)]
-pub struct DeclareResult {
+pub trait DeclareResultTrait {
+    fn class_hash(self: @DeclareResult) -> @ClassHash;
+}
+```
+
+## Structures Used by the Command
+
+```rust
+#[derive(Drop, Copy, Debug, Serde)]
+pub enum DeclareResult {
+    Success: DeclareTransactionResult,
+    AlreadyDeclared: AlreadyDeclaredResult,
+}
+
+#[derive(Drop, Copy, Debug, Serde)]
+pub struct DeclareTransactionResult {
     pub class_hash: ClassHash,
     pub transaction_hash: felt252,
+}
+
+#[derive(Drop, Copy, Debug, Serde)]
+pub struct AlreadyDeclaredResult {
+    pub class_hash: ClassHash,
 }
 
 #[derive(Drop, Clone, Debug, Serde, PartialEq)]

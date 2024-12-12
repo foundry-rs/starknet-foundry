@@ -24,6 +24,8 @@
 * [Testing Workspaces](testing/testing-workspaces.md)
 * [Test Collection](testing/test-collection.md)
 * [Contract Collection](testing/contracts-collection.md)
+    * [Optimized Mechanism](testing/contract-collection/new-mechanism.md)
+    * [Old Mechanism](testing/contract-collection/old-mechanism.md)
 * [Gas and VM Resources Estimation](testing/gas-and-resource-estimation.md)
 * [Coverage](testing/coverage.md)
 
@@ -34,12 +36,13 @@
 * [Conditional Compilation](snforge-advanced-features/conditional-compilation.md)
 * [Direct Storage Access](snforge-advanced-features/storage-cheatcodes.md)
 * [Profiling](snforge-advanced-features/profiling.md)
+* [Backtrace](snforge-advanced-features/backtrace.md)
 
 ---
 
 # `sncast` Overview
 
-* [Outline](starknet/index.md)
+* [Outline](starknet/sncast-overview.md)
 * [Creating And Deploying Accounts](starknet/account.md)
 * [Importing Accounts](starknet/account-import.md)
 * [Declaring New Contracts](starknet/declare.md)
@@ -58,6 +61,7 @@
 # Foundry Development
 
 * [Environment Setup](development/environment-setup.md)
+* [Shell snippets](development/shell-snippets.md)
 
 ---
 
@@ -67,6 +71,7 @@
     * [test](appendix/snforge/test.md)
     * [init](appendix/snforge/init.md)
     * [clean-cache](appendix/snforge/clean-cache.md)
+    * [check-requirements](appendix/snforge/check-requirements)
 * [Cheatcodes Reference](appendix/cheatcodes.md)
     * [Cheating Globally](appendix/cheatcodes/global.md)
     * [CheatSpan](appendix/cheatcodes/cheat_span.md)
@@ -95,6 +100,7 @@
     * [spy_messages_to_l1](appendix/cheatcodes/spy_messages_to_l1.md)
     * [store](appendix/cheatcodes/store.md)
     * [load](appendix/cheatcodes/load.md)
+    * [generate_random_felt](appendix/cheatcodes/generate_random_felt.md)
 * [`snforge` Library Reference](appendix/snforge-library.md)
     * [byte_array](appendix/snforge-library/byte_array.md)
     * [declare](appendix/snforge-library/declare.md)
@@ -132,5 +138,6 @@
     * [get_nonce](appendix/sncast-library/get_nonce.md)
     * [tx_status](appendix/sncast-library/tx_status.md)
     * [errors](appendix/sncast-library/errors.md)
-* [ `snfoundry.toml` Reference](appendix/snfoundry-toml.md)
-* [ `Scarb.toml` Reference](appendix/scarb-toml.md)
+* [`snfoundry.toml` Reference](appendix/snfoundry-toml.md)
+* [`Scarb.toml` Reference](appendix/scarb-toml.md)
+* [Starknet Foundry Github Action](appendix/starknet-foundry-github-action.md)

@@ -104,7 +104,7 @@ jobs:
           toolchain: stable
           target: ${{ matrix.target }}
 
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
         with:
           workspaces: starknet-foundry
 
@@ -249,3 +249,35 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.create-release.outputs.computed-prefix }}${{ steps.create-release.outputs.version }}
+
+  publish-snforge-scarb-plugin:
+    name: Publish snforge_scarb_plugin
+    uses: ./.github/workflows/publish_plugin.yml
+    secrets: inherit
+
+  publish-to-registry:
+    name: Publish packages to the registry
+    runs-on: ubuntu-latest
+    needs: [ create-release, publish-snforge-scarb-plugin ]
+    env:
+      SCARB_REGISTRY_AUTH_TOKEN: ${{ secrets.SCARB_REGISTRY_AUTH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
+        with:
+          toolchain: stable
+
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: "2.8.5"
+
+      - name: Publish sncast_std
+        working-directory: sncast_std
+        run: scarb publish --allow-dirty
+
+      - name: Publish snforge_std
+        working-directory: snforge_std
+        run: |
+          ../scripts/set_plugin_version.sh
+          scarb publish --allow-dirty

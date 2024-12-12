@@ -52,14 +52,20 @@ defined in the profile.
 ```shell
 $ sncast --profile myprofile \
     call \
-    --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
-    --function get \
-    --calldata 0x0 \
+    --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
+    --function get_balance \
     --block-id latest
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: call
 response: [0x0]
 ```
+</details>
+<br>
 
 ### Multiple Profiles
 
@@ -82,16 +88,77 @@ With this, there's no need to include the `--profile` argument when using `sncas
 
 ```shell
 $ sncast call \
-    --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
-    --function get \
-    --calldata 0x0 \
+    --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
+    --function get_balance \
     --block-id latest
-
-command: call
-response: [0x1, 0x23, 0x4]
 ```
 
-## Environmental variables
+<details>
+<summary>Output:</summary>
+
+```shell
+command: call
+response: [0x0]
+```
+</details>
+<br>
+
+### Global Configuration
+
+Global configuration file is a [`snfoundry.toml`](https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html), 
+which is a common storage for configurations to apply to multiple projects across various directories.
+This file is stored in a predefined location and is used to store profiles that can be used from any location on your computer.
+
+#### Interaction Between Local and Global Profiles
+
+Global config can be overridden by a local config.
+
+If both local and global profiles with the same name are present, local profile will be combined with global profile. For any setting defined in both profiles, the local setting will take precedence. For settings not defined in the local profile, values from the corresponding global profile will be used, or if not defined, values from the global default profile will be used instead.
+
+This same behavior applies for [default profiles](#default-profile) as well. A local default profile will override a global default profile.
+
+> 📝 **Note**
+> Remember that arguments passed in the CLI have the highest priority and will always override the configuration file settings.
+
+
+#### Global Configuration File Location
+The global configuration is stored in a specific location depending on the operating system:
+
+- macOS/Linux : The global configuration file is located at `$HOME/.config/starknet-foundry/snfoundry.toml`
+- Windows : The file can be found at `C:\Users\<user>\AppData\Roaming\starknet-foundry\snfoundry.toml`
+
+> 📝 **Note**
+> If missing, global configuration file will be created automatically on running any `sncast` command for the first time.
+
+### Config Interaction Example
+
+```
+root/
+├── .config/
+│   └── starknet-foundry/
+│       └── snfoundry.toml -> A
+└── /../../
+        └── projects/
+            ├── snfoundry.toml -> B
+            └── cairo-projects/
+                └── opus-magnum/
+```
+
+**Glossary:**
+
+- **A:** Global configuration file containing the profiles [`default`](#default-profile) and [`testnet`](#defining-profiles-in-snfoundrytoml).
+- **B:** Local configuration file containing the profiles `default` and `mainnet`.
+
+In any directory in the file system, a user can run the `sncast` command using the `default` and `testnet` profiles, 
+because they are defined in global config (file A). 
+
+If no profiles are explicitly specified, the `default` profile from the global configuration file will be used.
+
+When running `sncast` from the `opus-magnum` directory, there is a configuration file in the parent directory (file B). 
+This setup allows for the use of the following profiles: `default`, `testnet`, and `mainnet`. If the `mainnet` profile is specified, 
+the configuration from the local file will be used to override the global `default` profile, as the `mainnet` profile does not exist in the global configuration.
+
+## Environmental Variables
 
 Programmers can use environmental variables in both `Scarb.toml::tool::snforge` and in `snfoundry.toml`. To use an environmental variable as a value, use its name prefixed with `$`. 
 This might be useful, for example, to hide node urls in the public repositories. 
@@ -106,4 +173,4 @@ url = "$NODE_URL"
 # ...
 ```
 
-Variable value are automatically resolved to numbers and booleans (strings `true`, `false`) if it is possible.
+Variable values are automatically resolved to numbers and booleans (strings `true`, `false`) where possible.

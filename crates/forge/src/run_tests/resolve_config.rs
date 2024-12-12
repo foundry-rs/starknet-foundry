@@ -128,7 +128,8 @@ mod tests {
     use forge_runner::package_tests::TestTargetLocation;
     use forge_runner::{expected_result::ExpectedTestResult, package_tests::TestDetails};
     use std::sync::Arc;
-    use universal_sierra_compiler_api::compile_sierra_to_casm;
+    use universal_sierra_compiler_api::{compile_sierra, SierraType};
+    use url::Url;
 
     fn program_for_testing() -> ProgramArtifact {
         ProgramArtifact {
@@ -147,7 +148,13 @@ mod tests {
         let mocked_tests = TestTargetWithConfig {
             sierra_program: program_for_testing(),
             sierra_program_path: Default::default(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            casm_program: Arc::new(
+                compile_sierra(
+                    &serde_json::to_value(&program_for_testing().program).unwrap(),
+                    &SierraType::Raw,
+                )
+                .unwrap(),
+            ),
             test_cases: vec![TestCaseWithConfig {
                 name: "crate1::do_thing".to_string(),
                 config: TestCaseConfig {
@@ -175,13 +182,11 @@ mod tests {
 
         assert!(resolve_config(
             mocked_tests,
-            &[ForkTarget::new(
-                "definitely_non_existing",
-                "https://not_taken.com",
-                "number",
-                "120",
-            )
-            .unwrap()],
+            &[ForkTarget {
+                name: "definitely_non_existing".to_string(),
+                url: Url::parse("https://not_taken.com").expect("Should be valid url"),
+                block_id: BlockId::BlockNumber(120),
+            }],
             &mut BlockNumberMap::default()
         )
         .await
