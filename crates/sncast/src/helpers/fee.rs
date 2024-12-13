@@ -1,7 +1,8 @@
-use anyhow::{bail, ensure, Result};
+use anyhow::{bail, ensure, Error, Result};
 use clap::{Args, ValueEnum};
 use conversions::serde::deserialize::CairoDeserialize;
 use conversions::TryIntoConv;
+use shared::print::print_as_warning;
 use starknet::core::types::BlockId;
 use starknet::providers::Provider;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
@@ -247,15 +248,16 @@ impl FromStr for FeeToken {
 }
 
 fn parse_fee_token(s: &str) -> Result<FeeToken, String> {
-    let deprecation_message = "\x1b[33mwarning:\x1b[0m Specifying '--fee-token' flag is deprecated and will be removed in the future. Use '--version' instead";
+    let deprecation_message = "Specifying '--fee-token' flag is deprecated and will be removed in the future. Use '--version' instead";
 
-    match s.to_lowercase().as_str() {
-        "eth" => {
-            println!("{deprecation_message}");
-            println!("\x1b[33mwarning:\x1b[0m Eth transactions will stop being supported in the future due to 'SNIP-16'");
-        }
-        _ => println!("{deprecation_message}"),
+    print_as_warning(&Error::msg(deprecation_message));
+
+    if s.to_lowercase().as_str() == "eth" {
+        print_as_warning(&Error::msg(
+            "Eth transactions will stop being supported in the future due to 'SNIP-16'",
+        ));
     }
+
     let parsed_token: FeeToken = s.parse()?;
     Ok(parsed_token)
 }
