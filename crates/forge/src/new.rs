@@ -163,7 +163,7 @@ pub fn new(
     if !overwrite {
         ensure!(
             !path.exists() || path.read_dir().is_ok_and(|mut i| i.next().is_none()),
-            format!("The provided path `{path}` points to a non-empty directory. If you wish to create a project in this directory, please use the `--overwrite` flag to proceed.")
+            format!("The provided path `{path}` points to a non-empty directory. If you wish to create a project in this directory, use the `--overwrite` flag")
         );
     }
     let name = infer_name(name, &path)?;

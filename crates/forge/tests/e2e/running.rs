@@ -691,11 +691,20 @@ fn with_exit_first_flag() {
 fn init_new_project() {
     let temp = tempdir_with_tool_versions().unwrap();
 
-    runner(&temp)
+    let output = runner(&temp)
         .args(["init", "test_name"])
         .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
         .assert()
         .success();
+
+    assert_stdout_contains(
+        output,
+        indoc!(
+            r"
+                [WARNING] Command `snforge init` is deprecated and will be removed in the future. Please use `snforge new` instead.
+            "
+        ),
+    );
 
     validate_init(&temp.join("test_name"), false);
 }
@@ -730,7 +739,7 @@ fn create_new_project_dir_not_empty() {
         output,
         indoc!(
             r"
-                [ERROR] The provided path [..] points to a non-empty directory. If you wish to create a project in this directory, please use the `--overwrite` flag to proceed.
+                [ERROR] The provided path [..] points to a non-empty directory. If you wish to create a project in this directory, use the `--overwrite` flag
             "
         ),
     );

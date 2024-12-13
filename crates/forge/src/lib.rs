@@ -169,6 +169,7 @@ pub struct TestArgs {
 
 #[derive(Parser, Debug)]
 pub struct NewArgs {
+    /// Path to a location where the new project will be created
     path: Utf8PathBuf,
     /// Name of a new project, defaults to the directory name
     #[arg(short, long)]
