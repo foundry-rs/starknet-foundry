@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
-#### Changed
+#### Deprecated
 
 - `--fee-token` and `--version` flags are now optional, `strk` and `v3` will be used by default
 
