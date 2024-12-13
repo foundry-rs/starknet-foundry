@@ -497,6 +497,15 @@ async fn run_async_command(
                 )
                 .await;
 
+                if result.is_ok() && io::stdout().is_terminal() {
+                    if let Some(account_name) =
+                        result.as_ref().ok().and_then(|r| r.account_name.clone())
+                    {
+                        ask_to_add_as_default(account_name.as_str())
+                            .expect("Failed to launch interactive prompt");
+                    }
+                }
+
                 print_command_result("account import", &result, numbers_format, output_format)?;
                 Ok(())
             }
