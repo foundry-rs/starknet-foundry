@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Requirements validation during `snforge` runtime
 - `snforge check-requirements` command
+- `snforge new` command
 
 #### Changed
 
@@ -23,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Deprecated
 
 - `--fee-token` and `--version` flags are now optional, `strk` and `v3` will be used by default
+
+#### Deprecated
+
+- `snforge init` command has been deprecated
 
 ## [0.34.0] - 2024-11-26
 

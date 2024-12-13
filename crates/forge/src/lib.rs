@@ -1,5 +1,6 @@
 use crate::compatibility_check::{create_version_parser, Requirement, RequirementsChecker};
 use anyhow::Result;
+use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge_runner::CACHE_DIR;
 use run_tests::workspace::run_for_workspace;
@@ -14,6 +15,7 @@ pub mod block_number_map;
 mod combine_configs;
 mod compatibility_check;
 mod init;
+mod new;
 pub mod pretty_printing;
 pub mod run_tests;
 pub mod scarb;
@@ -75,6 +77,11 @@ enum ForgeSubcommand {
     Init {
         /// Name of a new project
         name: String,
+    },
+    /// Create a new Forge project at <PATH>
+    New {
+        #[command(flatten)]
+        args: NewArgs,
     },
     /// Clean Forge cache directory
     CleanCache {},
@@ -160,6 +167,21 @@ pub struct TestArgs {
     additional_args: Vec<OsString>,
 }
 
+#[derive(Parser, Debug)]
+pub struct NewArgs {
+    /// Path to a location where the new project will be created
+    path: Utf8PathBuf,
+    /// Name of a new project, defaults to the directory name
+    #[arg(short, long)]
+    name: Option<String>,
+    /// Do not initialize a new Git repository
+    #[arg(long)]
+    no_vcs: bool,
+    /// Try to create the project even if the specified directory at <PATH> is not empty, which can result in overwriting existing files
+    #[arg(long)]
+    overwrite: bool,
+}
+
 pub enum ExitStatus {
     Success,
     Failure,
@@ -172,7 +194,11 @@ pub fn main_execution() -> Result<ExitStatus> {
 
     match cli.subcommand {
         ForgeSubcommand::Init { name } => {
-            init::run(name.as_str())?;
+            init::init(name.as_str())?;
+            Ok(ExitStatus::Success)
+        }
+        ForgeSubcommand::New { args } => {
+            new::new(args)?;
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::CleanCache {} => {
