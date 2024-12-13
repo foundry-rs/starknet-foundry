@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Requirements validation during `snforge` runtime
 - `snforge check-requirements` command
+
+#### Changed
+
 - `snforge_scarb_plugin` will now also emit warnings when errors occur
 
 ### Cast
