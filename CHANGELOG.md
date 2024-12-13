@@ -19,15 +19,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `snforge_scarb_plugin` will now also emit warnings when errors occur
 
+#### Deprecated
+
+- `snforge init` command
+
 ### Cast
 
+#### Changed
+
+- `--version` flag is now optional and `v3` will be used by default
+
 #### Deprecated
 
-- `--fee-token` and `--version` flags are now optional, `strk` and `v3` will be used by default
-
-#### Deprecated
-
-- `snforge init` command has been deprecated
+- `--fee-token` flag - `strk` will be used by default
 
 ## [0.34.0] - 2024-11-26
 
