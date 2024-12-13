@@ -45,6 +45,22 @@ And perform a test checking `load` and `store` behavior in context of those stru
 > If that's the case for your contract, make sure to handle deserialization properly - standard methods might not work.
 > **Use those cheatcode as a last-resort, for cases that cannot be handled via contract's API!**
 
+## Example: Using enums in storage
+
+Normally, enums use 0-based layout. For example, `Option::Some(100)` will be serialized as `[0, 100]`. However, their storage layout is 1-based, so `Option::Some(100)` will be serialized as `[1, 100]`. It's because the first variant needs to be distinguished from an uninitialized storage slot.
+
+Below is an example of a contract which can store `Option<u256>` values:
+
+```rust
+{{#include ../../listings/direct_storage_access/src/using_enums.cairo}}
+```
+
+And a test which uses `store` and reads the value:
+
+```rust
+{{#include ../../listings/direct_storage_access/tests/using_enums.cairo}}
+```
+
 
 > 📝 **Note**
 >
