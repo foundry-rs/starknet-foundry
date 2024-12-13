@@ -725,8 +725,8 @@ fn config_with_cli(config: &CastConfigFromFile, cli: &Cli) -> Result<CastConfig>
     let wait_params = config.wait_params().unwrap_or_default();
 
     let url = config.url().clone();
-    let account = config
-        .account()
+    let account = cli
+        .account
         .clone()
         .or_else(|| config.account().clone())
         .with_context(|| on_empty_message("account"))?;
