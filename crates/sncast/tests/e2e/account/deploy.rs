@@ -378,6 +378,71 @@ async fn test_default_fee_token() {
 }
 
 #[tokio::test]
+async fn test_fee_token_deprecation_warning_eth() {
+    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "--wait",
+        "account",
+        "deploy",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--fee-token",
+        "eth",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        [WARNING] Specifying '--fee-token' flag is deprecated and will be removed in the future. Use '--version' instead
+        [WARNING] Eth transactions will stop being supported in the future due to 'SNIP-16'
+        Transaction hash: [..]
+        command: account deploy
+        transaction_hash: [..]
+
+        To see invocation details, visit:
+        transaction: [..]
+    "});
+}
+
+#[tokio::test]
+async fn test_fee_token_deprecation_warning_strk() {
+    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "--wait",
+        "account",
+        "deploy",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--fee-token",
+        "strk",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        [WARNING] Specifying '--fee-token' flag is deprecated and will be removed in the future. Use '--version' instead
+        Transaction hash: [..]
+        command: account deploy
+        transaction_hash: [..]
+
+        To see invocation details, visit:
+        transaction: [..]
+    "});
+}
+
+#[tokio::test]
 pub async fn test_valid_class_hash() {
     let tempdir = create_account(true, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
     let accounts_file = "accounts.json";
