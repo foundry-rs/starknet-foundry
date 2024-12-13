@@ -42,6 +42,7 @@ pub async fn resolve_config(
     Ok(TestTargetWithResolvedConfig {
         tests_location: test_target.tests_location,
         sierra_program: test_target.sierra_program,
+        sierra_program_path: test_target.sierra_program_path,
         casm_program: test_target.casm_program,
         test_cases,
     })
@@ -146,6 +147,7 @@ mod tests {
     async fn to_runnable_non_existent_id() {
         let mocked_tests = TestTargetWithConfig {
             sierra_program: program_for_testing(),
+            sierra_program_path: Default::default(),
             casm_program: Arc::new(
                 compile_sierra(
                     &serde_json::to_value(&program_for_testing().program).unwrap(),
