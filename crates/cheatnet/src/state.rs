@@ -320,6 +320,12 @@ pub struct TraceData {
     pub is_vm_trace_needed: bool,
 }
 
+#[derive(Clone)]
+pub struct EncounteredError {
+    pub pc: usize,
+    pub class_hash: ClassHash,
+}
+
 pub struct CheatnetState {
     pub cheated_execution_info_contracts: HashMap<ContractAddress, ExecutionInfoMock>,
     pub global_cheated_execution_info: ExecutionInfoMock,
@@ -332,6 +338,7 @@ pub struct CheatnetState {
     pub deploy_salt_base: u32,
     pub block_info: BlockInfo,
     pub trace_data: TraceData,
+    pub encountered_errors: Vec<EncounteredError>,
 }
 
 impl Default for CheatnetState {
@@ -357,6 +364,7 @@ impl Default for CheatnetState {
                 current_call_stack: NotEmptyCallStack::from(test_call),
                 is_vm_trace_needed: false,
             },
+            encountered_errors: vec![],
         }
     }
 }

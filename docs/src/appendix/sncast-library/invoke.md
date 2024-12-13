@@ -17,7 +17,7 @@ Invokes a contract and returns `InvokeResult`.
 - `nonce` - nonce for declare transaction. If not provided, nonce will be set automatically.
 
 ```rust
-{{#include ../../../listings/sncast_library/scripts/invoke/src/lib.cairo}}
+{{#include ../../../listings/invoke/src/lib.cairo}}
 ```
 
 Structures used by the command:
