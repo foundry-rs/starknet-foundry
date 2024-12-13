@@ -69,9 +69,7 @@ pub fn ask_to_add_as_default(account: &str) -> Result<()> {
                 edit_config(&new_config_utf8, "default", "account", account)?;
             }
         }
-        _ => {
-            println!("No changes were made.");
-        }
+        _ => {}
     }
 
     Ok(())
