@@ -25,7 +25,6 @@ $ sncast \
   --url http://127.0.0.1:5055 \
   --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \
   --function "add" \
-  --fee-token eth \
   --arguments 'pokemons::model::PokemonData {'\
 'name: "Magmar",'\
 'element: pokemons::model::Element::Fire'\
@@ -48,8 +47,6 @@ transaction: https://sepolia.starkscan.co/tx/[..]
 > 💡 **Info**
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
 
-> 💡 **Info**
-> You can also choose to pay in Ether by setting `--fee-token` to `eth`.
 
 ### Invoking Function Without Arguments
 
@@ -57,7 +54,6 @@ Not every function accepts parameters. Here is how to call it.
 
 ```shell
 $ sncast invoke \
-  --fee-token strk \
   --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
   --function "get_balance"
 ```
