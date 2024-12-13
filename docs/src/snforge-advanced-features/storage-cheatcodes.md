@@ -47,7 +47,7 @@ And perform a test checking `load` and `store` behavior in context of those stru
 
 ## Example: Using enums in storage
 
-Normally, enums use 0-based layout. For example, `Option::Some(100)` will be serialized as `[0, 100]`. However, their storage layout is 1-based, so `Option::Some(100)` will be serialized as `[1, 100]`. It's because the first variant needs to be distinguished from an uninitialized storage slot.
+Normally, enums use 0-based layout. For example, `Option::Some(100)` will be serialized as `[0, 100]`. However, their storage layout is 1-based, so `Option::Some(100)` should be serialized as `[1, 100]`. It's because the first variant needs to be distinguished from an uninitialized storage slot.
 
 Below is an example of a contract which can store `Option<u256>` values:
 
