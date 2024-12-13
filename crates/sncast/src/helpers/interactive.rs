@@ -12,17 +12,17 @@ use toml_edit::{DocumentMut, Item, Table, Value};
 pub fn ask_to_add_as_default(account: &str) -> Result<()> {
     let mut options = Vec::new();
 
-    if let Some(global_path) = get_global_config_path().ok() {
-        let option = format!("Yes, global default account ({}).", global_path);
+    if let Ok(global_path) = get_global_config_path() {
+        let option = format!("Yes, global default account ({global_path}).");
         options.push(option);
     }
 
-    if let Some(current_path) = current_dir().ok() {
+    if let Ok(current_path) = current_dir() {
         let current_path_utf8 = Utf8PathBuf::from_path_buf(current_path.clone())
             .expect("Failed to convert current directory to Utf8PathBuf");
 
-        if let Some(local_path) = search_config_upwards_relative_to(&current_path_utf8).ok() {
-            let option = format!("Yes, local default account ({}).", local_path);
+        if let Ok(local_path) = search_config_upwards_relative_to(&current_path_utf8) {
+            let option = format!("Yes, local default account ({local_path}).");
             options.push(option);
         } else {
             let new_local_config_path = current_path.join("snfoundry.toml");
@@ -45,29 +45,28 @@ pub fn ask_to_add_as_default(account: &str) -> Result<()> {
 
     match options[selection].as_str() {
         selected if selected.starts_with("Yes, global default account") => {
-            if let Some(global_path) = get_global_config_path().ok() {
-                edit_config(global_path, "default", "account", account)?;
+            if let Ok(global_path) = get_global_config_path() {
+                edit_config(&global_path, "default", "account", account)?;
             }
         }
         selected if selected.starts_with("Yes, local default account") => {
-            if let Some(current_path) = current_dir().ok() {
+            if let Ok(current_path) = current_dir() {
                 let current_path_utf8 = Utf8PathBuf::from_path_buf(current_path)
                     .expect("Failed to convert current directory to Utf8PathBuf");
 
-                if let Some(local_path) = search_config_upwards_relative_to(&current_path_utf8).ok()
-                {
-                    edit_config(local_path, "default", "account", account)?;
+                if let Ok(local_path) = search_config_upwards_relative_to(&current_path_utf8) {
+                    edit_config(&local_path, "default", "account", account)?;
                 }
             }
         }
         selected if selected.starts_with("Yes, create new local default account") => {
-            if let Some(current_path) = current_dir().ok() {
+            if let Ok(current_path) = current_dir() {
                 let new_local_config_path = current_path.join("snfoundry.toml");
                 let new_config_utf8 = Utf8PathBuf::from_path_buf(new_local_config_path)
                     .expect("Failed to convert new config path to Utf8PathBuf");
 
                 create_global_config(new_config_utf8.clone())?;
-                edit_config(new_config_utf8, "default", "account", account)?;
+                edit_config(&new_config_utf8, "default", "account", account)?;
             }
         }
         _ => {
@@ -78,16 +77,16 @@ pub fn ask_to_add_as_default(account: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn edit_config(config_path: Utf8PathBuf, profile: &str, key: &str, value: &str) -> Result<()> {
+pub fn edit_config(config_path: &Utf8PathBuf, profile: &str, key: &str, value: &str) -> Result<()> {
     let mut file_content = String::new();
-    File::open(&config_path)?.read_to_string(&mut file_content)?;
+    File::open(config_path)?.read_to_string(&mut file_content)?;
 
     let mut toml_doc = file_content
         .parse::<DocumentMut>()
-        .expect("Failed to parse TOML")?;
+        .expect("Failed to parse TOML");
     update_config(&mut toml_doc, profile, key, value);
 
-    File::create(&config_path)?.write_all(toml_doc.to_string().as_bytes())?;
+    File::create(config_path)?.write_all(toml_doc.to_string().as_bytes())?;
 
     Ok(())
 }
@@ -97,11 +96,7 @@ pub fn update_config(toml_doc: &mut DocumentMut, profile: &str, key: &str, value
         .get_mut("sncast")
         .and_then(|item| item.as_table_mut())
     {
-        if !sncast_table.contains_key(profile) {
-            let mut profile_table = Table::new();
-            profile_table[key] = Value::from(value).into();
-            sncast_table[profile] = Item::Table(profile_table);
-        } else {
+        if sncast_table.contains_key(profile) {
             let profile_table = sncast_table
                 .get_mut(profile)
                 .unwrap()
@@ -109,6 +104,10 @@ pub fn update_config(toml_doc: &mut DocumentMut, profile: &str, key: &str, value
                 .unwrap();
 
             profile_table[key] = Value::from(value).into();
+        } else {
+            let mut profile_table = Table::new();
+            profile_table[key] = Value::from(value).into();
+            sncast_table[profile] = Item::Table(profile_table);
         }
     } else {
         let mut profile_table = Table::new();

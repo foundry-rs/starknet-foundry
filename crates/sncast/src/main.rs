@@ -523,7 +523,7 @@ async fn run_async_command(
                 .await;
 
                 if result.is_ok() {
-                    ask_to_add_as_default(&account).expect("Failed");
+                    ask_to_add_as_default(&account).expect("Failed to launch interactive prompt");
                 }
 
                 print_command_result("account create", &result, numbers_format, output_format)?;
