@@ -1,5 +1,3 @@
-use std::io;
-use std::io::IsTerminal;
 use crate::starknet_commands::{
     account, account::Account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke,
     multicall::Multicall, script::Script, show_config::ShowConfig, tx_status::TxStatus,
@@ -8,6 +6,8 @@ use anyhow::{Context, Result};
 use data_transformer::Calldata;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{print_command_result, OutputFormat};
+use std::io;
+use std::io::IsTerminal;
 
 use crate::starknet_commands::deploy::DeployArguments;
 use camino::Utf8PathBuf;
@@ -524,7 +524,7 @@ async fn run_async_command(
                 )
                 .await;
 
-                if result.is_ok() && io::stdout().is_terminal(){
+                if result.is_ok() && io::stdout().is_terminal() {
                     ask_to_add_as_default(&account).expect("Failed to launch interactive prompt");
                 }
 
