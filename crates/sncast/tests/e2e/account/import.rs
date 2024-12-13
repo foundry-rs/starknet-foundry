@@ -719,7 +719,7 @@ pub async fn test_happy_case_default_name_generation() {
         "delete",
         "--name",
         "account-2",
-        "--network",
+        "--network-name",
         "alpha-sepolia",
     ];
 
