@@ -3,10 +3,9 @@ use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args};
 use promptly::prompt;
 use serde_json::Map;
-use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountDeleteResponse;
-use sncast::{chain_id_to_network_name, get_chain_id};
+use sncast::{chain_id_to_network_name, get_chain_id, CastConfig};
 
 #[derive(Args, Debug)]
 #[command(about = "Delete account information from the accounts file")]

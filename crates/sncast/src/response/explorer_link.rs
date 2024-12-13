@@ -27,7 +27,7 @@ pub fn print_block_explorer_link_if_allowed<T: OutputLink>(
     output_format: OutputFormat,
     chain_id: Felt,
     show_links: bool,
-    explorer: Option<Service>,
+    explorer: Service,
 ) {
     if !show_links {
         return;
@@ -42,7 +42,7 @@ pub fn print_block_explorer_link_if_allowed<T: OutputLink>(
         return;
     };
 
-    if let Ok(provider) = explorer.unwrap_or_default().as_provider(network) {
+    if let Ok(provider) = explorer.as_provider(network) {
         response.print_links(provider);
     }
 }

@@ -8,7 +8,6 @@ use clap::Args;
 use conversions::IntoConv;
 use serde_json::json;
 use sncast::helpers::braavos::BraavosAccountFactory;
-use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
     CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
@@ -118,14 +117,14 @@ pub async fn create(
     }
 
     if add_profile.is_some() {
-        let config = CastConfig {
-            url: rpc_url,
-            account: account.into(),
-            accounts_file: accounts_file.into(),
-            keystore,
-            ..Default::default()
-        };
-        add_created_profile_to_configuration(create.add_profile.as_deref(), &config, None)?;
+        add_created_profile_to_configuration(
+            create.add_profile.as_deref(),
+            Some(&rpc_url),
+            account,
+            accounts_file,
+            keystore.as_ref(),
+            None,
+        )?;
     }
 
     Ok(AccountCreateResponse {

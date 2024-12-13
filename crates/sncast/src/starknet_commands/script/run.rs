@@ -32,8 +32,6 @@ use scarb_metadata::{Metadata, PackageMetadata};
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::print::print_as_warning;
 use shared::utils::build_readable_text;
-use sncast::get_nonce;
-use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::helpers::fee::{FeeSettings, ScriptFeeSettings};
 use sncast::helpers::rpc::RpcArgs;
@@ -42,6 +40,7 @@ use sncast::state::hashing::{
     generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
 };
 use sncast::state::state_file::StateManager;
+use sncast::{get_nonce, CastConfig};
 use starknet::accounts::{Account, SingleOwnerAccount};
 use starknet::core::types::{BlockId, BlockTag::Pending};
 use starknet::providers::jsonrpc::HttpTransport;
@@ -142,7 +141,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.artifacts,
                     WaitForTx {
                         wait: true,
-                        wait_params: self.config.wait_params,
+                        wait_params: self.config.wait_params(),
                     },
                     true,
                 ));
@@ -181,7 +180,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.account()?,
                     WaitForTx {
                         wait: true,
-                        wait_params: self.config.wait_params,
+                        wait_params: self.config.wait_params(),
                     },
                 ));
 
@@ -218,7 +217,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.account()?,
                     WaitForTx {
                         wait: true,
-                        wait_params: self.config.wait_params,
+                        wait_params: self.config.wait_params(),
                     },
                 ));
 
@@ -339,14 +338,14 @@ pub fn run(
         ReadOnlySegments::default(),
     );
 
-    let account = if config.account.is_empty() {
+    let account = if config.account().is_empty() {
         None
     } else {
         Some(tokio_runtime.block_on(get_account(
-            &config.account,
-            &config.accounts_file,
+            config.account(),
+            config.accounts_file(),
             provider,
-            config.keystore.clone(),
+            config.keystore().as_ref(),
         ))?)
     };
     let state = StateManager::from(state_file_path)?;

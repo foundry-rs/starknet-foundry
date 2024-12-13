@@ -1,4 +1,5 @@
-use crate::{get_provider, helpers::configuration::CastConfig};
+use crate::{get_provider, on_empty_message, CastConfig};
+use anyhow::Context;
 use clap::Args;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
@@ -15,16 +16,15 @@ impl RpcArgs {
         &self,
         config: &CastConfig,
     ) -> anyhow::Result<JsonRpcClient<HttpTransport>> {
-        let url = self.url.as_ref().unwrap_or(&config.url);
+        let url = self
+            .url
+            .as_ref()
+            .or(config.url.as_ref())
+            .with_context(|| on_empty_message("url"))?;
         let provider = get_provider(url)?;
 
         verify_and_warn_if_incompatible_rpc_version(&provider, &url).await?;
 
         Ok(provider)
-    }
-
-    #[must_use]
-    pub fn get_url(&self, config: &CastConfig) -> String {
-        self.url.clone().unwrap_or_else(|| config.url.clone())
     }
 }

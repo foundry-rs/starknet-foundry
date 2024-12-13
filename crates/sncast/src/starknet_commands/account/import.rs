@@ -11,7 +11,6 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
 use regex::Regex;
-use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
 use sncast::{
@@ -152,13 +151,14 @@ pub async fn import(
     write_account_to_accounts_file(&account_name, accounts_file, chain_id, account_json.clone())?;
 
     if import.add_profile.is_some() {
-        let config = CastConfig {
-            url: import.rpc.url.clone().unwrap_or_default(),
-            account: account_name.clone(),
-            accounts_file: accounts_file.into(),
-            ..Default::default()
-        };
-        add_created_profile_to_configuration(import.add_profile.as_deref(), &config, None)?;
+        add_created_profile_to_configuration(
+            import.add_profile.as_deref(),
+            import.rpc.url.as_deref(),
+            &account_name,
+            accounts_file,
+            None,
+            None,
+        )?;
     }
 
     Ok(AccountImportResponse {

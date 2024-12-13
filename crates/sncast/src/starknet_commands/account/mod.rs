@@ -10,7 +10,9 @@ use configuration::{
     find_config_file, load_config, search_config_upwards_relative_to, CONFIG_FILENAME,
 };
 use serde_json::json;
-use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
+use sncast::{
+    chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfigFromFile,
+};
 use starknet::signers::SigningKey;
 use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, fmt, fs::OpenOptions, io::Write};
@@ -125,13 +127,15 @@ pub fn write_account_to_accounts_file(
 
 pub fn add_created_profile_to_configuration(
     profile: Option<&str>,
-    cast_config: &CastConfig,
+    url: Option<&str>,
+    account: &str,
+    accounts_file: &Utf8PathBuf,
+    keystore: Option<&Utf8PathBuf>,
     path: Option<&Utf8PathBuf>,
 ) -> Result<()> {
-    if !load_config::<CastConfig>(path, profile)
-        .unwrap_or_default()
-        .account
-        .is_empty()
+    if !load_config::<CastConfigFromFile>(path, profile)?
+        .account()
+        .is_none()
     {
         bail!(
             "Failed to add profile = {} to the snfoundry.toml. Profile already exists",
@@ -142,22 +146,21 @@ pub fn add_created_profile_to_configuration(
     let toml_string = {
         let mut new_profile = toml::value::Table::new();
 
-        new_profile.insert("url".to_string(), Value::String(cast_config.url.clone()));
-        new_profile.insert(
-            "account".to_string(),
-            Value::String(cast_config.account.clone()),
-        );
-        if let Some(keystore) = cast_config.keystore.clone() {
+        if let Some(url) = url {
+            new_profile.insert("url".to_string(), Value::String(url.to_string()));
+        }
+        new_profile.insert("account".to_string(), Value::String(account.to_string()));
+        if let Some(keystore) = keystore {
             new_profile.insert("keystore".to_string(), Value::String(keystore.to_string()));
         } else {
             new_profile.insert(
                 "accounts-file".to_string(),
-                Value::String(cast_config.accounts_file.to_string()),
+                Value::String(accounts_file.to_string()),
             );
         }
         let mut profile_config = toml::value::Table::new();
         profile_config.insert(
-            profile.map_or_else(|| cast_config.account.clone(), ToString::to_string),
+            profile.unwrap_or(account).to_string(),
             Value::Table(new_profile),
         );
 
@@ -188,7 +191,6 @@ pub fn add_created_profile_to_configuration(
 mod tests {
     use camino::Utf8PathBuf;
     use configuration::copy_config_to_tempdir;
-    use sncast::helpers::configuration::CastConfig;
     use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
     use std::fs;
 
@@ -199,15 +201,12 @@ mod tests {
         let tempdir =
             copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
         let path = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
-        let config = CastConfig {
-            url: String::from("http://some-url"),
-            account: String::from("some-name"),
-            accounts_file: "accounts".into(),
-            ..Default::default()
-        };
         let res = add_created_profile_to_configuration(
             Some(&String::from("some-name")),
-            &config,
+            Some("http://some-url"),
+            "some-name",
+            &Utf8PathBuf::from("accounts"),
+            None,
             Some(&path.clone()),
         );
         assert!(res.is_ok());
@@ -224,15 +223,12 @@ mod tests {
     fn test_add_created_profile_to_configuration_profile_already_exists() {
         let tempdir =
             copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
-        let config = CastConfig {
-            url: String::from("http://127.0.0.1:5055/rpc"),
-            account: String::from("user1"),
-            accounts_file: DEFAULT_ACCOUNTS_FILE.into(),
-            ..Default::default()
-        };
         let res = add_created_profile_to_configuration(
             Some(&String::from("default")),
-            &config,
+            Some("http://127.0.0.1:5055/rpc"),
+            "user1",
+            &Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE),
+            None,
             Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
         );
         assert!(res.is_err());

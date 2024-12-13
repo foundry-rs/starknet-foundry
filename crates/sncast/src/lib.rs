@@ -1,4 +1,6 @@
-use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
+use crate::helpers::constants::{
+    DEFAULT_ACCOUNTS_FILE, DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT,
+};
 use crate::response::errors::SNCastProviderError;
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
@@ -14,7 +16,7 @@ use serde_json::{Deserializer, Value};
 use shared::rpc::create_rpc_client;
 use starknet::accounts::{AccountFactory, AccountFactoryError};
 use starknet::core::types::{
-    BlockId, BlockTag,
+    BlockId,
     BlockTag::{Latest, Pending},
     ContractClass, ContractErrorData,
     StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
@@ -42,7 +44,81 @@ pub mod helpers;
 pub mod response;
 pub mod state;
 
+use crate::helpers::block_explorer;
 use conversions::byte_array::ByteArray;
+
+#[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
+pub struct CastConfig {
+    url: Option<String>,
+    account: String,
+    accounts_file: Utf8PathBuf,
+    keystore: Option<Utf8PathBuf>,
+    wait_params: ValidatedWaitParams,
+    block_explorer: block_explorer::Service,
+    show_explorer_links: bool,
+}
+
+impl CastConfig {
+    #[must_use]
+    pub fn url(&self) -> &Option<String> {
+        &self.url
+    }
+
+    #[must_use]
+    pub fn account(&self) -> &str {
+        &self.account
+    }
+
+    #[must_use]
+    pub fn accounts_file(&self) -> &Utf8PathBuf {
+        &self.accounts_file
+    }
+
+    #[must_use]
+    pub fn keystore(&self) -> &Option<Utf8PathBuf> {
+        &self.keystore
+    }
+
+    #[must_use]
+    pub fn wait_params(&self) -> ValidatedWaitParams {
+        self.wait_params
+    }
+
+    #[must_use]
+    pub fn block_explorer(&self) -> block_explorer::Service {
+        self.block_explorer
+    }
+
+    #[must_use]
+    pub fn show_explorer_links(&self) -> bool {
+        self.show_explorer_links
+    }
+}
+
+impl CastConfig {
+    #[must_use]
+    pub fn new(
+        url: Option<String>,
+        account: String,
+        accounts_file: Option<Utf8PathBuf>,
+        keystore: Option<Utf8PathBuf>,
+        wait_params: ValidatedWaitParams,
+        block_explorer: Option<block_explorer::Service>,
+        show_explorer_links: Option<bool>,
+    ) -> Self {
+        Self {
+            url,
+            account,
+            accounts_file: accounts_file
+                .unwrap_or_else(|| Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE)),
+            keystore,
+            wait_params,
+            block_explorer: block_explorer.unwrap_or_default(),
+            show_explorer_links: show_explorer_links.unwrap_or(true),
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -196,7 +272,6 @@ impl Default for ValidatedWaitParams {
 }
 
 pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
-    raise_if_empty(url, "RPC url")?;
     create_rpc_client(url)
 }
 
@@ -256,11 +331,11 @@ pub async fn get_account<'a>(
     account: &str,
     accounts_file: &Utf8PathBuf,
     provider: &'a JsonRpcClient<HttpTransport>,
-    keystore: Option<Utf8PathBuf>,
+    keystore: Option<&Utf8PathBuf>,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
     let chain_id = get_chain_id(provider).await?;
     let account_data = if let Some(keystore) = keystore {
-        get_account_data_from_keystore(account, &keystore)?
+        get_account_data_from_keystore(account, keystore)?
     } else {
         get_account_data_from_accounts_file(account, chain_id, accounts_file)?
     };
@@ -274,11 +349,9 @@ pub async fn get_contract_class(
     class_hash: Felt,
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<ContractClass> {
-    let result = provider
-        .get_class(BlockId::Tag(BlockTag::Latest), class_hash)
-        .await;
+    let result = provider.get_class(BlockId::Tag(Latest), class_hash).await;
 
-    if let Err(ProviderError::StarknetError(ClassHashNotFound)) = result {
+    if let Err(StarknetError(ClassHashNotFound)) = result {
         // Imitate error thrown on chain to achieve particular error message (Issue #2554)
         let artificial_transaction_revert_error = SNCastProviderError::StarknetError(
             SNCastStarknetError::ContractError(ContractErrorData {
@@ -341,7 +414,7 @@ pub async fn check_class_hash_exists(
     provider: &JsonRpcClient<HttpTransport>,
     class_hash: Felt,
 ) -> Result<()> {
-    match provider.get_class(BlockId::Tag(BlockTag::Latest), class_hash).await {
+    match provider.get_class(BlockId::Tag(Latest), class_hash).await {
         Ok(_) => Ok(()),
         Err(err) => match err {
             StarknetError(ClassHashNotFound) => Err(anyhow!("Class with hash {class_hash:#x} is not declared, try using --class-hash with a hash of the declared class")),
@@ -424,7 +497,6 @@ pub fn get_account_data_from_accounts_file(
     chain_id: Felt,
     path: &Utf8PathBuf,
 ) -> Result<AccountData> {
-    raise_if_empty(name, "Account name")?;
     check_account_file_exists(path)?;
 
     let accounts: HashMap<String, HashMap<String, AccountData>> = read_and_parse_json_file(path)?;
@@ -486,7 +558,7 @@ pub async fn get_class_hash_by_address(
         .get_class_hash_at(BlockId::Tag(Pending), address)
         .await;
 
-    if let Err(ProviderError::StarknetError(ContractNotFound)) = result {
+    if let Err(StarknetError(ContractNotFound)) = result {
         // Imitate error thrown on chain to achieve particular error message (Issue #2554)
         let artificial_transaction_revert_error = SNCastProviderError::StarknetError(
             SNCastStarknetError::ContractError(ContractErrorData {
@@ -654,11 +726,9 @@ pub async fn handle_wait_for_tx<T>(
     Ok(return_value)
 }
 
-pub fn raise_if_empty(value: &str, value_name: &str) -> Result<()> {
-    if value.is_empty() {
-        bail!("{value_name} not passed nor found in snfoundry.toml")
-    }
-    Ok(())
+#[must_use]
+pub fn on_empty_message(value_name: &str) -> String {
+    format!("{value_name} not passed nor found in snfoundry.toml")
 }
 
 pub fn check_account_file_exists(accounts_file_path: &Utf8PathBuf) -> Result<()> {

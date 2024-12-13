@@ -11,9 +11,9 @@ use crate::starknet_commands::deploy::DeployArguments;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use configuration::load_config;
-use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
-use sncast::helpers::configuration::CastConfig;
-use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
+use sncast::helpers::config::get_global_config_path;
+use sncast::helpers::configuration::CastConfigFromFile;
+use sncast::helpers::constants::DEFAULT_MULTICALL_CONTENTS;
 use sncast::helpers::fee::PayableTransaction;
 use sncast::helpers::scarb_utils::{
     assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
@@ -23,7 +23,8 @@ use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::structs::DeclareResponse;
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_class_hash_by_address,
-    get_contract_class, get_default_state_file_name, NumbersFormat, ValidatedWaitParams, WaitForTx,
+    get_contract_class, get_default_state_file_name, on_empty_message, CastConfig, NumbersFormat,
+    ValidatedWaitParams, WaitForTx,
 };
 use starknet::accounts::ConnectedAccount;
 use starknet::core::types::ContractClass;
@@ -66,7 +67,8 @@ Join the community:
 Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
 "
 )]
-#[command(about = "sncast - All-in-one tool for interacting with Starknet smart contracts", long_about = None)]
+#[command(about = "sncast - All-in-one tool for interacting with Starknet smart contracts", long_about = None
+)]
 #[clap(name = "sncast")]
 #[allow(clippy::struct_excessive_bools)]
 struct Cli {
@@ -228,7 +230,7 @@ async fn run_async_command(
 ) -> Result<()> {
     let wait_config = WaitForTx {
         wait: cli.wait,
-        wait_params: config.wait_params,
+        wait_params: config.wait_params(),
     };
 
     match cli.command {
@@ -238,10 +240,10 @@ async fn run_async_command(
             declare.validate()?;
 
             let account = get_account(
-                &config.account,
-                &config.accounts_file,
+                config.account(),
+                config.accounts_file(),
                 &provider,
-                config.keystore,
+                config.keystore().as_ref(),
             )
             .await?;
             let manifest_path = assert_manifest_path_exists()?;
@@ -279,8 +281,8 @@ async fn run_async_command(
                 &result,
                 output_format,
                 provider.chain_id().await?,
-                config.show_explorer_links,
-                config.block_explorer,
+                config.show_explorer_links(),
+                config.block_explorer(),
             );
             Ok(())
         }
@@ -300,10 +302,10 @@ async fn run_async_command(
             let provider = rpc.get_provider(&config).await?;
 
             let account = get_account(
-                &config.account,
-                &config.accounts_file,
+                config.account(),
+                config.accounts_file(),
                 &provider,
-                config.keystore,
+                config.keystore().as_ref(),
             )
             .await?;
 
@@ -339,8 +341,8 @@ async fn run_async_command(
                 &result,
                 output_format,
                 provider.chain_id().await?,
-                config.show_explorer_links,
-                config.block_explorer,
+                config.show_explorer_links(),
+                config.block_explorer(),
             );
             Ok(())
         }
@@ -395,10 +397,10 @@ async fn run_async_command(
             let provider = rpc.get_provider(&config).await?;
 
             let account = get_account(
-                &config.account,
-                &config.accounts_file,
+                config.account(),
+                config.accounts_file(),
                 &provider,
-                config.keystore,
+                config.keystore().as_ref(),
             )
             .await?;
 
@@ -429,8 +431,8 @@ async fn run_async_command(
                 &result,
                 output_format,
                 provider.chain_id().await?,
-                config.show_explorer_links,
-                config.block_explorer,
+                config.show_explorer_links(),
+                config.block_explorer(),
             );
             Ok(())
         }
@@ -460,10 +462,10 @@ async fn run_async_command(
                     run.validate()?;
 
                     let account = get_account(
-                        &config.account,
-                        &config.accounts_file,
+                        config.account(),
+                        config.accounts_file(),
                         &provider,
-                        config.keystore,
+                        config.keystore().as_ref(),
                     )
                     .await?;
                     let result =
@@ -475,8 +477,8 @@ async fn run_async_command(
                         &result,
                         output_format,
                         provider.chain_id().await?,
-                        config.show_explorer_links,
-                        config.block_explorer,
+                        config.show_explorer_links(),
+                        config.block_explorer(),
                     );
                 }
             }
@@ -486,9 +488,9 @@ async fn run_async_command(
         Commands::Account(account) => match account.command {
             account::Commands::Import(import) => {
                 let provider = import.rpc.get_provider(&config).await?;
-                let result = starknet_commands::account::import::import(
+                let result = account::import::import(
                     import.name.clone(),
-                    &config.accounts_file,
+                    config.accounts_file(),
                     &provider,
                     &import,
                 )
@@ -502,19 +504,24 @@ async fn run_async_command(
                 let provider = create.rpc.get_provider(&config).await?;
 
                 let chain_id = get_chain_id(&provider).await?;
-                let account = if config.keystore.is_none() {
+                let account = if config.keystore().is_none() {
                     create
                         .name
                         .clone()
                         .context("Required argument `--name` not provided")?
                 } else {
-                    config.account.clone()
+                    config.account().to_string()
                 };
-                let result = starknet_commands::account::create::create(
-                    create.rpc.get_url(&config),
+                let result = account::create::create(
+                    create
+                        .rpc
+                        .url
+                        .clone()
+                        .or(config.url().clone())
+                        .with_context(|| on_empty_message("url"))?,
                     &account,
-                    &config.accounts_file,
-                    config.keystore,
+                    config.accounts_file(),
+                    config.keystore().clone(),
                     &provider,
                     chain_id,
                     &create,
@@ -526,8 +533,8 @@ async fn run_async_command(
                     &result,
                     output_format,
                     provider.chain_id().await?,
-                    config.show_explorer_links,
-                    config.block_explorer,
+                    config.show_explorer_links(),
+                    config.block_explorer(),
                 );
                 Ok(())
             }
@@ -538,14 +545,14 @@ async fn run_async_command(
                 let provider = deploy.rpc.get_provider(&config).await?;
 
                 let chain_id = get_chain_id(&provider).await?;
-                let keystore_path = config.keystore.clone();
-                let result = starknet_commands::account::deploy::deploy(
+                let keystore_path = config.keystore().clone();
+                let result = account::deploy::deploy(
                     &provider,
-                    config.accounts_file,
+                    config.accounts_file().clone(),
                     deploy,
                     chain_id,
                     wait_config,
-                    &config.account,
+                    config.account(),
                     keystore_path,
                 )
                 .await;
@@ -555,19 +562,18 @@ async fn run_async_command(
                     &result,
                     output_format,
                     provider.chain_id().await?,
-                    config.show_explorer_links,
-                    config.block_explorer,
+                    config.show_explorer_links(),
+                    config.block_explorer(),
                 );
                 Ok(())
             }
 
             account::Commands::Delete(delete) => {
-                let network_name =
-                    starknet_commands::account::delete::get_network_name(&delete, &config).await?;
+                let network_name = account::delete::get_network_name(&delete, &config).await?;
 
-                let result = starknet_commands::account::delete::delete(
+                let result = account::delete::delete(
                     &delete.name,
-                    &config.accounts_file,
+                    config.accounts_file(),
                     &network_name,
                     delete.yes,
                 );
@@ -577,7 +583,7 @@ async fn run_async_command(
             }
 
             account::Commands::List(options) => print_account_list(
-                &config.accounts_file,
+                config.accounts_file(),
                 options.display_private_keys,
                 numbers_format,
                 output_format,
@@ -715,30 +721,38 @@ fn run_script_command(
     Ok(())
 }
 
-fn config_with_cli(config: &mut CastConfig, cli: &Cli) {
-    macro_rules! clone_or_else {
-        ($field:expr, $config_field:expr) => {
-            $field.clone().unwrap_or_else(|| $config_field.clone())
-        };
-    }
+fn config_with_cli(config: &CastConfigFromFile, cli: &Cli) -> Result<CastConfig> {
+    let wait_params = config.wait_params().unwrap_or_default();
 
-    config.account = clone_or_else!(cli.account, config.account);
-    config.keystore = cli.keystore.clone().or(config.keystore.clone());
-
-    if config.accounts_file == Utf8PathBuf::default() {
-        config.accounts_file = Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE);
-    }
-    let new_accounts_file = clone_or_else!(cli.accounts_file_path, config.accounts_file);
-
-    config.accounts_file = Utf8PathBuf::from(shellexpand::tilde(&new_accounts_file).to_string());
-
-    config.wait_params = ValidatedWaitParams::new(
-        clone_or_else!(
-            cli.wait_retry_interval,
-            config.wait_params.get_retry_interval()
-        ),
-        clone_or_else!(cli.wait_timeout, config.wait_params.get_timeout()),
+    let url = config.url().clone();
+    let account = config
+        .account()
+        .clone()
+        .or_else(|| config.account().clone())
+        .with_context(|| on_empty_message("account"))?;
+    let accounts_file = cli
+        .accounts_file_path
+        .clone()
+        .or_else(|| config.accounts_file().clone());
+    let keystore = cli.keystore.clone().or_else(|| config.keystore().clone());
+    let wait_params = ValidatedWaitParams::new(
+        cli.wait_retry_interval
+            .unwrap_or_else(|| wait_params.get_retry_interval()),
+        cli.wait_timeout
+            .unwrap_or_else(|| wait_params.get_timeout()),
     );
+    let block_explorer = config.block_explorer();
+    let show_explorer_links = config.show_explorer_links();
+
+    Ok(CastConfig::new(
+        url,
+        account,
+        accounts_file,
+        keystore,
+        wait_params,
+        block_explorer,
+        show_explorer_links,
+    ))
 }
 
 fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
@@ -747,16 +761,17 @@ fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
         Utf8PathBuf::new()
     });
 
-    let global_config =
-        load_config::<CastConfig>(Some(&global_config_path.clone()), cli.profile.as_deref())
-            .unwrap_or_else(|_| {
-                load_config::<CastConfig>(Some(&global_config_path), None).unwrap()
-            });
+    let global_config = load_config::<CastConfigFromFile>(
+        Some(&global_config_path.clone()),
+        cli.profile.as_deref(),
+    )
+    .unwrap_or_else(|_| {
+        load_config::<CastConfigFromFile>(Some(&global_config_path), None).unwrap()
+    });
 
-    let local_config = load_config::<CastConfig>(None, cli.profile.as_deref())?;
+    let local_config = load_config::<CastConfigFromFile>(None, cli.profile.as_deref())?;
 
-    let mut combined_config = combine_cast_configs(&global_config, &local_config);
+    let combined_config = global_config.combine(local_config);
 
-    config_with_cli(&mut combined_config, cli);
-    Ok(combined_config)
+    config_with_cli(&combined_config, cli)
 }
