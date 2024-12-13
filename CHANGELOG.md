@@ -13,18 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Requirements validation during `snforge` runtime
 - `snforge check-requirements` command
+- `snforge_scarb_plugin` will now also emit warnings when errors occur
 
 ### Cast
 
 #### Changed
 
 - `--fee-token` and `--version` flags are now optional, `strk` and `v3` will be used by default
-
-### `snforge_scarb_plugin`
-
-#### Changed
-
- - `snforge_scarb_plugin` will now also emit warnings when errors occur
 
 ## [0.34.0] - 2024-11-26
 
