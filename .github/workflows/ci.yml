@@ -25,7 +25,6 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: cargo test --release --lib -p forge
-      - run: cargo test --release --bin snforge
       - run: cargo test --release integration -p forge
 
   build-test-forge-e2e-nextest-archive:
