@@ -1,3 +1,5 @@
+use std::io;
+use std::io::IsTerminal;
 use crate::starknet_commands::{
     account, account::Account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke,
     multicall::Multicall, script::Script, show_config::ShowConfig, tx_status::TxStatus,
@@ -522,7 +524,7 @@ async fn run_async_command(
                 )
                 .await;
 
-                if result.is_ok() {
+                if result.is_ok() && io::stdout().is_terminal(){
                     ask_to_add_as_default(&account).expect("Failed to launch interactive prompt");
                 }
 
