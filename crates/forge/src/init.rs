@@ -9,6 +9,7 @@ pub fn init(project_name: &str) -> Result<()> {
         .expect("Failed to create Utf8PathBuf for the current directory")
         .join(project_name);
 
+    // To prevent printing this warning when running scarb init/new with an older version of Scarb
     if !project_path.join("Scarb.toml").exists() {
         print_as_warning(&anyhow!(
             "Command `snforge init` is deprecated and will be removed in the future. Please use `snforge new` instead."
