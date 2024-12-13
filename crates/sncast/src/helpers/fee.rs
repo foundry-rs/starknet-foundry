@@ -249,15 +249,15 @@ impl FromStr for FeeToken {
 
 fn parse_fee_token(s: &str) -> Result<FeeToken, String> {
     let deprecation_message = "Specifying '--fee-token' flag is deprecated and will be removed in the future. Use '--version' instead";
-
     print_as_warning(&Error::msg(deprecation_message));
 
-    if s.to_lowercase().as_str() == "eth" {
+    let parsed_token: FeeToken = s.parse()?;
+
+    if parsed_token == FeeToken::Eth {
         print_as_warning(&Error::msg(
             "Eth transactions will stop being supported in the future due to 'SNIP-16'",
         ));
     }
 
-    let parsed_token: FeeToken = s.parse()?;
     Ok(parsed_token)
 }
