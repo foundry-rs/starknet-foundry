@@ -729,7 +729,7 @@ fn validate_init(temp: &TempDir, validate_snforge_std: bool) {
     let scarb_toml = fs::read_to_string(manifest_path.clone()).unwrap();
 
     let snforge_std_assert = if validate_snforge_std {
-        "\nsnforge_std = { git = \"https://github.com/foundry-rs/starknet-foundry\", tag = \"v[..]\" }"
+        "\nsnforge_std = \"[..]\""
     } else {
         ""
     };

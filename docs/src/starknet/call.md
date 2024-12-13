@@ -19,7 +19,7 @@ For a detailed CLI description, see the [call command reference](../appendix/snc
 ```shell
 $ sncast \
   call \
-  --url http://127.0.0.1:5050 \
+  --url http://127.0.0.1:5055 \
   --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \
   --function "balance_of" \
   --arguments '0x0554d15a839f0241ba465bb176d231730c01cf89cdcb95fe896c51d4a6f4bb8f'
@@ -30,7 +30,7 @@ $ sncast \
 
 ```shell
 command: call
-response: [0x1, 0x0]
+response: [0x0, 0x0]
 ```
 </details>
 <br>
@@ -44,7 +44,7 @@ You can call a contract at the specific block by passing `--block-id` argument.
 
 ```shell
 $ sncast call \
-  --url http://127.0.0.1:5050 \
+  --url http://127.0.0.1:5055 \
   --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \
   --function "balance_of" \
   --arguments '0x0554d15a839f0241ba465bb176d231730c01cf89cdcb95fe896c51d4a6f4bb8f' \

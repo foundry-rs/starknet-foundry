@@ -17,6 +17,7 @@ mod fork_warning;
 mod forking;
 mod fuzzing;
 mod io_operations;
+mod requirements;
 mod running;
 mod steps;
 mod trace_print;
