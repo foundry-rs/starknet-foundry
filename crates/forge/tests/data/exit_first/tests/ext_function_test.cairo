@@ -2,7 +2,7 @@ use exit_first::fib;
 
 #[test]
 fn hard_test() {
-    fib(0, 1, 30344);
+    fib(0, 1, 99999999999999999999999);
     assert(2 == 2, 'simple check');
 }
 

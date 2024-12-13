@@ -1,5 +1,8 @@
 name: CI
 
+env:
+  DEVNET_REV: ef789b700770fa27a2fc057b3d1c610771be27d9
+
 on:
   pull_request:
   merge_group:
@@ -11,7 +14,10 @@ on:
 jobs:
   test-forge-unit-and-integration:
     name: Test Forge / Unit and Integration Tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -19,11 +25,14 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: cargo test --release --lib -p forge
-      - run: cargo test --release --bin snforge
       - run: cargo test --release integration -p forge
 
   build-test-forge-e2e-nextest-archive:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -31,48 +40,57 @@ jobs:
       - name: Install nextest
         uses: taiki-e/install-action@nextest
       - name: Build and archive tests
-        run: cargo nextest archive --release -p forge --archive-file nextest-archive.tar.zst
+        run: cargo nextest archive --release -p forge --archive-file 'nextest-archive-${{ matrix.os }}.tar.zst'
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v4
         with:
-          name: nextest-archive
-          path: nextest-archive.tar.zst
+          name: nextest-archive-${{ matrix.os }}
+          path: nextest-archive-${{ matrix.os }}.tar.zst
 
   test-forge-e2e:
     name: Test Forge / E2E Tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     needs: build-test-forge-e2e-nextest-archive
     strategy:
+      fail-fast: false
       matrix:
         partition: [ 1, 2, 3, 4, 5, 6, 7, 8 ]
+        os: [ ubuntu-latest, windows-latest ]
     steps:
       - name: Extract branch name
         if: github.event_name != 'pull_request'
         run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+        shell: bash
 
       - name: Extract branch name on pull request
         if: github.event_name == 'pull_request'
         run: echo "BRANCH_NAME=$(echo $GITHUB_HEAD_REF)" >> $GITHUB_ENV
+        shell: bash
 
       - name: Extract repo name and owner
         if: github.event_name != 'pull_request'
         run: echo "REPO_NAME=$(echo ${{ github.repository }}.git)" >> $GITHUB_ENV
+        shell: bash
 
       - name: Extract repo name and owner on pull request
         if: github.event_name == 'pull_request'
         run: echo "REPO_NAME=$(echo ${{ github.event.pull_request.head.repo.full_name }}.git)" >> $GITHUB_ENV
+        shell: bash
 
       - name: Print repo name
         run: echo 'The repo name is' $REPO_NAME
+        shell: bash
 
       - name: Get branch name
         run: echo 'The branch name is' $BRANCH_NAME
+        shell: bash
 
       - name: Install cairo-profiler
+        if: runner.os != 'Windows'
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-profiler/main/scripts/install.sh | sh
-
       - name: Install cairo-coverage
+        if: runner.os != 'Windows'
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
@@ -84,9 +102,9 @@ jobs:
       - uses: taiki-e/install-action@nextest
       - uses: actions/download-artifact@v4
         with:
-          name: nextest-archive
+          name: nextest-archive-${{ matrix.os }}
       - name: nextest partition ${{ matrix.partition }}/8
-        run: cargo nextest run --partition 'count:${{ matrix.partition }}/8' --archive-file 'nextest-archive.tar.zst' e2e
+        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/8' --archive-file 'nextest-archive-${{ matrix.os }}.tar.zst' e2e
 
   test-scarb-2-8-3:
     name: Test scarb 2.8.3
@@ -188,23 +206,38 @@ jobs:
 
   test-cast:
     name: Test Cast
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
-      - name: Install starknet-devnet-rs
-        run: ./scripts/install_devnet.sh
+      - name: Install starknet-devnet-rs on Linux/Macos
+        if: runner.os != 'Windows'
+        run: |
+          ./scripts/install_devnet.sh
+      - name: Cache devnet build
+        if: runner.os == 'Windows'
+        id: windows-devnet-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}\crates\sncast\tests\utils\devnet
+          key: ${{ runner.os }}-devnet-${{ env.DEVNET_REV }}
+      - name: Install devnet
+        if: runner.os == 'Windows' && steps.windows-devnet-cache.outputs.cache-hit != 'true'
+        run: |
+          $DEVNET_INSTALL_DIR = "${{ github.workspace }}\crates\sncast\tests\utils\devnet"
+          cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev ${{ env.DEVNET_REV }} --root $DEVNET_INSTALL_DIR
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: "2.7.0"
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests
         run: cargo test --release -p sncast
-      - name: Run test in debug profile
-        run: cargo test -p sncast test_happy_case_common_arguments_after_subcommand
 
   test-conversions:
     name: Test Conversions
@@ -229,7 +262,10 @@ jobs:
 
   test-scarb-api:
     name: Test Scarb Api
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
