@@ -12,4 +12,4 @@ Print help.
 
 > ⚠️ **Warning**
 >
-> The `snforge init` command has been deprecated. Please use the [`snforge new`](./new.md) command instead.
+> The `snforge init` command is deprecated. Please use the [`snforge new`](./new.md) command instead.

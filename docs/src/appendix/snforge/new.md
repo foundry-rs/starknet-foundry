@@ -1,6 +1,6 @@
 # `snforge new`
 
-Create a new Starknet Foundry project at the provided path.
+Create a new StarkNet Foundry project at the provided path that should either be empty or not exist.
 
 ## `<PATH>`
 
