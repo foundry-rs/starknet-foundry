@@ -15,3 +15,5 @@ Scarb.lock
 snfoundry_trace/
 coverage/
 **/.forge_e2e_cache/
+.cargo/
+.rustup/

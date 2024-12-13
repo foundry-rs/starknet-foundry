@@ -6,6 +6,7 @@ use super::super::_cheatcode::handle_cheatcode;
 mod caller_address;
 mod block_number;
 mod block_timestamp;
+mod block_hash;
 mod sequencer_address;
 mod version;
 mod max_fee;
@@ -96,6 +97,7 @@ impl TxInfoMockImpl of Default<TxInfoMock> {
 struct BlockInfoMock {
     block_number: Operation<u64>,
     block_timestamp: Operation<u64>,
+    block_hash: Operation<felt252>,
     sequencer_address: Operation<ContractAddress>,
 }
 
@@ -106,6 +108,7 @@ impl BlockInfoMockImpl of Default<BlockInfoMock> {
         BlockInfoMock {
             block_number: Operation::Retain,
             block_timestamp: Operation::Retain,
+            block_hash: Operation::Retain,
             sequencer_address: Operation::Retain,
         }
     }

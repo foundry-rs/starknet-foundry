@@ -33,7 +33,7 @@ mod Blocker {
             self.block_timestamp.write(block_info.block_timestamp);
             self.sequencer_address.write(block_info.sequencer_address);
 
-            let block_hash = get_block_hash_syscall(block_info.block_number - 10).unwrap_syscall();
+            let block_hash = get_block_hash_syscall(block_info.block_number).unwrap_syscall();
             self.block_hash.write(block_hash);
         }
 
