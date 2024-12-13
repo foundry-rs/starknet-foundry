@@ -141,6 +141,7 @@ fn start_cheat_execution_info_all_attributes_mocked() {
                 let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
+
                 let mut execution_info_mock: ExecutionInfoMock = Default::default();
 
                 execution_info_mock.tx_info.nonce = Operation::Start(CheatArguments {
@@ -208,7 +209,9 @@ fn start_cheat_execution_info_all_attributes_mocked() {
                     target: contract_address,
                     span: CheatSpan::Indefinite
                 });
+
                 cheat_execution_info(execution_info_mock);
+
                 let nonce = dispatcher.get_nonce();
                 assert(nonce == 411, 'Invalid nonce');
 
@@ -439,9 +442,11 @@ fn start_cheat_execution_info_all() {
                 let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
+
                 let mut execution_info_mock: ExecutionInfoMock = Default::default();
                 execution_info_mock.tx_info.transaction_hash = Operation::StartGlobal(421);
                 cheat_execution_info(execution_info_mock);
+
                 let transaction_hash = dispatcher.get_tx_hash();
                 assert(transaction_hash == 421, 'Invalid tx hash');
             }
@@ -451,6 +456,7 @@ fn start_cheat_execution_info_all() {
                 let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
+
                 let mut execution_info_mock: ExecutionInfoMock = Default::default();
 
                 execution_info_mock.tx_info.nonce = Operation::StartGlobal(411);
@@ -468,6 +474,7 @@ fn start_cheat_execution_info_all() {
                 execution_info_mock.tx_info.account_deployment_data = Operation::StartGlobal(array![111, 222].span());
 
                 cheat_execution_info(execution_info_mock);
+
                 let nonce = dispatcher.get_nonce();
                 assert(nonce == 411, 'Invalid nonce');
 
