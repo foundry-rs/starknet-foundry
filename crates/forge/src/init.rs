@@ -11,7 +11,7 @@ pub fn init(project_name: &str) -> Result<()> {
 
     if !project_path.join("Scarb.toml").exists() {
         print_as_warning(&anyhow!(
-            "Command `snforge init` has been deprecated and will be removed in an upcoming version. Please use `snforge new` instead."
+            "Command `snforge init` is deprecated and will be removed in the future. Please use `snforge new` instead."
         ));
     }
 
