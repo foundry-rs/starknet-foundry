@@ -92,29 +92,23 @@ pub fn edit_config(config_path: &Utf8PathBuf, profile: &str, key: &str, value: &
 }
 
 pub fn update_config(toml_doc: &mut DocumentMut, profile: &str, key: &str, value: &str) {
-    if let Some(sncast_table) = toml_doc
+    if !toml_doc.contains_key("sncast") {
+        toml_doc["sncast"] = Item::Table(Table::new());
+    }
+
+    let sncast_table = toml_doc
         .get_mut("sncast")
         .and_then(|item| item.as_table_mut())
-    {
-        if sncast_table.contains_key(profile) {
-            let profile_table = sncast_table
-                .get_mut(profile)
-                .unwrap()
-                .as_table_mut()
-                .unwrap();
+        .expect("Failed to create or access 'sncast' table");
 
-            profile_table[key] = Value::from(value).into();
-        } else {
-            let mut profile_table = Table::new();
-            profile_table[key] = Value::from(value).into();
-            sncast_table[profile] = Item::Table(profile_table);
-        }
-    } else {
-        let mut profile_table = Table::new();
-        profile_table[key] = Value::from(value).into();
-
-        let mut sncast_table = Table::new();
-        sncast_table[profile] = Item::Table(profile_table);
-        toml_doc["sncast"] = Item::Table(sncast_table);
+    if !sncast_table.contains_key(profile) {
+        sncast_table[profile] = Item::Table(Table::new());
     }
+
+    let profile_table = sncast_table
+        .get_mut(profile)
+        .and_then(|item| item.as_table_mut())
+        .expect("Failed to create or access profile table");
+
+    profile_table[key] = Value::from(value).into();
 }
