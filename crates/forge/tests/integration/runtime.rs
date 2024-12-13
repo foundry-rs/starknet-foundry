@@ -67,6 +67,7 @@ fn cheatcode_invalid_args() {
         r"
             use starknet::testing::cheatcode;
             use snforge_std::_cheatcode::handle_cheatcode;
+
             #[test]
             fn cheatcode_invalid_args() {
                 handle_cheatcode(cheatcode::<'replace_bytecode'>(array![].span()));
