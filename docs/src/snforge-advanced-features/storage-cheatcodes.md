@@ -61,6 +61,22 @@ And a test which uses `store` and reads the value:
 {{#include ../../listings/direct_storage_access/tests/using_enums.cairo}}
 ```
 
+```shell
+snforge test test_store_and_read
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Collected 1 test(s) from direct_storage_access package
+Running 1 test(s) from tests/
+[PASS] direct_storage_access_tests::using_enums::test_store_and_read (gas: ~233)
+Running 0 test(s) from src/
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
+```
+
+</details>
 
 > 📝 **Note**
 >

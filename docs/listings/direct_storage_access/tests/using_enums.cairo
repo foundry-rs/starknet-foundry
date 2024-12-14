@@ -1,7 +1,7 @@
-use store_load::IEnumsStorageContractSafeDispatcherTrait;
+use direct_storage_access::using_enums::IEnumsStorageContractSafeDispatcherTrait;
+use direct_storage_access::using_enums::IEnumsStorageContractSafeDispatcher;
 use starknet::ContractAddress;
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, store, map_entry_address, load};
-use store_load::{IEnumsStorageContractSafeDispatcher};
 
 fn deploy_contract(name: ByteArray) -> ContractAddress {
     let contract = declare(name).unwrap().contract_class();
