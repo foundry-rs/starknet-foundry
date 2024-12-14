@@ -300,7 +300,8 @@ jobs:
         run: |
           cargo install mdbook-linkcheck
       - name: Build with mdBook
-        run: mdbook build
+        run: |
+          ./scripts/build_docs.sh
         working-directory: ./docs
       - name: Install Forge
         run: |
