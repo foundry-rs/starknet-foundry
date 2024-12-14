@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TODO(#2781)
+
 pushd docs
 
 OUTPUT=$(mdbook build 2>&1)

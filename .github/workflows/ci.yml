@@ -301,6 +301,7 @@ jobs:
           cargo install mdbook-linkcheck
       - name: Build with mdBook
         run: |
+# TODO(#2781): Use `mdbook build`
           ./scripts/build_docs.sh
       - name: Install Forge
         run: |
