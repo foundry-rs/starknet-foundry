@@ -302,7 +302,6 @@ jobs:
       - name: Build with mdBook
         run: |
           ./scripts/build_docs.sh
-        working-directory: ./docs
       - name: Install Forge
         run: |
           cargo install --path crates/forge --locked

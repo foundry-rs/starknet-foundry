@@ -1,5 +1,7 @@
 #!/bin/bash
 
+pushd docs
+
 OUTPUT=$(mdbook build 2>&1)
 
 echo "$OUTPUT"
