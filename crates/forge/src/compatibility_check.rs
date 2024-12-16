@@ -124,7 +124,7 @@ mod tests {
             ),
             helper_text: "Follow instructions from https://www.rust-lang.org/tools/install"
                 .to_string(),
-            minimal_version: Version::new(1, 81, 0),
+            minimal_version: Version::new(1, 80, 1),
         });
         requirements_checker.add_requirement(Requirement {
             name: "Scarb".to_string(),
