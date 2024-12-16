@@ -106,7 +106,7 @@ fn to_tilde_path(path: &str) -> String {
         let input_path = Path::new(path);
 
         if let Ok(stripped_path) = input_path.strip_prefix(&home_dir) {
-            return format!("~{}", stripped_path.display());
+            return format!("~/{}", stripped_path.display());
         }
     }
 
