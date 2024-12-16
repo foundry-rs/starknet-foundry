@@ -63,7 +63,7 @@ fn build_default_manifest() -> String {
     }
 }
 
-pub fn create_global_config(global_config_path: Utf8PathBuf) -> Result<()> {
+fn create_global_config(global_config_path: Utf8PathBuf) -> Result<()> {
     let mut file = File::create(global_config_path)?;
     file.write_all(build_default_manifest().as_bytes())?;
 

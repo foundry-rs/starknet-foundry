@@ -1,4 +1,4 @@
-use crate::helpers::config::{create_global_config, get_global_config_path};
+use crate::helpers::config::get_global_config_path;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use configuration::search_config_upwards_relative_to;
@@ -23,13 +23,6 @@ pub fn ask_to_add_as_default(account: &str) -> Result<()> {
 
         if let Ok(local_path) = search_config_upwards_relative_to(&current_path_utf8) {
             let option = format!("Yes, local default account ({local_path}).");
-            options.push(option);
-        } else {
-            let new_local_config_path = current_path.join("snfoundry.toml");
-            let option = format!(
-                "Yes, create new local config with default account ({}).",
-                new_local_config_path.display()
-            );
             options.push(option);
         }
     }
@@ -57,16 +50,6 @@ pub fn ask_to_add_as_default(account: &str) -> Result<()> {
                 if let Ok(local_path) = search_config_upwards_relative_to(&current_path_utf8) {
                     edit_config(&local_path, "default", "account", account)?;
                 }
-            }
-        }
-        selected if selected.starts_with("Yes, create new") => {
-            if let Ok(current_path) = current_dir() {
-                let new_local_config_path = current_path.join("snfoundry.toml");
-                let new_config_utf8 = Utf8PathBuf::from_path_buf(new_local_config_path)
-                    .expect("Failed to convert new config path to Utf8PathBuf");
-
-                create_global_config(new_config_utf8.clone())?;
-                edit_config(&new_config_utf8, "default", "account", account)?;
             }
         }
         _ => {}
