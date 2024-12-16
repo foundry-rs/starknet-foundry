@@ -211,7 +211,7 @@ pub fn run_test_case(
 
     let run_result =
         match run_assembled_program(&assembled_program, builtins, hints_dict, &mut forge_runtime) {
-            Ok(runner) => {
+            Ok(mut runner) => {
                 let vm_resources_without_inner_calls = runner
                     .get_execution_resources()
                     .unwrap()
@@ -242,7 +242,7 @@ pub fn run_test_case(
                     &runner.relocated_memory,
                 );
 
-                update_top_call_vm_trace(&mut forge_runtime, &runner);
+                update_top_call_vm_trace(&mut forge_runtime, &mut runner);
 
                 Ok((gas_counter, runner.relocated_memory, value))
             }
