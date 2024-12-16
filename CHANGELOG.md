@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `--version` flag is now optional and `v3` will be used by default
-- Displayed underlying RPC error instead of "Unknown RPC error" in edge cases
+- Displaying underlying RPC error instead of "Unknown RPC error" in edge cases
 
 #### Deprecated
 
