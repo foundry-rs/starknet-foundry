@@ -9,20 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Fixed
+
+- `snforge` produces trace for contracts even if they fail or panic (assuming test passed)
+
+## [0.35.0] - 2024-12-13
+
+### Forge
+
 #### Added
 
 - Requirements validation during `snforge` runtime
 - `snforge check-requirements` command
+- `snforge new` command
 
 #### Changed
 
 - `snforge_scarb_plugin` will now also emit warnings when errors occur
-
-### Cast
+- `snforge_std` migrated to `2024_07` edition
 
 #### Deprecated
 
-- `--fee-token` and `--version` flags are now optional, `strk` and `v3` will be used by default
+- `snforge init` command
+
+### Cast
+
+#### Changed
+
+- `--version` flag is now optional and `v3` will be used by default
+
+#### Deprecated
+
+- `--fee-token` flag - `strk` will be used by default
 
 ## [0.34.0] - 2024-11-26
 
