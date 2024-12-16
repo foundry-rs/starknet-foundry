@@ -7,13 +7,17 @@ use dialoguer::Select;
 use std::env::current_dir;
 use std::fs::File;
 use std::io::{Read, Write};
+use std::path::Path;
 use toml_edit::{DocumentMut, Item, Table, Value};
 
 pub fn ask_to_add_as_default(account: &str) -> Result<()> {
     let mut options = Vec::new();
 
     if let Ok(global_path) = get_global_config_path() {
-        let option = format!("Yes, global default account ({global_path}).");
+        let option = format!(
+            "Yes, global default account ({}).",
+            to_tilde_path(global_path.as_str())
+        );
         options.push(option);
     }
 
@@ -22,7 +26,10 @@ pub fn ask_to_add_as_default(account: &str) -> Result<()> {
             .expect("Failed to convert current directory to Utf8PathBuf");
 
         if let Ok(local_path) = search_config_upwards_relative_to(&current_path_utf8) {
-            let option = format!("Yes, local default account ({local_path}).");
+            let option = format!(
+                "Yes, local default account ({}).",
+                to_tilde_path(local_path.as_str())
+            );
             options.push(option);
         }
     }
@@ -92,4 +99,16 @@ pub fn update_config(toml_doc: &mut DocumentMut, profile: &str, key: &str, value
         .expect("Failed to create or access profile table");
 
     profile_table[key] = Value::from(value).into();
+}
+
+fn to_tilde_path(path: &str) -> String {
+    if let Some(home_dir) = dirs::home_dir() {
+        let input_path = Path::new(path);
+
+        if let Ok(stripped_path) = input_path.strip_prefix(&home_dir) {
+            return format!("~{}", stripped_path.display());
+        }
+    }
+
+    path.to_string()
 }
