@@ -62,6 +62,9 @@ pub struct Import {
 
     #[clap(flatten)]
     pub rpc: RpcArgs,
+
+    #[clap(short, long)]
+    pub silent: bool,
 }
 
 pub async fn import(

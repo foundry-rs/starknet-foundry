@@ -497,12 +497,12 @@ async fn run_async_command(
                 )
                 .await;
 
-                if result.is_ok() && io::stdout().is_terminal() {
+                if !import.silent && result.is_ok() && io::stdout().is_terminal() {
                     if let Some(account_name) =
                         result.as_ref().ok().and_then(|r| r.account_name.clone())
                     {
                         ask_to_add_as_default(account_name.as_str())
-                            .expect("Failed to launch interactive prompt");
+                            .expect("Interactive prompt failed");
                     }
                 }
 
@@ -533,7 +533,7 @@ async fn run_async_command(
                 )
                 .await;
 
-                if result.is_ok() && io::stdout().is_terminal() {
+                if !create.silent && result.is_ok() && io::stdout().is_terminal() {
                     ask_to_add_as_default(&account).expect("Failed to launch interactive prompt");
                 }
 

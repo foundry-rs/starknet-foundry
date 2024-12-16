@@ -53,6 +53,9 @@ pub struct Create {
 
     #[clap(flatten)]
     pub rpc: RpcArgs,
+
+    #[clap(short, long)]
+    pub silent: bool,
 }
 
 #[allow(clippy::too_many_arguments)]
