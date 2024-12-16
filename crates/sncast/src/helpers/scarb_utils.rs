@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_api::{
     get_contracts_artifacts_and_source_sierra_paths,
@@ -7,6 +7,14 @@ use scarb_api::{
 };
 use scarb_ui::args::PackagesFilter;
 use shared::{command::CommandExt, print::print_as_warning};
+use starknet::{
+    core::types::{
+        contract::{CompiledClass, SierraClass},
+        BlockId, FlattenedSierraClass,
+    },
+    providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider, ProviderError},
+};
+use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::env;
 use std::str::FromStr;
@@ -185,6 +193,71 @@ pub fn build_and_load_artifacts(
         .into_iter()
         .map(|(name, (artifacts, _))| (name, artifacts))
         .collect())
+    }
+}
+
+pub fn read_manifest_and_build_artifacts(
+    package: &Option<String>,
+    json: bool,
+    profile: &Option<String>,
+) -> Result<HashMap<String, StarknetContractArtifacts>> {
+    let manifest_path = assert_manifest_path_exists()?;
+    let package_metadata = get_package_metadata(&manifest_path, package)?;
+
+    let profile = profile.to_owned().unwrap_or("dev".to_string());
+
+    let build_config = BuildConfig {
+        scarb_toml_path: manifest_path,
+        json,
+        profile,
+    };
+
+    build_and_load_artifacts(&package_metadata, &build_config, false)
+        .context("Failed to build contract")
+}
+
+pub struct CompiledContract {
+    pub class: FlattenedSierraClass,
+    pub sierra_class_hash: Felt,
+    pub casm_class_hash: Felt,
+}
+
+impl TryFrom<&StarknetContractArtifacts> for CompiledContract {
+    type Error = anyhow::Error;
+
+    fn try_from(artifacts: &StarknetContractArtifacts) -> Result<Self, Self::Error> {
+        let sierra_class = serde_json::from_str::<SierraClass>(&artifacts.sierra)
+            .context("Failed to parse Sierra artifact")?
+            .flatten()?;
+
+        let compiled_class = serde_json::from_str::<CompiledClass>(&artifacts.casm)
+            .context("Failed to parse CASM artifact")?;
+
+        let sierra_class_hash = sierra_class.class_hash();
+        let casm_class_hash = compiled_class.class_hash()?;
+
+        Ok(Self {
+            class: sierra_class,
+            sierra_class_hash,
+            casm_class_hash,
+        })
+    }
+}
+
+impl CompiledContract {
+    pub async fn is_declared(&self, provider: &JsonRpcClient<HttpTransport>) -> Result<bool> {
+        let block_id = BlockId::Tag(starknet::core::types::BlockTag::Pending);
+        let class_hash = self.sierra_class_hash;
+
+        let response = provider.get_class(block_id, class_hash).await;
+
+        match response {
+            Ok(_) => Ok(true),
+            Err(ProviderError::StarknetError(
+                starknet::core::types::StarknetError::ClassHashNotFound,
+            )) => Ok(false),
+            Err(other) => bail!(other),
+        }
     }
 }
 

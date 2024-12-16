@@ -117,7 +117,6 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
             "declare" => {
                 let contract: String = input_reader.read::<ByteArray>()?.to_string();
                 let fee_args: FeeArgs = input_reader.read::<ScriptFeeSettings>()?.into();
-                let fee_token = fee_args.fee_token.clone().unwrap_or_default();
                 let nonce = input_reader.read()?;
 
                 let declare = Declare {
@@ -145,8 +144,6 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait: true,
                         wait_params: self.config.wait_params,
                     },
-                    true,
-                    fee_token,
                 ));
 
                 self.state.maybe_insert_tx_entry(

@@ -40,6 +40,19 @@ transaction: https://sepolia.starkscan.co/tx/[..]
 > 💡 **Info**
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
 
+### Deploying contract by name
+
+A contract can also be deployed by specifying its name as a `--contract-name` argument, instead of a class hash.
+
+```shell
+$ sncast deploy \
+    --contract-name SimpleBalance \
+    --package SimplePackage
+
+command: deploy
+contract_address: 0x301316d47a81b39c5e27cca4a7b8ca4773edbf1103218588d6da4d3ed5303aa
+transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5ab1e
+```
 
 ### Deploying Contract With Constructor
 

@@ -1,6 +1,7 @@
 mod account;
 mod call;
 mod declare;
+mod declare_deploy;
 mod deploy;
 mod invoke;
 mod main_tests;

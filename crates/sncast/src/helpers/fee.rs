@@ -8,7 +8,7 @@ use starknet::providers::Provider;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 use std::str::FromStr;
 
-#[derive(Args, Debug, Clone)]
+#[derive(Args, Debug, Clone, Default)]
 pub struct FeeArgs {
     /// Token that transaction fee will be paid in
     #[clap(long, value_parser = parse_fee_token)]
