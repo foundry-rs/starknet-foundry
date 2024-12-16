@@ -49,4 +49,7 @@ Salt for the account address.
 ## `--add-profile <NAME>`
 Optional.
 
+## `--silent`
+Optional. If passed, the command will not launch the interactive prompt.
+
 If passed, a profile with corresponding name will be added to the local snfoundry.toml.
