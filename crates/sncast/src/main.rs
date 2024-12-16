@@ -238,7 +238,7 @@ async fn run_async_command(
         Commands::Declare(declare) => {
             let provider = declare.rpc.get_provider(&config).await?;
 
-            declare.validate()?;
+            let fee_token = declare.validate_and_get_token()?;
 
             let account = get_account(
                 &config.account,
@@ -265,6 +265,7 @@ async fn run_async_command(
                 &artifacts,
                 wait_config,
                 false,
+                fee_token,
             )
             .await
             .map_err(handle_starknet_command_error)
@@ -289,9 +290,7 @@ async fn run_async_command(
         }
 
         Commands::Deploy(deploy) => {
-            deploy.validate()?;
-
-            let fee_token = deploy.token_from_version();
+            let fee_token = deploy.validate_and_get_token()?;
 
             let Deploy {
                 arguments,
@@ -381,9 +380,7 @@ async fn run_async_command(
         }
 
         Commands::Invoke(invoke) => {
-            invoke.validate()?;
-
-            let fee_token = invoke.token_from_version();
+            let fee_token = invoke.validate_and_get_token()?;
 
             let Invoke {
                 contract_address,
@@ -459,8 +456,6 @@ async fn run_async_command(
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
                     let provider = run.rpc.get_provider(&config).await?;
-
-                    run.validate()?;
 
                     let account = get_account(
                         &config.account,
@@ -549,9 +544,11 @@ async fn run_async_command(
             }
 
             account::Commands::Deploy(deploy) => {
-                deploy.validate()?;
-
                 let provider = deploy.rpc.get_provider(&config).await?;
+
+                let fee_token = deploy.validate_and_get_token()?;
+
+                let fee_args = deploy.fee_args.clone().fee_token(fee_token);
 
                 let chain_id = get_chain_id(&provider).await?;
                 let keystore_path = config.keystore.clone();
@@ -563,6 +560,7 @@ async fn run_async_command(
                     wait_config,
                     &config.account,
                     keystore_path,
+                    fee_args,
                 )
                 .await;
 
