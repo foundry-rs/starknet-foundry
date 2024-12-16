@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `snforge_scarb_plugin` will now also emit warnings when errors occur
+- `snforge_std` migrated to `2024_07` edition
 
 #### Deprecated
 
