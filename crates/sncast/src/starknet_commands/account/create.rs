@@ -54,7 +54,7 @@ pub struct Create {
     #[clap(flatten)]
     pub rpc: RpcArgs,
 
-    #[clap(short, long)]
+    #[clap(long)]
     pub silent: bool,
 }
 
