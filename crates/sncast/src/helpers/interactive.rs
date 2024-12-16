@@ -27,7 +27,7 @@ pub fn ask_to_add_as_default(account: &str) -> Result<()> {
         } else {
             let new_local_config_path = current_path.join("snfoundry.toml");
             let option = format!(
-                "Yes, create new local default account ({}).",
+                "Yes, create new local config with default account ({}).",
                 new_local_config_path.display()
             );
             options.push(option);
@@ -44,12 +44,12 @@ pub fn ask_to_add_as_default(account: &str) -> Result<()> {
         .context("Failed to display selection dialog")?;
 
     match options[selection].as_str() {
-        selected if selected.starts_with("Yes, global default account") => {
+        selected if selected.starts_with("Yes, global default") => {
             if let Ok(global_path) = get_global_config_path() {
                 edit_config(&global_path, "default", "account", account)?;
             }
         }
-        selected if selected.starts_with("Yes, local default account") => {
+        selected if selected.starts_with("Yes, local default") => {
             if let Ok(current_path) = current_dir() {
                 let current_path_utf8 = Utf8PathBuf::from_path_buf(current_path)
                     .expect("Failed to convert current directory to Utf8PathBuf");
@@ -59,7 +59,7 @@ pub fn ask_to_add_as_default(account: &str) -> Result<()> {
                 }
             }
         }
-        selected if selected.starts_with("Yes, create new local default account") => {
+        selected if selected.starts_with("Yes, create new") => {
             if let Ok(current_path) = current_dir() {
                 let new_local_config_path = current_path.join("snfoundry.toml");
                 let new_config_utf8 = Utf8PathBuf::from_path_buf(new_local_config_path)
