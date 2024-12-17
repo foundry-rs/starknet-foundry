@@ -199,17 +199,18 @@ pub fn build_and_load_artifacts(
 pub fn read_manifest_and_build_artifacts(
     package: &Option<String>,
     json: bool,
-    profile: &Option<String>,
+    profile: Option<&String>,
 ) -> Result<HashMap<String, StarknetContractArtifacts>> {
     let manifest_path = assert_manifest_path_exists()?;
     let package_metadata = get_package_metadata(&manifest_path, package)?;
 
-    let profile = profile.to_owned().unwrap_or("dev".to_string());
+    let default_profile = "dev".to_string();
+    let profile = profile.unwrap_or(&default_profile);
 
     let build_config = BuildConfig {
         scarb_toml_path: manifest_path,
         json,
-        profile,
+        profile: profile.to_string(),
     };
 
     build_and_load_artifacts(&package_metadata, &build_config, false)

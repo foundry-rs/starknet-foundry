@@ -249,8 +249,11 @@ async fn run_async_command(
             )
             .await?;
 
-            let artifacts =
-                read_manifest_and_build_artifacts(&declare.package, cli.json, &cli.profile)?;
+            let artifacts = read_manifest_and_build_artifacts(
+                &declare.package,
+                cli.json,
+                cli.profile.as_ref(),
+            )?;
 
             let result =
                 starknet_commands::declare::declare(declare, &account, &artifacts, wait_config)
@@ -292,7 +295,7 @@ async fn run_async_command(
             let deploy = Deploy::from(declare_deploy);
 
             let contract =
-                deploy.build_artifacts_and_get_compiled_contract(cli.json, &cli.profile)?;
+                deploy.build_artifacts_and_get_compiled_contract(cli.json, cli.profile.as_ref())?;
             let class_hash = contract.sierra_class_hash;
 
             let needs_declaration = !contract.is_declared(&provider).await?;
@@ -404,8 +407,8 @@ async fn run_async_command(
             let deploy_resolved: DeployResolved = if deploy.class_hash.clone().is_some() {
                 deploy.clone().try_into().unwrap()
             } else {
-                let contract =
-                    deploy.build_artifacts_and_get_compiled_contract(cli.json, &cli.profile)?;
+                let contract = deploy
+                    .build_artifacts_and_get_compiled_contract(cli.json, cli.profile.as_ref())?;
                 let class_hash = contract.sierra_class_hash;
 
                 if !contract.is_declared(&provider).await? {
