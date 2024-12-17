@@ -13,24 +13,27 @@ use toml_edit::{DocumentMut, Item, Table, Value};
 pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
     let mut options = Vec::new();
 
-    if let Ok(global_path) = get_global_config_path() {
-        let option = format!(
+    if let Some(option) = get_global_config_path().ok().map(|global_path| {
+        format!(
             "Yes, global default account ({}).",
             to_tilde_path(global_path.as_str())
-        );
+        )
+    }) {
         options.push(option);
     }
 
-    if let Ok(current_path) = current_dir() {
-        if let Ok(current_path_utf8) = Utf8PathBuf::from_path_buf(current_path.clone()) {
-            if let Ok(local_path) = search_config_upwards_relative_to(&current_path_utf8) {
-                let option = format!(
-                    "Yes, local default account ({}).",
-                    to_tilde_path(local_path.as_str())
-                );
-                options.push(option);
-            }
-        }
+    if let Some(option) = current_dir()
+        .ok()
+        .and_then(|current_path| Utf8PathBuf::from_path_buf(current_path.clone()).ok())
+        .and_then(|current_path_utf8| search_config_upwards_relative_to(&current_path_utf8).ok())
+        .map(|local_path| {
+            format!(
+                "Yes, local default account ({}).",
+                to_tilde_path(local_path.as_str())
+            )
+        })
+    {
+        options.push(option);
     }
 
     options.push("No".to_string());
