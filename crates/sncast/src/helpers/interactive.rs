@@ -53,10 +53,9 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
         }
         selected if selected.starts_with("Yes, local default") => {
             if let Ok(current_path) = current_dir() {
-                let current_path_utf8 =
-                    Utf8PathBuf::from_path_buf(current_path).map_err(|_| {
-                        anyhow!("Failed to convert current directory path to Utf8PathBuf")
-                    })?;
+                let current_path_utf8 = Utf8PathBuf::from_path_buf(current_path).map_err(|_| {
+                    anyhow!("Failed to convert current directory path to Utf8PathBuf")
+                })?;
 
                 if let Ok(local_path) = search_config_upwards_relative_to(&current_path_utf8) {
                     edit_config(&local_path, "default", "account", account)?;
