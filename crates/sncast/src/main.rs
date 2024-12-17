@@ -529,7 +529,8 @@ async fn run_async_command(
                 .await;
 
                 if !create.silent && result.is_ok() && io::stdout().is_terminal() {
-                    prompt_to_add_account_as_default(&account).expect("Failed to launch interactive prompt");
+                    prompt_to_add_account_as_default(&account)
+                        .expect("Failed to launch interactive prompt");
                 }
 
                 print_command_result("account create", &result, numbers_format, output_format)?;

@@ -65,7 +65,7 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn edit_config(config_path: &Utf8PathBuf, profile: &str, key: &str, value: &str) -> Result<()> {
+fn edit_config(config_path: &Utf8PathBuf, profile: &str, key: &str, value: &str) -> Result<()> {
     let mut file_content = String::new();
     File::open(config_path)?.read_to_string(&mut file_content)?;
 
@@ -79,7 +79,7 @@ pub fn edit_config(config_path: &Utf8PathBuf, profile: &str, key: &str, value: &
     Ok(())
 }
 
-pub fn update_config(toml_doc: &mut DocumentMut, profile: &str, key: &str, value: &str) {
+fn update_config(toml_doc: &mut DocumentMut, profile: &str, key: &str, value: &str) {
     if !toml_doc.contains_key("sncast") {
         toml_doc["sncast"] = Item::Table(Table::new());
     }
@@ -111,4 +111,84 @@ fn to_tilde_path(path: &str) -> String {
     }
 
     path.to_string()
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::update_config;
+    use indoc::formatdoc;
+    use toml_edit::DocumentMut;
+    #[test]
+    fn test_update_value() {
+        let original = formatdoc! {r#"
+            [snfoundry]
+            key = 2137
+
+            [sncast.default]
+            account = "mainnet"
+            url = "https://localhost:5050"
+
+            # comment
+
+            [sncast.testnet]
+            account = "testnet-account"        # comment
+            url = "https://swmansion.com/"
+        "#};
+
+        let expected = formatdoc! {r#"
+            [snfoundry]
+            key = 2137
+
+            [sncast.default]
+            account = "testnet"
+            url = "https://localhost:5050"
+
+            # comment
+
+            [sncast.testnet]
+            account = "testnet-account"        # comment
+            url = "https://swmansion.com/"
+        "#};
+
+        let mut toml_doc = original.parse::<DocumentMut>().unwrap();
+
+        update_config(&mut toml_doc, "default", "account", "testnet");
+
+        assert_eq!(toml_doc.to_string(), expected);
+    }
+
+    #[test]
+    fn test_create_key() {
+        let original = formatdoc! {r#"
+            [snfoundry]
+            key = 2137
+
+            [sncast.default]
+            url = "https://localhost:5050"
+
+            [sncast.testnet]
+            account = "testnet-account"        # comment
+            url = "https://swmansion.com/"
+        "#};
+
+        let expected = formatdoc! {r#"
+            [snfoundry]
+            key = 2137
+
+            [sncast.default]
+            url = "https://localhost:5050"
+            account = "testnet"
+
+            [sncast.testnet]
+            account = "testnet-account"        # comment
+            url = "https://swmansion.com/"
+        "#};
+
+        let mut toml_doc = original.parse::<DocumentMut>().unwrap();
+
+        update_config(&mut toml_doc, "default", "account", "testnet");
+
+        assert_eq!(toml_doc.to_string(), expected);
+    }
 }
