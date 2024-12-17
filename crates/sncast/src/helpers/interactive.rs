@@ -54,7 +54,7 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
         selected if selected.starts_with("Yes, local default") => {
             if let Ok(current_path) = current_dir() {
                 let current_path_utf8 = Utf8PathBuf::from_path_buf(current_path)
-                    .expect("Failed to convert current directory to Utf8PathBuf");
+                    .context("Failed to convert current directory path to Utf8PathBuf")?;
 
                 if let Ok(local_path) = search_config_upwards_relative_to(&current_path_utf8) {
                     edit_config(&local_path, "default", "account", account)?;
@@ -73,7 +73,7 @@ fn edit_config(config_path: &Utf8PathBuf, profile: &str, key: &str, value: &str)
 
     let mut toml_doc = file_content
         .parse::<DocumentMut>()
-        .expect("Failed to parse TOML");
+        .context("Failed to parse TOML")?;
     update_config(&mut toml_doc, profile, key, value);
 
     File::create(config_path)?.write_all(toml_doc.to_string().as_bytes())?;
