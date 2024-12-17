@@ -498,7 +498,7 @@ async fn run_async_command(
                     {
                         prompt_to_add_account_as_default(account_name.as_str()).unwrap_or_else(
                             |err| {
-                                eprintln!("Error: Failed to launch interactive prompt: {}", err);
+                                eprintln!("Error: Failed to launch interactive prompt: {err}");
                             },
                         );
                     }
@@ -533,7 +533,7 @@ async fn run_async_command(
 
                 if !create.silent && result.is_ok() && io::stdout().is_terminal() {
                     prompt_to_add_account_as_default(&account).unwrap_or_else(|err| {
-                        eprintln!("Error: Failed to launch interactive prompt: {}", err);
+                        eprintln!("Error: Failed to launch interactive prompt: {err}");
                     });
                 }
 
