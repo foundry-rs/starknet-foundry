@@ -41,8 +41,10 @@ If passed, a profile with corresponding name will be added to the local snfoundr
 
 ## `--class-hash, -c`
 Optional.
+
 Class hash of a custom openzeppelin account contract declared to the network.
 
 ## `--silent`
 Optional.
+
 If passed, the command will not trigger an interactive prompt to add an account as a default
