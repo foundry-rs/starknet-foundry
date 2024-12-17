@@ -10,7 +10,7 @@ use std::io::{Read, Write};
 use std::path::Path;
 use toml_edit::{DocumentMut, Item, Table, Value};
 
-pub fn ask_to_add_as_default(account: &str) -> Result<()> {
+pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
     let mut options = Vec::new();
 
     if let Ok(global_path) = get_global_config_path() {

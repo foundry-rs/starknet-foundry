@@ -17,7 +17,7 @@ use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::fee::PayableTransaction;
-use sncast::helpers::interactive::ask_to_add_as_default;
+use sncast::helpers::interactive::prompt_to_add_account_as_default;
 use sncast::helpers::scarb_utils::{
     assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
     get_scarb_metadata_with_deps, BuildConfig,
@@ -496,7 +496,7 @@ async fn run_async_command(
                     if let Some(account_name) =
                         result.as_ref().ok().and_then(|r| r.account_name.clone())
                     {
-                        ask_to_add_as_default(account_name.as_str())
+                        prompt_to_add_account_as_default(account_name.as_str())
                             .expect("Interactive prompt failed");
                     }
                 }
@@ -529,7 +529,7 @@ async fn run_async_command(
                 .await;
 
                 if !create.silent && result.is_ok() && io::stdout().is_terminal() {
-                    ask_to_add_as_default(&account).expect("Failed to launch interactive prompt");
+                    prompt_to_add_account_as_default(&account).expect("Failed to launch interactive prompt");
                 }
 
                 print_command_result("account create", &result, numbers_format, output_format)?;
