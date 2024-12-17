@@ -102,11 +102,13 @@ fn update_config(toml_doc: &mut DocumentMut, profile: &str, key: &str, value: &s
 }
 
 fn to_tilde_path(path: &str) -> String {
-    if let Some(home_dir) = dirs::home_dir() {
-        let input_path = Path::new(path);
+    if cfg!(not(target_os = "windows")) {
+        if let Some(home_dir) = dirs::home_dir() {
+            let input_path = Path::new(path);
 
-        if let Ok(stripped_path) = input_path.strip_prefix(&home_dir) {
-            return format!("~/{}", stripped_path.display());
+            if let Ok(stripped_path) = input_path.strip_prefix(&home_dir) {
+                return format!("~/{}", stripped_path.display());
+            }
         }
     }
 
