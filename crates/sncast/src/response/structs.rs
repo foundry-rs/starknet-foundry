@@ -154,7 +154,7 @@ impl DeclareDeployResponse {
             })) => {
                 let class_hash: Felt = (*class_hash).into_();
                 let transaction_hash: Felt = (*transaction_hash).into_();
-                (Some(class_hash.clone()), Some(transaction_hash.clone()))
+                (Some(class_hash), Some(transaction_hash))
             }
             Some(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse { class_hash })) => {
                 let class_hash: Felt = (*class_hash).into_();
@@ -259,7 +259,7 @@ impl OutputLink for DeclareDeployResponse {
         let mut links = vec![];
 
         if let Some(ref class_hash) = self.class_hash {
-            let class_hash: PaddedFelt = class_hash.clone().into_();
+            let class_hash: PaddedFelt = (*class_hash).into_();
             links.push(format!("class: {}", provider.class(class_hash)));
         }
 
