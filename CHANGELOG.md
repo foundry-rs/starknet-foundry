@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast deploy` can now deploy contracts by name instead of class hash. [Read more here](https://foundry-rs.github.io/starknet-foundry/starknet/deploy.html)
 - `sncast declare-deploy` allows to declare and deploy contract at once. [Read more here](https://foundry-rs.github.io/starknet-foundry/starknet/declare-deploy.html)
 
+## [0.35.1] - 2024-12-16
+
+### Forge
+
+#### Fixed
+
+- Minimal Rust version in requirements check is the same as in docs (`1.80.1`)
+- `snforge` produces trace for contracts even if they fail or panic (assuming test passed)
+
 ## [0.35.0] - 2024-12-13
 
 ### Forge
@@ -26,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `snforge_scarb_plugin` will now also emit warnings when errors occur
+- `snforge_std` migrated to `2024_07` edition
+- `snforge_std` from scarbs package registry is now used in `snforge new` template
 
 #### Deprecated
 
@@ -33,9 +44,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Added
+
+- `account create` command shows prepared deployment command
+
 #### Changed
 
 - `--version` flag is now optional and `v3` will be used by default
+- Displaying underlying RPC error instead of "Unknown RPC error" in edge cases
 
 #### Deprecated
 
