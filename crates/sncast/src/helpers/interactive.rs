@@ -22,15 +22,14 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
     }
 
     if let Ok(current_path) = current_dir() {
-        let current_path_utf8 = Utf8PathBuf::from_path_buf(current_path.clone())
-            .expect("Failed to convert current directory to Utf8PathBuf");
-
-        if let Ok(local_path) = search_config_upwards_relative_to(&current_path_utf8) {
-            let option = format!(
-                "Yes, local default account ({}).",
-                to_tilde_path(local_path.as_str())
-            );
-            options.push(option);
+        if let Ok(current_path_utf8) = Utf8PathBuf::from_path_buf(current_path.clone()) {
+            if let Ok(local_path) = search_config_upwards_relative_to(&current_path_utf8) {
+                let option = format!(
+                    "Yes, local default account ({}).",
+                    to_tilde_path(local_path.as_str())
+                );
+                options.push(option);
+            }
         }
     }
 
