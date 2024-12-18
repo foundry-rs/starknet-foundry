@@ -116,7 +116,6 @@ impl FeeArgs {
                         ),
                         max_gas_unit_price: Some(max_gas_unit_price.try_into_()?),
                     },
-
                     (Some(max_fee), Some(max_gas), None) => {
                         let max_gas_unit_price =
                             max_fee.floor_div(&NonZeroFelt::from_felt_unchecked(max_gas));
