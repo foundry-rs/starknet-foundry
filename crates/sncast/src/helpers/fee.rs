@@ -281,5 +281,5 @@ fn parse_fee_token(s: &str) -> Result<FeeToken, String> {
 }
 
 fn print_max_fee_conversion_info() {
-    println!("Specyfing '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags");
+    println!("Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags");
 }
