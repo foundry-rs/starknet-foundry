@@ -313,6 +313,7 @@ mod tests {
     use crate::response::structs::DeclareTransactionResponse;
     use crate::state::state_file::ScriptTransactionOutput::ErrorResponse;
     use camino::Utf8PathBuf;
+    use conversions::byte_array::ByteArray;
     use conversions::string::TryFromHexStr;
     use conversions::IntoConv;
     use starknet_types_core::felt::Felt;
@@ -422,6 +423,8 @@ mod tests {
                 DeclareTransactionResponse {
                     class_hash: Felt::try_from_hex_str("0x123").unwrap().into_(),
                     transaction_hash: Felt::try_from_hex_str("0x321").unwrap().into_(),
+                    // TODO: Update message
+                    message: ByteArray::from("sdsd"),
                 },
             )),
             status: ScriptTransactionStatus::Success,
@@ -461,6 +464,8 @@ mod tests {
                 DeclareTransactionResponse {
                     class_hash: Felt::try_from_hex_str("0x1").unwrap().into_(),
                     transaction_hash: Felt::try_from_hex_str("0x2").unwrap().into_(),
+                    // TODO: Update message
+                    message: ByteArray::from("sdsd"),
                 },
             )),
             status: ScriptTransactionStatus::Success,
@@ -534,6 +539,8 @@ mod tests {
                 DeclareTransactionResponse {
                     class_hash: Felt::try_from_hex_str("0x1").unwrap().into_(),
                     transaction_hash: Felt::try_from_hex_str("0x2").unwrap().into_(),
+                    // TODO: Update message
+                    message: ByteArray::from("sdsd"),
                 },
             )),
             status: ScriptTransactionStatus::Success,
