@@ -1,6 +1,7 @@
 pub mod account;
 pub mod call;
 pub mod declare;
+pub mod declare_deploy;
 pub mod deploy;
 pub mod invoke;
 pub mod multicall;

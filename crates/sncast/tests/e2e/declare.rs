@@ -434,13 +434,22 @@ fn test_scarb_build_fails_when_wrong_cairo_path() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().failure();
-    assert_stderr_contains(
-        output,
-        "Failed to build contract: Failed to build using scarb; `scarb` exited with error",
-    );
+    // assert_stderr_contains(
+    //     output,
+    //     "Failed to build contract: Failed to build using scarb; `scarb` exited with error",
+    // );
+    let expected = indoc! {
+        "
+        Error: Failed to build contract
+        Caused by:
+            Failed to build using scarb; `scarb` exited with error
+        "
+    };
+
+    assert_stderr_contains(output, expected);
 }
 
-#[should_panic(expected = "Path to Scarb.toml manifest does not exist")]
+// #[should_panic(expected = "Path to Scarb.toml manifest does not exist")]
 #[test]
 fn test_scarb_build_fails_scarb_toml_does_not_exist() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR);
@@ -460,7 +469,14 @@ fn test_scarb_build_fails_scarb_toml_does_not_exist() {
         "eth",
     ];
 
-    runner(&args).current_dir(tempdir.path()).assert().success();
+    // runner(&args).current_dir(tempdir.path()).assert().success();
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "Error: Path to Scarb.toml manifest does not exist =[..]",
+    );
 }
 
 #[test]
@@ -531,7 +547,7 @@ fn test_too_low_max_fee() {
     );
 }
 
-#[should_panic(expected = "Make sure you have enabled sierra code generation in Scarb.toml")]
+// #[should_panic(expected = "Make sure you have enabled sierra code generation in Scarb.toml")]
 #[test]
 fn test_scarb_no_sierra_artifact() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/no_sierra");
@@ -551,7 +567,19 @@ fn test_scarb_no_sierra_artifact() {
         "eth",
     ];
 
-    runner(&args).current_dir(tempdir.path()).assert().success();
+    // runner(&args).current_dir(tempdir.path()).assert().success();
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    let expected = indoc! {
+        "
+        Error: Failed to build contract
+        Caused by:
+            [..]Make sure you have enabled sierra code generation in Scarb.toml[..]
+        "
+    };
+
+    assert_stderr_contains(output, expected);
 }
 
 #[test]
