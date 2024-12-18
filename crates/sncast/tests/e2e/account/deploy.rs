@@ -463,6 +463,8 @@ pub async fn test_valid_class_hash() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
+        Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags
+
         command: account deploy
         transaction_hash: [..]
 
@@ -584,6 +586,8 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
+        Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags
+
         command: account deploy
         transaction_hash: 0x0[..]
 
