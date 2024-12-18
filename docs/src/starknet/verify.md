@@ -24,7 +24,6 @@ First, ensure that you have created a `Scarb.toml` file for your contract (it sh
 Then run:
 
 <!-- { "ignored_output": true } -->
-
 ```shell
 $ sncast \
     verify \
@@ -48,7 +47,6 @@ $ sncast \
 command: verify
 message: Contract verification has started. You can check the verification status at the following link: https://api.walnut.dev/v1/verification/77f1d905-fdb4-4280-b7d6-57cd029d1259/status.
 ```
-
 </details>
 <br>
 

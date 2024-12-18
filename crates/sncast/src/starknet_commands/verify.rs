@@ -169,7 +169,7 @@ pub async fn verify(
 ) -> Result<VerifyResponse> {
     // Let's ask confirmation
     if !confirm_verification {
-        let prompt_text = format!("\n\tYou are about to submit the entire workspace code to the third-party verifier at {}.\n\n\tImportant: Make sure your project does not include sensitive information like private keys. The snfoundry.toml file will be uploaded. Keep the keystore outside the project to prevent it from being uploaded.\n\n\tAre you sure you want to proceed? (Y/n)", verifier);
+        let prompt_text = format!("\n\tYou are about to submit the entire workspace code to the third-party verifier at {verifier}.\n\n\tImportant: Make sure your project does not include sensitive information like private keys. The snfoundry.toml file will be uploaded. Keep the keystore outside the project to prevent it from being uploaded.\n\n\tAre you sure you want to proceed? (Y/n)");
         let input: String = prompt(prompt_text)?;
 
         if !input.starts_with('Y') {
