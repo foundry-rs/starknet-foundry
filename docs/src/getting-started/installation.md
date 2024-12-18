@@ -154,7 +154,7 @@ sncast --version
 > Currently, _procedural macros_ require Rust installation to function.
 > This will be changed in the upcoming versions of Scarb.
 
-Go to https://www.rust-lang.org/tools/install and follow the installation instructions.
+Go to [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install) and follow the installation instructions.
 
 To verify that correct Rust version was installed, run
 
