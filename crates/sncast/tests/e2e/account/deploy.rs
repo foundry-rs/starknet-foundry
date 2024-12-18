@@ -857,6 +857,8 @@ pub async fn test_deploy_keystore_other_args() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
+        Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags
+
         command: account deploy
         transaction_hash: 0x0[..]
 
