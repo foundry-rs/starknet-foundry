@@ -15,16 +15,16 @@ pub struct FeeArgs {
     pub fee_token: Option<FeeToken>,
 
     /// Max fee for the transaction. If not provided, will be automatically estimated.
-    #[clap(short, long)]
-    pub max_fee: Option<Felt>,
+    #[clap(value_parser = parse_non_zero_felt, short, long)]
+    pub max_fee: Option<NonZeroFelt>,
 
     /// Max gas amount. If not provided, will be automatically estimated. (Only for STRK fee payment)
-    #[clap(long)]
-    pub max_gas: Option<Felt>,
+    #[clap(value_parser = parse_non_zero_felt, long)]
+    pub max_gas: Option<NonZeroFelt>,
 
     /// Max gas price in Fri. If not provided, will be automatically estimated. (Only for STRK fee payment)
-    #[clap(long)]
-    pub max_gas_unit_price: Option<Felt>,
+    #[clap(value_parser = parse_non_zero_felt, long)]
+    pub max_gas_unit_price: Option<NonZeroFelt>,
 }
 
 impl From<ScriptFeeSettings> for FeeArgs {
@@ -32,7 +32,7 @@ impl From<ScriptFeeSettings> for FeeArgs {
         match script_fee_settings {
             ScriptFeeSettings::Eth { max_fee } => Self {
                 fee_token: Some(FeeToken::Eth),
-                max_fee,
+                max_fee: max_fee.and_then(|value| NonZeroFelt::try_from(value).ok()),
                 max_gas: None,
                 max_gas_unit_price: None,
             },
@@ -42,9 +42,13 @@ impl From<ScriptFeeSettings> for FeeArgs {
                 max_gas_unit_price,
             } => Self {
                 fee_token: Some(FeeToken::Strk),
-                max_fee,
-                max_gas: max_gas.map(Into::into),
-                max_gas_unit_price: max_gas_unit_price.map(Into::into),
+                max_fee: max_fee.and_then(|value| NonZeroFelt::try_from(value).ok()),
+                max_gas: max_gas
+                    .map(Into::into)
+                    .and_then(|val: Felt| NonZeroFelt::try_from(val).ok()),
+                max_gas_unit_price: max_gas_unit_price
+                    .map(Into::into)
+                    .and_then(|val: Felt| NonZeroFelt::try_from(val).ok()),
             },
         }
     }
@@ -75,7 +79,7 @@ impl FeeArgs {
                     "--max-gas-unit-price is not supported for ETH fee payment"
                 );
                 Ok(FeeSettings::Eth {
-                    max_fee: self.max_fee,
+                    max_fee: self.max_fee.map(Felt::from),
                 })
             }
             FeeToken::Strk => {
@@ -94,42 +98,35 @@ impl FeeArgs {
                     {
                         bail!("--max-fee should be greater than or equal to --max-gas-unit-price")
                     }
-                    (None, _, _) => {
-                        if let Some(max_gas) = self.max_gas {
-                            if max_gas == Felt::ZERO {
-                                bail!("--max-gas should be greater than 0")
-                            }
-                        }
-                        FeeSettings::Strk {
-                            max_gas: self.max_gas.map(TryIntoConv::try_into_).transpose()?,
-                            max_gas_unit_price: self
-                                .max_gas_unit_price
-                                .map(TryIntoConv::try_into_)
-                                .transpose()?,
-                        }
-                    }
+                    (None, _, _) => FeeSettings::Strk {
+                        max_gas: self
+                            .max_gas
+                            .map(Felt::from)
+                            .map(TryIntoConv::try_into_)
+                            .transpose()?,
+                        max_gas_unit_price: self
+                            .max_gas_unit_price
+                            .map(Felt::from)
+                            .map(TryIntoConv::try_into_)
+                            .transpose()?,
+                    },
                     (Some(max_fee), None, Some(max_gas_unit_price)) => FeeSettings::Strk {
                         max_gas: Some(
-                            max_fee
-                                .floor_div(&NonZeroFelt::from_felt_unchecked(max_gas_unit_price))
+                            Felt::from(max_fee)
+                                .floor_div(&max_gas_unit_price)
                                 .try_into_()?,
                         ),
-                        max_gas_unit_price: Some(max_gas_unit_price.try_into_()?),
+                        max_gas_unit_price: Some(Felt::from(max_gas_unit_price).try_into()?),
                     },
                     (Some(max_fee), Some(max_gas), None) => {
-                        let max_gas_unit_price =
-                            max_fee.floor_div(&NonZeroFelt::from_felt_unchecked(max_gas));
+                        let max_gas_unit_price = Felt::from(max_fee).floor_div(&max_gas);
                         if max_gas_unit_price == Felt::ZERO {
-                            bail!("--max-gas calculated from --max-fee should be greater than 0. Please increase --max-fee")
+                            bail!("Calculated max gas unit price from provided --max-fee and --max-gas is zero. Please increase --max-fee or decrease --max-gas to ensure a positive gas unit price")
                         }
 
                         FeeSettings::Strk {
-                            max_gas: Some(max_gas.try_into_()?),
-                            max_gas_unit_price: Some(
-                                max_fee
-                                    .floor_div(&NonZeroFelt::from_felt_unchecked(max_gas))
-                                    .try_into_()?,
-                            ),
+                            max_gas: Some(Felt::from(max_gas).try_into_()?),
+                            max_gas_unit_price: Some(max_gas_unit_price.try_into_()?),
                         }
                     }
                     (Some(max_fee), None, None) => {
@@ -138,10 +135,10 @@ impl FeeArgs {
                             .await?
                             .l1_gas_price()
                             .price_in_fri;
-                        let max_gas = max_fee
-                            .floor_div(&NonZeroFelt::from_felt_unchecked(max_gas_unit_price));
+                        let max_gas = Felt::from(max_fee)
+                            .floor_div(&NonZeroFelt::try_from(max_gas_unit_price)?);
                         if max_gas == Felt::ZERO {
-                            bail!("--max-gas calculated from --max-fee should be greater than 0. Please increase --max-fee")
+                            bail!("Calculated max-gas from provided --max-fee and the current network gas price is zero. Please increase --max-fee to obtain a positive gas amount")
                         }
 
                         FeeSettings::Strk {
@@ -281,4 +278,10 @@ fn parse_fee_token(s: &str) -> Result<FeeToken, String> {
 
 fn print_max_fee_conversion_info() {
     println!("Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags\n");
+}
+
+fn parse_non_zero_felt(s: &str) -> Result<NonZeroFelt, String> {
+    let felt: Felt = s.parse().map_err(|_| "Failed to parse value")?;
+    felt.try_into()
+        .map_err(|_| "Value should be greater than 0".to_string())
 }
