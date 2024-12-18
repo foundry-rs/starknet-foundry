@@ -413,13 +413,12 @@ fn test_max_gas_equal_to_zero() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().code(2);
 
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: invoke
-        error: --max-gas should be greater than 0
+        error: invalid value '0' for '--max-gas <MAX_GAS>': Value should be greater than 0
         "},
     );
 }
@@ -449,13 +448,12 @@ fn test_max_gas_calculated_from_max_fee_equal_to_zero() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().code(2);
 
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: invoke
-        error: --max-gas calculated from --max-fee should be greater than 0. Please increase --max-fee
+        error: invalid value '0' for '--max-fee <MAX_FEE>': Value should be greater than 0
         "},
     );
 }

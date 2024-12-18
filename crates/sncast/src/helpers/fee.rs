@@ -118,7 +118,7 @@ impl FeeArgs {
                     (Some(max_fee), Some(max_gas), None) => {
                         let max_gas_unit_price = Felt::from(max_fee).floor_div(&max_gas);
                         if max_gas_unit_price == Felt::ZERO {
-                            bail!("--max-gas calculated from --max-fee should be greater than 0. Please increase --max-fee")
+                            bail!("Calculated max gas unit price from provided --max-fee and --max-gas is zero. Please increase --max-fee or decrease --max-gas to ensure a positive gas unit price")
                         }
 
                         FeeSettings::Strk {
@@ -135,7 +135,7 @@ impl FeeArgs {
                         let max_gas = Felt::from(max_fee)
                             .floor_div(&NonZeroFelt::try_from(max_gas_unit_price)?);
                         if max_gas == Felt::ZERO {
-                            bail!("--max-gas calculated from --max-fee should be greater than 0. Please increase --max-fee")
+                            bail!("Calculated max-gas from provided --max-fee and the current network gas price is zero. Please increase --max-fee to obtain a positive gas amount")
                         }
 
                         FeeSettings::Strk {
