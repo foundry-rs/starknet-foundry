@@ -143,6 +143,10 @@ sncast --version
 
 ## Windows
 
+> 🐧 **Info** - WSL (Windows Subsystem for Linux)
+> 
+> If you're using WSL, follow the [Linux and macOS](#linux-and-macos) instructions.
+
 ### Install Rust version >= 1.80.1
 
 > ℹ️ **Info**
