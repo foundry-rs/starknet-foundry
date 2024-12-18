@@ -128,11 +128,13 @@ async fn test_happy_case_strk(class_hash: Felt, account_type: AccountType) {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success().get_output().stdout.clone();
+    let output = snapbox.assert().success();
+    let stdout = output.get_output().stdout.clone();
 
-    let hash = get_transaction_hash(&output);
+    let hash = get_transaction_hash(&stdout);
     let receipt = get_transaction_receipt(hash).await;
 
+    assert_stdout_contains(output, "Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags");
     assert!(matches!(receipt, Invoke(_)));
 }
 
