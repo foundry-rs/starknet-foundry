@@ -91,13 +91,20 @@ impl FeeArgs {
                     {
                         bail!("--max-fee should be greater than or equal to --max-gas-unit-price")
                     }
-                    (None, _, _) => FeeSettings::Strk {
-                        max_gas: self.max_gas.map(TryIntoConv::try_into_).transpose()?,
-                        max_gas_unit_price: self
-                            .max_gas_unit_price
-                            .map(TryIntoConv::try_into_)
-                            .transpose()?,
-                    },
+                    (None, _, _) => {
+                        if let Some(max_gas) = self.max_gas {
+                            if max_gas == Felt::ZERO {
+                                bail!("--max-gas should be greater than 0")
+                            }
+                        }
+                        FeeSettings::Strk {
+                            max_gas: self.max_gas.map(TryIntoConv::try_into_).transpose()?,
+                            max_gas_unit_price: self
+                                .max_gas_unit_price
+                                .map(TryIntoConv::try_into_)
+                                .transpose()?,
+                        }
+                    }
                     (Some(max_fee), None, Some(max_gas_unit_price)) => FeeSettings::Strk {
                         max_gas: Some(
                             max_fee
@@ -120,15 +127,14 @@ impl FeeArgs {
                             .await?
                             .l1_gas_price()
                             .price_in_fri;
+                        let max_gas = max_fee
+                            .floor_div(&NonZeroFelt::from_felt_unchecked(max_gas_unit_price));
+                        if max_gas == Felt::ZERO {
+                            bail!("--max-gas calculated from --max-fee should be greater than 0. Please increase --max-fee")
+                        }
 
                         FeeSettings::Strk {
-                            max_gas: Some(
-                                max_fee
-                                    .floor_div(&NonZeroFelt::from_felt_unchecked(
-                                        max_gas_unit_price,
-                                    ))
-                                    .try_into_()?,
-                            ),
+                            max_gas: Some(max_gas.try_into_()?),
                             max_gas_unit_price: Some(max_gas_unit_price.try_into_()?),
                         }
                     }

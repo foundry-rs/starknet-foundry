@@ -388,6 +388,78 @@ fn test_too_low_max_fee() {
     );
 }
 
+#[test]
+fn test_max_gas_equal_to_zero() {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "user11",
+        "--wait",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1",
+        "0x2",
+        "--max-gas",
+        "0",
+        "--fee-token",
+        "strk",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: invoke
+        error: --max-gas should be greater than 0
+        "},
+    );
+}
+
+#[test]
+fn test_max_gas_calculated_from_max_fee_equal_to_zero() {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "user11",
+        "--wait",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1",
+        "0x2",
+        "--max-fee",
+        "0",
+        "--fee-token",
+        "strk",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: invoke
+        error: --max-gas calculated from --max-fee should be greater than 0. Please increase --max-fee
+        "},
+    );
+}
+
 #[tokio::test]
 async fn test_happy_case_cairo_expression_calldata() {
     let tempdir = create_and_deploy_oz_account().await;
