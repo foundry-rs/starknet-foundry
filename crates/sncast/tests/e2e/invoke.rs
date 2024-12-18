@@ -454,6 +454,8 @@ fn test_max_gas_calculated_from_max_fee_equal_to_zero() {
     assert_stderr_contains(
         output,
         indoc! {r"
+        Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags
+        
         command: invoke
         error: --max-gas calculated from --max-fee should be greater than 0. Please increase --max-fee
         "},
