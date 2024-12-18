@@ -79,6 +79,9 @@ impl FeeArgs {
                 })
             }
             FeeToken::Strk => {
+                if self.max_fee.is_some() {
+                    print_max_fee_conversion_info();
+                }
                 let settings = match (self.max_fee, self.max_gas, self.max_gas_unit_price) {
                     (Some(_), Some(_), Some(_)) => {
                         bail!("Passing all --max-fee, --max-gas and --max-gas-unit-price is conflicting. Please pass only two of them or less")
@@ -113,14 +116,23 @@ impl FeeArgs {
                         ),
                         max_gas_unit_price: Some(max_gas_unit_price.try_into_()?),
                     },
-                    (Some(max_fee), Some(max_gas), None) => FeeSettings::Strk {
-                        max_gas: Some(max_gas.try_into_()?),
-                        max_gas_unit_price: Some(
-                            max_fee
-                                .floor_div(&NonZeroFelt::from_felt_unchecked(max_gas))
-                                .try_into_()?,
-                        ),
-                    },
+
+                    (Some(max_fee), Some(max_gas), None) => {
+                        let max_gas_unit_price =
+                            max_fee.floor_div(&NonZeroFelt::from_felt_unchecked(max_gas));
+                        if max_gas_unit_price == Felt::ZERO {
+                            bail!("--max-gas calculated from --max-fee should be greater than 0. Please increase --max-fee")
+                        }
+
+                        FeeSettings::Strk {
+                            max_gas: Some(max_gas.try_into_()?),
+                            max_gas_unit_price: Some(
+                                max_fee
+                                    .floor_div(&NonZeroFelt::from_felt_unchecked(max_gas))
+                                    .try_into_()?,
+                            ),
+                        }
+                    }
                     (Some(max_fee), None, None) => {
                         let max_gas_unit_price = provider
                             .get_block_with_tx_hashes(block_id)
@@ -266,4 +278,8 @@ fn parse_fee_token(s: &str) -> Result<FeeToken, String> {
     }
 
     Ok(parsed_token)
+}
+
+fn print_max_fee_conversion_info() {
+    println!("Specyfing '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags");
 }
