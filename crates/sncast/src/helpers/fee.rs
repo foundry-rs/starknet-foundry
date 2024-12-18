@@ -113,14 +113,22 @@ impl FeeArgs {
                         ),
                         max_gas_unit_price: Some(max_gas_unit_price.try_into_()?),
                     },
-                    (Some(max_fee), Some(max_gas), None) => FeeSettings::Strk {
-                        max_gas: Some(max_gas.try_into_()?),
-                        max_gas_unit_price: Some(
-                            max_fee
-                                .floor_div(&NonZeroFelt::from_felt_unchecked(max_gas))
-                                .try_into_()?,
-                        ),
-                    },
+                    (Some(max_fee), Some(max_gas), None) => {
+                        let max_gas_unit_price =
+                            max_fee.floor_div(&NonZeroFelt::from_felt_unchecked(max_gas));
+                        if max_gas_unit_price == Felt::ZERO {
+                            bail!("--max-gas calculated from --max-fee should be greater than 0. Please increase --max-fee")
+                        }
+
+                        FeeSettings::Strk {
+                            max_gas: Some(max_gas.try_into_()?),
+                            max_gas_unit_price: Some(
+                                max_fee
+                                    .floor_div(&NonZeroFelt::from_felt_unchecked(max_gas))
+                                    .try_into_()?,
+                            ),
+                        }
+                    }
                     (Some(max_fee), None, None) => {
                         let max_gas_unit_price = provider
                             .get_block_with_tx_hashes(block_id)
