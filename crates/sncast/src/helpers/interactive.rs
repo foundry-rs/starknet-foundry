@@ -4,9 +4,8 @@ use camino::Utf8PathBuf;
 use configuration::search_config_upwards_relative_to;
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::Select;
-use std::{env, fs};
 use std::fmt::Display;
-
+use std::{env, fs};
 use toml_edit::{DocumentMut, Item, Table, Value};
 
 enum PromptSelection {
