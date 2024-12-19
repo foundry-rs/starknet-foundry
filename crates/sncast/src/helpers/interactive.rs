@@ -9,6 +9,7 @@ use std::fmt::Display;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
+use std::fs;
 use toml_edit::{DocumentMut, Item, Table, Value};
 
 enum PromptSelection {
@@ -36,7 +37,7 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
         options.push(PromptSelection::GlobalDefault(
             format!(
                 "Yes, global default ({})",
-                to_tilde_path(global_path.as_str())
+                to_tilde_path(&global_path)
             ),
             global_path.clone(),
         ));
@@ -50,7 +51,7 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
         options.push(PromptSelection::LocalDefault(
             format!(
                 "Yes, local default ({})",
-                to_tilde_path(local_path.as_str())
+                to_tilde_path(&local_path)
             ),
             local_path.clone(),
         ));
@@ -79,15 +80,14 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
 }
 
 fn edit_config(config_path: &Utf8PathBuf, profile: &str, key: &str, value: &str) -> Result<()> {
-    let mut file_content = String::new();
-    File::open(config_path)?.read_to_string(&mut file_content)?;
+    let file_content = fs::read_to_string(config_path)?;
 
     let mut toml_doc = file_content
         .parse::<DocumentMut>()
         .context("Failed to parse TOML")?;
     update_config(&mut toml_doc, profile, key, value);
 
-    File::create(config_path)?.write_all(toml_doc.to_string().as_bytes())?;
+    fs::write(config_path, toml_doc.to_string())?;
 
     Ok(())
 }
@@ -114,13 +114,11 @@ fn update_config(toml_doc: &mut DocumentMut, profile: &str, key: &str, value: &s
     profile_table[key] = Value::from(value).into();
 }
 
-fn to_tilde_path(path: &str) -> String {
+fn to_tilde_path(path: &Utf8PathBuf) -> String {
     if cfg!(not(target_os = "windows")) {
         if let Some(home_dir) = dirs::home_dir() {
-            let input_path = Path::new(path);
-
-            if let Ok(stripped_path) = input_path.strip_prefix(&home_dir) {
-                return format!("~/{}", stripped_path.display());
+            if let Ok(stripped_path) = path.strip_prefix(&home_dir) {
+                return format!("~/{stripped_path}");
             }
         }
     }
