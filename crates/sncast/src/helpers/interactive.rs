@@ -6,7 +6,6 @@ use dialoguer::theme::ColorfulTheme;
 use dialoguer::Select;
 use std::env::current_dir;
 use std::fs;
-use std::path::Path;
 use toml_edit::{DocumentMut, Item, Table, Value};
 
 pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
@@ -15,7 +14,7 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
     if let Some(option) = get_global_config_path().ok().map(|global_path| {
         format!(
             "Yes, global default account ({}).",
-            to_tilde_path(global_path.as_str())
+            to_tilde_path(&global_path)
         )
     }) {
         options.push(option);
@@ -28,14 +27,12 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
         .map(|local_path| {
             format!(
                 "Yes, local default account ({}).",
-                to_tilde_path(local_path.as_str())
+                to_tilde_path(&local_path)
             )
         })
     {
         options.push(option);
     }
-
-    options.push("No".to_string());
 
     let selection = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Do you want to make this account default?")
@@ -102,13 +99,11 @@ fn update_config(toml_doc: &mut DocumentMut, profile: &str, key: &str, value: &s
     profile_table[key] = Value::from(value).into();
 }
 
-fn to_tilde_path(path: &str) -> String {
+fn to_tilde_path(path: &Utf8PathBuf) -> String {
     if cfg!(not(target_os = "windows")) {
         if let Some(home_dir) = dirs::home_dir() {
-            let input_path = Path::new(path);
-
-            if let Ok(stripped_path) = input_path.strip_prefix(&home_dir) {
-                return format!("~/{}", stripped_path.display());
+            if let Ok(stripped_path) = path.strip_prefix(&home_dir) {
+                return format!("~/{stripped_path}");
             }
         }
     }
