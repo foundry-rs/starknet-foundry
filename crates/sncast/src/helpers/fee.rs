@@ -265,6 +265,12 @@ fn parse_fee_token(s: &str) -> Result<FeeToken, String> {
     Ok(parsed_token)
 }
 
+fn print_max_fee_conversion_info(max_fee: Felt, max_gas: Felt, max_gas_unit_price: Felt) {
+    println!(
+        "Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags\nConverted {max_fee} max fee to {max_gas} max gas and {max_gas_unit_price} max gas unit price\n",
+    );
+}
+
 fn parse_non_zero_felt(s: &str) -> Result<NonZeroFelt, String> {
     let felt: Felt = s.parse().map_err(|_| "Failed to parse value")?;
     felt.try_into()
