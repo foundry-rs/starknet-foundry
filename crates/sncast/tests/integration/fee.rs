@@ -5,8 +5,8 @@ use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
+use starknet_types_core::felt::Felt;
 use url::Url;
-
 const MAX_FEE: u64 = 1_000_000_000_000;
 
 async fn get_factory() -> OpenZeppelinAccountFactory<LocalWallet, JsonRpcClient<HttpTransport>> {
@@ -26,7 +26,7 @@ async fn test_happy_case_eth() {
 
     let args = FeeArgs {
         fee_token: Some(FeeToken::Eth),
-        max_fee: Some(100_u32.into()),
+        max_fee: Some(Felt::from(100_u32).try_into().unwrap()),
         max_gas: None,
         max_gas_unit_price: None,
     };
@@ -50,8 +50,8 @@ async fn test_max_gas_eth() {
 
     let args = FeeArgs {
         fee_token: Some(FeeToken::Eth),
-        max_fee: Some(100_u32.into()),
-        max_gas: Some(100_u32.into()),
+        max_fee: Some(Felt::from(100_u32).try_into().unwrap()),
+        max_gas: Some(Felt::from(100_u32).try_into().unwrap()),
         max_gas_unit_price: None,
     };
 
@@ -71,9 +71,9 @@ async fn test_max_gas_unit_price_eth() {
 
     let args = FeeArgs {
         fee_token: Some(FeeToken::Eth),
-        max_fee: Some(100_u32.into()),
+        max_fee: Some(Felt::from(100).try_into().unwrap()),
         max_gas: None,
-        max_gas_unit_price: Some(100_u32.into()),
+        max_gas_unit_price: Some(Felt::from(100_u32).try_into().unwrap()),
     };
 
     let error = args
@@ -92,9 +92,9 @@ async fn test_all_args() {
 
     let args = FeeArgs {
         fee_token: Some(FeeToken::Strk),
-        max_fee: Some(100_u32.into()),
-        max_gas: Some(100_u32.into()),
-        max_gas_unit_price: Some(100_u32.into()),
+        max_fee: Some(Felt::from(100_u32).try_into().unwrap()),
+        max_gas: Some(Felt::from(100_u32).try_into().unwrap()),
+        max_gas_unit_price: Some(Felt::from(100_u32).try_into().unwrap()),
     };
 
     let error = args
@@ -113,8 +113,8 @@ async fn test_max_fee_less_than_max_gas() {
 
     let args = FeeArgs {
         fee_token: Some(FeeToken::Strk),
-        max_fee: Some(50_u32.into()),
-        max_gas: Some(100_u32.into()),
+        max_fee: Some(Felt::from(50_u32).try_into().unwrap()),
+        max_gas: Some(Felt::from(100_u32).try_into().unwrap()),
         max_gas_unit_price: None,
     };
 
@@ -134,9 +134,9 @@ async fn test_max_fee_less_than_max_gas_unit_price() {
 
     let args = FeeArgs {
         fee_token: Some(FeeToken::Strk),
-        max_fee: Some(50_u32.into()),
+        max_fee: Some(Felt::from(50_u32).try_into().unwrap()),
         max_gas: None,
-        max_gas_unit_price: Some(100_u32.into()),
+        max_gas_unit_price: Some(Felt::from(100).try_into().unwrap()),
     };
 
     let error = args
@@ -154,7 +154,7 @@ async fn test_strk_fee_get_max_fee() {
 
     let args = FeeArgs {
         fee_token: Some(FeeToken::Strk),
-        max_fee: Some(MAX_FEE.into()),
+        max_fee: Some(Felt::from(MAX_FEE).try_into().unwrap()),
         max_gas: None,
         max_gas_unit_price: None,
     };
@@ -184,8 +184,8 @@ async fn test_strk_fee_get_max_fee_with_max_gas() {
 
     let args = FeeArgs {
         fee_token: Some(FeeToken::Strk),
-        max_fee: Some(MAX_FEE.into()),
-        max_gas: Some(1_000_000_u32.into()),
+        max_fee: Some(Felt::from(MAX_FEE).try_into().unwrap()),
+        max_gas: Some(Felt::from(1_000_000_u32).try_into().unwrap()),
         max_gas_unit_price: None,
     };
 
@@ -223,8 +223,8 @@ async fn test_strk_fee_get_max_gas_and_max_gas_unit_price() {
     let args = FeeArgs {
         fee_token: Some(FeeToken::Strk),
         max_fee: None,
-        max_gas: Some(1_000_000_u32.into()),
-        max_gas_unit_price: Some(1_000_u32.into()),
+        max_gas: Some(Felt::from(1_000_000_u32).try_into().unwrap()),
+        max_gas_unit_price: Some(Felt::from(1_000_u32).try_into().unwrap()),
     };
 
     let settings = args
@@ -247,9 +247,9 @@ async fn test_strk_fee_get_max_fee_with_max_gas_unit_price() {
 
     let args = FeeArgs {
         fee_token: Some(FeeToken::Strk),
-        max_fee: Some(MAX_FEE.into()),
+        max_fee: Some(Felt::from(MAX_FEE).try_into().unwrap()),
         max_gas: None,
-        max_gas_unit_price: Some(1_000_u32.into()),
+        max_gas_unit_price: Some(Felt::from(1_000_u32).try_into().unwrap()),
     };
 
     let settings = args
