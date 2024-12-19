@@ -134,7 +134,13 @@ async fn test_happy_case_strk(class_hash: Felt, account_type: AccountType) {
     let hash = get_transaction_hash(&stdout);
     let receipt = get_transaction_receipt(hash).await;
 
-    assert_stdout_contains(output, "Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags");
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags
+            Converted [..] max fee to [..] max gas and [..] max gas unit price"
+        },
+    );
     assert!(matches!(receipt, Invoke(_)));
 }
 
