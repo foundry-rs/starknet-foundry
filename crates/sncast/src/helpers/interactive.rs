@@ -63,14 +63,14 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
 }
 
 fn edit_config(config_path: &Utf8PathBuf, profile: &str, key: &str, value: &str) -> Result<()> {
-    let file_content = fs::read_to_string(config_path)?;
+    let file_content = fs::read_to_string(config_path).context("Failed to read config file")?;
 
     let mut toml_doc = file_content
         .parse::<DocumentMut>()
         .context("Failed to parse TOML")?;
     update_config(&mut toml_doc, profile, key, value);
 
-    fs::write(config_path, toml_doc.to_string())?;
+    fs::write(config_path, toml_doc.to_string()).context("Failed to write to config file")?;
 
     Ok(())
 }
