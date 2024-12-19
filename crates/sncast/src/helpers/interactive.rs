@@ -5,8 +5,7 @@ use configuration::search_config_upwards_relative_to;
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::Select;
 use std::env::current_dir;
-use std::fs::File;
-use std::io::{Read, Write};
+use std::fs;
 use std::path::Path;
 use toml_edit::{DocumentMut, Item, Table, Value};
 
@@ -69,15 +68,14 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
 }
 
 fn edit_config(config_path: &Utf8PathBuf, profile: &str, key: &str, value: &str) -> Result<()> {
-    let mut file_content = String::new();
-    File::open(config_path)?.read_to_string(&mut file_content)?;
+    let file_content = fs::read_to_string(config_path)?;
 
     let mut toml_doc = file_content
         .parse::<DocumentMut>()
         .context("Failed to parse TOML")?;
     update_config(&mut toml_doc, profile, key, value);
 
-    File::create(config_path)?.write_all(toml_doc.to_string().as_bytes())?;
+    fs::write(config_path, toml_doc.to_string())?;
 
     Ok(())
 }
