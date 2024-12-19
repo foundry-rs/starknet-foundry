@@ -16,16 +16,15 @@ enum PromptSelection {
 
 impl Display for PromptSelection {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let str = match self {
+        match self {
             PromptSelection::LocalDefault(path) => {
-                format!("Yes, local default ({})", to_tilde_path(path))
+                write!(f, "Yes, local default ({})", to_tilde_path(path))
             }
             PromptSelection::GlobalDefault(path) => {
-                format!("Yes, global default ({})", to_tilde_path(path))
+                write!(f, "Yes, global default ({})", to_tilde_path(path))
             }
-            PromptSelection::No => "No".to_string(),
-        };
-        write!(f, "{str}")
+            PromptSelection::No => write!(f, "No"),
+        }
     }
 }
 
