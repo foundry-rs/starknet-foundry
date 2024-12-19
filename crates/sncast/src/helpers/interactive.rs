@@ -17,13 +17,12 @@ enum PromptSelection {
 
 impl Display for PromptSelection {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let str = match self {
+        match self {
             PromptSelection::LocalDefault(s, _) | PromptSelection::GlobalDefault(s, _) => {
-                s.to_string()
+                write!(f, "{s}")
             }
-            PromptSelection::No => "No".to_string(),
-        };
-        write!(f, "{str}")
+            PromptSelection::No => write!(f, "No"),
+        }
     }
 }
 
