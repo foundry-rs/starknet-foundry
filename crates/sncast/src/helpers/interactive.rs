@@ -4,9 +4,9 @@ use camino::Utf8PathBuf;
 use configuration::search_config_upwards_relative_to;
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::Select;
-use std::env::current_dir;
+use std::{env, fs};
 use std::fmt::Display;
-use std::fs;
+
 use toml_edit::{DocumentMut, Item, Table, Value};
 
 enum PromptSelection {
@@ -37,7 +37,7 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
         options.push(PromptSelection::GlobalDefault(global_path.clone()));
     }
 
-    if let Some(local_path) = current_dir()
+    if let Some(local_path) = env::current_dir()
         .ok()
         .and_then(|current_path| Utf8PathBuf::from_path_buf(current_path.clone()).ok())
         .and_then(|current_path_utf8| search_config_upwards_relative_to(&current_path_utf8).ok())
@@ -105,8 +105,10 @@ fn update_config(toml_doc: &mut DocumentMut, profile: &str, key: &str, value: &s
 fn to_tilde_path(path: &Utf8PathBuf) -> String {
     if cfg!(not(target_os = "windows")) {
         if let Some(home_dir) = dirs::home_dir() {
-            if let Ok(stripped_path) = path.strip_prefix(&home_dir) {
-                return format!("~/{stripped_path}");
+            if let Ok(canonical_path) = path.canonicalize() {
+                if let Ok(stripped_path) = canonical_path.strip_prefix(&home_dir) {
+                    return format!("~/{}", stripped_path.to_string_lossy());
+                }
             }
         }
     }
