@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+### Changed
+
+- Values passed with `--max-fee`, `--max-gas` and `--max-gas-unit-price` flags are required to be > 0
+
 ## [0.35.1] - 2024-12-16
 
 ### Forge
