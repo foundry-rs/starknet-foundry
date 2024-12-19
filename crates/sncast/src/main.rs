@@ -496,11 +496,9 @@ async fn run_async_command(
                     if let Some(account_name) =
                         result.as_ref().ok().and_then(|r| r.account_name.clone())
                     {
-                        prompt_to_add_account_as_default(account_name.as_str()).unwrap_or_else(
-                            |err| {
-                                eprintln!("Error: Failed to launch interactive prompt: {err}");
-                            },
-                        );
+                        if let Err(err) = prompt_to_add_account_as_default(account_name.as_str()) {
+                            eprintln!("Error: Failed to launch interactive prompt: {err}");
+                        }
                     }
                 }
 
@@ -532,9 +530,9 @@ async fn run_async_command(
                 .await;
 
                 if !create.silent && result.is_ok() && io::stdout().is_terminal() {
-                    prompt_to_add_account_as_default(&account).unwrap_or_else(|err| {
+                    if let Err(err) = prompt_to_add_account_as_default(&account) {
                         eprintln!("Error: Failed to launch interactive prompt: {err}");
-                    });
+                    }
                 }
 
                 print_command_result("account create", &result, numbers_format, output_format)?;
