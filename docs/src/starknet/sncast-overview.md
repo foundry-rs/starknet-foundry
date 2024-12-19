@@ -76,7 +76,7 @@ For example, this is equivalent to using the `--calldata` option with the follow
 
 To obtain the serialized form of the wished data, you can write a Cairo program that calls `Serde::serialize` on subsequent arguments and displays the results.
 
-Read more about it in the [Cairo documentation](https://book.cairo-lang.org/appendix-03-derivable-traits.html?highlight=seri#serializing-with-serde).
+Read more about it in the [Cairo documentation](https://book.cairo-lang.org/appendix-03-derivable-traits.html?#serializing-with-serde).
 
 ### How to Use `--wait` Flag
 
