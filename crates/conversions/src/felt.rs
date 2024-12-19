@@ -2,12 +2,15 @@ use crate::{
     byte_array::ByteArray,
     serde::serialize::SerializeToFeltVec,
     string::{TryFromDecStr, TryFromHexStr},
-    FromConv, IntoConv,
+    FromConv, IntoConv, TryFromConv,
 };
 use conversions::padded_felt::PaddedFelt;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
 use starknet_types_core::felt::{Felt, FromStrError};
-use std::vec;
+use std::{
+    num::{NonZeroU128, NonZeroU64},
+    vec,
+};
 
 impl FromConv<ClassHash> for Felt {
     fn from_(value: ClassHash) -> Felt {
@@ -36,6 +39,42 @@ impl FromConv<EntryPointSelector> for Felt {
 impl FromConv<PaddedFelt> for Felt {
     fn from_(value: PaddedFelt) -> Felt {
         value.0.into_()
+    }
+}
+
+impl TryFromConv<Felt> for NonZeroU64 {
+    type Error = String;
+    fn try_from_(value: Felt) -> Result<Self, Self::Error> {
+        if value == Felt::ZERO {
+            Err("value should be greater than 0".to_string())
+        } else {
+            let value: u64 = value.try_into().expect("failed to convert Felt to u64");
+            Ok(NonZeroU64::new(value).unwrap())
+        }
+    }
+}
+
+impl TryFromConv<Felt> for NonZeroU128 {
+    type Error = String;
+    fn try_from_(value: Felt) -> Result<Self, Self::Error> {
+        if value == Felt::ZERO {
+            Err("value should be greater than 0".to_string())
+        } else {
+            let value: u128 = value.try_into().expect("failed to convert Felt to u128");
+            Ok(NonZeroU128::new(value).unwrap())
+        }
+    }
+}
+
+impl FromConv<NonZeroU64> for Felt {
+    fn from_(value: NonZeroU64) -> Felt {
+        Felt::from(value.get())
+    }
+}
+
+impl FromConv<NonZeroU128> for Felt {
+    fn from_(value: NonZeroU128) -> Felt {
+        Felt::from(value.get())
     }
 }
 

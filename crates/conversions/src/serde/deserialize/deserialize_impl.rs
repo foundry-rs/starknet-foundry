@@ -3,8 +3,8 @@ use crate::{byte_array::ByteArray, IntoConv};
 use num_traits::cast::ToPrimitive;
 use starknet::providers::Url;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
-use starknet_types_core::felt::Felt;
-use std::num::NonZeroU32;
+use starknet_types_core::felt::{Felt, NonZeroFelt};
+use std::num::{NonZeroU128, NonZeroU32, NonZeroU64};
 
 impl CairoDeserialize for Url {
     fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
@@ -68,6 +68,27 @@ impl CairoDeserialize for bool {
             1 => Ok(true),
             _ => Err(BufferReadError::ParseFailed),
         }
+    }
+}
+
+impl CairoDeserialize for NonZeroFelt {
+    fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
+        let felt = reader.read::<Felt>()?;
+        NonZeroFelt::try_from(felt).map_err(|_| BufferReadError::ParseFailed)
+    }
+}
+
+impl CairoDeserialize for NonZeroU64 {
+    fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
+        let val: u64 = reader.read()?;
+        NonZeroU64::try_from(val).map_err(|_| BufferReadError::ParseFailed)
+    }
+}
+
+impl CairoDeserialize for NonZeroU128 {
+    fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
+        let val: u128 = reader.read()?;
+        NonZeroU128::try_from(val).map_err(|_| BufferReadError::ParseFailed)
     }
 }
 
