@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Values passed with `--max-fee`, `--max-gas` and `--max-gas-unit-price` flags are required to be > 0
+- Values passed to the `--max-fee`, `--max-gas`, and `--max-gas-unit-price` flags must be greater than 0
 
 ## [0.35.1] - 2024-12-16
 
