@@ -1,37 +1,50 @@
 use crate::helpers::config::get_global_config_path;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use configuration::search_config_upwards_relative_to;
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::Select;
+use std::fmt::Display;
 use std::{env, fs};
 use toml_edit::{DocumentMut, Item, Table, Value};
+
+enum PromptSelection {
+    GlobalDefault(Utf8PathBuf),
+    LocalDefault(Utf8PathBuf),
+    No,
+}
+
+impl Display for PromptSelection {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            PromptSelection::LocalDefault(path) => {
+                format!("Yes, local default ({})", to_tilde_path(path))
+            }
+            PromptSelection::GlobalDefault(path) => {
+                format!("Yes, global default ({})", to_tilde_path(path))
+            }
+            PromptSelection::No => "No".to_string(),
+        };
+        write!(f, "{str}")
+    }
+}
 
 pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
     let mut options = Vec::new();
 
-    if let Some(option) = get_global_config_path().ok().map(|global_path| {
-        format!(
-            "Yes, global default account ({}).",
-            to_tilde_path(&global_path)
-        )
-    }) {
-        options.push(option);
+    if let Ok(global_path) = get_global_config_path() {
+        options.push(PromptSelection::GlobalDefault(global_path));
     }
 
-    if let Some(option) = env::current_dir()
+    if let Some(local_path) = env::current_dir()
         .ok()
         .and_then(|current_path| Utf8PathBuf::from_path_buf(current_path.clone()).ok())
         .and_then(|current_path_utf8| search_config_upwards_relative_to(&current_path_utf8).ok())
-        .map(|local_path| {
-            format!(
-                "Yes, local default account ({}).",
-                to_tilde_path(&local_path)
-            )
-        })
     {
-        options.push(option);
+        options.push(PromptSelection::LocalDefault(local_path));
     }
+
+    options.push(PromptSelection::No);
 
     let selection = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Do you want to make this account default?")
@@ -40,24 +53,14 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
         .interact()
         .context("Failed to display selection dialog")?;
 
-    match options[selection].as_str() {
-        selected if selected.starts_with("Yes, global default") => {
-            if let Ok(global_path) = get_global_config_path() {
-                edit_config(&global_path, "default", "account", account)?;
-            }
+    match &options[selection] {
+        PromptSelection::GlobalDefault(path) => {
+            edit_config(path, "default", "account", account)?;
         }
-        selected if selected.starts_with("Yes, local default") => {
-            if let Ok(current_path) = env::current_dir() {
-                let current_path_utf8 = Utf8PathBuf::from_path_buf(current_path).map_err(|_| {
-                    anyhow!("Failed to convert current directory path to Utf8PathBuf")
-                })?;
-
-                if let Ok(local_path) = search_config_upwards_relative_to(&current_path_utf8) {
-                    edit_config(&local_path, "default", "account", account)?;
-                }
-            }
+        PromptSelection::LocalDefault(path) => {
+            edit_config(path, "default", "account", account)?;
         }
-        _ => {}
+        PromptSelection::No => {}
     }
 
     Ok(())
