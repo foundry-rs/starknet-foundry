@@ -33,7 +33,7 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
     let mut options = Vec::new();
 
     if let Ok(global_path) = get_global_config_path() {
-        options.push(PromptSelection::GlobalDefault(global_path.clone()));
+        options.push(PromptSelection::GlobalDefault(global_path));
     }
 
     if let Some(local_path) = env::current_dir()
@@ -41,7 +41,7 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
         .and_then(|current_path| Utf8PathBuf::from_path_buf(current_path.clone()).ok())
         .and_then(|current_path_utf8| search_config_upwards_relative_to(&current_path_utf8).ok())
     {
-        options.push(PromptSelection::LocalDefault(local_path.clone()));
+        options.push(PromptSelection::LocalDefault(local_path));
     }
 
     options.push(PromptSelection::No);
