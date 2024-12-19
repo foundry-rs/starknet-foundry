@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- interactive interface that allow to set created or imported accounts as default
+- interactive interface that allow to set created or imported account as default
 
 ## [0.35.0] - 2024-12-13
 
