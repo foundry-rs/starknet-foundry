@@ -193,4 +193,59 @@ mod tests {
 
         assert_eq!(toml_doc.to_string(), expected);
     }
+
+    #[test]
+    fn test_create_table_key() {
+        let original = formatdoc! {r#"
+            [snfoundry]
+            key = 2137
+
+            [sncast.testnet]
+            account = "testnet-account"        # comment
+            url = "https://swmansion.com/"
+        "#};
+
+        let expected = formatdoc! {r#"
+            [snfoundry]
+            key = 2137
+
+            [sncast.testnet]
+            account = "testnet-account"        # comment
+            url = "https://swmansion.com/"
+
+            [sncast.default]
+            account = "testnet"
+        "#};
+
+        let mut toml_doc = original.parse::<DocumentMut>().unwrap();
+
+        update_config(&mut toml_doc, "default", "account", "testnet");
+
+        assert_eq!(toml_doc.to_string(), expected);
+    }
+
+    #[test]
+    fn test_create_table() {
+        let original = formatdoc! {r#"
+            [snfoundry]
+            key = 2137
+        "#};
+
+        let expected = formatdoc! {
+            r#"
+            [snfoundry]
+            key = 2137
+
+            [sncast]
+
+            [sncast.default]
+            account = "testnet"
+        "#};
+
+        let mut toml_doc = original.parse::<DocumentMut>().unwrap();
+
+        update_config(&mut toml_doc, "default", "account", "testnet");
+
+        assert_eq!(toml_doc.to_string(), expected);
+    }
 }
