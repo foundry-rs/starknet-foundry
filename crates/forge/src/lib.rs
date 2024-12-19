@@ -7,9 +7,12 @@ use run_tests::workspace::run_for_workspace;
 use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
+use std::cell::RefCell;
 use std::ffi::OsString;
+use std::process::Command;
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
 use tokio::runtime::Builder;
+use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
 pub mod block_number_map;
 mod combine_configs;
@@ -237,14 +240,18 @@ fn check_requirements(output_on_success: bool) -> Result<()> {
     let mut requirements_checker = RequirementsChecker::new(output_on_success);
     requirements_checker.add_requirement(Requirement {
         name: "Rust".to_string(),
-        command: "rustc --version".to_string(),
+        command: RefCell::new({
+            let mut cmd = Command::new("rustc");
+            cmd.arg("--version");
+            cmd
+        }),
         minimal_version: MINIMAL_RUST_VERSION,
         version_parser: create_version_parser("Rust", r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)"),
         helper_text: "Follow instructions from https://www.rust-lang.org/tools/install".to_string(),
     });
     requirements_checker.add_requirement(Requirement {
         name: "Scarb".to_string(),
-        command: "scarb --version".to_string(),
+        command: RefCell::new(ScarbCommand::new().arg("--version").command()),
         minimal_version: MINIMAL_SCARB_VERSION,
         helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
             .to_string(),
@@ -252,7 +259,7 @@ fn check_requirements(output_on_success: bool) -> Result<()> {
     });
     requirements_checker.add_requirement(Requirement {
         name: "Universal Sierra Compiler".to_string(),
-        command: "universal-sierra-compiler --version".to_string(),
+        command: RefCell::new(UniversalSierraCompilerCommand::new().arg("--version").command()),
         minimal_version: MINIMAL_USC_VERSION,
         helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),
         version_parser: create_version_parser(
