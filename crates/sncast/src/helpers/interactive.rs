@@ -4,8 +4,7 @@ use camino::Utf8PathBuf;
 use configuration::search_config_upwards_relative_to;
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::Select;
-use std::env::current_dir;
-use std::fs;
+use std::{env, fs};
 use toml_edit::{DocumentMut, Item, Table, Value};
 
 pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
@@ -20,7 +19,7 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
         options.push(option);
     }
 
-    if let Some(option) = current_dir()
+    if let Some(option) = env::current_dir()
         .ok()
         .and_then(|current_path| Utf8PathBuf::from_path_buf(current_path.clone()).ok())
         .and_then(|current_path_utf8| search_config_upwards_relative_to(&current_path_utf8).ok())
@@ -48,7 +47,7 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
             }
         }
         selected if selected.starts_with("Yes, local default") => {
-            if let Ok(current_path) = current_dir() {
+            if let Ok(current_path) = env::current_dir() {
                 let current_path_utf8 = Utf8PathBuf::from_path_buf(current_path).map_err(|_| {
                     anyhow!("Failed to convert current directory path to Utf8PathBuf")
                 })?;
