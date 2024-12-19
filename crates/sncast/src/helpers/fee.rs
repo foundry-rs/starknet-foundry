@@ -116,14 +116,11 @@ impl FeeArgs {
                         max_gas_unit_price: Some(Felt::from(max_gas_unit_price).try_into()?),
                     },
                     (Some(max_fee), Some(max_gas), None) => {
-                        let max_gas_unit_price = Felt::from(max_fee).floor_div(&max_gas);
-                        if max_gas_unit_price == Felt::ZERO {
-                            bail!("Calculated max gas unit price from provided --max-fee and --max-gas is zero. Please increase --max-fee or decrease --max-gas to ensure a positive gas unit price")
-                        }
+                        let max_gas_unit_price = NonZeroFelt::try_from(Felt::from(max_fee).floor_div(&max_gas)).expect("Calculated max gas unit price from provided --max-fee and --max-gas is zero. Please increase --max-fee or decrease --max-gas to ensure a positive gas unit price");
 
                         FeeSettings::Strk {
                             max_gas: Some(Felt::from(max_gas).try_into_()?),
-                            max_gas_unit_price: Some(max_gas_unit_price.try_into_()?),
+                            max_gas_unit_price: Some(Felt::from(max_gas_unit_price).try_into_()?),
                         }
                     }
                     (Some(max_fee), None, None) => {
@@ -132,14 +129,11 @@ impl FeeArgs {
                             .await?
                             .l1_gas_price()
                             .price_in_fri;
-                        let max_gas = Felt::from(max_fee)
-                            .floor_div(&NonZeroFelt::try_from(max_gas_unit_price)?);
-                        if max_gas == Felt::ZERO {
-                            bail!("Calculated max-gas from provided --max-fee and the current network gas price is zero. Please increase --max-fee to obtain a positive gas amount")
-                        }
+                        let max_gas = NonZeroFelt::try_from(Felt::from(max_fee)
+                            .floor_div(&NonZeroFelt::try_from(max_gas_unit_price)?)).expect("Calculated max-gas from provided --max-fee and the current network gas price is zero. Please increase --max-fee to obtain a positive gas amount");
 
                         FeeSettings::Strk {
-                            max_gas: Some(max_gas.try_into_()?),
+                            max_gas: Some(Felt::from(max_gas).try_into_()?),
                             max_gas_unit_price: Some(max_gas_unit_price.try_into_()?),
                         }
                     }
