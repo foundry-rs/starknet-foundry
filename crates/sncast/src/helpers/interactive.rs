@@ -54,10 +54,7 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
         .context("Failed to display selection dialog")?;
 
     match &options[selection] {
-        PromptSelection::GlobalDefault(path) => {
-            edit_config(path, "default", "account", account)?;
-        }
-        PromptSelection::LocalDefault(path) => {
+        PromptSelection::GlobalDefault(path) | PromptSelection::LocalDefault(path) => {
             edit_config(path, "default", "account", account)?;
         }
         PromptSelection::No => {}
