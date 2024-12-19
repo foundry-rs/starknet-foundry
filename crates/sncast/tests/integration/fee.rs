@@ -1,3 +1,5 @@
+use std::num::{NonZeroU128, NonZeroU64};
+
 use crate::helpers::constants::URL;
 use sncast::helpers::constants::OZ_CLASS_HASH;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken};
@@ -39,7 +41,7 @@ async fn test_happy_case_eth() {
     assert_eq!(
         settings,
         FeeSettings::Eth {
-            max_fee: Some(100_u32.into())
+            max_fee: Some(Felt::from(100_u32).try_into().unwrap())
         }
     );
 }
@@ -169,10 +171,9 @@ async fn test_strk_fee_get_max_fee() {
             max_gas,
             max_gas_unit_price,
         } => {
-            assert_eq!(
-                u128::from(max_gas.unwrap()) * max_gas_unit_price.unwrap(),
-                MAX_FEE.into()
-            );
+            let max_gas: u64 = max_gas.unwrap().into();
+            let max_gas_unit_price: u128 = max_gas_unit_price.unwrap().into();
+            assert_eq!(u128::from(max_gas) * max_gas_unit_price, MAX_FEE.into());
         }
         FeeSettings::Eth { .. } => unreachable!(),
     }
@@ -197,8 +198,8 @@ async fn test_strk_fee_get_max_fee_with_max_gas() {
     assert_eq!(
         settings,
         FeeSettings::Strk {
-            max_gas: Some(1_000_000),
-            max_gas_unit_price: Some(u128::from(MAX_FEE / 1_000_000)),
+            max_gas: Some(NonZeroU64::new(1_000_000).unwrap()),
+            max_gas_unit_price: Some(NonZeroU128::new((MAX_FEE / 1_000_000).into()).unwrap()),
         }
     );
 
@@ -207,10 +208,9 @@ async fn test_strk_fee_get_max_fee_with_max_gas() {
             max_gas,
             max_gas_unit_price,
         } => {
-            assert_eq!(
-                u128::from(max_gas.unwrap()) * max_gas_unit_price.unwrap(),
-                MAX_FEE.into()
-            );
+            let max_gas: u64 = max_gas.unwrap().into();
+            let max_gas_unit_price: u128 = max_gas_unit_price.unwrap().into();
+            assert_eq!(u128::from(max_gas) * max_gas_unit_price, MAX_FEE.into());
         }
         FeeSettings::Eth { .. } => unreachable!(),
     }
@@ -235,8 +235,8 @@ async fn test_strk_fee_get_max_gas_and_max_gas_unit_price() {
     assert_eq!(
         settings,
         FeeSettings::Strk {
-            max_gas: Some(1_000_000),
-            max_gas_unit_price: Some(1_000),
+            max_gas: Some(NonZeroU64::new(1_000_000).unwrap()),
+            max_gas_unit_price: Some(NonZeroU128::new(1_000).unwrap()),
         }
     );
 }
@@ -260,8 +260,8 @@ async fn test_strk_fee_get_max_fee_with_max_gas_unit_price() {
     assert_eq!(
         settings,
         FeeSettings::Strk {
-            max_gas: Some(MAX_FEE / 1_000),
-            max_gas_unit_price: Some(1_000),
+            max_gas: Some(NonZeroU64::new(MAX_FEE / 1_000).unwrap()),
+            max_gas_unit_price: Some(NonZeroU128::new(1_000).unwrap()),
         }
     );
 
@@ -270,10 +270,9 @@ async fn test_strk_fee_get_max_fee_with_max_gas_unit_price() {
             max_gas,
             max_gas_unit_price,
         } => {
-            assert_eq!(
-                u128::from(max_gas.unwrap()) * max_gas_unit_price.unwrap(),
-                MAX_FEE.into()
-            );
+            let max_gas: u64 = max_gas.unwrap().into();
+            let max_gas_unit_price: u128 = max_gas_unit_price.unwrap().into();
+            assert_eq!(u128::from(max_gas) * max_gas_unit_price, MAX_FEE.into());
         }
         FeeSettings::Eth { .. } => unreachable!(),
     }
