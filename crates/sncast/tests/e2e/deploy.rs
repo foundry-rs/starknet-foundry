@@ -89,8 +89,8 @@ async fn test_happy_case_human_readable() {
             transaction_hash: 0x0[..]
 
             To see deployment details, visit:
-            contract: [..]
-            transaction: [..]
+            Contract: [..]
+            Transaction: [..]
             "
         },
     );
