@@ -5,7 +5,6 @@ use super::_cheatcode::handle_cheatcode;
 pub mod events;
 pub mod l1_handler;
 pub mod contract_class;
-pub mod fork;
 pub mod storage;
 pub mod execution_info;
 pub mod message_to_l1;
