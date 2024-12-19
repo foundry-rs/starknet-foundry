@@ -6,9 +6,6 @@ use dialoguer::theme::ColorfulTheme;
 use dialoguer::Select;
 use std::env::current_dir;
 use std::fmt::Display;
-use std::fs::File;
-use std::io::{Read, Write};
-use std::path::Path;
 use std::fs;
 use toml_edit::{DocumentMut, Item, Table, Value};
 
@@ -35,10 +32,7 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
 
     if let Ok(global_path) = get_global_config_path() {
         options.push(PromptSelection::GlobalDefault(
-            format!(
-                "Yes, global default ({})",
-                to_tilde_path(&global_path)
-            ),
+            format!("Yes, global default ({})", to_tilde_path(&global_path)),
             global_path.clone(),
         ));
     }
@@ -49,10 +43,7 @@ pub fn prompt_to_add_account_as_default(account: &str) -> Result<()> {
         .and_then(|current_path_utf8| search_config_upwards_relative_to(&current_path_utf8).ok())
     {
         options.push(PromptSelection::LocalDefault(
-            format!(
-                "Yes, local default ({})",
-                to_tilde_path(&local_path)
-            ),
+            format!("Yes, local default ({})", to_tilde_path(&local_path)),
             local_path.clone(),
         ));
     }
