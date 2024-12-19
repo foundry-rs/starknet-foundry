@@ -23,7 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimal Rust version in requirements check is the same as in docs (`1.80.1`)
 - `snforge` produces trace for contracts even if they fail or panic (assuming test passed)
 
-
 ## [0.35.0] - 2024-12-13
 
 ### Forge
