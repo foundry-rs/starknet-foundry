@@ -241,6 +241,8 @@ async fn run_async_command(
         Commands::Declare(declare) => {
             let provider = declare.rpc.get_provider(&config).await?;
 
+            declare.validate_and_get_token()?;
+
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
@@ -389,9 +391,6 @@ async fn run_async_command(
         }
 
         Commands::Deploy(deploy) => {
-            let deploy_resolved: DeployResolved = DeployResolved::try_from(deploy.clone())?;
-            deploy_resolved.validate_and_get_token()?;
-
             let rpc = deploy.rpc.clone();
 
             let provider = rpc.get_provider(&config).await?;
@@ -424,12 +423,6 @@ async fn run_async_command(
                 ..
             } = deploy;
 
-            let fee_settings = fee_args
-                .clone()
-                .fee_token(fee_args.fee_token.unwrap_or_default())
-                .try_into_fee_settings(&provider, account.block_id())
-                .await?;
-
             // safe to unwrap because "constructor" is a standardized name
             let selector = get_selector_from_name("constructor").unwrap();
 
@@ -437,6 +430,10 @@ async fn run_async_command(
 
             let arguments: Arguments = arguments.into();
             let calldata = arguments.try_into_calldata(contract_class, &selector)?;
+
+            let fee_settings = fee_args
+                .try_into_fee_settings(&provider, account.block_id())
+                .await?;
 
             let result = starknet_commands::deploy::deploy(
                 deploy_resolved.class_hash,

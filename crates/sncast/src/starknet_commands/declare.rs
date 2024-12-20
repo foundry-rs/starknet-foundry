@@ -106,38 +106,14 @@ pub async fn declare_compiled(
         .try_into_fee_settings(account.provider(), account.block_id())
         .await?;
 
-    // let contract_artifacts =
-    //     artifacts
-    //         .get(&declare.contract)
-    //         .ok_or(StarknetCommandError::ContractArtifactsNotFound(ErrorData {
-    //             data: ByteArray::from(declare.contract.as_str()),
-    //         }))?;
-
     let CompiledContract {
         class,
         casm_class_hash: class_hash,
-        ..
+        sierra_class_hash,
     } = contract;
-
-    // let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
-    //     .context("Failed to parse sierra artifact")?;
-    // let casm_contract_definition: CompiledClass =
-    //     serde_json::from_str(&contract_artifacts.casm).context("Failed to parse casm artifact")?;
-
-    // let casm_class_hash = casm_contract_definition
-    //     .class_hash()
-    //     .map_err(anyhow::Error::from)?;
-
-    // let class_hash = contract_definition
-    //     .class_hash()
-    //     .map_err(anyhow::Error::from)?;
 
     let result = match fee_settings {
         FeeSettings::Eth { max_fee } => {
-            // let declaration = account.declare_v2(
-            //     Arc::new(contract_definition.flatten().map_err(anyhow::Error::from)?),
-            //     casm_class_hash,
-            // );
             let declaration = account.declare_v2(Arc::new(class), class_hash);
 
             let declaration = apply_optional(declaration, max_fee, DeclarationV2::max_fee);
@@ -150,10 +126,6 @@ pub async fn declare_compiled(
             max_gas,
             max_gas_unit_price,
         } => {
-            // let declaration = account.declare_v3(
-            //     Arc::new(contract_definition.flatten().map_err(anyhow::Error::from)?),
-            //     casm_class_hash,
-            // );
             let declaration = account.declare_v3(Arc::new(class), class_hash);
 
             let declaration = apply_optional(declaration, max_gas, DeclarationV3::gas);
@@ -169,22 +141,24 @@ pub async fn declare_compiled(
         Ok(DeclareTransactionResult {
             transaction_hash,
             class_hash,
-        }) => handle_wait_for_tx(
-            account.provider(),
-            transaction_hash,
-            DeclareResponse::Success(DeclareTransactionResponse {
-                class_hash: class_hash.into_(),
-                transaction_hash: transaction_hash.into_(),
-            }),
-            wait_config,
-        )
+        }) => {
+            handle_wait_for_tx(
+                account.provider(),
+                transaction_hash,
+                DeclareResponse::Success(DeclareTransactionResponse {
+                    class_hash: class_hash.into_(),
+                    transaction_hash: transaction_hash.into_(),
+                }),
+                wait_config,
+            )
+        }
         .await
         .map_err(StarknetCommandError::from),
         Err(Provider(ProviderError::StarknetError(StarknetError::ClassAlreadyDeclared)))
             if skip_on_already_declared =>
         {
             Ok(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse {
-                class_hash: class_hash.into_(),
+                class_hash: sierra_class_hash.into_(),
             }))
         }
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
@@ -207,5 +181,5 @@ pub async fn declare(
     let contract = contract_artifacts.try_into()?;
     let fee_token = declare.fee_args.clone().fee_token.unwrap_or_default();
 
-    declare_compiled(declare, account, contract, wait_config, false, fee_token).await
+    declare_compiled(declare, account, contract, wait_config, true, fee_token).await
 }
