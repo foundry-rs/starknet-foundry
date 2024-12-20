@@ -310,9 +310,12 @@ fn verify_version(version: u8) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::response::structs::Felt;
+    use crate::response::structs::DeclareTransactionResponse;
     use crate::state::state_file::ScriptTransactionOutput::ErrorResponse;
     use camino::Utf8PathBuf;
+    use conversions::string::TryFromHexStr;
+    use conversions::IntoConv;
+    use starknet_types_core::felt::Felt;
     use tempfile::TempDir;
 
     #[test]
@@ -343,6 +346,17 @@ mod tests {
     #[test]
     fn test_load_or_create_state_file_exists_with_tx() {
         let state_file = Utf8PathBuf::from("tests/data/files/state_with_tx.json");
+        let result = load_or_create_state_file(&state_file).unwrap();
+
+        assert_eq!(
+            result.transactions.unwrap().get("123abc789").unwrap().name,
+            "declare"
+        );
+    }
+
+    #[test]
+    fn test_load_or_create_state_file_exists_with_tx_pre_0_34_0() {
+        let state_file = Utf8PathBuf::from("tests/data/files/pre_0.34.0_state_with_tx.json");
         let result = load_or_create_state_file(&state_file).unwrap();
 
         assert_eq!(
@@ -404,10 +418,12 @@ mod tests {
         let inputs = vec![123u8, 46u8];
         let transaction = ScriptTransactionEntry {
             name: "declare".to_string(),
-            output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
-                class_hash: Felt("0x123".parse().unwrap()),
-                transaction_hash: Felt("0x321".parse().unwrap()),
-            }),
+            output: ScriptTransactionOutput::DeclareResponse(DeclareResponse::Success(
+                DeclareTransactionResponse {
+                    class_hash: Felt::try_from_hex_str("0x123").unwrap().into_(),
+                    transaction_hash: Felt::try_from_hex_str("0x321").unwrap().into_(),
+                },
+            )),
             status: ScriptTransactionStatus::Success,
             timestamp: 0,
             misc: None,
@@ -441,10 +457,12 @@ mod tests {
         let inputs = vec![123u8, 45u8];
         let transaction1 = ScriptTransactionEntry {
             name: "declare".to_string(),
-            output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
-                class_hash: Felt("0x1".parse().unwrap()),
-                transaction_hash: Felt("0x2".parse().unwrap()),
-            }),
+            output: ScriptTransactionOutput::DeclareResponse(DeclareResponse::Success(
+                DeclareTransactionResponse {
+                    class_hash: Felt::try_from_hex_str("0x1").unwrap().into_(),
+                    transaction_hash: Felt::try_from_hex_str("0x2").unwrap().into_(),
+                },
+            )),
             status: ScriptTransactionStatus::Success,
             timestamp: 0,
             misc: None,
@@ -457,7 +475,7 @@ mod tests {
         let transaction2 = ScriptTransactionEntry {
             name: "invoke".to_string(),
             output: ScriptTransactionOutput::InvokeResponse(InvokeResponse {
-                transaction_hash: Felt("0x3".parse().unwrap()),
+                transaction_hash: Felt::try_from_hex_str("0x3").unwrap().into_(),
             }),
             status: ScriptTransactionStatus::Success,
             timestamp: 1,
@@ -512,10 +530,12 @@ mod tests {
         let inputs = vec![123u8, 45u8];
         let transaction1 = ScriptTransactionEntry {
             name: "declare".to_string(),
-            output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
-                class_hash: Felt("0x1".parse().unwrap()),
-                transaction_hash: Felt("0x2".parse().unwrap()),
-            }),
+            output: ScriptTransactionOutput::DeclareResponse(DeclareResponse::Success(
+                DeclareTransactionResponse {
+                    class_hash: Felt::try_from_hex_str("0x1").unwrap().into_(),
+                    transaction_hash: Felt::try_from_hex_str("0x2").unwrap().into_(),
+                },
+            )),
             status: ScriptTransactionStatus::Success,
             timestamp: 2,
             misc: None,
@@ -527,7 +547,7 @@ mod tests {
         let transaction2 = ScriptTransactionEntry {
             name: "invoke".to_string(),
             output: ScriptTransactionOutput::InvokeResponse(InvokeResponse {
-                transaction_hash: Felt("0x3".parse().unwrap()),
+                transaction_hash: Felt::try_from_hex_str("0x3").unwrap().into_(),
             }),
             status: ScriptTransactionStatus::Success,
             timestamp: 3,
@@ -583,14 +603,14 @@ mod tests {
         let result = read_txs_from_state_file(&temp_state_file).expect("Failed to read state file");
         let mut entries = result.unwrap();
         let transaction_entry = entries.transactions.get(&tx_id).unwrap();
-        assert_eq!(entries.transactions.len(), 2);
+        assert_eq!(entries.transactions.len(), 3);
         assert_eq!(transaction_entry.status, ScriptTransactionStatus::Fail);
 
         let new_transaction = ScriptTransactionEntry {
             name: "deploy".to_string(),
             output: ScriptTransactionOutput::DeployResponse(DeployResponse {
-                transaction_hash: Felt("0x3".parse().unwrap()),
-                contract_address: Felt("0x333".parse().unwrap()),
+                transaction_hash: Felt::try_from_hex_str("0x3").unwrap().into_(),
+                contract_address: Felt::try_from_hex_str("0x333").unwrap().into_(),
             }),
             status: ScriptTransactionStatus::Success,
             timestamp: 1,
@@ -605,7 +625,7 @@ mod tests {
         let result = read_txs_from_state_file(&temp_state_file).expect("Failed to read state file");
         let entries = result.unwrap();
         let transaction_entry = entries.transactions.get(&tx_id).unwrap();
-        assert_eq!(entries.transactions.len(), 2);
+        assert_eq!(entries.transactions.len(), 3);
         assert_eq!(transaction_entry.status, ScriptTransactionStatus::Success);
     }
 }

@@ -1,0 +1,16 @@
+[package]
+name = "testing_messages_to_l1"
+version = "0.1.0"
+edition = "2023_11"
+
+[dependencies]
+starknet = "2.7.0"
+
+[dev-dependencies]
+snforge_std = { path = "../../../snforge_std" }
+
+[[target.starknet-contract]]
+sierra = true
+
+[scripts]
+test = "snforge test"

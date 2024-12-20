@@ -11,12 +11,13 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::structs::InvokeResponse;
 use sncast::{extract_or_generate_salt, impl_payable_transaction, udc_uniqueness, WaitForTx};
-use starknet::accounts::{Account, Call, SingleOwnerAccount};
-use starknet::core::types::FieldElement;
+use starknet::accounts::{Account, SingleOwnerAccount};
+use starknet::core::types::Call;
 use starknet::core::utils::{get_selector_from_name, get_udc_deployed_address};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
+use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 
 #[derive(Args, Debug, Clone)]
@@ -43,11 +44,18 @@ impl_payable_transaction!(Run, token_not_supported_for_invoke,
 );
 
 #[derive(Deserialize, Debug)]
+#[serde(untagged)]
+enum Input {
+    String(String),
+    Number(i64),
+}
+
+#[derive(Deserialize, Debug)]
 struct DeployCall {
-    class_hash: FieldElement,
-    inputs: Vec<String>,
+    class_hash: Felt,
+    inputs: Vec<Input>,
     unique: bool,
-    salt: Option<FieldElement>,
+    salt: Option<Felt>,
     id: String,
 }
 
@@ -55,7 +63,7 @@ struct DeployCall {
 struct InvokeCall {
     contract_address: String,
     function: String,
-    inputs: Vec<String>,
+    inputs: Vec<Input>,
 }
 
 pub async fn run(
@@ -63,7 +71,9 @@ pub async fn run(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
-    let fee_args = run.fee_args.clone().fee_token(run.token_from_version());
+    let fee_token = run.validate_and_get_token()?;
+
+    let fee_args = run.fee_args.clone().fee_token(fee_token);
 
     let contents = std::fs::read_to_string(&run.path)?;
     let items_map: HashMap<String, Vec<toml::Value>> =
@@ -87,7 +97,7 @@ pub async fn run(
                 let mut calldata = vec![
                     deploy_call.class_hash,
                     salt,
-                    FieldElement::from(u8::from(deploy_call.unique)),
+                    Felt::from(u8::from(deploy_call.unique)),
                     deploy_call.inputs.len().into(),
                 ];
 
@@ -121,7 +131,7 @@ pub async fn run(
                 parsed_calls.push(Call {
                     to: contract_address
                         .parse()
-                        .context("Failed to parse contract address to FieldElement")?,
+                        .context("Failed to parse contract address to Felt")?,
                     selector: get_selector_from_name(&invoke_call.function)?,
                     calldata,
                 });
@@ -138,18 +148,19 @@ pub async fn run(
         .map_err(handle_starknet_command_error)
 }
 
-fn parse_inputs(
-    inputs: &Vec<String>,
-    contracts: &HashMap<String, String>,
-) -> Result<Vec<FieldElement>> {
+fn parse_inputs(inputs: &Vec<Input>, contracts: &HashMap<String, String>) -> Result<Vec<Felt>> {
     let mut parsed_inputs = Vec::new();
     for input in inputs {
-        let current_input = contracts.get(input).unwrap_or(input);
-        parsed_inputs.push(
-            current_input
-                .parse()
-                .context("Failed to parse input to FieldElement")?,
-        );
+        let felt_value = match input {
+            Input::String(s) => {
+                let resolved = contracts.get(s).unwrap_or(s);
+                resolved
+                    .parse()
+                    .context(format!("Failed to parse input '{resolved}' to Felt"))?
+            }
+            Input::Number(n) => (*n).into(),
+        };
+        parsed_inputs.push(felt_value);
     }
 
     Ok(parsed_inputs)

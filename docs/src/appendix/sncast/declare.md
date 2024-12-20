@@ -23,7 +23,7 @@ Optional.
 Maximum fee for the `declare` transaction in Fri or Wei depending on fee token or transaction version. When not used, defaults to auto-estimation.
 
 ## `--fee-token <FEE_TOKEN>`
-Optional. Required if `--version` is not provided.
+Optional. When not used, defaults to STRK.
 
 Token used for fee payment. Possible values: ETH, STRK.
 
@@ -38,7 +38,7 @@ Optional.
 Maximum gas unit price for the `declare` transaction paid in Fri. When not used, defaults to auto-estimation. (Only for STRK fee payment)
 
 ## `--version, -v <VERSION>`
-Optional. Required if `--fee-token` is not provided.
+Optional. When not used, defaults to v3.
 
 Version of the deployment transaction. Possible values: v2, v3.
 

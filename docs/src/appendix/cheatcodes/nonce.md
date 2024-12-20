@@ -23,6 +23,6 @@ Changes the transaction nonce for the given target.
 Cancels the `cheat_nonce` / `start_cheat_nonce` for the given target.
 
 ## `stop_cheat_nonce_global`
-> `fn stop_cheat_nonce_global(target: ContractAddress)`
+> `fn stop_cheat_nonce_global()`
 
 Cancels the `start_cheat_nonce_global`.

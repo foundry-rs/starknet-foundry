@@ -1,6 +1,8 @@
 use super::declare_deploy::DeclareDeploy;
 use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
+use conversions::byte_array::ByteArray;
+use conversions::IntoConv;
 use scarb_api::StarknetContractArtifacts;
 use sncast::helpers::deploy::DeployArgs;
 use sncast::helpers::error::token_not_supported_for_declaration;
@@ -8,17 +10,20 @@ use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::helpers::scarb_utils::CompiledContract;
 use sncast::response::errors::StarknetCommandError;
-use sncast::response::structs::DeclareResponse;
-use sncast::response::structs::Felt;
+use sncast::response::structs::{
+    AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
+};
 use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, ErrorData, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, DeclarationV2, DeclarationV3};
-use starknet::core::types::FieldElement;
+use starknet::core::types::{DeclareTransactionResult, StarknetError};
+use starknet::providers::ProviderError;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
     signers::LocalWallet,
 };
+use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -34,7 +39,7 @@ pub struct Declare {
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[clap(short, long)]
-    pub nonce: Option<FieldElement>,
+    pub nonce: Option<Felt>,
 
     /// Specifies scarb package to be used
     #[clap(long)]
@@ -89,11 +94,13 @@ pub async fn declare_compiled(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     contract: CompiledContract,
     wait_config: WaitForTx,
+    skip_on_already_declared: bool,
+    fee_token: FeeToken,
 ) -> Result<DeclareResponse, StarknetCommandError> {
     let fee_settings = declare
         .fee_args
         .clone()
-        .fee_token(declare.token_from_version())
+        .fee_token(fee_token)
         .try_into_fee_settings(account.provider(), account.block_id())
         .await?;
 
@@ -104,6 +111,27 @@ pub async fn declare_compiled(
     } = contract;
 
     let result = match fee_settings {
+    let contract_artifacts =
+        artifacts
+            .get(&declare.contract)
+            .ok_or(StarknetCommandError::ContractArtifactsNotFound(ErrorData {
+                data: ByteArray::from(declare.contract.as_str()),
+            }))?;
+
+    let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
+        .context("Failed to parse sierra artifact")?;
+    let casm_contract_definition: CompiledClass =
+        serde_json::from_str(&contract_artifacts.casm).context("Failed to parse casm artifact")?;
+
+    let casm_class_hash = casm_contract_definition
+        .class_hash()
+        .map_err(anyhow::Error::from)?;
+
+    let class_hash = contract_definition
+        .class_hash()
+        .map_err(anyhow::Error::from)?;
+
+    let declared = match fee_settings {
         FeeSettings::Eth { max_fee } => {
             let declaration = account.declare_v2(Arc::new(class), class_hash);
 
@@ -130,12 +158,17 @@ pub async fn declare_compiled(
 
     match result {
         Ok(result) => handle_wait_for_tx(
+    match declared {
+        Ok(DeclareTransactionResult {
+            transaction_hash,
+            class_hash,
+        }) => handle_wait_for_tx(
             account.provider(),
-            result.transaction_hash,
-            DeclareResponse {
-                class_hash: Felt(result.class_hash),
-                transaction_hash: Felt(result.transaction_hash),
-            },
+            transaction_hash,
+            DeclareResponse::Success(DeclareTransactionResponse {
+                class_hash: class_hash.into_(),
+                transaction_hash: transaction_hash.into_(),
+            }),
             wait_config,
         )
         .await
@@ -144,6 +177,15 @@ pub async fn declare_compiled(
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
 
         _ => Err(anyhow!("Unknown RPC error").into()),
+        Err(Provider(ProviderError::StarknetError(StarknetError::ClassAlreadyDeclared)))
+            if skip_on_already_declared =>
+        {
+            Ok(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse {
+                class_hash: class_hash.into_(),
+            }))
+        }
+        Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
+        Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
     }
 }
 

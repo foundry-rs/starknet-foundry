@@ -1,12 +1,13 @@
-use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
 };
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::DeclareResult;
+use conversions::byte_array::ByteArray;
 use starknet_api::core::ClassHash;
+use starknet_types_core::felt::Felt;
 
 #[inline]
-pub fn assert_success(call_contract_output: CallResult, expected_data: &[Felt252]) {
+pub fn assert_success(call_contract_output: CallResult, expected_data: &[Felt]) {
     assert!(matches!(
         call_contract_output,
         CallResult::Success { ret_data, .. }
@@ -15,7 +16,7 @@ pub fn assert_success(call_contract_output: CallResult, expected_data: &[Felt252
 }
 
 #[inline]
-pub fn assert_panic(call_contract_output: CallResult, expected_data: &[Felt252]) {
+pub fn assert_panic(call_contract_output: CallResult, expected_data: &[Felt]) {
     assert!(matches!(
         call_contract_output,
         CallResult::Failure(
@@ -26,7 +27,7 @@ pub fn assert_panic(call_contract_output: CallResult, expected_data: &[Felt252])
 }
 
 #[inline]
-pub fn assert_error(call_contract_output: CallResult, expected_data: impl Into<String>) {
+pub fn assert_error(call_contract_output: CallResult, expected_data: impl Into<ByteArray>) {
     assert!(matches!(
         call_contract_output,
         CallResult::Failure(

@@ -1,16 +1,21 @@
+use crate::compatibility_check::{create_version_parser, Requirement, RequirementsChecker};
 use anyhow::Result;
+use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge_runner::CACHE_DIR;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
-use scarb_ui::args::PackagesFilter;
+use scarb_ui::args::{FeaturesSpec, PackagesFilter};
+use semver::Version;
+use std::ffi::OsString;
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
 use tokio::runtime::Builder;
-use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
 pub mod block_number_map;
 mod combine_configs;
+mod compatibility_check;
 mod init;
+mod new;
 pub mod pretty_printing;
 pub mod run_tests;
 pub mod scarb;
@@ -18,7 +23,11 @@ mod shared_cache;
 pub mod test_filter;
 mod warn;
 
-pub const CAIRO_EDITION: &str = "2023_11";
+pub const CAIRO_EDITION: &str = "2024_07";
+
+const MINIMAL_RUST_VERSION: Version = Version::new(1, 80, 1);
+const MINIMAL_SCARB_VERSION: Version = Version::new(2, 7, 0);
+const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 
 #[derive(Parser, Debug)]
 #[command(
@@ -52,7 +61,7 @@ Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
 )]
 #[command(about = "snforge - a testing tool for Starknet contracts", long_about = None)]
 #[clap(name = "snforge")]
-struct Cli {
+pub struct Cli {
     #[command(subcommand)]
     subcommand: ForgeSubcommand,
 }
@@ -69,8 +78,15 @@ enum ForgeSubcommand {
         /// Name of a new project
         name: String,
     },
+    /// Create a new Forge project at <PATH>
+    New {
+        #[command(flatten)]
+        args: NewArgs,
+    },
     /// Clean Forge cache directory
     CleanCache {},
+    /// Check if all `snforge` requirements are installed
+    CheckRequirements,
 }
 
 #[derive(ValueEnum, Debug, Clone)]
@@ -126,13 +142,44 @@ pub struct TestArgs {
     #[arg(long)]
     save_trace_data: bool,
 
-    /// Build profiles of all test which have passed and are not fuzz tests using the cairo-profiler
-    #[arg(long)]
+    /// Build profiles of all tests which have passed and are not fuzz tests using the cairo-profiler
+    #[arg(long, conflicts_with = "coverage")]
     build_profile: bool,
+
+    /// Generate a coverage report for the executed tests which have passed and are not fuzz tests using the cairo-coverage
+    #[arg(long, conflicts_with = "build_profile")]
+    coverage: bool,
 
     /// Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
     #[arg(long)]
     max_n_steps: Option<u32>,
+
+    /// Specify features to enable
+    #[command(flatten)]
+    pub features: FeaturesSpec,
+
+    /// Build contracts separately in the scarb starknet contract target
+    #[arg(long)]
+    no_optimization: bool,
+
+    /// Additional arguments for cairo-coverage or cairo-profiler
+    #[clap(last = true)]
+    additional_args: Vec<OsString>,
+}
+
+#[derive(Parser, Debug)]
+pub struct NewArgs {
+    /// Path to a location where the new project will be created
+    path: Utf8PathBuf,
+    /// Name of a new project, defaults to the directory name
+    #[arg(short, long)]
+    name: Option<String>,
+    /// Do not initialize a new Git repository
+    #[arg(long)]
+    no_vcs: bool,
+    /// Try to create the project even if the specified directory at <PATH> is not empty, which can result in overwriting existing files
+    #[arg(long)]
+    overwrite: bool,
 }
 
 pub enum ExitStatus {
@@ -143,12 +190,15 @@ pub enum ExitStatus {
 pub fn main_execution() -> Result<ExitStatus> {
     let cli = Cli::parse();
 
-    ScarbCommand::new().ensure_available()?;
-    UniversalSierraCompilerCommand::ensure_available()?;
+    check_requirements(false)?;
 
     match cli.subcommand {
         ForgeSubcommand::Init { name } => {
-            init::run(name.as_str())?;
+            init::init(name.as_str())?;
+            Ok(ExitStatus::Success)
+        }
+        ForgeSubcommand::New { args } => {
+            new::new(args)?;
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::CleanCache {} => {
@@ -176,5 +226,39 @@ pub fn main_execution() -> Result<ExitStatus> {
 
             rt.block_on(run_for_workspace(args))
         }
+        ForgeSubcommand::CheckRequirements => {
+            check_requirements(true)?;
+            Ok(ExitStatus::Success)
+        }
     }
+}
+
+fn check_requirements(output_on_success: bool) -> Result<()> {
+    let mut requirements_checker = RequirementsChecker::new(output_on_success);
+    requirements_checker.add_requirement(Requirement {
+        name: "Rust".to_string(),
+        command: "rustc --version".to_string(),
+        minimal_version: MINIMAL_RUST_VERSION,
+        version_parser: create_version_parser("Rust", r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)"),
+        helper_text: "Follow instructions from https://www.rust-lang.org/tools/install".to_string(),
+    });
+    requirements_checker.add_requirement(Requirement {
+        name: "Scarb".to_string(),
+        command: "scarb --version".to_string(),
+        minimal_version: MINIMAL_SCARB_VERSION,
+        helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
+            .to_string(),
+        version_parser: create_version_parser("Scarb", r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)"),
+    });
+    requirements_checker.add_requirement(Requirement {
+        name: "Universal Sierra Compiler".to_string(),
+        command: "universal-sierra-compiler --version".to_string(),
+        minimal_version: MINIMAL_USC_VERSION,
+        helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),
+        version_parser: create_version_parser(
+            "Universal Sierra Compiler",
+            r"universal-sierra-compiler (?<version>[0-9]+.[0-9]+.[0-9]+)",
+        ),
+    });
+    requirements_checker.check()
 }

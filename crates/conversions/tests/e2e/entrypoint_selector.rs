@@ -3,14 +3,13 @@ mod tests_entrypoint_selector {
     use cairo_vm::utils::PRIME_STR;
     use conversions::string::{IntoDecStr, TryFromDecStr, TryFromHexStr};
     use conversions::{FromConv, IntoConv};
-    use starknet::core::types::FieldElement;
     use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
     use starknet_api::hash::StarkHash;
-    use starknet_types_core::felt::Felt as Felt252;
+    use starknet_types_core::felt::Felt;
 
     #[test]
     fn test_entrypoint_selector_conversions_happy_case() {
-        let felt = Felt252::from_bytes_be(&[1u8; 32]);
+        let felt = Felt::from_bytes_be(&[1u8; 32]);
         let entrypoint_selector = EntryPointSelector(felt);
 
         assert_eq!(
@@ -23,11 +22,11 @@ mod tests_entrypoint_selector {
         );
         assert_eq!(
             entrypoint_selector,
-            Felt252::from_(entrypoint_selector).into_()
+            Felt::from_(entrypoint_selector).into_()
         );
         assert_eq!(
             entrypoint_selector,
-            FieldElement::from_(entrypoint_selector).into_()
+            Felt::from_(entrypoint_selector).into_()
         );
         assert_eq!(
             entrypoint_selector,
@@ -46,7 +45,7 @@ mod tests_entrypoint_selector {
 
     #[test]
     fn test_entrypoint_selector_conversions_zero() {
-        let felt = Felt252::ZERO;
+        let felt = Felt::ZERO;
         let entrypoint_selector = EntryPointSelector(felt);
 
         assert_eq!(
@@ -59,11 +58,11 @@ mod tests_entrypoint_selector {
         );
         assert_eq!(
             entrypoint_selector,
-            Felt252::from_(entrypoint_selector).into_()
+            Felt::from_(entrypoint_selector).into_()
         );
         assert_eq!(
             entrypoint_selector,
-            FieldElement::from_(entrypoint_selector).into_()
+            Felt::from_(entrypoint_selector).into_()
         );
         assert_eq!(
             entrypoint_selector,
@@ -82,15 +81,15 @@ mod tests_entrypoint_selector {
 
     #[test]
     fn test_entrypoint_selector_conversions_limit() {
-        let mut entrypoint_selector: EntryPointSelector = Felt252::MAX.into_();
+        let mut entrypoint_selector: EntryPointSelector = Felt::MAX.into_();
 
         assert_eq!(
             entrypoint_selector,
-            Felt252::from_(entrypoint_selector).into_()
+            Felt::from_(entrypoint_selector).into_()
         );
         assert_eq!(
             entrypoint_selector,
-            FieldElement::from_(entrypoint_selector).into_()
+            Felt::from_(entrypoint_selector).into_()
         );
         assert_eq!(
             entrypoint_selector,
@@ -126,7 +125,7 @@ mod tests_entrypoint_selector {
     #[test]
     fn test_entrypoint_selector_conversions_out_of_range() {
         assert!(
-            EntryPointSelector::try_from_hex_str(PRIME_STR).unwrap() == Felt252::from(0_u8).into_()
+            EntryPointSelector::try_from_hex_str(PRIME_STR).unwrap() == Felt::from(0_u8).into_()
         );
     }
 }

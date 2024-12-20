@@ -1,5 +1,6 @@
 pub mod block_explorer;
 pub mod braavos;
+pub mod config;
 pub mod configuration;
 pub mod constants;
 pub mod deploy;

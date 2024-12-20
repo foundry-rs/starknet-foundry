@@ -1,14 +1,14 @@
 use super::{BufferWriter, CairoSerialize};
 use crate::{byte_array::ByteArray, IntoConv};
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use starknet::core::types::{ContractErrorData, FieldElement, TransactionExecutionErrorData};
+use starknet::core::types::{ContractErrorData, TransactionExecutionErrorData};
 use starknet_api::core::EthAddress;
 use starknet_api::{
     core::{ClassHash, ContractAddress, EntryPointSelector, Nonce},
     deprecated_contract_class::EntryPointType,
     transaction::Calldata,
 };
-use starknet_types_core::felt::Felt as Felt252;
+use starknet_types_core::felt::Felt;
 use std::{
     cell::{Ref, RefCell},
     rc::Rc,
@@ -28,20 +28,20 @@ impl CairoSerialize for CallEntryPoint {
 
 impl CairoSerialize for ContractErrorData {
     fn serialize(&self, output: &mut BufferWriter) {
-        self.revert_error.serialize(output);
+        ByteArray::from(self.revert_error.as_str()).serialize(output);
     }
 }
 
 impl CairoSerialize for TransactionExecutionErrorData {
     fn serialize(&self, output: &mut BufferWriter) {
         self.transaction_index.serialize(output);
-        self.execution_error.serialize(output);
+        ByteArray::from(self.execution_error.as_str()).serialize(output);
     }
 }
 
 impl CairoSerialize for anyhow::Error {
     fn serialize(&self, output: &mut BufferWriter) {
-        self.to_string().serialize(output);
+        ByteArray::from(self.to_string().as_str()).serialize(output);
     }
 }
 
@@ -73,9 +73,9 @@ impl CairoSerialize for CallType {
 impl CairoSerialize for bool {
     fn serialize(&self, output: &mut BufferWriter) {
         if *self {
-            Felt252::from(1).serialize(output);
+            Felt::from(1).serialize(output);
         } else {
-            Felt252::from(0).serialize(output);
+            Felt::from(0).serialize(output);
         }
     }
 }
@@ -116,19 +116,6 @@ where
     }
 }
 
-// Try remove impls for String, ByteArray should be used explicitly instead
-impl CairoSerialize for &str {
-    fn serialize(&self, output: &mut BufferWriter) {
-        ByteArray::from(*self).serialize(output);
-    }
-}
-
-impl CairoSerialize for String {
-    fn serialize(&self, output: &mut BufferWriter) {
-        self.as_str().serialize(output);
-    }
-}
-
 impl<T> CairoSerialize for Vec<T>
 where
     T: CairoSerialize,
@@ -146,11 +133,11 @@ impl<T: CairoSerialize, E: CairoSerialize> CairoSerialize for Result<T, E> {
     fn serialize(&self, output: &mut BufferWriter) {
         match self {
             Ok(val) => {
-                output.write_felt(Felt252::from(0));
+                output.write_felt(Felt::from(0));
                 val.serialize(output);
             }
             Err(err) => {
-                output.write_felt(Felt252::from(1));
+                output.write_felt(Felt::from(1));
                 err.serialize(output);
             }
         }
@@ -161,10 +148,10 @@ impl<T: CairoSerialize> CairoSerialize for Option<T> {
     fn serialize(&self, output: &mut BufferWriter) {
         match self {
             Some(val) => {
-                output.write_felt(Felt252::from(0));
+                output.write_felt(Felt::from(0));
                 val.serialize(output);
             }
-            None => output.write_felt(Felt252::from(1)),
+            None => output.write_felt(Felt::from(1)),
         }
     }
 }
@@ -192,7 +179,7 @@ macro_rules! impl_serialize_for_num_type {
     ($type:ty) => {
         impl CairoSerialize for $type {
             fn serialize(&self, output: &mut BufferWriter) {
-                Felt252::from(*self).serialize(output);
+                Felt::from(*self).serialize(output);
             }
         }
     };
@@ -215,8 +202,7 @@ macro_rules! impl_serialize_for_tuple {
     };
 }
 
-impl_serialize_for_felt_type!(Felt252);
-impl_serialize_for_felt_type!(FieldElement);
+impl_serialize_for_felt_type!(Felt);
 impl_serialize_for_felt_type!(ClassHash);
 impl_serialize_for_felt_type!(ContractAddress);
 impl_serialize_for_felt_type!(Nonce);
@@ -229,6 +215,12 @@ impl_serialize_for_num_type!(u32);
 impl_serialize_for_num_type!(u64);
 impl_serialize_for_num_type!(u128);
 impl_serialize_for_num_type!(usize);
+
+impl_serialize_for_num_type!(i8);
+impl_serialize_for_num_type!(i16);
+impl_serialize_for_num_type!(i32);
+impl_serialize_for_num_type!(i64);
+impl_serialize_for_num_type!(i128);
 
 impl_serialize_for_tuple!();
 impl_serialize_for_tuple!(A);

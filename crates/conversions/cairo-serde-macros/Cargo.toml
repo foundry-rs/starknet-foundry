@@ -7,6 +7,6 @@ edition.workspace = true
 proc-macro = true
 
 [dependencies]
-syn = "2.0.68"
-quote = "1.0.36"
-proc-macro2 = "1.0.86"
+syn = "2.0.79"
+quote = "1.0.37"
+proc-macro2 = "1.0.92"

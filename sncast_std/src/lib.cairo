@@ -135,15 +135,47 @@ pub fn call(
     result_data
 }
 
-#[derive(Drop, Clone, Debug, Serde)]
-pub struct DeclareResult {
+#[derive(Drop, Copy, Debug, Serde)]
+pub enum DeclareResult {
+    AlreadyDeclared: AlreadyDeclaredResult,
+    Success: DeclareTransactionResult,
+}
+
+#[derive(Drop, Copy, Debug, Serde)]
+pub struct DeclareTransactionResult {
     pub class_hash: ClassHash,
     pub transaction_hash: felt252,
 }
 
+#[derive(Drop, Copy, Debug, Serde)]
+pub struct AlreadyDeclaredResult {
+    pub class_hash: ClassHash,
+}
+
+pub trait DeclareResultTrait {
+    fn class_hash(self: @DeclareResult) -> @ClassHash;
+}
+
+impl DeclareResultImpl of DeclareResultTrait {
+    fn class_hash(self: @DeclareResult) -> @ClassHash {
+        match self {
+            DeclareResult::Success(result) => result.class_hash,
+            DeclareResult::AlreadyDeclared(result) => result.class_hash
+        }
+    }
+}
+
 impl DisplayDeclareResult of Display<DeclareResult> {
     fn fmt(self: @DeclareResult, ref f: Formatter) -> Result<(), Error> {
-        write!(f, "class_hash: {}, transaction_hash: {}", *self.class_hash, *self.transaction_hash)
+        match self {
+            DeclareResult::Success(result) => write!(
+                f,
+                "class_hash: {}, transaction_hash: {}",
+                result.class_hash,
+                result.transaction_hash
+            ),
+            DeclareResult::AlreadyDeclared(result) => write!(f, "class_hash: {}", result.class_hash)
+        }
     }
 }
 
@@ -174,7 +206,7 @@ pub fn declare(
     result_data
 }
 
-#[derive(Drop, Clone, Debug, Serde)]
+#[derive(Drop, Copy, Debug, Serde)]
 pub struct DeployResult {
     pub contract_address: ContractAddress,
     pub transaction_hash: felt252,
@@ -190,18 +222,18 @@ impl DisplayDeployResult of Display<DeployResult> {
         )
     }
 }
-#[derive(Drop, Clone, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub enum FeeSettings {
     Eth: EthFeeSettings,
     Strk: StrkFeeSettings
 }
 
-#[derive(Drop, Clone, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub struct EthFeeSettings {
     pub max_fee: Option<felt252>,
 }
 
-#[derive(Drop, Clone, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub struct StrkFeeSettings {
     pub max_fee: Option<felt252>,
     pub max_gas: Option<u64>,
@@ -300,7 +332,7 @@ pub fn get_nonce(block_tag: felt252) -> felt252 {
     *buf[0]
 }
 
-#[derive(Drop, Clone, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub enum FinalityStatus {
     Received,
     Rejected,
@@ -338,7 +370,7 @@ pub impl DisplayExecutionStatus of Display<ExecutionStatus> {
 }
 
 
-#[derive(Drop, Clone, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub struct TxStatusResult {
     pub finality_status: FinalityStatus,
     pub execution_status: Option<ExecutionStatus>

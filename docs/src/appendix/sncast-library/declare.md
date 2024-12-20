@@ -4,11 +4,47 @@
 
 Declares a contract and returns `DeclareResult`.
 
+- `contract_name` - name of a contract as Cairo string. It is a name of the contract (part after `mod` keyword) e.g. `"HelloStarknet"`.
+- `fee_settings` - fee settings for the transaction. Can be `Eth` or `Strk`. Read more about it [here](../../starknet/fees-and-versions.md)
+- `nonce` - nonce for declare transaction. If not provided, nonce will be set automatically.
+
 ```rust
-#[derive(Drop, Clone, Debug)]
-pub struct DeclareResult {
+{{#include ../../../listings/declare/src/lib.cairo}}
+```
+
+## Returned Type
+
+* If the contract has not been declared, `DeclareResult::Success` is returned containing respective transaction hash.
+* If the contract has already been declared, `DeclareResult::AlreadyDeclared` is returned.
+
+## Getting the Class Hash
+
+Both variants contain `class_hash` of the declared contract. Import `DeclareResultTrait` to access it.
+
+```rust
+pub trait DeclareResultTrait {
+    fn class_hash(self: @DeclareResult) -> @ClassHash;
+}
+```
+
+## Structures Used by the Command
+
+```rust
+#[derive(Drop, Copy, Debug, Serde)]
+pub enum DeclareResult {
+    Success: DeclareTransactionResult,
+    AlreadyDeclared: AlreadyDeclaredResult,
+}
+
+#[derive(Drop, Copy, Debug, Serde)]
+pub struct DeclareTransactionResult {
     pub class_hash: ClassHash,
     pub transaction_hash: felt252,
+}
+
+#[derive(Drop, Copy, Debug, Serde)]
+pub struct AlreadyDeclaredResult {
+    pub class_hash: ClassHash,
 }
 
 #[derive(Drop, Clone, Debug, Serde, PartialEq)]
@@ -22,26 +58,4 @@ pub struct StrkFeeSettings {
     pub max_gas: Option<u64>,
     pub max_gas_unit_price: Option<u128>,
 }
-```
-
-- `contract_name` - name of a contract as Cairo string. It is a name of the contract (part after `mod` keyword) e.g. `"HelloStarknet"`.
-- `fee_settings` - fee settings for the transaction. Can be `Eth` or `Strk`. Read more about it [here](../../starknet/fees-and-versions.md)
-- `nonce` - nonce for declare transaction. If not provided, nonce will be set automatically.
-
-```rust
-use sncast_std::{declare, DeclareResult, FeeSettings, EthFeeSettings};
-
-fn main() {
-    let max_fee = 9999999;
-    let declare_result = declare(
-        "HelloStarknet",
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
-        Option::None
-    )
-        .expect('declare failed');
-
-    println!("declare_result: {}", declare_result);
-    println!("debug declare_result: {:?}", declare_result);
-}
-
 ```

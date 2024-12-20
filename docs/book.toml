@@ -10,11 +10,16 @@ description = "Starknet Foundry is a toolchain for developing Starknet smart con
 warning-policy = "error"
 follow-web-links = true
 traverse-parent-directories = false
+exclude = [
+    "foundry-rs.github.io/starknet-foundry/snforge_std",
+    "foundry-rs.github.io/starknet-foundry/sncast_std",
+    "starknet-faucet.vercel.app"
+]
 
 [output.html]
 git-repository-url = "https://github.com/foundry-rs/starknet-foundry/"
 edit-url-template = "https://github.com/foundry-rs/starknet-foundry/edit/master/docs/{path}"
-additional-js = ["count.js"]
+additional-js = ["count.js", "codeSnippets.js"]
 
 [output.html.playground]
 runnable = false

@@ -4,10 +4,10 @@ use anyhow::Result;
 use itertools::Itertools;
 use serde::{Serialize, Serializer};
 use serde_json::Value;
-use starknet::core::types::FieldElement;
+use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, fmt::Display, str::FromStr};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OutputFormat {
     Json,
     Human,
@@ -75,6 +75,7 @@ impl From<Value> for OutputValue {
                     .collect(),
             ),
             Value::String(s) => OutputValue::String(s.to_string()),
+            Value::Bool(b) => OutputValue::String(b.to_string()),
             s => panic!("{s:?} cannot be auto-serialized to output"),
         }
     }
@@ -84,9 +85,12 @@ impl Format for OutputValue {
     fn format_with(self, numbers: NumbersFormat) -> Self {
         match self {
             OutputValue::String(input) => {
-                if let Ok(field) = FieldElement::from_str(&input) {
+                if let Ok(field) = Felt::from_str(&input) {
                     return match numbers {
                         NumbersFormat::Decimal => OutputValue::String(format!("{field:#}")),
+                        NumbersFormat::Hex if input.len() == 66 && input.starts_with("0x0") => {
+                            OutputValue::String(input)
+                        }
                         NumbersFormat::Hex => OutputValue::String(format!("{field:#x}")),
                         NumbersFormat::Default => OutputValue::String(input),
                     };
@@ -251,6 +255,48 @@ mod tests {
         let expected = OutputValue::Array(vec![OutputValue::String(String::from(
             "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
         ))]);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn format_address_force_hex() {
+        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
+            "0x0163a86513df426f4fd7ad989b11062769b03d3fd75fb83fae6c0f416b33a3d5",
+        ))]);
+
+        let actual = json_value.format_with(NumbersFormat::Hex);
+        let expected = OutputValue::Array(vec![OutputValue::String(String::from(
+            "0x0163a86513df426f4fd7ad989b11062769b03d3fd75fb83fae6c0f416b33a3d5",
+        ))]);
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn format_address_force_decimal() {
+        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
+            "0x0163a86513df426f4fd7ad989b11062769b03d3fd75fb83fae6c0f416b33a3d5",
+        ))]);
+
+        let actual = json_value.format_with(NumbersFormat::Decimal);
+        let expected = OutputValue::Array(vec![OutputValue::String(String::from(
+            "628392926429977811333168641010360117621605580210734736624161546314682966997",
+        ))]);
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn format_address_leave_default() {
+        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
+            "0x0163a86513df426f4fd7ad989b11062769b03d3fd75fb83fae6c0f416b33a3d5",
+        ))]);
+
+        let actual = json_value.format_with(NumbersFormat::Default);
+        let expected = OutputValue::Array(vec![OutputValue::String(String::from(
+            "0x0163a86513df426f4fd7ad989b11062769b03d3fd75fb83fae6c0f416b33a3d5",
+        ))]);
+
         assert_eq!(actual, expected);
     }
 

@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
-use crate::state::{CallTrace, CallTraceNode, CheatStatus};
+use crate::state::{CallTrace, CallTraceNode, CheatStatus, EncounteredError};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::{
     execution::{
@@ -17,7 +17,7 @@ use blockifier::{
     },
     state::state_api::State,
 };
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
+use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
 use starknet_api::{
     core::ClassHash,
     deprecated_contract_class::EntryPointType,
@@ -26,12 +26,18 @@ use starknet_api::{
 use std::collections::HashSet;
 use std::rc::Rc;
 use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
-use cairo_vm::Felt252;
+use starknet_types_core::felt::Felt;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
+use thiserror::Error;
 use conversions::FromConv;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
-use crate::runtime_extensions::common::sum_syscall_counters;
+use crate::runtime_extensions::common::{get_relocated_vm_trace, sum_syscall_counters};
 use conversions::string::TryFromHexStr;
+
+pub(crate) type ContractClassEntryPointExecutionResult = Result<
+    (CallInfo, SyscallCounter, Option<Vec<RelocatedTraceEntry>>),
+    EntryPointExecutionErrorWithTrace,
+>;
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
 #[allow(clippy::too_many_lines)]
@@ -66,10 +72,8 @@ pub fn execute_call_entry_point(
     if let Some(cheat_status) = get_mocked_function_cheat_status(entry_point, cheatnet_state) {
         if let CheatStatus::Cheated(ret_data, _) = (*cheat_status).clone() {
             cheat_status.decrement_cheat_span();
-            let ret_data_f252: Vec<Felt252> = ret_data
-                .iter()
-                .map(|datum| Felt252::from_(*datum))
-                .collect();
+            let ret_data_f252: Vec<Felt> =
+                ret_data.iter().map(|datum| Felt::from_(*datum)).collect();
             cheatnet_state.trace_data.exit_nested_call(
                 resources,
                 Default::default(),
@@ -109,7 +113,7 @@ pub fn execute_call_entry_point(
     // endregion
 
     // Hack to prevent version 0 attack on argent accounts.
-    if context.tx_context.tx_info.version() == TransactionVersion(Felt252::from(0_u8))
+    if context.tx_context.tx_info.version() == TransactionVersion(Felt::from(0_u8))
         && class_hash
             == TryFromHexStr::try_from_hex_str(FAULTY_CLASS_HASH)
                 .expect("A class hash must be a felt.")
@@ -153,8 +157,17 @@ pub fn execute_call_entry_point(
             );
             Ok(call_info)
         }
-        Err(err) => {
-            exit_error_call(&err, cheatnet_state, resources, entry_point);
+        Err(EntryPointExecutionErrorWithTrace { source: err, trace }) => {
+            if let Some(pc) = trace
+                .as_ref()
+                .and_then(|trace| trace.last())
+                .map(|entry| entry.pc)
+            {
+                cheatnet_state
+                    .encountered_errors
+                    .push(EncounteredError { pc, class_hash });
+            }
+            exit_error_call(&err, cheatnet_state, resources, entry_point, trace);
             Err(err)
         }
     }
@@ -191,6 +204,7 @@ fn exit_error_call(
     cheatnet_state: &mut CheatnetState,
     resources: &mut ExecutionResources,
     entry_point: &CallEntryPoint,
+    vm_trace: Option<Vec<RelocatedTraceEntry>>,
 ) {
     let identifier = match entry_point.call_type {
         CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
@@ -201,7 +215,7 @@ fn exit_error_call(
         Default::default(),
         CallResult::from_err(error, &identifier),
         &[],
-        None,
+        vm_trace,
     );
 }
 
@@ -250,7 +264,7 @@ pub fn execute_constructor_entry_point(
 fn get_mocked_function_cheat_status<'a>(
     call: &CallEntryPoint,
     cheatnet_state: &'a mut CheatnetState,
-) -> Option<&'a mut CheatStatus<Vec<Felt252>>> {
+) -> Option<&'a mut CheatStatus<Vec<Felt>>> {
     if call.call_type == CallType::Delegate {
         return None;
     }
@@ -261,7 +275,7 @@ fn get_mocked_function_cheat_status<'a>(
         .and_then(|contract_functions| contract_functions.get_mut(&call.entry_point_selector))
 }
 
-fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt252>) -> CallInfo {
+fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {
     CallInfo {
         call,
         execution: CallExecution {
@@ -298,4 +312,46 @@ fn aggregate_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter 
         }
     }
     result
+}
+
+#[derive(Debug, Error)]
+#[error("{}", source)]
+pub struct EntryPointExecutionErrorWithTrace {
+    pub source: EntryPointExecutionError,
+    pub trace: Option<Vec<RelocatedTraceEntry>>,
+}
+
+impl<T> From<T> for EntryPointExecutionErrorWithTrace
+where
+    T: Into<EntryPointExecutionError>,
+{
+    fn from(value: T) -> Self {
+        Self {
+            source: value.into(),
+            trace: None,
+        }
+    }
+}
+
+pub(crate) trait OnErrorLastPc<T>: Sized {
+    fn on_error_get_last_pc(
+        self,
+        runner: &mut CairoRunner,
+    ) -> Result<T, EntryPointExecutionErrorWithTrace>;
+}
+
+impl<T> OnErrorLastPc<T> for Result<T, EntryPointExecutionError> {
+    fn on_error_get_last_pc(
+        self,
+        runner: &mut CairoRunner,
+    ) -> Result<T, EntryPointExecutionErrorWithTrace> {
+        match self {
+            Err(source) => {
+                let trace = get_relocated_vm_trace(runner);
+
+                Err(EntryPointExecutionErrorWithTrace { source, trace })
+            }
+            Ok(value) => Ok(value),
+        }
+    }
 }

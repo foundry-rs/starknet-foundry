@@ -1,4 +1,5 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, MULTICALL_CONFIGS_DIR, URL};
+use crate::helpers::fixtures::create_and_deploy_oz_account;
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
@@ -29,8 +30,6 @@ async fn test_happy_case(account: &str) {
         URL,
         "--path",
         path,
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args);
@@ -44,7 +43,7 @@ async fn test_happy_case(account: &str) {
 
     output.stdout_matches(indoc! {r"
         command: multicall run
-        transaction_hash: 0x[..]
+        transaction_hash: 0x0[..]
 
         To see invocation details, visit:
         transaction: [..]
@@ -53,6 +52,8 @@ async fn test_happy_case(account: &str) {
 
 #[tokio::test]
 async fn test_calldata_ids() {
+    let tempdir = create_and_deploy_oz_account().await;
+
     let path = project_root::get_project_root().expect("failed to get project root path");
     let path = Path::new(&path)
         .join(MULTICALL_CONFIGS_DIR)
@@ -61,20 +62,18 @@ async fn test_calldata_ids() {
 
     let args = vec![
         "--accounts-file",
-        ACCOUNT_FILE_PATH,
+        "accounts.json",
         "--account",
-        "user5",
+        "my_account",
         "multicall",
         "run",
         "--url",
         URL,
         "--path",
         path,
-        "--fee-token",
-        "eth",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert();
 
     let stderr_str = output.as_stderr();
@@ -85,7 +84,7 @@ async fn test_calldata_ids() {
 
     output.stdout_matches(indoc! {r"
         command: multicall run
-        transaction_hash: 0x[..]
+        transaction_hash: 0x0[..]
 
         To see invocation details, visit:
         transaction: [..]
@@ -94,22 +93,22 @@ async fn test_calldata_ids() {
 
 #[tokio::test]
 async fn test_invalid_path() {
+    let tempdir = create_and_deploy_oz_account().await;
+
     let args = vec![
         "--accounts-file",
-        ACCOUNT_FILE_PATH,
+        "accounts.json",
         "--account",
-        "user2",
+        "my_account",
         "multicall",
         "run",
         "--url",
         URL,
         "--path",
         "non-existent",
-        "--fee-token",
-        "eth",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
     assert!(output.as_stdout().is_empty());
@@ -124,6 +123,8 @@ async fn test_invalid_path() {
 
 #[tokio::test]
 async fn test_deploy_fail() {
+    let tempdir = create_and_deploy_oz_account().await;
+
     let path = project_root::get_project_root().expect("failed to get project root path");
     let path = Path::new(&path)
         .join(MULTICALL_CONFIGS_DIR)
@@ -132,9 +133,9 @@ async fn test_deploy_fail() {
 
     let args = vec![
         "--accounts-file",
-        ACCOUNT_FILE_PATH,
+        "accounts.json",
         "--account",
-        "user2",
+        "my_account",
         "multicall",
         "run",
         "--url",
@@ -145,20 +146,22 @@ async fn test_deploy_fail() {
         "eth",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
     assert_stderr_contains(
         output,
         indoc! {r"
         command: multicall run
-        error: An error occurred in the called contract [..]
+        error: Transaction execution error [..]
         "},
     );
 }
 
 #[tokio::test]
 async fn test_invoke_fail() {
+    let tempdir = create_and_deploy_oz_account().await;
+
     let path = project_root::get_project_root().expect("failed to get project root path");
     let path = Path::new(&path)
         .join(MULTICALL_CONFIGS_DIR)
@@ -167,9 +170,9 @@ async fn test_invoke_fail() {
 
     let args = vec![
         "--accounts-file",
-        ACCOUNT_FILE_PATH,
+        "accounts.json",
         "--account",
-        "user2",
+        "my_account",
         "multicall",
         "run",
         "--url",
@@ -180,20 +183,22 @@ async fn test_invoke_fail() {
         "eth",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
     assert_stderr_contains(
         output,
         indoc! {r"
         command: multicall run
-        error: An error occurred in the called contract [..]
+        error: Transaction execution error [..]
         "},
     );
 }
 
 #[tokio::test]
 async fn test_deploy_success_invoke_fails() {
+    let tempdir = create_and_deploy_oz_account().await;
+
     let path = project_root::get_project_root().expect("failed to get project root path");
     let path = Path::new(&path)
         .join(MULTICALL_CONFIGS_DIR)
@@ -202,9 +207,9 @@ async fn test_deploy_success_invoke_fails() {
 
     let args = vec![
         "--accounts-file",
-        ACCOUNT_FILE_PATH,
+        "accounts.json",
         "--account",
-        "user3",
+        "my_account",
         "multicall",
         "run",
         "--url",
@@ -215,14 +220,93 @@ async fn test_deploy_success_invoke_fails() {
         "eth",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     let output = snapbox.assert().success();
     assert_stderr_contains(
         output,
         indoc! {r"
         command: multicall run
-        error: An error occurred in the called contract [..]
+        error: Transaction execution error [..]
+        "},
+    );
+}
+
+#[tokio::test]
+async fn test_numeric_inputs() {
+    let tempdir = create_and_deploy_oz_account().await;
+
+    let path = project_root::get_project_root().expect("failed to get project root path");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("deploy_invoke_numeric_inputs.toml");
+    let path = path.to_str().expect("failed converting path to str");
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "multicall",
+        "run",
+        "--url",
+        URL,
+        "--path",
+        path,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert();
+
+    let stderr_str = output.as_stderr();
+    assert!(
+        stderr_str.is_empty(),
+        "Multicall error, stderr: \n{stderr_str}",
+    );
+
+    output.stdout_matches(indoc! {r"
+        command: multicall run
+        transaction_hash: 0x0[..]
+
+        To see invocation details, visit:
+        transaction: [..]
+    "});
+}
+
+#[tokio::test]
+async fn test_numeric_overflow() {
+    let tempdir = create_and_deploy_oz_account().await;
+
+    let path = project_root::get_project_root().expect("failed to get project root path");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("deploy_invoke_numeric_overflow.toml");
+    let path = path.to_str().expect("failed converting path to str");
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "multicall",
+        "run",
+        "--url",
+        URL,
+        "--path",
+        path,
+        "--fee-token",
+        "eth",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: multicall run
+        error: Failed to parse [..]
+        number too large to fit in target type
         "},
     );
 }

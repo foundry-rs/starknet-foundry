@@ -1,9 +1,9 @@
 use crate::{handle_rpc_error, ErrorData, WaitForTransactionError};
 use anyhow::anyhow;
 use conversions::serde::serialize::CairoSerialize;
-use starknet::core::types::StarknetError::{
-    ContractError, TransactionExecutionError, ValidationFailure,
-};
+
+use conversions::byte_array::ByteArray;
+
 use starknet::core::types::{ContractErrorData, StarknetError, TransactionExecutionErrorData};
 use starknet::providers::ProviderError;
 use thiserror::Error;
@@ -78,7 +78,7 @@ pub enum SNCastStarknetError {
     #[error("Account balance is too small to cover transaction fee")]
     InsufficientAccountBalance,
     #[error("Contract failed the validation = {0}")]
-    ValidationFailure(String),
+    ValidationFailure(ByteArray),
     #[error("Contract failed to compile in starknet")]
     CompilationFailed,
     #[error("Contract class size is too large")]
@@ -108,15 +108,19 @@ impl From<StarknetError> for SNCastStarknetError {
             StarknetError::InvalidTransactionIndex => SNCastStarknetError::InvalidTransactionIndex,
             StarknetError::ClassHashNotFound => SNCastStarknetError::ClassHashNotFound,
             StarknetError::TransactionHashNotFound => SNCastStarknetError::TransactionHashNotFound,
-            ContractError(err) => SNCastStarknetError::ContractError(err),
-            TransactionExecutionError(err) => SNCastStarknetError::TransactionExecutionError(err),
+            StarknetError::ContractError(err) => SNCastStarknetError::ContractError(err),
+            StarknetError::TransactionExecutionError(err) => {
+                SNCastStarknetError::TransactionExecutionError(err)
+            }
             StarknetError::ClassAlreadyDeclared => SNCastStarknetError::ClassAlreadyDeclared,
             StarknetError::InvalidTransactionNonce => SNCastStarknetError::InvalidTransactionNonce,
             StarknetError::InsufficientMaxFee => SNCastStarknetError::InsufficientMaxFee,
             StarknetError::InsufficientAccountBalance => {
                 SNCastStarknetError::InsufficientAccountBalance
             }
-            ValidationFailure(err) => SNCastStarknetError::ValidationFailure(err),
+            StarknetError::ValidationFailure(err) => {
+                SNCastStarknetError::ValidationFailure(ByteArray::from(err.as_str()))
+            }
             StarknetError::CompilationFailed => SNCastStarknetError::CompilationFailed,
             StarknetError::ContractClassSizeIsTooLarge => {
                 SNCastStarknetError::ContractClassSizeIsTooLarge

@@ -16,6 +16,9 @@ scarb --manifest-path sncast_std/Scarb.toml build
 sed -i.bak "/\[package\]/,/version =/ s/version = \".*/version = \"${VERSION}\"/" snforge_std/Scarb.toml
 rm snforge_std/Scarb.toml.bak 2> /dev/null
 
+sed -i.bak "/\[package\]/,/version =/ s/version = \".*/version = \"${VERSION}\"/" crates/snforge-scarb-plugin/Scarb.toml
+rm crates/snforge-scarb-plugin/Scarb.toml.bak 2> /dev/null
+
 scarb --manifest-path snforge_std/Scarb.toml build
 
 cargo update -p forge

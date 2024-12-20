@@ -6,7 +6,6 @@ use blockifier::state::state_api::State;
 use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use cairo_vm::Felt252;
 use cheatnet::constants::TEST_ADDRESS;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     call_entry_point, AddressOrClassHash,
@@ -26,10 +25,13 @@ use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
 use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
-use scarb_api::{get_contracts_artifacts_and_source_sierra_paths, ScarbCommand};
+use scarb_api::{
+    get_contracts_artifacts_and_source_sierra_paths, target_dir_for_workspace, ScarbCommand,
+};
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
+use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 
 pub mod assertions;
@@ -56,7 +58,7 @@ fn build_syscall_hint_processor<'a>(
         ReadOnlySegments::default(),
     )
 }
-pub fn recover_data(output: CallResult) -> Vec<Felt252> {
+pub fn recover_data(output: CallResult) -> Vec<Felt> {
     match output {
         CallResult::Success { ret_data, .. } => ret_data,
         CallResult::Failure(failure_type) => match failure_type {
@@ -72,12 +74,12 @@ pub fn get_contracts() -> ContractsData {
         .manifest_path("tests/contracts/Scarb.toml")
         .run()
         .unwrap();
+    let target_dir = target_dir_for_workspace(&scarb_metadata).join("dev");
 
     let package = scarb_metadata.packages.first().unwrap();
 
     let contracts =
-        get_contracts_artifacts_and_source_sierra_paths(&scarb_metadata, &package.id, None)
-            .unwrap();
+        get_contracts_artifacts_and_source_sierra_paths(&target_dir, package, false).unwrap();
     ContractsData::try_from(contracts).unwrap()
 }
 
@@ -85,7 +87,7 @@ pub fn deploy_contract(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
     contract_name: &str,
-    calldata: &[Felt252],
+    calldata: &[Felt],
 ) -> ContractAddress {
     let contracts_data = get_contracts();
 
@@ -120,7 +122,7 @@ pub fn deploy_wrapper(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
     class_hash: &ClassHash,
-    calldata: &[Felt252],
+    calldata: &[Felt],
 ) -> Result<ContractAddress, CheatcodeError> {
     let mut execution_resources = ExecutionResources::default();
     let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);
@@ -148,7 +150,7 @@ pub fn deploy_at_wrapper(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
     class_hash: &ClassHash,
-    calldata: &[Felt252],
+    calldata: &[Felt],
     contract_address: ContractAddress,
 ) -> Result<ContractAddress, CheatcodeError> {
     let mut execution_resources = ExecutionResources::default();
@@ -181,7 +183,7 @@ pub fn call_contract(
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
     entry_point_selector: EntryPointSelector,
-    calldata: &[Felt252],
+    calldata: &[Felt],
 ) -> CallResult {
     let calldata = create_execute_calldata(calldata);
 

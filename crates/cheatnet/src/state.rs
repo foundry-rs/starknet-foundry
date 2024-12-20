@@ -15,9 +15,9 @@ use blockifier::{
     execution::contract_class::ContractClass,
     state::state_api::{StateReader, StateResult},
 };
+use cairo_annotations::trace_data::L1Resources;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
-use cairo_vm::Felt252;
 use conversions::serde::deserialize::CairoDeserialize;
 use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use conversions::string::TryFromHexStr;
@@ -29,10 +29,10 @@ use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
     state::StorageKey,
 };
+use starknet_types_core::felt::Felt;
 use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
-use trace_data::L1Resources;
 
 // Specifies the duration of the cheat
 #[derive(CairoDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
@@ -66,7 +66,7 @@ impl StateReader for ExtendedStateReader {
         &self,
         contract_address: ContractAddress,
         key: StorageKey,
-    ) -> StateResult<Felt252> {
+    ) -> StateResult<Felt> {
         self.dict_state_reader
             .get_storage_at(contract_address, key)
             .or_else(|_| {
@@ -284,19 +284,19 @@ impl NotEmptyCallStack {
 
 #[derive(Clone, Default, Debug, PartialEq, Eq)]
 pub struct CheatedTxInfo {
-    pub version: Option<Felt252>,
-    pub account_contract_address: Option<Felt252>,
-    pub max_fee: Option<Felt252>,
-    pub signature: Option<Vec<Felt252>>,
-    pub transaction_hash: Option<Felt252>,
-    pub chain_id: Option<Felt252>,
-    pub nonce: Option<Felt252>,
+    pub version: Option<Felt>,
+    pub account_contract_address: Option<Felt>,
+    pub max_fee: Option<Felt>,
+    pub signature: Option<Vec<Felt>>,
+    pub transaction_hash: Option<Felt>,
+    pub chain_id: Option<Felt>,
+    pub nonce: Option<Felt>,
     pub resource_bounds: Option<Vec<ResourceBounds>>,
-    pub tip: Option<Felt252>,
-    pub paymaster_data: Option<Vec<Felt252>>,
-    pub nonce_data_availability_mode: Option<Felt252>,
-    pub fee_data_availability_mode: Option<Felt252>,
-    pub account_deployment_data: Option<Vec<Felt252>>,
+    pub tip: Option<Felt>,
+    pub paymaster_data: Option<Vec<Felt>>,
+    pub nonce_data_availability_mode: Option<Felt>,
+    pub fee_data_availability_mode: Option<Felt>,
+    pub account_deployment_data: Option<Vec<Felt>>,
 }
 
 impl CheatedTxInfo {
@@ -320,18 +320,25 @@ pub struct TraceData {
     pub is_vm_trace_needed: bool,
 }
 
+#[derive(Clone)]
+pub struct EncounteredError {
+    pub pc: usize,
+    pub class_hash: ClassHash,
+}
+
 pub struct CheatnetState {
     pub cheated_execution_info_contracts: HashMap<ContractAddress, ExecutionInfoMock>,
     pub global_cheated_execution_info: ExecutionInfoMock,
 
     pub mocked_functions:
-        HashMap<ContractAddress, HashMap<EntryPointSelector, CheatStatus<Vec<Felt252>>>>,
+        HashMap<ContractAddress, HashMap<EntryPointSelector, CheatStatus<Vec<Felt>>>>,
     pub replaced_bytecode_contracts: HashMap<ContractAddress, ClassHash>,
     pub detected_events: Vec<Event>,
     pub detected_messages_to_l1: Vec<MessageToL1>,
     pub deploy_salt_base: u32,
     pub block_info: BlockInfo,
     pub trace_data: TraceData,
+    pub encountered_errors: Vec<EncounteredError>,
 }
 
 impl Default for CheatnetState {
@@ -357,6 +364,7 @@ impl Default for CheatnetState {
                 current_call_stack: NotEmptyCallStack::from(test_call),
                 is_vm_trace_needed: false,
             },
+            encountered_errors: vec![],
         }
     }
 }
@@ -416,7 +424,7 @@ impl CheatnetState {
 
     #[must_use]
     pub fn get_salt(&self) -> ContractAddressSalt {
-        ContractAddressSalt(Felt252::from(self.deploy_salt_base))
+        ContractAddressSalt(Felt::from(self.deploy_salt_base))
     }
 
     #[must_use]

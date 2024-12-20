@@ -1,4 +1,7 @@
 #!/bin/bash
+set -e
+
+export DEV_DISABLE_SNFORGE_STD_DEPENDENCY=true
 
 RPC_URL="$1"
 SNFORGE_PATH="$2"
@@ -10,7 +13,6 @@ REVISION="$5"
 
 $SNFORGE_PATH init my_project
 pushd my_project || exit
-scarb remove --dev snforge_std
 scarb add --dev snforge_std --git "$REPO_URL" --rev "$REVISION"
 $SNFORGE_PATH test || exit
 popd || exit

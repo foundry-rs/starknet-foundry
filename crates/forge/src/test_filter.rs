@@ -7,7 +7,7 @@ use forge_runner::TestCaseFilter;
 // Specifies what tests should be included
 pub struct TestsFilter {
     // based on name
-    name_filter: NameFilter,
+    pub(crate) name_filter: NameFilter,
     // based on `#[ignore]` attribute
     ignored_filter: IgnoredFilter,
     // based on rerun_failed flag
@@ -132,7 +132,7 @@ mod tests {
     };
     use forge_runner::package_tests::{TestDetails, TestTargetLocation};
     use std::sync::Arc;
-    use universal_sierra_compiler_api::compile_sierra_to_casm;
+    use universal_sierra_compiler_api::{compile_sierra, SierraType};
 
     fn program_for_testing() -> ProgramArtifact {
         ProgramArtifact {
@@ -163,7 +163,14 @@ mod tests {
     fn filtering_tests() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            sierra_program_path: Default::default(),
+            casm_program: Arc::new(
+                compile_sierra(
+                    &serde_json::to_value(&program_for_testing().program).unwrap(),
+                    &SierraType::Raw,
+                )
+                .unwrap(),
+            ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -425,7 +432,14 @@ mod tests {
     fn filtering_with_no_tests() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            sierra_program_path: Default::default(),
+            casm_program: Arc::new(
+                compile_sierra(
+                    &serde_json::to_value(&program_for_testing().program).unwrap(),
+                    &SierraType::Raw,
+                )
+                .unwrap(),
+            ),
             test_cases: vec![],
             tests_location: TestTargetLocation::Lib,
         };
@@ -464,7 +478,14 @@ mod tests {
     fn filtering_with_exact_match() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            sierra_program_path: Default::default(),
+            casm_program: Arc::new(
+                compile_sierra(
+                    &serde_json::to_value(&program_for_testing().program).unwrap(),
+                    &SierraType::Raw,
+                )
+                .unwrap(),
+            ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -649,7 +670,14 @@ mod tests {
     fn filtering_with_only_ignored() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            sierra_program_path: Default::default(),
+            casm_program: Arc::new(
+                compile_sierra(
+                    &serde_json::to_value(&program_for_testing().program).unwrap(),
+                    &SierraType::Raw,
+                )
+                .unwrap(),
+            ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -744,7 +772,14 @@ mod tests {
     fn filtering_with_include_ignored() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            sierra_program_path: Default::default(),
+            casm_program: Arc::new(
+                compile_sierra(
+                    &serde_json::to_value(&program_for_testing().program).unwrap(),
+                    &SierraType::Raw,
+                )
+                .unwrap(),
+            ),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),

@@ -1,6 +1,7 @@
 [package]
 name = "file_reading"
 version = "0.1.0"
+edition = "2023_01"
 
 [[target.starknet-contract]]
 sierra = true

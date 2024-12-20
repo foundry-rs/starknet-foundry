@@ -13,17 +13,16 @@ use blockifier::execution::{
 };
 use blockifier::state::errors::StateError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use cairo_vm::Felt252;
 use conversions::{
     byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr, FromConv, IntoConv,
 };
-use serde::{Deserialize, Serialize};
 use shared::utils::build_readable_text;
 use starknet_api::{core::EntryPointSelector, transaction::EventContent};
 use starknet_api::{
     core::{ClassHash, ContractAddress},
     deprecated_contract_class::EntryPointType,
 };
+use starknet_types_core::felt::Felt;
 
 #[derive(Clone, Debug, Default)]
 pub struct UsedResources {
@@ -35,19 +34,19 @@ pub struct UsedResources {
 }
 
 /// Enum representing possible call execution result, along with the data
-#[derive(Debug, Clone, CairoSerialize, Serialize, Deserialize)]
+#[derive(Debug, Clone, CairoSerialize)]
 pub enum CallResult {
-    Success { ret_data: Vec<Felt252> },
+    Success { ret_data: Vec<Felt> },
     Failure(CallFailure),
 }
 
 /// Enum representing possible call failure and its type.
 /// `Panic` - Recoverable, meant to be caught by the user.
 /// `Error` - Unrecoverable, equivalent of panic! in rust.
-#[derive(Debug, Clone, CairoSerialize, Serialize, Deserialize)]
+#[derive(Debug, Clone, CairoSerialize)]
 pub enum CallFailure {
-    Panic { panic_data: Vec<Felt252> },
-    Error { msg: String },
+    Panic { panic_data: Vec<Felt> },
+    Error { msg: ByteArray },
 }
 
 pub enum AddressOrClassHash {
@@ -64,17 +63,16 @@ impl CallFailure {
     ) -> Self {
         match err {
             EntryPointExecutionError::ExecutionFailed { error_data } => {
-                let err_data: Vec<_> = error_data
-                    .iter()
-                    .map(|data| Felt252::from_(*data))
-                    .collect();
+                let err_data: Vec<_> = error_data.iter().map(|data| Felt::from_(*data)).collect();
 
                 let err_data_str = build_readable_text(&err_data).unwrap_or_default();
 
                 if err_data_str.contains("Failed to deserialize param #")
                     || err_data_str.contains("Input too long for arguments")
                 {
-                    CallFailure::Error { msg: err_data_str }
+                    CallFailure::Error {
+                        msg: ByteArray::from(err_data_str.as_str()),
+                    }
                 } else {
                     CallFailure::Panic {
                         panic_data: err_data,
@@ -115,14 +113,18 @@ impl CallFailure {
                 }
             }
             EntryPointExecutionError::StateError(StateError::StateReadError(msg)) => {
-                CallFailure::Error { msg: msg.clone() }
+                CallFailure::Error {
+                    msg: ByteArray::from(msg.as_str()),
+                }
             }
             error => {
                 let error_string = error.to_string();
                 if let Some(panic_data) = try_extract_panic_data(&error_string) {
                     CallFailure::Panic { panic_data }
                 } else {
-                    CallFailure::Error { msg: error_string }
+                    CallFailure::Error {
+                        msg: ByteArray::from(error_string.as_str()),
+                    }
                 }
             }
         }
@@ -166,7 +168,7 @@ pub fn call_l1_handler(
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
     entry_point_selector: EntryPointSelector,
-    calldata: &[Felt252],
+    calldata: &[Felt],
 ) -> CallResult {
     let calldata = create_execute_calldata(calldata);
 

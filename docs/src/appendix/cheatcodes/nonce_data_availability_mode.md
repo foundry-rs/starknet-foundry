@@ -23,6 +23,6 @@ Changes the transaction nonce data availability mode for the given target.
 Cancels the `cheat_nonce_data_availability_mode` / `start_cheat_nonce_data_availability_mode` for the given target.
 
 ## `stop_cheat_nonce_data_availability_mode_global`
-> `fn stop_cheat_nonce_data_availability_mode_global(target: ContractAddress)`
+> `fn stop_cheat_nonce_data_availability_mode_global()`
 
 Cancels the `start_cheat_nonce_data_availability_mode_global`.

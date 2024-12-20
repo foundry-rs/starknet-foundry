@@ -31,11 +31,17 @@ pub fn parse<T: AttributeInfo>(
         .items(db)
         .elements(db);
 
-    if let Some(ModuleItem::FreeFunction(func)) = elements.into_iter().next() {
-        Ok((simple_db, func))
-    } else {
-        Err(T::error("can be used only on a function"))
-    }
+    elements
+        .into_iter()
+        .find_map(|element| {
+            if let ModuleItem::FreeFunction(func) = element {
+                Some(func)
+            } else {
+                None
+            }
+        })
+        .map(|func| (simple_db, func))
+        .ok_or_else(|| T::error("can be used only on a function"))
 }
 
 struct InternalCollector;

@@ -170,7 +170,7 @@ async fn test_strk_fee_get_max_fee() {
             max_gas_unit_price,
         } => {
             assert_eq!(
-                (max_gas.unwrap() as u128) * max_gas_unit_price.unwrap(),
+                u128::from(max_gas.unwrap()) * max_gas_unit_price.unwrap(),
                 MAX_FEE.into()
             );
         }
@@ -198,7 +198,7 @@ async fn test_strk_fee_get_max_fee_with_max_gas() {
         settings,
         FeeSettings::Strk {
             max_gas: Some(1_000_000),
-            max_gas_unit_price: Some((MAX_FEE / 1_000_000) as u128),
+            max_gas_unit_price: Some(u128::from(MAX_FEE / 1_000_000)),
         }
     );
 
@@ -208,7 +208,7 @@ async fn test_strk_fee_get_max_fee_with_max_gas() {
             max_gas_unit_price,
         } => {
             assert_eq!(
-                max_gas.unwrap() as u128 * max_gas_unit_price.unwrap(),
+                u128::from(max_gas.unwrap()) * max_gas_unit_price.unwrap(),
                 MAX_FEE.into()
             );
         }
@@ -271,7 +271,7 @@ async fn test_strk_fee_get_max_fee_with_max_gas_unit_price() {
             max_gas_unit_price,
         } => {
             assert_eq!(
-                max_gas.unwrap() as u128 * max_gas_unit_price.unwrap(),
+                u128::from(max_gas.unwrap()) * max_gas_unit_price.unwrap(),
                 MAX_FEE.into()
             );
         }

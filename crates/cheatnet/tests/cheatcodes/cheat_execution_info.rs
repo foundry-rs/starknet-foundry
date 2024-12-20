@@ -1,6 +1,5 @@
 use super::test_environment::TestEnvironment;
 use crate::common::{assertions::assert_success, get_contracts, recover_data};
-use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::ResourceBounds;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::{
     CheatArguments, ExecutionInfoMockOperations, Operation, TxInfoMockOperations,
@@ -9,28 +8,29 @@ use cheatnet::state::CheatSpan;
 use conversions::serde::deserialize::{BufferReader, CairoDeserialize};
 use conversions::IntoConv;
 use starknet_api::{core::ContractAddress, transaction::TransactionHash};
+use starknet_types_core::felt::Felt;
 
 trait CheatTransactionHashTrait {
     fn cheat_transaction_hash(
         &mut self,
         contract_address: ContractAddress,
-        transaction_hash: Felt252,
+        transaction_hash: Felt,
         span: CheatSpan,
     );
     fn start_cheat_transaction_hash(
         &mut self,
         contract_address: ContractAddress,
-        transaction_hash: Felt252,
+        transaction_hash: Felt,
     );
     fn stop_cheat_transaction_hash(&mut self, contract_address: ContractAddress);
-    fn start_cheat_transaction_hash_global(&mut self, transaction_hash: Felt252);
+    fn start_cheat_transaction_hash_global(&mut self, transaction_hash: Felt);
     fn stop_cheat_transaction_hash_global(&mut self);
 }
 impl CheatTransactionHashTrait for TestEnvironment {
     fn cheat_transaction_hash(
         &mut self,
         contract_address: ContractAddress,
-        transaction_hash: Felt252,
+        transaction_hash: Felt,
         span: CheatSpan,
     ) {
         let mut execution_info_mock = ExecutionInfoMockOperations::default();
@@ -48,7 +48,7 @@ impl CheatTransactionHashTrait for TestEnvironment {
     fn start_cheat_transaction_hash(
         &mut self,
         contract_address: ContractAddress,
-        transaction_hash: Felt252,
+        transaction_hash: Felt,
     ) {
         let mut execution_info_mock = ExecutionInfoMockOperations::default();
 
@@ -71,7 +71,7 @@ impl CheatTransactionHashTrait for TestEnvironment {
             .cheat_execution_info(execution_info_mock);
     }
 
-    fn start_cheat_transaction_hash_global(&mut self, transaction_hash: Felt252) {
+    fn start_cheat_transaction_hash_global(&mut self, transaction_hash: Felt) {
         let mut execution_info_mock = ExecutionInfoMockOperations::default();
 
         execution_info_mock.tx_info.transaction_hash = Operation::StartGlobal(transaction_hash);
@@ -125,19 +125,19 @@ impl TxInfoTrait for TestEnvironment {
 
 #[derive(CairoDeserialize, Clone, Default, Debug, PartialEq)]
 struct TxInfo {
-    pub version: Felt252,
-    pub account_contract_address: Felt252,
-    pub max_fee: Felt252,
-    pub signature: Vec<Felt252>,
-    pub transaction_hash: Felt252,
-    pub chain_id: Felt252,
-    pub nonce: Felt252,
+    pub version: Felt,
+    pub account_contract_address: Felt,
+    pub max_fee: Felt,
+    pub signature: Vec<Felt>,
+    pub transaction_hash: Felt,
+    pub chain_id: Felt,
+    pub nonce: Felt,
     pub resource_bounds: Vec<ResourceBounds>,
-    pub tip: Felt252,
-    pub paymaster_data: Vec<Felt252>,
-    pub nonce_data_availability_mode: Felt252,
-    pub fee_data_availability_mode: Felt252,
-    pub account_deployment_data: Vec<Felt252>,
+    pub tip: Felt,
+    pub paymaster_data: Vec<Felt>,
+    pub nonce_data_availability_mode: Felt,
+    pub fee_data_availability_mode: Felt,
+    pub account_deployment_data: Vec<Felt>,
 }
 
 impl TxInfo {
@@ -174,7 +174,7 @@ impl TxInfo {
         }
     }
 
-    fn deserialize(data: &[Felt252]) -> Self {
+    fn deserialize(data: &[Felt]) -> Self {
         BufferReader::new(data).read().unwrap()
     }
 }
@@ -187,7 +187,7 @@ fn cheat_transaction_hash_simple() {
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
-    let transaction_hash = Felt252::from(123);
+    let transaction_hash = Felt::from(123);
     let mut expected_tx_info = tx_info_before.clone();
 
     expected_tx_info.transaction_hash = transaction_hash;
@@ -214,43 +214,43 @@ fn start_cheat_execution_info_multiple_times() {
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
     let initial_tx_info_mock = TxInfoMockOperations {
-        version: operation_start(contract_address, Felt252::from(13)),
-        account_contract_address: operation_start(contract_address, Felt252::from(66)),
-        max_fee: operation_start(contract_address, Felt252::from(77)),
-        signature: operation_start(contract_address, vec![Felt252::from(88), Felt252::from(89)]),
-        transaction_hash: operation_start(contract_address, Felt252::from(123)),
-        chain_id: operation_start(contract_address, Felt252::from(22)),
-        nonce: operation_start(contract_address, Felt252::from(33)),
+        version: operation_start(contract_address, Felt::from(13)),
+        account_contract_address: operation_start(contract_address, Felt::from(66)),
+        max_fee: operation_start(contract_address, Felt::from(77)),
+        signature: operation_start(contract_address, vec![Felt::from(88), Felt::from(89)]),
+        transaction_hash: operation_start(contract_address, Felt::from(123)),
+        chain_id: operation_start(contract_address, Felt::from(22)),
+        nonce: operation_start(contract_address, Felt::from(33)),
         resource_bounds: operation_start(
             contract_address,
             vec![
                 ResourceBounds {
-                    resource: Felt252::from(111),
+                    resource: Felt::from(111),
                     max_amount: 222,
                     max_price_per_unit: 333,
                 },
                 ResourceBounds {
-                    resource: Felt252::from(444),
+                    resource: Felt::from(444),
                     max_amount: 555,
                     max_price_per_unit: 666,
                 },
             ],
         ),
-        tip: operation_start(contract_address, Felt252::from(777)),
+        tip: operation_start(contract_address, Felt::from(777)),
         paymaster_data: operation_start(
             contract_address,
             vec![
-                Felt252::from(11),
-                Felt252::from(22),
-                Felt252::from(33),
-                Felt252::from(44),
+                Felt::from(11),
+                Felt::from(22),
+                Felt::from(33),
+                Felt::from(44),
             ],
         ),
-        nonce_data_availability_mode: operation_start(contract_address, Felt252::from(55)),
-        fee_data_availability_mode: operation_start(contract_address, Felt252::from(66)),
+        nonce_data_availability_mode: operation_start(contract_address, Felt::from(55)),
+        fee_data_availability_mode: operation_start(contract_address, Felt::from(66)),
         account_deployment_data: operation_start(
             contract_address,
-            vec![Felt252::from(777), Felt252::from(888), Felt252::from(999)],
+            vec![Felt::from(777), Felt::from(888), Felt::from(999)],
         ),
     };
 
@@ -302,7 +302,7 @@ fn cheat_transaction_hash_start_stop() {
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
-    let transaction_hash = Felt252::from(123);
+    let transaction_hash = Felt::from(123);
     let mut expected_tx_info = tx_info_before.clone();
 
     expected_tx_info.transaction_hash = transaction_hash;
@@ -335,13 +335,13 @@ fn cheat_transaction_hash_with_other_syscall() {
 
     let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
-    let transaction_hash = Felt252::from(123);
+    let transaction_hash = Felt::from(123);
 
     test_env.start_cheat_transaction_hash(contract_address, transaction_hash);
 
     let output = test_env.call_contract(&contract_address, "get_tx_hash_and_emit_event", &[]);
 
-    assert_success(output, &[Felt252::from(123)]);
+    assert_success(output, &[Felt::from(123)]);
 }
 
 #[test]
@@ -353,7 +353,7 @@ fn cheat_transaction_hash_in_constructor() {
     let class_hash = test_env.declare("TxHashChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
-    let transaction_hash = Felt252::from(123);
+    let transaction_hash = Felt::from(123);
 
     test_env.start_cheat_transaction_hash(precalculated_address, transaction_hash);
 
@@ -362,7 +362,7 @@ fn cheat_transaction_hash_in_constructor() {
     assert_eq!(precalculated_address, contract_address);
 
     let output = test_env.call_contract(&contract_address, "get_stored_tx_hash", &[]);
-    assert_success(output, &[Felt252::from(123)]);
+    assert_success(output, &[Felt::from(123)]);
 }
 
 #[test]
@@ -371,12 +371,12 @@ fn cheat_transaction_hash_proxy() {
 
     let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
-    let transaction_hash = Felt252::from(123);
+    let transaction_hash = Felt::from(123);
 
     test_env.start_cheat_transaction_hash(contract_address, transaction_hash);
 
     let output = test_env.call_contract(&contract_address, "get_transaction_hash", &[]);
-    assert_success(output, &[Felt252::from(123)]);
+    assert_success(output, &[Felt::from(123)]);
 
     let proxy_address = test_env.deploy("TxHashCheckerProxy", &[]);
 
@@ -386,7 +386,7 @@ fn cheat_transaction_hash_proxy() {
         &[contract_address.into_()],
     );
 
-    assert_success(output, &[Felt252::from(123)]);
+    assert_success(output, &[Felt::from(123)]);
 }
 
 #[test]
@@ -398,7 +398,7 @@ fn cheat_transaction_hash_library_call() {
 
     let lib_call_address = test_env.deploy("CheatTxInfoCheckerLibCall", &[]);
 
-    let transaction_hash = Felt252::from(123);
+    let transaction_hash = Felt::from(123);
 
     test_env.start_cheat_transaction_hash(lib_call_address, transaction_hash);
 
@@ -408,7 +408,7 @@ fn cheat_transaction_hash_library_call() {
         &[class_hash.into_()],
     );
 
-    assert_success(output, &[Felt252::from(123)]);
+    assert_success(output, &[Felt::from(123)]);
 }
 
 #[test]
@@ -419,7 +419,7 @@ fn cheat_transaction_hash_all_simple() {
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
-    let transaction_hash = Felt252::from(123);
+    let transaction_hash = Felt::from(123);
     let mut expected_tx_info = tx_info_before.clone();
 
     expected_tx_info.transaction_hash = transaction_hash;
@@ -437,12 +437,12 @@ fn cheat_transaction_hash_all_then_one() {
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
-    let transaction_hash = Felt252::from(321);
+    let transaction_hash = Felt::from(321);
     let mut expected_tx_info = tx_info_before.clone();
 
     expected_tx_info.transaction_hash = transaction_hash;
 
-    test_env.start_cheat_transaction_hash_global(Felt252::from(123));
+    test_env.start_cheat_transaction_hash_global(Felt::from(123));
 
     test_env.start_cheat_transaction_hash(contract_address, transaction_hash);
 
@@ -457,12 +457,12 @@ fn cheat_transaction_hash_one_then_all() {
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
-    let transaction_hash = Felt252::from(321);
+    let transaction_hash = Felt::from(321);
     let mut expected_tx_info = tx_info_before.clone();
 
     expected_tx_info.transaction_hash = transaction_hash;
 
-    test_env.start_cheat_transaction_hash(contract_address, Felt252::from(123));
+    test_env.start_cheat_transaction_hash(contract_address, Felt::from(123));
 
     test_env.start_cheat_transaction_hash_global(transaction_hash);
 
@@ -477,7 +477,7 @@ fn cheat_transaction_hash_all_stop() {
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
-    let transaction_hash = Felt252::from(123);
+    let transaction_hash = Felt::from(123);
     let expected_tx_info = tx_info_before.clone();
 
     test_env.start_cheat_transaction_hash_global(transaction_hash);
@@ -501,7 +501,7 @@ fn cheat_transaction_hash_multiple() {
     let tx_info_before_1 = test_env.get_tx_info(&contract_address_1);
     let tx_info_before_2 = test_env.get_tx_info(&contract_address_2);
 
-    let transaction_hash = Felt252::from(123);
+    let transaction_hash = Felt::from(123);
     let mut expected_tx_info_1 = tx_info_before_1.clone();
     let mut expected_tx_info_2 = tx_info_before_2.clone();
 
@@ -528,7 +528,7 @@ fn cheat_transaction_hash_simple_with_span() {
     let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
-    let transaction_hash = Felt252::from(123);
+    let transaction_hash = Felt::from(123);
 
     let mut expected_tx_info = tx_info_before.clone();
     expected_tx_info.transaction_hash = transaction_hash;
@@ -555,7 +555,7 @@ fn cheat_transaction_hash_proxy_with_span() {
 
     test_env.cheat_transaction_hash(
         contract_address_1,
-        Felt252::from(123),
+        Felt::from(123),
         CheatSpan::TargetCalls(1),
     );
 
@@ -578,7 +578,7 @@ fn cheat_transaction_hash_in_constructor_with_span() {
 
     test_env.cheat_transaction_hash(
         precalculated_address,
-        Felt252::from(123),
+        Felt::from(123),
         CheatSpan::TargetCalls(2),
     );
 
@@ -587,7 +587,7 @@ fn cheat_transaction_hash_in_constructor_with_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_transaction_hash", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_transaction_hash", &[]),
@@ -595,7 +595,7 @@ fn cheat_transaction_hash_in_constructor_with_span() {
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_stored_tx_hash", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 }
 
@@ -610,7 +610,7 @@ fn cheat_transaction_hash_no_constructor_with_span() {
 
     test_env.cheat_transaction_hash(
         precalculated_address,
-        Felt252::from(123),
+        Felt::from(123),
         CheatSpan::TargetCalls(1),
     );
 
@@ -619,7 +619,7 @@ fn cheat_transaction_hash_no_constructor_with_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_transaction_hash", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_transaction_hash", &[]),
@@ -634,7 +634,7 @@ fn cheat_transaction_hash_override_span() {
     let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
-    let transaction_hash = Felt252::from(123);
+    let transaction_hash = Felt::from(123);
 
     let mut expected_tx_info = tx_info_before.clone();
     expected_tx_info.transaction_hash = transaction_hash;
@@ -643,7 +643,7 @@ fn cheat_transaction_hash_override_span() {
 
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
 
-    let transaction_hash = Felt252::from(321);
+    let transaction_hash = Felt::from(321);
 
     expected_tx_info.transaction_hash = transaction_hash;
 
@@ -667,17 +667,13 @@ fn cheat_transaction_hash_library_call_with_span() {
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
-    test_env.cheat_transaction_hash(
-        contract_address,
-        Felt252::from(123),
-        CheatSpan::TargetCalls(1),
-    );
+    test_env.cheat_transaction_hash(contract_address, Felt::from(123), CheatSpan::TargetCalls(1));
 
     let lib_call_selector = "get_tx_hash_with_lib_call";
 
     assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),

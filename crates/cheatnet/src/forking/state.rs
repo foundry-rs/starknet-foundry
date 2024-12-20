@@ -9,15 +9,13 @@ use blockifier::state::errors::StateError::{self, StateReadError, UndeclaredClas
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_utils::bigint::BigUintAsHex;
-use cairo_vm::Felt252;
 use camino::Utf8Path;
 use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
 use runtime::starknet::context::SerializableGasPrices;
 use starknet::core::types::{
-    BlockId, ContractClass as ContractClassStarknet, FieldElement, MaybePendingBlockWithTxHashes,
-    StarknetError,
+    BlockId, ContractClass as ContractClassStarknet, MaybePendingBlockWithTxHashes, StarknetError,
 };
 use starknet::core::utils::parse_cairo_short_string;
 use starknet::providers::jsonrpc::HttpTransport;
@@ -28,6 +26,7 @@ use starknet_api::deprecated_contract_class::{
     ContractClass as DeprecatedContractClass, EntryPoint, EntryPointType,
 };
 use starknet_api::state::StorageKey;
+use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::io::Read;
@@ -121,14 +120,14 @@ impl StateReader for ForkStateReader {
         &self,
         contract_address: ContractAddress,
         key: StorageKey,
-    ) -> StateResult<Felt252> {
+    ) -> StateResult<Felt> {
         if let Some(cache_hit) = self.cache.borrow().get_storage_at(&contract_address, &key) {
             return Ok(cache_hit);
         }
 
         match self.runtime.block_on(self.client.get_storage_at(
-            FieldElement::from_(contract_address),
-            FieldElement::from_(*key.0.key()),
+            Felt::from_(contract_address),
+            Felt::from_(*key.0.key()),
             self.block_id(),
         )) {
             Ok(value) => {
@@ -152,7 +151,7 @@ impl StateReader for ForkStateReader {
 
         match self.runtime.block_on(
             self.client
-                .get_nonce(self.block_id(), FieldElement::from_(contract_address)),
+                .get_nonce(self.block_id(), Felt::from_(contract_address)),
         ) {
             Ok(nonce) => {
                 let nonce = nonce.into_();
@@ -178,7 +177,7 @@ impl StateReader for ForkStateReader {
 
         match self.runtime.block_on(
             self.client
-                .get_class_hash_at(self.block_id(), FieldElement::from_(contract_address)),
+                .get_class_hash_at(self.block_id(), Felt::from_(contract_address)),
         ) {
             Ok(class_hash) => {
                 let class_hash = class_hash.into_();
@@ -209,7 +208,7 @@ impl StateReader for ForkStateReader {
             } else {
                 match self.runtime.block_on(
                     self.client
-                        .get_class(self.block_id(), FieldElement::from_(class_hash)),
+                        .get_class(self.block_id(), Felt::from_(class_hash)),
                 ) {
                     Ok(contract_class) => {
                         Ok(cache.insert_compiled_contract_class(class_hash, contract_class))
@@ -241,7 +240,7 @@ impl StateReader for ForkStateReader {
                     "entry_points_by_type": flattened_class.entry_points_by_type
                 });
 
-                match compile_sierra(&sierra_contract_class, None, &SierraType::Contract) {
+                match compile_sierra::<String>(&sierra_contract_class, &SierraType::Contract) {
                     Ok(casm_contract_class_raw) => {
                         let casm_contract_class: CasmContractClass =
                             serde_json::from_str(&casm_contract_class_raw)

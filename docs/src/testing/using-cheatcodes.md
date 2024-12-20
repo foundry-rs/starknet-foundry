@@ -3,109 +3,51 @@
 > ℹ️ **Info**
 > To use cheatcodes you need to add `snforge_std` package as a dependency in
 > your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#development-dependencies)
-> using appropriate release tag.
+> using the appropriate version.
 >
 > ```toml
 > [dev-dependencies]
-> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.9.0" }
+> snforge_std = "0.33.0"
 > ```
 
 When testing smart contracts, often there are parts of code that are dependent on a specific blockchain state.
 Instead of trying to replicate these conditions in tests, you can emulate them
 using [cheatcodes](../appendix/cheatcodes.md).
 
+> ⚠️ **Warning**
+> 
+> These examples make use of `assert_macros`, so it's recommended to get familiar with them first. [Learn more about `assert_macros`](testing.md#writing-assertions-and-assert_macros-package)
+
 ## The Test Contract
 
 In this tutorial, we will be using the following Starknet contract:
 
 ```rust
-#[starknet::interface]
-trait IHelloStarknet<TContractState> {
-    fn increase_balance(ref self: TContractState, amount: felt252);
-    fn get_balance(self: @TContractState) -> felt252;
-    fn get_block_number_at_construction(self: @TContractState) -> u64;
-    fn get_block_timestamp_at_construction(self: @TContractState) -> u64;
-}
-
-#[starknet::contract]
-mod HelloStarknet {
-
-    use box::BoxTrait;
-    use starknet::{Into, get_caller_address};
-
-    #[storage]
-    struct Storage {
-        balance: felt252,
-        blk_nb: u64,
-        blk_timestamp: u64,
-    }
-
-    #[constructor]
-    fn constructor(ref self: ContractState) {
-        // store the current block number
-        self.blk_nb.write(starknet::get_block_info().unbox().block_number);
-        // store the current block timestamp
-        self.blk_timestamp.write(starknet::get_block_info().unbox().block_timestamp);
-    }
-
-    #[abi(embed_v0)]
-    impl IHelloStarknetImpl of super::IHelloStarknet<ContractState> {
-        // Increases the balance by the given amount.
-        fn increase_balance(ref self: ContractState, amount: felt252) {
-            assert_is_allowed_user();
-            self.balance.write(self.balance.read() + amount);
-        }
-        // Gets the balance.
-        fn get_balance(self: @ContractState) -> felt252 {
-            self.balance.read()
-        }
-        // Gets the block number
-        fn get_block_number_at_construction(self: @ContractState) -> u64 {
-            self.blk_nb.read()
-        }
-        // Gets the block timestamp
-        fn get_block_timestamp_at_construction(self: @ContractState) -> u64 {
-            self.blk_timestamp.read()
-        }
-    }
-
-    fn assert_is_allowed_user() {
-        // checks if caller is '123'
-        let address = get_caller_address();
-        assert(address.into() == 123, 'user is not allowed');
-    }
-}
+{{#include ../../listings/using_cheatcodes/src/lib.cairo}}
 ```
-
-Please note that this contract example is a continuation of the same contract as in the [Testing Smart Contracts](./testing.md) page.
 
 ## Writing Tests
 
 We can try to create a test that will increase and verify the balance.
 
 ```rust
-#[test]
-fn call_and_invoke() {
-    // ...
-
-    let balance = dispatcher.get_balance();
-    assert(balance == 0, 'balance == 0');
-
-    dispatcher.increase_balance(100);
-
-    let balance = dispatcher.get_balance();
-    assert(balance == 100, 'balance == 100');
-}
+{{#include ../../listings/using_cheatcodes/tests/lib.cairo}}
 ```
 
-However, when running this test, we will get a failure with a message
+This test fails, which means that `increase_balance` method panics as we expected.
 
 ```shell
 $ snforge test
-Collected 1 test(s) from package_name package
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Collected 1 test(s) from using_cheatcodes package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
-[FAIL] tests::call_and_invoke
+[FAIL] using_cheatcodes_tests::call_and_invoke
 
 Failure data:
     0x75736572206973206e6f7420616c6c6f776564 ('user is not allowed')
@@ -113,8 +55,10 @@ Failure data:
 Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 Failures:
-    tests::call_and_invoke
+    using_cheatcodes_tests::call_and_invoke
 ```
+</details>
+<br>
 
 Our user validation is not letting us call the contract, because the default caller address is not `123`.
 
@@ -127,77 +71,73 @@ address, so it passes our validation.
 ### Cheating an Address
 
 ```rust
-use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address };
-
-#[test]
-fn call_and_invoke() {
-    let contract = declare("HelloStarknet").unwrap().contract_class();
-    let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-    let dispatcher = IHelloStarknetDispatcher { contract_address };
-
-    let balance = dispatcher.get_balance();
-    assert(balance == 0, 'balance == 0');
-
-    // Change the caller address to 123 when calling the contract at the `contract_address` address
-    start_cheat_caller_address(contract_address, 123.try_into().unwrap());
-
-    dispatcher.increase_balance(100);
-
-    let balance = dispatcher.get_balance();
-    assert(balance == 100, 'balance == 100');
-}
+{{#include ../../listings/using_cheatcodes_cheat_address/tests/lib.cairo}}
 ```
 
 The test will now pass without an error
 
 ```shell
 $ snforge test
-Collected 1 test(s) from package_name package
-Running 0 test(s) from src/
-Running 1 test(s) from tests/
-[PASS] tests::call_and_invoke
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
-### Canceling the Cheat
+<details>
+<summary>Output:</summary>
+
+```shell
+Collected 1 test(s) from using_cheatcodes_cheat_address package
+Running 0 test(s) from src/
+Running 1 test(s) from tests/
+[PASS] using_cheatcodes_cheat_address_tests::call_and_invoke (gas: ~239)
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+```
+</details>
+<br>
+
+### Cancelling the Cheat
 
 Most cheatcodes come with corresponding `start_` and `stop_` functions that can be used to start and stop the state
 change.
 In case of the `start_cheat_caller_address`, we can cancel the address change
-using [`stop_cheat_caller_address`](../appendix/cheatcodes/caller_address.md#stop_cheat_caller_address)
+using [`stop_cheat_caller_address`](../appendix/cheatcodes/caller_address.md#stop_cheat_caller_address).
+We will demonstrate its behavior using `SafeDispatcher` to show when exactly the fail occurs:
 
 ```rust
-use snforge_std::{stop_cheat_caller_address};
-
-#[test]
-fn call_and_invoke() {
-    // ...
-
-    // The address when calling contract at the `contract_address` address will no longer be changed
-    stop_cheat_caller_address(contract_address);
-
-    // This will fail
-    dispatcher.increase_balance(100);
-
-    let balance = dispatcher.get_balance();
-    assert(balance == 100, 'balance == 100');
-}
+{{#include ../../listings/using_cheatcodes_cancelling_cheat/tests/lib.cairo}}
 ```
 
 ```shell
 $ snforge test
-Collected 1 test(s) from package_name package
-Running 0 test(s) from src/
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Collected 1 test(s) from using_cheatcodes_cancelling_cheat package
 Running 1 test(s) from tests/
-[FAIL] tests::call_and_invoke, 0 ignored, 0 filtered out
+[FAIL] using_cheatcodes_cancelling_cheat_tests::call_and_invoke
 
 Failure data:
-    0x75736572206973206e6f7420616c6c6f776564 ('user is not allowed')
+    0x5365636f6e642063616c6c206661696c656421 ('Second call failed!')
 
+Running 0 test(s) from src/
 Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 Failures:
-    tests::call_and_invoke
+    using_cheatcodes_cancelling_cheat_tests::call_and_invoke
+```
+</details>
+<br>
+
+We see that the second `increase_balance` fails since we cancelled the cheatcode.
+
+### Cheating Addresses Globally
+
+In case you want to cheat the caller address for all contracts, you can use the global cheatcode which has the `_global` suffix. Note, that we don't specify target, nor the span, because this cheatcode type works globally and indefinitely.
+For more see [Cheating Globally](../appendix/cheatcodes/global.md).
+
+```rust
+{{#include ../../listings/using_cheatcodes_others/tests/caller_address/proper_use_global.cairo}}
 ```
 
 ### Cheating the Constructor
@@ -209,27 +149,12 @@ Let's say, that you have a contract that saves the caller address (deployer) in 
 To `cheat_caller_address` the constructor, you need to `start_cheat_caller_address` before it is invoked, with the right address. To achieve this, you need to precalculate the address of the contract by using the `precalculate_address` function of `ContractClassTrait` on the declared contract, and then use it in `start_cheat_caller_address` as an argument:
 
 ```rust
-use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address };
-
-#[test]
-fn mock_constructor_with_cheat_caller_address() {
-    let contract = declare("HelloStarknet").unwrap().contract_class();
-    let constructor_arguments = @ArrayTrait::new();
-
-    // Precalculate the address to obtain the contract address before the constructor call (deploy) itself
-    let contract_address = contract.precalculate_address(constructor_arguments);
-
-    // Change the caller address to 123 before the call to contract.deploy
-    start_cheat_caller_address(contract_address, 123.try_into().unwrap());
-
-    // The constructor will have 123 set as the caller address
-    contract.deploy(constructor_arguments).unwrap();
-}
+{{#include ../../listings/using_cheatcodes_others/tests/cheat_constructor.cairo}}
 ```
 
 ### Setting Cheatcode Span
 
-Sometimes it's useful to have a cheatcode work only for a certain number of target calls. 
+Sometimes it's useful to have a cheatcode work only for a certain number of target calls.
 
 That's where [`CheatSpan`](../appendix/cheatcodes/cheat_span.md) comes in handy.
 
@@ -258,40 +183,5 @@ Of course the cheatcode can still be canceled before its `CheatSpan` goes down t
 To better understand the functionality of `CheatSpan`, here's a full example:
 
 ```rust
-use snforge_std::{
-    declare, ContractClass, ContractClassTrait, DeclareResultTrait, cheat_caller_address, CheatSpan
-};
-
-#[test]
-#[feature("safe_dispatcher")]
-fn call_and_invoke() {
-    let contract = declare("HelloStarknet").unwrap().contract_class();
-    let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-    let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
-
-    let balance = safe_dispatcher.get_balance().unwrap();
-    assert_eq!(balance, 0);
-
-    // Function `increase_balance` from HelloStarknet contract
-    // requires the caller_address to be 123
-    let cheat_caller_addressed_address: ContractAddress = 123.try_into().unwrap();
-
-    // Change the caller address for the contract_address for a span of 2 target calls (here, calls to contract_address)
-    cheat_caller_address(contract_address, cheat_caller_addressed_address, CheatSpan::TargetCalls(2));
-
-    // Call #1 should succeed
-    let call_1_result = safe_dispatcher.increase_balance(100);
-    assert!(call_1_result.is_ok());
-
-    // Call #2 should succeed
-    let call_2_result = safe_dispatcher.increase_balance(100);
-    assert!(call_2_result.is_ok());
-
-    // Call #3 should fail, as the cheat_caller_address cheatcode has been canceled
-    let call_3_result = safe_dispatcher.increase_balance(100);
-    assert!(call_3_result.is_err());
-
-    let balance = safe_dispatcher.get_balance().unwrap();
-    assert_eq!(balance, 200);
-}
+{{#include ../../listings/using_cheatcodes_others/tests/caller_address/span.cairo}}
 ```

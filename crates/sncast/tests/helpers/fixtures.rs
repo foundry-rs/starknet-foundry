@@ -19,15 +19,15 @@ use sncast::state::state_file::{
 use sncast::{apply_optional, get_chain_id, get_keystore_password, AccountType};
 use sncast::{get_account, get_provider};
 use starknet::accounts::{
-    Account, AccountFactory, ArgentAccountFactory, Call, ExecutionV1, OpenZeppelinAccountFactory,
+    Account, AccountFactory, ArgentAccountFactory, ExecutionV1, OpenZeppelinAccountFactory,
 };
-use starknet::core::types::TransactionReceipt;
-use starknet::core::types::{FieldElement, InvokeTransactionResult};
+use starknet::core::types::{Call, InvokeTransactionResult, TransactionReceipt};
 use starknet::core::utils::get_contract_address;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::{LocalWallet, SigningKey};
+use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::env;
 use std::fs;
@@ -94,7 +94,7 @@ pub async fn deploy_argent_account() {
     let factory = ArgentAccountFactory::new(
         ARGENT_CLASS_HASH,
         chain_id,
-        FieldElement::ZERO,
+        Felt::ZERO,
         LocalWallet::from_signing_key(private_key),
         provider,
     )
@@ -169,7 +169,7 @@ fn get_account_deployment_data(account: &str) -> (String, String, SigningKey) {
     let private_key = SigningKey::from_secret_scalar(
         private_key
             .parse()
-            .expect("Failed to convert private key to FieldElement"),
+            .expect("Failed to convert private key to Felt"),
     );
 
     (address.to_string(), salt.to_string(), private_key)
@@ -186,7 +186,7 @@ pub async fn invoke_contract(
     account: &str,
     contract_address: &str,
     entry_point_name: &str,
-    max_fee: Option<FieldElement>,
+    max_fee: Option<Felt>,
     constructor_calldata: &[&str],
 ) -> InvokeTransactionResult {
     let provider = get_provider(URL).expect("Could not get the provider");
@@ -199,10 +199,10 @@ pub async fn invoke_contract(
     .await
     .expect("Could not get the account");
 
-    let mut calldata: Vec<FieldElement> = vec![];
+    let mut calldata: Vec<Felt> = vec![];
 
     for value in constructor_calldata {
-        let value: FieldElement = value.parse().expect("Could not parse the calldata");
+        let value: Felt = value.parse().expect("Could not parse the calldata");
         calldata.push(value);
     }
 
@@ -270,7 +270,7 @@ struct TransactionHashOutput {
 }
 
 #[must_use]
-pub fn get_transaction_hash(output: &[u8]) -> FieldElement {
+pub fn get_transaction_hash(output: &[u8]) -> Felt {
     let output = parse_output::<TransactionHashOutput>(output);
     output
         .transaction_hash
@@ -278,7 +278,7 @@ pub fn get_transaction_hash(output: &[u8]) -> FieldElement {
         .expect("Could not parse a number")
 }
 
-pub async fn get_transaction_receipt(tx_hash: FieldElement) -> TransactionReceipt {
+pub async fn get_transaction_receipt(tx_hash: Felt) -> TransactionReceipt {
     let client = reqwest::Client::new();
     let json = json!(
         {
@@ -473,7 +473,7 @@ pub fn get_address_from_keystore(
     account_path: impl AsRef<std::path::Path>,
     password: &str,
     account_type: &AccountType,
-) -> FieldElement {
+) -> Felt {
     let contents = std::fs::read_to_string(account_path).unwrap();
     let items: Map<String, serde_json::Value> = serde_json::from_str(&contents).unwrap();
     let deployment = items.get("deployment").unwrap();
@@ -483,7 +483,7 @@ pub fn get_address_from_keystore(
         get_keystore_password(password).unwrap().as_str(),
     )
     .unwrap();
-    let salt = FieldElement::from_hex_be(
+    let salt = Felt::from_hex(
         deployment
             .get("salt")
             .and_then(serde_json::Value::as_str)
@@ -492,7 +492,7 @@ pub fn get_address_from_keystore(
     .unwrap();
     let class_hash = match account_type {
         AccountType::Braavos => BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-        AccountType::OpenZeppelin | AccountType::Argent => FieldElement::from_hex_be(
+        AccountType::OpenZeppelin | AccountType::Argent => Felt::from_hex(
             deployment
                 .get("class_hash")
                 .and_then(serde_json::Value::as_str)
@@ -505,10 +505,10 @@ pub fn get_address_from_keystore(
         AccountType::OpenZeppelin | AccountType::Braavos => {
             vec![private_key.verifying_key().scalar()]
         }
-        AccountType::Argent => vec![private_key.verifying_key().scalar(), FieldElement::ZERO],
+        AccountType::Argent => vec![private_key.verifying_key().scalar(), Felt::ZERO],
     };
 
-    get_contract_address(salt, class_hash, &calldata, FieldElement::ZERO)
+    get_contract_address(salt, class_hash, &calldata, Felt::ZERO)
 }
 #[must_use]
 pub fn get_accounts_path(relative_path_from_cargo_toml: &str) -> String {
@@ -568,10 +568,7 @@ pub fn assert_tx_entry_success(tx_entry: &ScriptTransactionEntry, name: &str) {
 pub async fn create_and_deploy_oz_account() -> TempDir {
     create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await
 }
-pub async fn create_and_deploy_account(
-    class_hash: FieldElement,
-    account_type: AccountType,
-) -> TempDir {
+pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountType) -> TempDir {
     let class_hash = &class_hash.into_hex_string();
     let account_type = match account_type {
         AccountType::OpenZeppelin => "oz",

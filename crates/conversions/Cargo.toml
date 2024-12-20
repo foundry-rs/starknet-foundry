@@ -11,12 +11,9 @@ anyhow.workspace = true
 blockifier.workspace = true
 starknet_api.workspace = true
 starknet-types-core.workspace = true
-cairo-lang-casm.workspace = true
 cairo-lang-runner.workspace = true
 cairo-lang-utils.workspace = true
-cairo-lang-starknet.workspace = true
 cairo-vm.workspace = true
-regex.workspace = true
 starknet.workspace = true
 thiserror.workspace = true
 serde_json.workspace = true
@@ -25,6 +22,3 @@ num-traits.workspace = true
 itertools.workspace = true
 cairo-serde-macros = { path = "cairo-serde-macros" }
 
-[dev-dependencies]
-ctor.workspace = true
-indoc.workspace = true

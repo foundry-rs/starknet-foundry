@@ -4,7 +4,6 @@ use cairo_lang_runner::{
     casm_run::{build_cairo_runner, run_function_with_runner},
     initialize_vm, SierraCasmRunner,
 };
-use cairo_vm::Felt252;
 use cairo_vm::{
     hint_processor::hint_processor_definition::HintProcessor,
     serde::deserialize_program::HintParams,
@@ -12,6 +11,7 @@ use cairo_vm::{
     types::relocatable::MaybeRelocatable,
     vm::{errors::cairo_run_errors::CairoRunError, runners::cairo_runner::CairoRunner},
 };
+use starknet_types_core::felt::Felt;
 use universal_sierra_compiler_api::{
     AssembledCairoProgramWithSerde, AssembledProgramWithDebugInfo,
 };
@@ -38,7 +38,7 @@ pub fn run_assembled_program(
     let data: Vec<MaybeRelocatable> = assembled_program
         .bytecode
         .iter()
-        .map(Felt252::from)
+        .map(Felt::from)
         .map(MaybeRelocatable::from)
         .collect();
     let data_len = data.len();

@@ -65,9 +65,27 @@ Saves execution traces of test cases which pass and are not fuzz tests. You can 
 Saves trace data and then builds profiles of test cases which pass and are not fuzz tests. 
 You need [cairo-profiler](https://github.com/software-mansion/cairo-profiler) installed on your system. You can set a custom path to cairo-profiler with `CAIRO_PROFILER` env variable. Profile can be read with pprof, more information: [cairo-profiler](https://github.com/software-mansion/cairo-profiler), [pprof](https://github.com/google/pprof?tab=readme-ov-file#building-pprof)
 
+## `--coverage`
+
+Saves trace data and then generates coverage report of test cases which pass and are not fuzz tests.
+You need [cairo-coverage](https://github.com/software-mansion/cairo-coverage) installed on your system. You can set a custom path to cairo-coverage with `CAIRO_COVERAGE` env variable.
+
 ## `--max-n-steps` `<MAX_N_STEPS>`
 
 Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
+
+##  `-F`, `--features` `<FEATURES>`
+Comma separated list of features to activate.
+
+## `--all-features`
+Activate all available features.
+
+## `--no-default-features`
+Do not activate the `default` feature.
+
+## `--no-optimization`
+Build contract artifacts in a separate [starknet contract target](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#starknet-contract-target).
+Enabling this flag will slow down the compilation process, but the built contracts will more closely resemble the ones used on real networks. This is set to `true` when using Scarb version less than `2.8.3`.
 
 ## `-h`, `--help`
 

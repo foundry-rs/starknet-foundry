@@ -1,8 +1,9 @@
 use crate::{block_number_map::BlockNumberMap, scarb::config::ForkTarget};
 use anyhow::{anyhow, Result};
 use cheatnet::runtime_extensions::forge_config_extension::config::{
-    BlockId, InlineForkConfig, RawForkConfig,
+    BlockId, InlineForkConfig, OverriddenForkConfig, RawForkConfig,
 };
+use conversions::byte_array::ByteArray;
 use forge_runner::package_tests::{
     with_config::TestTargetWithConfig,
     with_config_resolved::{
@@ -10,7 +11,6 @@ use forge_runner::package_tests::{
         TestTargetWithResolvedConfig,
     },
 };
-use num_bigint::BigInt;
 use starknet_api::block::BlockNumber;
 
 pub async fn resolve_config(
@@ -42,6 +42,7 @@ pub async fn resolve_config(
     Ok(TestTargetWithResolvedConfig {
         tests_location: test_target.tests_location,
         sierra_program: test_target.sierra_program,
+        sierra_program_path: test_target.sierra_program_path,
         casm_program: test_target.casm_program,
         test_cases,
     })
@@ -77,25 +78,17 @@ async fn resolve_fork_config(
     Ok(Some(ResolvedForkConfig { url, block_number }))
 }
 
-fn parse_block_id(fork_target: &ForkTarget) -> Result<BlockId> {
-    let block_id = match fork_target.block_id_type.as_str() {
-        "number" => BlockId::BlockNumber(fork_target.block_id_value.parse()?),
-        "hash" => {
-            let block_hash = fork_target.block_id_value.parse::<BigInt>()?;
-
-            BlockId::BlockHash(block_hash.into())
-        }
-        "tag" => {
-            if fork_target.block_id_value == "latest" {
-                BlockId::BlockTag
-            } else {
-                Err(anyhow!(r#"only "latest" block tag is supported"#))?
-            }
-        }
-        _ => Err(anyhow!("block_id must be one of (number | hash | tag)"))?,
-    };
-
-    Ok(block_id)
+fn get_fork_target_from_runner_config<'a>(
+    fork_targets: &'a [ForkTarget],
+    name: &ByteArray,
+) -> Result<&'a ForkTarget> {
+    fork_targets
+        .iter()
+        .find(|fork| fork.name == name.to_string())
+        .ok_or_else(|| {
+            let name = name.to_string();
+            anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
+        })
 }
 
 fn replace_id_with_params(
@@ -105,21 +98,23 @@ fn replace_id_with_params(
     match raw_fork_config {
         RawForkConfig::Inline(raw_fork_params) => Ok(raw_fork_params),
         RawForkConfig::Named(name) => {
-            let fork_target_from_runner_config = fork_targets
-                .iter()
-                .find(|fork| fork.name == String::from(name.clone()))
-                .ok_or_else(|| {
-                    let name = String::from(name);
+            let fork_target_from_runner_config =
+                get_fork_target_from_runner_config(fork_targets, &name)?;
 
-                    anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
-                })?;
-
-            let block_id = parse_block_id(fork_target_from_runner_config)?;
+            let block_id = fork_target_from_runner_config.block_id.clone();
 
             Ok(InlineForkConfig {
-                url: fork_target_from_runner_config.url.parse()?,
+                url: fork_target_from_runner_config.url.clone(),
                 block: block_id,
             })
+        }
+        RawForkConfig::Overridden(OverriddenForkConfig { name, block }) => {
+            let fork_target_from_runner_config =
+                get_fork_target_from_runner_config(fork_targets, &name)?;
+
+            let url = fork_target_from_runner_config.url.clone();
+
+            Ok(InlineForkConfig { url, block })
         }
     }
 }
@@ -133,7 +128,8 @@ mod tests {
     use forge_runner::package_tests::TestTargetLocation;
     use forge_runner::{expected_result::ExpectedTestResult, package_tests::TestDetails};
     use std::sync::Arc;
-    use universal_sierra_compiler_api::compile_sierra_to_casm;
+    use universal_sierra_compiler_api::{compile_sierra, SierraType};
+    use url::Url;
 
     fn program_for_testing() -> ProgramArtifact {
         ProgramArtifact {
@@ -148,54 +144,17 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn to_runnable_unparsable_url() {
-        let mocked_tests = TestTargetWithConfig {
-            sierra_program: program_for_testing(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
-            test_cases: vec![TestCaseWithConfig {
-                name: "crate1::do_thing".to_string(),
-                config: TestCaseConfig {
-                    available_gas: None,
-                    ignored: false,
-                    expected_result: ExpectedTestResult::Success,
-                    fork_config: Some(RawForkConfig::Named("SOME_NAME".into())),
-                    fuzzer_config: None,
-                },
-                test_details: TestDetails {
-                    sierra_entry_point_statement_idx: 100,
-                    parameter_types: vec![
-                        (GenericTypeId("RangeCheck".into()), 1),
-                        (GenericTypeId("GasBuiltin".into()), 1),
-                    ],
-                    return_types: vec![
-                        (GenericTypeId("RangeCheck".into()), 1),
-                        (GenericTypeId("GasBuiltin".into()), 1),
-                        (GenericTypeId("Enum".into()), 3),
-                    ],
-                },
-            }],
-            tests_location: TestTargetLocation::Lib,
-        };
-
-        assert!(resolve_config(
-            mocked_tests,
-            &[ForkTarget {
-                name: "SOME_NAME".to_string(),
-                url: "unparsable_url".to_string(),
-                block_id_type: "Tag".to_string(),
-                block_id_value: "Latest".to_string(),
-            }],
-            &mut BlockNumberMap::default()
-        )
-        .await
-        .is_err());
-    }
-
-    #[tokio::test]
     async fn to_runnable_non_existent_id() {
         let mocked_tests = TestTargetWithConfig {
             sierra_program: program_for_testing(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            sierra_program_path: Default::default(),
+            casm_program: Arc::new(
+                compile_sierra(
+                    &serde_json::to_value(&program_for_testing().program).unwrap(),
+                    &SierraType::Raw,
+                )
+                .unwrap(),
+            ),
             test_cases: vec![TestCaseWithConfig {
                 name: "crate1::do_thing".to_string(),
                 config: TestCaseConfig {
@@ -223,12 +182,11 @@ mod tests {
 
         assert!(resolve_config(
             mocked_tests,
-            &[ForkTarget::new(
-                "definitely_non_existing".to_string(),
-                "https://not_taken.com".to_string(),
-                "Number".to_string(),
-                "120".to_string(),
-            )],
+            &[ForkTarget {
+                name: "definitely_non_existing".to_string(),
+                url: Url::parse("https://not_taken.com").expect("Should be valid url"),
+                block_id: BlockId::BlockNumber(120),
+            }],
             &mut BlockNumberMap::default()
         )
         .await

@@ -3,23 +3,19 @@ mod tests_contract_address {
     use cairo_vm::utils::PRIME_STR;
     use conversions::string::{IntoDecStr, TryFromDecStr, TryFromHexStr};
     use conversions::{FromConv, IntoConv};
-    use starknet::core::types::FieldElement;
     use starknet_api::core::{ClassHash, EntryPointSelector, Nonce};
     use starknet_api::core::{ContractAddress, PatriciaKey};
     use starknet_api::hash::StarkHash;
-    use starknet_types_core::felt::Felt as Felt252;
+    use starknet_types_core::felt::Felt;
 
     #[test]
     fn test_contract_address_conversions_happy_case() {
-        let felt = Felt252::from_bytes_be(&[1u8; 32]);
+        let felt = Felt::from_bytes_be(&[1u8; 32]);
         let contract_address = ContractAddress(PatriciaKey::try_from(felt).unwrap());
 
         assert_eq!(contract_address, ClassHash::from_(contract_address).into_(),);
-        assert_eq!(contract_address, Felt252::from_(contract_address).into_());
-        assert_eq!(
-            contract_address,
-            FieldElement::from_(contract_address).into_()
-        );
+        assert_eq!(contract_address, Felt::from_(contract_address).into_());
+        assert_eq!(contract_address, Felt::from_(contract_address).into_());
         assert_eq!(contract_address, Nonce::from_(contract_address).into_());
         assert_eq!(
             contract_address,
@@ -35,15 +31,12 @@ mod tests_contract_address {
 
     #[test]
     fn test_contract_address_conversions_zero() {
-        let felt = Felt252::ZERO;
+        let felt = Felt::ZERO;
         let contract_address = ContractAddress(PatriciaKey::try_from(felt).unwrap());
 
         assert_eq!(contract_address, ClassHash::from_(contract_address).into_(),);
-        assert_eq!(contract_address, Felt252::from_(contract_address).into_());
-        assert_eq!(
-            contract_address,
-            FieldElement::from_(contract_address).into_()
-        );
+        assert_eq!(contract_address, Felt::from_(contract_address).into_());
+        assert_eq!(contract_address, Felt::from_(contract_address).into_());
         assert_eq!(contract_address, Nonce::from_(contract_address).into_());
         assert_eq!(
             contract_address,
@@ -64,11 +57,8 @@ mod tests_contract_address {
         let mut contract_address = ContractAddress::try_from_hex_str(max_value).unwrap();
 
         assert_eq!(contract_address, ClassHash::from_(contract_address).into_(),);
-        assert_eq!(contract_address, Felt252::from_(contract_address).into_());
-        assert_eq!(
-            contract_address,
-            FieldElement::from_(contract_address).into_()
-        );
+        assert_eq!(contract_address, Felt::from_(contract_address).into_());
+        assert_eq!(contract_address, Felt::from_(contract_address).into_());
         assert_eq!(contract_address, Nonce::from_(contract_address).into_());
         assert_eq!(
             contract_address,
@@ -88,8 +78,6 @@ mod tests_contract_address {
 
     #[test]
     fn test_contract_address_conversions_out_of_range() {
-        assert!(
-            ContractAddress::try_from_hex_str(PRIME_STR).unwrap() == Felt252::from(0_u8).into_()
-        );
+        assert!(ContractAddress::try_from_hex_str(PRIME_STR).unwrap() == Felt::from(0_u8).into_());
     }
 }

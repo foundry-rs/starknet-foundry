@@ -27,14 +27,11 @@ async fn test_happy_case_from_sncast_config() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
-        indoc! {r"
-        command: call
-        error: There is no contract at the specified address
-        "},
+        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]"
     );
 }
 
@@ -55,14 +52,11 @@ async fn test_happy_case_from_cli_no_scarb() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
-        indoc! {r"
-        command: call
-        error: There is no contract at the specified address
-        "},
+        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]"
     );
 }
 
@@ -172,29 +166,6 @@ async fn test_missing_account_flag() {
     assert_stderr_contains(
         output,
         "Error: Account name not passed nor found in snfoundry.toml",
-    );
-}
-
-#[tokio::test]
-async fn test_missing_url() {
-    let args = vec![
-        "--accounts-file",
-        ACCOUNT_FILE_PATH,
-        "--account",
-        ACCOUNT,
-        "declare",
-        "--contract-name",
-        "whatever",
-        "--fee-token",
-        "eth",
-    ];
-
-    let snapbox = runner(&args);
-    let output = snapbox.assert().failure();
-
-    assert_stderr_contains(
-        output,
-        "Error: RPC url not passed nor found in snfoundry.toml",
     );
 }
 

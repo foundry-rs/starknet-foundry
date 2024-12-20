@@ -16,7 +16,6 @@ url.workspace = true
 rand.workspace = true
 scarb-metadata.workspace = true
 thiserror.workspace = true
-primitive-types.workspace = true
 shellexpand.workspace = true
 toml.workspace = true
 rpassword.workspace = true
@@ -28,26 +27,27 @@ indoc.workspace = true
 tempfile.workspace = true
 runtime = { path = "../runtime" }
 conversions = { path = "../conversions" }
+data-transformer = { path = "../data-transformer" }
 configuration = { path = "../configuration" }
 shared = { path = "../shared" }
 cairo-lang-runner.workspace = true
-cairo-lang-casm.workspace = true
 cairo-lang-sierra-to-casm.workspace = true
 cairo-lang-utils.workspace = true
 cairo-lang-sierra.workspace = true
 itertools.workspace = true
-num-traits.workspace = true
 starknet-types-core.workspace = true
 cairo-vm.workspace = true
 blockifier.workspace = true
 semver.workspace = true
-console.workspace = true
 sha3.workspace = true
 base16ct.workspace = true
 starknet-crypto.workspace = true
 async-trait.workspace = true
 serde_path_to_error.workspace = true
 walkdir.workspace = true
+const-hex.workspace = true
+regex.workspace = true
+dirs.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true
@@ -58,6 +58,7 @@ tempfile.workspace = true
 test-case.workspace = true
 fs_extra.workspace = true
 wiremock.workspace = true
+docs = { workspace = true, features = ["testing"] }
 
 [[bin]]
 name = "sncast"

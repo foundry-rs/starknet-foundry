@@ -1,0 +1,10 @@
+[package]
+name = "duplicated_test_names"
+version = "0.1.0"
+edition = "2023_11"
+
+[dev-dependencies]
+snforge_std = { path = "../../../../../snforge_std" }
+
+[scripts]
+test = "snforge test"

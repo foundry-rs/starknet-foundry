@@ -1,0 +1,26 @@
+[package]
+name = "custom_target_custom_names"
+version = "0.1.0"
+edition = "2023_01"
+
+[dependencies]
+starknet = "2.7.0"
+
+[dev-dependencies]
+snforge_std = { path = "../../../../../../snforge_std" }
+
+
+[[test]]
+name = "custom_first"
+kind = "my_kind"
+source-path = "./tests/tests.cairo"
+test-type = "integration"
+build-external-contracts = ["custom_target_custom_names::*"]
+
+[[test]]
+name = "custom_second"
+kind = "my_other_kind"
+test-type = "unit"
+
+[tool.snforge]
+exit_first = false
