@@ -4,18 +4,12 @@ use num_traits::cast::ToPrimitive;
 use starknet::providers::Url;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
 use starknet_types_core::felt::{Felt, NonZeroFelt};
-use std::num::{NonZeroU128, NonZeroU32, NonZeroU64};
+use std::num::NonZero;
 
 impl CairoDeserialize for Url {
     fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
         let url: String = reader.read::<ByteArray>()?.to_string();
         Url::parse(&url).map_err(|_| BufferReadError::ParseFailed)
-    }
-}
-
-impl CairoDeserialize for NonZeroU32 {
-    fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        NonZeroU32::new(reader.read()?).ok_or(BufferReadError::ParseFailed)
     }
 }
 
@@ -78,18 +72,15 @@ impl CairoDeserialize for NonZeroFelt {
     }
 }
 
-impl CairoDeserialize for NonZeroU64 {
-    fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        let val: u64 = reader.read()?;
-        NonZeroU64::try_from(val).map_err(|_| BufferReadError::ParseFailed)
-    }
-}
-
-impl CairoDeserialize for NonZeroU128 {
-    fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        let val: u128 = reader.read()?;
-        NonZeroU128::try_from(val).map_err(|_| BufferReadError::ParseFailed)
-    }
+macro_rules! impl_deserialize_for_nonzero_num_type {
+    ($type:ty) => {
+        impl CairoDeserialize for NonZero<$type> {
+            fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
+                let val = <$type>::deserialize(reader)?;
+                NonZero::new(val).ok_or(BufferReadError::ParseFailed)
+            }
+        }
+    };
 }
 
 macro_rules! impl_deserialize_for_felt_type {
@@ -119,6 +110,10 @@ impl_deserialize_for_felt_type!(ClassHash);
 impl_deserialize_for_felt_type!(ContractAddress);
 impl_deserialize_for_felt_type!(Nonce);
 impl_deserialize_for_felt_type!(EntryPointSelector);
+
+impl_deserialize_for_nonzero_num_type!(u32);
+impl_deserialize_for_nonzero_num_type!(u64);
+impl_deserialize_for_nonzero_num_type!(u128);
 
 impl_deserialize_for_num_type!(u8);
 impl_deserialize_for_num_type!(u16);
