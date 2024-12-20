@@ -335,6 +335,7 @@ pub fn assert_builtin(
     builtin: BuiltinName,
     expected_count: usize,
 ) {
+    // TODO(#2806)
     let scarb_version = ScarbCommand::version().run().unwrap();
     let expected_count =
         if builtin == BuiltinName::range_check && scarb_version.scarb >= Version::new(2, 9, 2) {
