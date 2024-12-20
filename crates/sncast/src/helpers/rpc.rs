@@ -24,7 +24,7 @@ impl RpcArgs {
         }
 
         let url = if let Some(network) = self.network {
-            let free_provider = FreeProvider::semi_random();
+            let free_provider = FreeProvider::choose_semi_randomly();
             network.url(&free_provider)
         } else {
             let url = self.url.clone().or_else(|| config.url.clone());
@@ -55,7 +55,7 @@ enum FreeProvider {
 }
 
 impl FreeProvider {
-    fn semi_random() -> Self {
+    fn choose_semi_randomly() -> Self {
         let seed = installation_constant_seed().unwrap_or(2);
         if seed % 2 == 0 {
             return Self::Blast;
