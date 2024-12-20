@@ -1,5 +1,3 @@
-use starknet::ContractAddress;
-
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
 
 use nonexistent_selector::IMyContractSafeDispatcher;

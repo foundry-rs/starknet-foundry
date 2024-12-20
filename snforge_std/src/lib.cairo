@@ -10,9 +10,6 @@ pub use cheatcodes::contract_class::DeclareResultTrait;
 pub use cheatcodes::l1_handler::L1Handler;
 pub use cheatcodes::l1_handler::L1HandlerTrait;
 
-pub use cheatcodes::fork::BlockTag;
-pub use cheatcodes::fork::BlockId;
-
 pub use cheatcodes::events::Event;
 pub use cheatcodes::events::EventSpy;
 pub use cheatcodes::events::EventSpyTrait;

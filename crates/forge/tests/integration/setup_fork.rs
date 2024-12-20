@@ -37,7 +37,6 @@ fn fork_simple_decorator() {
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
             use starknet::contract_address_const;
-            use snforge_std::{{ BlockTag, BlockId }};
 
             #[starknet::interface]
             trait IHelloStarknet<TContractState> {{
@@ -294,7 +293,7 @@ fn get_block_info_in_forked_block() {
             use starknet::ContractAddress;
             use starknet::ContractAddressIntoFelt252;
             use starknet::contract_address_const;
-            use snforge_std::{{ BlockTag, BlockId, declare, ContractClassTrait, DeclareResultTrait }};
+            use snforge_std::{{ declare, ContractClassTrait, DeclareResultTrait }};
 
             #[starknet::interface]
             trait IBlockInfoChecker<TContractState> {{
