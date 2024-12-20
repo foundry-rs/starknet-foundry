@@ -11,7 +11,7 @@ Command operates under all the circumstances [`declare`](./declare.md) and [`dep
 
 ### General Example
 
-Make sure you have a `Scarb.toml` in your project directory. Suppose we would like to declare and instantly deploy an example contract named `SimpleBalance`, defined in the default project.
+Make sure you have a `Scarb.toml` in your project directory. Suppose we would like to declare and instantly deploy an example contract named `HelloSncast`, defined in the default project.
 
 Running:
 
@@ -22,7 +22,7 @@ $ sncast --account myuser \
     --url http://127.0.0.1:5050/rpc \ 
     declare-deploy \
     --fee-token strk \
-    --contract-name SimpleBalance
+    --contract-name HelloSncast
 ```
 
 results in declaration and deployment.
