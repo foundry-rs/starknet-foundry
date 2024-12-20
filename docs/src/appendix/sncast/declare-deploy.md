@@ -3,7 +3,6 @@ Declare a contract and deploy it to Starknet immediately.
 
 >  ⚠️ **Warning**
 > This command relies on auto-estimation and does not allow specifying max fees explicitly.
-
 > ⚠️ **Warning**
 > Only a `fee-token` can be specified. Transaction versions for both declaration and deployment are inferred from token type.
 

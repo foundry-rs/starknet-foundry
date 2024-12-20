@@ -434,11 +434,9 @@ fn test_scarb_build_fails_when_wrong_cairo_path() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().failure();
-
     let expected = indoc! {
         "
         Error: Failed to build contract
-
         Caused by:
             Failed to build using scarb; `scarb` exited with error
         "
@@ -568,7 +566,6 @@ fn test_scarb_no_sierra_artifact() {
     let expected = indoc! {
         "
         Error: Failed to build contract
-
         Caused by:
             [..]Make sure you have enabled sierra code generation in Scarb.toml[..]
         "

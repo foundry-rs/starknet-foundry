@@ -1,5 +1,6 @@
+use super::deploy::DeployArguments;
 use clap::Args;
-use sncast::helpers::{deploy::DeployArgs, fee::FeeToken, rpc::RpcArgs};
+use sncast::helpers::{fee::FeeToken, rpc::RpcArgs};
 
 #[derive(Args)]
 #[command(about = "Deploy a contract on Starknet")]
@@ -9,7 +10,7 @@ pub struct DeclareDeploy {
     pub contract_name: String,
 
     #[clap(flatten)]
-    pub deploy_args: DeployArgs,
+    pub deploy_args: DeployArguments,
 
     /// Token that transaction fee will be paid in
     #[clap(long)]

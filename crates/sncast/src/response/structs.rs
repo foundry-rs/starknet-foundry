@@ -2,8 +2,8 @@ use super::explorer_link::OutputLink;
 use crate::helpers::block_explorer;
 use crate::helpers::block_explorer::LinkProvider;
 use camino::Utf8PathBuf;
-use conversions::padded_felt::PaddedFelt;
 use conversions::serde::serialize::CairoSerialize;
+use conversions::{padded_felt::PaddedFelt, IntoConv};
 use indoc::formatdoc;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize, Serializer};
@@ -146,14 +146,30 @@ pub struct DeclareDeployResponse {
 
 impl DeclareDeployResponse {
     #[must_use]
-    pub fn new(declare: &Option<DeclareResponse>, deploy: DeployResponse) -> Self {
-        let class_hash = declare.as_ref().map(|it| it.class_hash.clone());
-        let declare_transaction_hash = declare.as_ref().map(|it| it.transaction_hash.clone());
+    pub fn new(declare: &Option<DeclareResponse>, deploy: &DeployResponse) -> Self {
+        let (class_hash, declare_transaction_hash) = match declare {
+            Some(DeclareResponse::Success(DeclareTransactionResponse {
+                class_hash,
+                transaction_hash,
+            })) => {
+                let class_hash: Felt = (*class_hash).into_();
+                let transaction_hash: Felt = (*transaction_hash).into_();
+                (Some(class_hash), Some(transaction_hash))
+            }
+            Some(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse { class_hash })) => {
+                let class_hash: Felt = (*class_hash).into_();
+                (Some(class_hash), None)
+            }
+            None => (None, None),
+        };
 
         let DeployResponse {
             contract_address,
             transaction_hash: deploy_transaction_hash,
         } = deploy;
+
+        let contract_address: Felt = (*contract_address).into_();
+        let deploy_transaction_hash: Felt = (*deploy_transaction_hash).into_();
 
         Self {
             class_hash,
@@ -243,24 +259,26 @@ impl OutputLink for DeclareDeployResponse {
         let mut links = vec![];
 
         if let Some(ref class_hash) = self.class_hash {
-            links.push(format!("class: {}", provider.class(class_hash.0)));
+            let class_hash: PaddedFelt = (*class_hash).into_();
+            links.push(format!("class: {}", provider.class(class_hash)));
         }
 
-        links.push(format!(
-            "contract: {}",
-            provider.contract(self.contract_address.0)
-        ));
+        let contract_address: PaddedFelt = self.contract_address.into_();
+        links.push(format!("contract: {}", provider.contract(contract_address)));
 
-        if let Some(ref transaction_hash) = self.declare_transaction_hash {
+        if let Some(ref declare_transaction_hash) = self.declare_transaction_hash {
+            let declare_transaction_hash: PaddedFelt = (*declare_transaction_hash).into_();
+
             links.push(format!(
                 "declaration transaction: {}",
-                provider.class(transaction_hash.0)
+                provider.class(declare_transaction_hash)
             ));
         }
 
+        let deploy_transaction_hash: PaddedFelt = self.deploy_transaction_hash.into_();
         links.push(format!(
             "deployment transaction: {}",
-            provider.transaction(self.deploy_transaction_hash.0)
+            provider.transaction(deploy_transaction_hash)
         ));
 
         links.iter().join("\n")

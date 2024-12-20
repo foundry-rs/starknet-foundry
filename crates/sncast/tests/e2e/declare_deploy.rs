@@ -267,7 +267,6 @@ fn test_multiple_packages() {
         "supercomplexcode",
         "--salt",
         "0x2",
-        "--unique",
         "--fee-token",
         "strk",
     ];
@@ -313,7 +312,7 @@ fn test_invalid_nonce() {
 
     assert_eq!(output["command"], "declare-deploy");
     assert_matches(
-        "[..]Invalid transaction nonce[..]",
+        "[..]Account transaction nonce is invalid[..]",
         output["error"].as_str().unwrap(),
     );
 }
@@ -385,7 +384,7 @@ fn test_no_scarb_profile() {
     let expected = indoc!(
         "
         [..]
-        [WARNING] Profile profile5 does not exist in scarb, using default 'dev' profile.
+        [WARNING] Profile profile5 does not exist in scarb, using 'release' profile.
         command: [..]
         class_hash: [..]
         contract_address: [..]
