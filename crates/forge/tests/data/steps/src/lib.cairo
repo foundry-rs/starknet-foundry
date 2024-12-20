@@ -1,4 +1,4 @@
-// 75 constant cost
+// 75/70 constant cost depending on the Cairo version
 // 15 steps per iteration
 #[cfg(test)]
 mod tests {
