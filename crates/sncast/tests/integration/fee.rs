@@ -9,6 +9,7 @@ use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 use url::Url;
+
 const MAX_FEE: u64 = 1_000_000_000_000;
 
 async fn get_factory() -> OpenZeppelinAccountFactory<LocalWallet, JsonRpcClient<HttpTransport>> {
