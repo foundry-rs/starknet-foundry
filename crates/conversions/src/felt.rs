@@ -6,9 +6,9 @@ use crate::{
 };
 use conversions::padded_felt::PaddedFelt;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
-use starknet_types_core::felt::{Felt, FromStrError};
+use starknet_types_core::felt::{Felt, FromStrError, NonZeroFelt};
 use std::{
-    num::{NonZeroU128, NonZeroU64},
+    num::{NonZero, NonZeroU128, NonZeroU64},
     vec,
 };
 
@@ -42,39 +42,45 @@ impl FromConv<PaddedFelt> for Felt {
     }
 }
 
-impl TryFromConv<Felt> for NonZeroU64 {
+impl TryFromConv<NonZeroFelt> for NonZeroU64 {
     type Error = String;
-    fn try_from_(value: Felt) -> Result<Self, Self::Error> {
-        if value == Felt::ZERO {
-            Err("value should be greater than 0".to_string())
-        } else {
-            let value: u64 = value.try_into().expect("failed to convert Felt to u64");
-            Ok(NonZeroU64::new(value).unwrap())
-        }
+    fn try_from_(value: NonZeroFelt) -> Result<Self, Self::Error> {
+        let value: u64 = Felt::from(value)
+            .try_into()
+            .map_err(|_| "felt was too large to fit in u64")?;
+        Ok(NonZero::new(value)
+            .unwrap_or_else(|| unreachable!("non zero felt is always greater than 0")))
     }
 }
 
-impl TryFromConv<Felt> for NonZeroU128 {
+impl TryFromConv<NonZeroFelt> for NonZeroU128 {
     type Error = String;
-    fn try_from_(value: Felt) -> Result<Self, Self::Error> {
-        if value == Felt::ZERO {
-            Err("value should be greater than 0".to_string())
-        } else {
-            let value: u128 = value.try_into().expect("failed to convert Felt to u128");
-            Ok(NonZeroU128::new(value).unwrap())
-        }
+    fn try_from_(value: NonZeroFelt) -> Result<Self, Self::Error> {
+        let value: u128 = Felt::from(value)
+            .try_into()
+            .map_err(|_| "felt was too large to fit in u128")?;
+        Ok(NonZero::new(value)
+            .unwrap_or_else(|| unreachable!("non zero felt is always greater than 0")))
     }
 }
 
-impl FromConv<NonZeroU64> for Felt {
-    fn from_(value: NonZeroU64) -> Felt {
-        Felt::from(value.get())
+impl FromConv<NonZeroU64> for NonZeroFelt {
+    fn from_(value: NonZeroU64) -> Self {
+        NonZeroFelt::try_from(Felt::from(value.get())).unwrap_or_else(|_| {
+            unreachable!(
+                "NonZeroU64 is always greater than 0, so it should be convertible to NonZeroFelt"
+            )
+        })
     }
 }
 
-impl FromConv<NonZeroU128> for Felt {
-    fn from_(value: NonZeroU128) -> Felt {
-        Felt::from(value.get())
+impl FromConv<NonZeroU128> for NonZeroFelt {
+    fn from_(value: NonZeroU128) -> Self {
+        NonZeroFelt::try_from(Felt::from(value.get())).unwrap_or_else(|_| {
+            unreachable!(
+                "NonZeroU128 is always greater than 0, so it should be convertible to NonZeroFelt"
+            )
+        })
     }
 }
 
