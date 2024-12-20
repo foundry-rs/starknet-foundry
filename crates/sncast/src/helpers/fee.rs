@@ -1,12 +1,14 @@
-use anyhow::{bail, ensure, Error, Result};
+use anyhow::{bail, ensure, Context, Error, Result};
 use clap::{Args, ValueEnum};
-use conversions::serde::deserialize::CairoDeserialize;
-use conversions::TryIntoConv;
+use conversions::{serde::deserialize::CairoDeserialize, FromConv, TryFromConv};
 use shared::print::print_as_warning;
 use starknet::core::types::BlockId;
 use starknet::providers::Provider;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
-use std::str::FromStr;
+use std::{
+    num::{NonZeroU128, NonZeroU64},
+    str::FromStr,
+};
 
 #[derive(Args, Debug, Clone)]
 pub struct FeeArgs {
@@ -15,16 +17,16 @@ pub struct FeeArgs {
     pub fee_token: Option<FeeToken>,
 
     /// Max fee for the transaction. If not provided, will be automatically estimated.
-    #[clap(short, long)]
-    pub max_fee: Option<Felt>,
+    #[clap(value_parser = parse_non_zero_felt, short, long)]
+    pub max_fee: Option<NonZeroFelt>,
 
     /// Max gas amount. If not provided, will be automatically estimated. (Only for STRK fee payment)
-    #[clap(long)]
-    pub max_gas: Option<Felt>,
+    #[clap(value_parser = parse_non_zero_felt, long)]
+    pub max_gas: Option<NonZeroFelt>,
 
     /// Max gas price in Fri. If not provided, will be automatically estimated. (Only for STRK fee payment)
-    #[clap(long)]
-    pub max_gas_unit_price: Option<Felt>,
+    #[clap(value_parser = parse_non_zero_felt, long)]
+    pub max_gas_unit_price: Option<NonZeroFelt>,
 }
 
 impl From<ScriptFeeSettings> for FeeArgs {
@@ -43,8 +45,8 @@ impl From<ScriptFeeSettings> for FeeArgs {
             } => Self {
                 fee_token: Some(FeeToken::Strk),
                 max_fee,
-                max_gas: max_gas.map(Into::into),
-                max_gas_unit_price: max_gas_unit_price.map(Into::into),
+                max_gas: max_gas.map(NonZeroFelt::from_),
+                max_gas_unit_price: max_gas_unit_price.map(NonZeroFelt::from_),
             },
         }
     }
@@ -92,44 +94,59 @@ impl FeeArgs {
                         bail!("--max-fee should be greater than or equal to --max-gas-unit-price")
                     }
                     (None, _, _) => FeeSettings::Strk {
-                        max_gas: self.max_gas.map(TryIntoConv::try_into_).transpose()?,
+                        max_gas: self
+                            .max_gas
+                            .map(NonZeroU64::try_from_)
+                            .transpose()
+                            .map_err(anyhow::Error::msg)?,
                         max_gas_unit_price: self
                             .max_gas_unit_price
-                            .map(TryIntoConv::try_into_)
-                            .transpose()?,
+                            .map(NonZeroU128::try_from_)
+                            .transpose()
+                            .map_err(anyhow::Error::msg)?,
                     },
-                    (Some(max_fee), None, Some(max_gas_unit_price)) => FeeSettings::Strk {
-                        max_gas: Some(
-                            max_fee
-                                .floor_div(&NonZeroFelt::from_felt_unchecked(max_gas_unit_price))
-                                .try_into_()?,
-                        ),
-                        max_gas_unit_price: Some(max_gas_unit_price.try_into_()?),
-                    },
-                    (Some(max_fee), Some(max_gas), None) => FeeSettings::Strk {
-                        max_gas: Some(max_gas.try_into_()?),
-                        max_gas_unit_price: Some(
-                            max_fee
-                                .floor_div(&NonZeroFelt::from_felt_unchecked(max_gas))
-                                .try_into_()?,
-                        ),
-                    },
-                    (Some(max_fee), None, None) => {
-                        let max_gas_unit_price = provider
-                            .get_block_with_tx_hashes(block_id)
-                            .await?
-                            .l1_gas_price()
-                            .price_in_fri;
-
+                    (Some(max_fee), None, Some(max_gas_unit_price)) => {
+                        let max_gas = NonZeroFelt::try_from(Felt::from(max_fee).floor_div(&max_gas_unit_price)).context("Calculated max gas from provided --max-fee and --max-gas-unit-price is 0. Please increase --max-fee to obtain a positive gas amount")?;
                         FeeSettings::Strk {
                             max_gas: Some(
-                                max_fee
-                                    .floor_div(&NonZeroFelt::from_felt_unchecked(
-                                        max_gas_unit_price,
-                                    ))
-                                    .try_into_()?,
+                                NonZeroU64::try_from_(max_gas).map_err(anyhow::Error::msg)?,
                             ),
-                            max_gas_unit_price: Some(max_gas_unit_price.try_into_()?),
+                            max_gas_unit_price: Some(
+                                NonZeroU128::try_from_(max_gas_unit_price)
+                                    .map_err(anyhow::Error::msg)?,
+                            ),
+                        }
+                    }
+                    (Some(max_fee), Some(max_gas), None) => {
+                        let max_gas_unit_price = NonZeroFelt::try_from(Felt::from(max_fee).floor_div(&max_gas)).context("Calculated max gas unit price from provided --max-fee and --max-gas is 0. Please increase --max-fee or decrease --max-gas to ensure a positive gas unit price")?;
+                        FeeSettings::Strk {
+                            max_gas: Some(
+                                NonZeroU64::try_from_(max_gas).map_err(anyhow::Error::msg)?,
+                            ),
+                            max_gas_unit_price: Some(
+                                NonZeroU128::try_from_(max_gas_unit_price)
+                                    .map_err(anyhow::Error::msg)?,
+                            ),
+                        }
+                    }
+                    (Some(max_fee), None, None) => {
+                        let max_gas_unit_price = NonZeroFelt::try_from(
+                            provider
+                                .get_block_with_tx_hashes(block_id)
+                                .await?
+                                .l1_gas_price()
+                                .price_in_fri,
+                        )?;
+                        let max_gas = NonZeroFelt::try_from(Felt::from(max_fee)
+                            .floor_div(&max_gas_unit_price)).context("Calculated max-gas from provided --max-fee and the current network gas price is 0. Please increase --max-fee to obtain a positive gas amount")?;
+                        FeeSettings::Strk {
+                            max_gas: Some(
+                                NonZeroU64::try_from_(max_gas).map_err(anyhow::Error::msg)?,
+                            ),
+                            max_gas_unit_price: Some(
+                                NonZeroU128::try_from_(max_gas_unit_price)
+                                    .map_err(anyhow::Error::msg)?,
+                            ),
                         }
                     }
                 };
@@ -152,23 +169,23 @@ pub enum FeeToken {
 #[derive(Debug, PartialEq, CairoDeserialize)]
 pub enum ScriptFeeSettings {
     Eth {
-        max_fee: Option<Felt>,
+        max_fee: Option<NonZeroFelt>,
     },
     Strk {
-        max_fee: Option<Felt>,
-        max_gas: Option<u64>,
-        max_gas_unit_price: Option<u128>,
+        max_fee: Option<NonZeroFelt>,
+        max_gas: Option<NonZeroU64>,
+        max_gas_unit_price: Option<NonZeroU128>,
     },
 }
 
 #[derive(Debug, PartialEq)]
 pub enum FeeSettings {
     Eth {
-        max_fee: Option<Felt>,
+        max_fee: Option<NonZeroFelt>,
     },
     Strk {
-        max_gas: Option<u64>,
-        max_gas_unit_price: Option<u128>,
+        max_gas: Option<NonZeroU64>,
+        max_gas_unit_price: Option<NonZeroU128>,
     },
 }
 
@@ -260,4 +277,10 @@ fn parse_fee_token(s: &str) -> Result<FeeToken, String> {
     }
 
     Ok(parsed_token)
+}
+
+fn parse_non_zero_felt(s: &str) -> Result<NonZeroFelt, String> {
+    let felt: Felt = s.parse().map_err(|_| "Failed to parse value")?;
+    felt.try_into()
+        .map_err(|_| "Value should be greater than 0".to_string())
 }
