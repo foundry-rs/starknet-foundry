@@ -48,6 +48,8 @@ walkdir.workspace = true
 const-hex.workspace = true
 regex.workspace = true
 dirs.workspace = true
+dialoguer.workspace = true
+toml_edit.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true
