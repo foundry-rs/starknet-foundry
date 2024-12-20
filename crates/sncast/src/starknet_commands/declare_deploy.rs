@@ -3,7 +3,7 @@ use clap::Args;
 use sncast::helpers::{fee::FeeToken, rpc::RpcArgs};
 
 #[derive(Args)]
-#[command(about = "Deploy a contract on Starknet")]
+#[command(about = "Declare and deploy a contract on Starknet")]
 pub struct DeclareDeploy {
     // Name of the contract to deploy
     #[clap(long)]
