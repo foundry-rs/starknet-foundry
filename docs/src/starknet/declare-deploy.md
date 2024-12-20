@@ -1,7 +1,7 @@
 # Deploying an Undeclared Contract
 
 `sncast` allows declaring and deploying contracts through dedicated commands.
-The `declare-deploy` command simplifies this pipeline by performing these two actions at the same time. It is used to declare a contract and deploy it immediately.
+The `declare-deploy` command simplifies this pipeline by performing these two actions at the same time. It is used to declare a contract and deploy it immediately. If the contract has been already declared, the command will behave exactly as `deploy`.
 
 For detailed description, see [declare-deploy command reference](../appendix/sncast/declare-deploy.md).
 

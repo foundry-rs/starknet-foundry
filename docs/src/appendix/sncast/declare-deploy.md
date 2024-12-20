@@ -1,5 +1,5 @@
 # `declare-deploy`
-Declare a contract and deploy it to Starknet immediately.
+Declare a contract and deploy it to Starknet immediately. If the contract has been already declared, behaves exactly as `deploy`.
 
 >  ⚠️ **Warning**
 > This command relies on auto-estimation and does not allow specifying max fees explicitly.
