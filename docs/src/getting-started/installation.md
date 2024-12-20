@@ -171,7 +171,7 @@ See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#in
 Follow the instructions from [Scarb docs](https://docs.swmansion.com/scarb/download.html#windows).
 
 1. Download the release archive matching your CPU architecture
-   from https://docs.swmansion.com/scarb/download.html#precompiled-packages.
+   from [https://docs.swmansion.com/scarb/download.html#precompiled-packages](https://docs.swmansion.com/scarb/download.html#precompiled-packages).
 2. Extract it to a location where you would like to have Scarb installed. We recommend `%LOCALAPPDATA%\Programs\scarb`.
 3. From this directory, get the full path to `scarb\bin` and add it to PATH.
    See [this article](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) for instructions on
@@ -188,7 +188,7 @@ and verify that version is >= 2.7.0
 ### Install Universal Sierra Compiler
 
 1. Download the release archive matching your CPU architecture
-   from https://github.com/software-mansion/universal-sierra-compiler/releases/latest. Look for package with `windows`
+   from [https://github.com/software-mansion/universal-sierra-compiler/releases/latest](https://github.com/software-mansion/universal-sierra-compiler/releases/latest). Look for package with `windows`
    in the name e.g.
    `universal-sierra-compiler-v2.3.0-x86_64-pc-windows-msvc.zip`.
 2. Extract it to a location where you would like to have Starknet Foundry installed. We recommend
@@ -206,7 +206,7 @@ universal-sierra-compiler --version
 ### Install Starknet Foundry
 
 1. Download the release archive matching your CPU architecture
-   from https://github.com/foundry-rs/starknet-foundry/releases/latest. Look for package with `windows` in the name e.g.
+   from [https://github.com/foundry-rs/starknet-foundry/releases/latest](https://github.com/foundry-rs/starknet-foundry/releases/latest). Look for package with `windows` in the name e.g.
    `starknet-foundry-v0.34.0-x86_64-pc-windows-msvc.zip`.
 2. Extract it to a location where you would like to have Starknet Foundry installed. We recommend
    `%LOCALAPPDATA%\Programs\snfoundry`.
