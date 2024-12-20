@@ -33,7 +33,7 @@ fn works_with_few_attributes() {
             #[snforge_internal_test_executable]
             #[__internal_config_statement]
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
                     let mut data = array![];
 
                     snforge_std::_config_types::AvailableGasConfig {
@@ -62,7 +62,7 @@ fn works_with_few_attributes() {
             #[snforge_internal_test_executable]
             #[__internal_config_statement]
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
                     let mut data = array![];
 
                     snforge_std::_config_types::AvailableGasConfig {

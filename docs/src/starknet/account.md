@@ -66,7 +66,6 @@ $ sncast \
     account deploy \
     --url http://127.0.0.1:5055 \
 	--name new_account \
-	--fee-token strk \
 	--max-fee 9999999999999
 ```
 
@@ -85,8 +84,6 @@ transaction: https://sepolia.starkscan.co/tx/[..]
 
 For a detailed CLI description, see [account deploy command reference](../appendix/sncast/account/deploy.md).
 
-> 💡 **Info**
-> You can also choose to pay in Ether by setting `--fee-token` to `eth`.
 
 ## Managing Accounts
 
@@ -211,7 +208,6 @@ $ sncast \
     declare \
 	--url http://127.0.0.1:5055 \
     --contract-name my_contract \
-    --fee-token eth
 ```
 
 #### Creating an Account With Starkli-Style Keystore

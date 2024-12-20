@@ -23,7 +23,6 @@ pub fn combine_configs(
     max_n_steps: Option<u32>,
     contracts_data: ContractsData,
     cache_dir: Utf8PathBuf,
-    versioned_programs_dir: Utf8PathBuf,
     forge_config_from_scarb: &ForgeConfigFromScarb,
     additional_args: &[OsString],
 ) -> ForgeConfig {
@@ -52,7 +51,6 @@ pub fn combine_configs(
         output_config: Arc::new(OutputConfig {
             detailed_resources: detailed_resources || forge_config_from_scarb.detailed_resources,
             execution_data_to_save,
-            versioned_programs_dir,
         }),
     }
 }
@@ -74,7 +72,6 @@ mod tests {
             None,
             Default::default(),
             Default::default(),
-            Default::default(),
             &Default::default(),
             &[],
         );
@@ -87,7 +84,6 @@ mod tests {
             false,
             false,
             None,
-            Default::default(),
             Default::default(),
             Default::default(),
             &Default::default(),
@@ -115,7 +111,6 @@ mod tests {
             None,
             Default::default(),
             Default::default(),
-            Default::default(),
             &Default::default(),
             &[],
         );
@@ -135,7 +130,6 @@ mod tests {
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: false,
                     execution_data_to_save: ExecutionDataToSave::default(),
-                    versioned_programs_dir: Default::default(),
                 }),
             }
         );
@@ -166,7 +160,6 @@ mod tests {
             None,
             Default::default(),
             Default::default(),
-            Default::default(),
             &config_from_scarb,
             &[],
         );
@@ -191,7 +184,6 @@ mod tests {
                         coverage: true,
                         additional_args: vec![],
                     },
-                    versioned_programs_dir: Default::default(),
                 }),
             }
         );
@@ -221,7 +213,6 @@ mod tests {
             Some(1_000_000),
             Default::default(),
             Default::default(),
-            Default::default(),
             &config_from_scarb,
             &[],
         );
@@ -247,7 +238,6 @@ mod tests {
                         coverage: true,
                         additional_args: vec![],
                     },
-                    versioned_programs_dir: Default::default(),
                 }),
             }
         );

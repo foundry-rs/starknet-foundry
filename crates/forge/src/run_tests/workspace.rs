@@ -6,7 +6,6 @@ use crate::{
 };
 use anyhow::{Context, Result};
 use forge_runner::{
-    build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR,
     coverage_api::can_coverage_be_generated,
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
 };
@@ -66,7 +65,6 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
 
     let workspace_root = &scarb_metadata.workspace.root;
     let cache_dir = workspace_root.join(CACHE_DIR);
-    let versioned_programs_dir = workspace_root.join(VERSIONED_PROGRAMS_DIR);
 
     for package in packages {
         env::set_current_dir(&package.root)?;
@@ -77,7 +75,6 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
             &args,
             &cache_dir,
             &artifacts_dir_path,
-            versioned_programs_dir.clone(),
         )?;
 
         let tests_file_summaries = run_for_package(args, &mut block_number_map).await?;
