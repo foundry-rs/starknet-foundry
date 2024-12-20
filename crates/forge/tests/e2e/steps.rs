@@ -70,10 +70,10 @@ fn should_allow_more_than_10m() {
 
                 Collected 4 test(s) from steps package
                 Running 4 test(s) from src/
-                [PASS] steps::tests::steps_much_less_than_10000000 (gas: ~[..])
-                [PASS] steps::tests::steps_more_than_10000000 (gas: ~[..])
-                [PASS] steps::tests::steps_less_than_10000000 (gas: ~[..])
-                [PASS] steps::tests::steps_much_more_than_10000000 (gas: ~[..])
+                [PASS] steps::tests::steps_much_less_than_10000000 [..]
+                [PASS] steps::tests::steps_more_than_10000000 [..]
+                [PASS] steps::tests::steps_less_than_10000000 [..]
+                [PASS] steps::tests::steps_much_more_than_10000000 [..]
                 Tests: 4 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
             "
         ),
@@ -94,7 +94,7 @@ fn should_default_to_10m() {
 
             Collected 4 test(s) from steps package
             Running 4 test(s) from src/
-            [PASS] steps::tests::steps_much_less_than_10000000 (gas: ~[..])
+            [PASS] steps::tests::steps_much_less_than_10000000 [..]
             [FAIL] steps::tests::steps_much_more_than_10000000
 
             Failure data:
@@ -105,7 +105,7 @@ fn should_default_to_10m() {
             Failure data:
                 Could not reach the end of the program. RunResources has no remaining steps.
 
-            [PASS] steps::tests::steps_less_than_10000000 (gas: ~[..])
+            [PASS] steps::tests::steps_less_than_10000000 [..]
             Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
 
             Failures:

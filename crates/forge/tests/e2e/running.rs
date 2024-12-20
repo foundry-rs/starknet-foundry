@@ -1143,7 +1143,7 @@ fn call_nonexistent_selector() {
         Collected 1 test(s) from nonexistent_selector package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] nonexistent_selector_integrationtest::test_contract::test_unwrapped_call_contract_syscall (gas: ~[..])
+        [PASS] nonexistent_selector_integrationtest::test_contract::test_unwrapped_call_contract_syscall [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "},
     );
