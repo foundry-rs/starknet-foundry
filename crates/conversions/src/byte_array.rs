@@ -4,14 +4,25 @@ use crate::{serde::serialize::SerializeToFeltVec, string::TryFromHexStr};
 use cairo_lang_runner::short_string::as_cairo_short_string_ex;
 use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
 use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
+use serde::{Deserialize, Serialize};
 use starknet_types_core::felt::Felt;
 use std::fmt;
 
-#[derive(CairoDeserialize, CairoSerialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, CairoDeserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct ByteArray {
     words: Vec<Felt>,
     pending_word: Felt,
     pending_word_len: usize,
+}
+
+impl Default for ByteArray {
+    fn default() -> Self {
+        ByteArray {
+            words: Vec::new(),
+            pending_word: Felt::ZERO,
+            pending_word_len: 0,
+        }
+    }
 }
 
 impl From<&str> for ByteArray {
@@ -23,6 +34,17 @@ impl From<&str> for ByteArray {
         let words = chunks.map(Felt::from_bytes_be_slice).collect();
         let pending_word = Felt::from_bytes_be_slice(remainder);
 
+        Self {
+            words,
+            pending_word,
+            pending_word_len,
+        }
+    }
+}
+
+impl ByteArray {
+    #[must_use]
+    pub fn new(words: Vec<Felt>, pending_word: Felt, pending_word_len: usize) -> Self {
         Self {
             words,
             pending_word,
