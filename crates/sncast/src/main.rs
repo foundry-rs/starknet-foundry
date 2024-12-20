@@ -417,6 +417,8 @@ async fn run_async_command(
                 deploy.clone().resolved_with_class_hash(class_hash)
             };
 
+            let fee_token = deploy_resolved.validate_and_get_token()?;
+
             let Deploy {
                 arguments,
                 fee_args,
@@ -432,6 +434,8 @@ async fn run_async_command(
             let calldata = arguments.try_into_calldata(contract_class, &selector)?;
 
             let fee_settings = fee_args
+                .clone()
+                .fee_token(fee_token)
                 .try_into_fee_settings(&provider, account.block_id())
                 .await?;
 

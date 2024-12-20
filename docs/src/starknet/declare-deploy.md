@@ -15,6 +15,8 @@ Make sure you have a `Scarb.toml` in your project directory. Suppose we would li
 
 Running:
 
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast --account myuser \
     --url http://127.0.0.1:5050/rpc \ 
