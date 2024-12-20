@@ -320,7 +320,7 @@ fn get_block_hash() {
         #[test]
         fn get_block_hash() {
             let block_info = get_block_info().unbox();
-            let hash = get_block_hash_syscall(block_info.block_number - 10).unwrap();
+            let hash = get_block_hash_syscall(block_info.block_number.unwrap();
             assert(hash == 0, 'Hash not zero');
         }
     "

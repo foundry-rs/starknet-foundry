@@ -3,9 +3,11 @@ use starknet::ResourcesBounds;
 use snforge_std::cheatcodes::CheatSpan;
 use super::super::_cheatcode::handle_cheatcode;
 
+
 pub mod caller_address;
 pub mod block_number;
 pub mod block_timestamp;
+pub mod block_hash;
 pub mod sequencer_address;
 pub mod version;
 pub mod max_fee;
@@ -96,6 +98,7 @@ impl TxInfoMockImpl of Default<TxInfoMock> {
 struct BlockInfoMock {
     block_number: Operation<u64>,
     block_timestamp: Operation<u64>,
+    block_hash: Operation<felt252>,
     sequencer_address: Operation<ContractAddress>,
 }
 
@@ -106,6 +109,7 @@ impl BlockInfoMockImpl of Default<BlockInfoMock> {
         BlockInfoMock {
             block_number: Operation::Retain,
             block_timestamp: Operation::Retain,
+            block_hash: Operation::Retain,
             sequencer_address: Operation::Retain,
         }
     }

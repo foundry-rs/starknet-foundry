@@ -79,6 +79,7 @@
     * [caller_address](appendix/cheatcodes/caller_address.md)
     * [block_number](appendix/cheatcodes/block_number.md)
     * [block_timestamp](appendix/cheatcodes/block_timestamp.md)
+    * [block_hash](appendix/cheatcodes/block_hash.md)
     * [sequencer_address](appendix/cheatcodes/sequencer_address.md)
     * [version](appendix/cheatcodes/transaction_version.md)
     * [account_contract_address](appendix/cheatcodes/account_contract_address.md)

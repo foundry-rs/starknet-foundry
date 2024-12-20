@@ -50,6 +50,11 @@ pub use cheatcodes::execution_info::block_timestamp::start_cheat_block_timestamp
 pub use cheatcodes::execution_info::block_timestamp::stop_cheat_block_timestamp;
 pub use cheatcodes::execution_info::block_timestamp::stop_cheat_block_timestamp_global;
 pub use cheatcodes::execution_info::block_timestamp::start_cheat_block_timestamp;
+pub use cheatcodes::execution_info::block_hash::cheat_block_hash;
+pub use cheatcodes::execution_info::block_hash::start_cheat_block_hash_global;
+pub use cheatcodes::execution_info::block_hash::stop_cheat_block_hash;
+pub use cheatcodes::execution_info::block_hash::stop_cheat_block_hash_global;
+pub use cheatcodes::execution_info::block_hash::start_cheat_block_hash;
 pub use cheatcodes::execution_info::sequencer_address::cheat_sequencer_address;
 pub use cheatcodes::execution_info::sequencer_address::start_cheat_sequencer_address_global;
 pub use cheatcodes::execution_info::sequencer_address::stop_cheat_sequencer_address;
