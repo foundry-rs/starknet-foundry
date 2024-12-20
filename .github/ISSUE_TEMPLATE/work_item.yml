@@ -1,23 +1,29 @@
 name: Work item
 description: Submit an actionable task
 body:
-  - type: dropdown
-    id: tool-name
+  - type: textarea
+    id: current-state
     attributes:
-      label: Which components does the task require to be changed? (think hard pls)
-      multiple: true
-      options:
-        - snforge
-        - sncast
-        - cairo-profiler
-        - other (describe below)
+      label: Current State
+      description: Describe the current state and state the problem
+      placeholder: Currently, the `print_a` cheatcode prints `"a"` to stdout. This is problematic because user might want it to be printed on their actual printer.
+    validations:
+      required: true
+
+  - type: input
+    id: correct-state
+    attributes:
+      label: Correct State
+      description: Briefly describe the correct state
+      placeholder: `print_a` should magically detect if user wants to print to stdout or a printer.
     validations:
       required: true
 
   - type: textarea
-    id: description
+    id: additional-context
     attributes:
-      label: Description
-      description: Describe the issue here.
+      label: Additional Context
+      description: Provide additional context on the desired state.
+      placeholder: E.g. if we can detect any printers in local network it might indicate that user wants to print to it.
     validations:
-      required: true
+      required: false
