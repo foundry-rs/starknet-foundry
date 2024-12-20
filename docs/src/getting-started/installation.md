@@ -145,7 +145,10 @@ sncast --version
 
 > 🐧 **Info** - WSL (Windows Subsystem for Linux)
 > 
-> If you're using WSL, follow the [Linux and macOS](#linux-and-macos) instructions.
+> Starknet Foundry can be installed natively on Windows, but to achieve better experience it is recommended to use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
+> 
+> If you are using WSL, please follow the [Linux and macOS](#linux-and-macos) guide.
+
 
 ### Install Rust version >= 1.80.1
 
