@@ -145,7 +145,7 @@ sncast --version
 
 > 🐧 **Info** - WSL (Windows Subsystem for Linux)
 > 
-> Starknet Foundry can be installed natively on Windows, but to achieve better experience it is recommended to use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
+> Starknet Foundry can be installed natively on Windows, but currently, for smoother experience, it is recommended to use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
 > 
 > If you are using WSL, please follow the [Linux and macOS](#linux-and-macos) guide.
 
