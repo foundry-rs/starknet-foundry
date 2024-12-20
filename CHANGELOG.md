@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- interactive interface that allows setting created or imported account as the default
+
+
 ## [0.35.1] - 2024-12-16
 
 ### Forge
