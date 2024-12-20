@@ -16,6 +16,7 @@ use scarb_api::{
     get_contracts_artifacts_and_source_sierra_paths, metadata::MetadataCommandExt,
     target_dir_for_workspace, ScarbCommand, StarknetContractArtifacts,
 };
+use semver::Version;
 use shared::command::CommandExt;
 use std::{
     collections::HashMap,
@@ -334,6 +335,14 @@ pub fn assert_builtin(
     builtin: BuiltinName,
     expected_count: usize,
 ) {
+    let scarb_version = ScarbCommand::version().run().unwrap();
+    let expected_count =
+        if builtin == BuiltinName::range_check && scarb_version.scarb >= Version::new(2, 9, 2) {
+            expected_count - 1
+        } else {
+            expected_count
+        };
+
     let test_name_suffix = format!("::{test_case_name}");
     let result = TestCase::find_test_result(result);
 

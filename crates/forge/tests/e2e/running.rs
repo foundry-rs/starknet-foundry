@@ -1032,10 +1032,7 @@ fn incompatible_snforge_std_version_warning() {
         .unwrap()
         .parse::<DocumentMut>()
         .unwrap();
-    scarb_toml["dev-dependencies"]["snforge_std"]["path"] = Item::None;
-    scarb_toml["dev-dependencies"]["snforge_std"]["git"] =
-        value("https://github.com/foundry-rs/starknet-foundry.git");
-    scarb_toml["dev-dependencies"]["snforge_std"]["tag"] = value("v0.28.0");
+    scarb_toml["dev-dependencies"]["snforge_std"] = value("0.34.0");
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
     let output = test_runner(&temp).assert().failure();
@@ -1043,7 +1040,6 @@ fn incompatible_snforge_std_version_warning() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        [..]Updating git repository https://github.com/foundry-rs/starknet-foundry
         [WARNING] Package snforge_std version does not meet the recommended version requirement =0.[..], [..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -1051,23 +1047,23 @@ fn incompatible_snforge_std_version_warning() {
 
         Collected 4 test(s) from steps package
         Running 4 test(s) from src/
-        [PASS] steps::tests::steps_570030 [..]
-        [FAIL] steps::tests::steps_10000005
+        [PASS] steps::tests::steps_much_less_than_10000000 [..]
+        [FAIL] steps::tests::steps_more_than_10000000
 
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
 
-        [FAIL] steps::tests::steps_11250075
+        [FAIL] steps::tests::steps_much_more_than_10000000
 
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
 
-        [PASS] steps::tests::steps_9999990 [..]
+        [PASS] steps::tests::steps_less_than_10000000 [..]
         Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
 
         Failures:
-            steps::tests::steps_10000005
-            steps::tests::steps_11250075
+            steps::tests::steps_more_than_10000000
+            steps::tests::steps_much_more_than_10000000
         "},
     );
 }
@@ -1145,9 +1141,9 @@ fn call_nonexistent_selector() {
         output,
         indoc! {r"
         Collected 1 test(s) from nonexistent_selector package
-        Running 1 test(s) from tests/
-        [PASS] nonexistent_selector_integrationtest::test_contract::test_unwrapped_call_contract_syscall (gas: ~103)
         Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] nonexistent_selector_integrationtest::test_contract::test_unwrapped_call_contract_syscall (gas: ~[..])
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "},
     );
