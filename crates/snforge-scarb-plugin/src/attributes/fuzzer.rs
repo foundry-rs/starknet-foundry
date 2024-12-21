@@ -1,4 +1,4 @@
-use super::{AttributeInfo, AttributeTypeData};
+use super::{AttributeInfo, AttributeTypeData, ValidArgs, ValidArgsTypes, ValidNamedArgs};
 use crate::{
     args::Arguments,
     attributes::{AttributeCollector, ErrorExt},
@@ -18,6 +18,11 @@ impl AttributeInfo for FuzzerCollector {
 
 impl AttributeTypeData for FuzzerCollector {
     const CHEATCODE_NAME: &'static str = "set_config_fuzzer";
+}
+
+impl ValidArgs for FuzzerCollector {
+    const VALID_ARGS: ValidArgsTypes<'_> =
+        ValidArgsTypes::Named(ValidNamedArgs::Restricted(&["seed", "runs"]));
 }
 
 impl AttributeCollector for FuzzerCollector {
