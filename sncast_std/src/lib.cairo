@@ -114,13 +114,17 @@ impl DisplayCallResult of Display<CallResult> {
 }
 
 pub fn call(
-    contract_address: ContractAddress, function_selector: felt252, calldata: Array::<felt252>
+    contract_address: ContractAddress, function_selector: felt252, calldata: Option<Array::<felt252>>
 ) -> Result<CallResult, ScriptCommandError> {
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
+    let calldata_to_serialize = match calldata {
+        Some(calldata) => calldata,
+        None => array![], 
+    };
 
     let mut calldata_serialized = array![];
-    calldata.serialize(ref calldata_serialized);
+    calldata_to_serialize.serialize(ref calldata_serialized);
 
     inputs.append_span(calldata_serialized.span());
 
@@ -129,11 +133,12 @@ pub fn call(
     let mut result_data: Result<CallResult, ScriptCommandError> =
         match Serde::<Result<CallResult>>::deserialize(ref buf) {
         Option::Some(result_data) => result_data,
-        Option::None => panic!("call deserialize failed")
+        Option::None => panic!("call deserialize failed"),
     };
 
     result_data
 }
+
 
 #[derive(Drop, Copy, Debug, Serde)]
 pub enum DeclareResult {
