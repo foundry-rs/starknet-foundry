@@ -591,7 +591,7 @@ pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
     top_call.borrow_mut().used_l1_resources.l2_l1_message_sizes = all_l2_l1_message_sizes;
 }
 
-pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &CairoRunner) {
+pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &mut CairoRunner) {
     let trace_data = &mut runtime
         .extended_runtime
         .extended_runtime
@@ -601,7 +601,7 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &Cairo
 
     if trace_data.is_vm_trace_needed {
         trace_data.current_call_stack.top().borrow_mut().vm_trace =
-            Some(get_relocated_vm_trace(cairo_runner));
+            get_relocated_vm_trace(cairo_runner);
     }
 }
 fn add_syscall_resources(

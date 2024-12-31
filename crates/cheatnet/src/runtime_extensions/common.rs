@@ -18,6 +18,10 @@ pub fn sum_syscall_counters(mut a: SyscallCounter, b: &SyscallCounter) -> Syscal
 }
 
 #[must_use]
-pub fn get_relocated_vm_trace(cairo_runner: &CairoRunner) -> Vec<RelocatedTraceEntry> {
-    cairo_runner.relocated_trace.clone().unwrap()
+pub fn get_relocated_vm_trace(cairo_runner: &mut CairoRunner) -> Option<Vec<RelocatedTraceEntry>> {
+    // if vm execution failed, the trace is not relocated so we need to relocate it
+    if cairo_runner.relocated_trace.is_none() {
+        cairo_runner.relocate(true).ok()?;
+    }
+    cairo_runner.relocated_trace.clone()
 }

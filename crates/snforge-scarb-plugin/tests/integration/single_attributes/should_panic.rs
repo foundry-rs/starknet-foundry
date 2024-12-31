@@ -16,7 +16,7 @@ fn work_with_empty() {
         &result,
         r"
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
                     let mut data = array![];
 
                     snforge_std::_config_types::ShouldPanicConfig {
@@ -45,7 +45,7 @@ fn work_with_expected_string() {
         &result,
         r#"
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
                     let mut data = array![];
 
                     snforge_std::_config_types::ShouldPanicConfig {
@@ -74,7 +74,7 @@ fn work_with_expected_string_escaped() {
         &result,
         r#"
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
                     let mut data = array![];
 
                     snforge_std::_config_types::ShouldPanicConfig {
@@ -103,7 +103,7 @@ fn work_with_expected_short_string() {
         &result,
         r"
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
                     let mut data = array![];
 
                     snforge_std::_config_types::ShouldPanicConfig {
@@ -132,7 +132,7 @@ fn work_with_expected_short_string_escaped() {
         &result,
         r"
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
                     let mut data = array![];
 
                     snforge_std::_config_types::ShouldPanicConfig {
@@ -161,7 +161,7 @@ fn work_with_expected_tuple() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
                     let mut data = array![];
 
                     snforge_std::_config_types::ShouldPanicConfig {

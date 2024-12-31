@@ -14,6 +14,13 @@ unstable-add-statements-code-locations-debug-info = true
 unstable-add-statements-functions-debug-info = true
 ```
 
+> 📝 **Note**
+>
+> That `unstable-add-statements-code-locations-debug-info = true` and
+`unstable-add-statements-functions-debug-info = true` will slow down the compilation and cause it to use more system
+> memory. It will also make the compilation artifacts larger. So it is only recommended to add these flags when you need
+> their functionality.
+
 ## Usage
 
 > 📝 **Note**  

@@ -7,7 +7,9 @@ use super::{
 /// - `version` - transaction version to be set
 /// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
 /// applied
-fn cheat_transaction_version(contract_address: ContractAddress, version: felt252, span: CheatSpan) {
+pub fn cheat_transaction_version(
+    contract_address: ContractAddress, version: felt252, span: CheatSpan
+) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
@@ -20,7 +22,7 @@ fn cheat_transaction_version(contract_address: ContractAddress, version: felt252
 
 /// Changes the transaction version.
 /// - `version` - transaction version to be set
-fn start_cheat_transaction_version_global(version: felt252) {
+pub fn start_cheat_transaction_version_global(version: felt252) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.version = Operation::StartGlobal(version);
@@ -29,7 +31,7 @@ fn start_cheat_transaction_version_global(version: felt252) {
 }
 
 /// Cancels the `start_cheat_transaction_version_global`.
-fn stop_cheat_transaction_version_global() {
+pub fn stop_cheat_transaction_version_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.version = Operation::StopGlobal;
@@ -40,14 +42,14 @@ fn stop_cheat_transaction_version_global() {
 /// Changes the transaction version for the given contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `version` - transaction version to be set
-fn start_cheat_transaction_version(contract_address: ContractAddress, version: felt252) {
+pub fn start_cheat_transaction_version(contract_address: ContractAddress, version: felt252) {
     cheat_transaction_version(contract_address, version, CheatSpan::Indefinite);
 }
 
 /// Cancels the `cheat_transaction_version` / `start_cheat_transaction_version` for the given
 /// contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
-fn stop_cheat_transaction_version(contract_address: ContractAddress) {
+pub fn stop_cheat_transaction_version(contract_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.version = Operation::Stop(contract_address);

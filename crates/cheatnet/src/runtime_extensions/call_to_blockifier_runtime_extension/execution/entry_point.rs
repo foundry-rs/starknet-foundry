@@ -31,12 +31,12 @@ use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use thiserror::Error;
 use conversions::FromConv;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
-use crate::runtime_extensions::common::sum_syscall_counters;
+use crate::runtime_extensions::common::{get_relocated_vm_trace, sum_syscall_counters};
 use conversions::string::TryFromHexStr;
 
 pub(crate) type ContractClassEntryPointExecutionResult = Result<
     (CallInfo, SyscallCounter, Option<Vec<RelocatedTraceEntry>>),
-    EntryPointExecutionErrorWithLastPc,
+    EntryPointExecutionErrorWithTrace,
 >;
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
@@ -157,16 +157,17 @@ pub fn execute_call_entry_point(
             );
             Ok(call_info)
         }
-        Err(EntryPointExecutionErrorWithLastPc {
-            source: err,
-            last_pc: pc,
-        }) => {
-            if let Some(pc) = pc {
+        Err(EntryPointExecutionErrorWithTrace { source: err, trace }) => {
+            if let Some(pc) = trace
+                .as_ref()
+                .and_then(|trace| trace.last())
+                .map(|entry| entry.pc)
+            {
                 cheatnet_state
                     .encountered_errors
                     .push(EncounteredError { pc, class_hash });
             }
-            exit_error_call(&err, cheatnet_state, resources, entry_point);
+            exit_error_call(&err, cheatnet_state, resources, entry_point, trace);
             Err(err)
         }
     }
@@ -203,6 +204,7 @@ fn exit_error_call(
     cheatnet_state: &mut CheatnetState,
     resources: &mut ExecutionResources,
     entry_point: &CallEntryPoint,
+    vm_trace: Option<Vec<RelocatedTraceEntry>>,
 ) {
     let identifier = match entry_point.call_type {
         CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
@@ -213,7 +215,7 @@ fn exit_error_call(
         Default::default(),
         CallResult::from_err(error, &identifier),
         &[],
-        None,
+        vm_trace,
     );
 }
 
@@ -314,19 +316,19 @@ fn aggregate_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter 
 
 #[derive(Debug, Error)]
 #[error("{}", source)]
-pub struct EntryPointExecutionErrorWithLastPc {
+pub struct EntryPointExecutionErrorWithTrace {
     pub source: EntryPointExecutionError,
-    pub last_pc: Option<usize>,
+    pub trace: Option<Vec<RelocatedTraceEntry>>,
 }
 
-impl<T> From<T> for EntryPointExecutionErrorWithLastPc
+impl<T> From<T> for EntryPointExecutionErrorWithTrace
 where
     T: Into<EntryPointExecutionError>,
 {
     fn from(value: T) -> Self {
         Self {
             source: value.into(),
-            last_pc: None,
+            trace: None,
         }
     }
 }
@@ -335,37 +337,21 @@ pub(crate) trait OnErrorLastPc<T>: Sized {
     fn on_error_get_last_pc(
         self,
         runner: &mut CairoRunner,
-    ) -> Result<T, EntryPointExecutionErrorWithLastPc>;
+    ) -> Result<T, EntryPointExecutionErrorWithTrace>;
 }
 
 impl<T> OnErrorLastPc<T> for Result<T, EntryPointExecutionError> {
     fn on_error_get_last_pc(
         self,
         runner: &mut CairoRunner,
-    ) -> Result<T, EntryPointExecutionErrorWithLastPc> {
+    ) -> Result<T, EntryPointExecutionErrorWithTrace> {
         match self {
             Err(source) => {
-                let last_pc = runner.get_last_pc();
+                let trace = get_relocated_vm_trace(runner);
 
-                Err(EntryPointExecutionErrorWithLastPc { source, last_pc })
+                Err(EntryPointExecutionErrorWithTrace { source, trace })
             }
             Ok(value) => Ok(value),
         }
-    }
-}
-
-pub trait GetLastPc {
-    fn get_last_pc(&mut self) -> Option<usize>;
-}
-
-impl GetLastPc for CairoRunner {
-    fn get_last_pc(&mut self) -> Option<usize> {
-        if self.relocated_trace.is_none() {
-            self.relocate(true).ok()?;
-        }
-        self.relocated_trace
-            .as_ref()
-            .and_then(|trace| trace.last())
-            .map(|entry| entry.pc)
     }
 }
