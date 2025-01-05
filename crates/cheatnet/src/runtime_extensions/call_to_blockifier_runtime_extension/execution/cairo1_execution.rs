@@ -1,6 +1,5 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
-    ContractClassEntryPointExecutionResult, EntryPointExecutionErrorWithLastPc, GetLastPc,
-    OnErrorLastPc,
+    ContractClassEntryPointExecutionResult, EntryPointExecutionErrorWithTrace, OnErrorLastPc,
 };
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
@@ -72,23 +71,14 @@ pub fn execute_entry_point_call_cairo1(
     )
     .on_error_get_last_pc(&mut runner)?;
 
-    let vm_trace = if cheatable_runtime
-        .extension
-        .cheatnet_state
-        .trace_data
-        .is_vm_trace_needed
-    {
-        Some(get_relocated_vm_trace(&runner))
-    } else {
-        None
-    };
+    let trace = get_relocated_vm_trace(&mut runner);
+
     let syscall_counter = cheatable_runtime
         .extended_runtime
         .hint_handler
         .syscall_counter
         .clone();
 
-    let last_pc = runner.get_last_pc();
     let call_info = finalize_execution(
         runner,
         cheatable_runtime.extended_runtime.hint_handler,
@@ -97,15 +87,15 @@ pub fn execute_entry_point_call_cairo1(
         program_extra_data_length,
     )?;
     if call_info.execution.failed {
-        return Err(EntryPointExecutionErrorWithLastPc {
+        return Err(EntryPointExecutionErrorWithTrace {
             source: EntryPointExecutionError::ExecutionFailed {
                 error_data: call_info.execution.retdata.0,
             },
-            last_pc,
+            trace,
         });
     }
 
-    Ok((call_info, syscall_counter, vm_trace))
+    Ok((call_info, syscall_counter, trace))
     // endregion
 }
 

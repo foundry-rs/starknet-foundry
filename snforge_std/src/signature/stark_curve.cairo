@@ -7,7 +7,7 @@ use starknet::testing::cheatcode;
 
 use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 
-impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
+pub impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
     fn generate() -> KeyPair<felt252, felt252> {
         let mut output = handle_cheatcode(cheatcode::<'generate_stark_keys'>(array![].span()));
 
@@ -31,7 +31,9 @@ impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
     }
 }
 
-impl StarkCurveSignerImpl of SignerTrait<KeyPair<felt252, felt252>, felt252, (felt252, felt252)> {
+pub impl StarkCurveSignerImpl of SignerTrait<
+    KeyPair<felt252, felt252>, felt252, (felt252, felt252)
+> {
     fn sign(
         self: KeyPair<felt252, felt252>, message_hash: felt252
     ) -> Result<(felt252, felt252), SignError> {
@@ -43,7 +45,7 @@ impl StarkCurveSignerImpl of SignerTrait<KeyPair<felt252, felt252>, felt252, (fe
     }
 }
 
-impl StarkCurveVerifierImpl of VerifierTrait<
+pub impl StarkCurveVerifierImpl of VerifierTrait<
     KeyPair<felt252, felt252>, felt252, (felt252, felt252)
 > {
     fn verify(
