@@ -140,7 +140,7 @@ async fn test_show_config_default_block_explorer() {
         accounts_file_path: ../account-file
         chain_id: alpha-sepolia
         rpc_url: {}
-        block_explorer: etherscan
+        block_explorer: StarkScan
         show_explorer_links: true
         wait_retry_interval: 5
         wait_timeout: 300

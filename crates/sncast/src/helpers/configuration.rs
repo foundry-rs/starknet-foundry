@@ -48,7 +48,6 @@ pub struct CastConfig {
     pub show_explorer_links: bool,
 }
 
-/// Default block explorer function
 fn default_block_explorer() -> Option<block_explorer::Service> {
     Some(block_explorer::Service::default())
 }
