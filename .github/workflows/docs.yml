@@ -50,7 +50,7 @@ jobs:
       - name: Install Scarb
         uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: nightly
+          scarb-version: latest
       - name: Generate and build snforge_std docs
         run: |
           scarb doc

@@ -50,3 +50,8 @@ Salt for the account address.
 Optional.
 
 If passed, a profile with corresponding name will be added to the local snfoundry.toml.
+
+## `--silent`
+Optional.
+
+If passed, the command will not trigger an interactive prompt to add an account as a default

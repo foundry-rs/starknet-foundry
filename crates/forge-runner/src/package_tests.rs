@@ -1,5 +1,6 @@
 use cairo_lang_sierra::ids::GenericTypeId;
 use cairo_lang_sierra::program::ProgramArtifact;
+use camino::Utf8PathBuf;
 use std::sync::Arc;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
@@ -26,6 +27,7 @@ pub struct TestDetails {
 pub struct TestTarget<C> {
     pub tests_location: TestTargetLocation,
     pub sierra_program: ProgramArtifact,
+    pub sierra_program_path: Arc<Utf8PathBuf>,
     pub casm_program: Arc<AssembledProgramWithDebugInfo>,
     pub test_cases: Vec<TestCase<C>>,
 }

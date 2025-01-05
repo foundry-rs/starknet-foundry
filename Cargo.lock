@@ -1280,7 +1280,6 @@ dependencies = [
  "regex",
  "runtime",
  "scarb-api",
- "scarb-metadata",
  "serde",
  "serde_json",
  "shared",
@@ -1468,24 +1467,17 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "blockifier",
- "cairo-lang-casm",
  "cairo-lang-runner",
- "cairo-lang-starknet",
  "cairo-lang-utils",
  "cairo-serde-macros",
  "cairo-vm",
- "ctor",
- "indoc",
  "itertools 0.12.1",
- "num-bigint",
  "num-traits 0.2.19",
- "regex",
  "serde",
  "serde_json",
  "starknet",
  "starknet-types-core",
  "starknet_api",
- "test-case",
  "thiserror",
 ]
 
@@ -1701,7 +1693,6 @@ dependencies = [
  "indoc",
  "itertools 0.12.1",
  "num-bigint",
- "num-traits 0.2.19",
  "primitive-types",
  "serde",
  "serde_json",
@@ -1798,6 +1789,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "dialoguer"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "658bce805d770f407bc62102fca7c2c64ceef2fbcb2b8bd19d2765ce093980de"
+dependencies = [
+ "console",
+ "shell-words",
+ "tempfile",
+ "thiserror",
+ "zeroize",
+]
+
+[[package]]
 name = "diff"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1891,12 +1895,16 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
 name = "docs"
-version = "0.34.0"
+version = "0.35.1"
 dependencies = [
+ "anyhow",
+ "camino",
  "regex",
  "serde",
  "serde_json",
  "shell-words",
+ "tempfile",
+ "toml_edit",
  "walkdir",
 ]
 
@@ -2140,27 +2148,16 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.34.0"
+version = "0.35.1"
 dependencies = [
  "anyhow",
- "ark-ff",
- "ark-secp256k1",
- "ark-secp256r1",
- "ark-std",
  "assert_fs",
  "axum",
  "blockifier",
  "cairo-annotations",
- "cairo-lang-casm",
- "cairo-lang-compiler",
- "cairo-lang-filesystem",
  "cairo-lang-runner",
  "cairo-lang-sierra",
- "cairo-lang-sierra-to-casm",
- "cairo-lang-starknet",
  "cairo-lang-starknet-classes",
- "cairo-lang-test-plugin",
- "cairo-lang-utils",
  "cairo-vm",
  "camino",
  "cheatnet",
@@ -2169,31 +2166,22 @@ dependencies = [
  "console",
  "conversions",
  "docs",
- "flatten-serde-json",
  "forge_runner",
- "fs_extra",
  "futures",
  "include_dir",
  "indoc",
- "itertools 0.12.1",
  "lazy_static",
  "num-bigint",
- "num-integer",
- "num-traits 0.2.19",
  "openssl",
- "project-root",
  "rand",
- "rayon",
  "regex",
  "scarb-api",
  "scarb-metadata",
  "scarb-ui",
- "schemars",
  "semver",
  "serde",
  "serde_json",
  "shared",
- "smol_str",
  "snapbox",
  "starknet",
  "starknet-types-core",
@@ -2201,9 +2189,7 @@ dependencies = [
  "tempfile",
  "test-case",
  "test_utils",
- "thiserror",
  "tokio",
- "tokio-util",
  "toml_edit",
  "universal-sierra-compiler-api",
  "url",
@@ -2212,20 +2198,14 @@ dependencies = [
 
 [[package]]
 name = "forge_runner"
-version = "0.34.0"
+version = "0.35.1"
 dependencies = [
  "anyhow",
- "bimap",
  "blockifier",
  "cairo-annotations",
  "cairo-lang-casm",
- "cairo-lang-compiler",
- "cairo-lang-filesystem",
  "cairo-lang-runner",
  "cairo-lang-sierra",
- "cairo-lang-sierra-ap-change",
- "cairo-lang-sierra-gas",
- "cairo-lang-sierra-to-casm",
  "cairo-lang-sierra-type-size",
  "cairo-lang-starknet",
  "cairo-lang-starknet-classes",
@@ -2236,7 +2216,6 @@ dependencies = [
  "cheatnet",
  "console",
  "conversions",
- "flatten-serde-json",
  "fs4",
  "futures",
  "indoc",
@@ -2252,13 +2231,10 @@ dependencies = [
  "serde",
  "serde_json",
  "shared",
- "smol_str",
  "starknet",
  "starknet-types-core",
  "starknet_api",
- "thiserror",
  "tokio",
- "tokio-util",
  "toml_edit",
  "universal-sierra-compiler-api",
  "url",
@@ -4270,13 +4246,10 @@ dependencies = [
  "blockifier",
  "cairo-lang-casm",
  "cairo-lang-runner",
- "cairo-lang-starknet",
  "cairo-lang-utils",
  "cairo-vm",
  "conversions",
  "indoc",
- "num-bigint",
- "num-traits 0.2.19",
  "serde",
  "serde_json",
  "starknet",
@@ -4892,38 +4865,30 @@ dependencies = [
 
 [[package]]
 name = "sncast"
-version = "0.34.0"
+version = "0.35.1"
 dependencies = [
  "anyhow",
  "async-trait",
  "base16ct",
  "blockifier",
- "cairo-lang-casm",
- "cairo-lang-diagnostics",
- "cairo-lang-filesystem",
- "cairo-lang-parser",
  "cairo-lang-runner",
  "cairo-lang-sierra",
  "cairo-lang-sierra-to-casm",
- "cairo-lang-syntax",
  "cairo-lang-utils",
  "cairo-vm",
  "camino",
  "clap",
  "configuration",
- "console",
  "const-hex",
  "conversions",
  "ctor",
  "data-transformer",
+ "dialoguer",
  "dirs",
  "docs",
  "fs_extra",
  "indoc",
  "itertools 0.12.1",
- "num-bigint",
- "num-traits 0.2.19",
- "primitive-types",
  "project-root",
  "promptly",
  "rand",
@@ -4950,6 +4915,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "toml",
+ "toml_edit",
  "url",
  "walkdir",
  "wiremock",
@@ -4957,20 +4923,18 @@ dependencies = [
 
 [[package]]
 name = "snforge_scarb_plugin"
-version = "0.34.0"
+version = "0.35.1"
 dependencies = [
  "cairo-lang-diagnostics",
  "cairo-lang-filesystem",
  "cairo-lang-macro",
  "cairo-lang-parser",
- "cairo-lang-sierra",
  "cairo-lang-syntax",
  "cairo-lang-utils",
  "indoc",
  "lazy_static",
  "num-bigint",
  "regex",
- "serde_json",
  "smol_str",
  "url",
 ]
@@ -5845,7 +5809,6 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "cairo-lang-casm",
- "cairo-lang-sierra",
  "camino",
  "indicatif",
  "num-bigint",

@@ -15,7 +15,6 @@ use tokio::runtime::Runtime;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::run_tests::package::RunForPackageArgs;
 use forge::scarb::load_test_artifacts;
-use forge_runner::build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
@@ -38,7 +37,6 @@ fn fork_simple_decorator() {
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
             use starknet::contract_address_const;
-            use snforge_std::{{ BlockTag, BlockId }};
 
             #[starknet::interface]
             trait IHelloStarknet<TContractState> {{
@@ -158,11 +156,6 @@ fn fork_aliased_decorator() {
                     output_config: Arc::new(OutputConfig {
                         detailed_resources: false,
                         execution_data_to_save: ExecutionDataToSave::default(),
-                        versioned_programs_dir: Utf8PathBuf::from_path_buf(
-                            tempdir().unwrap().into_path(),
-                        )
-                        .unwrap()
-                        .join(VERSIONED_PROGRAMS_DIR),
                     }),
                 }),
                 fork_targets: vec![ForkTarget {
@@ -248,11 +241,6 @@ fn fork_aliased_decorator_overrding() {
                     output_config: Arc::new(OutputConfig {
                         detailed_resources: false,
                         execution_data_to_save: ExecutionDataToSave::default(),
-                        versioned_programs_dir: Utf8PathBuf::from_path_buf(
-                            tempdir().unwrap().into_path(),
-                        )
-                        .unwrap()
-                        .join(VERSIONED_PROGRAMS_DIR),
                     }),
                 }),
                 fork_targets: vec![ForkTarget {
@@ -305,7 +293,7 @@ fn get_block_info_in_forked_block() {
             use starknet::ContractAddress;
             use starknet::ContractAddressIntoFelt252;
             use starknet::contract_address_const;
-            use snforge_std::{{ BlockTag, BlockId, declare, ContractClassTrait, DeclareResultTrait }};
+            use snforge_std::{{ declare, ContractClassTrait, DeclareResultTrait }};
 
             #[starknet::interface]
             trait IBlockInfoChecker<TContractState> {{

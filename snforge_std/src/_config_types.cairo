@@ -1,42 +1,42 @@
 #[derive(Drop, Serde)]
-struct AvailableGasConfig {
-    gas: felt252
+pub struct AvailableGasConfig {
+    pub gas: felt252
 }
 
 #[derive(Drop, Serde)]
-enum BlockId {
+pub enum BlockId {
     BlockTag: (),
     BlockHash: felt252,
     BlockNumber: felt252
 }
 
 #[derive(Drop, Serde)]
-struct InlineForkConfig {
-    url: ByteArray,
-    block: BlockId
+pub struct InlineForkConfig {
+    pub url: ByteArray,
+    pub block: BlockId
 }
 
 #[derive(Drop, Serde)]
-struct OverriddenForkConfig {
-    name: ByteArray,
-    block: BlockId
+pub struct OverriddenForkConfig {
+    pub name: ByteArray,
+    pub block: BlockId
 }
 
 #[derive(Drop, Serde)]
-enum ForkConfig {
+pub enum ForkConfig {
     Inline: InlineForkConfig,
     Named: ByteArray,
     Overridden: OverriddenForkConfig
 }
 
 #[derive(Drop, Serde)]
-struct FuzzerConfig {
-    runs: Option<felt252>,
-    seed: Option<felt252>
+pub struct FuzzerConfig {
+    pub runs: Option<felt252>,
+    pub seed: Option<felt252>
 }
 
 #[derive(Drop, Serde)]
-enum Expected {
+pub enum Expected {
     ShortString: felt252,
     ByteArray: ByteArray,
     Array: Array<felt252>,
@@ -44,11 +44,11 @@ enum Expected {
 }
 
 #[derive(Drop, Serde)]
-struct ShouldPanicConfig {
-    expected: Expected,
+pub struct ShouldPanicConfig {
+    pub expected: Expected,
 }
 
 #[derive(Drop, Serde)]
-struct IgnoreConfig {
-    is_ignored: bool,
+pub struct IgnoreConfig {
+    pub is_ignored: bool,
 }

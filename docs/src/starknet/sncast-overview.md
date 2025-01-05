@@ -29,9 +29,11 @@ You can, however, overwrite their values by supplying them as flags directly to 
 
 Let's use `sncast` to call a contract's function:
 
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast call \
-    --url http://127.0.0.1:5050 \
+    --url http://127.0.0.1:5055 \
     --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \
     --function "pokemon" \
     --arguments '"Charizard"' \
@@ -70,29 +72,31 @@ In the example above we called a function with a deserialized argument: `'"Chari
 
 The same result can be achieved by passing serialized calldata, which is a list of hexadecimal-encoded field elements.
 
-For example, this is equivalent to using the --calldata option with the following value: 0x0 0x43686172697a617264 0x9.
+For example, this is equivalent to using the `--calldata` option with the following value: `0x0 0x43686172697a617264 0x9`.
 
 To obtain the serialized form of the wished data, you can write a Cairo program that calls `Serde::serialize` on subsequent arguments and displays the results.
 
-Read more about it in the [Cairo documentation](https://book.cairo-lang.org/appendix-03-derivable-traits.html?highlight=seri#serializing-with-serde).
+Read more about it in the [Cairo documentation](https://book.cairo-lang.org/appendix-03-derivable-traits.html?#serializing-with-serde).
 
 ### How to Use `--wait` Flag
 
 Let's invoke a transaction and wait for it to be `ACCEPTED_ON_L2`.
 
+<!-- { "ignored_output": true } -->
 ```shell
-$ sncast --account myuser \
+$ sncast --account my_account \
     --wait \
     deploy \
-	--url http://127.0.0.1:5050 \
-    --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
+	--url http://127.0.0.1:5055 \
+    --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
+    --fee-token strk
 ```
 
 <details>
 <summary>Output:</summary>
 
 ```shell
-Transaction hash: 0x3062310a1e40d4b66d8987ba7447d1c7317381d0295d62cb12f2fe3f11e6983
+Transaction hash: [..]
 Waiting for transaction to be received. Retries left: 11
 Waiting for transaction to be received. Retries left: 10
 Waiting for transaction to be received. Retries left: 9
@@ -105,12 +109,12 @@ Received transaction. Status: Pending
 Received transaction. Status: Pending
 Received transaction. Status: Pending
 command: deploy
-contract_address: 0x1d91599ec661e97fdcbb10c642a1c4f920986f1a7a9659d157d0db09baaa29e
-transaction_hash: 0x3062310a1e40d4b66d8987ba7447d1c7317381d0295d62cb12f2fe3f11e6983
+contract_address: [..]
+transaction_hash: [..]
 
 To see deployment details, visit:
-contract: https://starkscan.co/search/0x1d91599ec6...
-transaction: https://starkscan.co/search/0x3062310a1e...
+contract: https://starkscan.co/search/[..]
+transaction: https://starkscan.co/search/[..]
 ```
 </details>
 <br>
