@@ -8,6 +8,10 @@ on:
       - master
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.head_ref }}
+  cancel-in-progress: ${{ github.head_ref != 'master' }}
+
 jobs:
   test-forge-unit-and-integration:
     name: Test Forge / Unit and Integration Tests
