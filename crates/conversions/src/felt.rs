@@ -2,15 +2,12 @@ use crate::{
     byte_array::ByteArray,
     serde::serialize::SerializeToFeltVec,
     string::{TryFromDecStr, TryFromHexStr},
-    FromConv, IntoConv, TryFromConv,
+    FromConv, IntoConv,
 };
 use conversions::padded_felt::PaddedFelt;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
-use starknet_types_core::felt::{Felt, FromStrError, NonZeroFelt};
-use std::{
-    num::{NonZero, NonZeroU128, NonZeroU64},
-    vec,
-};
+use starknet_types_core::felt::{Felt, FromStrError};
+use std::vec;
 
 impl FromConv<ClassHash> for Felt {
     fn from_(value: ClassHash) -> Felt {
@@ -39,48 +36,6 @@ impl FromConv<EntryPointSelector> for Felt {
 impl FromConv<PaddedFelt> for Felt {
     fn from_(value: PaddedFelt) -> Felt {
         value.0.into_()
-    }
-}
-
-impl TryFromConv<NonZeroFelt> for NonZeroU64 {
-    type Error = String;
-    fn try_from_(value: NonZeroFelt) -> Result<Self, Self::Error> {
-        let value: u64 = Felt::from(value)
-            .try_into()
-            .map_err(|_| "felt was too large to fit in u64")?;
-        Ok(NonZero::new(value)
-            .unwrap_or_else(|| unreachable!("non zero felt is always greater than 0")))
-    }
-}
-
-impl TryFromConv<NonZeroFelt> for NonZeroU128 {
-    type Error = String;
-    fn try_from_(value: NonZeroFelt) -> Result<Self, Self::Error> {
-        let value: u128 = Felt::from(value)
-            .try_into()
-            .map_err(|_| "felt was too large to fit in u128")?;
-        Ok(NonZero::new(value)
-            .unwrap_or_else(|| unreachable!("non zero felt is always greater than 0")))
-    }
-}
-
-impl FromConv<NonZeroU64> for NonZeroFelt {
-    fn from_(value: NonZeroU64) -> Self {
-        NonZeroFelt::try_from(Felt::from(value.get())).unwrap_or_else(|_| {
-            unreachable!(
-                "NonZeroU64 is always greater than 0, so it should be convertible to NonZeroFelt"
-            )
-        })
-    }
-}
-
-impl FromConv<NonZeroU128> for NonZeroFelt {
-    fn from_(value: NonZeroU128) -> Self {
-        NonZeroFelt::try_from(Felt::from(value.get())).unwrap_or_else(|_| {
-            unreachable!(
-                "NonZeroU128 is always greater than 0, so it should be convertible to NonZeroFelt"
-            )
-        })
     }
 }
 
