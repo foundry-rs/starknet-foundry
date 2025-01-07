@@ -86,14 +86,6 @@ impl FeeArgs {
                     (Some(_), Some(_), Some(_)) => {
                         bail!("Passing all --max-fee, --max-gas and --max-gas-unit-price is conflicting. Please pass only two of them or less")
                     }
-                    (Some(max_fee), Some(max_gas), None) if max_fee < max_gas => {
-                        bail!("--max-fee should be greater than or equal to --max-gas amount")
-                    }
-                    (Some(max_fee), None, Some(max_gas_unit_price))
-                        if max_fee < max_gas_unit_price =>
-                    {
-                        bail!("--max-fee should be greater than or equal to --max-gas-unit-price")
-                    }
                     (None, _, _) => FeeSettings::Strk {
                         max_gas: self
                             .max_gas
@@ -107,7 +99,14 @@ impl FeeArgs {
                             .map_err(anyhow::Error::msg)?,
                     },
                     (Some(max_fee), None, Some(max_gas_unit_price)) => {
-                        let max_gas = NonZeroFelt::try_from(Felt::from(max_fee).floor_div(&max_gas_unit_price)).context("Calculated max gas from provided --max-fee and --max-gas-unit-price is 0. Please increase --max-fee to obtain a positive gas amount")?;
+                        if max_fee < max_gas_unit_price {
+                            bail!(
+                                "--max-fee should be greater than or equal to --max-gas-unit-price"
+                            );
+                        }
+
+                        let max_gas = NonZeroFelt::try_from(Felt::from(max_fee).floor_div(&max_gas_unit_price))
+                        .unwrap_or_else(|_| unreachable!("Calculated max gas must be >= 1 because max_fee >= max_gas_unit_price ensures a positive result"));
                         print_max_fee_conversion_info(
                             max_fee.into(),
                             max_gas.into(),
@@ -124,7 +123,12 @@ impl FeeArgs {
                         }
                     }
                     (Some(max_fee), Some(max_gas), None) => {
-                        let max_gas_unit_price = NonZeroFelt::try_from(Felt::from(max_fee).floor_div(&max_gas)).context("Calculated max gas unit price from provided --max-fee and --max-gas is 0. Please increase --max-fee or decrease --max-gas to ensure a positive gas unit price")?;
+                        if max_fee < max_gas {
+                            bail!("--max-fee should be greater than or equal to --max-gas amount");
+                        }
+
+                        let max_gas_unit_price = NonZeroFelt::try_from(Felt::from(max_fee).floor_div(&max_gas))
+                        .unwrap_or_else(|_| unreachable!("Calculated max gas unit price must be >= 1 because max_fee >= max_gas ensures a positive result"));
                         print_max_fee_conversion_info(
                             max_fee.into(),
                             max_gas.into(),

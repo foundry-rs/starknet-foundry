@@ -740,7 +740,7 @@ pub async fn test_happy_case_default_name_generation() {
         let snapbox = runner(&import_args).current_dir(tempdir.path());
         snapbox.assert().stdout_matches(formatdoc! {r"
         command: account import
-        account_name: Account imported with name: account-{id}
+        account_name: account-{id}
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
     ", id = i + 1});
     }
@@ -766,7 +766,7 @@ pub async fn test_happy_case_default_name_generation() {
     let snapbox = runner(&import_args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
         command: account import
-        account_name: Account imported with name: account-2
+        account_name: account-2
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
     "});
 

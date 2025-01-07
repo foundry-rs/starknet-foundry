@@ -432,7 +432,7 @@ fn test_max_gas_equal_to_zero() {
 }
 
 #[test]
-fn test_max_gas_calculated_from_max_fee_equal_to_zero() {
+fn test_calculated_max_gas_equal_to_zero_when_max_fee_passed() {
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -450,18 +450,19 @@ fn test_max_gas_calculated_from_max_fee_equal_to_zero() {
         "0x1",
         "0x2",
         "--max-fee",
-        "0",
+        "999999",
         "--fee-token",
         "strk",
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().code(2);
+    let output = snapbox.assert().success();
 
     assert_stderr_contains(
         output,
         indoc! {r"
-        error: invalid value '0' for '--max-fee <MAX_FEE>': Value should be greater than 0
+        command: invoke
+        error: Calculated max-gas from provided --max-fee and the current network gas price is 0. Please increase --max-fee to obtain a positive gas amount: Tried to create NonZeroFelt from 0
         "},
     );
 }
