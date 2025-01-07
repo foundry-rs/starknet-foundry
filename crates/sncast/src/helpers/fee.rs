@@ -105,7 +105,7 @@ impl FeeArgs {
                         }
 
                         let max_gas = NonZeroFelt::try_from(Felt::from(max_fee).floor_div(&max_gas_unit_price))
-                        .unwrap_or_else(|_| unreachable!("Calculated max gas cannot be 0 because max_fee >= max_gas_unit_price ensures a positive result"));
+                        .unwrap_or_else(|_| unreachable!("Calculated max gas must be >= 1 because max_fee >= max_gas_unit_price ensures a positive result"));
                         FeeSettings::Strk {
                             max_gas: Some(
                                 NonZeroU64::try_from_(max_gas).map_err(anyhow::Error::msg)?,
@@ -122,7 +122,7 @@ impl FeeArgs {
                         }
 
                         let max_gas_unit_price = NonZeroFelt::try_from(Felt::from(max_fee).floor_div(&max_gas))
-                        .unwrap_or_else(|_| unreachable!("Calculated max gas unit price cannot be 0 because max_fee >= max_gas ensures a positive result"));
+                        .unwrap_or_else(|_| unreachable!("Calculated max gas unit price must be >= 1 because max_fee >= max_gas ensures a positive result"));
                         FeeSettings::Strk {
                             max_gas: Some(
                                 NonZeroU64::try_from_(max_gas).map_err(anyhow::Error::msg)?,
