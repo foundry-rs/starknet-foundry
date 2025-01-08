@@ -51,8 +51,6 @@ Enums use 0-based layout for serialization. For example, `FirstVariantOfSomeEnum
 
 Remember that this rule may not hold for enums that with manual `Store` trait implementation. The most notable example is `Option`, e.g. `Option::None` will be stored as `[0]` and `Option::Some(100)` will be stored as `[1, 100]`.
 
-You generally don't need to worry about this, as the `Store` trait takes care of it. It's only relevant when you're handling manual serialization or deserialization, e.g. when using `Option`.
-
 Below is an example of a contract which can store `Option<u256>` values:
 
 ```rust
