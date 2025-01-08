@@ -1269,6 +1269,7 @@ dependencies = [
  "flate2",
  "flatten-serde-json",
  "fs2",
+ "futures",
  "glob",
  "indoc",
  "k256",
