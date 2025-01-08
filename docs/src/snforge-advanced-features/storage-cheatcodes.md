@@ -47,7 +47,9 @@ And perform a test checking `load` and `store` behavior in context of those stru
 
 ## Example: Using enums in storage
 
-Normally, enums use 0-based layout. For example, `Option::Some(100)` will be serialized as `[0, 100]`. However, their storage layout is 1-based, so `Option::Some(100)` should be serialized as `[1, 100]`. It's because the first variant needs to be distinguished from an uninitialized storage slot. `Option::None` is an exception and will be serialized as `[0]`.
+Enums use 0-based layout for serialization. For example, `FirstVariantOfSomeEnum(100)` will be serialized as `[0, 100]`. However, their Starknet storage layout is 1-based for most enums, especially for these with derived `Store` trait implementation. Therefore, `FirstVariantOfSomeEnum(100)` will be stored on Starknet as `[1, 100]`. 
+
+Remember that this rule may not hold for enums that with manual `Store` trait implementation. The most notable example is `Option`: `Option::None` will be stored as `[0]` and `Option::Some(100)` will be stored as `[1, 100]`.
 
 You generally don't need to worry about this, as the `Store` trait takes care of it. It's only relevant when you're handling manual serialization or deserialization, e.g. when using `Option`.
 
