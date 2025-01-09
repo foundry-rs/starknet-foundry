@@ -562,7 +562,7 @@ fn fork_store_load() {
     let test = test_utils::test_case!(formatdoc!(
         r#"
             use starknet::{{ ContractAddress, contract_address_const }};
-            use snforge_std::{{ BlockTag, BlockId, load, store }};
+            use snforge_std::{{ load, store }};
 
             #[starknet::interface]
             trait IHelloStarknet<TContractState> {{

@@ -1,7 +1,7 @@
 use super::common::runner::{
     get_current_branch, get_remote_url, runner, setup_package, snforge_test_bin_path, test_runner,
 };
-use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
+use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
@@ -11,6 +11,7 @@ use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::assert_matches;
 use snapbox::cmd::Command as SnapboxCommand;
 use std::ffi::OsString;
+use std::path::PathBuf;
 use std::{env, fs, iter, path::Path, str::FromStr};
 use test_utils::{get_local_snforge_std_absolute_path, tempdir_with_tool_versions};
 use toml_edit::{value, DocumentMut, Formatted, InlineTable, Item, Value};
@@ -690,13 +691,76 @@ fn with_exit_first_flag() {
 fn init_new_project() {
     let temp = tempdir_with_tool_versions().unwrap();
 
-    runner(&temp)
+    let output = runner(&temp)
         .args(["init", "test_name"])
         .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
         .assert()
         .success();
 
-    validate_init(&temp, false);
+    assert_stdout_contains(
+        output,
+        indoc!(
+            r"
+                [WARNING] Command `snforge init` is deprecated and will be removed in the future. Please use `snforge new` instead.
+            "
+        ),
+    );
+
+    validate_init(&temp.join("test_name"), false);
+}
+
+#[test]
+fn create_new_project_dir_not_exist() {
+    let temp = tempdir_with_tool_versions().unwrap();
+    let project_path = temp.join("new").join("project");
+
+    runner(&temp)
+        .args(["new", "--name", "test_name"])
+        .arg(&project_path)
+        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
+        .assert()
+        .success();
+
+    validate_init(&project_path, false);
+}
+
+#[test]
+fn create_new_project_dir_not_empty() {
+    let temp = tempdir_with_tool_versions().unwrap();
+    temp.child("empty.txt").touch().unwrap();
+
+    let output = runner(&temp)
+        .args(["new", "--name", "test_name"])
+        .arg(temp.path())
+        .assert()
+        .code(2);
+
+    assert_stdout_contains(
+        output,
+        indoc!(
+            r"
+                [ERROR] The provided path [..] points to a non-empty directory. If you wish to create a project in this directory, use the `--overwrite` flag
+            "
+        ),
+    );
+}
+
+#[test]
+fn create_new_project_dir_exists_and_empty() {
+    let temp = tempdir_with_tool_versions().unwrap();
+    let project_path = temp.join("new").join("project");
+
+    fs::create_dir_all(&project_path).unwrap();
+    assert!(project_path.exists());
+
+    runner(&temp)
+        .args(["new", "--name", "test_name"])
+        .arg(&project_path)
+        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
+        .assert()
+        .success();
+
+    validate_init(&project_path, false);
 }
 
 #[test]
@@ -714,7 +778,7 @@ fn init_new_project_from_scarb() {
         .assert()
         .success();
 
-    validate_init(&temp, true);
+    validate_init(&temp.join("test_name"), true);
 }
 
 pub fn append_to_path_var(path: &Path) -> OsString {
@@ -724,8 +788,8 @@ pub fn append_to_path_var(path: &Path) -> OsString {
     env::join_paths(script_path.chain(other_paths)).unwrap()
 }
 
-fn validate_init(temp: &TempDir, validate_snforge_std: bool) {
-    let manifest_path = temp.join("test_name/Scarb.toml");
+fn validate_init(project_path: &PathBuf, validate_snforge_std: bool) {
+    let manifest_path = project_path.join("Scarb.toml");
     let scarb_toml = fs::read_to_string(manifest_path.clone()).unwrap();
 
     let snforge_std_assert = if validate_snforge_std {
@@ -784,8 +848,8 @@ fn validate_init(temp: &TempDir, validate_snforge_std: bool) {
 
     std::fs::write(manifest_path, scarb_toml.to_string()).unwrap();
 
-    let output = test_runner(temp)
-        .current_dir(temp.child(Path::new("test_name")))
+    let output = test_runner(&TempDir::new().unwrap())
+        .current_dir(project_path)
         .assert()
         .success();
 
@@ -812,14 +876,15 @@ fn test_init_project_with_custom_snforge_dependency_git() {
     let temp = tempdir_with_tool_versions().unwrap();
 
     runner(&temp)
-        .args(["init", "test_name"])
+        .args(["new", "test_name"])
         .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
         .assert()
         .success();
 
-    let manifest_path = temp.child("test_name/Scarb.toml");
+    let project_path = temp.join("test_name");
+    let manifest_path = project_path.join("Scarb.toml");
 
-    let scarb_toml = std::fs::read_to_string(manifest_path.path()).unwrap();
+    let scarb_toml = std::fs::read_to_string(&manifest_path).unwrap();
     let mut scarb_toml = DocumentMut::from_str(&scarb_toml).unwrap();
 
     let dependencies = scarb_toml
@@ -838,10 +903,10 @@ fn test_init_project_with_custom_snforge_dependency_git() {
     dependencies.remove("snforge_std");
     dependencies.insert("snforge_std", Item::Value(Value::InlineTable(snforge_std)));
 
-    std::fs::write(manifest_path.path(), scarb_toml.to_string()).unwrap();
+    std::fs::write(&manifest_path, scarb_toml.to_string()).unwrap();
 
     let output = test_runner(&temp)
-        .current_dir(temp.child(Path::new("test_name")))
+        .current_dir(&project_path)
         .assert()
         .success();
 
@@ -967,10 +1032,7 @@ fn incompatible_snforge_std_version_warning() {
         .unwrap()
         .parse::<DocumentMut>()
         .unwrap();
-    scarb_toml["dev-dependencies"]["snforge_std"]["path"] = Item::None;
-    scarb_toml["dev-dependencies"]["snforge_std"]["git"] =
-        value("https://github.com/foundry-rs/starknet-foundry.git");
-    scarb_toml["dev-dependencies"]["snforge_std"]["tag"] = value("v0.28.0");
+    scarb_toml["dev-dependencies"]["snforge_std"] = value("0.34.0");
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
     let output = test_runner(&temp).assert().failure();
@@ -978,7 +1040,6 @@ fn incompatible_snforge_std_version_warning() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        [..]Updating git repository https://github.com/foundry-rs/starknet-foundry
         [WARNING] Package snforge_std version does not meet the recommended version requirement =0.[..], [..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -986,23 +1047,23 @@ fn incompatible_snforge_std_version_warning() {
 
         Collected 4 test(s) from steps package
         Running 4 test(s) from src/
-        [PASS] steps::tests::steps_570030 [..]
-        [FAIL] steps::tests::steps_10000005
+        [PASS] steps::tests::steps_much_less_than_10000000 [..]
+        [FAIL] steps::tests::steps_more_than_10000000
 
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
 
-        [FAIL] steps::tests::steps_11250075
+        [FAIL] steps::tests::steps_much_more_than_10000000
 
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
 
-        [PASS] steps::tests::steps_9999990 [..]
+        [PASS] steps::tests::steps_less_than_10000000 [..]
         Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
 
         Failures:
-            steps::tests::steps_10000005
-            steps::tests::steps_11250075
+            steps::tests::steps_more_than_10000000
+            steps::tests::steps_much_more_than_10000000
         "},
     );
 }
@@ -1090,9 +1151,9 @@ fn call_nonexistent_selector() {
         output,
         indoc! {r"
         Collected 1 test(s) from nonexistent_selector package
-        Running 1 test(s) from tests/
-        [PASS] nonexistent_selector_integrationtest::test_contract::test_unwrapped_call_contract_syscall (gas: ~103)
         Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] nonexistent_selector_integrationtest::test_contract::test_unwrapped_call_contract_syscall [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "},
     );

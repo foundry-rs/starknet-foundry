@@ -166,3 +166,32 @@ fn trace_has_deploy_with_no_constructor_phantom_nodes() {
         cairo_annotations::trace_data::CallTraceNode::DeployWithoutConstructor
     );
 }
+
+#[test]
+fn trace_is_produced_even_if_contract_panics() {
+    let temp = setup_package("backtrace_panic");
+    test_runner(&temp)
+        .arg("--save-trace-data")
+        .assert()
+        .success();
+
+    let trace_data = fs::read_to_string(
+        temp.join(TRACE_DIR)
+            .join("backtrace_panic::Test::test_contract_panics.json"),
+    )
+    .unwrap();
+
+    let call_trace: ProfilerCallTrace = serde_json::from_str(&trace_data).unwrap();
+
+    assert_all_execution_info_exists(&call_trace);
+}
+
+fn assert_all_execution_info_exists(trace: &ProfilerCallTrace) {
+    assert!(trace.cairo_execution_info.is_some());
+
+    for trace_node in &trace.nested_calls {
+        if let ProfilerCallTraceNode::EntryPointCall(trace) = trace_node {
+            assert_all_execution_info_exists(trace);
+        }
+    }
+}

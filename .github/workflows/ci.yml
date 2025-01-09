@@ -336,8 +336,9 @@ jobs:
         run: |
           cargo install mdbook-linkcheck
       - name: Build with mdBook
-        run: mdbook build
-        working-directory: ./docs
+        run: |
+          # TODO(#2781): Use `mdbook build`
+          ./scripts/build_docs.sh
       - name: Install Forge
         run: |
           cargo install --path crates/forge --locked

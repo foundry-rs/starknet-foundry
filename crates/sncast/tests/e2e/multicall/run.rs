@@ -30,8 +30,6 @@ async fn test_happy_case(account: &str) {
         URL,
         "--path",
         path,
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args);
@@ -73,8 +71,6 @@ async fn test_calldata_ids() {
         URL,
         "--path",
         path,
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -110,8 +106,6 @@ async fn test_invalid_path() {
         URL,
         "--path",
         "non-existent",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -266,8 +260,6 @@ async fn test_numeric_inputs() {
         URL,
         "--path",
         path,
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
