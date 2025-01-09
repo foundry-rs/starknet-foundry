@@ -6,7 +6,9 @@ use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::DeployResponse;
-use sncast::{extract_or_generate_salt, impl_payable_transaction, udc_uniqueness};
+use sncast::{
+    extract_or_generate_salt, generate_version_parser, impl_payable_transaction, udc_uniqueness,
+};
 use sncast::{handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
@@ -67,6 +69,8 @@ pub enum DeployVersion {
     V1,
     V3,
 }
+
+generate_version_parser!(DeployVersion, V1, V3);
 
 impl_payable_transaction!(Deploy, token_not_supported_for_deployment,
     DeployVersion::V1 => FeeToken::Eth,

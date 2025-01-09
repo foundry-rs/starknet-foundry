@@ -7,7 +7,10 @@ use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::InvokeResponse;
-use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, WaitForTx};
+use sncast::{
+    apply_optional, generate_version_parser, handle_wait_for_tx, impl_payable_transaction,
+    WaitForTx,
+};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, ExecutionV1, ExecutionV3, SingleOwnerAccount};
 use starknet::core::types::{Call, InvokeTransactionResult};
@@ -50,6 +53,8 @@ pub enum InvokeVersion {
     V1,
     V3,
 }
+
+generate_version_parser!(InvokeVersion, V1, V3);
 
 impl_payable_transaction!(Invoke, token_not_supported_for_invoke,
     InvokeVersion::V1 => FeeToken::Eth,

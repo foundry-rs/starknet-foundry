@@ -10,7 +10,7 @@ use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::InvokeResponse;
 use sncast::{
-    apply_optional, chain_id_to_network_name, check_account_file_exists,
+    apply_optional, chain_id_to_network_name, check_account_file_exists, generate_version_parser,
     get_account_data_from_accounts_file, get_account_data_from_keystore, get_keystore_password,
     handle_rpc_error, handle_wait_for_tx, impl_payable_transaction, AccountType, WaitForTx,
 };
@@ -38,7 +38,7 @@ pub struct Deploy {
     pub fee_args: FeeArgs,
 
     /// Version of the account deployment (can be inferred from fee token)
-    #[clap(short, long)]
+    #[clap(short, long, value_parser = parse_version)]
     pub version: Option<AccountDeployVersion>,
 
     #[clap(flatten)]
@@ -50,6 +50,8 @@ pub enum AccountDeployVersion {
     V1,
     V3,
 }
+
+generate_version_parser!(AccountDeployVersion, V1, V3);
 
 impl_payable_transaction!(Deploy, token_not_supported_for_deployment,
     AccountDeployVersion::V1 => FeeToken::Eth,
