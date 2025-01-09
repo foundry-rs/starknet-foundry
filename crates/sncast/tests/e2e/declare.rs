@@ -763,7 +763,7 @@ async fn test_version_deprecation_warning() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 transactions will become the default and only available version.
+        [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 will become the only type of transaction available.
         command: declare
         class_hash: 0x0[..]
         transaction_hash: 0x0[..]

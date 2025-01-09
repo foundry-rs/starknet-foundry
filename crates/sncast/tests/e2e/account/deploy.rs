@@ -464,7 +464,7 @@ async fn test_version_deprecation_warning() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
-        [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 transactions will become the default and only available version.
+        [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 will become the only type of transaction available.
         Transaction hash: [..]
         command: account deploy
         transaction_hash: [..]

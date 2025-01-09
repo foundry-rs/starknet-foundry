@@ -23,7 +23,7 @@ macro_rules! generate_version_parser {
         }
 
         pub fn parse_version(s: &str) -> Result<$enum_name, String> {
-            let deprecation_message = "The '--version' flag is deprecated and will be removed in the future. Version 3 transactions will become the default and only available version.";
+            let deprecation_message = "The '--version' flag is deprecated and will be removed in the future. Version 3 will become the only type of transaction available.";
             print_as_warning(&Error::msg(deprecation_message));
 
             let parsed_enum = s.parse::<$enum_name>()?;
