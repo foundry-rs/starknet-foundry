@@ -331,7 +331,7 @@ async fn test_version_deprecation_warning() {
         "--path",
         path,
         "--version",
-        "v3"
+        "v3",
     ];
 
     let snapbox = runner(&args);
@@ -367,7 +367,7 @@ async fn test_version_deprecation_warning_error() {
         "--path",
         path,
         "--version",
-        "v2137"
+        "v2137",
     ];
 
     let snapbox = runner(&args);
