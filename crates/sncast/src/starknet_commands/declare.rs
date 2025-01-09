@@ -47,7 +47,7 @@ pub struct Declare {
     pub package: Option<String>,
 
     /// Version of the declaration (can be inferred from fee token)
-    #[clap(short, long)]
+    #[clap(short, long, value_parser = parse_version)]
     pub version: Option<DeclareVersion>,
 
     #[clap(flatten)]

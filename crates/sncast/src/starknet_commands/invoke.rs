@@ -41,7 +41,7 @@ pub struct Invoke {
     pub nonce: Option<Felt>,
 
     /// Version of invoke (can be inferred from fee token)
-    #[clap(short, long)]
+    #[clap(short, long, value_parser = parse_version)]
     pub version: Option<InvokeVersion>,
 
     #[clap(flatten)]
