@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - interactive interface that allows setting created or imported account as the default
 
+#### Deprecated
+
+- `--version` flag
+
 
 ## [0.35.1] - 2024-12-16
 
