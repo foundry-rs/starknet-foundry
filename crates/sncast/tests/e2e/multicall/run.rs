@@ -310,3 +310,72 @@ async fn test_numeric_overflow() {
         "},
     );
 }
+
+#[tokio::test]
+async fn test_version_deprecation_warning() {
+    let path = project_root::get_project_root().expect("failed to get project root path");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("deploy_invoke.toml");
+    let path = path.to_str().expect("failed converting path to str");
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "oz",
+        "multicall",
+        "run",
+        "--url",
+        URL,
+        "--path",
+        path,
+        "--version",
+        "v3"
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert();
+
+    output.stdout_matches(indoc! {r"
+        [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 will become the only type of transaction available.
+        command: multicall run
+        transaction_hash: 0x0[..]
+
+        To see invocation details, visit:
+        transaction: [..]
+    "});
+}
+
+#[tokio::test]
+async fn test_version_deprecation_warning_error() {
+    let path = project_root::get_project_root().expect("failed to get project root path");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("deploy_invoke.toml");
+    let path = path.to_str().expect("failed converting path to str");
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "oz",
+        "multicall",
+        "run",
+        "--url",
+        URL,
+        "--path",
+        path,
+        "--version",
+        "v2137"
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert();
+
+    output.stderr_matches(indoc! {r"
+        error: invalid value 'v2137' for '--version <VERSION>': Invalid value 'v2137'. Possible values: v1, v3
+
+        For more information, try '--help'.
+    "});
+}

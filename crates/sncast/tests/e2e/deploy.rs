@@ -526,7 +526,7 @@ async fn test_version_deprecation_warning_error() {
         output,
         indoc! {
             "
-            error: invalid value 'v2137' for '--version <VERSION>': Invalid value 'v2137'. Possible values: v2, v3
+            error: invalid value 'v2137' for '--version <VERSION>': Invalid value 'v2137'. Possible values: v1, v3
 
             For more information, try '--help'.
             "
