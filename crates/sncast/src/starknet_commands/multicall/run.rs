@@ -1,4 +1,4 @@
-use crate::starknet_commands::invoke::{execute_calls, InvokeVersion, parse_version};
+use crate::starknet_commands::invoke::{execute_calls, parse_version, InvokeVersion};
 use anyhow::anyhow;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
