@@ -1,7 +1,5 @@
-use core::array::SpanTrait;
-use core::serde::Serde;
-use starknet::{ContractAddress, testing::cheatcode, SyscallResult};
-use super::super::_cheatcode::handle_cheatcode;
+use starknet::{ContractAddress, SyscallResult};
+use super::super::_cheatcode::typed_checked_cheatcode;
 
 #[derive(Drop, Clone)]
 pub struct L1Handler {
@@ -38,14 +36,6 @@ impl L1HandlerImpl of L1HandlerTrait {
         ];
         payload.serialize(ref inputs);
 
-        let mut outputs = handle_cheatcode(cheatcode::<'l1_handler_execute'>(inputs.span()));
-        let exit_code = *outputs.pop_front().unwrap();
-
-        if exit_code == 0 {
-            SyscallResult::Ok(())
-        } else {
-            let panic_data = Serde::<Array<felt252>>::deserialize(ref outputs).unwrap();
-            SyscallResult::Err(panic_data)
-        }
+        typed_checked_cheatcode::<'l1_handler_execute', SyscallResult<()>>(inputs.span())
     }
 }

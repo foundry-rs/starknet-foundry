@@ -1,7 +1,7 @@
-use starknet::{ContractAddress, testing::cheatcode, contract_address_const};
+use starknet::ContractAddress;
 use starknet::ResourcesBounds;
 use snforge_std::cheatcodes::CheatSpan;
-use super::super::_cheatcode::handle_cheatcode;
+use super::super::_cheatcode::typed_checked_cheatcode;
 
 pub mod caller_address;
 pub mod block_number;
@@ -145,5 +145,5 @@ fn cheat_execution_info(execution_info_mock: ExecutionInfoMock) {
 
     execution_info_mock.serialize(ref inputs);
 
-    handle_cheatcode(cheatcode::<'cheat_execution_info'>(inputs.span()));
+    typed_checked_cheatcode::<'cheat_execution_info', ()>(inputs.span());
 }
