@@ -777,7 +777,7 @@ async fn test_version_deprecation_warning() {
 
 #[tokio::test]
 async fn test_version_deprecation_warning_error() {
-    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
         "--accounts-file",
@@ -785,14 +785,13 @@ async fn test_version_deprecation_warning_error() {
         "--account",
         "user8",
         "--int-format",
-        "--json",
         "declare",
         "--url",
         URL,
-        "--contract-name",
-        "supercomplexcode",
         "--package",
-        "main_workspace",
+        "cast_addition",
+        "--contract-name",
+        "whatever",
         "--max-fee",
         "99999999999999999",
         "--version",
