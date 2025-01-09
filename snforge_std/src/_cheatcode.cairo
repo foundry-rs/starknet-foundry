@@ -20,8 +20,8 @@ pub(crate) fn typed_checked_cheatcode<const selector: felt252, T, +Serde<T>>(
     let mut serialized_output = checked_cheatcode::<selector>(input);
 
     match Serde::deserialize(ref serialized_output) {
-        Some(output) => output,
-        None => panic!("snforge_std version mismatch: check the warning above")
+        Option::Some(output) => output,
+        Option::None => panic!("snforge_std version mismatch: check the warning above")
     }
 }
 
