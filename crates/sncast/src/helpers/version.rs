@@ -28,8 +28,6 @@ macro_rules! generate_version_parser {
 
             let parsed_enum = s.parse::<$enum_name>()?;
 
-            println!("Parsed enum: {:?}", parsed_enum);
-
             Ok(parsed_enum)
         }
     };

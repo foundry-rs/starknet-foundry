@@ -729,3 +729,83 @@ async fn test_no_scarb_profile() {
         "},
     );
 }
+
+#[tokio::test]
+async fn test_version_deprecation_warning() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "human_readable",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+        "--max-fee",
+        "99999999999999999",
+        "--version",
+        "v2",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 transactions will become the default and only available version.
+        command: declare
+        class_hash: 0x0[..]
+        transaction_hash: 0x0[..]
+
+        To see declaration details, visit:
+        class: https://[..]
+        transaction: https://[..]
+    " },
+    );
+}
+
+#[tokio::test]
+async fn test_version_deprecation_warning_error() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "human_readable",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+        "--max-fee",
+        "99999999999999999",
+        "--version",
+        "v2137",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().failure().stderr_matches(indoc! {r"
+        error: invalid value 'v2137' for '--version <VERSION>': Invalid value 'v2137'. Possible values: v2, v3
+
+        For more information, try '--help'.
+    "});
+}

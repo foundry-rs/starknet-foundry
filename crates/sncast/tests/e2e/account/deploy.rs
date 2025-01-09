@@ -443,6 +443,66 @@ async fn test_fee_token_deprecation_warning_strk() {
 }
 
 #[tokio::test]
+async fn test_version_deprecation_warning() {
+    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "--wait",
+        "account",
+        "deploy",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--version",
+        "v3",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 transactions will become the default and only available version.
+        Transaction hash: [..]
+        command: account deploy
+        transaction_hash: [..]
+
+        To see invocation details, visit:
+        transaction: [..]
+    "});
+}
+
+#[tokio::test]
+async fn test_version_deprecation_warning_error() {
+    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "--wait",
+        "account",
+        "deploy",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--version",
+        "v2137",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().failure().stderr_matches(indoc! {r"
+        error: invalid value 'v2137' for '--version <VERSION>': Invalid value 'v2137'. Possible values: v1, v3
+
+        For more information, try '--help'.
+    "});
+}
+
+#[tokio::test]
 pub async fn test_valid_class_hash() {
     let tempdir = create_account(true, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
     let accounts_file = "accounts.json";
