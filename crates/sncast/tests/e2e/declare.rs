@@ -777,24 +777,22 @@ async fn test_version_deprecation_warning() {
 
 #[tokio::test]
 async fn test_version_deprecation_warning_error() {
-    let contract_path = duplicate_contract_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/map",
-        "put",
-        "human_readable",
-    );
-    let tempdir = create_and_deploy_oz_account().await;
-    join_tempdirs(&contract_path, &tempdir);
-
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
         "--accounts-file",
-        "accounts.json",
+        accounts_json_path.as_str(),
         "--account",
-        "my_account",
+        "user8",
+        "--int-format",
+        "--json",
         "declare",
         "--url",
         URL,
         "--contract-name",
-        "Map",
+        "supercomplexcode",
+        "--package",
+        "main_workspace",
         "--max-fee",
         "99999999999999999",
         "--version",
