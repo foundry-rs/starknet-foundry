@@ -6,14 +6,12 @@ use scarb_api::StarknetContractArtifacts;
 use sncast::helpers::error::token_not_supported_for_declaration;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
+use sncast::helpers::version::parse_version;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
 };
-use sncast::{
-    apply_optional, generate_version_parser, handle_wait_for_tx, impl_payable_transaction,
-    ErrorData, WaitForTx,
-};
+use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, ErrorData, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, DeclarationV2, DeclarationV3};
 use starknet::core::types::{DeclareTransactionResult, StarknetError};
@@ -47,7 +45,7 @@ pub struct Declare {
     pub package: Option<String>,
 
     /// Version of the declaration (can be inferred from fee token)
-    #[clap(short, long, value_parser = parse_version)]
+    #[clap(short, long, value_parser = parse_version::<DeclareVersion>)]
     pub version: Option<DeclareVersion>,
 
     #[clap(flatten)]
@@ -59,8 +57,6 @@ pub enum DeclareVersion {
     V2,
     V3,
 }
-
-generate_version_parser!(DeclareVersion, V2, V3);
 
 impl_payable_transaction!(Declare, token_not_supported_for_declaration,
     DeclareVersion::V2 => FeeToken::Eth,
