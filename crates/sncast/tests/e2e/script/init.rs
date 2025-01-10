@@ -133,7 +133,7 @@ fn test_initialized_script_compiles() {
         formatdoc! {r"
         [WARNING] The newly created script isn't auto-added to the workspace. [..]
         command: script init
-        message: Successfully initialized `{script_name}` at [..]/scripts/{script_name}
+        message: Successfully initialized `{script_name}` at [..]{script_name}
     "},
     );
 
