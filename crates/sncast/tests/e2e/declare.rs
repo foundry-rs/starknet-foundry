@@ -763,13 +763,6 @@ async fn test_version_deprecation_warning() {
         output,
         indoc! {r"
         [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 will become the only type of transaction available.
-        command: declare
-        class_hash: 0x0[..]
-        transaction_hash: 0x0[..]
-
-        To see declaration details, visit:
-        class: https://[..]
-        transaction: https://[..]
     " },
     );
 }
