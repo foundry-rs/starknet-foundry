@@ -12,16 +12,17 @@ use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader};
 use conversions::byte_array::ByteArray;
 use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
-use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
+use futures::future::join_all;
 use runtime::EnhancedHintError;
 use serde_json::Value;
 use starknet_api::block::BlockNumber;
 use starknet_api::core::ContractAddress;
 use starknet_types_core::felt::Felt;
 use tempfile::TempDir;
+use tokio::runtime::Handle;
 
-#[test]
-fn fork_simple() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn fork_simple() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
@@ -61,8 +62,8 @@ fn fork_simple() {
     assert_success(output, &[Felt::from(100)]);
 }
 
-#[test]
-fn try_calling_nonexistent_contract() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn try_calling_nonexistent_contract() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
@@ -83,8 +84,8 @@ fn try_calling_nonexistent_contract() {
     assert_panic(output, &panic_data_felts);
 }
 
-#[test]
-fn try_deploying_undeclared_class() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn try_deploying_undeclared_class() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
@@ -103,8 +104,8 @@ fn try_deploying_undeclared_class() {
     });
 }
 
-#[test]
-fn test_forking_at_block_number() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_forking_at_block_number() {
     let cache_dir = TempDir::new().unwrap();
 
     {
@@ -148,8 +149,8 @@ fn test_forking_at_block_number() {
     purge_cache(cache_dir.path().to_str().unwrap());
 }
 
-#[test]
-fn call_forked_contract_from_other_contract() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn call_forked_contract_from_other_contract() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
@@ -176,8 +177,8 @@ fn call_forked_contract_from_other_contract() {
     assert_success(output, &[Felt::from(0)]);
 }
 
-#[test]
-fn library_call_on_forked_class_hash() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn library_call_on_forked_class_hash() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
@@ -222,8 +223,8 @@ fn library_call_on_forked_class_hash() {
     assert_success(output, &[Felt::from(100)]);
 }
 
-#[test]
-fn call_forked_contract_from_constructor() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn call_forked_contract_from_constructor() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
@@ -255,8 +256,8 @@ fn call_forked_contract_from_constructor() {
     assert_success(output, &[Felt::from(0)]);
 }
 
-#[test]
-fn call_forked_contract_get_block_info_via_proxy() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn call_forked_contract_get_block_info_via_proxy() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state =
         create_fork_cached_state_at(53_655, cache_dir.path().to_str().unwrap());
@@ -314,8 +315,8 @@ fn call_forked_contract_get_block_info_via_proxy() {
     );
 }
 
-#[test]
-fn call_forked_contract_get_block_info_via_libcall() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn call_forked_contract_get_block_info_via_libcall() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state =
         create_fork_cached_state_at(53_669, cache_dir.path().to_str().unwrap());
@@ -374,8 +375,8 @@ fn call_forked_contract_get_block_info_via_libcall() {
     );
 }
 
-#[test]
-fn using_specified_block_nb_is_cached() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn using_specified_block_nb_is_cached() {
     let cache_dir = TempDir::new().unwrap();
     let run_test = || {
         let mut cached_state =
@@ -457,8 +458,8 @@ fn using_specified_block_nb_is_cached() {
     purge_cache(cache_dir.path().to_str().unwrap());
 }
 
-#[test]
-fn test_cache_merging() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn test_cache_merging() {
     fn run_test(cache_dir: &str, contract_address: &str, balance: u64) {
         let mut cached_state = create_fork_cached_state_at(53_680, cache_dir);
         let _ = cached_state.state.get_block_info().unwrap();
@@ -549,27 +550,27 @@ fn test_cache_merging() {
             "0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8"
         );
     };
-    let cache_dir_str = cache_dir.path().to_str().unwrap();
+    let cache_dir_str = cache_dir.path().to_string_lossy().to_string();
 
-    run_test(cache_dir_str, contract_1_address, 0);
-    run_test(cache_dir_str, contract_2_address, 0);
+    run_test(&cache_dir_str, contract_1_address, 0);
+    run_test(&cache_dir_str, contract_2_address, 0);
     assert_cache();
 
     purge_cache(cache_dir.path().to_str().unwrap());
 
     // Parallel execution
-    [
-        (cache_dir_str, contract_1_address, 0),
-        (cache_dir_str, contract_2_address, 0),
-    ]
-    .par_iter()
-    .for_each(|param_tpl| run_test(param_tpl.0, param_tpl.1, param_tpl.2));
+    let tasks = [contract_1_address, contract_2_address].map(move |address| {
+        let cache_dir_str = cache_dir_str.clone();
+        Handle::current().spawn(async move { run_test(&cache_dir_str, address, 0) })
+    });
+
+    join_all(tasks).await;
 
     assert_cache();
 }
 
-#[test]
-fn test_cached_block_info_merging() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_cached_block_info_merging() {
     fn run_test(cache_dir: &str, balance: u64, call_get_block_info: bool) {
         let mut cached_state = create_fork_cached_state_at(53_680, cache_dir);
         if call_get_block_info {
@@ -636,8 +637,8 @@ fn test_cached_block_info_merging() {
     assert_cached_block_info(true);
 }
 
-#[test]
-fn test_calling_nonexistent_url() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_calling_nonexistent_url() {
     let temp_dir = TempDir::new().unwrap();
     let nonexistent_url = "http://nonexistent-node-address.com".parse().unwrap();
     let mut cached_fork_state = CachedState::new(ExtendedStateReader {

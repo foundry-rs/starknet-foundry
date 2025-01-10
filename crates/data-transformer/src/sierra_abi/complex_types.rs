@@ -233,7 +233,7 @@ impl SupportedCalldataKind for ExprStructCtorCall {
         {
             // TODO add message which arguments are invalid (Issue #2549)
             bail!(
-                r#"Arguments in constructor invocation for struct {} do not match struct arguments in ABI"#,
+                r"Arguments in constructor invocation for struct {} do not match struct arguments in ABI",
                 expected_type
             )
         }
