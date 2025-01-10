@@ -150,9 +150,9 @@ fn overwrite_lib_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> Resul
 
     fs::write(
         lib_file_path,
-        formatdoc! {r#"
+        formatdoc! {r"
             mod {script_name};
-        "#},
+        "},
     )?;
 
     Ok(())

@@ -107,5 +107,5 @@ pub fn can_coverage_be_generated(scarb_metadata: &Metadata) -> Result<()> {
 fn contains_entry_with_value(table: &Table, key: &str, value: &str) -> bool {
     table
         .get(key)
-        .map_or(false, |entry| entry.to_string().trim() == value)
+        .is_some_and(|entry| entry.to_string().trim() == value)
 }

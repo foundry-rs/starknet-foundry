@@ -40,14 +40,14 @@ where
     let cheatcode_name = Collector::CHEATCODE_NAME;
 
     let config_cheatcode = formatdoc!(
-        r#"
+        r"
             let mut data = array![];
 
             {value}
             .serialize(ref data);
 
             starknet::testing::cheatcode::<'{cheatcode_name}'>(data.span());
-        "#
+        "
     );
 
     Ok(append_config_statements(db, func, &config_cheatcode))
