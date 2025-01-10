@@ -1100,21 +1100,31 @@ fn detailed_resources_flag() {
 fn catch_runtime_errors() {
     let temp = setup_package("simple_package");
 
+    let expected_panic = if cfg!(target_os = "windows") {
+        "The system cannot find the file specified"
+    } else {
+        "No such file or directory"
+    };
+
     temp.child("tests/test.cairo")
-        .write_str(indoc!(
-            r#"
-                use snforge_std::fs::{FileTrait, read_txt};
+        .write_str(
+            formatdoc!(
+                r#"
+                use snforge_std::fs::{{FileTrait, read_txt}};
 
                 #[test]
-                #[should_panic(expected: "No such file or directory (os error 2)")]
-                fn catch_no_such_file() {
+                #[should_panic(expected: "{}")]
+                fn catch_no_such_file() {{
                     let file = FileTrait::new("no_way_this_file_exists");
                     let content = read_txt(@file);
 
                     assert!(false);
-                }
-            "#
-        ))
+                }}
+            "#,
+                expected_panic
+            )
+            .as_str(),
+        )
         .unwrap();
 
     let output = test_runner(&temp).assert();
