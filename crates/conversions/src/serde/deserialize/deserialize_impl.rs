@@ -92,15 +92,13 @@ macro_rules! impl_deserialize_for_felt_type {
         }
     };
 }
+
 macro_rules! impl_deserialize_for_num_type {
     ($type:ty) => {
         impl CairoDeserialize for $type {
             fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
                 let felt = Felt::deserialize(reader)?;
-
-                felt.to_bigint()
-                    .try_into()
-                    .map_err(|_| BufferReadError::ParseFailed)
+                felt.try_into().map_err(|_| BufferReadError::ParseFailed)
             }
         }
     };
