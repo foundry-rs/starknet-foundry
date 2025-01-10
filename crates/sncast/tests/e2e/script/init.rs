@@ -55,9 +55,9 @@ fn test_script_init_happy_case() {
 
     assert_eq!(
         lib_cairo_content,
-        formatdoc! {r#"
+        formatdoc! {r"
             mod {script_name};
-        "#}
+        "}
     );
     assert_eq!(
         main_file_content,
