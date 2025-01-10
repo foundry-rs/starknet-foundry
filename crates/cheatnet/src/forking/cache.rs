@@ -150,7 +150,7 @@ impl ForkCache {
         file.write_all(output.as_bytes())
             .expect("Could not write cache to file");
 
-        file.unlock().unwrap();
+        fs2::FileExt::unlock(&file).unwrap();
     }
 
     pub(crate) fn get_storage_at(
