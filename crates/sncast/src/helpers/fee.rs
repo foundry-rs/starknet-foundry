@@ -107,11 +107,7 @@ impl FeeArgs {
 
                         let max_gas = NonZeroFelt::try_from(Felt::from(max_fee).floor_div(&max_gas_unit_price))
                         .unwrap_or_else(|_| unreachable!("Calculated max gas must be >= 1 because max_fee >= max_gas_unit_price ensures a positive result"));
-                        print_max_fee_conversion_info(
-                            max_fee.into(),
-                            max_gas.into(),
-                            max_gas_unit_price.into(),
-                        );
+                        print_max_fee_conversion_info(max_fee, max_gas, max_gas_unit_price);
                         FeeSettings::Strk {
                             max_gas: Some(
                                 NonZeroU64::try_from_(max_gas).map_err(anyhow::Error::msg)?,
@@ -129,11 +125,7 @@ impl FeeArgs {
 
                         let max_gas_unit_price = NonZeroFelt::try_from(Felt::from(max_fee).floor_div(&max_gas))
                         .unwrap_or_else(|_| unreachable!("Calculated max gas unit price must be >= 1 because max_fee >= max_gas ensures a positive result"));
-                        print_max_fee_conversion_info(
-                            max_fee.into(),
-                            max_gas.into(),
-                            max_gas_unit_price.into(),
-                        );
+                        print_max_fee_conversion_info(max_fee, max_gas, max_gas_unit_price);
                         FeeSettings::Strk {
                             max_gas: Some(
                                 NonZeroU64::try_from_(max_gas).map_err(anyhow::Error::msg)?,
@@ -154,11 +146,7 @@ impl FeeArgs {
                         )?;
                         let max_gas = NonZeroFelt::try_from(Felt::from(max_fee)
                             .floor_div(&max_gas_unit_price)).context("Calculated max-gas from provided --max-fee and the current network gas price is 0. Please increase --max-fee to obtain a positive gas amount")?;
-                        print_max_fee_conversion_info(
-                            max_fee.into(),
-                            max_gas.into(),
-                            max_gas_unit_price.into(),
-                        );
+                        print_max_fee_conversion_info(max_fee, max_gas, max_gas_unit_price);
                         FeeSettings::Strk {
                             max_gas: Some(
                                 NonZeroU64::try_from_(max_gas).map_err(anyhow::Error::msg)?,
@@ -299,7 +287,14 @@ fn parse_fee_token(s: &str) -> Result<FeeToken, String> {
     Ok(parsed_token)
 }
 
-fn print_max_fee_conversion_info(max_fee: impl Into<Felt>, max_gas: impl Into<Felt>, max_gas_unit_price: impl Into<Felt>) {
+fn print_max_fee_conversion_info(
+    max_fee: impl Into<Felt>,
+    max_gas: impl Into<Felt>,
+    max_gas_unit_price: impl Into<Felt>,
+) {
+    let max_fee: Felt = max_fee.into();
+    let max_gas: Felt = max_gas.into();
+    let max_gas_unit_price: Felt = max_gas_unit_price.into();
     println!(
         "Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags\nConverted {max_fee} max fee to {max_gas} max gas and {max_gas_unit_price} max gas unit price\n",
     );
