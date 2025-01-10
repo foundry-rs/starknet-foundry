@@ -15,7 +15,7 @@ body:
     attributes:
       label: Objective
       description: Briefly describe the correct state
-      placeholder: `print_a` should magically detect if user wants to print to stdout or a printer.
+      placeholder: The `print_a` cheatcode should magically detect if user wants to print to stdout or a printer.
     validations:
       required: true
 
