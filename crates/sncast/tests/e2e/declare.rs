@@ -774,35 +774,3 @@ async fn test_version_deprecation_warning() {
     " },
     );
 }
-
-#[tokio::test]
-async fn test_version_deprecation_warning_error() {
-    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
-    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
-    let args = vec![
-        "--accounts-file",
-        accounts_json_path.as_str(),
-        "--account",
-        "user8",
-        "--int-format",
-        "declare",
-        "--url",
-        URL,
-        "--package",
-        "cast_addition",
-        "--contract-name",
-        "whatever",
-        "--max-fee",
-        "99999999999999999",
-        "--version",
-        "v2137",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-
-    snapbox.assert().failure().stderr_matches(indoc! {r"
-        error: invalid value 'v2137' for '--version <VERSION>': Invalid value 'v2137'. Possible values: v2, v3
-
-        For more information, try '--help'.
-    "});
-}

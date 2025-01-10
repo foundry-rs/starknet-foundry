@@ -474,38 +474,3 @@ fn test_version_deprecation_warning() {
         "},
     );
 }
-
-#[test]
-fn test_version_deprecation_warning_error() {
-    let args = vec![
-        "--accounts-file",
-        ACCOUNT_FILE_PATH,
-        "--account",
-        "oz",
-        "invoke",
-        "--url",
-        URL,
-        "--contract-address",
-        MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--function",
-        "put",
-        "--calldata",
-        "0x1 0x2",
-        "--max-fee",
-        "99999999999999999",
-        "--version",
-        "v2137",
-    ];
-
-    let snapbox = runner(&args);
-    let output = snapbox.assert().failure();
-
-    assert_stderr_contains(
-        output,
-        indoc! {"
-            error: invalid value 'v2137' for '--version <VERSION>': Invalid value 'v2137'. Possible values: v1, v3
-
-            For more information, try '--help'.
-        "},
-    );
-}

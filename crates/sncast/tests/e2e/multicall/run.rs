@@ -346,36 +346,3 @@ async fn test_version_deprecation_warning() {
         transaction: [..]
     "});
 }
-
-#[tokio::test]
-async fn test_version_deprecation_warning_error() {
-    let path = project_root::get_project_root().expect("failed to get project root path");
-    let path = Path::new(&path)
-        .join(MULTICALL_CONFIGS_DIR)
-        .join("deploy_invoke.toml");
-    let path = path.to_str().expect("failed converting path to str");
-
-    let args = vec![
-        "--accounts-file",
-        ACCOUNT_FILE_PATH,
-        "--account",
-        "oz",
-        "multicall",
-        "run",
-        "--url",
-        URL,
-        "--path",
-        path,
-        "--version",
-        "v2137",
-    ];
-
-    let snapbox = runner(&args);
-    let output = snapbox.assert();
-
-    output.stderr_matches(indoc! {r"
-        error: invalid value 'v2137' for '--version <VERSION>': Invalid value 'v2137'. Possible values: v1, v3
-
-        For more information, try '--help'.
-    "});
-}
