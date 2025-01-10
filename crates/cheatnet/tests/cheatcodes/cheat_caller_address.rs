@@ -291,8 +291,8 @@ fn cheat_caller_address_one_then_all() {
     );
 }
 
-#[test]
-fn cheat_caller_address_cairo0_callback() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn cheat_caller_address_cairo0_callback() {
     let temp_dir = TempDir::new().unwrap();
     let cached_state = create_fork_cached_state_at(53_631, temp_dir.path().to_str().unwrap());
     let mut test_env = TestEnvironment::new();

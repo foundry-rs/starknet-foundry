@@ -33,7 +33,6 @@ rayon.workspace = true
 tokio.workspace = true
 num-bigint.workspace = true
 conversions.workspace = true
-scarb-metadata.workspace = true
 fs2.workspace = true
 flate2.workspace = true
 data-transformer = { path = "../data-transformer" }
@@ -46,6 +45,7 @@ shared.workspace = true
 rand.workspace = true
 
 [dev-dependencies]
+futures.workspace = true
 ctor.workspace = true
 indoc.workspace = true
 rayon.workspace = true

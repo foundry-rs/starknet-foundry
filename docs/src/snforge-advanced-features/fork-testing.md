@@ -14,7 +14,7 @@ We are going to use a free, open RPC endpoint - [Blast](https://blastapi.io/publ
 
 We first need to define the contract's interface along with all the structures used by its externals:
 ```rust
-{{#include ../../listings/snforge_advanced_features/crates/fork_testing/src/lib.cairo}}
+{{#include ../../listings/fork_testing/src/lib.cairo}}
 ```
 
 ## Fork Configuration
@@ -43,17 +43,17 @@ Example uses of all methods:
 
 1. `block_number`:
 ```rust
-{{#include ../../listings/snforge_advanced_features/crates/fork_testing/tests/explicit/block_number.cairo}}
+{{#include ../../listings/fork_testing/tests/explicit/block_number.cairo}}
 ```
 
 2. `block_hash`:
 ```rust
-{{#include ../../listings/snforge_advanced_features/crates/fork_testing/tests/explicit/block_hash.cairo}}
+{{#include ../../listings/fork_testing/tests/explicit/block_hash.cairo}}
 ```
 
 3. `block_tag`:
 ```rust
-{{#include ../../listings/snforge_advanced_features/crates/fork_testing/tests/explicit/block_tag.cairo}}
+{{#include ../../listings/fork_testing/tests/explicit/block_tag.cairo}}
 ```
 
 ### Configure Fork in `Scarb.toml`
@@ -65,21 +65,21 @@ the same fork in tests.
 ```toml
 [[tool.snforge.fork]]
 name = "SEPOLIA_LATEST"
-url = "https://starknet-sepolia.public.blastapi.iol/rpc/v0_7"
+url = "https://starknet-sepolia.public.blastapi.io/rpc/v0_7"
 block_id.tag = "latest"
 ```
 
 From this moment forks can be set using their name in the `fork` attribute.
 
 ```rust
-{{#include ../../listings/snforge_advanced_features/crates/fork_testing/tests/name.cairo}}
+{{#include ../../listings/fork_testing/tests/name.cairo}}
 ```
 
 In some cases you may want to override `block_id` defined in the `Scarb.toml` file.
 You can do it by passing `block_number`, `block_hash`, `block_tag` arguments to the `fork` attribute.
 
 ```rust
-{{#include ../../listings/snforge_advanced_features/crates/fork_testing/tests/overridden_name.cairo}}
+{{#include ../../listings/fork_testing/tests/overridden_name.cairo}}
 ```
 
 ## Testing Forked Contracts

@@ -52,9 +52,8 @@ defined in the profile.
 ```shell
 $ sncast --profile myprofile \
     call \
-    --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
-    --function get \
-    --arguments '0' \
+    --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
+    --function get_balance \
     --block-id latest
 ```
 
@@ -89,9 +88,8 @@ With this, there's no need to include the `--profile` argument when using `sncas
 
 ```shell
 $ sncast call \
-    --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
-    --function get \
-    --arguments '0' \
+    --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
+    --function get_balance \
     --block-id latest
 ```
 
@@ -100,7 +98,7 @@ $ sncast call \
 
 ```shell
 command: call
-response: [0x1, 0x23, 0x4]
+response: [0x0]
 ```
 </details>
 <br>
@@ -175,4 +173,4 @@ url = "$NODE_URL"
 # ...
 ```
 
-Variable value are automatically resolved to numbers and booleans (strings `true`, `false`) if it is possible.
+Variable values are automatically resolved to numbers and booleans (strings `true`, `false`) where possible.

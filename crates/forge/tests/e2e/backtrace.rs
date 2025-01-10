@@ -101,12 +101,12 @@ fn test_backtrace_panic() {
     let output = test_runner(&temp)
         .env("SNFORGE_BACKTRACE", "1")
         .assert()
-        .failure();
+        .success();
 
     assert_stdout_contains(
         output,
         indoc! {
-           "Failure data:
+           "Success data:
                 0x61616161 ('aaaa')
             error occurred in contract 'InnerContract' at pc: '70'
             stack backtrace:

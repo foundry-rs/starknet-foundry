@@ -6,7 +6,7 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
-use indoc::indoc;
+use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stderr_contains;
 use sncast::get_default_state_file_name;
 use sncast::state::state_file::{read_txs_from_state_file, ScriptTransactionStatus};
@@ -132,10 +132,11 @@ async fn test_incompatible_sncast_std_version() {
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
+    let version = env!("CARGO_PKG_VERSION");
 
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_matches(formatdoc! {r"
         ...
-        [WARNING] Package sncast_std version does not meet the recommended version requirement =0.33.0, it might result in unexpected behaviour
+        [WARNING] Package sncast_std version does not meet the recommended version requirement ={version}, it might result in unexpected behaviour
         ...
     "});
 }
@@ -238,13 +239,13 @@ async fn test_run_script_display_debug_traits() {
         test
         declare_nonce: [..]
         debug declare_nonce: [..]
-        Transaction hash = 0x[..]
+        Transaction hash: 0x[..]
         declare_result: class_hash: [..], transaction_hash: [..]
         debug declare_result: DeclareResult::Success(DeclareTransactionResult { class_hash: [..], transaction_hash: [..] })
-        Transaction hash = 0x[..]
+        Transaction hash: 0x[..]
         deploy_result: contract_address: [..], transaction_hash: [..]
         debug deploy_result: DeployResult { contract_address: [..], transaction_hash: [..] }
-        Transaction hash = 0x[..]
+        Transaction hash: 0x[..]
         invoke_result: [..]
         debug invoke_result: InvokeResult { transaction_hash: [..] }
         call_result: [2]

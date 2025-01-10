@@ -163,6 +163,7 @@ mod tests {
     fn filtering_tests() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
+            sierra_program_path: Default::default(),
             casm_program: Arc::new(
                 compile_sierra(
                     &serde_json::to_value(&program_for_testing().program).unwrap(),
@@ -431,6 +432,7 @@ mod tests {
     fn filtering_with_no_tests() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
+            sierra_program_path: Default::default(),
             casm_program: Arc::new(
                 compile_sierra(
                     &serde_json::to_value(&program_for_testing().program).unwrap(),
@@ -476,6 +478,7 @@ mod tests {
     fn filtering_with_exact_match() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
+            sierra_program_path: Default::default(),
             casm_program: Arc::new(
                 compile_sierra(
                     &serde_json::to_value(&program_for_testing().program).unwrap(),
@@ -667,6 +670,7 @@ mod tests {
     fn filtering_with_only_ignored() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
+            sierra_program_path: Default::default(),
             casm_program: Arc::new(
                 compile_sierra(
                     &serde_json::to_value(&program_for_testing().program).unwrap(),
@@ -768,6 +772,7 @@ mod tests {
     fn filtering_with_include_ignored() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
+            sierra_program_path: Default::default(),
             casm_program: Arc::new(
                 compile_sierra(
                     &serde_json::to_value(&program_for_testing().program).unwrap(),

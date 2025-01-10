@@ -35,7 +35,7 @@ use shared::utils::build_readable_text;
 use sncast::get_nonce;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
-use sncast::helpers::fee::{FeeSettings, ScriptFeeSettings};
+use sncast::helpers::fee::{FeeArgs, FeeSettings, ScriptFeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::ScriptRunResponse;
 use sncast::state::hashing::{
@@ -81,7 +81,7 @@ pub struct CastScriptExtension<'a> {
     pub state: StateManager,
 }
 
-impl<'a> CastScriptExtension<'a> {
+impl CastScriptExtension<'_> {
     pub fn account(
         &self,
     ) -> Result<&SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>> {
@@ -116,7 +116,8 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
             }
             "declare" => {
                 let contract: String = input_reader.read::<ByteArray>()?.to_string();
-                let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
+                let fee_args: FeeArgs = input_reader.read::<ScriptFeeSettings>()?.into();
+                let fee_token = fee_args.fee_token.clone().unwrap_or_default();
                 let nonce = input_reader.read()?;
 
                 let declare = Declare {
@@ -145,6 +146,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait_params: self.config.wait_params,
                     },
                     true,
+                    fee_token,
                 ));
 
                 self.state.maybe_insert_tx_entry(

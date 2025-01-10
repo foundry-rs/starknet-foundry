@@ -14,6 +14,13 @@ unstable-add-statements-code-locations-debug-info = true
 unstable-add-statements-functions-debug-info = true
 ```
 
+> 📝 **Note**
+>
+> That `unstable-add-statements-code-locations-debug-info = true` and
+`unstable-add-statements-functions-debug-info = true` will slow down the compilation and cause it to use more system
+> memory. It will also make the compilation artifacts larger. So it is only recommended to add these flags when you need
+> their functionality.
+
 ## Usage
 
 > 📝 **Note**  
@@ -34,7 +41,7 @@ this:
 
 
 
-<!-- { "ignored": false, "package_name": "backtrace_panic" } -->
+<!-- { "package_name": "backtrace_vm_error" } -->
 ```shell
 $ snforge test
 ```
@@ -55,7 +62,9 @@ To enable backtraces, simply set the `SNFORGE_BACKTRACE=1` environment variable 
 When enabled, the backtrace will display the call tree of the execution, including the specific line numbers in the
 contracts where the errors occurred. Here's an example of what you might see:
 
-<!-- { "ignored": true, "package_name": "backtrace_panic" } -->
+<!-- TODO(#2713) -->
+
+<!-- { "ignored": true, "package_name": "backtrace_vm_error" } -->
 ```shell
 $ SNFORGE_BACKTRACE=1 snforge test
 ```

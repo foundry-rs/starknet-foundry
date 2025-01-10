@@ -12,8 +12,10 @@ fn fails_with_empty() {
 
     assert_diagnostics(
         &result,
-        &[Diagnostic::error(
-            "#[available_gas] expected 1 arguments, got: 0",
+        &[
+            Diagnostic::warn("#[available_gas] used with empty argument list. Either remove () or specify some arguments"),
+            Diagnostic::error(
+            "#[available_gas] expected arguments: 1, got: 0",
         )],
     );
 }
@@ -28,7 +30,7 @@ fn fails_with_more_than_one() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(
-            "#[available_gas] expected 1 arguments, got: 3",
+            "#[available_gas] expected arguments: 1, got: 3",
         )],
     );
 }
@@ -61,7 +63,7 @@ fn work_with_number() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
                     let mut data = array![];
 
                     snforge_std::_config_types::AvailableGasConfig {

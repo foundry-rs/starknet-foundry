@@ -451,12 +451,18 @@ pub async fn test_invalid_private_key_file_path() {
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
 
+    let expected_file_error = if cfg!(target_os = "windows") {
+        "The system cannot find the file specified[..]"
+    } else {
+        "No such file or directory [..]"
+    };
+
     assert_stderr_contains(
         output,
-        indoc! {r"
+        formatdoc! {r"
         command: account import
-        error: Failed to obtain private key from the file my_private_key: No such file or directory (os error 2)
-        "},
+        error: Failed to obtain private key from the file my_private_key: {}
+        ", expected_file_error},
     );
 }
 
@@ -740,7 +746,7 @@ pub async fn test_happy_case_default_name_generation() {
         let snapbox = runner(&import_args).current_dir(tempdir.path());
         snapbox.assert().stdout_matches(formatdoc! {r"
         command: account import
-        account_name: Account imported with name: account-{id}
+        account_name: account-{id}
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
     ", id = i + 1});
     }
@@ -766,7 +772,7 @@ pub async fn test_happy_case_default_name_generation() {
     let snapbox = runner(&import_args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
         command: account import
-        account_name: Account imported with name: account-2
+        account_name: account-2
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
     "});
 

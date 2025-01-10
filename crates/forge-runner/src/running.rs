@@ -1,5 +1,4 @@
 use crate::backtrace::add_backtrace_footer;
-use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
@@ -10,7 +9,7 @@ use blockifier::state::cached_state::CachedState;
 use cairo_lang_runner::{RunResult, SierraCasmRunner};
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use camino::Utf8Path;
+use camino::{Utf8Path, Utf8PathBuf};
 use casm::{get_assembled_program, run_assembled_program};
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
@@ -52,7 +51,7 @@ pub fn run_test(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
-    maybe_versioned_program_path: Arc<Option<VersionedProgramPath>>,
+    versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
@@ -81,7 +80,7 @@ pub fn run_test(
             &case,
             vec![],
             &test_runner_config.contracts_data,
-            &maybe_versioned_program_path,
+            &versioned_program_path,
         )
     })
 }
@@ -91,7 +90,7 @@ pub(crate) fn run_fuzz_test(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
-    maybe_versioned_program_path: Arc<Option<VersionedProgramPath>>,
+    versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
     fuzzing_send: Sender<()>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
@@ -122,7 +121,7 @@ pub(crate) fn run_fuzz_test(
             &case,
             args,
             &test_runner_config.contracts_data,
-            &maybe_versioned_program_path,
+            &versioned_program_path,
         )
     })
 }
@@ -158,7 +157,7 @@ pub fn run_test_case(
         dict_state_reader: cheatnet_constants::build_testing_state(),
         fork_state_reader: get_fork_state_reader(
             runtime_config.cache_dir,
-            &case.config.fork_config,
+            case.config.fork_config.as_ref(),
         )?,
     };
     let block_info = state_reader.get_block_info()?;
@@ -212,7 +211,7 @@ pub fn run_test_case(
 
     let run_result =
         match run_assembled_program(&assembled_program, builtins, hints_dict, &mut forge_runtime) {
-            Ok(runner) => {
+            Ok(mut runner) => {
                 let vm_resources_without_inner_calls = runner
                     .get_execution_resources()
                     .unwrap()
@@ -243,7 +242,7 @@ pub fn run_test_case(
                     &runner.relocated_memory,
                 );
 
-                update_top_call_vm_trace(&mut forge_runtime, &runner);
+                update_top_call_vm_trace(&mut forge_runtime, &mut runner);
 
                 Ok((gas_counter, runner.relocated_memory, value))
             }
@@ -290,7 +289,7 @@ fn extract_test_case_summary(
     case: &TestCaseWithResolvedConfig,
     args: Vec<Felt>,
     contracts_data: &ContractsData,
-    maybe_versioned_program_path: &Option<VersionedProgramPath>,
+    versioned_program_path: &Utf8Path,
 ) -> TestCaseSummary<Single> {
     match run_result {
         Ok(result_with_info) => {
@@ -304,7 +303,7 @@ fn extract_test_case_summary(
                     &result_with_info.call_trace,
                     &result_with_info.encountered_errors,
                     contracts_data,
-                    maybe_versioned_program_path,
+                    versioned_program_path,
                 ),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(error) => TestCaseSummary::Failed {
@@ -338,7 +337,7 @@ fn extract_test_case_summary(
 
 fn get_fork_state_reader(
     cache_dir: &Utf8Path,
-    fork_config: &Option<ResolvedForkConfig>,
+    fork_config: Option<&ResolvedForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
     fork_config
         .as_ref()

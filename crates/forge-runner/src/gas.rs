@@ -146,7 +146,7 @@ fn get_l1_data_cost(
 }
 
 pub fn check_available_gas(
-    available_gas: &Option<usize>,
+    available_gas: Option<usize>,
     summary: TestCaseSummary<Single>,
 ) -> TestCaseSummary<Single> {
     match summary {
@@ -155,7 +155,7 @@ pub fn check_available_gas(
             arguments,
             gas_info,
             ..
-        } if available_gas.map_or(false, |available_gas| gas_info > available_gas as u128) => {
+        } if available_gas.is_some_and(|available_gas| gas_info > available_gas as u128) => {
             TestCaseSummary::Failed {
                 name,
                 msg: Some(format!(

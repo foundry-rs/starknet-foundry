@@ -11,6 +11,7 @@ use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 use url::Url;
 
+#[allow(clippy::zombie_processes)]
 #[cfg(test)]
 #[ctor]
 fn start_devnet() {
@@ -33,7 +34,13 @@ fn start_devnet() {
         }
     }
 
-    Command::new("tests/utils/devnet/starknet-devnet")
+    let devnet_path = if cfg!(target_os = "windows") {
+        "tests/utils/devnet/bin/starknet-devnet.exe"
+    } else {
+        "tests/utils/devnet/starknet-devnet"
+    };
+
+    Command::new(devnet_path)
         .args([
             "--port",
             &port,
@@ -75,15 +82,22 @@ fn start_devnet() {
     rt.block_on(deploy_braavos_account());
 }
 
+#[allow(clippy::zombie_processes)]
 #[cfg(test)]
 #[dtor]
 fn stop_devnet() {
     let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
-    Command::new("pkill")
-        .args([
-            "-f",
-            &format!("starknet-devnet.*{}.*{}", &port, &SEED.to_string())[..],
-        ])
-        .spawn()
-        .expect("Failed to kill devnet processes");
+    let pattern = format!("starknet-devnet.*{port}.*{SEED}");
+
+    if cfg!(target_os = "windows") {
+        Command::new("taskkill")
+            .args(["/IM", &pattern, "/F"])
+            .output()
+            .expect("Failed to kill devnet processes");
+    } else {
+        Command::new("pkill")
+            .args(["-f", &pattern])
+            .output()
+            .expect("Failed to kill devnet processes");
+    }
 }

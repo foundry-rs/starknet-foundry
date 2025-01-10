@@ -1,0 +1,15 @@
+[package]
+name = "call"
+version = "0.1.0"
+edition = "2023_11"
+
+[dependencies]
+starknet = "2.7.0"
+sncast_std = { path = "../../../sncast_std" }
+snforge_std = { path = "../../../snforge_std" }
+
+[[target.lib]]
+sierra = true
+
+[scripts]
+test = "snforge test"

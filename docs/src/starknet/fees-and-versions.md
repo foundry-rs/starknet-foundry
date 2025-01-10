@@ -1,7 +1,7 @@
 # `Fees` and `versions`
 
 Historically, fees for transactions on Starknet had to be paid exclusively with ETH. However, with the rollout of v3
-transactions, users now have the additional option to pay these fees using STRK.
+transactions, users now have the additional option to pay these fees using **STRK**, and it is ***the default token used by sncast to pay fees***.
 
 > 💡 **Info**
 > V3 transactions have additional options, that give you more control over transaction fee. You can specify the maximum gas unit price and the maximum gas for the transaction. 
@@ -9,6 +9,11 @@ This is done using the `--max-gas` and `--max-gas-unit-price` flags.
 
 Cast allows you to specify either the version of the transaction you want to send or the fee token you want to pay the fees in. This is done using
 the `--version` and `--fee-token` flags.
+
+> ⚠️ **Warning**
+> `--fee-token` flag is deprecated and will be removed in the future due to [SNIP-16: Deprecation of Transaction Versions 0,1,2](https://community.starknet.io/t/snip-16-deprecation-of-transaction-versions-0-1-2/114443).
+> It is recommended to use `--version` flag instead or let the version be inferred automatically.
+
 
 > 💡 **Info**
 > Don't worry if you're not sure which version to use, it will be inferred automatically based on the fee token you
@@ -23,43 +28,34 @@ When deploying an account, you can specify the version of the transaction and th
 | v1      | eth       |
 | v3      | strk      |
 
-When paying in STRK, you need to either set `--fee-token` to `strk`:
 
+When paying in ETH, you need to either set `--fee-token` to `eth`:
+
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast account deploy \
-    --name some-name \
-    --fee-token strk \
-    --max-fee 9999999999999
-```
-or set `--version` to `v3`:
-
-```shell
-$ sncast account deploy \
-    --name some-name \
-    --version v3 \
-    --max-fee 9999999999999
-```
-
-In case of paying in ETH, same rules apply. You need to set either `--fee-token` to `eth`:
-
-```shell
-$ sncast account deploy \
-    --name some-name \
+    --name example-name \
     --fee-token eth \
     --max-fee 9999999999999
 ```
 
 or set `--version` to `v1`:
 
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast account deploy \
-    --name some-name \
+    --name example-name \
     --version v1 \
     --max-fee 9999999999999
 ```
 
+In case of paying in STRK, you don't need to specify the `--fee-token` or `--version` flags, but the same rules apply.
+
+
 > 📝 **Note**
-> The unit used in `--max-fee` flag is the smallest unit of the given fee token. For ETH it is Wei, for STRK it is Fri.
+> The unit used in `--max-fee` flag is the smallest unit of the given fee token. For ETH it is WEI, for STRK it is FRI.
 
 ## sncast deploy
 

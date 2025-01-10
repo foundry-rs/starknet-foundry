@@ -221,7 +221,7 @@ For more details, see [init command](../appendix/sncast/script/init.md).
 This example shows how to call an already deployed contract. Please find full example with contract deployment [here](#full-example-with-contract-deployment).
 
 ```rust
-{{#include ../../listings/sncast_overview/scripts/basic_example/src/basic_example.cairo}}
+{{#include ../../listings/basic_example/src/basic_example.cairo}}
 ```
 
 The script should be included in a Scarb package. The directory structure and config for this example looks like this:
@@ -255,6 +255,8 @@ sncast_std = "0.33.0"
 
 To run the script, do:
 
+<!-- TODO(#2736) -->
+<!-- { "ignored_output": true } -->
 ```shell
 $ sncast \
   script run my_script
@@ -276,13 +278,13 @@ status: success
 This example script declares, deploys and interacts with an example `MapContract`:
 
 ```rust
-{{#include ../../listings/sncast_overview/crates/map3/src/lib.cairo}}
+{{#include ../../listings/map3/src/lib.cairo}}
 ```
 
 We prepare a script:
 
 ```rust
-{{#include ../../listings/sncast_overview/scripts/full_example/src/full_example.cairo}}
+{{#include ../../listings/full_example/src/full_example.cairo}}
 ```
 
 The script should be included in a Scarb package. The directory structure and config for this example looks like this:
@@ -333,6 +335,7 @@ Please note that `map` contract was specified as the dependency. In our example,
 
 To run the script, do:
 
+<!-- { "ignored_output": true } -->
 ```shell
 $ sncast \
   --account example_user \
@@ -360,6 +363,7 @@ status: success
 As [an idempotency](#state-file) feature is turned on by default, executing the same script once again ends with a success
 and only `call` functions are being executed (as they do not change the network state):
 
+<!-- { "ignored_output": true } -->
 ```shell
 $ sncast \
   --account example_user \
@@ -384,6 +388,7 @@ status: success
 
 whereas, when we run the same script once again with `--no-state-file` flag set, it fails (as the `Map` contract is already deployed):
 
+<!-- { "ignored_output": true } -->
 ```shell
 $ sncast \
   --account example_user \
@@ -414,7 +419,7 @@ Script errors implement `Debug` trait, allowing the error to be printed to stdou
 ### Minimal example with `assert!` and `println!`
 
 ```rust
-{{#include ../../listings/sncast_overview/scripts/error_handling/src/error_handling.cairo}}
+{{#include ../../listings/error_handling/src/error_handling.cairo}}
 ```
 
 More on deployment scripts errors [here](../appendix/sncast-library/errors.md).
