@@ -753,11 +753,10 @@ async fn test_version_deprecation_warning() {
         "--max-fee",
         "99999999999999999",
         "--version",
-        "v2",
+        "v3",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-
     let output = snapbox.assert().success();
 
     assert_stdout_contains(
