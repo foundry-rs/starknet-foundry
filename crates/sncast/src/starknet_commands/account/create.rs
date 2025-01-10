@@ -52,6 +52,10 @@ pub struct Create {
 
     #[clap(flatten)]
     pub rpc: RpcArgs,
+
+    /// If passed, the command will not trigger an interactive prompt to add an account as a default
+    #[clap(long)]
+    pub silent: bool,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -207,8 +211,8 @@ where
     Ok((deployment.address(), get_deployment_fee(&deployment).await?))
 }
 
-async fn get_deployment_fee<'a, T>(
-    account_deployment: &AccountDeploymentV1<'a, T>,
+async fn get_deployment_fee<T>(
+    account_deployment: &AccountDeploymentV1<'_, T>,
 ) -> Result<FeeEstimate>
 where
     T: AccountFactory + Sync,

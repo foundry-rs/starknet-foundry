@@ -18,7 +18,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.34.0"
+version = "0.35.1"
 edition = "2021"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
@@ -35,17 +35,8 @@ cairo-lang-utils = "2.7.0"
 cairo-lang-starknet = "2.7.0"
 cairo-lang-compiler = "2.7.0"
 cairo-lang-filesystem = "2.7.0"
-cairo-lang-debug = "2.7.0"
-cairo-lang-defs = "2.7.0"
 cairo-lang-diagnostics = "2.7.0"
-cairo-lang-lowering = "2.7.0"
-cairo-lang-plugins = "2.7.0"
-cairo-lang-project = "2.7.0"
-cairo-lang-semantic = "2.7.0"
-cairo-lang-sierra-ap-change = "2.7.0"
-cairo-lang-sierra-gas = "2.7.0"
 cairo-lang-sierra-type-size = "2.7.0"
-cairo-lang-sierra-generator = "2.7.0"
 cairo-lang-syntax = "2.7.0"
 cairo-lang-test-plugin = "2.7.0"
 cairo-lang-starknet-classes = "2.7.0"
@@ -54,28 +45,28 @@ cairo-lang-macro = "0.1.0"
 cairo-vm = "1.0.0-rc3"
 cairo-annotations = "0.1.0"
 dirs = "5.0.1"
+dialoguer = "0.11.0"
 starknet-types-core = { version = "0.1.7", features = ["hash", "prime-bigint"] }
-anyhow = "1.0.93"
+anyhow = "1.0.95"
 assert_fs = "1.1.2"
 camino = { version = "1.1.9", features = ["serde1"] }
-clap = { version = "4.5.21", features = ["derive"] }
-console = "0.15.8"
+clap = { version = "4.5.23", features = ["derive"] }
+console = "0.15.10"
 include_dir = "0.7.4"
 indoc = "2"
 itertools = "0.12.1"
 num-traits = "0.2.19"
 rayon = "1.10"
 regex = "1.11.1"
-serde = { version = "1.0.215", features = ["derive"] }
-serde_json = "1.0.133"
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.134"
 starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "660a732" }
 starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "660a732" }
 tempfile = "3.14.0"
 thiserror = "1.0.69"
 ctor = "0.2.9"
 url = { "version" = "2.5.4", "features" = ["serde"] }
-tokio = { version = "1.41.1", features = ["full"] }
-tokio-util = "0.7.11"
+tokio = { version = "1.42.0", features = ["full"] }
 futures = "0.3.31"
 num-bigint = { version = "0.4.6", features = ["rand"] }
 walkdir = "2.5.0"
@@ -92,7 +83,7 @@ snapbox = "0.4.17"
 smol_str = "0.2.2"
 num-integer = "0.1.46"
 scarb-ui = "0.1.5"
-semver = "1.0.23"
+semver = "1.0.24"
 bimap = "0.6.3"
 primitive-types = "0.12.1"
 shellexpand = "3.1.0"
@@ -102,11 +93,6 @@ promptly = "0.3.1"
 # Freeze reqwest dependency, because newer versions cause cast tests to fail on macs
 reqwest = "=0.11.18"
 fs_extra = "1.3.0"
-schemars = { version = "0.8.21", features = ["preserve_order"] }
-ark-ff = "0.4.0-alpha.7"
-ark-std = "0.4.0"
-ark-secp256k1 = "0.4.0"
-ark-secp256r1 = "0.4.0"
 openssl = { version = "0.10", features = ["vendored"] }
 toml_edit = "0.22.22"
 axum = "0.7.9"
@@ -115,7 +101,7 @@ fs2 = "0.4.3"
 flate2 = "1.0.35"
 k256 = { version = "0.13.4", features = ["sha256", "ecdsa", "serde"] }
 p256 = { version = "0.13.2", features = ["sha256", "ecdsa", "serde"] }
-glob = "0.3.1"
+glob = "0.3.2"
 sha3 = "0.10.8"
 base16ct = { version = "0.2.0", features = ["alloc"] }
 fs4 = "0.7"
@@ -124,3 +110,5 @@ serde_path_to_error = "0.1.16"
 wiremock = "0.6.0"
 const-hex = "1.14.0"
 indicatif = "0.17.9"
+shell-words = "1.1.0"
+sanitize-filename = "0.6.0"

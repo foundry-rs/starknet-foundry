@@ -40,14 +40,14 @@ where
     let cheatcode_name = Collector::CHEATCODE_NAME;
 
     let config_cheatcode = formatdoc!(
-        r#"
+        r"
             let mut data = array![];
 
             {value}
             .serialize(ref data);
 
             starknet::testing::cheatcode::<'{cheatcode_name}'>(data.span());
-        "#
+        "
     );
 
     Ok(append_config_statements(db, func, &config_cheatcode))
@@ -79,7 +79,7 @@ pub fn append_config_statements(
             return None;
         };
 
-        // this function is named "snforge_std::_cheatcode::_is_config_run"
+        // this function is named "snforge_std::_internals::_is_config_run"
         let segments = expr.path(db).elements(db);
 
         let [snforge_std, cheatcode, is_config_run] = segments.as_slice() else {
@@ -87,7 +87,7 @@ pub fn append_config_statements(
         };
 
         if snforge_std.identifier(db) != "snforge_std"
-            || cheatcode.identifier(db) != "_cheatcode"
+            || cheatcode.identifier(db) != "_internals"
             || is_config_run.identifier(db) != "_is_config_run"
         {
             return None;
@@ -122,7 +122,7 @@ pub fn append_config_statements(
         "
             {attrs}
             {vis} {declaration} {{
-                if snforge_std::_cheatcode::_is_config_run() {{
+                if snforge_std::_internals::_is_config_run() {{
                     {if_content}
 
                     {config_statements}

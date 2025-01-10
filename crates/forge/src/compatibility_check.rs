@@ -1,13 +1,14 @@
 use anyhow::{anyhow, Context, Result};
 use regex::Regex;
 use semver::Version;
+use std::cell::RefCell;
 use std::process::Command;
 
 type VersionParser<'a> = dyn Fn(&str) -> Result<Version> + 'a;
 
 pub struct Requirement<'a> {
     pub name: String,
-    pub command: String,
+    pub command: RefCell<Command>,
     pub version_parser: Box<VersionParser<'a>>,
     pub helper_text: String,
     pub minimal_version: Version,
@@ -84,23 +85,9 @@ pub fn create_version_parser<'a>(name: &'a str, pattern: &'a str) -> Box<Version
     })
 }
 
-fn os_specific_command() -> Command {
-    if cfg!(target_os = "windows") {
-        let mut command = Command::new("cmd");
-        command.arg("/C");
-        command
-    } else {
-        let mut command = Command::new("sh");
-        command.arg("-c");
-        command
-    }
-}
-
-fn get_raw_version(name: &str, raw_command: &str) -> Result<String> {
-    let mut command = os_specific_command();
-    command.arg(raw_command);
-
+fn get_raw_version(name: &str, command: &RefCell<Command>) -> Result<String> {
     let raw_current_version = command
+        .borrow_mut()
         .output()
         .with_context(|| format!("Failed to run version command for {name}"))?;
     Ok(String::from_utf8_lossy(&raw_current_version.stdout)
@@ -111,24 +98,30 @@ fn get_raw_version(name: &str, raw_command: &str) -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use scarb_api::ScarbCommand;
+    use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
     #[test]
     fn happy_case() {
         let mut requirements_checker = RequirementsChecker::new(true);
         requirements_checker.add_requirement(Requirement {
             name: "Rust".to_string(),
-            command: "rustc --version".to_string(),
+            command: RefCell::new({
+                let mut cmd = Command::new("rustc");
+                cmd.arg("--version");
+                cmd
+            }),
             version_parser: create_version_parser(
                 "Rust",
                 r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)",
             ),
             helper_text: "Follow instructions from https://www.rust-lang.org/tools/install"
                 .to_string(),
-            minimal_version: Version::new(1, 81, 0),
+            minimal_version: Version::new(1, 80, 1),
         });
         requirements_checker.add_requirement(Requirement {
             name: "Scarb".to_string(),
-            command: "scarb --version".to_string(),
+            command: RefCell::new(ScarbCommand::new().arg("--version").command()),
             minimal_version: Version::new(2, 7, 0),
             helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
                 .to_string(),
@@ -139,7 +132,7 @@ mod tests {
         });
         requirements_checker.add_requirement(Requirement {
             name: "Universal Sierra Compiler".to_string(),
-            command: "universal-sierra-compiler --version".to_string(),
+            command: RefCell::new(UniversalSierraCompilerCommand::new().arg("--version").command()),
             minimal_version: Version::new(2, 0, 0),
             helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),
             version_parser: create_version_parser(
@@ -161,7 +154,11 @@ mod tests {
         let mut requirements_checker = RequirementsChecker::new(true);
         requirements_checker.add_requirement(Requirement {
             name: "Rust".to_string(),
-            command: "rustc --version".to_string(),
+            command: RefCell::new({
+                let mut cmd = Command::new("rustc");
+                cmd.arg("--version");
+                cmd
+            }),
             version_parser: create_version_parser(
                 "Rust",
                 r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)",

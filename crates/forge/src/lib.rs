@@ -1,19 +1,24 @@
 use crate::compatibility_check::{create_version_parser, Requirement, RequirementsChecker};
 use anyhow::Result;
+use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge_runner::CACHE_DIR;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
+use std::cell::RefCell;
 use std::ffi::OsString;
+use std::process::Command;
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
 use tokio::runtime::Builder;
+use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
 pub mod block_number_map;
 mod combine_configs;
 mod compatibility_check;
 mod init;
+mod new;
 pub mod pretty_printing;
 pub mod run_tests;
 pub mod scarb;
@@ -23,7 +28,7 @@ mod warn;
 
 pub const CAIRO_EDITION: &str = "2024_07";
 
-const MINIMAL_RUST_VERSION: Version = Version::new(1, 81, 0);
+const MINIMAL_RUST_VERSION: Version = Version::new(1, 80, 1);
 const MINIMAL_SCARB_VERSION: Version = Version::new(2, 7, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 
@@ -75,6 +80,11 @@ enum ForgeSubcommand {
     Init {
         /// Name of a new project
         name: String,
+    },
+    /// Create a new Forge project at <PATH>
+    New {
+        #[command(flatten)]
+        args: NewArgs,
     },
     /// Clean Forge cache directory
     CleanCache {},
@@ -160,6 +170,21 @@ pub struct TestArgs {
     additional_args: Vec<OsString>,
 }
 
+#[derive(Parser, Debug)]
+pub struct NewArgs {
+    /// Path to a location where the new project will be created
+    path: Utf8PathBuf,
+    /// Name of a new project, defaults to the directory name
+    #[arg(short, long)]
+    name: Option<String>,
+    /// Do not initialize a new Git repository
+    #[arg(long)]
+    no_vcs: bool,
+    /// Try to create the project even if the specified directory at <PATH> is not empty, which can result in overwriting existing files
+    #[arg(long)]
+    overwrite: bool,
+}
+
 pub enum ExitStatus {
     Success,
     Failure,
@@ -172,7 +197,11 @@ pub fn main_execution() -> Result<ExitStatus> {
 
     match cli.subcommand {
         ForgeSubcommand::Init { name } => {
-            init::run(name.as_str())?;
+            init::init(name.as_str())?;
+            Ok(ExitStatus::Success)
+        }
+        ForgeSubcommand::New { args } => {
+            new::new(args)?;
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::CleanCache {} => {
@@ -211,14 +240,18 @@ fn check_requirements(output_on_success: bool) -> Result<()> {
     let mut requirements_checker = RequirementsChecker::new(output_on_success);
     requirements_checker.add_requirement(Requirement {
         name: "Rust".to_string(),
-        command: "rustc --version".to_string(),
+        command: RefCell::new({
+            let mut cmd = Command::new("rustc");
+            cmd.arg("--version");
+            cmd
+        }),
         minimal_version: MINIMAL_RUST_VERSION,
         version_parser: create_version_parser("Rust", r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)"),
         helper_text: "Follow instructions from https://www.rust-lang.org/tools/install".to_string(),
     });
     requirements_checker.add_requirement(Requirement {
         name: "Scarb".to_string(),
-        command: "scarb --version".to_string(),
+        command: RefCell::new(ScarbCommand::new().arg("--version").command()),
         minimal_version: MINIMAL_SCARB_VERSION,
         helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
             .to_string(),
@@ -226,7 +259,7 @@ fn check_requirements(output_on_success: bool) -> Result<()> {
     });
     requirements_checker.add_requirement(Requirement {
         name: "Universal Sierra Compiler".to_string(),
-        command: "universal-sierra-compiler --version".to_string(),
+        command: RefCell::new(UniversalSierraCompilerCommand::new().arg("--version").command()),
         minimal_version: MINIMAL_USC_VERSION,
         helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),
         version_parser: create_version_parser(

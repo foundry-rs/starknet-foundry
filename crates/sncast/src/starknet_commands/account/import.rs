@@ -61,6 +61,10 @@ pub struct Import {
 
     #[clap(flatten)]
     pub rpc: RpcArgs,
+
+    /// If passed, the command will not trigger an interactive prompt to add an account as a default
+    #[clap(long)]
+    pub silent: bool,
 }
 
 pub async fn import(
@@ -166,10 +170,7 @@ pub async fn import(
             || "--add-profile flag was not set. No profile added to snfoundry.toml".to_string(),
             |profile_name| format!("Profile {profile_name} successfully added to snfoundry.toml"),
         ),
-        account_name: account.map_or_else(
-            || Some(format!("Account imported with name: {account_name}")),
-            |_| None,
-        ),
+        account_name: account.map_or_else(|| Some(account_name), |_| None),
     })
 }
 

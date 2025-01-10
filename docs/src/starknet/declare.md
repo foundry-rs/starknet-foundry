@@ -23,7 +23,6 @@ Then run:
 $ sncast --account my_account \
     declare \
 	--url http://127.0.0.1:5055 \
-    --fee-token strk \
     --contract-name HelloSncast
 ```
 
@@ -53,7 +52,4 @@ transaction: https://starkscan.co/search/[..]
 > 💡 **Info**
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
 
-
-> 💡 **Info**
-> You can also choose to pay in Ether by setting `--fee-token` to `eth`.
 

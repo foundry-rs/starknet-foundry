@@ -6,6 +6,8 @@ use anyhow::{Context, Result};
 use data_transformer::Calldata;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{print_command_result, OutputFormat};
+use std::io;
+use std::io::IsTerminal;
 
 use crate::starknet_commands::deploy::DeployArguments;
 use camino::Utf8PathBuf;
@@ -15,6 +17,7 @@ use sncast::helpers::config::get_global_config_path;
 use sncast::helpers::configuration::CastConfigFromFile;
 use sncast::helpers::constants::DEFAULT_MULTICALL_CONTENTS;
 use sncast::helpers::fee::PayableTransaction;
+use sncast::helpers::interactive::prompt_to_add_account_as_default;
 use sncast::helpers::scarb_utils::{
     assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
     get_scarb_metadata_with_deps, BuildConfig,
@@ -237,7 +240,7 @@ async fn run_async_command(
         Commands::Declare(declare) => {
             let provider = declare.rpc.get_provider(&config).await?;
 
-            declare.validate()?;
+            let fee_token = declare.validate_and_get_token()?;
 
             let account = get_account(
                 config.account(),
@@ -264,6 +267,7 @@ async fn run_async_command(
                 &artifacts,
                 wait_config,
                 false,
+                fee_token,
             )
             .await
             .map_err(handle_starknet_command_error)
@@ -288,9 +292,7 @@ async fn run_async_command(
         }
 
         Commands::Deploy(deploy) => {
-            deploy.validate()?;
-
-            let fee_token = deploy.token_from_version();
+            let fee_token = deploy.validate_and_get_token()?;
 
             let Deploy {
                 arguments,
@@ -380,9 +382,7 @@ async fn run_async_command(
         }
 
         Commands::Invoke(invoke) => {
-            invoke.validate()?;
-
-            let fee_token = invoke.token_from_version();
+            let fee_token = invoke.validate_and_get_token()?;
 
             let Invoke {
                 contract_address,
@@ -459,8 +459,6 @@ async fn run_async_command(
                 starknet_commands::multicall::Commands::Run(run) => {
                     let provider = run.rpc.get_provider(&config).await?;
 
-                    run.validate()?;
-
                     let account = get_account(
                         config.account(),
                         config.accounts_file(),
@@ -496,6 +494,16 @@ async fn run_async_command(
                 )
                 .await;
 
+                if !import.silent && result.is_ok() && io::stdout().is_terminal() {
+                    if let Some(account_name) =
+                        result.as_ref().ok().and_then(|r| r.account_name.clone())
+                    {
+                        if let Err(err) = prompt_to_add_account_as_default(account_name.as_str()) {
+                            eprintln!("Error: Failed to launch interactive prompt: {err}");
+                        }
+                    }
+                }
+
                 print_command_result("account import", &result, numbers_format, output_format)?;
                 Ok(())
             }
@@ -528,6 +536,12 @@ async fn run_async_command(
                 )
                 .await;
 
+                if !create.silent && result.is_ok() && io::stdout().is_terminal() {
+                    if let Err(err) = prompt_to_add_account_as_default(&account) {
+                        eprintln!("Error: Failed to launch interactive prompt: {err}");
+                    }
+                }
+
                 print_command_result("account create", &result, numbers_format, output_format)?;
                 print_block_explorer_link_if_allowed(
                     &result,
@@ -540,9 +554,11 @@ async fn run_async_command(
             }
 
             account::Commands::Deploy(deploy) => {
-                deploy.validate()?;
-
                 let provider = deploy.rpc.get_provider(&config).await?;
+
+                let fee_token = deploy.validate_and_get_token()?;
+
+                let fee_args = deploy.fee_args.clone().fee_token(fee_token);
 
                 let chain_id = get_chain_id(&provider).await?;
                 let keystore_path = config.keystore().clone();
@@ -554,6 +570,7 @@ async fn run_async_command(
                     wait_config,
                     config.account(),
                     keystore_path,
+                    fee_args,
                 )
                 .await;
 
