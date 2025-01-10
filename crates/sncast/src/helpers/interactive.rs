@@ -222,10 +222,10 @@ mod tests {
 
     #[test]
     fn test_create_table() {
-        let original = formatdoc! {r#"
+        let original = formatdoc! {r"
             [snfoundry]
             key = 2137
-        "#};
+        "};
 
         let expected = formatdoc! {
             r#"

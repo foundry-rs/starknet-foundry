@@ -1132,11 +1132,11 @@ fn catch_runtime_errors() {
     assert_stdout_contains(
         output,
         formatdoc!(
-            r#"
+            r"
                 [..]Compiling[..]
                 [..]Finished[..]
                 [PASS] simple_package_integrationtest::test::catch_no_such_file [..]
-            "#
+            "
         ),
     );
 }
