@@ -5,15 +5,15 @@ body:
     id: current-state
     attributes:
       label: Current State
-      description: Describe the current state and state the problem
+      description: Describe the current state and outline the problem
       placeholder: Currently, the `print_a` cheatcode prints `"a"` to stdout. This is problematic because user might want it to be printed on their actual printer.
     validations:
       required: true
 
   - type: input
-    id: correct-state
+    id: objective
     attributes:
-      label: Correct State
+      label: Objective
       description: Briefly describe the correct state
       placeholder: `print_a` should magically detect if user wants to print to stdout or a printer.
     validations:
