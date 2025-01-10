@@ -508,12 +508,23 @@ async fn test_happy_case_cairo_expression_calldata() {
 async fn test_happy_case_shell() {
     let tempdir = create_and_deploy_oz_account().await;
 
-    let test_path = PathBuf::from("tests/shell/invoke.sh")
+    let script_extension = if cfg!(windows) { ".ps1" } else { ".sh" };
+    let test_path = PathBuf::from(format!("tests/shell/invoke{script_extension}"))
         .canonicalize()
         .unwrap();
     let binary_path = cargo_bin!("sncast");
 
-    let snapbox = Command::new(test_path)
+    let command = if cfg!(windows) {
+        Command::new("powershell")
+            .arg("-ExecutionPolicy")
+            .arg("Bypass")
+            .arg("-File")
+            .arg(test_path)
+    } else {
+        Command::new(test_path)
+    };
+
+    let snapbox = command
         .current_dir(tempdir.path())
         .arg(binary_path)
         .arg(URL)
