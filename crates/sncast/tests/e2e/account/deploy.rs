@@ -399,7 +399,7 @@ async fn test_fee_token_deprecation_warning_eth() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
-        [WARNING] Specifying '--fee-token' flag is deprecated and will be removed in the future. Use '--version' instead
+        [WARNING] Specifying '--fee-token' flag is deprecated and will be removed in the future.
         [WARNING] Eth transactions will stop being supported in the future due to 'SNIP-16'
         Transaction hash: [..]
         command: account deploy
@@ -432,7 +432,7 @@ async fn test_fee_token_deprecation_warning_strk() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
-        [WARNING] Specifying '--fee-token' flag is deprecated and will be removed in the future. Use '--version' instead
+        [WARNING] Specifying '--fee-token' flag is deprecated and will be removed in the future.
         Transaction hash: [..]
         command: account deploy
         transaction_hash: [..]

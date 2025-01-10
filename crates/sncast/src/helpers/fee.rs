@@ -248,7 +248,7 @@ impl FromStr for FeeToken {
 }
 
 fn parse_fee_token(s: &str) -> Result<FeeToken, String> {
-    let deprecation_message = "Specifying '--fee-token' flag is deprecated and will be removed in the future. Use '--version' instead";
+    let deprecation_message = "Specifying '--fee-token' flag is deprecated and will be removed in the future.";
     print_as_warning(&Error::msg(deprecation_message));
 
     let parsed_token: FeeToken = s.parse()?;
