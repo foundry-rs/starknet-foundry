@@ -24,6 +24,6 @@ body:
     attributes:
       label: Additional Context
       description: Provide additional context on the desired state.
-      placeholder: E.g. if we can detect any printers in local network it might indicate that user wants to print to it.
+      placeholder: If we can detect any printers in local network it might indicate that user wants to print to it.
     validations:
       required: false
