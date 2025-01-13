@@ -2188,7 +2188,6 @@ dependencies = [
  "starknet-types-core",
  "starknet_api",
  "tempfile",
- "test-case",
  "test_utils",
  "tokio",
  "toml_edit",
@@ -2217,7 +2216,6 @@ dependencies = [
  "cheatnet",
  "console",
  "conversions",
- "fs4",
  "futures",
  "indoc",
  "itertools 0.12.1",
@@ -2260,16 +2258,6 @@ checksum = "9564fc758e15025b46aa6643b1b77d047d1a56a1aea6e01002ac0c7026876213"
 dependencies = [
  "libc",
  "winapi",
-]
-
-[[package]]
-name = "fs4"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29f9df8a11882c4e3335eb2d18a0137c505d9ca927470b0cac9c6f0ae07d28f7"
-dependencies = [
- "rustix",
- "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -4773,7 +4761,6 @@ dependencies = [
  "snapbox",
  "starknet",
  "starknet-types-core",
- "url",
 ]
 
 [[package]]
@@ -4936,8 +4923,6 @@ dependencies = [
 name = "snforge_scarb_plugin"
 version = "0.35.1"
 dependencies = [
- "cairo-lang-diagnostics",
- "cairo-lang-filesystem",
  "cairo-lang-macro",
  "cairo-lang-parser",
  "cairo-lang-syntax",
