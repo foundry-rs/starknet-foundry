@@ -60,4 +60,5 @@ lazy_static.workspace = true
 tempfile.workspace = true
 cairo-lang-starknet-classes.workspace = true
 walkdir.workspace = true
+test-case.workspace = true
 docs = { workspace = true, features = ["testing"] }

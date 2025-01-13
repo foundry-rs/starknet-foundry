@@ -2188,6 +2188,7 @@ dependencies = [
  "starknet-types-core",
  "starknet_api",
  "tempfile",
+ "test-case",
  "test_utils",
  "tokio",
  "toml_edit",
@@ -4761,6 +4762,7 @@ dependencies = [
  "snapbox",
  "starknet",
  "starknet-types-core",
+ "url",
 ]
 
 [[package]]

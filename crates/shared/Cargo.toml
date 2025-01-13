@@ -10,5 +10,6 @@ cairo-lang-runner.workspace = true
 console.workspace = true
 semver.workspace = true
 starknet.workspace = true
+url.workspace = true
 regex.workspace = true
 snapbox.workspace = true
