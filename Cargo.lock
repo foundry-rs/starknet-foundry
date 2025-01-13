@@ -4768,6 +4768,7 @@ dependencies = [
  "anyhow",
  "cairo-lang-runner",
  "console",
+ "indicatif",
  "regex",
  "semver",
  "snapbox",
