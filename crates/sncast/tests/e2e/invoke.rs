@@ -458,6 +458,7 @@ fn test_calculated_max_gas_equal_to_zero_when_max_fee_passed() {
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
 
+    // TODO(#2852)
     assert_stderr_contains(
         output,
         indoc! {r"

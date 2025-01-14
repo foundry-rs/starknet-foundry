@@ -26,7 +26,7 @@ mod tests_non_zero_u64 {
 
     #[test]
     fn test_felt_too_large() {
-        let large_felt = Felt::from_dec_str("18446744073709551616").unwrap(); // 2^64
+        let large_felt = Felt::TWO.pow(64_u8);
         let non_zero_felt = NonZeroFelt::try_from(large_felt).unwrap();
 
         let result = NonZeroU64::try_from_(non_zero_felt);
