@@ -463,3 +463,46 @@ async fn test_happy_case_shell() {
         .arg(CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA);
     snapbox.assert().success();
 }
+
+#[tokio::test]
+async fn test_version_deprecation_warning() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "deploy",
+        "--url",
+        URL,
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--salt",
+        "0x2",
+        "--unique",
+        "--max-fee",
+        "99999999999999999",
+        "--version",
+        "v3",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 will become the only type of transaction available.
+            command: deploy
+            contract_address: 0x0[..]
+            transaction_hash: 0x0[..]
+
+            To see deployment details, visit:
+            contract: [..]
+            transaction: [..]
+            "
+        },
+    );
+}

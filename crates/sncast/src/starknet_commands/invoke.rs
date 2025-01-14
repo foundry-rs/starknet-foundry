@@ -5,6 +5,7 @@ use conversions::IntoConv;
 use sncast::helpers::error::token_not_supported_for_invoke;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
+use sncast::helpers::version::parse_version;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::InvokeResponse;
 use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, WaitForTx};
@@ -38,7 +39,7 @@ pub struct Invoke {
     pub nonce: Option<Felt>,
 
     /// Version of invoke (can be inferred from fee token)
-    #[clap(short, long)]
+    #[clap(short, long, value_parser = parse_version::<InvokeVersion>)]
     pub version: Option<InvokeVersion>,
 
     #[clap(flatten)]

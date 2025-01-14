@@ -399,7 +399,7 @@ async fn test_fee_token_deprecation_warning_eth() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
-        [WARNING] Specifying '--fee-token' flag is deprecated and will be removed in the future. Use '--version' instead
+        [WARNING] Specifying '--fee-token' flag is deprecated and will be removed in the future.
         [WARNING] Eth transactions will stop being supported in the future due to 'SNIP-16'
         Transaction hash: [..]
         command: account deploy
@@ -432,7 +432,39 @@ async fn test_fee_token_deprecation_warning_strk() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
-        [WARNING] Specifying '--fee-token' flag is deprecated and will be removed in the future. Use '--version' instead
+        [WARNING] Specifying '--fee-token' flag is deprecated and will be removed in the future.
+        Transaction hash: [..]
+        command: account deploy
+        transaction_hash: [..]
+
+        To see invocation details, visit:
+        transaction: [..]
+    "});
+}
+
+#[tokio::test]
+async fn test_version_deprecation_warning() {
+    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "--wait",
+        "account",
+        "deploy",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--version",
+        "v3",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 will become the only type of transaction available.
         Transaction hash: [..]
         command: account deploy
         transaction_hash: [..]

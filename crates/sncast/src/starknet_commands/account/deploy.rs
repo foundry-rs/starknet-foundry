@@ -8,6 +8,7 @@ use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSW
 use sncast::helpers::error::token_not_supported_for_deployment;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
+use sncast::helpers::version::parse_version;
 use sncast::response::structs::InvokeResponse;
 use sncast::{
     apply_optional, chain_id_to_network_name, check_account_file_exists,
@@ -38,7 +39,7 @@ pub struct Deploy {
     pub fee_args: FeeArgs,
 
     /// Version of the account deployment (can be inferred from fee token)
-    #[clap(short, long)]
+    #[clap(short, long, value_parser = parse_version::<AccountDeployVersion>)]
     pub version: Option<AccountDeployVersion>,
 
     #[clap(flatten)]
