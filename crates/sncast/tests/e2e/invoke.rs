@@ -388,6 +388,78 @@ fn test_too_low_max_fee() {
     );
 }
 
+#[test]
+fn test_max_gas_equal_to_zero() {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "user11",
+        "--wait",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1",
+        "0x2",
+        "--max-gas",
+        "0",
+        "--fee-token",
+        "strk",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().code(2);
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        error: invalid value '0' for '--max-gas <MAX_GAS>': Value should be greater than 0
+        "},
+    );
+}
+
+#[test]
+fn test_calculated_max_gas_equal_to_zero_when_max_fee_passed() {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "user11",
+        "--wait",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1",
+        "0x2",
+        "--max-fee",
+        "999999",
+        "--fee-token",
+        "strk",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().success();
+
+    // TODO(#2852)
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: invoke
+        error: Calculated max-gas from provided --max-fee and the current network gas price is 0. Please increase --max-fee to obtain a positive gas amount: Tried to create NonZeroFelt from 0
+        "},
+    );
+}
+
 #[tokio::test]
 async fn test_happy_case_cairo_expression_calldata() {
     let tempdir = create_and_deploy_oz_account().await;

@@ -106,7 +106,8 @@ pub async fn declare(
                 casm_class_hash,
             );
 
-            let declaration = apply_optional(declaration, max_fee, DeclarationV2::max_fee);
+            let declaration =
+                apply_optional(declaration, max_fee.map(Felt::from), DeclarationV2::max_fee);
             let declaration = apply_optional(declaration, declare.nonce, DeclarationV2::nonce);
 
             declaration.send().await
@@ -120,9 +121,16 @@ pub async fn declare(
                 casm_class_hash,
             );
 
-            let declaration = apply_optional(declaration, max_gas, DeclarationV3::gas);
-            let declaration =
-                apply_optional(declaration, max_gas_unit_price, DeclarationV3::gas_price);
+            let declaration = apply_optional(
+                declaration,
+                max_gas.map(std::num::NonZero::get),
+                DeclarationV3::gas,
+            );
+            let declaration = apply_optional(
+                declaration,
+                max_gas_unit_price.map(std::num::NonZero::get),
+                DeclarationV3::gas_price,
+            );
             let declaration = apply_optional(declaration, declare.nonce, DeclarationV3::nonce);
 
             declaration.send().await

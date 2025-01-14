@@ -17,7 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
+- When using `--max-fee` with transactions v3, calculated max gas and max gas unit price are automatically validated to ensure they are greater than 0 after conversion
 - interactive interface that allows setting created or imported account as the default
+
+#### Changed
+
+- Values passed to the `--max-fee`, `--max-gas`, and `--max-gas-unit-price` flags must be greater than 0
 
 #### Deprecated
 
