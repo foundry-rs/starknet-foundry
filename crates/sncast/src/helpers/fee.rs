@@ -141,6 +141,7 @@ impl FeeArgs {
                                 .l1_gas_price()
                                 .price_in_fri,
                         )?;
+                        // TODO(#2852)
                         let max_gas = NonZeroFelt::try_from(Felt::from(max_fee)
                             .floor_div(&max_gas_unit_price)).context("Calculated max-gas from provided --max-fee and the current network gas price is 0. Please increase --max-fee to obtain a positive gas amount")?;
                         FeeSettings::Strk {
