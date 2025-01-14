@@ -13,6 +13,7 @@ use futures::StreamExt;
 use package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use profiler_api::run_profiler;
 use shared::print::print_as_warning;
+use shared::spinner::Spinner;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -68,6 +69,7 @@ pub fn maybe_save_trace_and_profile(
             let name = sanitize_filename::sanitize(name.replace("::", "_"));
             let trace_path = save_trace_data(&name, trace_data)?;
             if execution_data_to_save.profile {
+                let _spinner = Spinner::create_with_message("Running cairo-profiler");
                 run_profiler(&name, &trace_path, &execution_data_to_save.additional_args)?;
             }
             return Ok(Some(trace_path));
@@ -84,6 +86,7 @@ pub fn maybe_generate_coverage(
         if saved_trace_data_paths.is_empty() {
             print_as_warning(&anyhow!("No trace data to generate coverage from"));
         } else {
+            let _spinner = Spinner::create_with_message("Running cairo-coverage");
             run_coverage(
                 saved_trace_data_paths,
                 &execution_data_to_save.additional_args,
