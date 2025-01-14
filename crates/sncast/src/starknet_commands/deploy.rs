@@ -91,7 +91,7 @@ pub async fn deploy(
             let execution = factory.deploy_v1(calldata.clone(), salt, unique);
             let execution = match max_fee {
                 None => execution,
-                Some(max_fee) => execution.max_fee(max_fee),
+                Some(max_fee) => execution.max_fee(max_fee.into()),
             };
             let execution = match nonce {
                 None => execution,
@@ -107,11 +107,11 @@ pub async fn deploy(
 
             let execution = match max_gas {
                 None => execution,
-                Some(max_gas) => execution.gas(max_gas),
+                Some(max_gas) => execution.gas(max_gas.into()),
             };
             let execution = match max_gas_unit_price {
                 None => execution,
-                Some(max_gas_unit_price) => execution.gas_price(max_gas_unit_price),
+                Some(max_gas_unit_price) => execution.gas_price(max_gas_unit_price.into()),
             };
             let execution = match nonce {
                 None => execution,
