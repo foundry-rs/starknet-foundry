@@ -7,14 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- Trace files saved in `snfoundry_trace` directory will now use `_` as separators instead of `::`
+
 ### Cast
 
 ### Added
 
 - `sncast deploy` can now deploy contracts by name instead of class hash. [Read more here](https://foundry-rs.github.io/starknet-foundry/starknet/deploy.html)
 - `sncast declare-deploy` allows to declare and deploy contract at once. [Read more here](https://foundry-rs.github.io/starknet-foundry/starknet/declare-deploy.html)
-- Interactive interface that allows setting created or imported account as the default
+- When using `--max-fee` with transactions v3, calculated max gas and max gas unit price are automatically validated to ensure they are greater than 0 after conversion
+- interactive interface that allows setting created or imported account as the default
 
+#### Changed
+
+- Values passed to the `--max-fee`, `--max-gas`, and `--max-gas-unit-price` flags must be greater than 0
+
+#### Deprecated
+
+- `--version` flag
 
 ## [0.35.1] - 2024-12-16
 

@@ -749,3 +749,40 @@ async fn test_no_scarb_profile() {
         "},
     );
 }
+
+#[tokio::test]
+async fn test_version_deprecation_warning() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "human_readable",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+        "--max-fee",
+        "99999999999999999",
+        "--version",
+        "v3",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 will become the only type of transaction available.
+    " },
+    );
+}

@@ -33,7 +33,7 @@ impl VersionCommand {
     fn extract_version(version_output: &str, tool: &str) -> Result<Version> {
         // https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
         let version_regex = Regex::new(
-            &format!(r#"{tool}?\s*((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)"#))
+            &format!(r"{tool}?\s*((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)"))
             .context("Could not create version matching regex")?;
 
         let version_capture = version_regex

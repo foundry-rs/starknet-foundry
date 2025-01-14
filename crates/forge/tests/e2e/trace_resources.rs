@@ -65,7 +65,7 @@ fn assert_resources_for_test(
 
 fn deserialize_call_trace(test_name: &str, temp_dir: &TempDir) -> VersionedProfilerCallTrace {
     let trace_data = fs::read_to_string(temp_dir.join(TRACE_DIR).join(format!(
-        "trace_resources_tests::{test_name}::{test_name}.json"
+        "trace_resources_tests_{test_name}_{test_name}.json"
     )))
     .unwrap();
     serde_json::from_str(&trace_data).expect("Failed to parse call trace")
