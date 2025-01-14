@@ -27,7 +27,7 @@ impl CairoExpression for Expected {
             Self::ByteArray(string) => {
                 let string = string.as_cairo_expression();
 
-                format!(r#"snforge_std::_config_types::Expected::ByteArray({string})"#)
+                format!(r"snforge_std::_config_types::Expected::ByteArray({string})")
             }
             Self::Array(strings) => {
                 let arr = strings.as_cairo_expression();

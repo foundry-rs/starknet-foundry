@@ -6,6 +6,8 @@ use anyhow::{Context, Result};
 use data_transformer::Calldata;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{print_command_result, OutputFormat};
+use std::io;
+use std::io::IsTerminal;
 
 use crate::starknet_commands::deploy::DeployArguments;
 use camino::Utf8PathBuf;
@@ -15,6 +17,7 @@ use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::fee::PayableTransaction;
+use sncast::helpers::interactive::prompt_to_add_account_as_default;
 use sncast::helpers::scarb_utils::{
     assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
     get_scarb_metadata_with_deps, BuildConfig,
@@ -60,7 +63,7 @@ Read the docs:
 Join the community:
 - Follow core developers on X: https://twitter.com/swmansionxyz
 - Get support via Telegram: https://t.me/starknet_foundry_support
-- Or discord: https://discord.gg/KZWaFtPZJf
+- Or discord: https://discord.gg/starknet-community
 - Or join our general chat (Telegram): https://t.me/starknet_foundry
 
 Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
@@ -489,6 +492,16 @@ async fn run_async_command(
                 )
                 .await;
 
+                if !import.silent && result.is_ok() && io::stdout().is_terminal() {
+                    if let Some(account_name) =
+                        result.as_ref().ok().and_then(|r| r.account_name.clone())
+                    {
+                        if let Err(err) = prompt_to_add_account_as_default(account_name.as_str()) {
+                            eprintln!("Error: Failed to launch interactive prompt: {err}");
+                        }
+                    }
+                }
+
                 print_command_result("account import", &result, numbers_format, output_format)?;
                 Ok(())
             }
@@ -515,6 +528,12 @@ async fn run_async_command(
                     &create,
                 )
                 .await;
+
+                if !create.silent && result.is_ok() && io::stdout().is_terminal() {
+                    if let Err(err) = prompt_to_add_account_as_default(&account) {
+                        eprintln!("Error: Failed to launch interactive prompt: {err}");
+                    }
+                }
 
                 print_command_result("account create", &result, numbers_format, output_format)?;
                 print_block_explorer_link_if_allowed(

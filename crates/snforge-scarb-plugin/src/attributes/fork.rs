@@ -78,7 +78,7 @@ fn from_file_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diag
     let name = name.as_cairo_expression();
 
     Ok(format!(
-        r#"snforge_std::_config_types::ForkConfig::Named({name})"#
+        r"snforge_std::_config_types::ForkConfig::Named({name})"
     ))
 }
 
