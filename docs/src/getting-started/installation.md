@@ -108,6 +108,7 @@ asdf install scarb latest
 ```
 
 Set a version globally (in your ~/.tool-versions file):
+
 ```shell
 asdf global scarb latest
 ```
@@ -135,6 +136,7 @@ asdf install starknet-foundry latest
 ```
 
 Set a version globally (in your ~/.tool-versions file):
+
 ```shell
 asdf global starknet-foundry latest
 ```
