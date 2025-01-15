@@ -1,6 +1,6 @@
 use crate::helpers::configuration::CastConfig;
 use crate::{get_provider, Network};
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use clap::Args;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
@@ -94,5 +94,39 @@ impl Network {
             FreeProvider::Blast => "https://starknet-sepolia.public.blastapi.io".to_string(),
             FreeProvider::Voyager => "https://free-rpc.nethermind.io/sepolia-juno".to_string(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use reqwest::Response;
+    use test_case::test_case;
+
+    async fn call_provider(url: &str) -> Result<Response> {
+        let client = reqwest::Client::new();
+        client
+            .get(url)
+            .send()
+            .await
+            .context("Failed to send request")
+    }
+
+    #[test_case(FreeProvider::Voyager)]
+    #[test_case(FreeProvider::Blast)]
+    #[tokio::test]
+    async fn test_mainnet_url_works(free_provider: FreeProvider) {
+        assert!(call_provider(&Network::free_mainnet_rpc(&free_provider))
+            .await
+            .is_ok());
+    }
+
+    #[test_case(FreeProvider::Voyager)]
+    #[test_case(FreeProvider::Blast)]
+    #[tokio::test]
+    async fn test_sepolia_url_works(free_provider: FreeProvider) {
+        assert!(call_provider(&Network::free_sepolia_rpc(&free_provider))
+            .await
+            .is_ok());
     }
 }
