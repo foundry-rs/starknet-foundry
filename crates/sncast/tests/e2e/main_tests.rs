@@ -36,6 +36,32 @@ async fn test_happy_case_from_sncast_config() {
 }
 
 #[tokio::test]
+async fn test_happy_case_predefined_network() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--profile",
+        "no_url",
+        "call",
+        "--network",
+        "sepolia",
+        "--contract-address",
+        "0x0",
+        "--function",
+        "doesnotmatter",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]"
+    );
+}
+
+#[tokio::test]
 async fn test_happy_case_from_cli_no_scarb() {
     let args = vec![
         "--accounts-file",
