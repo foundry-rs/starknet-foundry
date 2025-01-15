@@ -107,6 +107,12 @@ Install Scarb
 asdf install scarb latest
 ```
 
+Set a version globally (in your ~/.tool-versions file):
+
+```shell
+asdf global scarb latest
+```
+
 To verify that Scarb was installed, run
 
 ```shell
@@ -127,6 +133,12 @@ Install Starknet Foundry
 
 ```shell
 asdf install starknet-foundry latest
+```
+
+Set a version globally (in your ~/.tool-versions file):
+
+```shell
+asdf global starknet-foundry latest
 ```
 
 To verify that Starknet Foundry was installed, run
