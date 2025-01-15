@@ -33,7 +33,7 @@ Let's use `sncast` to call a contract's function:
 <!-- { "ignored": true } -->
 ```shell
 $ sncast call \
-    --url http://127.0.0.1:5055 \
+    --network sepolia \
     --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \
     --function "pokemon" \
     --arguments '"Charizard"' \
@@ -89,7 +89,7 @@ Let's invoke a transaction and wait for it to be `ACCEPTED_ON_L2`.
 $ sncast --account my_account \
     --wait \
     deploy \
-	--url http://127.0.0.1:5055 \
+	--network sepolia \
     --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
     --fee-token strk
 ```

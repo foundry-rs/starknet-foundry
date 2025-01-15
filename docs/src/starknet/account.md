@@ -1,12 +1,14 @@
 # Creating And Deploying Accounts
 
-Account is required to perform interactions with Starknet (only calls can be done without it). Starknet Foundry `sncast` supports
+Account is required to perform interactions with Starknet (only calls can be done without it). Starknet Foundry `sncast`
+supports
 entire account management flow with the `sncast account create` and `sncast account deploy` commands.
 
 Difference between those two commands is that the first one creates account information (private key, address and more)
 and the second one deploys it to the network. After deployment, account can be used to interact with Starknet.
 
-To remove an account from the accounts file, you can use  `sncast account delete`. Please note this only removes the account information stored locally - this will not remove the account from Starknet.
+To remove an account from the accounts file, you can use  `sncast account delete`. Please note this only removes the
+account information stored locally - this will not remove the account from Starknet.
 
 > 💡 **Info**
 > Accounts creation and deployment is supported for
@@ -25,7 +27,7 @@ Do the following to start interacting with the Starknet:
 ```shell
 $ sncast \
     account create \
-    --url http://127.0.0.1:5055 \
+    --network sepolia \
     --name new_account
 ```
 
@@ -42,6 +44,7 @@ message: Account successfully created. Prefund generated address with at least <
 To see account creation details, visit:
 account: https://sepolia.starkscan.co/contract/[..]
 ```
+
 </details>
 <br>
 
@@ -51,12 +54,16 @@ See more advanced use cases below or jump directly to the section [here](#advanc
 
 #### Prefund generated address with tokens
 
-To deploy an account in the next step, you need to prefund it with either STRK or an equivalent amount of ETH tokens (read more about them [here](https://docs.starknet.io/architecture-and-concepts/economics-of-starknet/)).
-You can do it both by sending tokens from another starknet account or by bridging them with [StarkGate](https://starkgate.starknet.io/).
+To deploy an account in the next step, you need to prefund it with either STRK or an equivalent amount of ETH tokens (
+read more about them [here](https://docs.starknet.io/architecture-and-concepts/economics-of-starknet/)).
+You can do it both by sending tokens from another starknet account or by bridging them
+with [StarkGate](https://starkgate.starknet.io/).
 
- >💡 **Info**
-> When deploying on a Sepolia test network, you can also fund your account with artificial tokens via the [Starknet Faucet](https://starknet-faucet.vercel.app)
->![image](images/starknet-faucet-sepolia.png)
+> 💡 **Info**
+> When deploying on a Sepolia test network, you can also fund your account with artificial tokens via
+> the [Starknet Faucet](https://starknet-faucet.vercel.app)
+> ![image](images/starknet-faucet-sepolia.png)
+
 #### Deploy account with the `sncast account deploy` command
 
 <!-- TODO(#2736) -->
@@ -64,7 +71,7 @@ You can do it both by sending tokens from another starknet account or by bridgin
 ```shell
 $ sncast \
     account deploy \
-    --url http://127.0.0.1:5055 \
+    --network sepolia \
 	--name new_account \
 	--max-fee 9999999999999
 ```
@@ -79,23 +86,26 @@ transaction_hash: [..]
 To see invocation details, visit:
 transaction: https://sepolia.starkscan.co/tx/[..]
 ```
+
 </details>
 <br>
 
 For a detailed CLI description, see [account deploy command reference](../appendix/sncast/account/deploy.md).
 
-
 ## Managing Accounts
 
-If you created an account with `sncast account create` it by default it will be saved in `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` file which we call `default accounts file` in the following sections.
+If you created an account with `sncast account create` it by default it will be saved in
+`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` file which we call `default accounts file` in the following
+sections.
 
 ### [`account import`](../appendix/sncast/account/import.md)
 
 To import an account to the `default accounts file`, use the `account import` command.
+
 ```shell
 $ sncast \
     account import \
-	--url http://127.0.0.1:5055 \
+	--network sepolia \
     --name my_imported_account \
     --address 0x3a0bcb72428d8056cc7c2bbe5168ddfc844db2737dda3b4c67ff057691177e1 \
     --private-key 0x2 \
@@ -103,6 +113,7 @@ $ sncast \
 ```
 
 ### [`account list`](../appendix/sncast/account/list.md)
+
 List all accounts saved in `accounts file`, grouped based on the networks they are defined on.
 
 <!-- TODO(#2736) -->
@@ -133,6 +144,7 @@ Available accounts (at [..]):
   deployed: true
   type: OpenZeppelin
 ```
+
 </details>
 <br>
 
@@ -141,7 +153,8 @@ There is also possibility to show private keys with the `--display-private-keys`
 
 ### [`account delete`](../appendix/sncast/account/delete.md)
 
-Delete an account from `accounts-file` and its associated Scarb profile. If you pass this command, you will be asked to confirm the deletion.
+Delete an account from `accounts-file` and its associated Scarb profile. If you pass this command, you will be asked to
+confirm the deletion.
 
 ```shell
 $ sncast account delete \
@@ -153,15 +166,17 @@ $ sncast account delete \
 
 #### Custom Account Contract
 
-By default, `sncast` creates/deploys an account using [OpenZeppelin's account contract class hash](https://starkscan.co/class/0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6).
-It is possible to create an account using custom openzeppelin, argent or braavos contract declared to starknet. This can be achieved
+By default, `sncast` creates/deploys an account
+using [OpenZeppelin's account contract class hash](https://starkscan.co/class/0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6).
+It is possible to create an account using custom openzeppelin, argent or braavos contract declared to starknet. This can
+be achieved
 with `--class-hash` flag:
 
 ```shell
 $ sncast \
     account create \
     --name new_account_2 \
-    --url http://127.0.0.1:5055 \
+    --network sepolia \
     --class-hash 0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6
     --type oz
 ```
@@ -173,7 +188,7 @@ Instead of random generation, salt can be specified with `--salt`.
 ```shell
 $ sncast \
     account create \
-    --url http://127.0.0.1:5055 \
+    --network sepolia \
     --name another_account_3 \
     --salt 0x1
 ```
@@ -182,9 +197,9 @@ $ sncast \
 
 ##### Specifying [`--accounts-file`](../appendix/sncast/account/create.md#create)
 
-Account information such as `private_key`, `class_hash`, `address` etc. will be saved to the file specified by `--accounts-file` argument, 
+Account information such as `private_key`, `class_hash`, `address` etc. will be saved to the file specified by
+`--accounts-file` argument,
 if not provided, the `default accounts file` will be used.
-
 
 ##### Specifying [`--add-profile`](../appendix/sncast/account/create.md#--add-profile-name)
 
@@ -194,7 +209,8 @@ Simply use the `--profile` argument followed by the account name in subsequent r
 
 #### Using Keystore and Starkli Account
 
-Accounts created and deployed with [starkli](https://book.starkli.rs/accounts#accounts) can be used by specifying the [`--keystore` argument](../appendix/sncast/common.md#--keystore--k-path_to_keystore_file).
+Accounts created and deployed with [starkli](https://book.starkli.rs/accounts#accounts) can be used by specifying the [
+`--keystore` argument](../appendix/sncast/common.md#--keystore--k-path_to_keystore_file).
 
 > 💡 **Info**
 > When passing the `--keystore` argument, `--account` argument must be a path to the starkli account JSON file.
@@ -206,13 +222,14 @@ $ sncast \
     --keystore keystore.json \
     --account account.json  \
     declare \
-	--url http://127.0.0.1:5055 \
+	--network sepolia \
     --contract-name my_contract \
 ```
 
 #### Creating an Account With Starkli-Style Keystore
 
-It is possible to create an openzeppelin account with keystore in a similar way [starkli](https://book.starkli.rs/accounts#accounts) does.
+It is possible to create an openzeppelin account with keystore in a similar
+way [starkli](https://book.starkli.rs/accounts#accounts) does.
 
 <!-- Snippets is ignored, because typing password for keystore uses interactive mode -->
 <!-- { "ignored": true } -->
@@ -221,7 +238,8 @@ $ sncast \
     --keystore my_key.json \
     --account my_account.json \
     account create \
-    --url http://127.0.0.1:5050 
+    --network sncast
 ```
 
-The command above will generate a keystore file containing the private key, as well as an account file containing the openzeppelin account info that can later be used with starkli.
+The command above will generate a keystore file containing the private key, as well as an account file containing the
+openzeppelin account info that can later be used with starkli.
