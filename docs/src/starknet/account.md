@@ -146,7 +146,7 @@ Delete an account from `accounts-file` and its associated Scarb profile. If you 
 ```shell
 $ sncast account delete \
     --name new_account \
-    --network alpha-sepolia
+    --network-name alpha-sepolia
 ```
 
 ### Advanced Use Cases
@@ -188,8 +188,8 @@ if not provided, the `default accounts file` will be used.
 
 ##### Specifying [`--add-profile`](../appendix/sncast/account/create.md#--add-profile-name)
 
-When the `--add-profile` flag is used, you won't need to include the `--url` or `--accounts-file` parameters 
-(the latter being necessary if your account information was stored in a custom file).
+When the `--add-profile` flag is used, the [profile](../projects/configuration.md#defining-profiles-in-snfoundrytoml)
+is automatically created for the account.
 Simply use the `--profile` argument followed by the account name in subsequent requests.
 
 #### Using Keystore and Starkli Account

@@ -51,7 +51,9 @@ response: [0x0, 0x0, 0x43686172697a617264, 0x9, 0x0, 0x0, 0x41a78e741e5af2fec34b
 <br>
 
 > 📝 **Note**
-> In the above example we supply `sncast` with `--account` and `--url` flags. If `snfoundry.toml` is present, and have these properties set, values provided using these flags will override values from `snfoundry.toml`. Learn more about `snfoundry.toml` configuration [here](../projects/configuration.md#sncast).
+> In the above example we supply `sncast` with `--account` flag. If `snfoundry.toml` is present, and have this property set, value provided using this flags will override value from `snfoundry.toml`. Learn more about `snfoundry.toml` configuration [here](../projects/configuration.md#sncast).
+
+### Network and RPC Providers
 
 
 ### Arguments
