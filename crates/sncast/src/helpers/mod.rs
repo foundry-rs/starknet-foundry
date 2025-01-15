@@ -8,3 +8,4 @@ pub mod fee;
 pub mod interactive;
 pub mod rpc;
 pub mod scarb_utils;
+pub mod version;

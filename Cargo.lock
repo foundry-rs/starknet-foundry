@@ -1896,7 +1896,7 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
 name = "docs"
-version = "0.35.1"
+version = "0.36.0"
 dependencies = [
  "anyhow",
  "camino",
@@ -2149,7 +2149,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.35.1"
+version = "0.36.0"
 dependencies = [
  "anyhow",
  "assert_fs",
@@ -2199,7 +2199,7 @@ dependencies = [
 
 [[package]]
 name = "forge_runner"
-version = "0.35.1"
+version = "0.36.0"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -2217,7 +2217,6 @@ dependencies = [
  "cheatnet",
  "console",
  "conversions",
- "fs4",
  "futures",
  "indoc",
  "itertools 0.12.1",
@@ -2260,16 +2259,6 @@ checksum = "9564fc758e15025b46aa6643b1b77d047d1a56a1aea6e01002ac0c7026876213"
 dependencies = [
  "libc",
  "winapi",
-]
-
-[[package]]
-name = "fs4"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29f9df8a11882c4e3335eb2d18a0137c505d9ca927470b0cac9c6f0ae07d28f7"
-dependencies = [
- "rustix",
- "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -4768,6 +4757,7 @@ dependencies = [
  "anyhow",
  "cairo-lang-runner",
  "console",
+ "indicatif",
  "regex",
  "semver",
  "snapbox",
@@ -4876,7 +4866,7 @@ dependencies = [
 
 [[package]]
 name = "sncast"
-version = "0.35.1"
+version = "0.36.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4934,10 +4924,8 @@ dependencies = [
 
 [[package]]
 name = "snforge_scarb_plugin"
-version = "0.35.1"
+version = "0.36.0"
 dependencies = [
- "cairo-lang-diagnostics",
- "cairo-lang-filesystem",
  "cairo-lang-macro",
  "cairo-lang-parser",
  "cairo-lang-syntax",
