@@ -59,6 +59,8 @@ pub struct SnippetConfig {
     pub package_name: Option<String>,
     #[serde(default)]
     pub ignored_output: bool,
+    #[serde(default)]
+    pub not_replace_network: bool,
 }
 
 #[derive(Debug)]
