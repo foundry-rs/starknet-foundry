@@ -14,7 +14,9 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      - uses: actions/stale@v9
+      - name: Run Stale Bot
+        id: stale-bot
+        uses: actions/stale@v9
         with:
           # General settings
           days-before-stale: ${{ env.DAYS_BEFORE_STALE }}
@@ -32,3 +34,9 @@ jobs:
             marking it as stale. It will close in ${{ env.DAYS_BEFORE_CLOSE }}
             days unless something changes. Thanks for contributing!
           close-pr-message: false
+
+      - name: Logs
+        if: ${{ steps.stale-bot.outputs.staled-issues-prs != '' || steps.stale-bot.outputs.closed-issues-prs != '' }}
+        run: |
+          echo "Staled PRs: ${{ steps.stale-bot.outputs.staled-issues-prs }}"
+          echo "Closed PRs: ${{ steps.stale-bot.outputs.closed-issues-prs }}"
