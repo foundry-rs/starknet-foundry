@@ -275,6 +275,43 @@ pub async fn test_happy_case_add_profile() {
 }
 
 #[tokio::test]
+pub async fn test_add_profile_with_network_arg() {
+    let tempdir = tempdir().expect("Failed to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "import",
+        "--network",
+        "sepolia",
+        "--name",
+        "my_account_import",
+        "--address",
+        "0x1",
+        "--private-key",
+        "0x2",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "--type",
+        "oz",
+        "--add-profile",
+        "my_account_import",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        error: the argument '--network <NETWORK>' cannot be used with '--add-profile <ADD_PROFILE>'
+    "},
+    );
+}
+
+#[tokio::test]
 pub async fn test_detect_deployed() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";

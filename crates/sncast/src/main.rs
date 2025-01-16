@@ -519,7 +519,6 @@ async fn run_async_command(
                     config.account.clone()
                 };
                 let result = starknet_commands::account::create::create(
-                    create.rpc.get_url(&config),
                     &account,
                     &config.accounts_file,
                     config.keystore,
