@@ -1,6 +1,6 @@
 use crate::helpers::configuration::CastConfig;
 use crate::{get_provider, Network};
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use clap::Args;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
@@ -8,7 +8,7 @@ use std::env::current_exe;
 use std::time::UNIX_EPOCH;
 
 #[derive(Args, Clone, Debug, Default)]
-#[group(required = false)]
+#[group(required = false, multiple = false)]
 pub struct RpcArgs {
     /// RPC provider url address; overrides url from snfoundry.toml
     #[clap(short, long)]
@@ -21,6 +21,10 @@ pub struct RpcArgs {
 
 impl RpcArgs {
     pub async fn get_provider(&self, config: &CastConfig) -> Result<JsonRpcClient<HttpTransport>> {
+        if self.network.is_some() && !config.url.is_empty() {
+            bail!("The argument '--network' cannot be used when `url` is defined in `snfoundry.toml` for the active profile")
+        }
+
         let url = if let Some(network) = self.network {
             let free_provider = FreeProvider::semi_random();
             network.url(&free_provider)
@@ -84,14 +88,18 @@ impl Network {
 
     fn free_mainnet_rpc(provider: &FreeProvider) -> String {
         match provider {
-            FreeProvider::Blast => "https://starknet-mainnet.public.blastapi.io".to_string(),
+            FreeProvider::Blast => {
+                "https://starknet-mainnet.public.blastapi.io/rpc/v0_7".to_string()
+            }
             FreeProvider::Voyager => "https://free-rpc.nethermind.io/mainnet-juno".to_string(),
         }
     }
 
     fn free_sepolia_rpc(provider: &FreeProvider) -> String {
         match provider {
-            FreeProvider::Blast => "https://starknet-sepolia.public.blastapi.io".to_string(),
+            FreeProvider::Blast => {
+                "https://starknet-sepolia.public.blastapi.io/rpc/v0_7".to_string()
+            }
             FreeProvider::Voyager => "https://free-rpc.nethermind.io/sepolia-juno".to_string(),
         }
     }
