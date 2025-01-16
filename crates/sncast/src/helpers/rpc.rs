@@ -14,7 +14,7 @@ pub struct RpcArgs {
     #[clap(short, long)]
     pub url: Option<String>,
 
-    /// Use predefined network using public provider
+    /// Use predefined network using public provider. When using this option you may experience rate limits and other unexpected behavior
     #[clap(long)]
     pub network: Option<Network>,
 }

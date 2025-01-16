@@ -55,6 +55,13 @@ response: [0x0, 0x0, 0x43686172697a617264, 0x9, 0x0, 0x0, 0x41a78e741e5af2fec34b
 
 ### Network and RPC Providers
 
+### Network and RPC Providers
+
+When providing `--network` flag, `sncast` will randomly select on of the free RPC providers.
+When using free provider you may experience rate limits and other unexpected behavior.
+
+If using `sncast` extensively, we recommend getting access to a dedicated RPC node and providing its URL to sncast with
+`--url` flag.
 
 ### Arguments
 
