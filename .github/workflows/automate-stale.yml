@@ -23,7 +23,6 @@ jobs:
           days-before-close: ${{ env.DAYS_BEFORE_CLOSE }}
           operations-per-run: 3000
           exempt-all-milestones: true
-          enable-statistics: true # This is only useful if secret ACTIONS_STEP_DEBUG=true
           start-date: '2025-01-17'
           remove-stale-when-updated: true
 
