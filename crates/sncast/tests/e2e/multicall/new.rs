@@ -1,6 +1,6 @@
 use crate::helpers::constants::ACCOUNT_FILE_PATH;
 use crate::helpers::runner::runner;
-use indoc::indoc;
+use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains, AsOutput};
 use sncast::helpers::constants::DEFAULT_MULTICALL_CONTENTS;
 use tempfile::tempdir;
@@ -47,7 +47,7 @@ async fn test_no_output_path_specified() {
     error: the following required arguments were not provided:
       <OUTPUT_PATH>
 
-    Usage: sncast multicall new <OUTPUT_PATH>
+    Usage: sncast[..] multicall new <OUTPUT_PATH>
 
     For more information, try '--help'.
     "};
@@ -73,12 +73,19 @@ async fn test_directory_non_existent() {
     let output = snapbox.assert().success();
 
     assert!(output.as_stdout().is_empty());
+
+    let expected_file_error = if cfg!(target_os = "windows") {
+        "The system cannot find the path specified[..]"
+    } else {
+        "No such file or directory [..]"
+    };
+
     assert_stderr_contains(
         output,
-        indoc! {r"
+        formatdoc! {r"
         command: multicall new
-        error: No such file or directory[..]
-        "},
+        error: {}
+        ", expected_file_error},
     );
 }
 

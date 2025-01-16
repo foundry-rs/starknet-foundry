@@ -1,7 +1,7 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, MULTICALL_CONFIGS_DIR, URL};
 use crate::helpers::fixtures::create_and_deploy_oz_account;
 use crate::helpers::runner::runner;
-use indoc::indoc;
+use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
 use std::path::Path;
 use test_case::test_case;
@@ -112,12 +112,19 @@ async fn test_invalid_path() {
     let output = snapbox.assert().success();
 
     assert!(output.as_stdout().is_empty());
+
+    let expected_file_error = if cfg!(target_os = "windows") {
+        "The system cannot find the file specified[..]"
+    } else {
+        "No such file or directory [..]"
+    };
+
     assert_stderr_contains(
         output,
-        indoc! {r"
+        formatdoc! {r"
         command: multicall run
-        error: No such file or directory [..]
-        "},
+        error: {}
+        ", expected_file_error},
     );
 }
 
@@ -309,4 +316,40 @@ async fn test_numeric_overflow() {
         number too large to fit in target type
         "},
     );
+}
+
+#[tokio::test]
+async fn test_version_deprecation_warning() {
+    let path = project_root::get_project_root().expect("failed to get project root path");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("deploy_invoke.toml");
+    let path = path.to_str().expect("failed converting path to str");
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "oz",
+        "multicall",
+        "run",
+        "--url",
+        URL,
+        "--path",
+        path,
+        "--version",
+        "v3",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert();
+
+    output.stdout_matches(indoc! {r"
+        [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 will become the only type of transaction available.
+        command: multicall run
+        transaction_hash: 0x0[..]
+
+        To see invocation details, visit:
+        transaction: [..]
+    "});
 }
