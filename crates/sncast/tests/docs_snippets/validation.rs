@@ -9,7 +9,6 @@ use docs::utils::{
     update_scarb_toml_dependencies,
 };
 use docs::validation::{extract_snippets_from_directory, extract_snippets_from_file};
-use itertools::Itertools;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
