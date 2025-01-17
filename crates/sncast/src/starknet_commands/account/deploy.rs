@@ -263,7 +263,11 @@ where
     let result = match fee_settings {
         FeeSettings::Eth { max_fee } => {
             let deployment = account_factory.deploy_v1(salt);
-            let deployment = apply_optional(deployment, max_fee, AccountDeploymentV1::max_fee);
+            let deployment = apply_optional(
+                deployment,
+                max_fee.map(Felt::from),
+                AccountDeploymentV1::max_fee,
+            );
             deployment.send().await
         }
         FeeSettings::Strk {
@@ -271,10 +275,14 @@ where
             max_gas_unit_price,
         } => {
             let deployment = account_factory.deploy_v3(salt);
-            let deployment = apply_optional(deployment, max_gas, AccountDeploymentV3::gas);
             let deployment = apply_optional(
                 deployment,
-                max_gas_unit_price,
+                max_gas.map(std::num::NonZero::get),
+                AccountDeploymentV3::gas,
+            );
+            let deployment = apply_optional(
+                deployment,
+                max_gas_unit_price.map(std::num::NonZero::get),
                 AccountDeploymentV3::gas_price,
             );
             deployment.send().await
