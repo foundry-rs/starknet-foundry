@@ -52,6 +52,10 @@ impl SnippetType {
     }
 }
 
+fn replace_network_default() -> bool {
+    true
+}
+
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct SnippetConfig {
     #[serde(default)]
@@ -59,8 +63,8 @@ pub struct SnippetConfig {
     pub package_name: Option<String>,
     #[serde(default)]
     pub ignored_output: bool,
-    #[serde(default)]
-    pub not_replace_network: bool,
+    #[serde(default = "replace_network_default")]
+    pub replace_network: bool,
 }
 
 #[derive(Debug)]

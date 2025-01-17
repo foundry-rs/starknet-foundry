@@ -56,7 +56,7 @@ fn test_docs_snippets() {
         args.insert(0, "--accounts-file");
         args.insert(1, target_accounts_json_path.to_str().unwrap());
 
-        if !snippet.config.not_replace_network {
+        if snippet.config.replace_network {
             let network_pos = args.iter().position(|arg| *arg == "--network");
             if let Some(network_pos) = network_pos {
                 args[network_pos] = "--url";
