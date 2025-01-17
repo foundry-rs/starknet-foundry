@@ -113,33 +113,26 @@ impl Network {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use reqwest::Response;
+    use semver::Version;
+    use shared::rpc::is_expected_version;
+    use starknet::providers::Provider;
     use test_case::test_case;
-
-    async fn call_provider(url: &str) -> Result<Response> {
-        let client = reqwest::Client::new();
-        client
-            .get(url)
-            .send()
-            .await
-            .context("Failed to send request")
-    }
 
     #[test_case(FreeProvider::Voyager)]
     #[test_case(FreeProvider::Blast)]
     #[tokio::test]
     async fn test_mainnet_url_happy_case(free_provider: FreeProvider) {
-        assert!(call_provider(&Network::free_mainnet_rpc(&free_provider))
-            .await
-            .is_ok());
+        let provider = get_provider(&Network::free_sepolia_rpc(&free_provider)).unwrap();
+        let spec_version = provider.spec_version().await.unwrap();
+        assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
     }
 
     #[test_case(FreeProvider::Voyager)]
     #[test_case(FreeProvider::Blast)]
     #[tokio::test]
     async fn test_sepolia_url_happy_case(free_provider: FreeProvider) {
-        assert!(call_provider(&Network::free_sepolia_rpc(&free_provider))
-            .await
-            .is_ok());
+        let provider = get_provider(&Network::free_sepolia_rpc(&free_provider)).unwrap();
+        let spec_version = provider.spec_version().await.unwrap();
+        assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
     }
 }
