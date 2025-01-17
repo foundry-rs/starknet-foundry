@@ -50,5 +50,5 @@ Please follow these rules when creating outputs for `sncast`:
 - Use an imperative tone
 - Keep your message concise and to the point
 - When displaying config, use `key: value` format
-- If the executed command has a natural successor-command, display it as hint in the output
+- If the executed command has a natural successor-command, display it as hint in the output. For example, the output of `declare` command should include a hint to use `deploy` command next.
 - Use colored text when displaying fees, addresses and hashes
