@@ -18,7 +18,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.35.1"
+version = "0.36.0"
 edition = "2021"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
@@ -111,3 +111,4 @@ wiremock = "0.6.0"
 const-hex = "1.14.0"
 indicatif = "0.17.9"
 shell-words = "1.1.0"
+sanitize-filename = "0.6.0"
