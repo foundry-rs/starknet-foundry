@@ -6,6 +6,7 @@ use scarb_api::StarknetContractArtifacts;
 use sncast::helpers::error::token_not_supported_for_declaration;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
+use sncast::helpers::version::parse_version;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
@@ -44,7 +45,7 @@ pub struct Declare {
     pub package: Option<String>,
 
     /// Version of the declaration (can be inferred from fee token)
-    #[clap(short, long)]
+    #[clap(short, long, value_parser = parse_version::<DeclareVersion>)]
     pub version: Option<DeclareVersion>,
 
     #[clap(flatten)]

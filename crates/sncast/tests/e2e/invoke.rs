@@ -128,11 +128,19 @@ async fn test_happy_case_strk(class_hash: Felt, account_type: AccountType) {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success().get_output().stdout.clone();
+    let output = snapbox.assert().success();
+    let stdout = output.get_output().stdout.clone();
 
-    let hash = get_transaction_hash(&output);
+    let hash = get_transaction_hash(&stdout);
     let receipt = get_transaction_receipt(hash).await;
 
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags
+            Converted [..] max fee to [..] max gas and [..] max gas unit price"
+        },
+    );
     assert!(matches!(receipt, Invoke(_)));
 }
 
@@ -523,4 +531,37 @@ async fn test_happy_case_shell() {
         .arg(URL)
         .arg(DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA);
     snapbox.assert().success();
+}
+
+#[test]
+fn test_version_deprecation_warning() {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "oz",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 0x2",
+        "--max-fee",
+        "99999999999999999",
+        "--version",
+        "v3",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {"
+            [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 will become the only type of transaction available.
+        "},
+    );
 }
