@@ -238,7 +238,7 @@ $ sncast \
     --keystore my_key.json \
     --account my_account.json \
     account create \
-    --network sncast
+    --network sepolia
 ```
 
 The command above will generate a keystore file containing the private key, as well as an account file containing the

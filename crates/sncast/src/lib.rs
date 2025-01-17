@@ -87,11 +87,10 @@ pub enum Network {
 
 impl Display for Network {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let str = match self {
-            Network::Mainnet => "mainnet".to_string(),
-            Network::Sepolia => "sepolia".to_string(),
-        };
-        write!(f, "{str}")
+        match self {
+            Network::Mainnet => write!(f, "mainnet"),
+            Network::Sepolia => write!(f, "sepolia"),
+        }
     }
 }
 

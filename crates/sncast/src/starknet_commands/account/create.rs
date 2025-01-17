@@ -347,7 +347,7 @@ fn generate_network_flag(rpc_url: Option<&str>, network: Option<&Network>) -> St
     } else if let Some(network) = network {
         format!("--network {network}",)
     } else {
-        unreachable!()
+        unreachable!("Either `rpc_url` or `network` must be provided.")
     }
 }
 

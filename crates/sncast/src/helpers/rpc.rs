@@ -14,7 +14,7 @@ pub struct RpcArgs {
     #[clap(short, long)]
     pub url: Option<String>,
 
-    /// Use predefined network using public provider. When using this option you may experience rate limits and other unexpected behavior
+    /// Use predefined network with a public provider. Note that this option may result in rate limits or other unexpected behavior
     #[clap(long)]
     pub network: Option<Network>,
 }
@@ -123,7 +123,7 @@ mod tests {
     #[test_case(FreeProvider::Voyager)]
     #[test_case(FreeProvider::Blast)]
     #[tokio::test]
-    async fn test_mainnet_url_works(free_provider: FreeProvider) {
+    async fn test_mainnet_url_happy_case(free_provider: FreeProvider) {
         assert!(call_provider(&Network::free_mainnet_rpc(&free_provider))
             .await
             .is_ok());
@@ -132,7 +132,7 @@ mod tests {
     #[test_case(FreeProvider::Voyager)]
     #[test_case(FreeProvider::Blast)]
     #[tokio::test]
-    async fn test_sepolia_url_works(free_provider: FreeProvider) {
+    async fn test_sepolia_url_happy_case(free_provider: FreeProvider) {
         assert!(call_provider(&Network::free_sepolia_rpc(&free_provider))
             .await
             .is_ok());
