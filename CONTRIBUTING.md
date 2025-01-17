@@ -43,7 +43,7 @@ elsewhere.
 
 ### `sncast` Guidelines
 
-#### Command outputs
+#### Command Outputs
 
 Please follow these rules when creating outputs for `sncast`:
 
