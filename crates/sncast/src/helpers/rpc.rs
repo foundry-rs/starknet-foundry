@@ -2,6 +2,7 @@ use crate::helpers::configuration::CastConfig;
 use crate::{get_provider, Network};
 use anyhow::{bail, Context, Result};
 use clap::Args;
+use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
 use std::env::current_exe;
@@ -89,18 +90,22 @@ impl Network {
     fn free_mainnet_rpc(provider: &FreeProvider) -> String {
         match provider {
             FreeProvider::Blast => {
-                "https://starknet-mainnet.public.blastapi.io/rpc/v0_7".to_string()
+                format!("https://starknet-mainnet.public.blastapi.io/rpc/{RPC_URL_VERSION}")
             }
-            FreeProvider::Voyager => "https://free-rpc.nethermind.io/mainnet-juno".to_string(),
+            FreeProvider::Voyager => {
+                format!("https://free-rpc.nethermind.io/mainnet-juno/{RPC_URL_VERSION}")
+            }
         }
     }
 
     fn free_sepolia_rpc(provider: &FreeProvider) -> String {
         match provider {
             FreeProvider::Blast => {
-                "https://starknet-sepolia.public.blastapi.io/rpc/v0_7".to_string()
+                format!("https://starknet-sepolia.public.blastapi.io/rpc/{RPC_URL_VERSION}")
             }
-            FreeProvider::Voyager => "https://free-rpc.nethermind.io/sepolia-juno".to_string(),
+            FreeProvider::Voyager => {
+                format!("https://free-rpc.nethermind.io/sepolia-juno/{RPC_URL_VERSION}")
+            }
         }
     }
 }
