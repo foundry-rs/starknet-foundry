@@ -140,7 +140,7 @@ impl StateReader for ForkStateReader {
                     key,
                     Felt::default(),
                 );
-                Ok(Default::default())
+                Ok(Felt::default())
             },
             Err(x) => Err(StateReadError(format!(
                 "Unable to get storage at address: {contract_address:?} and key: {key:?} from fork ({x})"
