@@ -31,7 +31,7 @@ Overrides url from `snfoundry.toml`.
 ## `--network <NETWORK>`
 Optional.
 
-Use predefined network using public provider
+Use predefined network with public provider
 
 Possible values: `mainnet`, `sepolia`.
 
