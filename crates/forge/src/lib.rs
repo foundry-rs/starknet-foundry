@@ -90,6 +90,8 @@ enum ForgeSubcommand {
     CleanCache {},
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
+    /// Analyze the project using the sierra-analyzer
+    Analyzer,
 }
 
 #[derive(ValueEnum, Debug, Clone)]
@@ -233,6 +235,10 @@ pub fn main_execution() -> Result<ExitStatus> {
             check_requirements(true)?;
             Ok(ExitStatus::Success)
         }
+        ForgeSubcommand::Analyzer => {
+            analyze_project()?;
+            Ok(ExitStatus::Success)
+        }
     }
 }
 
@@ -268,4 +274,8 @@ fn check_requirements(output_on_success: bool) -> Result<()> {
         ),
     });
     requirements_checker.check()
+}
+
+fn analyze_project() -> Result<()> {
+    Ok(())
 }
