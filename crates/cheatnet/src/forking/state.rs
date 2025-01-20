@@ -138,7 +138,7 @@ impl StateReader for ForkStateReader {
                 self.cache.borrow_mut().cache_get_storage_at(
                     contract_address,
                     key,
-                    Default::default(),
+                    Felt::default(),
                 );
                 Ok(Default::default())
             },
