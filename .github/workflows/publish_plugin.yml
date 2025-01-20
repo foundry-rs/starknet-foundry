@@ -53,18 +53,18 @@ jobs:
             os: ubuntu-latest
             cross: true
             ext: "so"
-
-          - target: x86_64-apple-darwin
-            os: macos-latest
-            ext: "dylib"
-
-          - target: aarch64-apple-darwin
-            os: macos-latest
-            ext: "dylib"
-
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            ext: "dll"
+#
+#          - target: x86_64-apple-darwin
+#            os: macos-latest
+#            ext: "dylib"
+#
+#          - target: aarch64-apple-darwin
+#            os: macos-latest
+#            ext: "dylib"
+#
+#          - target: x86_64-pc-windows-msvc
+#            os: windows-latest
+#            ext: "dll"
 
     steps:
       - uses: actions/checkout@v4
@@ -145,7 +145,7 @@ jobs:
         shell: bash
         run: ls crates/snforge-scarb-plugin/target/scarb/cairo-plugin
 
-      - name: Publish snforge_scarb_plugin
-        if: needs.check-version.outputs.snforge_scarb_plugin_uploaded == 'false' || github.event_name == 'workflow_dispatch'
-        working-directory: crates/snforge-scarb-plugin
-        run: scarb publish
+#      - name: Publish snforge_scarb_plugin
+#        if: needs.check-version.outputs.snforge_scarb_plugin_uploaded == 'false' || github.event_name == 'workflow_dispatch'
+#        working-directory: crates/snforge-scarb-plugin
+#        run: scarb publish
