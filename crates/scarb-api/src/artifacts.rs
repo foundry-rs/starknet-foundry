@@ -197,14 +197,12 @@ mod tests {
 
         // Load the contracts
         let result = artifacts_files.load_contracts_artifacts();
-        println!("{result:?}");
 
         // Ensure no errors and non-empty result
         assert!(result.is_ok());
 
         // Assert the Contract Artifacts are loaded.
         let artifacts_map = result.unwrap();
-        assert!(!artifacts_map.is_empty());
         assert!(artifacts_map.contains_key("ERC20"));
         assert!(artifacts_map.contains_key("HelloStarknet"));
     }
