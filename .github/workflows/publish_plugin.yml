@@ -22,12 +22,101 @@ jobs:
           echo "snforge_scarb_plugin_uploaded=$snforge_scarb_plugin_uploaded" >> $GITHUB_OUTPUT
 
   build-binaries:
+    name: Build ${{ matrix.target }}
+    needs: check-version
+    runs-on: ${{ matrix.os }}
 
+    env:
+      # Cross-compiled targets will override this to `cross`.
+      CARGO: cargo
+
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            # Use cross to link oldest GLIBC possible.
+            cross: true
+            ext: "so"
+
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            cross: true
+            ext: "so"
+
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            cross: true
+            ext: "so"
+
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+            cross: true
+            ext: "so"
+
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            ext: "dylib"
+
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            ext: "dylib"
+
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            ext: "dll"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          target: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
+
+      - name: Install cross
+        if: matrix.cross
+        uses: taiki-e/install-action@cross
+
+      - name: Enable cross-compilation
+        if: matrix.cross
+        shell: bash
+        run: |
+          echo "CARGO=cross" >> $GITHUB_ENV
+
+      - name: Build
+        working-directory: crates/snforge-scarb-plugin
+        run: ${{ env.CARGO }} build --release --locked --target ${{ matrix.target }}
+
+      - name: Rename Binary
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          PACKAGE_NAME="snforge_scarb_plugin"
+          PACKAGE_VERSION=$(grep version crates/snforge-scarb-plugin/Scarb.toml | cut -d '"' -f 2)
+
+          TARGET="${{ matrix.target }}"
+          EXT="${{ matrix.ext }}"
+
+          OUTPUT_BINARY="${PACKAGE_NAME}_v${PACKAGE_VERSION}_${TARGET}.${EXT}"
+
+          cp ./target/${TARGET}/release/*.${EXT} ./target/${TARGET}/release/${OUTPUT_BINARY}
+
+          OUTPUT_BINARY_PATH="./target/${TARGET}/release/${OUTPUT_BINARY}"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.target }}
+          path: ${{ env.OUTPUT_BINARY_PATH }}
+          compression-level: 0
 
   upload-to-registry:
     name: Upload snforge_scarb_plugin to the registry
     runs-on: ubuntu-latest
-    needs: check-version
+    needs: [check-version, build-binaries]
     env:
       SCARB_REGISTRY_AUTH_TOKEN: ${{ secrets.SCARB_REGISTRY_AUTH_TOKEN }}
     steps:
@@ -36,6 +125,25 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: "2.8.5"
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts-dl
+
+      - name: Debug 1
+        shell: bash
+        run: ls artifacts-dl
+
+      - name: Move artifacts to staging director
+        shell: bash
+        run: |
+          mkdir -p crates/snforge-scarb-plugin/target/scarb/cairo-plugin
+          mv artifacts-dl/build-* crates/snforge-scarb-plugin/target/scarb/cairo-plugin/
+
+      - name: Debug 2
+        shell: bash
+        run: ls crates/snforge-scarb-plugin/target/scarb/cairo-plugin
 
       - name: Publish snforge_scarb_plugin
         if: needs.check-version.outputs.snforge_scarb_plugin_uploaded == 'false' || github.event_name == 'workflow_dispatch'
