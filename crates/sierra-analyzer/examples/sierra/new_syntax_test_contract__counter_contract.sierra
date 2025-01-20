@@ -1,0 +1,1151 @@
+type RangeCheck = RangeCheck [storable: true, drop: false, dup: false, zero_sized: false];
+type Const<felt252, 919351712289634246300158463021408865763225970949890991975649277335387851124> = Const<felt252, 919351712289634246300158463021408865763225970949890991975649277335387851124> [storable: false, drop: false, dup: false, zero_sized: false];
+type Const<felt252, 364451368385661037075321874576483508309644891427381190745986300576661518140> = Const<felt252, 364451368385661037075321874576483508309644891427381190745986300576661518140> [storable: false, drop: false, dup: false, zero_sized: false];
+type Const<felt252, 373502242078911797297509776863854163679541038429883461174855360031674187824> = Const<felt252, 373502242078911797297509776863854163679541038429883461174855360031674187824> [storable: false, drop: false, dup: false, zero_sized: false];
+type cairo_level_tests::contracts::new_syntax_test_contract::OutOfScopeEvent = Struct<ut@[163877428345231133648790821436924631891389557336569455802525456191555995446]> [storable: true, drop: true, dup: true, zero_sized: true];
+type cairo_level_tests::contracts::new_syntax_test_contract::test_component::Event = Enum<ut@[39577172977327277046548137108835658022134028076093944644575072805272534766]> [storable: true, drop: true, dup: true, zero_sized: false];
+type u128 = u128 [storable: true, drop: true, dup: true, zero_sized: false];
+type cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterIncreased = Struct<ut@[431575795818504942265272937990576674379023564596969741717731654773605852296], u128> [storable: true, drop: true, dup: true, zero_sized: false];
+type cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterDecreased = Struct<ut@[1537539988943211817562541285787916241942105193321751242150155970002584480707], u128> [storable: true, drop: true, dup: true, zero_sized: false];
+type cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event = Enum<ut@[822065776351063864357606769906883376284343179454988756930021796730218810965], cairo_level_tests::contracts::new_syntax_test_contract::test_component::Event, cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterIncreased, cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterDecreased, cairo_level_tests::contracts::new_syntax_test_contract::OutOfScopeEvent> [storable: true, drop: true, dup: true, zero_sized: false];
+type Const<felt252, 1749165063169615148890104124711417950509560691> = Const<felt252, 1749165063169615148890104124711417950509560691> [storable: false, drop: false, dup: false, zero_sized: false];
+type Const<felt252, 7891998437966260601762371672023996916393715052535837300> = Const<felt252, 7891998437966260601762371672023996916393715052535837300> [storable: false, drop: false, dup: false, zero_sized: false];
+type Const<felt252, 39878429859763533771555484554338820190071> = Const<felt252, 39878429859763533771555484554338820190071> [storable: false, drop: false, dup: false, zero_sized: false];
+type Unit = Struct<ut@[1325343513152088812341467750635149026053683136611136091911357178651207272643]> [storable: true, drop: true, dup: true, zero_sized: true];
+type core::bool = Enum<ut@[1428587981972971377690703480718106917688158670535227238524565791273937320306], Unit, Unit> [storable: true, drop: true, dup: true, zero_sized: false];
+type felt252 = felt252 [storable: true, drop: true, dup: true, zero_sized: false];
+type NonZero<felt252> = NonZero<felt252> [storable: true, drop: true, dup: true, zero_sized: false];
+type Const<felt252, 111544887057963339087585932406486273909854462006621624506100316242821434072> = Const<felt252, 111544887057963339087585932406486273909854462006621624506100316242821434072> [storable: false, drop: false, dup: false, zero_sized: false];
+type Const<felt252, 39878429859757942499084499860145094553463> = Const<felt252, 39878429859757942499084499860145094553463> [storable: false, drop: false, dup: false, zero_sized: false];
+type Const<felt252, 485748461484230571791265682659113160264223489397539653310998840191492914> = Const<felt252, 485748461484230571791265682659113160264223489397539653310998840191492914> [storable: false, drop: false, dup: false, zero_sized: false];
+type ContractAddress = ContractAddress [storable: true, drop: true, dup: true, zero_sized: false];
+type core::option::Option::<core::felt252> = Enum<ut@[502540321931352404499287398278270665773953423387279675570524389549882807569], felt252, Unit> [storable: true, drop: true, dup: true, zero_sized: false];
+type Const<felt252, 485748461484230571791265682659113160264223489397539653310998840191492913> = Const<felt252, 485748461484230571791265682659113160264223489397539653310998840191492913> [storable: false, drop: false, dup: false, zero_sized: false];
+type cairo_level_tests::contracts::new_syntax_test_contract::test_component::__member_module_data::ComponentMemberState = Struct<ut@[1109495736334165678643069387379489823896325033689534529778125533838718739136]> [storable: true, drop: true, dup: true, zero_sized: true];
+type cairo_level_tests::contracts::new_syntax_test_contract::test_component::ComponentState::<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState> = Struct<ut@[1308209069636590259733985031730087271860927527520946610431002685101626629825], cairo_level_tests::contracts::new_syntax_test_contract::test_component::__member_module_data::ComponentMemberState> [storable: true, drop: true, dup: true, zero_sized: true];
+type cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::__member_module_counter::ContractMemberState = Struct<ut@[1652231889771686780515405964928301578157391310772613319605451269811188926162]> [storable: true, drop: true, dup: true, zero_sized: true];
+type cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::__member_module_other_contract::ContractMemberState = Struct<ut@[168924763854626648487469537744743942682400807547496105263435050896269624718]> [storable: true, drop: true, dup: true, zero_sized: true];
+type cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState = Struct<ut@[738342303727599462903210023928120118624461243523334503103490103733701315016], cairo_level_tests::contracts::new_syntax_test_contract::test_component::ComponentState::<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>, cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::__member_module_counter::ContractMemberState, cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::__member_module_other_contract::ContractMemberState> [storable: true, drop: true, dup: true, zero_sized: true];
+type Tuple<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, Unit> = Struct<ut@[1325343513152088812341467750635149026053683136611136091911357178651207272643], cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, Unit> [storable: true, drop: true, dup: true, zero_sized: true];
+type core::panics::Panic = Struct<ut@[640126984585624630990013944782631102820301644699864366139839615702772668018]> [storable: true, drop: true, dup: true, zero_sized: true];
+type Array<felt252> = Array<felt252> [storable: true, drop: true, dup: false, zero_sized: false];
+type Tuple<core::panics::Panic, Array<felt252>> = Struct<ut@[1325343513152088812341467750635149026053683136611136091911357178651207272643], core::panics::Panic, Array<felt252>> [storable: true, drop: true, dup: false, zero_sized: false];
+type core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())> = Enum<ut@[1464869975552433251415112562813245585545137753319124513515889126554538809944], Tuple<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, Unit>, Tuple<core::panics::Panic, Array<felt252>>> [storable: true, drop: true, dup: false, zero_sized: false];
+type Box<felt252> = Box<felt252> [storable: true, drop: true, dup: true, zero_sized: false];
+type core::option::Option::<core::box::Box::<@core::felt252>> = Enum<ut@[1182885770396068416776258475038712898857052156962285097349975100489777991911], Box<felt252>, Unit> [storable: true, drop: true, dup: true, zero_sized: false];
+type Const<felt252, 375233589013918064796019> = Const<felt252, 375233589013918064796019> [storable: false, drop: false, dup: false, zero_sized: false];
+type Const<felt252, 476442828812030857794232422692155113556837216824> = Const<felt252, 476442828812030857794232422692155113556837216824> [storable: false, drop: false, dup: false, zero_sized: false];
+type Snapshot<Array<felt252>> = Snapshot<Array<felt252>> [storable: true, drop: true, dup: true, zero_sized: false];
+type core::array::Span::<core::felt252> = Struct<ut@[782572820229152792105145177694740816763001980856532159945905090893343825762], Snapshot<Array<felt252>>> [storable: true, drop: true, dup: true, zero_sized: false];
+type Tuple<core::array::Span::<core::felt252>> = Struct<ut@[1325343513152088812341467750635149026053683136611136091911357178651207272643], core::array::Span::<core::felt252>> [storable: true, drop: true, dup: true, zero_sized: false];
+type Const<u32, 0> = Const<u32, 0> [storable: false, drop: false, dup: false, zero_sized: false];
+type u32 = u32 [storable: true, drop: true, dup: true, zero_sized: false];
+type StorageAddress = StorageAddress [storable: true, drop: true, dup: true, zero_sized: false];
+type StorageBaseAddress = StorageBaseAddress [storable: true, drop: true, dup: true, zero_sized: false];
+type BuiltinCosts = BuiltinCosts [storable: true, drop: true, dup: true, zero_sized: false];
+type System = System [storable: true, drop: false, dup: false, zero_sized: false];
+type core::panics::PanicResult::<(core::array::Span::<core::felt252>,)> = Enum<ut@[270671131472959732993844072583327084608513343873724697777364695367457417702], Tuple<core::array::Span::<core::felt252>>, Tuple<core::panics::Panic, Array<felt252>>> [storable: true, drop: true, dup: false, zero_sized: false];
+type Const<felt252, 7733229381460288120802334208475838166080759535023995805565484692595> = Const<felt252, 7733229381460288120802334208475838166080759535023995805565484692595> [storable: false, drop: false, dup: false, zero_sized: false];
+type GasBuiltin = GasBuiltin [storable: true, drop: false, dup: false, zero_sized: false];
+
+libfunc revoke_ap_tracking = revoke_ap_tracking;
+libfunc withdraw_gas = withdraw_gas;
+libfunc branch_align = branch_align;
+libfunc struct_deconstruct<core::array::Span::<core::felt252>> = struct_deconstruct<core::array::Span::<core::felt252>>;
+libfunc store_temp<RangeCheck> = store_temp<RangeCheck>;
+libfunc array_snapshot_pop_front<felt252> = array_snapshot_pop_front<felt252>;
+libfunc drop<Snapshot<Array<felt252>>> = drop<Snapshot<Array<felt252>>>;
+libfunc drop<Box<felt252>> = drop<Box<felt252>>;
+libfunc array_new<felt252> = array_new<felt252>;
+libfunc const_as_immediate<Const<felt252, 7733229381460288120802334208475838166080759535023995805565484692595>> = const_as_immediate<Const<felt252, 7733229381460288120802334208475838166080759535023995805565484692595>>;
+libfunc store_temp<felt252> = store_temp<felt252>;
+libfunc array_append<felt252> = array_append<felt252>;
+libfunc struct_construct<core::panics::Panic> = struct_construct<core::panics::Panic>;
+libfunc struct_construct<Tuple<core::panics::Panic, Array<felt252>>> = struct_construct<Tuple<core::panics::Panic, Array<felt252>>>;
+libfunc enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1> = enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>;
+libfunc store_temp<GasBuiltin> = store_temp<GasBuiltin>;
+libfunc store_temp<System> = store_temp<System>;
+libfunc store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>> = store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>;
+libfunc get_builtin_costs = get_builtin_costs;
+libfunc store_temp<BuiltinCosts> = store_temp<BuiltinCosts>;
+libfunc withdraw_gas_all = withdraw_gas_all;
+libfunc storage_base_address_const<223925651276572801467025322450506123433664924558092583619131301620304795732> = storage_base_address_const<223925651276572801467025322450506123433664924558092583619131301620304795732>;
+libfunc storage_address_from_base = storage_address_from_base;
+libfunc const_as_immediate<Const<u32, 0>> = const_as_immediate<Const<u32, 0>>;
+libfunc store_temp<u32> = store_temp<u32>;
+libfunc store_temp<StorageAddress> = store_temp<StorageAddress>;
+libfunc storage_read_syscall = storage_read_syscall;
+libfunc u128s_from_felt252 = u128s_from_felt252;
+libfunc u128_to_felt252 = u128_to_felt252;
+libfunc snapshot_take<Array<felt252>> = snapshot_take<Array<felt252>>;
+libfunc drop<Array<felt252>> = drop<Array<felt252>>;
+libfunc struct_construct<core::array::Span::<core::felt252>> = struct_construct<core::array::Span::<core::felt252>>;
+libfunc struct_construct<Tuple<core::array::Span::<core::felt252>>> = struct_construct<Tuple<core::array::Span::<core::felt252>>>;
+libfunc enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 0> = enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 0>;
+libfunc drop<u128> = drop<u128>;
+libfunc const_as_immediate<Const<felt252, 476442828812030857794232422692155113556837216824>> = const_as_immediate<Const<felt252, 476442828812030857794232422692155113556837216824>>;
+libfunc store_temp<Array<felt252>> = store_temp<Array<felt252>>;
+libfunc jump = jump;
+libfunc const_as_immediate<Const<felt252, 375233589013918064796019>> = const_as_immediate<Const<felt252, 375233589013918064796019>>;
+libfunc drop<core::array::Span::<core::felt252>> = drop<core::array::Span::<core::felt252>>;
+libfunc enable_ap_tracking = enable_ap_tracking;
+libfunc enum_init<core::option::Option::<core::box::Box::<@core::felt252>>, 0> = enum_init<core::option::Option::<core::box::Box::<@core::felt252>>, 0>;
+libfunc store_temp<Snapshot<Array<felt252>>> = store_temp<Snapshot<Array<felt252>>>;
+libfunc store_temp<core::option::Option::<core::box::Box::<@core::felt252>>> = store_temp<core::option::Option::<core::box::Box::<@core::felt252>>>;
+libfunc struct_construct<Unit> = struct_construct<Unit>;
+libfunc enum_init<core::option::Option::<core::box::Box::<@core::felt252>>, 1> = enum_init<core::option::Option::<core::box::Box::<@core::felt252>>, 1>;
+libfunc enum_match<core::option::Option::<core::box::Box::<@core::felt252>>> = enum_match<core::option::Option::<core::box::Box::<@core::felt252>>>;
+libfunc unbox<felt252> = unbox<felt252>;
+libfunc rename<felt252> = rename<felt252>;
+libfunc disable_ap_tracking = disable_ap_tracking;
+libfunc struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::test_component::__member_module_data::ComponentMemberState> = struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::test_component::__member_module_data::ComponentMemberState>;
+libfunc struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::test_component::ComponentState::<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>> = struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::test_component::ComponentState::<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>>;
+libfunc struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::__member_module_counter::ContractMemberState> = struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::__member_module_counter::ContractMemberState>;
+libfunc struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::__member_module_other_contract::ContractMemberState> = struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::__member_module_other_contract::ContractMemberState>;
+libfunc struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState> = struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>;
+libfunc store_temp<u128> = store_temp<u128>;
+libfunc function_call<user@cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterContract::increase_counter> = function_call<user@cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterContract::increase_counter>;
+libfunc enum_match<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>> = enum_match<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>;
+libfunc drop<Tuple<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, Unit>> = drop<Tuple<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, Unit>>;
+libfunc drop<Unit> = drop<Unit>;
+libfunc const_as_immediate<Const<felt252, 485748461484230571791265682659113160264223489397539653310998840191492913>> = const_as_immediate<Const<felt252, 485748461484230571791265682659113160264223489397539653310998840191492913>>;
+libfunc function_call<user@cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterContract::decrease_counter> = function_call<user@cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterContract::decrease_counter>;
+libfunc enum_init<core::option::Option::<core::felt252>, 0> = enum_init<core::option::Option::<core::felt252>, 0>;
+libfunc store_temp<core::option::Option::<core::felt252>> = store_temp<core::option::Option::<core::felt252>>;
+libfunc enum_init<core::option::Option::<core::felt252>, 1> = enum_init<core::option::Option::<core::felt252>, 1>;
+libfunc enum_match<core::option::Option::<core::felt252>> = enum_match<core::option::Option::<core::felt252>>;
+libfunc contract_address_try_from_felt252 = contract_address_try_from_felt252;
+libfunc drop<ContractAddress> = drop<ContractAddress>;
+libfunc storage_write_syscall = storage_write_syscall;
+libfunc storage_base_address_const<376313616497945473624065492941162130666019289552693032300931764466904068779> = storage_base_address_const<376313616497945473624065492941162130666019289552693032300931764466904068779>;
+libfunc contract_address_to_felt252 = contract_address_to_felt252;
+libfunc const_as_immediate<Const<felt252, 485748461484230571791265682659113160264223489397539653310998840191492914>> = const_as_immediate<Const<felt252, 485748461484230571791265682659113160264223489397539653310998840191492914>>;
+libfunc dup<u128> = dup<u128>;
+libfunc u128_overflowing_add = u128_overflowing_add;
+libfunc struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterIncreased> = struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterIncreased>;
+libfunc store_temp<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterIncreased> = store_temp<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterIncreased>;
+libfunc function_call<user@cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractStateEventEmitter::emit::<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterIncreased, cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::EventCounterIncreasedIntoEvent>> = function_call<user@cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractStateEventEmitter::emit::<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterIncreased, cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::EventCounterIncreasedIntoEvent>>;
+libfunc store_temp<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>> = store_temp<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>;
+libfunc drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState> = drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>;
+libfunc enum_init<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>, 1> = enum_init<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>, 1>;
+libfunc const_as_immediate<Const<felt252, 39878429859757942499084499860145094553463>> = const_as_immediate<Const<felt252, 39878429859757942499084499860145094553463>>;
+libfunc const_as_immediate<Const<felt252, 111544887057963339087585932406486273909854462006621624506100316242821434072>> = const_as_immediate<Const<felt252, 111544887057963339087585932406486273909854462006621624506100316242821434072>>;
+libfunc call_contract_syscall = call_contract_syscall;
+libfunc felt252_is_zero = felt252_is_zero;
+libfunc enum_init<core::bool, 1> = enum_init<core::bool, 1>;
+libfunc store_temp<core::bool> = store_temp<core::bool>;
+libfunc drop<NonZero<felt252>> = drop<NonZero<felt252>>;
+libfunc enum_init<core::bool, 0> = enum_init<core::bool, 0>;
+libfunc bool_not_impl = bool_not_impl;
+libfunc enum_match<core::bool> = enum_match<core::bool>;
+libfunc struct_construct<Tuple<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, Unit>> = struct_construct<Tuple<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, Unit>>;
+libfunc enum_init<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>, 0> = enum_init<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>, 0>;
+libfunc u128_overflowing_sub = u128_overflowing_sub;
+libfunc struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterDecreased> = struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterDecreased>;
+libfunc store_temp<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterDecreased> = store_temp<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterDecreased>;
+libfunc function_call<user@cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractStateEventEmitter::emit::<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterDecreased, cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::EventCounterDecreasedIntoEvent>> = function_call<user@cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractStateEventEmitter::emit::<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterDecreased, cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::EventCounterDecreasedIntoEvent>>;
+libfunc const_as_immediate<Const<felt252, 39878429859763533771555484554338820190071>> = const_as_immediate<Const<felt252, 39878429859763533771555484554338820190071>>;
+libfunc const_as_immediate<Const<felt252, 7891998437966260601762371672023996916393715052535837300>> = const_as_immediate<Const<felt252, 7891998437966260601762371672023996916393715052535837300>>;
+libfunc const_as_immediate<Const<felt252, 1749165063169615148890104124711417950509560691>> = const_as_immediate<Const<felt252, 1749165063169615148890104124711417950509560691>>;
+libfunc enum_init<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event, 1> = enum_init<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event, 1>;
+libfunc snapshot_take<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event> = snapshot_take<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event>;
+libfunc drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event> = drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event>;
+libfunc store_temp<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event> = store_temp<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event>;
+libfunc enum_match<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event> = enum_match<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event>;
+libfunc enum_match<cairo_level_tests::contracts::new_syntax_test_contract::test_component::Event> = enum_match<cairo_level_tests::contracts::new_syntax_test_contract::test_component::Event>;
+libfunc const_as_immediate<Const<felt252, 373502242078911797297509776863854163679541038429883461174855360031674187824>> = const_as_immediate<Const<felt252, 373502242078911797297509776863854163679541038429883461174855360031674187824>>;
+libfunc struct_deconstruct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterIncreased> = struct_deconstruct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterIncreased>;
+libfunc rename<u128> = rename<u128>;
+libfunc const_as_immediate<Const<felt252, 364451368385661037075321874576483508309644891427381190745986300576661518140>> = const_as_immediate<Const<felt252, 364451368385661037075321874576483508309644891427381190745986300576661518140>>;
+libfunc struct_deconstruct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterDecreased> = struct_deconstruct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterDecreased>;
+libfunc drop<cairo_level_tests::contracts::new_syntax_test_contract::OutOfScopeEvent> = drop<cairo_level_tests::contracts::new_syntax_test_contract::OutOfScopeEvent>;
+libfunc const_as_immediate<Const<felt252, 919351712289634246300158463021408865763225970949890991975649277335387851124>> = const_as_immediate<Const<felt252, 919351712289634246300158463021408865763225970949890991975649277335387851124>>;
+libfunc emit_event_syscall = emit_event_syscall;
+libfunc enum_init<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event, 2> = enum_init<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event, 2>;
+
+revoke_ap_tracking() -> (); // 0
+withdraw_gas([0], [1]) { fallthrough([4], [5]) 91([6], [7]) }; // 1
+branch_align() -> (); // 2
+struct_deconstruct<core::array::Span::<core::felt252>>([3]) -> ([8]); // 3
+store_temp<RangeCheck>([4]) -> ([4]); // 4
+array_snapshot_pop_front<felt252>([8]) { fallthrough([9], [10]) 21([11]) }; // 5
+branch_align() -> (); // 6
+drop<Snapshot<Array<felt252>>>([9]) -> (); // 7
+drop<Box<felt252>>([10]) -> (); // 8
+array_new<felt252>() -> ([12]); // 9
+const_as_immediate<Const<felt252, 7733229381460288120802334208475838166080759535023995805565484692595>>() -> ([13]); // 10
+store_temp<felt252>([13]) -> ([13]); // 11
+array_append<felt252>([12], [13]) -> ([14]); // 12
+struct_construct<core::panics::Panic>() -> ([15]); // 13
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([15], [14]) -> ([16]); // 14
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([16]) -> ([17]); // 15
+store_temp<RangeCheck>([4]) -> ([4]); // 16
+store_temp<GasBuiltin>([5]) -> ([5]); // 17
+store_temp<System>([2]) -> ([2]); // 18
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([17]) -> ([17]); // 19
+return([4], [5], [2], [17]); // 20
+branch_align() -> (); // 21
+drop<Snapshot<Array<felt252>>>([11]) -> (); // 22
+get_builtin_costs() -> ([18]); // 23
+store_temp<BuiltinCosts>([18]) -> ([18]); // 24
+withdraw_gas_all([4], [5], [18]) { fallthrough([19], [20]) 78([21], [22]) }; // 25
+branch_align() -> (); // 26
+storage_base_address_const<223925651276572801467025322450506123433664924558092583619131301620304795732>() -> ([23]); // 27
+storage_address_from_base([23]) -> ([24]); // 28
+const_as_immediate<Const<u32, 0>>() -> ([25]); // 29
+store_temp<u32>([25]) -> ([25]); // 30
+store_temp<StorageAddress>([24]) -> ([24]); // 31
+store_temp<RangeCheck>([19]) -> ([19]); // 32
+storage_read_syscall([20], [2], [25], [24]) { fallthrough([26], [27], [28]) 65([29], [30], [31]) }; // 33
+branch_align() -> (); // 34
+store_temp<felt252>([28]) -> ([28]); // 35
+store_temp<GasBuiltin>([26]) -> ([26]); // 36
+store_temp<System>([27]) -> ([27]); // 37
+u128s_from_felt252([19], [28]) { fallthrough([32], [33]) 53([34], [35], [36]) }; // 38
+branch_align() -> (); // 39
+array_new<felt252>() -> ([37]); // 40
+u128_to_felt252([33]) -> ([38]); // 41
+array_append<felt252>([37], [38]) -> ([39]); // 42
+snapshot_take<Array<felt252>>([39]) -> ([40], [41]); // 43
+drop<Array<felt252>>([40]) -> (); // 44
+struct_construct<core::array::Span::<core::felt252>>([41]) -> ([42]); // 45
+struct_construct<Tuple<core::array::Span::<core::felt252>>>([42]) -> ([43]); // 46
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 0>([43]) -> ([44]); // 47
+store_temp<RangeCheck>([32]) -> ([32]); // 48
+store_temp<GasBuiltin>([26]) -> ([26]); // 49
+store_temp<System>([27]) -> ([27]); // 50
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([44]) -> ([44]); // 51
+return([32], [26], [27], [44]); // 52
+branch_align() -> (); // 53
+drop<u128>([35]) -> (); // 54
+drop<u128>([36]) -> (); // 55
+array_new<felt252>() -> ([45]); // 56
+const_as_immediate<Const<felt252, 476442828812030857794232422692155113556837216824>>() -> ([46]); // 57
+store_temp<felt252>([46]) -> ([46]); // 58
+array_append<felt252>([45], [46]) -> ([47]); // 59
+store_temp<RangeCheck>([34]) -> ([48]); // 60
+store_temp<GasBuiltin>([26]) -> ([49]); // 61
+store_temp<System>([27]) -> ([50]); // 62
+store_temp<Array<felt252>>([47]) -> ([51]); // 63
+jump() { 70() }; // 64
+branch_align() -> (); // 65
+store_temp<RangeCheck>([19]) -> ([48]); // 66
+store_temp<GasBuiltin>([29]) -> ([49]); // 67
+store_temp<System>([30]) -> ([50]); // 68
+store_temp<Array<felt252>>([31]) -> ([51]); // 69
+struct_construct<core::panics::Panic>() -> ([52]); // 70
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([52], [51]) -> ([53]); // 71
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([53]) -> ([54]); // 72
+store_temp<RangeCheck>([48]) -> ([48]); // 73
+store_temp<GasBuiltin>([49]) -> ([49]); // 74
+store_temp<System>([50]) -> ([50]); // 75
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([54]) -> ([54]); // 76
+return([48], [49], [50], [54]); // 77
+branch_align() -> (); // 78
+array_new<felt252>() -> ([55]); // 79
+const_as_immediate<Const<felt252, 375233589013918064796019>>() -> ([56]); // 80
+store_temp<felt252>([56]) -> ([56]); // 81
+array_append<felt252>([55], [56]) -> ([57]); // 82
+struct_construct<core::panics::Panic>() -> ([58]); // 83
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([58], [57]) -> ([59]); // 84
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([59]) -> ([60]); // 85
+store_temp<RangeCheck>([21]) -> ([21]); // 86
+store_temp<GasBuiltin>([22]) -> ([22]); // 87
+store_temp<System>([2]) -> ([2]); // 88
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([60]) -> ([60]); // 89
+return([21], [22], [2], [60]); // 90
+branch_align() -> (); // 91
+drop<core::array::Span::<core::felt252>>([3]) -> (); // 92
+array_new<felt252>() -> ([61]); // 93
+const_as_immediate<Const<felt252, 375233589013918064796019>>() -> ([62]); // 94
+store_temp<felt252>([62]) -> ([62]); // 95
+array_append<felt252>([61], [62]) -> ([63]); // 96
+struct_construct<core::panics::Panic>() -> ([64]); // 97
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([64], [63]) -> ([65]); // 98
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([65]) -> ([66]); // 99
+store_temp<RangeCheck>([6]) -> ([6]); // 100
+store_temp<GasBuiltin>([7]) -> ([7]); // 101
+store_temp<System>([2]) -> ([2]); // 102
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([66]) -> ([66]); // 103
+return([6], [7], [2], [66]); // 104
+revoke_ap_tracking() -> (); // 105
+withdraw_gas([0], [1]) { fallthrough([4], [5]) 223([6], [7]) }; // 106
+branch_align() -> (); // 107
+struct_deconstruct<core::array::Span::<core::felt252>>([3]) -> ([8]); // 108
+enable_ap_tracking() -> (); // 109
+store_temp<RangeCheck>([4]) -> ([4]); // 110
+array_snapshot_pop_front<felt252>([8]) { fallthrough([9], [10]) 117([11]) }; // 111
+branch_align() -> (); // 112
+enum_init<core::option::Option::<core::box::Box::<@core::felt252>>, 0>([10]) -> ([12]); // 113
+store_temp<Snapshot<Array<felt252>>>([9]) -> ([13]); // 114
+store_temp<core::option::Option::<core::box::Box::<@core::felt252>>>([12]) -> ([14]); // 115
+jump() { 122() }; // 116
+branch_align() -> (); // 117
+struct_construct<Unit>() -> ([15]); // 118
+enum_init<core::option::Option::<core::box::Box::<@core::felt252>>, 1>([15]) -> ([16]); // 119
+store_temp<Snapshot<Array<felt252>>>([11]) -> ([13]); // 120
+store_temp<core::option::Option::<core::box::Box::<@core::felt252>>>([16]) -> ([14]); // 121
+enum_match<core::option::Option::<core::box::Box::<@core::felt252>>>([14]) { fallthrough([17]) 206([18]) }; // 122
+branch_align() -> (); // 123
+unbox<felt252>([17]) -> ([19]); // 124
+rename<felt252>([19]) -> ([20]); // 125
+store_temp<felt252>([20]) -> ([20]); // 126
+u128s_from_felt252([4], [20]) { fallthrough([21], [22]) 200([23], [24], [25]) }; // 127
+branch_align() -> (); // 128
+store_temp<RangeCheck>([21]) -> ([21]); // 129
+array_snapshot_pop_front<felt252>([13]) { fallthrough([26], [27]) 148([28]) }; // 130
+branch_align() -> (); // 131
+disable_ap_tracking() -> (); // 132
+drop<Snapshot<Array<felt252>>>([26]) -> (); // 133
+drop<Box<felt252>>([27]) -> (); // 134
+drop<u128>([22]) -> (); // 135
+array_new<felt252>() -> ([29]); // 136
+const_as_immediate<Const<felt252, 7733229381460288120802334208475838166080759535023995805565484692595>>() -> ([30]); // 137
+store_temp<felt252>([30]) -> ([30]); // 138
+array_append<felt252>([29], [30]) -> ([31]); // 139
+struct_construct<core::panics::Panic>() -> ([32]); // 140
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([32], [31]) -> ([33]); // 141
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([33]) -> ([34]); // 142
+store_temp<RangeCheck>([21]) -> ([21]); // 143
+store_temp<GasBuiltin>([5]) -> ([5]); // 144
+store_temp<System>([2]) -> ([2]); // 145
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([34]) -> ([34]); // 146
+return([21], [5], [2], [34]); // 147
+branch_align() -> (); // 148
+disable_ap_tracking() -> (); // 149
+drop<Snapshot<Array<felt252>>>([28]) -> (); // 150
+get_builtin_costs() -> ([35]); // 151
+store_temp<BuiltinCosts>([35]) -> ([35]); // 152
+withdraw_gas_all([21], [5], [35]) { fallthrough([36], [37]) 186([38], [39]) }; // 153
+branch_align() -> (); // 154
+struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::test_component::__member_module_data::ComponentMemberState>() -> ([40]); // 155
+struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::test_component::ComponentState::<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>>([40]) -> ([41]); // 156
+struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::__member_module_counter::ContractMemberState>() -> ([42]); // 157
+struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::__member_module_other_contract::ContractMemberState>() -> ([43]); // 158
+struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>([41], [42], [43]) -> ([44]); // 159
+store_temp<RangeCheck>([36]) -> ([36]); // 160
+store_temp<GasBuiltin>([37]) -> ([37]); // 161
+store_temp<System>([2]) -> ([2]); // 162
+store_temp<u128>([22]) -> ([22]); // 163
+function_call<user@cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterContract::increase_counter>([36], [37], [2], [44], [22]) -> ([45], [46], [47], [48]); // 164
+enum_match<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>([48]) { fallthrough([49]) 179([50]) }; // 165
+branch_align() -> (); // 166
+drop<Tuple<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, Unit>>([49]) -> (); // 167
+array_new<felt252>() -> ([51]); // 168
+snapshot_take<Array<felt252>>([51]) -> ([52], [53]); // 169
+drop<Array<felt252>>([52]) -> (); // 170
+struct_construct<core::array::Span::<core::felt252>>([53]) -> ([54]); // 171
+struct_construct<Tuple<core::array::Span::<core::felt252>>>([54]) -> ([55]); // 172
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 0>([55]) -> ([56]); // 173
+store_temp<RangeCheck>([45]) -> ([45]); // 174
+store_temp<GasBuiltin>([46]) -> ([46]); // 175
+store_temp<System>([47]) -> ([47]); // 176
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([56]) -> ([56]); // 177
+return([45], [46], [47], [56]); // 178
+branch_align() -> (); // 179
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([50]) -> ([57]); // 180
+store_temp<RangeCheck>([45]) -> ([45]); // 181
+store_temp<GasBuiltin>([46]) -> ([46]); // 182
+store_temp<System>([47]) -> ([47]); // 183
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([57]) -> ([57]); // 184
+return([45], [46], [47], [57]); // 185
+branch_align() -> (); // 186
+drop<u128>([22]) -> (); // 187
+array_new<felt252>() -> ([58]); // 188
+const_as_immediate<Const<felt252, 375233589013918064796019>>() -> ([59]); // 189
+store_temp<felt252>([59]) -> ([59]); // 190
+array_append<felt252>([58], [59]) -> ([60]); // 191
+struct_construct<core::panics::Panic>() -> ([61]); // 192
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([61], [60]) -> ([62]); // 193
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([62]) -> ([63]); // 194
+store_temp<RangeCheck>([38]) -> ([38]); // 195
+store_temp<GasBuiltin>([39]) -> ([39]); // 196
+store_temp<System>([2]) -> ([2]); // 197
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([63]) -> ([63]); // 198
+return([38], [39], [2], [63]); // 199
+branch_align() -> (); // 200
+drop<u128>([24]) -> (); // 201
+drop<u128>([25]) -> (); // 202
+drop<Snapshot<Array<felt252>>>([13]) -> (); // 203
+store_temp<RangeCheck>([23]) -> ([64]); // 204
+jump() { 210() }; // 205
+branch_align() -> (); // 206
+drop<Unit>([18]) -> (); // 207
+drop<Snapshot<Array<felt252>>>([13]) -> (); // 208
+store_temp<RangeCheck>([4]) -> ([64]); // 209
+disable_ap_tracking() -> (); // 210
+array_new<felt252>() -> ([65]); // 211
+const_as_immediate<Const<felt252, 485748461484230571791265682659113160264223489397539653310998840191492913>>() -> ([66]); // 212
+store_temp<felt252>([66]) -> ([66]); // 213
+array_append<felt252>([65], [66]) -> ([67]); // 214
+struct_construct<core::panics::Panic>() -> ([68]); // 215
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([68], [67]) -> ([69]); // 216
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([69]) -> ([70]); // 217
+store_temp<RangeCheck>([64]) -> ([64]); // 218
+store_temp<GasBuiltin>([5]) -> ([5]); // 219
+store_temp<System>([2]) -> ([2]); // 220
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([70]) -> ([70]); // 221
+return([64], [5], [2], [70]); // 222
+branch_align() -> (); // 223
+drop<core::array::Span::<core::felt252>>([3]) -> (); // 224
+array_new<felt252>() -> ([71]); // 225
+const_as_immediate<Const<felt252, 375233589013918064796019>>() -> ([72]); // 226
+store_temp<felt252>([72]) -> ([72]); // 227
+array_append<felt252>([71], [72]) -> ([73]); // 228
+struct_construct<core::panics::Panic>() -> ([74]); // 229
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([74], [73]) -> ([75]); // 230
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([75]) -> ([76]); // 231
+store_temp<RangeCheck>([6]) -> ([6]); // 232
+store_temp<GasBuiltin>([7]) -> ([7]); // 233
+store_temp<System>([2]) -> ([2]); // 234
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([76]) -> ([76]); // 235
+return([6], [7], [2], [76]); // 236
+revoke_ap_tracking() -> (); // 237
+withdraw_gas([0], [1]) { fallthrough([4], [5]) 355([6], [7]) }; // 238
+branch_align() -> (); // 239
+struct_deconstruct<core::array::Span::<core::felt252>>([3]) -> ([8]); // 240
+enable_ap_tracking() -> (); // 241
+store_temp<RangeCheck>([4]) -> ([4]); // 242
+array_snapshot_pop_front<felt252>([8]) { fallthrough([9], [10]) 249([11]) }; // 243
+branch_align() -> (); // 244
+enum_init<core::option::Option::<core::box::Box::<@core::felt252>>, 0>([10]) -> ([12]); // 245
+store_temp<Snapshot<Array<felt252>>>([9]) -> ([13]); // 246
+store_temp<core::option::Option::<core::box::Box::<@core::felt252>>>([12]) -> ([14]); // 247
+jump() { 254() }; // 248
+branch_align() -> (); // 249
+struct_construct<Unit>() -> ([15]); // 250
+enum_init<core::option::Option::<core::box::Box::<@core::felt252>>, 1>([15]) -> ([16]); // 251
+store_temp<Snapshot<Array<felt252>>>([11]) -> ([13]); // 252
+store_temp<core::option::Option::<core::box::Box::<@core::felt252>>>([16]) -> ([14]); // 253
+enum_match<core::option::Option::<core::box::Box::<@core::felt252>>>([14]) { fallthrough([17]) 338([18]) }; // 254
+branch_align() -> (); // 255
+unbox<felt252>([17]) -> ([19]); // 256
+rename<felt252>([19]) -> ([20]); // 257
+store_temp<felt252>([20]) -> ([20]); // 258
+u128s_from_felt252([4], [20]) { fallthrough([21], [22]) 332([23], [24], [25]) }; // 259
+branch_align() -> (); // 260
+store_temp<RangeCheck>([21]) -> ([21]); // 261
+array_snapshot_pop_front<felt252>([13]) { fallthrough([26], [27]) 280([28]) }; // 262
+branch_align() -> (); // 263
+disable_ap_tracking() -> (); // 264
+drop<Snapshot<Array<felt252>>>([26]) -> (); // 265
+drop<Box<felt252>>([27]) -> (); // 266
+drop<u128>([22]) -> (); // 267
+array_new<felt252>() -> ([29]); // 268
+const_as_immediate<Const<felt252, 7733229381460288120802334208475838166080759535023995805565484692595>>() -> ([30]); // 269
+store_temp<felt252>([30]) -> ([30]); // 270
+array_append<felt252>([29], [30]) -> ([31]); // 271
+struct_construct<core::panics::Panic>() -> ([32]); // 272
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([32], [31]) -> ([33]); // 273
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([33]) -> ([34]); // 274
+store_temp<RangeCheck>([21]) -> ([21]); // 275
+store_temp<GasBuiltin>([5]) -> ([5]); // 276
+store_temp<System>([2]) -> ([2]); // 277
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([34]) -> ([34]); // 278
+return([21], [5], [2], [34]); // 279
+branch_align() -> (); // 280
+disable_ap_tracking() -> (); // 281
+drop<Snapshot<Array<felt252>>>([28]) -> (); // 282
+get_builtin_costs() -> ([35]); // 283
+store_temp<BuiltinCosts>([35]) -> ([35]); // 284
+withdraw_gas_all([21], [5], [35]) { fallthrough([36], [37]) 318([38], [39]) }; // 285
+branch_align() -> (); // 286
+struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::test_component::__member_module_data::ComponentMemberState>() -> ([40]); // 287
+struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::test_component::ComponentState::<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>>([40]) -> ([41]); // 288
+struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::__member_module_counter::ContractMemberState>() -> ([42]); // 289
+struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::__member_module_other_contract::ContractMemberState>() -> ([43]); // 290
+struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>([41], [42], [43]) -> ([44]); // 291
+store_temp<RangeCheck>([36]) -> ([36]); // 292
+store_temp<GasBuiltin>([37]) -> ([37]); // 293
+store_temp<System>([2]) -> ([2]); // 294
+store_temp<u128>([22]) -> ([22]); // 295
+function_call<user@cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterContract::decrease_counter>([36], [37], [2], [44], [22]) -> ([45], [46], [47], [48]); // 296
+enum_match<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>([48]) { fallthrough([49]) 311([50]) }; // 297
+branch_align() -> (); // 298
+drop<Tuple<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, Unit>>([49]) -> (); // 299
+array_new<felt252>() -> ([51]); // 300
+snapshot_take<Array<felt252>>([51]) -> ([52], [53]); // 301
+drop<Array<felt252>>([52]) -> (); // 302
+struct_construct<core::array::Span::<core::felt252>>([53]) -> ([54]); // 303
+struct_construct<Tuple<core::array::Span::<core::felt252>>>([54]) -> ([55]); // 304
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 0>([55]) -> ([56]); // 305
+store_temp<RangeCheck>([45]) -> ([45]); // 306
+store_temp<GasBuiltin>([46]) -> ([46]); // 307
+store_temp<System>([47]) -> ([47]); // 308
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([56]) -> ([56]); // 309
+return([45], [46], [47], [56]); // 310
+branch_align() -> (); // 311
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([50]) -> ([57]); // 312
+store_temp<RangeCheck>([45]) -> ([45]); // 313
+store_temp<GasBuiltin>([46]) -> ([46]); // 314
+store_temp<System>([47]) -> ([47]); // 315
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([57]) -> ([57]); // 316
+return([45], [46], [47], [57]); // 317
+branch_align() -> (); // 318
+drop<u128>([22]) -> (); // 319
+array_new<felt252>() -> ([58]); // 320
+const_as_immediate<Const<felt252, 375233589013918064796019>>() -> ([59]); // 321
+store_temp<felt252>([59]) -> ([59]); // 322
+array_append<felt252>([58], [59]) -> ([60]); // 323
+struct_construct<core::panics::Panic>() -> ([61]); // 324
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([61], [60]) -> ([62]); // 325
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([62]) -> ([63]); // 326
+store_temp<RangeCheck>([38]) -> ([38]); // 327
+store_temp<GasBuiltin>([39]) -> ([39]); // 328
+store_temp<System>([2]) -> ([2]); // 329
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([63]) -> ([63]); // 330
+return([38], [39], [2], [63]); // 331
+branch_align() -> (); // 332
+drop<u128>([24]) -> (); // 333
+drop<u128>([25]) -> (); // 334
+drop<Snapshot<Array<felt252>>>([13]) -> (); // 335
+store_temp<RangeCheck>([23]) -> ([64]); // 336
+jump() { 342() }; // 337
+branch_align() -> (); // 338
+drop<Unit>([18]) -> (); // 339
+drop<Snapshot<Array<felt252>>>([13]) -> (); // 340
+store_temp<RangeCheck>([4]) -> ([64]); // 341
+disable_ap_tracking() -> (); // 342
+array_new<felt252>() -> ([65]); // 343
+const_as_immediate<Const<felt252, 485748461484230571791265682659113160264223489397539653310998840191492913>>() -> ([66]); // 344
+store_temp<felt252>([66]) -> ([66]); // 345
+array_append<felt252>([65], [66]) -> ([67]); // 346
+struct_construct<core::panics::Panic>() -> ([68]); // 347
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([68], [67]) -> ([69]); // 348
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([69]) -> ([70]); // 349
+store_temp<RangeCheck>([64]) -> ([64]); // 350
+store_temp<GasBuiltin>([5]) -> ([5]); // 351
+store_temp<System>([2]) -> ([2]); // 352
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([70]) -> ([70]); // 353
+return([64], [5], [2], [70]); // 354
+branch_align() -> (); // 355
+drop<core::array::Span::<core::felt252>>([3]) -> (); // 356
+array_new<felt252>() -> ([71]); // 357
+const_as_immediate<Const<felt252, 375233589013918064796019>>() -> ([72]); // 358
+store_temp<felt252>([72]) -> ([72]); // 359
+array_append<felt252>([71], [72]) -> ([73]); // 360
+struct_construct<core::panics::Panic>() -> ([74]); // 361
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([74], [73]) -> ([75]); // 362
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([75]) -> ([76]); // 363
+store_temp<RangeCheck>([6]) -> ([6]); // 364
+store_temp<GasBuiltin>([7]) -> ([7]); // 365
+store_temp<System>([2]) -> ([2]); // 366
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([76]) -> ([76]); // 367
+return([6], [7], [2], [76]); // 368
+revoke_ap_tracking() -> (); // 369
+withdraw_gas([0], [1]) { fallthrough([4], [5]) 548([6], [7]) }; // 370
+branch_align() -> (); // 371
+struct_deconstruct<core::array::Span::<core::felt252>>([3]) -> ([8]); // 372
+enable_ap_tracking() -> (); // 373
+store_temp<RangeCheck>([4]) -> ([4]); // 374
+array_snapshot_pop_front<felt252>([8]) { fallthrough([9], [10]) 381([11]) }; // 375
+branch_align() -> (); // 376
+enum_init<core::option::Option::<core::box::Box::<@core::felt252>>, 0>([10]) -> ([12]); // 377
+store_temp<Snapshot<Array<felt252>>>([9]) -> ([13]); // 378
+store_temp<core::option::Option::<core::box::Box::<@core::felt252>>>([12]) -> ([14]); // 379
+jump() { 386() }; // 380
+branch_align() -> (); // 381
+struct_construct<Unit>() -> ([15]); // 382
+enum_init<core::option::Option::<core::box::Box::<@core::felt252>>, 1>([15]) -> ([16]); // 383
+store_temp<Snapshot<Array<felt252>>>([11]) -> ([13]); // 384
+store_temp<core::option::Option::<core::box::Box::<@core::felt252>>>([16]) -> ([14]); // 385
+enum_match<core::option::Option::<core::box::Box::<@core::felt252>>>([14]) { fallthrough([17]) 531([18]) }; // 386
+branch_align() -> (); // 387
+unbox<felt252>([17]) -> ([19]); // 388
+rename<felt252>([19]) -> ([20]); // 389
+store_temp<felt252>([20]) -> ([20]); // 390
+u128s_from_felt252([4], [20]) { fallthrough([21], [22]) 525([23], [24], [25]) }; // 391
+branch_align() -> (); // 392
+store_temp<RangeCheck>([21]) -> ([21]); // 393
+array_snapshot_pop_front<felt252>([13]) { fallthrough([26], [27]) 402([28]) }; // 394
+branch_align() -> (); // 395
+unbox<felt252>([27]) -> ([29]); // 396
+rename<felt252>([29]) -> ([30]); // 397
+enum_init<core::option::Option::<core::felt252>, 0>([30]) -> ([31]); // 398
+store_temp<Snapshot<Array<felt252>>>([26]) -> ([32]); // 399
+store_temp<core::option::Option::<core::felt252>>([31]) -> ([33]); // 400
+jump() { 407() }; // 401
+branch_align() -> (); // 402
+struct_construct<Unit>() -> ([34]); // 403
+enum_init<core::option::Option::<core::felt252>, 1>([34]) -> ([35]); // 404
+store_temp<Snapshot<Array<felt252>>>([28]) -> ([32]); // 405
+store_temp<core::option::Option::<core::felt252>>([35]) -> ([33]); // 406
+enum_match<core::option::Option::<core::felt252>>([33]) { fallthrough([36]) 507([37]) }; // 407
+branch_align() -> (); // 408
+contract_address_try_from_felt252([21], [36]) { fallthrough([38], [39]) 502([40]) }; // 409
+branch_align() -> (); // 410
+store_temp<RangeCheck>([38]) -> ([38]); // 411
+array_snapshot_pop_front<felt252>([32]) { fallthrough([41], [42]) 431([43]) }; // 412
+branch_align() -> (); // 413
+disable_ap_tracking() -> (); // 414
+drop<Snapshot<Array<felt252>>>([41]) -> (); // 415
+drop<Box<felt252>>([42]) -> (); // 416
+drop<ContractAddress>([39]) -> (); // 417
+drop<u128>([22]) -> (); // 418
+array_new<felt252>() -> ([44]); // 419
+const_as_immediate<Const<felt252, 7733229381460288120802334208475838166080759535023995805565484692595>>() -> ([45]); // 420
+store_temp<felt252>([45]) -> ([45]); // 421
+array_append<felt252>([44], [45]) -> ([46]); // 422
+struct_construct<core::panics::Panic>() -> ([47]); // 423
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([47], [46]) -> ([48]); // 424
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([48]) -> ([49]); // 425
+store_temp<RangeCheck>([38]) -> ([38]); // 426
+store_temp<GasBuiltin>([5]) -> ([5]); // 427
+store_temp<System>([2]) -> ([2]); // 428
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([49]) -> ([49]); // 429
+return([38], [5], [2], [49]); // 430
+branch_align() -> (); // 431
+drop<Snapshot<Array<felt252>>>([43]) -> (); // 432
+get_builtin_costs() -> ([50]); // 433
+store_temp<BuiltinCosts>([50]) -> ([50]); // 434
+withdraw_gas_all([38], [5], [50]) { fallthrough([51], [52]) 486([53], [54]) }; // 435
+branch_align() -> (); // 436
+storage_base_address_const<223925651276572801467025322450506123433664924558092583619131301620304795732>() -> ([55]); // 437
+u128_to_felt252([22]) -> ([56]); // 438
+storage_address_from_base([55]) -> ([57]); // 439
+const_as_immediate<Const<u32, 0>>() -> ([58]); // 440
+store_temp<u32>([58]) -> ([58]); // 441
+store_temp<StorageAddress>([57]) -> ([57]); // 442
+store_temp<RangeCheck>([51]) -> ([51]); // 443
+storage_write_syscall([52], [2], [58], [57], [56]) { fallthrough([59], [60]) 472([61], [62], [63]) }; // 444
+branch_align() -> (); // 445
+storage_base_address_const<376313616497945473624065492941162130666019289552693032300931764466904068779>() -> ([64]); // 446
+contract_address_to_felt252([39]) -> ([65]); // 447
+storage_address_from_base([64]) -> ([66]); // 448
+const_as_immediate<Const<u32, 0>>() -> ([67]); // 449
+store_temp<GasBuiltin>([59]) -> ([59]); // 450
+store_temp<u32>([67]) -> ([67]); // 451
+store_temp<StorageAddress>([66]) -> ([66]); // 452
+storage_write_syscall([59], [60], [67], [66], [65]) { fallthrough([68], [69]) 467([70], [71], [72]) }; // 453
+branch_align() -> (); // 454
+disable_ap_tracking() -> (); // 455
+array_new<felt252>() -> ([73]); // 456
+snapshot_take<Array<felt252>>([73]) -> ([74], [75]); // 457
+drop<Array<felt252>>([74]) -> (); // 458
+struct_construct<core::array::Span::<core::felt252>>([75]) -> ([76]); // 459
+struct_construct<Tuple<core::array::Span::<core::felt252>>>([76]) -> ([77]); // 460
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 0>([77]) -> ([78]); // 461
+store_temp<RangeCheck>([51]) -> ([51]); // 462
+store_temp<GasBuiltin>([68]) -> ([68]); // 463
+store_temp<System>([69]) -> ([69]); // 464
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([78]) -> ([78]); // 465
+return([51], [68], [69], [78]); // 466
+branch_align() -> (); // 467
+store_temp<GasBuiltin>([70]) -> ([79]); // 468
+store_temp<System>([71]) -> ([80]); // 469
+store_temp<Array<felt252>>([72]) -> ([81]); // 470
+jump() { 477() }; // 471
+branch_align() -> (); // 472
+drop<ContractAddress>([39]) -> (); // 473
+store_temp<GasBuiltin>([61]) -> ([79]); // 474
+store_temp<System>([62]) -> ([80]); // 475
+store_temp<Array<felt252>>([63]) -> ([81]); // 476
+disable_ap_tracking() -> (); // 477
+struct_construct<core::panics::Panic>() -> ([82]); // 478
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([82], [81]) -> ([83]); // 479
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([83]) -> ([84]); // 480
+store_temp<RangeCheck>([51]) -> ([51]); // 481
+store_temp<GasBuiltin>([79]) -> ([79]); // 482
+store_temp<System>([80]) -> ([80]); // 483
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([84]) -> ([84]); // 484
+return([51], [79], [80], [84]); // 485
+branch_align() -> (); // 486
+disable_ap_tracking() -> (); // 487
+drop<ContractAddress>([39]) -> (); // 488
+drop<u128>([22]) -> (); // 489
+array_new<felt252>() -> ([85]); // 490
+const_as_immediate<Const<felt252, 375233589013918064796019>>() -> ([86]); // 491
+store_temp<felt252>([86]) -> ([86]); // 492
+array_append<felt252>([85], [86]) -> ([87]); // 493
+struct_construct<core::panics::Panic>() -> ([88]); // 494
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([88], [87]) -> ([89]); // 495
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([89]) -> ([90]); // 496
+store_temp<RangeCheck>([53]) -> ([53]); // 497
+store_temp<GasBuiltin>([54]) -> ([54]); // 498
+store_temp<System>([2]) -> ([2]); // 499
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([90]) -> ([90]); // 500
+return([53], [54], [2], [90]); // 501
+branch_align() -> (); // 502
+drop<Snapshot<Array<felt252>>>([32]) -> (); // 503
+drop<u128>([22]) -> (); // 504
+store_temp<RangeCheck>([40]) -> ([91]); // 505
+jump() { 512() }; // 506
+branch_align() -> (); // 507
+drop<Unit>([37]) -> (); // 508
+drop<Snapshot<Array<felt252>>>([32]) -> (); // 509
+drop<u128>([22]) -> (); // 510
+store_temp<RangeCheck>([21]) -> ([91]); // 511
+disable_ap_tracking() -> (); // 512
+array_new<felt252>() -> ([92]); // 513
+const_as_immediate<Const<felt252, 485748461484230571791265682659113160264223489397539653310998840191492914>>() -> ([93]); // 514
+store_temp<felt252>([93]) -> ([93]); // 515
+array_append<felt252>([92], [93]) -> ([94]); // 516
+struct_construct<core::panics::Panic>() -> ([95]); // 517
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([95], [94]) -> ([96]); // 518
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([96]) -> ([97]); // 519
+store_temp<RangeCheck>([91]) -> ([91]); // 520
+store_temp<GasBuiltin>([5]) -> ([5]); // 521
+store_temp<System>([2]) -> ([2]); // 522
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([97]) -> ([97]); // 523
+return([91], [5], [2], [97]); // 524
+branch_align() -> (); // 525
+drop<u128>([24]) -> (); // 526
+drop<u128>([25]) -> (); // 527
+drop<Snapshot<Array<felt252>>>([13]) -> (); // 528
+store_temp<RangeCheck>([23]) -> ([98]); // 529
+jump() { 535() }; // 530
+branch_align() -> (); // 531
+drop<Unit>([18]) -> (); // 532
+drop<Snapshot<Array<felt252>>>([13]) -> (); // 533
+store_temp<RangeCheck>([4]) -> ([98]); // 534
+disable_ap_tracking() -> (); // 535
+array_new<felt252>() -> ([99]); // 536
+const_as_immediate<Const<felt252, 485748461484230571791265682659113160264223489397539653310998840191492913>>() -> ([100]); // 537
+store_temp<felt252>([100]) -> ([100]); // 538
+array_append<felt252>([99], [100]) -> ([101]); // 539
+struct_construct<core::panics::Panic>() -> ([102]); // 540
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([102], [101]) -> ([103]); // 541
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([103]) -> ([104]); // 542
+store_temp<RangeCheck>([98]) -> ([98]); // 543
+store_temp<GasBuiltin>([5]) -> ([5]); // 544
+store_temp<System>([2]) -> ([2]); // 545
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([104]) -> ([104]); // 546
+return([98], [5], [2], [104]); // 547
+branch_align() -> (); // 548
+drop<core::array::Span::<core::felt252>>([3]) -> (); // 549
+array_new<felt252>() -> ([105]); // 550
+const_as_immediate<Const<felt252, 375233589013918064796019>>() -> ([106]); // 551
+store_temp<felt252>([106]) -> ([106]); // 552
+array_append<felt252>([105], [106]) -> ([107]); // 553
+struct_construct<core::panics::Panic>() -> ([108]); // 554
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([108], [107]) -> ([109]); // 555
+enum_init<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>, 1>([109]) -> ([110]); // 556
+store_temp<RangeCheck>([6]) -> ([6]); // 557
+store_temp<GasBuiltin>([7]) -> ([7]); // 558
+store_temp<System>([2]) -> ([2]); // 559
+store_temp<core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>>([110]) -> ([110]); // 560
+return([6], [7], [2], [110]); // 561
+storage_base_address_const<223925651276572801467025322450506123433664924558092583619131301620304795732>() -> ([5]); // 562
+storage_address_from_base([5]) -> ([6]); // 563
+const_as_immediate<Const<u32, 0>>() -> ([7]); // 564
+store_temp<u32>([7]) -> ([7]); // 565
+store_temp<StorageAddress>([6]) -> ([6]); // 566
+storage_read_syscall([1], [2], [7], [6]) { fallthrough([8], [9], [10]) 637([11], [12], [13]) }; // 567
+branch_align() -> (); // 568
+store_temp<felt252>([10]) -> ([10]); // 569
+store_temp<GasBuiltin>([8]) -> ([8]); // 570
+store_temp<System>([9]) -> ([9]); // 571
+u128s_from_felt252([0], [10]) { fallthrough([14], [15]) 623([16], [17], [18]) }; // 572
+branch_align() -> (); // 573
+dup<u128>([4]) -> ([4], [19]); // 574
+u128_overflowing_add([14], [15], [19]) { fallthrough([20], [21]) 607([22], [23]) }; // 575
+branch_align() -> (); // 576
+storage_base_address_const<223925651276572801467025322450506123433664924558092583619131301620304795732>() -> ([24]); // 577
+u128_to_felt252([21]) -> ([25]); // 578
+storage_address_from_base([24]) -> ([26]); // 579
+const_as_immediate<Const<u32, 0>>() -> ([27]); // 580
+store_temp<u32>([27]) -> ([27]); // 581
+store_temp<StorageAddress>([26]) -> ([26]); // 582
+store_temp<RangeCheck>([20]) -> ([20]); // 583
+storage_write_syscall([8], [9], [27], [26], [25]) { fallthrough([28], [29]) 596([30], [31], [32]) }; // 584
+branch_align() -> (); // 585
+struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterIncreased>([4]) -> ([33]); // 586
+store_temp<GasBuiltin>([28]) -> ([28]); // 587
+store_temp<System>([29]) -> ([29]); // 588
+store_temp<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterIncreased>([33]) -> ([33]); // 589
+function_call<user@cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractStateEventEmitter::emit::<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterIncreased, cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::EventCounterIncreasedIntoEvent>>([28], [29], [3], [33]) -> ([34], [35], [36]); // 590
+store_temp<RangeCheck>([20]) -> ([20]); // 591
+store_temp<GasBuiltin>([34]) -> ([34]); // 592
+store_temp<System>([35]) -> ([35]); // 593
+store_temp<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>([36]) -> ([36]); // 594
+return([20], [34], [35], [36]); // 595
+branch_align() -> (); // 596
+drop<u128>([4]) -> (); // 597
+drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>([3]) -> (); // 598
+struct_construct<core::panics::Panic>() -> ([37]); // 599
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([37], [32]) -> ([38]); // 600
+enum_init<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>, 1>([38]) -> ([39]); // 601
+store_temp<RangeCheck>([20]) -> ([20]); // 602
+store_temp<GasBuiltin>([30]) -> ([30]); // 603
+store_temp<System>([31]) -> ([31]); // 604
+store_temp<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>([39]) -> ([39]); // 605
+return([20], [30], [31], [39]); // 606
+branch_align() -> (); // 607
+drop<u128>([23]) -> (); // 608
+drop<u128>([4]) -> (); // 609
+drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>([3]) -> (); // 610
+array_new<felt252>() -> ([40]); // 611
+const_as_immediate<Const<felt252, 39878429859757942499084499860145094553463>>() -> ([41]); // 612
+store_temp<felt252>([41]) -> ([41]); // 613
+array_append<felt252>([40], [41]) -> ([42]); // 614
+struct_construct<core::panics::Panic>() -> ([43]); // 615
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([43], [42]) -> ([44]); // 616
+enum_init<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>, 1>([44]) -> ([45]); // 617
+store_temp<RangeCheck>([22]) -> ([22]); // 618
+store_temp<GasBuiltin>([8]) -> ([8]); // 619
+store_temp<System>([9]) -> ([9]); // 620
+store_temp<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>([45]) -> ([45]); // 621
+return([22], [8], [9], [45]); // 622
+branch_align() -> (); // 623
+drop<u128>([17]) -> (); // 624
+drop<u128>([18]) -> (); // 625
+drop<u128>([4]) -> (); // 626
+drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>([3]) -> (); // 627
+array_new<felt252>() -> ([46]); // 628
+const_as_immediate<Const<felt252, 476442828812030857794232422692155113556837216824>>() -> ([47]); // 629
+store_temp<felt252>([47]) -> ([47]); // 630
+array_append<felt252>([46], [47]) -> ([48]); // 631
+store_temp<RangeCheck>([16]) -> ([49]); // 632
+store_temp<GasBuiltin>([8]) -> ([50]); // 633
+store_temp<System>([9]) -> ([51]); // 634
+store_temp<Array<felt252>>([48]) -> ([52]); // 635
+jump() { 644() }; // 636
+branch_align() -> (); // 637
+drop<u128>([4]) -> (); // 638
+drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>([3]) -> (); // 639
+store_temp<RangeCheck>([0]) -> ([49]); // 640
+store_temp<GasBuiltin>([11]) -> ([50]); // 641
+store_temp<System>([12]) -> ([51]); // 642
+store_temp<Array<felt252>>([13]) -> ([52]); // 643
+struct_construct<core::panics::Panic>() -> ([53]); // 644
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([53], [52]) -> ([54]); // 645
+enum_init<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>, 1>([54]) -> ([55]); // 646
+store_temp<RangeCheck>([49]) -> ([49]); // 647
+store_temp<GasBuiltin>([50]) -> ([50]); // 648
+store_temp<System>([51]) -> ([51]); // 649
+store_temp<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>([55]) -> ([55]); // 650
+return([49], [50], [51], [55]); // 651
+storage_base_address_const<376313616497945473624065492941162130666019289552693032300931764466904068779>() -> ([5]); // 652
+storage_address_from_base([5]) -> ([6]); // 653
+const_as_immediate<Const<u32, 0>>() -> ([7]); // 654
+store_temp<u32>([7]) -> ([7]); // 655
+store_temp<StorageAddress>([6]) -> ([6]); // 656
+storage_read_syscall([1], [2], [7], [6]) { fallthrough([8], [9], [10]) 838([11], [12], [13]) }; // 657
+branch_align() -> (); // 658
+store_temp<felt252>([10]) -> ([10]); // 659
+store_temp<GasBuiltin>([8]) -> ([8]); // 660
+store_temp<System>([9]) -> ([9]); // 661
+contract_address_try_from_felt252([0], [10]) { fallthrough([14], [15]) 826([16]) }; // 662
+branch_align() -> (); // 663
+array_new<felt252>() -> ([17]); // 664
+const_as_immediate<Const<felt252, 111544887057963339087585932406486273909854462006621624506100316242821434072>>() -> ([18]); // 665
+snapshot_take<Array<felt252>>([17]) -> ([19], [20]); // 666
+drop<Array<felt252>>([19]) -> (); // 667
+struct_construct<core::array::Span::<core::felt252>>([20]) -> ([21]); // 668
+store_temp<felt252>([18]) -> ([18]); // 669
+store_temp<RangeCheck>([14]) -> ([14]); // 670
+call_contract_syscall([8], [9], [15], [18], [21]) { fallthrough([22], [23], [24]) 812([25], [26], [27]) }; // 671
+branch_align() -> (); // 672
+struct_deconstruct<core::array::Span::<core::felt252>>([24]) -> ([28]); // 673
+store_temp<Snapshot<Array<felt252>>>([28]) -> ([28]); // 674
+store_temp<GasBuiltin>([22]) -> ([22]); // 675
+store_temp<System>([23]) -> ([23]); // 676
+array_snapshot_pop_front<felt252>([28]) { fallthrough([29], [30]) 800([31]) }; // 677
+branch_align() -> (); // 678
+drop<Snapshot<Array<felt252>>>([29]) -> (); // 679
+unbox<felt252>([30]) -> ([32]); // 680
+rename<felt252>([32]) -> ([33]); // 681
+store_temp<felt252>([33]) -> ([33]); // 682
+felt252_is_zero([33]) { fallthrough() 689([34]) }; // 683
+branch_align() -> (); // 684
+struct_construct<Unit>() -> ([35]); // 685
+enum_init<core::bool, 1>([35]) -> ([36]); // 686
+store_temp<core::bool>([36]) -> ([37]); // 687
+jump() { 694() }; // 688
+branch_align() -> (); // 689
+drop<NonZero<felt252>>([34]) -> (); // 690
+struct_construct<Unit>() -> ([38]); // 691
+enum_init<core::bool, 0>([38]) -> ([39]); // 692
+store_temp<core::bool>([39]) -> ([37]); // 693
+bool_not_impl([37]) -> ([40]); // 694
+store_temp<core::bool>([40]) -> ([40]); // 695
+enum_match<core::bool>([40]) { fallthrough([41]) 708([42]) }; // 696
+branch_align() -> (); // 697
+drop<Unit>([41]) -> (); // 698
+drop<u128>([4]) -> (); // 699
+struct_construct<Unit>() -> ([43]); // 700
+struct_construct<Tuple<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, Unit>>([3], [43]) -> ([44]); // 701
+enum_init<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>, 0>([44]) -> ([45]); // 702
+store_temp<RangeCheck>([14]) -> ([14]); // 703
+store_temp<GasBuiltin>([22]) -> ([22]); // 704
+store_temp<System>([23]) -> ([23]); // 705
+store_temp<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>([45]) -> ([45]); // 706
+return([14], [22], [23], [45]); // 707
+branch_align() -> (); // 708
+drop<Unit>([42]) -> (); // 709
+storage_base_address_const<223925651276572801467025322450506123433664924558092583619131301620304795732>() -> ([46]); // 710
+storage_address_from_base([46]) -> ([47]); // 711
+const_as_immediate<Const<u32, 0>>() -> ([48]); // 712
+store_temp<u32>([48]) -> ([48]); // 713
+store_temp<StorageAddress>([47]) -> ([47]); // 714
+storage_read_syscall([22], [23], [48], [47]) { fallthrough([49], [50], [51]) 785([52], [53], [54]) }; // 715
+branch_align() -> (); // 716
+store_temp<felt252>([51]) -> ([51]); // 717
+store_temp<GasBuiltin>([49]) -> ([49]); // 718
+store_temp<System>([50]) -> ([50]); // 719
+u128s_from_felt252([14], [51]) { fallthrough([55], [56]) 771([57], [58], [59]) }; // 720
+branch_align() -> (); // 721
+dup<u128>([4]) -> ([4], [60]); // 722
+u128_overflowing_sub([55], [56], [60]) { fallthrough([61], [62]) 755([63], [64]) }; // 723
+branch_align() -> (); // 724
+storage_base_address_const<223925651276572801467025322450506123433664924558092583619131301620304795732>() -> ([65]); // 725
+u128_to_felt252([62]) -> ([66]); // 726
+storage_address_from_base([65]) -> ([67]); // 727
+const_as_immediate<Const<u32, 0>>() -> ([68]); // 728
+store_temp<u32>([68]) -> ([68]); // 729
+store_temp<StorageAddress>([67]) -> ([67]); // 730
+store_temp<RangeCheck>([61]) -> ([61]); // 731
+storage_write_syscall([49], [50], [68], [67], [66]) { fallthrough([69], [70]) 744([71], [72], [73]) }; // 732
+branch_align() -> (); // 733
+struct_construct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterDecreased>([4]) -> ([74]); // 734
+store_temp<GasBuiltin>([69]) -> ([69]); // 735
+store_temp<System>([70]) -> ([70]); // 736
+store_temp<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterDecreased>([74]) -> ([74]); // 737
+function_call<user@cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractStateEventEmitter::emit::<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterDecreased, cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::EventCounterDecreasedIntoEvent>>([69], [70], [3], [74]) -> ([75], [76], [77]); // 738
+store_temp<RangeCheck>([61]) -> ([61]); // 739
+store_temp<GasBuiltin>([75]) -> ([75]); // 740
+store_temp<System>([76]) -> ([76]); // 741
+store_temp<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>([77]) -> ([77]); // 742
+return([61], [75], [76], [77]); // 743
+branch_align() -> (); // 744
+drop<u128>([4]) -> (); // 745
+drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>([3]) -> (); // 746
+struct_construct<core::panics::Panic>() -> ([78]); // 747
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([78], [73]) -> ([79]); // 748
+enum_init<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>, 1>([79]) -> ([80]); // 749
+store_temp<RangeCheck>([61]) -> ([61]); // 750
+store_temp<GasBuiltin>([71]) -> ([71]); // 751
+store_temp<System>([72]) -> ([72]); // 752
+store_temp<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>([80]) -> ([80]); // 753
+return([61], [71], [72], [80]); // 754
+branch_align() -> (); // 755
+drop<u128>([64]) -> (); // 756
+drop<u128>([4]) -> (); // 757
+drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>([3]) -> (); // 758
+array_new<felt252>() -> ([81]); // 759
+const_as_immediate<Const<felt252, 39878429859763533771555484554338820190071>>() -> ([82]); // 760
+store_temp<felt252>([82]) -> ([82]); // 761
+array_append<felt252>([81], [82]) -> ([83]); // 762
+struct_construct<core::panics::Panic>() -> ([84]); // 763
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([84], [83]) -> ([85]); // 764
+enum_init<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>, 1>([85]) -> ([86]); // 765
+store_temp<RangeCheck>([63]) -> ([63]); // 766
+store_temp<GasBuiltin>([49]) -> ([49]); // 767
+store_temp<System>([50]) -> ([50]); // 768
+store_temp<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>([86]) -> ([86]); // 769
+return([63], [49], [50], [86]); // 770
+branch_align() -> (); // 771
+drop<u128>([58]) -> (); // 772
+drop<u128>([59]) -> (); // 773
+drop<u128>([4]) -> (); // 774
+drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>([3]) -> (); // 775
+array_new<felt252>() -> ([87]); // 776
+const_as_immediate<Const<felt252, 476442828812030857794232422692155113556837216824>>() -> ([88]); // 777
+store_temp<felt252>([88]) -> ([88]); // 778
+array_append<felt252>([87], [88]) -> ([89]); // 779
+store_temp<RangeCheck>([57]) -> ([90]); // 780
+store_temp<GasBuiltin>([49]) -> ([91]); // 781
+store_temp<System>([50]) -> ([92]); // 782
+store_temp<Array<felt252>>([89]) -> ([93]); // 783
+jump() { 792() }; // 784
+branch_align() -> (); // 785
+drop<u128>([4]) -> (); // 786
+drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>([3]) -> (); // 787
+store_temp<RangeCheck>([14]) -> ([90]); // 788
+store_temp<GasBuiltin>([52]) -> ([91]); // 789
+store_temp<System>([53]) -> ([92]); // 790
+store_temp<Array<felt252>>([54]) -> ([93]); // 791
+struct_construct<core::panics::Panic>() -> ([94]); // 792
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([94], [93]) -> ([95]); // 793
+enum_init<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>, 1>([95]) -> ([96]); // 794
+store_temp<RangeCheck>([90]) -> ([90]); // 795
+store_temp<GasBuiltin>([91]) -> ([91]); // 796
+store_temp<System>([92]) -> ([92]); // 797
+store_temp<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>([96]) -> ([96]); // 798
+return([90], [91], [92], [96]); // 799
+branch_align() -> (); // 800
+drop<Snapshot<Array<felt252>>>([31]) -> (); // 801
+drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>([3]) -> (); // 802
+drop<u128>([4]) -> (); // 803
+array_new<felt252>() -> ([97]); // 804
+const_as_immediate<Const<felt252, 7891998437966260601762371672023996916393715052535837300>>() -> ([98]); // 805
+store_temp<felt252>([98]) -> ([98]); // 806
+array_append<felt252>([97], [98]) -> ([99]); // 807
+store_temp<GasBuiltin>([22]) -> ([100]); // 808
+store_temp<System>([23]) -> ([101]); // 809
+store_temp<Array<felt252>>([99]) -> ([102]); // 810
+jump() { 818() }; // 811
+branch_align() -> (); // 812
+drop<u128>([4]) -> (); // 813
+drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>([3]) -> (); // 814
+store_temp<GasBuiltin>([25]) -> ([100]); // 815
+store_temp<System>([26]) -> ([101]); // 816
+store_temp<Array<felt252>>([27]) -> ([102]); // 817
+struct_construct<core::panics::Panic>() -> ([103]); // 818
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([103], [102]) -> ([104]); // 819
+enum_init<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>, 1>([104]) -> ([105]); // 820
+store_temp<RangeCheck>([14]) -> ([14]); // 821
+store_temp<GasBuiltin>([100]) -> ([100]); // 822
+store_temp<System>([101]) -> ([101]); // 823
+store_temp<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>([105]) -> ([105]); // 824
+return([14], [100], [101], [105]); // 825
+branch_align() -> (); // 826
+drop<u128>([4]) -> (); // 827
+drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>([3]) -> (); // 828
+array_new<felt252>() -> ([106]); // 829
+const_as_immediate<Const<felt252, 1749165063169615148890104124711417950509560691>>() -> ([107]); // 830
+store_temp<felt252>([107]) -> ([107]); // 831
+array_append<felt252>([106], [107]) -> ([108]); // 832
+store_temp<RangeCheck>([16]) -> ([109]); // 833
+store_temp<GasBuiltin>([8]) -> ([110]); // 834
+store_temp<System>([9]) -> ([111]); // 835
+store_temp<Array<felt252>>([108]) -> ([112]); // 836
+jump() { 845() }; // 837
+branch_align() -> (); // 838
+drop<u128>([4]) -> (); // 839
+drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>([3]) -> (); // 840
+store_temp<RangeCheck>([0]) -> ([109]); // 841
+store_temp<GasBuiltin>([11]) -> ([110]); // 842
+store_temp<System>([12]) -> ([111]); // 843
+store_temp<Array<felt252>>([13]) -> ([112]); // 844
+struct_construct<core::panics::Panic>() -> ([113]); // 845
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([113], [112]) -> ([114]); // 846
+enum_init<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>, 1>([114]) -> ([115]); // 847
+store_temp<RangeCheck>([109]) -> ([109]); // 848
+store_temp<GasBuiltin>([110]) -> ([110]); // 849
+store_temp<System>([111]) -> ([111]); // 850
+store_temp<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>([115]) -> ([115]); // 851
+return([109], [110], [111], [115]); // 852
+array_new<felt252>() -> ([4]); // 853
+array_new<felt252>() -> ([5]); // 854
+enum_init<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event, 1>([3]) -> ([6]); // 855
+snapshot_take<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event>([6]) -> ([7], [8]); // 856
+drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event>([7]) -> (); // 857
+store_temp<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event>([8]) -> ([8]); // 858
+enum_match<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event>([8]) { fallthrough([9]) 862([10]) 873([11]) 884([12]) }; // 859
+branch_align() -> (); // 860
+enum_match<cairo_level_tests::contracts::new_syntax_test_contract::test_component::Event>([9]) { }; // 861
+branch_align() -> (); // 862
+const_as_immediate<Const<felt252, 373502242078911797297509776863854163679541038429883461174855360031674187824>>() -> ([13]); // 863
+store_temp<felt252>([13]) -> ([13]); // 864
+array_append<felt252>([4], [13]) -> ([14]); // 865
+struct_deconstruct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterIncreased>([10]) -> ([15]); // 866
+rename<u128>([15]) -> ([16]); // 867
+u128_to_felt252([16]) -> ([17]); // 868
+array_append<felt252>([5], [17]) -> ([18]); // 869
+store_temp<Array<felt252>>([14]) -> ([19]); // 870
+store_temp<Array<felt252>>([18]) -> ([20]); // 871
+jump() { 891() }; // 872
+branch_align() -> (); // 873
+const_as_immediate<Const<felt252, 364451368385661037075321874576483508309644891427381190745986300576661518140>>() -> ([21]); // 874
+store_temp<felt252>([21]) -> ([21]); // 875
+array_append<felt252>([4], [21]) -> ([22]); // 876
+struct_deconstruct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterDecreased>([11]) -> ([23]); // 877
+rename<u128>([23]) -> ([24]); // 878
+u128_to_felt252([24]) -> ([25]); // 879
+array_append<felt252>([5], [25]) -> ([26]); // 880
+store_temp<Array<felt252>>([22]) -> ([19]); // 881
+store_temp<Array<felt252>>([26]) -> ([20]); // 882
+jump() { 891() }; // 883
+branch_align() -> (); // 884
+drop<cairo_level_tests::contracts::new_syntax_test_contract::OutOfScopeEvent>([12]) -> (); // 885
+const_as_immediate<Const<felt252, 919351712289634246300158463021408865763225970949890991975649277335387851124>>() -> ([27]); // 886
+store_temp<felt252>([27]) -> ([27]); // 887
+array_append<felt252>([4], [27]) -> ([28]); // 888
+store_temp<Array<felt252>>([28]) -> ([19]); // 889
+store_temp<Array<felt252>>([5]) -> ([20]); // 890
+snapshot_take<Array<felt252>>([19]) -> ([29], [30]); // 891
+drop<Array<felt252>>([29]) -> (); // 892
+snapshot_take<Array<felt252>>([20]) -> ([31], [32]); // 893
+drop<Array<felt252>>([31]) -> (); // 894
+struct_construct<core::array::Span::<core::felt252>>([30]) -> ([33]); // 895
+struct_construct<core::array::Span::<core::felt252>>([32]) -> ([34]); // 896
+emit_event_syscall([0], [1], [33], [34]) { fallthrough([35], [36]) 906([37], [38], [39]) }; // 897
+branch_align() -> (); // 898
+struct_construct<Unit>() -> ([40]); // 899
+struct_construct<Tuple<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, Unit>>([2], [40]) -> ([41]); // 900
+enum_init<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>, 0>([41]) -> ([42]); // 901
+store_temp<GasBuiltin>([35]) -> ([35]); // 902
+store_temp<System>([36]) -> ([36]); // 903
+store_temp<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>([42]) -> ([42]); // 904
+return([35], [36], [42]); // 905
+branch_align() -> (); // 906
+drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>([2]) -> (); // 907
+struct_construct<core::panics::Panic>() -> ([43]); // 908
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([43], [39]) -> ([44]); // 909
+enum_init<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>, 1>([44]) -> ([45]); // 910
+store_temp<GasBuiltin>([37]) -> ([37]); // 911
+store_temp<System>([38]) -> ([38]); // 912
+store_temp<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>([45]) -> ([45]); // 913
+return([37], [38], [45]); // 914
+array_new<felt252>() -> ([4]); // 915
+array_new<felt252>() -> ([5]); // 916
+enum_init<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event, 2>([3]) -> ([6]); // 917
+snapshot_take<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event>([6]) -> ([7], [8]); // 918
+drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event>([7]) -> (); // 919
+store_temp<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event>([8]) -> ([8]); // 920
+enum_match<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::Event>([8]) { fallthrough([9]) 924([10]) 935([11]) 946([12]) }; // 921
+branch_align() -> (); // 922
+enum_match<cairo_level_tests::contracts::new_syntax_test_contract::test_component::Event>([9]) { }; // 923
+branch_align() -> (); // 924
+const_as_immediate<Const<felt252, 373502242078911797297509776863854163679541038429883461174855360031674187824>>() -> ([13]); // 925
+store_temp<felt252>([13]) -> ([13]); // 926
+array_append<felt252>([4], [13]) -> ([14]); // 927
+struct_deconstruct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterIncreased>([10]) -> ([15]); // 928
+rename<u128>([15]) -> ([16]); // 929
+u128_to_felt252([16]) -> ([17]); // 930
+array_append<felt252>([5], [17]) -> ([18]); // 931
+store_temp<Array<felt252>>([14]) -> ([19]); // 932
+store_temp<Array<felt252>>([18]) -> ([20]); // 933
+jump() { 953() }; // 934
+branch_align() -> (); // 935
+const_as_immediate<Const<felt252, 364451368385661037075321874576483508309644891427381190745986300576661518140>>() -> ([21]); // 936
+store_temp<felt252>([21]) -> ([21]); // 937
+array_append<felt252>([4], [21]) -> ([22]); // 938
+struct_deconstruct<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterDecreased>([11]) -> ([23]); // 939
+rename<u128>([23]) -> ([24]); // 940
+u128_to_felt252([24]) -> ([25]); // 941
+array_append<felt252>([5], [25]) -> ([26]); // 942
+store_temp<Array<felt252>>([22]) -> ([19]); // 943
+store_temp<Array<felt252>>([26]) -> ([20]); // 944
+jump() { 953() }; // 945
+branch_align() -> (); // 946
+drop<cairo_level_tests::contracts::new_syntax_test_contract::OutOfScopeEvent>([12]) -> (); // 947
+const_as_immediate<Const<felt252, 919351712289634246300158463021408865763225970949890991975649277335387851124>>() -> ([27]); // 948
+store_temp<felt252>([27]) -> ([27]); // 949
+array_append<felt252>([4], [27]) -> ([28]); // 950
+store_temp<Array<felt252>>([28]) -> ([19]); // 951
+store_temp<Array<felt252>>([5]) -> ([20]); // 952
+snapshot_take<Array<felt252>>([19]) -> ([29], [30]); // 953
+drop<Array<felt252>>([29]) -> (); // 954
+snapshot_take<Array<felt252>>([20]) -> ([31], [32]); // 955
+drop<Array<felt252>>([31]) -> (); // 956
+struct_construct<core::array::Span::<core::felt252>>([30]) -> ([33]); // 957
+struct_construct<core::array::Span::<core::felt252>>([32]) -> ([34]); // 958
+emit_event_syscall([0], [1], [33], [34]) { fallthrough([35], [36]) 968([37], [38], [39]) }; // 959
+branch_align() -> (); // 960
+struct_construct<Unit>() -> ([40]); // 961
+struct_construct<Tuple<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, Unit>>([2], [40]) -> ([41]); // 962
+enum_init<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>, 0>([41]) -> ([42]); // 963
+store_temp<GasBuiltin>([35]) -> ([35]); // 964
+store_temp<System>([36]) -> ([36]); // 965
+store_temp<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>([42]) -> ([42]); // 966
+return([35], [36], [42]); // 967
+branch_align() -> (); // 968
+drop<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState>([2]) -> (); // 969
+struct_construct<core::panics::Panic>() -> ([43]); // 970
+struct_construct<Tuple<core::panics::Panic, Array<felt252>>>([43], [39]) -> ([44]); // 971
+enum_init<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>, 1>([44]) -> ([45]); // 972
+store_temp<GasBuiltin>([37]) -> ([37]); // 973
+store_temp<System>([38]) -> ([38]); // 974
+store_temp<core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>>([45]) -> ([45]); // 975
+return([37], [38], [45]); // 976
+
+cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::__wrapper__CounterContract__get_counter@0([0]: RangeCheck, [1]: GasBuiltin, [2]: System, [3]: core::array::Span::<core::felt252>) -> (RangeCheck, GasBuiltin, System, core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>);
+cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::__wrapper__CounterContract__increase_counter@105([0]: RangeCheck, [1]: GasBuiltin, [2]: System, [3]: core::array::Span::<core::felt252>) -> (RangeCheck, GasBuiltin, System, core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>);
+cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::__wrapper__CounterContract__decrease_counter@237([0]: RangeCheck, [1]: GasBuiltin, [2]: System, [3]: core::array::Span::<core::felt252>) -> (RangeCheck, GasBuiltin, System, core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>);
+cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::__wrapper__constructor@369([0]: RangeCheck, [1]: GasBuiltin, [2]: System, [3]: core::array::Span::<core::felt252>) -> (RangeCheck, GasBuiltin, System, core::panics::PanicResult::<(core::array::Span::<core::felt252>,)>);
+cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterContract::increase_counter@562([0]: RangeCheck, [1]: GasBuiltin, [2]: System, [3]: cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, [4]: u128) -> (RangeCheck, GasBuiltin, System, core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>);
+cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterContract::decrease_counter@652([0]: RangeCheck, [1]: GasBuiltin, [2]: System, [3]: cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, [4]: u128) -> (RangeCheck, GasBuiltin, System, core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>);
+cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractStateEventEmitter::emit::<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterIncreased, cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::EventCounterIncreasedIntoEvent>@853([0]: GasBuiltin, [1]: System, [2]: cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, [3]: cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterIncreased) -> (GasBuiltin, System, core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>);
+cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractStateEventEmitter::emit::<cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterDecreased, cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::EventCounterDecreasedIntoEvent>@915([0]: GasBuiltin, [1]: System, [2]: cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, [3]: cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::CounterDecreased) -> (GasBuiltin, System, core::panics::PanicResult::<(cairo_level_tests::contracts::new_syntax_test_contract::counter_contract::ContractState, ())>);

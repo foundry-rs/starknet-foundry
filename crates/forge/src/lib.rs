@@ -91,7 +91,7 @@ enum ForgeSubcommand {
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
     /// Analyze the project using the sierra-analyzer
-    Analyzer,
+    Analyze,
 }
 
 #[derive(ValueEnum, Debug, Clone)]
@@ -235,7 +235,7 @@ pub fn main_execution() -> Result<ExitStatus> {
             check_requirements(true)?;
             Ok(ExitStatus::Success)
         }
-        ForgeSubcommand::Analyzer => {
+        ForgeSubcommand::Analyze => {
             analyze_project()?;
             Ok(ExitStatus::Success)
         }

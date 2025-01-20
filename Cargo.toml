@@ -15,6 +15,7 @@ members = [
     "crates/universal-sierra-compiler-api",
     "crates/snforge-scarb-plugin",
     "crates/docs",
+    "crates/sierra-analyzer",
 ]
 
 [workspace.package]
