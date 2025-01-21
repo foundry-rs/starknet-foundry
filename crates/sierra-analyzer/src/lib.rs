@@ -94,13 +94,66 @@ async fn load_scarb_program() -> Result<SierraProgram, String> {
     Ok(program)
 }
 
+/// Handle the running of detectors and printing their results
+fn handle_detectors(decompiler: &mut Decompiler, detector_names: Vec<String>) {
+    let mut detectors = get_detectors();
+    let mut output = String::new();
+
+    // Run the specified detectors
+    for detector in detectors.iter_mut() {
+        // Skip TESTING detectors if no specific detector names are provided
+        if detector_names.is_empty() && detector.detector_type() == DetectorType::TESTING {
+            continue;
+        }
+
+        // Skip detectors not in the provided names if names are provided
+        if !detector_names.is_empty() && !detector_names.contains(&detector.id().to_string()) {
+            continue;
+        }
+
+        let result = detector.detect(decompiler);
+        if !result.trim().is_empty() {
+            // Each detector output is formatted like
+            //
+            // [Detector category] Detector name
+            //      - detector content
+            //      - ...
+            output.push_str(&format!(
+                "[{}] {}\n{}\n\n",
+                detector.detector_type().as_str(),
+                detector.name(),
+                result
+                    .lines()
+                    .map(|line| format!("\t- {}", line))
+                    .collect::<Vec<String>>()
+                    .join("\n")
+            ));
+        }
+    }
+
+    // Print the detectors result if not empty
+    if !output.trim().is_empty() {
+        println!("{}", output.trim());
+    }
+}
+
 pub async fn analyze_project() {
     // Load the Sierra program from the /target directory
     let program = match load_scarb_program().await {
         Ok(program) => program,
-        Err(e) => {
-            eprintln!("Error loading program, you must build it before running the analyzer: {}", e);
+        Err(_e) => {
+            eprintln!("Error loading program, you must build it before running the analyzer");
             return;
         }
     };
+
+    // Initialize the decompiler
+    let mut decompiler = program.decompiler(false);
+    let decompiled_code = decompiler.decompile(false);
+
+    // Run the detectors
+    handle_detectors(&mut decompiler, Vec::new());
+
+    // Print the decompiled code
+    println!("{}", decompiled_code);
 }
