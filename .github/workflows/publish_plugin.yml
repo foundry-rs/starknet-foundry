@@ -39,32 +39,33 @@ jobs:
             cross: true
             ext: "so"
 
-          - target: x86_64-unknown-linux-musl
-            os: ubuntu-latest
-            cross: true
-            ext: "so"
-
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
             cross: true
             ext: "so"
 
-          - target: aarch64-unknown-linux-musl
-            os: ubuntu-latest
-            cross: true
-            ext: "so"
-#
-#          - target: x86_64-apple-darwin
-#            os: macos-latest
-#            ext: "dylib"
-#
-#          - target: aarch64-apple-darwin
-#            os: macos-latest
-#            ext: "dylib"
-#
-#          - target: x86_64-pc-windows-msvc
-#            os: windows-latest
-#            ext: "dll"
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            ext: "dylib"
+
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            ext: "dylib"
+
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            ext: "dll"
+
+          # - target: aarch64-unknown-linux-musl
+          #   os: ubuntu-latest
+          #   cross: true
+          #   ext: "so"
+
+          # - target: x86_64-unknown-linux-musl
+          #   os: ubuntu-latest
+          #   cross: true
+          #   ext: "so"
+
 
     steps:
       - uses: actions/checkout@v4
@@ -104,7 +105,7 @@ jobs:
 
           cp ./target/${TARGET}/release/*.${EXT} ./target/${TARGET}/release/${OUTPUT_BINARY}
 
-          OUTPUT_BINARY_PATH="./target/${TARGET}/release/${OUTPUT_BINARY}"
+          echo "OUTPUT_BINARY_PATH=./target/${TARGET}/release/${OUTPUT_BINARY}" >> $GITHUB_ENV
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -124,28 +125,22 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "2.8.5"
+          scarb-version: "2.10.0-rc.1"
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts-dl
 
-      - name: Debug 1
-        shell: bash
-        run: ls artifacts-dl
-
-      - name: Move artifacts to staging director
+      - name: Unpack artifacts to target directory
         shell: bash
         run: |
+          set -euxo pipefail
           mkdir -p crates/snforge-scarb-plugin/target/scarb/cairo-plugin
-          mv artifacts-dl/build-* crates/snforge-scarb-plugin/target/scarb/cairo-plugin/
+          
+          mv artifacts-dl/build-*/snforge_scarb_plugin_* crates/snforge-scarb-plugin/target/scarb/cairo-plugin/
 
-      - name: Debug 2
-        shell: bash
-        run: ls crates/snforge-scarb-plugin/target/scarb/cairo-plugin
-
-#      - name: Publish snforge_scarb_plugin
-#        if: needs.check-version.outputs.snforge_scarb_plugin_uploaded == 'false' || github.event_name == 'workflow_dispatch'
-#        working-directory: crates/snforge-scarb-plugin
-#        run: scarb publish
+      - name: Publish snforge_scarb_plugin
+        if: needs.check-version.outputs.snforge_scarb_plugin_uploaded == 'false' || github.event_name == 'workflow_dispatch'
+        working-directory: crates/snforge-scarb-plugin
+        run: scarb publish
