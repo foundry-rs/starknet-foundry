@@ -1,6 +1,6 @@
 use sncast_std::{
     declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce,
-    FeeSettings, EthFeeSettings
+    FeeSettings
 };
 
 fn main() {
@@ -12,7 +12,7 @@ fn main() {
         map_contract_address,
         selector!("put"),
         array![0x10, 0x1],
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::None }),
+        FeeSettings { max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None },
         Option::None
     )
         .unwrap();

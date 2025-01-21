@@ -1,6 +1,5 @@
 use sncast_std::{
     get_nonce, deploy, DeployResult, ScriptCommandError, ProviderError, StarknetError, FeeSettings,
-    EthFeeSettings
 };
 use starknet::{ClassHash, Felt252TryIntoClassHash};
 use traits::Into;
@@ -19,7 +18,7 @@ fn main() {
         array![0x2],
         Option::Some(salt),
         true,
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        FeeSettings { max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None },
         Option::Some(deploy_nonce)
     )
         .unwrap_err();

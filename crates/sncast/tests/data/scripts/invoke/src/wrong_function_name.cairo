@@ -1,6 +1,5 @@
 use sncast_std::{
     invoke, InvokeResult, ScriptCommandError, ProviderError, StarknetError, FeeSettings,
-    EthFeeSettings
 };
 use starknet::{ContractAddress, Felt252TryIntoContractAddress};
 use traits::Into;
@@ -14,7 +13,7 @@ fn main() {
         map_contract_address,
         selector!("mariusz"),
         array![0x10, 0x1],
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::None }),
+        FeeSettings { max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None },
         Option::None
     )
         .unwrap_err();
