@@ -1,6 +1,6 @@
 use sncast_std::{
     declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce,
-    FeeSettings, EthFeeSettings
+    FeeSettings
 };
 use starknet::{ClassHash, ContractAddress};
 
@@ -17,7 +17,7 @@ fn main() {
     let declare_nonce = get_nonce('latest');
     declare(
         "Not_this_time",
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        FeeSettings { max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None },
         Option::Some(declare_nonce)
     )
         .expect_err('error expected declare');
@@ -28,7 +28,7 @@ fn main() {
         ArrayTrait::new(),
         Option::Some(salt),
         true,
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        FeeSettings { max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None },
         Option::Some(deploy_nonce)
     )
         .expect_err('error expected deploy');
@@ -38,7 +38,7 @@ fn main() {
         map_contract_address,
         selector!("put"),
         array![0x1, 0x2],
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        FeeSettings { max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None },
         Option::Some(invoke_nonce)
     )
         .expect_err('error expected invoke');

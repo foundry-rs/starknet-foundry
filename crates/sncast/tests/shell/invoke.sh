@@ -27,5 +27,3 @@ $CAST_BINARY \
 '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' \
   --max-fee \
   99999999999999999 \
-  --fee-token \
-  eth

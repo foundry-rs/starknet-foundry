@@ -133,8 +133,6 @@ async fn test_nonexistent_account_address() {
         URL,
         "--contract-name",
         "Map",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path());
@@ -156,8 +154,6 @@ async fn test_missing_account_flag() {
         URL,
         "--contract-name",
         "whatever",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args);
@@ -179,8 +175,6 @@ async fn test_inexistent_keystore() {
         URL,
         "--contract-name",
         "my_contract",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args);
@@ -199,8 +193,6 @@ async fn test_keystore_account_required() {
         URL,
         "--contract-name",
         "my_contract",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args);
@@ -224,8 +216,6 @@ async fn test_keystore_inexistent_account() {
         URL,
         "--contract-name",
         "my_contract",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args);
@@ -255,8 +245,6 @@ async fn test_keystore_undeployed_account() {
         URL,
         "--contract-name",
         "Map",
-        "--fee-token",
-        "eth",
     ];
 
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
@@ -282,8 +270,6 @@ async fn test_keystore_declare() {
         URL,
         "--contract-name",
         "Map",
-        "--fee-token",
-        "eth",
     ];
 
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");

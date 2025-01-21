@@ -1,23 +1,19 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
-use clap::{Args, ValueEnum};
+use clap::Args;
 use conversions::IntoConv;
 use serde_json::Map;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
-use sncast::helpers::error::token_not_supported_for_deployment;
-use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
+use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
-use sncast::helpers::version::parse_version;
 use sncast::response::structs::InvokeResponse;
 use sncast::{
     apply_optional, chain_id_to_network_name, check_account_file_exists,
     get_account_data_from_accounts_file, get_account_data_from_keystore, get_keystore_password,
-    handle_rpc_error, handle_wait_for_tx, impl_payable_transaction, AccountType, WaitForTx,
+    handle_rpc_error, handle_wait_for_tx, AccountType, WaitForTx,
 };
-use starknet::accounts::{
-    AccountDeploymentV1, AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory,
-};
+use starknet::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
 use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
 use starknet::core::types::BlockTag::Pending;
 use starknet::core::types::{BlockId, StarknetError::ClassHashNotFound};
@@ -38,24 +34,9 @@ pub struct Deploy {
     #[clap(flatten)]
     pub fee_args: FeeArgs,
 
-    /// Version of the account deployment (can be inferred from fee token)
-    #[clap(short, long, value_parser = parse_version::<AccountDeployVersion>)]
-    pub version: Option<AccountDeployVersion>,
-
     #[clap(flatten)]
     pub rpc: RpcArgs,
 }
-
-#[derive(ValueEnum, Debug, Clone)]
-pub enum AccountDeployVersion {
-    V1,
-    V3,
-}
-
-impl_payable_transaction!(Deploy, token_not_supported_for_deployment,
-    AccountDeployVersion::V1 => FeeToken::Eth,
-    AccountDeployVersion::V3 => FeeToken::Strk
-);
 
 #[allow(clippy::too_many_arguments)]
 pub async fn deploy(
@@ -261,34 +242,23 @@ where
     let fee_settings = fee_args
         .try_into_fee_settings(account_factory.provider(), account_factory.block_id())
         .await?;
-    let result = match fee_settings {
-        FeeSettings::Eth { max_fee } => {
-            let deployment = account_factory.deploy_v1(salt);
-            let deployment = apply_optional(
-                deployment,
-                max_fee.map(Felt::from),
-                AccountDeploymentV1::max_fee,
-            );
-            deployment.send().await
-        }
-        FeeSettings::Strk {
-            max_gas,
-            max_gas_unit_price,
-        } => {
-            let deployment = account_factory.deploy_v3(salt);
-            let deployment = apply_optional(
-                deployment,
-                max_gas.map(std::num::NonZero::get),
-                AccountDeploymentV3::gas,
-            );
-            let deployment = apply_optional(
-                deployment,
-                max_gas_unit_price.map(std::num::NonZero::get),
-                AccountDeploymentV3::gas_price,
-            );
-            deployment.send().await
-        }
-    };
+
+    let FeeSettings {
+        max_gas,
+        max_gas_unit_price,
+    } = fee_settings;
+    let deployment = account_factory.deploy_v3(salt);
+    let deployment = apply_optional(
+        deployment,
+        max_gas.map(std::num::NonZero::get),
+        AccountDeploymentV3::gas,
+    );
+    let deployment = apply_optional(
+        deployment,
+        max_gas_unit_price.map(std::num::NonZero::get),
+        AccountDeploymentV3::gas_price,
+    );
+    let result = deployment.send().await;
 
     match result {
         Err(AccountFactoryError::Provider(error)) => match error {

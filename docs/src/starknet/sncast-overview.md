@@ -89,7 +89,6 @@ $ sncast --account my_account \
     deploy \
 	--url http://127.0.0.1:5055 \
     --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
-    --fee-token strk
 ```
 
 <details>
