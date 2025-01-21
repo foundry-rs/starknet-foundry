@@ -3,17 +3,16 @@ use crate::{byte_array::ByteArray, IntoConv};
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use starknet::core::types::{ContractErrorData, TransactionExecutionErrorData};
 use starknet_api::core::EthAddress;
-use starknet_api::{
-    core::{ClassHash, ContractAddress, EntryPointSelector, Nonce},
-    deprecated_contract_class::EntryPointType,
-    transaction::Calldata,
-};
+use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
+use starknet_api::transaction::fields::Calldata;
 use starknet_types_core::felt::Felt;
 use std::{
     cell::{Ref, RefCell},
     rc::Rc,
     sync::Arc,
 };
+
+use starknet_api::contract_class::EntryPointType;
 
 impl CairoSerialize for CallEntryPoint {
     fn serialize(&self, output: &mut BufferWriter) {
