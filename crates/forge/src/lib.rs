@@ -7,6 +7,7 @@ use run_tests::workspace::run_for_workspace;
 use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
+use sierra_analyzer::analyze_project;
 use std::cell::RefCell;
 use std::ffi::OsString;
 use std::process::Command;
@@ -236,7 +237,9 @@ pub fn main_execution() -> Result<ExitStatus> {
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Analyze => {
-            analyze_project()?;
+            let rt = Builder::new_multi_thread().enable_all().build()?;
+
+            rt.block_on(analyze_project());
             Ok(ExitStatus::Success)
         }
     }
@@ -274,8 +277,4 @@ fn check_requirements(output_on_success: bool) -> Result<()> {
         ),
     });
     requirements_checker.check()
-}
-
-fn analyze_project() -> Result<()> {
-    Ok(())
 }
