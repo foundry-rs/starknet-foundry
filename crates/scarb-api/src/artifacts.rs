@@ -196,14 +196,10 @@ mod tests {
         let artifacts_files = StarknetArtifactsFiles::new(base_file, other_files);
 
         // Load the contracts
-        let result = artifacts_files.load_contracts_artifacts();
-
-        // Ensure no errors and non-empty result
-        assert!(result.is_ok());
+        let result = artifacts_files.load_contracts_artifacts().unwrap();
 
         // Assert the Contract Artifacts are loaded.
-        let artifacts_map = result.unwrap();
-        assert!(artifacts_map.contains_key("ERC20"));
-        assert!(artifacts_map.contains_key("HelloStarknet"));
+        assert!(result.contains_key("ERC20"));
+        assert!(result.contains_key("HelloStarknet"));
     }
 }
