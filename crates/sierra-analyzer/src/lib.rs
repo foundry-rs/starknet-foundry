@@ -137,7 +137,14 @@ fn handle_detectors(decompiler: &mut Decompiler, detector_names: Vec<String>) {
     }
 }
 
-pub async fn analyze_project() {
+pub async fn analyze_project(
+    _function: Option<String>,
+    _cfg: bool,
+    _callgraph: bool,
+    _verbose: bool,
+    _detectors: bool,
+    _detector_names: Vec<String>,
+) {
     // Load the Sierra program from the /target directory
     let program = match load_scarb_program().await {
         Ok(program) => program,
