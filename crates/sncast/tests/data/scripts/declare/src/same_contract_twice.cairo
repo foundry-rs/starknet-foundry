@@ -7,7 +7,9 @@ fn main() {
     let declare_nonce = get_nonce('latest');
     let first_declare_result = declare(
         "Mapa",
-        FeeSettings { max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None },
+        FeeSettings {
+            max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None
+        },
         Option::Some(declare_nonce)
     )
         .expect('declare failed');
@@ -25,7 +27,9 @@ fn main() {
     let declare_nonce = get_nonce('latest');
     let second_declare_result = declare(
         "Mapa",
-        FeeSettings { max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None },
+        FeeSettings {
+            max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None
+        },
         Option::Some(declare_nonce)
     )
         .expect('second declare failed');

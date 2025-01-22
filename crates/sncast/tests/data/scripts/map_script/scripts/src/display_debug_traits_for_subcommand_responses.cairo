@@ -13,7 +13,9 @@ fn main() {
 
     let declare_result = declare(
         "Mapa",
-        FeeSettings { max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None },
+        FeeSettings {
+            max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None
+        },
         Option::Some(declare_nonce)
     )
         .expect('declare failed');
@@ -27,7 +29,9 @@ fn main() {
         ArrayTrait::new(),
         Option::Some(salt),
         true,
-        FeeSettings { max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None },
+        FeeSettings {
+            max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None
+        },
         Option::Some(deploy_nonce)
     )
         .expect('deploy failed');
@@ -41,7 +45,9 @@ fn main() {
         deploy_result.contract_address,
         selector!("put"),
         array![0x1, 0x2],
-        FeeSettings { max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None },
+        FeeSettings {
+            max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None
+        },
         Option::Some(invoke_nonce)
     )
         .expect('invoke failed');

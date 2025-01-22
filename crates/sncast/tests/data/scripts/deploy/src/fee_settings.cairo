@@ -14,10 +14,10 @@ fn main() {
         Option::Some(salt),
         true,
         FeeSettings {
-                max_gas: Option::Some(999),
-                max_gas_unit_price: Option::Some(999999999999),
-                max_fee: Option::None
-            },
+            max_gas: Option::Some(999),
+            max_gas_unit_price: Option::Some(999999999999),
+            max_fee: Option::None
+        },
         Option::None
     )
         .expect('deploy failed');
