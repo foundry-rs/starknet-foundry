@@ -13,7 +13,7 @@ Invokes a contract and returns `InvokeResult`.
 - `contract_address` - address of the contract to invoke.
 - `entry_point_selector` - the selector of the function to invoke.
 - `calldata` - inputs to the function to be invoked.
-- `fee_settings` - fee settings for the transaction. Can be `Eth` or `Strk`. Read more about it [here](../../starknet/fees-and-versions.md)
+- `fee_settings` - fee settings for the transaction.
 - `nonce` - nonce for declare transaction. If not provided, nonce will be set automatically.
 
 ```rust
