@@ -10,7 +10,6 @@ use std::fs;
 use std::path::Path;
 use std::process::exit;
 
-use cairo_lang_starknet_classes::contract_class::ContractClass;
 use serde_json;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
@@ -18,7 +17,9 @@ use tokio::io::AsyncReadExt;
 use crate::decompiler::decompiler::Decompiler;
 use crate::detectors::detector::DetectorType;
 use crate::detectors::get_detectors;
+use crate::graph::graph::save_svg_graph_to_file;
 use crate::sierra_program::SierraProgram;
+use cairo_lang_starknet_classes::contract_class::ContractClass;
 
 /// Load the Sierra program from the /target directory
 async fn load_scarb_program() -> Result<SierraProgram, String> {
@@ -94,6 +95,50 @@ async fn load_scarb_program() -> Result<SierraProgram, String> {
     Ok(program)
 }
 
+/// Handle the generation and saving of the CFG (Control Flow Graph)
+fn handle_cfg(decompiler: &mut Decompiler, file_stem: &str) {
+    let cfg_output = Path::new("cfg_output/");
+    let svg_filename = format!("{}_cfg.svg", file_stem);
+    let full_path = cfg_output.join(svg_filename);
+
+    // Create the output directory if it doesn't exist
+    if let Err(e) = fs::create_dir_all(cfg_output) {
+        eprintln!(
+            "Failed to create directory '{}': {}",
+            cfg_output.display(),
+            e
+        );
+        return;
+    }
+
+    // Generate CFG and save to SVG
+    let cfg_graph = decompiler.generate_cfg();
+    save_svg_graph_to_file(full_path.to_str().unwrap(), cfg_graph)
+        .expect("Failed to save CFG to SVG");
+}
+
+/// Handle the generation and saving of the Call Graph
+fn handle_callgraph(decompiler: &mut Decompiler, file_stem: &str) {
+    let callgraph_output = Path::new("callgraph_output/");
+    let svg_filename = format!("{}_callgraph.svg", file_stem);
+    let full_path = callgraph_output.join(svg_filename);
+
+    // Create the output directory if it doesn't exist
+    if let Err(e) = fs::create_dir_all(callgraph_output) {
+        eprintln!(
+            "Failed to create directory '{}': {}",
+            callgraph_output.display(),
+            e
+        );
+        return;
+    }
+
+    // Generate Callgraph and save to SVG
+    let callgraph_graph = decompiler.generate_callgraph();
+    save_svg_graph_to_file(full_path.to_str().unwrap(), callgraph_graph)
+        .expect("Failed to save Callgraph to SVG");
+}
+
 /// Handle the running of detectors and printing their results
 fn handle_detectors(decompiler: &mut Decompiler, detector_names: Vec<String>) {
     let mut detectors = get_detectors();
@@ -138,12 +183,12 @@ fn handle_detectors(decompiler: &mut Decompiler, detector_names: Vec<String>) {
 }
 
 pub async fn analyze_project(
-    _function: Option<String>,
-    _cfg: bool,
-    _callgraph: bool,
-    _verbose: bool,
-    _detectors: bool,
-    _detector_names: Vec<String>,
+    function: Option<String>,
+    cfg: bool,
+    callgraph: bool,
+    verbose: bool,
+    detectors: bool,
+    detector_names: Vec<String>,
 ) {
     // Load the Sierra program from the /target directory
     let program = match load_scarb_program().await {
@@ -155,12 +200,32 @@ pub async fn analyze_project(
     };
 
     // Initialize the decompiler
-    let mut decompiler = program.decompiler(false);
-    let decompiled_code = decompiler.decompile(false);
+    let mut decompiler = program.decompiler(verbose);
+    let decompiled_code = decompiler.decompile(true);
 
-    // Run the detectors
-    handle_detectors(&mut decompiler, Vec::new());
+    // Filter functions if a specific function name is given
+    if let Some(ref function_name) = function {
+        decompiler.filter_functions(function_name);
+    }
 
-    // Print the decompiled code
-    println!("{}", decompiled_code);
+    // Determine the file stem
+    let file_stem = "sierra_program";
+
+    // Handle different output options
+    // CFG
+    if cfg {
+        handle_cfg(&mut decompiler, &file_stem);
+    }
+    // Callgraph
+    else if callgraph {
+        handle_callgraph(&mut decompiler, &file_stem);
+    }
+    // Detectors
+    else if detectors {
+        handle_detectors(&mut decompiler, detector_names);
+    }
+    // Decompiler
+    else {
+        println!("{}", decompiled_code);
+    }
 }
