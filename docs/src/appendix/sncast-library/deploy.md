@@ -42,7 +42,7 @@ pub struct StrkFeeSettings {
 - `constructor_calldata` - calldata for the contract constructor.
 - `salt` - salt for the contract address.
 - `unique` - determines if salt should be further modified with the account address.
-- `fee_settings` - fee settings for the transaction. Can be `Eth` or `Strk`. Read more about it [here](../../starknet/fees-and-versions.md)
+- `fee_settings` - fee settings for the transaction.
 - `nonce` - nonce for declare transaction. If not provided, nonce will be set automatically.
 
 ```rust

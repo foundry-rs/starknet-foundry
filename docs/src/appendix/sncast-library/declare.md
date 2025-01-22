@@ -5,7 +5,7 @@
 Declares a contract and returns `DeclareResult`.
 
 - `contract_name` - name of a contract as Cairo string. It is a name of the contract (part after `mod` keyword) e.g. `"HelloStarknet"`.
-- `fee_settings` - fee settings for the transaction. Can be `Eth` or `Strk`. Read more about it [here](../../starknet/fees-and-versions.md)
+- `fee_settings` - fee settings for the transaction.
 - `nonce` - nonce for declare transaction. If not provided, nonce will be set automatically.
 
 ```rust
