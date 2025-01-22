@@ -3,8 +3,8 @@ use anyhow::anyhow;
 use camino::{Utf8Path, Utf8PathBuf};
 
 pub struct StarknetArtifactsRepresentation {
-    base_path: Utf8PathBuf,
-    artifacts: StarknetArtifacts,
+    pub(crate) base_path: Utf8PathBuf,
+    pub(crate) artifacts: StarknetArtifacts,
 }
 
 impl StarknetArtifactsRepresentation {
