@@ -1,5 +1,6 @@
 use sncast_std::{
-    get_nonce, deploy, DeployResult, ScriptCommandError, ProviderError, StarknetError, FeeSettings, TransactionExecutionErrorData
+    get_nonce, deploy, DeployResult, ScriptCommandError, ProviderError, StarknetError, FeeSettings,
+    TransactionExecutionErrorData
 };
 
 use starknet::{ClassHash, Felt252TryIntoClassHash};
@@ -19,7 +20,9 @@ fn main() {
         array![0x2, 0x2, 0x0],
         Option::Some(salt),
         true,
-        FeeSettings { max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None },
+        FeeSettings {
+            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+        },
         Option::Some(deploy_nonce)
     )
         .unwrap_err();
@@ -28,7 +31,14 @@ fn main() {
 
     assert(
         ScriptCommandError::ProviderError(
-            ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Account transaction nonce is invalid." }))
+            ProviderError::StarknetError(
+                StarknetError::TransactionExecutionError(
+                    TransactionExecutionErrorData {
+                        transaction_index: 0,
+                        execution_error: "Account transaction nonce is invalid."
+                    }
+                )
+            )
         ) == deploy_result,
         'ohno'
     )

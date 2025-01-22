@@ -13,7 +13,9 @@ fn main() {
         map_contract_address,
         selector!("put"),
         array![0x10, 0x1],
-        FeeSettings { max_fee: Option::None, max_gas: Option::Some(1), max_gas_unit_price: Option::Some(1) },
+        FeeSettings {
+            max_fee: Option::None, max_gas: Option::Some(1), max_gas_unit_price: Option::Some(1)
+        },
         Option::None
     )
         .unwrap_err();
