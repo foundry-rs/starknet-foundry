@@ -10,16 +10,16 @@ use blockifier::versioned_constants::VersionedConstants;
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use conversions::string::TryFromHexStr;
 use serde::{Deserialize, Serialize};
-use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp};
+use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp, GasPrice};
 use starknet_api::data_availability::DataAvailabilityMode;
-use starknet_api::transaction::fields::{Resource, ResourceBounds, ResourceBoundsMapping};
+use starknet_api::execution_resources::GasAmount;
+use starknet_api::transaction::fields::{AllResourceBounds, ResourceBounds, ValidResourceBounds};
 use starknet_api::{
     contract_address,
     core::{ChainId, ContractAddress, Nonce},
     transaction::{TransactionHash, TransactionSignature, TransactionVersion},
 };
 use starknet_types_core::felt::Felt;
-use std::collections::BTreeMap;
 use std::num::NonZeroU128;
 use std::sync::Arc;
 
@@ -58,22 +58,20 @@ fn build_tx_info() -> TransactionInfo {
             sender_address: ContractAddress::default(),
             only_query: false,
         },
-        resource_bounds: ResourceBoundsMapping(BTreeMap::from([
-            (
-                Resource::L1Gas,
-                ResourceBounds {
-                    max_amount: 0,
-                    max_price_per_unit: 1,
-                },
-            ),
-            (
-                Resource::L2Gas,
-                ResourceBounds {
-                    max_amount: 0,
-                    max_price_per_unit: 0,
-                },
-            ),
-        ])),
+        resource_bounds: ValidResourceBounds::AllResources(AllResourceBounds {
+            l1_gas: ResourceBounds {
+                max_amount: GasAmount::from(0),
+                max_price_per_unit: GasPrice::from(1),
+            },
+            l2_gas: ResourceBounds {
+                max_amount: GasAmount::from(0),
+                max_price_per_unit: GasPrice::from(0),
+            },
+            l1_data_gas: ResourceBounds {
+                max_amount: GasAmount::from(0),
+                max_price_per_unit: GasPrice::from(1),
+            },
+        }),
         tip: Default::default(),
         nonce_data_availability_mode: DataAvailabilityMode::L1,
         fee_data_availability_mode: DataAvailabilityMode::L1,

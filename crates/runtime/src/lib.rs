@@ -1,6 +1,8 @@
 use anyhow::Result;
-use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::execution::deprecated_syscalls::hint_processor::DeprecatedSyscallHintProcessor;
+use blockifier::execution::deprecated_syscalls::{
+    DeprecatedSyscallResult, DeprecatedSyscallSelector,
+};
 use blockifier::execution::syscalls::SyscallResult;
 use blockifier::state::errors::StateError;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
@@ -60,7 +62,7 @@ pub trait SyscallPtrAccess {
 }
 
 pub struct StarknetRuntime<'a> {
-    pub hint_handler: SyscallHintProcessor<'a>,
+    pub hint_handler: DeprecatedSyscallHintProcessor<'a>,
 }
 
 impl SyscallPtrAccess for StarknetRuntime<'_> {
@@ -68,38 +70,26 @@ impl SyscallPtrAccess for StarknetRuntime<'_> {
         &mut self.hint_handler.syscall_ptr
     }
 
-    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
-        self.hint_handler.base.verify_syscall_ptr(ptr)
+    fn verify_syscall_ptr(&self, ptr: Relocatable) -> DeprecatedSyscallResult<()> {
+        self.hint_handler.verify_syscall_ptr(ptr)
     }
 }
 
 impl ResourceTracker for StarknetRuntime<'_> {
     fn consumed(&self) -> bool {
-        self.hint_handler.base.context.vm_run_resources.consumed()
+        self.hint_handler.context.vm_run_resources.consumed()
     }
 
     fn consume_step(&mut self) {
-        self.hint_handler
-            .base
-            .context
-            .vm_run_resources
-            .consume_step();
+        self.hint_handler.context.vm_run_resources.consume_step();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        self.hint_handler
-            .base
-            .context
-            .vm_run_resources
-            .get_n_steps()
+        self.hint_handler.context.vm_run_resources.get_n_steps()
     }
 
     fn run_resources(&self) -> &RunResources {
-        self.hint_handler
-            .base
-            .context
-            .vm_run_resources
-            .run_resources()
+        self.hint_handler.context.vm_run_resources.run_resources()
     }
 }
 
