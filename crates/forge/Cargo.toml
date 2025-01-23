@@ -23,6 +23,7 @@ configuration = { path = "../configuration" }
 scarb-api = { path = "../scarb-api" }
 forge_runner = { path = "../forge-runner" }
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
+sierra-analyzer = { path = "../sierra-analyzer" }
 cairo-lang-runner.workspace = true
 cairo-lang-sierra.workspace = true
 cairo-annotations.workspace = true

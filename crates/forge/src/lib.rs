@@ -7,6 +7,7 @@ use run_tests::workspace::run_for_workspace;
 use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
+use sierra_analyzer::analyze_project;
 use std::cell::RefCell;
 use std::ffi::OsString;
 use std::process::Command;
@@ -90,6 +91,11 @@ enum ForgeSubcommand {
     CleanCache {},
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
+    /// Analyze the project using the sierra-analyzer
+    Analyze {
+        #[command(flatten)]
+        args: AnalyzeArgs,
+    },
 }
 
 #[derive(ValueEnum, Debug, Clone)]
@@ -185,6 +191,28 @@ pub struct NewArgs {
     overwrite: bool,
 }
 
+#[derive(Parser, Debug)]
+pub struct AnalyzeArgs {
+    /// Specify the function name to analyze
+    #[arg(long)]
+    function: Option<String>,
+    /// Generate a CFG (Control Flow Graph) instead of normal output
+    #[arg(long, default_value_t = false)]
+    cfg: bool,
+    /// Generate a Call Graph instead of normal output
+    #[arg(long, default_value_t = false)]
+    callgraph: bool,
+    /// Enable verbose decompiler output
+    #[arg(short, long, default_value_t = false)]
+    verbose: bool,
+    /// Run the detectors
+    #[arg(short = 'd', long)]
+    detectors: bool,
+    /// List of detector names to run
+    #[arg(long, use_value_delimiter = true)]
+    detector_names: Vec<String>,
+}
+
 pub enum ExitStatus {
     Success,
     Failure,
@@ -231,6 +259,19 @@ pub fn main_execution() -> Result<ExitStatus> {
         }
         ForgeSubcommand::CheckRequirements => {
             check_requirements(true)?;
+            Ok(ExitStatus::Success)
+        }
+        ForgeSubcommand::Analyze { args } => {
+            let rt = Builder::new_multi_thread().enable_all().build()?;
+
+            rt.block_on(analyze_project(
+                args.function,
+                args.cfg,
+                args.callgraph,
+                args.verbose,
+                args.detectors,
+                args.detector_names,
+            ));
             Ok(ExitStatus::Success)
         }
     }
