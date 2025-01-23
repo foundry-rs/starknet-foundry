@@ -493,7 +493,8 @@ dependencies = [
 [[package]]
 name = "blockifier"
 version = "0.14.0-rc.0"
-source = "git+https://github.com/starkware-libs/sequencer.git?branch=main-v0.13.4#13a4734b716721bbb5f25bfbf5ca71c570aa3396"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3dc6fa8aeb9d7768bea41cef5f444666c1559e8ced770c4fcf7f090b19e1c4ad"
 dependencies = [
  "anyhow",
  "ark-ec",
@@ -3691,7 +3692,8 @@ dependencies = [
 [[package]]
 name = "papyrus_config"
 version = "0.14.0-rc.0"
-source = "git+https://github.com/starkware-libs/sequencer.git?branch=main-v0.13.4#13a4734b716721bbb5f25bfbf5ca71c570aa3396"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "07fd4794f072c755d1e9a261090efdb6584cf60f247b25040e704397c20df81e"
 dependencies = [
  "clap",
  "itertools 0.12.1",
@@ -5311,7 +5313,8 @@ dependencies = [
 [[package]]
 name = "starknet_api"
 version = "0.14.0-rc.0"
-source = "git+https://github.com/starkware-libs/sequencer.git?branch=main-v0.13.4#13a4734b716721bbb5f25bfbf5ca71c570aa3396"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "37c6513984adf66a29ff3b96871bd259f084e29cbce6ddf7cf5283fc8c5dfd67"
 dependencies = [
  "bitvec",
  "cairo-lang-runner",
@@ -5338,7 +5341,8 @@ dependencies = [
 [[package]]
 name = "starknet_infra_utils"
 version = "0.14.0-rc.0"
-source = "git+https://github.com/starkware-libs/sequencer.git?branch=main-v0.13.4#13a4734b716721bbb5f25bfbf5ca71c570aa3396"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0a3bd57e3ec2ac2012518184517df3df270177a5bba21a8f540fb5027c6fc76"
 dependencies = [
  "tokio",
  "tracing",
@@ -5347,7 +5351,8 @@ dependencies = [
 [[package]]
 name = "starknet_sierra_multicompile"
 version = "0.14.0-rc.0"
-source = "git+https://github.com/starkware-libs/sequencer.git?branch=main-v0.13.4#13a4734b716721bbb5f25bfbf5ca71c570aa3396"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "66baf37d2eda9dc85c2f672c0b32544ceac513c6c6f90bbcb22cb5ed77c61357"
 dependencies = [
  "cairo-lang-sierra",
  "cairo-lang-starknet-classes",

@@ -69,7 +69,7 @@ impl SyscallPtrAccess for StarknetRuntime<'_> {
     }
 
     fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
-        self.hint_handler.verify_syscall_ptr(ptr)
+        self.hint_handler.base.verify_syscall_ptr(ptr)
     }
 }
 
