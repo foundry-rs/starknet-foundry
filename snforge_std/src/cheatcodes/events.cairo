@@ -33,7 +33,9 @@ pub trait EventSpyTrait {
 
 impl EventSpyTraitImpl of EventSpyTrait {
     fn get_events(ref self: EventSpy) -> Events {
-        execute_cheatcode_and_deserialize::<'get_events', Events>(array![self.event_offset.into()].span())
+        execute_cheatcode_and_deserialize::<
+            'get_events', Events
+        >(array![self.event_offset.into()].span())
     }
 }
 

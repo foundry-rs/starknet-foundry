@@ -124,7 +124,9 @@ pub fn declare(contract: ByteArray) -> Result<DeclareResult, Array<felt252>> {
 /// `contract_address` - target contract address
 /// Returns the `ClassHash` under given address
 pub fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
-    execute_cheatcode_and_deserialize::<'get_class_hash', ClassHash>(array![contract_address.into()].span())
+    execute_cheatcode_and_deserialize::<
+        'get_class_hash', ClassHash
+    >(array![contract_address.into()].span())
 }
 
 fn _prepare_calldata(
