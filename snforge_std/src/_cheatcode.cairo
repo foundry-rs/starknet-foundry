@@ -3,7 +3,7 @@ pub(crate) fn execute_cheatcode<const selector: felt252>(input: Span<felt252>) -
     let enum_variant = *result.at(0);
     let result_content = result.slice(1, result.len() - 1);
 
-    if result_content == 1 { // Check if the result is an `Err`
+    if enum_variant == 1 { // Check if the result is an `Err`
         let mut arr = array![core::byte_array::BYTE_ARRAY_MAGIC];
 
         arr.append_span(result_content);
