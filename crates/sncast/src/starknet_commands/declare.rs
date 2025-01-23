@@ -6,6 +6,7 @@ use scarb_api::StarknetContractArtifacts;
 use sncast::helpers::error::token_not_supported_for_declaration;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
+use sncast::helpers::version::parse_version;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
@@ -44,7 +45,7 @@ pub struct Declare {
     pub package: Option<String>,
 
     /// Version of the declaration (can be inferred from fee token)
-    #[clap(short, long)]
+    #[clap(short, long, value_parser = parse_version::<DeclareVersion>)]
     pub version: Option<DeclareVersion>,
 
     #[clap(flatten)]
@@ -105,7 +106,8 @@ pub async fn declare(
                 casm_class_hash,
             );
 
-            let declaration = apply_optional(declaration, max_fee, DeclarationV2::max_fee);
+            let declaration =
+                apply_optional(declaration, max_fee.map(Felt::from), DeclarationV2::max_fee);
             let declaration = apply_optional(declaration, declare.nonce, DeclarationV2::nonce);
 
             declaration.send().await
@@ -119,9 +121,16 @@ pub async fn declare(
                 casm_class_hash,
             );
 
-            let declaration = apply_optional(declaration, max_gas, DeclarationV3::gas);
-            let declaration =
-                apply_optional(declaration, max_gas_unit_price, DeclarationV3::gas_price);
+            let declaration = apply_optional(
+                declaration,
+                max_gas.map(std::num::NonZero::get),
+                DeclarationV3::gas,
+            );
+            let declaration = apply_optional(
+                declaration,
+                max_gas_unit_price.map(std::num::NonZero::get),
+                DeclarationV3::gas_price,
+            );
             let declaration = apply_optional(declaration, declare.nonce, DeclarationV3::nonce);
 
             declaration.send().await

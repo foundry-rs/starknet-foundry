@@ -128,11 +128,19 @@ async fn test_happy_case_strk(class_hash: Felt, account_type: AccountType) {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success().get_output().stdout.clone();
+    let output = snapbox.assert().success();
+    let stdout = output.get_output().stdout.clone();
 
-    let hash = get_transaction_hash(&output);
+    let hash = get_transaction_hash(&stdout);
     let receipt = get_transaction_receipt(hash).await;
 
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags
+            Converted [..] max fee to [..] max gas and [..] max gas unit price"
+        },
+    );
     assert!(matches!(receipt, Invoke(_)));
 }
 
@@ -388,6 +396,78 @@ fn test_too_low_max_fee() {
     );
 }
 
+#[test]
+fn test_max_gas_equal_to_zero() {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "user11",
+        "--wait",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1",
+        "0x2",
+        "--max-gas",
+        "0",
+        "--fee-token",
+        "strk",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().code(2);
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        error: invalid value '0' for '--max-gas <MAX_GAS>': Value should be greater than 0
+        "},
+    );
+}
+
+#[test]
+fn test_calculated_max_gas_equal_to_zero_when_max_fee_passed() {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "user11",
+        "--wait",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1",
+        "0x2",
+        "--max-fee",
+        "999999",
+        "--fee-token",
+        "strk",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().success();
+
+    // TODO(#2852)
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: invoke
+        error: Calculated max-gas from provided --max-fee and the current network gas price is 0. Please increase --max-fee to obtain a positive gas amount: Tried to create NonZeroFelt from 0
+        "},
+    );
+}
+
 #[tokio::test]
 async fn test_happy_case_cairo_expression_calldata() {
     let tempdir = create_and_deploy_oz_account().await;
@@ -429,15 +509,59 @@ async fn test_happy_case_cairo_expression_calldata() {
 async fn test_happy_case_shell() {
     let tempdir = create_and_deploy_oz_account().await;
 
-    let test_path = PathBuf::from("tests/shell/invoke.sh")
+    let script_extension = if cfg!(windows) { ".ps1" } else { ".sh" };
+    let test_path = PathBuf::from(format!("tests/shell/invoke{script_extension}"))
         .canonicalize()
         .unwrap();
     let binary_path = cargo_bin!("sncast");
 
-    let snapbox = Command::new(test_path)
+    let command = if cfg!(windows) {
+        Command::new("powershell")
+            .arg("-ExecutionPolicy")
+            .arg("Bypass")
+            .arg("-File")
+            .arg(test_path)
+    } else {
+        Command::new(test_path)
+    };
+
+    let snapbox = command
         .current_dir(tempdir.path())
         .arg(binary_path)
         .arg(URL)
         .arg(DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA);
     snapbox.assert().success();
+}
+
+#[test]
+fn test_version_deprecation_warning() {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "oz",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 0x2",
+        "--max-fee",
+        "99999999999999999",
+        "--version",
+        "v3",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {"
+            [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 will become the only type of transaction available.
+        "},
+    );
 }
