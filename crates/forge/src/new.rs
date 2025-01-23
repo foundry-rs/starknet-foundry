@@ -152,10 +152,10 @@ fn add_allow_prebuilt_macros(document: &mut DocumentMut) -> Result<()> {
     let mut scarb_table = Table::new();
 
     let mut allow_prebuilt_macros = Array::new();
-    allow_prebuilt_macros.push("snforge_scarb_plugin");
+    allow_prebuilt_macros.push("snforge_std");
 
     scarb_table.insert(
-        "allow-prebuilt-macros",
+        "allow-prebuilt-plugins",
         Item::Value(Value::Array(allow_prebuilt_macros)),
     );
 
