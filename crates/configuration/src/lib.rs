@@ -313,6 +313,8 @@ mod tests {
         list_example: Vec<bool>,
         #[serde(default, rename(serialize = "url-nested", deserialize = "url-nested"))]
         url_nested: f32,
+        #[serde(default, rename(serialize = "url-alt", deserialize = "url-alt"))]
+        url_alt: String,
     }
 
     impl Config for StubComplexConfig {
@@ -360,6 +362,7 @@ mod tests {
 
         // present env variables
         env::set_var("VALUE_STRING123132", "nfsaufbnsailfbsbksdabfnkl");
+        env::set_var("VALUE_STRING123142", "nfsasnsidnnsailfbsbksdabdkdkl");
         env::set_var("VALUE_INT123132", "321312");
         env::set_var("VALUE_FLOAT123132", "321.312");
         env::set_var("VALUE_BOOL1231321", "true");
@@ -373,5 +376,6 @@ mod tests {
         assert_eq!(config.account, 321_312);
         assert_eq!(config.nested.list_example, vec![true, false]);
         assert_eq!(config.nested.url_nested, 321.312);
+        assert_eq!(config.nested.url_alt, String::from("nfsasnsidnnsailfbsbksdabdkdkl"));
     }
 }

@@ -32,3 +32,4 @@ account = "$VALUE_INT123132"
 [stubtool.with-envs.nested]
 list-example = [ "$VALUE_BOOL1231321", "$VALUE_BOOL1231322"  ]
 url-nested = "$VALUE_FLOAT123132"
+url-alt = "${VALUE_STRING123142}"
