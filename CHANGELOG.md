@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.0] - 2025-01-15
+
 ### Forge
 
 #### Changed
@@ -23,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Values passed to the `--max-fee`, `--max-gas`, and `--max-gas-unit-price` flags must be greater than 0
+
+#### Deprecated
+
+- `--version` flag
 
 ## [0.35.1] - 2024-12-16
 
