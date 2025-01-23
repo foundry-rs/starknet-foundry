@@ -32,7 +32,7 @@ jobs:
           stale-pr-message: |
             Hi! This pull request hasn't had any activity for a while, so I am
             marking it as stale. It will close in ${{ env.DAYS_BEFORE_CLOSE }}
-            days unless something changes. Thanks for contributing!
+            days if it is not updated. Thanks for contributing!
           close-pr-message: false
 
       - name: Logs
