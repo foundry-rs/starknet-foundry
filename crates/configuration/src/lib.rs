@@ -122,7 +122,12 @@ fn resolve_env_variables(config: serde_json::Value) -> Result<serde_json::Value>
 
 fn resolve_env_variable(var: &str) -> Result<serde_json::Value> {
     assert!(var.starts_with('$'));
-    let value = env::var(&var[1..])?;
+    let mut initial_value = &var[1..];
+    if initial_value.starts_with('{') && initial_value.ends_with('}') {
+        initial_value = &initial_value[1..initial_value.len() - 1];
+    }
+    let value = env::var(&initial_value)?;
+
     if let Ok(value) = value.parse::<Number>() {
         return Ok(serde_json::Value::Number(value));
     }
