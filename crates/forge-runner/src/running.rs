@@ -311,13 +311,16 @@ fn extract_test_case_summary(
                         "\n    {}\n",
                         error.to_string().replace(" Custom Hint Error: ", "\n    ")
                     );
-                    if error.to_string().contains("RunResources has no remaining steps") {
-                        message.push_str("\nSuggestion: Try increasing the steps with --max-n-steps.");
+                    if error
+                        .to_string()
+                        .contains("RunResources has no remaining steps")
+                    {
+                        message
+                            .push_str("\nSuggestion: Try increasing the steps with --max-n-steps.");
                     }
                     TestCaseSummary::Failed {
                         name: case.name.clone(),
-                        msg: Some(message)
-                        .map(|msg| {
+                        msg: Some(message).map(|msg| {
                             add_backtrace_footer(
                                 msg,
                                 contracts_data,
@@ -327,7 +330,7 @@ fn extract_test_case_summary(
                         arguments: args,
                         test_statistics: (),
                     }
-                },
+                }
             }
         }
         // `ForkStateReader.get_block_info`, `get_fork_state_reader, `calculate_used_gas` may return an error
