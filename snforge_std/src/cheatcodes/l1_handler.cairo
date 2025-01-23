@@ -1,5 +1,5 @@
 use starknet::{ContractAddress, SyscallResult};
-use super::super::_cheatcode::typed_checked_cheatcode;
+use super::super::_cheatcode::execute_cheatcode_and_deserialize;
 
 #[derive(Drop, Clone)]
 pub struct L1Handler {
@@ -36,6 +36,6 @@ impl L1HandlerImpl of L1HandlerTrait {
         ];
         payload.serialize(ref inputs);
 
-        typed_checked_cheatcode::<'l1_handler_execute', SyscallResult<()>>(inputs.span())
+        execute_cheatcode_and_deserialize::<'l1_handler_execute', SyscallResult<()>>(inputs.span())
     }
 }

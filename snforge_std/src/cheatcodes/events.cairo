@@ -1,10 +1,10 @@
 use starknet::ContractAddress;
-use super::super::_cheatcode::typed_checked_cheatcode;
+use super::super::_cheatcode::execute_cheatcode_and_deserialize;
 
 
 /// Creates `EventSpy` instance that spies on all events emitted after its creation.
 pub fn spy_events() -> EventSpy {
-    typed_checked_cheatcode::<'spy_events', EventSpy>(array![].span())
+    execute_cheatcode_and_deserialize::<'spy_events', EventSpy>(array![].span())
 }
 
 /// Raw event format (as seen via the RPC-API), can be used for asserting the emitted events.
@@ -33,7 +33,7 @@ pub trait EventSpyTrait {
 
 impl EventSpyTraitImpl of EventSpyTrait {
     fn get_events(ref self: EventSpy) -> Events {
-        typed_checked_cheatcode::<'get_events', Events>(array![self.event_offset.into()].span())
+        execute_cheatcode_and_deserialize::<'get_events', Events>(array![self.event_offset.into()].span())
     }
 }
 

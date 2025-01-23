@@ -1,5 +1,5 @@
 use core::starknet::ContractAddress;
-use super::_cheatcode::typed_checked_cheatcode;
+use super::_cheatcode::execute_cheatcode_and_deserialize;
 
 /// Tree-like structure which contains all of the starknet calls and sub-calls along with the
 /// results
@@ -66,7 +66,7 @@ pub enum CallFailure {
 
 /// Returns current call trace of the test, up to the last call made to a contract
 pub fn get_call_trace() -> CallTrace {
-    typed_checked_cheatcode::<'get_call_trace', CallTrace>(array![].span())
+    execute_cheatcode_and_deserialize::<'get_call_trace', CallTrace>(array![].span())
 }
 
 use core::fmt::{Display, Formatter, Error, Debug};

@@ -1,6 +1,6 @@
 use starknet::{ContractAddress, ClassHash, SyscallResult};
 use super::super::byte_array::byte_array_as_felt_array;
-use super::super::_cheatcode::typed_checked_cheatcode;
+use super::super::_cheatcode::execute_cheatcode_and_deserialize;
 
 #[derive(Drop, Serde, Copy)]
 pub struct ContractClass {
@@ -60,7 +60,7 @@ impl ContractClassImpl of ContractClassTrait {
     ) -> ContractAddress {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
-        typed_checked_cheatcode::<'precalculate_address', ContractAddress>(inputs.span())
+        execute_cheatcode_and_deserialize::<'precalculate_address', ContractAddress>(inputs.span())
     }
 
     fn deploy(
@@ -68,7 +68,7 @@ impl ContractClassImpl of ContractClassTrait {
     ) -> SyscallResult<(ContractAddress, Span<felt252>)> {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
-        typed_checked_cheatcode::<
+        execute_cheatcode_and_deserialize::<
             'deploy', SyscallResult<(ContractAddress, Span<felt252>)>
         >(inputs.span())
     }
@@ -81,7 +81,7 @@ impl ContractClassImpl of ContractClassTrait {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
         inputs.append(contract_address.into());
 
-        typed_checked_cheatcode::<
+        execute_cheatcode_and_deserialize::<
             'deploy_at', SyscallResult<(ContractAddress, Span<felt252>)>
         >(inputs.span())
     }
@@ -115,7 +115,7 @@ impl DeclareResultImpl of DeclareResultTrait {
 /// - `AlreadyDeclared`: Contains `ContractClass` and signals that the contract has already been
 /// declared.
 pub fn declare(contract: ByteArray) -> Result<DeclareResult, Array<felt252>> {
-    typed_checked_cheatcode::<
+    execute_cheatcode_and_deserialize::<
         'declare', Result<DeclareResult, Array<felt252>>
     >(byte_array_as_felt_array(@contract).span())
 }
@@ -124,7 +124,7 @@ pub fn declare(contract: ByteArray) -> Result<DeclareResult, Array<felt252>> {
 /// `contract_address` - target contract address
 /// Returns the `ClassHash` under given address
 pub fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
-    typed_checked_cheatcode::<'get_class_hash', ClassHash>(array![contract_address.into()].span())
+    execute_cheatcode_and_deserialize::<'get_class_hash', ClassHash>(array![contract_address.into()].span())
 }
 
 fn _prepare_calldata(

@@ -3,14 +3,14 @@ use core::option::OptionTrait;
 use starknet::secp256k1::Secp256k1Point;
 use starknet::secp256_trait::{is_valid_signature, Secp256Trait, Secp256PointTrait};
 use starknet::{SyscallResultTrait};
-use super::super::_cheatcode::typed_checked_cheatcode;
+use super::super::_cheatcode::execute_cheatcode_and_deserialize;
 use super::SignError;
 
 use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 
 pub impl Secp256k1CurveKeyPairImpl of KeyPairTrait<u256, Secp256k1Point> {
     fn generate() -> KeyPair<u256, Secp256k1Point> {
-        let (secret_key, pk_x, pk_y) = typed_checked_cheatcode::<
+        let (secret_key, pk_x, pk_y) = execute_cheatcode_and_deserialize::<
             'generate_ecdsa_keys', (u256, u256, u256)
         >(array!['Secp256k1'].span());
 
@@ -43,7 +43,7 @@ pub impl Secp256k1CurveSignerImpl of SignerTrait<
         self.secret_key.serialize(ref input);
         message_hash.serialize(ref input);
 
-        typed_checked_cheatcode::<
+        execute_cheatcode_and_deserialize::<
             'ecdsa_sign_message', Result<(u256, u256), SignError>
         >(input.span())
     }
