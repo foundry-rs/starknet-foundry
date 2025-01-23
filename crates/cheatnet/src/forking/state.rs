@@ -134,7 +134,14 @@ impl StateReader for ForkStateReader {
                 Ok(value_sf)
             }
             Err(ProviderError::Other(boxed)) => other_provider_error(boxed),
-            Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => Ok(Default::default()),
+            Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => {
+                self.cache.borrow_mut().cache_get_storage_at(
+                    contract_address,
+                    key,
+                    Felt::default(),
+                );
+                Ok(Felt::default())
+            },
             Err(x) => Err(StateReadError(format!(
                 "Unable to get storage at address: {contract_address:?} and key: {key:?} from fork ({x})"
             ))),
@@ -159,6 +166,9 @@ impl StateReader for ForkStateReader {
             }
             Err(ProviderError::Other(boxed)) => other_provider_error(boxed),
             Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => {
+                self.cache
+                    .borrow_mut()
+                    .cache_get_nonce_at(contract_address, Default::default());
                 Ok(Default::default())
             }
             Err(x) => Err(StateReadError(format!(
@@ -184,6 +194,9 @@ impl StateReader for ForkStateReader {
                 Ok(class_hash)
             }
             Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => {
+                self.cache
+                    .borrow_mut()
+                    .cache_get_class_hash_at(contract_address, Default::default());
                 Ok(Default::default())
             }
             Err(ProviderError::Other(boxed)) => other_provider_error(boxed),

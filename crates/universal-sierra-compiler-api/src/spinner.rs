@@ -1,14 +1,9 @@
 use anyhow::Result;
 use camino::Utf8Path;
-use indicatif::{ProgressBar, ProgressStyle};
+use shared::spinner::Spinner;
 use std::env;
-use std::time::Duration;
 
-pub fn spawn_spinner_message(sierra_file_path: &Utf8Path) -> Result<ProgressBar> {
-    let spinner = ProgressBar::new_spinner();
-    spinner.set_style(ProgressStyle::with_template("\n{spinner} {msg}\n")?);
-    spinner.enable_steady_tick(Duration::from_millis(100));
-
+pub fn spawn_usc_spinner(sierra_file_path: &Utf8Path) -> Result<Spinner> {
     // Skip printing path when compiling unsaved sierra
     // which occurs during test execution for some cheatcodes e.g. `replace_bytecode`
     let message = if is_temp_file(sierra_file_path)? {
@@ -19,7 +14,7 @@ pub fn spawn_spinner_message(sierra_file_path: &Utf8Path) -> Result<ProgressBar>
             sierra_file_path.canonicalize_utf8()?
         )
     };
-    spinner.set_message(message);
+    let spinner = Spinner::create_with_message(message);
 
     Ok(spinner)
 }
