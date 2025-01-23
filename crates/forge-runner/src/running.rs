@@ -306,21 +306,27 @@ fn extract_test_case_summary(
                     versioned_program_path,
                 ),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
-                Err(error) => TestCaseSummary::Failed {
-                    name: case.name.clone(),
-                    msg: Some(format!(
+                Err(error) => {
+                    let mut message = format!(
                         "\n    {}\n",
                         error.to_string().replace(" Custom Hint Error: ", "\n    ")
-                    ))
-                    .map(|msg| {
-                        add_backtrace_footer(
-                            msg,
-                            contracts_data,
-                            &result_with_info.encountered_errors,
-                        )
-                    }),
-                    arguments: args,
-                    test_statistics: (),
+                    );
+                    if error.to_string().contains("RunResources has no remaining steps") {
+                        message.push_str("\nSuggestion: Try increasing the steps with --max-n-steps.");
+                    }
+                    TestCaseSummary::Failed {
+                        name: case.name.clone(),
+                        msg: Some(message)
+                        .map(|msg| {
+                            add_backtrace_footer(
+                                msg,
+                                contracts_data,
+                                &result_with_info.encountered_errors,
+                            )
+                        }),
+                        arguments: args,
+                        test_statistics: (),
+                    }
                 },
             }
         }
