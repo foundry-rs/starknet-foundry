@@ -176,5 +176,5 @@ url = "$NODE_URL"
 Variable values are automatically resolved to numbers and booleans (strings `true`, `false`) where possible.
 
 > 📝 **Note**
-> It is possible to use curly braces when defining vairable.
+> It is possible to pass env variables with curly braces.
 > `url = "${NODE_URL}"`
