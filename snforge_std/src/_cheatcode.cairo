@@ -1,16 +1,16 @@
 pub(crate) fn execute_cheatcode<const selector: felt252>(input: Span<felt252>) -> Span<felt252> {
-    let output = starknet::testing::cheatcode::<selector>(input);
-    let first = *output.at(0);
-    let output = output.slice(1, output.len() - 1);
+    let result = starknet::testing::cheatcode::<selector>(input);
+    let enum_variant = *result.at(0);
+    let result_content = result.slice(1, result.len() - 1);
 
-    if first == 1 {
+    if result_content == 1 { // Check if the result is an `Err`
         let mut arr = array![core::byte_array::BYTE_ARRAY_MAGIC];
 
-        arr.append_span(output);
+        arr.append_span(result_content);
 
         panic(arr)
     } else {
-        output
+        result_content
     }
 }
 
