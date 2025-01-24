@@ -126,7 +126,7 @@ fn resolve_env_variable(var: &str) -> Result<serde_json::Value> {
     if initial_value.starts_with('{') && initial_value.ends_with('}') {
         initial_value = &initial_value[1..initial_value.len() - 1];
     }
-    let value = env::var(&initial_value)?;
+    let value = env::var(initial_value)?;
 
     if let Ok(value) = value.parse::<Number>() {
         return Ok(serde_json::Value::Number(value));
@@ -376,6 +376,9 @@ mod tests {
         assert_eq!(config.account, 321_312);
         assert_eq!(config.nested.list_example, vec![true, false]);
         assert_eq!(config.nested.url_nested, 321.312);
-        assert_eq!(config.nested.url_alt, String::from("nfsasnsidnnsailfbsbksdabdkdkl"));
+        assert_eq!(
+            config.nested.url_alt,
+            String::from("nfsasnsidnnsailfbsbksdabdkdkl")
+        );
     }
 }
