@@ -663,3 +663,14 @@ async fn test_happy_case_contract_constructor() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn test_external_enum_function_ambiguous_struct_name_cairo_expression_input() {}
+
+#[tokio::test]
+async fn test_happy_case_external_enum_function_cairo_expression_input() -> anyhow::Result<()> {
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_external_enum_function_invalid_path_to_external_enum() {}
