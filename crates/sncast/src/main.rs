@@ -642,6 +642,7 @@ async fn run_async_command(
                 verify.verifier,
                 verify.network,
                 verify.confirm_verification,
+                verify.package,
                 &package_metadata.manifest_path,
                 &artifacts,
             )
