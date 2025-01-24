@@ -170,19 +170,29 @@ impl Arguments {
         contract_class: ContractClass,
         selector: &Felt,
     ) -> Result<Vec<Felt>> {
-        if let Some(arguments) = self.arguments {
-            Calldata::new(arguments).serialized(contract_class, selector)
-        } else if let Some(calldata) = self.calldata {
-            calldata
-                .iter()
-                .map(|data| {
-                    Felt::from_dec_str(data)
-                        .or_else(|_| Felt::from_hex(data))
-                        .context("Failed to parse to felt")
-                })
-                .collect()
-        } else {
-            Ok(vec![])
+        match (self.calldata, self.arguments) {
+            // If --calldata is provided, use it directly
+            (Some(calldata), None) => {
+                calldata
+                    .iter()
+                    .map(|data| {
+                        Felt::from_dec_str(data)
+                            .or_else(|_| Felt::from_hex(data))
+                            .context("Failed to parse calldata value to felt")
+                    })
+                    .collect()
+            }
+            // If --arguments is provided or neither is provided, use data transformer
+            (None, arguments) => {
+                let args = arguments.unwrap_or_default();
+                Calldata::new(args)
+                    .serialized(&contract_class, selector)
+                    .map_err(|err| anyhow!("Failed to serialize arguments: {err}"))
+            }
+            // Both provided - this is an error
+            (Some(_), Some(_)) => {
+                Err(anyhow!("Cannot provide both --calldata and --arguments"))
+            }
         }
     }
 }
