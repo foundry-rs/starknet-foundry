@@ -20,6 +20,7 @@ mod precalculate_address;
 mod replace_bytecode;
 mod spy_events;
 mod store;
+mod multiple_writes_same_storage;
 
 pub fn map_entry_address(var_name: &str, key: &[Felt]) -> Felt {
     calculate_variable_address(felt_selector_from_name(var_name).into_(), Some(key))
