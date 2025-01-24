@@ -1,6 +1,7 @@
 # Environment Setup
+
 > 💡 **Info**
-> This tutorial is only relevant if you wish to contribute to Starknet Foundry. 
+> This tutorial is only relevant if you wish to contribute to Starknet Foundry.
 > If you plan to only use it as a tool for your project, you can skip this part.
 
 ## Prerequisites
@@ -15,49 +16,54 @@ $ rustup update
 ```
 
 ### Scarb
+
 You can read more about installing Scarb [here](https://docs.swmansion.com/scarb/download.html).
 
 Please make sure you're using Scarb installed via [asdf](https://asdf-vm.com/) - otherwise some tests may fail.
+
 > To verify, run:
-> 
+>
 > ```shell
 > $ which scarb
 > ```
+>
 > the result of which should be:
+>
 > ```shell
 > $HOME/.asdf/shims/scarb
 > ```
-> 
+>
 > If you previously installed scarb using an official installer, you may need to remove this installation or modify your PATH to make sure asdf installed one is always used.
 
 ### cairo-profiler
+
 You can read more
 about installing `cairo-profiler` [here](https://github.com/software-mansion/cairo-profiler?tab=readme-ov-file#installation).
 
 > ❗️ **Warning**
-> 
+>
 > If you haven't pushed your branch to the remote yet (you've been working only locally), two tests will fail:
-> 
+>
 > - `e2e::running::init_new_project_test`
 > - `e2e::running::simple_package_with_git_dependency`
-> 
+>
 > After pushing the branch to the remote, those tests should pass.
 
 ### Starknet Devnet
+
 To install it run `./scripts/install_devnet.sh`
 
 ### Universal sierra compiler
+
 Install the latest [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler) version.
 
-
-
 ## Running Tests
+
 Tests can be run with:
 
 ```shell
 $ cargo test
 ```
-
 
 ## Formatting and Lints
 
@@ -70,7 +76,8 @@ $ cargo fmt
 For linting, it uses [clippy](https://github.com/rust-lang/rust-clippy). You can run it with this command:
 
 ```shell
-$ cargo clippy --all-targets --all-features -- --no-deps -W clippy::pedantic -A clippy::missing_errors_doc -A clippy::missing_panics_doc -A clippy::default_trait_access
+$ cargo clippy --all-targets --all-features -- --no-deps -W clippy::pedantic \
+    -A clippy::missing_errors_doc -A clippy::missing_panics_doc
 ```
 
 Or using our defined alias
@@ -97,6 +104,7 @@ Some typos can be automatically fixed by running
 ```shell
 $ typos -w
 ```
+
 </details>
 
 ## Contributing
