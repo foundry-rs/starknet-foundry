@@ -8,9 +8,11 @@ use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, fmt};
 
 pub mod explorer;
+pub mod voyager;
 pub mod walnut;
 
 use explorer::VerificationInterface;
+use voyager::Voyager;
 use walnut::WalnutVerificationInterface;
 
 #[derive(Args)]
@@ -25,7 +27,7 @@ pub struct Verify {
     pub contract_name: String,
 
     /// Block explorer to use for the verification
-    #[clap(short, long, value_enum, default_value_t = Verifier::Walnut)]
+    #[clap(short, long, value_enum)]
     pub verifier: Verifier,
 
     /// The network on which block explorer will do the verification
@@ -44,12 +46,14 @@ pub struct Verify {
 #[derive(ValueEnum, Clone, Debug)]
 pub enum Verifier {
     Walnut,
+    Voyager,
 }
 
 impl fmt::Display for Verifier {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Verifier::Walnut => write!(f, "walnut"),
+            Verifier::Voyager => write!(f, "voyager"),
         }
     }
 }
@@ -60,6 +64,7 @@ pub async fn verify(
     verifier: Verifier,
     network: Network,
     confirm_verification: bool,
+    package: Option<String>,
     manifest_path: &Utf8PathBuf,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<VerifyResponse> {
@@ -87,8 +92,16 @@ pub async fn verify(
 
     match verifier {
         Verifier::Walnut => {
-            let walnut = WalnutVerificationInterface::new(network, workspace_dir.to_path_buf());
-            walnut.verify(contract_address, contract_name).await
+            let walnut = WalnutVerificationInterface::new(network, workspace_dir.to_path_buf())?;
+            walnut
+                .verify(contract_address, contract_name, package)
+                .await
+        }
+        Verifier::Voyager => {
+            let voyager = Voyager::new(network, workspace_dir.to_path_buf())?;
+            voyager
+                .verify(contract_address, contract_name, package)
+                .await
         }
     }
 }
