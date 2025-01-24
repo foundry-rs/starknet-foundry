@@ -51,9 +51,9 @@ pub struct CastConfig {
 impl Default for CastConfig {
     fn default() -> Self {
         Self {
-            url: String::default(),
-            account: String::default(),
-            accounts_file: Utf8PathBuf::default(),
+            url: String::new(),
+            account: String::new(),
+            accounts_file: Utf8PathBuf::new(),
             keystore: None,
             wait_params: ValidatedWaitParams::default(),
             block_explorer: Some(block_explorer::Service::default()),
