@@ -16,17 +16,18 @@ pub struct WalnutVerificationInterface {
 
 #[async_trait::async_trait]
 impl VerificationInterface for WalnutVerificationInterface {
-    fn new(network: Network, workspace_dir: Utf8PathBuf) -> Self {
-        WalnutVerificationInterface {
+    fn new(network: Network, workspace_dir: Utf8PathBuf) -> Result<Self> {
+        Ok(WalnutVerificationInterface {
             network,
             workspace_dir,
-        }
+        })
     }
 
     async fn verify(
         &self,
         identifier: ContractIdentifier,
         contract_name: String,
+        _package: Option<String>,
     ) -> Result<VerifyResponse> {
         // Read all files name along with their contents in a JSON format
         // in the workspace dir recursively
@@ -67,7 +68,7 @@ impl VerificationInterface for WalnutVerificationInterface {
         // Send the POST request to the explorer
         let client = reqwest::Client::new();
         let api_res = client
-            .post(self.gen_explorer_url()?)
+            .post(self.gen_explorer_url())
             .header("Content-Type", "application/json")
             .body(json_payload)
             .send()
@@ -86,13 +87,13 @@ impl VerificationInterface for WalnutVerificationInterface {
         }
     }
 
-    fn gen_explorer_url(&self) -> Result<String> {
+    fn gen_explorer_url(&self) -> String {
         let api_base_url =
             env::var("WALNUT_API_URL").unwrap_or_else(|_| "https://api.walnut.dev".to_string());
         let path = match self.network {
             Network::Mainnet => "/v1/sn_main/verify",
             Network::Sepolia => "/v1/sn_sepolia/verify",
         };
-        Ok(format!("{api_base_url}{path}"))
+        format!("{api_base_url}{path}")
     }
 }

@@ -19,12 +19,13 @@ pub struct VerificationPayload {
 }
 
 #[async_trait::async_trait]
-pub trait VerificationInterface {
-    fn new(network: Network, workspace_dir: Utf8PathBuf) -> Self;
+pub trait VerificationInterface: Sized {
+    fn new(network: Network, workspace_dir: Utf8PathBuf) -> Result<Self>;
     async fn verify(
         &self,
         identifier: ContractIdentifier,
         contract_name: String,
+        package: Option<String>,
     ) -> Result<VerifyResponse>;
-    fn gen_explorer_url(&self) -> Result<String>;
+    fn gen_explorer_url(&self) -> String;
 }
