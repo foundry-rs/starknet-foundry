@@ -11,13 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Default support for prebuilt plugin
+- Newly created projects won't require Rust to be installed by default
 
 ### `snforge_scarb_plugin`
 
 #### Changed 
 
-- Now published with precompiled binaries, eliminating the need for Rust installation.
+- Precompiled plugin binaries are now published to the registry for new versions
 
 ## [0.36.0] - 2025-01-15
 
