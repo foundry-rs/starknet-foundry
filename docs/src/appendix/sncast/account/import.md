@@ -26,6 +26,13 @@ Starknet RPC node url address.
 
 Overrides url from `snfoundry.toml`.
 
+## `--network <NETWORK>`
+Optional.
+
+Use predefined network with public provider
+
+Possible values: `mainnet`, `sepolia`.
+
 ## `--class-hash, -c <CLASS_HASH>`
 Optional.
 

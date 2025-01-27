@@ -11,7 +11,7 @@ use sncast::{chain_id_to_network_name, get_chain_id};
 #[derive(Args, Debug)]
 #[command(about = "Delete account information from the accounts file")]
 #[command(group(ArgGroup::new("networks")
-    .args(&["url", "network"])
+    .args(&["url", "network", "network_name"])
     .required(true)
     .multiple(false)))]
 pub struct Delete {
@@ -19,16 +19,16 @@ pub struct Delete {
     #[clap(short, long)]
     pub name: String,
 
-    /// Network where the account exists; defaults to network of rpc node
-    #[clap(long)]
-    pub network: Option<String>,
-
     /// Assume "yes" as answer to confirmation prompt and run non-interactively
     #[clap(long, default_value = "false")]
     pub yes: bool,
 
     #[clap(flatten)]
-    pub rpc: Option<RpcArgs>,
+    pub rpc: RpcArgs,
+
+    /// Literal name of the network used in accounts file
+    #[clap(long)]
+    pub network_name: Option<String>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -79,13 +79,10 @@ pub fn delete(
 }
 
 pub(crate) async fn get_network_name(delete: &Delete, config: &CastConfig) -> Result<String> {
-    match (&delete.rpc, &delete.network) {
-        (Some(rpc), None) => {
-            let provider = rpc.get_provider(config).await?;
-            let network_name = chain_id_to_network_name(get_chain_id(&provider).await?);
-            Ok(network_name)
-        }
-        (None, Some(network)) => Ok(network.clone()),
-        _ => unreachable!("Checked on clap level"),
+    if let Some(network_name) = &delete.network_name {
+        return Ok(network_name.clone());
     }
+
+    let provider = delete.rpc.get_provider(config).await?;
+    Ok(chain_id_to_network_name(get_chain_id(&provider).await?))
 }

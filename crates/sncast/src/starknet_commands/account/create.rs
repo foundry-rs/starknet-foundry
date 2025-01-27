@@ -17,7 +17,7 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountCreateResponse;
 use sncast::{
     check_class_hash_exists, check_if_legacy_contract, extract_or_generate_salt, get_chain_id,
-    get_keystore_password, handle_account_factory_error,
+    get_keystore_password, handle_account_factory_error, Network,
 };
 use starknet::accounts::{
     AccountDeploymentV1, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
@@ -44,7 +44,7 @@ pub struct Create {
     pub salt: Option<Felt>,
 
     /// If passed, a profile with provided name and corresponding data will be created in snfoundry.toml
-    #[clap(long)]
+    #[clap(long, conflicts_with = "network")]
     pub add_profile: Option<String>,
 
     /// Custom contract class hash of declared contract
@@ -61,7 +61,6 @@ pub struct Create {
 
 #[allow(clippy::too_many_arguments)]
 pub async fn create(
-    rpc_url: String,
     account: &str,
     accounts_file: &Utf8PathBuf,
     keystore: Option<Utf8PathBuf>,
@@ -112,24 +111,38 @@ pub async fn create(
             legacy,
         )?;
 
-        let deploy_command = generate_deploy_command_with_keystore(account, &keystore, &rpc_url);
+        let deploy_command = generate_deploy_command_with_keystore(
+            account,
+            &keystore,
+            create.rpc.url.as_deref(),
+            create.rpc.network.as_ref(),
+        );
         message.push_str(&deploy_command);
     } else {
         write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
 
-        let deploy_command = generate_deploy_command(accounts_file, &rpc_url, account);
+        let deploy_command = generate_deploy_command(
+            accounts_file,
+            create.rpc.url.as_deref(),
+            create.rpc.network.as_ref(),
+            account,
+        );
         message.push_str(&deploy_command);
     }
 
     if add_profile.is_some() {
-        let config = CastConfig {
-            url: rpc_url,
-            account: account.into(),
-            accounts_file: accounts_file.into(),
-            keystore,
-            ..Default::default()
-        };
-        add_created_profile_to_configuration(create.add_profile.as_deref(), &config, None)?;
+        if let Some(url) = &create.rpc.url {
+            let config = CastConfig {
+                url: url.clone(),
+                account: account.into(),
+                accounts_file: accounts_file.into(),
+                keystore,
+                ..Default::default()
+            };
+            add_created_profile_to_configuration(create.add_profile.as_deref(), &config, None)?;
+        } else {
+            unreachable!("Conflicting arguments should be handled in clap");
+        }
     }
 
     Ok(AccountCreateResponse {
@@ -328,7 +341,22 @@ fn write_account_to_file(
     Ok(())
 }
 
-fn generate_deploy_command(accounts_file: &Utf8PathBuf, rpc_url: &str, account: &str) -> String {
+fn generate_network_flag(rpc_url: Option<&str>, network: Option<&Network>) -> String {
+    if let Some(rpc_url) = rpc_url {
+        format!("--url {rpc_url}")
+    } else if let Some(network) = network {
+        format!("--network {network}")
+    } else {
+        unreachable!("Either `--rpc_url` or `--network` must be provided.")
+    }
+}
+
+fn generate_deploy_command(
+    accounts_file: &Utf8PathBuf,
+    rpc_url: Option<&str>,
+    network: Option<&Network>,
+    account: &str,
+) -> String {
     let accounts_flag = if accounts_file
         .to_string()
         .contains("starknet_accounts/starknet_open_zeppelin_accounts.json")
@@ -338,19 +366,24 @@ fn generate_deploy_command(accounts_file: &Utf8PathBuf, rpc_url: &str, account: 
         format!(" --accounts-file {accounts_file}")
     };
 
+    let network_flag = generate_network_flag(rpc_url, network);
+
     format!(
         "\n\nAfter prefunding the address, run:\n\
-        sncast{accounts_flag} account deploy --url {rpc_url} --name {account} --fee-token strk"
+        sncast{accounts_flag} account deploy {network_flag} --name {account} --fee-token strk"
     )
 }
 
 fn generate_deploy_command_with_keystore(
     account: &str,
     keystore: &Utf8PathBuf,
-    rpc_url: &str,
+    rpc_url: Option<&str>,
+    network: Option<&Network>,
 ) -> String {
+    let network_flag = generate_network_flag(rpc_url, network);
+
     format!(
         "\n\nAfter prefunding the address, run:\n\
-        sncast --account {account} --keystore {keystore} account deploy --url {rpc_url} --fee-token strk"
+        sncast --account {account} --keystore {keystore} account deploy {network_flag} --fee-token strk"
     )
 }

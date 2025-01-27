@@ -16,7 +16,7 @@ You can track the details about the execution and finality status of a transacti
 $ sncast \
  tx-status \
  0x07d2067cd7675f88493a9d773b456c8d941457ecc2f6201d2fe6b0607daadfd1 \
- --url https://starknet-sepolia.public.blastapi.io
+ --network sepolia
 ```
 
 <details>

@@ -31,10 +31,11 @@ use starknet::{
     signers::{LocalWallet, SigningKey},
 };
 use starknet_types_core::felt::Felt;
+use std::collections::HashMap;
+use std::fmt::Display;
 use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
-use std::{collections::HashMap, fmt::Display};
 use std::{env, fs};
 use thiserror::Error;
 
@@ -82,6 +83,15 @@ pub const SEPOLIA: Felt =
 pub enum Network {
     Mainnet,
     Sepolia,
+}
+
+impl Display for Network {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Network::Mainnet => write!(f, "mainnet"),
+            Network::Sepolia => write!(f, "sepolia"),
+        }
+    }
 }
 
 impl TryFrom<Felt> for Network {

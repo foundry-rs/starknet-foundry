@@ -15,7 +15,7 @@ A default form of calldata passed to commands requiring it is a series of hex-en
 
 ```shell
 $ sncast call \
-    --url http://127.0.0.1:5055 \
+    --network sepolia \
     --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
     --function tuple_fn \
     --calldata 0x10 0x3 0x0 \
@@ -41,7 +41,7 @@ We can write the same command as above, but with arguments:
 
 ```shell
 $ sncast call \
-    --url http://127.0.0.1:5055 \
+    --network sepolia \
     --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
     --function tuple_fn \
     --arguments '(0x10, 3, hello_sncast::data_transformer_contract::Enum::One)' \
@@ -86,7 +86,7 @@ Numeric types (primitives and `felt252`) can be paseed with type suffix specifie
 
 ```shell
 $ sncast call \
-    --url http://127.0.0.1:5055 \
+    --network sepolia \
     --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
     --function complex_fn \
     --arguments \
@@ -109,7 +109,7 @@ Alternatively, you can continue the single quote for multiple lines.
 
 ```shell
 $ sncast call \
-    --url http://127.0.0.1:5055 \
+    --network sepolia \
     --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
     --function complex_fn \
     --arguments 'array![array![1, 2], array![3, 4, 5], array![6]],
@@ -131,7 +131,7 @@ true,
 
 ```shell
 $ sncast call \
-    --url http://127.0.0.1:5055 \
+    --network sepolia \
     --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
     --function nested_struct_fn \
     --arguments \

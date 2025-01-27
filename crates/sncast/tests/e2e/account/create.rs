@@ -244,6 +244,35 @@ pub async fn test_happy_case_accounts_file_already_exists() {
 }
 
 #[tokio::test]
+pub async fn test_add_profile_with_network() {
+    let tempdir = tempdir().expect("Failed to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--network",
+        "sepolia",
+        "--name",
+        "my_account",
+        "--add-profile",
+        "my_account",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        error: the argument '--network <NETWORK>' cannot be used with '--add-profile <ADD_PROFILE>'
+    "},
+    );
+}
+
+#[tokio::test]
 pub async fn test_profile_already_exists() {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
     let accounts_file = "accounts.json";

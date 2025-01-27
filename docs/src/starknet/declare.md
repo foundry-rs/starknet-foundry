@@ -22,7 +22,7 @@ Then run:
 ```shell
 $ sncast --account my_account \
     declare \
-	--url http://127.0.0.1:5055 \
+	--network sepolia \
     --contract-name HelloSncast
 ```
 
@@ -45,7 +45,7 @@ transaction: https://starkscan.co/search/[..]
 > Contract name is a part after the `mod` keyword in your contract file. It may differ from package name defined in `Scarb.toml` file.
 
 > 📝 **Note**
-> In the above example we supply `sncast` with `--account` and `--url` flags. If `snfoundry.toml` is present, and has
+> In the above example we supply `sncast` with `--account` and `--network` flags. If `snfoundry.toml` is present, and has
 > the properties set, values provided using these flags will override values from `snfoundry.toml`. Learn more about `snfoundry.toml`
 > configuration [here](../projects/configuration.md#sncast).
 
