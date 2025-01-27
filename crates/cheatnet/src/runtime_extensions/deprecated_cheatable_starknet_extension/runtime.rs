@@ -1,5 +1,6 @@
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::felt_from_ptr_immutable;
 use anyhow::Result;
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallResult;
 use blockifier::execution::{
     deprecated_syscalls::{
         hint_processor::DeprecatedSyscallHintProcessor, DeprecatedSyscallSelector,
@@ -25,7 +26,6 @@ use cairo_vm::{
 use runtime::{SyscallHandlingResult, SyscallPtrAccess};
 use starknet_types_core::felt::Felt;
 use std::{any::Any, collections::HashMap};
-use blockifier::execution::deprecated_syscalls::DeprecatedSyscallResult;
 
 pub struct DeprecatedStarknetRuntime<'a> {
     pub hint_handler: DeprecatedSyscallHintProcessor<'a>,

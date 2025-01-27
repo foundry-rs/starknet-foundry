@@ -59,6 +59,7 @@ fn build_tx_info() -> TransactionInfo {
             sender_address: ContractAddress::default(),
             only_query: false,
         },
+        // TODO: Mock
         resource_bounds: ValidResourceBounds::AllResources(AllResourceBounds {
             l1_gas: ResourceBounds {
                 max_amount: GasAmount::from(0_u8),
@@ -99,7 +100,13 @@ pub fn build_context(
 ) -> EntryPointExecutionContext {
     let transaction_context = Arc::new(build_transaction_context(block_info, chain_id));
 
-    EntryPointExecutionContext::new(transaction_context, ExecutionMode::Execute, false, SierraGasRevertTracker::new(GasAmount::from(100000_u64)))
+    EntryPointExecutionContext::new(
+        transaction_context,
+        ExecutionMode::Execute,
+        false,
+        // Mock
+        SierraGasRevertTracker::new(GasAmount::from(100_000_u64)),
+    )
 }
 
 pub fn set_max_steps(entry_point_ctx: &mut EntryPointExecutionContext, max_n_steps: u32) {

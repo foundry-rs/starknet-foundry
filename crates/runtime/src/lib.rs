@@ -1,8 +1,7 @@
 use anyhow::Result;
-use blockifier::execution::deprecated_syscalls::hint_processor::DeprecatedSyscallHintProcessor;
-use blockifier::execution::deprecated_syscalls::{
-    DeprecatedSyscallResult, DeprecatedSyscallSelector,
-};
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use blockifier::state::errors::StateError;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
@@ -33,8 +32,6 @@ use starknet_types_core::felt::Felt;
 use std::any::Any;
 use std::collections::HashMap;
 use std::io;
-use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use thiserror::Error;
 
 pub mod starknet;
@@ -363,7 +360,7 @@ impl<Extension: ExtensionLogic> SyscallPtrAccess for ExtendedRuntime<Extension> 
         self.extended_runtime.get_mut_syscall_ptr()
     }
 
-    fn verify_syscall_ptr(&self, ptr: Relocatable) -> DeprecatedSyscallResult<()> {
+    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
         self.extended_runtime.verify_syscall_ptr(ptr)
     }
 }

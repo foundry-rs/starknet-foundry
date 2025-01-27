@@ -22,6 +22,7 @@ use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use conversions::string::TryFromHexStr;
 use runtime::starknet::context::SerializableBlockInfo;
 use runtime::starknet::state::DictStateReader;
+use starknet_api::block::BlockInfo;
 use starknet_api::core::{ChainId, EntryPointSelector};
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
@@ -32,7 +33,6 @@ use starknet_types_core::felt::Felt;
 use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
-use starknet_api::block::BlockInfo;
 
 // Specifies the duration of the cheat
 #[derive(CairoDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
