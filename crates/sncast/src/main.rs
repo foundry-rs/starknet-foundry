@@ -492,7 +492,11 @@ async fn run_async_command(
                 )
                 .await;
 
-                if !import.silent && result.is_ok() && io::stdout().is_terminal() {
+                if !import.silent
+                    && result.is_ok()
+                    && io::stdout().is_terminal()
+                    && import.rpc.network.is_none()
+                {
                     if let Some(account_name) =
                         result.as_ref().ok().and_then(|r| r.account_name.clone())
                     {
@@ -528,7 +532,11 @@ async fn run_async_command(
                 )
                 .await;
 
-                if !create.silent && result.is_ok() && io::stdout().is_terminal() {
+                if !create.silent
+                    && result.is_ok()
+                    && io::stdout().is_terminal()
+                    && create.rpc.network.is_none()
+                {
                     if let Err(err) = prompt_to_add_account_as_default(&account) {
                         eprintln!("Error: Failed to launch interactive prompt: {err}");
                     }
