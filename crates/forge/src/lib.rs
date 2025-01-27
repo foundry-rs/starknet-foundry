@@ -15,6 +15,7 @@ use tokio::runtime::Builder;
 use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
 pub mod block_number_map;
+mod clean;
 mod combine_configs;
 mod compatibility_check;
 mod init;
@@ -25,7 +26,6 @@ pub mod scarb;
 mod shared_cache;
 pub mod test_filter;
 mod warn;
-mod clean;
 
 pub const CAIRO_EDITION: &str = "2024_07";
 
