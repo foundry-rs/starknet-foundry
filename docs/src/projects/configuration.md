@@ -160,8 +160,7 @@ the configuration from the local file will be used to override the global `defau
 
 ## Environmental Variables
 
-Programmers can use environmental variables in both `Scarb.toml::tool::snforge` and in `snfoundry.toml`. To use an environmental variable as a value, use its name prefixed with `$`.
-It is possible to pass env variables with curly braces. `variable_name = "${VARIABLE_VAlUE}"`.
+Programmers can use environmental variables in both `Scarb.toml::tool::snforge` and in `snfoundry.toml`. To use an environmental variable as a value, use its name either with or without curly braces, prefixed with `$`.
 This might be useful, for example, to hide node urls in the public repositories. 
 As an example:
 
