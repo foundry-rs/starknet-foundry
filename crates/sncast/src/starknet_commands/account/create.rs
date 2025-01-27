@@ -124,7 +124,7 @@ pub async fn create(
     if add_profile.is_some() {
         let config = CastConfig {
             url: rpc_url,
-            account: account.into(),
+            account: account.to_string(),
             accounts_file: accounts_file.into(),
             keystore,
             ..Default::default()

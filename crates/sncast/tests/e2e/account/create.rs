@@ -589,6 +589,70 @@ pub async fn test_happy_case_keystore_hex_format() {
     assert!(contents.contains("\"legacy\": false"));
 }
 
+#[test_case("oz"; "oz_account_type")]
+#[test_case("argent"; "argent_account_type")]
+#[test_case("braavos"; "braavos_account_type")]
+#[tokio::test]
+pub async fn test_happy_case_default_name_generation(account_type: &str) {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--salt",
+        "0x1",
+        "--type",
+        account_type,
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        command: account create
+        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        address: 0x0[..]
+        max_fee: [..]
+        message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.
+
+        After prefunding the address, run:
+        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name account-1 --fee-token strk
+
+        To see account creation details, visit:
+        account: [..]
+        "},
+    );
+
+    let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
+        .expect("Unable to read created file");
+
+    let expected = json!(
+        {
+            "alpha-sepolia": {
+                "account-1": {
+                    "address": "0x[..]",
+                    "class_hash": "0x[..]",
+                    "deployed": false,
+                    "legacy": false,
+                    "private_key": "0x[..]",
+                    "public_key": "0x[..]",
+                    "salt": "0x1",
+                    "type": get_formatted_account_type(account_type)
+                }
+            }
+        }
+    );
+
+    assert_matches(to_string_pretty(&expected).unwrap(), contents);
+}
+
 fn get_formatted_account_type(account_type: &str) -> &str {
     match account_type {
         "oz" => "open_zeppelin",
