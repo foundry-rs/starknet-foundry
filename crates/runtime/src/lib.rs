@@ -1,7 +1,7 @@
 use anyhow::Result;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::execution::syscalls::SyscallResult;
+use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use blockifier::state::errors::StateError;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};

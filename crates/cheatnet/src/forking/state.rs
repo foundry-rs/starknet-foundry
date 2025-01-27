@@ -1,7 +1,6 @@
 use crate::forking::cache::ForkCache;
 use crate::state::BlockInfoReader;
 use anyhow::{Context, Result};
-use blockifier::blockifier::block::BlockInfo;
 use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
 };
@@ -20,10 +19,10 @@ use starknet::core::types::{
 use starknet::core::utils::parse_cairo_short_string;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider, ProviderError};
-use starknet_api::block::{BlockNumber, BlockTimestamp};
+use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp};
 use starknet_api::core::{ChainId, ClassHash, CompiledClassHash, ContractAddress, Nonce};
 use starknet_api::deprecated_contract_class::{
-    ContractClass as DeprecatedContractClass, EntryPoint, EntryPointType,
+    ContractClass as DeprecatedContractClass, EntryPointType,
 };
 use starknet_api::state::StorageKey;
 use starknet_types_core::felt::Felt;
@@ -206,10 +205,7 @@ impl StateReader for ForkStateReader {
         }
     }
 
-    fn get_compiled_contract_class(
-        &self,
-        class_hash: ClassHash,
-    ) -> StateResult<ContractClassBlockifier> {
+    fn get_compiled_class(&self, class_hash: ClassHash) -> StateResult<ContractClassBlockifier> {
         let mut cache = self.cache.borrow_mut();
 
         let contract_class = {

@@ -6,7 +6,6 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execut
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
-use blockifier::blockifier::block::BlockInfo;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
@@ -23,6 +22,7 @@ use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use conversions::string::TryFromHexStr;
 use runtime::starknet::context::SerializableBlockInfo;
 use runtime::starknet::state::DictStateReader;
+use starknet_api::block::BlockInfo;
 use starknet_api::core::{ChainId, EntryPointSelector};
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
@@ -104,7 +104,7 @@ impl StateReader for ExtendedStateReader {
 
     fn get_compiled_contract_class(&self, class_hash: ClassHash) -> StateResult<ContractClass> {
         self.dict_state_reader
-            .get_compiled_contract_class(class_hash)
+            .get_compiled_class(class_hash)
             .or_else(|_| {
                 self.fork_state_reader
                     .as_ref()

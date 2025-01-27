@@ -1,8 +1,7 @@
-use blockifier::blockifier::block::{BlockInfo, GasPrices};
 use blockifier::bouncer::BouncerConfig;
 use blockifier::context::{BlockContext, ChainInfo, FeeTokenAddresses, TransactionContext};
 use blockifier::execution::common_hints::ExecutionMode;
-use blockifier::execution::entry_point::EntryPointExecutionContext;
+use blockifier::execution::entry_point::{EntryPointExecutionContext, SierraGasRevertTracker};
 use blockifier::transaction::objects::{
     CommonAccountFields, CurrentTransactionInfo, TransactionInfo,
 };
@@ -10,17 +9,18 @@ use blockifier::versioned_constants::VersionedConstants;
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use conversions::string::TryFromHexStr;
 use serde::{Deserialize, Serialize};
-use starknet_api::block::{BlockNumber, BlockTimestamp};
+use starknet_api::block::GasPrices;
+use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp, GasPrice};
 use starknet_api::data_availability::DataAvailabilityMode;
-use starknet_api::transaction::{Resource, ResourceBounds, ResourceBoundsMapping};
+use starknet_api::execution_resources::GasAmount;
+use starknet_api::transaction::fields::TransactionSignature;
+use starknet_api::transaction::fields::{AllResourceBounds, ResourceBounds, ValidResourceBounds};
 use starknet_api::{
     contract_address,
-    core::{ChainId, ContractAddress, Nonce, PatriciaKey},
-    felt, patricia_key,
-    transaction::{TransactionHash, TransactionSignature, TransactionVersion},
+    core::{ChainId, ContractAddress, Nonce},
+    transaction::{TransactionHash, TransactionVersion},
 };
 use starknet_types_core::felt::Felt;
-use std::collections::BTreeMap;
 use std::num::NonZeroU128;
 use std::sync::Arc;
 
@@ -59,22 +59,21 @@ fn build_tx_info() -> TransactionInfo {
             sender_address: ContractAddress::default(),
             only_query: false,
         },
-        resource_bounds: ResourceBoundsMapping(BTreeMap::from([
-            (
-                Resource::L1Gas,
-                ResourceBounds {
-                    max_amount: 0,
-                    max_price_per_unit: 1,
-                },
-            ),
-            (
-                Resource::L2Gas,
-                ResourceBounds {
-                    max_amount: 0,
-                    max_price_per_unit: 0,
-                },
-            ),
-        ])),
+        // TODO: Mock
+        resource_bounds: ValidResourceBounds::AllResources(AllResourceBounds {
+            l1_gas: ResourceBounds {
+                max_amount: GasAmount::from(0_u8),
+                max_price_per_unit: GasPrice::from(1_u8),
+            },
+            l2_gas: ResourceBounds {
+                max_amount: GasAmount::from(0_u8),
+                max_price_per_unit: GasPrice::from(0_u8),
+            },
+            l1_data_gas: ResourceBounds {
+                max_amount: GasAmount::from(0_u8),
+                max_price_per_unit: GasPrice::from(1_u8),
+            },
+        }),
         tip: Default::default(),
         nonce_data_availability_mode: DataAvailabilityMode::L1,
         fee_data_availability_mode: DataAvailabilityMode::L1,
@@ -101,7 +100,13 @@ pub fn build_context(
 ) -> EntryPointExecutionContext {
     let transaction_context = Arc::new(build_transaction_context(block_info, chain_id));
 
-    EntryPointExecutionContext::new(transaction_context, ExecutionMode::Execute, false).unwrap()
+    EntryPointExecutionContext::new(
+        transaction_context,
+        ExecutionMode::Execute,
+        false,
+        // TODO: Mock
+        SierraGasRevertTracker::new(GasAmount::from(100_000_u64)),
+    )
 }
 
 pub fn set_max_steps(entry_point_ctx: &mut EntryPointExecutionContext, max_n_steps: u32) {
@@ -174,23 +179,13 @@ impl From<BlockInfo> for SerializableBlockInfo {
     }
 }
 impl From<SerializableGasPrices> for GasPrices {
-    fn from(forge_gas_prices: SerializableGasPrices) -> Self {
-        Self {
-            eth_l1_gas_price: forge_gas_prices.eth_l1_gas_price,
-            strk_l1_gas_price: forge_gas_prices.strk_l1_gas_price,
-            eth_l1_data_gas_price: forge_gas_prices.eth_l1_data_gas_price,
-            strk_l1_data_gas_price: forge_gas_prices.strk_l1_data_gas_price,
-        }
+    fn from(_forge_gas_prices: SerializableGasPrices) -> Self {
+        GasPrices::default()
     }
 }
 
 impl From<GasPrices> for SerializableGasPrices {
-    fn from(gas_prices: GasPrices) -> Self {
-        Self {
-            eth_l1_gas_price: gas_prices.eth_l1_gas_price,
-            strk_l1_gas_price: gas_prices.strk_l1_gas_price,
-            eth_l1_data_gas_price: gas_prices.eth_l1_data_gas_price,
-            strk_l1_data_gas_price: gas_prices.strk_l1_data_gas_price,
-        }
+    fn from(_gas_prices: GasPrices) -> Self {
+        SerializableGasPrices::default()
     }
 }
