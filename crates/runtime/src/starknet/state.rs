@@ -7,6 +7,7 @@ use starknet_api::core::{ClassHash, ContractAddress, Nonce};
 use starknet_api::state::StorageKey;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
+use blockifier::execution::contract_class::RunnableCompiledClass;
 
 /// A simple implementation of `StateReader` using `HashMap`s as storage.
 #[derive(Debug, Default)]
@@ -48,10 +49,10 @@ impl StateReader for DictStateReader {
             .ok_or(StateError::UnavailableContractAddress(contract_address))
     }
 
-    fn get_compiled_class(&self, class_hash: ClassHash) -> StateResult<ContractClass> {
+    fn get_compiled_class(&self, class_hash: ClassHash) -> StateResult<RunnableCompiledClass> {
         let contract_class = self.class_hash_to_class.get(&class_hash).cloned();
         match contract_class {
-            Some(contract_class) => Ok(contract_class),
+            Some(contract_class) => Ok(contract_class.try_into()?),
             _ => Err(StateError::UndeclaredClassHash(class_hash)),
         }
     }
