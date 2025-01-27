@@ -312,12 +312,12 @@ fn extract_test_case_summary(
                         "\n    {}\n",
                         error.to_string().replace(" Custom Hint Error: ", "\n    ")
                     );
-                    if let CairoRunError::VirtualMachine(vm_error) = *error {
-                        if let VirtualMachineError::UnfinishedExecution = vm_error {
-                            message.push_str(
+                    if let CairoRunError::VirtualMachine(VirtualMachineError::UnfinishedExecution) =
+                        *error
+                    {
+                        message.push_str(
                                 "\n    Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps",
                             );
-                        }
                     }
                     TestCaseSummary::Failed {
                         name: case.name.clone(),
