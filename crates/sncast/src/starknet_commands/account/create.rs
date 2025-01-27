@@ -1,3 +1,4 @@
+use crate::starknet_commands::account::import::generate_account_name;
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
     AccountType,
@@ -17,7 +18,7 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountCreateResponse;
 use sncast::{
     check_class_hash_exists, check_if_legacy_contract, extract_or_generate_salt, get_chain_id,
-    get_keystore_password, handle_account_factory_error, read_and_parse_json_file,
+    get_keystore_password, handle_account_factory_error,
 };
 use starknet::accounts::{
     AccountDeploymentV1, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
@@ -79,8 +80,11 @@ pub async fn create(
     check_class_hash_exists(provider, class_hash).await?;
 
     // Default account name if none
-    let account_name = account
-        .unwrap_or_else(|| generate_account_name(accounts_file).unwrap().to_string());
+    let account_name = if create.name.is_none() {
+        generate_account_name(accounts_file)?
+    } else {
+        create.name.clone().unwrap()
+    };
 
     let (account_json, max_fee) =
         generate_account(provider, salt, class_hash, &create.account_type).await?;
@@ -153,34 +157,6 @@ pub async fn create(
             "Account already deployed".to_string()
         },
     })
-}
-
-fn generate_account_name(accounts_file: &Utf8PathBuf) -> Result<String> {
-    let mut id = 1;
-
-    if !accounts_file.exists() {
-        return Ok(format!("account-{id}"));
-    }
-
-    let networks: NestedMap<AccountData> = read_and_parse_json_file(accounts_file)?;
-    let mut result = HashSet::new();
-
-    for (_, accounts) in networks {
-        for (name, _) in accounts {
-            if let Some(id) = name
-                .strip_prefix("account-")
-                .and_then(|id| id.parse::<u32>().ok())
-            {
-                result.insert(id);
-            };
-        }
-    }
-
-    while result.contains(&id) {
-        id += 1;
-    }
-
-    Ok(format!("account-{id}"))
 }
 
 async fn generate_account(
