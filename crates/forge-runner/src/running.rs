@@ -315,7 +315,7 @@ fn extract_test_case_summary(
                     if let CairoRunError::VirtualMachine(vm_error) = *error {
                         if let VirtualMachineError::UnfinishedExecution = vm_error {
                             message.push_str(
-                                "\nSuggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps",
+                                "\n    Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps",
                             );
                         }
                     }
