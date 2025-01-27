@@ -8,7 +8,7 @@ fn main() {
     let first_declare_result = declare(
         "Mapa",
         FeeSettings {
-            max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None
+            max_fee: Option::None, max_gas: Option::Some(999999), max_gas_unit_price: Option::Some(100000000000)
         },
         Option::Some(declare_nonce)
     )
@@ -28,7 +28,7 @@ fn main() {
     let second_declare_result = declare(
         "Mapa",
         FeeSettings {
-            max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None
+            max_fee: Option::None, max_gas: Option::Some(999999), max_gas_unit_price: Option::Some(100000000000)
         },
         Option::Some(declare_nonce)
     )

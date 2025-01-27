@@ -18,7 +18,7 @@ fn main() {
     declare(
         "Not_this_time",
         FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+            max_fee: Option::None, max_gas: Option::Some(999999), max_gas_unit_price: Option::Some(100000000000)
         },
         Option::Some(declare_nonce)
     )
@@ -31,7 +31,7 @@ fn main() {
         Option::Some(salt),
         true,
         FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+            max_fee: Option::None, max_gas: Option::Some(999999), max_gas_unit_price: Option::Some(100000000000)
         },
         Option::Some(deploy_nonce)
     )
@@ -43,7 +43,7 @@ fn main() {
         selector!("put"),
         array![0x1, 0x2],
         FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+            max_fee: Option::None, max_gas: Option::Some(999999), max_gas_unit_price: Option::Some(100000000000)
         },
         Option::Some(invoke_nonce)
     )
