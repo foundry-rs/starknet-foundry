@@ -9,4 +9,4 @@ repository = "https://github.com/foundry-rs/starknet-foundry"
 license-file = "../LICENSE"
 
 [dev-dependencies]
-snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.27.0" }
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.36.0" }
