@@ -134,12 +134,12 @@ pub mod trace;
 
 pub mod byte_array;
 
-pub mod _config_types;
-
 mod _cheatcode;
 
 pub mod _internals {
     use super::_cheatcode;
 
     pub use _cheatcode::_is_config_run;
+
+    pub mod _config_types;
 }
