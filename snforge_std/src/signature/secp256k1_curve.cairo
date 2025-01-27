@@ -43,9 +43,7 @@ pub impl Secp256k1CurveSignerImpl of SignerTrait<
         self.secret_key.serialize(ref input);
         message_hash.serialize(ref input);
 
-        execute_cheatcode_and_deserialize::<
-            'ecdsa_sign_message', Result<(u256, u256), SignError>
-        >(input.span())
+        execute_cheatcode_and_deserialize::<'ecdsa_sign_message'>(input.span())
     }
 }
 

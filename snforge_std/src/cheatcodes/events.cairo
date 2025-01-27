@@ -4,7 +4,7 @@ use super::super::_cheatcode::execute_cheatcode_and_deserialize;
 
 /// Creates `EventSpy` instance that spies on all events emitted after its creation.
 pub fn spy_events() -> EventSpy {
-    execute_cheatcode_and_deserialize::<'spy_events', EventSpy>(array![].span())
+    execute_cheatcode_and_deserialize::<'spy_events'>(array![].span())
 }
 
 /// Raw event format (as seen via the RPC-API), can be used for asserting the emitted events.
@@ -33,9 +33,7 @@ pub trait EventSpyTrait {
 
 impl EventSpyTraitImpl of EventSpyTrait {
     fn get_events(ref self: EventSpy) -> Events {
-        execute_cheatcode_and_deserialize::<
-            'get_events', Events
-        >(array![self.event_offset.into()].span())
+        execute_cheatcode_and_deserialize::<'get_events'>(array![self.event_offset.into()].span())
     }
 }
 

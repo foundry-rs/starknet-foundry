@@ -3,7 +3,7 @@ use super::super::_cheatcode::execute_cheatcode_and_deserialize;
 
 /// Creates `MessageToL1Spy` instance that spies on all messages sent to L1
 pub fn spy_messages_to_l1() -> MessageToL1Spy {
-    execute_cheatcode_and_deserialize::<'spy_messages_to_l1', MessageToL1Spy>(array![].span())
+    execute_cheatcode_and_deserialize::<'spy_messages_to_l1'>(array![].span())
 }
 
 /// Raw message to L1 format (as seen via the RPC-API), can be used for asserting the sent messages.
@@ -35,7 +35,7 @@ pub trait MessageToL1SpyTrait {
 impl MessageToL1SpyTraitImpl of MessageToL1SpyTrait {
     fn get_messages(ref self: MessageToL1Spy) -> MessagesToL1 {
         execute_cheatcode_and_deserialize::<
-            'get_messages_to_l1', MessagesToL1
+            'get_messages_to_l1'
         >(array![self.message_offset.into()].span())
     }
 }

@@ -36,6 +36,6 @@ impl L1HandlerImpl of L1HandlerTrait {
         ];
         payload.serialize(ref inputs);
 
-        execute_cheatcode_and_deserialize::<'l1_handler_execute', SyscallResult<()>>(inputs.span())
+        execute_cheatcode_and_deserialize::<'l1_handler_execute'>(inputs.span())
     }
 }

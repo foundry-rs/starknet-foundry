@@ -28,5 +28,5 @@ pub(crate) fn execute_cheatcode_and_deserialize<const selector: felt252, T, +Ser
 // Do not use this function directly.
 // It is an internal part of the snforge architecture used by macros.
 pub fn _is_config_run() -> bool {
-    execute_cheatcode_and_deserialize::<'is_config_mode', bool>(array![].span())
+    execute_cheatcode_and_deserialize::<'is_config_mode'>(array![].span())
 }

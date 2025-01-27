@@ -114,6 +114,6 @@ pub fn replace_bytecode(
     contract: ContractAddress, new_class: ClassHash
 ) -> Result<(), ReplaceBytecodeError> {
     execute_cheatcode_and_deserialize::<
-        'replace_bytecode', Result<(), ReplaceBytecodeError>
+        'replace_bytecode'
     >(array![contract.into(), new_class.into()].span())
 }

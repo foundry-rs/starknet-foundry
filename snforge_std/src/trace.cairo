@@ -66,7 +66,7 @@ pub enum CallFailure {
 
 /// Returns current call trace of the test, up to the last call made to a contract
 pub fn get_call_trace() -> CallTrace {
-    execute_cheatcode_and_deserialize::<'get_call_trace', CallTrace>(array![].span())
+    execute_cheatcode_and_deserialize::<'get_call_trace'>(array![].span())
 }
 
 use core::fmt::{Display, Formatter, Error, Debug};

@@ -60,7 +60,7 @@ impl ContractClassImpl of ContractClassTrait {
     ) -> ContractAddress {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
-        execute_cheatcode_and_deserialize::<'precalculate_address', ContractAddress>(inputs.span())
+        execute_cheatcode_and_deserialize::<'precalculate_address'>(inputs.span())
     }
 
     fn deploy(
@@ -68,9 +68,7 @@ impl ContractClassImpl of ContractClassTrait {
     ) -> SyscallResult<(ContractAddress, Span<felt252>)> {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
-        execute_cheatcode_and_deserialize::<
-            'deploy', SyscallResult<(ContractAddress, Span<felt252>)>
-        >(inputs.span())
+        execute_cheatcode_and_deserialize::<'deploy'>(inputs.span())
     }
 
     fn deploy_at(
@@ -81,9 +79,7 @@ impl ContractClassImpl of ContractClassTrait {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
         inputs.append(contract_address.into());
 
-        execute_cheatcode_and_deserialize::<
-            'deploy_at', SyscallResult<(ContractAddress, Span<felt252>)>
-        >(inputs.span())
+        execute_cheatcode_and_deserialize::<'deploy_at'>(inputs.span())
     }
 
     fn new<T, +Into<T, ClassHash>>(class_hash: T) -> ContractClass {
@@ -115,18 +111,14 @@ impl DeclareResultImpl of DeclareResultTrait {
 /// - `AlreadyDeclared`: Contains `ContractClass` and signals that the contract has already been
 /// declared.
 pub fn declare(contract: ByteArray) -> Result<DeclareResult, Array<felt252>> {
-    execute_cheatcode_and_deserialize::<
-        'declare', Result<DeclareResult, Array<felt252>>
-    >(byte_array_as_felt_array(@contract).span())
+    execute_cheatcode_and_deserialize::<'declare'>(byte_array_as_felt_array(@contract).span())
 }
 
 /// Retrieves a class hash of a contract deployed under the given address
 /// `contract_address` - target contract address
 /// Returns the `ClassHash` under given address
 pub fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
-    execute_cheatcode_and_deserialize::<
-        'get_class_hash', ClassHash
-    >(array![contract_address.into()].span())
+    execute_cheatcode_and_deserialize::<'get_class_hash'>(array![contract_address.into()].span())
 }
 
 fn _prepare_calldata(

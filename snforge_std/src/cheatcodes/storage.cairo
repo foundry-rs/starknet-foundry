@@ -20,7 +20,7 @@ fn store_felt252(target: ContractAddress, storage_address: felt252, value: felt2
 fn load_felt252(target: ContractAddress, storage_address: felt252) -> felt252 {
     validate_storage_address_felt(storage_address);
     let inputs = array![target.into(), storage_address];
-    execute_cheatcode_and_deserialize::<'load', felt252>(inputs.span())
+    execute_cheatcode_and_deserialize::<'load'>(inputs.span())
 }
 
 /// Stores felts from `serialized_value` in `target` contract's storage, starting at
@@ -56,5 +56,5 @@ pub fn load(target: ContractAddress, storage_address: felt252, size: felt252) ->
 pub fn map_entry_address(map_selector: felt252, keys: Span<felt252>) -> felt252 {
     let mut inputs = array![map_selector];
     keys.serialize(ref inputs);
-    execute_cheatcode_and_deserialize::<'map_entry_address', felt252>(inputs.span())
+    execute_cheatcode_and_deserialize::<'map_entry_address'>(inputs.span())
 }

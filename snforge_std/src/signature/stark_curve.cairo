@@ -36,7 +36,7 @@ pub impl StarkCurveSignerImpl of SignerTrait<
         self: KeyPair<felt252, felt252>, message_hash: felt252
     ) -> Result<(felt252, felt252), SignError> {
         execute_cheatcode_and_deserialize::<
-            'stark_sign_message', Result<(felt252, felt252), SignError>
+            'stark_sign_message'
         >(array![self.secret_key, message_hash].span())
     }
 }
