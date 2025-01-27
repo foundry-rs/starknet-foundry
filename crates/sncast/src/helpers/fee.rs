@@ -129,20 +129,6 @@ pub struct FeeSettings {
     pub max_gas_unit_price: Option<NonZeroU128>,
 }
 
-impl From<ScriptFeeSettings> for FeeSettings {
-    fn from(value: ScriptFeeSettings) -> Self {
-        let ScriptFeeSettings {
-            max_gas,
-            max_gas_unit_price,
-            ..
-        } = value;
-        Self {
-            max_gas,
-            max_gas_unit_price,
-        }
-    }
-}
-
 fn print_max_fee_conversion_info(
     max_fee: impl Into<Felt>,
     max_gas: impl Into<Felt>,
