@@ -8,6 +8,7 @@ use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::state::cached_state::CachedState;
 use cairo_lang_runner::{RunResult, SierraCasmRunner};
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
+use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use camino::{Utf8Path, Utf8PathBuf};
 use casm::{get_assembled_program, run_assembled_program};
@@ -311,12 +312,12 @@ fn extract_test_case_summary(
                         "\n    {}\n",
                         error.to_string().replace(" Custom Hint Error: ", "\n    ")
                     );
-                    if error
-                        .to_string()
-                        .contains("RunResources has no remaining steps")
-                    {
-                        message
-                            .push_str("\nSuggestion: Try increasing the steps with --max-n-steps.");
+                    if let CairoRunError::VirtualMachine(vm_error) = *error {
+                        if let VirtualMachineError::UnfinishedExecution = vm_error {
+                            message.push_str(
+                                "\nSuggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps",
+                            );
+                        }
                     }
                     TestCaseSummary::Failed {
                         name: case.name.clone(),
