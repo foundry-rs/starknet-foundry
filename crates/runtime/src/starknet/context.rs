@@ -61,16 +61,16 @@ fn build_tx_info() -> TransactionInfo {
         },
         resource_bounds: ValidResourceBounds::AllResources(AllResourceBounds {
             l1_gas: ResourceBounds {
-                max_amount: GasAmount::from(0),
-                max_price_per_unit: GasPrice::from(1),
+                max_amount: GasAmount::from(0_u8),
+                max_price_per_unit: GasPrice::from(1_u8),
             },
             l2_gas: ResourceBounds {
-                max_amount: GasAmount::from(0),
-                max_price_per_unit: GasPrice::from(0),
+                max_amount: GasAmount::from(0_u8),
+                max_price_per_unit: GasPrice::from(0_u8),
             },
             l1_data_gas: ResourceBounds {
-                max_amount: GasAmount::from(0),
-                max_price_per_unit: GasPrice::from(1),
+                max_amount: GasAmount::from(0_u8),
+                max_price_per_unit: GasPrice::from(1_u8),
             },
         }),
         tip: Default::default(),
