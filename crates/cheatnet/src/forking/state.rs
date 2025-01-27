@@ -206,7 +206,7 @@ impl StateReader for ForkStateReader {
         }
     }
 
-    fn get_compiled_contract_class(
+    fn get_compiled_class(
         &self,
         class_hash: ClassHash,
     ) -> StateResult<ContractClassBlockifier> {

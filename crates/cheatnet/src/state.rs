@@ -104,7 +104,7 @@ impl StateReader for ExtendedStateReader {
 
     fn get_compiled_contract_class(&self, class_hash: ClassHash) -> StateResult<ContractClass> {
         self.dict_state_reader
-            .get_compiled_contract_class(class_hash)
+            .get_compiled_class(class_hash)
             .or_else(|_| {
                 self.fork_state_reader
                     .as_ref()
