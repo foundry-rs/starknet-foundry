@@ -234,7 +234,7 @@ async fn test_sncast_timed_out() {
 }
 
 #[tokio::test]
-async fn test_strk_fee_settings() {
+async fn test_fee_settings() {
     let contract_dir = duplicate_contract_directory_with_salt(
         SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
         "dummy",
@@ -247,7 +247,7 @@ async fn test_strk_fee_settings() {
 
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
-    let script_name = "strk_fee_settings";
+    let script_name = "fee_settings";
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),

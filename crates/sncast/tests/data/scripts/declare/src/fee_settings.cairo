@@ -3,17 +3,16 @@ use sncast_std::{
 };
 
 fn main() {
-    let max_fee = 99999999999999999;
-
     let declare_nonce = get_nonce('latest');
-    let declare_result = declare(
+    declare(
         "Mapa",
         FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+            max_gas: Option::Some(99999),
+            max_gas_unit_price: Option::Some(999999999999),
+            max_fee: Option::None
         },
         Option::Some(declare_nonce)
     )
-        .unwrap_err();
-
-    println!("{:?}", declare_result);
+        .expect('declare failed');
+    println!("success");
 }

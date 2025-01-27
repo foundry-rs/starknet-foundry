@@ -1,6 +1,6 @@
 use sncast_std::{
     declare, deploy, invoke, call, DeclareResult, DeclareResultTrait, DeployResult, InvokeResult,
-    CallResult, get_nonce, FeeSettings, EthFeeSettings
+    CallResult, get_nonce, FeeSettings
 };
 
 fn main() {
@@ -14,7 +14,9 @@ fn main() {
 
     let declare_result = declare(
         "Mapa",
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        FeeSettings {
+            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+        },
         Option::Some(declare_nonce)
     )
         .expect('declare failed');
@@ -28,7 +30,9 @@ fn main() {
         ArrayTrait::new(),
         Option::Some(salt),
         true,
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        FeeSettings {
+            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+        },
         Option::Some(deploy_nonce)
     )
         .expect('deploy failed');
@@ -42,7 +46,9 @@ fn main() {
         deploy_result.contract_address,
         selector!("put"),
         array![0x1, 0x2],
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        FeeSettings {
+            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+        },
         Option::Some(invoke_nonce)
     )
         .expect('invoke failed');

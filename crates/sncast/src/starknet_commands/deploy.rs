@@ -1,13 +1,11 @@
 use anyhow::{anyhow, Result};
-use clap::{Args, ValueEnum};
+use clap::Args;
 use conversions::IntoConv;
-use sncast::helpers::error::token_not_supported_for_deployment;
-use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
+use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
-use sncast::helpers::version::parse_version;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::DeployResponse;
-use sncast::{extract_or_generate_salt, impl_payable_transaction, udc_uniqueness};
+use sncast::{extract_or_generate_salt, udc_uniqueness};
 use sncast::{handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
@@ -43,10 +41,6 @@ pub struct Deploy {
     #[clap(short, long)]
     pub nonce: Option<Felt>,
 
-    /// Version of the deployment (can be inferred from fee token)
-    #[clap(short, long, value_parser = parse_version::<DeployVersion>)]
-    pub version: Option<DeployVersion>,
-
     #[clap(flatten)]
     pub rpc: RpcArgs,
 }
@@ -63,64 +57,43 @@ pub struct DeployArguments {
     pub arguments: Option<String>,
 }
 
-#[derive(ValueEnum, Debug, Clone)]
-pub enum DeployVersion {
-    V1,
-    V3,
-}
-
-impl_payable_transaction!(Deploy, token_not_supported_for_deployment,
-    DeployVersion::V1 => FeeToken::Eth,
-    DeployVersion::V3 => FeeToken::Strk
-);
-
 #[allow(clippy::ptr_arg, clippy::too_many_arguments)]
 pub async fn deploy(
     class_hash: Felt,
     calldata: &Vec<Felt>,
     salt: Option<Felt>,
     unique: bool,
-    fee_settings: FeeSettings,
+    fee_args: FeeArgs,
     nonce: Option<Felt>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
 ) -> Result<DeployResponse, StarknetCommandError> {
+    let fee_settings = fee_args
+        .try_into_fee_settings(account.provider(), account.block_id())
+        .await?;
+
     let salt = extract_or_generate_salt(salt);
     let factory = ContractFactory::new(class_hash, account);
-    let result = match fee_settings {
-        FeeSettings::Eth { max_fee } => {
-            let execution = factory.deploy_v1(calldata.clone(), salt, unique);
-            let execution = match max_fee {
-                None => execution,
-                Some(max_fee) => execution.max_fee(max_fee.into()),
-            };
-            let execution = match nonce {
-                None => execution,
-                Some(nonce) => execution.nonce(nonce),
-            };
-            execution.send().await
-        }
-        FeeSettings::Strk {
-            max_gas,
-            max_gas_unit_price,
-        } => {
-            let execution = factory.deploy_v3(calldata.clone(), salt, unique);
 
-            let execution = match max_gas {
-                None => execution,
-                Some(max_gas) => execution.gas(max_gas.into()),
-            };
-            let execution = match max_gas_unit_price {
-                None => execution,
-                Some(max_gas_unit_price) => execution.gas_price(max_gas_unit_price.into()),
-            };
-            let execution = match nonce {
-                None => execution,
-                Some(nonce) => execution.nonce(nonce),
-            };
-            execution.send().await
-        }
+    let FeeSettings {
+        max_gas,
+        max_gas_unit_price,
+    } = fee_settings;
+    let execution = factory.deploy_v3(calldata.clone(), salt, unique);
+
+    let execution = match max_gas {
+        None => execution,
+        Some(max_gas) => execution.gas(max_gas.into()),
     };
+    let execution = match max_gas_unit_price {
+        None => execution,
+        Some(max_gas_unit_price) => execution.gas_price(max_gas_unit_price.into()),
+    };
+    let execution = match nonce {
+        None => execution,
+        Some(nonce) => execution.nonce(nonce),
+    };
+    let result = execution.send().await;
 
     match result {
         Ok(result) => handle_wait_for_tx(

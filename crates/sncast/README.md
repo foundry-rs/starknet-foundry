@@ -36,8 +36,7 @@ All subcommand usages are shown for two scenarios - when all necessary arguments
 ```shell
 $ sncast --account my_account \
     declare \
-    --contract-name HelloSncast \
-    --fee-token strk
+    --contract-name HelloSncast
 ```
 
 <details>
@@ -57,8 +56,7 @@ With arguments taken from `snfoundry.toml` file (default profile name):
 <!-- { "ignored": true } -->
 ```shell
 $ sncast declare \
-    --contract-name HelloSncast \
-    --fee-token strk
+    --contract-name HelloSncast
 ```
 
 <details>
@@ -80,8 +78,7 @@ transaction_hash: [..]
 ```shell
 $ sncast --account my_account \
     deploy --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
-    --url http://127.0.0.1:5055 \
-    --fee-token strk
+    --url http://127.0.0.1:5055
 ```
 
 <details>
@@ -102,8 +99,6 @@ With arguments taken from `snfoundry.toml` file (default profile name):
 ```shell
 $ sncast deploy \
 --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
---fee-token strk
-
 ```
 
 <details>
@@ -127,8 +122,7 @@ $ sncast \
     --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
     --function "sum_numbers" \
     --arguments '1, 2, 3' \
-    --url http://127.0.0.1:5055/rpc \
-    --fee-token strk
+    --url http://127.0.0.1:5055/rpc
 ```
 
 <details>
@@ -152,8 +146,7 @@ $ sncast invoke \
     --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
     --function "sum_numbers" \
     --arguments '1, 2, 3' \
-    --url http://127.0.0.1:5055/rpc \
-    --fee-token strk
+    --url http://127.0.0.1:5055/rpc
 ```
 
 <details>

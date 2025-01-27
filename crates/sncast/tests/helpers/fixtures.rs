@@ -537,6 +537,7 @@ pub fn assert_tx_entry_failed(
     status: ScriptTransactionStatus,
     msg_contains: Vec<&str>,
 ) {
+    dbg!(&tx_entry);
     assert_eq!(tx_entry.name, name);
     assert_eq!(tx_entry.status, status);
 
@@ -618,8 +619,6 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
         "my_account",
         "--max-fee",
         "99999999999999999",
-        "--fee-token",
-        "eth",
     ];
 
     runner(&args).current_dir(tempdir.path()).assert().success();

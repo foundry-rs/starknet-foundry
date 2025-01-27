@@ -1,11 +1,15 @@
 use sncast_std::{
     declare, deploy, invoke, call, DeclareResult, DeployResult, DeclareResultTrait, InvokeResult,
-    CallResult, get_nonce, FeeSettings, EthFeeSettings
+    CallResult, get_nonce, FeeSettings
 };
 
 fn second_contract() {
     let declare_result = declare(
-        "Mapa2", FeeSettings::Eth(EthFeeSettings { max_fee: Option::None }), Option::None
+        "Mapa2",
+        FeeSettings {
+            max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None
+        },
+        Option::None
     )
         .expect('mapa2 declare failed');
 
@@ -14,7 +18,9 @@ fn second_contract() {
         ArrayTrait::new(),
         Option::None,
         false,
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::None }),
+        FeeSettings {
+            max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None
+        },
         Option::None
     )
         .expect('mapa deploy failed');
@@ -24,7 +30,9 @@ fn second_contract() {
         deploy_result.contract_address,
         selector!("put"),
         array![0x1, 0x3],
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::None }),
+        FeeSettings {
+            max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None
+        },
         Option::None
     )
         .expect('mapa2 invoke failed');
@@ -42,7 +50,9 @@ fn main() {
     let declare_nonce = get_nonce('latest');
     let declare_result = declare(
         "Mapa",
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        FeeSettings {
+            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+        },
         Option::Some(declare_nonce)
     )
         .expect('mapa declare failed');
@@ -54,7 +64,9 @@ fn main() {
         ArrayTrait::new(),
         Option::Some(salt),
         true,
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        FeeSettings {
+            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+        },
         Option::Some(deploy_nonce)
     )
         .expect('mapa deploy failed');
@@ -65,7 +77,9 @@ fn main() {
         deploy_result.contract_address,
         selector!("put"),
         array![0x1, 0x2],
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        FeeSettings {
+            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+        },
         Option::Some(invoke_nonce)
     )
         .expect('mapa invoke failed');

@@ -10,8 +10,8 @@ pub struct ErrorData {
 
 #[derive(Drop, PartialEq, Serde, Debug)]
 pub struct TransactionExecutionErrorData {
-    transaction_index: felt252,
-    execution_error: ByteArray,
+    pub transaction_index: felt252,
+    pub execution_error: ByteArray,
 }
 
 #[derive(Drop, Serde, PartialEq, Debug)]
@@ -223,23 +223,11 @@ impl DisplayDeployResult of Display<DeployResult> {
     }
 }
 #[derive(Drop, Copy, Debug, Serde, PartialEq)]
-pub enum FeeSettings {
-    Eth: EthFeeSettings,
-    Strk: StrkFeeSettings
-}
-
-#[derive(Drop, Copy, Debug, Serde, PartialEq)]
-pub struct EthFeeSettings {
-    pub max_fee: Option<felt252>,
-}
-
-#[derive(Drop, Copy, Debug, Serde, PartialEq)]
-pub struct StrkFeeSettings {
+pub struct FeeSettings {
     pub max_fee: Option<felt252>,
     pub max_gas: Option<u64>,
     pub max_gas_unit_price: Option<u128>,
 }
-
 
 pub fn deploy(
     class_hash: ClassHash,
