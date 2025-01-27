@@ -1,7 +1,9 @@
 use crate::starknet_commands::{
-    account, account::Account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke,
+    account, account::import::generate_account_name, account::Account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke,
     multicall::Multicall, script::Script, show_config::ShowConfig, tx_status::TxStatus,
 };
+// use crate::starknet_commands::account::import::generate_account_name;
+
 use anyhow::{Context, Result};
 use data_transformer::Calldata;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
@@ -514,7 +516,7 @@ async fn run_async_command(
                     create
                         .name
                         .clone()
-                        .context("Required argument `--name` not provided")?
+                        .unwrap_or_else(|| generate_account_name(&config.accounts_file).unwrap())
                 } else {
                     config.account.clone()
                 };

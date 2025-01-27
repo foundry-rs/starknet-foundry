@@ -1,4 +1,3 @@
-use crate::starknet_commands::account::import::generate_account_name;
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
     AccountType,
@@ -79,13 +78,6 @@ pub async fn create(
     });
     check_class_hash_exists(provider, class_hash).await?;
 
-    // Default account name if none
-    let account_name = if create.name.is_none() {
-        generate_account_name(accounts_file)?
-    } else {
-        create.name.clone().unwrap()
-    };
-
     let (account_json, max_fee) =
         generate_account(provider, salt, class_hash, &create.account_type).await?;
 
@@ -132,7 +124,7 @@ pub async fn create(
     if add_profile.is_some() {
         let config = CastConfig {
             url: rpc_url,
-            account: account_name,
+            account: account.to_string(),
             accounts_file: accounts_file.into(),
             keystore,
             ..Default::default()
