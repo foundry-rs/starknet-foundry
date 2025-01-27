@@ -25,6 +25,7 @@ pub mod scarb;
 mod shared_cache;
 pub mod test_filter;
 mod warn;
+mod clean;
 
 pub const CAIRO_EDITION: &str = "2024_07";
 
@@ -86,10 +87,29 @@ enum ForgeSubcommand {
         #[command(flatten)]
         args: NewArgs,
     },
+    Clean {
+        #[command(flatten)]
+        args: CleanArgs,
+    },
     /// Clean Forge cache directory
+    #[deprecated(note = "Use `snforge clean cache` instead")]
     CleanCache {},
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
+}
+
+#[derive(Parser, Debug)]
+pub struct CleanArgs {
+    #[arg(num_args = 1.., required = true)]
+    pub clean_components: Vec<CleanComponent>,
+}
+
+#[derive(ValueEnum, Debug, Clone)]
+pub enum CleanComponent {
+    Coverage,
+    Profile,
+    Cache,
+    All,
 }
 
 #[derive(ValueEnum, Debug, Clone)]
@@ -202,6 +222,10 @@ pub fn main_execution() -> Result<ExitStatus> {
         }
         ForgeSubcommand::New { args } => {
             new::new(args)?;
+            Ok(ExitStatus::Success)
+        }
+        ForgeSubcommand::Clean { args } => {
+            clean::clean(args)?;
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::CleanCache {} => {
