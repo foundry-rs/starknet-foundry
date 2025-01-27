@@ -1,15 +1,9 @@
-use core::array::ArrayTrait;
-use core::option::OptionTrait;
-use starknet::testing::cheatcode;
 use starknet::{ContractAddress, EthAddress};
-use super::super::_cheatcode::handle_cheatcode;
+use super::super::_cheatcode::execute_cheatcode_and_deserialize;
 
 /// Creates `MessageToL1Spy` instance that spies on all messages sent to L1
 pub fn spy_messages_to_l1() -> MessageToL1Spy {
-    let mut message_offset = handle_cheatcode(cheatcode::<'spy_messages_to_l1'>(array![].span()));
-    let parsed_message_offset: usize = Serde::<usize>::deserialize(ref message_offset).unwrap();
-
-    MessageToL1Spy { message_offset: parsed_message_offset }
+    execute_cheatcode_and_deserialize::<'spy_messages_to_l1'>(array![].span())
 }
 
 /// Raw message to L1 format (as seen via the RPC-API), can be used for asserting the sent messages.
@@ -40,13 +34,9 @@ pub trait MessageToL1SpyTrait {
 
 impl MessageToL1SpyTraitImpl of MessageToL1SpyTrait {
     fn get_messages(ref self: MessageToL1Spy) -> MessagesToL1 {
-        let mut output = handle_cheatcode(
-            cheatcode::<'get_messages_to_l1'>(array![self.message_offset.into()].span())
-        );
-        let messages = Serde::<Array<(ContractAddress, MessageToL1)>>::deserialize(ref output)
-            .unwrap();
-
-        MessagesToL1 { messages }
+        execute_cheatcode_and_deserialize::<
+            'get_messages_to_l1'
+        >(array![self.message_offset.into()].span())
     }
 }
 
@@ -144,4 +134,3 @@ fn is_sent(
     };
     return is_emitted;
 }
-

@@ -1,6 +1,5 @@
 use starknet::{ContractAddress, ClassHash, contract_address_const};
-use starknet::testing::cheatcode;
-use super::_cheatcode::handle_cheatcode;
+use super::_cheatcode::execute_cheatcode_and_deserialize;
 
 pub mod events;
 pub mod l1_handler;
@@ -58,7 +57,7 @@ pub fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct
 
     ret_data_arr.serialize(ref inputs);
 
-    handle_cheatcode(cheatcode::<'mock_call'>(inputs.span()));
+    execute_cheatcode_and_deserialize::<'mock_call', ()>(inputs.span());
 }
 
 
@@ -81,7 +80,7 @@ pub fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: De
 
     ret_data_arr.serialize(ref inputs);
 
-    handle_cheatcode(cheatcode::<'mock_call'>(inputs.span()));
+    execute_cheatcode_and_deserialize::<'mock_call', ()>(inputs.span());
 }
 
 /// Cancels the `mock_call` / `start_mock_call` for the function with given name and contract
@@ -91,9 +90,9 @@ pub fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: De
 /// macro)
 pub fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252) {
     let contract_address_felt: felt252 = contract_address.into();
-    handle_cheatcode(
-        cheatcode::<'stop_mock_call'>(array![contract_address_felt, function_selector].span())
-    );
+    execute_cheatcode_and_deserialize::<
+        'stop_mock_call', ()
+    >(array![contract_address_felt, function_selector].span());
 }
 
 #[derive(Drop, Serde, PartialEq, Debug)]
@@ -114,9 +113,7 @@ pub enum ReplaceBytecodeError {
 pub fn replace_bytecode(
     contract: ContractAddress, new_class: ClassHash
 ) -> Result<(), ReplaceBytecodeError> {
-    let mut cheat_result = handle_cheatcode(
-        cheatcode::<'replace_bytecode'>(array![contract.into(), new_class.into()].span())
-    );
-
-    Serde::deserialize(ref cheat_result).unwrap()
+    execute_cheatcode_and_deserialize::<
+        'replace_bytecode'
+    >(array![contract.into(), new_class.into()].span())
 }

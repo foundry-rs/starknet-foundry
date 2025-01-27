@@ -1,17 +1,15 @@
 use core::ecdsa::check_ecdsa_signature;
 use core::ec::{EcPointImpl, EcPoint, stark_curve};
-use super::super::_cheatcode::handle_cheatcode;
+use super::super::_cheatcode::execute_cheatcode_and_deserialize;
 use super::SignError;
-
-use starknet::testing::cheatcode;
 
 use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 
 pub impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
     fn generate() -> KeyPair<felt252, felt252> {
-        let mut output = handle_cheatcode(cheatcode::<'generate_stark_keys'>(array![].span()));
-
-        let (secret_key, public_key): (felt252, felt252) = Serde::deserialize(ref output).unwrap();
+        let (secret_key, public_key) = execute_cheatcode_and_deserialize::<
+            'generate_stark_keys', (felt252, felt252)
+        >(array![].span());
 
         KeyPair { secret_key, public_key }
     }
@@ -37,11 +35,9 @@ pub impl StarkCurveSignerImpl of SignerTrait<
     fn sign(
         self: KeyPair<felt252, felt252>, message_hash: felt252
     ) -> Result<(felt252, felt252), SignError> {
-        let mut output = handle_cheatcode(
-            cheatcode::<'stark_sign_message'>(array![self.secret_key, message_hash].span())
-        );
-
-        Serde::deserialize(ref output).unwrap()
+        execute_cheatcode_and_deserialize::<
+            'stark_sign_message'
+        >(array![self.secret_key, message_hash].span())
     }
 }
 
