@@ -33,6 +33,8 @@ use starknet_types_core::felt::Felt;
 use std::any::Any;
 use std::collections::HashMap;
 use std::io;
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use thiserror::Error;
 
 pub mod starknet;
@@ -57,11 +59,11 @@ const CAIRO_TEST_CHEATCODES: [&str; 14] = [
 pub trait SyscallPtrAccess {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable;
 
-    fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> DeprecatedSyscallResult<()>;
+    fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> SyscallResult<()>;
 }
 
 pub struct StarknetRuntime<'a> {
-    pub hint_handler: DeprecatedSyscallHintProcessor<'a>,
+    pub hint_handler: SyscallHintProcessor<'a>,
 }
 
 impl SyscallPtrAccess for StarknetRuntime<'_> {
@@ -69,7 +71,7 @@ impl SyscallPtrAccess for StarknetRuntime<'_> {
         &mut self.hint_handler.syscall_ptr
     }
 
-    fn verify_syscall_ptr(&self, ptr: Relocatable) -> DeprecatedSyscallResult<()> {
+    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
         self.hint_handler.verify_syscall_ptr(ptr)
     }
 }
