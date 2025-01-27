@@ -80,11 +80,15 @@ pub async fn deploy(
     calldata: &Vec<Felt>,
     salt: Option<Felt>,
     unique: bool,
-    fee_settings: FeeSettings,
+    fee_args: FeeArgs,
     nonce: Option<Felt>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
 ) -> Result<DeployResponse, StarknetCommandError> {
+    let fee_settings = fee_args
+        .try_into_fee_settings(account.provider(), account.block_id())
+        .await?;
+
     let salt = extract_or_generate_salt(salt);
     let factory = ContractFactory::new(class_hash, account);
     let result = match fee_settings {

@@ -28,7 +28,6 @@ use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_class_hash_by_address,
     get_contract_class, get_default_state_file_name, NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
-use starknet::accounts::ConnectedAccount;
 use starknet::core::types::ContractClass;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
@@ -290,8 +289,6 @@ async fn run_async_command(
         }
 
         Commands::Deploy(deploy) => {
-            let fee_token = deploy.validate_and_get_token()?;
-
             let Deploy {
                 arguments,
                 fee_args,
@@ -309,12 +306,6 @@ async fn run_async_command(
             )
             .await?;
 
-            let fee_settings = fee_args
-                .clone()
-                .fee_token(fee_token)
-                .try_into_fee_settings(&provider, account.block_id())
-                .await?;
-
             // safe to unwrap because "constructor" is a standardized name
             let selector = get_selector_from_name("constructor").unwrap();
 
@@ -328,7 +319,7 @@ async fn run_async_command(
                 &calldata,
                 deploy.salt,
                 deploy.unique,
-                fee_settings,
+                fee_args,
                 deploy.nonce,
                 &account,
                 wait_config,
