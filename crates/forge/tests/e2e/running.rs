@@ -1158,3 +1158,31 @@ fn call_nonexistent_selector() {
         "},
     );
 }
+
+#[test]
+fn create_new_project_and_check_gitignore() {
+    let temp = tempdir_with_tool_versions().unwrap();
+    let project_path = temp.join("project");
+
+    // Crear un nuevo proyecto
+    runner(&temp)
+        .args(["new", "--name", "test_name"])
+        .arg(&project_path)
+        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
+        .assert()
+        .success();
+
+    // Validar la inicialización del proyecto
+    validate_init(&project_path, false);
+
+    // Verificar el contenido del archivo .gitignore
+    let gitignore_path = project_path.join(".gitignore");
+    assert!(gitignore_path.exists(), ".gitignore file should exist");
+
+    let gitignore_content = fs::read_to_string(gitignore_path).unwrap();
+    assert!(gitignore_content.contains(".snfoundry_cache/"), "Missing .snfoundry_cache/");
+    assert!(gitignore_content.contains("snfoundry_trace/"), "Missing snfoundry_trace/");
+    assert!(gitignore_content.contains("coverage/"), "Missing coverage/");
+    assert!(gitignore_content.contains("profile/"), "Missing profile/");
+}
+
