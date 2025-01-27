@@ -6,7 +6,7 @@ use super::{
 use crate::{package_tests::TestDetails, running::build_syscall_handler};
 use anyhow::Result;
 use blockifier::{
-    blockifier::block::{BlockInfo, GasPrices},
+    blockifier::block::GasPrices,
     state::{cached_state::CachedState, state_api::StateReader},
 };
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
@@ -14,7 +14,7 @@ use cheatnet::runtime_extensions::forge_config_extension::{
     config::RawForgeConfig, ForgeConfigExtension,
 };
 use runtime::{starknet::context::build_context, ExtendedRuntime, StarknetRuntime};
-use starknet_api::block::{BlockNumber, BlockTimestamp};
+use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp};
 use starknet_types_core::felt::Felt;
 use std::{default::Default, num::NonZeroU128};
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
