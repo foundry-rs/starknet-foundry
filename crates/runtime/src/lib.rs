@@ -3,7 +3,6 @@ use blockifier::execution::deprecated_syscalls::hint_processor::DeprecatedSyscal
 use blockifier::execution::deprecated_syscalls::{
     DeprecatedSyscallResult, DeprecatedSyscallSelector,
 };
-use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use blockifier::state::errors::StateError;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
@@ -58,7 +57,7 @@ const CAIRO_TEST_CHEATCODES: [&str; 14] = [
 pub trait SyscallPtrAccess {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable;
 
-    fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> SyscallResult<()>;
+    fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> DeprecatedSyscallResult<()>;
 }
 
 pub struct StarknetRuntime<'a> {
@@ -362,7 +361,7 @@ impl<Extension: ExtensionLogic> SyscallPtrAccess for ExtendedRuntime<Extension> 
         self.extended_runtime.get_mut_syscall_ptr()
     }
 
-    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
+    fn verify_syscall_ptr(&self, ptr: Relocatable) -> DeprecatedSyscallResult<()> {
         self.extended_runtime.verify_syscall_ptr(ptr)
     }
 }

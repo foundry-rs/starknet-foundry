@@ -25,6 +25,7 @@ use cairo_vm::{
 use runtime::{SyscallHandlingResult, SyscallPtrAccess};
 use starknet_types_core::felt::Felt;
 use std::{any::Any, collections::HashMap};
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallResult;
 
 pub struct DeprecatedStarknetRuntime<'a> {
     pub hint_handler: DeprecatedSyscallHintProcessor<'a>,
@@ -175,7 +176,7 @@ impl<Extension: DeprecatedExtensionLogic> SyscallPtrAccess
         self.extended_runtime.get_mut_syscall_ptr()
     }
 
-    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
+    fn verify_syscall_ptr(&self, ptr: Relocatable) -> DeprecatedSyscallResult<()> {
         self.extended_runtime.verify_syscall_ptr(ptr)
     }
 }
