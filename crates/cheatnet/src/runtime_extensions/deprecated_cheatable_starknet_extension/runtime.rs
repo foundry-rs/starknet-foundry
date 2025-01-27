@@ -176,7 +176,7 @@ impl<Extension: DeprecatedExtensionLogic> SyscallPtrAccess
         self.extended_runtime.get_mut_syscall_ptr()
     }
 
-    fn verify_syscall_ptr(&self, ptr: Relocatable) -> DeprecatedSyscallResult<()> {
+    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
         self.extended_runtime.verify_syscall_ptr(ptr)
     }
 }
