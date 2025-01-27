@@ -5333,6 +5333,7 @@ dependencies = [
  "sha3",
  "starknet-crypto 0.7.4",
  "starknet-types-core",
+ "starknet_infra_utils",
  "strum 0.25.0",
  "strum_macros 0.25.3",
  "thiserror 1.0.69",

@@ -206,10 +206,7 @@ impl StateReader for ForkStateReader {
         }
     }
 
-    fn get_compiled_class(
-        &self,
-        class_hash: ClassHash,
-    ) -> StateResult<ContractClassBlockifier> {
+    fn get_compiled_class(&self, class_hash: ClassHash) -> StateResult<ContractClassBlockifier> {
         let mut cache = self.cache.borrow_mut();
 
         let contract_class = {

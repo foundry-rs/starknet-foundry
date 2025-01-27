@@ -1,4 +1,3 @@
-use blockifier::blockifier::block::GasPrices;
 use blockifier::bouncer::BouncerConfig;
 use blockifier::context::{BlockContext, ChainInfo, FeeTokenAddresses, TransactionContext};
 use blockifier::execution::common_hints::ExecutionMode;
@@ -10,14 +9,16 @@ use blockifier::versioned_constants::VersionedConstants;
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use conversions::string::TryFromHexStr;
 use serde::{Deserialize, Serialize};
+use starknet_api::block::GasPrices;
 use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp, GasPrice};
 use starknet_api::data_availability::DataAvailabilityMode;
 use starknet_api::execution_resources::GasAmount;
+use starknet_api::transaction::fields::TransactionSignature;
 use starknet_api::transaction::fields::{AllResourceBounds, ResourceBounds, ValidResourceBounds};
 use starknet_api::{
     contract_address,
     core::{ChainId, ContractAddress, Nonce},
-    transaction::{TransactionHash, TransactionSignature, TransactionVersion},
+    transaction::{TransactionHash, TransactionVersion},
 };
 use starknet_types_core::felt::Felt;
 use std::num::NonZeroU128;

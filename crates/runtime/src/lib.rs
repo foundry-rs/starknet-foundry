@@ -3,7 +3,7 @@ use blockifier::execution::deprecated_syscalls::hint_processor::DeprecatedSyscal
 use blockifier::execution::deprecated_syscalls::{
     DeprecatedSyscallResult, DeprecatedSyscallSelector,
 };
-use blockifier::execution::syscalls::SyscallResult;
+use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use blockifier::state::errors::StateError;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};

@@ -1,7 +1,7 @@
-use blockifier::execution::contract_class::ContractClass;
 use blockifier::state::cached_state::StorageEntry;
 use blockifier::state::errors::StateError;
 use blockifier::state::state_api::{StateReader, StateResult};
+use starknet_api::contract_class::ContractClass;
 use starknet_api::core::CompiledClassHash;
 use starknet_api::core::{ClassHash, ContractAddress, Nonce};
 use starknet_api::state::StorageKey;
