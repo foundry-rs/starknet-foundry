@@ -50,9 +50,7 @@ async fn test_wrong_contract_name(account: &str) {
     );
 }
 
-// FIXME error from devnet doesn't match
 #[tokio::test]
-#[ignore]
 async fn test_same_contract_twice() {
     let contract_dir = duplicate_contract_directory_with_salt(
         SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
