@@ -1,7 +1,7 @@
 use blockifier::bouncer::BouncerConfig;
 use blockifier::context::{BlockContext, ChainInfo, FeeTokenAddresses, TransactionContext};
 use blockifier::execution::common_hints::ExecutionMode;
-use blockifier::execution::entry_point::EntryPointExecutionContext;
+use blockifier::execution::entry_point::{EntryPointExecutionContext, SierraGasRevertTracker};
 use blockifier::transaction::objects::{
     CommonAccountFields, CurrentTransactionInfo, TransactionInfo,
 };
@@ -99,7 +99,7 @@ pub fn build_context(
 ) -> EntryPointExecutionContext {
     let transaction_context = Arc::new(build_transaction_context(block_info, chain_id));
 
-    EntryPointExecutionContext::new(transaction_context, ExecutionMode::Execute, false).unwrap()
+    EntryPointExecutionContext::new(transaction_context, ExecutionMode::Execute, false, SierraGasRevertTracker::new(GasAmount::from(100000_u64)))
 }
 
 pub fn set_max_steps(entry_point_ctx: &mut EntryPointExecutionContext, max_n_steps: u32) {
@@ -172,23 +172,13 @@ impl From<BlockInfo> for SerializableBlockInfo {
     }
 }
 impl From<SerializableGasPrices> for GasPrices {
-    fn from(forge_gas_prices: SerializableGasPrices) -> Self {
-        Self {
-            eth_l1_gas_price: forge_gas_prices.eth_l1_gas_price,
-            strk_l1_gas_price: forge_gas_prices.strk_l1_gas_price,
-            eth_l1_data_gas_price: forge_gas_prices.eth_l1_data_gas_price,
-            strk_l1_data_gas_price: forge_gas_prices.strk_l1_data_gas_price,
-        }
+    fn from(_forge_gas_prices: SerializableGasPrices) -> Self {
+        GasPrices::default()
     }
 }
 
 impl From<GasPrices> for SerializableGasPrices {
-    fn from(gas_prices: GasPrices) -> Self {
-        Self {
-            eth_l1_gas_price: gas_prices.eth_l1_gas_price,
-            strk_l1_gas_price: gas_prices.strk_l1_gas_price,
-            eth_l1_data_gas_price: gas_prices.eth_l1_data_gas_price,
-            strk_l1_data_gas_price: gas_prices.strk_l1_data_gas_price,
-        }
+    fn from(_gas_prices: GasPrices) -> Self {
+        SerializableGasPrices::default()
     }
 }
