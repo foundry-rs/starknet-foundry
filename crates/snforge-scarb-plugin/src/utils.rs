@@ -1,4 +1,6 @@
 use cairo_lang_macro::{Diagnostic, Severity};
+use cairo_lang_syntax::node::db::SyntaxGroup;
+use cairo_lang_syntax::node::TypedSyntaxNode;
 use indoc::formatdoc;
 
 pub fn higher_severity(a: Severity, b: Severity) -> Severity {
@@ -52,4 +54,14 @@ macro_rules! branch {
             })
         }
     }};
+}
+
+pub trait TypedSyntaxNodeAsText {
+    fn as_text(&self, db: &dyn SyntaxGroup) -> String;
+}
+
+impl<T: TypedSyntaxNode> TypedSyntaxNodeAsText for T {
+    fn as_text(&self, db: &dyn SyntaxGroup) -> String {
+        self.as_syntax_node().get_text(db)
+    }
 }

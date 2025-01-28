@@ -10,6 +10,8 @@ use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_syntax::node::db::SyntaxGroup;
 use num_bigint::BigInt;
 
+pub const FUZZABLE_PATH: &str = "snforge_std::fuzzable::Fuzzable";
+
 pub struct FuzzerCollector;
 
 impl AttributeInfo for FuzzerCollector {

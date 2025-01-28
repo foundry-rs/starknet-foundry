@@ -1,4 +1,4 @@
-use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN};
+use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN, FN_WITH_PARAM};
 use cairo_lang_macro::{Diagnostic, TokenStream};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::fuzzer::fuzzer;
@@ -27,8 +27,15 @@ fn work_without_args() {
 
                     starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
+                    empty_fn_actual_body();
+
                     return;
                 }
+                empty_fn_actual_body();
+            }
+
+            #[__internal_config_statement]
+            fn empty_fn_actual_body() {
             }
         ",
     );
@@ -58,8 +65,15 @@ fn work_with_both_args() {
 
                     starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
+                    empty_fn_actual_body();
+
                     return;
                 }
+                empty_fn_actual_body();
+            }
+
+            #[__internal_config_statement]
+            fn empty_fn_actual_body() {
             }
         ",
     );
@@ -89,8 +103,15 @@ fn work_with_runs_only() {
 
                     starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
+                    empty_fn_actual_body();
+
                     return;
                 }
+                empty_fn_actual_body();
+            }
+
+            #[__internal_config_statement]
+            fn empty_fn_actual_body() {
             }
         ",
     );
@@ -120,8 +141,52 @@ fn work_with_seed_only() {
 
                     starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
+                    empty_fn_actual_body();
+
                     return;
                 }
+                empty_fn_actual_body();
+            }
+            #[__internal_config_statement]
+            fn empty_fn_actual_body() {
+            }
+        ",
+    );
+}
+
+#[test]
+fn work_with_fn_with_param() {
+    let item = TokenStream::new(FN_WITH_PARAM.into());
+    let args = TokenStream::new(String::new());
+
+    let result = fuzzer(args, item);
+
+    assert_diagnostics(&result, &[]);
+
+    assert_output(
+        &result,
+        "
+            fn empty_fn() {
+                if snforge_std::_internals::_is_config_run() {
+                    let mut data = array![];
+
+                    snforge_std::_config_types::FuzzerConfig {
+                        seed: Option::None,
+                        runs: Option::None
+                    }
+                    .serialize(ref data);
+
+                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
+
+                    empty_fn_actual_body(snforge_std::fuzzable::Fuzzable::blank());
+
+                    return;
+                }
+                let f: felt252 = snforge_std::fuzzable::Fuzzable::generate();
+                empty_fn_actual_body(f);
+            }
+            #[__internal_config_statement]
+            fn empty_fn_actual_body(f: felt252) {
             }
         ",
     );
