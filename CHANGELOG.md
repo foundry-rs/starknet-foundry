@@ -12,8 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 - Added a suggestion for using the `--max-n-steps` flag when the Cairo VM returns the error: `Could not reach the end of the program. RunResources has no remaining steps`.
 
-#### Changed
-- Modified tests to properly display the `--max-n-steps` suggestion when the above error occurs.
 
 ## [0.36.0] - 2025-01-15
 
