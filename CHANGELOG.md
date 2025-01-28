@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- coverage validation now supports comments is `Scarb.toml` values
+- coverage validation now supports comments in `Scarb.toml`
 
 ## [0.36.0] - 2025-01-15
 
