@@ -34,7 +34,4 @@ jobs:
           close-pr-message: false
 
       - name: Logs
-        if: ${{ steps.stale-bot.outputs.staled-issues-prs != '' || steps.stale-bot.outputs.closed-issues-prs != '' }}
-        run: |
-          echo "Staled PRs: ${{ steps.stale-bot.outputs.staled-issues-prs }}"
-          echo "Closed PRs: ${{ steps.stale-bot.outputs.closed-issues-prs }}"
+        run: echo ${{ format('{0},{1}', toJSON(steps.stale.outputs.staled-issues-prs), toJSON(steps.stale.outputs.closed-issues-prs)) }}
