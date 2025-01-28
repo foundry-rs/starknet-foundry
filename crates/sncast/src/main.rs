@@ -3,7 +3,6 @@ use crate::starknet_commands::{
     declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall, script::Script,
     show_config::ShowConfig, tx_status::TxStatus,
 };
-// use crate::starknet_commands::account::import::generate_account_name;
 
 use anyhow::{Context, Result};
 use data_transformer::Calldata;

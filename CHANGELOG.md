@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- `account` `create` `--name` is now optional (default name is generated)
+- `--name` flag is now optional when using `account create` (default name is generated) 
 
 ## [0.36.0] - 2025-01-15
 
