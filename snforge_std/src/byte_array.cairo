@@ -1,4 +1,3 @@
-use core::option::OptionTrait;
 use core::byte_array::BYTE_ARRAY_MAGIC;
 
 pub fn byte_array_as_felt_array(self: @ByteArray) -> Array<felt252> {

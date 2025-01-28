@@ -33,7 +33,7 @@ Let's use `sncast` to call a contract's function:
 <!-- { "ignored": true } -->
 ```shell
 $ sncast call \
-    --url http://127.0.0.1:5055 \
+    --network sepolia \
     --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \
     --function "pokemon" \
     --arguments '"Charizard"' \
@@ -51,8 +51,15 @@ response: [0x0, 0x0, 0x43686172697a617264, 0x9, 0x0, 0x0, 0x41a78e741e5af2fec34b
 <br>
 
 > 📝 **Note**
-> In the above example we supply `sncast` with `--account` and `--url` flags. If `snfoundry.toml` is present, and have these properties set, values provided using these flags will override values from `snfoundry.toml`. Learn more about `snfoundry.toml` configuration [here](../projects/configuration.md#sncast).
+> In the above example we supply `sncast` with `--account` flag. If `snfoundry.toml` is present, and have this property set, value provided using this flags will override value from `snfoundry.toml`. Learn more about `snfoundry.toml` configuration [here](../projects/configuration.md#sncast).
 
+### Network and RPC Providers
+
+When providing `--network` flag, `sncast` will randomly select on of the free RPC providers.
+When using free provider you may experience rate limits and other unexpected behavior.
+
+If using `sncast` extensively, we recommend getting access to a dedicated RPC node and providing its URL to sncast with
+`--url` flag.
 
 ### Arguments
 
@@ -87,7 +94,7 @@ Let's invoke a transaction and wait for it to be `ACCEPTED_ON_L2`.
 $ sncast --account my_account \
     --wait \
     deploy \
-	--url http://127.0.0.1:5055 \
+	--network sepolia \
     --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
     --fee-token strk
 ```
