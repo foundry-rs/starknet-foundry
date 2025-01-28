@@ -5,8 +5,8 @@ on:
     - cron: '0 7 * * 1-5'
 
 env:
-  DAYS_BEFORE_STALE: 60
-  DAYS_BEFORE_CLOSE: 7
+  DAYS_BEFORE_STALE: 30
+  DAYS_BEFORE_CLOSE: 14
 
 jobs:
   stale:
