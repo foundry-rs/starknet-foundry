@@ -107,7 +107,7 @@ jobs:
 
           OUTPUT_BINARY="${PACKAGE_NAME}_v${PACKAGE_VERSION}_${TARGET}.${EXT}"
 
-          cp ./target/${TARGET}/release/*.${EXT} ./target/${TARGET}/release/${OUTPUT_BINARY}
+          mv ./target/${TARGET}/release/*.${EXT} ./target/${TARGET}/release/${OUTPUT_BINARY}
 
           echo "OUTPUT_BINARY_PATH=./target/${TARGET}/release/${OUTPUT_BINARY}" >> $GITHUB_ENV
 
