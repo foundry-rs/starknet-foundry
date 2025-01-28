@@ -6,7 +6,6 @@ use rand::Rng;
 mod arguments;
 mod random;
 
-pub use random::RandomFuzzer;
 use std::num::NonZeroU32;
 
 #[derive(Debug, Clone)]
