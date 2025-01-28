@@ -5,7 +5,6 @@ use sncast_std::{
 
 fn main() {
     println!("test");
-    let max_fee = 99999999999999999;
     let salt = 0x3;
 
     let declare_nonce = get_nonce('latest');
@@ -15,7 +14,7 @@ fn main() {
     let declare_result = declare(
         "Mapa",
         FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+            max_fee: Option::None, max_gas: Option::Some(999999), max_gas_unit_price: Option::Some(100000000000)
         },
         Option::Some(declare_nonce)
     )
@@ -31,7 +30,7 @@ fn main() {
         Option::Some(salt),
         true,
         FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+            max_fee: Option::None, max_gas: Option::Some(999999), max_gas_unit_price: Option::Some(100000000000)
         },
         Option::Some(deploy_nonce)
     )
@@ -47,7 +46,7 @@ fn main() {
         selector!("put"),
         array![0x1, 0x2],
         FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+            max_fee: Option::None, max_gas: Option::Some(999999), max_gas_unit_price: Option::Some(100000000000)
         },
         Option::Some(invoke_nonce)
     )

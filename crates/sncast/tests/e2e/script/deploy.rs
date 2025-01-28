@@ -98,7 +98,7 @@ async fn test_same_salt_and_class_hash_deployed_twice() {
         output,
         indoc! {r#"
         [..]
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
+        ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Transaction execution has failed:
         [..]
         [..]: Error in the contract class constructor ([..]):
         Requested ContractAddress(PatriciaKey([..])) is unavailable for deployment.
@@ -135,7 +135,7 @@ async fn test_invalid_class_hash() {
         output,
         indoc! {r#"
         [..]
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
+        ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Transaction execution has failed:
         [..]
         [..]: Error in the contract class constructor ([..]):
         Class with hash [..] is not declared.
@@ -172,7 +172,7 @@ async fn test_invalid_call_data() {
         output,
         indoc! {r#"
         [..]
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
+        ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Transaction execution has failed:
         [..]
         [..]: Error in the contract class constructor ([..]):
         Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
@@ -208,7 +208,7 @@ async fn test_invalid_nonce() {
     assert_stdout_contains(
         output,
         indoc! {"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: \"Account transaction nonce is invalid.\" })))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InvalidTransactionNonce(())))
         command: script run
         status: success
         "},

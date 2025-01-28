@@ -31,14 +31,7 @@ fn main() {
 
     assert(
         ScriptCommandError::ProviderError(
-            ProviderError::StarknetError(
-                StarknetError::TransactionExecutionError(
-                    TransactionExecutionErrorData {
-                        transaction_index: 0,
-                        execution_error: "Account transaction nonce is invalid."
-                    }
-                )
-            )
+            ProviderError::StarknetError(StarknetError::InvalidTransactionNonce)
         ) == deploy_result,
         'ohno'
     )
