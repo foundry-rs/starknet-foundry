@@ -14,7 +14,9 @@ fn main() {
     let declare_result = declare(
         "Mapa",
         FeeSettings {
-            max_fee: Option::None, max_gas: Option::Some(999999), max_gas_unit_price: Option::Some(100000000000)
+            max_fee: Option::None,
+            max_gas: Option::Some(999999),
+            max_gas_unit_price: Option::Some(100000000000)
         },
         Option::Some(declare_nonce)
     )
@@ -30,7 +32,9 @@ fn main() {
         Option::Some(salt),
         true,
         FeeSettings {
-            max_fee: Option::None, max_gas: Option::Some(999999), max_gas_unit_price: Option::Some(100000000000)
+            max_fee: Option::None,
+            max_gas: Option::Some(999999),
+            max_gas_unit_price: Option::Some(100000000000)
         },
         Option::Some(deploy_nonce)
     )
@@ -46,7 +50,9 @@ fn main() {
         selector!("put"),
         array![0x1, 0x2],
         FeeSettings {
-            max_fee: Option::None, max_gas: Option::Some(999999), max_gas_unit_price: Option::Some(100000000000)
+            max_fee: Option::None,
+            max_gas: Option::Some(999999),
+            max_gas_unit_price: Option::Some(100000000000)
         },
         Option::Some(invoke_nonce)
     )
