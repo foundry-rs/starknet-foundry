@@ -201,7 +201,7 @@ fn get_private_key_from_input() -> Result<Felt> {
     parse_input_to_felt(&input)
 }
 
-fn generate_account_name(accounts_file: &Utf8PathBuf) -> Result<String> {
+pub fn generate_account_name(accounts_file: &Utf8PathBuf) -> Result<String> {
     let mut id = 1;
 
     if !accounts_file.exists() {
