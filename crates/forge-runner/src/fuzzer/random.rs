@@ -5,12 +5,14 @@ use rand::SeedableRng;
 use starknet_types_core::felt::Felt;
 use std::num::NonZeroU32;
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct RandomFuzzer {
     rng: StdRng,
     run_params: RunParams,
 }
 
+#[allow(dead_code)]
 impl RandomFuzzer {
     pub fn create(seed: u64, total_runs: NonZeroU32, arguments: &[&str]) -> Result<Self> {
         let mut rng = StdRng::seed_from_u64(seed);
