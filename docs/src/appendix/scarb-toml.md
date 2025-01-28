@@ -84,7 +84,7 @@ block_id.number = "123"
 [tool.scarb]
 allow-prebuilt-plugins = ["snforge_std"]
 ```
-It gives `scarb` privilege to download precompiled dependencies used by `snforge_std`.
+It allow `scarb` to download precompiled dependencies used by `snforge_std`.
 The `snforge_std` library depends on a Cairo plugin that is written in Rust and, by default, is compiled locally on the user's side.
 
 ### `[profile.<dev|release>.cairo]`
