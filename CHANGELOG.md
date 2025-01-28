@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Fixed
+
+- coverage validation now supports comments in `Scarb.toml`
+
 ## [0.36.0] - 2025-01-15
 
 ### Forge
