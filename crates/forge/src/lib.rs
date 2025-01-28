@@ -1,4 +1,5 @@
 use crate::compatibility_check::{create_version_parser, Requirement, RequirementsChecker};
+use anyhow::anyhow;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
@@ -7,6 +8,7 @@ use run_tests::workspace::run_for_workspace;
 use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
+use shared::print::print_as_warning;
 use std::cell::RefCell;
 use std::ffi::OsString;
 use std::process::Command;
@@ -104,11 +106,12 @@ pub struct CleanArgs {
     pub clean_components: Vec<CleanComponent>,
 }
 
-#[derive(ValueEnum, Debug, Clone)]
+#[derive(ValueEnum, Debug, Clone, PartialEq, Eq)]
 pub enum CleanComponent {
     Coverage,
     Profile,
     Cache,
+    Trace,
     All,
 }
 
@@ -229,6 +232,9 @@ pub fn main_execution() -> Result<ExitStatus> {
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::CleanCache {} => {
+            print_as_warning(&anyhow!(
+                "`snforge clean-cache` is deprecated. Use `snforge clean cache` instead"
+            ));
             let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
             let cache_dir = scarb_metadata.workspace.root.join(CACHE_DIR);
 
