@@ -31,3 +31,7 @@ accounts-file = "/path/to/account.json"
 account = "user1"
 wait-params = { timeout = 500, retry-interval = 10 }
 show-explorer-links = false
+
+[sncast.no_url]
+accounts-file = "../account-file"
+account = "user1"
