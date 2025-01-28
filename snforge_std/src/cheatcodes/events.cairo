@@ -1,15 +1,10 @@
-use core::array::ArrayTrait;
-use core::option::OptionTrait;
-use starknet::testing::cheatcode;
 use starknet::ContractAddress;
-use super::super::_cheatcode::handle_cheatcode;
+use super::super::_cheatcode::execute_cheatcode_and_deserialize;
+
 
 /// Creates `EventSpy` instance that spies on all events emitted after its creation.
 pub fn spy_events() -> EventSpy {
-    let mut event_offset = handle_cheatcode(cheatcode::<'spy_events'>(array![].span()));
-    let parsed_event_offset: usize = Serde::<usize>::deserialize(ref event_offset).unwrap();
-
-    EventSpy { event_offset: parsed_event_offset }
+    execute_cheatcode_and_deserialize::<'spy_events'>(array![].span())
 }
 
 /// Raw event format (as seen via the RPC-API), can be used for asserting the emitted events.
@@ -38,12 +33,7 @@ pub trait EventSpyTrait {
 
 impl EventSpyTraitImpl of EventSpyTrait {
     fn get_events(ref self: EventSpy) -> Events {
-        let mut output = handle_cheatcode(
-            cheatcode::<'get_events'>(array![self.event_offset.into()].span())
-        );
-        let events = Serde::<Array<(ContractAddress, Event)>>::deserialize(ref output).unwrap();
-
-        Events { events }
+        execute_cheatcode_and_deserialize::<'get_events'>(array![self.event_offset.into()].span())
     }
 }
 
