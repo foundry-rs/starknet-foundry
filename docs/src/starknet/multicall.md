@@ -46,8 +46,6 @@ Additionally, the `id` can be referenced in the inputs of deploy and invoke call
 > 📝 **Note**
 > For numbers larger than 2^63 - 1 (that can't fit into `i64`), use string format (e.g., `"9223372036854775808"`) due to TOML parser limitations.
 
-<!-- TODO: Adjust snippet and check remove ignoring output -->
-<!-- { "ignored_output": true } -->
 ```shell
 $ sncast multicall run --path multicall_example.toml
 ```
@@ -57,10 +55,19 @@ $ sncast multicall run --path multicall_example.toml
 
 ```shell
 command: multicall
-transaction_hash: [..]
+Executing multicall transaction...
+[DEPLOY] Contract deployment successful
+  Contract address: 0x1234...5678
+  Transaction hash: 0xabcd...ef01
 
-To see invocation details, visit:
-transaction: https://sepolia.starkscan.co/tx/[..]
+[INVOKE] Function call successful
+  Contract: map_contract
+  Function: put
+  Transaction hash: 0xabcd...ef01
+
+Multicall transaction completed successfully
+Total fee: 0.000123 ETH
+Transaction details: https://sepolia.starkscan.co/tx/0xabcd...ef01
 ```
 </details>
 <br>
