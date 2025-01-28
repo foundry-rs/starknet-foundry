@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Enhanced `.gitignore` generation in `snforge new` command to include additional directories and files: `.snfoundry_cache/`, `snfoundry_trace/`, `coverage/`, and `profile/`. 
+
+### Added
+- Added a new test `create_new_project_and_check_gitignore` to verify that the `.gitignore` file is correctly generated with the expected entries when a new project is created using `snforge new`.
+
 ## [0.36.0] - 2025-01-15
 
 ### Forge
@@ -794,10 +800,16 @@ Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.
 
 ### Cast
 
-#### Changed
+#### Added
 
-- dropped official support for cairo 1 compiled contracts. While they still should be working without any problems,
-from now on the only officially supported cairo compiler version is 2
+- `account add` command for importing accounts to the accounts file
+- `account create` command for creating openzeppelin accounts with starkli-style keystore
+- `account deploy` command for deploying openzeppelin accounts with starkli-style keystore
+
+### Changed
+
+- `--add-profile` no longer accepts `-a` for short
+- allow the `id` property in multicalls to be referenced in the inputs of `deploy` and `invoke` calls
 
 ## [0.7.1] - 2023-09-27
 
@@ -830,14 +842,15 @@ from now on the only officially supported cairo compiler version is 2
 
 #### Added
 
-- `account add` command for importing accounts to the accounts file
-- `account create` command for creating openzeppelin accounts with starkli-style keystore
-- `account deploy` command for deploying openzeppelin accounts with starkli-style keystore
+- Support for custom networks - accounts created on custom networks are saved in `accounts-file` under network's
+  chain_id
+- `accounts-file` field in Scarb.toml profile
+- Include the class hash of an account contract in the `accounts-file`
 
-### Changed
+#### Removed
 
-- `--add-profile` no longer accepts `-a` for short
-- allow the `id` property in multicalls to be referenced in the inputs of `deploy` and `invoke` calls
+- `--network` option together with the `network` field in Scarb.toml profile — previously used as a validation factor;
+  now networks are identified by their chain_id
 
 ## [0.6.0] - 2023-09-13
 
