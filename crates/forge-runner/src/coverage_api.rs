@@ -17,7 +17,7 @@ const MINIMAL_SCARB_VERSION: Version = Version::new(2, 8, 0);
 const CAIRO_COVERAGE_REQUIRED_ENTRIES: [(&str, &str); 3] = [
     ("unstable-add-statements-functions-debug-info", "true"),
     ("unstable-add-statements-code-locations-debug-info", "true"),
-    ("inlining-strategy", "\"avoid\""),
+    ("inlining-strategy", "avoid"),
 ];
 
 pub fn run_coverage(saved_trace_data_paths: &[PathBuf], coverage_args: &[OsString]) -> Result<()> {
@@ -104,8 +104,16 @@ pub fn can_coverage_be_generated(scarb_metadata: &Metadata) -> Result<()> {
     Ok(())
 }
 
+/// Check if the table contains an entry with the given key and value.
+/// Accepts only bool and string values.
 fn contains_entry_with_value(table: &Table, key: &str, value: &str) -> bool {
-    table
-        .get(key)
-        .is_some_and(|entry| entry.to_string().trim() == value)
+    table.get(key).is_some_and(|entry| {
+        if let Some(entry) = entry.as_bool() {
+            entry.to_string() == value
+        } else if let Some(entry) = entry.as_str() {
+            entry == value
+        } else {
+            false
+        }
+    })
 }

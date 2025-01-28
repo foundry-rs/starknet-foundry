@@ -15,6 +15,6 @@ snforge_std = { path = "../../../../../snforge_std" }
 sierra = true
 
 [profile.dev.cairo]
-unstable-add-statements-functions-debug-info = true
+unstable-add-statements-functions-debug-info = true # Comment
 unstable-add-statements-code-locations-debug-info = true
-inlining-strategy= "avoid"
+inlining-strategy= "avoid" # Comment
