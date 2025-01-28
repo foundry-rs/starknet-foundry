@@ -33,32 +33,24 @@ fn same_storage_access_call_contract() {
     let mut test_env = TestEnvironment::new();
     let contracts_data = get_contracts();
     let hello_class_hash = test_env.declare("HelloStarknet", &contracts_data);
-    let contract_address_write = test_env.deploy_wrapper(&hello_class_hash, &[]);
-    let contract_address_read = test_env.deploy_wrapper(&hello_class_hash, &[]);
-    assert_ne!(contract_address_read, contract_address_write);
+    let contract_address_a = test_env.deploy_wrapper(&hello_class_hash, &[]);
+    let contract_address_b = test_env.deploy_wrapper(&hello_class_hash, &[]);
+    assert_ne!(contract_address_b, contract_address_a);
 
-    test_env.call_contract(
-        &contract_address_write,
-        "increase_balance",
-        &[Felt::from(420)],
-    );
-    let write_balance_value = test_env.call_contract(&contract_address_write, "get_balance", &[]);
-    assert_success(write_balance_value, &[Felt::from(420)]);
+    test_env.call_contract(&contract_address_a, "increase_balance", &[Felt::from(420)]);
+    let balance_value_a = test_env.call_contract(&contract_address_a, "get_balance", &[]);
+    assert_success(balance_value_a, &[Felt::from(420)]);
 
-    let read_balance_value = test_env.call_contract(&contract_address_read, "get_balance", &[]);
-    assert_success(read_balance_value, &[Felt::from(0)]);
+    let balance_value_b = test_env.call_contract(&contract_address_b, "get_balance", &[]);
+    assert_success(balance_value_b, &[Felt::from(0)]);
 
-    test_env.call_contract(
-        &contract_address_read,
-        "increase_balance",
-        &[Felt::from(42)],
-    );
+    test_env.call_contract(&contract_address_b, "increase_balance", &[Felt::from(42)]);
 
-    let read_balance_value = test_env.call_contract(&contract_address_read, "get_balance", &[]);
-    assert_success(read_balance_value, &[Felt::from(42)]);
+    let balance_value_b = test_env.call_contract(&contract_address_b, "get_balance", &[]);
+    assert_success(balance_value_b, &[Felt::from(42)]);
 
-    let write_balance_value = test_env.call_contract(&contract_address_write, "get_balance", &[]);
-    assert_success(write_balance_value, &[Felt::from(420)]);
+    let balance_value_a = test_env.call_contract(&contract_address_a, "get_balance", &[]);
+    assert_success(balance_value_a, &[Felt::from(420)]);
 }
 
 #[test]
@@ -66,21 +58,21 @@ fn same_storage_access_store() {
     let mut test_env = TestEnvironment::new();
     let contracts_data = get_contracts();
     let hello_class_hash = test_env.declare("HelloStarknet", &contracts_data);
-    let contract_address_write = test_env.deploy_wrapper(&hello_class_hash, &[]);
-    let contract_address_read = test_env.deploy_wrapper(&hello_class_hash, &[]);
-    assert_ne!(contract_address_read, contract_address_write);
+    let contract_address_a = test_env.deploy_wrapper(&hello_class_hash, &[]);
+    let contract_address_b = test_env.deploy_wrapper(&hello_class_hash, &[]);
+    assert_ne!(contract_address_b, contract_address_a);
 
-    test_env.store(contract_address_write, variable_address("balance"), 450);
-    let write_balance_value = test_env.load(contract_address_write, variable_address("balance"));
-    assert_eq!(write_balance_value, Felt::from(450));
+    test_env.store(contract_address_a, variable_address("balance"), 450);
+    let balance_value_a = test_env.load(contract_address_a, variable_address("balance"));
+    assert_eq!(balance_value_a, Felt::from(450));
 
-    let read_balance_value = test_env.load(contract_address_read, variable_address("balance"));
-    assert_eq!(read_balance_value, Felt::from(0));
+    let balance_value_b = test_env.load(contract_address_b, variable_address("balance"));
+    assert_eq!(balance_value_b, Felt::from(0));
 
-    test_env.store(contract_address_read, variable_address("balance"), 42);
-    let read_balance_value = test_env.load(contract_address_read, variable_address("balance"));
-    assert_eq!(read_balance_value, Felt::from(42));
+    test_env.store(contract_address_b, variable_address("balance"), 42);
+    let balance_value_b = test_env.load(contract_address_b, variable_address("balance"));
+    assert_eq!(balance_value_b, Felt::from(42));
 
-    let write_balance_value = test_env.load(contract_address_write, variable_address("balance"));
-    assert_eq!(write_balance_value, Felt::from(450));
+    let balance_value_a = test_env.load(contract_address_a, variable_address("balance"));
+    assert_eq!(balance_value_a, Felt::from(450));
 }
