@@ -1,3 +1,4 @@
+pub mod account;
 pub mod block_explorer;
 pub mod braavos;
 pub mod config;

@@ -14,7 +14,7 @@ use sncast::{
 use std::collections::HashMap;
 use std::fmt::Display;
 
-use super::NestedMap;
+use sncast::NestedMap;
 
 #[derive(Args, Debug)]
 #[command(

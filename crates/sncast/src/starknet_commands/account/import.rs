@@ -1,7 +1,4 @@
-use std::collections::HashSet;
-
 use super::deploy::compute_account_address;
-use super::NestedMap;
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
     AccountType,
@@ -11,13 +8,14 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
 use regex::Regex;
+use sncast::check_if_legacy_contract;
+use sncast::helpers::account::generate_account_name;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
 use sncast::{
     check_class_hash_exists, get_chain_id, handle_rpc_error, AccountType as SNCastAccountType,
 };
-use sncast::{check_if_legacy_contract, read_and_parse_json_file, AccountData};
 use starknet::core::types::{BlockId, BlockTag, StarknetError};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::providers::{Provider, ProviderError};
@@ -199,34 +197,6 @@ fn get_private_key_from_input() -> Result<Felt> {
     let input = rpassword::prompt_password("Type in your private key and press enter: ")
         .expect("Failed to read private key from input");
     parse_input_to_felt(&input)
-}
-
-pub fn generate_account_name(accounts_file: &Utf8PathBuf) -> Result<String> {
-    let mut id = 1;
-
-    if !accounts_file.exists() {
-        return Ok(format!("account-{id}"));
-    }
-
-    let networks: NestedMap<AccountData> = read_and_parse_json_file(accounts_file)?;
-    let mut result = HashSet::new();
-
-    for (_, accounts) in networks {
-        for (name, _) in accounts {
-            if let Some(id) = name
-                .strip_prefix("account-")
-                .and_then(|id| id.parse::<u32>().ok())
-            {
-                result.insert(id);
-            };
-        }
-    }
-
-    while result.contains(&id) {
-        id += 1;
-    }
-
-    Ok(format!("account-{id}"))
 }
 
 #[cfg(test)]

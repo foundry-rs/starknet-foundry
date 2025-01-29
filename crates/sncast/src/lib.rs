@@ -44,6 +44,8 @@ pub mod state;
 
 use conversions::byte_array::ByteArray;
 
+pub type NestedMap<T> = HashMap<String, HashMap<String, T>>;
+
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum AccountType {

@@ -1,11 +1,11 @@
 use crate::starknet_commands::{
-    account, account::import::generate_account_name, account::Account, call::Call,
-    declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall, script::Script,
-    show_config::ShowConfig, tx_status::TxStatus,
+    account, account::Account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke,
+    multicall::Multicall, script::Script, show_config::ShowConfig, tx_status::TxStatus,
 };
 
 use anyhow::{Context, Result};
 use data_transformer::Calldata;
+use sncast::helpers::account::generate_account_name;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{print_command_result, OutputFormat};
 use std::io;
