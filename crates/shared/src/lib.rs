@@ -10,6 +10,7 @@ pub mod command;
 pub mod consts;
 pub mod print;
 pub mod rpc;
+pub mod spinner;
 pub mod test_utils;
 pub mod utils;
 

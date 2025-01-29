@@ -16,7 +16,6 @@ blockifier.workspace = true
 camino.workspace = true
 include_dir.workspace = true
 starknet_api.workspace = true
-rayon.workspace = true
 shared.workspace = true
 cheatnet = { path = "../cheatnet" }
 conversions = { path = "../conversions" }
@@ -25,23 +24,13 @@ scarb-api = { path = "../scarb-api" }
 forge_runner = { path = "../forge-runner" }
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 cairo-lang-runner.workspace = true
-cairo-lang-casm.workspace = true
-cairo-lang-sierra-to-casm.workspace = true
 cairo-lang-sierra.workspace = true
-cairo-lang-utils.workspace = true
-cairo-lang-starknet.workspace = true
-cairo-lang-compiler.workspace = true
-cairo-lang-filesystem.workspace = true
-cairo-lang-test-plugin.workspace = true
 cairo-annotations.workspace = true
 starknet-types-core.workspace = true
-itertools.workspace = true
 regex.workspace = true
 serde_json.workspace = true
 serde.workspace = true
 starknet.workspace = true
-thiserror.workspace = true
-num-traits.workspace = true
 num-bigint.workspace = true
 clap.workspace = true
 console.workspace = true
@@ -49,24 +38,13 @@ rand.workspace = true
 scarb-metadata.workspace = true
 scarb-ui.workspace = true
 semver.workspace = true
-schemars.workspace = true
 cairo-vm.workspace = true
-ark-ff.workspace = true
-ark-std.workspace = true
-ark-secp256k1.workspace = true
-ark-secp256r1.workspace = true
 # openssl is being used, please do not remove it!
 openssl.workspace = true
 toml_edit.workspace = true
-flatten-serde-json.workspace = true
-smol_str.workspace = true
 tokio.workspace = true
-tokio-util.workspace = true
 futures.workspace = true
-num-integer.workspace = true
 url.workspace = true
-fs_extra.workspace = true
-project-root.workspace = true
 indoc.workspace = true
 
 [[bin]]

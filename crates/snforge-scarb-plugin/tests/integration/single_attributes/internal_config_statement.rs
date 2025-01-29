@@ -30,7 +30,7 @@ fn appends_config_statement() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
                     return;
                 }
             }

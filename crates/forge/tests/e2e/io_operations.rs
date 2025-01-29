@@ -1,6 +1,6 @@
 use super::common::runner::{setup_package_with_file_patterns, test_runner, BASE_FILE_PATTERNS};
 use assert_fs::fixture::PathChild;
-use indoc::indoc;
+use indoc::formatdoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
@@ -11,7 +11,13 @@ fn file_reading() {
         &[BASE_FILE_PATTERNS, &["**/*.txt", "**/*.json"]].concat(),
     );
 
-    let expected = indoc! {r#"
+    let expected_file_error = if cfg!(target_os = "windows") {
+        "The system cannot find the file specified[..]"
+    } else {
+        "No such file or directory [..]"
+    };
+
+    let expected = formatdoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -21,7 +27,7 @@ fn file_reading() {
         [FAIL] file_reading_integrationtest::test::json_non_existent
         
         Failure data:
-            "No such file or directory [..]"
+            "{}"
         
         [FAIL] file_reading_integrationtest::test::invalid_json
         
@@ -31,7 +37,7 @@ fn file_reading() {
         [FAIL] file_reading_integrationtest::test::non_existent
         
         Failure data:
-            "No such file or directory [..]"
+            "{}"
         
         [FAIL] file_reading_integrationtest::test::non_ascii
         
@@ -62,24 +68,24 @@ fn file_reading() {
             file_reading_integrationtest::test::non_ascii
             file_reading_integrationtest::test::valid_content_different_folder
             file_reading_integrationtest::test::negative_number
-    "#};
+    "#, expected_file_error, expected_file_error};
 
     // run from different directories to make sure cwd is always set to package directory
     let output = test_runner(&temp).assert().code(1);
 
-    assert_stdout_contains(output, expected);
+    assert_stdout_contains(output, &expected);
 
     let output = test_runner(&temp)
         .current_dir(temp.child("src"))
         .assert()
         .code(1);
 
-    assert_stdout_contains(output, expected);
+    assert_stdout_contains(output, &expected);
 
     let output = test_runner(&temp)
         .current_dir(temp.child("data"))
         .assert()
         .code(1);
 
-    assert_stdout_contains(output, expected);
+    assert_stdout_contains(output, &expected);
 }

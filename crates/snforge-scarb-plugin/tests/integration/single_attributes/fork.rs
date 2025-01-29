@@ -103,7 +103,7 @@ fn accepts_string() {
         &result,
         r#"
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
 
                     let mut data = array![];
 
@@ -132,7 +132,7 @@ fn accepts_inline_config() {
         &result,
         r#"
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
 
                     let mut data = array![];
 
@@ -166,7 +166,7 @@ fn overriding_config_name_first() {
         &result,
         r#"
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
 
                     let mut data = array![];
 
@@ -200,7 +200,7 @@ fn overriding_config_name_second() {
         &result,
         r#"
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
 
                     let mut data = array![];
 

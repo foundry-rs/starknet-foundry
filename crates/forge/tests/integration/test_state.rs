@@ -461,8 +461,7 @@ fn simple_cheatcodes() {
             start_cheat_block_number, stop_cheat_block_number,
             start_cheat_block_timestamp, stop_cheat_block_timestamp,
             start_cheat_transaction_hash, stop_cheat_transaction_hash,
-            test_address, TxInfoMock,
-            Operation, CheatArguments, CheatSpan
+            test_address, CheatSpan
         };
         use starknet::{
             SyscallResultTrait, SyscallResult, syscalls::get_execution_info_v2_syscall,
@@ -585,7 +584,7 @@ fn spy_events_simple() {
             fn spy_events_simple() {
                 let contract_address = test_address();
                 let mut spy = spy_events();
-                assert(spy._event_offset == 0, 'Events offset should be 0');
+                // assert(spy._event_offset == 0, 'Events offset should be 0'); TODO(#2765)
 
                 starknet::emit_event_syscall(array![1234].span(), array![2345].span()).unwrap_syscall();
 

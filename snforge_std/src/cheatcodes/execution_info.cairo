@@ -1,25 +1,25 @@
-use starknet::{ContractAddress, testing::cheatcode, contract_address_const};
-use starknet::info::v2::ResourceBounds;
+use starknet::ContractAddress;
+use starknet::ResourcesBounds;
 use snforge_std::cheatcodes::CheatSpan;
-use super::super::_cheatcode::handle_cheatcode;
+use super::super::_cheatcode::execute_cheatcode_and_deserialize;
 
-mod caller_address;
-mod block_number;
-mod block_timestamp;
-mod sequencer_address;
-mod version;
-mod max_fee;
-mod signature;
-mod transaction_hash;
-mod chain_id;
-mod nonce;
-mod resource_bounds;
-mod tip;
-mod paymaster_data;
-mod nonce_data_availability_mode;
-mod fee_data_availability_mode;
-mod account_deployment_data;
-mod account_contract_address;
+pub mod caller_address;
+pub mod block_number;
+pub mod block_timestamp;
+pub mod sequencer_address;
+pub mod version;
+pub mod max_fee;
+pub mod signature;
+pub mod transaction_hash;
+pub mod chain_id;
+pub mod nonce;
+pub mod resource_bounds;
+pub mod tip;
+pub mod paymaster_data;
+pub mod nonce_data_availability_mode;
+pub mod fee_data_availability_mode;
+pub mod account_deployment_data;
+pub mod account_contract_address;
 
 
 #[derive(Serde, Drop, Copy)]
@@ -55,7 +55,7 @@ struct TxInfoMock {
     chain_id: Operation<felt252>,
     nonce: Operation<felt252>,
     // starknet::info::v2::TxInfo fields
-    resource_bounds: Operation<Span<ResourceBounds>>,
+    resource_bounds: Operation<Span<ResourcesBounds>>,
     tip: Operation<u128>,
     paymaster_data: Operation<Span<felt252>>,
     nonce_data_availability_mode: Operation<u32>,
@@ -145,5 +145,5 @@ fn cheat_execution_info(execution_info_mock: ExecutionInfoMock) {
 
     execution_info_mock.serialize(ref inputs);
 
-    handle_cheatcode(cheatcode::<'cheat_execution_info'>(inputs.span()));
+    execute_cheatcode_and_deserialize::<'cheat_execution_info', ()>(inputs.span());
 }

@@ -62,6 +62,7 @@
 # Foundry Development
 
 * [Environment Setup](development/environment-setup.md)
+* [Shell snippets](development/shell-snippets.md)
 
 ---
 
@@ -70,7 +71,9 @@
 * [`snforge` Commands](appendix/snforge.md)
     * [test](appendix/snforge/test.md)
     * [init](appendix/snforge/init.md)
+    * [new](appendix/snforge/new.md)
     * [clean-cache](appendix/snforge/clean-cache.md)
+    * [check-requirements](appendix/snforge/check-requirements.md)
 * [Cheatcodes Reference](appendix/cheatcodes.md)
     * [Cheating Globally](appendix/cheatcodes/global.md)
     * [CheatSpan](appendix/cheatcodes/cheat_span.md)
@@ -137,5 +140,6 @@
     * [get_nonce](appendix/sncast-library/get_nonce.md)
     * [tx_status](appendix/sncast-library/tx_status.md)
     * [errors](appendix/sncast-library/errors.md)
-* [ `snfoundry.toml` Reference](appendix/snfoundry-toml.md)
-* [ `Scarb.toml` Reference](appendix/scarb-toml.md)
+* [`snfoundry.toml` Reference](appendix/snfoundry-toml.md)
+* [`Scarb.toml` Reference](appendix/scarb-toml.md)
+* [Starknet Foundry Github Action](appendix/starknet-foundry-github-action.md)

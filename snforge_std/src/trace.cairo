@@ -1,36 +1,34 @@
-use core::result::ResultTrait;
-use core::starknet::testing::cheatcode;
 use core::starknet::ContractAddress;
-use super::_cheatcode::handle_cheatcode;
+use super::_cheatcode::execute_cheatcode_and_deserialize;
 
 /// Tree-like structure which contains all of the starknet calls and sub-calls along with the
 /// results
 #[derive(Drop, Serde, PartialEq, Clone, Debug)]
-struct CallTrace {
-    entry_point: CallEntryPoint,
+pub struct CallTrace {
+    pub entry_point: CallEntryPoint,
     /// All the calls that happened in the scope of `entry_point`
-    nested_calls: Array<CallTrace>,
-    result: CallResult,
+    pub nested_calls: Array<CallTrace>,
+    pub result: CallResult,
 }
 
 /// A single function entry point summary
 #[derive(Drop, Serde, PartialEq, Clone, Debug)]
-struct CallEntryPoint {
-    entry_point_type: EntryPointType,
+pub struct CallEntryPoint {
+    pub entry_point_type: EntryPointType,
     /// Hashed selector of the invoked function
-    entry_point_selector: felt252,
+    pub entry_point_selector: felt252,
     /// Serialized arguments calldata
-    calldata: Array<felt252>,
+    pub calldata: Array<felt252>,
     /// Contract address targeted by the call
-    contract_address: ContractAddress,
+    pub contract_address: ContractAddress,
     /// Address that the call originates from
-    caller_address: ContractAddress,
-    call_type: CallType,
+    pub caller_address: ContractAddress,
+    pub call_type: CallType,
 }
 
 /// Type of the function being invoked
 #[derive(Drop, Serde, PartialEq, Clone, Debug)]
-enum EntryPointType {
+pub enum EntryPointType {
     /// Constructor of a contract
     Constructor,
     /// Contract interface entry point
@@ -41,7 +39,7 @@ enum EntryPointType {
 
 /// Denotes type of the call
 #[derive(Drop, Serde, PartialEq, Clone, Debug)]
-enum CallType {
+pub enum CallType {
     /// Regular call
     Call,
     /// Library call
@@ -50,7 +48,7 @@ enum CallType {
 
 /// Result of a contract or a library call
 #[derive(Drop, Serde, PartialEq, Clone, Debug)]
-enum CallResult {
+pub enum CallResult {
     /// A successful call with it's result
     Success: Array<felt252>,
     /// A failed call along with it's panic data
@@ -59,7 +57,7 @@ enum CallResult {
 
 /// Represents a pre-processed failure of a call
 #[derive(Drop, Serde, PartialEq, Clone, Debug)]
-enum CallFailure {
+pub enum CallFailure {
     /// Contains raw panic data
     Panic: Array<felt252>,
     /// Contains panic data in parsed form, if parsing is applicable
@@ -67,9 +65,8 @@ enum CallFailure {
 }
 
 /// Returns current call trace of the test, up to the last call made to a contract
-fn get_call_trace() -> CallTrace {
-    let mut output = handle_cheatcode(cheatcode::<'get_call_trace'>(array![].span()));
-    Serde::deserialize(ref output).unwrap()
+pub fn get_call_trace() -> CallTrace {
+    execute_cheatcode_and_deserialize::<'get_call_trace'>(array![].span())
 }
 
 use core::fmt::{Display, Formatter, Error, Debug};

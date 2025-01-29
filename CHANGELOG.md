@@ -7,11 +7,88 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### `snforge_scarb_plugin`
+### Forge
+
+#### Fixed
+
+- coverage validation now supports comments in `Scarb.toml`
+
+### Cast
+
+#### Added
+
+- Default RPC providers under `--network` flag
 
 #### Changed
 
- - `snforge_scarb_plugin` will now also emit warnings when errors occur
+- Renamed `--network` flag to `--network-name` in `sncast account delete` command
+
+## [0.36.0] - 2025-01-15
+
+### Forge
+
+#### Changed
+
+- Trace files saved in `snfoundry_trace` directory will now use `_` as separators instead of `::`
+
+### Cast
+
+#### Added
+
+- When using `--max-fee` with transactions v3, calculated max gas and max gas unit price are automatically validated to ensure they are greater than 0 after conversion
+- interactive interface that allows setting created or imported account as the default
+
+#### Changed
+
+- Values passed to the `--max-fee`, `--max-gas`, and `--max-gas-unit-price` flags must be greater than 0
+
+#### Deprecated
+
+- `--version` flag
+
+## [0.35.1] - 2024-12-16
+
+### Forge
+
+#### Fixed
+
+- Minimal Rust version in requirements check is the same as in docs (`1.80.1`)
+- `snforge` produces trace for contracts even if they fail or panic (assuming test passed)
+
+## [0.35.0] - 2024-12-13
+
+### Forge
+
+#### Added
+
+- Requirements validation during `snforge` runtime
+- `snforge check-requirements` command
+- `snforge new` command
+
+#### Changed
+
+- `snforge_scarb_plugin` will now also emit warnings when errors occur
+- `snforge_std` migrated to `2024_07` edition
+- `snforge_std` from scarbs package registry is now used in `snforge new` template
+
+#### Deprecated
+
+- `snforge init` command
+
+### Cast
+
+#### Added
+
+- `account create` command shows prepared deployment command
+
+#### Changed
+
+- `--version` flag is now optional and `v3` will be used by default
+- Displaying underlying RPC error instead of "Unknown RPC error" in edge cases
+
+#### Deprecated
+
+- `--fee-token` flag - `strk` will be used by default
 
 ## [0.34.0] - 2024-11-26
 

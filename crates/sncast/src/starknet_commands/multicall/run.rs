@@ -8,6 +8,7 @@ use sncast::helpers::constants::UDC_ADDRESS;
 use sncast::helpers::error::token_not_supported_for_invoke;
 use sncast::helpers::fee::{FeeArgs, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
+use sncast::helpers::version::parse_version;
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::structs::InvokeResponse;
 use sncast::{extract_or_generate_salt, impl_payable_transaction, udc_uniqueness, WaitForTx};
@@ -31,7 +32,7 @@ pub struct Run {
     pub fee_args: FeeArgs,
 
     /// Version of invoke (can be inferred from fee token)
-    #[clap(short, long)]
+    #[clap(short, long, value_parser = parse_version::<InvokeVersion>)]
     pub version: Option<InvokeVersion>,
 
     #[clap(flatten)]
@@ -71,7 +72,9 @@ pub async fn run(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
-    let fee_args = run.fee_args.clone().fee_token(run.token_from_version());
+    let fee_token = run.validate_and_get_token()?;
+
+    let fee_args = run.fee_args.clone().fee_token(fee_token);
 
     let contents = std::fs::read_to_string(&run.path)?;
     let items_map: HashMap<String, Vec<toml::Value>> =

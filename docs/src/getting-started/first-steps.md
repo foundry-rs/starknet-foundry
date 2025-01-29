@@ -3,10 +3,10 @@
 In this section we provide an overview of Starknet Foundry `snforge` command line tool.
 We demonstrate how to create a new project, compile, and test it.
 
-To start a new project with Starknet Foundry, run `snforge init`
+To start a new project with Starknet Foundry, run `snforge new`
 
 ```shell
-$ snforge init hello_starknet
+$ snforge new hello_starknet
 ```
 
 Let's check out the project structure

@@ -16,6 +16,13 @@ Starknet RPC node url address.
 
 Overrides url from `snfoundry.toml`.
 
+## `--network <NETWORK>`
+Optional.
+
+Use predefined network with a public provider
+
+Possible values: `mainnet`, `sepolia`.
+
 ## `--type, -t <ACCOUNT_TYPE>`
 Optional. Required if `--class-hash` is passed.
 
@@ -43,3 +50,8 @@ If passed, a profile with corresponding name will be added to the local snfoundr
 Optional.
 
 Class hash of a custom openzeppelin account contract declared to the network.
+
+## `--silent`
+Optional.
+
+If passed, the command will not trigger an interactive prompt to add an account as a default
