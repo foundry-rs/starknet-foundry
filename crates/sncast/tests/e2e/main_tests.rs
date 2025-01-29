@@ -36,6 +36,86 @@ async fn test_happy_case_from_sncast_config() {
 }
 
 #[tokio::test]
+async fn test_happy_case_predefined_network() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--profile",
+        "no_url",
+        "call",
+        "--network",
+        "sepolia",
+        "--contract-address",
+        "0x0",
+        "--function",
+        "doesnotmatter",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]"
+    );
+}
+
+#[tokio::test]
+async fn test_url_with_network_args() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--profile",
+        "no_url",
+        "call",
+        "--network",
+        "sepolia",
+        "--url",
+        URL,
+        "--contract-address",
+        "0x0",
+        "--function",
+        "doesnotmatter",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "error: the argument '--network <NETWORK>' cannot be used with '--url <URL>'",
+    );
+}
+
+#[tokio::test]
+async fn test_network_with_url_defined_in_config_toml() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--profile",
+        "default",
+        "call",
+        "--network",
+        "sepolia",
+        "--contract-address",
+        "0x0",
+        "--function",
+        "doesnotmatter",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "Error: The argument '--network' cannot be used when `url` is defined in `snfoundry.toml` for the active profile"
+    );
+}
+
+#[tokio::test]
 async fn test_happy_case_from_cli_no_scarb() {
     let args = vec![
         "--accounts-file",

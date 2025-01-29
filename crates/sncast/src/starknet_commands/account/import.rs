@@ -55,7 +55,7 @@ pub struct Import {
 
     /// If passed, a profile with the provided name and corresponding data will be created in snfoundry.toml
     #[allow(clippy::struct_field_names)]
-    #[clap(long)]
+    #[clap(long, conflicts_with = "network")]
     pub add_profile: Option<String>,
 
     #[clap(flatten)]
@@ -154,13 +154,17 @@ pub async fn import(
     write_account_to_accounts_file(&account_name, accounts_file, chain_id, account_json.clone())?;
 
     if import.add_profile.is_some() {
-        let config = CastConfig {
-            url: import.rpc.url.clone().unwrap_or_default(),
-            account: account_name.clone(),
-            accounts_file: accounts_file.into(),
-            ..Default::default()
-        };
-        add_created_profile_to_configuration(import.add_profile.as_deref(), &config, None)?;
+        if let Some(url) = &import.rpc.url {
+            let config = CastConfig {
+                url: url.clone(),
+                account: account_name.clone(),
+                accounts_file: accounts_file.into(),
+                ..Default::default()
+            };
+            add_created_profile_to_configuration(import.add_profile.as_deref(), &config, None)?;
+        } else {
+            unreachable!("Conflicting arguments should be handled in clap");
+        }
     }
 
     Ok(AccountImportResponse {
