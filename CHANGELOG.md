@@ -818,16 +818,10 @@ Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.
 
 ### Cast
 
-#### Added
+#### Changed
 
-- `account add` command for importing accounts to the accounts file
-- `account create` command for creating openzeppelin accounts with starkli-style keystore
-- `account deploy` command for deploying openzeppelin accounts with starkli-style keystore
-
-### Changed
-
-- `--add-profile` no longer accepts `-a` for short
-- allow the `id` property in multicalls to be referenced in the inputs of `deploy` and `invoke` calls
+- dropped official support for cairo 1 compiled contracts. While they still should be working without any problems,
+from now on the only officially supported cairo compiler version is 2
 
 ## [0.7.1] - 2023-09-27
 
@@ -860,15 +854,14 @@ Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.
 
 #### Added
 
-- Support for custom networks - accounts created on custom networks are saved in `accounts-file` under network's
-  chain_id
-- `accounts-file` field in Scarb.toml profile
-- Include the class hash of an account contract in the `accounts-file`
+- `account add` command for importing accounts to the accounts file
+- `account create` command for creating openzeppelin accounts with starkli-style keystore
+- `account deploy` command for deploying openzeppelin accounts with starkli-style keystore
 
-#### Removed
+### Changed
 
-- `--network` option together with the `network` field in Scarb.toml profile — previously used as a validation factor;
-  now networks are identified by their chain_id
+- `--add-profile` no longer accepts `-a` for short
+- allow the `id` property in multicalls to be referenced in the inputs of `deploy` and `invoke` calls
 
 ## [0.6.0] - 2023-09-13
 
