@@ -642,7 +642,7 @@ pub async fn test_happy_case_default_name_generation() {
         "--name",
         "account-2",
         "--network",
-        "alpha-sepolia",
+        "sepolia",
     ];
 
     for i in 0..3 {
