@@ -45,7 +45,7 @@ fn test_clean_coverage() {
         cache: true,
         trace: false,
     };
-    
+
     assert_eq!(
         check_clean_components_state(temp_dir.path()),
         clean_components_state
@@ -77,7 +77,7 @@ fn test_clean_profile() {
         cache: true,
         trace: true,
     };
-    
+
     assert_eq!(
         check_clean_components_state(temp_dir.path()),
         clean_components_state
@@ -116,8 +116,8 @@ fn test_clean_cache() {
     );
 }
 
-
 #[test]
+#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn test_clean_all() {
     let temp_dir = setup_package("coverage_project");
 
@@ -130,21 +130,14 @@ fn test_clean_all() {
 
     generate_clean_components(clean_components_state, &temp_dir);
 
-    runner(&temp_dir)
-        .arg("clean")
-        .arg("all")
-        .assert()
-        .success();
+    runner(&temp_dir).arg("clean").arg("all").assert().success();
 
     let clean_components_state: CleanComponentsState = CleanComponentsState {
         coverage: false,
         cache: false,
         trace: false,
-        profile: true,
+        profile: false,
     };
-    eprintln!("{:?}", check_clean_components_state(temp_dir.path()));
-    eprintln!("{:?}", temp_dir.path());
-
 
     assert_eq!(
         check_clean_components_state(temp_dir.path()),
@@ -156,7 +149,8 @@ fn generate_clean_components(clean_components_state: CleanComponentsState, temp_
     if clean_components_state.coverage {
         assert!(clean_components_state.trace && clean_components_state.cache);
         test_runner(temp_dir).arg("--coverage").assert().success();
-    } else if clean_components_state.profile {
+    }
+    if clean_components_state.profile {
         assert!(clean_components_state.trace && clean_components_state.cache);
         test_runner(temp_dir)
             .arg("--build-profile")

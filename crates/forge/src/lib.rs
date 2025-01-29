@@ -94,7 +94,6 @@ enum ForgeSubcommand {
         args: CleanArgs,
     },
     /// Clean Forge cache directory
-    #[deprecated(note = "Use `snforge clean cache` instead")]
     CleanCache {},
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
