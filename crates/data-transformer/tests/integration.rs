@@ -665,12 +665,34 @@ async fn test_happy_case_contract_constructor() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-async fn test_external_enum_function_ambiguous_struct_name_cairo_expression_input() {}
+async fn test_external_enum_function_ambiguous_struct_name_cairo_expression_input() {
+    // https://sepolia.starkscan.co/class/0x019ea00ebe2d83fb210fbd6f52c302b83c69e3c8c934f9404c87861e9d3aebbc#code
+    let test_class_hash: Felt = Felt::from_hex_unchecked(
+        "0x019ea00ebe2d83fb210fbd6f52c302b83c69e3c8c934f9404c87861e9d3aebbc",
+    );
 
-#[tokio::test]
-async fn test_happy_case_external_enum_function_cairo_expression_input() -> anyhow::Result<()> {
-    Ok(())
+    let client = JsonRpcClient::new(HttpTransport::new(
+        Url::parse("http://188.34.188.184:7070/rpc/v0_7").unwrap(),
+    ));
+
+    let contract_class = client
+        .get_class(BlockId::Tag(BlockTag::Latest), test_class_hash)
+        .await
+        .unwrap();
+
+    let input = String::from(
+        "
+            TransactionState::Init() , \
+            TransactionState::NotFound()
+            ",
+    );
+
+    let result = Calldata::new(input).serialized(
+        contract_class,
+        &get_selector_from_name("external_enum_fn").unwrap(),
+    );
+
+    result.unwrap_err().assert_contains(
+        r#"Found more than one enum "TransactionState" in ABI, please specify a full path to the item"#,
+    );
 }
-
-#[tokio::test]
-async fn test_external_enum_function_invalid_path_to_external_enum() {}
