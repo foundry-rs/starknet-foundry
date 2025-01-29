@@ -198,22 +198,6 @@ pub enum FeeSettings {
     },
 }
 
-impl From<ScriptFeeSettings> for FeeSettings {
-    fn from(value: ScriptFeeSettings) -> Self {
-        match value {
-            ScriptFeeSettings::Eth { max_fee } => FeeSettings::Eth { max_fee },
-            ScriptFeeSettings::Strk {
-                max_gas,
-                max_gas_unit_price,
-                ..
-            } => FeeSettings::Strk {
-                max_gas,
-                max_gas_unit_price,
-            },
-        }
-    }
-}
-
 pub trait PayableTransaction {
     fn error_message(&self, token: &str, version: &str) -> String;
     fn validate_and_get_token(&self) -> Result<FeeToken>;

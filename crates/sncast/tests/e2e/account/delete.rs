@@ -13,7 +13,7 @@ pub fn test_no_accounts_in_network() {
         "delete",
         "--name",
         "user99",
-        "--network",
+        "--network-name",
         "my-custom-network",
     ];
 
@@ -68,7 +68,7 @@ pub fn test_delete_abort() {
         "delete",
         "--name",
         "user3",
-        "--network",
+        "--network-name",
         "custom-network",
     ];
 
@@ -99,7 +99,7 @@ pub fn test_happy_case() {
         "delete",
         "--name",
         "user3",
-        "--network",
+        "--network-name",
         "custom-network",
     ];
 
@@ -150,7 +150,7 @@ pub fn test_happy_case_with_yes_flag() {
         "delete",
         "--name",
         "user3",
-        "--network",
+        "--network-name",
         "custom-network",
         "--yes",
     ];
@@ -167,7 +167,7 @@ pub fn test_happy_case_with_yes_flag() {
 }
 
 #[test]
-pub fn test_accept_only_url_or_network() {
+pub fn test_accept_only_one_network_type_argument() {
     let accounts_file_name = "temp_accounts.json";
     let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
 
@@ -180,7 +180,7 @@ pub fn test_accept_only_url_or_network() {
         URL,
         "--name",
         "user3",
-        "--network",
+        "--network-name",
         "custom-network",
     ];
 
@@ -190,7 +190,7 @@ pub fn test_accept_only_url_or_network() {
     assert_stderr_contains(
         output,
         indoc! {r"
-            error: the argument '--url <URL>' cannot be used with '--network <NETWORK>'
+            error: the argument '--url <URL>' cannot be used with '--network-name <NETWORK_NAME>'
         "},
     );
 }
