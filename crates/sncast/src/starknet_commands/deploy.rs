@@ -84,8 +84,10 @@ pub async fn deploy(
     nonce: Option<Felt>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
+    fee_token: FeeToken,
 ) -> Result<DeployResponse, StarknetCommandError> {
     let fee_settings = fee_args
+        .fee_token(fee_token)
         .try_into_fee_settings(account.provider(), account.block_id())
         .await?;
 

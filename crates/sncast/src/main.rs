@@ -289,6 +289,8 @@ async fn run_async_command(
         }
 
         Commands::Deploy(deploy) => {
+            let fee_token = deploy.validate_and_get_token()?;
+
             let Deploy {
                 arguments,
                 fee_args,
@@ -323,6 +325,7 @@ async fn run_async_command(
                 deploy.nonce,
                 &account,
                 wait_config,
+                fee_token,
             )
             .await
             .map_err(handle_starknet_command_error);
