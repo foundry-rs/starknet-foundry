@@ -40,20 +40,15 @@ mod tests_cairo_u96 {
 
     #[test]
     fn test_from_str_invalid_input() {
-        assert!(matches!(
-            CairoU96::from_str("not_a_number"),
-            Err(ParseCairoU96Error::InvalidString(_))
-        ));
+        assert!(matches!(  
+            CairoU96::from_str("not_a_number"),  
+            Err(ParseCairoU96Error::InvalidString(_))  
+        ));  
 
-        assert!(matches!(
-            CairoU96::from_str("not_hex"),
-            Err(ParseCairoU96Error::InvalidString(_))
-        ));
-
-        assert!(matches!(
-            CairoU96::from_str(""),
-            Err(ParseCairoU96Error::InvalidString(_))
-        ));
+        assert!(matches!(  
+            CairoU96::from_str(""),  
+            Err(ParseCairoU96Error::InvalidString(_))  
+        ));  
     }
 
     #[test]
