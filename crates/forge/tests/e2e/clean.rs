@@ -45,7 +45,39 @@ fn test_clean_coverage() {
         cache: true,
         trace: false,
     };
+    
+    assert_eq!(
+        check_clean_components_state(temp_dir.path()),
+        clean_components_state
+    );
+}
 
+#[test]
+fn test_clean_profile() {
+    let temp_dir = setup_package("coverage_project");
+
+    let clean_components_state = CleanComponentsState {
+        coverage: false,
+        profile: true,
+        cache: true,
+        trace: true,
+    };
+
+    generate_clean_components(clean_components_state, &temp_dir);
+
+    runner(&temp_dir)
+        .arg("clean")
+        .arg("profile")
+        .assert()
+        .success();
+
+    let clean_components_state: CleanComponentsState = CleanComponentsState {
+        coverage: false,
+        profile: false,
+        cache: true,
+        trace: true,
+    };
+    
     assert_eq!(
         check_clean_components_state(temp_dir.path()),
         clean_components_state
@@ -84,27 +116,35 @@ fn test_clean_cache() {
     );
 }
 
+
 #[test]
 fn test_clean_all() {
     let temp_dir = setup_package("coverage_project");
 
     let clean_components_state = CleanComponentsState {
         coverage: true,
-        profile: true,
         cache: true,
         trace: true,
+        profile: true,
     };
 
     generate_clean_components(clean_components_state, &temp_dir);
 
-    runner(&temp_dir).arg("clean").arg("all").assert().success();
+    runner(&temp_dir)
+        .arg("clean")
+        .arg("all")
+        .assert()
+        .success();
 
     let clean_components_state: CleanComponentsState = CleanComponentsState {
         coverage: false,
-        profile: false,
         cache: false,
         trace: false,
+        profile: true,
     };
+    eprintln!("{:?}", check_clean_components_state(temp_dir.path()));
+    eprintln!("{:?}", temp_dir.path());
+
 
     assert_eq!(
         check_clean_components_state(temp_dir.path()),
