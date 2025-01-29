@@ -11,11 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `snforge new` now adds the `snfoundry_trace`, `coverage`, and `profile` directories to `.gitignore`.
 
-#### Fixed
-
-- Bug resulting in value passed for `max_fee` being ignored in cast scripts when using `deploy` with STRK token
-
-
 ### Forge
 
 #### Fixed
@@ -31,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Renamed `--network` flag to `--network-name` in `sncast account delete` command
+
+#### Fixed
+
+- Bug resulting in value passed for `max_fee` being ignored in cast scripts when using `deploy` with STRK token
 
 ## [0.36.0] - 2025-01-15
 
