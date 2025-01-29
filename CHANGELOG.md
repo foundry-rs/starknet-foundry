@@ -13,9 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - coverage validation now supports comments in `Scarb.toml`
 
-
-## [0.36.1] - 2025-01-27
-
 ### Cast
 
 #### Changed
@@ -31,7 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Renamed `--network` flag to `--network-name` in `sncast account delete` command
-
 
 ## [0.36.0] - 2025-01-15
 
