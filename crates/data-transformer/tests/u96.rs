@@ -7,25 +7,25 @@ mod tests_cairo_u96 {
     const U96_MAX: u128 = (2u128 << 96) - 1;
 
     #[test]
-    fn test_from_str_decimal() {
-        let zero = CairoU96::from_str("0").unwrap();
-        let small = CairoU96::from_str("123").unwrap();
-        let large = CairoU96::from_str("1000000").unwrap();
+    fn test_valid_numbers() {
+        let test_cases = [
+            ("0", 0_u128),
+            ("123", 123_u128),
+            ("1000000", 1000000_u128),
+            ("ff", 0xff_u128),
+            ("1234abcd", 0x1234abcd_u128),
+        ];
 
-        assert_eq!(Felt::from(zero), Felt::from(0_u128));
-        assert_eq!(Felt::from(small), Felt::from(123_u128));
-        assert_eq!(Felt::from(large), Felt::from(1000000_u128));
-    }
-
-    #[test]
-    fn test_from_str_hex() {
-        let zero = CairoU96::from_str("0").unwrap();
-        let small_hex = CairoU96::from_str("ff").unwrap();
-        let large_hex = CairoU96::from_str("1234abcd").unwrap();
-
-        assert_eq!(Felt::from(zero), Felt::from(0_u128));
-        assert_eq!(Felt::from(small_hex), Felt::from(255_u128));
-        assert_eq!(Felt::from(large_hex), Felt::from(0x1234abcd_u128));
+        for (input, expected) in test_cases {
+            let parsed = CairoU96::from_str(input).unwrap();
+            assert_eq!(
+                Felt::from(parsed),
+                Felt::from(expected),
+                "Failed parsing {} - expected {}",
+                input,
+                expected
+            );
+        }
     }
 
     #[test]
