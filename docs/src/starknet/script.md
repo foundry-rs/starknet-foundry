@@ -260,7 +260,7 @@ To run the script, do:
 ```shell
 $ sncast \
   script run my_script
-  --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
+  --network sepolia
 ```
 
 <details>
@@ -340,7 +340,7 @@ To run the script, do:
 $ sncast \
   --account example_user \
   script run map_script \
-  --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
+  --network sepolia
 ```
 
 <details>
@@ -368,7 +368,7 @@ and only `call` functions are being executed (as they do not change the network 
 $ sncast \
   --account example_user \
   script run map_script \
-  --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
+  --network sepolia
 ```
 
 <details>
@@ -393,7 +393,7 @@ whereas, when we run the same script once again with `--no-state-file` flag set,
 $ sncast \
   --account example_user \
   script run map_script \
-  --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7 \
+  --network sepolia \
   --no-state-file
 ```
 
