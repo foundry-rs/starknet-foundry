@@ -185,7 +185,7 @@ fn check_clean_components_state(path: &Path) -> CleanComponentsState {
     let packages_root: Vec<_> = scarb_metadata
         .packages
         .into_iter()
-        .map(|package_metada| package_metada.root)
+        .map(|package_metadata| package_metadata.root)
         .collect();
 
     CleanComponentsState {

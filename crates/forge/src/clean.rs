@@ -31,7 +31,7 @@ pub fn clean(args: CleanArgs) -> Result<()> {
     let packages_root: Vec<Utf8PathBuf> = scarb_metadata
         .packages
         .into_iter()
-        .map(|package_metada| package_metada.root)
+        .map(|package_metadata| package_metadata.root)
         .collect();
 
     for component in &components {
