@@ -18,7 +18,7 @@ After [declaring your contract](./declare.md), you can deploy it the following w
 $ sncast \
     --account my_account \
     deploy \
-    --url http://127.0.0.1:5055/rpc \
+    --network sepolia \
     --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02
 ```
 
