@@ -37,7 +37,7 @@ pub fn declare(
         .get_class_hash(contract_name)
         .expect("Failed to get class hash");
 
-    match state.get_compiled_contract_class(class_hash) {
+    match state.get_compiled_class(class_hash) {
         Err(StateError::UndeclaredClassHash(_)) => {
             // Class is undeclared; declare it.
 

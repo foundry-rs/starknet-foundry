@@ -31,10 +31,10 @@ pub fn execute_inner_call(
     // region: Modified blockifier code
     let call_info = execute_call_entry_point(
         call,
-        syscall_handler.state,
+        syscall_handler.base.state,
         cheatnet_state,
         syscall_handler.resources,
-        syscall_handler.context,
+        syscall_handler.base.context,
     )?;
     // endregion
 

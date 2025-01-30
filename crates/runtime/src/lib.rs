@@ -55,8 +55,6 @@ const CAIRO_TEST_CHEATCODES: [&str; 14] = [
 ];
 pub trait SyscallPtrAccess {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable;
-
-    fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> SyscallResult<()>;
 }
 
 pub struct StarknetRuntime<'a> {
@@ -67,27 +65,23 @@ impl SyscallPtrAccess for StarknetRuntime<'_> {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
         &mut self.hint_handler.syscall_ptr
     }
-
-    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
-        self.hint_handler.verify_syscall_ptr(ptr)
-    }
 }
 
 impl ResourceTracker for StarknetRuntime<'_> {
     fn consumed(&self) -> bool {
-        self.hint_handler.context.vm_run_resources.consumed()
+        self.hint_handler.base.context.vm_run_resources.consumed()
     }
 
     fn consume_step(&mut self) {
-        self.hint_handler.context.vm_run_resources.consume_step();
+        self.hint_handler.base.context.vm_run_resources.consume_step();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        self.hint_handler.context.vm_run_resources.get_n_steps()
+        self.hint_handler.base.context.vm_run_resources.get_n_steps()
     }
 
     fn run_resources(&self) -> &RunResources {
-        self.hint_handler.context.vm_run_resources.run_resources()
+        self.hint_handler.base.context.vm_run_resources.run_resources()
     }
 }
 
@@ -297,10 +291,10 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
         constants: &HashMap<String, Felt>,
         system: &ResOperand,
     ) -> Result<(), HintError> {
-        let (cell, offset) = extract_buffer(system);
-        let system_ptr = get_ptr(vm, cell, &offset)?;
+        // let (cell, offset) = extract_buffer(system);
+        // let system_ptr = get_ptr(vm, cell, &offset)?;
 
-        self.verify_syscall_ptr(system_ptr)?;
+        // self.verify_syscall_ptr(system_ptr)?;
 
         // We peek into memory to check the selector
         let selector = DeprecatedSyscallSelector::try_from(
@@ -358,10 +352,6 @@ impl<Extension: ExtensionLogic> SignalPropagator for ExtendedRuntime<Extension> 
 impl<Extension: ExtensionLogic> SyscallPtrAccess for ExtendedRuntime<Extension> {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
         self.extended_runtime.get_mut_syscall_ptr()
-    }
-
-    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
-        self.extended_runtime.verify_syscall_ptr(ptr)
     }
 }
 

@@ -148,7 +148,7 @@ impl CheatableStarknetRuntimeExtension<'_> {
         // Increment, since the selector was peeked into before
         syscall_handler.syscall_ptr += 1;
         syscall_handler.increment_syscall_count_by(&selector, 1);
-        let syscall_gas_cost = get_syscall_cost(selector, syscall_handler.context);
+        let syscall_gas_cost = get_syscall_cost(selector, syscall_handler.base.context);
         let required_gas =
             syscall_gas_cost - syscall_handler.context.gas_costs().syscall_base_gas_cost;
 

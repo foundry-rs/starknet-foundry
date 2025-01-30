@@ -200,16 +200,16 @@ pub fn call_entry_point(
 ) -> CallResult {
     let exec_result = execute_call_entry_point(
         &mut entry_point,
-        syscall_handler.state,
+        syscall_handler.base.state,
         cheatnet_state,
         syscall_handler.resources,
-        syscall_handler.context,
+        syscall_handler.base.context,
     );
 
     let result = CallResult::from_execution_result(&exec_result, starknet_identifier);
 
     if let Ok(call_info) = exec_result {
-        syscall_handler.inner_calls.push(call_info);
+        syscall_handler.base.inner_calls.push(call_info);
     };
 
     result

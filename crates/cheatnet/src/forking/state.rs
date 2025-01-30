@@ -34,6 +34,7 @@ use tokio::runtime::Handle;
 use tokio::task;
 use universal_sierra_compiler_api::{compile_sierra, SierraType};
 use url::Url;
+use starknet_api::state::EntryPoint;
 
 #[derive(Debug)]
 pub struct ForkStateReader {

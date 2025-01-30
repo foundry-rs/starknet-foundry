@@ -25,7 +25,7 @@ use starknet_api::core::{
     calculate_contract_address, ClassHash, ContractAddress, EntryPointSelector,
 };
 use starknet_api::deprecated_contract_class::EntryPointType;
-use starknet_api::transaction::Calldata;
+use starknet_api::transaction::fields::Calldata;
 use starknet_types_core::felt::Felt;
 
 use self::runtime::{

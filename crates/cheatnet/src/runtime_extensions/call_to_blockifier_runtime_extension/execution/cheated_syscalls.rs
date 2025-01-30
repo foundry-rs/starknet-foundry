@@ -88,10 +88,10 @@ pub fn deploy_syscall(
         caller_address: deployer_address,
     };
     let call_info = execute_deployment(
-        syscall_handler.state,
+        syscall_handler.base.state,
         cheatnet_state,
         syscall_handler.resources,
-        syscall_handler.context,
+        syscall_handler.base.context,
         &ctor_context,
         request.constructor_calldata,
         *remaining_gas,
@@ -101,7 +101,7 @@ pub fn deploy_syscall(
         create_retdata_segment(vm, syscall_handler, &call_info.execution.retdata.0)?;
     update_remaining_gas(remaining_gas, &call_info);
 
-    syscall_handler.inner_calls.push(call_info);
+    syscall_handler.base.inner_calls.push(call_info);
 
     Ok(DeployResponse {
         contract_address: deployed_contract_address,

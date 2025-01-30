@@ -117,8 +117,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
-                    .state
-                    .get_compiled_contract_class(class)
+                    .base.state
+                    .get_compiled_class(class)
                 {
                     Err(StateError::UndeclaredClassHash(_)) => true,
                     Err(err) => return Err(err.into()),
@@ -129,7 +129,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
-                    .state
+                    .base.state
                     .get_class_hash_at(contract)?
                     == ClassHash::default()
                 {
@@ -222,7 +222,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
-                    .state;
+                    .base.state;
 
                 match get_class_hash(*state, contract_address) {
                     Ok(class_hash) => Ok(CheatcodeHandlingResult::from_serializable(class_hash)),
@@ -444,7 +444,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
-                    .state;
+                    .base.state;
                 let target = input_reader.read()?;
                 let storage_address = input_reader.read()?;
                 store(*state, target, storage_address, input_reader.read()?)
@@ -457,7 +457,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
-                    .state;
+                    .base.state;
                 let target = input_reader.read()?;
                 let storage_address = input_reader.read()?;
                 let loaded = load(*state, target, storage_address).context("Failed to load")?;
@@ -574,7 +574,7 @@ pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
         .extended_runtime
         .extended_runtime
         .hint_handler
-        .l2_to_l1_messages
+        .base.l2_to_l1_messages
         .iter()
         .map(|ordered_message| ordered_message.message.payload.0.len())
         .collect();
@@ -622,8 +622,8 @@ pub fn get_all_used_resources(
     transaction_context: &TransactionContext,
 ) -> UsedResources {
     let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
-    let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.l2_to_l1_messages;
-    let top_call_events = starknet_runtime.hint_handler.events;
+    let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.base.l2_to_l1_messages;
+    let top_call_events = starknet_runtime.hint_handler.base.events;
 
     // used just to obtain payloads of L2 -> L1 messages
     let runtime_call_info = CallInfo {
@@ -632,7 +632,7 @@ pub fn get_all_used_resources(
             events: top_call_events,
             ..Default::default()
         },
-        inner_calls: starknet_runtime.hint_handler.inner_calls,
+        inner_calls: starknet_runtime.hint_handler.base.inner_calls,
         ..Default::default()
     };
     let l2_to_l1_payload_lengths = runtime_call_info.get_l2_to_l1_payload_lengths();
