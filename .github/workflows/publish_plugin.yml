@@ -9,7 +9,7 @@ jobs:
     name: Check snforge_scarb_plugin Version
     runs-on: ubuntu-latest
     outputs:
-      is_plugin_already_uploaded: ${{ steps.check-version.outputs.is_plugin_already_uploaded }}
+      plugin_uploaded: ${{ steps.check-version.outputs.plugin_uploaded }}
     steps:
       - uses: actions/checkout@v4
       - name: Check version
@@ -18,13 +18,13 @@ jobs:
           set -exo pipefail
 
           snforge_scarb_plugin_version=$(grep version crates/snforge-scarb-plugin/Scarb.toml | cut -d '"' -f 2)
-          is_plugin_already_uploaded=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version "$snforge_scarb_plugin_version" '[.[] | select(.v == $version)] | length > 0')
-          echo "is_plugin_already_uploaded=$is_plugin_already_uploaded" >> $GITHUB_OUTPUT
+          plugin_uploaded=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version "$snforge_scarb_plugin_version" '[.[] | select(.v == $version)] | length > 0')
+          echo "plugin_uploaded=$plugin_uploaded" >> $GITHUB_OUTPUT
 
   build-binaries:
     name: Build ${{ matrix.target }}
     needs: check-version
-    if: needs.check-version.outputs.is_plugin_already_uploaded == 'false' || github.event_name == 'workflow_dispatch'
+    if: needs.check-version.outputs.plugin_uploaded == 'false' || github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
 
     env:
@@ -145,6 +145,6 @@ jobs:
           mv artifacts-dl/build-*/snforge_scarb_plugin_* crates/snforge-scarb-plugin/target/scarb/cairo-plugin/
 
       - name: Publish snforge_scarb_plugin
-        if: needs.check-version.outputs.is_plugin_already_uploaded == 'false' || github.event_name == 'workflow_dispatch'
+        if: needs.check-version.outputs.plugin_uploaded == 'false' || github.event_name == 'workflow_dispatch'
         working-directory: crates/snforge-scarb-plugin
         run: scarb publish
