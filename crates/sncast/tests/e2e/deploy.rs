@@ -279,6 +279,40 @@ fn test_contract_already_deployed() {
     );
 }
 
+#[test]
+fn test_too_low_gas() {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
+        "user7",
+        "--wait",
+        "deploy",
+        "--url",
+        URL,
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--salt",
+        "0x2",
+        "--unique",
+        "--max-gas-unit-price",
+        "1",
+        "--max-gas",
+        "1",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: deploy
+        error: Max fee is smaller than the minimal transaction cost
+        "},
+    );
+}
+
 #[tokio::test]
 async fn test_happy_case_shell() {
     let tempdir = create_and_deploy_oz_account().await;

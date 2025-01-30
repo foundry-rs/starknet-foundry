@@ -56,7 +56,8 @@ async fn test_happy_case_human_readable() {
     );
 }
 
-#[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
+#[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash"
+)]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
 #[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
 #[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
@@ -98,7 +99,8 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
 #[test_case(None, Some("100000"), None; "max_gas")]
 #[test_case(None, None, Some("100000000000000"); "max_gas_unit_price")]
 #[test_case(None, None, None; "none")]
-#[test_case(Some("10000000000000000000"), None, Some("100000000000000"); "max_fee_max_gas_unit_price")]
+#[test_case(Some("10000000000000000000"), None, Some("100000000000000"); "max_fee_max_gas_unit_price"
+)]
 #[test_case(None, Some("100000"), Some("100000000000000"); "max_gas_max_gas_unit_price")]
 #[test_case(Some("100000000000000000"), Some("100000"), None; "max_fee_max_gas")]
 #[tokio::test]
@@ -359,6 +361,44 @@ fn test_scarb_build_fails_manifest_does_not_exist() {
         output,
         indoc! {r"
         Error: Path to Scarb.toml manifest does not exist =[..]
+        "},
+    );
+}
+
+#[test]
+fn test_too_low_gas() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "2451825",
+    );
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user6",
+        "--wait",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+        "--max-gas-unit-price",
+        "1",
+        "--max-gas",
+        "1",
+    ];
+
+    let snapbox = runner(&args).current_dir(contract_path.path());
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: declare
+        error: Max fee is smaller than the minimal transaction cost
         "},
     );
 }
