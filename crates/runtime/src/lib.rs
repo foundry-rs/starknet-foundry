@@ -73,15 +73,27 @@ impl ResourceTracker for StarknetRuntime<'_> {
     }
 
     fn consume_step(&mut self) {
-        self.hint_handler.base.context.vm_run_resources.consume_step();
+        self.hint_handler
+            .base
+            .context
+            .vm_run_resources
+            .consume_step();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        self.hint_handler.base.context.vm_run_resources.get_n_steps()
+        self.hint_handler
+            .base
+            .context
+            .vm_run_resources
+            .get_n_steps()
     }
 
     fn run_resources(&self) -> &RunResources {
-        self.hint_handler.base.context.vm_run_resources.run_resources()
+        self.hint_handler
+            .base
+            .context
+            .vm_run_resources
+            .run_resources()
     }
 }
 

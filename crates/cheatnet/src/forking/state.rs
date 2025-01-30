@@ -24,6 +24,7 @@ use starknet_api::core::{ChainId, ClassHash, CompiledClassHash, ContractAddress,
 use starknet_api::deprecated_contract_class::{
     ContractClass as DeprecatedContractClass, EntryPointType,
 };
+use starknet_api::state::EntryPoint;
 use starknet_api::state::StorageKey;
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
@@ -34,7 +35,6 @@ use tokio::runtime::Handle;
 use tokio::task;
 use universal_sierra_compiler_api::{compile_sierra, SierraType};
 use url::Url;
-use starknet_api::state::EntryPoint;
 
 #[derive(Debug)]
 pub struct ForkStateReader {

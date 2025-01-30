@@ -180,12 +180,14 @@ impl From<BlockInfo> for SerializableBlockInfo {
 }
 impl From<SerializableGasPrices> for GasPrices {
     fn from(_forge_gas_prices: SerializableGasPrices) -> Self {
+        // TODO: Mock
         GasPrices::default()
     }
 }
 
 impl From<GasPrices> for SerializableGasPrices {
     fn from(_gas_prices: GasPrices) -> Self {
+        // TODO: Mock
         SerializableGasPrices::default()
     }
 }

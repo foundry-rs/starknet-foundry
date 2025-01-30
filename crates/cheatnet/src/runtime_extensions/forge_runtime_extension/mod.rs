@@ -117,7 +117,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
-                    .base.state
+                    .base
+                    .state
                     .get_compiled_class(class)
                 {
                     Err(StateError::UndeclaredClassHash(_)) => true,
@@ -129,7 +130,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
-                    .base.state
+                    .base
+                    .state
                     .get_class_hash_at(contract)?
                     == ClassHash::default()
                 {
@@ -222,7 +224,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
-                    .base.state;
+                    .base
+                    .state;
 
                 match get_class_hash(*state, contract_address) {
                     Ok(class_hash) => Ok(CheatcodeHandlingResult::from_serializable(class_hash)),
@@ -444,7 +447,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
-                    .base.state;
+                    .base
+                    .state;
                 let target = input_reader.read()?;
                 let storage_address = input_reader.read()?;
                 store(*state, target, storage_address, input_reader.read()?)
@@ -457,7 +461,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
-                    .base.state;
+                    .base
+                    .state;
                 let target = input_reader.read()?;
                 let storage_address = input_reader.read()?;
                 let loaded = load(*state, target, storage_address).context("Failed to load")?;
@@ -574,7 +579,8 @@ pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
         .extended_runtime
         .extended_runtime
         .hint_handler
-        .base.l2_to_l1_messages
+        .base
+        .l2_to_l1_messages
         .iter()
         .map(|ordered_message| ordered_message.message.payload.0.len())
         .collect();

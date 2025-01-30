@@ -26,7 +26,11 @@ pub fn deploy_at(
     calldata: &[Felt],
     contract_address: ContractAddress,
 ) -> Result<(ContractAddress, Vec<Felt>), CheatcodeError> {
-    if let Ok(class_hash) = syscall_handler.base.state.get_class_hash_at(contract_address) {
+    if let Ok(class_hash) = syscall_handler
+        .base
+        .state
+        .get_class_hash_at(contract_address)
+    {
         if class_hash != ClassHash::default() {
             return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
                 CustomHint(Box::from("Address is already taken")),
