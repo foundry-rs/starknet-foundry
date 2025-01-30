@@ -148,6 +148,7 @@ fn add_allow_prebuilt_macros(document: &mut DocumentMut) -> Result<()> {
     let tool_table = tool_section
         .as_table_mut()
         .context("Failed to get tool table from Scarb.toml")?;
+    tool_table.set_implicit(true);
 
     let mut scarb_table = Table::new();
 
