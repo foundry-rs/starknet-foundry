@@ -11,8 +11,8 @@ use blockifier::execution::{
 };
 use blockifier::state::errors::StateError;
 use blockifier::{
+    execution::execution_utils::update_remaining_gas,
     execution::syscalls::{hint_processor::create_retdata_segment, CallContractRequest},
-    transaction::transaction_utils::update_remaining_gas,
 };
 use blockifier::{
     execution::{

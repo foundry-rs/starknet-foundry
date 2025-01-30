@@ -45,7 +45,7 @@ use runtime::{
     SyscallHandlingResult,
 };
 use starknet::signers::SigningKey;
-use starknet_api::{core::ClassHash, deprecated_contract_class::EntryPointType::L1Handler};
+use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 
@@ -154,6 +154,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
+                    .base
                     .state;
 
                 let contract_name: String = input_reader.read::<ByteArray>()?.to_string();
@@ -616,9 +617,7 @@ fn add_syscall_resources(
     syscall_counter: &SyscallCounter,
 ) -> ExecutionResources {
     let mut total_vm_usage = execution_resources.filter_unused_builtins();
-    total_vm_usage += &versioned_constants
-        .get_additional_os_syscall_resources(syscall_counter)
-        .expect("Could not get additional costs");
+    total_vm_usage += &versioned_constants.get_additional_os_syscall_resources(syscall_counter);
     total_vm_usage
 }
 

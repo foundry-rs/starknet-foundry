@@ -1,13 +1,10 @@
 use anyhow::Result;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use blockifier::state::errors::StateError;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::{
-    extract_buffer, extract_relocatable, get_ptr, vm_get_range, MemBuffer,
-};
+use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
 use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::hint_processor::hint_processor_definition::{
@@ -301,13 +298,9 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
         constants: &HashMap<String, Felt>,
-        system: &ResOperand,
+        //TODO Remove - unused after removing verify_syscall_ptr
+        _system: &ResOperand,
     ) -> Result<(), HintError> {
-        // let (cell, offset) = extract_buffer(system);
-        // let system_ptr = get_ptr(vm, cell, &offset)?;
-
-        // self.verify_syscall_ptr(system_ptr)?;
-
         // We peek into memory to check the selector
         let selector = DeprecatedSyscallSelector::try_from(
             vm.get_integer(*self.get_mut_syscall_ptr())

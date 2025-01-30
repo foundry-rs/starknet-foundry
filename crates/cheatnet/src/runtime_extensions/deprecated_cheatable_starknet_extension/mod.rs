@@ -21,10 +21,10 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use num_traits::ToPrimitive;
 use starknet_api::block::{BlockNumber, BlockTimestamp};
+use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{
     calculate_contract_address, ClassHash, ContractAddress, EntryPointSelector,
 };
-use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::transaction::fields::Calldata;
 use starknet_types_core::felt::Felt;
 
@@ -265,11 +265,11 @@ fn deploy(
     };
     let call_info = execute_deployment(
         syscall_handler.state,
-        syscall_handler.resources,
         syscall_handler.context,
         ctor_context,
         request.constructor_calldata,
-        syscall_handler.context.gas_costs().initial_gas_cost,
+        //TODO MOCK
+        &mut 420_000_u64,
     )?;
     syscall_handler.inner_calls.push(call_info);
 

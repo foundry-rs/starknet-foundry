@@ -1,4 +1,5 @@
 use blockifier::{
+    execution::execution_utils::update_remaining_gas,
     execution::{
         entry_point::{CallEntryPoint, CallType},
         execution_utils::ReadOnlySegment,
@@ -7,7 +8,6 @@ use blockifier::{
             SyscallResult,
         },
     },
-    transaction::transaction_utils::update_remaining_gas,
 };
 use cairo_vm::vm::vm_core::VirtualMachine;
 use starknet_api::{

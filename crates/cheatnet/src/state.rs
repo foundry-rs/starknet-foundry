@@ -7,6 +7,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execut
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
+use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use blockifier::state::errors::StateError::UndeclaredClassHash;

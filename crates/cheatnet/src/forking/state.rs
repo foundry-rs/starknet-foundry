@@ -1,9 +1,7 @@
 use crate::forking::cache::ForkCache;
 use crate::state::BlockInfoReader;
 use anyhow::{Context, Result};
-use blockifier::execution::contract_class::{
-    ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
-};
+use blockifier::execution::contract_class::{ContractClassV0, ContractClassV1};
 use blockifier::state::errors::StateError::{self, StateReadError, UndeclaredClassHash};
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
@@ -20,6 +18,7 @@ use starknet::core::utils::parse_cairo_short_string;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider, ProviderError};
 use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp};
+use starknet_api::contract_class::ContractClass as ContractClassBlockifier;
 use starknet_api::core::{ChainId, ClassHash, CompiledClassHash, ContractAddress, Nonce};
 use starknet_api::deprecated_contract_class::{
     ContractClass as DeprecatedContractClass, EntryPointType,

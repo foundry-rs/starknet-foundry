@@ -230,13 +230,19 @@ pub fn execute_constructor_entry_point(
     remaining_gas: u64,
 ) -> EntryPointExecutionResult<CallInfo> {
     // Ensure the class is declared (by reading it).
-    let contract_class = state.get_compiled_contract_class(ctor_context.class_hash)?;
+    let contract_class = state.get_compiled_class(ctor_context.class_hash)?;
     let Some(constructor_selector) = contract_class.constructor_selector() else {
         // Contract has no constructor.
         cheatnet_state
             .trace_data
             .add_deploy_without_constructor_node();
-        return handle_empty_constructor(ctor_context, calldata, remaining_gas);
+        return handle_empty_constructor(
+            contract_class,
+            context,
+            ctor_context,
+            calldata,
+            remaining_gas,
+        );
     };
 
     let mut constructor_call = CallEntryPoint {

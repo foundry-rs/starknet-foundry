@@ -4,6 +4,7 @@ use crate::{get_account, WaitForTx};
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::CallEntryPoint;
+use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
 use cairo_lang_runner::short_string::as_cairo_short_string;
@@ -328,7 +329,6 @@ pub fn run(
 
     let syscall_handler = SyscallHintProcessor::new(
         &mut blockifier_state,
-        &mut execution_resources,
         &mut context,
         // This segment is created by SierraCasmRunner
         Relocatable {

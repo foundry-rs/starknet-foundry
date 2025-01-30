@@ -41,9 +41,6 @@ pub fn execute_entry_point_call_cairo0(
     )?;
     let n_total_args = args.len();
 
-    // Fix the VM resources, in order to calculate the usage of this run at the end.
-    let previous_vm_resources = syscall_handler.resources.clone();
-
     // region: Modified blockifier code
     let cheatable_extension = DeprecatedCheatableStarknetRuntimeExtension { cheatnet_state };
     let mut cheatable_syscall_handler = DeprecatedExtendedRuntime {
@@ -72,7 +69,6 @@ pub fn execute_entry_point_call_cairo0(
         runner,
         cheatable_syscall_handler.extended_runtime.hint_handler,
         call,
-        previous_vm_resources,
         implicit_args,
         n_total_args,
     )?;
