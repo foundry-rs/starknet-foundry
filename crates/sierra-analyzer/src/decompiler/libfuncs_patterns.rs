@@ -19,9 +19,18 @@ lazy_static! {
     pub static ref FUNCTION_CALL_REGEX: Regex = Regex::new(r"function_call<(.*)>").unwrap();
 
     // Arithmetic operations
-    pub static ref ADDITION_REGEX: Regex = Regex::new(r"(felt|u)_?(8|16|32|64|128|252)(_overflowing)?_add").unwrap();
-    pub static ref SUBSTRACTION_REGEX: Regex = Regex::new(r"(felt|u)_?(8|16|32|64|128|252)(_overflowing)?_sub").unwrap();
-    pub static ref MULTIPLICATION_REGEX: Regex = Regex::new(r"(felt|u)_?(8|16|32|64|128|252)(_overflowing)?_mul").unwrap();
+    pub static ref ADDITION_REGEX: Vec<Regex> = vec![
+        Regex::new(r"(felt|u)_?(8|16|32|64|128|252)(_overflowing)?_add").unwrap(),
+        Regex::new(r"function_call<user@core::Felt(8|16|32|64|128|252)Add::add>").unwrap(),
+    ];
+    pub static ref SUBSTRACTION_REGEX: Vec<Regex> = vec![
+        Regex::new(r"(felt|u)_?(8|16|32|64|128|252)(_overflowing)?_sub").unwrap(),
+        Regex::new(r"function_call<user@core::Felt(8|16|32|64|128|252)Sub::sub>").unwrap(),
+     ];
+    pub static ref MULTIPLICATION_REGEX: Vec<Regex> = vec![
+        Regex::new(r"(felt|u)_?(8|16|32|64|128|252)(_overflowing)?_mul").unwrap(),
+        Regex::new(r"function_call<user@core::Felt(8|16|32|64|128|252)Mul::mul>").unwrap(),
+    ];
 
     // Variable duplication
     pub static ref DUP_REGEX: Regex = Regex::new(r"dup(<.*>)?").unwrap();
@@ -67,9 +76,6 @@ lazy_static! {
             NEW_ARRAY_REGEX.clone(),
             ARRAY_APPEND_REGEX.clone(),
             DUP_REGEX.clone(),
-            ADDITION_REGEX.clone(),
-            SUBSTRACTION_REGEX.clone(),
-            MULTIPLICATION_REGEX.clone(),
             IS_ZERO_REGEX.clone(),
             // Add the additional strings as regexes
             Regex::new(r"branch_align").unwrap(),
@@ -79,6 +85,12 @@ lazy_static! {
             Regex::new(r"revoke_ap_tracking").unwrap(),
             Regex::new(r"get_builtin_costs").unwrap(),
         ];
+
+        // Extend the vector with all the arithmetic operations regexes
+        regexes.extend(ADDITION_REGEX.clone());
+        regexes.extend(SUBSTRACTION_REGEX.clone());
+        regexes.extend(MULTIPLICATION_REGEX.clone());
+
         // Extend the vector with all the variable assignment regexes
         regexes.extend(VARIABLE_ASSIGNMENT_REGEX.clone());
         regexes

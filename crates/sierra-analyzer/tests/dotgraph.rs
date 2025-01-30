@@ -1,4 +1,4 @@
-use sierra_analyzer_lib::sierra_program::SierraProgram;
+use sierra_analyzer::sierra_program::SierraProgram;
 
 #[test]
 fn test_dogtgraph_cfg_output() {

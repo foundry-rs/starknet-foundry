@@ -62,7 +62,7 @@ impl Detector for FeltOverflowDetector {
 
             let function_name = function.function.id.clone();
 
-            let arguments = function.arguments;
+            let arguments = function.arguments.clone();
 
             // Filter arguments felt arguments
             let felt_arguments: Vec<_> = arguments
@@ -94,14 +94,27 @@ impl Detector for FeltOverflowDetector {
                     );
 
                     // Detect if we perform an arithmetic operation with a felt argument
-                    if ADDITION_REGEX.is_match(&libfunc_name)
-                        || SUBSTRACTION_REGEX.is_match(&libfunc_name)
-                        || MULTIPLICATION_REGEX.is_match(&libfunc_name)
+                    if ADDITION_REGEX
+                        .iter()
+                        .any(|regex| regex.is_match(&libfunc_name))
+                        || SUBSTRACTION_REGEX
+                            .iter()
+                            .any(|regex| regex.is_match(&libfunc_name))
+                        || MULTIPLICATION_REGEX
+                            .iter()
+                            .any(|regex| regex.is_match(&libfunc_name))
                     {
-                        if !local_found_felt_arguments.is_empty() {
-                            found_vulnerabilities
-                                .push((function_name.clone(), local_found_felt_arguments));
-                        }
+                        let confidence = if !local_found_felt_arguments.is_empty() {
+                            "High"
+                        } else {
+                            "Low"
+                        };
+                        found_vulnerabilities.push((
+                            function_name.clone(),
+                            local_found_felt_arguments,
+                            confidence,
+                            libfunc_name,
+                        ));
                     }
                 }
             }
@@ -109,12 +122,24 @@ impl Detector for FeltOverflowDetector {
 
         // Append the found vulnerabilities to the result
         if !found_vulnerabilities.is_empty() {
-            for (function_name, arguments) in found_vulnerabilities {
+            for (function_name, arguments, confidence, libfunc_name) in found_vulnerabilities {
                 let arguments_str = arguments.join(", ");
-                result.push_str(&format!(
-                    "{}: parameters {} could be used to trigger a felt overflow/underflow\n",
-                    function_name, arguments_str
-                ));
+                let confidence_str = if confidence == "High" {
+                    "\x1b[1;31mHigh\x1b[0m"
+                } else {
+                    confidence
+                };
+                if confidence == "High" {
+                    result.push_str(&format!(
+                        "{}: parameters {} could be used to trigger a felt overflow/underflow (Confidence: {})\n",
+                        function_name, arguments_str, confidence_str
+                    ));
+                } else {
+                    result.push_str(&format!(
+                        "{}: method {} could be used to trigger a felt overflow/underflow (Confidence: {})\n",
+                        function_name, libfunc_name, confidence
+                    ));
+                }
             }
         }
 

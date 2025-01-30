@@ -3,7 +3,7 @@ use z3::{
     Config, Context, SatResult,
 };
 
-use sierra_analyzer_lib::sym_exec::sym_exec::SymbolicExecution;
+use sierra_analyzer::sym_exec::sym_exec::SymbolicExecution;
 
 #[test]
 fn test_constraints() {
