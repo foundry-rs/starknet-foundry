@@ -57,7 +57,7 @@ jobs:
             os: windows-latest
             ext: "dll"
 
-          # The builds for following platforms builds are experimental and are not supported by starknet-foundry team.
+          # The scarb builds for following platforms are experimental and not officially supported by starknet-foundry.
           # https://docs.swmansion.com/scarb/download.html#platform-support
           # Reference issue: TODO(#2886)
 
