@@ -2,7 +2,6 @@ use crate::starknet_commands::{
     account, account::Account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke,
     multicall::Multicall, script::Script, show_config::ShowConfig, tx_status::TxStatus,
 };
-
 use anyhow::{Context, Result};
 use data_transformer::Calldata;
 use sncast::helpers::account::generate_account_name;
