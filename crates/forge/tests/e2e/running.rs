@@ -1052,11 +1052,13 @@ fn incompatible_snforge_std_version_warning() {
 
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
+            Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps
 
         [FAIL] steps::tests::steps_much_more_than_10000000
 
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
+            Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps
 
         [PASS] steps::tests::steps_less_than_10000000 [..]
         Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
