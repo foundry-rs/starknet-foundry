@@ -33,15 +33,10 @@ mod tests_bytes31 {
         assert!(matches!(result, Err(ParseBytes31Error::Overflow)));
     }
 
-    #[test]
-    fn test_invalid_hex() {
-        let result = CairoBytes31::from_str("invalid_hex");
-        assert!(matches!(result, Err(ParseBytes31Error::CairoFromStrError)));
-    }
-
-    #[test]
-    fn test_empty_string() {
-        let result = CairoBytes31::from_str("");
+    #[test_case("wrong_string_value"; "wrong string value")]
+    #[test_case(""; "empty string")]
+    fn test_invalid_string(input: &str) {
+        let result = CairoBytes31::from_str(input);
         assert!(matches!(result, Err(ParseBytes31Error::CairoFromStrError)));
     }
 
