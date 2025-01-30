@@ -62,8 +62,8 @@ impl CallFailure {
         starknet_identifier: &AddressOrClassHash,
     ) -> Self {
         match err {
-            EntryPointExecutionError::ExecutionFailed { error_data } => {
-                let err_data: Vec<_> = error_data.iter().map(|data| Felt::from_(*data)).collect();
+            EntryPointExecutionError::ExecutionFailed { error_trace } => {
+                let err_data: Vec<_> = error_trace.iter().map(|data| Felt::from_(*data)).collect();
 
                 let err_data_str = build_readable_text(&err_data).unwrap_or_default();
 
