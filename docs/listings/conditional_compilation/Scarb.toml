@@ -1,7 +1,7 @@
 [package]
 name = "conditional_compilation"
 version = "0.1.0"
-edition = "2023_11"
+edition = "2024_07"
 
 [features]
 default = ["enable_for_tests"]
@@ -9,7 +9,7 @@ enable_for_tests = []
 
 [dependencies]
 starknet = "2.7.0"
-assert_macros = "0.1.0"
+assert_macros = "2.9.2"
 
 [dev-dependencies]
 snforge_std = { path = "../../../snforge_std" }

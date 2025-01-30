@@ -4,6 +4,7 @@ fn test_abc() {
 }
 
 #[test]
+#[should_panic(expected: 'failing check' )]
 fn test_failing() {
     assert(1 == 2, 'failing check');
 }
