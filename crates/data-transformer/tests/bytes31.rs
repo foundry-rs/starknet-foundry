@@ -33,6 +33,8 @@ mod tests_bytes31 {
         assert!(matches!(result, Err(ParseBytes31Error::Overflow)));
     }
 
+    use test_case::test_case;
+
     #[test_case("wrong_string_value"; "wrong string value")]
     #[test_case(""; "empty string")]
     fn test_invalid_string(input: &str) {
