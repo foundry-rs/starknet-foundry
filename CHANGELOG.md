@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
 #### Added
 
 - `snforge new` now adds the `snfoundry_trace`, `coverage`, and `profile` directories to `.gitignore`.
-
-### Forge
 
 #### Fixed
 
