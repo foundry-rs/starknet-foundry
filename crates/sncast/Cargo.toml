@@ -32,6 +32,7 @@ configuration = { path = "../configuration" }
 shared = { path = "../shared" }
 cairo-lang-runner.workspace = true
 cairo-lang-sierra-to-casm.workspace = true
+cairo-lang-runnable-utils.workspace = true
 cairo-lang-utils.workspace = true
 cairo-lang-sierra.workspace = true
 itertools.workspace = true

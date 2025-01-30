@@ -155,6 +155,7 @@ impl CheatableStarknetRuntimeExtension<'_> {
                 .base
                 .context
                 .gas_costs()
+                .base
                 .syscall_base_gas_cost;
 
         let SyscallRequestWrapper {

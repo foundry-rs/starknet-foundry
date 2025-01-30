@@ -7,6 +7,7 @@ use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
+use cairo_lang_runnable_utils::builder::create_code_footer;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{build_hints_dict, RunResultValue, SierraCasmRunner};
 use cairo_lang_sierra::program::VersionedProgram;
@@ -308,7 +309,7 @@ pub fn run(
         .context("Failed to find main function in script - please make sure `sierra-replace-ids` is not set to `false` for `dev` profile in script's Scarb.toml")?;
 
     let (entry_code, builtins) = runner.create_entry_code(func, &Vec::new(), usize::MAX)?;
-    let footer = SierraCasmRunner::create_code_footer();
+    let footer = create_code_footer();
     let instructions = chain!(
         entry_code.iter(),
         runner.get_casm_program().instructions.iter(),
