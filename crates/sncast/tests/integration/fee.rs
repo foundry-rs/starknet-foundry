@@ -24,6 +24,30 @@ async fn get_factory() -> OpenZeppelinAccountFactory<LocalWallet, JsonRpcClient<
 }
 
 #[tokio::test]
+async fn test_happy_case() {
+    let factory = get_factory().await;
+
+    let args = FeeArgs {
+        max_fee: None,
+        max_gas: Some(Felt::from(100_u32).try_into().unwrap()),
+        max_gas_unit_price: Some(Felt::from(200_u32).try_into().unwrap()),
+    };
+
+    let settings = args
+        .try_into_fee_settings(factory.provider(), factory.block_id())
+        .await
+        .unwrap();
+
+    assert_eq!(
+        settings,
+        FeeSettings {
+            max_gas: Some(NonZeroU64::try_from(100_u64).unwrap()),
+            max_gas_unit_price: Some(NonZeroU128::try_from(200_u128).unwrap()),
+        }
+    );
+}
+
+#[tokio::test]
 async fn test_all_args() {
     let factory = get_factory().await;
 
