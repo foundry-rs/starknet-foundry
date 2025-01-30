@@ -46,14 +46,8 @@ pub struct DeclareTransactionResult {
 pub struct AlreadyDeclaredResult {
     pub class_hash: ClassHash,
 }
-
-#[derive(Drop, Clone, Debug, Serde, PartialEq)]
-pub struct EthFeeSettings {
-    pub max_fee: Option<felt252>,
-}
-
-#[derive(Drop, Clone, Debug, Serde, PartialEq)]
-pub struct StrkFeeSettings {
+#[derive(Drop, Copy, Debug, Serde, PartialEq)]
+pub struct FeeSettings {
     pub max_fee: Option<felt252>,
     pub max_gas: Option<u64>,
     pub max_gas_unit_price: Option<u128>,
