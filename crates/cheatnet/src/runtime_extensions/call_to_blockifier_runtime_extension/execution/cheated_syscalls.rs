@@ -2,7 +2,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::{
-    DeployRequest, DeployResponse, LibraryCallRequest, SyscallResponse, SyscallResult,
+    syscall_base::SyscallResult, DeployRequest, DeployResponse, LibraryCallRequest, SyscallResponse,
 };
 use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
 use blockifier::execution::{
@@ -29,9 +29,9 @@ use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use starknet_api::core::calculate_contract_address;
 use starknet_api::{
+    contract_class::EntryPointType,
     core::{ClassHash, ContractAddress},
-    deprecated_contract_class::EntryPointType,
-    transaction::Calldata,
+    transaction::fields::Calldata,
 };
 
 use super::calls::{execute_inner_call, execute_library_call};

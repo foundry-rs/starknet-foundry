@@ -7,14 +7,10 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execut
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
-use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
-use blockifier::{
-    execution::contract_class::ContractClass,
-    state::state_api::{StateReader, StateResult},
-};
+use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_annotations::trace_data::L1Resources;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
@@ -24,8 +20,9 @@ use conversions::string::TryFromHexStr;
 use runtime::starknet::context::SerializableBlockInfo;
 use runtime::starknet::state::DictStateReader;
 use starknet_api::block::BlockInfo;
+use starknet_api::contract_class::ContractClass;
 use starknet_api::core::{ChainId, EntryPointSelector};
-use starknet_api::transaction::ContractAddressSalt;
+use starknet_api::transaction::fields::ContractAddressSalt;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
     state::StorageKey,

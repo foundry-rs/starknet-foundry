@@ -6,7 +6,8 @@ use anyhow::Result;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::execution::syscalls::hint_processor::OUT_OF_GAS_ERROR;
 use blockifier::execution::syscalls::{
-    SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper, SyscallResult,
+    syscall_base::SyscallResult, SyscallRequest, SyscallRequestWrapper, SyscallResponse,
+    SyscallResponseWrapper,
 };
 use blockifier::execution::{
     common_hints::HintExecutionResult,
@@ -149,8 +150,12 @@ impl CheatableStarknetRuntimeExtension<'_> {
         syscall_handler.syscall_ptr += 1;
         syscall_handler.increment_syscall_count_by(&selector, 1);
         let syscall_gas_cost = get_syscall_cost(selector, syscall_handler.base.context);
-        let required_gas =
-            syscall_gas_cost - syscall_handler.context.gas_costs().syscall_base_gas_cost;
+        let required_gas = syscall_gas_cost
+            - syscall_handler
+                .base
+                .context
+                .gas_costs()
+                .syscall_base_gas_cost;
 
         let SyscallRequestWrapper {
             gas_counter,

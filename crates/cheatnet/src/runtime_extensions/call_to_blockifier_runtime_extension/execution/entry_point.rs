@@ -7,7 +7,6 @@ use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::{
     execution::{
         call_info::CallInfo,
-        contract_class::ContractClass,
         entry_point::{
             handle_empty_constructor, CallEntryPoint, CallType, ConstructorContext,
             EntryPointExecutionContext, EntryPointExecutionResult,
@@ -20,14 +19,15 @@ use blockifier::{
 use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
 use starknet_api::{
     core::ClassHash,
-    deprecated_contract_class::EntryPointType,
-    transaction::{Calldata, TransactionVersion},
+    contract_class::EntryPointType,
+    transaction::{fields::Calldata, TransactionVersion},
 };
 use std::collections::HashSet;
 use std::rc::Rc;
 use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use starknet_types_core::felt::Felt;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
+use starknet_api::contract_class::ContractClass;
 use thiserror::Error;
 use conversions::FromConv;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};

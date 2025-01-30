@@ -6,14 +6,13 @@ use blockifier::execution::contract_class::ContractClassV1;
 use starknet_api::contract_class::ContractClass;
 
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
+use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
 use indoc::indoc;
-use starknet::core::utils::get_selector_from_name;
-use starknet_api::deprecated_contract_class::EntryPointType;
-
-use conversions::string::TryFromHexStr;
 use runtime::starknet::context::ERC20_CONTRACT_ADDRESS;
 use runtime::starknet::state::DictStateReader;
+use starknet::core::utils::get_selector_from_name;
+use starknet_api::contract_class::EntryPointType;
 use starknet_api::{core::ContractAddress, transaction::fields::Calldata};
 
 pub const MAX_FEE: u128 = 1_000_000 * 100_000_000_000; // 1000000 * min_gas_price.

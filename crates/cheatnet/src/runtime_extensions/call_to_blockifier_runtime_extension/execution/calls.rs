@@ -5,15 +5,15 @@ use blockifier::{
         execution_utils::ReadOnlySegment,
         syscalls::{
             hint_processor::{create_retdata_segment, SyscallExecutionError, SyscallHintProcessor},
-            SyscallResult,
+            syscall_base::SyscallResult,
         },
     },
 };
 use cairo_vm::vm::vm_core::VirtualMachine;
 use starknet_api::{
+    contract_class::EntryPointType,
     core::{ClassHash, EntryPointSelector},
-    deprecated_contract_class::EntryPointType,
-    transaction::Calldata,
+    transaction::fields::Calldata,
 };
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
@@ -51,7 +51,7 @@ pub fn execute_inner_call(
     let retdata_segment = create_retdata_segment(vm, syscall_handler, raw_retdata)?;
     update_remaining_gas(remaining_gas, &call_info);
 
-    syscall_handler.inner_calls.push(call_info);
+    syscall_handler.base.inner_calls.push(call_info);
 
     Ok(retdata_segment)
 }

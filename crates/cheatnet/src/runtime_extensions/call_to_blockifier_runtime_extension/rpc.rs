@@ -17,11 +17,11 @@ use conversions::{
     byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr, FromConv, IntoConv,
 };
 use shared::utils::build_readable_text;
-use starknet_api::{core::EntryPointSelector, transaction::EventContent};
 use starknet_api::{
+    contract_class::EntryPointType,
     core::{ClassHash, ContractAddress},
-    deprecated_contract_class::EntryPointType,
 };
+use starknet_api::{core::EntryPointSelector, transaction::EventContent};
 use starknet_types_core::felt::Felt;
 
 #[derive(Clone, Debug, Default)]

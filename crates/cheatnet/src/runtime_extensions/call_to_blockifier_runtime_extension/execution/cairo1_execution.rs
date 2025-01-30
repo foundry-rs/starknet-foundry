@@ -41,7 +41,7 @@ pub fn execute_entry_point_call_cairo1(
     } = initialize_execution_context(call, contract_class, state, resources, context)?;
 
     let args = prepare_call_arguments(
-        &syscall_handler.call,
+        &syscall_handler.base.call,
         &mut runner,
         initial_syscall_ptr,
         &mut syscall_handler.read_only_segments,

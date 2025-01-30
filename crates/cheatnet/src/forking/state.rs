@@ -19,10 +19,9 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider, ProviderError};
 use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp};
 use starknet_api::contract_class::ContractClass as ContractClassBlockifier;
+use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ChainId, ClassHash, CompiledClassHash, ContractAddress, Nonce};
-use starknet_api::deprecated_contract_class::{
-    ContractClass as DeprecatedContractClass, EntryPointType,
-};
+use starknet_api::deprecated_contract_class::ContractClass as DeprecatedContractClass;
 use starknet_api::state::EntryPoint;
 use starknet_api::state::StorageKey;
 use starknet_types_core::felt::Felt;

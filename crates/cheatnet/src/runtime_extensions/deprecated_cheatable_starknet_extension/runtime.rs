@@ -1,12 +1,10 @@
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::felt_from_ptr_immutable;
 use anyhow::Result;
-use blockifier::execution::deprecated_syscalls::DeprecatedSyscallResult;
 use blockifier::execution::{
     deprecated_syscalls::{
         hint_processor::DeprecatedSyscallHintProcessor, DeprecatedSyscallSelector,
     },
     hint_code,
-    syscalls::{hint_processor::SyscallExecutionError, SyscallResult},
 };
 use cairo_vm::{
     hint_processor::{
@@ -136,7 +134,7 @@ impl<Extension: DeprecatedExtensionLogic> DeprecatedExtendedRuntime<Extension> {
         ap_tracking: &ApTracking,
     ) -> Result<(), HintError> {
         let initial_syscall_ptr = get_ptr_from_var_name("syscall_ptr", vm, ids_data, ap_tracking)?;
-        // self.verify_syscall_ptr(initial_syscall_ptr)?;
+
         let selector = DeprecatedSyscallSelector::try_from(felt_from_ptr_immutable(
             vm,
             &initial_syscall_ptr,
@@ -165,10 +163,6 @@ impl<Extension: DeprecatedExtensionLogic> SyscallPtrAccess
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
         self.extended_runtime.get_mut_syscall_ptr()
     }
-
-    // fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
-    //     self.extended_runtime.verify_syscall_ptr(ptr)
-    // }
 }
 
 impl<Extension: DeprecatedExtensionLogic> ResourceTracker for DeprecatedExtendedRuntime<Extension> {
