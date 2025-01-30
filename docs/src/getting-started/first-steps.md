@@ -109,3 +109,5 @@ Additionally, ensure that starknet-contract target is enabled in the `Scarb.toml
 > [tool.scarb]  
 > allow-prebuilt-plugins = ["snforge_std"]
 > ```
+> This configuration requires Scarb version >= 2.10.0 .
+>
