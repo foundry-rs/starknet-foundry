@@ -13,7 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `snforge new` now adds the `snfoundry_trace`, `coverage`, and `profile` directories to `.gitignore`.
 
-#### Added
 
 - Added a suggestion for using the `--max-n-steps` flag when the Cairo VM returns the error: `Could not reach the end of the program. RunResources has no remaining steps`.
 
