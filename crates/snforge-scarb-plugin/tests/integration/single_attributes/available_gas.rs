@@ -66,7 +66,7 @@ fn work_with_number() {
                 if snforge_std::_internals::_is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_config_types::AvailableGasConfig {
+                    snforge_std::_internals::_config_types::AvailableGasConfig {
                         gas: 0x7b
                     }
                     .serialize(ref data);
