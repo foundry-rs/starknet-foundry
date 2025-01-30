@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{ensure, Context, Result};
 use cairo_annotations::annotations::coverage::{
     CodeLocation, ColumnNumber, CoverageAnnotationsV1, LineNumber, VersionedCoverageAnnotations,
 };
@@ -11,15 +11,24 @@ use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet_classes::contract_class::ContractClass;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::EncounteredError;
-use indoc::indoc;
+use indoc::{formatdoc, indoc};
 use itertools::Itertools;
 use rayon::prelude::*;
+use scarb_api::metadata::Metadata;
+use semver::Version;
 use starknet_api::core::ClassHash;
 use std::collections::HashMap;
 use std::fmt::Display;
-use std::{env, fmt};
+use std::{env, fmt, fs};
+use toml_edit::{DocumentMut, Table};
 
 const BACKTRACE_ENV: &str = "SNFORGE_BACKTRACE";
+const MINIMAL_SCARB_VERSION: Version = Version::new(2, 8, 0);
+
+const CAIRO_BACKTRACE_REQUIRED_ENTRIES: [(&str, &str); 2] = [
+    ("unstable-add-statements-functions-debug-info", "true"),
+    ("unstable-add-statements-code-locations-debug-info", "true"),
+];
 
 pub fn add_backtrace_footer(
     message: String,
@@ -52,6 +61,52 @@ pub fn add_backtrace_footer(
         )
 }
 
+pub fn can_be_generated(scarb_metadata: &Metadata) -> Result<()> {
+    let manifest = fs::read_to_string(&scarb_metadata.runtime_manifest)?.parse::<DocumentMut>()?;
+
+    ensure!(
+        scarb_metadata.app_version_info.version >= MINIMAL_SCARB_VERSION,
+        "Coverage generation requires scarb version >= {MINIMAL_SCARB_VERSION}",
+    );
+
+    let has_needed_entries = manifest
+        .get("profile")
+        .and_then(|profile| profile.get(&scarb_metadata.current_profile))
+        .and_then(|profile| profile.get("cairo"))
+        .and_then(|cairo| cairo.as_table())
+        .is_some_and(|profile_cairo| {
+            CAIRO_BACKTRACE_REQUIRED_ENTRIES
+                .iter()
+                .all(|(key, value)| contains_entry_with_value(profile_cairo, key, value))
+        });
+
+    ensure!(
+        has_needed_entries,
+        formatdoc! {
+            "Scarb.toml must have the following Cairo compiler configuration to run backtrace:
+
+            [profile.{profile}.cairo]
+            unstable-add-statements-functions-debug-info = true
+            unstable-add-statements-code-locations-debug-info = true
+            inlining-strategy = \"avoid\"
+            ... other entries ...
+            ",
+            profile = scarb_metadata.current_profile
+        },
+    );
+
+    Ok(())
+}
+
+pub fn is_enabled() -> bool {
+    env::var(BACKTRACE_ENV).is_ok_and(|value| value == "1")
+}
+
+fn contains_entry_with_value(table: &Table, key: &str, value: &str) -> bool {
+    table
+        .get(key)
+        .is_some_and(|entry| entry.to_string().trim() == value)
+}
 struct ContractBacktraceData {
     contract_name: String,
     casm_debug_info_start_offsets: Vec<usize>,

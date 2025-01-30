@@ -22,6 +22,7 @@ use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
+pub mod backtrace;
 pub mod build_trace_data;
 pub mod coverage_api;
 pub mod expected_result;
@@ -31,7 +32,6 @@ pub mod profiler_api;
 pub mod test_case_summary;
 pub mod test_target_summary;
 
-mod backtrace;
 mod fuzzer;
 mod gas;
 pub mod printing;

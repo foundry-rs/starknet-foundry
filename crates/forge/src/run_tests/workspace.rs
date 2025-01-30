@@ -5,6 +5,7 @@ use crate::{
     warn::warn_if_snforge_std_not_compatible, ColorOption, ExitStatus, TestArgs,
 };
 use anyhow::{Context, Result};
+use forge_runner::backtrace::{can_be_generated, is_enabled};
 use forge_runner::{
     coverage_api::can_coverage_be_generated,
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
@@ -30,6 +31,10 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
 
     if args.coverage {
         can_coverage_be_generated(&scarb_metadata)?;
+    }
+
+    if is_enabled() {
+        can_be_generated(&scarb_metadata)?;
     }
 
     warn_if_snforge_std_not_compatible(&scarb_metadata)?;
