@@ -32,3 +32,6 @@ jobs:
             marking it as stale. It will close in ${{ env.DAYS_BEFORE_CLOSE }}
             days if it is not updated. Thanks for contributing!
           close-pr-message: false
+
+      - name: Logs
+        run: echo ${{ format('{0},{1}', toJSON(steps.stale.outputs.staled-issues-prs), toJSON(steps.stale.outputs.closed-issues-prs)) }}
