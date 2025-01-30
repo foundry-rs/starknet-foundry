@@ -32,7 +32,7 @@ fn works_without_args() {
                 if snforge_std::_internals::_is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_config_types::IgnoreConfig {
+                    snforge_std::_internals::_config_types::IgnoreConfig {
                         is_ignored: true
                     }
                     .serialize(ref data);

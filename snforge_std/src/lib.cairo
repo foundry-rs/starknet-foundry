@@ -138,8 +138,8 @@ mod _cheatcode;
 
 pub mod _internals {
     use super::_cheatcode;
+    use super::_config_types;
 
     pub use _cheatcode::_is_config_run;
-
-    pub mod _config_types;
+    pub use _config_types::*;
 }
