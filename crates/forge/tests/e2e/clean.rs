@@ -20,6 +20,7 @@ struct CleanComponentsState {
 }
 
 #[test]
+#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn test_clean_coverage() {
     let temp_dir = setup_package("coverage_project");
 
@@ -53,6 +54,7 @@ fn test_clean_coverage() {
 }
 
 #[test]
+#[cfg(not(target_os = "windows"))]
 fn test_clean_profile() {
     let temp_dir = setup_package("coverage_project");
 
