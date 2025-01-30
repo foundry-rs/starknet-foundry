@@ -2,9 +2,6 @@ use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN};
 use cairo_lang_macro::{Diagnostic, TokenStream};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::should_panic::should_panic;
-use snforge_std::_internals::_is_config_run;
-use snforge_std::_internals::ShouldPanicConfig;
-use snforge_std::_internals::Expected;
 
 #[test]
 fn work_with_empty() {
