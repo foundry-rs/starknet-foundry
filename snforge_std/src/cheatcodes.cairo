@@ -20,6 +20,36 @@ pub enum CheatSpan {
     TargetCalls: usize,
 }
 
+/// Enum used to specify the call data that should be matched when mocking a contract call.
+#[derive(Copy, Drop, PartialEq, Clone, Debug)]
+pub enum MockCallData {
+    /// Matches any call data.
+    Any,
+    /// Matches the specified serialized call data.
+    Values: Span<felt252>,
+}
+
+impl MockCallDataSerde of Serde<MockCallData> {
+    fn deserialize(ref serialized: Span<felt252>) -> Option<MockCallData> {
+        let value: Option<Option<Span<felt252>>> = Serde::deserialize(ref serialized);
+
+        match value {
+            Option::None => Option::None,
+            Option::Some(call_data) => match call_data {
+                Option::None => Option::Some(MockCallData::Any),
+                Option::Some(data) => Option::Some(MockCallData::Values(data)),
+            },
+        }
+    }
+
+    fn serialize(self: @MockCallData, ref output: Array<felt252>) {
+        match self {
+            MockCallData::Any => Option::<Span<felt252>>::None.serialize(ref output),
+            MockCallData::Values(data) => Option::Some(*data).serialize(ref output),
+        }
+    }
+}
+
 pub fn test_selector() -> felt252 {
     // Result of selector!("TEST_CONTRACT_SELECTOR") since `selector!` macro requires dependency on
     // `starknet`.
@@ -43,13 +73,17 @@ pub fn test_address() -> ContractAddress {
 /// - `ret_data` - data to return by the function `function_selector`
 /// - `n_times` - number of calls to mock the function for
 pub fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
-    contract_address: ContractAddress, function_selector: felt252, ret_data: T, n_times: u32
+    contract_address: ContractAddress,
+    function_selector: felt252,
+    call_data: MockCallData,
+    ret_data: T,
+    n_times: u32
 ) {
     assert!(n_times > 0, "cannot mock_call 0 times, n_times argument must be greater than 0");
 
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
-
+    call_data.serialize(ref inputs);
     CheatSpan::TargetCalls(n_times).serialize(ref inputs);
 
     let mut ret_data_arr = ArrayTrait::new();
@@ -66,13 +100,17 @@ pub fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct
 /// - `contract_address` - targeted contracts' address
 /// - `function_selector` - hashed name of the target function (can be obtained with `selector!`
 /// macro)
+/// - `call_data` - matching call data
 /// - `ret_data` - data to be returned by the function
 pub fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
-    contract_address: ContractAddress, function_selector: felt252, ret_data: T
+    contract_address: ContractAddress,
+    function_selector: felt252,
+    call_data: MockCallData,
+    ret_data: T
 ) {
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
-
+    call_data.serialize(ref inputs);
     CheatSpan::Indefinite.serialize(ref inputs);
 
     let mut ret_data_arr = ArrayTrait::new();
@@ -87,12 +125,16 @@ pub fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: De
 /// address.
 /// - `contract_address` - targeted contracts' address
 /// - `function_selector` - hashed name of the target function (can be obtained with `selector!`
+/// - `call_data` - matching call data
 /// macro)
-pub fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252) {
+pub fn stop_mock_call(
+    contract_address: ContractAddress, function_selector: felt252, call_data: MockCallData
+) {
     let contract_address_felt: felt252 = contract_address.into();
-    execute_cheatcode_and_deserialize::<
-        'stop_mock_call', ()
-    >(array![contract_address_felt, function_selector].span());
+    let mut inputs = array![contract_address_felt, function_selector];
+    call_data.serialize(ref inputs);
+
+    execute_cheatcode_and_deserialize::<'stop_mock_call', ()>(inputs.span());
 }
 
 #[derive(Drop, Serde, PartialEq, Debug)]
