@@ -4,8 +4,7 @@
 #[starknet::component]
 pub mod SRC5Component {
     use starknet::{
-        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map},
-        ContractAddress
+        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map}
     };
 
     const ISRC5_ID: felt252 = 0x3f918d17e5ee77373b56385708f855659a07f75997f365cf87748628532a055;
