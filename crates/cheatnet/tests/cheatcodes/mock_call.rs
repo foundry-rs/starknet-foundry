@@ -38,6 +38,7 @@ impl MockCallTrait for TestEnvironment {
         self.cheatnet_state.mock_call(
             *contract_address,
             function_selector.into_(),
+            None,
             &ret_data,
             span,
         );
@@ -46,7 +47,7 @@ impl MockCallTrait for TestEnvironment {
     fn stop_mock_call(&mut self, contract_address: &ContractAddress, function_name: &str) {
         let function_selector = get_selector_from_name(function_name).unwrap();
         self.cheatnet_state
-            .stop_mock_call(*contract_address, function_selector.into_());
+            .stop_mock_call(*contract_address, function_selector.into_(), None);
     }
 }
 
@@ -115,7 +116,7 @@ fn mock_call_stop() {
 
     assert_success(output, &ret_data);
 
-    cheatnet_state.stop_mock_call(contract_address, felt_selector_from_name("get_thing"));
+    cheatnet_state.stop_mock_call(contract_address, felt_selector_from_name("get_thing"), None);
 
     let output = call_contract(
         &mut cached_state,
@@ -142,7 +143,7 @@ fn mock_call_stop_no_start() {
 
     let selector = felt_selector_from_name("get_thing");
 
-    cheatnet_state.stop_mock_call(contract_address, felt_selector_from_name("get_thing"));
+    cheatnet_state.stop_mock_call(contract_address, felt_selector_from_name("get_thing"), None);
 
     let output = call_contract(
         &mut cached_state,
@@ -185,7 +186,7 @@ fn mock_call_double() {
 
     assert_success(output, &ret_data);
 
-    cheatnet_state.stop_mock_call(contract_address, selector);
+    cheatnet_state.stop_mock_call(contract_address, selector, None);
 
     let output = call_contract(
         &mut cached_state,
