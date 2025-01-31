@@ -631,6 +631,8 @@ async fn run_async_command(
         }
 
         Commands::Verify(verify) => {
+            verify.validate()?;
+
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &verify.package)?;
             let artifacts = build_and_load_artifacts(
@@ -644,11 +646,7 @@ async fn run_async_command(
             )
             .expect("Failed to build contract");
             let result = starknet_commands::verify::verify(
-                verify.contract_address,
-                verify.contract_name,
-                verify.verifier,
-                verify.network,
-                verify.confirm_verification,
+                verify,
                 &package_metadata.manifest_path,
                 &artifacts,
             )

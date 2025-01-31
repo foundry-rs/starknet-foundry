@@ -211,6 +211,33 @@ response: [0x6]
 </details>
 <br>
 
+### Verify a contract
+
+```shell
+$ sncast \
+    verify \
+    --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
+    --contract-name HelloSncast \
+    --verifier walnut \
+    --network sepolia
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+
+    You are about to submit the entire workspace code to the third-party verifier at walnut.
+
+    Important: Make sure your project does not include sensitive information like private keys. The snfoundry.toml file will be uploaded. Keep the keystore outside the project to prevent it from being uploaded.
+
+    Are you sure you want to proceed? (Y/n): Y
+
+command: verify
+message: Contract verification has started. You can check the verification status at the following link: https://app.walnut.dev/verification/status/77f1d905-fdb4-4280-b7d6-57cd029d1259.
+```
+</details>
+<br>
 
 ## Development
 

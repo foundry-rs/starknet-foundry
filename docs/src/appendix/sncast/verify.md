@@ -1,8 +1,15 @@
 # `verify`
 Verify Cairo contract on a chosen verification provider.
 
-## `--contract-address, -a <CONTRACT_ADDRESS>`
-Required.
+## `--class-hash, -x <CLASS_HASH>`
+
+Required if `--contract-address` is not provided.
+
+The class hash of the contract that is to be verified.
+
+## `--contract-address, -d <CONTRACT_ADDRESS>`
+
+Required if `--class-hash` is not provided.
 
 The address of the contract that is to be verified.
 

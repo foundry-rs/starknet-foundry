@@ -22,8 +22,12 @@ struct WalnutVerificationInterface {
 #[async_trait::async_trait]
 trait VerificationInterface {
     fn new(network: Network, workspace_dir: Utf8PathBuf) -> Self;
-    async fn verify(&self, contract_address: Felt, contract_name: String)
-        -> Result<VerifyResponse>;
+    async fn verify(
+        &self,
+        class_hash: Option<Felt>,
+        contract_address: Option<Felt>,
+        contract_name: String,
+    ) -> Result<VerifyResponse>;
     fn gen_explorer_url(&self) -> Result<String>;
 }
 
@@ -38,7 +42,8 @@ impl VerificationInterface for WalnutVerificationInterface {
 
     async fn verify(
         &self,
-        contract_address: Felt,
+        class_hash: Option<Felt>,
+        contract_address: Option<Felt>,
         contract_name: String,
     ) -> Result<VerifyResponse> {
         // Read all files name along with their contents in a JSON format
@@ -67,10 +72,15 @@ impl VerificationInterface for WalnutVerificationInterface {
         // Serialize the JSON object to a JSON string
         let source_code = serde_json::Value::Object(file_data);
 
+        // Convert contract addresss and class hash from the Felt to String
+        let contract_address_str = contract_address.map(|addr| addr.to_fixed_hex_string());
+        let class_hash_str = class_hash.map(|hash| hash.to_fixed_hex_string());
+
         // Create the JSON payload with "contract name," "address," and "source_code" fields
         let payload = VerificationPayload {
-            contract_name: contract_name.to_string(),
-            contract_address: contract_address.to_string(),
+            contract_name,
+            class_hash: class_hash_str,
+            contract_address: contract_address_str,
             source_code,
         };
 
@@ -113,9 +123,13 @@ impl VerificationInterface for WalnutVerificationInterface {
 #[derive(Args)]
 #[command(about = "Verify a contract through a block explorer")]
 pub struct Verify {
+    /// Class hash of a contract to be verified
+    #[clap(short = 'x', long)]
+    pub class_hash: Option<Felt>,
+
     /// Address of a contract to be verified
     #[clap(short = 'd', long)]
-    pub contract_address: Felt,
+    pub contract_address: Option<Felt>,
 
     /// Name of the contract that is being verified
     #[clap(short, long)]
@@ -151,24 +165,33 @@ impl fmt::Display for Verifier {
     }
 }
 
+impl Verify {
+    pub fn validate(&self) -> Result<()> {
+        if self.class_hash.is_none() && self.contract_address.is_none() {
+            return Err(anyhow!(
+                "You must provide either --class-hash or --contract-address."
+            ));
+        }
+        Ok(())
+    }
+}
+
 #[derive(Serialize, Debug)]
 struct VerificationPayload {
     contract_name: String,
-    contract_address: String,
+    class_hash: Option<String>,
+    contract_address: Option<String>,
     source_code: serde_json::Value,
 }
 
 pub async fn verify(
-    contract_address: Felt,
-    contract_name: String,
-    verifier: Verifier,
-    network: Network,
-    confirm_verification: bool,
+    verify: Verify,
     manifest_path: &Utf8PathBuf,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<VerifyResponse> {
     // Let's ask confirmation
-    if !confirm_verification {
+    if !verify.confirm_verification {
+        let verifier = verify.verifier;
         let prompt_text = format!("\n\tYou are about to submit the entire workspace code to the third-party verifier at {verifier}.\n\n\tImportant: Make sure your project does not include sensitive information like private keys. The snfoundry.toml file will be uploaded. Keep the keystore outside the project to prevent it from being uploaded.\n\n\tAre you sure you want to proceed? (Y/n)");
         let input: String = prompt(prompt_text)?;
 
@@ -177,6 +200,7 @@ pub async fn verify(
         }
     }
 
+    let contract_name = verify.contract_name;
     if !artifacts.contains_key(&contract_name) {
         return Err(anyhow!("Contract named '{contract_name}' was not found"));
     }
@@ -187,10 +211,13 @@ pub async fn verify(
         .parent()
         .ok_or(anyhow!("Failed to obtain workspace dir"))?;
 
-    match verifier {
+    match verify.verifier {
         Verifier::Walnut => {
-            let walnut = WalnutVerificationInterface::new(network, workspace_dir.to_path_buf());
-            walnut.verify(contract_address, contract_name).await
+            let walnut =
+                WalnutVerificationInterface::new(verify.network, workspace_dir.to_path_buf());
+            walnut
+                .verify(verify.class_hash, verify.contract_address, contract_name)
+                .await
         }
     }
 }
