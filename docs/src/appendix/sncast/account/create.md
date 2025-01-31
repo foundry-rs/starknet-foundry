@@ -9,6 +9,8 @@ Optional.
 
 Account name under which account information is going to be saved.
 
+If `--name` is not provided, it will be generated automatically.
+
 ## `--url, -u <RPC_URL>`
 Optional.
 
