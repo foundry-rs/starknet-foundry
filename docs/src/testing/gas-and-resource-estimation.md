@@ -3,7 +3,7 @@
 `snforge` supports gas and other VM resources estimation for each individual test case. 
 
 It does not calculate the final transaction fee, for details on how fees are calculated, 
-please refer to fee mechanism in [Starknet documentation](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism).
+please refer to fee mechanism in [Starknet documentation](https://docs.starknet.io/architecture-and-concepts/network-architecture/fee-mechanism).
 
 ## Gas Estimation
 
