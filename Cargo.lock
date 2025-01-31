@@ -1697,6 +1697,7 @@ dependencies = [
  "primitive-types",
  "serde",
  "serde_json",
+ "shared",
  "starknet",
  "starknet-types-core",
  "test-case",

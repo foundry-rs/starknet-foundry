@@ -667,7 +667,7 @@ async fn test_external_enum_function_ambiguous_enum_name_cairo_expression_input(
     );
 
     let client = JsonRpcClient::new(HttpTransport::new(
-        Url::parse("http://188.34.188.184:7070/rpc/v0_7").unwrap(),
+        shared::test_utils::node_url::node_rpc_url(),
     ));
 
     let contract_class = client
