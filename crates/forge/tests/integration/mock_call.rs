@@ -10,7 +10,7 @@ fn mock_call_simple() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_mock_call, stop_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_mock_call, stop_mock_call, MockCallData };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -26,13 +26,19 @@ fn mock_call_simple() {
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
-            let mock_ret_data = 421;
-
-            start_mock_call(contract_address, selector!("get_thing"), mock_ret_data);
+            let specific_mock_ret_data = 421;
+            let default_mock_ret_data = 404;
+            let expected_calldata = MockCallData::Values([].span());
+            start_mock_call(contract_address, selector!("get_thing"), expected_calldata, specific_mock_ret_data);
+            start_mock_call(contract_address, selector!("get_thing"), MockCallData::Any, default_mock_ret_data);
             let thing = dispatcher.get_thing();
-            assert(thing == 421, 'Incorrect thing');
+            assert(thing == specific_mock_ret_data, 'Incorrect thing');
 
-            stop_mock_call(contract_address, selector!("get_thing"));
+            stop_mock_call(contract_address, selector!("get_thing"), expected_calldata);
+            let thing = dispatcher.get_thing();
+            assert(thing == default_mock_ret_data, 'Incorrect thing');
+
+            stop_mock_call(contract_address, selector!("get_thing"), MockCallData::Any);
             let thing = dispatcher.get_thing();
             assert(thing == 420, 'Incorrect thing');
         }
@@ -45,12 +51,12 @@ fn mock_call_simple() {
             let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
             let mock_ret_data = 421;
-            start_mock_call(contract_address, selector!("get_thing"), mock_ret_data);
+            start_mock_call(contract_address, selector!("get_thing"), MockCallData::Any, mock_ret_data);
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
             let thing = dispatcher.get_thing();
 
-            assert(thing == 421, 'Incorrect thing');
+            assert(thing == 421, 'Incorrect thing all catch');
         }
     "#
         ),
@@ -73,7 +79,7 @@ fn mock_call_complex_types() {
         use result::ResultTrait;
         use array::ArrayTrait;
         use serde::Serde;
-        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_mock_call, MockCallData };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -97,7 +103,7 @@ fn mock_call_complex_types() {
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
             let mock_ret_data = StructThing {item_one: 412, item_two: 421};
-            start_mock_call(contract_address, selector!("get_struct_thing"), mock_ret_data);
+            start_mock_call(contract_address, selector!("get_struct_thing"), MockCallData::Any, mock_ret_data);
 
             let thing: StructThing = dispatcher.get_struct_thing();
 
@@ -115,7 +121,7 @@ fn mock_call_complex_types() {
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
             let mock_ret_data =  array![ StructThing {item_one: 112, item_two: 121}, StructThing {item_one: 412, item_two: 421} ];
-            start_mock_call(contract_address, selector!("get_arr_thing"), mock_ret_data);
+            start_mock_call(contract_address, selector!("get_arr_thing"), MockCallData::Any, mock_ret_data);
 
             let things: Array<StructThing> = dispatcher.get_arr_thing();
 
@@ -146,7 +152,7 @@ fn mock_calls() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, mock_call, start_mock_call, stop_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, mock_call, MockCallData };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -164,7 +170,7 @@ fn mock_calls() {
 
             let mock_ret_data = 421;
 
-            mock_call(contract_address, selector!("get_thing"), mock_ret_data, 1);
+            mock_call(contract_address, selector!("get_thing"), MockCallData::Any, mock_ret_data, 1);
 
             let thing = dispatcher.get_thing();
             assert_eq!(thing, 421);
@@ -184,7 +190,7 @@ fn mock_calls() {
 
             let mock_ret_data = 421;
 
-            mock_call(contract_address, selector!("get_thing"), mock_ret_data, 2);
+            mock_call(contract_address, selector!("get_thing"), MockCallData::Any, mock_ret_data, 2);
 
             let thing = dispatcher.get_thing();
             assert_eq!(thing, 421);
