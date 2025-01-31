@@ -569,11 +569,6 @@ async fn test_happy_case_complex_struct_function_cairo_expression_input() -> any
     Ok(())
 }
 
-// TODO add similar test but with enums (Issue #2553)
-//  - take existing contract code
-//  - find/create a library with an enum
-//  - add to project as a dependency
-//  - create enum with the same name in your contract code
 #[tokio::test]
 async fn test_external_struct_function_ambiguous_struct_name_cairo_expression_input() {
     let contract_class = CLASS.get_or_init(init_class).await.to_owned();
