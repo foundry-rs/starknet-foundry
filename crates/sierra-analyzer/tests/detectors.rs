@@ -1,8 +1,8 @@
 use sierra_analyzer::detectors::detector::Detector;
+use sierra_analyzer::detectors::felt_overflow_detector::FeltOverflowDetector;
 use sierra_analyzer::detectors::functions_detector::FunctionsDetector;
 use sierra_analyzer::detectors::statistics_detector::StatisticsDetector;
 use sierra_analyzer::detectors::strings_detector::StringsDetector;
-use sierra_analyzer::detectors::felt_overflow_detector::FeltOverflowDetector;
 use sierra_analyzer::sierra_program::SierraProgram;
 
 #[test]

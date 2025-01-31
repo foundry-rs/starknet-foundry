@@ -196,6 +196,9 @@ pub struct AnalyzeArgs {
     /// Specify the function name to analyze
     #[arg(long)]
     function: Option<String>,
+    /// Specify the contract name to analyze
+    #[arg(long)]
+    contract: String,
     /// Generate a CFG (Control Flow Graph) instead of normal output
     #[arg(long, default_value_t = false)]
     cfg: bool,
@@ -265,6 +268,7 @@ pub fn main_execution() -> Result<ExitStatus> {
             let rt = Builder::new_multi_thread().enable_all().build()?;
 
             rt.block_on(analyze_project(
+                args.contract,
                 args.function,
                 args.cfg,
                 args.callgraph,

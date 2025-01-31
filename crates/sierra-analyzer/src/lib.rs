@@ -22,38 +22,48 @@ use crate::sierra_program::SierraProgram;
 use cairo_lang_starknet_classes::contract_class::ContractClass;
 
 /// Load the Sierra program from the /target directory
-async fn load_scarb_program() -> Result<SierraProgram, String> {
+async fn load_scarb_program(contract_name: &str) -> Result<SierraProgram, String> {
     let target_dir = Path::new("./target/dev/");
+    let contract_class_file = target_dir.join(format!("{}.contract_class.json", contract_name));
 
-    // Read the directory contents
-    let entries =
-        fs::read_dir(target_dir).map_err(|e| format!("Failed to read directory: {}", e))?;
+    // Check if the file exists
+    if !contract_class_file.exists() {
+        // List all files in the target directory
+        let entries =
+            fs::read_dir(target_dir).map_err(|e| format!("Failed to read directory: {}", e))?;
 
-    // Find the file that ends with "contract_class.json"
-    let contract_class_file = entries
-        .filter_map(|entry| {
-            let entry = entry.ok()?;
+        let mut valid_contracts = Vec::new();
+
+        for entry in entries {
+            let entry = entry.map_err(|e| format!("Failed to read entry: {}", e))?;
             let path = entry.path();
-            if path.is_file()
-                && path
-                    .file_name()
-                    .and_then(|name| name.to_str())
-                    .map_or(false, |name| name.ends_with("contract_class.json"))
-            {
-                Some(path)
-            } else {
-                None
-            }
-        })
-        .next();
 
-    // Check if the file was found
-    let contract_class_file = if let Some(file) = contract_class_file {
-        file
-    } else {
-        eprintln!("You need to run scarb build before running the sierra-analyzer");
-        exit(1);
-    };
+            if path.is_file() && path.extension().map_or(false, |ext| ext == "json") {
+                if let Some(file_name) = path.file_stem() {
+                    if let Some(contract_name) = file_name.to_str() {
+                        // Strip the ".contract_class" part from the file name
+                        if let Some(stripped_name) = contract_name.strip_suffix(".contract_class") {
+                            valid_contracts.push(stripped_name.to_string());
+                        }
+                    }
+                }
+            }
+        }
+
+        if valid_contracts.is_empty() {
+            eprintln!("Contract class file not found: {}. You need to run scarb build before running the sierra-analyzer", contract_class_file.display());
+            exit(1);
+        } else {
+            eprintln!(
+                "Contract class file not found: {}. Available contract class files:\n",
+                contract_class_file.display()
+            );
+            for contract in valid_contracts {
+                eprintln!("- {}", contract);
+            }
+            exit(1);
+        }
+    }
 
     // Open the file
     let mut file = File::open(&contract_class_file)
@@ -183,6 +193,7 @@ fn handle_detectors(decompiler: &mut Decompiler, detector_names: Vec<String>) {
 }
 
 pub async fn analyze_project(
+    contract: String,
     function: Option<String>,
     cfg: bool,
     callgraph: bool,
@@ -191,7 +202,7 @@ pub async fn analyze_project(
     detector_names: Vec<String>,
 ) {
     // Load the Sierra program from the /target directory
-    let program = match load_scarb_program().await {
+    let program = match load_scarb_program(&contract).await {
         Ok(program) => program,
         Err(_e) => {
             eprintln!("Error loading program, you must build it before running the analyzer");
