@@ -10,13 +10,13 @@ In this section, we will walk through the process of installing Starknet Foundry
   * [Contents](#contents)
   * [Requirements](#requirements)
   * [Linux and macOS](#linux-and-macos)
-    * [Install Rust version >= 1.80.1](#install-rust-version--1801)
     * [Install asdf](#install-asdf)
     * [Install Scarb version >= 2.7.0](#install-scarb-version--270)
+    * [Install Rust version >= 1.80.1](#rust-installation)
     * [Install Starknet Foundry](#install-starknet-foundry)
   * [Windows](#windows)
-    * [Install Rust version >= 1.80.1](#install-rust-version--1801-1)
     * [Install Scarb version >= 2.7.0](#install-scarb-version--270-1)
+    * [Install Rust version >= 1.80.1](#rust-installation-1)
     * [Install Universal Sierra Compiler](#install-universal-sierra-compiler)
     * [Install Starknet Foundry](#install-starknet-foundry-1)
   * [Common Errors](#common-errors)
@@ -58,31 +58,6 @@ all installed and added to your `PATH` environment variable.
 > If you already have installed Rust, Scarb and asdf simply run
 > `asdf plugin add starknet-foundry`
 
-### Install Rust version >= 1.80.1
-
-> ℹ️ **Info**
->
-> `snforge` relies on Scarb's [_procedural macros_](https://github.com/foundry-rs/starknet-foundry/issues/2299) to
-> create
-`snforge_scarb_plugin` which is a part of `snforge_std`.
-> This plugin is required for `snforge` test to work.
-> Currently, _procedural macros_ require Rust installation to function.
-> This will be changed in the upcoming versions of Scarb.
-
-```shell
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-
-To verify that correct Rust version was installed, run
-
-```shell
-rustc --version
-```
-
-and verify that version is >= 1.80.1
-
-See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
-
 ### Install asdf
 
 Follow the instructions from [asdf docs](https://asdf-vm.com/guide/getting-started.html#getting-started).
@@ -120,6 +95,47 @@ scarb --version
 ```
 
 and verify that version is >= 2.7.0
+
+### Rust installation
+
+> ℹ️ **Info**
+>
+> `snforge` relies on Scarb's [_procedural macros_](https://github.com/foundry-rs/starknet-foundry/issues/2299) to
+> create
+`snforge_scarb_plugin` which is a part of `snforge_std`.
+> This plugin is required for `snforge` test to work.
+> Currently, _procedural macros_ require Rust installation to function.
+> This will be changed in the upcoming versions of Scarb.
+
+> ⚠️ **Warning**
+>
+> Rust installation is only required if:
+>
+> * You are using Scarb version <= 2.10.0, *OR*
+> * Your platform is not one of the following supported platforms:
+>   * aarch64-apple-darwin
+>   * aarch64-unknown-linux-gnu
+>   * x86_64-apple-darwin
+>   * x86_64-pc-windows-msvc
+>   * x86_64-unknown-linux-gnu
+>
+> It is because precompiled `snforge_scarb_plugin` plugin binaries are now published to [package registry](https://scarbs.xyz) for new versions.
+
+
+```shell
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+To verify that correct Rust version was installed, run
+
+```shell
+rustc --version
+```
+
+and verify that version is >= 1.80.1
+
+See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
+
 
 ### Install Starknet Foundry
 
@@ -161,30 +177,6 @@ sncast --version
 > 
 > If you are using WSL, please follow the [Linux and macOS](#linux-and-macos) guide.
 
-
-### Install Rust version >= 1.80.1
-
-> ℹ️ **Info**
->
-> `snforge` relies on Scarb's [_procedural macros_](https://github.com/foundry-rs/starknet-foundry/issues/2299) to
-> create
-`snforge_scarb_plugin` which is a part of `snforge_std`.
-> This plugin is required for `snforge` test to work.
-> Currently, _procedural macros_ require Rust installation to function.
-> This will be changed in the upcoming versions of Scarb.
-
-Go to [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install) and follow the installation instructions.
-
-To verify that correct Rust version was installed, run
-
-```shell
-rustc --version
-```
-
-and verify that version is >= 1.80.1
-
-See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
-
 ### Install Scarb version >= 2.7.0
 
 Follow the instructions from [Scarb docs](https://docs.swmansion.com/scarb/download.html#windows).
@@ -203,6 +195,45 @@ scarb --version
 ```
 
 and verify that version is >= 2.7.0
+
+### Rust installation
+
+> ℹ️ **Info**
+>
+> `snforge` relies on Scarb's [_procedural macros_](https://github.com/foundry-rs/starknet-foundry/issues/2299) to
+> create
+`snforge_scarb_plugin` which is a part of `snforge_std`.
+> This plugin is required for `snforge` test to work.
+> Currently, _procedural macros_ require Rust installation to function.
+> This will be changed in the upcoming versions of Scarb.
+
+> ⚠️ **Warning**
+>
+> Rust installation is only required if:
+>
+> * You are using Scarb version <= 2.10.0, *OR*
+> * Your platform is not one of the following supported platforms:
+>   * aarch64-apple-darwin
+>   * aarch64-unknown-linux-gnu
+>   * x86_64-apple-darwin
+>   * x86_64-pc-windows-msvc
+>   * x86_64-unknown-linux-gnu
+>
+> It is because precompiled `snforge_scarb_plugin` plugin binaries are now published to [package registry](https://scarbs.xyz) for new versions.
+
+
+Go to [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install) and follow the installation instructions.
+
+To verify that correct Rust version was installed, run
+
+```shell
+rustc --version
+```
+
+and verify that version is >= 1.80.1
+
+See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
+
 
 ### Install Universal Sierra Compiler
 
