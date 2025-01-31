@@ -18,11 +18,13 @@ use blockifier::{
     state::state_api::State,
 };
 use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
+use num_traits::Zero;
 use starknet_api::{
     core::ClassHash,
     deprecated_contract_class::EntryPointType,
     transaction::{Calldata, TransactionVersion},
 };
+use starknet_crypto::poseidon_hash_many;
 use std::collections::HashSet;
 use std::rc::Rc;
 use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
@@ -268,11 +270,22 @@ fn get_mocked_function_cheat_status<'a>(
     if call.call_type == CallType::Delegate {
         return None;
     }
-
-    cheatnet_state
+    match cheatnet_state
         .mocked_functions
         .get_mut(&call.storage_address)
-        .and_then(|contract_functions| contract_functions.get_mut(&call.entry_point_selector))
+    {
+        None => None,
+        Some(contract_functions) => {
+            let call_data_hash = poseidon_hash_many(call.calldata.0.iter());
+            let key = (call.entry_point_selector, call_data_hash);
+            if contract_functions.contains_key(&key) {
+                contract_functions.get_mut(&key)
+            } else {
+                let key_zero = (call.entry_point_selector, Felt::zero());
+                contract_functions.get_mut(&key_zero)
+            }
+        }
+    }
 }
 
 fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {

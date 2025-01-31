@@ -331,7 +331,7 @@ pub struct CheatnetState {
     pub global_cheated_execution_info: ExecutionInfoMock,
 
     pub mocked_functions:
-        HashMap<ContractAddress, HashMap<EntryPointSelector, CheatStatus<Vec<Felt>>>>,
+        HashMap<ContractAddress, HashMap<(EntryPointSelector, Felt), CheatStatus<Vec<Felt>>>>,
     pub replaced_bytecode_contracts: HashMap<ContractAddress, ClassHash>,
     pub detected_events: Vec<Event>,
     pub detected_messages_to_l1: Vec<MessageToL1>,

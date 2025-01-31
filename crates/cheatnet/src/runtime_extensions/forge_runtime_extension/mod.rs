@@ -87,26 +87,31 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             "mock_call" => {
                 let contract_address = input_reader.read()?;
                 let function_selector = input_reader.read()?;
+                let call_data = input_reader.read()?;
                 let span = input_reader.read()?;
-
                 let ret_data: Vec<_> = input_reader.read()?;
-
                 extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .mock_call(contract_address, function_selector, &ret_data, span);
+                    .mock_call(
+                        contract_address,
+                        function_selector,
+                        call_data,
+                        &ret_data,
+                        span,
+                    );
                 Ok(CheatcodeHandlingResult::from_serializable(()))
             }
             "stop_mock_call" => {
                 let contract_address = input_reader.read()?;
                 let function_selector = input_reader.read()?;
-
+                let call_data = input_reader.read()?;
                 extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .stop_mock_call(contract_address, function_selector);
+                    .stop_mock_call(contract_address, function_selector, call_data);
                 Ok(CheatcodeHandlingResult::from_serializable(()))
             }
             "replace_bytecode" => {

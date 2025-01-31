@@ -13,6 +13,7 @@ bimap.workspace = true
 camino.workspace = true
 starknet_api.workspace = true
 starknet-types-core.workspace = true
+starknet-crypto.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-runner.workspace = true
 cairo-lang-utils.workspace = true

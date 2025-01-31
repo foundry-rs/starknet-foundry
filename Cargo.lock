@@ -1285,6 +1285,7 @@ dependencies = [
  "serde_json",
  "shared",
  "starknet",
+ "starknet-crypto 0.7.1",
  "starknet-types-core",
  "starknet_api",
  "tempfile",

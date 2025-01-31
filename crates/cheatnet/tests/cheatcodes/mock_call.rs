@@ -68,6 +68,7 @@ fn mock_call_simple() {
     cheatnet_state.start_mock_call(
         contract_address,
         felt_selector_from_name("get_thing"),
+        None,
         &ret_data,
     );
 
@@ -100,6 +101,7 @@ fn mock_call_stop() {
     cheatnet_state.start_mock_call(
         contract_address,
         felt_selector_from_name("get_thing"),
+        None,
         &ret_data,
     );
 
@@ -168,10 +170,10 @@ fn mock_call_double() {
     let selector = felt_selector_from_name("get_thing");
 
     let ret_data = [Felt::from(123)];
-    cheatnet_state.start_mock_call(contract_address, selector, &ret_data);
+    cheatnet_state.start_mock_call(contract_address, selector, None, &ret_data);
 
     let ret_data = [Felt::from(999)];
-    cheatnet_state.start_mock_call(contract_address, selector, &ret_data);
+    cheatnet_state.start_mock_call(contract_address, selector, None, &ret_data);
 
     let output = call_contract(
         &mut cached_state,
@@ -214,6 +216,7 @@ fn mock_call_double_call() {
     cheatnet_state.start_mock_call(
         contract_address,
         felt_selector_from_name("get_thing"),
+        None,
         &ret_data,
     );
 
@@ -255,6 +258,7 @@ fn mock_call_proxy() {
     cheatnet_state.start_mock_call(
         contract_address,
         felt_selector_from_name("get_thing"),
+        None,
         &ret_data,
     );
 
@@ -303,6 +307,7 @@ fn mock_call_proxy_with_other_syscall() {
     cheatnet_state.start_mock_call(
         contract_address,
         felt_selector_from_name("get_thing"),
+        None,
         &ret_data,
     );
 
@@ -352,6 +357,7 @@ fn mock_call_inner_call_no_effect() {
     cheatnet_state.start_mock_call(
         contract_address,
         felt_selector_from_name("get_thing"),
+        None,
         &ret_data,
     );
 
@@ -407,6 +413,7 @@ fn mock_call_library_call_no_effect() {
     cheatnet_state.start_mock_call(
         contract_address,
         felt_selector_from_name("get_constant_thing"),
+        None,
         &ret_data,
     );
 
@@ -440,6 +447,7 @@ fn mock_call_before_deployment() {
     cheatnet_state.start_mock_call(
         precalculated_address,
         felt_selector_from_name("get_thing"),
+        None,
         &ret_data,
     );
 
@@ -482,6 +490,7 @@ fn mock_call_not_implemented() {
     cheatnet_state.start_mock_call(
         contract_address,
         felt_selector_from_name("get_thing_not_implemented"),
+        None,
         &ret_data,
     );
 
@@ -512,6 +521,7 @@ fn mock_call_in_constructor() {
     cheatnet_state.start_mock_call(
         balance_contract_address,
         felt_selector_from_name("get_balance"),
+        None,
         &ret_data,
     );
 
@@ -559,12 +569,14 @@ fn mock_call_two_methods() {
     cheatnet_state.start_mock_call(
         contract_address,
         felt_selector_from_name("get_thing"),
+        None,
         &ret_data,
     );
 
     cheatnet_state.start_mock_call(
         contract_address,
         felt_selector_from_name("get_constant_thing"),
+        None,
         &ret_data,
     );
 
@@ -602,6 +614,7 @@ fn mock_call_nonexisting_contract() {
     cheatnet_state.start_mock_call(
         contract_address,
         felt_selector_from_name("get_thing"),
+        None,
         &ret_data,
     );
 
