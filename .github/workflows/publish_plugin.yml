@@ -38,23 +38,28 @@ jobs:
             os: ubuntu-latest
             # Use cross to link oldest GLIBC possible.
             cross: true
+            lib-name: "libsnforge_scarb_plugin"
             ext: "so"
 
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
             cross: true
+            lib-name: "libsnforge_scarb_plugin"
             ext: "so"
 
           - target: x86_64-apple-darwin
             os: macos-latest
+            lib-name: "libsnforge_scarb_plugin"
             ext: "dylib"
 
           - target: aarch64-apple-darwin
             os: macos-latest
+            lib-name: "libsnforge_scarb_plugin"
             ext: "dylib"
 
           - target: x86_64-pc-windows-msvc
             os: windows-latest
+            lib-name: "snforge_scarb_plugin"
             ext: "dll"
 
           # The scarb builds for following platforms are experimental and not officially supported by starknet-foundry.
@@ -104,10 +109,11 @@ jobs:
 
           TARGET="${{ matrix.target }}"
           EXT="${{ matrix.ext }}"
+          LIB_NAME="${{ matrix.lib-name }}"
 
           OUTPUT_BINARY="${PACKAGE_NAME}_v${PACKAGE_VERSION}_${TARGET}.${EXT}"
 
-          mv ./target/${TARGET}/release/*.${EXT} ./target/${TARGET}/release/${OUTPUT_BINARY}
+          mv ./target/${TARGET}/release/${LIB_NAME}.${EXT} ./target/${TARGET}/release/${OUTPUT_BINARY}
 
           echo "OUTPUT_BINARY_PATH=./target/${TARGET}/release/${OUTPUT_BINARY}" >> $GITHUB_ENV
 
