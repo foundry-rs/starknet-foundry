@@ -169,9 +169,7 @@ impl Arguments {
         contract_class: ContractClass,
         selector: &Felt,
     ) -> Result<Vec<Felt>> {
-        if let Some(arguments) = self.arguments {
-            Calldata::new(arguments).serialized(contract_class, selector)
-        } else if let Some(calldata) = self.calldata {
+        if let Some(calldata) = self.calldata {
             calldata
                 .iter()
                 .map(|data| {
@@ -181,7 +179,9 @@ impl Arguments {
                 })
                 .collect()
         } else {
-            Ok(vec![])
+            // Use empty vec if no arguments were provided
+            let arguments = self.arguments.unwrap_or_default();
+            Calldata::new(arguments).serialized(contract_class, selector)
         }
     }
 }
