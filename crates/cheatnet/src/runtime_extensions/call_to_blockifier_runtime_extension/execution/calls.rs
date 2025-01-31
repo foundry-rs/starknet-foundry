@@ -33,7 +33,7 @@ pub fn execute_inner_call(
         call,
         syscall_handler.base.state,
         cheatnet_state,
-        syscall_handler.resources,
+        // syscall_handler.resources,
         syscall_handler.base.context,
     )?;
     // endregion
@@ -41,9 +41,8 @@ pub fn execute_inner_call(
     let raw_retdata = &call_info.execution.retdata.0;
 
     if call_info.execution.failed {
-        // TODO(spapini): Append an error word according to starknet spec if needed.
-        // Something like "EXECUTION_ERROR".
-        return Err(SyscallExecutionError::SyscallError {
+        // TODO verify error type
+        return Err(SyscallExecutionError::Revert {
             error_data: raw_retdata.clone(),
         });
     }

@@ -14,7 +14,7 @@ use blockifier::execution::{
 use blockifier::state::errors::StateError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use conversions::{
-    byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr, FromConv, IntoConv,
+    byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr, IntoConv,
 };
 use shared::utils::build_readable_text;
 use starknet_api::{
@@ -63,9 +63,9 @@ impl CallFailure {
     ) -> Self {
         match err {
             EntryPointExecutionError::ExecutionFailed { error_trace } => {
-                let err_data: Vec<_> = error_trace.iter().map(|data| Felt::from_(*data)).collect();
+                let err_data = error_trace.last_retdata.clone().0;
 
-                let err_data_str = build_readable_text(&err_data).unwrap_or_default();
+                let err_data_str = build_readable_text(err_data.as_slice()).unwrap_or_default();
 
                 if err_data_str.contains("Failed to deserialize param #")
                     || err_data_str.contains("Input too long for arguments")
@@ -202,7 +202,7 @@ pub fn call_entry_point(
         &mut entry_point,
         syscall_handler.base.state,
         cheatnet_state,
-        syscall_handler.resources,
+        // syscall_handler.resources,
         syscall_handler.base.context,
     );
 

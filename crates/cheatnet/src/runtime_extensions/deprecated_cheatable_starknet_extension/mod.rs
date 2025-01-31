@@ -304,7 +304,11 @@ fn call_contract(
         storage_address,
         caller_address: syscall_handler.storage_address,
         call_type: CallType::Call,
-        initial_gas: syscall_handler.context.gas_costs().initial_gas_cost,
+        initial_gas: syscall_handler
+            .context
+            .gas_costs()
+            .base
+            .default_initial_gas_cost,
     };
     let retdata_segment =
         execute_inner_call(&mut entry_point, vm, syscall_handler, cheatnet_state)?;
@@ -376,7 +380,7 @@ fn execute_inner_call(
         call,
         syscall_handler.state,
         cheatnet_state,
-        syscall_handler.resources,
+        // syscall_handler.resources,
         syscall_handler.context,
     )?;
     // endregion
@@ -422,7 +426,11 @@ fn execute_library_call(
         storage_address: syscall_handler.storage_address,
         caller_address: syscall_handler.caller_address,
         call_type: CallType::Delegate,
-        initial_gas: syscall_handler.context.gas_costs().initial_gas_cost,
+        initial_gas: syscall_handler
+            .context
+            .gas_costs()
+            .base
+            .default_initial_gas_cost,
     };
 
     execute_inner_call(&mut entry_point, vm, syscall_handler, cheatnet_state)

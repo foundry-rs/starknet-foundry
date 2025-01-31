@@ -34,7 +34,6 @@ pub fn build_syscall_handler<'a>(
 
     SyscallHintProcessor::new(
         blockifier_state,
-        execution_resources,
         context,
         Relocatable {
             segment_index,

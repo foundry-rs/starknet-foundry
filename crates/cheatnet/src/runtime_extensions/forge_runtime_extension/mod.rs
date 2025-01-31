@@ -2,11 +2,11 @@ use self::contracts_data::ContractsData;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
 use crate::runtime_extensions::{
     call_to_blockifier_runtime_extension::{
-        rpc::{CallFailure, CallResult, UsedResources},
+        rpc::{CallFailure, CallResult},
         CallToBlockifierRuntime,
     },
     cheatable_starknet_runtime_extension::SyscallSelector,
-    common::{get_relocated_vm_trace, sum_syscall_counters},
+    common::get_relocated_vm_trace,
     forge_runtime_extension::cheatcodes::{
         declare::declare,
         deploy::{deploy, deploy_at},
@@ -17,13 +17,11 @@ use crate::runtime_extensions::{
         CheatcodeError,
     },
 };
-use crate::state::CallTraceNode;
 use anyhow::{anyhow, Context, Result};
 use blockifier::state::errors::StateError;
 use blockifier::{
-    context::TransactionContext,
     execution::{
-        call_info::{CallExecution, CallInfo},
+        call_info::CallInfo,
         deprecated_syscalls::DeprecatedSyscallSelector,
         syscalls::hint_processor::SyscallCounter,
     },
@@ -519,47 +517,47 @@ fn handle_declare_deploy_result<T: CairoSerialize>(
     Ok(CheatcodeHandlingResult::from_serializable(result))
 }
 
-pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
-    let all_execution_resources = runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .resources
-        .clone();
-
-    // call representing the test code
-    let top_call = runtime
-        .extended_runtime
-        .extended_runtime
-        .extension
-        .cheatnet_state
-        .trace_data
-        .current_call_stack
-        .top();
-    let mut top_call = top_call.borrow_mut();
-
-    top_call.used_execution_resources = all_execution_resources;
-
-    let top_call_syscalls = runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .syscall_counter
-        .clone();
-
-    // Only sum 1-level since these include syscalls from inner calls
-    let nested_calls_syscalls = top_call
-        .nested_calls
-        .iter()
-        .filter_map(CallTraceNode::extract_entry_point_call)
-        .fold(SyscallCounter::new(), |syscalls, trace| {
-            sum_syscall_counters(syscalls, &trace.borrow().used_syscalls)
-        });
-
-    top_call.used_syscalls = sum_syscall_counters(top_call_syscalls, &nested_calls_syscalls);
-}
+// pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
+//     let all_execution_resources = runtime
+//         .extended_runtime
+//         .extended_runtime
+//         .extended_runtime
+//         .hint_handler
+//         .resources
+//         .clone();
+// 
+//     // call representing the test code
+//     let top_call = runtime
+//         .extended_runtime
+//         .extended_runtime
+//         .extension
+//         .cheatnet_state
+//         .trace_data
+//         .current_call_stack
+//         .top();
+//     let mut top_call = top_call.borrow_mut();
+// 
+//     top_call.used_execution_resources = all_execution_resources;
+// 
+//     let top_call_syscalls = runtime
+//         .extended_runtime
+//         .extended_runtime
+//         .extended_runtime
+//         .hint_handler
+//         .syscall_counter
+//         .clone();
+// 
+//     // Only sum 1-level since these include syscalls from inner calls
+//     let nested_calls_syscalls = top_call
+//         .nested_calls
+//         .iter()
+//         .filter_map(CallTraceNode::extract_entry_point_call)
+//         .fold(SyscallCounter::new(), |syscalls, trace| {
+//             sum_syscall_counters(syscalls, &trace.borrow().used_syscalls)
+//         });
+// 
+//     top_call.used_syscalls = sum_syscall_counters(top_call_syscalls, &nested_calls_syscalls);
+// }
 
 // Only top-level is considered relevant since we can't have l1 handlers deeper than 1 level of nesting
 fn get_l1_handlers_payloads_lengths(inner_calls: &[CallInfo]) -> Vec<usize> {
@@ -621,65 +619,65 @@ fn add_syscall_resources(
     total_vm_usage
 }
 
-#[must_use]
-pub fn get_all_used_resources(
-    runtime: ForgeRuntime,
-    transaction_context: &TransactionContext,
-) -> UsedResources {
-    let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
-    let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.base.l2_to_l1_messages;
-    let top_call_events = starknet_runtime.hint_handler.base.events;
-
-    // used just to obtain payloads of L2 -> L1 messages
-    let runtime_call_info = CallInfo {
-        execution: CallExecution {
-            l2_to_l1_messages: top_call_l2_to_l1_messages,
-            events: top_call_events,
-            ..Default::default()
-        },
-        inner_calls: starknet_runtime.hint_handler.base.inner_calls,
-        ..Default::default()
-    };
-    let l2_to_l1_payload_lengths = runtime_call_info.get_l2_to_l1_payload_lengths();
-
-    let l1_handler_payload_lengths =
-        get_l1_handlers_payloads_lengths(&runtime_call_info.inner_calls);
-
-    // call representing the test code
-    let top_call = runtime
-        .extended_runtime
-        .extended_runtime
-        .extension
-        .cheatnet_state
-        .trace_data
-        .current_call_stack
-        .top();
-
-    let execution_resources = top_call.borrow().used_execution_resources.clone();
-    let top_call_syscalls = top_call.borrow().used_syscalls.clone();
-    let events = runtime_call_info
-        .iter() // This method iterates over inner calls as well
-        .flat_map(|call_info| {
-            call_info
-                .execution
-                .events
-                .iter()
-                .map(|evt| evt.event.clone())
-        })
-        .collect();
-
-    let versioned_constants = transaction_context.block_context.versioned_constants();
-    let execution_resources = add_syscall_resources(
-        versioned_constants,
-        &execution_resources,
-        &top_call_syscalls,
-    );
-
-    UsedResources {
-        events,
-        syscall_counter: top_call_syscalls,
-        execution_resources,
-        l1_handler_payload_lengths,
-        l2_to_l1_payload_lengths,
-    }
-}
+// #[must_use]
+// pub fn get_all_used_resources(
+//     runtime: ForgeRuntime,
+//     transaction_context: &TransactionContext,
+// ) -> UsedResources {
+//     let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
+//     let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.base.l2_to_l1_messages;
+//     let top_call_events = starknet_runtime.hint_handler.base.events;
+// 
+//     // used just to obtain payloads of L2 -> L1 messages
+//     let runtime_call_info = CallInfo {
+//         execution: CallExecution {
+//             l2_to_l1_messages: top_call_l2_to_l1_messages,
+//             events: top_call_events,
+//             ..Default::default()
+//         },
+//         inner_calls: starknet_runtime.hint_handler.base.inner_calls,
+//         ..Default::default()
+//     };
+//     let l2_to_l1_payload_lengths = runtime_call_info.get_l2_to_l1_payload_lengths();
+// 
+//     let l1_handler_payload_lengths =
+//         get_l1_handlers_payloads_lengths(&runtime_call_info.inner_calls);
+// 
+//     // call representing the test code
+//     let top_call = runtime
+//         .extended_runtime
+//         .extended_runtime
+//         .extension
+//         .cheatnet_state
+//         .trace_data
+//         .current_call_stack
+//         .top();
+// 
+//     let execution_resources = top_call.borrow().used_execution_resources.clone();
+//     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
+//     let events = runtime_call_info
+//         .iter() // This method iterates over inner calls as well
+//         .flat_map(|call_info| {
+//             call_info
+//                 .execution
+//                 .events
+//                 .iter()
+//                 .map(|evt| evt.event.clone())
+//         })
+//         .collect();
+// 
+//     let versioned_constants = transaction_context.block_context.versioned_constants();
+//     let execution_resources = add_syscall_resources(
+//         versioned_constants,
+//         &execution_resources,
+//         &top_call_syscalls,
+//     );
+// 
+//     UsedResources {
+//         events,
+//         syscall_counter: top_call_syscalls,
+//         execution_resources,
+//         l1_handler_payload_lengths,
+//         l2_to_l1_payload_lengths,
+//     }
+// }

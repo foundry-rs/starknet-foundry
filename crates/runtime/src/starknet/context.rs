@@ -1,7 +1,10 @@
 use blockifier::bouncer::BouncerConfig;
 use blockifier::context::{BlockContext, ChainInfo, FeeTokenAddresses, TransactionContext};
 use blockifier::execution::common_hints::ExecutionMode;
-use blockifier::execution::entry_point::{EntryPointExecutionContext, SierraGasRevertTracker};
+use blockifier::execution::contract_class::TrackedResource;
+use blockifier::execution::entry_point::{
+    EntryPointExecutionContext, EntryPointRevertInfo, SierraGasRevertTracker,
+};
 use blockifier::transaction::objects::{
     CommonAccountFields, CurrentTransactionInfo, TransactionInfo,
 };
@@ -100,13 +103,27 @@ pub fn build_context(
 ) -> EntryPointExecutionContext {
     let transaction_context = Arc::new(build_transaction_context(block_info, chain_id));
 
-    EntryPointExecutionContext::new(
+    let mut context = EntryPointExecutionContext::new(
         transaction_context,
         ExecutionMode::Execute,
         false,
         // TODO: Mock
         SierraGasRevertTracker::new(GasAmount::from(100_000_u64)),
-    )
+    );
+
+    context.revert_infos.0.push(EntryPointRevertInfo::new(
+        // TODO use const
+        ContractAddress::try_from(Felt::from_hex("0x01724987234973219347210837402").unwrap())
+            .unwrap(),
+        starknet_api::core::ClassHash(Felt::from_hex("0x117").unwrap()),
+        context.n_emitted_events,
+        context.n_sent_messages_to_l1,
+    ));
+    context
+        .tracked_resource_stack
+        .push(TrackedResource::SierraGas);
+
+    context
 }
 
 pub fn set_max_steps(entry_point_ctx: &mut EntryPointExecutionContext, max_n_steps: u32) {

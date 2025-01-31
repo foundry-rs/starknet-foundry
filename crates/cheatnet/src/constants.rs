@@ -1,11 +1,9 @@
+use starknet_api::contract_class::{ContractClass, SierraVersion};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use blockifier::execution::contract_class::ContractClassV1;
-
-use starknet_api::contract_class::ContractClass;
-
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
+use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
 use indoc::indoc;
@@ -45,10 +43,12 @@ fn contract_class_no_entrypoints() -> ContractClass {
           }
         }"#,
     );
-    ContractClass::V1(
-        ContractClassV1::try_from_json_string(raw_contract_class)
-            .expect("Could not create dummy contract from raw"),
-    )
+    // TODO verify
+    let casm_contract_class: CasmContractClass =
+        serde_json::from_str(raw_contract_class).expect("Could not casm_contract_class from raw");
+
+    // TODO verify
+    ContractClass::V1((casm_contract_class, SierraVersion::LATEST))
 }
 
 // Creates a state with predeployed account and erc20 used to send transactions during tests.

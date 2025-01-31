@@ -25,7 +25,6 @@ use blockifier::{
     state::state_api::State,
 };
 use cairo_vm::types::relocatable::Relocatable;
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use starknet_api::core::calculate_contract_address;
 use starknet_api::{
@@ -90,7 +89,7 @@ pub fn deploy_syscall(
     let call_info = execute_deployment(
         syscall_handler.base.state,
         cheatnet_state,
-        syscall_handler.resources,
+        // syscall_handler.resources,
         syscall_handler.base.context,
         &ctor_context,
         request.constructor_calldata,
@@ -113,7 +112,7 @@ pub fn deploy_syscall(
 pub fn execute_deployment(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
-    resources: &mut ExecutionResources,
+    // resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
     ctor_context: &ConstructorContext,
     constructor_calldata: Calldata,
@@ -132,7 +131,7 @@ pub fn execute_deployment(
     let call_info = execute_constructor_entry_point(
         state,
         cheatnet_state,
-        resources,
+        // resources,
         context,
         ctor_context,
         constructor_calldata,

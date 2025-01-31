@@ -6,7 +6,7 @@ use crate::runtime_extensions::deprecated_cheatable_starknet_extension::runtime:
     DeprecatedExtendedRuntime, DeprecatedStarknetRuntime,
 };
 use crate::runtime_extensions::deprecated_cheatable_starknet_extension::DeprecatedCheatableStarknetRuntimeExtension;
-use blockifier::execution::contract_class::ContractClassV0;
+use blockifier::execution::contract_class::CompiledClassV0;
 use blockifier::execution::deprecated_entry_point_execution::{
     finalize_execution, initialize_execution_context, prepare_call_arguments, VmExecutionContext,
 };
@@ -15,15 +15,15 @@ use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::execution::execution_utils::Args;
 use blockifier::state::state_api::State;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
-use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner, ExecutionResources};
+use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner};
 
 // blockifier/src/execution/deprecated_execution.rs:36 (execute_entry_point_call)
 pub fn execute_entry_point_call_cairo0(
     call: CallEntryPoint,
-    contract_class: ContractClassV0,
+    compiled_class_v0: CompiledClassV0,
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
-    resources: &mut ExecutionResources,
+    // resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> ContractClassEntryPointExecutionResult {
     let VmExecutionContext {
@@ -31,7 +31,7 @@ pub fn execute_entry_point_call_cairo0(
         mut syscall_handler,
         initial_syscall_ptr,
         entry_point_pc,
-    } = initialize_execution_context(&call, contract_class, state, resources, context)?;
+    } = initialize_execution_context(&call, compiled_class_v0, state, context)?;
 
     let (implicit_args, args) = prepare_call_arguments(
         &call,

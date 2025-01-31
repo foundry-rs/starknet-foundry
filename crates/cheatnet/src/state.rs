@@ -7,6 +7,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execut
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
+use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
@@ -20,7 +21,6 @@ use conversions::string::TryFromHexStr;
 use runtime::starknet::context::SerializableBlockInfo;
 use runtime::starknet::state::DictStateReader;
 use starknet_api::block::BlockInfo;
-use starknet_api::contract_class::ContractClass;
 use starknet_api::core::{ChainId, EntryPointSelector};
 use starknet_api::transaction::fields::ContractAddressSalt;
 use starknet_api::{
@@ -100,14 +100,14 @@ impl StateReader for ExtendedStateReader {
             })
     }
 
-    fn get_compiled_class(&self, class_hash: ClassHash) -> StateResult<ContractClass> {
+    fn get_compiled_class(&self, class_hash: ClassHash) -> StateResult<RunnableCompiledClass> {
         self.dict_state_reader
             .get_compiled_class(class_hash)
             .or_else(|_| {
                 self.fork_state_reader
                     .as_ref()
                     .map_or(Err(UndeclaredClassHash(class_hash)), |reader| {
-                        reader.get_compiled_contract_class(class_hash)
+                        reader.get_compiled_class(class_hash)
                     })
             })
     }
@@ -225,7 +225,7 @@ impl CallTraceNode {
 #[derive(Clone)]
 struct CallStackElement {
     // when we exit the call we use it to calculate resources used by the call
-    resources_used_before_call: ExecutionResources,
+    // resources_used_before_call: ExecutionResources,
     call_trace: Rc<RefCell<CallTrace>>,
     cheated_data: CheatedData,
 }
@@ -235,7 +235,7 @@ pub struct NotEmptyCallStack(Vec<CallStackElement>);
 impl NotEmptyCallStack {
     pub fn from(elem: Rc<RefCell<CallTrace>>) -> Self {
         NotEmptyCallStack(vec![CallStackElement {
-            resources_used_before_call: ExecutionResources::default(),
+            // resources_used_before_call: ExecutionResources::default(),
             call_trace: elem,
             cheated_data: Default::default(),
         }])
@@ -244,11 +244,11 @@ impl NotEmptyCallStack {
     pub fn push(
         &mut self,
         elem: Rc<RefCell<CallTrace>>,
-        resources_used_before_call: ExecutionResources,
+        // resources_used_before_call: ExecutionResources,
         cheated_data: CheatedData,
     ) {
         self.0.push(CallStackElement {
-            resources_used_before_call,
+            // resources_used_before_call,
             call_trace: elem,
             cheated_data,
         });
@@ -471,7 +471,7 @@ impl TraceData {
     pub fn enter_nested_call(
         &mut self,
         entry_point: CallEntryPoint,
-        resources_used_before_call: ExecutionResources,
+        // resources_used_before_call: ExecutionResources,
         cheated_data: CheatedData,
     ) {
         let new_call = Rc::new(RefCell::new(CallTrace {
@@ -487,7 +487,8 @@ impl TraceData {
             .push(CallTraceNode::EntryPointCall(new_call.clone()));
 
         self.current_call_stack
-            .push(new_call, resources_used_before_call, cheated_data);
+            // .push(new_call, resources_used_before_call, cheated_data);
+            .push(new_call, cheated_data);
     }
 
     pub fn set_class_hash_for_current_call(&mut self, class_hash: ClassHash) {
@@ -497,21 +498,21 @@ impl TraceData {
 
     pub fn exit_nested_call(
         &mut self,
-        resources_used_after_call: &ExecutionResources,
+        // resources_used_after_call: &ExecutionResources,
         used_syscalls: SyscallCounter,
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
         vm_trace: Option<Vec<RelocatedTraceEntry>>,
     ) {
         let CallStackElement {
-            resources_used_before_call,
+            // resources_used_before_call,
             call_trace: last_call,
             ..
         } = self.current_call_stack.pop();
 
         let mut last_call = last_call.borrow_mut();
-        last_call.used_execution_resources =
-            resources_used_after_call - &resources_used_before_call;
+        // last_call.used_execution_resources =
+        //     resources_used_after_call - &resources_used_before_call;
         last_call.used_syscalls = used_syscalls;
 
         last_call.used_l1_resources.l2_l1_message_sizes = l2_to_l1_messages

@@ -20,8 +20,8 @@ use cheatnet::state::{CallTrace, CallTraceNode};
 use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
 use starknet::core::utils::get_selector_from_name;
+use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, EntryPointSelector};
-use starknet_api::deprecated_contract_class::EntryPointType;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
@@ -109,9 +109,9 @@ fn build_profiler_call_trace_node(
     versioned_program_path: &Utf8Path,
 ) -> ProfilerCallTraceNode {
     match value {
-        CallTraceNode::EntryPointCall(trace) => ProfilerCallTraceNode::EntryPointCall(
+        CallTraceNode::EntryPointCall(trace) => ProfilerCallTraceNode::EntryPointCall(Box::new(
             build_profiler_call_trace(trace, contracts_data, versioned_program_path),
-        ),
+        )),
         CallTraceNode::DeployWithoutConstructor => ProfilerCallTraceNode::DeployWithoutConstructor,
     }
 }
@@ -135,7 +135,6 @@ pub fn build_profiler_execution_resources(
                 .map(|(key, value)| (key.to_str_with_suffix().to_owned(), value))
                 .collect(),
         },
-        syscall_counter: profiler_syscall_counter,
     }
 }
 
@@ -273,6 +272,10 @@ fn build_profiler_deprecated_syscall_selector(
         DeprecatedSyscallSelector::Sha256ProcessBlock => {
             ProfilerDeprecatedSyscallSelector::Sha256ProcessBlock
         }
+        DeprecatedSyscallSelector::GetClassHashAt => {
+            ProfilerDeprecatedSyscallSelector::GetClassHashAt
+        }
+        DeprecatedSyscallSelector::KeccakRound => unimplemented!("No corresponding syscall"),
     }
 }
 
