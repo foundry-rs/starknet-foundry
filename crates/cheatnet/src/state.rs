@@ -326,12 +326,13 @@ pub struct EncounteredError {
     pub class_hash: ClassHash,
 }
 
+type MockedFunctionKey = (EntryPointSelector, Felt);
 pub struct CheatnetState {
     pub cheated_execution_info_contracts: HashMap<ContractAddress, ExecutionInfoMock>,
     pub global_cheated_execution_info: ExecutionInfoMock,
 
     pub mocked_functions:
-        HashMap<ContractAddress, HashMap<(EntryPointSelector, Felt), CheatStatus<Vec<Felt>>>>,
+        HashMap<ContractAddress, HashMap<MockedFunctionKey, CheatStatus<Vec<Felt>>>>,
     pub replaced_bytecode_contracts: HashMap<ContractAddress, ClassHash>,
     pub detected_events: Vec<Event>,
     pub detected_messages_to_l1: Vec<MessageToL1>,
