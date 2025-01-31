@@ -48,7 +48,8 @@ mod Test {
     use super::{IOuterContractDispatcher, IOuterContractDispatcherTrait};
 
     #[test]
-    fn test_unwrapped_call_contract_syscall() {
+    #[should_panic]
+    fn test_contract_panics() {
         let contract_inner = declare("InnerContract").unwrap().contract_class();
         let (contract_address_inner, _) = contract_inner.deploy(@array![]).unwrap();
 

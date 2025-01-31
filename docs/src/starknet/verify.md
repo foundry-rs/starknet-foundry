@@ -23,11 +23,12 @@ First, ensure that you have created a `Scarb.toml` file for your contract (it sh
 
 Then run:
 
+<!-- { "ignored_output": true, "replace_network": false } -->
 ```shell
 $ sncast \
     verify \
-    --contract-address 0x01e4ebe3278ab4633a9d0d3f5c4290001f29bc3179a70e570b6817dd7f8264fa \
-    --contract-name SimpleBalance \
+    --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
+    --contract-name HelloSncast \
     --verifier walnut \
     --network sepolia
 ```
@@ -36,7 +37,12 @@ $ sncast \
 <summary>Output:</summary>
 
 ```shell
-You are about to submit the entire workspace's code to the third-party chosen verifier at walnut, and the code will be publicly available through walnut's APIs. Are you sure? (Y/n) Y
+
+    You are about to submit the entire workspace code to the third-party verifier at walnut.
+
+    Important: Make sure your project does not include sensitive information like private keys. The snfoundry.toml file will be uploaded. Keep the keystore outside the project to prevent it from being uploaded.
+
+    Are you sure you want to proceed? (Y/n): Y
 
 command: verify
 message: Contract verification has started. You can check the verification status at the following link: https://api.walnut.dev/v1/verification/77f1d905-fdb4-4280-b7d6-57cd029d1259/status.

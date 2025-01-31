@@ -65,7 +65,7 @@ the same fork in tests.
 ```toml
 [[tool.snforge.fork]]
 name = "SEPOLIA_LATEST"
-url = "https://starknet-sepolia.public.blastapi.iol/rpc/v0_7"
+url = "https://starknet-sepolia.public.blastapi.io/rpc/v0_7"
 block_id.tag = "latest"
 ```
 

@@ -1,5 +1,15 @@
+use std::sync::LazyLock;
+
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+
+static RE_SNCAST: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new( r"(?ms)^(?:<!--\s*(?P<config>\{.*?\})\s*-->\n)?```shell\n\$ (?P<command>sncast .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n(?P<output>[\s\S]+?)\n```[\s]*<\/details>)?").expect("Failed to create regex for sncast snippet")
+});
+
+static RE_SNFORGE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new( r"(?ms)^(?:<!--\s*(?P<config>\{.*?\})\s*-->\n)?```shell\n\$ (?P<command>snforge .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n(?P<output>[\s\S]+?)\n```[\s]*<\/details>)?").expect("Failed to create regex for snforge snippet")
+});
 
 #[derive(Clone, Debug)]
 pub struct SnippetType(String);
@@ -21,9 +31,9 @@ impl SnippetType {
     }
 
     #[must_use]
-    pub fn get_re(&self) -> Regex {
+    pub fn get_re(&self) -> &'static Regex {
         // The regex pattern is used to match the snippet, its config and the output. Example:
-        // <!-- { "ignored": true, "package_name": "xyz" } -->
+        // <!-- { content of snippet config JSON } -->
         // ```shell
         // $ snforge or sncast command with args...
         // ```
@@ -34,19 +44,32 @@ impl SnippetType {
         // ```
         // </details>
 
-        let escaped_command = regex::escape(self.as_str());
-        let pattern = format!(
-            r"(?ms)^(?:<!--\s*(?P<config>.*?)\s*-->\n)?```shell\n\$ (?P<command>{escaped_command} .+?)\n```(?:\s*<details>\n<summary>Output:<\/summary>\n\n```shell\n(?P<output>[\s\S]+?)\n```[\s]*<\/details>)?"
-        );
-
-        Regex::new(&pattern).unwrap()
+        match self.as_str() {
+            "snforge" => &RE_SNFORGE,
+            "sncast" => &RE_SNCAST,
+            _ => panic!("Regex for {} not found", self.as_str()),
+        }
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Default)]
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(default)]
 pub struct SnippetConfig {
-    pub ignored: Option<bool>,
+    pub ignored: bool,
     pub package_name: Option<String>,
+    pub ignored_output: bool,
+    pub replace_network: bool,
+}
+
+impl Default for SnippetConfig {
+    fn default() -> Self {
+        Self {
+            ignored: false,
+            package_name: None,
+            ignored_output: false,
+            replace_network: true,
+        }
+    }
 }
 
 #[derive(Debug)]

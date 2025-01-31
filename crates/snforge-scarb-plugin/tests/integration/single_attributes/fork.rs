@@ -17,7 +17,7 @@ fn fails_without_block() {
                 "
                     All options failed
                     - variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
-                    - variant: #[fork] expected 1 arguments, got: 0
+                    - variant: #[fork] expected arguments: 1, got: 0
                     - variant: #[fork] can be used with unnamed attributes only
                     Resolve at least one of them
                 "
@@ -39,7 +39,7 @@ fn fails_without_url() {
             "
                 All options failed
                 - variant: <url> argument is missing
-                - variant: #[fork] expected 1 arguments, got: 0
+                - variant: #[fork] expected arguments: 1, got: 0
                 - variant: #[fork] can be used with unnamed attributes only
                 Resolve at least one of them
             "
@@ -56,12 +56,13 @@ fn fails_without_args() {
 
     assert_diagnostics(
         &result,
-        &[Diagnostic::error(formatdoc!(
+        &[Diagnostic::warn("#[fork] used with empty argument list. Either remove () or specify some arguments"),
+            Diagnostic::error(formatdoc!(
             "
                 All options failed
                 - variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
-                - variant: #[fork] expected 1 arguments, got: 0
-                - variant: #[fork] expected 1 arguments, got: 0
+                - variant: #[fork] expected arguments: 1, got: 0
+                - variant: #[fork] expected arguments: 1, got: 0
                 Resolve at least one of them
             "
         ))],
@@ -81,7 +82,7 @@ fn fails_with_invalid_url() {
             "
                 All options failed
                 - variant: #[fork] <url> is not a valid url
-                - variant: #[fork] expected 1 arguments, got: 0
+                - variant: #[fork] expected arguments: 1, got: 0
                 - variant: #[fork] can be used with unnamed attributes only
                 Resolve at least one of them
             "
@@ -102,7 +103,7 @@ fn accepts_string() {
         &result,
         r#"
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
 
                     let mut data = array![];
 
@@ -131,7 +132,7 @@ fn accepts_inline_config() {
         &result,
         r#"
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
 
                     let mut data = array![];
 
@@ -165,7 +166,7 @@ fn overriding_config_name_first() {
         &result,
         r#"
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
 
                     let mut data = array![];
 
@@ -199,7 +200,7 @@ fn overriding_config_name_second() {
         &result,
         r#"
             fn empty_fn() {
-                if snforge_std::_cheatcode::_is_config_run() {
+                if snforge_std::_internals::_is_config_run() {
 
                     let mut data = array![];
 

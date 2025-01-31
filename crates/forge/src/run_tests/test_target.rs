@@ -3,7 +3,6 @@ use cairo_lang_runner::RunnerError;
 use forge_runner::{
     forge_config::ForgeConfig,
     function_args, maybe_generate_coverage, maybe_save_trace_and_profile,
-    maybe_save_versioned_program,
     package_tests::with_config_resolved::TestTargetWithResolvedConfig,
     printing::print_test_result,
     run_for_test_case,
@@ -25,7 +24,6 @@ pub async fn run_for_test_target(
     tests: TestTargetWithResolvedConfig,
     forge_config: Arc<ForgeConfig>,
     tests_filter: &impl TestCaseFilter,
-    package_name: &str,
 ) -> Result<TestTargetRunResult> {
     let sierra_program = &tests.sierra_program.program;
     let casm_program = tests.casm_program.clone();
@@ -37,13 +35,6 @@ pub async fn run_for_test_target(
     // As `spawn_blocking` can't be prematurely cancelled (refer: https://dtantsur.github.io/rust-openstack/tokio/task/fn.spawn_blocking.html),
     // a channel is used to signal the task that test processing is no longer necessary.
     let (send, mut rec) = channel(1);
-
-    let maybe_versioned_program_path = Arc::new(maybe_save_versioned_program(
-        &forge_config.output_config.execution_data_to_save,
-        &tests,
-        &forge_config.output_config.versioned_programs_dir,
-        package_name,
-    )?);
 
     let type_declarations: HashMap<_, _> = sierra_program
         .type_declarations
@@ -79,7 +70,7 @@ pub async fn run_for_test_target(
             case,
             casm_program.clone(),
             forge_config.clone(),
-            maybe_versioned_program_path.clone(),
+            tests.sierra_program_path.clone(),
             send.clone(),
         ));
     }

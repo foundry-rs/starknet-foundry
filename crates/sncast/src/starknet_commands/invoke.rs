@@ -5,6 +5,7 @@ use conversions::IntoConv;
 use sncast::helpers::error::token_not_supported_for_invoke;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
+use sncast::helpers::version::parse_version;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::InvokeResponse;
 use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, WaitForTx};
@@ -38,7 +39,7 @@ pub struct Invoke {
     pub nonce: Option<Felt>,
 
     /// Version of invoke (can be inferred from fee token)
-    #[clap(short, long)]
+    #[clap(short, long, value_parser = parse_version::<InvokeVersion>)]
     pub version: Option<InvokeVersion>,
 
     #[clap(flatten)]
@@ -89,7 +90,11 @@ pub async fn execute_calls(
         FeeSettings::Eth { max_fee } => {
             let execution_calls = account.execute_v1(calls);
 
-            let execution = apply_optional(execution_calls, max_fee, ExecutionV1::max_fee);
+            let execution = apply_optional(
+                execution_calls,
+                max_fee.map(Felt::from),
+                ExecutionV1::max_fee,
+            );
             let execution = apply_optional(execution, nonce, ExecutionV1::nonce);
             execution.send().await
         }
@@ -99,8 +104,16 @@ pub async fn execute_calls(
         } => {
             let execution_calls = account.execute_v3(calls);
 
-            let execution = apply_optional(execution_calls, max_gas, ExecutionV3::gas);
-            let execution = apply_optional(execution, max_gas_unit_price, ExecutionV3::gas_price);
+            let execution = apply_optional(
+                execution_calls,
+                max_gas.map(std::num::NonZero::get),
+                ExecutionV3::gas,
+            );
+            let execution = apply_optional(
+                execution,
+                max_gas_unit_price.map(std::num::NonZero::get),
+                ExecutionV3::gas_price,
+            );
             let execution = apply_optional(execution, nonce, ExecutionV3::nonce);
             execution.send().await
         }
@@ -118,6 +131,6 @@ pub async fn execute_calls(
         .await
         .map_err(StarknetCommandError::from),
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
-        _ => Err(anyhow!("Unknown RPC error").into()),
+        Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
     }
 }

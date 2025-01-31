@@ -3,7 +3,7 @@
 `snforge` supports gas and other VM resources estimation for each individual test case. 
 
 It does not calculate the final transaction fee, for details on how fees are calculated, 
-please refer to fee mechanism in [Starknet documentation](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism).
+please refer to fee mechanism in [Starknet documentation](https://docs.starknet.io/architecture-and-concepts/network-architecture/fee-mechanism).
 
 ## Gas Estimation
 
@@ -27,7 +27,7 @@ While using the fuzzing feature additional gas statistics will be displayed:
 > 📝 **Note**
 >  
 > Starknet-Foundry uses blob-based gas calculation formula in order to calculate gas usage. 
-> For details on the exact formula, [see the docs](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#overall_fee_blob). 
+> For details on the exact formula, [see the docs](https://docs.starknet.io/architecture-and-concepts/network-architecture/fee-mechanism/#overall_fee_blob). 
 
 ## VM Resources estimation 
 
@@ -49,14 +49,14 @@ Running 2 test(s) from tests/
 [PASS] hello_starknet_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value (gas: ~105)
         steps: 3405
         memory holes: 22
-        builtins: ([..])
-        syscalls: ([..])
+        builtins: (range_check: 77, pedersen: 7)
+        syscalls: (CallContract: 2, StorageRead: 1, Deploy: 1)
         
 [PASS] hello_starknet_integrationtest::test_contract::test_increase_balance (gas: ~172)
         steps: 4535
         memory holes: 15
-        builtins: ([..])
-        syscalls: ([..])
+        builtins: (range_check: 95, pedersen: 7)
+        syscalls: (CallContract: 3, StorageRead: 3, Deploy: 1, StorageWrite: 1)
         
 Running 0 test(s) from src/
 Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out

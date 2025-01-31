@@ -6,7 +6,7 @@ Starknet Foundry `sncast` is a command line tool for performing Starknet RPC cal
 > At the moment, `sncast` only supports contracts written in [Cairo](https://github.com/starkware-libs/cairo) v1 and v2.
 
 > ⚠️ **Warning**
-> Currently, support is only provided for accounts that use the default signature based on the [Stark curve](https://docs.starknet.io/documentation/architecture_and_concepts/Cryptography/stark-curve).
+> Currently, support is only provided for accounts that use the default signature based on the [Stark curve](https://docs.starknet.io/architecture-and-concepts/cryptography/#stark-curve).
 
 ## How to Use `sncast`
 
@@ -29,9 +29,11 @@ You can, however, overwrite their values by supplying them as flags directly to 
 
 Let's use `sncast` to call a contract's function:
 
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast call \
-    --url http://127.0.0.1:5050 \
+    --network sepolia \
     --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \
     --function "pokemon" \
     --arguments '"Charizard"' \
@@ -49,8 +51,15 @@ response: [0x0, 0x0, 0x43686172697a617264, 0x9, 0x0, 0x0, 0x41a78e741e5af2fec34b
 <br>
 
 > 📝 **Note**
-> In the above example we supply `sncast` with `--account` and `--url` flags. If `snfoundry.toml` is present, and have these properties set, values provided using these flags will override values from `snfoundry.toml`. Learn more about `snfoundry.toml` configuration [here](../projects/configuration.md#sncast).
+> In the above example we supply `sncast` with `--account` flag. If `snfoundry.toml` is present, and have this property set, value provided using this flags will override value from `snfoundry.toml`. Learn more about `snfoundry.toml` configuration [here](../projects/configuration.md#sncast).
 
+### Network and RPC Providers
+
+When providing `--network` flag, `sncast` will randomly select on of the free RPC providers.
+When using free provider you may experience rate limits and other unexpected behavior.
+
+If using `sncast` extensively, we recommend getting access to a dedicated RPC node and providing its URL to sncast with
+`--url` flag.
 
 ### Arguments
 
@@ -70,29 +79,31 @@ In the example above we called a function with a deserialized argument: `'"Chari
 
 The same result can be achieved by passing serialized calldata, which is a list of hexadecimal-encoded field elements.
 
-For example, this is equivalent to using the --calldata option with the following value: 0x0 0x43686172697a617264 0x9.
+For example, this is equivalent to using the `--calldata` option with the following value: `0x0 0x43686172697a617264 0x9`.
 
 To obtain the serialized form of the wished data, you can write a Cairo program that calls `Serde::serialize` on subsequent arguments and displays the results.
 
-Read more about it in the [Cairo documentation](https://book.cairo-lang.org/appendix-03-derivable-traits.html?highlight=seri#serializing-with-serde).
+Read more about it in the [Cairo documentation](https://book.cairo-lang.org/appendix-03-derivable-traits.html?#serializing-with-serde).
 
 ### How to Use `--wait` Flag
 
 Let's invoke a transaction and wait for it to be `ACCEPTED_ON_L2`.
 
+<!-- { "ignored_output": true } -->
 ```shell
-$ sncast --account myuser \
+$ sncast --account my_account \
     --wait \
     deploy \
-	--url http://127.0.0.1:5050 \
-    --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
+	--network sepolia \
+    --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
+    --fee-token strk
 ```
 
 <details>
 <summary>Output:</summary>
 
 ```shell
-Transaction hash: 0x3062310a1e40d4b66d8987ba7447d1c7317381d0295d62cb12f2fe3f11e6983
+Transaction hash: [..]
 Waiting for transaction to be received. Retries left: 11
 Waiting for transaction to be received. Retries left: 10
 Waiting for transaction to be received. Retries left: 9
@@ -105,12 +116,12 @@ Received transaction. Status: Pending
 Received transaction. Status: Pending
 Received transaction. Status: Pending
 command: deploy
-contract_address: 0x1d91599ec661e97fdcbb10c642a1c4f920986f1a7a9659d157d0db09baaa29e
-transaction_hash: 0x3062310a1e40d4b66d8987ba7447d1c7317381d0295d62cb12f2fe3f11e6983
+contract_address: [..]
+transaction_hash: [..]
 
 To see deployment details, visit:
-contract: https://starkscan.co/search/0x1d91599ec6...
-transaction: https://starkscan.co/search/0x3062310a1e...
+contract: https://starkscan.co/search/[..]
+transaction: https://starkscan.co/search/[..]
 ```
 </details>
 <br>

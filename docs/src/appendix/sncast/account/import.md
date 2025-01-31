@@ -26,6 +26,13 @@ Starknet RPC node url address.
 
 Overrides url from `snfoundry.toml`.
 
+## `--network <NETWORK>`
+Optional.
+
+Use predefined network with public provider
+
+Possible values: `mainnet`, `sepolia`.
+
 ## `--class-hash, -c <CLASS_HASH>`
 Optional.
 
@@ -50,3 +57,8 @@ Salt for the account address.
 Optional.
 
 If passed, a profile with corresponding name will be added to the local snfoundry.toml.
+
+## `--silent`
+Optional.
+
+If passed, the command will not trigger an interactive prompt to add an account as a default

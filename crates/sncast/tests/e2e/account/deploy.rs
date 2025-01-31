@@ -349,7 +349,7 @@ async fn test_invalid_version_and_token_combination(fee_token: &str, version: &s
 }
 
 #[tokio::test]
-async fn test_no_version_and_token() {
+async fn test_default_fee_token() {
     let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
     let accounts_file = "accounts.json";
 
@@ -367,11 +367,111 @@ async fn test_no_version_and_token() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    let output = snapbox.assert().failure();
-    assert_stderr_contains(
-        output,
-        "Error: Either --fee-token or --version must be provided",
-    );
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        Transaction hash: [..]
+        command: account deploy
+        transaction_hash: [..]
+
+        To see invocation details, visit:
+        transaction: [..]
+    "});
+}
+
+#[tokio::test]
+async fn test_fee_token_deprecation_warning_eth() {
+    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "--wait",
+        "account",
+        "deploy",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--fee-token",
+        "eth",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        [WARNING] Specifying '--fee-token' flag is deprecated and will be removed in the future.
+        [WARNING] Eth transactions will stop being supported in the future due to 'SNIP-16'
+        Transaction hash: [..]
+        command: account deploy
+        transaction_hash: [..]
+
+        To see invocation details, visit:
+        transaction: [..]
+    "});
+}
+
+#[tokio::test]
+async fn test_fee_token_deprecation_warning_strk() {
+    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "--wait",
+        "account",
+        "deploy",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--fee-token",
+        "strk",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        [WARNING] Specifying '--fee-token' flag is deprecated and will be removed in the future.
+        Transaction hash: [..]
+        command: account deploy
+        transaction_hash: [..]
+
+        To see invocation details, visit:
+        transaction: [..]
+    "});
+}
+
+#[tokio::test]
+async fn test_version_deprecation_warning() {
+    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "--wait",
+        "account",
+        "deploy",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--version",
+        "v3",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 will become the only type of transaction available.
+        Transaction hash: [..]
+        command: account deploy
+        transaction_hash: [..]
+
+        To see invocation details, visit:
+        transaction: [..]
+    "});
 }
 
 #[tokio::test]
@@ -390,13 +490,14 @@ pub async fn test_valid_class_hash() {
         "my_account",
         "--max-fee",
         "10000000000000000",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
+        Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags
+        Converted [..] max fee to [..] max gas and [..] max gas unit price
+
         command: account deploy
         transaction_hash: [..]
 
@@ -421,8 +522,6 @@ pub async fn test_valid_no_max_fee() {
         URL,
         "--name",
         "my_account",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -515,13 +614,14 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         URL,
         "--max-fee",
         "99999999999999999",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
+        Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags
+        Converted [..] max fee to [..] max gas and [..] max gas unit price
+
         command: account deploy
         transaction_hash: 0x0[..]
 
@@ -791,12 +891,13 @@ pub async fn test_deploy_keystore_other_args() {
         "some-name",
         "--max-fee",
         "99999999999999999",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
+        Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags
+        Converted [..] max fee to [..] max gas and [..] max gas unit price
+
         command: account deploy
         transaction_hash: 0x0[..]
 

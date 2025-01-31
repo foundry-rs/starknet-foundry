@@ -4,6 +4,7 @@ use conversions::IntoConv;
 use sncast::helpers::error::token_not_supported_for_deployment;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
+use sncast::helpers::version::parse_version;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::DeployResponse;
 use sncast::{extract_or_generate_salt, impl_payable_transaction, udc_uniqueness};
@@ -43,7 +44,7 @@ pub struct Deploy {
     pub nonce: Option<Felt>,
 
     /// Version of the deployment (can be inferred from fee token)
-    #[clap(short, long)]
+    #[clap(short, long, value_parser = parse_version::<DeployVersion>)]
     pub version: Option<DeployVersion>,
 
     #[clap(flatten)]
@@ -79,11 +80,17 @@ pub async fn deploy(
     calldata: &Vec<Felt>,
     salt: Option<Felt>,
     unique: bool,
-    fee_settings: FeeSettings,
+    fee_args: FeeArgs,
     nonce: Option<Felt>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
+    fee_token: FeeToken,
 ) -> Result<DeployResponse, StarknetCommandError> {
+    let fee_settings = fee_args
+        .fee_token(fee_token)
+        .try_into_fee_settings(account.provider(), account.block_id())
+        .await?;
+
     let salt = extract_or_generate_salt(salt);
     let factory = ContractFactory::new(class_hash, account);
     let result = match fee_settings {
@@ -91,7 +98,7 @@ pub async fn deploy(
             let execution = factory.deploy_v1(calldata.clone(), salt, unique);
             let execution = match max_fee {
                 None => execution,
-                Some(max_fee) => execution.max_fee(max_fee),
+                Some(max_fee) => execution.max_fee(max_fee.into()),
             };
             let execution = match nonce {
                 None => execution,
@@ -107,11 +114,11 @@ pub async fn deploy(
 
             let execution = match max_gas {
                 None => execution,
-                Some(max_gas) => execution.gas(max_gas),
+                Some(max_gas) => execution.gas(max_gas.into()),
             };
             let execution = match max_gas_unit_price {
                 None => execution,
-                Some(max_gas_unit_price) => execution.gas_price(max_gas_unit_price),
+                Some(max_gas_unit_price) => execution.gas_price(max_gas_unit_price.into()),
             };
             let execution = match nonce {
                 None => execution,
@@ -140,6 +147,6 @@ pub async fn deploy(
         .await
         .map_err(StarknetCommandError::from),
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
-        _ => Err(anyhow!("Unknown RPC error").into()),
+        Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
     }
 }

@@ -440,15 +440,69 @@ fn test_too_low_max_fee() {
 async fn test_happy_case_shell() {
     let tempdir = create_and_deploy_oz_account().await;
 
-    let test_path = PathBuf::from("tests/shell/deploy.sh")
+    let script_extension = if cfg!(windows) { ".ps1" } else { ".sh" };
+    let test_path = PathBuf::from(format!("tests/shell/deploy{script_extension}"))
         .canonicalize()
         .unwrap();
     let binary_path = cargo_bin!("sncast");
 
-    let snapbox = Command::new(test_path)
+    let command = if cfg!(windows) {
+        Command::new("powershell")
+            .arg("-ExecutionPolicy")
+            .arg("Bypass")
+            .arg("-File")
+            .arg(test_path)
+    } else {
+        Command::new(test_path)
+    };
+
+    let snapbox = command
         .current_dir(tempdir.path())
         .arg(binary_path)
         .arg(URL)
         .arg(CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA);
     snapbox.assert().success();
+}
+
+#[tokio::test]
+async fn test_version_deprecation_warning() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "deploy",
+        "--url",
+        URL,
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--salt",
+        "0x2",
+        "--unique",
+        "--max-fee",
+        "99999999999999999",
+        "--version",
+        "v3",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 will become the only type of transaction available.
+            command: deploy
+            contract_address: 0x0[..]
+            transaction_hash: 0x0[..]
+
+            To see deployment details, visit:
+            contract: [..]
+            transaction: [..]
+            "
+        },
+    );
 }
