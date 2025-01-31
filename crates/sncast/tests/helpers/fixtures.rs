@@ -537,7 +537,6 @@ pub fn assert_tx_entry_failed(
     status: ScriptTransactionStatus,
     msg_contains: Vec<&str>,
 ) {
-    dbg!(&tx_entry);
     assert_eq!(tx_entry.name, name);
     assert_eq!(tx_entry.status, status);
 
