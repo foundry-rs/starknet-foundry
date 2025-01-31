@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Newly created projects won't require Rust to be installed by default, as precompiled plugin binaries are now published to the registry for new versions.
+- Rust is no longer required to use `snforge` - precompiled `snforge_scarb_plugin` plugin binaries are now published to (package registry)[https://scarbs.xyz/] for new versions. 
 - Added a suggestion for using the `--max-n-steps` flag when the Cairo VM returns the error: `Could not reach the end of the program. RunResources has no remaining steps`.
 
 #### Fixed
