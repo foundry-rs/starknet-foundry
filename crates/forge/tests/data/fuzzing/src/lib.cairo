@@ -1,12 +1,12 @@
-fn adder(a: felt252, b: felt252) -> felt252 {
+pub fn adder(a: felt252, b: felt252) -> felt252 {
     a + b
 }
 
-fn always_five(a: felt252, b: felt252) -> felt252 {
+pub fn always_five(a: felt252, b: felt252) -> felt252 {
     5
 }
 
-fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
+pub fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
     match n {
         0 => a,
         _ => fib(b, a + b, n - 1),
@@ -44,6 +44,7 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected: 'result == a + b')]
     fn failing_fuzz(a: felt252, b: felt252) {
         let result = always_five(a, b);
         assert(result == a + b, 'result == a + b');
