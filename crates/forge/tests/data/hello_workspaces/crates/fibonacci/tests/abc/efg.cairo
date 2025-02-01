@@ -4,6 +4,7 @@ fn efg_test() {
 }
 
 #[test]
+#[should_panic(expected: ('', ))]
 fn failing_test() {
     assert(1 == 2, '');
 }
