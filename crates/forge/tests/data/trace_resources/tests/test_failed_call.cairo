@@ -1,4 +1,5 @@
 use core::clone::Clone;
+use core::panic_with_felt252;
 use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 use snforge_std::{declare, ContractClassTrait};
 
