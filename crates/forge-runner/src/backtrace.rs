@@ -25,7 +25,7 @@ use toml_edit::{DocumentMut, Table};
 const BACKTRACE_ENV: &str = "SNFORGE_BACKTRACE";
 const MINIMAL_SCARB_VERSION: Version = Version::new(2, 8, 0);
 
-const CAIRO_BACKTRACE_REQUIRED_ENTRIES: [(&str, &str); 2] = [
+const BACKTRACE_REQUIRED_ENTRIES: [(&str, &str); 2] = [
     ("unstable-add-statements-functions-debug-info", "true"),
     ("unstable-add-statements-code-locations-debug-info", "true"),
 ];
@@ -61,12 +61,12 @@ pub fn add_backtrace_footer(
         )
 }
 
-pub fn can_be_generated(scarb_metadata: &Metadata) -> Result<()> {
+pub fn can_backtrace_be_generated(scarb_metadata: &Metadata) -> Result<()> {
     let manifest = fs::read_to_string(&scarb_metadata.runtime_manifest)?.parse::<DocumentMut>()?;
 
     ensure!(
         scarb_metadata.app_version_info.version >= MINIMAL_SCARB_VERSION,
-        "Coverage generation requires scarb version >= {MINIMAL_SCARB_VERSION}",
+        "Backtrace generation requires scarb version >= {MINIMAL_SCARB_VERSION}",
     );
 
     let has_needed_entries = manifest
@@ -75,7 +75,7 @@ pub fn can_be_generated(scarb_metadata: &Metadata) -> Result<()> {
         .and_then(|profile| profile.get("cairo"))
         .and_then(|cairo| cairo.as_table())
         .is_some_and(|profile_cairo| {
-            CAIRO_BACKTRACE_REQUIRED_ENTRIES
+            BACKTRACE_REQUIRED_ENTRIES
                 .iter()
                 .all(|(key, value)| contains_entry_with_value(profile_cairo, key, value))
         });
@@ -88,7 +88,6 @@ pub fn can_be_generated(scarb_metadata: &Metadata) -> Result<()> {
             [profile.{profile}.cairo]
             unstable-add-statements-functions-debug-info = true
             unstable-add-statements-code-locations-debug-info = true
-            inlining-strategy = \"avoid\"
             ... other entries ...
             ",
             profile = scarb_metadata.current_profile
@@ -98,14 +97,18 @@ pub fn can_be_generated(scarb_metadata: &Metadata) -> Result<()> {
     Ok(())
 }
 
-pub fn is_enabled() -> bool {
+pub fn is_backtrace_enabled() -> bool {
     env::var(BACKTRACE_ENV).is_ok_and(|value| value == "1")
 }
 
 fn contains_entry_with_value(table: &Table, key: &str, value: &str) -> bool {
-    table
-        .get(key)
-        .is_some_and(|entry| entry.to_string().trim() == value)
+    table.get(key).is_some_and(|entry| {
+        if let Some(entry) = entry.as_bool() {
+            entry.to_string() == value
+        } else {
+            false
+        }
+    })
 }
 struct ContractBacktraceData {
     contract_name: String,
