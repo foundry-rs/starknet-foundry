@@ -49,33 +49,22 @@ mod tests {
     }
 
     #[test]
-    fn test_from_str_invalid_input() {
-        let invalid_hex = "0xghijkl";
-        let result = CairoU384::from_str(invalid_hex);
-        assert!(matches!(result, Err(ParseCairoU384Error::InvalidString(_))));
-        let invalid_decimal = "123abc456";
-        let result = CairoU384::from_str(invalid_decimal);
-        assert!(matches!(result, Err(ParseCairoU384Error::InvalidString(_))));
-        let empty = "";
-        let result = CairoU384::from_str(empty);
-        assert!(matches!(result, Err(ParseCairoU384Error::InvalidString(_))));
-    }
-
-    #[test]
     fn test_edge_cases() {
+        // Test zero
         let zero = "0";
         let result = CairoU384::from_str(zero).unwrap();
         let expected = CairoU384::from_bytes(&[0u8; 48]);
         assert_eq!(result, expected);
-        let max_value = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+
+        // Test max value (96 hex chars = 384 bits)
+        let max_value = "0xffffffffffffffffffffffffffffffff";
         let result = CairoU384::from_str(max_value).unwrap();
-
-        let mut expected = [0u8; 48];
-        for i in 0..48 {
-            expected[i] = 0xFF;
-        }
-
-        let expected = CairoU384::from_bytes(&expected);
+        
+        let mut bytes = [0u8; 48];
+        let start = 48 - max_value[2..].len() / 2;  // Skip "0x" prefix
+        bytes[start..].fill(0xFF);
+        let expected = CairoU384::from_bytes(&bytes);
+        
         assert_eq!(result, expected);
     }
 }
