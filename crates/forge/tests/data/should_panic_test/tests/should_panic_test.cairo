@@ -1,4 +1,5 @@
-use array::ArrayTrait;
+use core::array::ArrayTrait;
+use core::panic_with_felt252;
 
 #[test]
 #[should_panic]
