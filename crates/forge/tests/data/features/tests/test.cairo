@@ -1,7 +1,7 @@
 use snforge_std::{declare, DeclareResultTrait, ContractClassTrait};
 use features::{IContractDispatcher, IContractDispatcherTrait};
 
-pub fn mock_in_tests() -> felt252 {
+fn mock_in_tests() -> felt252 {
     999
 }
 
