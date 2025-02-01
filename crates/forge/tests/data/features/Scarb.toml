@@ -12,4 +12,5 @@ snforge_std = { path = "../../../../../snforge_std" }
 [[target.starknet-contract]]
 
 [features]
+default = ["snforge_test_only"]
 snforge_test_only = []
