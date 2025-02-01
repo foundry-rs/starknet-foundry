@@ -186,13 +186,13 @@ pub fn add_created_profile_to_configuration(
 
 #[cfg(test)]
 mod tests {
+    use crate::starknet_commands::account::add_created_profile_to_configuration;
+    use crate::ValidatedWaitParams;
     use camino::Utf8PathBuf;
     use configuration::copy_config_to_tempdir;
     use sncast::helpers::configuration::CastConfig;
     use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
     use std::fs;
-
-    use crate::starknet_commands::account::add_created_profile_to_configuration;
 
     #[test]
     fn test_add_created_profile_to_configuration_happy_case() {
@@ -203,7 +203,10 @@ mod tests {
             url: String::from("http://some-url"),
             account: String::from("some-name"),
             accounts_file: "accounts".into(),
-            ..Default::default()
+            keystore: None,
+            wait_params: ValidatedWaitParams::default(),
+            block_explorer: None,
+            show_explorer_links: false,
         };
         let res = add_created_profile_to_configuration(
             Some(&String::from("some-name")),
@@ -228,7 +231,10 @@ mod tests {
             url: String::from("http://127.0.0.1:5055/rpc"),
             account: String::from("user1"),
             accounts_file: DEFAULT_ACCOUNTS_FILE.into(),
-            ..Default::default()
+            keystore: None,
+            wait_params: ValidatedWaitParams::default(),
+            block_explorer: None,
+            show_explorer_links: false,
         };
         let res = add_created_profile_to_configuration(
             Some(&String::from("default")),

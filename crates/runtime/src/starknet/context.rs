@@ -12,7 +12,10 @@ use conversions::string::TryFromHexStr;
 use serde::{Deserialize, Serialize};
 use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_api::data_availability::DataAvailabilityMode;
-use starknet_api::transaction::{Resource, ResourceBounds, ResourceBoundsMapping};
+use starknet_api::transaction::Tip;
+use starknet_api::transaction::{
+    AccountDeploymentData, PaymasterData, Resource, ResourceBounds, ResourceBoundsMapping,
+};
 use starknet_api::{
     contract_address,
     core::{ChainId, ContractAddress, Nonce, PatriciaKey},
@@ -75,11 +78,11 @@ fn build_tx_info() -> TransactionInfo {
                 },
             ),
         ])),
-        tip: Default::default(),
+        tip: Tip::default(),
         nonce_data_availability_mode: DataAvailabilityMode::L1,
         fee_data_availability_mode: DataAvailabilityMode::L1,
-        paymaster_data: Default::default(),
-        account_deployment_data: Default::default(),
+        paymaster_data: PaymasterData::default(),
+        account_deployment_data: AccountDeploymentData::default(),
     })
 }
 
