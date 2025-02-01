@@ -59,12 +59,12 @@ mod tests {
         // Test max value (96 hex chars = 384 bits)
         let max_value = "0xffffffffffffffffffffffffffffffff";
         let result = CairoU384::from_str(max_value).unwrap();
-        
+
         let mut bytes = [0u8; 48];
-        let start = 48 - max_value[2..].len() / 2;  // Skip "0x" prefix
+        let start = 48 - max_value[2..].len() / 2;
         bytes[start..].fill(0xFF);
         let expected = CairoU384::from_bytes(&bytes);
-        
+
         assert_eq!(result, expected);
     }
 }
