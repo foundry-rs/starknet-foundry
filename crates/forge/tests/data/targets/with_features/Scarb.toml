@@ -15,4 +15,5 @@ snforge_std = { path = "../../../../../../snforge_std" }
 exit_first = false
 
 [features]
+default = ["enable_for_tests"]
 enable_for_tests = []
