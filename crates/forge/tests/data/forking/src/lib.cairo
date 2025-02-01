@@ -1,82 +1,74 @@
 #[cfg(test)]
 mod tests {
-//     use starknet::ContractAddress;
-//     use starknet::contract_address_const;
+    use starknet::contract_address_const;
 
+    const CONTRACT_ADDRESS: felt252 = 0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9;
 
-    // #[starknet::interface]
-    // trait IHelloStarknet<TContractState> {
-    //     fn increase_balance(ref self: TContractState, amount: felt252);
-    //     fn get_balance(self: @TContractState) -> felt252;
-    // }
+    #[starknet::interface]
+    trait IHelloStarknet<TContractState> {
+        fn increase_balance(ref self: TContractState, amount: felt252);
+        fn get_balance(self: @TContractState) -> felt252;
+    }
 
-    // #[test]
-    // fn test_fork_simple() {
-    //     let dispatcher = IHelloStarknetDispatcher {
-    //         contract_address: contract_address_const::<
-    //             0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9
-    //         >()
-    //     };
+    #[test]
+    fn test_fork_simple() {
+        let dispatcher = IHelloStarknetDispatcher {
+            contract_address: CONTRACT_ADDRESS.try_into().unwrap()
+        };
 
-    //     let balance = dispatcher.get_balance();
-    //     assert(balance == 0, 'Balance should be 0');
+        let balance = dispatcher.get_balance();
+        assert(balance == 0, 'Balance should be 0');
 
-    //     dispatcher.increase_balance(100);
+        dispatcher.increase_balance(100);
 
-    //     let balance = dispatcher.get_balance();
-    //     assert(balance == 100, 'Balance should be 100');
-    // }
+        let balance = dispatcher.get_balance();
+        assert(balance == 100, 'Balance should be 100');
+    }
 
-    // #[test]
-    // fn test_fork_simple_number_hex() {
-    //     let dispatcher = IHelloStarknetDispatcher {
-    //         contract_address: contract_address_const::<
-    //             0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9
-    //         >()
-    //     };
+    #[test]
+    fn test_fork_simple_number_hex() {
+        let dispatcher = IHelloStarknetDispatcher {
+            contract_address: CONTRACT_ADDRESS.try_into().unwrap()
+        };
 
-    //     let balance = dispatcher.get_balance();
-    //     assert(balance == 0, 'Balance should be 0');
+        let balance = dispatcher.get_balance();
+        assert(balance == 0, 'Balance should be 0');
 
-    //     dispatcher.increase_balance(100);
+        dispatcher.increase_balance(100);
 
-    //     let balance = dispatcher.get_balance();
-    //     assert(balance == 100, 'Balance should be 100');
-    // }
+        let balance = dispatcher.get_balance();
+        assert(balance == 100, 'Balance should be 100');
+    }
 
-    // #[test]
-    // fn test_fork_simple_hash_hex() {
-    //     let dispatcher = IHelloStarknetDispatcher {
-    //         contract_address: contract_address_const::<
-    //             0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9
-    //         >()
-    //     };
+    #[test]
+    fn test_fork_simple_hash_hex() {
+        let dispatcher = IHelloStarknetDispatcher {
+            contract_address: CONTRACT_ADDRESS.try_into().unwrap()
+        };
 
-    //     let balance = dispatcher.get_balance();
-    //     assert(balance == 0, 'Balance should be 0');
+        let balance = dispatcher.get_balance();
+        assert(balance == 0, 'Balance should be 0');
 
-    //     dispatcher.increase_balance(100);
+        dispatcher.increase_balance(100);
 
-    //     let balance = dispatcher.get_balance();
-    //     assert(balance == 100, 'Balance should be 100');
-    // }
+        let balance = dispatcher.get_balance();
+        assert(balance == 100, 'Balance should be 100');
+    }
 
-    // #[test]
-    // fn test_fork_simple_hash_number() {
-    //     let dispatcher = IHelloStarknetDispatcher {
-    //         contract_address: contract_address_const::<
-    //             0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9
-    //         >()
-    //     };
+    #[test]
+    fn test_fork_simple_hash_number() {
+        let dispatcher = IHelloStarknetDispatcher {
+            contract_address: CONTRACT_ADDRESS.try_into().unwrap()
+        };
 
-    //     let balance = dispatcher.get_balance();
-    //     assert(balance == 0, 'Balance should be 0');
+        let balance = dispatcher.get_balance();
+        assert(balance == 0, 'Balance should be 0');
 
-    //     dispatcher.increase_balance(100);
+        dispatcher.increase_balance(100);
 
-    //     let balance = dispatcher.get_balance();
-    //     assert(balance == 100, 'Balance should be 100');
-    // }
+        let balance = dispatcher.get_balance();
+        assert(balance == 100, 'Balance should be 100');
+    }
 
     #[test]
     fn print_block_number_when_latest() {

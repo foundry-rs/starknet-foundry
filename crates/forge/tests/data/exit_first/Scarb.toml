@@ -11,3 +11,6 @@ snforge_std = { path = "../../../../../snforge_std" }
 
 [[target.starknet-contract]]
 sierra = true
+
+[tool.snforge]
+exit-first = true
