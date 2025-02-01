@@ -6,6 +6,7 @@ use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
     AccountType,
 };
+use crate::ValidatedWaitParams;
 use anyhow::{bail, ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
@@ -160,7 +161,10 @@ pub async fn import(
             url: import.rpc.url.clone().unwrap_or_default(),
             account: account_name.clone(),
             accounts_file: accounts_file.into(),
-            ..Default::default()
+            keystore: None,
+            wait_params: ValidatedWaitParams::default(),
+            block_explorer: None,
+            show_explorer_links: false,
         };
         add_created_profile_to_configuration(import.add_profile.as_deref(), &config, None)?;
     }

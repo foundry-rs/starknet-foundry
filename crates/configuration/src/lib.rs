@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use scarb_metadata::{Metadata, PackageId};
-use serde_json::Number;
+use serde_json::{Map, Number};
 use std::{env, fs};
 
 use camino::Utf8PathBuf;
@@ -48,7 +48,7 @@ pub fn get_profile(
 
     match get_with_ownership(tool_config, profile_name) {
         Some(profile_value) => Ok(profile_value),
-        None if profile_name == "default" => Ok(serde_json::Value::Object(Default::default())),
+        None if profile_name == "default" => Ok(serde_json::Value::Object(Map::default())),
         None => Err(anyhow!("Profile [{}] not found in config", profile_name)),
     }
 }

@@ -8,6 +8,7 @@ use camino::Utf8PathBuf;
 use forge::block_number_map::BlockNumberMap;
 use forge::run_tests::package::run_for_package;
 use forge::scarb::config::ForkTarget;
+use forge::shared_cache::FailedTestsCache;
 use forge::test_filter::TestsFilter;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
@@ -138,7 +139,7 @@ fn fork_aliased_decorator() {
                     false,
                     false,
                     false,
-                    Default::default(),
+                    FailedTestsCache::default(),
                 ),
                 forge_config: Arc::new(ForgeConfig {
                     test_runner_config: Arc::new(TestRunnerConfig {
@@ -223,7 +224,7 @@ fn fork_aliased_decorator_overrding() {
                     false,
                     false,
                     false,
-                    Default::default(),
+                    FailedTestsCache::default(),
                 ),
                 forge_config: Arc::new(ForgeConfig {
                     test_runner_config: Arc::new(TestRunnerConfig {

@@ -23,7 +23,7 @@ use starknet_api::{
     deprecated_contract_class::EntryPointType,
     transaction::{Calldata, TransactionVersion},
 };
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use starknet_types_core::felt::Felt;
@@ -76,7 +76,7 @@ pub fn execute_call_entry_point(
                 ret_data.iter().map(|datum| Felt::from_(*datum)).collect();
             cheatnet_state.trace_data.exit_nested_call(
                 resources,
-                Default::default(),
+                HashMap::default(),
                 CallResult::Success {
                     ret_data: ret_data_f252,
                 },
@@ -212,7 +212,7 @@ fn exit_error_call(
     };
     cheatnet_state.trace_data.exit_nested_call(
         resources,
-        Default::default(),
+        HashMap::default(),
         CallResult::from_err(error, &identifier),
         &[],
         vm_trace,

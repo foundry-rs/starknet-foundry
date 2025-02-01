@@ -10,7 +10,7 @@ use blockifier::{
 use conversions::serde::serialize::CairoSerialize;
 use conversions::IntoConv;
 use starknet::core::types::contract::SierraClass;
-use starknet_api::core::ClassHash;
+use starknet_api::core::{ClassHash, CompiledClassHash};
 
 #[derive(CairoSerialize)]
 pub enum DeclareResult {
@@ -49,7 +49,7 @@ pub fn declare(
             // because it is currently only used in verification
             // and we haven't found a way to calculate it easily
             state
-                .set_compiled_class_hash(class_hash, Default::default())
+                .set_compiled_class_hash(class_hash, CompiledClassHash::default())
                 .unwrap_or_else(|err| panic!("Failed to set compiled class hash: {err:?}"));
             Ok(DeclareResult::Success(class_hash))
         }
