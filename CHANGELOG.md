@@ -9,9 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- Added a suggestion for using the `--max-n-steps` flag when the Cairo VM returns the error: `Could not reach the end of the program. RunResources has no remaining steps`.
+
+### Forge
+
 #### Fixed
 
 - coverage validation now supports comments in `Scarb.toml`
+
+### Cast
+
+#### Added
+
+- Default RPC providers under `--network` flag
+
+#### Changed
+
+- Renamed `--network` flag to `--network-name` in `sncast account delete` command
+
+#### Fixed
+
+- Bug resulting in value passed for `max_fee` being ignored in cast scripts when using `deploy` with STRK token
 
 ## [0.36.0] - 2025-01-15
 
