@@ -52,13 +52,24 @@ impl SnippetType {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Default)]
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(default)]
 pub struct SnippetConfig {
-    #[serde(default)]
     pub ignored: bool,
     pub package_name: Option<String>,
-    #[serde(default)]
     pub ignored_output: bool,
+    pub replace_network: bool,
+}
+
+impl Default for SnippetConfig {
+    fn default() -> Self {
+        Self {
+            ignored: false,
+            package_name: None,
+            ignored_output: false,
+            replace_network: true,
+        }
+    }
 }
 
 #[derive(Debug)]

@@ -11,7 +11,7 @@ To configure a snippet, you need to add a comment block right before it. The com
 ```shell
 $ sncast \
     account create \
-    --url http://127.0.0.1:5055 \
+    --network sepolia \
     --name my_first_account
 ```
 
