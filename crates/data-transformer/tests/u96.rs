@@ -4,26 +4,22 @@ mod tests_cairo_u96 {
     use starknet_types_core::felt::Felt;
     use std::str::FromStr;
 
+    use test_case::test_case;
+
     const U96_MAX: u128 = (2u128 << 96) - 1;
 
-    #[test]
-    fn test_valid_numbers() {
-        let test_cases = [
-            ("0", 0_u128),
-            ("123", 123_u128),
-            ("1000000", 1_000_000_u128),
-            ("ff", 0xff_u128),
-            ("1234abcd", 0x1234_abcd_u128),
-        ];
-
-        for (input, expected) in test_cases {
-            let parsed = CairoU96::from_str(input).unwrap();
-            assert_eq!(
-                Felt::from(parsed),
-                Felt::from(expected),
-                "Failed parsing {input} - expected {expected}"
-            );
-        }
+    #[test_case("0", 0_u128 ; "zero")]
+    #[test_case("123", 123_u128 ; "small decimal")]
+    #[test_case("1000000", 1_000_000_u128 ; "million")]
+    #[test_case("ff", 0xff_u128 ; "small hex")]
+    #[test_case("1234abcd", 0x1234_abcd_u128 ; "large hex")]
+    fn test_valid_numbers(input: &str, expected: u128) {
+        let parsed = CairoU96::from_str(input).unwrap();
+        assert_eq!(
+            Felt::from(parsed),
+            Felt::from(expected),
+            "Failed parsing {input} - expected {expected}"
+        );
     }
 
     #[test]
@@ -49,19 +45,13 @@ mod tests_cairo_u96 {
         ));
     }
 
-    #[test]
-    fn test_conversion_to_felt() {
-        let values = [
-            ("0", 0_u128),
-            ("123", 123_u128),
-            ("1000000", 1_000_000_u128),
-            ("ff", 255_u128),
-            (&U96_MAX.to_string(), U96_MAX),
-        ];
-
-        for (input, expected) in values {
-            let cairo_u96 = CairoU96::from_str(input).unwrap();
-            assert_eq!(Felt::from(cairo_u96), Felt::from(expected));
-        }
+    #[test_case("0", 0_u128 ; "zero conversion")]
+    #[test_case("123", 123_u128 ; "small number conversion")]
+    #[test_case("1000000", 1_000_000_u128 ; "million conversion")]
+    #[test_case("ff", 255_u128 ; "hex conversion")]
+    #[test_case(&U96_MAX.to_string(), U96_MAX ; "max value conversion")]
+    fn test_conversion_to_felt(input: &str, expected: u128) {
+        let cairo_u96 = CairoU96::from_str(input).unwrap();
+        assert_eq!(Felt::from(cairo_u96), Felt::from(expected));
     }
 }

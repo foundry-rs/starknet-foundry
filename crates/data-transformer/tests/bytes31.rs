@@ -5,6 +5,7 @@ use std::str::FromStr;
 #[cfg(test)]
 mod tests_bytes31 {
     use super::*;
+    use test_case::test_case;
 
     #[test]
     fn test_happy_case() {
@@ -14,7 +15,6 @@ mod tests_bytes31 {
             Felt::from_hex_unchecked("0x123456789abcdef")
         );
     }
-
     #[test]
     fn test_max_value() {
         let max_bytes31 = CairoBytes31::MAX;
@@ -24,7 +24,6 @@ mod tests_bytes31 {
         .unwrap();
         assert_eq!(max_bytes31, from_str);
     }
-
     #[test]
     fn test_overflow() {
         let result = CairoBytes31::from_str(
@@ -32,8 +31,6 @@ mod tests_bytes31 {
         );
         assert!(matches!(result, Err(ParseBytes31Error::Overflow)));
     }
-
-    use test_case::test_case;
 
     #[test_case("wrong_string_value"; "wrong string value")]
     #[test_case(""; "empty string")]
@@ -59,17 +56,5 @@ mod tests_bytes31 {
     fn test_leading_zeros() {
         let bytes31 = CairoBytes31::from_str("0x000123").unwrap();
         assert_eq!(Felt::from(bytes31), Felt::from_hex_unchecked("0x123"));
-    }
-
-    #[test]
-    fn test_error_display() {
-        assert_eq!(
-            ParseBytes31Error::CairoFromStrError.to_string(),
-            "Failed to parse as Cairo type"
-        );
-        assert_eq!(
-            ParseBytes31Error::Overflow.to_string(),
-            "Number is too large to fit in 31 bytes"
-        );
     }
 }

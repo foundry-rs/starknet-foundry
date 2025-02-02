@@ -49,14 +49,15 @@ mod tests {
     }
 
     #[test]
-    fn test_edge_cases() {
-        // Test zero
+    fn test_from_str_zero() {
         let zero = "0";
         let result = CairoU384::from_str(zero).unwrap();
         let expected = CairoU384::from_bytes(&[0u8; 48]);
         assert_eq!(result, expected);
+    }
 
-        // Test max value (96 hex chars = 384 bits)
+    #[test]
+    fn test_from_str_max_value() {
         let max_value = "0xffffffffffffffffffffffffffffffff";
         let result = CairoU384::from_str(max_value).unwrap();
 
