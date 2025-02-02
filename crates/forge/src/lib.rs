@@ -89,6 +89,7 @@ enum ForgeSubcommand {
         #[command(flatten)]
         args: NewArgs,
     },
+    /// Clean the project directory using the specified components (coverage, profile, cache, trace, all)
     Clean {
         #[command(flatten)]
         args: CleanArgs,
@@ -107,10 +108,15 @@ pub struct CleanArgs {
 
 #[derive(ValueEnum, Debug, Clone, PartialEq, Eq)]
 pub enum CleanComponent {
+    /// Clean the coverage directory
     Coverage,
+    /// Clean the profile directory
     Profile,
+    /// Clean the cache directory
     Cache,
+    /// Clean the trace directory
     Trace,
+    /// Clean all generated directories
     All,
 }
 

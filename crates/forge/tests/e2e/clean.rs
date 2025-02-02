@@ -147,6 +147,39 @@ fn test_clean_all() {
     );
 }
 
+#[test]
+fn test_clean_all_and_component() {
+    let temp_dir = setup_package("coverage_project");
+
+    let clean_components_state = CleanComponentsState {
+        coverage: false,
+        cache: true,
+        trace: true,
+        profile: false,
+    };
+    generate_clean_components(clean_components_state, &temp_dir);
+
+    // This command should fail because 'all' cannot be combined with other components
+    runner(&temp_dir)
+        .arg("clean")
+        .arg("all")
+        .arg("cache")
+        .assert()
+        .failure(); // "The 'all' component cannot be combined with other components"
+
+    let expected_state = CleanComponentsState {
+        coverage: false,
+        cache: true,
+        trace: true,
+        profile: false,
+    };
+
+    assert_eq!(
+        check_clean_components_state(temp_dir.path()),
+        expected_state
+    );
+}
+
 fn generate_clean_components(clean_components_state: CleanComponentsState, temp_dir: &TempDir) {
     if clean_components_state.coverage {
         assert!(clean_components_state.trace && clean_components_state.cache);
