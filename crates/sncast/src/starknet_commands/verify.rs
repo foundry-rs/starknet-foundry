@@ -72,7 +72,7 @@ impl VerificationInterface for WalnutVerificationInterface {
         // Serialize the JSON object to a JSON string
         let source_code = serde_json::Value::Object(file_data);
 
-        // Convert contract addresss and class hash from the Felt to String
+        // Convert contract address and class hash from the Felt to String
         let contract_address_str = contract_address.map(|addr| addr.to_fixed_hex_string());
         let class_hash_str = class_hash.map(|hash| hash.to_fixed_hex_string());
 
@@ -124,7 +124,7 @@ impl VerificationInterface for WalnutVerificationInterface {
 #[command(about = "Verify a contract through a block explorer")]
 pub struct Verify {
     /// Class hash of a contract to be verified
-    #[clap(short = 'x', long)]
+    #[clap(short = 'g', long)]
     pub class_hash: Option<Felt>,
 
     /// Address of a contract to be verified

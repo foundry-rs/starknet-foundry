@@ -14,6 +14,7 @@ Note, that `sncast` only officially supports contracts written in Cairo 2.
     * [Deploying contracts](#deploy-a-contract)
     * [Invoking contracts](#invoke-a-contract)
     * [Calling contracts](#call-a-contract)
+    * [Verify contracts](#verify-a-contract)
   * [Development](#development)
 <!-- TOC -->
 
