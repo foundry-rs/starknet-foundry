@@ -11,7 +11,7 @@ use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use toml_edit::{value, ArrayOfTables, DocumentMut, Item, Table};
+use toml_edit::{value, Array, ArrayOfTables, DocumentMut, Item, Table, Value};
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 
@@ -96,6 +96,7 @@ fn update_config(config_path: &Path, scarb: &Version) -> Result<()> {
     set_cairo_edition(&mut document, CAIRO_EDITION);
     add_test_script(&mut document);
     add_assert_macros(&mut document, scarb)?;
+    add_allow_prebuilt_macros(&mut document)?;
 
     fs::write(config_path, document.to_string())?;
 
@@ -138,6 +139,28 @@ fn add_assert_macros(document: &mut DocumentMut, scarb: &Version) -> Result<()> 
         .and_then(|dep| dep.as_table_mut())
         .context("Failed to get dev-dependencies from Scarb.toml")?
         .insert("assert_macros", value(version.to_string()));
+
+    Ok(())
+}
+
+fn add_allow_prebuilt_macros(document: &mut DocumentMut) -> Result<()> {
+    let tool_section = document.entry("tool").or_insert(Item::Table(Table::new()));
+    let tool_table = tool_section
+        .as_table_mut()
+        .context("Failed to get tool table from Scarb.toml")?;
+    tool_table.set_implicit(true);
+
+    let mut scarb_table = Table::new();
+
+    let mut allow_prebuilt_macros = Array::new();
+    allow_prebuilt_macros.push("snforge_std");
+
+    scarb_table.insert(
+        "allow-prebuilt-plugins",
+        Item::Value(Value::Array(allow_prebuilt_macros)),
+    );
+
+    tool_table.insert("scarb", Item::Table(scarb_table));
 
     Ok(())
 }
