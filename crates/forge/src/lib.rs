@@ -89,7 +89,7 @@ enum ForgeSubcommand {
         #[command(flatten)]
         args: NewArgs,
     },
-    /// Clean the project directory using the specified components (coverage, profile, cache, trace, all)
+    /// Clean `snforge` generated directories
     Clean {
         #[command(flatten)]
         args: CleanArgs,

@@ -3,6 +3,7 @@ use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::ScarbCommand;
+use shared::test_utils::output_assert::assert_stdout_contains;
 use std::path::Path;
 
 const COVERAGE_DIR: &str = "coverage";
@@ -134,16 +135,9 @@ fn test_clean_all() {
 
     runner(&temp_dir).arg("clean").arg("all").assert().success();
 
-    let expected_state = CleanComponentsState {
-        coverage: false,
-        cache: false,
-        trace: false,
-        profile: false,
-    };
-
     assert_eq!(
         check_clean_components_state(temp_dir.path()),
-        expected_state
+        clean_components_state
     );
 }
 
@@ -160,49 +154,61 @@ fn test_clean_all_and_component() {
     generate_clean_components(clean_components_state, &temp_dir);
 
     // This command should fail because 'all' cannot be combined with other components
-    runner(&temp_dir)
+    let output = runner(&temp_dir)
         .arg("clean")
         .arg("all")
         .arg("cache")
         .assert()
         .failure();
 
-    let expected_state = CleanComponentsState {
-        coverage: false,
-        cache: true,
-        trace: true,
-        profile: false,
-    };
-
-    assert_eq!(
-        check_clean_components_state(temp_dir.path()),
-        expected_state
+    assert_stdout_contains(
+        output,
+        "[ERROR] The 'all' component cannot be combined with other components",
     );
 }
 
-fn generate_clean_components(clean_components_state: CleanComponentsState, temp_dir: &TempDir) {
-    let mut args = Vec::new();
-
-    if clean_components_state.coverage {
-        assert!(clean_components_state.trace && clean_components_state.cache);
-        args.push("--coverage");
-    }
-    if clean_components_state.profile {
-        assert!(clean_components_state.trace && clean_components_state.cache);
-        args.push("--build-profile");
-    } else if clean_components_state.trace {
-        assert!(clean_components_state.cache);
-        args.push("--save-trace-data");
-    } else if clean_components_state.cache {
-        // No additional arguments needed for cache-only case
-    }
+fn generate_clean_components(state: CleanComponentsState, temp_dir: &TempDir) {
+    let args = match state {
+        CleanComponentsState {
+            coverage: true,
+            trace: true,
+            cache: true,
+            profile: false,
+        } => {
+            vec!["--coverage"]
+        }
+        CleanComponentsState {
+            profile: true,
+            trace: true,
+            cache: true,
+            coverage: false,
+        } => {
+            vec!["--build-profile"]
+        }
+        CleanComponentsState {
+            trace: true,
+            cache: true,
+            profile: false,
+            coverage: false,
+        } => {
+            vec!["--save-trace-data"]
+        }
+        CleanComponentsState {
+            coverage: false,
+            profile: false,
+            trace: false,
+            cache: true,
+        } => {
+            vec![]
+        }
+        state => {
+            panic!("Invalid state: {state:?}");
+        }
+    };
 
     test_runner(temp_dir).args(&args).assert().success();
 
-    assert_eq!(
-        check_clean_components_state(temp_dir.path()),
-        clean_components_state
-    );
+    assert_eq!(check_clean_components_state(temp_dir.path()), state);
 }
 
 fn check_clean_components_state(path: &Path) -> CleanComponentsState {
