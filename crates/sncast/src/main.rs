@@ -17,7 +17,6 @@ use configuration::load_config;
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
-use sncast::helpers::fee::PayableTransaction;
 use sncast::helpers::interactive::prompt_to_add_account_as_default;
 use sncast::helpers::scarb_utils::{
     assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
@@ -238,8 +237,6 @@ async fn run_async_command(
         Commands::Declare(declare) => {
             let provider = declare.rpc.get_provider(&config).await?;
 
-            let fee_token = declare.validate_and_get_token()?;
-
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
@@ -265,7 +262,6 @@ async fn run_async_command(
                 &artifacts,
                 wait_config,
                 false,
-                fee_token,
             )
             .await
             .map_err(handle_starknet_command_error)
@@ -290,8 +286,6 @@ async fn run_async_command(
         }
 
         Commands::Deploy(deploy) => {
-            let fee_token = deploy.validate_and_get_token()?;
-
             let Deploy {
                 arguments,
                 fee_args,
@@ -326,7 +320,6 @@ async fn run_async_command(
                 deploy.nonce,
                 &account,
                 wait_config,
-                fee_token,
             )
             .await
             .map_err(handle_starknet_command_error);
@@ -375,8 +368,6 @@ async fn run_async_command(
         }
 
         Commands::Invoke(invoke) => {
-            let fee_token = invoke.validate_and_get_token()?;
-
             let Invoke {
                 contract_address,
                 function,
@@ -396,8 +387,6 @@ async fn run_async_command(
                 config.keystore,
             )
             .await?;
-
-            let fee_args = fee_args.fee_token(fee_token);
 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
@@ -479,7 +468,7 @@ async fn run_async_command(
         Commands::Account(account) => match account.command {
             account::Commands::Import(import) => {
                 let provider = import.rpc.get_provider(&config).await?;
-                let result = starknet_commands::account::import::import(
+                let result = account::import::import(
                     import.name.clone(),
                     &config.accounts_file,
                     &provider,
@@ -551,9 +540,7 @@ async fn run_async_command(
             account::Commands::Deploy(deploy) => {
                 let provider = deploy.rpc.get_provider(&config).await?;
 
-                let fee_token = deploy.validate_and_get_token()?;
-
-                let fee_args = deploy.fee_args.clone().fee_token(fee_token);
+                let fee_args = deploy.fee_args.clone();
 
                 let chain_id = get_chain_id(&provider).await?;
                 let keystore_path = config.keystore.clone();

@@ -25,7 +25,11 @@ contracts from within Cairo, its interface, internals and feature set can change
 > ```rust
 >      let declare_result = declare(
 >        "Map",
->        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+>        FeeSettings {
+>           max_fee: Option::None,
+>           max_gas: Option::Some(999999),
+>           max_gas_unit_price: Option::Some(100000000000)
+>        },
 >        Option::Some(nonce)
 >    )
 >        .expect('declare failed');
