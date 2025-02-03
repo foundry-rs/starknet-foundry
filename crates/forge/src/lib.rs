@@ -238,7 +238,7 @@ pub fn main_execution() -> Result<ExitStatus> {
         }
         ForgeSubcommand::CleanCache {} => {
             print_as_warning(&anyhow!(
-                "`snforge clean-cache` is deprecated. Use `snforge clean cache` instead"
+                "`snforge clean-cache` is deprecated and will be removed in the future. Use `snforge clean cache` instead"
             ));
             let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
             let cache_dir = scarb_metadata.workspace.root.join(CACHE_DIR);

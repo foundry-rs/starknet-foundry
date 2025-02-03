@@ -40,7 +40,7 @@ fn test_clean_coverage() {
         .assert()
         .success();
 
-    let clean_components_state: CleanComponentsState = CleanComponentsState {
+    let expected_state = CleanComponentsState {
         coverage: false,
         profile: false,
         cache: true,
@@ -49,7 +49,7 @@ fn test_clean_coverage() {
 
     assert_eq!(
         check_clean_components_state(temp_dir.path()),
-        clean_components_state
+        expected_state
     );
 }
 
@@ -73,7 +73,7 @@ fn test_clean_profile() {
         .assert()
         .success();
 
-    let clean_components_state: CleanComponentsState = CleanComponentsState {
+    let expected_state = CleanComponentsState {
         coverage: false,
         profile: false,
         cache: true,
@@ -82,7 +82,7 @@ fn test_clean_profile() {
 
     assert_eq!(
         check_clean_components_state(temp_dir.path()),
-        clean_components_state
+        expected_state
     );
 }
 
@@ -105,7 +105,7 @@ fn test_clean_cache() {
         .assert()
         .success();
 
-    let clean_components_state: CleanComponentsState = CleanComponentsState {
+    let expected_state = CleanComponentsState {
         coverage: false,
         profile: false,
         cache: false,
@@ -114,7 +114,7 @@ fn test_clean_cache() {
 
     assert_eq!(
         check_clean_components_state(temp_dir.path()),
-        clean_components_state
+        expected_state
     );
 }
 
@@ -134,7 +134,7 @@ fn test_clean_all() {
 
     runner(&temp_dir).arg("clean").arg("all").assert().success();
 
-    let clean_components_state: CleanComponentsState = CleanComponentsState {
+    let expected_state = CleanComponentsState {
         coverage: false,
         cache: false,
         trace: false,
@@ -143,7 +143,7 @@ fn test_clean_all() {
 
     assert_eq!(
         check_clean_components_state(temp_dir.path()),
-        clean_components_state
+        expected_state
     );
 }
 
@@ -165,7 +165,7 @@ fn test_clean_all_and_component() {
         .arg("all")
         .arg("cache")
         .assert()
-        .failure(); // "The 'all' component cannot be combined with other components"
+        .failure();
 
     let expected_state = CleanComponentsState {
         coverage: false,
@@ -181,25 +181,23 @@ fn test_clean_all_and_component() {
 }
 
 fn generate_clean_components(clean_components_state: CleanComponentsState, temp_dir: &TempDir) {
+    let mut args = Vec::new();
+
     if clean_components_state.coverage {
         assert!(clean_components_state.trace && clean_components_state.cache);
-        test_runner(temp_dir).arg("--coverage").assert().success();
+        args.push("--coverage");
     }
     if clean_components_state.profile {
         assert!(clean_components_state.trace && clean_components_state.cache);
-        test_runner(temp_dir)
-            .arg("--build-profile")
-            .assert()
-            .success();
+        args.push("--build-profile");
     } else if clean_components_state.trace {
         assert!(clean_components_state.cache);
-        test_runner(temp_dir)
-            .arg("--save-trace-data")
-            .assert()
-            .success();
+        args.push("--save-trace-data");
     } else if clean_components_state.cache {
-        test_runner(temp_dir).assert().success();
+        // No additional arguments needed for cache-only case
     }
+
+    test_runner(temp_dir).args(&args).assert().success();
 
     assert_eq!(
         check_clean_components_state(temp_dir.path()),
