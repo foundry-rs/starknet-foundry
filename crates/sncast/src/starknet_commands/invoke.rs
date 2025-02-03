@@ -1,16 +1,14 @@
 use crate::Arguments;
 use anyhow::{anyhow, Result};
-use clap::{Args, ValueEnum};
+use clap::Args;
 use conversions::IntoConv;
-use sncast::helpers::error::token_not_supported_for_invoke;
-use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
+use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
-use sncast::helpers::version::parse_version;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::InvokeResponse;
-use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, WaitForTx};
+use sncast::{apply_optional, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
-use starknet::accounts::{Account, ConnectedAccount, ExecutionV1, ExecutionV3, SingleOwnerAccount};
+use starknet::accounts::{Account, ConnectedAccount, ExecutionV3, SingleOwnerAccount};
 use starknet::core::types::{Call, InvokeTransactionResult};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -38,24 +36,9 @@ pub struct Invoke {
     #[clap(short, long)]
     pub nonce: Option<Felt>,
 
-    /// Version of invoke (can be inferred from fee token)
-    #[clap(short, long, value_parser = parse_version::<InvokeVersion>)]
-    pub version: Option<InvokeVersion>,
-
     #[clap(flatten)]
     pub rpc: RpcArgs,
 }
-
-#[derive(ValueEnum, Debug, Clone)]
-pub enum InvokeVersion {
-    V1,
-    V3,
-}
-
-impl_payable_transaction!(Invoke, token_not_supported_for_invoke,
-    InvokeVersion::V1 => FeeToken::Eth,
-    InvokeVersion::V3 => FeeToken::Strk
-);
 
 pub async fn invoke(
     contract_address: Felt,
@@ -86,38 +69,24 @@ pub async fn execute_calls(
         .try_into_fee_settings(account.provider(), account.block_id())
         .await?;
 
-    let result = match fee_settings {
-        FeeSettings::Eth { max_fee } => {
-            let execution_calls = account.execute_v1(calls);
+    let FeeSettings {
+        max_gas,
+        max_gas_unit_price,
+    } = fee_settings;
+    let execution_calls = account.execute_v3(calls);
 
-            let execution = apply_optional(
-                execution_calls,
-                max_fee.map(Felt::from),
-                ExecutionV1::max_fee,
-            );
-            let execution = apply_optional(execution, nonce, ExecutionV1::nonce);
-            execution.send().await
-        }
-        FeeSettings::Strk {
-            max_gas,
-            max_gas_unit_price,
-        } => {
-            let execution_calls = account.execute_v3(calls);
-
-            let execution = apply_optional(
-                execution_calls,
-                max_gas.map(std::num::NonZero::get),
-                ExecutionV3::gas,
-            );
-            let execution = apply_optional(
-                execution,
-                max_gas_unit_price.map(std::num::NonZero::get),
-                ExecutionV3::gas_price,
-            );
-            let execution = apply_optional(execution, nonce, ExecutionV3::nonce);
-            execution.send().await
-        }
-    };
+    let execution = apply_optional(
+        execution_calls,
+        max_gas.map(std::num::NonZero::get),
+        ExecutionV3::gas,
+    );
+    let execution = apply_optional(
+        execution,
+        max_gas_unit_price.map(std::num::NonZero::get),
+        ExecutionV3::gas_price,
+    );
+    let execution = apply_optional(execution, nonce, ExecutionV3::nonce);
+    let result = execution.send().await;
 
     match result {
         Ok(InvokeTransactionResult { transaction_hash }) => handle_wait_for_tx(
