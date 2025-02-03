@@ -388,3 +388,195 @@ fn mock_call_when_complex_types() {
     let result = run_test_case(&test);
     assert_passed(&result);
 }
+
+#[test]
+fn mock_calls_when() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, mock_call_when, MockCallData};
+
+        #[starknet::interface]
+        trait IMockChecker<TContractState> {
+            fn get_thing(ref self: TContractState) -> felt252;
+        }
+
+        #[test]
+        fn mock_call_when_one_specific() {
+            let calldata = array![420];
+
+            let contract = declare("MockChecker").unwrap().contract_class();
+            let (contract_address, _) = contract.deploy(@calldata).unwrap();
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+
+            let mock_ret_data = 421;
+            let expected_calldata = MockCallData::Values([].span());
+            mock_call_when(contract_address, selector!("get_thing"), expected_calldata, mock_ret_data, 1);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 421);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 420);
+        }
+
+        #[test]
+        fn mock_call_when_twice_specific() {
+            let calldata = array![420];
+
+            let contract = declare("MockChecker").unwrap().contract_class();
+            let (contract_address, _) = contract.deploy(@calldata).unwrap();
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+
+            let mock_ret_data = 421;
+            let expected_calldata = MockCallData::Values([].span());
+            mock_call_when(contract_address, selector!("get_thing"), expected_calldata, mock_ret_data, 2);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 421);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 421);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 420);
+        }
+
+        #[test]
+        fn mock_call_when_one_any() {
+            let calldata = array![420];
+
+            let contract = declare("MockChecker").unwrap().contract_class();
+            let (contract_address, _) = contract.deploy(@calldata).unwrap();
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+
+            let mock_ret_data = 421;
+            mock_call_when(contract_address, selector!("get_thing"), MockCallData::Any, mock_ret_data, 1);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 421);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 420);
+        }
+
+        #[test]
+        fn mock_call_when_twice_any() {
+            let calldata = array![420];
+
+            let contract = declare("MockChecker").unwrap().contract_class();
+            let (contract_address, _) = contract.deploy(@calldata).unwrap();
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+
+            let mock_ret_data = 421;
+            mock_call_when(contract_address, selector!("get_thing"), MockCallData::Any, mock_ret_data, 2);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 421);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 421);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 420);
+        }
+
+    "#
+        ),
+        Contract::from_code_path(
+            "MockChecker".to_string(),
+            Path::new("tests/data/contracts/mock_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+    assert_passed(&result);
+}
+
+#[test]
+fn mock_calls_when_mixed() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, mock_call_when, MockCallData};
+
+        #[starknet::interface]
+        trait IMockChecker<TContractState> {
+            fn get_thing(ref self: TContractState) -> felt252;
+        }
+
+        #[test]
+        fn mock_call_when_one() {
+            let calldata = array![420];
+
+            let contract = declare("MockChecker").unwrap().contract_class();
+            let (contract_address, _) = contract.deploy(@calldata).unwrap();
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+
+            let mock_ret_data = 421;
+            let expected_calldata = MockCallData::Values([].span());
+            mock_call_when(contract_address, selector!("get_thing"), expected_calldata, mock_ret_data, 1);
+            mock_call_when(contract_address, selector!("get_thing"), MockCallData::Any, 422, 1);
+            
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 421, "Specific calldata");
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 422, "Any calldata");
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 420);
+        }
+
+        #[test]
+        fn mock_call_when_multi() {
+            let calldata = array![420];
+
+            let contract = declare("MockChecker").unwrap().contract_class();
+            let (contract_address, _) = contract.deploy(@calldata).unwrap();
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+
+            let mock_ret_data = 421;
+            let expected_calldata = MockCallData::Values([].span());
+            mock_call_when(contract_address, selector!("get_thing"), expected_calldata, mock_ret_data, 3);
+            mock_call_when(contract_address, selector!("get_thing"), MockCallData::Any, 422, 2);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 421, "1st Specific calldata");
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 421, "2nd Specific calldata");
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 421, "3rd Specific calldata");
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 422, "1st Any calldata");
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 422, "2nd Any calldata");
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 420);
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "MockChecker".to_string(),
+            Path::new("tests/data/contracts/mock_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+    assert_passed(&result);
+}

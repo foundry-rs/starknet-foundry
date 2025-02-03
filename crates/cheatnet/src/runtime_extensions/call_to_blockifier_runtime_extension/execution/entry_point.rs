@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
-use crate::state::{CallTrace, CallTraceNode, CheatStatus, EncounteredError};
+use crate::state::{CallTrace, CallTraceNode, CheatSpan, CheatStatus, EncounteredError};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::{
     execution::{
@@ -278,11 +278,14 @@ fn get_mocked_function_cheat_status<'a>(
         Some(contract_functions) => {
             let call_data_hash = poseidon_hash_many(call.calldata.0.iter());
             let key = (call.entry_point_selector, call_data_hash);
-            if contract_functions.contains_key(&key) {
-                contract_functions.get_mut(&key)
-            } else {
-                let key_zero = (call.entry_point_selector, Felt::zero());
-                contract_functions.get_mut(&key_zero)
+            let key_zero = (call.entry_point_selector, Felt::zero());
+
+            match contract_functions.get(&key) {
+                Some(CheatStatus::Cheated(_, CheatSpan::TargetCalls(0))) => {
+                    contract_functions.get_mut(&key_zero)
+                }
+                Some(CheatStatus::Cheated(_, _)) => contract_functions.get_mut(&key),
+                _ => contract_functions.get_mut(&key_zero),
             }
         }
     }
