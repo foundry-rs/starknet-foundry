@@ -23,7 +23,7 @@ mod tests_cairo_u96 {
     }
 
     #[test]
-    fn test_from_str_max_value() {
+    fn test_max_value() {
         let max_value_str = U96_MAX.to_string();
         let result = CairoU96::from_str(&max_value_str).unwrap();
         assert_eq!(Felt::from(result), Felt::from(U96_MAX));
@@ -32,15 +32,11 @@ mod tests_cairo_u96 {
         assert_eq!(Felt::from(result_hex), Felt::from(U96_MAX));
     }
 
-    #[test]
-    fn test_from_str_invalid_input() {
+    #[test_case("" ; "empty string")]
+    #[test_case("not_a_number" ; "invalid string")]
+    fn test_invalid_input(input: &str) {
         assert!(matches!(
-            CairoU96::from_str("not_a_number"),
-            Err(ParseCairoU96Error::InvalidString(_))
-        ));
-
-        assert!(matches!(
-            CairoU96::from_str(""),
+            CairoU96::from_str(input),
             Err(ParseCairoU96Error::InvalidString(_))
         ));
     }
@@ -50,7 +46,7 @@ mod tests_cairo_u96 {
     #[test_case("1000000", 1_000_000_u128 ; "million conversion")]
     #[test_case("ff", 255_u128 ; "hex conversion")]
     #[test_case(&U96_MAX.to_string(), U96_MAX ; "max value conversion")]
-    fn test_conversion_to_felt(input: &str, expected: u128) {
+    fn test_felt_conversion(input: &str, expected: u128) {
         let cairo_u96 = CairoU96::from_str(input).unwrap();
         assert_eq!(Felt::from(cairo_u96), Felt::from(expected));
     }

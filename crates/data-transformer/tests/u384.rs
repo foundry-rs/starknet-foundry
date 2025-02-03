@@ -19,7 +19,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_str_valid_decimal() {
+    fn test_valid_decimal() {
         let input = "123456789";
         let result = CairoU384::from_str(input).unwrap();
         let mut expected = [0u8; 48];
@@ -30,7 +30,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_str_valid_hex() {
+    fn test_valid_hex() {
         let input = "0x1234567890abcdef";
         let result = CairoU384::from_str(input).unwrap();
 
@@ -42,14 +42,14 @@ mod tests {
     }
 
     #[test]
-    fn test_from_str_overflow() {
+    fn test_overflow() {
         let large_hex = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
         let result = CairoU384::from_str(large_hex);
         assert!(matches!(result, Err(ParseCairoU384Error::Overflow)));
     }
 
     #[test]
-    fn test_from_str_zero() {
+    fn test_zero_value() {
         let zero = "0";
         let result = CairoU384::from_str(zero).unwrap();
         let expected = CairoU384::from_bytes(&[0u8; 48]);
@@ -57,7 +57,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_str_max_value() {
+    fn test_max_value() {
         let max_value = "0xffffffffffffffffffffffffffffffff";
         let result = CairoU384::from_str(max_value).unwrap();
 

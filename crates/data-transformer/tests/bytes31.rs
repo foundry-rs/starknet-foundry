@@ -49,7 +49,7 @@ mod tests_bytes31 {
     #[test]
     fn test_zero_value() {
         let bytes31 = CairoBytes31::from_str("0x0").unwrap();
-        assert_eq!(Felt::from(bytes31), Felt::from(0_u8));
+        assert_eq!(Felt::from(bytes31), Felt::ZERO);
     }
 
     #[test]
