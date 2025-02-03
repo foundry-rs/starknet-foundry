@@ -155,7 +155,7 @@ fn mock_call_cairo0_contract() {
     let test = test_case!(formatdoc!(
         r#"
             use starknet::{{contract_address_const}};
-            use snforge_std::{{start_mock_call, stop_mock_call, MockCallData}};
+            use snforge_std::{{start_mock_call, stop_mock_call}};
 
             #[starknet::interface]
             trait IERC20<TContractState> {{
@@ -173,11 +173,11 @@ fn mock_call_cairo0_contract() {
 
                 assert(eth_dispatcher.name() == 'Ether', 'invalid name');
 
-                start_mock_call(eth_dispatcher.contract_address, selector!("name"), MockCallData::Any, 'NotEther');
+                start_mock_call(eth_dispatcher.contract_address, selector!("name"), 'NotEther');
 
                 assert(eth_dispatcher.name() == 'NotEther', 'invalid mocked name');
 
-                stop_mock_call(eth_dispatcher.contract_address, selector!("name"), MockCallData::Any);
+                stop_mock_call(eth_dispatcher.contract_address, selector!("name"));
 
                 assert(eth_dispatcher.name() == 'Ether', 'invalid name after mock');
             }}

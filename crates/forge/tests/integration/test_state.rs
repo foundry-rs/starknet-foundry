@@ -678,7 +678,7 @@ fn inconsistent_syscall_pointers() {
         r#"
         use starknet::ContractAddress;
         use starknet::info::get_block_number;
-        use snforge_std::{start_mock_call, MockCallData};
+        use snforge_std::start_mock_call;
 
         #[starknet::interface]
         trait IContract<TContractState> {
@@ -689,7 +689,7 @@ fn inconsistent_syscall_pointers() {
         fn inconsistent_syscall_pointers() {
             // verifies if SyscallHandler.syscal_ptr is incremented correctly when calling a contract
             let address = 'address'.try_into().unwrap();
-            start_mock_call(address, selector!("get_value"), MockCallData::Any, 55);
+            start_mock_call(address, selector!("get_value"), 55);
             let contract = IContractDispatcher { contract_address: address };
             contract.get_value(address);
             get_block_number();
