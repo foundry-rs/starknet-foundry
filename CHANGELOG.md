@@ -33,6 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bug resulting in value passed for `max_fee` being ignored in cast scripts when using `deploy` with STRK token
 
+#### Removed
+
+- `--fee-token` and `--version` flags, subsequently support for transaction versions other than v3
+- Support for ETH transactions in scripts
+
 ## [0.36.0] - 2025-01-15
 
 ### Forge

@@ -1,4 +1,4 @@
-use sncast_std::{deploy, DeployResult, FeeSettings, StrkFeeSettings};
+use sncast_std::{deploy, DeployResult, FeeSettings};
 use starknet::{ClassHash, Felt252TryIntoClassHash};
 use traits::Into;
 
@@ -13,13 +13,11 @@ fn main() {
         array![0x2, 0x2, 0x0],
         Option::Some(salt),
         true,
-        FeeSettings::Strk(
-            StrkFeeSettings {
-                max_gas: Option::Some(999),
-                max_gas_unit_price: Option::Some(999999999999),
-                max_fee: Option::None
-            }
-        ),
+        FeeSettings {
+            max_gas: Option::Some(999),
+            max_gas_unit_price: Option::Some(999999999999),
+            max_fee: Option::None
+        },
         Option::None
     )
         .expect('deploy failed');

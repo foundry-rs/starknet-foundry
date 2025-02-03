@@ -44,11 +44,6 @@ Optional.
 
 Maximum fee for the `deploy` transaction in Fri or Wei depending on fee token or transaction version. When not used, defaults to auto-estimation. Must be greater than zero.
 
-## `--fee-token <FEE_TOKEN>`
-Optional. When not used, defaults to STRK.
-
-Token used for fee payment. Possible values: ETH, STRK.
-
 ## `--max-gas <MAX_GAS>`
 Optional.
 
@@ -58,11 +53,6 @@ Maximum gas for the `deploy` transaction. When not used, defaults to auto-estima
 Optional.
 
 Maximum gas unit price for the `deploy` transaction paid in Fri. When not used, defaults to auto-estimation. Must be greater than zero. (Only for STRK fee payment)
-
-## `--version, -v <VERSION>`
-Optional. When not used, defaults to v3.
-
-Version of the deployment transaction. Possible values: v1, v3.
 
 ## `--nonce, -n <NONCE>`
 Optional.

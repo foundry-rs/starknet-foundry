@@ -1,6 +1,5 @@
 use sncast_std::{
-    get_nonce, declare, DeclareResult, ScriptCommandError, ProviderError, StarknetError,
-    FeeSettings, EthFeeSettings
+    get_nonce, declare, DeclareResult, ScriptCommandError, ProviderError, StarknetError, FeeSettings
 };
 
 fn main() {
@@ -9,7 +8,9 @@ fn main() {
     let declare_nonce = get_nonce('pending') + 100;
     let declare_result = declare(
         "Mapa",
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        FeeSettings {
+            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+        },
         Option::Some(declare_nonce)
     )
         .unwrap_err();
