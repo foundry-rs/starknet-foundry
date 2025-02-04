@@ -101,3 +101,13 @@ Additionally, ensure that starknet-contract target is enabled in the `Scarb.toml
 # ...
 [[target.starknet-contract]]
 ```
+
+> 📝 **Note**
+>
+> You can additionally specify `scarb` settings to avoid compiling Cairo plugin which `snforge_std` depends on. The plugin is written in Rust and, by default, is compiled locally on the user's side.
+> ```
+> [tool.scarb]  
+> allow-prebuilt-plugins = ["snforge_std"]
+> ```
+> This configuration requires Scarb version >= 2.10.0 .
+>

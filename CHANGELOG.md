@@ -7,13 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.0] - 2025-02-03
+
 ### Forge
 
 #### Added
 
+- Rust is no longer required to use `snforge` if using Scarb >= 2.10.0 on supported platforms - precompiled `snforge_scarb_plugin` plugin binaries are now published to [package registry](https://scarbs.xyz) for new versions. 
 - Added a suggestion for using the `--max-n-steps` flag when the Cairo VM returns the error: `Could not reach the end of the program. RunResources has no remaining steps`.
-
-### Forge
 
 #### Fixed
 
@@ -32,6 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - Bug resulting in value passed for `max_fee` being ignored in cast scripts when using `deploy` with STRK token
+
+#### Removed
+
+- `--fee-token` and `--version` flags, subsequently support for transaction versions other than v3
+- Support for ETH transactions in scripts
 
 ## [0.36.0] - 2025-01-15
 
