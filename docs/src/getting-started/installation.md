@@ -193,7 +193,7 @@ scarb --version
 
 and verify that version is >= 2.7.0
 
-### Rust Installation (Optional for Scarb >= 2.10.0)[^note]
+### (Optional for Scarb >= 2.10.0)[^note] Rust Installation
 
 > ℹ️️ **Info**
 >
