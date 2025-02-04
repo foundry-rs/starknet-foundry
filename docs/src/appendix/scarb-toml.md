@@ -78,6 +78,17 @@ url = "http://your.second.rpc.url"
 block_id.number = "123"
 ```
 
+### `[tool.scarb]`
+
+```toml
+[tool.scarb]
+allow-prebuilt-plugins = ["snforge_std"]
+```
+Note: This configuration requires Scarb version >= 2.10.0 .
+
+It allows `scarb` to download precompiled dependencies used by `snforge_std` from [the registry](https://scarbs.xyz).
+The `snforge_std` library depends on a Cairo plugin that is written in Rust, and otherwise is compiled locally on the user's side.
+
 ### `[profile.<dev|release>.cairo]`
 By default, these arguments do not need to be defined. Only set them to use [profiler](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/profiling.html#profiling) or [coverage](https://foundry-rs.github.io/starknet-foundry/testing/coverage.html#coverage).
 

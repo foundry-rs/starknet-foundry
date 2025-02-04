@@ -818,6 +818,9 @@ fn validate_init(project_path: &PathBuf, validate_snforge_std: bool) {
 
             [scripts]
             test = "snforge test"
+
+            [tool.scarb]
+            allow-prebuilt-plugins = ["snforge_std"]
             {SCARB_MANIFEST_TEMPLATE_CONTENT}
         "#,
         snforge_std_assert
