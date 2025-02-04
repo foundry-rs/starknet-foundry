@@ -26,3 +26,4 @@ indoc.workspace = true
 primitive-types.workspace = true
 tokio.workspace = true
 url.workspace = true
+shared = { path = "../shared" }
