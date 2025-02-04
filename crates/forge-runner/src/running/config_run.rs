@@ -6,7 +6,9 @@ use super::{
 use crate::{package_tests::TestDetails, running::build_syscall_handler};
 use anyhow::Result;
 use blockifier::state::{cached_state::CachedState, state_api::StateReader};
+use cairo_lang_runner::Arg;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
+use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::forge_config_extension::{
     config::RawForgeConfig, ForgeConfigExtension,
 };
@@ -107,6 +109,7 @@ pub fn run_config_pass(
         },
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
+            user_args: vec![vec![Arg::Value(Felt::from(u64::MAX))]],
         },
     };
 

@@ -4346,6 +4346,7 @@ dependencies = [
  "cairo-vm",
  "conversions",
  "indoc",
+ "num-traits 0.2.19",
  "serde",
  "serde_json",
  "starknet",

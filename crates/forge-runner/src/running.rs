@@ -6,7 +6,7 @@ use crate::test_case_summary::{Single, TestCaseSummary};
 use anyhow::{ensure, Result};
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::state::cached_state::CachedState;
-use cairo_lang_runner::{RunResult, SierraCasmRunner};
+use cairo_lang_runner::{Arg, RunResult, SierraCasmRunner};
 use cairo_lang_sierra::extensions::bitwise::BitwiseType;
 use cairo_lang_sierra::extensions::circuit::{AddModType, MulModType};
 use cairo_lang_sierra::extensions::ec::EcOpType;
@@ -46,6 +46,7 @@ use std::default::Default;
 use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::Arc;
+use std::u64;
 use syscall_handler::build_syscall_handler;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
@@ -204,6 +205,8 @@ pub fn run_test_case(
         },
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
+            // FIXME use correct value
+            user_args: vec![vec![Arg::Value(Felt::from(u32::MAX))]],
         },
     };
 
@@ -344,7 +347,7 @@ pub fn get_results_data(
                 SegmentArenaType::ID,
                 SystemType::ID,
             ]);
-            non_user_types.contains(generic_ty)
+            !non_user_types.contains(generic_ty)
         }
     });
 

@@ -25,9 +25,11 @@ pub fn build_syscall_handler<'a>(
         .iter()
         .any(|(ty, _)| ty == &SegmentArenaType::ID)
     {
-        16
+        // FIXME verify this
+        8
     } else {
-        14
+        // FIXME verify this
+        6
     };
 
     let entry_point = build_test_entry_point();

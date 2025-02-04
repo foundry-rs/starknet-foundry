@@ -2,10 +2,10 @@ use anyhow::Result;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::errors::StateError;
-use cairo_lang_casm::hints::{Hint, StarknetHint};
+use cairo_lang_casm::hints::{ExternalHint, Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
-use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
+use cairo_lang_runner::casm_run::{extract_relocatable, get_val, vm_get_range, MemBuffer};
+use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref, Arg};
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::hint_processor::hint_processor_definition::{
     HintProcessor, HintProcessorLogic, HintReference,
@@ -24,6 +24,7 @@ use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::raw::RawFeltVec;
 use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
 use indoc::indoc;
+use num_traits::cast::ToPrimitive;
 use starknet_api::StarknetApiError;
 use starknet_types_core::felt::Felt;
 use std::any::Any;
@@ -56,6 +57,7 @@ pub trait SyscallPtrAccess {
 
 pub struct StarknetRuntime<'a> {
     pub hint_handler: SyscallHintProcessor<'a>,
+    pub user_args: Vec<Vec<Arg>>,
 }
 
 impl SyscallPtrAccess for StarknetRuntime<'_> {
@@ -124,6 +126,10 @@ fn fetch_cheatcode_input(
     Ok(inputs)
 }
 
+fn args_size(args: &[Arg]) -> usize {
+    args.iter().map(Arg::size).sum()
+}
+
 impl HintProcessorLogic for StarknetRuntime<'_> {
     fn execute_hint(
         &mut self,
@@ -134,29 +140,63 @@ impl HintProcessorLogic for StarknetRuntime<'_> {
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
 
-        if let Some(Hint::Starknet(StarknetHint::Cheatcode {
-            selector,
-            input_start: _,
-            input_end: _,
-            output_start: _,
-            output_end: _,
-        })) = maybe_extended_hint
-        {
-            let selector = parse_selector(selector)?;
+        if let Some(extended_hint) = maybe_extended_hint {
+            match extended_hint {
+                Hint::Starknet(StarknetHint::Cheatcode {
+                    selector,
+                    input_start: _,
+                    input_end: _,
+                    output_start: _,
+                    output_end: _,
+                }) => {
+                    let selector = parse_selector(selector)?;
 
-            let is_cairo_test_fn = CAIRO_TEST_CHEATCODES.contains(&selector.as_str());
+                    let is_cairo_test_fn = CAIRO_TEST_CHEATCODES.contains(&selector.as_str());
 
-            let error = format!(
-                "Function `{selector}` is not supported in this runtime\n{}",
-                if is_cairo_test_fn {
-                    "Check if functions are imported from `snforge_std`/`sncast_std` NOT from `starknet::testing`"
-                } else {
-                    "Check if used library (`snforge_std` or `sncast_std`) is compatible with used binary, probably one of them is not updated"
+                    let error = format!(
+                        "Function `{selector}` is not supported in this runtime\n{}",
+                        if is_cairo_test_fn {
+                            "Check if functions are imported from `snforge_std`/`sncast_std` NOT from `starknet::testing`"
+                        } else {
+                            "Check if used library (`snforge_std` or `sncast_std`) is compatible with used binary, probably one of them is not updated"
+                        }
+                    );
+
+                    return Err(CustomHint(error.into()));
                 }
-            );
-
-            return Err(HintError::CustomHint(error.into()));
-        }
+                Hint::External(ExternalHint::AddRelocationRule { src, dst }) => {
+                    return Ok(vm.add_relocation_rule(
+                        extract_relocatable(vm, src)?,
+                        extract_relocatable(vm, dst)?,
+                    )?)
+                }
+                Hint::External(ExternalHint::WriteRunParam { index, dst }) => {
+                    let index = get_val(vm, index)?.to_usize().expect("Got a bad index.");
+                    let mut stack =
+                        vec![(cell_ref_to_relocatable(dst, vm), &self.user_args[index])];
+                    while let Some((mut buffer, values)) = stack.pop() {
+                        for value in values {
+                            match value {
+                                Arg::Value(v) => {
+                                    vm.insert_value(buffer, v)?;
+                                    buffer += 1;
+                                }
+                                Arg::Array(arr) => {
+                                    let arr_buffer = vm.add_memory_segment();
+                                    stack.push((arr_buffer, arr));
+                                    vm.insert_value(buffer, arr_buffer)?;
+                                    buffer += 1;
+                                    vm.insert_value(buffer, (arr_buffer + args_size(arr))?)?;
+                                    buffer += 1;
+                                }
+                            }
+                        }
+                    }
+                    return Ok(());
+                }
+                _ => {}
+            }
+        };
 
         self.hint_handler
             .execute_hint(vm, exec_scopes, hint_data, constants)
@@ -468,13 +508,13 @@ pub enum EnhancedHintError {
 impl From<BufferReadError> for EnhancedHintError {
     fn from(value: BufferReadError) -> Self {
         EnhancedHintError::Anyhow(
-            anyhow::Error::from(value)
-                .context(
-                    indoc!(r"
+                anyhow::Error::from(value)
+                    .context(
+                        indoc!(r"
                         Reading from buffer failed, this can be caused by calling starknet::testing::cheatcode with invalid arguments.
                         Probably `snforge_std`/`sncast_std` version is incompatible, check above for incompatibility warning.
                     ")
-                )
-        )
+                    )
+            )
     }
 }

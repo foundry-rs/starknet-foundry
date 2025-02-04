@@ -69,6 +69,8 @@ pub fn execute_entry_point_call_cairo1(
         extension: CheatableStarknetRuntimeExtension { cheatnet_state },
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
+            // FIXME use correct value
+            user_args: vec![],
         },
     };
 
