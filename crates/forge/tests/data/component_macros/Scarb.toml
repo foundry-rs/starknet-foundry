@@ -6,7 +6,7 @@ edition = "2024_07"
 # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
 [dependencies]
-starknet = "2.9.2"
+starknet = "2.7.0"
 
 [dev-dependencies]
 snforge_std = { path = "../../../../../snforge_std" }

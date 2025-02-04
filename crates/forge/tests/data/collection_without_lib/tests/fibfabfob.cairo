@@ -1,5 +1,5 @@
 use collection_without_lib::fob::fob_impl::fob_fn;
-pub use collection_without_lib::fab::fab_impl::fab_fn;
+use collection_without_lib::fab::fab_impl::fab_fn;
 use collection_without_lib::fib::fib_fn;
 
 #[test]
