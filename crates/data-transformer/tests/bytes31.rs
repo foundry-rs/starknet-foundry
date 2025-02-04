@@ -15,7 +15,7 @@ mod tests_bytes31 {
             Felt::from_hex_unchecked("0x123456789abcdef")
         );
     }
-    
+
     #[test]
     fn test_max_value() {
         let max_bytes31 = CairoBytes31::MAX;
@@ -25,7 +25,7 @@ mod tests_bytes31 {
         .unwrap();
         assert_eq!(max_bytes31, from_str);
     }
-    
+
     #[test]
     fn test_overflow() {
         let result = CairoBytes31::from_str(
