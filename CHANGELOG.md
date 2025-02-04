@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `--name` flag is now optional when using `account create` (default name is generated) 
 
+### Forge
+
+#### Added
+
+- `snforge new` now adds the `snfoundry_trace`, `coverage`, and `profile` directories to `.gitignore`.
+
 ## [0.37.0] - 2025-02-03
 
 ### Forge
