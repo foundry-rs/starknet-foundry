@@ -93,6 +93,7 @@
     * [fee_data_availability_mode](appendix/cheatcodes/fee_data_availability_mode.md)
     * [account_deployment_data](appendix/cheatcodes/account_deployment_data.md)
     * [mock_call](appendix/cheatcodes/mock_call.md)
+    * [mock_call_when](appendix/cheatcodes/mock_call_when.md)
     * [get_class_hash](appendix/cheatcodes/get_class_hash.md)
     * [replace_bytecode](appendix/cheatcodes/replace_bytecode.md)
     * [l1_handler](appendix/cheatcodes/l1_handler.md)
