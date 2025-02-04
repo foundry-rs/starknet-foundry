@@ -171,6 +171,9 @@ fn extend_gitignore(path: &Path) -> Result<()> {
             .append(true)
             .open(path.join(".gitignore"))?;
         writeln!(file, ".snfoundry_cache/")?;
+        writeln!(file, "snfoundry_trace/")?;
+        writeln!(file, "coverage/")?;
+        writeln!(file, "profile/")?;
     }
     Ok(())
 }
