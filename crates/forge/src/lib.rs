@@ -108,13 +108,13 @@ pub struct CleanArgs {
 
 #[derive(ValueEnum, Debug, Clone, PartialEq, Eq)]
 pub enum CleanComponent {
-    /// Clean the coverage directory
+    /// Clean the `coverage` directory
     Coverage,
-    /// Clean the profile directory
+    /// Clean the `profile` directory
     Profile,
-    /// Clean the cache directory
+    /// Clean the `.snfoundry_cache` directory
     Cache,
-    /// Clean the trace directory
+    /// Clean the `snfoundry_trace` directory
     Trace,
     /// Clean all generated directories
     All,
