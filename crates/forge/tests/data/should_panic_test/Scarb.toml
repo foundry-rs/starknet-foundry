@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2024_07"
 
 [dev-dependencies]
-cairo_test = "2.9.2"
+snforge_std = { path = "../../../../../snforge_std" }

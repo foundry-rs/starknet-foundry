@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2024_07"
 
 [dependencies]
-starknet = "2.9.2"
-assert_macros = "2.9.2"
+starknet = "2.7.0"
+assert_macros = "2.7.0"
 
 [dev-dependencies]
 snforge_std = { path = "../../../snforge_std" }
