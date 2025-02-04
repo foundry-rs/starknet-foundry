@@ -64,9 +64,6 @@ fn test_docs_snippets() {
             }
         }
 
-        dbg!(&snippet);
-        dbg!(&args);
-
         let snapbox = runner(&args).current_dir(tempdir.path());
         let output = snapbox.assert().success();
 

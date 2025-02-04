@@ -20,5 +20,3 @@ $CAST_BINARY \
   '0x420, 0x2137_u256' \
   --max-fee \
   99999999999999999 \
-  --fee-token \
-  eth

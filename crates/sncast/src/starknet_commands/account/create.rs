@@ -85,7 +85,7 @@ pub async fn create(
         .context("Invalid address")?
         .parse()?;
 
-    let mut message = "Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.".to_string();
+    let mut message = "Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.".to_string();
 
     if let Some(keystore) = keystore.clone() {
         let account_path = Utf8PathBuf::from(&account);
@@ -370,7 +370,7 @@ fn generate_deploy_command(
 
     format!(
         "\n\nAfter prefunding the address, run:\n\
-        sncast{accounts_flag} account deploy {network_flag} --name {account} --fee-token strk"
+        sncast{accounts_flag} account deploy {network_flag} --name {account}"
     )
 }
 
@@ -384,6 +384,6 @@ fn generate_deploy_command_with_keystore(
 
     format!(
         "\n\nAfter prefunding the address, run:\n\
-        sncast --account {account} --keystore {keystore} account deploy {network_flag} --fee-token strk"
+        sncast --account {account} --keystore {keystore} account deploy {network_flag}"
     )
 }

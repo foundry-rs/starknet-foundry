@@ -618,8 +618,6 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
         "my_account",
         "--max-fee",
         "99999999999999999",
-        "--fee-token",
-        "eth",
     ];
 
     runner(&args).current_dir(tempdir.path()).assert().success();
