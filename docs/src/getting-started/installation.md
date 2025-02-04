@@ -113,16 +113,11 @@ and verify that version is >= 2.7.0
 >
 > * You are using Scarb version <= 2.10.0
 > * Your platform is not one of the following supported platforms:
-    >
-
-* aarch64-apple-darwin
-
-> * aarch64-unknown-linux-gnu
-    >
-
-* x86_64-apple-darwin
-
-> * x86_64-unknown-linux-gnu
+>   * aarch64-apple-darwin
+>   * aarch64-unknown-linux-gnu
+>   * x86_64-apple-darwin
+>   * x86_64-pc-windows-msvc
+>   * x86_64-unknown-linux-gnu
 
 ```shell
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
