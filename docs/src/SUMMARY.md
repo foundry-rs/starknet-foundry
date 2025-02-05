@@ -70,6 +70,7 @@
     * [test](appendix/snforge/test.md)
     * [init](appendix/snforge/init.md)
     * [new](appendix/snforge/new.md)
+    * [clean](appendix/snforge/clean.md)
     * [clean-cache](appendix/snforge/clean-cache.md)
     * [check-requirements](appendix/snforge/check-requirements.md)
 * [Cheatcodes Reference](appendix/cheatcodes.md)
