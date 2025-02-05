@@ -26,10 +26,7 @@ pub fn print_test_result(any_test_result: &AnyTestCaseSummary, print_detailed_re
                 arguments,
                 test_statistics: FuzzingStatistics { runs },
                 ..
-            } => {
-                // TODO:Currently arguments are always empty vec, explore possible ways how to print failed input
-                Some(format!(" (runs: {runs}, arguments: {arguments:?})"))
-            }
+            } => Some(format!(" (runs: {runs}, arguments: {arguments:?})")),
             _ => None,
         };
     }
