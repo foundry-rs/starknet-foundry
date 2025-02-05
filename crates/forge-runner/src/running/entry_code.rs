@@ -1,9 +1,7 @@
 use crate::package_tests::TestDetails;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runnable_utils::builder::{create_entry_code_from_params, EntryCodeConfig};
-use cairo_lang_runner::{Arg, SierraCasmRunner};
 use cairo_vm::types::builtin_name::BuiltinName;
-use starknet_types_core::felt::Felt;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
 pub fn create_entry_code(
@@ -17,7 +15,6 @@ pub fn create_entry_code(
         &test_details.parameter_types,
         &test_details.return_types,
         casm_entry_point_offset,
-        // TODO is this correct?
         EntryCodeConfig::testing(),
     )
     .unwrap()
