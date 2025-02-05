@@ -300,6 +300,7 @@ fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {
         storage_read_values: vec![],
         accessed_storage_keys: HashSet::new(),
         read_class_hash_values: vec![],
+        // TODO this might impact things
         tracked_resource: Default::default(),
         accessed_contract_addresses: Default::default(),
     }
