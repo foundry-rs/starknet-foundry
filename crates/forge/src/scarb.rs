@@ -281,7 +281,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(config, Default::default());
+        assert_eq!(config, ForgeConfigFromScarb::default());
     }
 
     #[test]

@@ -18,6 +18,7 @@ use blockifier::{
 use cairo_annotations::trace_data::L1Resources;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
+// use cairo_vm::Felt252;
 use conversions::serde::deserialize::CairoDeserialize;
 use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use conversions::string::TryFromHexStr;
@@ -72,7 +73,7 @@ impl StateReader for ExtendedStateReader {
             .or_else(|_| {
                 self.fork_state_reader
                     .as_ref()
-                    .map_or(Ok(Default::default()), {
+                    .map_or(Ok(Felt::default()), {
                         |reader| reader.get_storage_at(contract_address, key)
                     })
             })
@@ -84,7 +85,7 @@ impl StateReader for ExtendedStateReader {
             .or_else(|_| {
                 self.fork_state_reader
                     .as_ref()
-                    .map_or(Ok(Default::default()), {
+                    .map_or(Ok(Nonce::default()), {
                         |reader| reader.get_nonce_at(contract_address)
                     })
             })
@@ -96,7 +97,7 @@ impl StateReader for ExtendedStateReader {
             .or_else(|_| {
                 self.fork_state_reader
                     .as_ref()
-                    .map_or(Ok(Default::default()), {
+                    .map_or(Ok(ClassHash::default()), {
                         |reader| reader.get_class_hash_at(contract_address)
                     })
             })
@@ -195,10 +196,10 @@ impl CallTrace {
     fn default_successful_call() -> Self {
         Self {
             run_with_call_header: Default::default(),
-            entry_point: Default::default(),
-            used_execution_resources: Default::default(),
-            used_l1_resources: Default::default(),
-            used_syscalls: Default::default(),
+            entry_point: CallEntryPoint::default(),
+            used_execution_resources: ExecutionResources::default(),
+            used_l1_resources: L1Resources::default(),
+            used_syscalls: HashMap::default(),
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
             vm_trace: None,
@@ -239,7 +240,7 @@ impl NotEmptyCallStack {
         NotEmptyCallStack(vec![CallStackElement {
             resources_used_before_call: ExecutionResources::default(),
             call_trace: elem,
-            cheated_data: Default::default(),
+            cheated_data: CheatedData::default(),
         }])
     }
 
@@ -302,7 +303,7 @@ pub struct CheatedTxInfo {
 impl CheatedTxInfo {
     #[must_use]
     pub fn is_mocked(&self) -> bool {
-        self != &Default::default()
+        self != &CheatedTxInfo::default()
     }
 }
 
@@ -352,10 +353,10 @@ impl Default for CheatnetState {
             ..CallTrace::default_successful_call()
         }));
         Self {
-            cheated_execution_info_contracts: Default::default(),
-            global_cheated_execution_info: Default::default(),
-            mocked_functions: Default::default(),
-            replaced_bytecode_contracts: Default::default(),
+            cheated_execution_info_contracts: HashMap::default(),
+            global_cheated_execution_info: ExecutionInfoMock::default(),
+            mocked_functions: HashMap::default(),
+            replaced_bytecode_contracts: HashMap::default(),
             detected_events: vec![],
             detected_messages_to_l1: vec![],
             deploy_salt_base: 0,

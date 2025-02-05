@@ -32,11 +32,11 @@ impl Default for ForkCacheContent {
     fn default() -> Self {
         Self {
             cache_version: CACHE_VERSION,
-            storage_at: Default::default(),
-            nonce_at: Default::default(),
-            class_hash_at: Default::default(),
-            compiled_contract_class: Default::default(),
-            block_info: Default::default(),
+            storage_at: HashMap::default(),
+            nonce_at: HashMap::default(),
+            class_hash_at: HashMap::default(),
+            compiled_contract_class: HashMap::default(),
+            block_info: None,
         }
     }
 }

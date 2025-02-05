@@ -147,7 +147,7 @@ mod tests {
     async fn to_runnable_non_existent_id() {
         let mocked_tests = TestTargetWithConfig {
             sierra_program: program_for_testing(),
-            sierra_program_path: Default::default(),
+            sierra_program_path: Arc::default(),
             casm_program: Arc::new(
                 compile_sierra(
                     &serde_json::to_value(&program_for_testing().program).unwrap(),

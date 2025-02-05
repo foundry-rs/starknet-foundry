@@ -5,6 +5,7 @@ use forge::{
     block_number_map::BlockNumberMap,
     run_tests::package::{run_for_package, RunForPackageArgs},
     scarb::load_test_artifacts,
+    shared_cache::FailedTestsCache,
     test_filter::TestsFilter,
 };
 use forge_runner::forge_config::{
@@ -52,7 +53,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
                 false,
                 false,
                 false,
-                Default::default(),
+                FailedTestsCache::default(),
             ),
             forge_config: Arc::new(ForgeConfig {
                 test_runner_config: Arc::new(TestRunnerConfig {

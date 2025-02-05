@@ -2,6 +2,7 @@ use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
     AccountType,
 };
+use crate::ValidatedWaitParams;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
@@ -131,18 +132,18 @@ pub async fn create(
     }
 
     if add_profile.is_some() {
-        if let Some(url) = &create.rpc.url {
-            let config = CastConfig {
-                url: url.clone(),
-                account: account.into(),
-                accounts_file: accounts_file.into(),
-                keystore,
-                ..Default::default()
-            };
-            add_created_profile_to_configuration(create.add_profile.as_deref(), &config, None)?;
-        } else {
-            unreachable!("Conflicting arguments should be handled in clap");
-        }
+
+        let config = CastConfig {
+            url: rpc_url,
+            account: account.into(),
+            accounts_file: accounts_file.into(),
+            keystore,
+            wait_params: ValidatedWaitParams::default(),
+            block_explorer: None,
+            show_explorer_links: false,
+        };
+        add_created_profile_to_configuration(create.add_profile.as_deref(), &config, None)?;
+
     }
 
     Ok(AccountCreateResponse {

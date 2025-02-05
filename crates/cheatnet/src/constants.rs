@@ -78,7 +78,9 @@ pub fn build_testing_state() -> DictStateReader {
     DictStateReader {
         address_to_class_hash,
         class_hash_to_class,
-        ..Default::default()
+        storage_view: HashMap::new(),
+        address_to_nonce: HashMap::new(),
+        class_hash_to_compiled_class_hash: HashMap::new(),
     }
 }
 
