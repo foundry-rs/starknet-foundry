@@ -35,7 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Renamed `--network` flag to `--network-name` in `sncast account delete` command
-- `--name` flag is now optional when using `account create` (default name is generated) 
 
 #### Fixed
 
