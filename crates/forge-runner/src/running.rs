@@ -46,7 +46,7 @@ use std::default::Default;
 use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::Arc;
-use std::u64;
+use std::usize;
 use syscall_handler::build_syscall_handler;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
@@ -206,8 +206,10 @@ pub fn run_test_case(
         },
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
-            // FIXME use correct value
-            user_args: vec![vec![Arg::Value(Felt::from(u32::MAX))]],
+            // Max gas is no longer set by `create_entry_code_from_params`
+            // Instead, call to `ExternalHint::WriteRunParam` is added by it, and we need to
+            // store the gas value to be read by logic handling the hint
+            user_args: vec![vec![Arg::Value(Felt::from(u128::MAX))]],
         },
     };
 

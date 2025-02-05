@@ -110,7 +110,10 @@ pub fn run_config_pass(
         },
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
-            user_args: vec![vec![Arg::Value(Felt::from(u64::MAX))]],
+            // Max gas is no longer set by `create_entry_code_from_params`
+            // Instead, call to `ExternalHint::WriteRunParam` is added by it, and we need to
+            // store the gas value to be read by logic handling the hint
+            user_args: vec![vec![Arg::Value(Felt::from(u128::MAX))]],
         },
     };
 
