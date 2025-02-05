@@ -43,11 +43,9 @@ fn contract_class_no_entrypoints() -> ContractClass {
           }
         }"#,
     );
-    // TODO verify
     let casm_contract_class: CasmContractClass =
         serde_json::from_str(raw_contract_class).expect("Could not casm_contract_class from raw");
 
-    // TODO verify
     ContractClass::V1((casm_contract_class, SierraVersion::LATEST))
 }
 
