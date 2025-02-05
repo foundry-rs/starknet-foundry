@@ -1,0 +1,45 @@
+name: 'Automation - Stale issues and PRs'
+
+on:
+  schedule:
+    - cron: '0 7 * * 1-5'
+
+env:
+  DAYS_BEFORE_STALE: 30
+  DAYS_BEFORE_CLOSE: 14
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Run Stale Bot
+        id: stale
+        uses: actions/stale@v9
+        with:
+          # General settings
+          days-before-stale: ${{ env.DAYS_BEFORE_STALE }}
+          days-before-close: ${{ env.DAYS_BEFORE_CLOSE }}
+          operations-per-run: 3000
+          enable-statistics: true # This is only useful if secret ACTIONS_STEP_DEBUG=true
+          remove-stale-when-updated: true
+
+          # PR settings
+          stale-pr-label: stale
+          stale-pr-message: |
+            Hi! This pull request hasn't had any activity for a while, so I am
+            marking it as stale. It will close in ${{ env.DAYS_BEFORE_CLOSE }}
+            days if it is not updated. Thanks for contributing!
+          close-pr-message: false
+
+      - name: Print outputs
+        run: |
+          issues_and_prs=$(echo ${{ toJSON(steps.stale.outputs.staled-issues-prs) }})
+          closed_issues_and_prs=$(echo ${{ toJSON(steps.stale.outputs.closed-issues-prs) }})
+
+          echo "Staled Issues/PRs:"
+          echo "$issues_and_prs" | jq -r '.[] | "Title: \(.title)\nNumber: \(.number)\nCreated At: \(.created_at)\nUpdated At: \(.updated_at)\nDraft: \(.draft)\n---"'
+
+          echo "Closed Issues/PRs:"
+          echo "$closed_issues_and_prs" | jq -r '.[] | "Title: \(.title)\nNumber: \(.number)\nCreated At: \(.created_at)\nUpdated At: \(.updated_at)\nDraft: \(.draft)\n---"'
