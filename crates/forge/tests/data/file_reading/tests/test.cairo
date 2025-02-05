@@ -112,7 +112,6 @@ fn json_serialization() {
 }
 
 #[test]
-#[should_panic(expected: "Parse JSON error: invalid type: integer `231232`, expected a map at line 1 column 6 , in file data/json/invalid.json")]
 fn invalid_json() {
     let file = FileTrait::new("data/json/invalid.json");
     read_json(@file);
@@ -144,7 +143,6 @@ fn json_deserialization() {
 }
 
 #[test]
-#[should_panic(expected: "The system cannot find the file specified. (os error 2)")]
 fn json_non_existent() {
     let file = FileTrait::new("data/non_existent.json");
     read_json(@file);
@@ -194,7 +192,6 @@ fn valid_content_different_folder() {
 }
 
 #[test]
-#[should_panic(expected: "The system cannot find the file specified. (os error 2)")]
 fn non_existent() {
     let file = FileTrait::new("data/non_existent.txt");
     read_txt(@file);
@@ -202,7 +199,6 @@ fn non_existent() {
 }
 
 #[test]
-#[should_panic(expected: "Failed to parse data/negative_number.txt file")]
 fn negative_number() {
     let file = FileTrait::new("data/negative_number.txt");
     read_txt(@file);
@@ -210,7 +206,6 @@ fn negative_number() {
 }
 
 #[test]
-#[should_panic(expected: "Failed to parse data/non_ascii.txt file")]
 fn non_ascii() {
     let file = FileTrait::new("data/non_ascii.txt");
     read_txt(@file);

@@ -17,7 +17,7 @@ fn test_trace() {
     let (contract_address_B, _) = sc.deploy(@array![]).unwrap();
     let (contract_address_C, _) = sc.deploy(@array![]).unwrap();
 
-    let calls: Array<RecursiveCall> = array![
+    let calls = array![
         RecursiveCall {
             contract_address: contract_address_B,
             payload: array![

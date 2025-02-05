@@ -44,7 +44,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected: 'result == a + b')]
     fn failing_fuzz(a: felt252, b: felt252) {
         let result = always_five(a, b);
         assert(result == a + b, 'result == a + b');
