@@ -19,17 +19,22 @@ pub fn build_syscall_handler<'a>(
     execution_resources: &'a mut ExecutionResources,
     context: &'a mut EntryPointExecutionContext,
     test_param_types: &[(GenericTypeId, i16)],
+    builtins_len: usize,
 ) -> SyscallHintProcessor<'a> {
-    // Segment arena is allocated conditionally, so segment index is automatically moved (+2 segments)
+    // * Segment arena is allocated conditionally, so segment index is automatically moved (+2 segments)
+    // * Each used builtin moves the offset by +1
+    // * Line `let mut builtin_offset = 3;` in `create_entry_code_from_params`
+    // * TODO Where is remaining +2 in base offset coming from? Maybe System builtin and Gas builtin which seem to be always included
+    let base_offset = 5;
     let segment_index = if test_param_types
         .iter()
         .any(|(ty, _)| ty == &SegmentArenaType::ID)
     {
         // FIXME verify this
-        8
+        base_offset + builtins_len + 2
     } else {
         // FIXME verify this
-        6
+        base_offset + builtins_len
     };
 
     let entry_point = build_test_entry_point();
@@ -38,7 +43,9 @@ pub fn build_syscall_handler<'a>(
         blockifier_state,
         context,
         Relocatable {
-            segment_index,
+            segment_index: segment_index
+                .try_into()
+                .expect("Failed to convert index to isize"),
             offset: 0,
         },
         entry_point,

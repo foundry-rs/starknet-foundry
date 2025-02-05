@@ -191,6 +191,7 @@ pub fn run_test_case(
         &mut execution_resources,
         &mut context,
         &case.test_details.parameter_types,
+        builtins.len(),
     );
 
     let mut cheatnet_state = CheatnetState {

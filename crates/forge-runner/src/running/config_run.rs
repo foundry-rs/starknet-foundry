@@ -99,6 +99,7 @@ pub fn run_config_pass(
         &mut execution_resources,
         &mut context,
         &test_details.parameter_types,
+        builtins.len(),
     );
 
     let mut config = RawForgeConfig::default();
