@@ -5,9 +5,11 @@ Account information will be saved to the file specified by `--accounts-file` arg
 which is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default.
 
 ## `--name, -n <ACCOUNT_NAME>`
-Required.
+Optional.
 
 Account name under which account information is going to be saved.
+
+If `--name` is not provided, it will be generated automatically.
 
 ## `--url, -u <RPC_URL>`
 Optional.
