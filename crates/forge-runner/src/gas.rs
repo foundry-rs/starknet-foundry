@@ -55,7 +55,7 @@ pub fn calculate_used_gas(
         versioned_constants,
         // FIXME actually check it
         true,
-        &GasVectorComputationMode::All,
+        &GasVectorComputationMode::NoL2Gas,
     ))
 }
 
@@ -119,7 +119,15 @@ fn get_messages_resources(
     MessageResources {
         l2_to_l1_payload_lengths: l2_to_l1_payloads_lengths.to_vec(),
         message_segment_length,
-        l1_handler_payload_size: Some(l1_to_l2_segment_length),
+        // The logic for calculating gas vector treats `l1_handler_payload_size` being `Some`
+        // as indication that L1 handler was used and adds gas cost for that.
+        // 
+        // We need to set it to `None` if length is 0 to avoid including this extra cost.
+        l1_handler_payload_size: if l1_to_l2_segment_length > 0 {
+            Some(l1_to_l2_segment_length)
+        } else {
+            None
+        },
     }
 }
 
@@ -131,6 +139,7 @@ fn get_state_resources(
     // compiled_class_hash_updates is used only for keeping track of declares
     // which we don't want to include in gas cost
     state_changes.state_maps.compiled_class_hashes.clear();
+    state_changes.state_maps.declared_contracts.clear();
 
     let state_changes_count = state_changes.count_for_fee_charge(
         None,

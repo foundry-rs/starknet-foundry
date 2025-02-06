@@ -1,4 +1,5 @@
 use self::contracts_data::ContractsData;
+use crate::constants::TEST_CONTRACT_CLASS_HASH;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use crate::runtime_extensions::common::sum_syscall_counters;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
@@ -23,6 +24,7 @@ use crate::state::CallTraceNode;
 use anyhow::{anyhow, Context, Result};
 use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::CallExecution;
+use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::state::errors::StateError;
 use blockifier::{
     execution::{
@@ -41,6 +43,7 @@ use conversions::byte_array::ByteArray;
 use conversions::felt::TryInferFormat;
 use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::CairoSerialize;
+use conversions::IntoConv;
 use data_transformer::cairo_types::CairoU256;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
@@ -653,6 +656,10 @@ pub fn get_all_used_resources(
         execution: CallExecution {
             l2_to_l1_messages: top_call_l2_to_l1_messages,
             events: top_call_events,
+            ..Default::default()
+        },
+        call: CallEntryPoint {
+            class_hash: Some(Felt::from_hex(TEST_CONTRACT_CLASS_HASH).unwrap().into_()),
             ..Default::default()
         },
         inner_calls: starknet_runtime.hint_handler.base.inner_calls,

@@ -121,7 +121,7 @@ pub fn build_context(
     ));
     context
         .tracked_resource_stack
-        .push(TrackedResource::SierraGas);
+        .push(TrackedResource::CairoSteps);
 
     context
 }
