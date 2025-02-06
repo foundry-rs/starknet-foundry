@@ -117,7 +117,6 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
             "declare" => {
                 let contract: String = input_reader.read::<ByteArray>()?.to_string();
                 let fee_args: FeeArgs = input_reader.read::<ScriptFeeSettings>()?.into();
-                let fee_token = fee_args.fee_token.clone().unwrap_or_default();
                 let nonce = input_reader.read()?;
 
                 let declare = Declare {
@@ -125,7 +124,6 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     fee_args,
                     nonce,
                     package: None,
-                    version: None,
                     rpc: RpcArgs::default(),
                 };
 
@@ -146,7 +144,6 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait_params: self.config.wait_params,
                     },
                     true,
-                    fee_token,
                 ));
 
                 self.state.maybe_insert_tx_entry(
@@ -163,7 +160,6 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let unique = input_reader.read()?;
                 let fee_args: FeeArgs = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
-                let fee_token = fee_args.fee_token.clone().unwrap_or_default();
 
                 let deploy_tx_id =
                     generate_deploy_tx_id(class_hash, &constructor_calldata, salt, unique);
@@ -186,7 +182,6 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait: true,
                         wait_params: self.config.wait_params,
                     },
-                    fee_token,
                 ));
 
                 self.state.maybe_insert_tx_entry(

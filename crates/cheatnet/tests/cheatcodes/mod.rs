@@ -16,6 +16,7 @@ mod generate_random_felt;
 mod get_class_hash;
 mod load;
 mod mock_call;
+mod multiple_writes_same_storage;
 mod precalculate_address;
 mod replace_bytecode;
 mod spy_events;
