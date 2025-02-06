@@ -57,7 +57,7 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
             // This is redirected to drop ForgeRuntimeExtension
             // and to enable handling call errors with safe dispatchers in the test code
             // since call errors cannot be handled on real starknet
-            // https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/system-calls-cairo1/#call_contract
+            // https://docs.starknet.io/architecture-and-concepts/smart-contracts/system-calls-cairo1/#call_contract
             DeprecatedSyscallSelector::CallContract => {
                 execute_syscall::<CallContractRequest>(vm, extended_runtime)?;
 
