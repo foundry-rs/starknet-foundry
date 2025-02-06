@@ -5,40 +5,28 @@ use super::{
 };
 use crate::{package_tests::TestDetails, running::build_syscall_handler};
 use anyhow::Result;
-use blockifier::{
-    blockifier::block::{BlockInfo, GasPrices},
-    state::{cached_state::CachedState, state_api::StateReader},
-};
+use blockifier::state::{cached_state::CachedState, state_api::StateReader};
+use cairo_lang_runner::Arg;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
+use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::forge_config_extension::{
     config::RawForgeConfig, ForgeConfigExtension,
 };
 use runtime::{starknet::context::build_context, ExtendedRuntime, StarknetRuntime};
-use starknet_api::block::{BlockNumber, BlockTimestamp};
+use starknet_api::block::{
+    BlockInfo, BlockNumber, BlockTimestamp, GasPrice, GasPriceVector, GasPrices, NonzeroGasPrice,
+};
 use starknet_types_core::felt::Felt;
-use std::{default::Default, num::NonZeroU128};
+use std::default::Default;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 struct PhantomStateReader;
 
 impl StateReader for PhantomStateReader {
-    fn get_class_hash_at(
+    fn get_storage_at(
         &self,
         _contract_address: starknet_api::core::ContractAddress,
-    ) -> blockifier::state::state_api::StateResult<starknet_api::core::ClassHash> {
-        unreachable!()
-    }
-    fn get_compiled_class_hash(
-        &self,
-        _class_hash: starknet_api::core::ClassHash,
-    ) -> blockifier::state::state_api::StateResult<starknet_api::core::CompiledClassHash> {
-        unreachable!()
-    }
-    fn get_compiled_contract_class(
-        &self,
-        _class_hash: starknet_api::core::ClassHash,
-    ) -> blockifier::state::state_api::StateResult<
-        blockifier::execution::contract_class::ContractClass,
-    > {
+        _key: starknet_api::state::StorageKey,
+    ) -> blockifier::state::state_api::StateResult<Felt> {
         unreachable!()
     }
     fn get_nonce_at(
@@ -47,11 +35,24 @@ impl StateReader for PhantomStateReader {
     ) -> blockifier::state::state_api::StateResult<starknet_api::core::Nonce> {
         unreachable!()
     }
-    fn get_storage_at(
+    fn get_class_hash_at(
         &self,
         _contract_address: starknet_api::core::ContractAddress,
-        _key: starknet_api::state::StorageKey,
-    ) -> blockifier::state::state_api::StateResult<Felt> {
+    ) -> blockifier::state::state_api::StateResult<starknet_api::core::ClassHash> {
+        unreachable!()
+    }
+    fn get_compiled_class(
+        &self,
+        _class_hash: starknet_api::core::ClassHash,
+    ) -> blockifier::state::state_api::StateResult<
+        blockifier::execution::contract_class::RunnableCompiledClass,
+    > {
+        unreachable!()
+    }
+    fn get_compiled_class_hash(
+        &self,
+        _class_hash: starknet_api::core::ClassHash,
+    ) -> blockifier::state::state_api::StateResult<starknet_api::core::CompiledClassHash> {
         unreachable!()
     }
 }
@@ -67,15 +68,21 @@ pub fn run_config_pass(
         block_number: BlockNumber(0),
         block_timestamp: BlockTimestamp(0),
         gas_prices: GasPrices {
-            eth_l1_data_gas_price: NonZeroU128::new(2).unwrap(),
-            eth_l1_gas_price: NonZeroU128::new(2).unwrap(),
-            strk_l1_data_gas_price: NonZeroU128::new(2).unwrap(),
-            strk_l1_gas_price: NonZeroU128::new(2).unwrap(),
+            eth_gas_prices: GasPriceVector {
+                l1_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
+                l1_data_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
+                l2_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
+            },
+            strk_gas_prices: GasPriceVector {
+                l1_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
+                l1_data_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
+                l2_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
+            },
         },
         sequencer_address: 0_u8.into(),
         use_kzg_da: true,
     };
-    let (entry_code, builtins) = create_entry_code(args, test_details, casm_program);
+    let (entry_code, builtins) = create_entry_code(test_details, casm_program);
 
     let assembled_program = get_assembled_program(casm_program, entry_code);
 
@@ -92,6 +99,7 @@ pub fn run_config_pass(
         &mut execution_resources,
         &mut context,
         &test_details.parameter_types,
+        builtins.len(),
     );
 
     let mut config = RawForgeConfig::default();
@@ -102,6 +110,10 @@ pub fn run_config_pass(
         },
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
+            // Max gas is no longer set by `create_entry_code_from_params`
+            // Instead, call to `ExternalHint::WriteRunParam` is added by it, and we need to
+            // store the gas value to be read by logic handling the hint
+            user_args: vec![vec![Arg::Value(Felt::from(u64::MAX))]],
         },
     };
 

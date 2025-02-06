@@ -1,19 +1,19 @@
 use blockifier::{
+    execution::execution_utils::update_remaining_gas,
     execution::{
         entry_point::{CallEntryPoint, CallType},
         execution_utils::ReadOnlySegment,
         syscalls::{
             hint_processor::{create_retdata_segment, SyscallExecutionError, SyscallHintProcessor},
-            SyscallResult,
+            syscall_base::SyscallResult,
         },
     },
-    transaction::transaction_utils::update_remaining_gas,
 };
 use cairo_vm::vm::vm_core::VirtualMachine;
 use starknet_api::{
+    contract_class::EntryPointType,
     core::{ClassHash, EntryPointSelector},
-    deprecated_contract_class::EntryPointType,
-    transaction::Calldata,
+    transaction::fields::Calldata,
 };
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
@@ -31,19 +31,18 @@ pub fn execute_inner_call(
     // region: Modified blockifier code
     let call_info = execute_call_entry_point(
         call,
-        syscall_handler.state,
+        syscall_handler.base.state,
         cheatnet_state,
-        syscall_handler.resources,
-        syscall_handler.context,
+        // syscall_handler.resources,
+        syscall_handler.base.context,
     )?;
     // endregion
 
     let raw_retdata = &call_info.execution.retdata.0;
 
     if call_info.execution.failed {
-        // TODO(spapini): Append an error word according to starknet spec if needed.
-        // Something like "EXECUTION_ERROR".
-        return Err(SyscallExecutionError::SyscallError {
+        // TODO verify error type
+        return Err(SyscallExecutionError::Revert {
             error_data: raw_retdata.clone(),
         });
     }
@@ -51,7 +50,7 @@ pub fn execute_inner_call(
     let retdata_segment = create_retdata_segment(vm, syscall_handler, raw_retdata)?;
     update_remaining_gas(remaining_gas, &call_info);
 
-    syscall_handler.inner_calls.push(call_info);
+    syscall_handler.base.inner_calls.push(call_info);
 
     Ok(retdata_segment)
 }

@@ -1,15 +1,29 @@
 use crate::backtrace::add_backtrace_footer;
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
+// use crate::gas::calculate_used_gas;
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
 use crate::test_case_summary::{Single, TestCaseSummary};
 use anyhow::{ensure, Result};
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::state::cached_state::CachedState;
-use cairo_lang_runner::{RunResult, SierraCasmRunner};
+use cairo_lang_runner::{Arg, RunResult, SierraCasmRunner};
+use cairo_lang_sierra::extensions::bitwise::BitwiseType;
+use cairo_lang_sierra::extensions::circuit::{AddModType, MulModType};
+use cairo_lang_sierra::extensions::ec::EcOpType;
+use cairo_lang_sierra::extensions::gas::GasBuiltinType;
+use cairo_lang_sierra::extensions::pedersen::PedersenType;
+use cairo_lang_sierra::extensions::poseidon::PoseidonType;
+use cairo_lang_sierra::extensions::range_check::{RangeCheck96Type, RangeCheckType};
+use cairo_lang_sierra::extensions::segment_arena::SegmentArenaType;
+use cairo_lang_sierra::extensions::starknet::syscalls::SystemType;
+use cairo_lang_sierra::extensions::NamedType;
+use cairo_lang_sierra::ids::GenericTypeId;
+use cairo_lang_utils::unordered_hash_set::UnorderedHashSet;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
+use cairo_vm::Felt252;
 use camino::{Utf8Path, Utf8PathBuf};
 use casm::{get_assembled_program, run_assembled_program};
 use cheatnet::constants as cheatnet_constants;
@@ -20,7 +34,7 @@ use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::Cheatabl
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
     get_all_used_resources, update_top_call_execution_resources, update_top_call_l1_resources,
-    update_top_call_vm_trace, ForgeExtension, ForgeRuntime,
+    update_top_call_vm_resources, update_top_call_vm_trace, ForgeExtension, ForgeRuntime,
 };
 use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredError, ExtendedStateReader,
@@ -35,6 +49,7 @@ use std::default::Default;
 use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::Arc;
+use std::usize;
 use syscall_handler::build_syscall_handler;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
@@ -142,12 +157,14 @@ pub fn run_test_case(
     casm_program: &AssembledProgramWithDebugInfo,
     runtime_config: &RuntimeConfig,
 ) -> Result<RunResultWithInfo> {
+    assert!(args.is_empty(), "Tests with args not supported currently");
+
     ensure!(
         case.config.available_gas != Some(0),
         "\n\t`available_gas` attribute was incorrectly configured. Make sure you use scarb >= 2.4.4\n"
     );
 
-    let (entry_code, builtins) = create_entry_code(args, &case.test_details, casm_program);
+    let (entry_code, builtins) = create_entry_code(&case.test_details, casm_program);
 
     let assembled_program = get_assembled_program(casm_program, entry_code);
 
@@ -177,6 +194,7 @@ pub fn run_test_case(
         &mut execution_resources,
         &mut context,
         &case.test_details.parameter_types,
+        builtins.len(),
     );
 
     let mut cheatnet_state = CheatnetState {
@@ -191,6 +209,10 @@ pub fn run_test_case(
         },
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
+            // Max gas is no longer set by `create_entry_code_from_params`
+            // Instead, call to `ExternalHint::WriteRunParam` is added by it, and we need to
+            // store the gas value to be read by logic handling the hint
+            user_args: vec![vec![Arg::Value(Felt::from(u64::MAX))]],
         },
     };
 
@@ -217,16 +239,18 @@ pub fn run_test_case(
                     .get_execution_resources()
                     .unwrap()
                     .filter_unused_builtins();
-                *forge_runtime
-                    .extended_runtime
-                    .extended_runtime
-                    .extended_runtime
-                    .hint_handler
-                    .resources += &vm_resources_without_inner_calls;
+                update_top_call_vm_resources(&mut forge_runtime, &vm_resources_without_inner_calls);
+                // FIXME resources
+                // *forge_runtime
+                //     .extended_runtime
+                //     .extended_runtime
+                //     .extended_runtime
+                //     .hint_handler
+                //     .resources += &vm_resources_without_inner_calls;
 
                 let ap = runner.relocated_trace.as_ref().unwrap().last().unwrap().ap;
 
-                let (results_data, gas_counter) = SierraCasmRunner::get_results_data(
+                let (results_data, gas_counter) = get_results_data(
                     &case.test_details.return_types,
                     &runner.relocated_memory,
                     ap,
@@ -272,17 +296,69 @@ pub fn run_test_case(
 
     Ok(RunResultWithInfo {
         run_result: run_result.map(|(gas_counter, memory, value)| RunResult {
+            // FIXME resources
             used_resources: used_resources.execution_resources.clone(),
+            // used_resources: Default::default(),
             gas_counter,
             memory,
             value,
             profiling_info: None,
         }),
-        gas_used: gas,
-        used_resources,
+        // FIXME gas
+        // gas_used: gas,
+        gas_used: 0,
+        // FIXME resources
+        // used_resources,
+        used_resources: Default::default(),
         call_trace: call_trace_ref,
         encountered_errors,
     })
+}
+
+// FIXME get rid of copied code
+// Copied from `cairo-lang-runnable`
+pub fn get_results_data(
+    return_types: &[(GenericTypeId, i16)],
+    cells: &[Option<Felt252>],
+    mut ap: usize,
+) -> (Vec<(GenericTypeId, Vec<Felt252>)>, Option<Felt252>) {
+    let mut results_data = vec![];
+    for (ty, ty_size) in return_types.iter().rev() {
+        let size = *ty_size as usize;
+        let values: Vec<Felt252> = ((ap - size)..ap)
+            .map(|index| cells[index].unwrap())
+            .collect();
+        ap -= size;
+        results_data.push((ty.clone(), values));
+    }
+
+    // Handling implicits.
+    let mut gas_counter = None;
+    results_data.retain_mut(|(ty, values)| {
+        let generic_ty = ty;
+        if *generic_ty == GasBuiltinType::ID {
+            gas_counter = Some(values.remove(0));
+            assert!(values.is_empty());
+            false
+        } else {
+            let non_user_types: UnorderedHashSet<GenericTypeId> = UnorderedHashSet::from_iter([
+                AddModType::ID,
+                BitwiseType::ID,
+                GasBuiltinType::ID,
+                EcOpType::ID,
+                MulModType::ID,
+                PedersenType::ID,
+                PoseidonType::ID,
+                RangeCheck96Type::ID,
+                RangeCheckType::ID,
+                SegmentArenaType::ID,
+                SystemType::ID,
+            ]);
+            !non_user_types.contains(generic_ty)
+        }
+    });
+
+    (results_data, gas_counter)
 }
 
 fn extract_test_case_summary(
@@ -363,6 +439,7 @@ fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext 
         .extended_runtime
         .extended_runtime
         .hint_handler
+        .base
         .context
 }
 

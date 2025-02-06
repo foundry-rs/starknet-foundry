@@ -1,4 +1,5 @@
 use anyhow::Result;
+use cairo_lang_runnable_utils::builder::BuildError;
 use cairo_lang_runner::RunnerError;
 use forge_runner::{
     forge_config::ForgeConfig,
@@ -59,7 +60,9 @@ pub async fn run_for_test_target(
             .funcs
             .iter()
             .find(|f| f.id.debug_name.as_ref().unwrap().ends_with(&case_name))
-            .ok_or(RunnerError::MissingFunction { suffix: case_name })?;
+            .ok_or(RunnerError::BuildError(BuildError::MissingFunction {
+                suffix: case_name,
+            }))?;
 
         let args = function_args(function, &type_declarations);
 

@@ -29,8 +29,8 @@ use scarb_api::{
     get_contracts_artifacts_and_source_sierra_paths, target_dir_for_workspace, ScarbCommand,
 };
 use starknet::core::utils::get_selector_from_name;
+use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
-use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 
@@ -41,13 +41,12 @@ pub mod state;
 fn build_syscall_hint_processor<'a>(
     call_entry_point: CallEntryPoint,
     state: &'a mut dyn State,
-    execution_resources: &'a mut ExecutionResources,
+    _execution_resources: &'a mut ExecutionResources,
     entry_point_execution_context: &'a mut EntryPointExecutionContext,
     hints: &'a HashMap<String, Hint>,
 ) -> SyscallHintProcessor<'a> {
     SyscallHintProcessor::new(
         state,
-        execution_resources,
         entry_point_execution_context,
         Relocatable {
             segment_index: 0,

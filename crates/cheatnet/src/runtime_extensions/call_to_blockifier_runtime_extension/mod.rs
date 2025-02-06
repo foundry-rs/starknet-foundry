@@ -17,8 +17,8 @@ use blockifier::execution::{
 use cairo_vm::types::relocatable::MaybeRelocatable;
 use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
 use runtime::{ExtendedRuntime, ExtensionLogic, SyscallHandlingResult, SyscallPtrAccess};
+use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::ContractAddress;
-use starknet_api::deprecated_contract_class::EntryPointType;
 
 use crate::state::CheatnetState;
 
