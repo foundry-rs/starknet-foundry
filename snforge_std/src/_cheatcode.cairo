@@ -30,3 +30,12 @@ pub(crate) fn execute_cheatcode_and_deserialize<const selector: felt252, T, +Ser
 pub fn _is_config_run() -> bool {
     execute_cheatcode_and_deserialize::<'is_config_mode'>(array![].span())
 }
+
+// Do not use this function directly.
+// It is an internal part of the snforge fuzzer logic used by macros.
+pub fn _save_fuzzer_arg<T, +core::fmt::Debug<T>, +Drop<T>>(input: T) {
+    let input = format!("{input:?}");
+    let mut serialized = array![];
+    input.serialize(ref serialized);
+    execute_cheatcode::<'save_fuzzer_arg'>(serialized.span());
+}

@@ -339,6 +339,7 @@ pub struct CheatnetState {
     pub block_info: BlockInfo,
     pub trace_data: TraceData,
     pub encountered_errors: Vec<EncounteredError>,
+    pub fuzzer_args: Vec<String>,
 }
 
 impl Default for CheatnetState {
@@ -365,6 +366,7 @@ impl Default for CheatnetState {
                 is_vm_trace_needed: false,
             },
             encountered_errors: vec![],
+            fuzzer_args: Vec::default(),
         }
     }
 }
@@ -466,6 +468,10 @@ impl CheatnetState {
 
     pub fn update_cheats(&mut self, address: &ContractAddress) {
         self.progress_cheated_execution_info(*address);
+    }
+
+    pub fn update_fuzzer_args(&mut self, arg: String) {
+        self.fuzzer_args.push(arg);
     }
 }
 

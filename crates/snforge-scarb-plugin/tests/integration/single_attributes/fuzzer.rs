@@ -324,6 +324,7 @@ fn config_wrapper_work_with_fn_with_param() {
                     return;
                 }
                 let f: felt252 = snforge_std::fuzzable::Fuzzable::generate();
+                snforge_std::_internals::_save_fuzzer_arg(f);
                 empty_fn_actual_body(f);
             }
             #[__internal_config_statement]
@@ -355,7 +356,7 @@ fn wrapper_handle_attributes() {
                     empty_fn_actual_body();
 
                     return; 
-                } 
+                }
                 empty_fn_actual_body(); 
             }
 
