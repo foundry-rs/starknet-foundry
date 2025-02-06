@@ -1,6 +1,7 @@
 use crate::backtrace::add_backtrace_footer;
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 // use crate::gas::calculate_used_gas;
+use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
 use crate::test_case_summary::{Single, TestCaseSummary};
 use anyhow::{ensure, Result};
@@ -31,7 +32,8 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBl
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
-    update_top_call_l1_resources, update_top_call_vm_trace, ForgeExtension, ForgeRuntime,
+    get_all_used_resources, update_top_call_execution_resources, update_top_call_l1_resources,
+    update_top_call_vm_resources, update_top_call_vm_trace, ForgeExtension, ForgeRuntime,
 };
 use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredError, ExtendedStateReader,
@@ -232,10 +234,11 @@ pub fn run_test_case(
     let run_result =
         match run_assembled_program(&assembled_program, builtins, hints_dict, &mut forge_runtime) {
             Ok(mut runner) => {
-                // let vm_resources_without_inner_calls = runner
-                //     .get_execution_resources()
-                //     .unwrap()
-                //     .filter_unused_builtins();
+                let vm_resources_without_inner_calls = runner
+                    .get_execution_resources()
+                    .unwrap()
+                    .filter_unused_builtins();
+                update_top_call_vm_resources(&mut forge_runtime, &vm_resources_without_inner_calls);
                 // FIXME resources
                 // *forge_runtime
                 //     .extended_runtime
@@ -280,21 +283,21 @@ pub fn run_test_case(
 
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
-    // update_top_call_execution_resources(&mut forge_runtime);
+    update_top_call_execution_resources(&mut forge_runtime);
     update_top_call_l1_resources(&mut forge_runtime);
-    // let transaction_context = get_context(&forge_runtime).tx_context.clone();
-    // let used_resources = get_all_used_resources(forge_runtime, &transaction_context);
-    // let gas = calculate_used_gas(
-    //     &transaction_context,
-    //     &mut cached_state,
-    //     used_resources.clone(),
-    // )?;
+    let transaction_context = get_context(&forge_runtime).tx_context.clone();
+    let used_resources = get_all_used_resources(forge_runtime, &transaction_context);
+    let gas = calculate_used_gas(
+        &transaction_context,
+        &mut cached_state,
+        used_resources.clone(),
+    )?;
 
     Ok(RunResultWithInfo {
         run_result: run_result.map(|(gas_counter, memory, value)| RunResult {
             // FIXME resources
-            // used_resources: used_resources.execution_resources.clone(),
-            used_resources: Default::default(),
+            used_resources: used_resources.execution_resources.clone(),
+            // used_resources: Default::default(),
             gas_counter,
             memory,
             value,
