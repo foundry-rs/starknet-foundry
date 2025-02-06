@@ -49,7 +49,7 @@ The most tricky part would be playing on top of the merged `shared_state` with o
 by simply implementing `StateReader` for the `StateCache`. It would search for a contract in the following order:
 
 - check if contract is available in the `shared_state` - if so return it
-- check if contract is available in the local `DisctStateReader` of the `ExtendedStateReader` - if so return it
+- check if contract is available in the local `DictStateReader` of the `ExtendedStateReader` - if so return it
 - check if contract is available in the forked network (perform call to node) - if so return it
 - throw an error
 
