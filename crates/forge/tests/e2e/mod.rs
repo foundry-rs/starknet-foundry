@@ -3,6 +3,7 @@ pub(crate) mod common;
 mod backtrace;
 mod build_profile;
 mod build_trace_data;
+mod clean;
 mod collection;
 mod color;
 mod components;
