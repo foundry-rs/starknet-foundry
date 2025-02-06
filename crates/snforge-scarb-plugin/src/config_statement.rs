@@ -61,6 +61,29 @@ pub fn append_config_statements(
     let vis = func.visibility(db).as_syntax_node().get_text(db);
     let attrs = func.attributes(db).as_syntax_node().get_text(db);
     let declaration = func.declaration(db).as_syntax_node().get_text(db);
+
+    let (statements, if_content) = get_statements(db, func);
+
+    formatdoc!(
+        "
+            {attrs}
+            {vis} {declaration} {{
+                if snforge_std::_internals::_is_config_run() {{
+                    {if_content}
+
+                    {config_statements}
+
+                    return;
+                }}
+
+                {statements}
+            }}
+        "
+    )
+}
+
+// Gets test statements and content of `if` that checks whether function is run in config mode
+fn get_statements(db: &dyn SyntaxGroup, func: &FunctionWithBody) -> (String, String) {
     let statements = func.body(db).statements(db).elements(db);
 
     let if_content = statements.first().and_then(|stmt| {
@@ -71,7 +94,7 @@ pub fn append_config_statements(
         let Expr::If(if_expr) = expr.expr(db) else {
             return None;
         };
-        // it's condition is function call
+        // its condition is function call
         let Condition::Expr(expr) = if_expr.condition(db) else {
             return None;
         };
@@ -116,22 +139,5 @@ pub fn append_config_statements(
         acc + &stmt.as_syntax_node().get_text(db)
     });
 
-    let if_content = if_content.unwrap_or_default();
-
-    formatdoc!(
-        "
-            {attrs}
-            {vis} {declaration} {{
-                if snforge_std::_internals::_is_config_run() {{
-                    {if_content}
-
-                    {config_statements}
-
-                    return;
-                }}
-
-                {statements}
-            }}
-        "
-    )
+    (statements, if_content.unwrap_or_default())
 }
