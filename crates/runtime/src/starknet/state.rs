@@ -21,7 +21,7 @@ impl StateReader for DictStateReader {
         key: StorageKey,
     ) -> StateResult<Felt> {
         Err(StateError::StateReadError(format!(
-                "Unable to get storage at address: {contract_address:?} and key: {key:?} form DictStateReader"
+                "Unable to get storage at address: {contract_address:?} and key: {key:?} from DictStateReader"
             )))
     }
 
