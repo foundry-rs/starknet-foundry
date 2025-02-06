@@ -1,6 +1,5 @@
 use crate::coverage_api::run_coverage;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
-use crate::fuzzer::RandomFuzzer;
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
 use anyhow::{anyhow, Result};
@@ -12,11 +11,13 @@ use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 use package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use profiler_api::run_profiler;
+use rand::prelude::StdRng;
+use rand::SeedableRng;
 use shared::print::print_as_warning;
 use shared::spinner::Spinner;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
@@ -98,14 +99,13 @@ pub fn maybe_generate_coverage(
 
 #[must_use]
 pub fn run_for_test_case(
-    args: Vec<ConcreteTypeLongId>,
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
 ) -> JoinHandle<Result<AnyTestCaseSummary>> {
-    if args.is_empty() {
+    if case.config.fuzzer_config.is_none() {
         tokio::task::spawn(async move {
             let res = run_test(
                 case,
@@ -120,7 +120,6 @@ pub fn run_for_test_case(
     } else {
         tokio::task::spawn(async move {
             let res = run_with_fuzzing(
-                args,
                 case,
                 casm_program,
                 forge_config.test_runner_config.clone(),
@@ -133,6 +132,7 @@ pub fn run_for_test_case(
     }
 }
 
+#[allow(dead_code)]
 fn argument_type_name(arg: &ConcreteTypeLongId) -> &str {
     let name = arg.generic_id.0.as_str();
 
@@ -151,7 +151,6 @@ fn argument_type_name(arg: &ConcreteTypeLongId) -> &str {
 }
 
 fn run_with_fuzzing(
-    args: Vec<ConcreteTypeLongId>,
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
@@ -164,7 +163,6 @@ fn run_with_fuzzing(
         }
 
         let (fuzzing_send, mut fuzzing_rec) = channel(1);
-        let arg_types = args.iter().map(argument_type_name).collect::<Vec<_>>();
 
         let (fuzzer_runs, fuzzer_seed) = match case.config.fuzzer_config {
             Some(RawFuzzerConfig { runs, seed }) => (
@@ -176,21 +174,20 @@ fn run_with_fuzzing(
                 test_runner_config.fuzzer_seed,
             ),
         };
-        let mut fuzzer = RandomFuzzer::create(fuzzer_seed, fuzzer_runs, &arg_types)?;
+
+        let rng = Arc::new(Mutex::new(StdRng::seed_from_u64(fuzzer_seed)));
 
         let mut tasks = FuturesUnordered::new();
 
         for _ in 1..=fuzzer_runs.get() {
-            let args = fuzzer.next_args();
-
             tasks.push(run_fuzz_test(
-                args,
                 case.clone(),
                 casm_program.clone(),
                 test_runner_config.clone(),
                 versioned_program_path.clone(),
                 send.clone(),
                 fuzzing_send.clone(),
+                rng.clone(),
             ));
         }
 

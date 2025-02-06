@@ -13,6 +13,7 @@ fn fuzzed_argument() {
         }
 
         #[test]
+        #[fuzzer]
         fn fuzzed_argument(b: felt252) {
             let result = adder(2, b);
             assert(result == 2 + b, '2 + b == 2 + b');
@@ -30,6 +31,7 @@ fn fuzzer_different_types() {
     let test = test_case!(indoc!(
         r"
         #[test]
+        #[fuzzer]
         fn fuzzer_different_types(a: u256) {
             if a <= 5_u256 {
                 assert(2 == 2, '2 == 2');

@@ -7,6 +7,7 @@ mod tests {
     use super::sum;
 
     #[test]
+    #[fuzzer]
     fn test_sum(x: felt252, y: felt252) {
         assert_eq!(sum(x, y), x + y);
     }

@@ -47,6 +47,7 @@ fn available_gas_fuzzing() {
         r"
             #[test]
             #[available_gas(11)]
+            #[fuzzer]
             fn keccak_cost(x: u256) {
                 keccak::keccak_u256s_le_inputs(array![x].span());
             }

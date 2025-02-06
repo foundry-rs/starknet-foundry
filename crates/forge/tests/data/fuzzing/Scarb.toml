@@ -10,3 +10,6 @@ starknet = "2.4.0"
 
 [dev-dependencies]
 snforge_std = { path = "../../../../../snforge_std" }
+
+[features]
+unimplemented = []
