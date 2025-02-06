@@ -99,7 +99,9 @@ impl FeeArgs {
                 )?;
                 // TODO(#2852)
                 let max_gas = NonZeroFelt::try_from(Felt::from(max_fee)
-                            .floor_div(&max_gas_unit_price)).context("Calculated max-gas from provided --max-fee and the current network gas price is 0. Please increase --max-fee to obtain a positive gas amount")?;
+                            .floor_div(&max_gas_unit_price)).context(format!(
+                                "Failed to calculate max-gas. Provided --max-fee: {}, Current network gas price: {}, Resulting max-gas: 0. Please increase --max-fee to obtain a positive gas amount",
+                                max_fee, max_gas_unit_price))?;
                 print_max_fee_conversion_info(max_fee, max_gas, max_gas_unit_price);
                 FeeSettings {
                     max_gas: Some(NonZeroU64::try_from_(max_gas).map_err(anyhow::Error::msg)?),
