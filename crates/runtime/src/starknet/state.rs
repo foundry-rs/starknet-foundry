@@ -47,6 +47,8 @@ impl StateReader for DictStateReader {
     }
 
     fn get_compiled_class_hash(&self, class_hash: ClassHash) -> StateResult<CompiledClassHash> {
-        Err(StateError::UndeclaredClassHash(class_hash))
+        Err(StateError::StateReadError(format!(
+            "Unable to get compiled class hash at {class_hash:?} from DictStateReader"
+        )))
     }
 }
