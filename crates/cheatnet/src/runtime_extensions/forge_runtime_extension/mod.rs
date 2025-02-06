@@ -40,6 +40,7 @@ use conversions::felt::TryInferFormat;
 use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::CairoSerialize;
 use data_transformer::cairo_types::CairoU256;
+use rand::prelude::StdRng;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
@@ -48,16 +49,19 @@ use starknet::signers::SigningKey;
 use starknet_api::{core::ClassHash, deprecated_contract_class::EntryPointType::L1Handler};
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
 pub mod cheatcodes;
 pub mod contracts_data;
 mod file_operations;
+mod fuzzer;
 
 pub type ForgeRuntime<'a> = ExtendedRuntime<ForgeExtension<'a>>;
 
 pub struct ForgeExtension<'a> {
     pub environment_variables: &'a HashMap<String, String>,
     pub contracts_data: &'a ContractsData,
+    pub fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
 }
 
 // This runtime extension provides an implementation logic for functions from snforge_std library.
@@ -476,6 +480,14 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             "generate_random_felt" => Ok(CheatcodeHandlingResult::from_serializable(
                 generate_random_felt(),
             )),
+            "generate_arg" => {
+                let min_value: Felt = input_reader.read()?;
+                let max_value: Felt = input_reader.read()?;
+
+                Ok(CheatcodeHandlingResult::from_serializable(
+                    fuzzer::generate_arg(self.fuzzer_rng.clone(), min_value, max_value)?,
+                ))
+            }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }
     }
