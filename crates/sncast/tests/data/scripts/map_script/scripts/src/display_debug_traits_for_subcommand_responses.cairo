@@ -1,11 +1,10 @@
 use sncast_std::{
     declare, deploy, invoke, call, DeclareResult, DeclareResultTrait, DeployResult, InvokeResult,
-    CallResult, get_nonce, FeeSettings, EthFeeSettings
+    CallResult, get_nonce, FeeSettings
 };
 
 fn main() {
     println!("test");
-    let max_fee = 99999999999999999;
     let salt = 0x3;
 
     let declare_nonce = get_nonce('latest');
@@ -14,7 +13,11 @@ fn main() {
 
     let declare_result = declare(
         "Mapa",
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        FeeSettings {
+            max_fee: Option::None,
+            max_gas: Option::Some(999999),
+            max_gas_unit_price: Option::Some(100000000000)
+        },
         Option::Some(declare_nonce)
     )
         .expect('declare failed');
@@ -28,7 +31,11 @@ fn main() {
         ArrayTrait::new(),
         Option::Some(salt),
         true,
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        FeeSettings {
+            max_fee: Option::None,
+            max_gas: Option::Some(999999),
+            max_gas_unit_price: Option::Some(100000000000)
+        },
         Option::Some(deploy_nonce)
     )
         .expect('deploy failed');
@@ -42,7 +49,11 @@ fn main() {
         deploy_result.contract_address,
         selector!("put"),
         array![0x1, 0x2],
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        FeeSettings {
+            max_fee: Option::None,
+            max_gas: Option::Some(999999),
+            max_gas_unit_price: Option::Some(100000000000)
+        },
         Option::Some(invoke_nonce)
     )
         .expect('invoke failed');

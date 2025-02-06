@@ -818,6 +818,9 @@ fn validate_init(project_path: &PathBuf, validate_snforge_std: bool) {
 
             [scripts]
             test = "snforge test"
+
+            [tool.scarb]
+            allow-prebuilt-plugins = ["snforge_std"]
             {SCARB_MANIFEST_TEMPLATE_CONTENT}
         "#,
         snforge_std_assert
@@ -1159,4 +1162,33 @@ fn call_nonexistent_selector() {
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "},
     );
+}
+
+#[test]
+fn create_new_project_and_check_gitignore() {
+    let temp = tempdir_with_tool_versions().unwrap();
+    let project_path = temp.join("project");
+
+    runner(&temp)
+        .args(["new", "--name", "test_name"])
+        .arg(&project_path)
+        .assert()
+        .success();
+
+    let gitignore_path = project_path.join(".gitignore");
+    assert!(gitignore_path.exists(), ".gitignore file should exist");
+
+    let gitignore_content = fs::read_to_string(gitignore_path).unwrap();
+
+    let expected_gitignore_content = indoc! {
+        r"
+        target
+        .snfoundry_cache/
+        snfoundry_trace/
+        coverage/
+        profile/
+        "
+    };
+
+    assert_eq!(gitignore_content, expected_gitignore_content);
 }
