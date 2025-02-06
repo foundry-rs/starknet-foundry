@@ -162,6 +162,7 @@ pub fn check_available_gas(
                     "\n\tTest cost exceeded the available gas. Consumed gas: ~{gas_info}"
                 )),
                 arguments,
+                fuzzer_args: Vec::default(),
                 test_statistics: (),
             }
         }
