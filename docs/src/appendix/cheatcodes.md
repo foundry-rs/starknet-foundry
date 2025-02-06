@@ -4,6 +4,9 @@
 - [`mock_call`](cheatcodes/mock_call.md#mock_call) - mocks a number of contract calls to an entry point
 - [`start_mock_call`](cheatcodes/mock_call.md#start_mock_call) - mocks contract call to an entry point
 - [`stop_mock_call`](cheatcodes/mock_call.md#stop_mock_call) - cancels the `mock_call` / `start_mock_call` for an entry point
+- [`mock_call_when`](cheatcodes/mock_call_when.md#mock_call_when) - mocks a number of contract calls to an entry point for a given call data
+- [`start_mock_call_when`](cheatcodes/mock_call_when.md#start_mock_call_when) - mocks contract call to an entry point for a given call data
+- [`stop_mock_call_when`](cheatcodes/mock_call_when.md#stop_mock_call_when) - cancels the `mock_call_when` / `start_mock_call_when` for an entry point
 - [`get_class_hash`](cheatcodes/get_class_hash.md) - retrieves a class hash of a contract
 - [`replace_bytecode`](cheatcodes/replace_bytecode.md) - replace the class hash of a contract
 - [`l1_handler`](cheatcodes/l1_handler.md) - executes a `#[l1_handler]` function to mock a message arriving from Ethereum

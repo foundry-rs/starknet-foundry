@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
-use crate::state::{CallTrace, CallTraceNode, CheatStatus, EncounteredError};
+use crate::state::{CallTrace, CallTraceNode, CheatSpan, CheatStatus, EncounteredError};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::{
     execution::{
@@ -18,11 +18,13 @@ use blockifier::{
     state::state_api::State,
 };
 use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
+use num_traits::Zero;
 use starknet_api::{
     core::ClassHash,
     deprecated_contract_class::EntryPointType,
     transaction::{Calldata, TransactionVersion},
 };
+use starknet_crypto::poseidon_hash_many;
 use std::collections::HashSet;
 use std::rc::Rc;
 use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
@@ -268,11 +270,25 @@ fn get_mocked_function_cheat_status<'a>(
     if call.call_type == CallType::Delegate {
         return None;
     }
-
-    cheatnet_state
+    match cheatnet_state
         .mocked_functions
         .get_mut(&call.storage_address)
-        .and_then(|contract_functions| contract_functions.get_mut(&call.entry_point_selector))
+    {
+        None => None,
+        Some(contract_functions) => {
+            let call_data_hash = poseidon_hash_many(call.calldata.0.iter());
+            let key = (call.entry_point_selector, call_data_hash);
+            let key_zero = (call.entry_point_selector, Felt::zero());
+
+            match contract_functions.get(&key) {
+                Some(CheatStatus::Cheated(_, CheatSpan::TargetCalls(0))) => {
+                    contract_functions.get_mut(&key_zero)
+                }
+                Some(CheatStatus::Cheated(_, _)) => contract_functions.get_mut(&key),
+                _ => contract_functions.get_mut(&key_zero),
+            }
+        }
+    }
 }
 
 fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {
