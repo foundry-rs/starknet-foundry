@@ -1,2 +1,2 @@
-mod fibfabfob;
-mod fab;
+pub mod fibfabfob;
+pub mod fab;

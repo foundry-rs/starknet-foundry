@@ -1,4 +1,7 @@
 [package]
 name = "should_panic_test"
 version = "0.1.0"
-edition = "2023_01"
+edition = "2024_07"
+
+[dev-dependencies]
+snforge_std = { path = "../../../../../snforge_std" }

@@ -1,6 +1,6 @@
 use addition::add;
 
-fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
+pub fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
     match n {
         0 => a,
         _ => fib(b, add(a, b), n - 1),

@@ -1,7 +1,7 @@
 use collection_without_lib::fob::fob_impl::fob_fn;
 use super::fab::fab_impl::fab_fn;
 
-fn fib_fn(a: felt252, b: felt252, n: felt252) -> felt252 {
+pub fn fib_fn(a: felt252, b: felt252, n: felt252) -> felt252 {
     match n {
         0 => a,
         _ => fib_fn(b, a + b, n - 1),
