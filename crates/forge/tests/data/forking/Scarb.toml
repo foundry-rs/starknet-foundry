@@ -13,8 +13,3 @@ snforge_std = { path = "../../../../../snforge_std" }
 
 [[target.starknet-contract]]
 sierra = true
-
-[[tool.snforge.fork]]
-name = "NODE_RPC_URL"
-url = "https://starknet-sepolia.public.blastapi.io/rpc/v0_7"
-block_id.tag = "latest"
