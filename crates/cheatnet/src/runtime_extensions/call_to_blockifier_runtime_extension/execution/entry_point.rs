@@ -188,6 +188,7 @@ fn remove_syscall_resources_and_exit_success_call(
     cheatnet_state: &mut CheatnetState,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
 ) {
+    // FIXME restore
     // let versioned_constants = context.tx_context.block_context.versioned_constants();
     // We don't want the syscall resources to pollute the results
     // *resources -= &versioned_constants.get_additional_os_syscall_resources(syscall_counter);
