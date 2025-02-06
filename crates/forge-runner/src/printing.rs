@@ -23,10 +23,10 @@ pub fn print_test_result(any_test_result: &AnyTestCaseSummary, print_detailed_re
                 gas_info.max, gas_info.min, gas_info.mean, gas_info.std_deviation
             )),
             TestCaseSummary::Failed {
-                arguments,
+                fuzzer_args,
                 test_statistics: FuzzingStatistics { runs },
                 ..
-            } => Some(format!(" (runs: {runs}, arguments: {arguments:?})")),
+            } => Some(format!(" (runs: {runs}, arguments: {fuzzer_args:?})")),
             _ => None,
         };
     }
