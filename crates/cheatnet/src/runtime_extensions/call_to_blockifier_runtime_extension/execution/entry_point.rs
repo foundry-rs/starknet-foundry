@@ -86,6 +86,8 @@ pub fn execute_call_entry_point(
                 &[],
                 None,
             );
+            // FIXME setting default class hash
+            entry_point.class_hash = Some(Default::default());
             return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
         }
     }
