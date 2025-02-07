@@ -611,6 +611,7 @@ fn l1_message_from_test_cost() {
     assert_gas(&result, "l1_message_from_test_cost", 1 + 26764);
 }
 
+// FIXME these values changed
 #[test]
 fn l1_message_cost_for_proxy() {
     let test = test_case!(
@@ -665,6 +666,7 @@ fn l1_message_cost_for_proxy() {
     assert_gas(&result, "l1_message_cost_for_proxy", 13 + 128 + 64 + 29524);
 }
 
+// FIXME these values changed
 #[test]
 fn l1_handler_cost() {
     let test = test_case!(
