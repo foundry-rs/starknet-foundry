@@ -52,6 +52,9 @@ pub fn calculate_used_gas(
         starknet_resources,
         computation: computation_resources,
     };
+
+    dbg!(&transaction_resources);
+
     // FIXME this is the tricky part, how to figure the computation mode here
     Ok(transaction_resources.to_gas_vector(
         versioned_constants,

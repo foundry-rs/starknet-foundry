@@ -470,7 +470,8 @@ fn storage_write_cost() {
     // 2491 * 0.0025 = 6,2275 ~ 7 = gas cost of steps
     // 96 = gas cost of deployment
     // storage_updates(1) * 2 * 32 = 64
-    assert_gas(&result, "storage_write_cost", 7 + 96 + 64);
+    // storage updates from zero value(1) * 32 = 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
+    assert_gas(&result, "storage_write_cost", 7 + 96 + 64+ 32);
 }
 
 #[test]
@@ -503,7 +504,8 @@ fn storage_write_from_test_cost() {
     // So, as per formula:
     // n(1) * 2 * 32 = 64
     // m(1) * 2 * 32 = 64
-    assert_gas(&result, "storage_write_from_test_cost", 1 + 64 + 64);
+    // storage updates from zero value(1) * 32 = 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
+    assert_gas(&result, "storage_write_from_test_cost", 1 + 64 + 64 + 32);
 }
 
 #[test]
@@ -547,7 +549,8 @@ fn multiple_storage_writes_cost() {
     // n(1) * 2 * 32 = 64
     // m(1) * 2 * 32 = 64
     // l(1) * 32 = 32
-    assert_gas(&result, "multiple_storage_writes_cost", 9 + 64 + 64 + 32);
+    // storage updates from zero value(1) * 32 = 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
+    assert_gas(&result, "multiple_storage_writes_cost", 9 + 64 + 64 + 32 + 32);
 }
 
 #[test]
