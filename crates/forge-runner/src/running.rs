@@ -292,7 +292,7 @@ pub fn run_test_case(
         &mut cached_state,
         used_resources.clone(),
     )?;
-    
+
     dbg!(&gas);
 
     Ok(RunResultWithInfo {
@@ -305,9 +305,8 @@ pub fn run_test_case(
             value,
             profiling_info: None,
         }),
-        // FIXME gas
-        // gas_used: gas,
-        gas_used: 0,
+        // FIXME return triplet
+        gas_used: (gas.l1_gas.0 + gas.l1_data_gas.0) as u128,
         // FIXME resources
         // used_resources,
         used_resources: Default::default(),
