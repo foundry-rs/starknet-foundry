@@ -307,9 +307,7 @@ pub fn run_test_case(
         }),
         // FIXME return triplet
         gas_used: (gas.l1_gas.0 + gas.l1_data_gas.0) as u128,
-        // FIXME resources
-        // used_resources,
-        used_resources: Default::default(),
+        used_resources,
         call_trace: call_trace_ref,
         encountered_errors,
     })
