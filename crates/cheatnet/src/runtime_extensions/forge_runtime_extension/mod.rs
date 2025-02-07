@@ -20,7 +20,7 @@ use crate::runtime_extensions::{
         CheatcodeError,
     },
 };
-use crate::state::CallTraceNode;
+use crate::state::{CallTrace, CallTraceNode};
 use anyhow::{anyhow, Context, Result};
 use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::CallExecution;
@@ -52,7 +52,9 @@ use runtime::{
 use starknet::signers::SigningKey;
 use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
 use starknet_types_core::felt::Felt;
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 pub mod cheatcodes;
 pub mod contracts_data;
@@ -640,6 +642,19 @@ fn add_syscall_resources(
     total_vm_usage
 }
 
+fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResources {
+    let mut execution_resouces = top_call.borrow().used_execution_resources.clone();
+    for nested_call in &top_call.borrow().nested_calls {
+        match nested_call {
+            CallTraceNode::EntryPointCall(nested_call) => {
+                execution_resouces += &add_execution_resources(nested_call.clone());
+            }
+            CallTraceNode::DeployWithoutConstructor => {}
+        }
+    }
+    execution_resouces
+}
+
 #[must_use]
 pub fn get_all_used_resources(
     runtime: ForgeRuntime,
@@ -681,7 +696,20 @@ pub fn get_all_used_resources(
         .current_call_stack
         .top();
 
-    let execution_resources = top_call.borrow().used_execution_resources.clone();
+    dbg!(
+        &runtime
+            .extended_runtime
+            .extended_runtime
+            .extension
+            .cheatnet_state
+            .trace_data
+            .current_call_stack
+    );
+
+    let execution_resources = add_execution_resources(top_call.clone());
+    
+    dbg!(&execution_resources);
+    
     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
     let events = runtime_call_info
         .iter() // This method iterates over inner calls as well

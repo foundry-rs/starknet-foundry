@@ -78,6 +78,7 @@ pub fn execute_call_entry_point(
             // FIXME traces
             cheatnet_state.trace_data.exit_nested_call(
                 // resources,
+                ExecutionResources::default(),
                 Default::default(),
                 CallResult::Success {
                     ret_data: ret_data_f252,
@@ -183,20 +184,22 @@ pub fn execute_call_entry_point(
 fn remove_syscall_resources_and_exit_success_call(
     call_info: &CallInfo,
     syscall_counter: &SyscallCounter,
-    _context: &mut EntryPointExecutionContext,
+    context: &mut EntryPointExecutionContext,
     // resources: &mut ExecutionResources,
     cheatnet_state: &mut CheatnetState,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
 ) {
-    // FIXME restore
-    // let versioned_constants = context.tx_context.block_context.versioned_constants();
+    let versioned_constants = context.tx_context.block_context.versioned_constants();
     // We don't want the syscall resources to pollute the results
-    // *resources -= &versioned_constants.get_additional_os_syscall_resources(syscall_counter);
+    let mut resources = call_info.resources.clone();
+    resources -= &versioned_constants.get_additional_os_syscall_resources(syscall_counter);
+
     let nested_syscall_counter_sum =
         aggregate_nested_syscall_counters(&cheatnet_state.trace_data.current_call_stack.top());
     let syscall_counter = sum_syscall_counters(nested_syscall_counter_sum, syscall_counter);
     cheatnet_state.trace_data.exit_nested_call(
         // resources,
+        resources,
         syscall_counter,
         CallResult::from_success(call_info),
         &call_info.execution.l2_to_l1_messages,
@@ -217,6 +220,7 @@ fn exit_error_call(
     };
     cheatnet_state.trace_data.exit_nested_call(
         // resources,
+        ExecutionResources::default(),
         Default::default(),
         CallResult::from_err(error, &identifier),
         &[],

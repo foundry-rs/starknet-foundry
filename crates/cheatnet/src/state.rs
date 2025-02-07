@@ -158,6 +158,7 @@ impl<T> CheatStatus<T> {
 }
 
 /// Tree structure representing trace of a call.
+#[derive(Debug)]
 pub struct CallTrace {
     pub run_with_call_header: bool,
     // only these are serialized
@@ -205,7 +206,7 @@ impl CallTrace {
 }
 
 /// Enum representing node of a trace of a call.
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub enum CallTraceNode {
     EntryPointCall(Rc<RefCell<CallTrace>>),
     DeployWithoutConstructor,
@@ -222,7 +223,7 @@ impl CallTraceNode {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct CallStackElement {
     // when we exit the call we use it to calculate resources used by the call
     // resources_used_before_call: ExecutionResources,
@@ -230,6 +231,7 @@ struct CallStackElement {
     cheated_data: CheatedData,
 }
 
+#[derive(Debug)]
 pub struct NotEmptyCallStack(Vec<CallStackElement>);
 
 impl NotEmptyCallStack {
@@ -313,6 +315,7 @@ pub struct CheatedData {
     pub tx_info: CheatedTxInfo,
 }
 
+#[derive(Debug)]
 pub struct TraceData {
     pub current_call_stack: NotEmptyCallStack,
     pub is_vm_trace_needed: bool,
@@ -498,7 +501,7 @@ impl TraceData {
 
     pub fn exit_nested_call(
         &mut self,
-        // resources_used_after_call: &ExecutionResources,
+        execution_resources: ExecutionResources,
         used_syscalls: SyscallCounter,
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
@@ -513,6 +516,8 @@ impl TraceData {
         let mut last_call = last_call.borrow_mut();
         // last_call.used_execution_resources =
         //     resources_used_after_call - &resources_used_before_call;
+        last_call.used_execution_resources = execution_resources;
+
         last_call.used_syscalls = used_syscalls;
 
         last_call.used_l1_resources.l2_l1_message_sizes = l2_to_l1_messages

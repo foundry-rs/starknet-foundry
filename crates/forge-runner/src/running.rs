@@ -292,6 +292,8 @@ pub fn run_test_case(
         &mut cached_state,
         used_resources.clone(),
     )?;
+    
+    dbg!(&gas);
 
     Ok(RunResultWithInfo {
         run_result: run_result.map(|(gas_counter, memory, value)| RunResult {

@@ -32,6 +32,8 @@ pub fn calculate_used_gas(
 
     let archival_data_resources = get_archival_data_resources(resources.events);
 
+    dbg!(&resources.execution_resources);
+
     let starknet_resources = StarknetResources {
         archival_data: archival_data_resources,
         messages: message_resources,
@@ -121,7 +123,7 @@ fn get_messages_resources(
         message_segment_length,
         // The logic for calculating gas vector treats `l1_handler_payload_size` being `Some`
         // as indication that L1 handler was used and adds gas cost for that.
-        // 
+        //
         // We need to set it to `None` if length is 0 to avoid including this extra cost.
         l1_handler_payload_size: if l1_to_l2_segment_length > 0 {
             Some(l1_to_l2_segment_length)
