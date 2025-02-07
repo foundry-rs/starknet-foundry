@@ -45,13 +45,15 @@ async fn test_happy_case_human_readable() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        command: declare
-        class_hash: 0x0[..]
-        transaction_hash: 0x0[..]
+        Class hash: 0x0[..]
+        Transaction hash: 0x0[..]
         
+        In order to deploy it, run:
+        sncast deploy --class-hash 0x0[..] --fee-token strk[..]
+
         To see declaration details, visit:
-        class: https://[..]
-        transaction: https://[..]
+        Class: https://[..]
+        Transaction: https://[..]
     " },
     );
 }
@@ -219,7 +221,6 @@ async fn test_contract_already_declared() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: declare
         error: [..]Class with hash[..]is already declared[..]
         "},
     );
@@ -253,7 +254,6 @@ async fn test_invalid_nonce() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: declare
         error: Invalid transaction nonce
         "},
     );
@@ -285,7 +285,6 @@ async fn test_wrong_contract_name_passed() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: declare
         error: Failed to find nonexistent artifact in starknet_artifacts.json file[..]
         "},
     );
@@ -397,7 +396,6 @@ fn test_too_low_gas() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: declare
         error: Max fee is smaller than the minimal transaction cost
         "},
     );
@@ -447,9 +445,17 @@ fn test_scarb_no_casm_artifact() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        command: declare
-        class_hash: [..]
-        transaction_hash: [..]
+        Contract successfully declared!
+        
+        Class hash: [..]
+        Transaction hash: [..]
+
+        In order to deploy it, run:
+        sncast deploy --class-hash 0x0[..] --fee-token strk[..]
+
+        To see declaration details, visit:
+        Class: [..]
+        Transaction: [..]
         "},
     );
 }
@@ -541,7 +547,6 @@ async fn test_worskpaces_package_no_contract() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: declare
         error: Failed to find whatever artifact in starknet_artifacts.json file[..]
         "},
     );
@@ -579,13 +584,18 @@ async fn test_no_scarb_profile() {
         indoc! {"
             [..]
             [WARNING] Profile profile5 does not exist in scarb, using 'release' profile.
-            command: declare
-            class_hash: [..]
-            transaction_hash: [..]
+
+            Contract successfully declared!
+            
+            Class hash: [..]
+            Transaction hash: [..]
+
+            In order to deploy it, run:
+            sncast deploy --class-hash 0x0[..] --fee-token strk[..]
 
             To see declaration details, visit:
-            class: [..]
-            transaction: [..]
+            Class: [..]
+            Transaction: [..]
         "},
     );
 }
