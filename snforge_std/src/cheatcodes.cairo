@@ -8,6 +8,7 @@ pub mod storage;
 pub mod execution_info;
 pub mod message_to_l1;
 pub mod generate_random_felt;
+pub mod generate_arg;
 
 /// Enum used to specify how long the target should be cheated for.
 #[derive(Copy, Drop, Serde, PartialEq, Clone, Debug)]
