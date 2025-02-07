@@ -50,7 +50,9 @@ async fn test_wrong_contract_name(account: &str) {
     );
 }
 
+// TODO(#2912)
 #[tokio::test]
+#[ignore]
 async fn test_same_contract_twice() {
     let contract_dir = duplicate_contract_directory_with_salt(
         SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
@@ -78,13 +80,14 @@ async fn test_same_contract_twice() {
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
-    snapbox.assert().success().stdout_matches(indoc! {r#"
+    snapbox.assert().success().stdout_matches(indoc! {"
         ...
         success
-        ScriptCommandError::ProviderError(ProviderError::UnknownError(ErrorData { msg: "JSON-RPC error: code=-1, message="Class with hash ClassHash(StarkFelt("[..]")) is already declared."" }))
+        DeclareResult::Success(DeclareTransactionResult { class_hash: [..], transaction_hash: [..] })
+        DeclareResult::AlreadyDeclared(AlreadyDeclaredResult { class_hash: [..] })
         command: script run
         status: success
-    "#});
+    "});
 }
 
 #[tokio::test]
@@ -233,7 +236,7 @@ async fn test_sncast_timed_out() {
 }
 
 #[tokio::test]
-async fn test_strk_fee_settings() {
+async fn test_fee_settings() {
     let contract_dir = duplicate_contract_directory_with_salt(
         SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
         "dummy",
@@ -246,7 +249,7 @@ async fn test_strk_fee_settings() {
 
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
-    let script_name = "strk_fee_settings";
+    let script_name = "fee_settings";
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),

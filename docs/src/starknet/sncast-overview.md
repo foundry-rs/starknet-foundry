@@ -1,0 +1,134 @@
+# `sncast` Overview
+
+Starknet Foundry `sncast` is a command line tool for performing Starknet RPC calls. With it, you can easily interact with Starknet contracts!
+
+> 💡 **Info**
+> At the moment, `sncast` only supports contracts written in [Cairo](https://github.com/starkware-libs/cairo) v1 and v2.
+
+> ⚠️ **Warning**
+> Currently, support is only provided for accounts that use the default signature based on the [Stark curve](https://docs.starknet.io/architecture-and-concepts/cryptography/#stark-curve).
+
+## How to Use `sncast`
+
+To use `sncast`, run the `sncast` command followed by a subcommand (see [available commands](../appendix/sncast.md)):
+
+<!-- { "ignored": true } -->
+```shell
+$ sncast <subcommand>
+```
+
+If `snfoundry.toml` is present and configured with `[sncast.default]`, `url`, `accounts-file` and `account` name will be taken from it.
+You can, however, overwrite their values by supplying them as flags directly to `sncast` cli.
+
+> 💡 **Info**
+> Some transactions (like declaring, deploying or invoking) require paying a fee, and they must be signed.
+
+## Examples
+
+### General Example
+
+Let's use `sncast` to call a contract's function:
+
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
+```shell
+$ sncast call \
+    --network sepolia \
+    --contract-address 0x522dc7cbe288037382a02569af5a4169531053d284193623948eac8dd051716 \
+    --function "pokemon" \
+    --arguments '"Charizard"' \
+    --block-id latest
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+command: call
+response: [0x0, 0x0, 0x43686172697a617264, 0x9, 0x0, 0x0, 0x41a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7766661ad02bf]
+```
+</details>
+<br>
+
+> 📝 **Note**
+> In the above example we supply `sncast` with `--account` flag. If `snfoundry.toml` is present, and have this property set, value provided using this flags will override value from `snfoundry.toml`. Learn more about `snfoundry.toml` configuration [here](../projects/configuration.md#sncast).
+
+### Network and RPC Providers
+
+When providing `--network` flag, `sncast` will randomly select on of the free RPC providers.
+When using free provider you may experience rate limits and other unexpected behavior.
+
+If using `sncast` extensively, we recommend getting access to a dedicated RPC node and providing its URL to sncast with
+`--url` flag.
+
+### Arguments
+
+Some `sncast` commands (namely `call`, `deploy` and `invoke`) allow passing arguments to perform an action with on the blockchain.
+
+Under the hood cast always send request with serialized form of arguments, but it can be passed in 
+human-readable form thanks to the [calldata transformation](./calldata-transformation.md) feature present in Cast.
+
+In the example above we called a function with a deserialized argument: `'"Charizard"'`, passed using `--arguments` flag.
+
+> ⚠️ **Warning**
+> Cast will not verify the serialized calldata. Any errors caused by passing improper calldata in a serialized form will originate from the network.
+> Basic static analysis is possible only when passing expressions - see [calldata transformation](./calldata-transformation.md).
+
+
+### Using Serialized Calldata
+
+The same result can be achieved by passing serialized calldata, which is a list of hexadecimal-encoded field elements.
+
+For example, this is equivalent to using the `--calldata` option with the following value: `0x0 0x43686172697a617264 0x9`.
+
+To obtain the serialized form of the wished data, you can write a Cairo program that calls `Serde::serialize` on subsequent arguments and displays the results.
+
+Read more about it in the [Cairo documentation](https://book.cairo-lang.org/appendix-03-derivable-traits.html?#serializing-with-serde).
+
+### How to Use `--wait` Flag
+
+Let's invoke a transaction and wait for it to be `ACCEPTED_ON_L2`.
+
+<!-- { "ignored_output": true } -->
+```shell
+$ sncast --account my_account \
+    --wait \
+    deploy \
+	--network sepolia \
+    --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Transaction hash: [..]
+Waiting for transaction to be received. Retries left: 11
+Waiting for transaction to be received. Retries left: 10
+Waiting for transaction to be received. Retries left: 9
+Waiting for transaction to be received. Retries left: 8
+Waiting for transaction to be received. Retries left: 7
+Received transaction. Status: Pending
+Received transaction. Status: Pending
+Received transaction. Status: Pending
+Received transaction. Status: Pending
+Received transaction. Status: Pending
+Received transaction. Status: Pending
+command: deploy
+contract_address: [..]
+transaction_hash: [..]
+
+To see deployment details, visit:
+contract: https://starkscan.co/search/[..]
+transaction: https://starkscan.co/search/[..]
+```
+</details>
+<br>
+
+As you can see command waited for the transaction until it was `ACCEPTED_ON_L2`.
+
+After setting up the `--wait` flag, command waits 60 seconds for a transaction to be received and (another not specified
+amount of time) to be included in the block.
+
+> 📝 **Note**
+> By default, all commands don't wait for transactions.

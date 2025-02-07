@@ -3,6 +3,7 @@ mod cheat_block_number;
 mod cheat_block_timestamp;
 mod cheat_caller_address;
 mod cheat_execution_info;
+#[cfg(not(target_os = "windows"))]
 mod cheat_fork;
 mod cheat_sequencer_address;
 mod declare;
@@ -13,6 +14,7 @@ mod dispatchers;
 mod env;
 mod fuzzing;
 mod gas;
+mod generate_random_felt;
 mod get_class_hash;
 mod l1_handler_executor;
 mod message_to_l1;
@@ -22,6 +24,7 @@ mod pure_cairo;
 mod replace_bytecode;
 mod resources;
 mod runtime;
+#[cfg(not(target_os = "windows"))]
 mod setup_fork;
 mod should_panic;
 mod signing;

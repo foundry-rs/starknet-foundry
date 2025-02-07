@@ -1,26 +1,27 @@
+use crate::Arguments;
 use anyhow::Result;
 use clap::Args;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
-use sncast::response::structs::{CallResponse, Felt};
-use starknet::core::types::{BlockId, FieldElement, FunctionCall};
+use sncast::response::structs::CallResponse;
+use starknet::core::types::{BlockId, FunctionCall};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
+use starknet_types_core::felt::Felt;
 
 #[derive(Args)]
 #[command(about = "Call a contract instance on Starknet", long_about = None)]
 pub struct Call {
     /// Address of the called contract (hex)
-    #[clap(short = 'a', long)]
-    pub contract_address: FieldElement,
+    #[clap(short = 'd', long)]
+    pub contract_address: Felt,
 
     /// Name of the contract function to be called
     #[clap(short, long)]
     pub function: String,
 
-    /// Arguments of the called function (list of hex)
-    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
-    pub calldata: Vec<FieldElement>,
+    #[clap(flatten)]
+    pub arguments: Arguments,
 
     /// Block identifier on which call should be performed.
     /// Possible values: pending, latest, block hash (0x prefixed string)
@@ -34,9 +35,9 @@ pub struct Call {
 
 #[allow(clippy::ptr_arg)]
 pub async fn call(
-    contract_address: FieldElement,
-    entry_point_selector: FieldElement,
-    calldata: Vec<FieldElement>,
+    contract_address: Felt,
+    entry_point_selector: Felt,
+    calldata: Vec<Felt>,
     provider: &JsonRpcClient<HttpTransport>,
     block_id: &BlockId,
 ) -> Result<CallResponse, StarknetCommandError> {
@@ -45,10 +46,7 @@ pub async fn call(
         entry_point_selector,
         calldata,
     };
-    let res = provider
-        .call(function_call, block_id)
-        .await
-        .map(|v| v.into_iter().map(Felt).collect());
+    let res = provider.call(function_call, block_id).await;
 
     match res {
         Ok(response) => Ok(CallResponse { response }),

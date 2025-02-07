@@ -18,31 +18,27 @@ Starknet RPC node url address.
 
 Overrides url from `snfoundry.toml`.
 
+## `--network <NETWORK>`
+Optional.
+
+Use predefined network with public provider
+
+Possible values: `mainnet`, `sepolia`.
+
 ## `--max-fee, -m <MAX_FEE>`
 Optional.
 
-Maximum fee for the `invoke` transaction in Fri or Wei depending on fee token or transaction version. When not used, defaults to auto-estimation.
-
-## `--fee-token <FEE_TOKEN>`
-Optional. Required if `--version` is not provided.
-
-Token used for fee payment. Possible values: ETH, STRK.
+Maximum fee for the `invoke` transaction in Fri or Wei depending on fee token or transaction version. When not used, defaults to auto-estimation. Must be greater than zero.
 
 ## `--max-gas <MAX_GAS>`
 Optional.
 
-Maximum gas for the `invoke` transaction. When not used, defaults to auto-estimation. (Only for STRK fee payment)
+Maximum gas for the `invoke` transaction. When not used, defaults to auto-estimation. Must be greater than zero. (Only for STRK fee payment)
 
 ## ` --max-gas-unit-price <MAX_GAS_UNIT_PRICE>`
 Optional.
 
-Maximum gas unit price for the `invoke` transaction paid in Fri. When not used, defaults to auto-estimation. (Only for STRK fee payment)
-
-## `--version, -v <VERSION>`
-Optional. Required if `--fee-token` is not provided.
-
-Version of the deployment transaction. Possible values: v1, v3.
-
+Maximum gas unit price for the `invoke` transaction paid in Fri. When not used, defaults to auto-estimation. Must be greater than zero. (Only for STRK fee payment)
 
 File example:
 

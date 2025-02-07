@@ -23,6 +23,6 @@ Changes the transaction tip for the given target.
 Cancels the `cheat_tip` / `start_cheat_tip` for the given target.
 
 ## `stop_cheat_tip_global`
-> `fn stop_cheat_tip_global(target: ContractAddress)`
+> `fn stop_cheat_tip_global()`
 
 Cancels the `start_cheat_tip_global`.

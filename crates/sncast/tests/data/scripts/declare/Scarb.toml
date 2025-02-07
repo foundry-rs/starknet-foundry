@@ -1,17 +1,16 @@
 [package]
 name = "declare_test_scripts"
 version = "0.1.0"
+edition = "2023_01"
 
 [dependencies]
 starknet = ">=2.3.0"
 sncast_std = { path = "../../../../../../sncast_std" }
-map = { path = "../map_script/contracts" }
+map1 = { path = "../map_script/contracts" }
 
 [lib]
 sierra = true
 casm = true
 
 [[target.starknet-contract]]
-build-external-contracts = [
-    "map::Mapa",
-]
+build-external-contracts = ["map1::Mapa"]

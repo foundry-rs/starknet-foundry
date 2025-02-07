@@ -409,9 +409,9 @@ fn proxy_storage() {
 
             #[derive(Drop, Serde, starknet::Store)]
             struct NestedStruct {
-                d: felt252, 
+                d: felt252,
             }
-            
+
             #[derive(Drop, Serde, starknet::Store)]
             struct CustomStruct {
                 a: felt252,
@@ -427,7 +427,7 @@ fn proxy_storage() {
                     custom_struct: CustomStruct
                 ) -> felt252;
             }
-            
+
             #[starknet::contract]
             mod Caller {
                 use super::CustomStruct;
@@ -438,10 +438,10 @@ fn proxy_storage() {
                 trait IExecutor<T> {
                     fn store_and_add_5(self: @T, custom_struct: CustomStruct) -> felt252;
                 }
-            
+
                 #[storage]
                 struct Storage {}
-            
+
                 #[abi(embed_v0)]
                 impl CallerImpl of super::ICaller<ContractState> {
                     fn call_executor(
@@ -463,9 +463,9 @@ fn proxy_storage() {
                 r"
             #[derive(Drop, Serde, starknet::Store)]
             struct NestedStruct {
-                d: felt252, 
+                d: felt252,
             }
-            
+
             #[derive(Drop, Serde, starknet::Store)]
             struct CustomStruct {
                 a: felt252,
@@ -478,7 +478,7 @@ fn proxy_storage() {
                 fn store_and_add_5(ref self: TContractState, custom_struct: CustomStruct) -> felt252;
                 fn read_storage(ref self: TContractState) -> CustomStruct;
             }
-            
+
             #[starknet::contract]
             mod Executor {
                 use super::CustomStruct;
@@ -530,20 +530,20 @@ fn proxy_dispatcher_panic() {
             let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
             contract_address
         }
-        
+
         #[starknet::interface]
         trait ICaller<T> {
             fn invoke_executor(ref self: T);
         }
-        
+
         #[test]
         fn proxy_dispatcher_panic() {
             let executor_address = deploy_contract("Executor", @ArrayTrait::new());
-            let caller_constructor_calldata: Array<felt252> = array![executor_address.into()]; 
+            let caller_constructor_calldata: Array<felt252> = array![executor_address.into()];
             let caller_address = deploy_contract("Caller", @caller_constructor_calldata);
-        
+
             let caller_dispatcher = ICallerSafeDispatcher { contract_address: caller_address };
-        
+
             match caller_dispatcher.invoke_executor() {
                 Result::Ok(_) => panic_with_felt252('should have panicked'),
                 Result::Err(x) => assert(*x.at(0) == 'panic_msg', 'wrong panic msg')
@@ -566,22 +566,22 @@ fn proxy_dispatcher_panic() {
             mod Caller {
                 use result::ResultTrait;
                 use starknet::ContractAddress;
-            
+
                 #[starknet::interface]
                 trait IExecutor<T> {
                     fn invoke_with_panic(self: @T);
                 }
-            
+
                 #[storage]
                 struct Storage {
                     executor_address: ContractAddress
                 }
-            
+
                 #[constructor]
                 fn constructor(ref self: ContractState, executor_address: ContractAddress) {
                     self.executor_address.write(executor_address);
                 }
-                
+
                 #[abi(embed_v0)]
                 impl CallerImpl of super::ICaller<ContractState> {
                     fn invoke_executor(
@@ -608,7 +608,7 @@ fn proxy_dispatcher_panic() {
             mod Executor {
                 #[storage]
                 struct Storage {}
-            
+
                 #[abi(embed_v0)]
                 impl ExecutorImpl of super::IExecutor<ContractState> {
                     fn invoke_with_panic(ref self: ContractState) {
@@ -739,10 +739,10 @@ fn nonexistent_libcall_function() {
                     use starknet::ClassHash;
                     use result::ResultTrait;
                     use array::ArrayTrait;
-                    
+
                     #[storage]
                     struct Storage {}
-                    
+
                     #[starknet::interface]
                     trait ICaller<T> {
                         fn invoke_nonexistent(ref self: T);
@@ -778,10 +778,11 @@ fn nonexistent_libcall_function() {
     let result = run_test_case(&test);
 
     assert_failed(&result);
+
     assert_case_output_contains(
-       & result,
+        &result,
         "nonexistent_libcall_function",
-        "Entry point EntryPointSelector(0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485) not found in contract"
+        "(0x454e545259504f494e545f4e4f545f464f554e44 ('ENTRYPOINT_NOT_FOUND'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))"
     );
 }
 
@@ -792,7 +793,7 @@ fn undeclared_class_call() {
         use starknet::ContractAddress;
         use traits::TryInto;
         use option::OptionTrait;
-        
+
         #[starknet::interface]
         trait IContract<T> {
             fn invoke_nonexistent(ref self: T);
@@ -864,10 +865,10 @@ fn nonexistent_class_libcall() {
                     use array::ArrayTrait;
                     use traits::TryInto;
                     use option::OptionTrait;
-                    
+
                     #[storage]
                     struct Storage {}
-                    
+
                     #[starknet::interface]
                     trait ICaller<T> {
                         fn invoke_nonexistent(ref self: T);

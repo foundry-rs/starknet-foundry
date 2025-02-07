@@ -12,4 +12,5 @@ which.workspace = true
 tempfile.workspace = true
 num-bigint.workspace = true
 cairo-lang-casm.workspace = true
-cairo-lang-sierra.workspace = true
+camino.workspace = true
+indicatif.workspace = true

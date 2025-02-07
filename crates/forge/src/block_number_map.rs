@@ -1,11 +1,11 @@
 use anyhow::{anyhow, Result};
-use cairo_vm::Felt252;
 use conversions::{string::IntoHexStr, IntoConv};
 use starknet::{
     core::types::{BlockId, MaybePendingBlockWithTxHashes},
     providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider},
 };
 use starknet_api::block::BlockNumber;
+use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use tokio::runtime::Handle;
 use url::Url;
@@ -13,7 +13,7 @@ use url::Url;
 #[derive(Default)]
 pub struct BlockNumberMap {
     url_to_latest_block_number: HashMap<Url, BlockNumber>,
-    url_and_hash_to_block_number: HashMap<(Url, Felt252), BlockNumber>,
+    url_and_hash_to_block_number: HashMap<(Url, Felt), BlockNumber>,
 }
 
 impl BlockNumberMap {
@@ -32,11 +32,7 @@ impl BlockNumberMap {
         Ok(block_number)
     }
 
-    pub async fn get_block_number_for_hash(
-        &mut self,
-        url: Url,
-        hash: Felt252,
-    ) -> Result<BlockNumber> {
+    pub async fn get_block_number_for_hash(&mut self, url: Url, hash: Felt) -> Result<BlockNumber> {
         let block_number = if let Some(block_number) =
             self.url_and_hash_to_block_number.get(&(url.clone(), hash))
         {
@@ -68,7 +64,7 @@ async fn fetch_latest_block_number(url: Url) -> Result<BlockNumber> {
         .map(BlockNumber)?)
 }
 
-async fn fetch_block_number_for_hash(url: Url, block_hash: Felt252) -> Result<BlockNumber> {
+async fn fetch_block_number_for_hash(url: Url, block_hash: Felt) -> Result<BlockNumber> {
     let client = JsonRpcClient::new(HttpTransport::new(url));
 
     let hash = BlockId::Hash(block_hash.into_());

@@ -7,7 +7,6 @@ use forge::{
     scarb::load_test_artifacts,
     test_filter::TestsFilter,
 };
-use forge_runner::build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
@@ -71,12 +70,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: false,
-                    execution_data_to_save: ExecutionDataToSave::None,
-                    versioned_programs_dir: Utf8PathBuf::from_path_buf(
-                        tempdir().unwrap().into_path(),
-                    )
-                    .unwrap()
-                    .join(VERSIONED_PROGRAMS_DIR),
+                    execution_data_to_save: ExecutionDataToSave::default(),
                 }),
             }),
             fork_targets: vec![],

@@ -28,7 +28,7 @@ use conversions::serde::serialize::raw::RawFeltVec;
 use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
 use indoc::indoc;
 use starknet_api::StarknetApiError;
-use starknet_types_core::felt::Felt as Felt252;
+use starknet_types_core::felt::Felt;
 use std::any::Any;
 use std::collections::HashMap;
 use std::io;
@@ -63,7 +63,7 @@ pub struct StarknetRuntime<'a> {
     pub hint_handler: SyscallHintProcessor<'a>,
 }
 
-impl<'a> SyscallPtrAccess for StarknetRuntime<'a> {
+impl SyscallPtrAccess for StarknetRuntime<'_> {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
         &mut self.hint_handler.syscall_ptr
     }
@@ -73,7 +73,7 @@ impl<'a> SyscallPtrAccess for StarknetRuntime<'a> {
     }
 }
 
-impl<'a> ResourceTracker for StarknetRuntime<'a> {
+impl ResourceTracker for StarknetRuntime<'_> {
     fn consumed(&self) -> bool {
         self.hint_handler.context.vm_run_resources.consumed()
     }
@@ -91,7 +91,7 @@ impl<'a> ResourceTracker for StarknetRuntime<'a> {
     }
 }
 
-impl<'a> SignalPropagator for StarknetRuntime<'a> {
+impl SignalPropagator for StarknetRuntime<'_> {
     fn propagate_system_call_signal(
         &mut self,
         _selector: DeprecatedSyscallSelector,
@@ -99,7 +99,7 @@ impl<'a> SignalPropagator for StarknetRuntime<'a> {
     ) {
     }
 
-    fn propagate_cheatcode_signal(&mut self, _selector: &str, _inputs: &[Felt252]) {}
+    fn propagate_cheatcode_signal(&mut self, _selector: &str, _inputs: &[Felt]) {}
 }
 
 fn parse_selector(selector: &BigIntAsHex) -> Result<String, HintError> {
@@ -113,7 +113,7 @@ fn fetch_cheatcode_input(
     vm: &mut VirtualMachine,
     input_start: &ResOperand,
     input_end: &ResOperand,
-) -> Result<Vec<Felt252>, HintError> {
+) -> Result<Vec<Felt>, HintError> {
     let input_start = extract_relocatable(vm, input_start)?;
     let input_end = extract_relocatable(vm, input_end)?;
     let inputs = vm_get_range(vm, input_start, input_end)
@@ -121,13 +121,13 @@ fn fetch_cheatcode_input(
     Ok(inputs)
 }
 
-impl<'a> HintProcessorLogic for StarknetRuntime<'a> {
+impl HintProcessorLogic for StarknetRuntime<'_> {
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt252>,
+        constants: &HashMap<String, Felt>,
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
 
@@ -182,7 +182,7 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt252>,
+        constants: &HashMap<String, Felt>,
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
 
@@ -242,7 +242,7 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt252>,
+        constants: &HashMap<String, Felt>,
         selector: &BigIntAsHex,
         vm_io_ptrs: &VmIoPointers,
     ) -> Result<(), HintError> {
@@ -294,7 +294,7 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt252>,
+        constants: &HashMap<String, Felt>,
         system: &ResOperand,
     ) -> Result<(), HintError> {
         let (cell, offset) = extract_buffer(system);
@@ -332,7 +332,7 @@ pub trait SignalPropagator {
         vm: &mut VirtualMachine,
     );
 
-    fn propagate_cheatcode_signal(&mut self, selector: &str, inputs: &[Felt252]);
+    fn propagate_cheatcode_signal(&mut self, selector: &str, inputs: &[Felt]);
 }
 
 impl<Extension: ExtensionLogic> SignalPropagator for ExtendedRuntime<Extension> {
@@ -347,7 +347,7 @@ impl<Extension: ExtensionLogic> SignalPropagator for ExtendedRuntime<Extension> 
             .handle_system_call_signal(selector, vm, &mut self.extended_runtime);
     }
 
-    fn propagate_cheatcode_signal(&mut self, selector: &str, inputs: &[Felt252]) {
+    fn propagate_cheatcode_signal(&mut self, selector: &str, inputs: &[Felt]) {
         self.extended_runtime
             .propagate_cheatcode_signal(selector, inputs);
         self.extension
@@ -394,7 +394,7 @@ pub enum SyscallHandlingResult {
 #[derive(Debug)]
 pub enum CheatcodeHandlingResult {
     Forwarded,
-    Handled(Vec<Felt252>),
+    Handled(Vec<Felt>),
 }
 
 impl CheatcodeHandlingResult {
@@ -444,7 +444,7 @@ pub trait ExtensionLogic {
     fn handle_cheatcode_signal(
         &mut self,
         _selector: &str,
-        _inputs: &[Felt252],
+        _inputs: &[Felt],
         _extended_runtime: &mut Self::Runtime,
     ) {
     }

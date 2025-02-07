@@ -11,11 +11,9 @@ pub fn test_no_accounts_in_network() {
         ACCOUNT_FILE_PATH,
         "account",
         "delete",
-        "--url",
-        URL,
         "--name",
         "user99",
-        "--network",
+        "--network-name",
         "my-custom-network",
     ];
 
@@ -68,11 +66,9 @@ pub fn test_delete_abort() {
         &accounts_file_name,
         "account",
         "delete",
-        "--url",
-        URL,
         "--name",
         "user3",
-        "--network",
+        "--network-name",
         "custom-network",
     ];
 
@@ -101,11 +97,9 @@ pub fn test_happy_case() {
         &accounts_file_name,
         "account",
         "delete",
-        "--url",
-        URL,
         "--name",
         "user3",
-        "--network",
+        "--network-name",
         "custom-network",
     ];
 
@@ -119,12 +113,10 @@ pub fn test_happy_case() {
 }
 
 #[test]
-pub fn test_happy_case_without_network_args() {
-    // Creating dummy accounts test file
+pub fn test_happy_case_url() {
     let accounts_file_name = "temp_accounts.json";
     let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
 
-    // Now delete dummy account
     let args = vec![
         "--accounts-file",
         &accounts_file_name,
@@ -136,7 +128,6 @@ pub fn test_happy_case_without_network_args() {
         "user0",
     ];
 
-    // Run test with an affirmative user input
     let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
 
     snapbox.assert().success().stdout_matches(indoc! {r"
@@ -157,11 +148,9 @@ pub fn test_happy_case_with_yes_flag() {
         &accounts_file_name,
         "account",
         "delete",
-        "--url",
-        URL,
         "--name",
         "user3",
-        "--network",
+        "--network-name",
         "custom-network",
         "--yes",
     ];
@@ -175,4 +164,33 @@ pub fn test_happy_case_with_yes_flag() {
         command: account delete
         result: Account successfully removed
     "});
+}
+
+#[test]
+pub fn test_accept_only_one_network_type_argument() {
+    let accounts_file_name = "temp_accounts.json";
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
+
+    let args = vec![
+        "--accounts-file",
+        &accounts_file_name,
+        "account",
+        "delete",
+        "--url",
+        URL,
+        "--name",
+        "user3",
+        "--network-name",
+        "custom-network",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
+
+    let output = snapbox.assert().failure();
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+            error: the argument '--url <URL>' cannot be used with '--network-name <NETWORK_NAME>'
+        "},
+    );
 }

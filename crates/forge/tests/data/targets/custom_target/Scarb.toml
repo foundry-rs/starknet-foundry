@@ -1,0 +1,26 @@
+[package]
+name = "custom_target"
+version = "0.1.0"
+edition = "2023_01"
+
+[dependencies]
+starknet = "2.7.0"
+
+[dev-dependencies]
+snforge_std = { path = "../../../../../../snforge_std" }
+
+[[target.starknet-contract]]
+
+[[test]]
+name = "custom_target_integrationtest"
+kind = "test"
+source-path = "./tests/tests.cairo"
+test-type = "integration"
+
+[[test]]
+name = "custom_target_unittest"
+kind = "test"
+test-type = "unit"
+
+[tool.snforge]
+exit_first = false

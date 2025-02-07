@@ -1,4 +1,9 @@
 [package]
 name = "sncast_std"
-version = "0.27.0"
+version = "0.37.0"
 edition = "2023_11"
+description = "Library used for writing deployment scripts in Cairo"
+homepage = "https://foundry-rs.github.io/starknet-foundry/starknet/script.html"
+documentation = "https://foundry-rs.github.io/starknet-foundry/appendix/sncast-library.html"
+repository = "https://github.com/foundry-rs/starknet-foundry"
+license-file = "../LICENSE"

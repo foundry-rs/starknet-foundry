@@ -1,6 +1,7 @@
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use std::collections::HashMap;
+use std::ffi::OsString;
 use std::num::NonZeroU32;
 use std::sync::Arc;
 
@@ -26,35 +27,34 @@ pub struct TestRunnerConfig {
 pub struct OutputConfig {
     pub detailed_resources: bool,
     pub execution_data_to_save: ExecutionDataToSave,
-    pub versioned_programs_dir: Utf8PathBuf,
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum ExecutionDataToSave {
-    None,
-    Trace,
-    /// Profile data requires saved trace data
-    TraceAndProfile,
+#[derive(Debug, PartialEq, Clone, Default)]
+pub struct ExecutionDataToSave {
+    pub trace: bool,
+    pub profile: bool,
+    pub coverage: bool,
+    pub additional_args: Vec<OsString>,
 }
 
 impl ExecutionDataToSave {
     #[must_use]
-    pub fn from_flags(save_trace_data: bool, build_profile: bool) -> Self {
-        if build_profile {
-            return ExecutionDataToSave::TraceAndProfile;
+    pub fn from_flags(
+        save_trace_data: bool,
+        build_profile: bool,
+        coverage: bool,
+        additional_args: &[OsString],
+    ) -> Self {
+        Self {
+            trace: save_trace_data,
+            profile: build_profile,
+            coverage,
+            additional_args: additional_args.to_vec(),
         }
-        if save_trace_data {
-            return ExecutionDataToSave::Trace;
-        }
-        ExecutionDataToSave::None
     }
-}
-
-#[must_use]
-pub fn is_vm_trace_needed(execution_data_to_save: ExecutionDataToSave) -> bool {
-    match execution_data_to_save {
-        ExecutionDataToSave::Trace | ExecutionDataToSave::TraceAndProfile => true,
-        ExecutionDataToSave::None => false,
+    #[must_use]
+    pub fn is_vm_trace_needed(&self) -> bool {
+        self.trace || self.profile || self.coverage
     }
 }
 

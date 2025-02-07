@@ -1,12 +1,12 @@
 use crate::common::assertions::assert_success;
 use crate::common::get_contracts;
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
-use cairo_vm::Felt252;
 use cheatnet::constants::TEST_ADDRESS;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use cheatnet::state::CheatSpan;
 use conversions::IntoConv;
 use starknet_api::core::ContractAddress;
+use starknet_types_core::felt::Felt;
 use tempfile::TempDir;
 
 use super::test_environment::TestEnvironment;
@@ -59,7 +59,7 @@ fn cheat_caller_address_simple() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 }
 
@@ -73,7 +73,7 @@ fn cheat_caller_address_with_other_syscall() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address_and_emit_event", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 }
 
@@ -92,7 +92,7 @@ fn cheat_caller_address_in_constructor() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_stored_caller_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 }
 
@@ -106,7 +106,7 @@ fn cheat_caller_address_stop() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env.stop_cheat_caller_address(contract_address);
@@ -128,7 +128,7 @@ fn cheat_caller_address_double() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[Felt252::from(222)],
+        &[Felt::from(222)],
     );
 
     test_env.stop_cheat_caller_address(contract_address);
@@ -151,7 +151,7 @@ fn cheat_caller_address_proxy() {
     let selector = "get_cheated_caller_address";
     assert_success(
         test_env.call_contract(&proxy_address, selector, &[contract_address.into_()]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env.stop_cheat_caller_address(contract_address);
@@ -175,7 +175,7 @@ fn cheat_caller_address_library_call() {
     let lib_call_selector = "get_caller_address_with_lib_call";
     assert_success(
         test_env.call_contract(&lib_call_address, lib_call_selector, &[class_hash.into_()]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env.stop_cheat_caller_address(lib_call_address);
@@ -200,7 +200,7 @@ fn cheat_caller_address_all() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env.cheatnet_state.stop_cheat_caller_address_global();
@@ -233,11 +233,11 @@ fn cheat_caller_address_multiple() {
 
     assert_success(
         test_env.call_contract(&contract_address1, "get_caller_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address2, "get_caller_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env
@@ -270,7 +270,7 @@ fn cheat_caller_address_all_then_one() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[Felt252::from(222)],
+        &[Felt::from(222)],
     );
 }
 
@@ -287,12 +287,12 @@ fn cheat_caller_address_one_then_all() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[Felt252::from(222)],
+        &[Felt::from(222)],
     );
 }
 
-#[test]
-fn cheat_caller_address_cairo0_callback() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn cheat_caller_address_cairo0_callback() {
     let temp_dir = TempDir::new().unwrap();
     let cached_state = create_fork_cached_state_at(53_631, temp_dir.path().to_str().unwrap());
     let mut test_env = TestEnvironment::new();
@@ -303,7 +303,7 @@ fn cheat_caller_address_cairo0_callback() {
 
     test_env.start_cheat_caller_address(contract_address, 123);
 
-    let expected_caller_address = Felt252::from(123);
+    let expected_caller_address = Felt::from(123);
 
     assert_success(
         test_env.call_contract(
@@ -311,7 +311,7 @@ fn cheat_caller_address_cairo0_callback() {
             "start",
             &[
                 // cairo 0 callback contract address
-                Felt252::try_from_hex_str(
+                Felt::try_from_hex_str(
                     "0x18783f6c124c3acc504f300cb6b3a33def439681744d027be8d7fd5d3551565",
                 )
                 .unwrap(),
@@ -345,11 +345,11 @@ fn cheat_caller_address_simple_with_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
@@ -387,18 +387,18 @@ fn cheat_caller_address_override_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     test_env.cheat_caller_address(contract_address, 321, CheatSpan::Indefinite);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[Felt252::from(321)],
+        &[Felt::from(321)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[Felt252::from(321)],
+        &[Felt::from(321)],
     );
 
     test_env.stop_cheat_caller_address(contract_address);
@@ -424,11 +424,11 @@ fn cheat_caller_address_constructor_with_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_stored_caller_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
@@ -450,7 +450,7 @@ fn cheat_caller_address_library_call_with_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
     assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),

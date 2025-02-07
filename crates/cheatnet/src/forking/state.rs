@@ -9,15 +9,13 @@ use blockifier::state::errors::StateError::{self, StateReadError, UndeclaredClas
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_utils::bigint::BigUintAsHex;
-use cairo_vm::Felt252;
 use camino::Utf8Path;
 use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
 use runtime::starknet::context::SerializableGasPrices;
 use starknet::core::types::{
-    BlockId, ContractClass as ContractClassStarknet, FieldElement, MaybePendingBlockWithTxHashes,
-    StarknetError,
+    BlockId, ContractClass as ContractClassStarknet, MaybePendingBlockWithTxHashes, StarknetError,
 };
 use starknet::core::utils::parse_cairo_short_string;
 use starknet::providers::jsonrpc::HttpTransport;
@@ -28,10 +26,13 @@ use starknet_api::deprecated_contract_class::{
     ContractClass as DeprecatedContractClass, EntryPoint, EntryPointType,
 };
 use starknet_api::state::StorageKey;
+use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::future::Future;
 use std::io::Read;
-use tokio::runtime::Runtime;
+use tokio::runtime::Handle;
+use tokio::task;
 use universal_sierra_compiler_api::{compile_sierra, SierraType};
 use url::Url;
 
@@ -39,7 +40,6 @@ use url::Url;
 pub struct ForkStateReader {
     client: JsonRpcClient<HttpTransport>,
     block_number: BlockNumber,
-    runtime: Runtime,
     cache: RefCell<ForkCache>,
 }
 
@@ -52,12 +52,11 @@ impl ForkStateReader {
             ),
             client: JsonRpcClient::new(HttpTransport::new(url)),
             block_number,
-            runtime: Runtime::new().expect("Could not instantiate Runtime"),
         })
     }
 
     pub fn chain_id(&self) -> Result<ChainId> {
-        let id = self.runtime.block_on(self.client.chain_id())?;
+        let id = sync(self.client.chain_id())?;
         let id = parse_cairo_short_string(&id)?;
         Ok(ChainId::from(id))
     }
@@ -86,10 +85,7 @@ impl BlockInfoReader for ForkStateReader {
             return Ok(cache_hit);
         }
 
-        match self
-            .runtime
-            .block_on(self.client.get_block_with_tx_hashes(self.block_id()))
-        {
+        match sync(self.client.get_block_with_tx_hashes(self.block_id())) {
             Ok(MaybePendingBlockWithTxHashes::Block(block)) => {
                 let block_info = BlockInfo {
                     block_number: BlockNumber(block.block_number),
@@ -121,14 +117,14 @@ impl StateReader for ForkStateReader {
         &self,
         contract_address: ContractAddress,
         key: StorageKey,
-    ) -> StateResult<Felt252> {
+    ) -> StateResult<Felt> {
         if let Some(cache_hit) = self.cache.borrow().get_storage_at(&contract_address, &key) {
             return Ok(cache_hit);
         }
 
-        match self.runtime.block_on(self.client.get_storage_at(
-            FieldElement::from_(contract_address),
-            FieldElement::from_(*key.0.key()),
+        match sync(self.client.get_storage_at(
+            Felt::from_(contract_address),
+            Felt::from_(*key.0.key()),
             self.block_id(),
         )) {
             Ok(value) => {
@@ -138,7 +134,14 @@ impl StateReader for ForkStateReader {
                 Ok(value_sf)
             }
             Err(ProviderError::Other(boxed)) => other_provider_error(boxed),
-            Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => Ok(Default::default()),
+            Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => {
+                self.cache.borrow_mut().cache_get_storage_at(
+                    contract_address,
+                    key,
+                    Felt::default(),
+                );
+                Ok(Felt::default())
+            },
             Err(x) => Err(StateReadError(format!(
                 "Unable to get storage at address: {contract_address:?} and key: {key:?} from fork ({x})"
             ))),
@@ -150,9 +153,9 @@ impl StateReader for ForkStateReader {
             return Ok(cache_hit);
         }
 
-        match self.runtime.block_on(
+        match sync(
             self.client
-                .get_nonce(self.block_id(), FieldElement::from_(contract_address)),
+                .get_nonce(self.block_id(), Felt::from_(contract_address)),
         ) {
             Ok(nonce) => {
                 let nonce = nonce.into_();
@@ -163,6 +166,9 @@ impl StateReader for ForkStateReader {
             }
             Err(ProviderError::Other(boxed)) => other_provider_error(boxed),
             Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => {
+                self.cache
+                    .borrow_mut()
+                    .cache_get_nonce_at(contract_address, Default::default());
                 Ok(Default::default())
             }
             Err(x) => Err(StateReadError(format!(
@@ -176,9 +182,9 @@ impl StateReader for ForkStateReader {
             return Ok(cache_hit);
         }
 
-        match self.runtime.block_on(
+        match sync(
             self.client
-                .get_class_hash_at(self.block_id(), FieldElement::from_(contract_address)),
+                .get_class_hash_at(self.block_id(), Felt::from_(contract_address)),
         ) {
             Ok(class_hash) => {
                 let class_hash = class_hash.into_();
@@ -188,6 +194,9 @@ impl StateReader for ForkStateReader {
                 Ok(class_hash)
             }
             Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => {
+                self.cache
+                    .borrow_mut()
+                    .cache_get_class_hash_at(contract_address, Default::default());
                 Ok(Default::default())
             }
             Err(ProviderError::Other(boxed)) => other_provider_error(boxed),
@@ -207,9 +216,9 @@ impl StateReader for ForkStateReader {
             if let Some(cache_hit) = cache.get_compiled_contract_class(&class_hash) {
                 Ok(cache_hit)
             } else {
-                match self.runtime.block_on(
+                match sync(
                     self.client
-                        .get_class(self.block_id(), FieldElement::from_(class_hash)),
+                        .get_class(self.block_id(), Felt::from_(class_hash)),
                 ) {
                     Ok(contract_class) => {
                         Ok(cache.insert_compiled_contract_class(class_hash, contract_class))
@@ -241,7 +250,7 @@ impl StateReader for ForkStateReader {
                     "entry_points_by_type": flattened_class.entry_points_by_type
                 });
 
-                match compile_sierra(&sierra_contract_class, None, &SierraType::Contract) {
+                match compile_sierra::<String>(&sierra_contract_class, &SierraType::Contract) {
                     Ok(casm_contract_class_raw) => {
                         let casm_contract_class: CasmContractClass =
                             serde_json::from_str(&casm_contract_class_raw)
@@ -283,4 +292,8 @@ impl StateReader for ForkStateReader {
             "Unable to get compiled class hash from the fork".to_string(),
         ))
     }
+}
+
+fn sync<R>(action: impl Future<Output = R>) -> R {
+    task::block_in_place(move || Handle::current().block_on(action))
 }

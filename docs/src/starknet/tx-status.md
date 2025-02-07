@@ -16,10 +16,15 @@ You can track the details about the execution and finality status of a transacti
 $ sncast \
  tx-status \
  0x07d2067cd7675f88493a9d773b456c8d941457ecc2f6201d2fe6b0607daadfd1 \
- --url http://127.0.0.1:5050
-
-command: tx-status
-execution_status: Succeeded
-finality_status: AcceptedOnL2
+ --network sepolia
 ```
 
+<details>
+<summary>Output:</summary>
+
+```shell
+command: tx-status
+execution_status: Succeeded
+finality_status: AcceptedOnL1
+```
+</details>

@@ -1,7 +1,11 @@
 mod class_hash;
 mod contract_address;
 mod entrypoint_selector;
-mod felt252;
+mod felt;
 mod field_elements;
+mod non_zero_felt;
+mod non_zero_u128;
+mod non_zero_u64;
 mod nonce;
+mod padded_felt;
 mod string;

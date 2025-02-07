@@ -1,26 +1,19 @@
 use super::{BufferReadError, BufferReadResult, BufferReader, CairoDeserialize};
 use crate::{byte_array::ByteArray, IntoConv};
 use num_traits::cast::ToPrimitive;
-use starknet::{core::types::FieldElement, providers::Url};
+use starknet::providers::Url;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
-use starknet_types_core::felt::Felt as Felt252;
-use std::num::NonZeroU32;
+use starknet_types_core::felt::{Felt, NonZeroFelt};
+use std::num::NonZero;
 
 impl CairoDeserialize for Url {
     fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        let url: String = reader.read::<ByteArray>()?.into();
-
+        let url: String = reader.read::<ByteArray>()?.to_string();
         Url::parse(&url).map_err(|_| BufferReadError::ParseFailed)
     }
 }
 
-impl CairoDeserialize for NonZeroU32 {
-    fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        NonZeroU32::new(reader.read()?).ok_or(BufferReadError::ParseFailed)
-    }
-}
-
-impl CairoDeserialize for Felt252 {
+impl CairoDeserialize for Felt {
     fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
         reader.read_felt()
     }
@@ -31,7 +24,7 @@ where
     T: CairoDeserialize,
 {
     fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        let length: Felt252 = reader.read()?;
+        let length: Felt = reader.read()?;
         let length = length.to_usize().ok_or(BufferReadError::ParseFailed)?;
 
         let mut result = Vec::with_capacity(length);
@@ -49,7 +42,7 @@ where
     T: CairoDeserialize,
 {
     fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        let variant: Felt252 = reader.read()?;
+        let variant: Felt = reader.read()?;
         let variant: usize = variant.to_usize().ok_or(BufferReadError::ParseFailed)?;
 
         match variant {
@@ -72,34 +65,53 @@ impl CairoDeserialize for bool {
     }
 }
 
+impl CairoDeserialize for NonZeroFelt {
+    fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
+        let felt = reader.read::<Felt>()?;
+        NonZeroFelt::try_from(felt).map_err(|_| BufferReadError::ParseFailed)
+    }
+}
+
+macro_rules! impl_deserialize_for_nonzero_num_type {
+    ($type:ty) => {
+        impl CairoDeserialize for NonZero<$type> {
+            fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
+                let val = <$type>::deserialize(reader)?;
+                NonZero::new(val).ok_or(BufferReadError::ParseFailed)
+            }
+        }
+    };
+}
+
 macro_rules! impl_deserialize_for_felt_type {
     ($type:ty) => {
         impl CairoDeserialize for $type {
             fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-                Felt252::deserialize(reader).map(IntoConv::into_)
+                Felt::deserialize(reader).map(IntoConv::into_)
             }
         }
     };
 }
+
 macro_rules! impl_deserialize_for_num_type {
     ($type:ty) => {
         impl CairoDeserialize for $type {
             fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-                let felt = Felt252::deserialize(reader)?;
-
-                felt.to_bigint()
-                    .try_into()
-                    .map_err(|_| BufferReadError::ParseFailed)
+                let felt = Felt::deserialize(reader)?;
+                felt.try_into().map_err(|_| BufferReadError::ParseFailed)
             }
         }
     };
 }
 
-impl_deserialize_for_felt_type!(FieldElement);
 impl_deserialize_for_felt_type!(ClassHash);
 impl_deserialize_for_felt_type!(ContractAddress);
 impl_deserialize_for_felt_type!(Nonce);
 impl_deserialize_for_felt_type!(EntryPointSelector);
+
+impl_deserialize_for_nonzero_num_type!(u32);
+impl_deserialize_for_nonzero_num_type!(u64);
+impl_deserialize_for_nonzero_num_type!(u128);
 
 impl_deserialize_for_num_type!(u8);
 impl_deserialize_for_num_type!(u16);

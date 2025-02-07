@@ -57,7 +57,7 @@ async fn test_call_invalid_entry_point() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Entry point EntryPointSelector(StarkFelt([..])) not found in contract." })))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Entry point EntryPointSelector([..]) not found in contract." })))
         command: script run
         status: success
         "#},

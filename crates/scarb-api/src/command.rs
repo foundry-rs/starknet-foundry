@@ -1,7 +1,7 @@
 use crate::metadata::MetadataCommand;
 use crate::version::VersionCommand;
 use anyhow::Context;
-use scarb_ui::args::PackagesFilter;
+use scarb_ui::args::{FeaturesSpec, PackagesFilter, ToEnvVars};
 use std::collections::HashMap;
 use std::ffi::{OsStr, OsString};
 use std::path::PathBuf;
@@ -91,7 +91,13 @@ impl ScarbCommand {
 
     /// Pass packages filter to `scarb` call.
     pub fn packages_filter(&mut self, filter: PackagesFilter) -> &mut Self {
-        self.env("SCARB_PACKAGES_FILTER", filter.to_env());
+        self.envs(filter.to_env_vars());
+        self
+    }
+
+    /// Pass features specification filter to `scarb` call.
+    pub fn features(&mut self, features: FeaturesSpec) -> &mut Self {
+        self.envs(features.to_env_vars());
         self
     }
 

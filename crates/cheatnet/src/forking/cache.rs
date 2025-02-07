@@ -1,6 +1,5 @@
 use anyhow::{Context, Result};
 use blockifier::blockifier::block::BlockInfo;
-use cairo_vm::Felt252;
 use camino::{Utf8Path, Utf8PathBuf};
 use fs2::FileExt;
 use regex::Regex;
@@ -10,6 +9,7 @@ use starknet::core::types::ContractClass;
 use starknet_api::block::BlockNumber;
 use starknet_api::core::{ClassHash, ContractAddress, Nonce};
 use starknet_api::state::StorageKey;
+use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::fs;
 use std::fs::OpenOptions;
@@ -21,7 +21,7 @@ pub const CACHE_VERSION: usize = 3;
 #[derive(Serialize, Deserialize, Debug)]
 struct ForkCacheContent {
     cache_version: usize,
-    storage_at: HashMap<ContractAddress, HashMap<StorageKey, Felt252>>,
+    storage_at: HashMap<ContractAddress, HashMap<StorageKey, Felt>>,
     nonce_at: HashMap<ContractAddress, Nonce>,
     class_hash_at: HashMap<ContractAddress, ClassHash>,
     compiled_contract_class: HashMap<ClassHash, ContractClass>,
@@ -150,14 +150,14 @@ impl ForkCache {
         file.write_all(output.as_bytes())
             .expect("Could not write cache to file");
 
-        file.unlock().unwrap();
+        fs2::FileExt::unlock(&file).unwrap();
     }
 
     pub(crate) fn get_storage_at(
         &self,
         contract_address: &ContractAddress,
         key: &StorageKey,
-    ) -> Option<Felt252> {
+    ) -> Option<Felt> {
         self.fork_cache_content
             .storage_at
             .get(contract_address)?
@@ -169,7 +169,7 @@ impl ForkCache {
         &mut self,
         contract_address: ContractAddress,
         key: StorageKey,
-        value: Felt252,
+        value: Felt,
     ) {
         self.fork_cache_content
             .storage_at

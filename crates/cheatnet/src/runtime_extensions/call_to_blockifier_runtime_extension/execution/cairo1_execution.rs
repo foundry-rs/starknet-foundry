@@ -1,22 +1,22 @@
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
+    ContractClassEntryPointExecutionResult, EntryPointExecutionErrorWithTrace, OnErrorLastPc,
+};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use crate::runtime_extensions::common::get_relocated_vm_trace;
-use blockifier::execution::call_info::CallInfo;
-use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use blockifier::execution::entry_point_execution::{
     finalize_execution, initialize_execution_context, prepare_call_arguments, VmExecutionContext,
 };
 use blockifier::{
     execution::{
         contract_class::{ContractClassV1, EntryPointV1},
-        entry_point::{CallEntryPoint, EntryPointExecutionContext, EntryPointExecutionResult},
+        entry_point::{CallEntryPoint, EntryPointExecutionContext},
         errors::EntryPointExecutionError,
         execution_utils::Args,
     },
     state::state_api::State,
 };
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
-use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use cairo_vm::{
     hint_processor::hint_processor_definition::HintProcessor,
     vm::runners::cairo_runner::{CairoArg, CairoRunner, ExecutionResources},
@@ -31,7 +31,7 @@ pub fn execute_entry_point_call_cairo1(
     cheatnet_state: &mut CheatnetState, // Added parameter
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
-) -> EntryPointExecutionResult<(CallInfo, SyscallCounter, Option<Vec<RelocatedTraceEntry>>)> {
+) -> ContractClassEntryPointExecutionResult {
     let VmExecutionContext {
         mut runner,
         mut syscall_handler,
@@ -68,18 +68,11 @@ pub fn execute_entry_point_call_cairo1(
         &entry_point,
         &args,
         program_extra_data_length,
-    )?;
+    )
+    .on_error_get_last_pc(&mut runner)?;
 
-    let vm_trace = if cheatable_runtime
-        .extension
-        .cheatnet_state
-        .trace_data
-        .is_vm_trace_needed
-    {
-        Some(get_relocated_vm_trace(&runner))
-    } else {
-        None
-    };
+    let trace = get_relocated_vm_trace(&mut runner);
+
     let syscall_counter = cheatable_runtime
         .extended_runtime
         .hint_handler
@@ -94,12 +87,15 @@ pub fn execute_entry_point_call_cairo1(
         program_extra_data_length,
     )?;
     if call_info.execution.failed {
-        return Err(EntryPointExecutionError::ExecutionFailed {
-            error_data: call_info.execution.retdata.0,
+        return Err(EntryPointExecutionErrorWithTrace {
+            source: EntryPointExecutionError::ExecutionFailed {
+                error_data: call_info.execution.retdata.0,
+            },
+            trace,
         });
     }
 
-    Ok((call_info, syscall_counter, vm_trace))
+    Ok((call_info, syscall_counter, trace))
     // endregion
 }
 

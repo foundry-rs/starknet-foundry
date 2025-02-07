@@ -1,16 +1,17 @@
 use super::common::runner::{setup_package, test_runner};
 use crate::e2e::common::get_trace_from_trace_node;
 use assert_fs::TempDir;
-use forge_runner::build_trace_data::TRACE_DIR;
-use std::{collections::HashMap, fs};
-use trace_data::{
-    CallTrace as ProfilerCallTrace, CallTraceNode as ProfilerCallTraceNode,
+use cairo_annotations::trace_data::{
+    CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
     DeprecatedSyscallSelector::{
         CallContract, Deploy, EmitEvent, GetBlockHash, GetExecutionInfo, Keccak, LibraryCall,
         SendMessageToL1, StorageRead, StorageWrite,
     },
     ExecutionResources as ProfilerExecutionResources,
+    VersionedCallTrace as VersionedProfilerCallTrace,
 };
+use forge_runner::build_trace_data::TRACE_DIR;
+use std::{collections::HashMap, fs};
 
 #[test]
 fn trace_resources_call() {
@@ -56,15 +57,15 @@ fn assert_resources_for_test(
         .assert()
         .success();
 
-    let call_trace = deserialize_call_trace(test_name, &temp);
+    let VersionedProfilerCallTrace::V1(call_trace) = deserialize_call_trace(test_name, &temp);
     check_vm_resources_and_easily_unifiable_syscalls(&call_trace);
     // test Deploy, CallContract and LibraryCall syscalls as their counts cannot be unified as easily as the rest
     check_not_easily_unifiable_syscalls(&call_trace);
 }
 
-fn deserialize_call_trace(test_name: &str, temp_dir: &TempDir) -> ProfilerCallTrace {
+fn deserialize_call_trace(test_name: &str, temp_dir: &TempDir) -> VersionedProfilerCallTrace {
     let trace_data = fs::read_to_string(temp_dir.join(TRACE_DIR).join(format!(
-        "trace_resources_tests::{test_name}::{test_name}.json"
+        "trace_resources_tests_{test_name}_{test_name}.json"
     )))
     .unwrap();
     serde_json::from_str(&trace_data).expect("Failed to parse call trace")
@@ -75,7 +76,7 @@ fn check_vm_resources_and_easily_unifiable_syscalls(
 ) -> &ProfilerExecutionResources {
     let mut child_resources = vec![];
     for call_node in &call_trace.nested_calls {
-        if let trace_data::CallTraceNode::EntryPointCall(call) = call_node {
+        if let cairo_annotations::trace_data::CallTraceNode::EntryPointCall(call) = call_node {
             child_resources.push(check_vm_resources_and_easily_unifiable_syscalls(call));
         }
     }

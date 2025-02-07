@@ -5,6 +5,7 @@ use crate::starknet_commands::account::{
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
+use conversions::IntoConv;
 use serde_json::json;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::CastConfig;
@@ -13,18 +14,19 @@ use sncast::helpers::constants::{
     CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
 };
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::{AccountCreateResponse, Felt};
+use sncast::response::structs::AccountCreateResponse;
 use sncast::{
     check_class_hash_exists, check_if_legacy_contract, extract_or_generate_salt, get_chain_id,
-    get_keystore_password, handle_account_factory_error,
+    get_keystore_password, handle_account_factory_error, Network,
 };
 use starknet::accounts::{
     AccountDeploymentV1, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
 };
-use starknet::core::types::{FeeEstimate, FieldElement};
+use starknet::core::types::FeeEstimate;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::{LocalWallet, SigningKey};
+use starknet_types_core::felt::Felt;
 
 #[derive(Args, Debug)]
 #[command(about = "Create an account with all important secrets")]
@@ -39,35 +41,36 @@ pub struct Create {
 
     /// Salt for the address
     #[clap(short, long)]
-    pub salt: Option<FieldElement>,
+    pub salt: Option<Felt>,
 
     /// If passed, a profile with provided name and corresponding data will be created in snfoundry.toml
-    #[clap(long)]
+    #[clap(long, conflicts_with = "network")]
     pub add_profile: Option<String>,
 
     /// Custom contract class hash of declared contract
     #[clap(short, long, requires = "account_type")]
-    pub class_hash: Option<FieldElement>,
+    pub class_hash: Option<Felt>,
 
     #[clap(flatten)]
     pub rpc: RpcArgs,
+
+    /// If passed, the command will not trigger an interactive prompt to add an account as a default
+    #[clap(long)]
+    pub silent: bool,
 }
 
 #[allow(clippy::too_many_arguments)]
 pub async fn create(
-    rpc_url: &str,
     account: &str,
     accounts_file: &Utf8PathBuf,
     keystore: Option<Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
-    chain_id: FieldElement,
-    account_type: AccountType,
-    salt: Option<FieldElement>,
-    add_profile: Option<String>,
-    class_hash: Option<FieldElement>,
+    chain_id: Felt,
+    create: &Create,
 ) -> Result<AccountCreateResponse> {
-    let salt = extract_or_generate_salt(salt);
-    let class_hash = class_hash.unwrap_or(match account_type {
+    let add_profile = create.add_profile.clone();
+    let salt = extract_or_generate_salt(create.salt);
+    let class_hash = create.class_hash.unwrap_or(match create.account_type {
         AccountType::Oz => OZ_CLASS_HASH,
         AccountType::Argent => ARGENT_CLASS_HASH,
         AccountType::Braavos => BRAAVOS_CLASS_HASH,
@@ -75,12 +78,14 @@ pub async fn create(
     check_class_hash_exists(provider, class_hash).await?;
 
     let (account_json, max_fee) =
-        generate_account(provider, salt, class_hash, &account_type).await?;
+        generate_account(provider, salt, class_hash, &create.account_type).await?;
 
-    let address = account_json["address"]
+    let address: Felt = account_json["address"]
         .as_str()
         .context("Invalid address")?
         .parse()?;
+
+    let mut message = "Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.".to_string();
 
     if let Some(keystore) = keystore.clone() {
         let account_path = Utf8PathBuf::from(&account);
@@ -100,29 +105,49 @@ pub async fn create(
             private_key,
             salt,
             class_hash,
-            &account_type,
+            &create.account_type,
             &keystore,
             &account_path,
             legacy,
         )?;
+
+        let deploy_command = generate_deploy_command_with_keystore(
+            account,
+            &keystore,
+            create.rpc.url.as_deref(),
+            create.rpc.network.as_ref(),
+        );
+        message.push_str(&deploy_command);
     } else {
         write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
+
+        let deploy_command = generate_deploy_command(
+            accounts_file,
+            create.rpc.url.as_deref(),
+            create.rpc.network.as_ref(),
+            account,
+        );
+        message.push_str(&deploy_command);
     }
 
     if add_profile.is_some() {
-        let config = CastConfig {
-            url: rpc_url.into(),
-            account: account.into(),
-            accounts_file: accounts_file.into(),
-            keystore,
-            ..Default::default()
-        };
-        add_created_profile_to_configuration(&add_profile, &config, &None)?;
+        if let Some(url) = &create.rpc.url {
+            let config = CastConfig {
+                url: url.clone(),
+                account: account.into(),
+                accounts_file: accounts_file.into(),
+                keystore,
+                ..Default::default()
+            };
+            add_created_profile_to_configuration(create.add_profile.as_deref(), &config, None)?;
+        } else {
+            unreachable!("Conflicting arguments should be handled in clap");
+        }
     }
 
     Ok(AccountCreateResponse {
-        address: Felt(address),
-        max_fee: Felt(max_fee),
+        address: address.into_(),
+        max_fee,
         add_profile: if add_profile.is_some() {
             format!(
                 "Profile {} successfully added to snfoundry.toml",
@@ -132,7 +157,7 @@ pub async fn create(
             "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
         },
         message: if account_json["deployed"] == json!(false) {
-            "Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.".to_string()
+            message
         } else {
             "Account already deployed".to_string()
         },
@@ -141,10 +166,10 @@ pub async fn create(
 
 async fn generate_account(
     provider: &JsonRpcClient<HttpTransport>,
-    salt: FieldElement,
-    class_hash: FieldElement,
+    salt: Felt,
+    class_hash: Felt,
     account_type: &AccountType,
-) -> Result<(serde_json::Value, FieldElement)> {
+) -> Result<(serde_json::Value, Felt)> {
     let chain_id = get_chain_id(provider).await?;
     let private_key = SigningKey::from_random();
     let signer = LocalWallet::from_signing_key(private_key.clone());
@@ -156,14 +181,9 @@ async fn generate_account(
             get_address_and_deployment_fee(factory, salt).await?
         }
         AccountType::Argent => {
-            let factory = ArgentAccountFactory::new(
-                class_hash,
-                chain_id,
-                FieldElement::ZERO,
-                signer,
-                provider,
-            )
-            .await?;
+            let factory =
+                ArgentAccountFactory::new(class_hash, chain_id, Felt::ZERO, signer, provider)
+                    .await?;
             get_address_and_deployment_fee(factory, salt).await?
         }
         AccountType::Braavos => {
@@ -196,8 +216,8 @@ async fn generate_account(
 
 async fn get_address_and_deployment_fee<T>(
     account_factory: T,
-    salt: FieldElement,
-) -> Result<(FieldElement, FeeEstimate)>
+    salt: Felt,
+) -> Result<(Felt, FeeEstimate)>
 where
     T: AccountFactory + Sync,
 {
@@ -205,8 +225,8 @@ where
     Ok((deployment.address(), get_deployment_fee(&deployment).await?))
 }
 
-async fn get_deployment_fee<'a, T>(
-    account_deployment: &AccountDeploymentV1<'a, T>,
+async fn get_deployment_fee<T>(
+    account_deployment: &AccountDeploymentV1<'_, T>,
 ) -> Result<FeeEstimate>
 where
     T: AccountFactory + Sync,
@@ -224,9 +244,9 @@ where
 
 #[allow(clippy::too_many_arguments)]
 fn create_to_keystore(
-    private_key: FieldElement,
-    salt: FieldElement,
-    class_hash: FieldElement,
+    private_key: Felt,
+    salt: Felt,
+    class_hash: Felt,
     account_type: &AccountType,
     keystore_path: &Utf8PathBuf,
     account_path: &Utf8PathBuf,
@@ -319,4 +339,51 @@ fn write_account_to_file(
         serde_json::to_string_pretty(&account_json).unwrap(),
     )?;
     Ok(())
+}
+
+fn generate_network_flag(rpc_url: Option<&str>, network: Option<&Network>) -> String {
+    if let Some(rpc_url) = rpc_url {
+        format!("--url {rpc_url}")
+    } else if let Some(network) = network {
+        format!("--network {network}")
+    } else {
+        unreachable!("Either `--rpc_url` or `--network` must be provided.")
+    }
+}
+
+fn generate_deploy_command(
+    accounts_file: &Utf8PathBuf,
+    rpc_url: Option<&str>,
+    network: Option<&Network>,
+    account: &str,
+) -> String {
+    let accounts_flag = if accounts_file
+        .to_string()
+        .contains("starknet_accounts/starknet_open_zeppelin_accounts.json")
+    {
+        String::new()
+    } else {
+        format!(" --accounts-file {accounts_file}")
+    };
+
+    let network_flag = generate_network_flag(rpc_url, network);
+
+    format!(
+        "\n\nAfter prefunding the address, run:\n\
+        sncast{accounts_flag} account deploy {network_flag} --name {account}"
+    )
+}
+
+fn generate_deploy_command_with_keystore(
+    account: &str,
+    keystore: &Utf8PathBuf,
+    rpc_url: Option<&str>,
+    network: Option<&Network>,
+) -> String {
+    let network_flag = generate_network_flag(rpc_url, network);
+
+    format!(
+        "\n\nAfter prefunding the address, run:\n\
+        sncast --account {account} --keystore {keystore} account deploy {network_flag}"
+    )
 }

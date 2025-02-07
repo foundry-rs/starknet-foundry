@@ -13,7 +13,6 @@ use blockifier::execution::{
     deprecated_syscalls::DeprecatedSyscallSelector,
     syscalls::hint_processor::{SyscallExecutionError, SyscallHintProcessor},
 };
-use cairo_vm::Felt252;
 use cairo_vm::{
     types::relocatable::Relocatable,
     vm::{
@@ -23,6 +22,7 @@ use cairo_vm::{
 };
 use conversions::string::TryFromHexStr;
 use runtime::{ExtendedRuntime, ExtensionLogic, StarknetRuntime, SyscallHandlingResult};
+use starknet_types_core::felt::Felt;
 
 pub type SyscallSelector = DeprecatedSyscallSelector;
 
@@ -106,7 +106,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
 pub fn felt_from_ptr_immutable(
     vm: &VirtualMachine,
     ptr: &Relocatable,
-) -> Result<Felt252, VirtualMachineError> {
+) -> Result<Felt, VirtualMachineError> {
     let felt = vm.get_integer(*ptr)?.into_owned();
     Ok(felt)
 }

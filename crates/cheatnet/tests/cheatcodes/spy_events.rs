@@ -3,11 +3,11 @@ use crate::common::get_contracts;
 use crate::common::state::create_fork_cached_state_at;
 use crate::common::{call_contract, deploy_contract, felt_selector_from_name};
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
-use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use cheatnet::state::CheatnetState;
 use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
+use starknet_types_core::felt::Felt;
 use std::vec;
 use tempfile::TempDir;
 
@@ -27,7 +27,7 @@ fn spy_events_zero_offset() {
 
     let contract_address = test_env.deploy("SpyEventsChecker", &[]);
 
-    test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
+    test_env.call_contract(&contract_address, "emit_one_event", &[Felt::from(123)]);
 
     let events = test_env.get_events(0);
 
@@ -37,12 +37,12 @@ fn spy_events_zero_offset() {
         Event {
             from: contract_address,
             keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
-            data: vec![Felt252::from(123)]
+            data: vec![Felt::from(123)]
         },
         "Wrong event"
     );
 
-    test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
+    test_env.call_contract(&contract_address, "emit_one_event", &[Felt::from(123)]);
 
     let length = test_env.get_events(0).len();
     assert_eq!(length, 2, "There should be one more new event");
@@ -54,9 +54,9 @@ fn spy_events_some_offset() {
 
     let contract_address = test_env.deploy("SpyEventsChecker", &[]);
 
-    test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
-    test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
-    test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
+    test_env.call_contract(&contract_address, "emit_one_event", &[Felt::from(123)]);
+    test_env.call_contract(&contract_address, "emit_one_event", &[Felt::from(123)]);
+    test_env.call_contract(&contract_address, "emit_one_event", &[Felt::from(123)]);
 
     let events = test_env.get_events(2);
 
@@ -70,12 +70,12 @@ fn spy_events_some_offset() {
         Event {
             from: contract_address,
             keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
-            data: vec![Felt252::from(123)]
+            data: vec![Felt::from(123)]
         },
         "Wrong event"
     );
 
-    test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
+    test_env.call_contract(&contract_address, "emit_one_event", &[Felt::from(123)]);
 
     let length = test_env.get_events(2).len();
     assert_eq!(length, 2, "There should be one more new event");
@@ -92,9 +92,9 @@ fn check_events_order() {
         &spy_events_order_checker_address,
         "emit_and_call_another",
         &[
-            Felt252::from(123),
-            Felt252::from(234),
-            Felt252::from(345),
+            Felt::from(123),
+            Felt::from(234),
+            Felt::from(345),
             spy_events_checker_address.into_(),
         ],
     );
@@ -107,7 +107,7 @@ fn check_events_order() {
         Event {
             from: spy_events_order_checker_address,
             keys: vec![starknet_keccak("SecondEvent".as_ref()).into()],
-            data: vec![Felt252::from(123)]
+            data: vec![Felt::from(123)]
         },
         "Wrong first event"
     );
@@ -116,7 +116,7 @@ fn check_events_order() {
         Event {
             from: spy_events_checker_address,
             keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
-            data: vec![Felt252::from(234)]
+            data: vec![Felt::from(234)]
         },
         "Wrong second event"
     );
@@ -125,7 +125,7 @@ fn check_events_order() {
         Event {
             from: spy_events_order_checker_address,
             keys: vec![starknet_keccak("ThirdEvent".as_ref()).into()],
-            data: vec![Felt252::from(345)]
+            data: vec![Felt::from(345)]
         },
         "Wrong third event"
     );
@@ -142,7 +142,7 @@ fn library_call_emits_event() {
     test_env.call_contract(
         &contract_address,
         "call_lib_call",
-        &[Felt252::from(123), class_hash.into_()],
+        &[Felt::from(123), class_hash.into_()],
     );
 
     let events = test_env.get_events(0);
@@ -153,7 +153,7 @@ fn library_call_emits_event() {
         Event {
             from: contract_address,
             keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
-            data: vec![Felt252::from(123)]
+            data: vec![Felt::from(123)]
         },
         "Wrong event"
     );
@@ -163,7 +163,7 @@ fn library_call_emits_event() {
 fn event_emitted_in_constructor() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("ConstructorSpyEventsChecker", &[Felt252::from(123)]);
+    let contract_address = test_env.deploy("ConstructorSpyEventsChecker", &[Felt::from(123)]);
 
     let events = test_env.get_events(0);
 
@@ -173,7 +173,7 @@ fn event_emitted_in_constructor() {
         Event {
             from: contract_address,
             keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
-            data: vec![Felt252::from(123)]
+            data: vec![Felt::from(123)]
         },
         "Wrong event"
     );
@@ -196,7 +196,7 @@ fn test_nested_calls() {
     test_env.call_contract(
         &spy_events_checker_top_proxy_address,
         "emit_one_event",
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     let events = test_env.get_events(0);
@@ -207,7 +207,7 @@ fn test_nested_calls() {
         Event {
             from: spy_events_checker_top_proxy_address,
             keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
-            data: vec![Felt252::from(123)]
+            data: vec![Felt::from(123)]
         },
         "Wrong first event"
     );
@@ -216,7 +216,7 @@ fn test_nested_calls() {
         Event {
             from: spy_events_checker_proxy_address,
             keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
-            data: vec![Felt252::from(123)]
+            data: vec![Felt::from(123)]
         },
         "Wrong second event"
     );
@@ -225,7 +225,7 @@ fn test_nested_calls() {
         Event {
             from: spy_events_checker_address,
             keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
-            data: vec![Felt252::from(123)]
+            data: vec![Felt::from(123)]
         },
         "Wrong third event"
     );
@@ -252,7 +252,7 @@ fn use_multiple_spies() {
     test_env.call_contract(
         &spy_events_checker_top_proxy_address,
         "emit_one_event",
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     let events1 = test_env.get_events(0);
@@ -268,7 +268,7 @@ fn use_multiple_spies() {
         Event {
             from: spy_events_checker_top_proxy_address,
             keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
-            data: vec![Felt252::from(123)]
+            data: vec![Felt::from(123)]
         },
         "Wrong spy_events_checker_top_proxy event"
     );
@@ -277,7 +277,7 @@ fn use_multiple_spies() {
         Event {
             from: spy_events_checker_proxy_address,
             keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
-            data: vec![Felt252::from(123)]
+            data: vec![Felt::from(123)]
         },
         "Wrong spy_events_checker_proxy event"
     );
@@ -286,7 +286,7 @@ fn use_multiple_spies() {
         Event {
             from: spy_events_checker_address,
             keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
-            data: vec![Felt252::from(123)]
+            data: vec![Felt::from(123)]
         },
         "Wrong spy_events_checker event"
     );
@@ -301,7 +301,7 @@ fn test_emitted_by_emit_events_syscall() {
     test_env.call_contract(
         &contract_address,
         "emit_event_syscall",
-        &[Felt252::from(123), Felt252::from(456)],
+        &[Felt::from(123), Felt::from(456)],
     );
 
     let events = test_env.get_events(0);
@@ -311,15 +311,15 @@ fn test_emitted_by_emit_events_syscall() {
         events[0],
         Event {
             from: contract_address,
-            keys: vec![Felt252::from(123)],
-            data: vec![Felt252::from(456)]
+            keys: vec![Felt::from(123)],
+            data: vec![Felt::from(456)]
         },
         "Wrong spy_events_checker event"
     );
 }
 
-#[test]
-fn capture_cairo0_event() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn capture_cairo0_event() {
     let temp_dir = TempDir::new().unwrap();
     let mut cached_state = create_fork_cached_state_at(53_626, temp_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
@@ -333,10 +333,9 @@ fn capture_cairo0_event() {
 
     let selector = felt_selector_from_name("test_cairo0_event_collection");
 
-    let cairo0_contract_address = Felt252::try_from_hex_str(
-        "0x2c77ca97586968c6651a533bd5f58042c368b14cf5f526d2f42f670012e10ac",
-    )
-    .unwrap();
+    let cairo0_contract_address =
+        Felt::try_from_hex_str("0x2c77ca97586968c6651a533bd5f58042c368b14cf5f526d2f42f670012e10ac")
+            .unwrap();
 
     call_contract(
         &mut cached_state,
@@ -355,7 +354,7 @@ fn capture_cairo0_event() {
         Event {
             from: cairo0_contract_address.into_(),
             keys: vec![starknet_keccak("my_event".as_ref()).into()],
-            data: vec![Felt252::from(123_456_789)]
+            data: vec![Felt::from(123_456_789)]
         },
         "Wrong spy_events_checker event"
     );

@@ -20,3 +20,17 @@ If you want `snforge` to call `cairo-profiler` on generated files automatically,
 ```shell
 $ snforge test --build-profile
 ``` 
+The files with profiling data will be saved to `profile` directory.
+
+## Passing arguments to `cairo-profiler`
+
+You can pass additional arguments to `cairo-profiler` by using the `--` separator. Everything after `--` will be passed
+to `cairo-profiler`:
+
+```shell
+$ snforge test --build-profile -- --show-inlined-functions
+```
+
+> 📝 **Note**
+>
+> Running `snforge test --help` won't show info about `cairo-profiler` flags. To see them, run `snforge test --build-profile -- --help`.

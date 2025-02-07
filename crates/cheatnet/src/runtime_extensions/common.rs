@@ -1,11 +1,11 @@
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
-use cairo_vm::Felt252;
 use starknet_api::transaction::Calldata;
+use starknet_types_core::felt::Felt;
 
 #[must_use]
-pub fn create_execute_calldata(calldata: &[Felt252]) -> Calldata {
+pub fn create_execute_calldata(calldata: &[Felt]) -> Calldata {
     Calldata(calldata.to_vec().into())
 }
 
@@ -18,6 +18,10 @@ pub fn sum_syscall_counters(mut a: SyscallCounter, b: &SyscallCounter) -> Syscal
 }
 
 #[must_use]
-pub fn get_relocated_vm_trace(cairo_runner: &CairoRunner) -> Vec<RelocatedTraceEntry> {
-    cairo_runner.relocated_trace.clone().unwrap()
+pub fn get_relocated_vm_trace(cairo_runner: &mut CairoRunner) -> Option<Vec<RelocatedTraceEntry>> {
+    // if vm execution failed, the trace is not relocated so we need to relocate it
+    if cairo_runner.relocated_trace.is_none() {
+        cairo_runner.relocate(true).ok()?;
+    }
+    cairo_runner.relocated_trace.clone()
 }

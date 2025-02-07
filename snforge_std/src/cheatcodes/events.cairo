@@ -1,53 +1,43 @@
-use core::array::ArrayTrait;
-use core::option::OptionTrait;
-use starknet::testing::cheatcode;
 use starknet::ContractAddress;
-use super::super::_cheatcode::handle_cheatcode;
+use super::super::_cheatcode::execute_cheatcode_and_deserialize;
+
 
 /// Creates `EventSpy` instance that spies on all events emitted after its creation.
-fn spy_events() -> EventSpy {
-    let mut event_offset = handle_cheatcode(cheatcode::<'spy_events'>(array![].span()));
-    let parsed_event_offset: usize = Serde::<usize>::deserialize(ref event_offset).unwrap();
-
-    EventSpy { _event_offset: parsed_event_offset }
+pub fn spy_events() -> EventSpy {
+    execute_cheatcode_and_deserialize::<'spy_events'>(array![].span())
 }
 
 /// Raw event format (as seen via the RPC-API), can be used for asserting the emitted events.
-#[derive(Drop, Clone, Serde)]
-struct Event {
-    keys: Array<felt252>,
-    data: Array<felt252>
+#[derive(Drop, Clone, Serde, Debug)]
+pub struct Event {
+    pub keys: Array<felt252>,
+    pub data: Array<felt252>
 }
 
 /// An event spy structure allowing to get events emitted only after its creation.
 #[derive(Drop, Serde)]
-struct EventSpy {
-    _event_offset: usize
+pub struct EventSpy {
+    event_offset: usize
 }
 
 /// A wrapper structure on an array of events to handle filtering smoothly.
-#[derive(Drop, Serde)]
-struct Events {
-    events: Array<(ContractAddress, Event)>
+#[derive(Drop, Serde, Clone, Debug)]
+pub struct Events {
+    pub events: Array<(ContractAddress, Event)>
 }
 
-trait EventSpyTrait {
+pub trait EventSpyTrait {
     /// Gets all events given [`EventSpy`] spies for.
     fn get_events(ref self: EventSpy) -> Events;
 }
 
 impl EventSpyTraitImpl of EventSpyTrait {
     fn get_events(ref self: EventSpy) -> Events {
-        let mut output = handle_cheatcode(
-            cheatcode::<'get_events'>(array![self._event_offset.into()].span())
-        );
-        let events = Serde::<Array<(ContractAddress, Event)>>::deserialize(ref output).unwrap();
-
-        Events { events }
+        execute_cheatcode_and_deserialize::<'get_events'>(array![self.event_offset.into()].span())
     }
 }
 
-trait EventsFilterTrait {
+pub trait EventsFilterTrait {
     /// Filter events emitted by a given [`ContractAddress`].
     fn emitted_by(self: @Events, contract_address: ContractAddress) -> Events;
 }
@@ -70,7 +60,7 @@ impl EventsFilterTraitImpl of EventsFilterTrait {
 
 /// Allows to assert the expected events emission (or lack thereof),
 /// in the scope of [`EventSpy`] structure.
-trait EventSpyAssertionsTrait<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> {
+pub trait EventSpyAssertionsTrait<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> {
     fn assert_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
     fn assert_not_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
 }

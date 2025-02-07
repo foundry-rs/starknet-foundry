@@ -11,27 +11,25 @@ use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_co
 use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::AccountType;
 use starknet::core::types::TransactionReceipt::Declare;
-use starknet_crypto::FieldElement;
+use starknet_types_core::felt::Felt;
 use std::fs;
 use test_case::test_case;
 
-#[test_case("oz_cairo_0"; "cairo_0_account")]
-#[test_case("oz_cairo_1"; "cairo_1_account")]
-#[test_case("oz"; "oz_account")]
-#[test_case("argent"; "argent_account")]
-#[test_case("braavos"; "braavos_account")]
 #[tokio::test]
-async fn test_happy_case_eth(account: &str) {
-    let contract_path =
-        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", account);
-    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+async fn test_happy_case_human_readable() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "human_readable",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
     let args = vec![
         "--accounts-file",
-        accounts_json_path.as_str(),
+        "accounts.json",
         "--account",
-        account,
-        "--int-format",
-        "--json",
+        "my_account",
         "declare",
         "--url",
         URL,
@@ -39,25 +37,32 @@ async fn test_happy_case_eth(account: &str) {
         "Map",
         "--max-fee",
         "99999999999999999",
-        "--fee-token",
-        "eth",
     ];
 
-    let snapbox = runner(&args).current_dir(contract_path.path());
-    let output = snapbox.assert().success().get_output().stdout.clone();
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
 
-    let hash = get_transaction_hash(&output);
-    let receipt = get_transaction_receipt(hash).await;
-
-    assert!(matches!(receipt, Declare(_)));
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        command: declare
+        class_hash: 0x0[..]
+        transaction_hash: 0x0[..]
+        
+        To see declaration details, visit:
+        class: https://[..]
+        transaction: https://[..]
+    " },
+    );
 }
 
-#[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
+#[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash"
+)]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
 #[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
 #[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
-async fn test_happy_case_strk(class_hash: FieldElement, account_type: AccountType) {
+async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let contract_path = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "put",
@@ -79,8 +84,6 @@ async fn test_happy_case_strk(class_hash: FieldElement, account_type: AccountTyp
         "Map",
         "--max-fee",
         "99999999999999999",
-        "--fee-token",
-        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -92,50 +95,16 @@ async fn test_happy_case_strk(class_hash: FieldElement, account_type: AccountTyp
     assert!(matches!(receipt, Declare(_)));
 }
 
-#[test_case("v2"; "v2")]
-#[test_case("v3"; "v3")]
-#[tokio::test]
-async fn test_happy_case_versions(version: &str) {
-    let contract_path =
-        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", version);
-    let tempdir = create_and_deploy_oz_account().await;
-    join_tempdirs(&contract_path, &tempdir);
-    let args = vec![
-        "--accounts-file",
-        "accounts.json",
-        "--account",
-        "my_account",
-        "--int-format",
-        "--json",
-        "declare",
-        "--url",
-        URL,
-        "--contract-name",
-        "Map",
-        "--max-fee",
-        "99999999999999999",
-        "--version",
-        version,
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success().get_output().stdout.clone();
-
-    let hash = get_transaction_hash(&output);
-    let receipt = get_transaction_receipt(hash).await;
-
-    assert!(matches!(receipt, Declare(_)));
-}
-
-#[test_case(Some("99999999999999999"), None, None; "max_fee")]
-#[test_case(None, Some("9999"), None; "max_gas")]
-#[test_case(None, None, Some("999999999999"); "max_gas_unit_price")]
+#[test_case(Some("100000000000000000"), None, None; "max_fee")]
+#[test_case(None, Some("100000"), None; "max_gas")]
+#[test_case(None, None, Some("100000000000000"); "max_gas_unit_price")]
 #[test_case(None, None, None; "none")]
-#[test_case(Some("99999999999999999"), None, Some("999999999999"); "max_fee_max_gas_unit_price")]
-#[test_case(None, Some("9999"), Some("999999999999"); "max_gas_max_gas_unit_price")]
-#[test_case(Some("999999999999999"), Some("9999"), None; "max_fee_max_gas")]
+#[test_case(Some("10000000000000000000"), None, Some("100000000000000"); "max_fee_max_gas_unit_price"
+)]
+#[test_case(None, Some("100000"), Some("100000000000000"); "max_gas_max_gas_unit_price")]
+#[test_case(Some("100000000000000000"), Some("100000"), None; "max_fee_max_gas")]
 #[tokio::test]
-async fn test_happy_case_strk_different_fees(
+async fn test_happy_case_different_fees(
     max_fee: Option<&str>,
     max_gas: Option<&str>,
     max_gas_unit_price: Option<&str>,
@@ -164,8 +133,6 @@ async fn test_happy_case_strk_different_fees(
         URL,
         "--contract-name",
         "Map",
-        "--fee-token",
-        "strk",
     ];
 
     let options = [
@@ -181,7 +148,9 @@ async fn test_happy_case_strk_different_fees(
     }
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success().get_output().stdout.clone();
+    let output = snapbox.assert().success();
+
+    let output = output.get_output().stdout.clone();
 
     let hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(hash).await;
@@ -189,42 +158,6 @@ async fn test_happy_case_strk_different_fees(
     assert!(matches!(receipt, Declare(_)));
 }
 
-#[test_case("eth", "v3"; "eth-v3")]
-#[test_case("strk", "v2"; "strk-v2")]
-#[tokio::test]
-async fn test_invalid_version_and_token_combination(fee_token: &str, version: &str) {
-    let contract_path =
-        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", version);
-    let tempdir = create_and_deploy_oz_account().await;
-    join_tempdirs(&contract_path, &tempdir);
-    let args = vec![
-        "--accounts-file",
-        "accounts.json",
-        "--account",
-        "my_account",
-        "--int-format",
-        "--json",
-        "declare",
-        "--url",
-        URL,
-        "--contract-name",
-        "Map",
-        "--max-fee",
-        "99999999999999999",
-        "--version",
-        version,
-        "--fee-token",
-        fee_token,
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-
-    let output = snapbox.assert().failure();
-    assert_stderr_contains(
-        output,
-        format!("Error: {fee_token} fee token is not supported for {version} declaration."),
-    );
-}
 #[tokio::test]
 async fn test_happy_case_specify_package() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
@@ -245,8 +178,6 @@ async fn test_happy_case_specify_package() {
         "main_workspace",
         "--max-fee",
         "99999999999999999",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -261,7 +192,11 @@ async fn test_happy_case_specify_package() {
 
 #[tokio::test]
 async fn test_contract_already_declared() {
-    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    let tempdir = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "8512851",
+    );
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -274,9 +209,9 @@ async fn test_contract_already_declared() {
         URL,
         "--contract-name",
         "Map",
-        "--fee-token",
-        "eth",
     ];
+
+    runner(&args).current_dir(tempdir.path()).assert().success();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -285,7 +220,7 @@ async fn test_contract_already_declared() {
         output,
         indoc! {r"
         command: declare
-        error: An error occurred [..]Class with hash[..]is already declared[..]
+        error: [..]Class with hash[..]is already declared[..]
         "},
     );
 }
@@ -310,8 +245,6 @@ async fn test_invalid_nonce() {
         "99999999999999999",
         "--nonce",
         "12345",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path());
@@ -328,7 +261,11 @@ async fn test_invalid_nonce() {
 
 #[tokio::test]
 async fn test_wrong_contract_name_passed() {
-    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    let tempdir = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "521754725",
+    );
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -341,8 +278,6 @@ async fn test_wrong_contract_name_passed() {
         URL,
         "--contract-name",
         "nonexistent",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -371,8 +306,6 @@ fn test_scarb_build_fails_when_wrong_cairo_path() {
         URL,
         "--contract-name",
         "BuildFails",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -399,8 +332,6 @@ fn test_scarb_build_fails_scarb_toml_does_not_exist() {
         URL,
         "--contract-name",
         "BuildFails",
-        "--fee-token",
-        "eth",
     ];
 
     runner(&args).current_dir(tempdir.path()).assert().success();
@@ -421,8 +352,6 @@ fn test_scarb_build_fails_manifest_does_not_exist() {
         URL,
         "--contract-name",
         "BuildFails",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -437,9 +366,12 @@ fn test_scarb_build_fails_manifest_does_not_exist() {
 }
 
 #[test]
-fn test_too_low_max_fee() {
-    let contract_path =
-        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "2");
+fn test_too_low_gas() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "2451825",
+    );
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -453,10 +385,10 @@ fn test_too_low_max_fee() {
         URL,
         "--contract-name",
         "Map",
-        "--max-fee",
+        "--max-gas-unit-price",
         "1",
-        "--fee-token",
-        "eth",
+        "--max-gas",
+        "1",
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path());
@@ -487,8 +419,6 @@ fn test_scarb_no_sierra_artifact() {
         URL,
         "--contract-name",
         "minimal_contract",
-        "--fee-token",
-        "eth",
     ];
 
     runner(&args).current_dir(tempdir.path()).assert().success();
@@ -509,8 +439,6 @@ fn test_scarb_no_casm_artifact() {
         URL,
         "--contract-name",
         "minimal_contract",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -544,8 +472,6 @@ async fn test_many_packages_default() {
         "supercomplexcode2",
         "--max-fee",
         "99999999999999999",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -577,8 +503,6 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         "FibonacciContract",
         "--max-fee",
         "99999999999999999",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -609,8 +533,6 @@ async fn test_worskpaces_package_no_contract() {
         "whatever",
         "--max-fee",
         "99999999999999999",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -628,7 +550,7 @@ async fn test_worskpaces_package_no_contract() {
 #[tokio::test]
 async fn test_no_scarb_profile() {
     let contract_path =
-        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "69");
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "694215");
     fs::copy(
         "tests/data/files/correct_snfoundry.toml",
         contract_path.path().join(CONFIG_FILENAME),
@@ -647,16 +569,23 @@ async fn test_no_scarb_profile() {
         "Map",
         "--max-fee",
         "99999999999999999",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path());
-    snapbox.assert().success().stdout_matches(indoc! {r"
-        ...
-        [WARNING] Profile profile5 does not exist in scarb, using default 'dev' profile.
-        command: declare
-        class_hash: [..]
-        transaction_hash: [..]
-    "});
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {"
+            [..]
+            [WARNING] Profile profile5 does not exist in scarb, using 'release' profile.
+            command: declare
+            class_hash: [..]
+            transaction_hash: [..]
+
+            To see declaration details, visit:
+            class: [..]
+            transaction: [..]
+        "},
+    );
 }

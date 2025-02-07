@@ -64,7 +64,7 @@ fn with_cache() {
         Failure data:
             0x42616c616e63652073686f756c642062652030 ('Balance should be 0')
 
-        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 4 filtered out
+        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, other filtered out
 
         Failures:
             forking::tests::test_fork_simple
@@ -96,7 +96,7 @@ fn with_clean_cache() {
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
         [PASS] forking::tests::test_fork_simple [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
         "},
     );
 }
@@ -124,7 +124,7 @@ fn printing_latest_block_number() {
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
         [PASS] forking::tests::print_block_number_when_latest [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
 
         Latest block number = [..] for url = {node_rpc_url}
         "},

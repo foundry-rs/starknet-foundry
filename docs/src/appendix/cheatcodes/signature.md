@@ -23,6 +23,6 @@ Changes the transaction signature for the given target.
 Cancels the `cheat_signature` / `start_cheat_signature` for the given target.
 
 ## `stop_cheat_signature_global`
-> `fn stop_cheat_signature_global(target: ContractAddress)`
+> `fn stop_cheat_signature_global()`
 
 Cancels the `start_cheat_signature_global`.

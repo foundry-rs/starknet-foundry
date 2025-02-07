@@ -1,5 +1,5 @@
-use starknet::core::types::FieldElement;
 use starknet::macros::felt;
+use starknet_types_core::felt::Felt;
 
 pub static DEFAULT_MULTICALL_CONTENTS: &str = r#"[[call]]
 call_type = "deploy"
@@ -15,17 +15,17 @@ function = ""
 inputs = []
 "#;
 
-pub const UDC_ADDRESS: FieldElement =
+pub const UDC_ADDRESS: Felt =
     felt!("0x041a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7766661ad02bf");
-pub const OZ_CLASS_HASH: FieldElement =
+pub const OZ_CLASS_HASH: Felt =
     felt!("0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6");
-pub const ARGENT_CLASS_HASH: FieldElement =
+pub const ARGENT_CLASS_HASH: Felt =
     felt!("0x029927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b");
 
-pub const BRAAVOS_CLASS_HASH: FieldElement =
+pub const BRAAVOS_CLASS_HASH: Felt =
     felt!("0x00816dd0297efc55dc1e7559020a3a825e81ef734b558f03c83325d4da7e6253");
 
-pub const BRAAVOS_BASE_ACCOUNT_CLASS_HASH: FieldElement =
+pub const BRAAVOS_BASE_ACCOUNT_CLASS_HASH: Felt =
     felt!("0x013bfe114fb1cf405bfc3a7f8dbe2d91db146c17521d40dcf57e16d6b59fa8e6");
 
 // used in wait_for_tx. Txs will be fetched every 5s with timeout of 300s - so 60 attempts

@@ -3,7 +3,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use scarb_api::{
     get_contracts_artifacts_and_source_sierra_paths,
     metadata::{Metadata, MetadataCommand, PackageMetadata},
-    ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
+    target_dir_for_workspace, ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
 };
 use scarb_ui::args::PackagesFilter;
 use shared::{command::CommandExt, print::print_as_warning};
@@ -123,7 +123,11 @@ pub struct BuildConfig {
     pub profile: String,
 }
 
-pub fn build(package: &PackageMetadata, config: &BuildConfig) -> Result<(), ScarbCommandError> {
+pub fn build(
+    package: &PackageMetadata,
+    config: &BuildConfig,
+    default_profile: &str,
+) -> Result<(), ScarbCommandError> {
     let filter = PackagesFilter::generate_for::<Metadata>([package].into_iter());
 
     let mut cmd = ScarbCommand::new_with_stdio();
@@ -132,7 +136,7 @@ pub fn build(package: &PackageMetadata, config: &BuildConfig) -> Result<(), Scar
     let profile = if metadata.profiles.contains(&config.profile) {
         &config.profile
     } else {
-        "dev"
+        default_profile
     };
     cmd.arg("--profile")
         .arg(profile)
@@ -149,30 +153,38 @@ pub fn build(package: &PackageMetadata, config: &BuildConfig) -> Result<(), Scar
 pub fn build_and_load_artifacts(
     package: &PackageMetadata,
     config: &BuildConfig,
+    build_for_script: bool,
 ) -> Result<HashMap<String, StarknetContractArtifacts>> {
-    build(package, config).map_err(|e| anyhow!(format!("Failed to build using scarb; {e}")))?;
+    // TODO (#2042): Remove this logic, always use release as default
+    let default_profile = if build_for_script { "dev" } else { "release" };
+    build(package, config, default_profile)
+        .map_err(|e| anyhow!(format!("Failed to build using scarb; {e}")))?;
 
     let metadata = get_scarb_metadata_with_deps(&config.scarb_toml_path)?;
+    let target_dir = target_dir_for_workspace(&metadata);
+
     if metadata.profiles.contains(&config.profile) {
         Ok(get_contracts_artifacts_and_source_sierra_paths(
-            &metadata,
-            &package.id,
-            Some(&config.profile),
-        )?
+            &target_dir.join(&config.profile),
+            package,
+            false,
+        ).context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
         .into_iter()
         .map(|(name, (artifacts, _))| (name, artifacts))
         .collect())
     } else {
         let profile = &config.profile;
         print_as_warning(&anyhow!(
-            "Profile {profile} does not exist in scarb, using default 'dev' profile."
+            "Profile {profile} does not exist in scarb, using '{default_profile}' profile."
         ));
-        Ok(
-            get_contracts_artifacts_and_source_sierra_paths(&metadata, &package.id, None)?
-                .into_iter()
-                .map(|(name, (artifacts, _))| (name, artifacts))
-                .collect(),
-        )
+        Ok(get_contracts_artifacts_and_source_sierra_paths(
+            &target_dir.join(default_profile),
+            package,
+            false,
+        ).context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
+        .into_iter()
+        .map(|(name, (artifacts, _))| (name, artifacts))
+        .collect())
     }
 }
 
@@ -182,7 +194,8 @@ mod tests {
 
     #[test]
     fn test_get_scarb_metadata() {
-        let metadata = get_scarb_metadata(&"tests/data/contracts/map/Scarb.toml".into());
+        let metadata =
+            get_scarb_metadata(&"tests/data/contracts/constructor_with_params/Scarb.toml".into());
         assert!(metadata.is_ok());
     }
 
@@ -196,9 +209,12 @@ mod tests {
 
     #[test]
     fn test_get_package_metadata_happy_default() {
-        let metadata =
-            get_package_metadata(&"tests/data/contracts/map/Scarb.toml".into(), &None).unwrap();
-        assert_eq!(metadata.name, "map");
+        let metadata = get_package_metadata(
+            &"tests/data/contracts/constructor_with_params/Scarb.toml".into(),
+            &None,
+        )
+        .unwrap();
+        assert_eq!(metadata.name, "constructor_with_params");
     }
 
     #[test]

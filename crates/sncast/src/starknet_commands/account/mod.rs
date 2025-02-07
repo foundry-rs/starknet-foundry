@@ -1,24 +1,25 @@
-use crate::starknet_commands::account::add::Add;
 use crate::starknet_commands::account::create::Create;
 use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
+use crate::starknet_commands::account::import::Import;
 use crate::starknet_commands::account::list::List;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Args, Subcommand, ValueEnum};
 use configuration::{
-    find_config_file, load_global_config, search_config_upwards_relative_to, CONFIG_FILENAME,
+    find_config_file, load_config, search_config_upwards_relative_to, CONFIG_FILENAME,
 };
 use serde_json::json;
 use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
-use starknet::{core::types::FieldElement, signers::SigningKey};
+use starknet::signers::SigningKey;
+use starknet_types_core::felt::Felt;
 use std::{fmt, fs::OpenOptions, io::Write};
 use toml::Value;
 
-pub mod add;
 pub mod create;
 pub mod delete;
 pub mod deploy;
+pub mod import;
 pub mod list;
 
 #[derive(Args)]
@@ -30,7 +31,7 @@ pub struct Account {
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
-    Add(Add),
+    Import(Import),
     Create(Create),
     Deploy(Deploy),
     Delete(Delete),
@@ -60,12 +61,12 @@ impl fmt::Display for AccountType {
 
 pub fn prepare_account_json(
     private_key: &SigningKey,
-    address: FieldElement,
+    address: Felt,
     deployed: bool,
     legacy: bool,
     account_type: &AccountType,
-    class_hash: Option<FieldElement>,
-    salt: Option<FieldElement>,
+    class_hash: Option<Felt>,
+    salt: Option<Felt>,
 ) -> serde_json::Value {
     let mut account_json = json!({
         "private_key": format!("{:#x}", private_key.secret_scalar()),
@@ -90,7 +91,7 @@ pub fn prepare_account_json(
 pub fn write_account_to_accounts_file(
     account: &str,
     accounts_file: &Utf8PathBuf,
-    chain_id: FieldElement,
+    chain_id: Felt,
     account_json: serde_json::Value,
 ) -> Result<()> {
     if !accounts_file.exists() {
@@ -121,18 +122,18 @@ pub fn write_account_to_accounts_file(
 }
 
 pub fn add_created_profile_to_configuration(
-    profile: &Option<String>,
+    profile: Option<&str>,
     cast_config: &CastConfig,
-    path: &Option<Utf8PathBuf>,
+    path: Option<&Utf8PathBuf>,
 ) -> Result<()> {
-    if !load_global_config::<CastConfig>(path, profile)
+    if !load_config::<CastConfig>(path, profile)
         .unwrap_or_default()
         .account
         .is_empty()
     {
         bail!(
             "Failed to add profile = {} to the snfoundry.toml. Profile already exists",
-            profile.as_ref().unwrap_or(&"default".to_string())
+            profile.unwrap_or("default")
         );
     }
 
@@ -154,9 +155,7 @@ pub fn add_created_profile_to_configuration(
         }
         let mut profile_config = toml::value::Table::new();
         profile_config.insert(
-            profile
-                .clone()
-                .unwrap_or_else(|| cast_config.account.clone()),
+            profile.map_or_else(|| cast_config.account.clone(), ToString::to_string),
             Value::Table(new_profile),
         );
 
@@ -205,9 +204,9 @@ mod tests {
             ..Default::default()
         };
         let res = add_created_profile_to_configuration(
-            &Some(String::from("some-name")),
+            Some(&String::from("some-name")),
             &config,
-            &Some(path.clone()),
+            Some(&path.clone()),
         );
         assert!(res.is_ok());
 
@@ -230,9 +229,9 @@ mod tests {
             ..Default::default()
         };
         let res = add_created_profile_to_configuration(
-            &Some(String::from("default")),
+            Some(&String::from("default")),
             &config,
-            &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
         );
         assert!(res.is_err());
     }

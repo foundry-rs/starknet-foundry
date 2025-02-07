@@ -1,20 +1,21 @@
-use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
+use crate::coverage_api::run_coverage;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
 use crate::fuzzer::RandomFuzzer;
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use build_trace_data::save_trace_data;
 use cairo_lang_sierra::program::{ConcreteTypeLongId, Function, TypeDeclaration};
-use camino::Utf8Path;
+use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_config_extension::config::RawFuzzerConfig;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
-use package_tests::with_config_resolved::{
-    TestCaseWithResolvedConfig, TestTargetWithResolvedConfig,
-};
+use package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use profiler_api::run_profiler;
+use shared::print::print_as_warning;
+use shared::spinner::Spinner;
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
@@ -22,6 +23,7 @@ use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
 pub mod build_trace_data;
+pub mod coverage_api;
 pub mod expected_result;
 pub mod forge_config;
 pub mod package_tests;
@@ -29,6 +31,7 @@ pub mod profiler_api;
 pub mod test_case_summary;
 pub mod test_target_summary;
 
+mod backtrace;
 mod fuzzer;
 mod gas;
 pub mod printing;
@@ -36,7 +39,7 @@ pub mod running;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
-const BUILTINS: [&str; 8] = [
+const BUILTINS: [&str; 11] = [
     "Pedersen",
     "RangeCheck",
     "Bitwise",
@@ -45,57 +48,52 @@ const BUILTINS: [&str; 8] = [
     "SegmentArena",
     "GasBuiltin",
     "System",
+    "RangeCheck96",
+    "AddMod",
+    "MulMod",
 ];
 
 pub trait TestCaseFilter {
     fn should_be_run(&self, test_case: &TestCaseWithResolvedConfig) -> bool;
 }
 
-pub fn maybe_save_execution_data(
+pub fn maybe_save_trace_and_profile(
     result: &AnyTestCaseSummary,
-    execution_data_to_save: ExecutionDataToSave,
-) -> Result<()> {
+    execution_data_to_save: &ExecutionDataToSave,
+) -> Result<Option<PathBuf>> {
     if let AnyTestCaseSummary::Single(TestCaseSummary::Passed {
         name, trace_data, ..
     }) = result
     {
-        match execution_data_to_save {
-            ExecutionDataToSave::Trace => {
-                save_trace_data(name, trace_data)?;
+        if execution_data_to_save.is_vm_trace_needed() {
+            let name = sanitize_filename::sanitize(name.replace("::", "_"));
+            let trace_path = save_trace_data(&name, trace_data)?;
+            if execution_data_to_save.profile {
+                let _spinner = Spinner::create_with_message("Running cairo-profiler");
+                run_profiler(&name, &trace_path, &execution_data_to_save.additional_args)?;
             }
-            ExecutionDataToSave::TraceAndProfile => {
-                let trace_path = save_trace_data(name, trace_data)?;
-                run_profiler(name, &trace_path)?;
-            }
-            ExecutionDataToSave::None => {}
+            return Ok(Some(trace_path));
+        }
+    }
+    Ok(None)
+}
+
+pub fn maybe_generate_coverage(
+    execution_data_to_save: &ExecutionDataToSave,
+    saved_trace_data_paths: &[PathBuf],
+) -> Result<()> {
+    if execution_data_to_save.coverage {
+        if saved_trace_data_paths.is_empty() {
+            print_as_warning(&anyhow!("No trace data to generate coverage from"));
+        } else {
+            let _spinner = Spinner::create_with_message("Running cairo-coverage");
+            run_coverage(
+                saved_trace_data_paths,
+                &execution_data_to_save.additional_args,
+            )?;
         }
     }
     Ok(())
-}
-
-pub fn maybe_save_versioned_program(
-    execution_data_to_save: ExecutionDataToSave,
-    test_target: &TestTargetWithResolvedConfig,
-    versioned_programs_dir: &Utf8Path,
-    package_name: &str,
-) -> Result<Option<VersionedProgramPath>> {
-    let save_versioned_program = match execution_data_to_save {
-        ExecutionDataToSave::Trace | ExecutionDataToSave::TraceAndProfile => true,
-        ExecutionDataToSave::None => false,
-    };
-
-    let maybe_versioned_program_path = if save_versioned_program {
-        Some(VersionedProgramPath::save_versioned_program(
-            &test_target.sierra_program.program.clone().into_artifact(),
-            test_target.tests_location,
-            versioned_programs_dir,
-            package_name,
-        )?)
-    } else {
-        None
-    };
-
-    Ok(maybe_versioned_program_path)
 }
 
 #[must_use]
@@ -104,7 +102,7 @@ pub fn run_for_test_case(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     forge_config: Arc<ForgeConfig>,
-    maybe_versioned_program_path: Arc<Option<VersionedProgramPath>>,
+    versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
 ) -> JoinHandle<Result<AnyTestCaseSummary>> {
     if args.is_empty() {
@@ -113,10 +111,10 @@ pub fn run_for_test_case(
                 case,
                 casm_program,
                 forge_config.test_runner_config.clone(),
-                maybe_versioned_program_path,
+                versioned_program_path,
                 send,
             )
-            .await??;
+            .await?;
             Ok(AnyTestCaseSummary::Single(res))
         })
     } else {
@@ -126,7 +124,7 @@ pub fn run_for_test_case(
                 case,
                 casm_program,
                 forge_config.test_runner_config.clone(),
-                maybe_versioned_program_path,
+                versioned_program_path,
                 send,
             )
             .await??;
@@ -157,7 +155,7 @@ fn run_with_fuzzing(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
-    maybe_versioned_program_path: Arc<Option<VersionedProgramPath>>,
+    versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary<Fuzzing>>> {
     tokio::task::spawn(async move {
@@ -190,7 +188,7 @@ fn run_with_fuzzing(
                 case.clone(),
                 casm_program.clone(),
                 test_runner_config.clone(),
-                maybe_versioned_program_path.clone(),
+                versioned_program_path.clone(),
                 send.clone(),
                 fuzzing_send.clone(),
             ));
@@ -198,7 +196,7 @@ fn run_with_fuzzing(
 
         let mut results = vec![];
         while let Some(task) = tasks.next().await {
-            let result = task??;
+            let result = task?;
 
             results.push(result.clone());
 

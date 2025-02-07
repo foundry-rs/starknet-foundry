@@ -13,7 +13,7 @@ use conversions::string::IntoHexStr;
 use sncast::{get_account, ValidatedWaitParams};
 use sncast::{handle_wait_for_tx, wait_for_tx, WaitForTx};
 use starknet::contract::ContractFactory;
-use starknet::core::types::FieldElement;
+use starknet_types_core::felt::Felt;
 
 #[tokio::test]
 async fn test_happy_path() {
@@ -43,8 +43,8 @@ async fn test_rejected_transaction() {
 
     let factory = ContractFactory::new(MAP_CONTRACT_CLASS_HASH_SEPOLIA.parse().unwrap(), account);
     let deployment = factory
-        .deploy_v1(Vec::new(), FieldElement::ONE, false)
-        .max_fee(FieldElement::ONE);
+        .deploy_v1(Vec::new(), Felt::ONE, false)
+        .max_fee(Felt::ONE);
     let resp = deployment.send().await.unwrap_err();
 
     assert!(resp.to_string().contains("InsufficientMaxFee"));

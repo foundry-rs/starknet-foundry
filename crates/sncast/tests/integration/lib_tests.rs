@@ -6,7 +6,8 @@ use crate::helpers::fixtures::create_test_provider;
 use camino::Utf8PathBuf;
 use shared::rpc::{get_rpc_version, is_expected_version};
 use sncast::{check_if_legacy_contract, get_account, get_provider};
-use std::fs;
+use starknet::accounts::Account;
+use starknet::macros::felt;
 use url::ParseError;
 
 #[tokio::test]
@@ -40,14 +41,14 @@ async fn test_get_account() {
         &provider,
         None,
     )
-    .await;
+    .await
+    .unwrap();
 
-    assert!(account.is_ok());
-
-    let expected = fs::read_to_string("tests/data/accounts/user1_representation")
-        .expect("Failed to read expected debug representation");
-    let returned = format!("{:?}", account.unwrap());
-    assert_eq!(returned.trim(), expected.trim());
+    assert_eq!(account.chain_id(), felt!("0x534e5f5345504f4c4941"));
+    assert_eq!(
+        account.address(),
+        felt!("0xf6ecd22832b7c3713cfa7826ee309ce96a2769833f093795fafa1b8f20c48b")
+    );
 }
 
 #[tokio::test]
@@ -126,8 +127,9 @@ async fn test_get_account_failed_to_convert_field_elements() {
     )
     .await;
     let err = account1.unwrap_err();
+
     assert!(err.to_string().contains(
-        "Failed to parse field `alpha-sepolia.with_invalid_private_key.private_key` in file 'tests/data/accounts/faulty_accounts_invalid_felt.json': invalid character at line 4 column 40"
+        "Failed to parse field `alpha-sepolia.with_invalid_private_key.private_key` in file 'tests/data/accounts/faulty_accounts_invalid_felt.json': expected hex string to be prefixed by '0x' at line 4 column 40"
     ));
 }
 

@@ -27,14 +27,91 @@ async fn test_happy_case_from_sncast_config() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
-        indoc! {r"
-        command: call
-        error: There is no contract at the specified address
-        "},
+        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]"
+    );
+}
+
+#[tokio::test]
+async fn test_happy_case_predefined_network() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--profile",
+        "no_url",
+        "call",
+        "--network",
+        "sepolia",
+        "--contract-address",
+        "0x0",
+        "--function",
+        "doesnotmatter",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]"
+    );
+}
+
+#[tokio::test]
+async fn test_url_with_network_args() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--profile",
+        "no_url",
+        "call",
+        "--network",
+        "sepolia",
+        "--url",
+        URL,
+        "--contract-address",
+        "0x0",
+        "--function",
+        "doesnotmatter",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "error: the argument '--network <NETWORK>' cannot be used with '--url <URL>'",
+    );
+}
+
+#[tokio::test]
+async fn test_network_with_url_defined_in_config_toml() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--profile",
+        "default",
+        "call",
+        "--network",
+        "sepolia",
+        "--contract-address",
+        "0x0",
+        "--function",
+        "doesnotmatter",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "Error: The argument '--network' cannot be used when `url` is defined in `snfoundry.toml` for the active profile"
     );
 }
 
@@ -55,14 +132,11 @@ async fn test_happy_case_from_cli_no_scarb() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
-        indoc! {r"
-        command: call
-        error: There is no contract at the specified address
-        "},
+        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]"
     );
 }
 
@@ -139,8 +213,6 @@ async fn test_nonexistent_account_address() {
         URL,
         "--contract-name",
         "Map",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path());
@@ -162,8 +234,6 @@ async fn test_missing_account_flag() {
         URL,
         "--contract-name",
         "whatever",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args);
@@ -172,29 +242,6 @@ async fn test_missing_account_flag() {
     assert_stderr_contains(
         output,
         "Error: Account name not passed nor found in snfoundry.toml",
-    );
-}
-
-#[tokio::test]
-async fn test_missing_url() {
-    let args = vec![
-        "--accounts-file",
-        ACCOUNT_FILE_PATH,
-        "--account",
-        ACCOUNT,
-        "declare",
-        "--contract-name",
-        "whatever",
-        "--fee-token",
-        "eth",
-    ];
-
-    let snapbox = runner(&args);
-    let output = snapbox.assert().failure();
-
-    assert_stderr_contains(
-        output,
-        "Error: RPC url not passed nor found in snfoundry.toml",
     );
 }
 
@@ -208,8 +255,6 @@ async fn test_inexistent_keystore() {
         URL,
         "--contract-name",
         "my_contract",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args);
@@ -228,8 +273,6 @@ async fn test_keystore_account_required() {
         URL,
         "--contract-name",
         "my_contract",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args);
@@ -253,8 +296,6 @@ async fn test_keystore_inexistent_account() {
         URL,
         "--contract-name",
         "my_contract",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args);
@@ -284,8 +325,6 @@ async fn test_keystore_undeployed_account() {
         URL,
         "--contract-name",
         "Map",
-        "--fee-token",
-        "eth",
     ];
 
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
@@ -311,8 +350,6 @@ async fn test_keystore_declare() {
         URL,
         "--contract-name",
         "Map",
-        "--fee-token",
-        "eth",
     ];
 
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");

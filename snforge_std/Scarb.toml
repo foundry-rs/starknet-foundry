@@ -1,7 +1,11 @@
 [package]
 name = "snforge_std"
-version = "0.27.0"
-edition = "2023_10"
+version = "0.37.0"
+edition = "2024_07"
+description = "Cairo testing library"
+documentation = "https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library.html"
+repository = "https://github.com/foundry-rs/starknet-foundry"
+license-file = "../LICENSE"
 
 [dependencies]
 snforge_scarb_plugin = { path = "../crates/snforge-scarb-plugin" }

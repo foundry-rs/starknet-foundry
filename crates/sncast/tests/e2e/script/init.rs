@@ -8,7 +8,6 @@ use sncast::helpers::scarb_utils::get_cairo_version;
 use tempfile::TempDir;
 
 #[test]
-#[ignore] // TODO: Fix this tests in https://github.com/foundry-rs/starknet-foundry/issues/2352
 fn test_script_init_happy_case() {
     let script_name = "my_script";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
@@ -46,6 +45,9 @@ fn test_script_init_happy_case() {
             [dependencies]
             sncast_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{cast_version}" }}
             starknet = ">={cairo_version}"
+
+            [dev-dependencies]
+            cairo_test = "{cairo_version}"
         "#
     );
 
@@ -53,9 +55,9 @@ fn test_script_init_happy_case() {
 
     assert_eq!(
         lib_cairo_content,
-        formatdoc! {r#"
+        formatdoc! {r"
             mod {script_name};
-        "#}
+        "}
     );
     assert_eq!(
         main_file_content,
@@ -131,7 +133,7 @@ fn test_initialized_script_compiles() {
         formatdoc! {r"
         [WARNING] The newly created script isn't auto-added to the workspace. [..]
         command: script init
-        message: Successfully initialized `{script_name}` at [..]/scripts/{script_name}
+        message: Successfully initialized `{script_name}` at [..]{script_name}
     "},
     );
 

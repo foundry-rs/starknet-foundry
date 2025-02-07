@@ -5,17 +5,17 @@ use crate::common::{
     get_contracts,
 };
 use cairo_vm::vm::errors::hint_errors::HintError;
-use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
 };
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::state::CheatnetState;
-use conversions::felt252::FromShortString;
+use conversions::felt::FromShortString;
 use conversions::IntoConv;
 use runtime::EnhancedHintError;
 use starknet_api::core::ContractAddress;
+use starknet_types_core::felt::Felt;
 
 #[test]
 fn deploy_at_predefined_address() {
@@ -47,7 +47,7 @@ fn deploy_at_predefined_address() {
         &[],
     );
 
-    assert_success(output, &[Felt252::from(0)]);
+    assert_success(output, &[Felt::from(0)]);
 }
 
 #[test]
@@ -139,7 +139,7 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
         &mut cached_state,
         &mut cheatnet_state,
         "SpyEventsCheckerProxy",
-        &[Felt252::from(121)],
+        &[Felt::from(121)],
     );
 
     let proxy_selector = felt_selector_from_name("emit_one_event");
@@ -148,14 +148,14 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
         &mut cheatnet_state,
         &proxy_address,
         proxy_selector,
-        &[Felt252::from(323)],
+        &[Felt::from(323)],
     );
 
     assert!(
         matches!(
             output,
             CallResult::Failure(CallFailure::Error { msg, .. })
-            if msg.contains("Requested contract address") && msg.contains("is not deployed")
+            if msg.to_string().contains("Requested contract address") && msg.to_string().contains("is not deployed")
         ),
         "Wrong error message"
     );
@@ -179,7 +179,7 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
         &mut cheatnet_state,
         &proxy_address,
         proxy_selector,
-        &[Felt252::from(323)],
+        &[Felt::from(323)],
     );
 
     assert_success(output, &[]);
@@ -225,7 +225,7 @@ fn deploy_calldata_no_constructor() {
         &mut cached_state,
         &mut cheatnet_state,
         &class_hash,
-        &[Felt252::from(123_321)],
+        &[Felt::from(123_321)],
     );
 
     assert!(match output {
@@ -251,7 +251,7 @@ fn deploy_missing_arguments_in_constructor() {
         &mut cached_state,
         &mut cheatnet_state,
         &class_hash,
-        &[Felt252::from(123_321)],
+        &[Felt::from(123_321)],
     );
 
     assert!(match output {
@@ -276,7 +276,7 @@ fn deploy_too_many_arguments_in_constructor() {
         &mut cached_state,
         &mut cheatnet_state,
         &class_hash,
-        &[Felt252::from(123_321), Felt252::from(523_325)],
+        &[Felt::from(123_321), Felt::from(523_325)],
     );
 
     assert!(match output {
@@ -291,7 +291,7 @@ fn deploy_invalid_class_hash() {
     let mut cached_state = create_cached_state();
     let mut cheatnet_state = CheatnetState::default();
 
-    let class_hash = Felt252::from_short_string("Invalid ClassHash")
+    let class_hash = Felt::from_short_string("Invalid ClassHash")
         .unwrap()
         .into_();
 
@@ -299,13 +299,13 @@ fn deploy_invalid_class_hash() {
         &mut cached_state,
         &mut cheatnet_state,
         &class_hash,
-        &[Felt252::from(123_321), Felt252::from(523_325)],
+        &[Felt::from(123_321), Felt::from(523_325)],
     );
 
     assert!(matches!(
         output,
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg))))
-        if msg.as_ref().contains(class_hash.to_string().as_str()),
+        if msg.as_ref().contains(class_hash.to_hex_string().trim_start_matches("0x")),
     ));
 }
 
@@ -318,7 +318,7 @@ fn deploy_invokes_constructor() {
         &mut cached_state,
         &mut cheatnet_state,
         "ConstructorSimple",
-        &[Felt252::from(123)],
+        &[Felt::from(123)],
     );
 
     let selector = felt_selector_from_name("get_number");
@@ -331,7 +331,7 @@ fn deploy_invokes_constructor() {
         &[],
     );
 
-    assert_success(output, &[Felt252::from(123)]);
+    assert_success(output, &[Felt::from(123)]);
 }
 
 #[test]
@@ -349,8 +349,8 @@ fn deploy_at_invokes_constructor() {
         &mut cached_state,
         &mut cheatnet_state,
         &class_hash,
-        &[Felt252::from(123)],
-        Felt252::from(420).into_(),
+        &[Felt::from(123)],
+        Felt::from(420).into_(),
     )
     .unwrap();
 
@@ -364,5 +364,5 @@ fn deploy_at_invokes_constructor() {
         &[],
     );
 
-    assert_success(output, &[Felt252::from(123)]);
+    assert_success(output, &[Felt::from(123)]);
 }

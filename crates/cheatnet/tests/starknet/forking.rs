@@ -4,7 +4,6 @@ use crate::common::state::{create_fork_cached_state, create_fork_cached_state_at
 use crate::common::{call_contract, deploy_contract, deploy_wrapper, felt_selector_from_name};
 use blockifier::state::cached_state::CachedState;
 use cairo_vm::vm::errors::hint_errors::HintError;
-use cairo_vm::Felt252;
 use camino::Utf8Path;
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::{cache::CACHE_VERSION, state::ForkStateReader};
@@ -13,15 +12,17 @@ use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader};
 use conversions::byte_array::ByteArray;
 use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
-use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
+use futures::future::join_all;
 use runtime::EnhancedHintError;
 use serde_json::Value;
 use starknet_api::block::BlockNumber;
 use starknet_api::core::ContractAddress;
+use starknet_types_core::felt::Felt;
 use tempfile::TempDir;
+use tokio::runtime::Handle;
 
-#[test]
-fn fork_simple() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn fork_simple() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
@@ -39,7 +40,7 @@ fn fork_simple() {
         selector,
         &[],
     );
-    assert_success(output, &[Felt252::from(0)]);
+    assert_success(output, &[Felt::from(0)]);
 
     let selector = felt_selector_from_name("increase_balance");
     call_contract(
@@ -47,7 +48,7 @@ fn fork_simple() {
         &mut cheatnet_state,
         &contract_address,
         selector,
-        &[Felt252::from(100)],
+        &[Felt::from(100)],
     );
 
     let selector = felt_selector_from_name("get_balance");
@@ -58,11 +59,11 @@ fn fork_simple() {
         selector,
         &[],
     );
-    assert_success(output, &[Felt252::from(100)]);
+    assert_success(output, &[Felt::from(100)]);
 }
 
-#[test]
-fn try_calling_nonexistent_contract() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn try_calling_nonexistent_contract() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
@@ -79,17 +80,17 @@ fn try_calling_nonexistent_contract() {
     );
 
     let msg = "Contract not deployed at address: 0x1";
-    let panic_data_felts: Vec<Felt252> = ByteArray::from(msg).serialize_with_magic();
+    let panic_data_felts: Vec<Felt> = ByteArray::from(msg).serialize_with_magic();
     assert_panic(output, &panic_data_felts);
 }
 
-#[test]
-fn try_deploying_undeclared_class() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn try_deploying_undeclared_class() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
 
-    let class_hash = Felt252::ONE.into_();
+    let class_hash = Felt::ONE.into_();
 
     assert!(match deploy_wrapper(
         &mut cached_fork_state,
@@ -103,8 +104,8 @@ fn try_deploying_undeclared_class() {
     });
 }
 
-#[test]
-fn test_forking_at_block_number() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_forking_at_block_number() {
     let cache_dir = TempDir::new().unwrap();
 
     {
@@ -130,7 +131,7 @@ fn test_forking_at_block_number() {
         );
 
         let msg = "Contract not deployed at address: 0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9";
-        let panic_data_felts: Vec<Felt252> = ByteArray::from(msg).serialize_with_magic();
+        let panic_data_felts: Vec<Felt> = ByteArray::from(msg).serialize_with_magic();
         assert_panic(output, &panic_data_felts);
 
         let selector = felt_selector_from_name("get_balance");
@@ -142,28 +143,27 @@ fn test_forking_at_block_number() {
             &[],
         );
 
-        assert_success(output, &[Felt252::from(0)]);
+        assert_success(output, &[Felt::from(0)]);
     }
 
     purge_cache(cache_dir.path().to_str().unwrap());
 }
 
-#[test]
-fn call_forked_contract_from_other_contract() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn call_forked_contract_from_other_contract() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
 
-    let forked_contract_address = Felt252::try_from_hex_str(
-        "0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9",
-    )
-    .unwrap();
+    let forked_contract_address =
+        Felt::try_from_hex_str("0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9")
+            .unwrap();
 
     let contract_address = deploy_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
         "ForkingChecker",
-        &[Felt252::from(1)],
+        &[Felt::from(1)],
     );
 
     let selector = felt_selector_from_name("get_balance_call_contract");
@@ -174,16 +174,16 @@ fn call_forked_contract_from_other_contract() {
         selector,
         &[forked_contract_address],
     );
-    assert_success(output, &[Felt252::from(0)]);
+    assert_success(output, &[Felt::from(0)]);
 }
 
-#[test]
-fn library_call_on_forked_class_hash() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn library_call_on_forked_class_hash() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
 
-    let forked_class_hash = Felt252::try_from_hex_str(
+    let forked_class_hash = Felt::try_from_hex_str(
         "0x06a7eb29ee38b0a0b198e39ed6ad458d2e460264b463351a0acfc05822d61550",
     )
     .unwrap();
@@ -192,7 +192,7 @@ fn library_call_on_forked_class_hash() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         "ForkingChecker",
-        &[Felt252::from(1)],
+        &[Felt::from(1)],
     );
 
     let selector = felt_selector_from_name("get_balance_library_call");
@@ -203,14 +203,14 @@ fn library_call_on_forked_class_hash() {
         selector,
         &[forked_class_hash],
     );
-    assert_success(output, &[Felt252::from(0)]);
+    assert_success(output, &[Felt::from(0)]);
 
     call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
         felt_selector_from_name("set_balance"),
-        &[Felt252::from(100)],
+        &[Felt::from(100)],
     );
 
     let output = call_contract(
@@ -220,30 +220,29 @@ fn library_call_on_forked_class_hash() {
         selector,
         &[forked_class_hash],
     );
-    assert_success(output, &[Felt252::from(100)]);
+    assert_success(output, &[Felt::from(100)]);
 }
 
-#[test]
-fn call_forked_contract_from_constructor() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn call_forked_contract_from_constructor() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
 
-    let forked_class_hash = Felt252::try_from_hex_str(
+    let forked_class_hash = Felt::try_from_hex_str(
         "0x06a7eb29ee38b0a0b198e39ed6ad458d2e460264b463351a0acfc05822d61550",
     )
     .unwrap();
 
-    let forked_contract_address = Felt252::try_from_hex_str(
-        "0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9",
-    )
-    .unwrap();
+    let forked_contract_address =
+        Felt::try_from_hex_str("0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9")
+            .unwrap();
 
     let contract_address = deploy_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
         "ForkingChecker",
-        &[Felt252::from(0), forked_contract_address],
+        &[Felt::from(0), forked_contract_address],
     );
 
     let selector = felt_selector_from_name("get_balance_library_call");
@@ -254,11 +253,11 @@ fn call_forked_contract_from_constructor() {
         selector,
         &[forked_class_hash],
     );
-    assert_success(output, &[Felt252::from(0)]);
+    assert_success(output, &[Felt::from(0)]);
 }
 
-#[test]
-fn call_forked_contract_get_block_info_via_proxy() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn call_forked_contract_get_block_info_via_proxy() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state =
         create_fork_cached_state_at(53_655, cache_dir.path().to_str().unwrap());
@@ -268,10 +267,9 @@ fn call_forked_contract_get_block_info_via_proxy() {
         ..Default::default()
     };
 
-    let forked_contract_address = Felt252::try_from_hex_str(
-        "0x3d80c579ad7d83ff46634abe8f91f9d2080c5c076d4f0f59dd810f9b3f01164",
-    )
-    .unwrap();
+    let forked_contract_address =
+        Felt::try_from_hex_str("0x3d80c579ad7d83ff46634abe8f91f9d2080c5c076d4f0f59dd810f9b3f01164")
+            .unwrap();
 
     let contract_address = deploy_contract(
         &mut cached_fork_state,
@@ -288,7 +286,7 @@ fn call_forked_contract_get_block_info_via_proxy() {
         selector,
         &[forked_contract_address],
     );
-    assert_success(output, &[Felt252::from(53_655)]);
+    assert_success(output, &[Felt::from(53_655)]);
 
     let selector = felt_selector_from_name("read_block_timestamp");
     let output = call_contract(
@@ -298,7 +296,7 @@ fn call_forked_contract_get_block_info_via_proxy() {
         selector,
         &[forked_contract_address],
     );
-    assert_success(output, &[Felt252::from(1_711_548_115)]);
+    assert_success(output, &[Felt::from(1_711_548_115)]);
 
     let selector = felt_selector_from_name("read_sequencer_address");
     let output = call_contract(
@@ -310,15 +308,15 @@ fn call_forked_contract_get_block_info_via_proxy() {
     );
     assert_success(
         output,
-        &[Felt252::try_from_hex_str(
+        &[Felt::try_from_hex_str(
             "0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8",
         )
         .unwrap()],
     );
 }
 
-#[test]
-fn call_forked_contract_get_block_info_via_libcall() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn call_forked_contract_get_block_info_via_libcall() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state =
         create_fork_cached_state_at(53_669, cache_dir.path().to_str().unwrap());
@@ -328,7 +326,7 @@ fn call_forked_contract_get_block_info_via_libcall() {
         ..Default::default()
     };
 
-    let forked_class_hash = Felt252::try_from_hex_str(
+    let forked_class_hash = Felt::try_from_hex_str(
         "0x04947e141416a51b57a59bc8786b5c0e02751d33e46383fa9cebbf9cf6f30844",
     )
     .unwrap();
@@ -348,7 +346,7 @@ fn call_forked_contract_get_block_info_via_libcall() {
         selector,
         &[forked_class_hash],
     );
-    assert_success(output, &[Felt252::from(53_669)]);
+    assert_success(output, &[Felt::from(53_669)]);
 
     let selector = felt_selector_from_name("read_block_timestamp_with_lib_call");
     let output = call_contract(
@@ -358,7 +356,7 @@ fn call_forked_contract_get_block_info_via_libcall() {
         selector,
         &[forked_class_hash],
     );
-    assert_success(output, &[Felt252::from(1_711_551_518)]);
+    assert_success(output, &[Felt::from(1_711_551_518)]);
 
     let selector = felt_selector_from_name("read_sequencer_address_with_lib_call");
     let output = call_contract(
@@ -370,15 +368,15 @@ fn call_forked_contract_get_block_info_via_libcall() {
     );
     assert_success(
         output,
-        &[Felt252::try_from_hex_str(
+        &[Felt::try_from_hex_str(
             "0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8",
         )
         .unwrap()],
     );
 }
 
-#[test]
-fn using_specified_block_nb_is_cached() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn using_specified_block_nb_is_cached() {
     let cache_dir = TempDir::new().unwrap();
     let run_test = || {
         let mut cached_state =
@@ -401,7 +399,7 @@ fn using_specified_block_nb_is_cached() {
             &[],
         );
 
-        assert_success(output, &[Felt252::from(0)]);
+        assert_success(output, &[Felt::from(0)]);
     };
 
     let assert_cache = || {
@@ -460,8 +458,8 @@ fn using_specified_block_nb_is_cached() {
     purge_cache(cache_dir.path().to_str().unwrap());
 }
 
-#[test]
-fn test_cache_merging() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn test_cache_merging() {
     fn run_test(cache_dir: &str, contract_address: &str, balance: u64) {
         let mut cached_state = create_fork_cached_state_at(53_680, cache_dir);
         let _ = cached_state.state.get_block_info().unwrap();
@@ -479,7 +477,7 @@ fn test_cache_merging() {
             &[],
         );
 
-        assert_success(output, &[Felt252::from(balance)]);
+        assert_success(output, &[Felt::from(balance)]);
     }
 
     let cache_dir = TempDir::new().unwrap();
@@ -552,27 +550,27 @@ fn test_cache_merging() {
             "0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8"
         );
     };
-    let cache_dir_str = cache_dir.path().to_str().unwrap();
+    let cache_dir_str = cache_dir.path().to_string_lossy().to_string();
 
-    run_test(cache_dir_str, contract_1_address, 0);
-    run_test(cache_dir_str, contract_2_address, 0);
+    run_test(&cache_dir_str, contract_1_address, 0);
+    run_test(&cache_dir_str, contract_2_address, 0);
     assert_cache();
 
     purge_cache(cache_dir.path().to_str().unwrap());
 
     // Parallel execution
-    [
-        (cache_dir_str, contract_1_address, 0),
-        (cache_dir_str, contract_2_address, 0),
-    ]
-    .par_iter()
-    .for_each(|param_tpl| run_test(param_tpl.0, param_tpl.1, param_tpl.2));
+    let tasks = [contract_1_address, contract_2_address].map(move |address| {
+        let cache_dir_str = cache_dir_str.clone();
+        Handle::current().spawn(async move { run_test(&cache_dir_str, address, 0) })
+    });
+
+    join_all(tasks).await;
 
     assert_cache();
 }
 
-#[test]
-fn test_cached_block_info_merging() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_cached_block_info_merging() {
     fn run_test(cache_dir: &str, balance: u64, call_get_block_info: bool) {
         let mut cached_state = create_fork_cached_state_at(53_680, cache_dir);
         if call_get_block_info {
@@ -594,7 +592,7 @@ fn test_cached_block_info_merging() {
             &[],
         );
 
-        assert_success(output, &[Felt252::from(balance)]);
+        assert_success(output, &[Felt::from(balance)]);
     }
 
     let cache_dir = TempDir::new().unwrap();
@@ -639,8 +637,8 @@ fn test_cached_block_info_merging() {
     assert_cached_block_info(true);
 }
 
-#[test]
-fn test_calling_nonexistent_url() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_calling_nonexistent_url() {
     let temp_dir = TempDir::new().unwrap();
     let nonexistent_url = "http://nonexistent-node-address.com".parse().unwrap();
     let mut cached_fork_state = CachedState::new(ExtendedStateReader {

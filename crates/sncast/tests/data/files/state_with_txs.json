@@ -5,8 +5,20 @@
       "name": "declare",
       "output": {
         "type": "DeclareResponse",
-        "class_hash": "0x123",
-        "transaction_hash": "0x321"
+        "status": "Success",
+        "class_hash": "0x0000000000000000000000000000000000000000000000000000000000000123",
+        "transaction_hash": "0x0000000000000000000000000000000000000000000000000000000000000321"
+      },
+      "status": "Success",
+      "timestamp": 1706093159,
+      "misc": null
+    },
+    "111aaa111": {
+      "name": "declare",
+      "output": {
+        "type": "DeclareResponse",
+        "status": "AlreadyDeclared",
+        "class_hash": "0x0000000000000000000000000000000000000000000000000000000000000123"
       },
       "status": "Success",
       "timestamp": 1706093159,

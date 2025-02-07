@@ -2,7 +2,7 @@
 
 ## Overview
 
-> ⚠️⚠️⚠️ Highly experimental code, a subject to change  ⚠️⚠️⚠️
+> ⚠️⚠️⚠️ Highly experimental code, a subject to change ⚠️⚠️⚠️
 
 Starknet Foundry cast can be used to run deployment scripts written in Cairo, using `script run` subcommand.
 It aims to provide similar functionality to Foundry's `forge script`.
@@ -22,14 +22,18 @@ contracts from within Cairo, its interface, internals and feature set can change
 >
 > Example:
 >
->```rust
+> ```rust
 >      let declare_result = declare(
 >        "Map",
->        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+>        FeeSettings {
+>           max_fee: Option::None,
+>           max_gas: Option::Some(999999),
+>           max_gas_unit_price: Option::Some(100000000000)
+>        },
 >        Option::Some(nonce)
 >    )
 >        .expect('declare failed');
->```
+> ```
 
 Some of the planned features that will be included in future versions are:
 
@@ -44,16 +48,17 @@ and more!
 ## State file
 
 By default, when you run a script a state file containing information about previous runs will be created. This file
-can later be used to skip making changes to the network if they were done previously. 
+can later be used to skip making changes to the network if they were done previously.
 
 To determine if an operation (a function like declare, deploy or invoke) has to be sent to the network, the script will
-first check if such operation with given arguments already exists in state file. If it does, and previously ended with 
+first check if such operation with given arguments already exists in state file. If it does, and previously ended with
 a success, its execution will be skipped. Otherwise, sncast will attempt to execute this function, and will write its status
 to the state file afterwards.
 
 To prevent sncast from using the state file, you can set [the --no-state-file flag](../appendix/sncast/script/run.md#--no-state-file).
 
 A state file is typically named in a following manner:
+
 ```
 {script name}_{network name}_state.json
 ```
@@ -64,8 +69,15 @@ As sncast scripts are just regular scarb packages, there are multiple ways to in
 Most common directory structures include:
 
 ### 1. `scripts` directory with all the scripts in the same workspace with cairo contracts (default for `sncast script init`)
+
 ```shell
 $ tree
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 .
 ├── scripts
 │   └── my_script
@@ -78,17 +90,26 @@ $ tree
 │   └── lib.cairo
 └── Scarb.toml
 ```
+</details>
+<br>
 
 > 📝 **Note**
-> You should add `scripts` to `members` field in your top-level Scarb.toml to be able to run the script from 
-anywhere in the workspace - otherwise you will have to run the script from within its directory. To learn more consult
-[Scarb documentation](https://docs.swmansion.com/scarb/docs/reference/workspaces.html#members).
+> You should add `scripts` to `members` field in your top-level Scarb.toml to be able to run the script from
+> anywhere in the workspace - otherwise you will have to run the script from within its directory. To learn more consult
+> [Scarb documentation](https://docs.swmansion.com/scarb/docs/reference/workspaces.html#members).
 
 You can also have multiple scripts as separate packages, or multiple modules inside one package, like so:
 
 #### 1a. multiple scripts in one package
+
 ```shell
 $ tree
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 .
 ├── scripts
 │   └── my_script
@@ -102,11 +123,19 @@ $ tree
 │   └── lib.cairo
 └── Scarb.toml
 ```
+</details>
+<br>
 
 #### 1b. multiple scripts as separate packages
 
 ```shell
 $ tree
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 .
 ├── scripts
 │   ├── Scarb.toml
@@ -125,11 +154,19 @@ $ tree
 │   └── lib.cairo
 └── Scarb.toml
 ```
+</details>
+<br>
 
 #### 1c. single script with flat directory structure
 
 ```shell
 $ tree
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 .
 ├── Scarb.toml
 ├── scripts
@@ -140,16 +177,27 @@ $ tree
 └── src
     └── lib.cairo
 ```
+</details>
+<br>
 
 ### 2. scripts disjointed from the workspace with cairo contracts
+
 ```shell
 $ tree
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 .
 ├── Scarb.toml
 └── src
     ├── lib.cairo
     └── my_script.cairo
 ```
+</details>
+<br>
 
 In order to use this directory structure you must set any contracts you're using as dependencies in script's Scarb.toml,
 and override `build-external-contracts` property to build those contracts. To learn more consult [Scarb documentation](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#compiling-external-contracts).
@@ -177,31 +225,27 @@ For more details, see [init command](../appendix/sncast/script/init.md).
 This example shows how to call an already deployed contract. Please find full example with contract deployment [here](#full-example-with-contract-deployment).
 
 ```rust
-use sncast_std::{invoke, call, CallResult};
-
-fn main() {
-    let eth = 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7;
-    let addr = 0x0089496091c660345BaA480dF76c1A900e57cf34759A899eFd1EADb362b20DB5;
-    let call_result = call(eth.try_into().unwrap(), selector!("allowance"), array![addr, addr]).expect('call failed');
-    let call_result = *call_result.data[0];
-    assert(call_result == 0, call_result);
-
-    let call_result = call(eth.try_into().unwrap(), selector!("decimals"), array![]).expect('call failed');
-    let call_result = *call_result.data[0];
-    assert(call_result == 18, call_result);
-}
+{{#include ../../listings/basic_example/src/basic_example.cairo}}
 ```
 
-The script should be included in a scarb package. The directory structure and config for this example looks like this:
+The script should be included in a Scarb package. The directory structure and config for this example looks like this:
 
 ```shell
 $ tree
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 .
 ├── src
 │   ├── my_script.cairo
 │   └── lib.cairo
 └── Scarb.toml
 ```
+</details>
+<br>
 
 ```toml
 [package]
@@ -209,77 +253,54 @@ name = "my_script"
 version = "0.1.0"
 
 [dependencies]
-starknet = ">=2.3.0"
-sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.22.0" }
+starknet = ">=2.8.0"
+sncast_std = "0.33.0"
 ```
 
 To run the script, do:
 
+<!-- TODO(#2736) -->
+<!-- { "ignored_output": true } -->
 ```shell
 $ sncast \
   script run my_script
-  --url http://127.0.0.1:5050 \
+  --network sepolia
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
+CallResult { data: [0, 96231036770510887841935600920878740513, 16] }
 command: script run
 status: success
 ```
+</details>
 
 ### Full Example (With Contract Deployment)
 
-This example script declares, deploys and interacts with an example [map contract](https://github.com/foundry-rs/starknet-foundry/tree/master/crates/sncast/tests/data/contracts/map):
+This example script declares, deploys and interacts with an example `MapContract`:
 
 ```rust
-use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce,
-    FeeSettings, EthFeeSettings
-};
-
-fn main() {
-    let max_fee = 99999999999999999;
-    let salt = 0x3;
-
-    let declare_nonce = get_nonce('latest');
-    let declare_result = declare(
-        "Map",
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
-        Option::Some(declare_nonce)
-    )
-        .expect('map declare failed');
-
-    let class_hash = declare_result.class_hash;
-    let deploy_nonce = get_nonce('pending');
-    let deploy_result = deploy(
-        class_hash,
-        ArrayTrait::new(),
-        Option::Some(salt),
-        true,
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
-        Option::Some(deploy_nonce)
-    )
-        .expect('map deploy failed');
-    assert(deploy_result.transaction_hash != 0, deploy_result.transaction_hash);
-
-    let invoke_nonce = get_nonce('pending');
-    let invoke_result = invoke(
-        deploy_result.contract_address,
-        selector!("put"),
-        array![0x1, 0x2],
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
-        Option::Some(invoke_nonce)
-    )
-        .expect('map invoke failed');
-    assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);
-
-    let call_result = call(deploy_result.contract_address, selector!("get"), array![0x1])
-        .expect('map call failed');
-    assert(call_result.data == array![0x2], *call_result.data.at(0));
-}
+{{#include ../../listings/map3/src/lib.cairo}}
 ```
 
-The script should be included in a scarb package. The directory structure and config for this example looks like this:
+We prepare a script:
+
+```rust
+{{#include ../../listings/full_example/src/full_example.cairo}}
+```
+
+The script should be included in a Scarb package. The directory structure and config for this example looks like this:
 
 ```shell
 $ tree
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 .
 ├── contracts
 │    ├── Scarb.toml
@@ -291,6 +312,8 @@ $ tree
         ├── lib.cairo
         └── map_script.cairo
 ```
+</details>
+<br>
 
 ```toml
 [package]
@@ -298,8 +321,8 @@ name = "map_script"
 version = "0.1.0"
 
 [dependencies]
-starknet = ">=2.3.0"
-sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.27.0" }
+starknet = ">=2.8.0"
+sncast_std = "0.33.0"
 map = { path = "../contracts" }
 
 [lib]
@@ -308,7 +331,7 @@ casm = true
 
 [[target.starknet-contract]]
 build-external-contracts = [
-    "map::Map"
+    "map::MapContract"
 ]
 ```
 
@@ -316,12 +339,18 @@ Please note that `map` contract was specified as the dependency. In our example,
 
 To run the script, do:
 
+<!-- { "ignored_output": true } -->
 ```shell
 $ sncast \
   --account example_user \
   script run map_script \
-  --url http://127.0.0.1:5050
+  --network sepolia
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 Class hash of the declared contract: 685896493695476540388232336434993540241192267040651919145140488413686992233
 ...
 Deployed the contract to address: 2993684914933159551622723238457226804366654523161908704282792530334498925876
@@ -332,16 +361,24 @@ Call result: [2]
 command: script run
 status: success
 ```
+</details>
+<br>
 
 As [an idempotency](#state-file) feature is turned on by default, executing the same script once again ends with a success
 and only `call` functions are being executed (as they do not change the network state):
 
+<!-- { "ignored_output": true } -->
 ```shell
 $ sncast \
   --account example_user \
   script run map_script \
-  --url http://127.0.0.1:5050
+  --network sepolia
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 Class hash of the declared contract: 1922774777685257258886771026518018305931014651657879651971507142160195873652
 Deployed the contract to address: 3478557462226312644848472512920965457566154264259286784215363579593349825684
 Invoke tx hash is: 1373185562410761200747829131886166680837022579434823960660735040169785115611
@@ -349,90 +386,44 @@ Call result: [2]
 command: script run
 status: success
 ```
+</details>
+<br>
 
-whereas, when we run the same script once again with `--no-state-file` flag set, it fails (as the `Map` contract is already declared):
 
+whereas, when we run the same script once again with `--no-state-file` flag set, it fails (as the `Map` contract is already deployed):
+
+<!-- { "ignored_output": true } -->
 ```shell
 $ sncast \
   --account example_user \
   script run map_script \
-  --url http://127.0.0.1:5050 \
+  --network sepolia \
   --no-state-file
+```
 
+<details>
+<summary>Output:</summary>
+
+```shell
 command: script run
 message:
-    0x636f6e747261637420616c7265616479206465636c61726564 ('contract already declared')
+    0x6d6170206465706c6f79206661696c6564 ('map deploy failed')
 
 status: script panicked
 ```
+</details>
+<br>
 
 ## Error handling
 
-Each of `declare`, `deploy`, `invoke`, `call` functions return `Result<T, ScriptCommandError>`, where `T` is a corresponding response struct. 
-This allows for various script errors to be handled programmatically. 
+Each of `declare`, `deploy`, `invoke`, `call` functions return `Result<T, ScriptCommandError>`, where `T` is a corresponding response struct.
+This allows for various script errors to be handled programmatically.
 Script errors implement `Debug` trait, allowing the error to be printed to stdout.
 
-### Minimal example with assert and print
+### Minimal example with `assert!` and `println!`
 
 ```rust
-use sncast_std::{
-    get_nonce, declare, DeclareResult, ScriptCommandError, ProviderError, StarknetError,
-    FeeSettings, EthFeeSettings
-};
-
-fn main() {
-    let max_fee = 9999999999999999999999999999999999;
-
-    let declare_nonce = get_nonce('latest');
-    let declare_result = declare(
-        "Map",
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
-        Option::Some(declare_nonce)
-    )
-        .unwrap_err();
-    println!("{:?}", declare_result);
-
-    assert(
-        ScriptCommandError::ProviderError(
-            ProviderError::StarknetError(StarknetError::InsufficientAccountBalance)
-        ) == declare_result,
-        'ohno'
-    )
-}
-
-```
-
-stdout:
-```shell
-...
-ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientAccountBalance(())))
-command: script
-status: success
-```
-
-Some errors may contain an error message in the form of `ByteArray`
-
-### Minimal example with an error msg:
-
-```rust
-use sncast_std::{call, CallResult, ScriptCommandError, ProviderError, StarknetError, ErrorData};
-
-fn main() {
-    let eth = 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7.try_into().expect('bad address');
-    let call_err: ScriptCommandError = call(
-        eth, selector!("gimme_money"), array![]
-    )
-        .unwrap_err();
-
-    println!("{:?}", call_err);
-}
-```
-stdout:
-```shell
-...
-ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Entry point EntryPointSelector(StarkFelt( ... )) not found in contract." })))
-command: script
-status: success
+{{#include ../../listings/error_handling/src/error_handling.cairo}}
 ```
 
 More on deployment scripts errors [here](../appendix/sncast-library/errors.md).

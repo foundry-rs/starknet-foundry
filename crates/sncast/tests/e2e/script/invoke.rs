@@ -67,8 +67,12 @@ async fn test_contract_does_not_exist() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
-        Got an exception while executing a hint: Requested contract address ContractAddress(PatriciaKey(StarkFelt("[..]"))) is not deployed.
+        [..]
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
+        [..]
+        [..]: Error in the called contract ([..]):
+        Requested contract address [..] is not deployed.
+        " })))
         command: script run
         status: success
         "#},
@@ -100,8 +104,12 @@ fn test_wrong_function_name() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
-        Got an exception while executing a hint: Entry point EntryPointSelector(StarkFelt("[..]")) not found in contract.
+        [..]
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
+        [..]
+        [..]: Error in the called contract ([..]):
+        Entry point EntryPointSelector([..]) not found in contract.
+        " })))
         command: script run
         status: success
         "#},
@@ -133,8 +141,12 @@ fn test_wrong_calldata() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
-        Got an exception while executing a hint: Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
+        [..]
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
+        [..]
+        [..]: Error in the called contract ([..]):
+        Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
+        " })))
         command: script run
         status: success
         "#},

@@ -31,105 +31,178 @@ All subcommand usages are shown for two scenarios - when all necessary arguments
 
 ### Declare a contract
 
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
 ```shell
-$ sncast --account myuser \
-    --url http://127.0.0.1:5050/rpc \
+$ sncast --account my_account \
     declare \
-    --contract-name SimpleBalance
-
-command: Declare
-class_hash: 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
-transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
+    --contract-name HelloSncast
 ```
 
+<details>
+<summary>Output:</summary>
+
+```shell
+command: Declare
+class_hash: [..]
+transaction_hash: [..]
+```
+</details>
+<br>
 
 With arguments taken from `snfoundry.toml` file (default profile name):
 
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
 ```shell
 $ sncast declare \
-    --contract-name SimpleBalance
-
-command: Declare
-class_hash: 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
-transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
+    --contract-name HelloSncast
 ```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+command: Declare
+class_hash: [..]
+transaction_hash: [..]
+```
+</details>
+<br>
+
 
 ### Deploy a contract
 
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
 ```shell
-$ sncast --account myuser \
-    --url http://127.0.0.1:5050/rpc \
-    deploy --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
-
-command: Deploy
-contract_address: 0x301316d47a81b39c5e27cca4a7b8ca4773edbf1103218588d6da4d3ed53035a
-transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5ab1e
+$ sncast --account my_account \
+    deploy --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
+    --url http://127.0.0.1:5055
 ```
 
+<details>
+<summary>Output:</summary>
+
+```shell
+command: Deploy
+contract_address: [..]
+transaction_hash: [..]
+```
+</details>
+<br>
 
 With arguments taken from `snfoundry.toml` file (default profile name):
 
+<!-- TODO(#2736) -->
+<!-- { "ignored": true } -->
 ```shell
-$ sncast deploy --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
-
-command: Deploy
-contract_address: 0x301316d47a81b39c5e27cca4a7b8ca4773edbf1103218588d6da4d3ed53035a
-transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5ab1e
+$ sncast deploy \
+--class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
 ```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+command: Deploy
+contract_address: [..]
+transaction_hash: [..]
+```
+</details>
+<br>
 
 
 ### Invoke a contract
 
 ```shell
-$ sncast --url http://127.0.0.1:5050 \
-    --account example_user \
+$ sncast \
+    --account my_account \
     invoke \
-    --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
-    --function "some_function" \
-    --calldata 1 2 3
-
-command: Invoke
-transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
+    --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
+    --function "sum_numbers" \
+    --arguments '1, 2, 3' \
+    --url http://127.0.0.1:5055/rpc
 ```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+command: invoke
+transaction_hash: [..]
+
+To see invocation details, visit:
+transaction: https://sepolia.starkscan.co/tx/[..]
+```
+</details>
+<br>
 
 
 With arguments taken from `snfoundry.toml` file (default profile name):
 
 ```shell
 $ sncast invoke \
-    --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
-    --function "some_function" \
-    --calldata 1 2 3
-
-command: Invoke
-transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
+    --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
+    --function "sum_numbers" \
+    --arguments '1, 2, 3' \
+    --url http://127.0.0.1:5055/rpc
 ```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+command: invoke
+transaction_hash: [..]
+
+To see invocation details, visit:
+transaction: https://sepolia.starkscan.co/tx/[..]
+```
+</details>
+<br>
 
 ### Call a contract
 
 ```shell
-$ sncast --url http://127.0.0.1:5050 \
+$ sncast \
     call \
-    --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
-    --function "some_function" \
-    --calldata 1 2 3
-
-command: call
-response: [0x0]
+    --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
+    --function "sum_numbers" \
+    --arguments '1, 2, 3' \
+    --url http://127.0.0.1:5055/rpc
 ```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+command: call
+response: [0x6]
+```
+</details>
+<br>
 
 
 With arguments taken from `snfoundry.toml` file (default profile name):
 
 ```shell
 $ sncast call \
-    --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
-    --function some_function \
-    --calldata 1 2 3
-
-command: call
-response: [0x0]
+    --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
+    --function "sum_numbers" \
+    --arguments '1, 2, 3' \
+    --url http://127.0.0.1:5055/rpc
 ```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+command: call
+response: [0x6]
+```
+</details>
+<br>
 
 
 ## Development
@@ -141,7 +214,15 @@ To verify, run:
 
 ```shell
 $ which scarb
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
 $HOME/.asdf/shims/scarb
 ```
+</details>
+<br>
 
 If you previously installed scarb using official installer, you may need to remove this installation or modify your PATH to make sure asdf installed one is always used.

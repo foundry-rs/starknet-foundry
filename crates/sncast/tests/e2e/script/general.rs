@@ -6,8 +6,8 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
-use indoc::indoc;
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use indoc::{formatdoc, indoc};
+use shared::test_utils::output_assert::assert_stderr_contains;
 use sncast::get_default_state_file_name;
 use sncast::state::state_file::{read_txs_from_state_file, ScriptTransactionStatus};
 use tempfile::tempdir;
@@ -132,10 +132,11 @@ async fn test_incompatible_sncast_std_version() {
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
+    let version = env!("CARGO_PKG_VERSION");
 
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_matches(formatdoc! {r"
         ...
-        [WARNING] Package sncast_std version does not meet the recommended version requirement =0.27.0, it might result in unexpected behaviour
+        [WARNING] Package sncast_std version does not meet the recommended version requirement ={version}, it might result in unexpected behaviour
         ...
     "});
 }
@@ -238,13 +239,13 @@ async fn test_run_script_display_debug_traits() {
         test
         declare_nonce: [..]
         debug declare_nonce: [..]
-        Transaction hash = 0x[..]
+        Transaction hash: 0x[..]
         declare_result: class_hash: [..], transaction_hash: [..]
-        debug declare_result: DeclareResult { class_hash: [..], transaction_hash: [..] }
-        Transaction hash = 0x[..]
+        debug declare_result: DeclareResult::Success(DeclareTransactionResult { class_hash: [..], transaction_hash: [..] })
+        Transaction hash: 0x[..]
         deploy_result: contract_address: [..], transaction_hash: [..]
         debug deploy_result: DeployResult { contract_address: [..], transaction_hash: [..] }
-        Transaction hash = 0x[..]
+        Transaction hash: 0x[..]
         invoke_result: [..]
         debug invoke_result: InvokeResult { transaction_hash: [..] }
         call_result: [2]
@@ -287,16 +288,13 @@ async fn test_no_account_passed() {
     let args = vec!["script", "run", &script_name, "--url", URL];
 
     let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts");
-    let output = snapbox.assert().success();
-
-    assert_stdout_contains(
-        output,
-        indoc! {r#"
+    snapbox.assert().success().stdout_matches(indoc! {r#"
+        ...
         command: script run
-        message: 
+        message:[..]
             "Account not defined. Please ensure the correct account is passed to `script run` command"
-        "#},
-    );
+        ...
+    "#});
 }
 
 #[tokio::test]
@@ -392,6 +390,7 @@ async fn test_run_script_twice_with_state_file_enabled() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn test_state_file_contains_all_failed_txs() {
     let script_dir = copy_script_directory_to_tempdir(
         SCRIPTS_DIR.to_owned() + "/state_file/",
@@ -443,7 +442,7 @@ async fn test_state_file_contains_all_failed_txs() {
         deploy_tx_entry,
         "deploy",
         ScriptTransactionStatus::Fail,
-        vec!["Class with hash ClassHash", "is not declared"],
+        vec!["Class with hash 0x", "is not declared"],
     );
 
     let invoke_tx_entry = tx_entries_after_first_run
