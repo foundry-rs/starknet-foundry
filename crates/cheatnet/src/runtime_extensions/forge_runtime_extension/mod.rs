@@ -35,10 +35,12 @@ use cairo_vm::vm::{
     errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
     vm_core::VirtualMachine,
 };
+use cheatcodes::erc20::{get_balance, set_balance};
 use conversions::byte_array::ByteArray;
 use conversions::felt::TryInferFormat;
 use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::CairoSerialize;
+use conversions::FromConv;
 use data_transformer::cairo_types::CairoU256;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
@@ -463,6 +465,34 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let loaded = load(*state, target, storage_address).context("Failed to load")?;
 
                 Ok(CheatcodeHandlingResult::from_serializable(loaded))
+            }
+            "set_balance" => {
+                let state = &mut extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .state;
+                let target = input_reader.read()?;
+                let new_balance = input_reader.read()?;
+                let token = input_reader.read()?;
+                set_balance(*state, target, new_balance, token).context("Failed to set balance")?;
+
+                Ok(CheatcodeHandlingResult::from_serializable(()))
+            }
+            "get_balance" => {
+                let state = &mut extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .state;
+                let target = input_reader.read()?;
+                let token = input_reader.read()?;
+                let balance =
+                    get_balance(*state, target, token).context("Failed to read balance")?;
+
+                Ok(CheatcodeHandlingResult::from_serializable(Felt::from_(
+                    balance,
+                )))
             }
             "map_entry_address" => {
                 let map_selector = input_reader.read()?;
