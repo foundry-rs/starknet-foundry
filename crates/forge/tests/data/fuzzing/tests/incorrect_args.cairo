@@ -1,6 +1,6 @@
 use fuzzing::adder;
 
-#[derive(Drop)]
+#[derive(Debug, Drop)]
 struct MyStruct {
     a: felt252
 }

@@ -1,8 +1,9 @@
 pub use super::cheatcodes::generate_arg::generate_arg;
+use core::fmt::Debug;
 
 const MAX_FELT: felt252 = 0x800000000000011000000000000000000000000000000000000000000000000;
 
-pub trait Fuzzable<T> {
+pub trait Fuzzable<T, +Debug<T>> {
     fn blank() -> T;
     fn generate() -> T;
 }
@@ -18,11 +19,11 @@ impl FuzzableFelt of Fuzzable<felt252> {
 }
 
 mod nums {
-    use super::{Fuzzable, generate_arg};
+    use super::{Fuzzable, generate_arg, Debug};
     use core::num::traits::{Bounded, One, Zero};
 
     pub impl FuzzableNum<
-        T, +Zero<T>, +Bounded<T>, +Drop<T>, +Serde<T>, +Into<T, felt252>
+        T, +Zero<T>, +Bounded<T>, +Drop<T>, +Serde<T>, +Into<T, felt252>, +Debug<T>
     > of Fuzzable<T> {
         fn blank() -> T {
             Zero::<T>::zero()

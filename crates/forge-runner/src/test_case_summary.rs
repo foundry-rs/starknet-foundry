@@ -110,6 +110,8 @@ pub enum TestCaseSummary<T: TestType> {
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt>,
+        /// Random arguments used in the fuzz test case run
+        fuzzer_args: Vec<String>,
         /// Statistics of the test run
         test_statistics: <T as TestType>::TestStatistics,
     },
@@ -192,11 +194,13 @@ impl TestCaseSummary<Fuzzing> {
                 name,
                 msg,
                 arguments,
+                fuzzer_args,
                 test_statistics: (),
             } => TestCaseSummary::Failed {
                 name,
                 msg,
                 arguments,
+                fuzzer_args,
                 test_statistics: FuzzingStatistics {
                     runs: results.len(),
                 },
@@ -214,6 +218,7 @@ impl TestCaseSummary<Single> {
         run_result: RunResult,
         test_case: &TestCaseWithResolvedConfig,
         arguments: Vec<Felt>,
+        fuzzer_args: Vec<String>,
         gas: u128,
         used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
@@ -246,6 +251,7 @@ impl TestCaseSummary<Single> {
                     name,
                     msg,
                     arguments,
+                    fuzzer_args,
                     test_statistics: (),
                 },
             },
@@ -254,6 +260,7 @@ impl TestCaseSummary<Single> {
                     name,
                     msg,
                     arguments,
+                    fuzzer_args,
                     test_statistics: (),
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
@@ -262,6 +269,7 @@ impl TestCaseSummary<Single> {
                             name,
                             msg,
                             arguments,
+                            fuzzer_args,
                             test_statistics: (),
                         }
                     }
