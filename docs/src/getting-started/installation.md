@@ -94,7 +94,7 @@ asdf install scarb latest
 Set a version globally (in your ~/.tool-versions file):
 
 ```shell
-asdf global scarb latest
+asdf set --home scarb latest
 ```
 
 To verify that Scarb was installed, run
@@ -150,7 +150,7 @@ asdf install starknet-foundry latest
 Set a version globally (in your ~/.tool-versions file):
 
 ```shell
-asdf global starknet-foundry latest
+asdf set --home starknet-foundry latest
 ```
 
 To verify that Starknet Foundry was installed, run
@@ -268,13 +268,13 @@ Users may encounter this error when trying to use `snforge` or `sncast` without 
 ```shell
 No version is set for command snforge
 Consider adding one of the following versions in your config file at $HOME/.tool_versions
-starknet-foundry 0.32.0
+starknet-foundry 0.37.0
 ```
 
 This error indicates that `Starknet Foundry` version is unset. To resolve it, set the version globally using asdf:
 
 ```shell
-asdf global starknet-foundry <version>
+asdf set --home starknet-foundry latest
 ```
 
 For additional information on asdf version management, see
