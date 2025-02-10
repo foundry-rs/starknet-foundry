@@ -29,6 +29,7 @@ $ snforge test
 <details>
 <summary>Output:</summary>
 
+<!-- TODO (#2926) -->
 ```shell
 Collected 2 test(s) from fuzz_testing package
 Running 2 test(s) from src/

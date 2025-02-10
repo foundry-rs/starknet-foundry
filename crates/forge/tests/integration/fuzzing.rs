@@ -74,6 +74,7 @@ fn fuzzed_while_loop() {
         panic!()
     };
 
+    // TODO (#2926)
     assert_eq!(gas_info.min, 2);
     assert_eq!(gas_info.max, 22);
     assert!((gas_info.mean - 12.).abs() < f64::EPSILON);
