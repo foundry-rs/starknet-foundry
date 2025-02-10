@@ -16,7 +16,7 @@ Any type that is used as a parameter in a test function with the [`#[fuzzer]`](.
 
 - `blank()` function returns an empty or default value that is used only for configuration runs. For instance, it returns `0` for numeric types.
 - `generate()` function is used to return a random value of the given type. To implement this function, it is necessary to either use the [generate_arg](../cheatcodes/generate_arg.md) cheatcode,
-which can uniformly generate a random number within a specified range, or use a `Fuzzable` implementation for a different type.
+which can uniformly generate a random number within a specified range, or use a `Fuzzable` implementation from a different type.
 
 ## Example
 
