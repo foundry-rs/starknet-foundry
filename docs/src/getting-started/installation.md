@@ -13,11 +13,11 @@ In this section, we will walk through the process of installing Starknet Foundry
     * [Linux and macOS](#linux-and-macos)
         * [Install asdf](#install-asdf)
         * [Install Scarb version >= 2.7.0](#install-scarb-version--270)
-        * [(Optional for Scarb >= 2.10.0) Rust Installation](#optional-for-scarb--2100note-rust-installation)
+        * [(Optional for Scarb >= 2.10.0) Rust Installation](#optional-for-scarb--21001-rust-installation)
         * [Install Starknet Foundry](#install-starknet-foundry)
     * [Windows](#windows)
         * [Install Scarb version >= 2.7.0](#install-scarb-version--270-1)
-        * [(Optional for Scarb >= 2.10.0) Rust Installation](#optional-for-scarb--2100-rust-installation)
+        * [(Optional for Scarb >= 2.10.0) Rust Installation](#optional-for-scarb--21001-rust-installation-1)
         * [Install Universal Sierra Compiler](#install-universal-sierra-compiler)
         * [Install Starknet Foundry](#install-starknet-foundry-1)
     * [Common Errors](#common-errors)
@@ -49,11 +49,11 @@ To use Starknet Foundry, you need:
 all installed and added to your `PATH` environment variable.
 
 [^note]: Additionally, your platform must be one of the supported:
-* aarch64-apple-darwin
-* aarch64-unknown-linux-gnu
-* x86_64-apple-darwin
-* x86_64-pc-windows-msvc
-* x86_64-unknown-linux-gnu
+* `aarch64-apple-darwin`
+* `aarch64-unknown-linux-gnu`
+* `x86_64-apple-darwin`
+* `x86_64-pc-windows-msvc`
+* `x86_64-unknown-linux-gnu`
 
 > 📝 **Note**
 >
@@ -113,11 +113,11 @@ and verify that version is >= 2.7.0
 >
 > * You are using Scarb version <= 2.10.0
 > * Your platform is not one of the following supported platforms:
->   * aarch64-apple-darwin
->   * aarch64-unknown-linux-gnu
->   * x86_64-apple-darwin
->   * x86_64-pc-windows-msvc
->   * x86_64-unknown-linux-gnu
+>   * `aarch64-apple-darwin`
+>   * `aarch64-unknown-linux-gnu`
+>   * `x86_64-apple-darwin`
+>   * `x86_64-pc-windows-msvc`
+>   * `x86_64-unknown-linux-gnu`
 
 ```shell
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -199,9 +199,9 @@ and verify that version is >= 2.7.0
 >
 > Rust installation is only required if:
 >
-> You are using Scarb version <= 2.10.0, *OR*
+> * You are using Scarb version <= 2.10.0
 > * Your platform is not one of the following supported platforms:
->   * x86_64-pc-windows-msvc
+>   * `x86_64-pc-windows-msvc`
 
 Go to [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install) and follow the installation
 instructions.
