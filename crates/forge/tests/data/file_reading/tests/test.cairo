@@ -179,7 +179,7 @@ fn serialization() {
 fn valid_content_different_folder() {
     let file = FileTrait::new("valid_file.txt");
     let content = read_txt(@file);
-    let expected = array![123, '12dsfwe', 00124];
+    let expected = array!['123', '12dsfwe', 124];
 
     assert(content.len() == expected.len(), 'lengths not equal');
     let mut i = 0;
