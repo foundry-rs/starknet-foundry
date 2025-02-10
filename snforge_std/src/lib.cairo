@@ -26,6 +26,13 @@ pub use cheatcodes::storage::store;
 pub use cheatcodes::storage::load;
 pub use cheatcodes::storage::map_entry_address;
 
+pub use cheatcodes::erc20::set_balance;
+pub use cheatcodes::erc20::get_balance;
+pub use cheatcodes::erc20::Token;
+pub use cheatcodes::erc20::CustomToken;
+pub use cheatcodes::erc20::STRK_CONTRACT_ADDRESS;
+pub use cheatcodes::erc20::ETH_CONTRACT_ADDRESS;
+
 pub use cheatcodes::CheatSpan;
 pub use cheatcodes::ReplaceBytecodeError;
 pub use cheatcodes::test_address;

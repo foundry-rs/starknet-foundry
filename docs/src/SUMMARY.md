@@ -101,6 +101,8 @@
     * [spy_messages_to_l1](appendix/cheatcodes/spy_messages_to_l1.md)
     * [store](appendix/cheatcodes/store.md)
     * [load](appendix/cheatcodes/load.md)
+    * [set_balance](appendix/cheatcodes/set_balance.md)
+    * [get_balance](appendix/cheatcodes/get_balance.md)
     * [generate_random_felt](appendix/cheatcodes/generate_random_felt.md)
 * [`snforge` Library Reference](appendix/snforge-library.md)
     * [byte_array](appendix/snforge-library/byte_array.md)
