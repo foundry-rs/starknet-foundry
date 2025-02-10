@@ -11,7 +11,7 @@ use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet_classes::contract_class::ContractClass;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::EncounteredError;
-use indoc::{formatdoc, indoc};
+use indoc::formatdoc;
 use itertools::Itertools;
 use rayon::prelude::*;
 use scarb_api::metadata::Metadata;
@@ -140,13 +140,7 @@ impl ContractBacktraceData {
             VersionedCoverageAnnotations::try_from_debug_info(sierra_debug_info)?;
 
         let VersionedProfilerAnnotations::V1(profiler_annotations) =
-            VersionedProfilerAnnotations::try_from_debug_info(sierra_debug_info).context(
-                indoc! {
-                    "unstable-add-statements-functions-debug-info = true
-                or scarb version is less than 2.8.0
-                "
-                },
-            )?;
+            VersionedProfilerAnnotations::try_from_debug_info(sierra_debug_info)?;
 
         // Not optimal, but USC doesn't produce debug info for the contract class
         let (_, debug_info) = CasmContractClass::from_contract_class_with_debug_info(
