@@ -83,12 +83,13 @@ fn test_wrong_scarb_toml_configuration() {
     assert_stdout_contains(
         output,
         indoc! {
-           "Failure data:
-                (0x454e545259504f494e545f4e4f545f464f554e44 ('ENTRYPOINT_NOT_FOUND'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
-            failed to create backtrace: perhaps the contract was compiled without the following entry in Scarb.toml under [profile.dev.cairo]:
-            unstable-add-statements-code-locations-debug-info = true
+            "[ERROR] Scarb.toml must have the following Cairo compiler configuration to run backtrace:
 
-            or scarb version is less than 2.8.0"
+            [profile.dev.cairo]
+            unstable-add-statements-functions-debug-info = true
+            unstable-add-statements-code-locations-debug-info = true
+            ... other entries ...
+            "
         },
     );
 }
