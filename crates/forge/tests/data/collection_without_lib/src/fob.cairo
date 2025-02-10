@@ -1,4 +1,4 @@
-mod fob_impl;
+pub mod fob_impl;
 
 #[cfg(test)]
 mod tests {

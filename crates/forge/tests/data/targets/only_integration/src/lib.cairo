@@ -1,5 +1,5 @@
 #[starknet::interface]
-trait IHelloStarknet<TContractState> {
+pub trait IHelloStarknet<TContractState> {
     fn increase_balance(ref self: TContractState, amount: felt252);
     fn get_balance(self: @TContractState) -> felt252;
     fn do_a_panic(self: @TContractState);
@@ -7,8 +7,9 @@ trait IHelloStarknet<TContractState> {
 }
 
 #[starknet::contract]
-mod HelloStarknet {
-    use array::ArrayTrait;
+pub mod HelloStarknet {
+    use core::array::ArrayTrait;
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     #[storage]
     struct Storage {

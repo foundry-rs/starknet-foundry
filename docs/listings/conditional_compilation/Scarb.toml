@@ -1,7 +1,7 @@
 [package]
 name = "conditional_compilation"
 version = "0.1.0"
-edition = "2023_11"
+edition = "2024_07"
 
 [features]
 default = ["enable_for_tests"]
