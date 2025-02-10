@@ -25,9 +25,9 @@ use toml_edit::{DocumentMut, Table};
 const BACKTRACE_ENV: &str = "SNFORGE_BACKTRACE";
 const MINIMAL_SCARB_VERSION: Version = Version::new(2, 8, 0);
 
-const BACKTRACE_REQUIRED_ENTRIES: [(&str, &str); 2] = [
-    ("unstable-add-statements-functions-debug-info", "true"),
-    ("unstable-add-statements-code-locations-debug-info", "true"),
+const BACKTRACE_REQUIRED_ENTRIES: [(&str, bool); 2] = [
+    ("unstable-add-statements-functions-debug-info", true ),
+    ("unstable-add-statements-code-locations-debug-info", true),
 ];
 #[must_use]
 pub fn add_backtrace_footer(
@@ -39,8 +39,7 @@ pub fn add_backtrace_footer(
         return message;
     }
 
-    let is_backtrace_enabled = is_backtrace_enabled();
-    if !is_backtrace_enabled {
+    if !is_backtrace_enabled() {
         return format!(
             "{message}\nnote: run with `{BACKTRACE_ENV}=1` environment variable to display a backtrace",
         );
@@ -67,34 +66,32 @@ pub fn can_backtrace_be_generated(scarb_metadata: &Metadata) -> Result<()> {
         "Backtrace generation requires scarb version >= {MINIMAL_SCARB_VERSION}",
     );
 
-    let manifest = fs::read_to_string(&scarb_metadata.runtime_manifest)?.parse::<DocumentMut>()?;
+    let manifest: DocumentMut = fs::read_to_string(&scarb_metadata.runtime_manifest)?.parse::<DocumentMut>()?;
 
-    let profile_cairo = manifest
+    let has_needed_entries = manifest
         .get("profile")
         .and_then(|profile| profile.get(&scarb_metadata.current_profile))
         .and_then(|profile| profile.get("cairo"))
         .and_then(|cairo| cairo.as_table())
-        .context(formatdoc! {
-            "Scarb.toml must have the following Cairo compiler configuration to run backtrace:
+        .is_some_and(|profile_cairo| {
+            BACKTRACE_REQUIRED_ENTRIES
+                .iter()
+                .all(|(key, value)| contains_entry_with_value(profile_cairo, key, *value))
+        });
 
-            [profile.{profile}.cairo]
-            unstable-add-statements-functions-debug-info = true
-            unstable-add-statements-code-locations-debug-info = true
-            ... other entries ...
-            ",
-            profile = scarb_metadata.current_profile
-        })?;
-
-    let has_needed_entries = BACKTRACE_REQUIRED_ENTRIES
-        .iter()
-        .all(|(key, value)| contains_entry_with_value(profile_cairo, key, *value == "true"));
-
-    ensure!(
-        has_needed_entries,
-        "Contract was compiled without required debug info flags. Please add the following to Scarb.toml:
-        unstable-add-statements-functions-debug-info = true
-        unstable-add-statements-code-locations-debug-info = true"
-    );
+        ensure!(
+            has_needed_entries,
+            formatdoc! {
+                "Scarb.toml must have the following Cairo compiler configuration to run backtrace:
+    
+                [profile.{profile}.cairo]
+                unstable-add-statements-functions-debug-info = true
+                unstable-add-statements-code-locations-debug-info = true
+                ... other entries ...
+                ",
+                profile = scarb_metadata.current_profile
+            },
+        );
 
     Ok(())
 }
@@ -140,13 +137,7 @@ impl ContractBacktraceData {
             .context("debug info not found")?;
 
         let VersionedCoverageAnnotations::V1(coverage_annotations) =
-            VersionedCoverageAnnotations::try_from_debug_info(sierra_debug_info).context(
-                indoc! {
-                    "unstable-add-statements-code-locations-debug-info = true
-                or scarb version is less than 2.8.0
-                "
-                },
-            )?;
+            VersionedCoverageAnnotations::try_from_debug_info(sierra_debug_info)?;
 
         let VersionedProfilerAnnotations::V1(profiler_annotations) =
             VersionedProfilerAnnotations::try_from_debug_info(sierra_debug_info).context(

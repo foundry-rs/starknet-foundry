@@ -83,11 +83,13 @@ fn test_wrong_scarb_toml_configuration() {
     assert_stdout_contains(
         output,
         indoc! {
-            "    Blocking waiting for file lock on package cache
-    Blocking waiting for file lock on package cache
-[ERROR] Contract was compiled without required debug info flags. Please add the following to Scarb.toml:
-        unstable-add-statements-functions-debug-info = true
-        unstable-add-statements-code-locations-debug-info = true"
+            "[ERROR] Scarb.toml must have the following Cairo compiler configuration to run backtrace:
+
+            [profile.dev.cairo]
+            unstable-add-statements-functions-debug-info = true
+            unstable-add-statements-code-locations-debug-info = true
+            ... other entries ...
+            "
         },
     );
 }
