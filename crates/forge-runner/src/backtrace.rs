@@ -26,7 +26,7 @@ const BACKTRACE_ENV: &str = "SNFORGE_BACKTRACE";
 const MINIMAL_SCARB_VERSION: Version = Version::new(2, 8, 0);
 
 const BACKTRACE_REQUIRED_ENTRIES: [(&str, bool); 2] = [
-    ("unstable-add-statements-functions-debug-info", true ),
+    ("unstable-add-statements-functions-debug-info", true),
     ("unstable-add-statements-code-locations-debug-info", true),
 ];
 #[must_use]
@@ -66,7 +66,8 @@ pub fn can_backtrace_be_generated(scarb_metadata: &Metadata) -> Result<()> {
         "Backtrace generation requires scarb version >= {MINIMAL_SCARB_VERSION}",
     );
 
-    let manifest: DocumentMut = fs::read_to_string(&scarb_metadata.runtime_manifest)?.parse::<DocumentMut>()?;
+    let manifest: DocumentMut =
+        fs::read_to_string(&scarb_metadata.runtime_manifest)?.parse::<DocumentMut>()?;
 
     let has_needed_entries = manifest
         .get("profile")
@@ -79,19 +80,19 @@ pub fn can_backtrace_be_generated(scarb_metadata: &Metadata) -> Result<()> {
                 .all(|(key, value)| contains_entry_with_value(profile_cairo, key, *value))
         });
 
-        ensure!(
-            has_needed_entries,
-            formatdoc! {
-                "Scarb.toml must have the following Cairo compiler configuration to run backtrace:
+    ensure!(
+        has_needed_entries,
+        formatdoc! {
+            "Scarb.toml must have the following Cairo compiler configuration to run backtrace:
     
                 [profile.{profile}.cairo]
                 unstable-add-statements-functions-debug-info = true
                 unstable-add-statements-code-locations-debug-info = true
                 ... other entries ...
                 ",
-                profile = scarb_metadata.current_profile
-            },
-        );
+            profile = scarb_metadata.current_profile
+        },
+    );
 
     Ok(())
 }
