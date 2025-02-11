@@ -276,8 +276,8 @@ fn get_mocked_function_cheat_status<'a>(
     {
         None => None,
         Some(contract_functions) => {
-            let call_data_hash = poseidon_hash_many(call.calldata.0.iter());
-            let key = (call.entry_point_selector, call_data_hash);
+            let calldata_hash = poseidon_hash_many(call.calldata.0.iter());
+            let key = (call.entry_point_selector, calldata_hash);
             let key_zero = (call.entry_point_selector, Felt::zero());
 
             match contract_functions.get(&key) {

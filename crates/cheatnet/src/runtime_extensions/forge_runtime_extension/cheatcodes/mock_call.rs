@@ -11,16 +11,16 @@ impl CheatnetState {
         &mut self,
         contract_address: ContractAddress,
         function_selector: EntryPointSelector,
-        call_data: Option<Vec<Felt>>,
+        calldata: Option<Vec<Felt>>,
         ret_data: &[Felt],
         span: CheatSpan,
     ) {
         let contract_mocked_functions = self.mocked_functions.entry(contract_address).or_default();
-        let call_data_hash = match call_data {
+        let calldata_hash = match calldata {
             Some(data) => poseidon_hash_many(data.iter()),
             None => Felt::zero(),
         };
-        let key = (function_selector, call_data_hash);
+        let key = (function_selector, calldata_hash);
         contract_mocked_functions.insert(key, CheatStatus::Cheated(ret_data.to_vec(), span));
     }
 
@@ -28,13 +28,13 @@ impl CheatnetState {
         &mut self,
         contract_address: ContractAddress,
         function_selector: EntryPointSelector,
-        call_data: Option<Vec<Felt>>,
+        calldata: Option<Vec<Felt>>,
         ret_data: &[Felt],
     ) {
         self.mock_call(
             contract_address,
             function_selector,
-            call_data,
+            calldata,
             ret_data,
             CheatSpan::Indefinite,
         );
@@ -44,15 +44,15 @@ impl CheatnetState {
         &mut self,
         contract_address: ContractAddress,
         function_selector: EntryPointSelector,
-        call_data: Option<Vec<Felt>>,
+        calldata: Option<Vec<Felt>>,
     ) {
         if let Entry::Occupied(mut e) = self.mocked_functions.entry(contract_address) {
             let contract_mocked_functions = e.get_mut();
-            let call_data_hash = match call_data {
+            let calldata_hash = match calldata {
                 Some(data) => poseidon_hash_many(data.iter()),
                 None => Felt::zero(),
             };
-            contract_mocked_functions.remove(&(function_selector, call_data_hash));
+            contract_mocked_functions.remove(&(function_selector, calldata_hash));
         }
     }
 }
