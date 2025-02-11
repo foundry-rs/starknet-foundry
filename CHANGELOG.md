@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Changed
+
+- `--name` flag is now optional when using `account create` (default name is generated) 
+
 ### Forge
 
 #### Added

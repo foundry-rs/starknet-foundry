@@ -4,6 +4,7 @@ use crate::starknet_commands::{
 };
 use anyhow::{Context, Result};
 use data_transformer::Calldata;
+use sncast::helpers::account::generate_account_name;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{print_command_result, OutputFormat};
 use std::io;
@@ -501,7 +502,7 @@ async fn run_async_command(
                     create
                         .name
                         .clone()
-                        .context("Required argument `--name` not provided")?
+                        .unwrap_or_else(|| generate_account_name(&config.accounts_file).unwrap())
                 } else {
                     config.account.clone()
                 };
