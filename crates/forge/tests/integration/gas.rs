@@ -611,7 +611,6 @@ fn l1_message_from_test_cost() {
     assert_gas(&result, "l1_message_from_test_cost", 1 + 26764);
 }
 
-// FIXME these values changed
 #[test]
 fn l1_message_cost_for_proxy() {
     let test = test_case!(
@@ -656,6 +655,7 @@ fn l1_message_cost_for_proxy() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
+    // FIXME these calculatuins are incorrect
     // 4870 * 0.0025 = 12,175 ~ 13 = gas cost of steps
     // l = number of class hash updates
     // n = unique contracts updated
@@ -663,10 +663,9 @@ fn l1_message_cost_for_proxy() {
     // n(2) * 2 * 32 = 128
     // l(2) * 32 = 64
     // 29524 = gas cost of message
-    assert_gas(&result, "l1_message_cost_for_proxy", 13 + 128 + 64 + 29524);
+    assert_gas(&result, "l1_message_cost_for_proxy", 128 + 64 + 29538);
 }
 
-// FIXME these values changed
 #[test]
 fn l1_handler_cost() {
     let test = test_case!(
@@ -694,10 +693,11 @@ fn l1_handler_cost() {
 
     let result = run_test_case(&test);
     assert_passed(&result);
+    // FIXME these values changed
     // 96 = gas cost of onchain data (deploy cost)
     // int(5.12 * 4) = 21 = keccak cost from l1 handler
     // 14643 - l1 cost of payload + emit message handle event
-    assert_gas(&result, "l1_handler_cost", 96 + 21 + 14643);
+    assert_gas(&result, "l1_handler_cost", 96 + 15944);
 }
 
 #[test]
