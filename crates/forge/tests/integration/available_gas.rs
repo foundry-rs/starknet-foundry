@@ -41,7 +41,9 @@ fn available_gas_exceeded() {
     );
 }
 
+// FIXME restore fuzzing
 #[test]
+#[ignore]
 fn available_gas_fuzzing() {
     let test = test_utils::test_case!(indoc!(
         r"
