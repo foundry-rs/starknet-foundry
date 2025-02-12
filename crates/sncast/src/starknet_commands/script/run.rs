@@ -282,20 +282,6 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
     }
 }
 
-// #[allow(clippy::too_many_lines)]
-// #[allow(clippy::too_many_arguments)]
-// pub fn run(
-//     module_name: &str,
-//     metadata: &Metadata,
-//     package_metadata: &PackageMetadata,
-//     artifacts: &mut HashMap<String, StarknetContractArtifacts>,
-//     provider: &JsonRpcClient<HttpTransport>,
-//     tokio_runtime: Runtime,
-//     config: &CastConfig,
-//     state_file_path: Option<Utf8PathBuf>,
-// ) -> Result<ScriptRunResponse> {
-// }
-
 #[allow(clippy::too_many_lines)]
 #[allow(clippy::too_many_arguments)]
 pub fn run(
