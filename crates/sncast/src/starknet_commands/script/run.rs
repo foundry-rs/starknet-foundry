@@ -317,7 +317,7 @@ pub fn run(
     // `builder` field in `SierraCasmRunner` is private, hence the need to create a new `RunnableBuilder`
     // https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L184
     let builder = RunnableBuilder::new(sierra_program, Some(MetadataComputationConfig::default()))
-        .with_context(|| "Failed to create runnable builder")?;
+        .with_context(|| "Failed to create builder")?;
 
     let name_suffix = module_name.to_string() + "::main";
     let func = runner.find_function(name_suffix.as_str())
@@ -326,6 +326,7 @@ pub fn run(
     let entry_code_config = EntryCodeConfig::testing();
     let (entry_code, builtins) = create_entry_code(&builder, func, entry_code_config)?;
     let footer = create_code_footer();
+
     // import from cairo-lang-runner
     let assembled_program = builder
         .casm_program()
