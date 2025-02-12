@@ -12,8 +12,9 @@ use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runnable_utils::builder::{
     create_code_footer, create_entry_code_from_params, BuildError, EntryCodeConfig, RunnableBuilder,
 };
+use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_runner::{build_hints_dict, Arg, RunResultValue, RunnerError, SierraCasmRunner};
+use cairo_lang_runner::{Arg, RunResultValue, RunnerError, SierraCasmRunner};
 use cairo_lang_sierra::extensions::gas::GasBuiltinType;
 use cairo_lang_sierra::extensions::ConcreteType;
 use cairo_lang_sierra::extensions::NamedType;
@@ -21,6 +22,7 @@ use cairo_lang_sierra::program::{Function, VersionedProgram};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::casts::IntoOrPanic;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
+use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::builtin_name::BuiltinName;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
@@ -30,7 +32,6 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::byte_array::ByteArray;
 use conversions::serde::deserialize::BufferReader;
-use itertools::chain;
 use runtime::starknet::context::{build_context, SerializableBlockInfo};
 use runtime::starknet::state::DictStateReader;
 use runtime::{
@@ -281,6 +282,20 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
     }
 }
 
+// #[allow(clippy::too_many_lines)]
+// #[allow(clippy::too_many_arguments)]
+// pub fn run(
+//     module_name: &str,
+//     metadata: &Metadata,
+//     package_metadata: &PackageMetadata,
+//     artifacts: &mut HashMap<String, StarknetContractArtifacts>,
+//     provider: &JsonRpcClient<HttpTransport>,
+//     tokio_runtime: Runtime,
+//     config: &CastConfig,
+//     state_file_path: Option<Utf8PathBuf>,
+// ) -> Result<ScriptRunResponse> {
+// }
+
 #[allow(clippy::too_many_lines)]
 #[allow(clippy::too_many_arguments)]
 pub fn run(
@@ -326,24 +341,12 @@ pub fn run(
     let entry_code_config = EntryCodeConfig::testing();
     let (entry_code, builtins) = create_entry_code(&builder, func, entry_code_config)?;
     let footer = create_code_footer();
-    let instructions = chain!(
-        entry_code.iter(),
-        builder.casm_program().instructions.iter(),
-    );
-    let entry_point = func.entry_point.0;
-    let code_offset =
-        builder.casm_program().debug_info.sierra_statement_info[entry_point].start_offset;
-    let indexed_hints = instructions
-        .enumerate()
-        .map(|(index, instr)| (code_offset + 0, instr.hints.clone()))
-        .collect::<Vec<(usize, Vec<Hint>)>>();
-
     // import from cairo-lang-runner
-    let (hints_dict, string_to_hint) = build_hints_dict(&indexed_hints);
     let assembled_program = builder
         .casm_program()
         .clone()
         .assemble_ex(&entry_code, &footer);
+    let (hints_dict, string_to_hint) = hints_to_params(assembled_program.hints);
 
     // hint processor
     let mut context = build_context(&SerializableBlockInfo::default().into(), None);
@@ -552,4 +555,29 @@ fn requires_gas_builtin(builder: &RunnableBuilder, func: &Function) -> bool {
         .param_types
         .iter()
         .any(|ty| builder.type_long_id(ty).generic_id == GasBuiltinType::ID)
+}
+
+pub fn hints_to_params(
+    hints: Vec<(usize, Vec<Hint>)>,
+) -> (HashMap<usize, Vec<HintParams>>, HashMap<String, Hint>) {
+    let mut hints_dict: HashMap<usize, Vec<HintParams>> = HashMap::new();
+    let mut string_to_hint: HashMap<String, Hint> = HashMap::new();
+
+    for (offset, offset_hints) in hints {
+        // Register hint with string for the hint processor.
+        for hint in offset_hints.clone() {
+            string_to_hint.insert(hint.representing_string(), hint.clone());
+        }
+        // Add hint, associated with the instruction offset.
+        hints_dict.insert(
+            offset,
+            offset_hints
+                .clone()
+                .iter()
+                .map(hint_to_hint_params)
+                .collect(),
+        );
+    }
+
+    (hints_dict, string_to_hint)
 }
