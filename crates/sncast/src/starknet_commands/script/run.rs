@@ -549,11 +549,9 @@ pub fn hints_to_params(
     let mut string_to_hint: HashMap<String, Hint> = HashMap::new();
 
     for (offset, offset_hints) in hints {
-        // Register hint with string for the hint processor.
         for hint in offset_hints.clone() {
             string_to_hint.insert(hint.representing_string(), hint.clone());
         }
-        // Add hint, associated with the instruction offset.
         hints_dict.insert(
             offset,
             offset_hints
