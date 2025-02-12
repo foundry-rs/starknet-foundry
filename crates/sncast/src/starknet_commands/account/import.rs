@@ -127,7 +127,7 @@ pub async fn import(
         let sncast_account_type = match import.account_type {
             AccountType::Argent => SNCastAccountType::Argent,
             AccountType::Braavos => SNCastAccountType::Braavos,
-            AccountType::Oz => SNCastAccountType::OpenZeppelin,
+            AccountType::OpenZeppelin => SNCastAccountType::OpenZeppelin,
         };
         let computed_address =
             compute_account_address(salt, private_key, class_hash, sncast_account_type, chain_id);
