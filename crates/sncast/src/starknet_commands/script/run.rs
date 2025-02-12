@@ -13,12 +13,13 @@ use cairo_lang_runnable_utils::builder::{
     create_code_footer, create_entry_code_from_params, BuildError, EntryCodeConfig, RunnableBuilder,
 };
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_runner::{
-    build_hints_dict, Arg, RunResultValue, RunnerError, SierraCasmRunner, StarknetState,
-};
+use cairo_lang_runner::{build_hints_dict, Arg, RunResultValue, RunnerError, SierraCasmRunner};
+use cairo_lang_sierra::extensions::gas::GasBuiltinType;
 use cairo_lang_sierra::extensions::ConcreteType;
+use cairo_lang_sierra::extensions::NamedType;
 use cairo_lang_sierra::program::{Function, VersionedProgram};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
+use cairo_lang_utils::casts::IntoOrPanic;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::types::builtin_name::BuiltinName;
 use cairo_vm::types::relocatable::Relocatable;
@@ -280,6 +281,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 #[allow(clippy::too_many_arguments)]
 pub fn run(
     module_name: &str,
@@ -314,35 +316,31 @@ pub fn run(
 
     // `builder` field in `SierraCasmRunner` is private, hence the need to create a new `RunnableBuilder`
     // https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L184
-    let runnable_builder =
-        RunnableBuilder::new(sierra_program, Some(MetadataComputationConfig::default()))
-            .with_context(|| "Failed to create runnable builder")?;
+    let builder = RunnableBuilder::new(sierra_program, Some(MetadataComputationConfig::default()))
+        .with_context(|| "Failed to create runnable builder")?;
 
     let name_suffix = module_name.to_string() + "::main";
     let func = runner.find_function(name_suffix.as_str())
         .context("Failed to find main function in script - please make sure `sierra-replace-ids` is not set to `false` for `dev` profile in script's Scarb.toml")?;
 
     let entry_code_config = EntryCodeConfig::testing();
-    let (entry_code, builtins) = create_entry_code(&runnable_builder, func, entry_code_config)?;
+    let (entry_code, builtins) = create_entry_code(&builder, func, entry_code_config)?;
     let footer = create_code_footer();
     let instructions = chain!(
         entry_code.iter(),
-        runnable_builder.casm_program().instructions.iter(),
+        builder.casm_program().instructions.iter(),
     );
     let entry_point = func.entry_point.0;
-    let code_offset = runnable_builder
-        .casm_program()
-        .debug_info
-        .sierra_statement_info[entry_point]
-        .start_offset;
+    let code_offset =
+        builder.casm_program().debug_info.sierra_statement_info[entry_point].start_offset;
     let indexed_hints = instructions
         .enumerate()
-        .map(|(index, instr)| (code_offset + index, instr.hints.clone()))
+        .map(|(index, instr)| (code_offset + 0, instr.hints.clone()))
         .collect::<Vec<(usize, Vec<Hint>)>>();
 
     // import from cairo-lang-runner
     let (hints_dict, string_to_hint) = build_hints_dict(&indexed_hints);
-    let assembled_program = runnable_builder
+    let assembled_program = builder
         .casm_program()
         .clone()
         .assemble_ex(&entry_code, &footer);
@@ -351,7 +349,7 @@ pub fn run(
     let mut context = build_context(&SerializableBlockInfo::default().into(), None);
 
     let mut blockifier_state = CachedState::new(DictStateReader::default());
-    let mut execution_resources = ExecutionResources::default();
+    let mut _execution_resources = ExecutionResources::default();
 
     let syscall_handler = SyscallHintProcessor::new(
         &mut blockifier_state,
@@ -391,7 +389,7 @@ pub fn run(
     let available_gas = Some(usize::MAX);
     // TODO: Figure out args
     let args = vec![];
-    let user_args = prepare_args(&runner, func, available_gas, args)?;
+    let user_args = prepare_args(&runner, &builder, func, available_gas, args)?;
     let mut cast_runtime = ExtendedRuntime {
         extension: cast_extension,
         extended_runtime: StarknetRuntime {
@@ -472,25 +470,20 @@ fn inject_lib_artifact(
 
 // Copied from https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runnable-utils/src/builder.rs#L193
 fn create_entry_code(
-    runnable_builder: &RunnableBuilder,
+    builder: &RunnableBuilder,
     func: &Function,
     config: EntryCodeConfig,
 ) -> Result<(Vec<Instruction>, Vec<BuiltinName>), BuildError> {
-    let param_types =
-        runnable_builder.generic_id_and_size_from_concrete(&func.signature.param_types);
-    let return_types =
-        runnable_builder.generic_id_and_size_from_concrete(&func.signature.ret_types);
+    let param_types = builder.generic_id_and_size_from_concrete(&func.signature.param_types);
+    let return_types = builder.generic_id_and_size_from_concrete(&func.signature.ret_types);
 
     let entry_point = func.entry_point.0;
-    let code_offset = runnable_builder
-        .casm_program()
-        .debug_info
-        .sierra_statement_info[entry_point]
-        .start_offset;
+    let code_offset =
+        builder.casm_program().debug_info.sierra_statement_info[entry_point].start_offset;
     // Finalizing for proof only if all returned values are builtins or droppable.
     let droppable_return_value = func.signature.ret_types.iter().all(|ty| {
-        let info = runnable_builder.registry().get_type(ty).unwrap().info();
-        info.droppable || !runnable_builder.is_user_arg_type(&info.long_id.generic_id)
+        let info = builder.registry().get_type(ty).unwrap().info();
+        info.droppable || !builder.is_user_arg_type(&info.long_id.generic_id)
     });
     if !droppable_return_value {
         assert!(
@@ -505,13 +498,13 @@ fn create_entry_code(
 // Copied from https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L464
 fn prepare_args(
     runner: &SierraCasmRunner,
+    builder: &RunnableBuilder,
     func: &Function,
     available_gas: Option<usize>,
     args: Vec<Arg>,
 ) -> Result<Vec<Vec<Arg>>, RunnerError> {
     let mut user_args = vec![];
-    if let Some(gas) = runner
-        .requires_gas_builtin(func)
+    if let Some(gas) = requires_gas_builtin(builder, func)
         .then_some(runner.get_initial_available_gas(func, available_gas)?)
     {
         user_args.push(vec![Arg::Value(Felt::from(gas))]);
@@ -519,11 +512,10 @@ fn prepare_args(
     let mut expected_arguments_size = 0;
     let actual_args_size = args.iter().map(Arg::size).sum();
     let mut arg_iter = args.into_iter().enumerate();
-    for (param_index, (_, param_size)) in runner
-        .builder
+    for (param_index, (_, param_size)) in builder
         .generic_id_and_size_from_concrete(&func.signature.param_types)
         .into_iter()
-        .filter(|(ty, _)| runner.builder.is_user_arg_type(ty))
+        .filter(|(ty, _)| builder.is_user_arg_type(ty))
         .enumerate()
     {
         let mut curr_arg = vec![];
@@ -554,7 +546,10 @@ fn prepare_args(
     Ok(user_args)
 }
 
-/// The size in memory of the arguments.
-fn args_size(args: &[Arg]) -> usize {
-    args.iter().map(Arg::size).sum()
+// Copied from https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L581
+fn requires_gas_builtin(builder: &RunnableBuilder, func: &Function) -> bool {
+    func.signature
+        .param_types
+        .iter()
+        .any(|ty| builder.type_long_id(ty).generic_id == GasBuiltinType::ID)
 }
