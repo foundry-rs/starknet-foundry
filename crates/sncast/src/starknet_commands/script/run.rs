@@ -7,12 +7,15 @@ use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
+use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runnable_utils::builder::{
     create_code_footer, create_entry_code_from_params, BuildError, EntryCodeConfig, RunnableBuilder,
 };
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_runner::{build_hints_dict, RunResultValue, SierraCasmRunner};
+use cairo_lang_runner::{
+    build_hints_dict, Arg, RunResultValue, RunnerError, SierraCasmRunner, StarknetState,
+};
 use cairo_lang_sierra::extensions::ConcreteType;
 use cairo_lang_sierra::program::{Function, VersionedProgram};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
@@ -302,7 +305,7 @@ pub fn run(
         .program;
 
     let runner = SierraCasmRunner::new(
-        sierra_program,
+        sierra_program.clone(),
         Some(MetadataComputationConfig::default()),
         OrderedHashMap::default(),
         None,
@@ -326,9 +329,19 @@ pub fn run(
         entry_code.iter(),
         runnable_builder.casm_program().instructions.iter(),
     );
+    let entry_point = func.entry_point.0;
+    let code_offset = runnable_builder
+        .casm_program()
+        .debug_info
+        .sierra_statement_info[entry_point]
+        .start_offset;
+    let indexed_hints = instructions
+        .enumerate()
+        .map(|(index, instr)| (code_offset + index, instr.hints.clone()))
+        .collect::<Vec<(usize, Vec<Hint>)>>();
 
     // import from cairo-lang-runner
-    let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
+    let (hints_dict, string_to_hint) = build_hints_dict(&indexed_hints);
     let assembled_program = runnable_builder
         .casm_program()
         .clone()
@@ -374,10 +387,16 @@ pub fn run(
         state,
     };
 
+    // TODO: Implement gas handling
+    let available_gas = Some(usize::MAX);
+    // TODO: Figure out args
+    let args = vec![];
+    let user_args = prepare_args(&runner, func, available_gas, args)?;
     let mut cast_runtime = ExtendedRuntime {
         extension: cast_extension,
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
+            user_args,
         },
     };
 
@@ -481,4 +500,61 @@ fn create_entry_code(
     }
 
     create_entry_code_from_params(&param_types, &return_types, code_offset, config)
+}
+
+// Copied from https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L464
+fn prepare_args(
+    runner: &SierraCasmRunner,
+    func: &Function,
+    available_gas: Option<usize>,
+    args: Vec<Arg>,
+) -> Result<Vec<Vec<Arg>>, RunnerError> {
+    let mut user_args = vec![];
+    if let Some(gas) = runner
+        .requires_gas_builtin(func)
+        .then_some(runner.get_initial_available_gas(func, available_gas)?)
+    {
+        user_args.push(vec![Arg::Value(Felt::from(gas))]);
+    }
+    let mut expected_arguments_size = 0;
+    let actual_args_size = args.iter().map(Arg::size).sum();
+    let mut arg_iter = args.into_iter().enumerate();
+    for (param_index, (_, param_size)) in runner
+        .builder
+        .generic_id_and_size_from_concrete(&func.signature.param_types)
+        .into_iter()
+        .filter(|(ty, _)| runner.builder.is_user_arg_type(ty))
+        .enumerate()
+    {
+        let mut curr_arg = vec![];
+        let param_size: usize = param_size.into_or_panic();
+        expected_arguments_size += param_size;
+        let mut taken_size = 0;
+        while taken_size < param_size {
+            let Some((arg_index, arg)) = arg_iter.next() else {
+                break;
+            };
+            taken_size += arg.size();
+            if taken_size > param_size {
+                return Err(RunnerError::ArgumentUnaligned {
+                    param_index,
+                    arg_index,
+                });
+            }
+            curr_arg.push(arg);
+        }
+        user_args.push(curr_arg);
+    }
+    if expected_arguments_size != actual_args_size {
+        return Err(RunnerError::ArgumentsSizeMismatch {
+            expected: expected_arguments_size,
+            actual: actual_args_size,
+        });
+    }
+    Ok(user_args)
+}
+
+/// The size in memory of the arguments.
+fn args_size(args: &[Arg]) -> usize {
+    args.iter().map(Arg::size).sum()
 }
