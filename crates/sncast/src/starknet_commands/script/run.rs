@@ -374,7 +374,7 @@ pub fn run(
 
     let available_gas = Some(usize::MAX);
 
-    // `args` are an empty array, same as in cair-run
+    // `args` are an empty array, same as in cairo-run
     // https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/bin/cairo-run/src/main.rs#L96
     let args = vec![];
     let user_args = prepare_args(&runner, &builder, func, available_gas, args)?;
