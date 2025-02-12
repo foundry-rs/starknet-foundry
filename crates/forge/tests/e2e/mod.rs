@@ -6,6 +6,7 @@ mod build_trace_data;
 mod clean;
 mod collection;
 mod color;
+mod completions;
 mod components;
 mod contract_artifacts;
 mod coverage;

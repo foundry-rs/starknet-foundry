@@ -2173,6 +2173,7 @@ dependencies = [
  "camino",
  "cheatnet",
  "clap",
+ "clap_complete",
  "configuration",
  "console",
  "conversions",
