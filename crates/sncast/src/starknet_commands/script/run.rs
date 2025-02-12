@@ -26,7 +26,6 @@ use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::builtin_name::BuiltinName;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
 use clap::Args;
@@ -338,7 +337,6 @@ pub fn run(
     let mut context = build_context(&SerializableBlockInfo::default().into(), None);
 
     let mut blockifier_state = CachedState::new(DictStateReader::default());
-    let mut _execution_resources = ExecutionResources::default();
 
     let syscall_handler = SyscallHintProcessor::new(
         &mut blockifier_state,
@@ -374,9 +372,10 @@ pub fn run(
         state,
     };
 
-    // TODO: Implement gas handling
     let available_gas = Some(usize::MAX);
-    // TODO: Figure out args
+
+    // `args` are an empty array, same as in cair-run
+    // https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/bin/cairo-run/src/main.rs#L96
     let args = vec![];
     let user_args = prepare_args(&runner, &builder, func, available_gas, args)?;
     let mut cast_runtime = ExtendedRuntime {
