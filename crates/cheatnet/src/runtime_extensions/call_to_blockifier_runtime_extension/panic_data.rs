@@ -4,7 +4,6 @@ use starknet_types_core::felt::Felt;
 
 #[must_use]
 pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt>> {
-    // FIXME add support for comma separated errors
     let re_felt_array = Regex::new(
         r"[\s\S]*Execution failed\. Failure reason:\nError in contract \(.+\):\n.*\('([\s\S]*)'\).",
     )
@@ -22,7 +21,6 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt>> {
     )
     .expect("Could not create entry point panic_data matching regex");
 
-    // FIXME add support for comma separated errors
     if let Some(captures) = re_felt_array.captures(err) {
         if let Some(panic_data_match) = captures.get(1) {
             let panic_data_felts: Vec<Felt> = panic_data_match
