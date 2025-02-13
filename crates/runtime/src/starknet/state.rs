@@ -1,4 +1,3 @@
-use blockifier::execution::contract_class::ContractClass;
 use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::state::errors::StateError;
 use blockifier::state::state_api::{StateReader, StateResult};
