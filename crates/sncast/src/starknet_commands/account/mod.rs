@@ -13,7 +13,7 @@ use serde_json::json;
 use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
 use starknet::signers::SigningKey;
 use starknet_types_core::felt::Felt;
-use std::{collections::HashMap, fmt, fs::OpenOptions, io::Write};
+use std::{fmt, fs::OpenOptions, io::Write};
 use toml::Value;
 
 pub mod create;
@@ -21,8 +21,6 @@ pub mod delete;
 pub mod deploy;
 pub mod import;
 pub mod list;
-
-type NestedMap<T> = HashMap<String, HashMap<String, T>>;
 
 #[derive(Args)]
 #[command(about = "Creates and deploys an account to the Starknet")]

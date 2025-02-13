@@ -52,7 +52,6 @@
 * [Performing Multicall](starknet/multicall.md)
 * [Cairo Deployment Scripts](starknet/script.md)
 * [Inspecting Transactions](starknet/tx-status.md)
-* [Fees and Versions](starknet/fees-and-versions.md)
 * [Verifying Contracts](starknet/verify.md)
 * [Calldata Transformation](starknet/calldata-transformation.md)
 
@@ -71,6 +70,7 @@
     * [test](appendix/snforge/test.md)
     * [init](appendix/snforge/init.md)
     * [new](appendix/snforge/new.md)
+    * [clean](appendix/snforge/clean.md)
     * [clean-cache](appendix/snforge/clean-cache.md)
     * [check-requirements](appendix/snforge/check-requirements.md)
 * [Cheatcodes Reference](appendix/cheatcodes.md)

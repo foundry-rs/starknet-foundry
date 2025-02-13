@@ -36,7 +36,7 @@ use shared::utils::build_readable_text;
 use sncast::get_nonce;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
-use sncast::helpers::fee::{FeeArgs, FeeSettings, ScriptFeeSettings};
+use sncast::helpers::fee::{FeeArgs, ScriptFeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::ScriptRunResponse;
 use sncast::state::hashing::{
@@ -118,7 +118,6 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
             "declare" => {
                 let contract: String = input_reader.read::<ByteArray>()?.to_string();
                 let fee_args: FeeArgs = input_reader.read::<ScriptFeeSettings>()?.into();
-                let fee_token = fee_args.fee_token.clone().unwrap_or_default();
                 let nonce = input_reader.read()?;
 
                 let declare = Declare {
@@ -126,7 +125,6 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     fee_args,
                     nonce,
                     package: None,
-                    version: None,
                     rpc: RpcArgs::default(),
                 };
 
@@ -147,7 +145,6 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait_params: self.config.wait_params,
                     },
                     true,
-                    fee_token,
                 ));
 
                 self.state.maybe_insert_tx_entry(
@@ -162,7 +159,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let constructor_calldata = input_reader.read::<Vec<Felt>>()?;
                 let salt = input_reader.read()?;
                 let unique = input_reader.read()?;
-                let fee_args: FeeSettings = input_reader.read::<ScriptFeeSettings>()?.into();
+                let fee_args: FeeArgs = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
 
                 let deploy_tx_id =

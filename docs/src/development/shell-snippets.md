@@ -11,7 +11,7 @@ To configure a snippet, you need to add a comment block right before it. The com
 ```shell
 $ sncast \
     account create \
-    --url http://127.0.0.1:5055 \
+    --network sepolia \
     --name my_first_account
 ```
 
@@ -23,7 +23,7 @@ command: account create
 add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
 address: [..]
 max_fee: [..]
-message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.
+message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.
 
 To see account creation details, visit:
 account: https://sepolia.starkscan.co/contract/[..]

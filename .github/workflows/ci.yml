@@ -160,6 +160,8 @@ jobs:
           cargo test --package forge --features scarb_2_8_3 e2e::features
       - run: |
           cargo test --package scarb-api --features scarb_2_8_3 get_starknet_artifacts_path
+      - run: |
+          cargo test --package scarb-api --features scarb_2_8_3 test_load_contracts_artifacts
 
   test-forge-runner:
     name: Test Forge Runner
