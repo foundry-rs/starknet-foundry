@@ -281,20 +281,20 @@ pub fn run(
     state_file_path: Option<Utf8PathBuf>,
 ) -> Result<ScriptRunResponse> {
     todo!("fix this")
-    // 
+    //
     // warn_if_sncast_std_not_compatible(metadata)?;
     // let artifacts = inject_lib_artifact(metadata, package_metadata, artifacts)?;
-    // 
+    //
     // let artifact = artifacts
     //     .get(SCRIPT_LIB_ARTIFACT_NAME)
     //     .ok_or(anyhow!("Failed to find script artifact"))?;
-    // 
+    //
     // let sierra_program = serde_json::from_str::<VersionedProgram>(&artifact.sierra)
     //     .with_context(|| "Failed to deserialize Sierra program")?
     //     .into_v1()
     //     .with_context(|| "Failed to load Sierra program")?
     //     .program;
-    // 
+    //
     // let runner = SierraCasmRunner::new(
     //     sierra_program,
     //     Some(MetadataComputationConfig::default()),
@@ -302,31 +302,31 @@ pub fn run(
     //     None,
     // )
     // .with_context(|| "Failed to set up runner")?;
-    // 
+    //
     // let name_suffix = module_name.to_string() + "::main";
     // let func = runner.find_function(name_suffix.as_str())
     //     .context("Failed to find main function in script - please make sure `sierra-replace-ids` is not set to `false` for `dev` profile in script's Scarb.toml")?;
-    // 
+    //
     // let (entry_code, builtins) = runner.create_entry_code(func, &Vec::new(), usize::MAX)?;
     // let footer = create_code_footer();
     // let instructions = chain!(
     //     entry_code.iter(),
     //     runner.get_casm_program().instructions.iter(),
     // );
-    // 
+    //
     // // import from cairo-lang-runner
     // let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
     // let assembled_program = runner
     //     .get_casm_program()
     //     .clone()
     //     .assemble_ex(&entry_code, &footer);
-    // 
+    //
     // // hint processor
     // let mut context = build_context(&SerializableBlockInfo::default().into(), None);
-    // 
+    //
     // let mut blockifier_state = CachedState::new(DictStateReader::default());
     // let mut execution_resources = ExecutionResources::default();
-    // 
+    //
     // let syscall_handler = SyscallHintProcessor::new(
     //     &mut blockifier_state,
     //     &mut context,
@@ -339,7 +339,7 @@ pub fn run(
     //     &string_to_hint,
     //     ReadOnlySegments::default(),
     // );
-    // 
+    //
     // let account = if config.account.is_empty() {
     //     None
     // } else {
@@ -351,7 +351,7 @@ pub fn run(
     //     ))?)
     // };
     // let state = StateManager::from(state_file_path)?;
-    // 
+    //
     // let cast_extension = CastScriptExtension {
     //     provider,
     //     tokio_runtime,
@@ -360,14 +360,14 @@ pub fn run(
     //     account: account.as_ref(),
     //     state,
     // };
-    // 
+    //
     // let mut cast_runtime = ExtendedRuntime {
     //     extension: cast_extension,
     //     extended_runtime: StarknetRuntime {
     //         hint_handler: syscall_handler,
     //     },
     // };
-    // 
+    //
     // match runner.run_function(
     //     func,
     //     &mut cast_runtime,

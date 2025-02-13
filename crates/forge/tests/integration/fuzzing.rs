@@ -83,4 +83,3 @@ fn fuzzed_while_loop() {
     assert!((gas_info.mean - 11.).abs() < f64::EPSILON);
     assert!((gas_info.std_deviation - 6.09).abs() < 0.01);
 }
-
