@@ -263,7 +263,11 @@ fn deploy(
         storage_address: deployed_contract_address,
         caller_address: deployer_address,
     };
-    let mut remaining_gas = syscall_handler.context.gas_costs().base.default_initial_gas_cost;
+    let mut remaining_gas = syscall_handler
+        .context
+        .gas_costs()
+        .base
+        .default_initial_gas_cost;
     let call_info = execute_deployment(
         syscall_handler.state,
         syscall_handler.context,
