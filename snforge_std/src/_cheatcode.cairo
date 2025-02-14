@@ -33,7 +33,7 @@ pub fn _is_config_run() -> bool {
 
 // Do not use this function directly.
 // It is an internal part of the snforge fuzzer logic used by macros.
-pub fn _save_fuzzer_arg<T, +core::fmt::Debug<T>, +Drop<T>>(input: T) {
+pub fn _save_fuzzer_arg<T, +core::fmt::Debug<T>>(input: @T) {
     let input = format!("{input:?}");
     let mut serialized = array![];
     input.serialize(ref serialized);

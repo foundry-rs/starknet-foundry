@@ -489,12 +489,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 ))
             }
             "save_fuzzer_arg" => {
-                let arg: String = input_reader.read::<ByteArray>()?.to_string();
+                let arg = input_reader.read::<ByteArray>()?.to_string();
                 extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .update_fuzzer_args(arg);
+                    // Skip first character, which is a snapshot symbol '@'
+                    .update_fuzzer_args(arg[1..].to_string());
 
                 Ok(CheatcodeHandlingResult::from_serializable(()))
             }
