@@ -264,6 +264,11 @@ pub fn run_test_case(
         .encountered_errors
         .clone();
 
+    let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
+
+    update_top_call_execution_resources(&mut forge_runtime);
+    update_top_call_l1_resources(&mut forge_runtime);
+
     let fuzzer_args = forge_runtime
         .extended_runtime
         .extended_runtime
@@ -272,10 +277,6 @@ pub fn run_test_case(
         .fuzzer_args
         .clone();
 
-    let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
-
-    update_top_call_execution_resources(&mut forge_runtime);
-    update_top_call_l1_resources(&mut forge_runtime);
     let transaction_context = get_context(&forge_runtime).tx_context.clone();
     let used_resources = get_all_used_resources(forge_runtime, &transaction_context);
     let gas = calculate_used_gas(
