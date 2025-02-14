@@ -94,7 +94,7 @@ fn get_archival_data_resources(
     };
 
     let signature_length = transaction_context.tx_info.signature().0.len();
-    let calldata_length = calculate_calldata_length(&transaction_context);
+    let calldata_length = calculate_calldata_length();
     let dummy_starknet_resources = StarknetResources::new(
         calldata_length,
         signature_length,
@@ -107,8 +107,8 @@ fn get_archival_data_resources(
     dummy_starknet_resources.archival_data
 }
 
-fn calculate_calldata_length(transaction_context: &TransactionContext) -> usize {
-    // TODO: Implement
+fn calculate_calldata_length() -> usize {
+    // TODO: Needs to be implemented. Somehow we need to retieve transaction type from `transaction_context` or in other way.
     // logic should be as follows
     // declare -> 0
     // deploy account -> constructor calldata length
