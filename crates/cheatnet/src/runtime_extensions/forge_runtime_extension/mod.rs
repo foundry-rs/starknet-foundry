@@ -481,8 +481,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 generate_random_felt(),
             )),
             "generate_arg" => {
-                let min_value: Felt = input_reader.read()?;
-                let max_value: Felt = input_reader.read()?;
+                let min_value = input_reader.read()?;
+                let max_value = input_reader.read()?;
 
                 Ok(CheatcodeHandlingResult::from_serializable(
                     fuzzer::generate_arg(self.fuzzer_rng.clone(), min_value, max_value)?,

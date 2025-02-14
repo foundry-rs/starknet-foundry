@@ -27,7 +27,7 @@ pub(crate) fn generate_arg(
     let value = if let Some(fuzzer_rng) = fuzzer_rng {
         fuzzer_rng
             .lock()
-            .unwrap()
+            .expect("Failed to acquire lock on fuzzer_rng")
             .gen_bigint_range(&min_big_int, &(max_big_int + 1))
     } else {
         // `generate_arg` cheatcode can be also used outside the fuzzer context
