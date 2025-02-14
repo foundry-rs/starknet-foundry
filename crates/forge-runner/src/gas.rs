@@ -94,8 +94,9 @@ fn get_archival_data_resources(
     };
 
     let signature_length = transaction_context.tx_info.signature().0.len();
+    let calldata_length = calculate_calldata_length(&transaction_context);
     let dummy_starknet_resources = StarknetResources::new(
-        0,
+        calldata_length,
         signature_length,
         0,
         StateResources::default(),
@@ -104,6 +105,16 @@ fn get_archival_data_resources(
     );
 
     dummy_starknet_resources.archival_data
+}
+
+fn calculate_calldata_length(transaction_context: &TransactionContext) -> usize {
+    // TODO: Implement
+    // logic should be as follows
+    // declare -> 0
+    // deploy account -> constructor calldata length
+    // invoke -> calldata length
+
+    0
 }
 
 // Put together from a few blockifier functions
