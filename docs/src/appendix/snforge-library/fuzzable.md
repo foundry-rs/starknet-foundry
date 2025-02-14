@@ -15,8 +15,8 @@ This trait is used by `snforge` to generate random data for fuzz testing.
 Any type that is used as a parameter in a test function with the [`#[fuzzer]`](../../testing/test-attributes.md#fuzzer) attribute must implement this trait.
 
 - `blank()` returns an empty or default value. The specific value used does not matter much, as it is only used for configuration runs. For types that implement the `Default` trait, it is recommended to return `Default::default()`.
-- `generate()` function is used to return a random value of the given type. To implement this function, it is necessary to either use the [generate_arg](../cheatcodes/generate_arg.md) cheatcode,
-which can uniformly generate a random number within a specified range, or use a `Fuzzable` implementation from a different type.
+- `generate()` function is used to return a random value of the given type. To implement this function, it is necessary to either use a `Fuzzable` implementation from a different type,
+or use the [generate_arg](../cheatcodes/generate_arg.md) cheatcode, which can uniformly generate a random number within a specified range.
 
 ## Example
 
