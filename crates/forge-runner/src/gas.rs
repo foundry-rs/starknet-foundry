@@ -13,7 +13,6 @@ use blockifier::utils::u64_from_usize;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::ExtendedStateReader;
 use starknet_api::execution_resources::GasVector;
-use starknet_api::transaction::fields::GasVectorComputationMode;
 use starknet_api::transaction::EventContent;
 
 pub fn calculate_used_gas(
@@ -30,7 +29,8 @@ pub fn calculate_used_gas(
 
     let state_resources = get_state_resources(transaction_context, state)?;
 
-    let archival_data_resources = get_archival_data_resources(resources.events);
+    let archival_data_resources =
+        get_archival_data_resources(resources.events, transaction_context);
 
     dbg!(&resources.execution_resources);
 
@@ -62,7 +62,10 @@ pub fn calculate_used_gas(
     ))
 }
 
-fn get_archival_data_resources(events: Vec<EventContent>) -> ArchivalDataResources {
+fn get_archival_data_resources(
+    events: Vec<EventContent>,
+    transaction_context: &TransactionContext,
+) -> ArchivalDataResources {
     // FIXME link source
     let mut total_event_keys = 0;
     let mut total_event_data_size = 0;
@@ -89,9 +92,11 @@ fn get_archival_data_resources(events: Vec<EventContent>) -> ArchivalDataResourc
             total_event_data_size,
         },
     };
+
+    let signature_length = transaction_context.tx_info.signature().0.len();
     let dummy_starknet_resources = StarknetResources::new(
         0,
-        0,
+        signature_length,
         0,
         StateResources::default(),
         None,
