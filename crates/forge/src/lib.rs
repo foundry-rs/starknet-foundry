@@ -33,6 +33,7 @@ pub const CAIRO_EDITION: &str = "2024_07";
 
 const MINIMAL_RUST_VERSION: Version = Version::new(1, 80, 1);
 const MINIMAL_SCARB_VERSION: Version = Version::new(2, 7, 0);
+const MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN: Version = Version::new(2, 10, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 
 #[derive(Parser, Debug)]
@@ -221,8 +222,6 @@ pub enum ExitStatus {
 pub fn main_execution() -> Result<ExitStatus> {
     let cli = Cli::parse();
 
-    check_requirements(false)?;
-
     match cli.subcommand {
         ForgeSubcommand::Init { name } => {
             init::init(name.as_str())?;
@@ -250,6 +249,7 @@ pub fn main_execution() -> Result<ExitStatus> {
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Test { args } => {
+            check_requirements(false)?;
             let cores = if let Ok(available_cores) = available_parallelism() {
                 available_cores.get()
             } else {
@@ -274,17 +274,6 @@ pub fn main_execution() -> Result<ExitStatus> {
 fn check_requirements(output_on_success: bool) -> Result<()> {
     let mut requirements_checker = RequirementsChecker::new(output_on_success);
     requirements_checker.add_requirement(Requirement {
-        name: "Rust".to_string(),
-        command: RefCell::new({
-            let mut cmd = Command::new("rustc");
-            cmd.arg("--version");
-            cmd
-        }),
-        minimal_version: MINIMAL_RUST_VERSION,
-        version_parser: create_version_parser("Rust", r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)"),
-        helper_text: "Follow instructions from https://www.rust-lang.org/tools/install".to_string(),
-    });
-    requirements_checker.add_requirement(Requirement {
         name: "Scarb".to_string(),
         command: RefCell::new(ScarbCommand::new().arg("--version").command()),
         minimal_version: MINIMAL_SCARB_VERSION,
@@ -302,5 +291,29 @@ fn check_requirements(output_on_success: bool) -> Result<()> {
             r"universal-sierra-compiler (?<version>[0-9]+.[0-9]+.[0-9]+)",
         ),
     });
-    requirements_checker.check()
+    requirements_checker.check()?;
+
+    let scarb_version = ScarbCommand::version().run()?.scarb;
+    if scarb_version <= MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN {
+        let mut requirements_checker = RequirementsChecker::new(output_on_success);
+        requirements_checker.add_requirement(Requirement {
+            name: "Rust".to_string(),
+            command: RefCell::new({
+                let mut cmd = Command::new("rustc");
+                cmd.arg("--version");
+                cmd
+            }),
+            minimal_version: MINIMAL_RUST_VERSION,
+            version_parser: create_version_parser(
+                "Rust",
+                r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)",
+            ),
+            helper_text: "Follow instructions from https://www.rust-lang.org/tools/install"
+                .to_string(),
+        });
+
+        requirements_checker.check()?;
+    }
+
+    Ok(())
 }
