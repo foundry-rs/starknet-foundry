@@ -65,7 +65,7 @@ fn fuzzer_wrapper_internal(
 
     let signature = func.declaration(db).signature(db).as_text(db);
 
-    let fuzzer_assignments = extract_and_modify_params(
+    let fuzzer_assignments = extract_and_transform_params(
         db,
         func,
         |param| {
@@ -78,7 +78,7 @@ fn fuzzer_wrapper_internal(
         "\n",
     );
 
-    let blank_values_for_config_run = extract_and_modify_params(
+    let blank_values_for_config_run = extract_and_transform_params(
         db,
         func,
         |_param| "snforge_std::fuzzable::Fuzzable::blank()".to_string(),
@@ -86,7 +86,7 @@ fn fuzzer_wrapper_internal(
     );
 
     let arguments_list =
-        extract_and_modify_params(db, func, |param| param.name(db).as_text(db), ", ");
+        extract_and_transform_params(db, func, |param| param.name(db).as_text(db), ", ");
 
     let internal_config_attr = InternalConfigStatementCollector::ATTR_NAME;
     let actual_body_fn_name = format!("{name}_actual_body");
@@ -117,7 +117,7 @@ fn fuzzer_wrapper_internal(
     ))
 }
 
-fn extract_and_modify_params<F>(
+fn extract_and_transform_params<F>(
     db: &dyn SyntaxGroup,
     func: &FunctionWithBody,
     transformer: F,
