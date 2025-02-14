@@ -62,7 +62,7 @@ pub impl FuzzableU256 of Fuzzable<u256> {
 }
 
 
-pub impl FuzzableByteArray of Fuzzable<ByteArray> {
+pub impl FuzzableByteArray1000ASCII of Fuzzable<ByteArray> {
     fn blank() -> ByteArray {
         ""
     }
