@@ -57,7 +57,7 @@ pub impl FuzzableU256 of Fuzzable<u256> {
             Fuzzable::<u128>::generate().into(), Fuzzable::<u128>::generate().into()
         ]
             .span();
-        Serde::deserialize(ref serialized).unwrap_or(1)
+        Serde::deserialize(ref serialized).unwrap()
     }
 }
 
