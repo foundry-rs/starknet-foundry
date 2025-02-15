@@ -19,6 +19,7 @@ use cairo_lang_sierra::extensions::segment_arena::SegmentArenaType;
 use cairo_lang_sierra::extensions::starknet::syscalls::SystemType;
 use cairo_lang_sierra::extensions::NamedType;
 use cairo_lang_sierra::ids::GenericTypeId;
+use cairo_lang_sierra::program::Program;
 use cairo_lang_utils::unordered_hash_set::UnorderedHashSet;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
@@ -43,6 +44,7 @@ use entry_code::create_entry_code;
 use hints::{hints_by_representation, hints_to_params};
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
+use starknet_api::contract_class::FELT_WIDTH;
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::default::Default;
@@ -66,6 +68,7 @@ pub mod with_config;
 pub fn run_test(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
+    sierra_program: Program,
     test_runner_config: Arc<TestRunnerConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -287,11 +290,25 @@ pub fn run_test_case(
     update_top_call_execution_resources(&mut forge_runtime);
     update_top_call_l1_resources(&mut forge_runtime);
     let transaction_context = get_context(&forge_runtime).tx_context.clone();
+    let calldata = forge_runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .base
+        .call
+        .calldata
+        .clone();
     let used_resources = get_all_used_resources(forge_runtime, &transaction_context);
+    // TODO: Calcualate or retrieve `code_size`
+    // Ref: https://github.com/starkware-libs/sequencer/blob/7319f200db1df692be89245c43bfaf8af595df9d/crates/starknet_api/src/contract_class.rs#L159
+    let code_size = calculate_code_size(0, 0, 0);
     let gas = calculate_used_gas(
         &transaction_context,
         &mut cached_state,
         used_resources.clone(),
+        code_size,
+        calldata,
     )?;
 
     dbg!(&gas);
@@ -312,6 +329,15 @@ pub fn run_test_case(
         call_trace: call_trace_ref,
         encountered_errors,
     })
+}
+
+// Ref: https://github.com/starkware-libs/sequencer/blob/7319f200db1df692be89245c43bfaf8af595df9d/crates/starknet_api/src/contract_class.rs#L159
+fn calculate_code_size(
+    bytecode_length: usize,
+    sierra_program_length: usize,
+    abi_length: usize,
+) -> usize {
+    (bytecode_length + sierra_program_length) * FELT_WIDTH + abi_length
 }
 
 // FIXME get rid of copied code

@@ -13,12 +13,15 @@ use blockifier::utils::u64_from_usize;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::ExtendedStateReader;
 use starknet_api::execution_resources::GasVector;
+use starknet_api::transaction::fields::Calldata;
 use starknet_api::transaction::EventContent;
 
 pub fn calculate_used_gas(
     transaction_context: &TransactionContext,
     state: &mut CachedState<ExtendedStateReader>,
     resources: UsedResources,
+    code_size: usize,
+    calldata: Calldata,
 ) -> Result<GasVector, StateError> {
     let versioned_constants = transaction_context.block_context.versioned_constants();
 
@@ -30,7 +33,7 @@ pub fn calculate_used_gas(
     let state_resources = get_state_resources(transaction_context, state)?;
 
     let archival_data_resources =
-        get_archival_data_resources(resources.events, transaction_context);
+        get_archival_data_resources(resources.events, transaction_context, code_size, calldata);
 
     dbg!(&resources.execution_resources);
 
@@ -65,6 +68,8 @@ pub fn calculate_used_gas(
 fn get_archival_data_resources(
     events: Vec<EventContent>,
     transaction_context: &TransactionContext,
+    code_size: usize,
+    calldata: Calldata,
 ) -> ArchivalDataResources {
     // FIXME link source
     let mut total_event_keys = 0;
@@ -94,27 +99,17 @@ fn get_archival_data_resources(
     };
 
     let signature_length = transaction_context.tx_info.signature().0.len();
-    let calldata_length = calculate_calldata_length();
+    let calldata_length = calldata.0.len();
     let dummy_starknet_resources = StarknetResources::new(
         calldata_length,
         signature_length,
-        0,
+        code_size,
         StateResources::default(),
         None,
         dummy_execution_summary,
     );
 
     dummy_starknet_resources.archival_data
-}
-
-fn calculate_calldata_length() -> usize {
-    // TODO: Needs to be implemented. Somehow we need to retieve transaction type from `transaction_context` or in other way.
-    // logic should be as follows
-    // declare -> 0
-    // deploy account -> constructor calldata length
-    // invoke -> calldata length
-
-    0
 }
 
 // Put together from a few blockifier functions
