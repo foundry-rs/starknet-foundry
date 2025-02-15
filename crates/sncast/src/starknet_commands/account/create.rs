@@ -32,7 +32,7 @@ use starknet_types_core::felt::Felt;
 #[command(about = "Create an account with all important secrets")]
 pub struct Create {
     /// Type of the account
-    #[clap(value_enum, short = 't', long = "type", default_value_t = AccountType::Oz)]
+    #[clap(value_enum, short = 't', long = "type", default_value_t = AccountType::OpenZeppelin)]
     pub account_type: AccountType,
 
     /// Account name under which account information is going to be saved
@@ -71,7 +71,7 @@ pub async fn create(
     let add_profile = create.add_profile.clone();
     let salt = extract_or_generate_salt(create.salt);
     let class_hash = create.class_hash.unwrap_or(match create.account_type {
-        AccountType::Oz => OZ_CLASS_HASH,
+        AccountType::OpenZeppelin => OZ_CLASS_HASH,
         AccountType::Argent => ARGENT_CLASS_HASH,
         AccountType::Braavos => BRAAVOS_CLASS_HASH,
     });
@@ -175,7 +175,7 @@ async fn generate_account(
     let signer = LocalWallet::from_signing_key(private_key.clone());
 
     let (address, fee_estimate) = match account_type {
-        AccountType::Oz => {
+        AccountType::OpenZeppelin => {
             let factory =
                 OpenZeppelinAccountFactory::new(class_hash, chain_id, signer, provider).await?;
             get_address_and_deployment_fee(factory, salt).await?
@@ -263,7 +263,7 @@ fn create_to_keystore(
     private_key.save_as_keystore(keystore_path, &password)?;
 
     let account_json = match account_type {
-        AccountType::Oz => {
+        AccountType::OpenZeppelin => {
             json!({
                 "version": 1,
                 "variant": {

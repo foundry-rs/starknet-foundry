@@ -1,7 +1,6 @@
 use super::deploy::compute_account_address;
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
-    AccountType,
 };
 use anyhow::{bail, ensure, Context, Result};
 use camino::Utf8PathBuf;
@@ -13,9 +12,7 @@ use sncast::helpers::account::generate_account_name;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
-use sncast::{
-    check_class_hash_exists, get_chain_id, handle_rpc_error, AccountType as SNCastAccountType,
-};
+use sncast::{check_class_hash_exists, get_chain_id, handle_rpc_error, AccountType};
 use starknet::core::types::{BlockId, BlockTag, StarknetError};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::providers::{Provider, ProviderError};
@@ -124,11 +121,12 @@ pub async fn import(
     let chain_id = get_chain_id(provider).await?;
     if let Some(salt) = import.salt {
         // TODO(#2571)
-        let sncast_account_type = match import.account_type {
-            AccountType::Argent => SNCastAccountType::Argent,
-            AccountType::Braavos => SNCastAccountType::Braavos,
-            AccountType::Oz => SNCastAccountType::OpenZeppelin,
-        };
+        // let sncast_account_type = match import.account_type {
+        //     AccountType::Argent => SNCastAccountType::Argent,
+        //     AccountType::Braavos => SNCastAccountType::Braavos,
+        //     AccountType::OpenZeppelin => SNCastAccountType::OpenZeppelin,
+        // };
+        let sncast_account_type = import.account_type;
         let computed_address =
             compute_account_address(salt, private_key, class_hash, sncast_account_type, chain_id);
         ensure!(
