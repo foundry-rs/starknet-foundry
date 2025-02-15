@@ -12,6 +12,8 @@ use forge_runner::{
     TestCaseFilter,
 };
 use futures::{stream::FuturesUnordered, StreamExt};
+use starknet::core::types::contract::SierraClass;
+use starknet_api::contract_class::FELT_WIDTH;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::mpsc::channel;
 
@@ -28,6 +30,15 @@ pub async fn run_for_test_target(
 ) -> Result<TestTargetRunResult> {
     let sierra_program = &tests.sierra_program.program;
     let casm_program = tests.casm_program.clone();
+    let contract_artifact: SierraClass =
+        serde_json::from_reader(std::fs::File::open(&*tests.sierra_program_path).unwrap()).unwrap();
+    // TODO: Use real `abi_length`, now it's mocked as 0.
+    // Ref: https://github.com/starkware-libs/sequencer/blob/7319f200db1df692be89245c43bfaf8af595df9d/crates/starknet_api/src/contract_class.rs#L159
+    let code_size = calculate_code_size(
+        casm_program.assembled_cairo_program.bytecode.len(),
+        sierra_program.statements.len(),
+        contract_artifact.abi.len(),
+    );
 
     let mut tasks = FuturesUnordered::new();
     // Initiate two channels to manage the `--exit-first` flag.
@@ -56,7 +67,7 @@ pub async fn run_for_test_target(
             continue;
         };
 
-        let function = sierra_program
+        let function = &sierra_program
             .funcs
             .iter()
             .find(|f| f.id.debug_name.as_ref().unwrap().ends_with(&case_name))
@@ -72,6 +83,7 @@ pub async fn run_for_test_target(
             args,
             case,
             casm_program.clone(),
+            code_size,
             forge_config.clone(),
             tests.sierra_program_path.clone(),
             send.clone(),
@@ -117,4 +129,13 @@ pub async fn run_for_test_target(
     } else {
         Ok(TestTargetRunResult::Ok(summary))
     }
+}
+
+// Ref: https://github.com/starkware-libs/sequencer/blob/7319f200db1df692be89245c43bfaf8af595df9d/crates/starknet_api/src/contract_class.rs#L159
+fn calculate_code_size(
+    bytecode_length: usize,
+    sierra_program_length: usize,
+    abi_length: usize,
+) -> usize {
+    (bytecode_length + sierra_program_length) * FELT_WIDTH + abi_length
 }
