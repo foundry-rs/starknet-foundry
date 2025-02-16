@@ -220,7 +220,7 @@ fn calculate_sierra_gas(execution_resources: &ExecutionResources) -> usize {
 
 fn calculate_libfunc_cost(libfunc: BuiltinName, count: usize) -> usize {
     let cost_per_builtin = match libfunc {
-        BuiltinName::output => 10, // FIXME: Not defined in costs table
+        BuiltinName::output => 0, // FIXME: Not defined in costs table
         BuiltinName::range_check => 70,
         BuiltinName::pedersen => 4050,
         BuiltinName::poseidon => 491,
@@ -228,10 +228,10 @@ fn calculate_libfunc_cost(libfunc: BuiltinName, count: usize) -> usize {
         BuiltinName::ec_op => 4085,
         BuiltinName::add_mod => 230,
         BuiltinName::mul_mod => 604,
-        BuiltinName::ecdsa => 5000,  // FIXME: Not defined in costs table
-        BuiltinName::keccak => 3000, // FIXME: Not defined in costs table
-        BuiltinName::segment_arena => 50, // FIXME: Not defined in costs table
-        BuiltinName::range_check96 => 70, // FIXME: Not defined in costs table
+        BuiltinName::ecdsa => 0,         // FIXME: Not defined in costs table
+        BuiltinName::keccak => 0,        // FIXME: Not defined in costs table
+        BuiltinName::segment_arena => 0, // FIXME: Not defined in costs table
+        BuiltinName::range_check96 => 70,
     };
     count * cost_per_builtin
 }
