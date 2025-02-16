@@ -30,12 +30,14 @@ pub async fn run_for_test_target(
 ) -> Result<TestTargetRunResult> {
     let sierra_program = &tests.sierra_program.program;
     let casm_program = tests.casm_program.clone();
-    let contract_artifact: SierraClass =
-        serde_json::from_reader(std::fs::File::open(&*tests.sierra_program_path).unwrap()).unwrap();
+    // let contract_artifact: SierraClass =
+    //     serde_json::from_reader(std::fs::File::open(&*tests.sierra_program_path).unwrap()).unwrap();
     let code_size = calculate_code_size(
         casm_program.assembled_cairo_program.bytecode.len(),
         sierra_program.statements.len(),
-        contract_artifact.abi.len(),
+        // FIXME: Fix passing abi length
+        // contract_artifact.abi.len(),
+        0,
     );
 
     let mut tasks = FuturesUnordered::new();
