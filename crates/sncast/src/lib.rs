@@ -69,19 +69,6 @@ impl FromStr for AccountType {
     }
 }
 
-// impl FromStr for AccountType {
-//     type Err = anyhow::Error;
-
-//     fn from_str(s: &str) -> Result<Self, Self::Err> {
-//         match s.to_lowercase().as_str() {
-//             "open_zeppelin" | "oz" => Ok(AccountType::OpenZeppelin),
-//             "argent" => Ok(AccountType::Argent),
-//             "braavos" => Ok(AccountType::Braavos),
-//             account_type => Err(anyhow!("Invalid account type = {account_type}")),
-//         }
-//     }
-// }
-
 impl Display for AccountType {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match *self {
@@ -91,34 +78,6 @@ impl Display for AccountType {
         }
     }
 }
-
-// #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
-// #[serde(rename_all = "lowercase")]
-// pub enum AccountType {
-//     #[serde(rename = "open_zeppelin")]
-//     OpenZeppelin,
-//     Argent,
-//     Braavos,
-// }
-
-// impl FromStr for AccountType {
-//     type Err = anyhow::Error;
-
-//     fn from_str(s: &str) -> Result<Self, Self::Err> {
-//         match s {
-//             "open_zeppelin" | "oz" => Ok(AccountType::OpenZeppelin),
-//             "argent" => Ok(AccountType::Argent),
-//             "braavos" => Ok(AccountType::Braavos),
-//             account_type => Err(anyhow!("Invalid account type = {account_type}")),
-//         }
-//     }
-// }
-
-// impl Display for AccountType {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         write!(f, "{self:?}")
-//     }
-// }
 
 pub const MAINNET: Felt =
     Felt::from_hex_unchecked(const_hex::const_encode::<7, true>(b"SN_MAIN").as_str());
