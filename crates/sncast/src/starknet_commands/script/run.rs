@@ -14,13 +14,10 @@ use cairo_lang_runnable_utils::builder::{
 };
 use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_runner::{Arg, RunResultValue, RunnerError, SierraCasmRunner};
-use cairo_lang_sierra::extensions::gas::GasBuiltinType;
+use cairo_lang_runner::{RunResultValue, SierraCasmRunner};
 use cairo_lang_sierra::extensions::ConcreteType;
-use cairo_lang_sierra::extensions::NamedType;
 use cairo_lang_sierra::program::{Function, VersionedProgram};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
-use cairo_lang_utils::casts::IntoOrPanic;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::builtin_name::BuiltinName;
@@ -373,17 +370,13 @@ pub fn run(
         state,
     };
 
-    let available_gas = Some(usize::MAX);
-
-    // `args` are an empty array, same as in cairo-run
-    // https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/bin/cairo-run/src/main.rs#L96
-    let args = vec![];
-    let user_args = prepare_args(&runner, &builder, func, available_gas, args)?;
     let mut cast_runtime = ExtendedRuntime {
         extension: cast_extension,
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
-            user_args,
+            // If for some reason we need to calculate `user_args`, here
+            // is the function to do it: https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L464
+            user_args: vec![],
         },
     };
 
@@ -482,65 +475,6 @@ fn create_entry_code(
     }
 
     create_entry_code_from_params(&param_types, &return_types, code_offset, config)
-}
-
-// Copied from https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L464
-fn prepare_args(
-    runner: &SierraCasmRunner,
-    builder: &RunnableBuilder,
-    func: &Function,
-    available_gas: Option<usize>,
-    args: Vec<Arg>,
-) -> Result<Vec<Vec<Arg>>, RunnerError> {
-    let mut user_args = vec![];
-    if let Some(gas) = requires_gas_builtin(builder, func)
-        .then_some(runner.get_initial_available_gas(func, available_gas)?)
-    {
-        user_args.push(vec![Arg::Value(Felt::from(gas))]);
-    }
-    let mut expected_arguments_size = 0;
-    let actual_args_size = args.iter().map(Arg::size).sum();
-    let mut arg_iter = args.into_iter().enumerate();
-    for (param_index, (_, param_size)) in builder
-        .generic_id_and_size_from_concrete(&func.signature.param_types)
-        .into_iter()
-        .filter(|(ty, _)| builder.is_user_arg_type(ty))
-        .enumerate()
-    {
-        let mut curr_arg = vec![];
-        let param_size: usize = param_size.into_or_panic();
-        expected_arguments_size += param_size;
-        let mut taken_size = 0;
-        while taken_size < param_size {
-            let Some((arg_index, arg)) = arg_iter.next() else {
-                break;
-            };
-            taken_size += arg.size();
-            if taken_size > param_size {
-                return Err(RunnerError::ArgumentUnaligned {
-                    param_index,
-                    arg_index,
-                });
-            }
-            curr_arg.push(arg);
-        }
-        user_args.push(curr_arg);
-    }
-    if expected_arguments_size != actual_args_size {
-        return Err(RunnerError::ArgumentsSizeMismatch {
-            expected: expected_arguments_size,
-            actual: actual_args_size,
-        });
-    }
-    Ok(user_args)
-}
-
-// Copied from https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L581
-fn requires_gas_builtin(builder: &RunnableBuilder, func: &Function) -> bool {
-    func.signature
-        .param_types
-        .iter()
-        .any(|ty| builder.type_long_id(ty).generic_id == GasBuiltinType::ID)
 }
 
 pub fn hints_to_params(
