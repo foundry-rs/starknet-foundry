@@ -8,7 +8,6 @@ use anyhow::Result;
 use blockifier::state::{cached_state::CachedState, state_api::StateReader};
 use cairo_lang_runner::Arg;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::forge_config_extension::{
     config::RawForgeConfig, ForgeConfigExtension,
 };

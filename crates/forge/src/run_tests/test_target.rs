@@ -12,7 +12,6 @@ use forge_runner::{
     TestCaseFilter,
 };
 use futures::{stream::FuturesUnordered, StreamExt};
-use starknet::core::types::contract::SierraClass;
 use starknet_api::contract_class::FELT_WIDTH;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::mpsc::channel;

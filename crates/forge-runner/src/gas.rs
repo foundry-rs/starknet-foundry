@@ -37,7 +37,7 @@ pub fn calculate_used_gas(
         resources.events,
         transaction_context,
         code_size,
-        calldata,
+        &calldata,
         state_resources.clone(),
     );
 
@@ -75,7 +75,7 @@ fn get_archival_data_resources(
     events: Vec<EventContent>,
     transaction_context: &TransactionContext,
     code_size: usize,
-    calldata: Calldata,
+    calldata: &Calldata,
     state_resources: StateResources,
 ) -> ArchivalDataResources {
     // FIXME link source
