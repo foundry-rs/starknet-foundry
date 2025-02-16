@@ -32,8 +32,6 @@ pub async fn run_for_test_target(
     let casm_program = tests.casm_program.clone();
     let contract_artifact: SierraClass =
         serde_json::from_reader(std::fs::File::open(&*tests.sierra_program_path).unwrap()).unwrap();
-    // TODO: Use real `abi_length`, now it's mocked as 0.
-    // Ref: https://github.com/starkware-libs/sequencer/blob/7319f200db1df692be89245c43bfaf8af595df9d/crates/starknet_api/src/contract_class.rs#L159
     let code_size = calculate_code_size(
         casm_program.assembled_cairo_program.bytecode.len(),
         sierra_program.statements.len(),
