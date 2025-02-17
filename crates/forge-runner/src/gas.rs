@@ -10,11 +10,9 @@ use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
 use blockifier::transaction::objects::HasRelatedFeeType;
 use blockifier::utils::u64_from_usize;
-use cairo_vm::types::builtin_name::BuiltinName;
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::ExtendedStateReader;
-use starknet_api::execution_resources::{GasAmount, GasVector};
+use starknet_api::execution_resources::GasVector;
 use starknet_api::transaction::fields::Calldata;
 use starknet_api::transaction::EventContent;
 
@@ -42,18 +40,17 @@ pub fn calculate_used_gas(
         state_resources.clone(),
     );
 
-    dbg!(&resources.execution_resources);
+    // dbg!(&resources.execution_resources);
 
     let starknet_resources = StarknetResources {
         archival_data: archival_data_resources,
         messages: message_resources,
         state: state_resources,
     };
-    let sierra_gas = GasAmount::from(calculate_sierra_gas(&resources.execution_resources) as u64);
     let computation_resources = ComputationResources {
         vm_resources: resources.execution_resources.clone(),
         n_reverted_steps: 0,
-        sierra_gas,
+        sierra_gas: Default::default(),
         // FIXME correct value
         reverted_sierra_gas: Default::default(),
     };
@@ -63,7 +60,7 @@ pub fn calculate_used_gas(
         computation: computation_resources,
     };
 
-    dbg!(&transaction_resources);
+    // dbg!(&transaction_resources);
 
     Ok(transaction_resources.to_gas_vector(
         versioned_constants,
@@ -200,35 +197,4 @@ pub fn check_available_gas(
         }
         _ => summary,
     }
-}
-
-fn calculate_sierra_gas(execution_resources: &ExecutionResources) -> usize {
-    const COST_PER_CAIRO_STEP: usize = 100;
-
-    let gas_from_steps = execution_resources.n_steps * COST_PER_CAIRO_STEP;
-
-    let gas_from_builtins: usize = execution_resources
-        .builtin_instance_counter
-        .iter()
-        .map(|(libfunc, count)| calculate_libfunc_cost(*libfunc, *count))
-        .sum();
-
-    gas_from_steps + gas_from_builtins
-}
-
-fn calculate_libfunc_cost(libfunc: BuiltinName, count: usize) -> usize {
-    let cost_per_builtin = match libfunc {
-        BuiltinName::output => 0, // FIXME: Not defined in costs table
-        BuiltinName::range_check | BuiltinName::range_check96 => 70,
-        BuiltinName::pedersen => 4050,
-        BuiltinName::poseidon => 491,
-        BuiltinName::bitwise => 583,
-        BuiltinName::ec_op => 4085,
-        BuiltinName::add_mod => 230,
-        BuiltinName::mul_mod => 604,
-        BuiltinName::ecdsa => 0,         // FIXME: Not defined in costs table
-        BuiltinName::keccak => 0,        // FIXME: Not defined in costs table
-        BuiltinName::segment_arena => 0, // FIXME: Not defined in costs table
-    };
-    count * cost_per_builtin
 }
