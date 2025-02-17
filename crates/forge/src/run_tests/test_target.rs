@@ -29,15 +29,6 @@ pub async fn run_for_test_target(
 ) -> Result<TestTargetRunResult> {
     let sierra_program = &tests.sierra_program.program;
     let casm_program = tests.casm_program.clone();
-    // let contract_artifact: SierraClass =
-    //     serde_json::from_reader(std::fs::File::open(&*tests.sierra_program_path).unwrap()).unwrap();
-    let code_size = calculate_code_size(
-        casm_program.assembled_cairo_program.bytecode.len(),
-        sierra_program.statements.len(),
-        // FIXME: Fix passing abi length
-        // contract_artifact.abi.len(),
-        0,
-    );
 
     let mut tasks = FuturesUnordered::new();
     // Initiate two channels to manage the `--exit-first` flag.
@@ -82,7 +73,6 @@ pub async fn run_for_test_target(
             args,
             case,
             casm_program.clone(),
-            code_size,
             forge_config.clone(),
             tests.sierra_program_path.clone(),
             send.clone(),
@@ -128,13 +118,4 @@ pub async fn run_for_test_target(
     } else {
         Ok(TestTargetRunResult::Ok(summary))
     }
-}
-
-// Ref: https://github.com/starkware-libs/sequencer/blob/7319f200db1df692be89245c43bfaf8af595df9d/crates/starknet_api/src/contract_class.rs#L159
-fn calculate_code_size(
-    bytecode_length: usize,
-    sierra_program_length: usize,
-    abi_length: usize,
-) -> usize {
-    (bytecode_length + sierra_program_length) * FELT_WIDTH + abi_length
 }

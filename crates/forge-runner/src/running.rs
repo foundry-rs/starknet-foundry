@@ -66,7 +66,6 @@ pub mod with_config;
 pub fn run_test(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
-    code_size: usize,
     test_runner_config: Arc<TestRunnerConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -82,7 +81,6 @@ pub fn run_test(
             vec![],
             &case,
             &casm_program,
-            code_size,
             &RuntimeConfig::from(&test_runner_config),
         );
 
@@ -107,7 +105,6 @@ pub(crate) fn run_fuzz_test(
     args: Vec<Felt>,
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
-    code_size: usize,
     test_runner_config: Arc<TestRunnerConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -125,7 +122,6 @@ pub(crate) fn run_fuzz_test(
             args.clone(),
             &case,
             &casm_program,
-            code_size,
             &Arc::new(RuntimeConfig::from(&test_runner_config)),
         );
 
@@ -159,7 +155,6 @@ pub fn run_test_case(
     args: Vec<Felt>,
     case: &TestCaseWithResolvedConfig,
     casm_program: &AssembledProgramWithDebugInfo,
-    code_size: usize,
     runtime_config: &RuntimeConfig,
 ) -> Result<RunResultWithInfo> {
     assert!(args.is_empty(), "Tests with args not supported currently");
@@ -292,22 +287,11 @@ pub fn run_test_case(
     update_top_call_execution_resources(&mut forge_runtime);
     update_top_call_l1_resources(&mut forge_runtime);
     let transaction_context = get_context(&forge_runtime).tx_context.clone();
-    let calldata = forge_runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .base
-        .call
-        .calldata
-        .clone();
     let used_resources = get_all_used_resources(forge_runtime, &transaction_context);
     let gas = calculate_used_gas(
         &transaction_context,
         &mut cached_state,
         used_resources.clone(),
-        code_size,
-        calldata,
     )?;
 
     dbg!(&gas);
