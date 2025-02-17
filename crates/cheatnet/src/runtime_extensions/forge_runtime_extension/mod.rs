@@ -698,7 +698,9 @@ pub fn get_all_used_resources(
         .current_call_stack
         .top();
 
-    let execution_resources = add_execution_resources(top_call.clone());
+    // TODO check this
+    // let execution_resources = add_execution_resources(top_call.clone());
+    let execution_resources = top_call.borrow().used_execution_resources.clone();
 
     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
     let events = runtime_call_info
