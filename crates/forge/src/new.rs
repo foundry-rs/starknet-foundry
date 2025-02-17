@@ -1,8 +1,8 @@
 use crate::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
-use crate::{CAIRO_EDITION, NewArgs};
-use anyhow::{Context, Ok, Result, anyhow, bail, ensure};
+use crate::{NewArgs, Template, CAIRO_EDITION};
+use anyhow::{anyhow, bail, ensure, Context, Ok, Result};
 use camino::Utf8PathBuf;
-use include_dir::{Dir, include_dir};
+use include_dir::{include_dir, Dir, DirEntry};
 use indoc::formatdoc;
 use scarb_api::ScarbCommand;
 use semver::Version;
@@ -13,7 +13,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use toml_edit::{Array, ArrayOfTables, DocumentMut, Item, Table, Value, value};
 
-static TEMPLATE: Dir = include_dir!("starknet_forge_template");
+static TEMPLATES_DIR: Dir = include_dir!("snforge_templates");
 
 const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
 const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
@@ -56,25 +56,26 @@ fn add_template_to_scarb_manifest(path: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-fn overwrite_files_from_scarb_template(
-    dir_to_overwrite: &str,
-    base_path: &Path,
+fn overwrite_or_copy_files(
+    dir: &Dir,
+    template_path: &Path,
+    project_path: &Path,
     project_name: &str,
 ) -> Result<()> {
-    let copy_from_dir = TEMPLATE.get_dir(dir_to_overwrite).ok_or_else(|| {
-        anyhow!(
-            "Directory {} doesn't exist in the template.",
-            dir_to_overwrite
-        )
-    })?;
-
-    for file in copy_from_dir.files() {
-        fs::create_dir_all(base_path.join(Path::new(dir_to_overwrite)))?;
-        let path = base_path.join(file.path());
-        let contents = file.contents();
-        let contents = replace_project_name(contents, project_name)?;
-
-        fs::write(path, contents)?;
+    for entry in dir.entries() {
+        let path_without_template_name = entry.path().strip_prefix(template_path)?;
+        let destination = project_path.join(path_without_template_name);
+        match entry {
+            DirEntry::Dir(dir) => {
+                fs::create_dir_all(&destination)?;
+                overwrite_or_copy_files(dir, template_path, project_path, project_name)?;
+            }
+            DirEntry::File(file) => {
+                let contents = file.contents();
+                let contents = replace_project_name(contents, project_name)?;
+                fs::write(destination, contents)?;
+            }
+        }
     }
 
     Ok(())
@@ -86,16 +87,19 @@ fn replace_project_name(contents: &[u8], project_name: &str) -> Result<Vec<u8>> 
     Ok(contents.into_bytes())
 }
 
-fn update_config(config_path: &Path, scarb: &Version) -> Result<()> {
+fn update_config(config_path: &Path, template: &Template) -> Result<()> {
     let config_file = fs::read_to_string(config_path)?;
     let mut document = config_file
         .parse::<DocumentMut>()
         .context("invalid document")?;
 
-    add_target_to_toml(&mut document);
+    if !matches!(template, Template::CairoProgram) {
+        add_target_to_toml(&mut document);
+    }
+
     set_cairo_edition(&mut document, CAIRO_EDITION);
     add_test_script(&mut document);
-    add_assert_macros(&mut document, scarb)?;
+    add_assert_macros(&mut document)?;
     add_allow_prebuilt_macros(&mut document)?;
 
     fs::write(config_path, document.to_string())?;
@@ -127,11 +131,12 @@ fn set_cairo_edition(document: &mut DocumentMut, cairo_edition: &str) {
     document["package"]["edition"] = value(cairo_edition);
 }
 
-fn add_assert_macros(document: &mut DocumentMut, scarb: &Version) -> Result<()> {
-    let version = if scarb < &MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS {
-        &DEFAULT_ASSERT_MACROS
+fn add_assert_macros(document: &mut DocumentMut) -> Result<()> {
+    let scarb_version = ScarbCommand::version().run()?.scarb;
+    let version = if scarb_version < MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS {
+        DEFAULT_ASSERT_MACROS
     } else {
-        scarb
+        scarb_version
     };
 
     document
@@ -184,6 +189,7 @@ pub fn new(
         name,
         no_vcs,
         overwrite,
+        template,
     }: NewArgs,
 ) -> Result<()> {
     if !overwrite {
@@ -232,34 +238,12 @@ pub fn new(
         create_snfoundry_manifest(&snfoundry_manifest_path)?;
     }
 
-    let version = env!("CARGO_PKG_VERSION");
-    let cairo_version = ScarbCommand::version().run()?.cairo;
-
-    if env::var("DEV_DISABLE_SNFORGE_STD_DEPENDENCY").is_err() {
-        ScarbCommand::new_with_stdio()
-            .current_dir(&project_path)
-            .manifest_path(scarb_manifest_path.clone())
-            .offline()
-            .arg("add")
-            .arg("--dev")
-            .arg(format!("snforge_std@{version}"))
-            .run()
-            .context("Failed to add snforge_std dependency")?;
-    }
-
-    ScarbCommand::new_with_stdio()
-        .current_dir(&project_path)
-        .manifest_path(scarb_manifest_path.clone())
-        .offline()
-        .arg("add")
-        .arg(format!("starknet@{cairo_version}"))
-        .run()
-        .context("Failed to add starknet dependency")?;
-
-    update_config(&project_path.join("Scarb.toml"), &cairo_version)?;
+    add_dependencies_to_scarb_toml(&project_path, &template)?;
+    update_config(&scarb_manifest_path, &template)?;
     extend_gitignore(&project_path)?;
-    overwrite_files_from_scarb_template("src", &project_path, &name)?;
-    overwrite_files_from_scarb_template("tests", &project_path, &name)?;
+
+    let template_dir = get_template_dir(&template)?;
+    overwrite_or_copy_files(&template_dir, template_dir.path(), &project_path, &name)?;
 
     // Fetch to create lock file.
     ScarbCommand::new_with_stdio()
@@ -267,6 +251,50 @@ pub fn new(
         .arg("fetch")
         .run()
         .context("Failed to fetch created project")?;
+
+    Ok(())
+}
+
+fn add_dependencies_to_scarb_toml(project_path: &PathBuf, template: &Template) -> Result<()> {
+    let snforge_version = env!("CARGO_PKG_VERSION");
+    let cairo_version = ScarbCommand::version().run()?.cairo;
+
+    if env::var("DEV_DISABLE_SNFORGE_STD_DEPENDENCY").is_err() {
+        add_dependency(project_path, "snforge_std", snforge_version, true)?;
+    }
+
+    match template {
+        Template::BalanceContract => {
+            add_dependency(project_path, "starknet", &cairo_version.to_string(), false)?;
+        }
+        Template::CairoProgram => {}
+    }
+
+    Ok(())
+}
+
+fn add_dependency(
+    project_path: &PathBuf,
+    dep_name: &str,
+    version: &str,
+    is_dev: bool,
+) -> Result<()> {
+    let scarb_manifest_path = project_path.join("Scarb.toml");
+
+    let mut cmd = ScarbCommand::new_with_stdio();
+
+    cmd.current_dir(project_path)
+        .manifest_path(scarb_manifest_path.clone())
+        .offline()
+        .arg("add");
+
+    if is_dev {
+        cmd.arg("--dev");
+    }
+
+    cmd.arg(format!("{dep_name}@{version}"))
+        .run()
+        .context(format!("Failed to add {dep_name} dependency"))?;
 
     Ok(())
 }
@@ -282,4 +310,16 @@ fn infer_name(name: Option<String>, path: &Utf8PathBuf) -> Result<String> {
     };
 
     Ok(name)
+}
+
+fn get_template_dir(template: &Template) -> Result<Dir> {
+    let dir_name = match template {
+        Template::CairoProgram => "cairo_program",
+        Template::BalanceContract => "balance_contract",
+    };
+
+    TEMPLATES_DIR
+        .get_dir(dir_name)
+        .ok_or_else(|| anyhow!("Directory {dir_name} not found"))
+        .cloned()
 }

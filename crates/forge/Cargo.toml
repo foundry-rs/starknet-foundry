@@ -48,6 +48,7 @@ tokio.workspace = true
 futures.workspace = true
 url.workspace = true
 indoc.workspace = true
+derive_more.workspace = true
 
 [[bin]]
 name = "snforge"
