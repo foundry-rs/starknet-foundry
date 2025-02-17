@@ -30,13 +30,7 @@ fn declare_cost_is_omitted() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 1 because of steps required to run the code
-
-    // steps: 230
-    // memory holes: 2
-    // builtins: (range_check: 10)
-    // syscalls: ()
-
+    // 1 = cost of 230 steps (because int(0.0025 * 230) = 1)
     assert_gas(&result, "declare_cost_is_omitted", 1);
 }
 
@@ -70,13 +64,7 @@ fn deploy_syscall_cost() {
     // l = 1 (updated contract class)
     // n = 1 (unique contracts updated - in this case it's the new contract address)
     // ( l + n * 2 ) * felt_size_in_bytes(32) = 96 (total l1 cost)
-    // int(5.12 * 2) = 11 = keccak cost from constructor
-
-    // steps: 2891
-    // memory holes: 50
-    // builtins: (range_check: 227, bitwise: 12, pedersen: 7, keccak: 2)
-    // syscalls: (Keccak: 2, Deploy: 1)
-
+    // 11 = cost of 2 keccak builtins from constructor (because int(5.12 * 2) = 11)
     assert_gas(&result, "deploy_syscall_cost", 96 + 11);
 }
 
@@ -106,13 +94,7 @@ fn snforge_std_deploy_cost() {
 
     assert_passed(&result);
     // 96 = gas cost of onchain data (deploy cost)
-    // int(5.12 * 2) = 11 = keccak cost
-
-    // steps: 3063
-    // memory holes: 51
-    // builtins: (range_check: 239, bitwise: 12, pedersen: 7, keccak: 2)
-    // syscalls: (Keccak: 2, Deploy: 1)
-
+    // 11 = cost of 11 keccak builtins = 11, because int(5.12 * 11) = 56
     assert_gas(&result, "deploy_cost", 96 + 11);
 }
 
@@ -130,12 +112,7 @@ fn keccak_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-
-    // steps: 850
-    // memory holes: 24
-    // builtins: (range_check: 100, bitwise: 6, keccak: 1)
-    // syscalls: (Keccak: 1)
-
+    // cost of 1 keccak builtin = 6, because int(5.12 * 1) = 6
     assert_gas(&result, "keccak_cost", 6);
 }
 
@@ -172,13 +149,7 @@ fn contract_keccak_cost() {
 
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
-    // 26 = cost of 5x keccak builtin
-
-    // steps: 6107
-    // memory holes: 122
-    // builtins: (range_check: 561, bitwise: 30, pedersen: 7, keccak: 5)
-    // syscalls: (Keccak: 5, Deploy: 1, CallContract: 1)
-
+    // 26 = cost of 5 keccak builtins (because int(5.12 * 5) = 26)
     assert_gas(&result, "contract_keccak_cost", 96 + 26);
 }
 
@@ -196,12 +167,7 @@ fn range_check_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-
-    // steps: 68
-    // memory holes: 1
-    // builtins: (range_check: 3)
-    // syscalls: ()
-
+    // 1 = cost of 1 range check builtin (because int(0.04 * 1) = 1)
     assert_gas(&result, "range_check_cost", 1);
 }
 
@@ -241,13 +207,7 @@ fn contract_range_check_cost() {
 
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
-    // 8 = cost of 191 range check builtins
-
-    // steps: 3163
-    // memory holes: 10
-    // builtins: (range_check: 197, pedersen: 7)
-    // syscalls: (Deploy: 1, CallContract: 1)
-
+    // 8 = cost of 191 range check builtins (because int(0.04 * 191) = 8)
     assert_gas(&result, "contract_range_check_cost", 96 + 8);
 }
 
@@ -266,12 +226,7 @@ fn bitwise_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-
-    // steps: 78
-    // memory holes: 1
-    // builtins: (range_check: 3, bitwise: 1)
-    // syscalls: ()
-
+    // 1 = cost of 1 bitwise builtin, because int(0.16 * 1) = 1
     assert_gas(&result, "bitwise_cost", 1);
 }
 
@@ -309,13 +264,7 @@ fn contract_bitwise_cost() {
 
     assert_passed(&result);
     // 96 = cost of deploy l1 cost (see snforge_std_deploy_cost test)
-    // 48 = cost of 300 bitwise builtins
-
-    // steps: 11799
-    // memory holes: 7
-    // builtins: (range_check: 961, bitwise: 300, pedersen: 7)
-    // syscalls: (Deploy: 1, CallContract: 1)
-
+    // 48 = cost of 300 bitwise builtins (because int(0.16 * 300) = 48)
     assert_gas(&result, "contract_bitwise_cost", 96 + 48);
 }
 
@@ -334,12 +283,7 @@ fn pedersen_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-
-    // steps: 78
-    // memory holes: 1
-    // builtins: (range_check: 3, pedersen: 1)
-    // syscalls: ()
-
+    // 1 = cost of 1 pedersen builtin (because int(0.16 * 1) = 1)
     assert_gas(&result, "pedersen_cost", 1);
 }
 
@@ -377,13 +321,7 @@ fn contract_pedersen_cost() {
 
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
-    // 7 = cost of 86 pedersen builtins
-
-    // steps: 2778
-    // memory holes: 7
-    // builtins: (pedersen: 86, range_check: 57)
-    // syscalls: (Deploy: 1, CallContract: 1)
-
+    // 7 = cost of 86 pedersen builtins (because int(0.08 * 86) = 7)
     assert_gas(&result, "contract_pedersen_cost", 96 + 7);
 }
 
@@ -402,12 +340,7 @@ fn poseidon_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-
-    // steps: 4330
-    // memory holes: 9
-    // builtins: (poseidon: 160, range_check: 74, pedersen: 7)
-    // syscalls: (CallContract: 2, Deploy: 1)
-
+    // 1 = cost of 1 poseidon builtin (because int(0.08 * 1) = 1)
     assert_gas(&result, "poseidon_cost", 1);
 }
 
@@ -446,13 +379,7 @@ fn contract_poseidon_cost() {
 
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
-    // 13 = cost of 160 poseidon builtins
-
-    // steps: 4330
-    // memory holes: 9
-    // builtins: (poseidon: 160, range_check: 74, pedersen: 7)
-    // syscalls: (CallContract: 2, Deploy: 1)
-
+    // 13 = cost of 160 poseidon builtins (because int(0.08 * 160) = 13)
     assert_gas(&result, "contract_poseidon_cost", 96 + 13);
 }
 
@@ -473,12 +400,7 @@ fn ec_op_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-
-    // steps: 123
-    // memory holes: 1
-    // builtins: (range_check: 6, ec_op: 1)
-    // syscalls: ()
-
+    // 3 = cost of 1 ec_op builtin (because int(2.56 * 1) = 3)
     assert_gas(&result, "ec_op_cost", 3);
 }
 
@@ -515,13 +437,7 @@ fn contract_ec_op_cost() {
 
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
-    // 26 = cost of 10x ec_op builtins
-
-    // steps: 3259
-    // memory holes: 7
-    // builtins: (range_check: 121, ec_op: 10, pedersen: 7)
-    // syscalls: (CallContract: 1, Deploy: 1)
-
+    // 26 = cost of 10 ec_op builtins (because int(2.56 * 10) = 26)
     assert_gas(&result, "contract_ec_op_cost", 96 + 26);
 }
 
@@ -557,13 +473,7 @@ fn storage_write_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-
-    // steps: 2576
-    // memory holes: 7
-    // builtins: (range_check: 60, pedersen: 7)
-    // syscalls: (CallContract: 1, Deploy: 1, StorageWrite: 1)
-
-    // 2491 * 0.0025 = 6,2275 ~ 7 = gas cost of steps
+    // 2576 * 0.0025 = 6.44 ~ 7 = gas cost of steps
     // 96 = gas cost of deployment
     // storage_updates(1) * 2 * 32 = 64
     // storage updates from zero value(1) * 32 = 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
@@ -594,19 +504,13 @@ fn storage_write_from_test_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 1 = gas cost of steps
+    // 173 * 0.0025 = 0.4325 ~ 1 = gas cost of steps
     // n = unique contracts updated
     // m = values updated
     // So, as per formula:
     // n(1) * 2 * 32 = 64
     // m(1) * 2 * 32 = 64
     // storage updates from zero value(1) * 32 = 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
-
-    // steps: 173
-    // memory holes: 1
-    // builtins: (range_check: 4)
-    // syscalls: (StorageWrite: 1)
-
     assert_gas(&result, "storage_write_from_test_cost", 1 + 64 + 64 + 32);
 }
 
@@ -643,7 +547,7 @@ fn multiple_storage_writes_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 3470 * 0.0025 = 8.675 ~ 9 = gas cost of steps
+    // 3598 * 0.0025 = 8.995 ~ 9 = gas cost of steps
     // l = number of class hash updates
     // n = unique contracts updated
     // m = unique(!) values updated
@@ -652,12 +556,6 @@ fn multiple_storage_writes_cost() {
     // m(1) * 2 * 32 = 64
     // l(1) * 32 = 32
     // storage updates from zero value(1) * 32 = 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
-
-    // steps: 3598
-    // memory holes: 9
-    // builtins: (range_check: 80, pedersen: 7)
-    // syscalls: (CallContract: 2, StorageWrite: 2, Deploy: 1)
-
     assert_gas(
         &result,
         "multiple_storage_writes_cost",
@@ -697,16 +595,9 @@ fn l1_message_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 2533 * 0.0025 = 6.3325 ~ 7 = gas cost of steps
+    // 2614 * 0.0025 = 6.535 ~ 7 = gas cost of steps
     // 96 = gas cost of deployment
     // 29524 = gas cost of onchain data
-    // 1 = ???
-
-    // steps: 2614
-    // memory holes: 7
-    // builtins: (range_check: 58, pedersen: 7)
-    // syscalls: (SendMessageToL1: 1, Deploy: 1, CallContract: 1)
-
     assert_gas(&result, "l1_message_cost", 7 + 96 + 29524);
 }
 
@@ -724,14 +615,8 @@ fn l1_message_from_test_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 1 = gas cost of steps
+    // 224 * 0.0025 = 0.56 ~ 1 = gas cost of steps
     // 26764 = gas cost of onchain data
-
-    // steps: 224
-    // memory holes: 1
-    // builtins: (range_check: 4)
-    // syscalls: (SendMessageToL1: 1)
-
     assert_gas(&result, "l1_message_from_test_cost", 1 + 26764);
 }
 
@@ -780,20 +665,14 @@ fn l1_message_cost_for_proxy() {
 
     assert_passed(&result);
     // FIXME these calculatuins are incorrect
-    // 4870 * 0.0025 = 12,175 ~ 13 = gas cost of steps
+    // 5205 * 0.0025 = 13.0125 ~ 14 = gas cost of steps
     // l = number of class hash updates
     // n = unique contracts updated
     // So, as per formula:
     // n(2) * 2 * 32 = 128
     // l(2) * 32 = 64
     // 29524 = gas cost of message
-
-    // steps: 5205
-    // memory holes: 13
-    // builtins: (range_check: 118, pedersen: 14)
-    // syscalls: (Deploy: 2, CallContract: 2, SendMessageToL1: 1)
-
-    assert_gas(&result, "l1_message_cost_for_proxy", 128 + 64 + 29538);
+    assert_gas(&result, "l1_message_cost_for_proxy", 14 + 128 + 64 + 29524);
 }
 
 #[test]
@@ -864,12 +743,6 @@ fn events_cost() {
     // 156 range_check_builtin ~= 7
     // 6 gas for 50 event values
     // ~13 gas for 50 event keys
-
-    // steps: 1716
-    // memory holes: 1
-    // builtins: (range_check: 156)
-    // syscalls: (EmitEvent: 1)
-
     assert_gas(&result, "events_cost", 7 + 6 + 13);
 }
 
@@ -903,15 +776,9 @@ fn events_contract_cost() {
 
     let result = run_test_case(&test);
     assert_passed(&result);
-    // 4038 * 0.0025 = 10,095 ~ 11 = gas cost of steps
+    // 4119 * 0.0025 = 10.2975 ~ 11 = gas cost of steps
     // 96 = gas cost of onchain data (deploy cost)
     // 6 gas for 50 event values
     // ~13 gas for 50 event keys
-
-    // steps: 4119
-    // memory holes: 7
-    // builtins: (range_check: 212, pedersen: 7)
-    // syscalls: (Deploy: 1, EmitEvent: 1, CallContract: 1)
-
     assert_gas(&result, "event_emission_cost", 11 + 96 + 6 + 13);
 }
