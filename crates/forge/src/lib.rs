@@ -3,6 +3,7 @@ use anyhow::anyhow;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
+use derive_more::Display;
 use forge_runner::CACHE_DIR;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
@@ -198,6 +199,16 @@ pub struct TestArgs {
     additional_args: Vec<OsString>,
 }
 
+#[derive(ValueEnum, Display, Debug, Clone)]
+pub enum Template {
+    /// Basic Cairo program
+    #[display("cairo-program")]
+    CairoProgram,
+    /// Basic contract with example tests
+    #[display("balance-contract")]
+    BalanceContract,
+}
+
 #[derive(Parser, Debug)]
 pub struct NewArgs {
     /// Path to a location where the new project will be created
@@ -211,6 +222,9 @@ pub struct NewArgs {
     /// Try to create the project even if the specified directory at <PATH> is not empty, which can result in overwriting existing files
     #[arg(long)]
     overwrite: bool,
+    /// Template to use for the new project
+    #[arg(short, long, default_value_t = Template::BalanceContract)]
+    template: Template,
 }
 
 pub enum ExitStatus {
