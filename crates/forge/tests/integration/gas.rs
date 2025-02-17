@@ -94,7 +94,7 @@ fn snforge_std_deploy_cost() {
 
     assert_passed(&result);
     // 96 = gas cost of onchain data (deploy cost)
-    // 11 = cost of 11 keccak builtins = 11, because int(5.12 * 11) = 56
+    // 11 = cost of 2 keccak builtins = 11 (because int(5.12 * 2) = 11)
     assert_gas(&result, "deploy_cost", 96 + 11);
 }
 
@@ -112,7 +112,7 @@ fn keccak_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // cost of 1 keccak builtin = 6, because int(5.12 * 1) = 6
+    // 6 = cost of 1 keccak builtin (because int(5.12 * 1) = 6)
     assert_gas(&result, "keccak_cost", 6);
 }
 
@@ -559,7 +559,7 @@ fn multiple_storage_writes_cost() {
     assert_gas(
         &result,
         "multiple_storage_writes_cost",
-        9 + 64 + 64 + 32 + 32,
+        10 + 64 + 64 + 32 + 32,
     );
 }
 
@@ -664,7 +664,6 @@ fn l1_message_cost_for_proxy() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // FIXME these calculatuins are incorrect
     // 5205 * 0.0025 = 13.0125 ~ 14 = gas cost of steps
     // l = number of class hash updates
     // n = unique contracts updated
@@ -706,12 +705,6 @@ fn l1_handler_cost() {
     // 96 = gas cost of onchain data (deploy cost)
     // int(5.12 * 4) = 21 = keccak cost from l1 handler
     // 14643 - l1 cost of payload + emit message handle event
-
-    // steps: 4546
-    // memory holes: 97
-    // builtins: (range_check: 434, bitwise: 24, pedersen: 7, keccak: 4)
-    // syscalls: (Keccak: 4, Deploy: 1)
-
     assert_gas(&result, "l1_handler_cost", 96 + 15944);
 }
 

@@ -12,7 +12,6 @@ use forge_runner::{
     TestCaseFilter,
 };
 use futures::{stream::FuturesUnordered, StreamExt};
-use starknet_api::contract_class::FELT_WIDTH;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::mpsc::channel;
 
@@ -57,7 +56,7 @@ pub async fn run_for_test_target(
             continue;
         };
 
-        let function = &sierra_program
+        let function = sierra_program
             .funcs
             .iter()
             .find(|f| f.id.debug_name.as_ref().unwrap().ends_with(&case_name))
