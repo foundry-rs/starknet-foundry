@@ -157,6 +157,8 @@ fn get_state_resources(
             .fee_token_address(&transaction_context.tx_info.fee_type()),
     );
 
+    // let use_kzg_da = transaction_context.block_context.block_info().use_kzg_da;
+    // let l1_data_gas_cost = get_da_gas_cost(&state_changes_count, use_kzg_da);
     Ok(StateResources {
         state_changes_for_fee: state_changes_count,
     })
