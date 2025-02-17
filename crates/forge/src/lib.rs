@@ -294,7 +294,7 @@ fn check_requirements(output_on_success: bool) -> Result<()> {
     requirements_checker.check()?;
 
     let scarb_version = ScarbCommand::version().run()?.scarb;
-    if scarb_version <= MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN {
+    if scarb_version < MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN {
         let mut requirements_checker = RequirementsChecker::new(output_on_success);
         requirements_checker.add_requirement(Requirement {
             name: "Rust".to_string(),
