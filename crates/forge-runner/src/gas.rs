@@ -61,8 +61,6 @@ pub fn calculate_used_gas(
         // FIXME actually check it
         true,
         &GasVectorComputationMode::NoL2Gas,
-        // transaction_context.block_context.block_info().use_kzg_da,
-        // &transaction_context.get_gas_vector_computation_mode(),
     ))
 }
 
