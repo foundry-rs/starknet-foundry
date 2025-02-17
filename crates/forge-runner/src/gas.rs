@@ -26,6 +26,7 @@ pub fn calculate_used_gas(
     calldata: Calldata,
 ) -> Result<GasVector, StateError> {
     let versioned_constants = transaction_context.block_context.versioned_constants();
+
     let message_resources = get_messages_resources(
         &resources.l2_to_l1_payload_lengths,
         &resources.l1_handler_payload_lengths,
@@ -203,11 +204,8 @@ pub fn check_available_gas(
 
 fn calculate_sierra_gas(execution_resources: &ExecutionResources) -> usize {
     const COST_PER_CAIRO_STEP: usize = 100;
-    const COST_PER_MEMORY_HOLE: usize = 50;
 
     let gas_from_steps = execution_resources.n_steps * COST_PER_CAIRO_STEP;
-
-    let gas_from_memory_holes = execution_resources.n_memory_holes * COST_PER_MEMORY_HOLE;
 
     let gas_from_builtins: usize = execution_resources
         .builtin_instance_counter
@@ -215,7 +213,7 @@ fn calculate_sierra_gas(execution_resources: &ExecutionResources) -> usize {
         .map(|(libfunc, count)| calculate_libfunc_cost(*libfunc, *count))
         .sum();
 
-    gas_from_steps + gas_from_memory_holes + gas_from_builtins
+    gas_from_steps + gas_from_builtins
 }
 
 fn calculate_libfunc_cost(libfunc: BuiltinName, count: usize) -> usize {
