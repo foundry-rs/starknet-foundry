@@ -302,7 +302,6 @@ pub fn run_test_case(
         .calldata
         .clone();
     let used_resources = get_all_used_resources(forge_runtime, &transaction_context);
-
     let gas = calculate_used_gas(
         &transaction_context,
         &mut cached_state,
