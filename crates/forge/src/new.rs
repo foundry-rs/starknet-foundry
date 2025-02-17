@@ -1,8 +1,8 @@
 use crate::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
-use crate::{NewArgs, Template, CAIRO_EDITION};
-use anyhow::{anyhow, bail, ensure, Context, Ok, Result};
+use crate::{CAIRO_EDITION, NewArgs, Template};
+use anyhow::{Context, Ok, Result, anyhow, bail, ensure};
 use camino::Utf8PathBuf;
-use include_dir::{include_dir, Dir, DirEntry};
+use include_dir::{Dir, DirEntry, include_dir};
 use indoc::formatdoc;
 use scarb_api::ScarbCommand;
 use semver::Version;

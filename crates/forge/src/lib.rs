@@ -206,7 +206,7 @@ pub struct TestArgs {
 
 #[derive(ValueEnum, Display, Debug, Clone)]
 pub enum Template {
-    /// Basic Cairo program
+    /// Simple Cairo program with unit tests
     #[display("cairo-program")]
     CairoProgram,
     /// Basic contract with example tests

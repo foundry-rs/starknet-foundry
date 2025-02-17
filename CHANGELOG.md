@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `snforge new` now adds the `snfoundry_trace`, `coverage`, and `profile` directories to `.gitignore`.
 - Custom types can be used in fuzz testing by implementing the `Fuzzable` trait
 - Support for Cairo 2.10.0
+- `--template` flag to `snforge new` command that allows selecting a template for the new project. Possible values are `balance-contract` (default) and `cairo-program`
 
 #### Changed
 

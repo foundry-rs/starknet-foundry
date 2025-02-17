@@ -10,6 +10,12 @@ Path to a location where the new project will be created.
 
 Name of a package to create, defaults to the directory name.
 
+## `-t`, `--template`
+
+Name of a template to use in creating the new project. Possible values:
+- `balance-contract` (default): Basic contract with example tests.
+- `cairo-program`: Simple Cairo program with unit tests.
+
 ## `--no-vcs`
 
 Do not initialize a new Git repository.

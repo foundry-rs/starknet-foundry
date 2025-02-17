@@ -1,4 +1,4 @@
-use crate::{NewArgs, new, Template};
+use crate::{NewArgs, Template, new};
 use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use shared::print::print_as_warning;
