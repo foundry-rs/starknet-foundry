@@ -1,10 +1,6 @@
-use core::clone::Clone;
-use core::serde::Serde;
-use core::traits::TryInto;
-use starknet::{ContractAddress, ClassHash, testing::cheatcode, SyscallResult};
+use starknet::{ContractAddress, ClassHash, SyscallResult};
 use super::super::byte_array::byte_array_as_felt_array;
-use super::super::_cheatcode::handle_cheatcode;
-use core::traits::Into;
+use super::super::_cheatcode::execute_cheatcode_and_deserialize;
 
 #[derive(Drop, Serde, Copy)]
 pub struct ContractClass {
@@ -64,9 +60,7 @@ impl ContractClassImpl of ContractClassTrait {
     ) -> ContractAddress {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
-        let mut outputs = handle_cheatcode(cheatcode::<'precalculate_address'>(inputs.span()));
-
-        Serde::deserialize(ref outputs).unwrap()
+        execute_cheatcode_and_deserialize::<'precalculate_address'>(inputs.span())
     }
 
     fn deploy(
@@ -74,9 +68,7 @@ impl ContractClassImpl of ContractClassTrait {
     ) -> SyscallResult<(ContractAddress, Span<felt252>)> {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
-        let mut outputs = handle_cheatcode(cheatcode::<'deploy'>(inputs.span()));
-
-        Serde::deserialize(ref outputs).unwrap()
+        execute_cheatcode_and_deserialize::<'deploy'>(inputs.span())
     }
 
     fn deploy_at(
@@ -87,9 +79,7 @@ impl ContractClassImpl of ContractClassTrait {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
         inputs.append(contract_address.into());
 
-        let mut outputs = handle_cheatcode(cheatcode::<'deploy_at'>(inputs.span()));
-
-        Serde::deserialize(ref outputs).unwrap()
+        execute_cheatcode_and_deserialize::<'deploy_at'>(inputs.span())
     }
 
     fn new<T, +Into<T, ClassHash>>(class_hash: T) -> ContractClass {
@@ -121,22 +111,14 @@ impl DeclareResultImpl of DeclareResultTrait {
 /// - `AlreadyDeclared`: Contains `ContractClass` and signals that the contract has already been
 /// declared.
 pub fn declare(contract: ByteArray) -> Result<DeclareResult, Array<felt252>> {
-    let mut span = handle_cheatcode(
-        cheatcode::<'declare'>(byte_array_as_felt_array(@contract).span())
-    );
-
-    Serde::deserialize(ref span).unwrap()
+    execute_cheatcode_and_deserialize::<'declare'>(byte_array_as_felt_array(@contract).span())
 }
 
 /// Retrieves a class hash of a contract deployed under the given address
 /// `contract_address` - target contract address
 /// Returns the `ClassHash` under given address
 pub fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
-    let mut span = handle_cheatcode(
-        cheatcode::<'get_class_hash'>(array![contract_address.into()].span())
-    );
-
-    Serde::deserialize(ref span).unwrap()
+    execute_cheatcode_and_deserialize::<'get_class_hash'>(array![contract_address.into()].span())
 }
 
 fn _prepare_calldata(

@@ -5,9 +5,11 @@ Account information will be saved to the file specified by `--accounts-file` arg
 which is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default.
 
 ## `--name, -n <ACCOUNT_NAME>`
-Required.
+Optional.
 
 Account name under which account information is going to be saved.
+
+If `--name` is not provided, it will be generated automatically.
 
 ## `--url, -u <RPC_URL>`
 Optional.
@@ -15,6 +17,13 @@ Optional.
 Starknet RPC node url address.
 
 Overrides url from `snfoundry.toml`.
+
+## `--network <NETWORK>`
+Optional.
+
+Use predefined network with a public provider
+
+Possible values: `mainnet`, `sepolia`.
 
 ## `--type, -t <ACCOUNT_TYPE>`
 Optional. Required if `--class-hash` is passed.

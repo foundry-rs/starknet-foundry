@@ -25,7 +25,11 @@ contracts from within Cairo, its interface, internals and feature set can change
 > ```rust
 >      let declare_result = declare(
 >        "Map",
->        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+>        FeeSettings {
+>           max_fee: Option::None,
+>           max_gas: Option::Some(999999),
+>           max_gas_unit_price: Option::Some(100000000000)
+>        },
 >        Option::Some(nonce)
 >    )
 >        .expect('declare failed');
@@ -260,7 +264,7 @@ To run the script, do:
 ```shell
 $ sncast \
   script run my_script
-  --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
+  --network sepolia
 ```
 
 <details>
@@ -340,7 +344,7 @@ To run the script, do:
 $ sncast \
   --account example_user \
   script run map_script \
-  --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
+  --network sepolia
 ```
 
 <details>
@@ -368,7 +372,7 @@ and only `call` functions are being executed (as they do not change the network 
 $ sncast \
   --account example_user \
   script run map_script \
-  --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7
+  --network sepolia
 ```
 
 <details>
@@ -393,7 +397,7 @@ whereas, when we run the same script once again with `--no-state-file` flag set,
 $ sncast \
   --account example_user \
   script run map_script \
-  --url https://starknet-sepolia.public.blastapi.io/rpc/v0_7 \
+  --network sepolia \
   --no-state-file
 ```
 

@@ -48,7 +48,7 @@ pub fn load(
 
 /// The address after hashing with pedersen, needs to be taken with a specific modulo value (2^251 - 256)
 /// For details see:
-/// <https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/contract-storage>
+/// <https://docs.starknet.io/architecture-and-concepts/smart-contracts/contract-storage>
 #[must_use]
 fn normalize_storage_address(address: Felt) -> Felt {
     let modulus = NonZeroFelt::from_felt_unchecked(Felt::from(2).pow(251_u128) - Felt::from(256));

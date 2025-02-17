@@ -206,7 +206,7 @@ impl CallTrace {
 }
 
 /// Enum representing node of a trace of a call.
-#[derive(Clone,Debug)]
+#[derive(Clone, Debug)]
 pub enum CallTraceNode {
     EntryPointCall(Rc<RefCell<CallTrace>>),
     DeployWithoutConstructor,

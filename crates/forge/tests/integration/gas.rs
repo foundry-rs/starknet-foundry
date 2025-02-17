@@ -5,7 +5,7 @@ use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
 // all calculations are based on formula from
-// https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#overall_fee
+// https://docs.starknet.io/architecture-and-concepts/network-architecture/fee-mechanism/#overall_fee
 
 #[test]
 fn declare_cost_is_omitted() {
@@ -471,7 +471,7 @@ fn storage_write_cost() {
     // 96 = gas cost of deployment
     // storage_updates(1) * 2 * 32 = 64
     // storage updates from zero value(1) * 32 = 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
-    assert_gas(&result, "storage_write_cost", 7 + 96 + 64+ 32);
+    assert_gas(&result, "storage_write_cost", 7 + 96 + 64 + 32);
 }
 
 #[test]
@@ -550,7 +550,11 @@ fn multiple_storage_writes_cost() {
     // m(1) * 2 * 32 = 64
     // l(1) * 32 = 32
     // storage updates from zero value(1) * 32 = 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
-    assert_gas(&result, "multiple_storage_writes_cost", 9 + 64 + 64 + 32 + 32);
+    assert_gas(
+        &result,
+        "multiple_storage_writes_cost",
+        9 + 64 + 64 + 32 + 32,
+    );
 }
 
 #[test]

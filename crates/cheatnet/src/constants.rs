@@ -75,7 +75,6 @@ pub fn build_testing_state() -> DictStateReader {
     DictStateReader {
         address_to_class_hash,
         class_hash_to_class,
-        ..Default::default()
     }
 }
 

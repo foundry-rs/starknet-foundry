@@ -1,7 +1,5 @@
-use core::array::ArrayTrait;
-use starknet::testing::cheatcode;
 use super::super::byte_array::byte_array_as_felt_array;
-use super::super::_cheatcode::handle_cheatcode;
+use super::super::_cheatcode::execute_cheatcode;
 
 #[derive(Drop, Clone)]
 pub struct File {
@@ -23,26 +21,14 @@ impl FileTraitImpl of FileTrait {
 /// `file` - a `File` struct to read text data from
 /// Returns an array of felts read from the file, panics if read was not possible
 pub fn read_txt(file: @File) -> Array<felt252> {
-    let content = handle_cheatcode(
-        cheatcode::<'read_txt'>(byte_array_as_felt_array(file.path).span())
-    );
-
-    let mut result = array![];
-    result.append_span(content);
-    result
+    execute_cheatcode::<'read_txt'>(byte_array_as_felt_array(file.path).span()).into()
 }
 
 /// `file` - a `File` struct to read json data from
 /// Returns an array of felts read from the file, panics if read was not possible, or json was
 /// incorrect
 pub fn read_json(file: @File) -> Array<felt252> {
-    let content = handle_cheatcode(
-        cheatcode::<'read_json'>(byte_array_as_felt_array(file.path).span())
-    );
-
-    let mut result = array![];
-    result.append_span(content);
-    result
+    execute_cheatcode::<'read_json'>(byte_array_as_felt_array(file.path).span()).into()
 }
 
 pub trait FileParser<T, impl TSerde: Serde<T>> {
@@ -58,15 +44,16 @@ pub trait FileParser<T, impl TSerde: Serde<T>> {
 
 impl FileParserImpl<T, impl TSerde: Serde<T>> of FileParser<T> {
     fn parse_txt(file: @File) -> Option<T> {
-        let mut content = handle_cheatcode(
-            cheatcode::<'read_txt'>(byte_array_as_felt_array(file.path).span())
-        );
+        let mut content = execute_cheatcode::<
+            'read_txt'
+        >(byte_array_as_felt_array(file.path).span());
         Serde::<T>::deserialize(ref content)
     }
+
     fn parse_json(file: @File) -> Option<T> {
-        let mut content = handle_cheatcode(
-            cheatcode::<'read_json'>(byte_array_as_felt_array(file.path).span())
-        );
+        let mut content = execute_cheatcode::<
+            'read_json'
+        >(byte_array_as_felt_array(file.path).span());
         Serde::<T>::deserialize(ref content)
     }
 }

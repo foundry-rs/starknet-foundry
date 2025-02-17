@@ -21,6 +21,7 @@ use cairo_lang_sierra::extensions::NamedType;
 use cairo_lang_sierra::ids::GenericTypeId;
 use cairo_lang_utils::unordered_hash_set::UnorderedHashSet;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
+use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::Felt252;
 use camino::{Utf8Path, Utf8PathBuf};
@@ -381,22 +382,31 @@ fn extract_test_case_summary(
                     versioned_program_path,
                 ),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
-                Err(error) => TestCaseSummary::Failed {
-                    name: case.name.clone(),
-                    msg: Some(format!(
+                Err(error) => {
+                    let mut message = format!(
                         "\n    {}\n",
                         error.to_string().replace(" Custom Hint Error: ", "\n    ")
-                    ))
-                    .map(|msg| {
-                        add_backtrace_footer(
-                            msg,
-                            contracts_data,
-                            &result_with_info.encountered_errors,
-                        )
-                    }),
-                    arguments: args,
-                    test_statistics: (),
-                },
+                    );
+                    if let CairoRunError::VirtualMachine(VirtualMachineError::UnfinishedExecution) =
+                        *error
+                    {
+                        message.push_str(
+                                "\n    Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps",
+                            );
+                    }
+                    TestCaseSummary::Failed {
+                        name: case.name.clone(),
+                        msg: Some(message).map(|msg| {
+                            add_backtrace_footer(
+                                msg,
+                                contracts_data,
+                                &result_with_info.encountered_errors,
+                            )
+                        }),
+                        arguments: args,
+                        test_statistics: (),
+                    }
+                }
             }
         }
         // `ForkStateReader.get_block_info`, `get_fork_state_reader, `calculate_used_gas` may return an error

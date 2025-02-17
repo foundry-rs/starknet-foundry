@@ -13,10 +13,17 @@ Starknet RPC node url address.
 
 Overrides url from `snfoundry.toml`.
 
-## `--network`
+## `--network <NETWORK>`
 Optional.
 
-Network in `accounts-file` associated with the account. By default, the network of RPC node.
+Use predefined network with a public provider
+
+Possible values: `mainnet`, `sepolia`.
+
+## `--network-name`
+Optional.
+
+Network in `accounts-file` associated with the account. By default, the network passed as `--network` of RPC node.
 
 ## `--yes`
 Optional.
