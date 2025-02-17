@@ -1,7 +1,7 @@
 use super::deploy::compute_account_address;
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
-    AccountType,
+    BaseAccountType,
 };
 use anyhow::{bail, ensure, Context, Result};
 use camino::Utf8PathBuf;
@@ -35,7 +35,7 @@ pub struct Import {
 
     /// Type of the account
     #[clap(short = 't', long = "type")]
-    pub account_type: AccountType,
+    pub account_type: BaseAccountType,
 
     /// Class hash of the account
     #[clap(short, long)]
@@ -125,9 +125,9 @@ pub async fn import(
     if let Some(salt) = import.salt {
         // TODO(#2571)
         let sncast_account_type = match import.account_type {
-            AccountType::Argent => SNCastAccountType::Argent,
-            AccountType::Braavos => SNCastAccountType::Braavos,
-            AccountType::Oz => SNCastAccountType::OpenZeppelin,
+            BaseAccountType::Argent => SNCastAccountType::Argent,
+            BaseAccountType::Braavos => SNCastAccountType::Braavos,
+            BaseAccountType::Oz => SNCastAccountType::OpenZeppelin,
         };
         let computed_address =
             compute_account_address(salt, private_key, class_hash, sncast_account_type, chain_id);

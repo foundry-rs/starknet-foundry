@@ -40,7 +40,7 @@ pub enum Commands {
 
 #[allow(clippy::doc_markdown)]
 #[derive(ValueEnum, Clone, Debug)]
-pub enum AccountType {
+pub enum BaseAccountType {
     /// OpenZeppelin account implementation
     Oz,
     /// Argent account implementation
@@ -49,12 +49,12 @@ pub enum AccountType {
     Braavos,
 }
 
-impl fmt::Display for AccountType {
+impl fmt::Display for BaseAccountType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            AccountType::Oz => write!(f, "open_zeppelin"),
-            AccountType::Argent => write!(f, "argent"),
-            AccountType::Braavos => write!(f, "braavos"),
+            BaseAccountType::Oz => write!(f, "open_zeppelin"),
+            BaseAccountType::Argent => write!(f, "argent"),
+            BaseAccountType::Braavos => write!(f, "braavos"),
         }
     }
 }
@@ -64,7 +64,7 @@ pub fn prepare_account_json(
     address: Felt,
     deployed: bool,
     legacy: bool,
-    account_type: &AccountType,
+    account_type: &BaseAccountType,
     class_hash: Option<Felt>,
     salt: Option<Felt>,
 ) -> serde_json::Value {
