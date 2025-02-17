@@ -558,10 +558,12 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
         .trace_data
         .current_call_stack
         .top();
+
+    let all_execution_resources = add_execution_resources(top_call.clone());
     let mut top_call = top_call.borrow_mut();
+    top_call.used_execution_resources = all_execution_resources;
 
-    // top_call.used_execution_resources = all_execution_resources;
-
+    // FIXME: it seems there are no syscalls in resulting trace file
     let top_call_syscalls = runtime
         .extended_runtime
         .extended_runtime
@@ -696,19 +698,7 @@ pub fn get_all_used_resources(
         .current_call_stack
         .top();
 
-    dbg!(
-        &runtime
-            .extended_runtime
-            .extended_runtime
-            .extension
-            .cheatnet_state
-            .trace_data
-            .current_call_stack
-    );
-
     let execution_resources = add_execution_resources(top_call.clone());
-
-    dbg!(&execution_resources);
 
     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
     let events = runtime_call_info

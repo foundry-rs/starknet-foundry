@@ -184,8 +184,6 @@ pub fn execute_entry_point_call_cairo1(
     .on_error_get_last_pc(&mut runner)?;
 
     let trace = get_relocated_vm_trace(&mut runner);
-    dbg!(&trace.is_some());
-
     let syscall_counter = cheatable_runtime
         .extended_runtime
         .hint_handler
