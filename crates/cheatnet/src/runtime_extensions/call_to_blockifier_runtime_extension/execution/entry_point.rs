@@ -75,7 +75,6 @@ pub fn execute_call_entry_point(
             let ret_data_f252: Vec<Felt> =
                 ret_data.iter().map(|datum| Felt::from_(*datum)).collect();
             cheatnet_state.trace_data.exit_nested_call(
-                // resources,
                 ExecutionResources::default(),
                 Default::default(),
                 CallResult::Success {
@@ -195,7 +194,6 @@ fn remove_syscall_resources_and_exit_success_call(
         aggregate_nested_syscall_counters(&cheatnet_state.trace_data.current_call_stack.top());
     let syscall_counter = sum_syscall_counters(nested_syscall_counter_sum, syscall_counter);
     cheatnet_state.trace_data.exit_nested_call(
-        // resources,
         resources,
         syscall_counter,
         CallResult::from_success(call_info),
@@ -216,7 +214,6 @@ fn exit_error_call(
         CallType::Delegate => AddressOrClassHash::ClassHash(entry_point.class_hash.unwrap()),
     };
     cheatnet_state.trace_data.exit_nested_call(
-        // resources,
         ExecutionResources::default(),
         Default::default(),
         CallResult::from_err(error, &identifier),
