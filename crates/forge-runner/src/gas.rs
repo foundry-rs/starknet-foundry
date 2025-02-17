@@ -32,13 +32,8 @@ pub fn calculate_used_gas(
 
     let state_resources = get_state_resources(transaction_context, state)?;
 
-    let archival_data_resources = get_archival_data_resources(
-        resources.events,
-        transaction_context,
-        code_size,
-        &calldata,
-        state_resources.clone(),
-    );
+    let archival_data_resources =
+        get_archival_data_resources(resources.events, transaction_context, code_size, &calldata);
 
     // dbg!(&resources.execution_resources);
 
@@ -50,6 +45,7 @@ pub fn calculate_used_gas(
     let computation_resources = ComputationResources {
         vm_resources: resources.execution_resources.clone(),
         n_reverted_steps: 0,
+        // FIXME correct value
         sierra_gas: Default::default(),
         // FIXME correct value
         reverted_sierra_gas: Default::default(),
@@ -74,7 +70,6 @@ fn get_archival_data_resources(
     transaction_context: &TransactionContext,
     code_size: usize,
     calldata: &Calldata,
-    state_resources: StateResources,
 ) -> ArchivalDataResources {
     // FIXME link source
     let mut total_event_keys = 0;
@@ -108,8 +103,9 @@ fn get_archival_data_resources(
     let dummy_starknet_resources = StarknetResources::new(
         calldata_length,
         signature_length,
-        code_size,
-        state_resources,
+        // code_size,
+        Default::default(),
+        StateResources::default(),
         None,
         dummy_execution_summary,
     );
