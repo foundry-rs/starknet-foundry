@@ -203,6 +203,7 @@ pub fn run_test_case(
     let forge_extension = ForgeExtension {
         environment_variables: runtime_config.environment_variables,
         contracts_data: runtime_config.contracts_data,
+        fuzzer_rng: None,
     };
 
     let mut forge_runtime = ExtendedRuntime {
