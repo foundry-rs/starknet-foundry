@@ -644,6 +644,7 @@ fn add_syscall_resources(
     total_vm_usage
 }
 
+#[allow(clippy::needless_pass_by_value)]
 fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResources {
     let mut execution_resources = top_call.borrow().used_execution_resources.clone();
     for nested_call in &top_call.borrow().nested_calls {

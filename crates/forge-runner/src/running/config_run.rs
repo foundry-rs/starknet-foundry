@@ -7,8 +7,6 @@ use crate::{package_tests::TestDetails, running::build_syscall_handler};
 use anyhow::Result;
 use blockifier::state::{cached_state::CachedState, state_api::StateReader};
 use cairo_lang_runner::Arg;
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::forge_config_extension::{
     config::RawForgeConfig, ForgeConfigExtension,
 };
@@ -64,20 +62,18 @@ pub fn run_config_pass(
     casm_program: &AssembledProgramWithDebugInfo,
 ) -> Result<RawForgeConfig> {
     let mut cached_state = CachedState::new(PhantomStateReader);
+    let gas_price_vector = GasPriceVector {
+        l1_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
+        l1_data_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
+        l2_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
+    };
+
     let block_info = BlockInfo {
         block_number: BlockNumber(0),
         block_timestamp: BlockTimestamp(0),
         gas_prices: GasPrices {
-            eth_gas_prices: GasPriceVector {
-                l1_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
-                l1_data_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
-                l2_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
-            },
-            strk_gas_prices: GasPriceVector {
-                l1_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
-                l1_data_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
-                l2_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
-            },
+            eth_gas_prices: gas_price_vector.clone(),
+            strk_gas_prices: gas_price_vector,
         },
         sequencer_address: 0_u8.into(),
         use_kzg_da: true,
@@ -91,12 +87,9 @@ pub fn run_config_pass(
 
     let mut context = build_context(&block_info, None);
 
-    let mut execution_resources = ExecutionResources::default();
-
     let syscall_handler = build_syscall_handler(
         &mut cached_state,
         &string_to_hint,
-        &mut execution_resources,
         &mut context,
         &test_details.parameter_types,
         builtins.len(),

@@ -68,7 +68,7 @@ fn prepare_program_extra_data(
     write_felt(
         &mut runner.vm,
         &mut ptr,
-        Felt::from(0x208b7fff7fff7ffe_u128),
+        Felt::from(0x208b_7fff_7fff_7ffe_u128),
     )?;
     // Push a pointer to the builtin cost segment.
     write_maybe_relocatable(&mut runner.vm, &mut ptr, builtin_cost_segment_start)?;
@@ -129,7 +129,7 @@ fn initialize_execution_context<'a>(
 // blockifier/src/execution/cairo1_execution.rs:48 (execute_entry_point_call)
 pub fn execute_entry_point_call_cairo1(
     call: CallEntryPoint,
-    compiled_class_v1: CompiledClassV1,
+    compiled_class_v1: &CompiledClassV1,
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState, // Added parameter
     // resources: &mut ExecutionResources,
@@ -147,7 +147,7 @@ pub fn execute_entry_point_call_cairo1(
         initial_syscall_ptr,
         entry_point,
         program_extra_data_length,
-    } = initialize_execution_context(call, &compiled_class_v1, state, context)?;
+    } = initialize_execution_context(call, compiled_class_v1, state, context)?;
 
     let args = prepare_call_arguments(
         &syscall_handler.base.call,

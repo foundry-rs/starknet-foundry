@@ -90,6 +90,7 @@ mod test {
     //     }
     // }
 
+    #[allow(clippy::needless_pass_by_value)]
     #[test_case(indoc!(
                     r#"
                     Error at pc=0:107:
