@@ -22,7 +22,6 @@ use cairo_lang_sierra::ids::GenericTypeId;
 use cairo_lang_utils::unordered_hash_set::UnorderedHashSet;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::Felt252;
 use camino::{Utf8Path, Utf8PathBuf};
 use casm::{get_assembled_program, run_assembled_program};
@@ -49,7 +48,6 @@ use std::default::Default;
 use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::Arc;
-use std::usize;
 use syscall_handler::build_syscall_handler;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
@@ -187,11 +185,9 @@ pub fn run_test_case(
         set_max_steps(&mut context, max_n_steps);
     }
     let mut cached_state = CachedState::new(state_reader);
-    let mut execution_resources = ExecutionResources::default();
     let syscall_handler = build_syscall_handler(
         &mut cached_state,
         &string_to_hint,
-        &mut execution_resources,
         &mut context,
         &case.test_details.parameter_types,
         builtins.len(),
@@ -212,7 +208,8 @@ pub fn run_test_case(
             // Max gas is no longer set by `create_entry_code_from_params`
             // Instead, call to `ExternalHint::WriteRunParam` is added by it, and we need to
             // store the gas value to be read by logic handling the hint
-            user_args: vec![vec![Arg::Value(Felt::from(u64::MAX))]],
+            // fixme: the 100000 was substracted arbitrarily, to fix 'Got an exception while executing a hint: Invalid syscall input: 0x10000000000002877; Unexpected gas.' error
+            user_args: vec![vec![Arg::Value(Felt::from(u64::MAX - 100_000))]],
         },
     };
 
@@ -237,7 +234,7 @@ pub fn run_test_case(
             Ok(mut runner) => {
                 let vm_resources_without_inner_calls = runner
                     .get_execution_resources()
-                    .unwrap()
+                    .expect("Execution resources missing")
                     .filter_unused_builtins();
                 update_top_call_vm_resources(&mut forge_runtime, &vm_resources_without_inner_calls);
                 // FIXME resources
@@ -307,7 +304,7 @@ pub fn run_test_case(
             profiling_info: None,
         }),
         // FIXME return triplet
-        gas_used: (gas.l1_gas.0 + gas.l1_data_gas.0) as u128,
+        gas_used: u128::from(gas.l1_gas.0 + gas.l1_data_gas.0),
         used_resources,
         call_trace: call_trace_ref,
         encountered_errors,
@@ -316,6 +313,7 @@ pub fn run_test_case(
 
 // FIXME get rid of copied code
 // Copied from `cairo-lang-runnable`
+#[must_use]
 pub fn get_results_data(
     return_types: &[(GenericTypeId, i16)],
     cells: &[Option<Felt252>],

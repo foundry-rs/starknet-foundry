@@ -8,7 +8,7 @@ use blockifier::{
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_sierra::extensions::NoGenericArgsGenericType;
 use cairo_lang_sierra::{extensions::segment_arena::SegmentArenaType, ids::GenericTypeId};
-use cairo_vm::{types::relocatable::Relocatable, vm::runners::cairo_runner::ExecutionResources};
+use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::constants::build_test_entry_point;
 use std::collections::HashMap;
 use std::default::Default;
@@ -16,7 +16,6 @@ use std::default::Default;
 pub fn build_syscall_handler<'a>(
     blockifier_state: &'a mut dyn State,
     string_to_hint: &'a HashMap<String, Hint>,
-    execution_resources: &'a mut ExecutionResources,
     context: &'a mut EntryPointExecutionContext,
     test_param_types: &[(GenericTypeId, i16)],
     builtins_len: usize,

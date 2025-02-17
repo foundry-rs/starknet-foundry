@@ -141,13 +141,12 @@ pub fn execute_call_entry_point(
         ),
         RunnableCompiledClass::V1(compiled_class_v1) => execute_entry_point_call_cairo1(
             entry_point.clone(),
-            compiled_class_v1,
+            &compiled_class_v1,
             state,
             cheatnet_state,
             // resources,
             context,
         ),
-        _ => panic!("Unsupported RunnableCompiledClass variant"),
     };
 
     // region: Modified blockifier code

@@ -558,10 +558,12 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
         .trace_data
         .current_call_stack
         .top();
+
+    let all_execution_resources = add_execution_resources(top_call.clone());
     let mut top_call = top_call.borrow_mut();
+    top_call.used_execution_resources = all_execution_resources;
 
-    // top_call.used_execution_resources = all_execution_resources;
-
+    // FIXME: it seems there are no syscalls in resulting trace file
     let top_call_syscalls = runtime
         .extended_runtime
         .extended_runtime
@@ -642,6 +644,7 @@ fn add_syscall_resources(
     total_vm_usage
 }
 
+#[allow(clippy::needless_pass_by_value)]
 fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResources {
     let mut execution_resources = top_call.borrow().used_execution_resources.clone();
     for nested_call in &top_call.borrow().nested_calls {
@@ -696,19 +699,9 @@ pub fn get_all_used_resources(
         .current_call_stack
         .top();
 
-    dbg!(
-        &runtime
-            .extended_runtime
-            .extended_runtime
-            .extension
-            .cheatnet_state
-            .trace_data
-            .current_call_stack
-    );
-
-    let execution_resources = add_execution_resources(top_call.clone());
-
-    dbg!(&execution_resources);
+    // TODO check this
+    // let execution_resources = add_execution_resources(top_call.clone());
+    let execution_resources = top_call.borrow().used_execution_resources.clone();
 
     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
     let events = runtime_call_info
