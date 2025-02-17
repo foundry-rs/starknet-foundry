@@ -13,7 +13,7 @@ use blockifier::utils::u64_from_usize;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::ExtendedStateReader;
 use starknet_api::execution_resources::GasVector;
-use starknet_api::transaction::fields::Calldata;
+use starknet_api::transaction::fields::{Calldata, GasVectorComputationMode};
 use starknet_api::transaction::EventContent;
 
 pub fn calculate_used_gas(
@@ -35,7 +35,7 @@ pub fn calculate_used_gas(
     let archival_data_resources =
         get_archival_data_resources(resources.events, transaction_context, code_size, &calldata);
 
-    // dbg!(&resources.execution_resources);
+    dbg!(&resources.execution_resources);
 
     let starknet_resources = StarknetResources {
         archival_data: archival_data_resources,
@@ -56,12 +56,16 @@ pub fn calculate_used_gas(
         computation: computation_resources,
     };
 
-    // dbg!(&transaction_resources);
+    dbg!(&transaction_resources);
 
+    // FIXME this is the tricky part, how to figure the computation mode here
     Ok(transaction_resources.to_gas_vector(
         versioned_constants,
-        transaction_context.block_context.block_info().use_kzg_da,
-        &transaction_context.get_gas_vector_computation_mode(),
+        // FIXME actually check it
+        true,
+        &GasVectorComputationMode::NoL2Gas,
+        // transaction_context.block_context.block_info().use_kzg_da,
+        // &transaction_context.get_gas_vector_computation_mode(),
     ))
 }
 
@@ -103,8 +107,8 @@ fn get_archival_data_resources(
     let dummy_starknet_resources = StarknetResources::new(
         calldata_length,
         signature_length,
-        // code_size,
-        Default::default(),
+        // FIXME: Use actual `code_size`
+        0,
         StateResources::default(),
         None,
         dummy_execution_summary,
