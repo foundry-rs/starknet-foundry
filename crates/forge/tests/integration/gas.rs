@@ -559,7 +559,7 @@ fn multiple_storage_writes_cost() {
     assert_gas(
         &result,
         "multiple_storage_writes_cost",
-        10 + 64 + 64 + 32 + 32,
+        9 + 64 + 64 + 32 + 32,
     );
 }
 
