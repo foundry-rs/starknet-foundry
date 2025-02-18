@@ -70,9 +70,13 @@ fn fuzzer_wrapper_internal(
         func,
         |param| {
             format!(
-                "let {}{} = snforge_std::fuzzable::Fuzzable::generate();",
+                r"
+                let {}{} = snforge_std::fuzzable::Fuzzable::generate();
+                snforge_std::_internals::_save_fuzzer_arg(@{});
+                ",
                 param.name(db).as_text(db),
                 param.type_clause(db).as_text(db),
+                param.name(db).as_text(db),
             )
         },
         "\n",

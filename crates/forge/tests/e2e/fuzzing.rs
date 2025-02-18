@@ -21,7 +21,7 @@ fn fuzzing() {
         [PASS] fuzzing::tests::fuzzed_argument (runs: 256, [..]
         [PASS] fuzzing::tests::fuzzed_both_arguments (runs: 256, [..]
         [PASS] fuzzing::tests::passing [..]
-        [FAIL] fuzzing::tests::failing_fuzz (runs: 1, arguments: [])
+        [FAIL] fuzzing::tests::failing_fuzz (runs: 1, arguments: [[..], [..]])
 
         Failure data:
             0x726573756c74203d3d2061202b2062 ('result == a + b')
@@ -66,7 +66,7 @@ fn fuzzing_set_runs() {
         [PASS] fuzzing::tests::fuzzed_argument (runs: 10, [..]
         [PASS] fuzzing::tests::fuzzed_both_arguments (runs: 10, [..]
         [PASS] fuzzing::tests::passing [..]
-        [FAIL] fuzzing::tests::failing_fuzz (runs: 1, arguments: [])
+        [FAIL] fuzzing::tests::failing_fuzz (runs: 1, arguments: [[..], [..]])
 
         Failure data:
             0x726573756c74203d3d2061202b2062 ('result == a + b')
@@ -111,7 +111,7 @@ fn fuzzing_set_seed() {
         [PASS] fuzzing::tests::fuzzed_argument (runs: 256, [..]
         [PASS] fuzzing::tests::fuzzed_both_arguments (runs: 256, [..]
         [PASS] fuzzing::tests::passing [..]
-        [FAIL] fuzzing::tests::failing_fuzz (runs: 1, arguments: [])
+        [FAIL] fuzzing::tests::failing_fuzz (runs: 1, arguments: [[..], [..]])
 
         Failure data:
             0x726573756c74203d3d2061202b2062 ('result == a + b')
@@ -165,7 +165,7 @@ fn fuzzing_incorrect_function_args() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        error: Trait has no implementation in context: snforge_std::fuzzable::Fuzzable::<fuzzing_integrationtest::incorrect_args::MyStruct>.
+        error: Trait has no implementation in context: snforge_std::fuzzable::Fuzzable::<fuzzing_integrationtest::incorrect_args::MyStruct, fuzzing_integrationtest::incorrect_args::MyStructDebug>.
 
         [ERROR] Failed to build test artifacts with Scarb: `scarb` exited with error
         "},
@@ -190,7 +190,7 @@ fn fuzzing_exit_first() {
 
         Collected 2 test(s) from fuzzing package
         Running 2 test(s) from tests/
-        [FAIL] fuzzing_integrationtest::exit_first_fuzz::exit_first_fails_test (runs: 1, arguments: [..])
+        [FAIL] fuzzing_integrationtest::exit_first_fuzz::exit_first_fails_test (runs: 1, arguments: [[..]])
 
         Failure data:
             0x32202b2062203d3d2032202b2062 ('2 + b == 2 + b')

@@ -136,6 +136,7 @@ pub struct RunResultWithInfo {
     pub(crate) gas_used: u128,
     pub(crate) used_resources: UsedResources,
     pub(crate) encountered_errors: Vec<EncounteredError>,
+    pub(crate) fuzzer_args: Vec<String>,
 }
 
 #[allow(clippy::too_many_lines)]
@@ -267,6 +268,15 @@ pub fn run_test_case(
 
     update_top_call_execution_resources(&mut forge_runtime);
     update_top_call_l1_resources(&mut forge_runtime);
+
+    let fuzzer_args = forge_runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .fuzzer_args
+        .clone();
+
     let transaction_context = get_context(&forge_runtime).tx_context.clone();
     let used_resources = get_all_used_resources(forge_runtime, &transaction_context);
     let gas = calculate_used_gas(
@@ -287,6 +297,7 @@ pub fn run_test_case(
         used_resources,
         call_trace: call_trace_ref,
         encountered_errors,
+        fuzzer_args,
     })
 }
 
@@ -304,6 +315,7 @@ fn extract_test_case_summary(
                     run_result,
                     case,
                     args,
+                    result_with_info.fuzzer_args,
                     result_with_info.gas_used,
                     result_with_info.used_resources,
                     &result_with_info.call_trace,
@@ -334,6 +346,7 @@ fn extract_test_case_summary(
                             )
                         }),
                         arguments: args,
+                        fuzzer_args: result_with_info.fuzzer_args,
                         test_statistics: (),
                     }
                 }
@@ -345,6 +358,7 @@ fn extract_test_case_summary(
             name: case.name.clone(),
             msg: Some(error.to_string()),
             arguments: args,
+            fuzzer_args: Vec::default(),
             test_statistics: (),
         },
     }

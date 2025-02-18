@@ -74,10 +74,11 @@ fn fuzzed_while_loop() {
         panic!()
     };
 
-    assert_eq!(gas_info.min, 1);
-    assert_eq!(gas_info.max, 21);
-    assert!((gas_info.mean - 11.).abs() < f64::EPSILON);
-    assert!((gas_info.std_deviation - 6.09).abs() < 0.01);
+    // TODO (#2926)
+    assert_eq!(gas_info.min, 2);
+    assert_eq!(gas_info.max, 23);
+    assert!((gas_info.mean - 12.).abs() < f64::EPSILON);
+    assert!((gas_info.std_deviation - 6.24).abs() < 0.01);
 }
 
 #[test]
