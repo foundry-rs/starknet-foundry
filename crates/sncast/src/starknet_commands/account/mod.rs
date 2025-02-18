@@ -5,15 +5,17 @@ use crate::starknet_commands::account::import::Import;
 use crate::starknet_commands::account::list::List;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
-use clap::{Args, Subcommand, ValueEnum};
+use clap::{Args, Subcommand};
 use configuration::{
     find_config_file, load_config, search_config_upwards_relative_to, CONFIG_FILENAME,
 };
 use serde_json::json;
-use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
+use sncast::{
+    chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig, AccountType,
+};
 use starknet::signers::SigningKey;
 use starknet_types_core::felt::Felt;
-use std::{fmt, fs::OpenOptions, io::Write};
+use std::{fs::OpenOptions, io::Write};
 use toml::Value;
 
 pub mod create;
@@ -38,41 +40,26 @@ pub enum Commands {
     List(List),
 }
 
-#[allow(clippy::doc_markdown)]
-#[derive(ValueEnum, Clone, Debug)]
-pub enum BaseAccountType {
-    /// OpenZeppelin account implementation
-    Oz,
-    /// Argent account implementation
-    Argent,
-    /// Braavos account implementation
-    Braavos,
-}
-
-impl fmt::Display for BaseAccountType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            BaseAccountType::Oz => write!(f, "open_zeppelin"),
-            BaseAccountType::Argent => write!(f, "argent"),
-            BaseAccountType::Braavos => write!(f, "braavos"),
-        }
-    }
-}
-
 pub fn prepare_account_json(
     private_key: &SigningKey,
     address: Felt,
     deployed: bool,
     legacy: bool,
-    account_type: &BaseAccountType,
+    account_type: &AccountType,
     class_hash: Option<Felt>,
     salt: Option<Felt>,
 ) -> serde_json::Value {
+    let acc_type = match account_type {
+        AccountType::OpenZeppelin => "open_zeppelin",
+        AccountType::Argent => "argent",
+        AccountType::Braavos => "braavos",
+    };
+
     let mut account_json = json!({
         "private_key": format!("{:#x}", private_key.secret_scalar()),
         "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
         "address": format!("{address:#x}"),
-        "type": format!("{account_type}"),
+        "type": format!("{acc_type}"),
         "deployed": deployed,
         "legacy": legacy,
     });

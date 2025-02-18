@@ -1,7 +1,8 @@
+use std::str::FromStr;
+
 use super::deploy::compute_account_address;
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
-    BaseAccountType,
 };
 use anyhow::{bail, ensure, Context, Result};
 use camino::Utf8PathBuf;
@@ -13,9 +14,7 @@ use sncast::helpers::account::generate_account_name;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
-use sncast::{
-    check_class_hash_exists, get_chain_id, handle_rpc_error, AccountType as SNCastAccountType,
-};
+use sncast::{check_class_hash_exists, get_chain_id, handle_rpc_error, AccountType};
 use starknet::core::types::{BlockId, BlockTag, StarknetError};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::providers::{Provider, ProviderError};
@@ -34,8 +33,8 @@ pub struct Import {
     pub address: Felt,
 
     /// Type of the account
-    #[clap(short = 't', long = "type")]
-    pub account_type: BaseAccountType,
+    #[clap(short = 't', long = "type", value_parser = AccountType::from_str)]
+    pub account_type: AccountType,
 
     /// Class hash of the account
     #[clap(short, long)]
@@ -123,11 +122,7 @@ pub async fn import(
 
     let chain_id = get_chain_id(provider).await?;
     if let Some(salt) = import.salt {
-        let sncast_account_type = match import.account_type {
-            BaseAccountType::Argent => SNCastAccountType::Argent,
-            BaseAccountType::Braavos => SNCastAccountType::Braavos,
-            BaseAccountType::Oz => SNCastAccountType::OpenZeppelin,
-        };
+        let sncast_account_type = import.account_type;
         let computed_address =
             compute_account_address(salt, private_key, class_hash, sncast_account_type, chain_id);
         ensure!(
