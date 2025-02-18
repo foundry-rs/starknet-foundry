@@ -701,11 +701,15 @@ fn l1_handler_cost() {
 
     let result = run_test_case(&test);
     assert_passed(&result);
-    // FIXME these values changed
     // 96 = gas cost of onchain data (deploy cost)
     // int(5.12 * 4) = 21 = keccak cost from l1 handler
-    // 14643 - l1 cost of payload + emit message handle event
-    assert_gas(&result, "l1_handler_cost", 96 + 15944);
+    // in this test, l1_handler_payload_size = 6
+    // 15923 = 3072 (6 * 512, 512 is gas per memory word) +
+    //         5000 (1 * 5000, 5000 is gas per counter decrease) +
+    //         4179 (result of get_consumed_message_to_l2_emissions_cost(6)) +
+    //         3672 (6 * 612, 612 is sharp gas per memory word) +
+    //
+    assert_gas(&result, "l1_handler_cost", 96 + 21 + 15923);
 }
 
 #[test]
