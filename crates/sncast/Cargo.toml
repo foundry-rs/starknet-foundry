@@ -35,6 +35,7 @@ cairo-lang-sierra-to-casm.workspace = true
 cairo-lang-runnable-utils.workspace = true
 cairo-lang-utils.workspace = true
 cairo-lang-sierra.workspace = true
+cairo-lang-casm.workspace = true
 itertools.workspace = true
 starknet-types-core.workspace = true
 cairo-vm.workspace = true

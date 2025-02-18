@@ -63,7 +63,6 @@ pub fn execute_call_entry_point(
 
     // region: Modified blockifier code
     // We skip recursion depth validation here.
-    // FIXME traces
     cheatnet_state.trace_data.enter_nested_call(
         entry_point.clone(),
         // resources.clone(),
@@ -75,9 +74,7 @@ pub fn execute_call_entry_point(
             cheat_status.decrement_cheat_span();
             let ret_data_f252: Vec<Felt> =
                 ret_data.iter().map(|datum| Felt::from_(*datum)).collect();
-            // FIXME traces
             cheatnet_state.trace_data.exit_nested_call(
-                // resources,
                 ExecutionResources::default(),
                 Default::default(),
                 CallResult::Success {
@@ -86,8 +83,6 @@ pub fn execute_call_entry_point(
                 &[],
                 None,
             );
-            // FIXME setting default class hash
-            entry_point.class_hash = Some(Default::default());
             return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
         }
     }
@@ -141,13 +136,12 @@ pub fn execute_call_entry_point(
         ),
         RunnableCompiledClass::V1(compiled_class_v1) => execute_entry_point_call_cairo1(
             entry_point.clone(),
-            compiled_class_v1,
+            &compiled_class_v1,
             state,
             cheatnet_state,
             // resources,
             context,
         ),
-        _ => panic!("Unsupported RunnableCompiledClass variant"),
     };
 
     // region: Modified blockifier code
@@ -200,7 +194,6 @@ fn remove_syscall_resources_and_exit_success_call(
         aggregate_nested_syscall_counters(&cheatnet_state.trace_data.current_call_stack.top());
     let syscall_counter = sum_syscall_counters(nested_syscall_counter_sum, syscall_counter);
     cheatnet_state.trace_data.exit_nested_call(
-        // resources,
         resources,
         syscall_counter,
         CallResult::from_success(call_info),
@@ -221,7 +214,6 @@ fn exit_error_call(
         CallType::Delegate => AddressOrClassHash::ClassHash(entry_point.class_hash.unwrap()),
     };
     cheatnet_state.trace_data.exit_nested_call(
-        // resources,
         ExecutionResources::default(),
         Default::default(),
         CallResult::from_err(error, &identifier),
@@ -294,7 +286,10 @@ fn get_mocked_function_cheat_status<'a>(
 
 fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {
     CallInfo {
-        call,
+        call: CallEntryPoint {
+            class_hash: Some(call.class_hash.unwrap_or_default()),
+            ..call
+        },
         execution: CallExecution {
             retdata: Retdata(ret_data),
             events: vec![],
