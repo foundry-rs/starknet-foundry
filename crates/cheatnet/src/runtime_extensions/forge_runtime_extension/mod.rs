@@ -488,6 +488,17 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     fuzzer::generate_arg(self.fuzzer_rng.clone(), min_value, max_value)?,
                 ))
             }
+            "save_fuzzer_arg" => {
+                let arg = input_reader.read::<ByteArray>()?.to_string();
+                extended_runtime
+                    .extended_runtime
+                    .extension
+                    .cheatnet_state
+                    // Skip first character, which is a snapshot symbol '@'
+                    .update_fuzzer_args(arg[1..].to_string());
+
+                Ok(CheatcodeHandlingResult::from_serializable(()))
+            }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }
     }
