@@ -143,4 +143,5 @@ pub mod _internals {
     use super::_cheatcode;
 
     pub use _cheatcode::_is_config_run;
+    pub use _cheatcode::_save_fuzzer_arg;
 }

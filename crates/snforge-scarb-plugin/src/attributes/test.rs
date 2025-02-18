@@ -8,7 +8,8 @@ use cairo_lang_syntax::node::{ast::FunctionWithBody, db::SyntaxGroup, Terminal, 
 use indoc::formatdoc;
 
 use std::env::{self, VarError};
-struct TestCollector;
+
+pub struct TestCollector;
 
 impl AttributeInfo for TestCollector {
     const ATTR_NAME: &'static str = "test";
