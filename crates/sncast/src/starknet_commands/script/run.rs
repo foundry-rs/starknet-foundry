@@ -334,6 +334,7 @@ pub fn run(
 
     let mut blockifier_state = CachedState::new(DictStateReader::default());
 
+    // TODO(#2954)
     let param_types = builder.generic_id_and_size_from_concrete(&func.signature.param_types);
     let base_offset = 5;
     // * Segment arena is allocated conditionally, so segment index is automatically moved (+2 segments)
@@ -392,8 +393,8 @@ pub fn run(
             hint_handler: syscall_handler,
             // If for some reason we need to calculate `user_args`, here
             // is the function to do it: https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L464
+            // TODO: Verify this
             user_args: vec![vec![Arg::Value(Felt::from(u64::MAX))]],
-            // user_args: vec![vec![Arg::Value(Felt::from(u64::MAX))]],
         },
     };
 
@@ -468,6 +469,7 @@ fn inject_lib_artifact(
 }
 
 // Copied from https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runnable-utils/src/builder.rs#L193
+// TODO(#2953)
 fn create_entry_code(
     builder: &RunnableBuilder,
     func: &Function,
