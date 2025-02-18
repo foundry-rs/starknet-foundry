@@ -35,7 +35,7 @@ fn fuzzing() {
         [PASS] fuzzing::tests::uint128_arg (runs: 256, [..]
         [PASS] fuzzing::tests::uint256_arg (runs: 256, [..]
         Running 0 test(s) from tests/
-        Tests: 12 passed, 1 failed, 0 skipped, 0 ignored, 6 filtered out
+        Tests: 12 passed, 1 failed, 0 skipped, 0 ignored, 5 filtered out
         Fuzzer seed: [..]
 
         Failures:
@@ -80,7 +80,7 @@ fn fuzzing_set_runs() {
         [PASS] fuzzing::tests::uint128_arg (runs: 10, [..]
         [PASS] fuzzing::tests::uint256_arg (runs: 10, [..]
         Running 0 test(s) from tests/
-        Tests: 12 passed, 1 failed, 0 skipped, 0 ignored, 6 filtered out
+        Tests: 12 passed, 1 failed, 0 skipped, 0 ignored, 5 filtered out
         Fuzzer seed: [..]
 
         Failures:
@@ -125,7 +125,7 @@ fn fuzzing_set_seed() {
         [PASS] fuzzing::tests::uint128_arg (runs: 256, [..]
         [PASS] fuzzing::tests::uint256_arg (runs: 256, [..]
         Running 0 test(s) from tests/
-        Tests: 12 passed, 1 failed, 0 skipped, 0 ignored, 6 filtered out
+        Tests: 12 passed, 1 failed, 0 skipped, 0 ignored, 5 filtered out
         Fuzzer seed: 1234
 
         Failures:
@@ -157,18 +157,17 @@ fn fuzzing_incorrect_runs() {
 fn fuzzing_incorrect_function_args() {
     let temp = setup_package("fuzzing");
 
-    let output = test_runner(&temp).arg("incorrect_args").assert().code(2);
+    let output = test_runner(&temp)
+        .args(["incorrect_args", "--features", "unimplemented"])
+        .assert()
+        .code(2);
 
     assert_stdout_contains(
         output,
         indoc! {r"
-        [..]Compiling[..]
-        [..]Finished[..]
-        
-        
-        Collected 2 test(s) from fuzzing package
-        Running 2 test(s) from tests/
-        [ERROR] Tried to use incorrect type for fuzzing. Type = fuzzing_integrationtest::incorrect_args::MyStruct is not supported
+        error: Trait has no implementation in context: snforge_std::fuzzable::Fuzzable::<fuzzing_integrationtest::incorrect_args::MyStruct, fuzzing_integrationtest::incorrect_args::MyStructDebug>.
+
+        [ERROR] Failed to build test artifacts with Scarb: `scarb` exited with error
         "},
     );
 }
@@ -191,12 +190,12 @@ fn fuzzing_exit_first() {
 
         Collected 2 test(s) from fuzzing package
         Running 2 test(s) from tests/
-        [FAIL] fuzzing_integrationtest::exit_first_fuzz::exit_first_fails_test (runs: 1, arguments: [..])
+        [FAIL] fuzzing_integrationtest::exit_first_fuzz::exit_first_fails_test (runs: 1, arguments: [[..]])
 
         Failure data:
             0x32202b2062203d3d2032202b2062 ('2 + b == 2 + b')
 
-        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 17 filtered out
+        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 16 filtered out
 
         Fuzzer seed: [..]
         Failures:
@@ -231,7 +230,7 @@ fn fuzzing_exit_first_single_fail() {
         Failures:
             fuzzing_integrationtest::exit_first_single_fail::exit_first_fails_test
 
-        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 17 filtered out
+        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 16 filtered out
         "},
     );
 }

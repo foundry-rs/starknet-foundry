@@ -50,10 +50,10 @@ pub async fn test_happy_case(account_type: &str) {
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
         max_fee: [..]
-        message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.
+        message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.
 
         After prefunding the address, run:
-        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account --fee-token strk
+        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
 
         To see account creation details, visit:
         account: [..]
@@ -147,7 +147,7 @@ pub async fn test_happy_case_generate_salt() {
         message: Account successfully created[..]
 
         After prefunding the address, run:
-        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account --fee-token strk
+        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
 
         To see account creation details, visit:
         account: [..]
@@ -230,7 +230,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         message: Account successfully created[..]
 
         After prefunding the address, run:
-        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account --fee-token strk
+        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
 
         To see account creation details, visit:
         account: [..]
@@ -362,7 +362,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         message: Account successfully created[..]
 
         After prefunding the address, run:
-        sncast --account {} --keystore {} account deploy --url {} --fee-token strk
+        sncast --account {} --keystore {} account deploy --url {}
 
         To see account creation details, visit:
         account: [..]
@@ -560,7 +560,7 @@ pub async fn test_happy_case_keystore_int_format() {
         message: Account successfully created[..]
 
         After prefunding the address, run:
-        sncast --account {} --keystore {} account deploy --url {} --fee-token strk
+        sncast --account {} --keystore {} account deploy --url {}
 
         To see account creation details, visit:
         account: [..]
@@ -604,7 +604,7 @@ pub async fn test_happy_case_keystore_hex_format() {
         message: Account successfully created[..]
 
         After prefunding the address, run:
-        sncast --account {} --keystore {} account deploy --url {} --fee-token strk
+        sncast --account {} --keystore {} account deploy --url {}
 
         To see account creation details, visit:
         account: [..]
@@ -616,6 +616,129 @@ pub async fn test_happy_case_keystore_hex_format() {
     assert!(contents.contains("\"variant\": {"));
     assert!(contents.contains("\"version\": 1"));
     assert!(contents.contains("\"legacy\": false"));
+}
+
+#[tokio::test]
+#[allow(clippy::too_many_lines)]
+pub async fn test_happy_case_default_name_generation() {
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let create_args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--salt",
+        "0x1",
+    ];
+
+    let delete_args = vec![
+        "--accounts-file",
+        &accounts_file,
+        "account",
+        "delete",
+        "--name",
+        "account-2",
+        "--network",
+        "sepolia",
+    ];
+
+    for i in 0..3 {
+        let snapbox = runner(&create_args).current_dir(tempdir.path());
+        snapbox.assert().stdout_matches(formatdoc! {r"
+        command: account create
+        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        address: 0x0[..]
+        max_fee: [..]
+        message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.
+
+        After prefunding the address, run:
+        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name account-{id}
+
+        To see account creation details, visit:
+        account: [..]
+    ", id = i + 1});
+    }
+
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file))
+        .expect("Unable to read created file");
+
+    assert!(contents.contains("account-1"));
+    assert!(contents.contains("account-2"));
+    assert!(contents.contains("account-3"));
+
+    let snapbox = runner(&delete_args).current_dir(tempdir.path()).stdin("Y");
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        command: account delete
+        result: Account successfully removed
+    "});
+
+    let contents_after_delete = fs::read_to_string(tempdir.path().join(accounts_file))
+        .expect("Unable to read created file");
+
+    assert!(!contents_after_delete.contains("account-2"));
+
+    let snapbox = runner(&create_args).current_dir(tempdir.path());
+    snapbox.assert().stdout_matches(indoc! {r"
+        command: account create
+        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        address: 0x0[..]
+        max_fee: [..]
+        message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.
+
+        After prefunding the address, run:
+        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name account-2
+
+        To see account creation details, visit:
+        account: [..]
+    "});
+
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file))
+        .expect("Unable to read created file");
+
+    assert!(contents.contains("account-2"));
+
+    let expected = json!(
+        {
+            "alpha-sepolia": {
+                "account-1": {
+                    "address": "0x[..]",
+                    "class_hash": "0x[..]",
+                    "deployed": false,
+                    "legacy": false,
+                    "private_key": "0x[..]",
+                    "public_key": "0x[..]",
+                    "salt": "0x1",
+                    "type": "open_zeppelin"
+                },
+                "account-2": {
+                    "address": "0x[..]",
+                    "class_hash": "0x[..]",
+                    "deployed": false,
+                    "legacy": false,
+                    "private_key": "0x[..]",
+                    "public_key": "0x[..]",
+                    "salt": "0x1",
+                    "type": "open_zeppelin"
+                },
+                "account-3": {
+                    "address": "0x[..]",
+                    "class_hash": "0x[..]",
+                    "deployed": false,
+                    "legacy": false,
+                    "private_key": "0x[..]",
+                    "public_key": "0x[..]",
+                    "salt": "0x1",
+                    "type": "open_zeppelin"
+                },
+            }
+        }
+    );
+
+    assert_matches(to_string_pretty(&expected).unwrap(), contents);
 }
 
 fn get_formatted_account_type(account_type: &str) -> &str {

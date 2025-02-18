@@ -2,7 +2,7 @@ use std::num::{NonZeroU128, NonZeroU64};
 
 use crate::helpers::constants::URL;
 use sncast::helpers::constants::OZ_CLASS_HASH;
-use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken};
+use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
@@ -24,14 +24,13 @@ async fn get_factory() -> OpenZeppelinAccountFactory<LocalWallet, JsonRpcClient<
 }
 
 #[tokio::test]
-async fn test_happy_case_eth() {
+async fn test_happy_case() {
     let factory = get_factory().await;
 
     let args = FeeArgs {
-        fee_token: Some(FeeToken::Eth),
-        max_fee: Some(Felt::from(100_u32).try_into().unwrap()),
-        max_gas: None,
-        max_gas_unit_price: None,
+        max_fee: None,
+        max_gas: Some(Felt::from(100_u32).try_into().unwrap()),
+        max_gas_unit_price: Some(Felt::from(200_u32).try_into().unwrap()),
     };
 
     let settings = args
@@ -41,52 +40,11 @@ async fn test_happy_case_eth() {
 
     assert_eq!(
         settings,
-        FeeSettings::Eth {
-            max_fee: Some(Felt::from(100_u32).try_into().unwrap())
+        FeeSettings {
+            max_gas: Some(NonZeroU64::try_from(100_u64).unwrap()),
+            max_gas_unit_price: Some(NonZeroU128::try_from(200_u128).unwrap()),
         }
     );
-}
-
-#[tokio::test]
-async fn test_max_gas_eth() {
-    let factory = get_factory().await;
-
-    let args = FeeArgs {
-        fee_token: Some(FeeToken::Eth),
-        max_fee: Some(Felt::from(100_u32).try_into().unwrap()),
-        max_gas: Some(Felt::from(100_u32).try_into().unwrap()),
-        max_gas_unit_price: None,
-    };
-
-    let error = args
-        .try_into_fee_settings(factory.provider(), factory.block_id())
-        .await
-        .unwrap_err();
-
-    assert!(error
-        .to_string()
-        .contains("--max-gas is not supported for ETH fee payment"));
-}
-
-#[tokio::test]
-async fn test_max_gas_unit_price_eth() {
-    let factory = get_factory().await;
-
-    let args = FeeArgs {
-        fee_token: Some(FeeToken::Eth),
-        max_fee: Some(Felt::from(100).try_into().unwrap()),
-        max_gas: None,
-        max_gas_unit_price: Some(Felt::from(100_u32).try_into().unwrap()),
-    };
-
-    let error = args
-        .try_into_fee_settings(factory.provider(), factory.block_id())
-        .await
-        .unwrap_err();
-
-    assert!(error
-        .to_string()
-        .contains("--max-gas-unit-price is not supported for ETH fee payment"));
 }
 
 #[tokio::test]
@@ -94,7 +52,6 @@ async fn test_all_args() {
     let factory = get_factory().await;
 
     let args = FeeArgs {
-        fee_token: Some(FeeToken::Strk),
         max_fee: Some(Felt::from(100_u32).try_into().unwrap()),
         max_gas: Some(Felt::from(100_u32).try_into().unwrap()),
         max_gas_unit_price: Some(Felt::from(100_u32).try_into().unwrap()),
@@ -115,7 +72,6 @@ async fn test_max_fee_less_than_max_gas() {
     let factory = get_factory().await;
 
     let args = FeeArgs {
-        fee_token: Some(FeeToken::Strk),
         max_fee: Some(Felt::from(50_u32).try_into().unwrap()),
         max_gas: Some(Felt::from(100_u32).try_into().unwrap()),
         max_gas_unit_price: None,
@@ -136,7 +92,6 @@ async fn test_max_fee_less_than_max_gas_unit_price() {
     let factory = get_factory().await;
 
     let args = FeeArgs {
-        fee_token: Some(FeeToken::Strk),
         max_fee: Some(Felt::from(50_u32).try_into().unwrap()),
         max_gas: None,
         max_gas_unit_price: Some(Felt::from(100).try_into().unwrap()),
@@ -152,11 +107,10 @@ async fn test_max_fee_less_than_max_gas_unit_price() {
         .contains("--max-fee should be greater than or equal to --max-gas-unit-price"));
 }
 #[tokio::test]
-async fn test_strk_fee_get_max_fee() {
+async fn test_get_max_fee() {
     let factory = get_factory().await;
 
     let args = FeeArgs {
-        fee_token: Some(FeeToken::Strk),
         max_fee: Some(Felt::from(MAX_FEE).try_into().unwrap()),
         max_gas: None,
         max_gas_unit_price: None,
@@ -167,25 +121,20 @@ async fn test_strk_fee_get_max_fee() {
         .await
         .unwrap();
 
-    match settings {
-        FeeSettings::Strk {
-            max_gas,
-            max_gas_unit_price,
-        } => {
-            let max_gas: u64 = max_gas.unwrap().into();
-            let max_gas_unit_price: u128 = max_gas_unit_price.unwrap().into();
-            assert_eq!(u128::from(max_gas) * max_gas_unit_price, MAX_FEE.into());
-        }
-        FeeSettings::Eth { .. } => unreachable!(),
-    }
+    let FeeSettings {
+        max_gas,
+        max_gas_unit_price,
+    } = settings;
+    let max_gas: u64 = max_gas.unwrap().into();
+    let max_gas_unit_price: u128 = max_gas_unit_price.unwrap().into();
+    assert_eq!(u128::from(max_gas) * max_gas_unit_price, MAX_FEE.into());
 }
 
 #[tokio::test]
-async fn test_strk_fee_get_max_fee_with_max_gas() {
+async fn test_fee_get_max_fee_with_max_gas() {
     let factory = get_factory().await;
 
     let args = FeeArgs {
-        fee_token: Some(FeeToken::Strk),
         max_fee: Some(Felt::from(MAX_FEE).try_into().unwrap()),
         max_gas: Some(Felt::from(1_000_000_u32).try_into().unwrap()),
         max_gas_unit_price: None,
@@ -198,31 +147,26 @@ async fn test_strk_fee_get_max_fee_with_max_gas() {
 
     assert_eq!(
         settings,
-        FeeSettings::Strk {
+        FeeSettings {
             max_gas: Some(NonZeroU64::new(1_000_000).unwrap()),
             max_gas_unit_price: Some(NonZeroU128::new((MAX_FEE / 1_000_000).into()).unwrap()),
         }
     );
 
-    match settings {
-        FeeSettings::Strk {
-            max_gas,
-            max_gas_unit_price,
-        } => {
-            let max_gas: u64 = max_gas.unwrap().into();
-            let max_gas_unit_price: u128 = max_gas_unit_price.unwrap().into();
-            assert_eq!(u128::from(max_gas) * max_gas_unit_price, MAX_FEE.into());
-        }
-        FeeSettings::Eth { .. } => unreachable!(),
-    }
+    let FeeSettings {
+        max_gas,
+        max_gas_unit_price,
+    } = settings;
+    let max_gas: u64 = max_gas.unwrap().into();
+    let max_gas_unit_price: u128 = max_gas_unit_price.unwrap().into();
+    assert_eq!(u128::from(max_gas) * max_gas_unit_price, MAX_FEE.into());
 }
 
 #[tokio::test]
-async fn test_strk_fee_get_max_gas_and_max_gas_unit_price() {
+async fn test_fee_get_max_gas_and_max_gas_unit_price() {
     let factory = get_factory().await;
 
     let args = FeeArgs {
-        fee_token: Some(FeeToken::Strk),
         max_fee: None,
         max_gas: Some(Felt::from(1_000_000_u32).try_into().unwrap()),
         max_gas_unit_price: Some(Felt::from(1_000_u32).try_into().unwrap()),
@@ -235,7 +179,7 @@ async fn test_strk_fee_get_max_gas_and_max_gas_unit_price() {
 
     assert_eq!(
         settings,
-        FeeSettings::Strk {
+        FeeSettings {
             max_gas: Some(NonZeroU64::new(1_000_000).unwrap()),
             max_gas_unit_price: Some(NonZeroU128::new(1_000).unwrap()),
         }
@@ -243,11 +187,10 @@ async fn test_strk_fee_get_max_gas_and_max_gas_unit_price() {
 }
 
 #[tokio::test]
-async fn test_strk_fee_get_max_fee_with_max_gas_unit_price() {
+async fn test_fee_get_max_fee_with_max_gas_unit_price() {
     let factory = get_factory().await;
 
     let args = FeeArgs {
-        fee_token: Some(FeeToken::Strk),
         max_fee: Some(Felt::from(MAX_FEE).try_into().unwrap()),
         max_gas: None,
         max_gas_unit_price: Some(Felt::from(1_000_u32).try_into().unwrap()),
@@ -260,31 +203,26 @@ async fn test_strk_fee_get_max_fee_with_max_gas_unit_price() {
 
     assert_eq!(
         settings,
-        FeeSettings::Strk {
+        FeeSettings {
             max_gas: Some(NonZeroU64::new(MAX_FEE / 1_000).unwrap()),
             max_gas_unit_price: Some(NonZeroU128::new(1_000).unwrap()),
         }
     );
 
-    match settings {
-        FeeSettings::Strk {
-            max_gas,
-            max_gas_unit_price,
-        } => {
-            let max_gas: u64 = max_gas.unwrap().into();
-            let max_gas_unit_price: u128 = max_gas_unit_price.unwrap().into();
-            assert_eq!(u128::from(max_gas) * max_gas_unit_price, MAX_FEE.into());
-        }
-        FeeSettings::Eth { .. } => unreachable!(),
-    }
+    let FeeSettings {
+        max_gas,
+        max_gas_unit_price,
+    } = settings;
+    let max_gas: u64 = max_gas.unwrap().into();
+    let max_gas_unit_price: u128 = max_gas_unit_price.unwrap().into();
+    assert_eq!(u128::from(max_gas) * max_gas_unit_price, MAX_FEE.into());
 }
 
 #[tokio::test]
-async fn test_strk_fee_get_none() {
+async fn test_fee_get_none() {
     let factory = get_factory().await;
 
     let args = FeeArgs {
-        fee_token: Some(FeeToken::Strk),
         max_fee: None,
         max_gas: None,
         max_gas_unit_price: None,
@@ -297,7 +235,7 @@ async fn test_strk_fee_get_none() {
 
     assert_eq!(
         settings,
-        FeeSettings::Strk {
+        FeeSettings {
             max_gas: None,
             max_gas_unit_price: None,
         }

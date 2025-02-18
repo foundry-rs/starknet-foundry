@@ -5,7 +5,7 @@ use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
 // all calculations are based on formula from
-// https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#overall_fee
+// https://docs.starknet.io/architecture-and-concepts/network-architecture/fee-mechanism/#overall_fee
 
 #[test]
 fn declare_cost_is_omitted() {
