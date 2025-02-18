@@ -32,8 +32,9 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBl
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
-    get_all_used_resources, update_top_call_execution_resources, update_top_call_l1_resources,
-    update_top_call_vm_resources, update_top_call_vm_trace, ForgeExtension, ForgeRuntime,
+    add_vm_execution_resources_to_top_call, get_all_used_resources,
+    update_top_call_execution_resources, update_top_call_l1_resources, update_top_call_vm_trace,
+    ForgeExtension, ForgeRuntime,
 };
 use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredError, ExtendedStateReader,
@@ -236,14 +237,10 @@ pub fn run_test_case(
                     .get_execution_resources()
                     .expect("Execution resources missing")
                     .filter_unused_builtins();
-                update_top_call_vm_resources(&mut forge_runtime, &vm_resources_without_inner_calls);
-                // FIXME resources
-                // *forge_runtime
-                //     .extended_runtime
-                //     .extended_runtime
-                //     .extended_runtime
-                //     .hint_handler
-                //     .resources += &vm_resources_without_inner_calls;
+                add_vm_execution_resources_to_top_call(
+                    &mut forge_runtime,
+                    &vm_resources_without_inner_calls,
+                );
 
                 let ap = runner.relocated_trace.as_ref().unwrap().last().unwrap().ap;
 
@@ -295,15 +292,13 @@ pub fn run_test_case(
 
     Ok(RunResultWithInfo {
         run_result: run_result.map(|(gas_counter, memory, value)| RunResult {
-            // FIXME resources
             used_resources: used_resources.execution_resources.clone(),
-            // used_resources: Default::default(),
             gas_counter,
             memory,
             value,
             profiling_info: None,
         }),
-        // FIXME return triplet
+        // TODO return triplet
         gas_used: u128::from(gas.l1_gas.0 + gas.l1_data_gas.0),
         used_resources,
         call_trace: call_trace_ref,
@@ -311,8 +306,7 @@ pub fn run_test_case(
     })
 }
 
-// FIXME get rid of copied code
-// Copied from `cairo-lang-runnable`
+// Copied and modified from https://github.com/starkware-libs/cairo/blob/a8da296d7d03f19af3bdb0e7ae17637e66192e4b/crates/cairo-lang-runner/src/lib.rs#L543
 #[must_use]
 pub fn get_results_data(
     return_types: &[(GenericTypeId, i16)],
@@ -338,6 +332,7 @@ pub fn get_results_data(
             assert!(values.is_empty());
             false
         } else {
+            // region: Modified code
             let non_user_types: UnorderedHashSet<GenericTypeId> = UnorderedHashSet::from_iter([
                 AddModType::ID,
                 BitwiseType::ID,
@@ -352,6 +347,7 @@ pub fn get_results_data(
                 SystemType::ID,
             ]);
             !non_user_types.contains(generic_ty)
+            // endregion
         }
     });
 

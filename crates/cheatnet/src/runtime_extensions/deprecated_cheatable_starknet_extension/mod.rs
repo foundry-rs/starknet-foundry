@@ -384,7 +384,6 @@ fn execute_inner_call(
         call,
         syscall_handler.state,
         cheatnet_state,
-        // syscall_handler.resources,
         syscall_handler.context,
     )?;
     // endregion

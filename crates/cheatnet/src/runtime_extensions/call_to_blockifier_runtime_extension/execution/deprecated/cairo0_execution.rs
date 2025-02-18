@@ -23,7 +23,6 @@ pub fn execute_entry_point_call_cairo0(
     compiled_class_v0: CompiledClassV0,
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
-    // resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> ContractClassEntryPointExecutionResult {
     let VmExecutionContext {

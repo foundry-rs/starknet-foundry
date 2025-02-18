@@ -50,7 +50,6 @@ pub fn deploy_at(
     let exec_result = cheated_syscalls::execute_deployment(
         syscall_handler.base.state,
         cheatnet_state,
-        // syscall_handler.resources,
         syscall_handler.base.context,
         &ctor_context,
         calldata,

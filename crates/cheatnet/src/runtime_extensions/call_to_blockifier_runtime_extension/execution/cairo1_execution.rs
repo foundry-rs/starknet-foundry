@@ -78,7 +78,7 @@ fn prepare_program_extra_data(
     Ok(program_extra_data_length)
 }
 
-// TODO remov copied code
+// TODO remove copied code
 // Copied from https://github.com/starkware-libs/sequencer/blob/0e1e92e0b90790e4bec20721c069c312d6a60a13/crates/blockifier/src/execution/entry_point_execution.rs#L98
 fn initialize_execution_context<'a>(
     call: CallEntryPoint,
@@ -135,7 +135,6 @@ pub fn execute_entry_point_call_cairo1(
     compiled_class_v1: &CompiledClassV1,
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState, // Added parameter
-    // resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> ContractClassEntryPointExecutionResult {
     let tracked_resource = *context
@@ -161,9 +160,6 @@ pub fn execute_entry_point_call_cairo1(
         entry_point_initial_budget,
     )?;
     let n_total_args = args.len();
-
-    // // Snapshot the VM resources, in order to calculate the usage of this run at the end.
-    // let previous_vm_resources = syscall_handler.resources.clone();
 
     // region: Modified blockifier code
 
