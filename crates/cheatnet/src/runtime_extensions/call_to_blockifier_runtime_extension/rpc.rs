@@ -202,7 +202,6 @@ pub fn call_entry_point(
         &mut entry_point,
         syscall_handler.base.state,
         cheatnet_state,
-        // syscall_handler.resources,
         syscall_handler.base.context,
     );
 

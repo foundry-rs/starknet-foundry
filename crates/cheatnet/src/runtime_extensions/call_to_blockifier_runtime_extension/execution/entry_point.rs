@@ -173,7 +173,6 @@ fn remove_syscall_resources_and_exit_success_call(
     call_info: &CallInfo,
     syscall_counter: &SyscallCounter,
     context: &mut EntryPointExecutionContext,
-    // resources: &mut ExecutionResources,
     cheatnet_state: &mut CheatnetState,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
 ) {

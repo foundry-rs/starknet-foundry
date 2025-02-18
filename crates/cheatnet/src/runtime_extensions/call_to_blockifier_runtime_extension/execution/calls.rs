@@ -34,7 +34,6 @@ pub fn execute_inner_call(
         call,
         syscall_handler.base.state,
         cheatnet_state,
-        // syscall_handler.resources,
         syscall_handler.base.context,
     )?;
     // endregion
