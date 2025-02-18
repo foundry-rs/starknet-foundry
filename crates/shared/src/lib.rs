@@ -6,6 +6,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use std::fmt::Display;
 
+pub mod auto_completions;
 pub mod command;
 pub mod consts;
 pub mod print;

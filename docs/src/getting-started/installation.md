@@ -26,6 +26,7 @@ In this section, we will walk through the process of installing Starknet Foundry
             * [Linux and macOS](#linux-and-macos-1)
             * [Windows](#windows-1)
         * [`scarb test` Isn’t Running `snforge`](#scarb-test-isnt-running-snforge)
+    * [Shell completions (Optional)](#set-up-shell-completions-optional)
     * [Universal-Sierra-Compiler update](#universal-sierra-compiler-update)
         * [Linux and macOS](#linux-and-macos-2)
         * [Windows](#windows-2)
@@ -328,6 +329,76 @@ Make sure to include this section in `Scarb.toml`
 [scripts]
 test = "snforge test"
 ```
+
+## Set up shell completions (optional)
+
+<details>
+  <summary><strong>Bash</strong></summary>
+
+Completions are configured by doing the following:
+```shell
+mkdir -p "${ASDF_DATA_DIR:-$HOME/.asdf}/completions"
+sncast completion bash > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/sncast.bash"
+snforge completion bash > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/snforge.bash"
+```
+
+Then add the following to your `.bash`:
+```shell
+# source completion scripts
+. "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/sncast.bash"     
+. "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/snforge.bash"
+```
+
+</details>
+
+<details>
+  <summary><strong>ZSH</strong></summary>
+
+Completions are configured by doing the following:
+```shell
+mkdir -p "${ASDF_DATA_DIR:-$HOME/.asdf}/completions"
+sncast completion zsh > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/_sncast"
+snforge completion zsh > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/_snforge"
+```
+
+Then add the following to your `.zshrc`:
+```shell
+# append completions to fpath
+fpath=(${ASDF_DATA_DIR:-$HOME/.asdf}/completions $fpath)
+# initialise completions with ZSH's compinit
+autoload -Uz compinit && compinit
+```
+This is to enable autocompletion in [ZSH](https://wiki.archlinux.org/title/Zsh#Command_completion).
+
+</details>
+
+<details>
+  <summary><strong>Fish</strong></summary>
+
+Completions are configured by doing the following:
+```shell
+sncast completion fish > ~/.config/fish/completions/sncast.fish
+snforge completion fish > ~/.config/fish/completions/snforge.fish
+```
+
+</details>
+
+<details>
+  <summary><strong>Elvish</strong></summary>
+
+Completions are configured by doing the following:
+
+```shell
+sncast completion elvish >> ~/.config/elvish/rc.elv
+snforge completion elvish >> ~/.config/elvish/rc.elv
+```
+
+</details>
+
+<details>
+  <summary><strong>PowerShell</strong></summary>
+    📄 Doc is under construction.
+</details>
 
 ## Universal-Sierra-Compiler update
 
