@@ -214,7 +214,7 @@ fn mock_call_when_simple() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_mock_call_when, stop_mock_call_when, MockCallData };
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_mock_call_when, stop_mock_call_when, MockCalldata };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -232,10 +232,10 @@ fn mock_call_when_simple() {
             
             let specific_mock_ret_data = 421;
             let default_mock_ret_data = 404;
-            let expected_calldata = MockCallData::Values([].span());
+            let expected_calldata = MockCalldata::Values([].span());
 
             start_mock_call_when(contract_address, selector!("get_thing"), expected_calldata, specific_mock_ret_data);
-            start_mock_call_when(contract_address, selector!("get_thing"), MockCallData::Any, default_mock_ret_data);
+            start_mock_call_when(contract_address, selector!("get_thing"), MockCalldata::Any, default_mock_ret_data);
             let thing = dispatcher.get_thing();
             assert(thing == specific_mock_ret_data, 'Incorrect thing');
 
@@ -243,7 +243,7 @@ fn mock_call_when_simple() {
             let thing = dispatcher.get_thing();
             assert(thing == default_mock_ret_data, 'Incorrect thing');
 
-            stop_mock_call_when(contract_address, selector!("get_thing"), MockCallData::Any);
+            stop_mock_call_when(contract_address, selector!("get_thing"), MockCalldata::Any);
             let thing = dispatcher.get_thing();
             assert(thing == 420, 'Incorrect thing');
         }
@@ -257,10 +257,10 @@ fn mock_call_when_simple() {
 
             let specific_mock_ret_data = 421;
             let default_mock_ret_data = 404;
-            let expected_calldata = MockCallData::Values([].span());
+            let expected_calldata = MockCalldata::Values([].span());
             
             start_mock_call_when(contract_address, selector!("get_thing"), expected_calldata, specific_mock_ret_data);
-            start_mock_call_when(contract_address, selector!("get_thing"), MockCallData::Any, default_mock_ret_data);
+            start_mock_call_when(contract_address, selector!("get_thing"), MockCalldata::Any, default_mock_ret_data);
             let dispatcher = IMockCheckerDispatcher { contract_address };
             let thing = dispatcher.get_thing();
 
@@ -270,7 +270,7 @@ fn mock_call_when_simple() {
             let thing = dispatcher.get_thing();
             assert(thing == default_mock_ret_data, 'Incorrect thing');
 
-            stop_mock_call_when(contract_address, selector!("get_thing"), MockCallData::Any);
+            stop_mock_call_when(contract_address, selector!("get_thing"), MockCalldata::Any);
             let thing = dispatcher.get_thing();
             assert(thing == 420, 'Incorrect thing');
         }
@@ -295,7 +295,7 @@ fn mock_call_when_complex_types() {
         use result::ResultTrait;
         use array::ArrayTrait;
         use serde::Serde;
-        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_mock_call_when, stop_mock_call_when, MockCallData };
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_mock_call_when, stop_mock_call_when, MockCalldata };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -320,9 +320,9 @@ fn mock_call_when_complex_types() {
 
             let default_mock_ret_data = StructThing {item_one: 412, item_two: 421};
             let specific_mock_ret_data = StructThing {item_one: 404, item_two: 401};
-            let expected_calldata = MockCallData::Values([].span());
+            let expected_calldata = MockCalldata::Values([].span());
 
-            start_mock_call_when(contract_address, selector!("get_struct_thing"), MockCallData::Any, default_mock_ret_data);
+            start_mock_call_when(contract_address, selector!("get_struct_thing"), MockCalldata::Any, default_mock_ret_data);
             start_mock_call_when(contract_address, selector!("get_struct_thing"), expected_calldata, specific_mock_ret_data);
 
             let thing: StructThing = dispatcher.get_struct_thing();
@@ -349,9 +349,9 @@ fn mock_call_when_complex_types() {
             let default_mock_ret_data =  array![ StructThing {item_one: 112, item_two: 121}, StructThing {item_one: 412, item_two: 421} ];
             let specific_mock_ret_data =  array![ StructThing {item_one: 212, item_two: 221}, StructThing {item_one: 512, item_two: 521} ];
 
-            let expected_calldata = MockCallData::Values([].span());
+            let expected_calldata = MockCalldata::Values([].span());
 
-            start_mock_call_when(contract_address, selector!("get_arr_thing"), MockCallData::Any, default_mock_ret_data);
+            start_mock_call_when(contract_address, selector!("get_arr_thing"), MockCalldata::Any, default_mock_ret_data);
             start_mock_call_when(contract_address, selector!("get_arr_thing"), expected_calldata, specific_mock_ret_data);
 
             let things: Array<StructThing> = dispatcher.get_arr_thing();
@@ -395,7 +395,7 @@ fn mock_calls_when() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, mock_call_when, MockCallData};
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, mock_call_when, MockCalldata};
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -412,7 +412,7 @@ fn mock_calls_when() {
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
             let mock_ret_data = 421;
-            let expected_calldata = MockCallData::Values([].span());
+            let expected_calldata = MockCalldata::Values([].span());
             mock_call_when(contract_address, selector!("get_thing"), expected_calldata, mock_ret_data, 1);
 
             let thing = dispatcher.get_thing();
@@ -432,7 +432,7 @@ fn mock_calls_when() {
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
             let mock_ret_data = 421;
-            let expected_calldata = MockCallData::Values([].span());
+            let expected_calldata = MockCalldata::Values([].span());
             mock_call_when(contract_address, selector!("get_thing"), expected_calldata, mock_ret_data, 2);
 
             let thing = dispatcher.get_thing();
@@ -455,7 +455,7 @@ fn mock_calls_when() {
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
             let mock_ret_data = 421;
-            mock_call_when(contract_address, selector!("get_thing"), MockCallData::Any, mock_ret_data, 1);
+            mock_call_when(contract_address, selector!("get_thing"), MockCalldata::Any, mock_ret_data, 1);
 
             let thing = dispatcher.get_thing();
             assert_eq!(thing, 421);
@@ -474,7 +474,7 @@ fn mock_calls_when() {
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
             let mock_ret_data = 421;
-            mock_call_when(contract_address, selector!("get_thing"), MockCallData::Any, mock_ret_data, 2);
+            mock_call_when(contract_address, selector!("get_thing"), MockCalldata::Any, mock_ret_data, 2);
 
             let thing = dispatcher.get_thing();
             assert_eq!(thing, 421);
@@ -505,7 +505,7 @@ fn mock_calls_when_mixed() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, mock_call_when, MockCallData};
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, mock_call_when, MockCalldata};
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -522,9 +522,9 @@ fn mock_calls_when_mixed() {
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
             let mock_ret_data = 421;
-            let expected_calldata = MockCallData::Values([].span());
+            let expected_calldata = MockCalldata::Values([].span());
             mock_call_when(contract_address, selector!("get_thing"), expected_calldata, mock_ret_data, 1);
-            mock_call_when(contract_address, selector!("get_thing"), MockCallData::Any, 422, 1);
+            mock_call_when(contract_address, selector!("get_thing"), MockCalldata::Any, 422, 1);
             
             let thing = dispatcher.get_thing();
             assert_eq!(thing, 421, "Specific calldata");
@@ -546,9 +546,9 @@ fn mock_calls_when_mixed() {
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
             let mock_ret_data = 421;
-            let expected_calldata = MockCallData::Values([].span());
+            let expected_calldata = MockCalldata::Values([].span());
             mock_call_when(contract_address, selector!("get_thing"), expected_calldata, mock_ret_data, 3);
-            mock_call_when(contract_address, selector!("get_thing"), MockCallData::Any, 422, 2);
+            mock_call_when(contract_address, selector!("get_thing"), MockCalldata::Any, 422, 2);
 
             let thing = dispatcher.get_thing();
             assert_eq!(thing, 421, "1st Specific calldata");

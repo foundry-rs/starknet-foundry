@@ -2,22 +2,22 @@
 
 Cheatcodes mocking contract entry point calls:
 
-## `MockCallData`
+## `MockCalldata`
 
 ```rust
-pub enum MockCallData {
+pub enum MockCalldata {
     Any,
     Values: Span<felt252>,
 }
 ```
 
-`MockCallData` is an enum used to specify for which calldata the contract entry point will be mocked.
+`MockCalldata` is an enum used to specify for which calldata the contract entry point will be mocked.
 - `Any` mock the contract entry point for any calldata.
 - `Values` mock the contract entry point only for this calldata.
 
 ## `mock_call_when`
 > `fn mock_call_when<T, impl TSerde: serde::Serde<T>, impl TDestruct: Destruct<T>>(
->   contract_address: ContractAddress, function_selector: felt252, calldata: MockCallData, ret_data: T, n_times: u32
+>   contract_address: ContractAddress, function_selector: felt252, calldata: MockCalldata, ret_data: T, n_times: u32
 > )`
 
 Mocks contract call to a `function_selector` of a contract at the given address, with the given calldata, for `n_times` first calls that are made 
@@ -29,7 +29,7 @@ Note that the function is not meant for mocking internal calls - it works only f
 
 ## `start_mock_call_when`
 > `fn start_mock_call<T, impl TSerde: serde::Serde<T>, impl TDestruct: Destruct<T>>(
->   contract_address: ContractAddress, function_selector: felt252, calldata: MockCallData, ret_data: T
+>   contract_address: ContractAddress, function_selector: felt252, calldata: MockCalldata, ret_data: T
 > )`
 
 Mocks contract call to a `function_selector` of a contract at the given address, with the given calldata, indefinitely.
@@ -38,6 +38,6 @@ See `mock_call_when` for comprehensive definition of how it can be used.
 
 ### `stop_mock_call_when`
 
-> `fn stop_mock_call_when(contract_address: ContractAddress, function_selector: felt252, calldata: MockCallData)`
+> `fn stop_mock_call_when(contract_address: ContractAddress, function_selector: felt252, calldata: MockCalldata)`
 
 Cancels the `mock_call_when` / `start_mock_call_when` for the function `function_selector` of a contract at the given addressn with the given calldata

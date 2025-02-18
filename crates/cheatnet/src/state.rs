@@ -41,6 +41,12 @@ pub enum CheatSpan {
     TargetCalls(usize),
 }
 
+#[derive(CairoDeserialize, Clone, Debug, PartialEq, Eq)]
+pub enum MockCalldata {
+    Any,
+    Values(Vec<Felt>),
+}
+
 #[derive(Debug)]
 pub struct ExtendedStateReader {
     pub dict_state_reader: DictStateReader,

@@ -20,35 +20,15 @@ pub enum CheatSpan {
     TargetCalls: usize,
 }
 
-/// Enum used to specify the call data that should be matched when mocking a contract call.
-#[derive(Copy, Drop, PartialEq, Clone, Debug)]
-pub enum MockCallData {
-    /// Matches any call data.
+/// Enum used to specify the calldata that should be matched when mocking a contract call.
+#[derive(Copy, Drop, PartialEq, Clone, Debug, Serde)]
+pub enum MockCalldata {
+    /// Matches any calldata.
     Any,
-    /// Matches the specified serialized call data.
+    /// Matches the specified serialized calldata.
     Values: Span<felt252>,
 }
 
-impl MockCallDataSerde of Serde<MockCallData> {
-    fn deserialize(ref serialized: Span<felt252>) -> Option<MockCallData> {
-        let value: Option<Option<Span<felt252>>> = Serde::deserialize(ref serialized);
-
-        match value {
-            Option::None => Option::None,
-            Option::Some(call_data) => match call_data {
-                Option::None => Option::Some(MockCallData::Any),
-                Option::Some(data) => Option::Some(MockCallData::Values(data)),
-            },
-        }
-    }
-
-    fn serialize(self: @MockCallData, ref output: Array<felt252>) {
-        match self {
-            MockCallData::Any => Option::<Span<felt252>>::None.serialize(ref output),
-            MockCallData::Values(data) => Option::Some(*data).serialize(ref output),
-        }
-    }
-}
 
 pub fn test_selector() -> felt252 {
     // Result of selector!("TEST_CONTRACT_SELECTOR") since `selector!` macro requires dependency on
@@ -76,7 +56,7 @@ pub fn test_address() -> ContractAddress {
 pub fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
     contract_address: ContractAddress, function_selector: felt252, ret_data: T, n_times: u32
 ) {
-    mock_call_when(contract_address, function_selector, MockCallData::Any, ret_data, n_times)
+    mock_call_when(contract_address, function_selector, MockCalldata::Any, ret_data, n_times)
 }
 
 /// Mocks contract call to a function of a contract at the given address, indefinitely.
@@ -88,7 +68,7 @@ pub fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct
 pub fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
     contract_address: ContractAddress, function_selector: felt252, ret_data: T
 ) {
-    start_mock_call_when(contract_address, function_selector, MockCallData::Any, ret_data)
+    start_mock_call_when(contract_address, function_selector, MockCalldata::Any, ret_data)
 }
 
 /// Cancels the `mock_call` / `start_mock_call` for the function with given name and contract
@@ -97,7 +77,7 @@ pub fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: De
 /// - `function_selector` - hashed name of the target function (can be obtained with `selector!`
 /// macro)
 pub fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252,) {
-    stop_mock_call_when(contract_address, function_selector, MockCallData::Any)
+    stop_mock_call_when(contract_address, function_selector, MockCalldata::Any)
 }
 
 /// Mocks contract call to a `function_selector` of a contract at the given address, for `n_times`
@@ -110,13 +90,13 @@ pub fn stop_mock_call(contract_address: ContractAddress, function_selector: felt
 /// - `contract_address` - target contract address
 /// - `function_selector` - hashed name of the target function (can be obtained with `selector!`
 /// macro)
-/// - `call_data` - matching call data
+/// - `calldata` - matching calldata
 /// - `ret_data` - data to return by the function `function_selector`
 /// - `n_times` - number of calls to mock the function for
 pub fn mock_call_when<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
     contract_address: ContractAddress,
     function_selector: felt252,
-    call_data: MockCallData,
+    calldata: MockCalldata,
     ret_data: T,
     n_times: u32
 ) {
@@ -124,7 +104,7 @@ pub fn mock_call_when<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Des
 
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
-    call_data.serialize(ref inputs);
+    calldata.serialize(ref inputs);
     CheatSpan::TargetCalls(n_times).serialize(ref inputs);
 
     let mut ret_data_arr = ArrayTrait::new();
@@ -141,17 +121,17 @@ pub fn mock_call_when<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Des
 /// - `contract_address` - targeted contracts' address
 /// - `function_selector` - hashed name of the target function (can be obtained with `selector!`
 /// macro)
-/// - `call_data` - matching call data
+/// - `calldata` - matching calldata
 /// - `ret_data` - data to be returned by the function
 pub fn start_mock_call_when<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
     contract_address: ContractAddress,
     function_selector: felt252,
-    call_data: MockCallData,
+    calldata: MockCalldata,
     ret_data: T
 ) {
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
-    call_data.serialize(ref inputs);
+    calldata.serialize(ref inputs);
     CheatSpan::Indefinite.serialize(ref inputs);
 
     let mut ret_data_arr = ArrayTrait::new();
@@ -166,14 +146,14 @@ pub fn start_mock_call_when<T, impl TSerde: core::serde::Serde<T>, impl TDestruc
 /// contract address.
 /// - `contract_address` - targeted contracts' address
 /// - `function_selector` - hashed name of the target function (can be obtained with `selector!`
-/// - `call_data` - matching call data
+/// - `calldata` - matching calldata
 /// macro)
 pub fn stop_mock_call_when(
-    contract_address: ContractAddress, function_selector: felt252, call_data: MockCallData
+    contract_address: ContractAddress, function_selector: felt252, calldata: MockCalldata
 ) {
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
-    call_data.serialize(ref inputs);
+    calldata.serialize(ref inputs);
 
     execute_cheatcode_and_deserialize::<'stop_mock_call', ()>(inputs.span());
 }

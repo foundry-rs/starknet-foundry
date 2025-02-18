@@ -1,4 +1,4 @@
-use crate::state::{CheatSpan, CheatStatus};
+use crate::state::{CheatSpan, CheatStatus, MockCalldata};
 use crate::CheatnetState;
 use num_traits::Zero;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
@@ -11,14 +11,14 @@ impl CheatnetState {
         &mut self,
         contract_address: ContractAddress,
         function_selector: EntryPointSelector,
-        calldata: Option<Vec<Felt>>,
+        calldata: MockCalldata,
         ret_data: &[Felt],
         span: CheatSpan,
     ) {
         let contract_mocked_functions = self.mocked_functions.entry(contract_address).or_default();
         let calldata_hash = match calldata {
-            Some(data) => poseidon_hash_many(data.iter()),
-            None => Felt::zero(),
+            MockCalldata::Values(data) => poseidon_hash_many(data.iter()),
+            MockCalldata::Any => Felt::zero(),
         };
         let key = (function_selector, calldata_hash);
         contract_mocked_functions.insert(key, CheatStatus::Cheated(ret_data.to_vec(), span));
@@ -28,7 +28,7 @@ impl CheatnetState {
         &mut self,
         contract_address: ContractAddress,
         function_selector: EntryPointSelector,
-        calldata: Option<Vec<Felt>>,
+        calldata: MockCalldata,
         ret_data: &[Felt],
     ) {
         self.mock_call(
@@ -44,13 +44,13 @@ impl CheatnetState {
         &mut self,
         contract_address: ContractAddress,
         function_selector: EntryPointSelector,
-        calldata: Option<Vec<Felt>>,
+        calldata: MockCalldata,
     ) {
         if let Entry::Occupied(mut e) = self.mocked_functions.entry(contract_address) {
             let contract_mocked_functions = e.get_mut();
             let calldata_hash = match calldata {
-                Some(data) => poseidon_hash_many(data.iter()),
-                None => Felt::zero(),
+                MockCalldata::Values(data) => poseidon_hash_many(data.iter()),
+                MockCalldata::Any => Felt::zero(),
             };
             contract_mocked_functions.remove(&(function_selector, calldata_hash));
         }

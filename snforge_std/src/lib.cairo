@@ -30,7 +30,7 @@ pub use cheatcodes::CheatSpan;
 pub use cheatcodes::ReplaceBytecodeError;
 pub use cheatcodes::test_address;
 pub use cheatcodes::test_selector;
-pub use cheatcodes::MockCallData;
+pub use cheatcodes::MockCalldata;
 pub use cheatcodes::mock_call;
 pub use cheatcodes::start_mock_call;
 pub use cheatcodes::stop_mock_call;
