@@ -707,7 +707,7 @@ fn l1_handler_cost() {
     // 15923 = 3072 (6 * 512, 512 is gas per memory word) +
     //         5000 (1 * 5000, 5000 is gas per counter decrease) +
     //         4179 (result of get_consumed_message_to_l2_emissions_cost(6)) +
-    //         3672 (6 * 612, 612 is sharp gas per memory word) +
+    //         3672 (6 * 612, 612 is sharp gas per memory word)
     //
     assert_gas(&result, "l1_handler_cost", 96 + 21 + 15923);
 }
