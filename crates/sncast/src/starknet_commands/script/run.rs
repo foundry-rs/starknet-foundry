@@ -336,6 +336,10 @@ pub fn run(
 
     let param_types = builder.generic_id_and_size_from_concrete(&func.signature.param_types);
     let base_offset = 5;
+    // * Segment arena is allocated conditionally, so segment index is automatically moved (+2 segments)
+    // * Each used builtin moves the offset by +1
+    // * Line `let mut builtin_offset = 3;` in `create_entry_code_from_params`
+    // * TODO Where is remaining +2 in base offset coming from? Maybe System builtin and Gas builtin which seem to be always included
     let segment_index = if param_types
         .iter()
         .any(|(ty, _)| ty == &SegmentArenaType::ID)
