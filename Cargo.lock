@@ -4992,6 +4992,7 @@ dependencies = [
  "async-trait",
  "base16ct",
  "blockifier",
+ "cairo-lang-casm",
  "cairo-lang-runnable-utils",
  "cairo-lang-runner",
  "cairo-lang-sierra",

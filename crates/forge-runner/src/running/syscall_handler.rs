@@ -24,6 +24,7 @@ pub fn build_syscall_handler<'a>(
     // * Each used builtin moves the offset by +1
     // * Line `let mut builtin_offset = 3;` in `create_entry_code_from_params`
     // * TODO Where is remaining +2 in base offset coming from? Maybe System builtin and Gas builtin which seem to be always included
+    // TODO(#2954)
     let base_offset = 5;
     let segment_index = if test_param_types
         .iter()
