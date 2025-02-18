@@ -704,10 +704,11 @@ fn l1_handler_cost() {
     // 96 = gas cost of onchain data (deploy cost)
     // int(5.12 * 4) = 21 = keccak cost from l1 handler
     // in this test, l1_handler_payload_size = 6
-    // 15923 = 3072 (6 * 512, 512 is gas per memory word) +
-    //         5000 (1 * 5000, 5000 is gas per counter decrease) +
-    //         4179 (result of get_consumed_message_to_l2_emissions_cost(6)) +
-    //         3672 (6 * 612, 612 is sharp gas per memory word)
+    // 15923 = 12251 (gas used for processing L1<>L2 messages on L1) + 3672 (SHARP gas, 6 * 612)
+    // 12251 = 3072 (6 * 512, 512 is gas per memory word) +
+    //         + 4179 (result of get_consumed_message_to_l2_emissions_cost(6) which is get_event_emission_cost(3, 3 + 6) = 375 + (3 + 1) * 375 + 9 * 256) +
+    //         + 0 +
+    //         + 5000 (1 * 5000, 5000 is gas per counter decrease)
     //
     assert_gas(&result, "l1_handler_cost", 96 + 21 + 15923);
 }
