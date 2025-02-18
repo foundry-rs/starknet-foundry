@@ -15,7 +15,8 @@ use cairo_lang_runnable_utils::builder::{
 use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{Arg, RunResultValue, SierraCasmRunner};
-use cairo_lang_sierra::extensions::ConcreteType;
+use cairo_lang_sierra::extensions::segment_arena::SegmentArenaType;
+use cairo_lang_sierra::extensions::{ConcreteType, NamedType};
 use cairo_lang_sierra::program::{Function, VersionedProgram};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
@@ -333,12 +334,26 @@ pub fn run(
 
     let mut blockifier_state = CachedState::new(DictStateReader::default());
 
+    let param_types = builder.generic_id_and_size_from_concrete(&func.signature.param_types);
+    let base_offset = 5;
+    let segment_index = if param_types
+        .iter()
+        .any(|(ty, _)| ty == &SegmentArenaType::ID)
+    {
+        // FIXME verify this
+        base_offset + builtins.len() + 2
+    } else {
+        // FIXME verify this
+        base_offset + builtins.len()
+    };
     let syscall_handler = SyscallHintProcessor::new(
         &mut blockifier_state,
         &mut context,
         // This segment is created by SierraCasmRunner
         Relocatable {
-            segment_index: 10,
+            segment_index: segment_index
+                .try_into()
+                .expect("Failed to convert index to isize"),
             offset: 0,
         },
         CallEntryPoint::default(),
