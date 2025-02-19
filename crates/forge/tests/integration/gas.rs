@@ -547,7 +547,7 @@ fn multiple_storage_writes_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 3598 * 0.0025 = 8.995 ~ 9 = gas cost of steps
+    // (3598 + 9 memory holes) * 0.0025 = 9.0175 ~ 10 = gas cost of steps
     // l = number of class hash updates
     // n = unique contracts updated
     // m = unique(!) values updated
@@ -559,7 +559,7 @@ fn multiple_storage_writes_cost() {
     assert_gas(
         &result,
         "multiple_storage_writes_cost",
-        9 + 64 + 64 + 32 + 32,
+        10 + 64 + 64 + 32 + 32,
     );
 }
 
