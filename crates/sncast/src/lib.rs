@@ -71,7 +71,11 @@ impl FromStr for AccountType {
 
 impl Display for AccountType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{self:?}")
+        match *self {
+            AccountType::OpenZeppelin => write!(f, "open_zeppelin"),
+            AccountType::Argent => write!(f, "argent"),
+            AccountType::Braavos => write!(f, "braavos"),
+        }
     }
 }
 
