@@ -8,7 +8,8 @@ trait IHelloStarknet<TContractState> {
 
 #[starknet::contract]
 mod HelloStarknet {
-    use array::ArrayTrait;
+    use core::array::ArrayTrait;
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     #[storage]
     struct Storage {
@@ -44,7 +45,7 @@ mod HelloStarknet {
 
 #[cfg(test)]
 mod tests {
-    use snforge_std::{declare, ContractClassTrait};
+    use snforge_std::{declare};
     use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 
     #[test]

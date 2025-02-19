@@ -1,5 +1,7 @@
 #[starknet::contract]
 mod SegmentArenaUser {
+    use core::dict::Felt252Dict;
+    
     #[storage]
     struct Storage {}
 

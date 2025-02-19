@@ -1,4 +1,4 @@
-mod fab_impl;
+pub mod fab_impl;
 
 fn fn_from_above() -> felt252 {
     1
