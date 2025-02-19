@@ -1,6 +1,5 @@
-use sncast_std::{deploy, DeployResult, FeeSettings};
-use starknet::{ClassHash, Felt252TryIntoClassHash};
-use traits::Into;
+use sncast_std::{deploy, FeeSettings};
+use starknet::{ClassHash};
 
 fn main() {
     let salt = 0x3;

@@ -1,8 +1,6 @@
 use sncast_std::{
-    invoke, InvokeResult, ScriptCommandError, ProviderError, StarknetError, FeeSettings,
+    invoke, FeeSettings,
 };
-use starknet::{ContractAddress, Felt252TryIntoContractAddress};
-use traits::Into;
 
 fn main() {
     let map_contract_address = 0x123.try_into().expect('Invalid contract address value');
