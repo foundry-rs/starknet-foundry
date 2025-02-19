@@ -34,13 +34,11 @@ fn trace_resources_lib_call() {
 }
 
 #[test]
-#[ignore] // TODO(#1657)
 fn trace_resources_failed_call() {
     assert_resources_for_test("test_failed_call", |_| ());
 }
 
 #[test]
-#[ignore] // TODO(#1657)
 fn trace_resources_failed_lib_call() {
     assert_resources_for_test("test_failed_lib_call", |_| ());
 }
