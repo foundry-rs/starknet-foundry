@@ -209,8 +209,9 @@ pub fn run_test_case(
             // Max gas is no longer set by `create_entry_code_from_params`
             // Instead, call to `ExternalHint::WriteRunParam` is added by it, and we need to
             // store the gas value to be read by logic handling the hint
-            // fixme: the 100000 was substracted arbitrarily, to fix 'Got an exception while executing a hint: Invalid syscall input: 0x10000000000002877; Unexpected gas.' error
-            user_args: vec![vec![Arg::Value(Felt::from(u64::MAX - 100_000))]],
+            // TODO we should subtract inital cost of the function from this value to be more exact.
+            //  But as a workaround it should be good enough.
+            user_args: vec![vec![Arg::Value(Felt::from(i64::MAX as u64))]],
         },
     };
 

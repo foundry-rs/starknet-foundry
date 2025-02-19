@@ -181,7 +181,7 @@ pub fn call_l1_handler(
         storage_address: *contract_address,
         caller_address: ContractAddress::default(),
         call_type: CallType::Call,
-        initial_gas: u64::MAX,
+        initial_gas: i64::MAX as u64,
     };
 
     call_entry_point(

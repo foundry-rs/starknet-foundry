@@ -91,6 +91,6 @@ pub fn build_test_entry_point() -> CallEntryPoint {
         storage_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
         caller_address: ContractAddress::default(),
         call_type: CallType::Call,
-        initial_gas: u64::MAX,
+        initial_gas: i64::MAX as u64,
     }
 }

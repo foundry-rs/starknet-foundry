@@ -53,7 +53,7 @@ pub fn deploy_at(
         syscall_handler.base.context,
         &ctor_context,
         calldata,
-        u64::MAX,
+        i64::MAX as u64,
     );
     cheatnet_state.increment_deploy_salt_base();
 
