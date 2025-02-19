@@ -50,7 +50,7 @@ pub fn load(
 /// For details see:
 /// <https://docs.starknet.io/architecture-and-concepts/smart-contracts/contract-storage>
 #[must_use]
-pub(crate) fn normalize_storage_address(address: Felt) -> Felt {
+fn normalize_storage_address(address: Felt) -> Felt {
     let modulus = NonZeroFelt::from_felt_unchecked(Felt::from(2).pow(251_u128) - Felt::from(256));
     address.mod_floor(&modulus)
 }

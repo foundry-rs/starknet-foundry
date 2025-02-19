@@ -57,10 +57,7 @@ pub fn set_balance(
 ) -> Result<(), anyhow::Error> {
     let balance_low_address =
         calculate_variable_address(token.balances_variable_selector(), Some(&[target.into()]));
-    let balance_high_address = calculate_variable_address(
-        token.balances_variable_selector(),
-        Some(&[target.into(), Felt::ONE]),
-    );
+    let balance_high_address = balance_low_address + Felt::ONE;
     store(
         state,
         token.contract_address(),

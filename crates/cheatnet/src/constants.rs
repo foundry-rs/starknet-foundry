@@ -22,6 +22,7 @@ use runtime::starknet::state::DictStateReader;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::{core::ContractAddress, transaction::Calldata};
+
 pub const MAX_FEE: u128 = 1_000_000 * 100_000_000_000; // 1000000 * min_gas_price.
 pub const INITIAL_BALANCE: u128 = 10 * MAX_FEE;
 
@@ -54,7 +55,6 @@ pub fn get_contract_class(class: &str) -> ContractClass {
 // Creates a state with predeployed account and erc20 used to send transactions during tests.
 // Deployed contracts are cairo 0 contracts
 // Account does not include validations
-// TODO: Add ETH contract
 #[must_use]
 pub fn build_testing_state() -> DictStateReader {
     let test_erc20_class_hash =
@@ -79,7 +79,6 @@ pub fn build_testing_state() -> DictStateReader {
     ]);
 
     let test_erc20_address = TryFromHexStr::try_from_hex_str(ERC20_CONTRACT_ADDRESS).unwrap();
-
     let test_address = TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap();
     let address_to_class_hash = HashMap::from([
         (test_erc20_address, test_erc20_class_hash),

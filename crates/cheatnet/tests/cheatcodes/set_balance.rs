@@ -42,14 +42,12 @@ fn test_set_balance_strk() {
     assert_success(balance, &[0.into(), 0.into()]);
 
     test_env.set_balance(contract_address, U256::from(1_000_000_u32), token);
-
     let balance = get_balance(&mut test_env, contract_address, token);
     assert_success(balance, &[1_000_000.into(), 0.into()]);
 
-    test_env.set_balance(contract_address, U256::from(3_000_000_u32), token);
-
+    test_env.set_balance(contract_address, U256::from_words(u128::MAX, 100), token);
     let balance = get_balance(&mut test_env, contract_address, token);
-    assert_success(balance, &[3_000_000.into(), 0.into()]);
+    assert_success(balance, &[u128::MAX.into(), 100.into()]);
 }
 
 #[test]
@@ -83,53 +81,10 @@ fn test_set_balance_custom_token() {
     assert_success(balance, &[0.into(), 0.into()]);
 
     test_env.set_balance(contract_address, U256::from(1_000_000_u32), token);
-
     let balance = get_balance(&mut test_env, contract_address, token);
     assert_success(balance, &[1_000_000.into(), 0.into()]);
 
-    test_env.set_balance(contract_address, U256::from(3_000_000_u32), token);
+    test_env.set_balance(contract_address, U256::from_words(u128::MAX, 100), token);
     let balance = get_balance(&mut test_env, contract_address, token);
-
-    assert_success(balance, &[3_000_000.into(), 0.into()]);
-}
-
-#[test]
-fn test_set_balance_() {
-    let mut test_env = TestEnvironment::new();
-
-    let contracts_data = get_contracts();
-
-    let class_hash = test_env.declare("HelloStarknet", &contracts_data);
-    let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
-
-    let custom_token_class_hash = test_env.declare("ERC20", &contracts_data);
-    let custom_token_address = test_env.deploy_wrapper(
-        &custom_token_class_hash,
-        &[
-            Felt::from_short_string("CustomToken").unwrap(),
-            Felt::from_short_string("CT").unwrap(),
-            18.into(),
-            1_000_000_000.into(),
-            0.into(),
-            123.into(),
-        ],
-    );
-
-    let token = Token::Custom {
-        address: custom_token_address,
-        balances_variable_selector: get_selector_from_name("balances").unwrap(),
-    };
-
-    let balance = get_balance(&mut test_env, contract_address, token);
-    assert_success(balance, &[0.into(), 0.into()]);
-
-    test_env.set_balance(contract_address, U256::from(1_000_000_u32), token);
-
-    let balance = get_balance(&mut test_env, contract_address, token);
-    assert_success(balance, &[1_000_000.into(), 0.into()]);
-
-    test_env.set_balance(contract_address, U256::from(3_000_000_u32), token);
-    let balance = get_balance(&mut test_env, contract_address, token);
-
-    assert_success(balance, &[3_000_000.into(), 0.into()]);
+    assert_success(balance, &[u128::MAX.into(), 100.into()]);
 }
