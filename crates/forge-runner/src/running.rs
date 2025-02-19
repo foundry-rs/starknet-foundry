@@ -289,8 +289,6 @@ pub fn run_test_case(
         used_resources.clone(),
     )?;
 
-    dbg!(&gas);
-
     Ok(RunResultWithInfo {
         run_result: run_result.map(|(gas_counter, memory, value)| RunResult {
             used_resources: used_resources.execution_resources.clone(),
