@@ -7,7 +7,7 @@ trait ICheatBlockTimestampChecker<TContractState> {
 
 #[starknet::contract]
 mod CheatBlockTimestampChecker {
-    use box::BoxTrait;
+    use core::box::BoxTrait;
 
     #[storage]
     struct Storage {}

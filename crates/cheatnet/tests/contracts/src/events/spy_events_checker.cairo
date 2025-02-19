@@ -78,7 +78,7 @@ mod SpyEventsChecker {
         }
 
         fn emit_event_syscall(ref self: ContractState, some_key: felt252, some_data: felt252) {
-            starknet::emit_event_syscall(array![some_key].span(), array![some_data].span())
+            starknet::syscalls::emit_event_syscall(array![some_key].span(), array![some_data].span())
                 .unwrap_syscall();
         }
     }

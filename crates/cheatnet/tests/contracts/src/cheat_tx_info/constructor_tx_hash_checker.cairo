@@ -6,7 +6,8 @@ trait ITxHashChecker<TContractState> {
 
 #[starknet::contract]
 mod TxHashChecker {
-    use box::BoxTrait;
+    use core::box::BoxTrait;
+    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     #[storage]
     struct Storage {

@@ -8,8 +8,9 @@ trait IConstructorCheatSequencerAddressChecker<TContractState> {
 
 #[starknet::contract]
 mod ConstructorCheatSequencerAddressChecker {
-    use box::BoxTrait;
+    use core::box::BoxTrait;
     use starknet::ContractAddress;
+    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     #[storage]
     struct Storage {

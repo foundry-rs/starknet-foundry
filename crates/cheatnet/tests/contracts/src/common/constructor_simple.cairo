@@ -6,6 +6,8 @@ trait IConstructorSimple<TContractState> {
 
 #[starknet::contract]
 mod ConstructorSimple {
+    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+
     #[storage]
     struct Storage {
         number: felt252
