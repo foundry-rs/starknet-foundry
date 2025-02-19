@@ -41,6 +41,7 @@ use cheatnet::state::{
 };
 use entry_code::create_entry_code;
 use hints::{hints_by_representation, hints_to_params};
+use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use starknet_types_core::felt::Felt;
@@ -48,7 +49,7 @@ use std::cell::RefCell;
 use std::default::Default;
 use std::marker::PhantomData;
 use std::rc::Rc;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use syscall_handler::build_syscall_handler;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
@@ -81,6 +82,7 @@ pub fn run_test(
             &case,
             &casm_program,
             &RuntimeConfig::from(&test_runner_config),
+            None,
         );
 
         // TODO: code below is added to fix snforge tests
@@ -101,13 +103,13 @@ pub fn run_test(
 }
 
 pub(crate) fn run_fuzz_test(
-    args: Vec<Felt>,
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
     fuzzing_send: Sender<()>,
+    rng: Arc<Mutex<StdRng>>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -118,10 +120,11 @@ pub(crate) fn run_fuzz_test(
         }
 
         let run_result = run_test_case(
-            args.clone(),
+            vec![],
             &case,
             &casm_program,
             &Arc::new(RuntimeConfig::from(&test_runner_config)),
+            Some(rng),
         );
 
         // TODO: code below is added to fix snforge tests
@@ -134,7 +137,7 @@ pub(crate) fn run_fuzz_test(
         extract_test_case_summary(
             run_result,
             &case,
-            args,
+            vec![],
             &test_runner_config.contracts_data,
             &versioned_program_path,
         )
@@ -147,6 +150,7 @@ pub struct RunResultWithInfo {
     pub(crate) gas_used: u128,
     pub(crate) used_resources: UsedResources,
     pub(crate) encountered_errors: Vec<EncounteredError>,
+    pub(crate) fuzzer_args: Vec<String>,
 }
 
 #[allow(clippy::too_many_lines)]
@@ -155,6 +159,7 @@ pub fn run_test_case(
     case: &TestCaseWithResolvedConfig,
     casm_program: &AssembledProgramWithDebugInfo,
     runtime_config: &RuntimeConfig,
+    fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
 ) -> Result<RunResultWithInfo> {
     assert!(args.is_empty(), "Tests with args not supported currently");
 
@@ -224,6 +229,7 @@ pub fn run_test_case(
     let forge_extension = ForgeExtension {
         environment_variables: runtime_config.environment_variables,
         contracts_data: runtime_config.contracts_data,
+        fuzzer_rng,
     };
 
     let mut forge_runtime = ExtendedRuntime {
@@ -281,6 +287,15 @@ pub fn run_test_case(
 
     update_top_call_execution_resources(&mut forge_runtime);
     update_top_call_l1_resources(&mut forge_runtime);
+
+    let fuzzer_args = forge_runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .fuzzer_args
+        .clone();
+
     let transaction_context = get_context(&forge_runtime).tx_context.clone();
     let used_resources = get_all_used_resources(forge_runtime, &transaction_context);
     let gas = calculate_used_gas(
@@ -302,6 +317,7 @@ pub fn run_test_case(
         used_resources,
         call_trace: call_trace_ref,
         encountered_errors,
+        fuzzer_args,
     })
 }
 
@@ -368,6 +384,7 @@ fn extract_test_case_summary(
                     run_result,
                     case,
                     args,
+                    result_with_info.fuzzer_args,
                     result_with_info.gas_used,
                     result_with_info.used_resources,
                     &result_with_info.call_trace,
@@ -398,6 +415,7 @@ fn extract_test_case_summary(
                             )
                         }),
                         arguments: args,
+                        fuzzer_args: result_with_info.fuzzer_args,
                         test_statistics: (),
                     }
                 }
@@ -409,6 +427,7 @@ fn extract_test_case_summary(
             name: case.name.clone(),
             msg: Some(error.to_string()),
             arguments: args,
+            fuzzer_args: Vec::default(),
             test_statistics: (),
         },
     }

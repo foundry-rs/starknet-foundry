@@ -15,6 +15,7 @@ fn fuzzed_argument() {
         }
 
         #[test]
+        #[fuzzer]
         fn fuzzed_argument(b: felt252) {
             let result = adder(2, b);
             assert(result == 2 + b, '2 + b == 2 + b');
@@ -34,6 +35,7 @@ fn fuzzer_different_types() {
     let test = test_case!(indoc!(
         r"
         #[test]
+        #[fuzzer]
         fn fuzzer_different_types(a: u256) {
             if a <= 5_u256 {
                 assert(2 == 2, '2 == 2');
@@ -78,8 +80,9 @@ fn fuzzed_while_loop() {
         panic!()
     };
 
-    assert_eq!(gas_info.min, 1);
-    assert_eq!(gas_info.max, 21);
-    assert!((gas_info.mean - 11.).abs() < f64::EPSILON);
-    assert!((gas_info.std_deviation - 6.09).abs() < 0.01);
+    // TODO (#2926)
+    assert_eq!(gas_info.min, 2);
+    assert_eq!(gas_info.max, 23);
+    assert!((gas_info.mean - 12.).abs() < f64::EPSILON);
+    assert!((gas_info.std_deviation - 6.24).abs() < 0.01);
 }
