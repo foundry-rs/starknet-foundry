@@ -2,8 +2,6 @@ use super::common::runner::{setup_package, test_runner};
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 
-// FIXME restore fuzzing
-#[ignore]
 #[test]
 fn fuzzing() {
     let temp = setup_package("fuzzing");
@@ -46,8 +44,6 @@ fn fuzzing() {
     );
 }
 
-// FIXME restore fuzzing
-#[ignore]
 #[test]
 fn fuzzing_set_runs() {
     let temp = setup_package("fuzzing");
@@ -93,8 +89,6 @@ fn fuzzing_set_runs() {
     );
 }
 
-// FIXME restore fuzzing
-#[ignore]
 #[test]
 fn fuzzing_set_seed() {
     let temp = setup_package("fuzzing");
@@ -140,8 +134,6 @@ fn fuzzing_set_seed() {
     );
 }
 
-// FIXME restore fuzzing
-#[ignore]
 #[test]
 fn fuzzing_incorrect_runs() {
     let temp = setup_package("fuzzing");
@@ -161,8 +153,6 @@ fn fuzzing_incorrect_runs() {
     );
 }
 
-// FIXME restore fuzzing
-#[ignore]
 #[test]
 fn fuzzing_incorrect_function_args() {
     let temp = setup_package("fuzzing");
@@ -182,8 +172,6 @@ fn fuzzing_incorrect_function_args() {
     );
 }
 
-// FIXME restore fuzzing
-#[ignore]
 #[test]
 fn fuzzing_exit_first() {
     let temp = setup_package("fuzzing");
@@ -216,8 +204,6 @@ fn fuzzing_exit_first() {
     );
 }
 
-// FIXME restore fuzzing
-#[ignore]
 #[test]
 fn fuzzing_exit_first_single_fail() {
     let temp = setup_package("fuzzing");
@@ -249,8 +235,6 @@ fn fuzzing_exit_first_single_fail() {
     );
 }
 
-// FIXME restore fuzzing
-#[ignore]
 #[test]
 fn fuzzing_multiple_attributes() {
     let temp = setup_package("fuzzing");
@@ -278,8 +262,6 @@ fn fuzzing_multiple_attributes() {
     );
 }
 
-// FIXME restore fuzzing
-#[ignore]
 #[test]
 fn generate_arg_cheatcode() {
     let temp = setup_package("fuzzing");

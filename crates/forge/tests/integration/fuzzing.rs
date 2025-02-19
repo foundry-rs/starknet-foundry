@@ -4,8 +4,6 @@ use test_utils::runner::{assert_passed, TestCase};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
-// FIXME restore fuzzing
-#[ignore]
 #[test]
 fn fuzzed_argument() {
     let test = test_case!(indoc!(
@@ -28,8 +26,6 @@ fn fuzzed_argument() {
     assert_passed(&result);
 }
 
-// FIXME restore fuzzing
-#[ignore]
 #[test]
 fn fuzzer_different_types() {
     let test = test_case!(indoc!(
@@ -52,8 +48,6 @@ fn fuzzer_different_types() {
     assert_passed(&result);
 }
 
-// FIXME restore fuzzing
-#[ignore]
 #[test]
 fn fuzzed_while_loop() {
     let test = test_case!(indoc!(
