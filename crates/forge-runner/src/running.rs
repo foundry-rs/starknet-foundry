@@ -50,7 +50,6 @@ use std::default::Default;
 use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
-use syscall_handler::build_syscall_handler;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
@@ -61,6 +60,10 @@ mod entry_code;
 mod hints;
 mod syscall_handler;
 pub mod with_config;
+
+use crate::running::syscall_handler::build_syscall_handler;
+pub use syscall_handler::has_segment_arena;
+pub use syscall_handler::syscall_handler_offset;
 
 #[must_use]
 pub fn run_test(

@@ -5009,6 +5009,7 @@ dependencies = [
  "dialoguer",
  "dirs",
  "docs",
+ "forge_runner",
  "fs_extra",
  "indoc",
  "itertools 0.12.1",
