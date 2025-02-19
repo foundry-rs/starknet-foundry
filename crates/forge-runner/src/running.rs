@@ -78,7 +78,6 @@ pub fn run_test(
             return TestCaseSummary::Skipped {};
         }
         let run_result = run_test_case(
-            vec![],
             &case,
             &casm_program,
             &RuntimeConfig::from(&test_runner_config),
@@ -120,7 +119,6 @@ pub(crate) fn run_fuzz_test(
         }
 
         let run_result = run_test_case(
-            vec![],
             &case,
             &casm_program,
             &Arc::new(RuntimeConfig::from(&test_runner_config)),
@@ -155,14 +153,11 @@ pub struct RunResultWithInfo {
 
 #[allow(clippy::too_many_lines)]
 pub fn run_test_case(
-    args: Vec<Felt>,
     case: &TestCaseWithResolvedConfig,
     casm_program: &AssembledProgramWithDebugInfo,
     runtime_config: &RuntimeConfig,
     fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
 ) -> Result<RunResultWithInfo> {
-    assert!(args.is_empty(), "Tests with args not supported currently");
-
     ensure!(
         case.config.available_gas != Some(0),
         "\n\t`available_gas` attribute was incorrectly configured. Make sure you use scarb >= 2.4.4\n"
