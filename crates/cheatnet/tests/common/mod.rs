@@ -195,7 +195,7 @@ pub fn call_contract(
         storage_address: *contract_address,
         caller_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
         call_type: CallType::Call,
-        initial_gas: u64::MAX,
+        initial_gas: i64::MAX as u64,
     };
 
     let mut execution_resources = ExecutionResources::default();

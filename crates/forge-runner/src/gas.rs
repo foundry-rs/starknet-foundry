@@ -32,8 +32,6 @@ pub fn calculate_used_gas(
 
     let archival_data_resources = get_archival_data_resources(resources.events);
 
-    //dbg!(&resources.execution_resources);
-
     let starknet_resources = StarknetResources {
         archival_data: archival_data_resources,
         messages: message_resources,
@@ -52,8 +50,6 @@ pub fn calculate_used_gas(
         starknet_resources,
         computation: computation_resources,
     };
-
-    //dbg!(&transaction_resources);
 
     // FIXME this is the tricky part, how to figure the computation mode here
     Ok(transaction_resources.to_gas_vector(
@@ -181,6 +177,7 @@ pub fn check_available_gas(
                     "\n\tTest cost exceeded the available gas. Consumed gas: ~{gas_info}"
                 )),
                 arguments,
+                fuzzer_args: Vec::default(),
                 test_statistics: (),
             }
         }

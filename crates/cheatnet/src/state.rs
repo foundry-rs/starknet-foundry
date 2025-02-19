@@ -225,8 +225,6 @@ impl CallTraceNode {
 
 #[derive(Clone, Debug)]
 struct CallStackElement {
-    // when we exit the call we use it to calculate resources used by the call
-    // resources_used_before_call: ExecutionResources,
     call_trace: Rc<RefCell<CallTrace>>,
     cheated_data: CheatedData,
 }
@@ -237,20 +235,13 @@ pub struct NotEmptyCallStack(Vec<CallStackElement>);
 impl NotEmptyCallStack {
     pub fn from(elem: Rc<RefCell<CallTrace>>) -> Self {
         NotEmptyCallStack(vec![CallStackElement {
-            // resources_used_before_call: ExecutionResources::default(),
             call_trace: elem,
             cheated_data: Default::default(),
         }])
     }
 
-    pub fn push(
-        &mut self,
-        elem: Rc<RefCell<CallTrace>>,
-        // resources_used_before_call: ExecutionResources,
-        cheated_data: CheatedData,
-    ) {
+    pub fn push(&mut self, elem: Rc<RefCell<CallTrace>>, cheated_data: CheatedData) {
         self.0.push(CallStackElement {
-            // resources_used_before_call,
             call_trace: elem,
             cheated_data,
         });
@@ -340,6 +331,7 @@ pub struct CheatnetState {
     pub block_info: BlockInfo,
     pub trace_data: TraceData,
     pub encountered_errors: Vec<EncounteredError>,
+    pub fuzzer_args: Vec<String>,
 }
 
 impl Default for CheatnetState {
@@ -366,6 +358,7 @@ impl Default for CheatnetState {
                 is_vm_trace_needed: false,
             },
             encountered_errors: vec![],
+            fuzzer_args: Vec::default(),
         }
     }
 }
@@ -468,15 +461,14 @@ impl CheatnetState {
     pub fn update_cheats(&mut self, address: &ContractAddress) {
         self.progress_cheated_execution_info(*address);
     }
+
+    pub fn update_fuzzer_args(&mut self, arg: String) {
+        self.fuzzer_args.push(arg);
+    }
 }
 
 impl TraceData {
-    pub fn enter_nested_call(
-        &mut self,
-        entry_point: CallEntryPoint,
-        // resources_used_before_call: ExecutionResources,
-        cheated_data: CheatedData,
-    ) {
+    pub fn enter_nested_call(&mut self, entry_point: CallEntryPoint, cheated_data: CheatedData) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
             run_with_call_header: false,
@@ -489,9 +481,7 @@ impl TraceData {
             .nested_calls
             .push(CallTraceNode::EntryPointCall(new_call.clone()));
 
-        self.current_call_stack
-            // .push(new_call, resources_used_before_call, cheated_data);
-            .push(new_call, cheated_data);
+        self.current_call_stack.push(new_call, cheated_data);
     }
 
     pub fn set_class_hash_for_current_call(&mut self, class_hash: ClassHash) {
@@ -508,14 +498,11 @@ impl TraceData {
         vm_trace: Option<Vec<RelocatedTraceEntry>>,
     ) {
         let CallStackElement {
-            // resources_used_before_call,
             call_trace: last_call,
             ..
         } = self.current_call_stack.pop();
 
         let mut last_call = last_call.borrow_mut();
-        // last_call.used_execution_resources =
-        //     resources_used_after_call - &resources_used_before_call;
         last_call.used_execution_resources = execution_resources;
 
         last_call.used_syscalls = used_syscalls;

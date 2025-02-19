@@ -57,7 +57,6 @@ impl StateReader for PhantomStateReader {
 
 #[allow(clippy::too_many_lines)]
 pub fn run_config_pass(
-    args: Vec<Felt>,
     test_details: &TestDetails,
     casm_program: &AssembledProgramWithDebugInfo,
 ) -> Result<RawForgeConfig> {
@@ -106,7 +105,9 @@ pub fn run_config_pass(
             // Max gas is no longer set by `create_entry_code_from_params`
             // Instead, call to `ExternalHint::WriteRunParam` is added by it, and we need to
             // store the gas value to be read by logic handling the hint
-            user_args: vec![vec![Arg::Value(Felt::from(u64::MAX))]],
+            // TODO we should subtract initial cost of the function from this value to be more exact.
+            //  But as a workaround it should be good enough.
+            user_args: vec![vec![Arg::Value(Felt::from(i64::MAX))]],
         },
     };
 

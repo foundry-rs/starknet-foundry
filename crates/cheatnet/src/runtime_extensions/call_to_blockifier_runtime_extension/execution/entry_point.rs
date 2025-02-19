@@ -45,7 +45,6 @@ pub fn execute_call_entry_point(
     entry_point: &mut CallEntryPoint, // Instead of 'self'
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
-    // resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
     let cheated_data = if let CallType::Delegate = entry_point.call_type {
@@ -63,11 +62,9 @@ pub fn execute_call_entry_point(
 
     // region: Modified blockifier code
     // We skip recursion depth validation here.
-    cheatnet_state.trace_data.enter_nested_call(
-        entry_point.clone(),
-        // resources.clone(),
-        cheated_data,
-    );
+    cheatnet_state
+        .trace_data
+        .enter_nested_call(entry_point.clone(), cheated_data);
 
     if let Some(cheat_status) = get_mocked_function_cheat_status(entry_point, cheatnet_state) {
         if let CheatStatus::Cheated(ret_data, _) = (*cheat_status).clone() {
@@ -131,7 +128,6 @@ pub fn execute_call_entry_point(
             compiled_class_v0,
             state,
             cheatnet_state,
-            // resources,
             context,
         ),
         RunnableCompiledClass::V1(compiled_class_v1) => execute_entry_point_call_cairo1(
@@ -139,7 +135,6 @@ pub fn execute_call_entry_point(
             &compiled_class_v1,
             state,
             cheatnet_state,
-            // resources,
             context,
         ),
     };
@@ -152,7 +147,6 @@ pub fn execute_call_entry_point(
                 &call_info,
                 &syscall_counter,
                 context,
-                // resources,
                 cheatnet_state,
                 vm_trace,
             );
@@ -168,8 +162,6 @@ pub fn execute_call_entry_point(
                     .encountered_errors
                     .push(EncounteredError { pc, class_hash });
             }
-            // FIXME traces
-            // exit_error_call(&err, cheatnet_state, resources, entry_point, trace);
             exit_error_call(&err, cheatnet_state, entry_point, trace);
             Err(err)
         }
@@ -181,7 +173,6 @@ fn remove_syscall_resources_and_exit_success_call(
     call_info: &CallInfo,
     syscall_counter: &SyscallCounter,
     context: &mut EntryPointExecutionContext,
-    // resources: &mut ExecutionResources,
     cheatnet_state: &mut CheatnetState,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
 ) {
@@ -205,7 +196,6 @@ fn remove_syscall_resources_and_exit_success_call(
 fn exit_error_call(
     error: &EntryPointExecutionError,
     cheatnet_state: &mut CheatnetState,
-    // resources: &mut ExecutionResources,
     entry_point: &CallEntryPoint,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
 ) {
@@ -226,7 +216,6 @@ fn exit_error_call(
 pub fn execute_constructor_entry_point(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
-    // resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
     ctor_context: &ConstructorContext,
     calldata: Calldata,
@@ -260,13 +249,7 @@ pub fn execute_constructor_entry_point(
         initial_gas: remaining_gas,
     };
     // region: Modified blockifier code
-    execute_call_entry_point(
-        &mut constructor_call,
-        state,
-        cheatnet_state,
-        // resources,
-        context,
-    )
+    execute_call_entry_point(&mut constructor_call, state, cheatnet_state, context)
     // endregion
 }
 
