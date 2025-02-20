@@ -170,7 +170,7 @@ pub fn run_test_case(
         set_max_steps(&mut context, max_n_steps);
     }
     let mut cached_state = CachedState::new(state_reader);
-    setup_predeployed_strk_token(&mut cached_state);
+    // setup_predeployed_strk_token(&mut cached_state);
 
     let mut execution_resources = ExecutionResources::default();
     let syscall_handler = build_syscall_handler(
