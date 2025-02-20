@@ -14,11 +14,11 @@ use cairo_annotations::trace_data::{
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use camino::{Utf8Path, Utf8PathBuf};
-use cheatnet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::{CallTrace, CallTraceNode};
 use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
+use runtime::starknet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, EntryPointSelector};
@@ -275,7 +275,7 @@ fn build_profiler_deprecated_syscall_selector(
         DeprecatedSyscallSelector::GetClassHashAt => {
             ProfilerDeprecatedSyscallSelector::GetClassHashAt
         }
-        DeprecatedSyscallSelector::KeccakRound => unimplemented!("No corresponding syscall"),
+        DeprecatedSyscallSelector::KeccakRound => ProfilerDeprecatedSyscallSelector::KeccakRound,
     }
 }
 

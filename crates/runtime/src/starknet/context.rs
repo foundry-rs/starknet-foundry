@@ -1,3 +1,4 @@
+use crate::starknet::constants::{TEST_ADDRESS, TEST_CONTRACT_CLASS_HASH};
 use blockifier::bouncer::BouncerConfig;
 use blockifier::context::{BlockContext, ChainInfo, FeeTokenAddresses, TransactionContext};
 use blockifier::execution::common_hints::ExecutionMode;
@@ -12,8 +13,8 @@ use blockifier::versioned_constants::VersionedConstants;
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use conversions::string::TryFromHexStr;
 use serde::{Deserialize, Serialize};
-use starknet_api::block::GasPrices;
 use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp, GasPrice};
+use starknet_api::block::{GasPriceVector, GasPrices, NonzeroGasPrice};
 use starknet_api::data_availability::DataAvailabilityMode;
 use starknet_api::execution_resources::GasAmount;
 use starknet_api::transaction::fields::TransactionSignature;
@@ -24,7 +25,6 @@ use starknet_api::{
     transaction::{TransactionHash, TransactionVersion},
 };
 use starknet_types_core::felt::Felt;
-use std::num::NonZeroU128;
 use std::sync::Arc;
 
 pub const DEFAULT_CHAIN_ID: &str = "SN_SEPOLIA";
@@ -62,7 +62,6 @@ fn build_tx_info() -> TransactionInfo {
             sender_address: ContractAddress::default(),
             only_query: false,
         },
-        // TODO: Mock
         resource_bounds: ValidResourceBounds::AllResources(AllResourceBounds {
             l1_gas: ResourceBounds {
                 max_amount: GasAmount::from(0_u8),
@@ -107,15 +106,12 @@ pub fn build_context(
         transaction_context,
         ExecutionMode::Execute,
         false,
-        // TODO: Mock
-        SierraGasRevertTracker::new(GasAmount::from(100_000_u64)),
+        SierraGasRevertTracker::new(GasAmount::from(i64::MAX as u64)),
     );
 
     context.revert_infos.0.push(EntryPointRevertInfo::new(
-        // TODO use const
-        ContractAddress::try_from(Felt::from_hex("0x01724987234973219347210837402").unwrap())
-            .unwrap(),
-        starknet_api::core::ClassHash(Felt::from_hex("0x117").unwrap()),
+        ContractAddress::try_from(Felt::from_hex(TEST_ADDRESS).unwrap()).unwrap(),
+        starknet_api::core::ClassHash(Felt::from_hex(TEST_CONTRACT_CLASS_HASH).unwrap()),
         context.n_emitted_events,
         context.n_sent_messages_to_l1,
     ));
@@ -144,18 +140,25 @@ pub struct SerializableBlockInfo {
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SerializableGasPrices {
-    eth_l1_gas_price: NonZeroU128,
-    strk_l1_gas_price: NonZeroU128,
-    eth_l1_data_gas_price: NonZeroU128,
-    strk_l1_data_gas_price: NonZeroU128,
+    eth_l1_gas_price: NonzeroGasPrice,
+    strk_l1_gas_price: NonzeroGasPrice,
+    eth_l1_data_gas_price: NonzeroGasPrice,
+    strk_l1_data_gas_price: NonzeroGasPrice,
+    eth_l2_gas_price: NonzeroGasPrice,
+    strk_l2_gas_price: NonzeroGasPrice,
 }
 impl Default for SerializableGasPrices {
     fn default() -> Self {
         Self {
-            eth_l1_gas_price: NonZeroU128::try_from(100 * u128::pow(10, 9)).unwrap(),
-            strk_l1_gas_price: NonZeroU128::try_from(100 * u128::pow(10, 9)).unwrap(),
-            eth_l1_data_gas_price: NonZeroU128::try_from(u128::pow(10, 6)).unwrap(),
-            strk_l1_data_gas_price: NonZeroU128::try_from(u128::pow(10, 9)).unwrap(),
+            eth_l1_gas_price: NonzeroGasPrice::new(GasPrice::from(100 * u128::pow(10, 9))).unwrap(),
+            strk_l1_gas_price: NonzeroGasPrice::new(GasPrice::from(100 * u128::pow(10, 9)))
+                .unwrap(),
+            eth_l1_data_gas_price: NonzeroGasPrice::new(GasPrice::from(u128::pow(10, 6))).unwrap(),
+            strk_l1_data_gas_price: NonzeroGasPrice::new(GasPrice::from(u128::pow(10, 9))).unwrap(),
+            eth_l2_gas_price: NonzeroGasPrice::new(GasPrice::from(10000 * u128::pow(10, 9)))
+                .unwrap(),
+            strk_l2_gas_price: NonzeroGasPrice::new(GasPrice::from(10000 * u128::pow(10, 9)))
+                .unwrap(),
         }
     }
 }
@@ -196,15 +199,31 @@ impl From<BlockInfo> for SerializableBlockInfo {
     }
 }
 impl From<SerializableGasPrices> for GasPrices {
-    fn from(_forge_gas_prices: SerializableGasPrices) -> Self {
-        // TODO: Mock
-        GasPrices::default()
+    fn from(forge_gas_prices: SerializableGasPrices) -> Self {
+        GasPrices {
+            eth_gas_prices: GasPriceVector {
+                l1_gas_price: forge_gas_prices.eth_l1_gas_price,
+                l1_data_gas_price: forge_gas_prices.eth_l1_data_gas_price,
+                l2_gas_price: forge_gas_prices.eth_l2_gas_price,
+            },
+            strk_gas_prices: GasPriceVector {
+                l1_gas_price: forge_gas_prices.strk_l1_gas_price,
+                l1_data_gas_price: forge_gas_prices.strk_l1_data_gas_price,
+                l2_gas_price: forge_gas_prices.strk_l2_gas_price,
+            },
+        }
     }
 }
 
 impl From<GasPrices> for SerializableGasPrices {
-    fn from(_gas_prices: GasPrices) -> Self {
-        // TODO: Mock
-        SerializableGasPrices::default()
+    fn from(gas_prices: GasPrices) -> Self {
+        SerializableGasPrices {
+            eth_l1_gas_price: gas_prices.eth_gas_prices.l1_gas_price,
+            strk_l1_gas_price: gas_prices.strk_gas_prices.l1_gas_price,
+            eth_l1_data_gas_price: gas_prices.eth_gas_prices.l1_data_gas_price,
+            strk_l1_data_gas_price: gas_prices.strk_gas_prices.l1_data_gas_price,
+            eth_l2_gas_price: gas_prices.eth_gas_prices.l2_gas_price,
+            strk_l2_gas_price: gas_prices.strk_gas_prices.l2_gas_price,
+        }
     }
 }

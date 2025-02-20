@@ -1,3 +1,5 @@
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
+use blockifier::execution::syscalls::hint_processor::ENTRYPOINT_FAILED_ERROR;
 use blockifier::{
     execution::execution_utils::update_remaining_gas,
     execution::{
@@ -15,8 +17,7 @@ use starknet_api::{
     core::{ClassHash, EntryPointSelector},
     transaction::fields::Calldata,
 };
-
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
+use starknet_types_core::felt::Felt;
 
 use super::entry_point::execute_call_entry_point;
 
@@ -33,21 +34,21 @@ pub fn execute_inner_call(
         call,
         syscall_handler.base.state,
         cheatnet_state,
-        // syscall_handler.resources,
         syscall_handler.base.context,
     )?;
     // endregion
 
-    let raw_retdata = &call_info.execution.retdata.0;
+    let mut raw_retdata = call_info.execution.retdata.0.clone();
 
     if call_info.execution.failed {
-        // TODO verify error type
+        raw_retdata
+            .push(Felt::from_hex(ENTRYPOINT_FAILED_ERROR).map_err(SyscallExecutionError::from)?);
         return Err(SyscallExecutionError::Revert {
-            error_data: raw_retdata.clone(),
+            error_data: raw_retdata,
         });
     }
 
-    let retdata_segment = create_retdata_segment(vm, syscall_handler, raw_retdata)?;
+    let retdata_segment = create_retdata_segment(vm, syscall_handler, &raw_retdata)?;
     update_remaining_gas(remaining_gas, &call_info);
 
     syscall_handler.base.inner_calls.push(call_info);

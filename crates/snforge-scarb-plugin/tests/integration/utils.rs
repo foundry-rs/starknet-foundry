@@ -4,6 +4,7 @@ use regex::Regex;
 use std::collections::HashSet;
 
 pub const EMPTY_FN: &str = "fn empty_fn(){}";
+pub const FN_WITH_SINGLE_FELT252_PARAM: &str = "fn empty_fn(f: felt252){}";
 
 pub fn assert_diagnostics(result: &ProcMacroResult, expected: &[Diagnostic]) {
     let diagnostics: HashSet<_> = result.diagnostics.iter().collect();

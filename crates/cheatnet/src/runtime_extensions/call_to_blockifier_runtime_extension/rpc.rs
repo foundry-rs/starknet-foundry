@@ -181,7 +181,7 @@ pub fn call_l1_handler(
         storage_address: *contract_address,
         caller_address: ContractAddress::default(),
         call_type: CallType::Call,
-        initial_gas: u64::MAX,
+        initial_gas: i64::MAX as u64,
     };
 
     call_entry_point(
@@ -202,7 +202,6 @@ pub fn call_entry_point(
         &mut entry_point,
         syscall_handler.base.state,
         cheatnet_state,
-        // syscall_handler.resources,
         syscall_handler.base.context,
     );
 

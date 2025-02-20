@@ -41,14 +41,13 @@ fn available_gas_exceeded() {
     );
 }
 
-// FIXME restore fuzzing
 #[test]
-#[ignore]
 fn available_gas_fuzzing() {
     let test = test_utils::test_case!(indoc!(
         r"
             #[test]
-            #[available_gas(11)]
+            #[available_gas(100)]
+            #[fuzzer]
             fn keccak_cost(x: u256) {
                 keccak::keccak_u256s_le_inputs(array![x].span());
             }

@@ -57,6 +57,9 @@ pub trait SyscallPtrAccess {
 
 pub struct StarknetRuntime<'a> {
     pub hint_handler: SyscallHintProcessor<'a>,
+    // Required for handling `External` hints
+    //
+    // See https://github.com/starkware-libs/cairo/blob/dfb5d3fdcf80bff30c205c14163f99c890dbdc10/crates/cairo-lang-runner/src/casm_run/mod.rs#L94
     pub user_args: Vec<Vec<Arg>>,
 }
 
@@ -164,12 +167,14 @@ impl HintProcessorLogic for StarknetRuntime<'_> {
 
                     return Err(CustomHint(error.into()));
                 }
+                // Copied from https://github.com/starkware-libs/cairo/blob/3d5631d3f6563b5f97c11c816f530be99095a843/crates/cairo-lang-runner/src/casm_run/mod.rs#L1316
                 Hint::External(ExternalHint::AddRelocationRule { src, dst }) => {
                     return Ok(vm.add_relocation_rule(
                         extract_relocatable(vm, src)?,
                         extract_relocatable(vm, dst)?,
                     )?)
                 }
+                // Copied from https://github.com/starkware-libs/cairo/blob/3d5631d3f6563b5f97c11c816f530be99095a843/crates/cairo-lang-runner/src/casm_run/mod.rs#L1320
                 Hint::External(ExternalHint::WriteRunParam { index, dst }) => {
                     let index = get_val(vm, index)?.to_usize().expect("Got a bad index.");
                     let mut stack =
@@ -250,8 +255,8 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
                         output_end,
                     },
                 ),
-                StarknetHint::SystemCall { system } => {
-                    self.execute_syscall_hint(vm, exec_scopes, hint_data, constants, system)
+                StarknetHint::SystemCall { .. } => {
+                    self.execute_syscall_hint(vm, exec_scopes, hint_data, constants)
                 }
             },
             _ => self
@@ -338,8 +343,6 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
         constants: &HashMap<String, Felt>,
-        //TODO Remove - unused after removing verify_syscall_ptr
-        _system: &ResOperand,
     ) -> Result<(), HintError> {
         // We peek into memory to check the selector
         let selector = DeprecatedSyscallSelector::try_from(

@@ -22,7 +22,6 @@ use cairo_lang_sierra::ids::GenericTypeId;
 use cairo_lang_utils::unordered_hash_set::UnorderedHashSet;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::Felt252;
 use camino::{Utf8Path, Utf8PathBuf};
 use casm::{get_assembled_program, run_assembled_program};
@@ -33,14 +32,16 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBl
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
-    get_all_used_resources, update_top_call_execution_resources, update_top_call_l1_resources,
-    update_top_call_vm_resources, update_top_call_vm_trace, ForgeExtension, ForgeRuntime,
+    add_vm_execution_resources_to_top_call, get_all_used_resources,
+    update_top_call_execution_resources, update_top_call_l1_resources, update_top_call_vm_trace,
+    ForgeExtension, ForgeRuntime,
 };
 use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredError, ExtendedStateReader,
 };
 use entry_code::create_entry_code;
 use hints::{hints_by_representation, hints_to_params};
+use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use starknet_types_core::felt::Felt;
@@ -48,9 +49,7 @@ use std::cell::RefCell;
 use std::default::Default;
 use std::marker::PhantomData;
 use std::rc::Rc;
-use std::sync::Arc;
-use std::usize;
-use syscall_handler::build_syscall_handler;
+use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
@@ -61,6 +60,10 @@ mod entry_code;
 mod hints;
 mod syscall_handler;
 pub mod with_config;
+
+use crate::running::syscall_handler::build_syscall_handler;
+pub use syscall_handler::has_segment_arena;
+pub use syscall_handler::syscall_handler_offset;
 
 #[must_use]
 pub fn run_test(
@@ -78,10 +81,10 @@ pub fn run_test(
             return TestCaseSummary::Skipped {};
         }
         let run_result = run_test_case(
-            vec![],
             &case,
             &casm_program,
             &RuntimeConfig::from(&test_runner_config),
+            None,
         );
 
         // TODO: code below is added to fix snforge tests
@@ -102,13 +105,13 @@ pub fn run_test(
 }
 
 pub(crate) fn run_fuzz_test(
-    args: Vec<Felt>,
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
     fuzzing_send: Sender<()>,
+    rng: Arc<Mutex<StdRng>>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -119,10 +122,10 @@ pub(crate) fn run_fuzz_test(
         }
 
         let run_result = run_test_case(
-            args.clone(),
             &case,
             &casm_program,
             &Arc::new(RuntimeConfig::from(&test_runner_config)),
+            Some(rng),
         );
 
         // TODO: code below is added to fix snforge tests
@@ -135,7 +138,7 @@ pub(crate) fn run_fuzz_test(
         extract_test_case_summary(
             run_result,
             &case,
-            args,
+            vec![],
             &test_runner_config.contracts_data,
             &versioned_program_path,
         )
@@ -148,17 +151,16 @@ pub struct RunResultWithInfo {
     pub(crate) gas_used: u128,
     pub(crate) used_resources: UsedResources,
     pub(crate) encountered_errors: Vec<EncounteredError>,
+    pub(crate) fuzzer_args: Vec<String>,
 }
 
 #[allow(clippy::too_many_lines)]
 pub fn run_test_case(
-    args: Vec<Felt>,
     case: &TestCaseWithResolvedConfig,
     casm_program: &AssembledProgramWithDebugInfo,
     runtime_config: &RuntimeConfig,
+    fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
 ) -> Result<RunResultWithInfo> {
-    assert!(args.is_empty(), "Tests with args not supported currently");
-
     ensure!(
         case.config.available_gas != Some(0),
         "\n\t`available_gas` attribute was incorrectly configured. Make sure you use scarb >= 2.4.4\n"
@@ -187,11 +189,9 @@ pub fn run_test_case(
         set_max_steps(&mut context, max_n_steps);
     }
     let mut cached_state = CachedState::new(state_reader);
-    let mut execution_resources = ExecutionResources::default();
     let syscall_handler = build_syscall_handler(
         &mut cached_state,
         &string_to_hint,
-        &mut execution_resources,
         &mut context,
         &case.test_details.parameter_types,
         builtins.len(),
@@ -212,7 +212,9 @@ pub fn run_test_case(
             // Max gas is no longer set by `create_entry_code_from_params`
             // Instead, call to `ExternalHint::WriteRunParam` is added by it, and we need to
             // store the gas value to be read by logic handling the hint
-            user_args: vec![vec![Arg::Value(Felt::from(u64::MAX))]],
+            // TODO we should subtract initial cost of the function from this value to be more exact.
+            //  But as a workaround it should be good enough.
+            user_args: vec![vec![Arg::Value(Felt::from(i64::MAX as u64))]],
         },
     };
 
@@ -225,6 +227,7 @@ pub fn run_test_case(
     let forge_extension = ForgeExtension {
         environment_variables: runtime_config.environment_variables,
         contracts_data: runtime_config.contracts_data,
+        fuzzer_rng,
     };
 
     let mut forge_runtime = ExtendedRuntime {
@@ -237,16 +240,12 @@ pub fn run_test_case(
             Ok(mut runner) => {
                 let vm_resources_without_inner_calls = runner
                     .get_execution_resources()
-                    .unwrap()
+                    .expect("Execution resources missing")
                     .filter_unused_builtins();
-                update_top_call_vm_resources(&mut forge_runtime, &vm_resources_without_inner_calls);
-                // FIXME resources
-                // *forge_runtime
-                //     .extended_runtime
-                //     .extended_runtime
-                //     .extended_runtime
-                //     .hint_handler
-                //     .resources += &vm_resources_without_inner_calls;
+                add_vm_execution_resources_to_top_call(
+                    &mut forge_runtime,
+                    &vm_resources_without_inner_calls,
+                );
 
                 let ap = runner.relocated_trace.as_ref().unwrap().last().unwrap().ap;
 
@@ -286,6 +285,15 @@ pub fn run_test_case(
 
     update_top_call_execution_resources(&mut forge_runtime);
     update_top_call_l1_resources(&mut forge_runtime);
+
+    let fuzzer_args = forge_runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .fuzzer_args
+        .clone();
+
     let transaction_context = get_context(&forge_runtime).tx_context.clone();
     let used_resources = get_all_used_resources(forge_runtime, &transaction_context);
     let gas = calculate_used_gas(
@@ -294,28 +302,27 @@ pub fn run_test_case(
         used_resources.clone(),
     )?;
 
-    dbg!(&gas);
-
     Ok(RunResultWithInfo {
         run_result: run_result.map(|(gas_counter, memory, value)| RunResult {
-            // FIXME resources
             used_resources: used_resources.execution_resources.clone(),
-            // used_resources: Default::default(),
             gas_counter,
             memory,
             value,
             profiling_info: None,
         }),
-        // FIXME return triplet
-        gas_used: (gas.l1_gas.0 + gas.l1_data_gas.0) as u128,
+        // TODO return triplet
+        gas_used: u128::from(gas.l1_gas.0 + gas.l1_data_gas.0),
         used_resources,
         call_trace: call_trace_ref,
         encountered_errors,
+        fuzzer_args,
     })
 }
 
-// FIXME get rid of copied code
-// Copied from `cairo-lang-runnable`
+// TODO(#2958) Remove copied code
+// Copied and modified from https://github.com/starkware-libs/cairo/blob/a8da296d7d03f19af3bdb0e7ae17637e66192e4b/crates/cairo-lang-runner/src/lib.rs#L543
+#[allow(clippy::cast_sign_loss)]
+#[must_use]
 pub fn get_results_data(
     return_types: &[(GenericTypeId, i16)],
     cells: &[Option<Felt252>],
@@ -340,6 +347,7 @@ pub fn get_results_data(
             assert!(values.is_empty());
             false
         } else {
+            // region: Modified code
             let non_user_types: UnorderedHashSet<GenericTypeId> = UnorderedHashSet::from_iter([
                 AddModType::ID,
                 BitwiseType::ID,
@@ -354,6 +362,7 @@ pub fn get_results_data(
                 SystemType::ID,
             ]);
             !non_user_types.contains(generic_ty)
+            // endregion
         }
     });
 
@@ -374,6 +383,7 @@ fn extract_test_case_summary(
                     run_result,
                     case,
                     args,
+                    result_with_info.fuzzer_args,
                     result_with_info.gas_used,
                     result_with_info.used_resources,
                     &result_with_info.call_trace,
@@ -404,6 +414,7 @@ fn extract_test_case_summary(
                             )
                         }),
                         arguments: args,
+                        fuzzer_args: result_with_info.fuzzer_args,
                         test_statistics: (),
                     }
                 }
@@ -415,6 +426,7 @@ fn extract_test_case_summary(
             name: case.name.clone(),
             msg: Some(error.to_string()),
             arguments: args,
+            fuzzer_args: Vec::default(),
             test_statistics: (),
         },
     }

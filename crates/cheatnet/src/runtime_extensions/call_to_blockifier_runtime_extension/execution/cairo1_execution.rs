@@ -36,7 +36,8 @@ use cairo_vm::{
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use starknet_types_core::felt::Felt;
 
-// FIXME copied code
+// TODO(#2957) remove copied code
+// Copied from https://github.com/starkware-libs/sequencer/blob/545761f29b859d06f125bd6c332b6182845734f0/crates/blockifier/src/execution/entry_point_execution.rs#L180
 fn prepare_program_extra_data(
     runner: &mut CairoRunner,
     contract_class: &CompiledClassV1,
@@ -68,7 +69,7 @@ fn prepare_program_extra_data(
     write_felt(
         &mut runner.vm,
         &mut ptr,
-        Felt::from(0x208b7fff7fff7ffe_u128),
+        Felt::from(0x208b_7fff_7fff_7ffe_u128),
     )?;
     // Push a pointer to the builtin cost segment.
     write_maybe_relocatable(&mut runner.vm, &mut ptr, builtin_cost_segment_start)?;
@@ -77,7 +78,8 @@ fn prepare_program_extra_data(
     Ok(program_extra_data_length)
 }
 
-// FIXME copied code
+// TODO(#2957) remove copied code
+// Copied from https://github.com/starkware-libs/sequencer/blob/0e1e92e0b90790e4bec20721c069c312d6a60a13/crates/blockifier/src/execution/entry_point_execution.rs#L98
 fn initialize_execution_context<'a>(
     call: CallEntryPoint,
     compiled_class: &'a CompiledClassV1,
@@ -88,7 +90,7 @@ fn initialize_execution_context<'a>(
 
     // Instantiate Cairo runner.
     let proof_mode = false;
-    // FIXME modified blockifier code to enable traces
+    // region: Modified blockifier code
     let trace_enabled = true;
     let mut runner = CairoRunner::new(
         &compiled_class.0.program,
@@ -96,6 +98,7 @@ fn initialize_execution_context<'a>(
         proof_mode,
         trace_enabled,
     )?;
+    // endregion
 
     runner.initialize_function_runner_cairo_1(&entry_point.builtins)?;
     let mut read_only_segments = ReadOnlySegments::default();
@@ -129,10 +132,9 @@ fn initialize_execution_context<'a>(
 // blockifier/src/execution/cairo1_execution.rs:48 (execute_entry_point_call)
 pub fn execute_entry_point_call_cairo1(
     call: CallEntryPoint,
-    compiled_class_v1: CompiledClassV1,
+    compiled_class_v1: &CompiledClassV1,
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState, // Added parameter
-    // resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> ContractClassEntryPointExecutionResult {
     let tracked_resource = *context
@@ -147,7 +149,7 @@ pub fn execute_entry_point_call_cairo1(
         initial_syscall_ptr,
         entry_point,
         program_extra_data_length,
-    } = initialize_execution_context(call, &compiled_class_v1, state, context)?;
+    } = initialize_execution_context(call, compiled_class_v1, state, context)?;
 
     let args = prepare_call_arguments(
         &syscall_handler.base.call,
@@ -159,16 +161,12 @@ pub fn execute_entry_point_call_cairo1(
     )?;
     let n_total_args = args.len();
 
-    // // Snapshot the VM resources, in order to calculate the usage of this run at the end.
-    // let previous_vm_resources = syscall_handler.resources.clone();
-
     // region: Modified blockifier code
 
     let mut cheatable_runtime = ExtendedRuntime {
         extension: CheatableStarknetRuntimeExtension { cheatnet_state },
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
-            // FIXME use correct value
             user_args: vec![],
         },
     };
@@ -184,8 +182,6 @@ pub fn execute_entry_point_call_cairo1(
     .on_error_get_last_pc(&mut runner)?;
 
     let trace = get_relocated_vm_trace(&mut runner);
-    dbg!(&trace.is_some());
-
     let syscall_counter = cheatable_runtime
         .extended_runtime
         .hint_handler

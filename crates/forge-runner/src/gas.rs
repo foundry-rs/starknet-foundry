@@ -32,8 +32,6 @@ pub fn calculate_used_gas(
 
     let archival_data_resources = get_archival_data_resources(resources.events);
 
-    dbg!(&resources.execution_resources);
-
     let starknet_resources = StarknetResources {
         archival_data: archival_data_resources,
         messages: message_resources,
@@ -52,8 +50,6 @@ pub fn calculate_used_gas(
         starknet_resources,
         computation: computation_resources,
     };
-
-    dbg!(&transaction_resources);
 
     // FIXME this is the tricky part, how to figure the computation mode here
     Ok(transaction_resources.to_gas_vector(
@@ -92,6 +88,9 @@ fn get_archival_data_resources(events: Vec<EventContent>) -> ArchivalDataResourc
         },
     };
     let dummy_starknet_resources = StarknetResources::new(
+        // calldata length, signature length and code size are set to 0, because
+        // we don't include them in estimations
+        // ref: https://github.com/foundry-rs/starknet-foundry/blob/5ce15b029135545452588c00aae580c05eb11ca8/docs/src/testing/gas-and-resource-estimation.md?plain=1#L73
         0,
         0,
         0,
@@ -178,6 +177,7 @@ pub fn check_available_gas(
                     "\n\tTest cost exceeded the available gas. Consumed gas: ~{gas_info}"
                 )),
                 arguments,
+                fuzzer_args: Vec::default(),
                 test_statistics: (),
             }
         }

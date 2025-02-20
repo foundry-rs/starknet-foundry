@@ -1,4 +1,3 @@
-use crate::constants::TEST_ADDRESS;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     AddressOrClassHash, CallFailure,
 };
@@ -18,6 +17,7 @@ use starknet_api::transaction::fields::Calldata;
 use super::CheatcodeError;
 use crate::state::CheatnetState;
 use conversions::string::TryFromHexStr;
+use runtime::starknet::constants::TEST_ADDRESS;
 
 pub fn deploy_at(
     syscall_handler: &mut SyscallHintProcessor,
@@ -50,11 +50,10 @@ pub fn deploy_at(
     let exec_result = cheated_syscalls::execute_deployment(
         syscall_handler.base.state,
         cheatnet_state,
-        // syscall_handler.resources,
         syscall_handler.base.context,
         &ctor_context,
         calldata,
-        u64::MAX,
+        i64::MAX as u64,
     );
     cheatnet_state.increment_deploy_salt_base();
 

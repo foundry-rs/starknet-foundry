@@ -1,5 +1,4 @@
 use self::contracts_data::ContractsData;
-use crate::constants::TEST_CONTRACT_CLASS_HASH;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use crate::runtime_extensions::common::sum_syscall_counters;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
@@ -45,6 +44,8 @@ use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::CairoSerialize;
 use conversions::IntoConv;
 use data_transformer::cairo_types::CairoU256;
+use rand::prelude::StdRng;
+use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
@@ -55,16 +56,19 @@ use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 pub mod cheatcodes;
 pub mod contracts_data;
 mod file_operations;
+mod fuzzer;
 
 pub type ForgeRuntime<'a> = ExtendedRuntime<ForgeExtension<'a>>;
 
 pub struct ForgeExtension<'a> {
     pub environment_variables: &'a HashMap<String, String>,
     pub contracts_data: &'a ContractsData,
+    pub fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
 }
 
 // This runtime extension provides an implementation logic for functions from snforge_std library.
@@ -489,6 +493,25 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             "generate_random_felt" => Ok(CheatcodeHandlingResult::from_serializable(
                 generate_random_felt(),
             )),
+            "generate_arg" => {
+                let min_value = input_reader.read()?;
+                let max_value = input_reader.read()?;
+
+                Ok(CheatcodeHandlingResult::from_serializable(
+                    fuzzer::generate_arg(self.fuzzer_rng.clone(), min_value, max_value)?,
+                ))
+            }
+            "save_fuzzer_arg" => {
+                let arg = input_reader.read::<ByteArray>()?.to_string();
+                extended_runtime
+                    .extended_runtime
+                    .extension
+                    .cheatnet_state
+                    // Skip first character, which is a snapshot symbol '@'
+                    .update_fuzzer_args(arg[1..].to_string());
+
+                Ok(CheatcodeHandlingResult::from_serializable(()))
+            }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }
     }
@@ -526,7 +549,10 @@ fn handle_declare_deploy_result<T: CairoSerialize>(
     Ok(CheatcodeHandlingResult::from_serializable(result))
 }
 
-pub fn update_top_call_vm_resources(runtime: &mut ForgeRuntime, resources: &ExecutionResources) {
+pub fn add_vm_execution_resources_to_top_call(
+    runtime: &mut ForgeRuntime,
+    resources: &ExecutionResources,
+) {
     let top_call = runtime
         .extended_runtime
         .extended_runtime
@@ -541,14 +567,6 @@ pub fn update_top_call_vm_resources(runtime: &mut ForgeRuntime, resources: &Exec
 }
 
 pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
-    // let all_execution_resources = runtime
-    //     .extended_runtime
-    //     .extended_runtime
-    //     .extended_runtime
-    //     .hint_handler
-    //     .resources
-    //     .clone();
-
     // call representing the test code
     let top_call = runtime
         .extended_runtime
@@ -558,9 +576,10 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
         .trace_data
         .current_call_stack
         .top();
-    let mut top_call = top_call.borrow_mut();
 
-    // top_call.used_execution_resources = all_execution_resources;
+    let all_execution_resources = add_execution_resources(top_call.clone());
+    let mut top_call = top_call.borrow_mut();
+    top_call.used_execution_resources = all_execution_resources;
 
     let top_call_syscalls = runtime
         .extended_runtime
@@ -642,6 +661,7 @@ fn add_syscall_resources(
     total_vm_usage
 }
 
+#[allow(clippy::needless_pass_by_value)]
 fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResources {
     let mut execution_resources = top_call.borrow().used_execution_resources.clone();
     for nested_call in &top_call.borrow().nested_calls {
@@ -696,19 +716,7 @@ pub fn get_all_used_resources(
         .current_call_stack
         .top();
 
-    dbg!(
-        &runtime
-            .extended_runtime
-            .extended_runtime
-            .extension
-            .cheatnet_state
-            .trace_data
-            .current_call_stack
-    );
-
-    let execution_resources = add_execution_resources(top_call.clone());
-
-    dbg!(&execution_resources);
+    let execution_resources = top_call.borrow().used_execution_resources.clone();
 
     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
     let events = runtime_call_info

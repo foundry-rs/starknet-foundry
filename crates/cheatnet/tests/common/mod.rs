@@ -6,7 +6,6 @@ use blockifier::state::state_api::State;
 use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use cheatnet::constants::TEST_ADDRESS;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     call_entry_point, AddressOrClassHash,
 };
@@ -23,6 +22,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::Contr
 use cheatnet::state::CheatnetState;
 use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
+use runtime::starknet::constants::TEST_ADDRESS;
 use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::{
@@ -195,7 +195,7 @@ pub fn call_contract(
         storage_address: *contract_address,
         caller_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
         call_type: CallType::Call,
-        initial_gas: u64::MAX,
+        initial_gas: i64::MAX as u64,
     };
 
     let mut execution_resources = ExecutionResources::default();
