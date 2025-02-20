@@ -482,7 +482,7 @@ fn create_entry_code(
     create_entry_code_from_params(&param_types, &return_types, code_offset, config)
 }
 
-pub fn hints_to_params(
+fn hints_to_params(
     hints: Vec<(usize, Vec<Hint>)>,
 ) -> (HashMap<usize, Vec<HintParams>>, HashMap<String, Hint>) {
     let mut hints_dict: HashMap<usize, Vec<HintParams>> = HashMap::new();
