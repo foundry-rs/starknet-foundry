@@ -102,6 +102,8 @@
     * [store](appendix/cheatcodes/store.md)
     * [load](appendix/cheatcodes/load.md)
     * [generate_random_felt](appendix/cheatcodes/generate_random_felt.md)
+    * [set_balance](appendix/cheatcodes/set_balance.md)
+    * [Token](appendix/cheatcodes/token.md)
 * [`snforge` Library Reference](appendix/snforge-library.md)
     * [byte_array](appendix/snforge-library/byte_array.md)
     * [declare](appendix/snforge-library/declare.md)

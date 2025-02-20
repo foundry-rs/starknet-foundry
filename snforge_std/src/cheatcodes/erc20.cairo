@@ -10,14 +10,18 @@ pub struct CustomToken {
     pub balances_variable_selector: felt252,
 }
 
+/// Enum used to specify the ERC20 token for which the balance should be cheated.
 #[derive(Drop, Copy, Clone)]
 pub enum Token {
+    /// Default STRK token.
     STRK,
+    /// Custom token with specified contract address and balances variable selector.
     Custom: CustomToken,
 }
 
 #[generate_trait]
 pub impl TokenImpl of TokenTrait {
+    /// Returns the contract address of the token.
     fn contract_address(self: Token) -> ContractAddress {
         match self {
             Token::STRK => STRK_CONTRACT_ADDRESS.try_into().unwrap(),
@@ -25,6 +29,7 @@ pub impl TokenImpl of TokenTrait {
         }
     }
 
+    /// Returns the balances variable selector of the token.
     fn balances_variable_selector(self: Token) -> felt252 {
         match self {
             Token::STRK => selector!("ERC20_balances"),
