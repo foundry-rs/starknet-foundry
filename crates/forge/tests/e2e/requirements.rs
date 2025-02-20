@@ -1,5 +1,5 @@
 use crate::e2e::common::runner::{runner, setup_package};
-use indoc::formatdoc;
+use indoc::{formatdoc, indoc};
 use scarb_api::ScarbCommand;
 use semver::Version;
 use shared::test_utils::output_assert::assert_stdout_contains;
@@ -12,7 +12,11 @@ fn happy_path() {
     let scarb_version = ScarbCommand::version().run().unwrap().scarb;
 
     let rust_check = if scarb_version < Version::new(2, 10, 0) {
-        "✅ Rust [..]"
+        indoc! {"
+        Checking requirements
+
+        ✅ Rust [..]
+        "}
     } else {
         ""
     };
@@ -21,9 +25,10 @@ fn happy_path() {
         output,
         formatdoc! {r"
     Checking requirements
-    {}
+
     ✅ Scarb [..]
     ✅ Universal Sierra Compiler [..]
+    {}
     ", rust_check},
     );
 }
