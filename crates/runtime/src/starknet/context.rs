@@ -1,3 +1,4 @@
+use crate::starknet::constants::{TEST_ADDRESS, TEST_CONTRACT_CLASS_HASH};
 use blockifier::bouncer::BouncerConfig;
 use blockifier::context::{BlockContext, ChainInfo, FeeTokenAddresses, TransactionContext};
 use blockifier::execution::common_hints::ExecutionMode;
@@ -61,7 +62,6 @@ fn build_tx_info() -> TransactionInfo {
             sender_address: ContractAddress::default(),
             only_query: false,
         },
-        // TODO: Mock
         resource_bounds: ValidResourceBounds::AllResources(AllResourceBounds {
             l1_gas: ResourceBounds {
                 max_amount: GasAmount::from(0_u8),
@@ -106,15 +106,12 @@ pub fn build_context(
         transaction_context,
         ExecutionMode::Execute,
         false,
-        // TODO: Mock
-        SierraGasRevertTracker::new(GasAmount::from(100_000_u64)),
+        SierraGasRevertTracker::new(GasAmount::from(i64::MAX as u64)),
     );
 
     context.revert_infos.0.push(EntryPointRevertInfo::new(
-        // TODO use const
-        ContractAddress::try_from(Felt::from_hex("0x01724987234973219347210837402").unwrap())
-            .unwrap(),
-        starknet_api::core::ClassHash(Felt::from_hex("0x117").unwrap()),
+        ContractAddress::try_from(Felt::from_hex(TEST_ADDRESS).unwrap()).unwrap(),
+        starknet_api::core::ClassHash(Felt::from_hex(TEST_CONTRACT_CLASS_HASH).unwrap()),
         context.n_emitted_events,
         context.n_sent_messages_to_l1,
     ));

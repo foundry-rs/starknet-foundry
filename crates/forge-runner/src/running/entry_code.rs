@@ -4,7 +4,6 @@ use cairo_lang_runnable_utils::builder::{create_entry_code_from_params, EntryCod
 use cairo_vm::types::builtin_name::BuiltinName;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
-// TODO(#2953)
 pub fn create_entry_code(
     test_details: &TestDetails,
     casm_program: &AssembledProgramWithDebugInfo,

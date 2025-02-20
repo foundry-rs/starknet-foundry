@@ -319,6 +319,7 @@ pub fn run_test_case(
     })
 }
 
+// TODO(#2958) Remove copied code
 // Copied and modified from https://github.com/starkware-libs/cairo/blob/a8da296d7d03f19af3bdb0e7ae17637e66192e4b/crates/cairo-lang-runner/src/lib.rs#L543
 #[allow(clippy::cast_sign_loss)]
 #[must_use]

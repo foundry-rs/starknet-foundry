@@ -1,5 +1,4 @@
 use self::contracts_data::ContractsData;
-use crate::constants::TEST_CONTRACT_CLASS_HASH;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use crate::runtime_extensions::common::sum_syscall_counters;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
@@ -46,6 +45,7 @@ use conversions::serde::serialize::CairoSerialize;
 use conversions::IntoConv;
 use data_transformer::cairo_types::CairoU256;
 use rand::prelude::StdRng;
+use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,

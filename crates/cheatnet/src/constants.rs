@@ -7,27 +7,17 @@ use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
 use indoc::indoc;
+use runtime::starknet::constants::{
+    TEST_ADDRESS, TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR,
+};
 use runtime::starknet::context::ERC20_CONTRACT_ADDRESS;
 use runtime::starknet::state::DictStateReader;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::{core::ContractAddress, transaction::fields::Calldata};
 
-pub const MAX_FEE: u128 = 1_000_000 * 100_000_000_000; // 1000000 * min_gas_price.
-pub const INITIAL_BALANCE: u128 = 10 * MAX_FEE;
-
 // Mocked class hashes, those are not checked anywhere
-pub const TEST_CLASS_HASH: &str = "0x110";
-pub const TEST_ACCOUNT_CONTRACT_CLASS_HASH: &str = "0x111";
-pub const TEST_EMPTY_CONTRACT_CLASS_HASH: &str = "0x112";
-pub const TEST_FAULTY_ACCOUNT_CONTRACT_CLASS_HASH: &str = "0x113";
-pub const SECURITY_TEST_CLASS_HASH: &str = "0x114";
 pub const TEST_ERC20_CONTRACT_CLASS_HASH: &str = "0x1010";
-
-pub const TEST_CONTRACT_CLASS_HASH: &str = "0x117";
-pub const TEST_ENTRY_POINT_SELECTOR: &str = "TEST_CONTRACT_SELECTOR";
-// snforge_std/src/cheatcodes.cairo::test_address
-pub const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
 
 fn contract_class_no_entrypoints() -> ContractClass {
     let raw_contract_class = indoc!(

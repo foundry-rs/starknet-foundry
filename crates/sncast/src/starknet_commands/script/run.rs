@@ -380,8 +380,7 @@ pub fn run(
             hint_handler: syscall_handler,
             // If for some reason we need to calculate `user_args`, here
             // is the function to do it: https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L464
-            // TODO: Verify this
-            user_args: vec![vec![Arg::Value(Felt::from(u64::MAX))]],
+            user_args: vec![vec![Arg::Value(Felt::from(i64::MAX))]],
         },
     };
 
@@ -483,7 +482,7 @@ fn create_entry_code(
     create_entry_code_from_params(&param_types, &return_types, code_offset, config)
 }
 
-pub fn hints_to_params(
+fn hints_to_params(
     hints: Vec<(usize, Vec<Hint>)>,
 ) -> (HashMap<usize, Vec<HintParams>>, HashMap<String, Hint>) {
     let mut hints_dict: HashMap<usize, Vec<HintParams>> = HashMap::new();
