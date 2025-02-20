@@ -12,7 +12,7 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use camino::{Utf8Path, Utf8PathBuf};
 use casm::{get_assembled_program, run_assembled_program};
-use cheatnet::constants as cheatnet_constants;
+use cheatnet::constants::{build_testing_state, setup_predeployed_strk_token};
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
@@ -160,7 +160,7 @@ pub fn run_test_case(
     let hints_dict = hints_to_params(&assembled_program);
 
     let mut state_reader = ExtendedStateReader {
-        dict_state_reader: cheatnet_constants::build_testing_state(),
+        dict_state_reader: build_testing_state(),
         fork_state_reader: get_fork_state_reader(
             runtime_config.cache_dir,
             case.config.fork_config.as_ref(),
@@ -175,6 +175,8 @@ pub fn run_test_case(
         set_max_steps(&mut context, max_n_steps);
     }
     let mut cached_state = CachedState::new(state_reader);
+    setup_predeployed_strk_token(&mut cached_state);
+
     let mut execution_resources = ExecutionResources::default();
     let syscall_handler = build_syscall_handler(
         &mut cached_state,
@@ -284,6 +286,9 @@ pub fn run_test_case(
         &mut cached_state,
         used_resources.clone(),
     )?;
+
+    // We need to subtract the gas used for predeployment of STRK token
+    let gas = gas - 320;
 
     Ok(RunResultWithInfo {
         run_result: run_result.map(|(gas_counter, memory, value)| RunResult {

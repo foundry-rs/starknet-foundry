@@ -19,6 +19,7 @@ mod mock_call;
 mod multiple_writes_same_storage;
 mod precalculate_address;
 mod replace_bytecode;
+mod set_balance;
 mod spy_events;
 mod store;
 
