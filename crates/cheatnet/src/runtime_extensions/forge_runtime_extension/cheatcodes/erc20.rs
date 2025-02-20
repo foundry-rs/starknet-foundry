@@ -5,10 +5,9 @@ use starknet::core::{types::U256, utils::get_selector_from_name};
 use starknet_api::core::ContractAddress;
 use starknet_types_core::felt::Felt;
 
-use super::storage::{calculate_variable_address, store};
+use crate::constants::STRK_CONTRACT_ADDRESS;
 
-const STRK_CONTRACT_ADDRESS: &str =
-    "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
+use super::storage::{calculate_variable_address, store};
 
 #[derive(CairoDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Token {
