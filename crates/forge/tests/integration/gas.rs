@@ -701,7 +701,10 @@ fn l1_handler_cost() {
 
     let result = run_test_case(&test);
     assert_passed(&result);
-    // TODO(#2960)
+    // TODO(#2960): These calculations are based on code from blockifier 0.14.0-rc.1
+    // ATM, they are a bit different from the formula in the docs
+    // We should verify correctness of this (docs may be outdated)
+
     // 96 = gas cost of onchain data (deploy cost)
     // int(5.12 * 4) = 21 = keccak cost from l1 handler
     // in this test, l1_handler_payload_size = 6
@@ -709,7 +712,8 @@ fn l1_handler_cost() {
     // 12251 = 3072 (6 * 512, 512 is gas per memory word) +
     //         + 4179 (result of get_consumed_message_to_l2_emissions_cost(6) which is get_event_emission_cost(3, 3 + 6) = 375 + (3 + 1) * 375 + 9 * 256) +
     //         + 0 +
-    //         + 5000 (1 * 5000, 5000 is gas per counter decrease)
+    //         + 5000 (1 * 5000, 5000 is gas per counter decrease, ref: https://github.com/starkware-libs/sequencer/blob/main/crates/blockifier/src/fee/resources.rs#L364-L368)
+    //
     //
     assert_gas(&result, "l1_handler_cost", 96 + 21 + 15923);
 }

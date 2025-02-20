@@ -90,7 +90,7 @@ fn get_archival_data_resources(events: Vec<EventContent>) -> ArchivalDataResourc
     let dummy_starknet_resources = StarknetResources::new(
         // calldata length, signature length and code size are set to 0, because
         // we don't include them in estimations
-        // ref: https://foundry-rs.github.io/starknet-foundry/testing/gas-and-resource-estimation.html#not-included-in-the-gasresource-estimations
+        // ref: https://github.com/foundry-rs/starknet-foundry/blob/5ce15b029135545452588c00aae580c05eb11ca8/docs/src/testing/gas-and-resource-estimation.md?plain=1#L73
         0,
         0,
         0,
