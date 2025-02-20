@@ -142,7 +142,6 @@ pub fn execute_call_entry_point(
     // region: Modified blockifier code
     match result {
         Ok((call_info, syscall_counter, vm_trace)) => {
-            // FIXME traces
             remove_syscall_resources_and_exit_success_call(
                 &call_info,
                 &syscall_counter,
@@ -285,7 +284,7 @@ fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {
         storage_read_values: vec![],
         accessed_storage_keys: HashSet::new(),
         read_class_hash_values: vec![],
-        // TODO this might impact things
+        // This defaults to `CairoSteps` as of writing this, but it could be changed in the future
         tracked_resource: Default::default(),
         accessed_contract_addresses: Default::default(),
     }
