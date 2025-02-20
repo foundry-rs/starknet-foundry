@@ -28,9 +28,8 @@ pub impl TokenImpl of TokenTrait {
     fn balances_variable_selector(self: Token) -> felt252 {
         match self {
             Token::STRK => selector!("ERC20_balances"),
-            Token::Custom(CustomToken {
-                balances_variable_selector, ..,
-            }) => balances_variable_selector,
+            Token::Custom(CustomToken { balances_variable_selector,
+            .., }) => balances_variable_selector,
         }
     }
 }
