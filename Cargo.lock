@@ -529,7 +529,7 @@ dependencies = [
  "strum 0.25.0",
  "strum_macros 0.25.3",
  "tempfile",
- "thiserror",
+ "thiserror 1.0.69",
  "toml",
 ]
 
@@ -601,7 +601,7 @@ dependencies = [
  "hashbrown 0.13.2",
  "instant",
  "once_cell",
- "thiserror",
+ "thiserror 1.0.69",
  "tokio",
 ]
 
@@ -626,20 +626,20 @@ checksum = "ade8366b8bd5ba243f0a58f036cc0ca8a2f069cff1a2351ef1cac6b083e16fc0"
 
 [[package]]
 name = "cairo-annotations"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79b5f3d9342fdd0a21e3d66f32322142d826e2fd6b56300d5c16ab291de387f9"
+checksum = "5e6d7624764c83e33a4eb0d581cc126232d42c878a187ffa6372bea038dc9ee6"
 dependencies = [
  "cairo-lang-sierra",
  "cairo-lang-sierra-to-casm",
  "camino",
- "derive_more 1.0.0",
+ "derive_more 2.0.1",
  "regex",
  "serde",
  "serde_json",
- "strum 0.26.3",
- "strum_macros 0.26.4",
- "thiserror",
+ "strum 0.27.1",
+ "strum_macros 0.27.1",
+ "thiserror 2.0.11",
 ]
 
 [[package]]
@@ -679,7 +679,7 @@ dependencies = [
  "rust-analyzer-salsa",
  "semver",
  "smol_str",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -763,7 +763,7 @@ dependencies = [
  "itertools 0.12.1",
  "rust-analyzer-salsa",
  "serde",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -884,7 +884,7 @@ dependencies = [
  "cairo-lang-filesystem",
  "cairo-lang-utils",
  "serde",
- "thiserror",
+ "thiserror 1.0.69",
  "toml",
 ]
 
@@ -903,7 +903,7 @@ dependencies = [
  "cairo-lang-utils",
  "cairo-vm",
  "itertools 0.12.1",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -933,7 +933,7 @@ dependencies = [
  "sha2",
  "smol_str",
  "starknet-types-core",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -987,7 +987,7 @@ dependencies = [
  "sha3",
  "smol_str",
  "starknet-types-core",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -1003,7 +1003,7 @@ dependencies = [
  "itertools 0.12.1",
  "num-bigint",
  "num-traits 0.2.19",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -1019,7 +1019,7 @@ dependencies = [
  "itertools 0.12.1",
  "num-bigint",
  "num-traits 0.2.19",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -1064,7 +1064,7 @@ dependencies = [
  "num-bigint",
  "num-traits 0.2.19",
  "starknet-types-core",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -1104,7 +1104,7 @@ dependencies = [
  "serde_json",
  "smol_str",
  "starknet-types-core",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -1127,7 +1127,7 @@ dependencies = [
  "sha3",
  "smol_str",
  "starknet-types-core",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -1320,7 +1320,7 @@ dependencies = [
  "starknet_api",
  "tempfile",
  "test-case",
- "thiserror",
+ "thiserror 1.0.69",
  "tokio",
  "universal-sierra-compiler-api",
  "url",
@@ -1510,7 +1510,7 @@ dependencies = [
  "starknet",
  "starknet-types-core",
  "starknet_api",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -1732,7 +1732,7 @@ dependencies = [
  "starknet",
  "starknet-types-core",
  "test-case",
- "thiserror",
+ "thiserror 1.0.69",
  "tokio",
  "url",
 ]
@@ -1802,18 +1802,18 @@ dependencies = [
 
 [[package]]
 name = "derive_more"
-version = "1.0.0"
+version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4a9b99b9cbbe49445b21764dc0625032a89b145a2642e67603e1c936f5458d05"
+checksum = "093242cf7570c207c83073cf82f79706fe7b8317e98620a47d5be7c3d8497678"
 dependencies = [
  "derive_more-impl",
 ]
 
 [[package]]
 name = "derive_more-impl"
-version = "1.0.0"
+version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb7330aeadfbe296029522e6c40f315320aba36fc43a5b3632f3795348f3bd22"
+checksum = "bda628edc44c4bb645fbe0f758797143e4e07926f7ebf4e9bdfbd3d2ce621df3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1830,7 +1830,7 @@ dependencies = [
  "console",
  "shell-words",
  "tempfile",
- "thiserror",
+ "thiserror 1.0.69",
  "zeroize",
 ]
 
@@ -2063,7 +2063,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "sha3",
- "thiserror",
+ "thiserror 1.0.69",
  "uuid",
 ]
 
@@ -3717,7 +3717,7 @@ dependencies = [
  "serde_json",
  "starknet_infra_utils",
  "strum_macros 0.25.3",
- "thiserror",
+ "thiserror 1.0.69",
  "tracing",
  "validator",
 ]
@@ -4203,7 +4203,7 @@ checksum = "ba009ff324d1fc1b900bd1fdb31564febe58a8ccc8a6fdbb93b543d33b13ca43"
 dependencies = [
  "getrandom 0.2.15",
  "libredox",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -4366,7 +4366,7 @@ dependencies = [
  "starknet",
  "starknet-types-core",
  "starknet_api",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -4559,7 +4559,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shared",
- "thiserror",
+ "thiserror 1.0.69",
  "universal-sierra-compiler-api",
  "which",
 ]
@@ -4574,7 +4574,7 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -5036,7 +5036,7 @@ dependencies = [
  "starknet-types-core",
  "tempfile",
  "test-case",
- "thiserror",
+ "thiserror 1.0.69",
  "tokio",
  "toml",
  "toml_edit",
@@ -5129,7 +5129,7 @@ dependencies = [
  "starknet-crypto 0.7.1",
  "starknet-providers",
  "starknet-signers",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -5143,7 +5143,7 @@ dependencies = [
  "starknet-accounts",
  "starknet-core",
  "starknet-providers",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -5295,7 +5295,7 @@ dependencies = [
  "serde_json",
  "serde_with",
  "starknet-core",
- "thiserror",
+ "thiserror 1.0.69",
  "url",
 ]
 
@@ -5312,7 +5312,7 @@ dependencies = [
  "rand",
  "starknet-core",
  "starknet-crypto 0.7.1",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -5356,7 +5356,7 @@ dependencies = [
  "starknet_infra_utils",
  "strum 0.25.0",
  "strum_macros 0.25.3",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -5386,7 +5386,7 @@ dependencies = [
  "starknet_api",
  "starknet_infra_utils",
  "tempfile",
- "thiserror",
+ "thiserror 1.0.69",
  "validator",
 ]
 
@@ -5435,9 +5435,9 @@ checksum = "290d54ea6f91c969195bdbcd7442c8c2a2ba87da8bf60a7ee86a235d4bc1e125"
 
 [[package]]
 name = "strum"
-version = "0.26.3"
+version = "0.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fec0f0aef304996cf250b31b5a10dee7980c85da9d759361292b8bca5a18f06"
+checksum = "f64def088c51c9510a8579e3c5d67c65349dcf755e5479ad3d010aa6454e2c32"
 
 [[package]]
 name = "strum_macros"
@@ -5454,9 +5454,9 @@ dependencies = [
 
 [[package]]
 name = "strum_macros"
-version = "0.26.4"
+version = "0.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c6bee85a5a24955dc440386795aa378cd9cf82acd5f764469152d2270e581be"
+checksum = "c77a8c5abcaf0f9ce05d62342b7d298c346515365c36b673df4ebe3ced01fde8"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
@@ -5626,7 +5626,16 @@ version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52"
 dependencies = [
- "thiserror-impl",
+ "thiserror-impl 1.0.69",
+]
+
+[[package]]
+name = "thiserror"
+version = "2.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d452f284b73e6d76dd36758a0c8684b1d5be31f92b89d07fd5822175732206fc"
+dependencies = [
+ "thiserror-impl 2.0.11",
 ]
 
 [[package]]
@@ -5634,6 +5643,17 @@ name = "thiserror-impl"
 version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.98",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "2.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26afc1baea8a989337eeb52b6e72a039780ce45c3edfcc9c5b9d112feeb173c2"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5943,7 +5963,7 @@ version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c878a167baa8afd137494101a688ef8c67125089ff2249284bd2b5f9bfedb815"
 dependencies = [
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]

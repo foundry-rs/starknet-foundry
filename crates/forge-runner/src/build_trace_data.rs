@@ -275,7 +275,7 @@ fn build_profiler_deprecated_syscall_selector(
         DeprecatedSyscallSelector::GetClassHashAt => {
             ProfilerDeprecatedSyscallSelector::GetClassHashAt
         }
-        DeprecatedSyscallSelector::KeccakRound => unimplemented!("No corresponding syscall"),
+        DeprecatedSyscallSelector::KeccakRound => ProfilerDeprecatedSyscallSelector::KeccakRound,
     }
 }
 
