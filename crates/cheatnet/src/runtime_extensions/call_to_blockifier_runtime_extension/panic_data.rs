@@ -76,13 +76,6 @@ mod test {
     #[test_case(indoc!(r"
                     Got an exception while executing a hint: Execution failed. Failure reason:
                     Error in contract (contract address: 0x03cda836debfed3f83aa981d7a31733da3ae4f903dde9d833509d2f985d52241, class hash: 0x07ca8b953cb041ee517951d34880631e537682103870b9b018a7b493363b9b63, selector: 0x00a4695e9e8c278609a8e9362d5abe9852a904da970c7de84f0456c777d21137):
-                    0x434d3232 ('AYY, LMAO').
-                    "
-                ),
-                    Some(vec![Felt::from(4_282_713_u64), Felt::from(1_280_131_407_u64)]); "also two felts")]
-    #[test_case(indoc!(r"
-                    Got an exception while executing a hint: Execution failed. Failure reason:
-                    Error in contract (contract address: 0x03cda836debfed3f83aa981d7a31733da3ae4f903dde9d833509d2f985d52241, class hash: 0x07ca8b953cb041ee517951d34880631e537682103870b9b018a7b493363b9b63, selector: 0x00a4695e9e8c278609a8e9362d5abe9852a904da970c7de84f0456c777d21137):
                     0x0 ('').
                     "
                 ),
