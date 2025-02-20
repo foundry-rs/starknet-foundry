@@ -272,6 +272,9 @@ pub fn run_test_case(
         used_resources.clone(),
     )?;
 
+    // We need to subtract the gas used for predeployment of STRK token
+    let gas = gas - 320;
+
     Ok(RunResultWithInfo {
         run_result: run_result.map(|(gas_counter, memory, value)| RunResult {
             used_resources: used_resources.execution_resources.clone(),
