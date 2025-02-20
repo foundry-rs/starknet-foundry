@@ -6,8 +6,8 @@ pub const STRK_CONTRACT_ADDRESS: felt252 =
 
 #[derive(Drop, Serde, Copy)]
 pub struct CustomToken {
-    address: ContractAddress,
-    balances_variable_selector: felt252,
+    pub contract_address: ContractAddress,
+    pub balances_variable_selector: felt252,
 }
 
 #[derive(Drop, Copy, Clone)]
@@ -17,15 +17,11 @@ pub enum Token {
 }
 
 #[generate_trait]
-impl TokenImpl of TokenTrait {
-    fn new(address: ContractAddress, balances_variable_selector: felt252) -> Token {
-        Token::Custom(CustomToken { address, balances_variable_selector })
-    }
-
+pub impl TokenImpl of TokenTrait {
     fn contract_address(self: Token) -> ContractAddress {
         match self {
             Token::STRK => STRK_CONTRACT_ADDRESS.try_into().unwrap(),
-            Token::Custom(CustomToken { address, .. }) => address,
+            Token::Custom(CustomToken { contract_address, .. }) => contract_address,
         }
     }
 

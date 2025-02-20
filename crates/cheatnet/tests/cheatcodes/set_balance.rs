@@ -73,7 +73,7 @@ fn test_set_balance_custom_token() {
     );
 
     let token = Token::Custom {
-        address: custom_token_address,
+        contract_address: custom_token_address,
         balances_variable_selector: get_selector_from_name("balances").unwrap(),
     };
 

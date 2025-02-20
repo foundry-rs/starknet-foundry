@@ -14,7 +14,7 @@ const STRK_CONTRACT_ADDRESS: &str =
 pub enum Token {
     STRK,
     Custom {
-        address: ContractAddress,
+        contract_address: ContractAddress,
         balances_variable_selector: Felt,
     },
 }
@@ -24,7 +24,9 @@ impl Token {
     pub fn contract_address(&self) -> ContractAddress {
         match self {
             Token::STRK => TryFromHexStr::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap(),
-            Token::Custom { address, .. } => *address,
+            Token::Custom {
+                contract_address, ..
+            } => *contract_address,
         }
     }
 

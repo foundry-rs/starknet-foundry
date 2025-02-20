@@ -113,7 +113,7 @@ pub fn setup_predeployed_strk_token(state: &mut CachedState<ExtendedStateReader>
     let storage_values = HashMap::from([
         (
             calculate_variable_address(Felt::from_short_string("ERC20_name").unwrap(), None),
-            Felt::from_short_string("STRK").unwrap(),
+            Felt::from_short_string("Starknet Token").unwrap(),
         ),
         (
             calculate_variable_address(Felt::from_short_string("ERC20_symbol").unwrap(), None),
