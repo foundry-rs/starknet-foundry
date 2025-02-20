@@ -129,13 +129,7 @@ fn print_pretty(data: &AccountDataRepresentation, name: &str) {
     print_if_some("class hash", data.class_hash.as_ref());
     print_if_some("deployed", data.deployed.as_ref());
     print_if_some("legacy", data.legacy.as_ref());
-    if data
-        .account_type
-        .as_ref()
-        .is_some_and(|t| t.to_string() != "open_zeppelin")
-    {
-        print_if_some("type", data.account_type.as_ref());
-    }
+    print_if_some("type", data.account_type.as_ref());
     println!();
 }
 

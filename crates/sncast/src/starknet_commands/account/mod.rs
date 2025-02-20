@@ -49,8 +49,11 @@ pub fn prepare_account_json(
     class_hash: Option<Felt>,
     salt: Option<Felt>,
 ) -> serde_json::Value {
-    // let acc_type = AccountType::Display(account_type.to_string());
-    let acc_type = account_type.to_string();
+    let acc_type = match account_type {
+        AccountType::OpenZeppelin => "open_zeppelin",
+        AccountType::Argent => "argent",
+        AccountType::Braavos => "braavos",
+    };
 
     let mut account_json = json!({
         "private_key": format!("{:#x}", private_key.secret_scalar()),
