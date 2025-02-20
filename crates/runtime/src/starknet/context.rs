@@ -106,8 +106,7 @@ pub fn build_context(
         transaction_context,
         ExecutionMode::Execute,
         false,
-        // TODO: Mock
-        SierraGasRevertTracker::new(GasAmount::from(100_000_u64)),
+        SierraGasRevertTracker::new(GasAmount::from(i64::MAX as u64)),
     );
 
     context.revert_infos.0.push(EntryPointRevertInfo::new(
