@@ -185,17 +185,3 @@ To better understand the functionality of `CheatSpan`, here's a full example:
 ```rust
 {{#include ../../listings/using_cheatcodes_others/tests/caller_address/span.cairo}}
 ```
-
-### Cheating ERC-20 token balance
-
-If you want to cheat the balance of an ERC-20 token (STRK, ETH or custom one), you can use the [`set_balance`](../appendix/cheatcodes/set_balance.md) cheatcode. Later, balance can be read thanks to [`get_balance`](../appendix/cheatcodes/get_balance.md). Below is a basic example of setting and reading STRK balance:
-
-```rust
-{{#include ../../listings/using_cheatcodes_others/tests/cheat_strk_balance.cairo}}
-```
-
-In case of custom token, you need to provide the token address and the storage variable name which holds the balance:
-
-```rust
-{{#include ../../listings/using_cheatcodes_others/tests/cheat_custom_token_balance.cairo}}
-```
