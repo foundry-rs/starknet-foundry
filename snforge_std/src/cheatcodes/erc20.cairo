@@ -43,9 +43,6 @@ pub fn set_balance(target: ContractAddress, new_balance: u256, token: Token) {
         token.balances_variable_selector(), [target.into()].span(),
     );
     let balance_high_address = balance_low_address + 1;
-    // let balance_high_address = map_entry_address(
-    //     token.balances_variable_selector(), [target.into(), 1].span(),
-    // );
 
     store(token.contract_address(), balance_high_address, array![new_balance.low.into()].span());
     store(token.contract_address(), balance_low_address, array![new_balance.high.into()].span());
