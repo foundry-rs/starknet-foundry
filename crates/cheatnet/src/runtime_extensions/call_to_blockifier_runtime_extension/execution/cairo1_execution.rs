@@ -36,7 +36,7 @@ use cairo_vm::{
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use starknet_types_core::felt::Felt;
 
-// TODO remove copied code
+// TODO(#2957) remove copied code
 // Copied from https://github.com/starkware-libs/sequencer/blob/545761f29b859d06f125bd6c332b6182845734f0/crates/blockifier/src/execution/entry_point_execution.rs#L180
 fn prepare_program_extra_data(
     runner: &mut CairoRunner,
@@ -78,7 +78,7 @@ fn prepare_program_extra_data(
     Ok(program_extra_data_length)
 }
 
-// TODO remove copied code
+// TODO(#2957) remove copied code
 // Copied from https://github.com/starkware-libs/sequencer/blob/0e1e92e0b90790e4bec20721c069c312d6a60a13/crates/blockifier/src/execution/entry_point_execution.rs#L98
 fn initialize_execution_context<'a>(
     call: CallEntryPoint,
