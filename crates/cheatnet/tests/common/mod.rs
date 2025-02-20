@@ -6,7 +6,6 @@ use blockifier::state::state_api::State;
 use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use cheatnet::constants::TEST_ADDRESS;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     call_entry_point, AddressOrClassHash,
 };
@@ -23,14 +22,15 @@ use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::Contr
 use cheatnet::state::CheatnetState;
 use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
+use runtime::starknet::constants::TEST_ADDRESS;
 use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::{
     get_contracts_artifacts_and_source_sierra_paths, target_dir_for_workspace, ScarbCommand,
 };
 use starknet::core::utils::get_selector_from_name;
+use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
-use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 
@@ -41,13 +41,12 @@ pub mod state;
 fn build_syscall_hint_processor<'a>(
     call_entry_point: CallEntryPoint,
     state: &'a mut dyn State,
-    execution_resources: &'a mut ExecutionResources,
+    _execution_resources: &'a mut ExecutionResources,
     entry_point_execution_context: &'a mut EntryPointExecutionContext,
     hints: &'a HashMap<String, Hint>,
 ) -> SyscallHintProcessor<'a> {
     SyscallHintProcessor::new(
         state,
-        execution_resources,
         entry_point_execution_context,
         Relocatable {
             segment_index: 0,
@@ -196,7 +195,7 @@ pub fn call_contract(
         storage_address: *contract_address,
         caller_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
         call_type: CallType::Call,
-        initial_gas: u64::MAX,
+        initial_gas: i64::MAX as u64,
     };
 
     let mut execution_resources = ExecutionResources::default();

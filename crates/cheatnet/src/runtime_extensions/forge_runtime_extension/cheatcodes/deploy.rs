@@ -1,4 +1,3 @@
-use crate::constants::TEST_ADDRESS;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     AddressOrClassHash, CallFailure,
 };
@@ -13,11 +12,12 @@ use starknet_types_core::felt::Felt;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::cheated_syscalls;
 use starknet_api::core::{ClassHash, ContractAddress};
-use starknet_api::transaction::Calldata;
+use starknet_api::transaction::fields::Calldata;
 
 use super::CheatcodeError;
 use crate::state::CheatnetState;
 use conversions::string::TryFromHexStr;
+use runtime::starknet::constants::TEST_ADDRESS;
 
 pub fn deploy_at(
     syscall_handler: &mut SyscallHintProcessor,
@@ -26,7 +26,11 @@ pub fn deploy_at(
     calldata: &[Felt],
     contract_address: ContractAddress,
 ) -> Result<(ContractAddress, Vec<Felt>), CheatcodeError> {
-    if let Ok(class_hash) = syscall_handler.state.get_class_hash_at(contract_address) {
+    if let Ok(class_hash) = syscall_handler
+        .base
+        .state
+        .get_class_hash_at(contract_address)
+    {
         if class_hash != ClassHash::default() {
             return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
                 CustomHint(Box::from("Address is already taken")),
@@ -44,20 +48,19 @@ pub fn deploy_at(
     let calldata = Calldata(Arc::new(calldata.to_vec()));
 
     let exec_result = cheated_syscalls::execute_deployment(
-        syscall_handler.state,
+        syscall_handler.base.state,
         cheatnet_state,
-        syscall_handler.resources,
-        syscall_handler.context,
+        syscall_handler.base.context,
         &ctor_context,
         calldata,
-        u64::MAX,
+        i64::MAX as u64,
     );
     cheatnet_state.increment_deploy_salt_base();
 
     match exec_result {
         Ok(call_info) => {
             let retdata = call_info.execution.retdata.0.clone();
-            syscall_handler.inner_calls.push(call_info);
+            syscall_handler.base.inner_calls.push(call_info);
             Ok((contract_address, retdata))
         }
         Err(err) => {
