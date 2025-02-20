@@ -1,5 +1,4 @@
 use crate::{
-    function_args,
     package_tests::{
         raw::TestTargetRaw,
         with_config::{TestCaseWithConfig, TestTargetWithConfig},
@@ -18,7 +17,6 @@ use cairo_lang_sierra_type_size::get_type_size_map;
 use cairo_lang_utils::unordered_hash_map::UnorderedHashMap;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
-use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, sync::Arc};
 use universal_sierra_compiler_api::{compile_sierra_at_path, SierraType};
 
@@ -65,9 +63,8 @@ pub fn test_target_with_config(test_target_raw: TestTargetRaw) -> Result<TestTar
             let func = funcs[&case.id];
 
             let test_details = build_test_details(func, &type_declarations, &type_size_map);
-            let args = prepare_args(func, &type_declarations);
 
-            let raw_config = run_config_pass(args, &test_details, &casm_program)?;
+            let raw_config = run_config_pass(&test_details, &casm_program)?;
 
             Ok(TestCaseWithConfig {
                 config: raw_config.into(),
@@ -107,35 +104,4 @@ fn build_test_details(
         parameter_types: map_types(&func.signature.param_types),
         return_types: map_types(&func.signature.ret_types),
     }
-}
-
-fn prepare_args(
-    func: &GenFunction<StatementIdx>,
-    type_declarations: &HashMap<u64, &TypeDeclaration>,
-) -> Vec<Felt> {
-    let args = function_args(func, type_declarations);
-
-    // trick to fix current fuzzer,
-    // it supports only u256 from types bigger than 1 felt
-    // since we have arguments count we need to know how many u256
-    // are there and add this to length, this way we got
-    // correct unmber of felts, this
-    // should be removed with new fuzzer logic so it is not extensible
-    let u256_occurrences = args
-        .iter()
-        .filter(|arg| {
-            arg.generic_id.0 == "Struct"
-                && matches!(
-                    arg.generic_args.first(),
-                    Some(cairo_lang_sierra::program::GenericArg::UserType(
-                        cairo_lang_sierra::ids::UserTypeId {
-                            debug_name: Some(name),
-                            ..
-                        }
-                    )) if name == "core::integer::u256"
-                )
-        })
-        .count();
-
-    vec![Felt::from(0_u8); args.len() + u256_occurrences]
 }
