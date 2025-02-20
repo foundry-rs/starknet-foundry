@@ -25,7 +25,7 @@ pub fn syscall_handler_offset(builtins_len: usize, has_segment_arena: bool) -> u
     // * Segment arena is allocated conditionally, so segment index is automatically moved (+2 segments)
     // * Each used builtin moves the offset by +1
     // * Line `let mut builtin_offset = 3;` in `create_entry_code_from_params`
-    // * TODO Where is remaining +2 in base offset coming from? Maybe System builtin and Gas builtin which seem to be always included
+    // * TODO(#2967) Where is remaining +2 in base offset coming from? Maybe System builtin and Gas builtin which seem to be always included
     let base_offset = 5;
     if has_segment_arena {
         base_offset + builtins_len + 2
