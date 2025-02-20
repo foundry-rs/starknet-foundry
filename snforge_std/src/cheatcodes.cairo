@@ -6,6 +6,7 @@ pub mod l1_handler;
 pub mod contract_class;
 pub mod storage;
 pub mod execution_info;
+pub mod erc20;
 pub mod message_to_l1;
 pub mod generate_random_felt;
 
@@ -43,7 +44,7 @@ pub fn test_address() -> ContractAddress {
 /// - `ret_data` - data to return by the function `function_selector`
 /// - `n_times` - number of calls to mock the function for
 pub fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
-    contract_address: ContractAddress, function_selector: felt252, ret_data: T, n_times: u32
+    contract_address: ContractAddress, function_selector: felt252, ret_data: T, n_times: u32,
 ) {
     assert!(n_times > 0, "cannot mock_call 0 times, n_times argument must be greater than 0");
 
@@ -68,7 +69,7 @@ pub fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct
 /// macro)
 /// - `ret_data` - data to be returned by the function
 pub fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
-    contract_address: ContractAddress, function_selector: felt252, ret_data: T
+    contract_address: ContractAddress, function_selector: felt252, ret_data: T,
 ) {
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
@@ -91,7 +92,7 @@ pub fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: De
 pub fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252) {
     let contract_address_felt: felt252 = contract_address.into();
     execute_cheatcode_and_deserialize::<
-        'stop_mock_call', ()
+        'stop_mock_call', (),
     >(array![contract_address_felt, function_selector].span());
 }
 
@@ -111,9 +112,9 @@ pub enum ReplaceBytecodeError {
 /// Returns `Result::Ok` if the replacement succeeded, and a `ReplaceBytecodeError` with appropriate
 /// error type otherwise
 pub fn replace_bytecode(
-    contract: ContractAddress, new_class: ClassHash
+    contract: ContractAddress, new_class: ClassHash,
 ) -> Result<(), ReplaceBytecodeError> {
     execute_cheatcode_and_deserialize::<
-        'replace_bytecode'
+        'replace_bytecode',
     >(array![contract.into(), new_class.into()].span())
 }
