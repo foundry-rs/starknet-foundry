@@ -140,7 +140,7 @@ pub async fn import(
         import.address,
         deployed,
         legacy,
-        &import.account_type,
+        import.account_type,
         Some(class_hash),
         import.salt,
     );

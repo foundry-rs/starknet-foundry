@@ -78,7 +78,7 @@ pub async fn create(
     check_class_hash_exists(provider, class_hash).await?;
 
     let (account_json, max_fee) =
-        generate_account(provider, salt, class_hash, &create.account_type).await?;
+        generate_account(provider, salt, class_hash, create.account_type).await?;
 
     let address: Felt = account_json["address"]
         .as_str()
@@ -105,7 +105,7 @@ pub async fn create(
             private_key,
             salt,
             class_hash,
-            &create.account_type,
+            create.account_type,
             &keystore,
             &account_path,
             legacy,
@@ -168,7 +168,7 @@ async fn generate_account(
     provider: &JsonRpcClient<HttpTransport>,
     salt: Felt,
     class_hash: Felt,
-    account_type: &AccountType,
+    account_type: AccountType,
 ) -> Result<(serde_json::Value, Felt)> {
     let chain_id = get_chain_id(provider).await?;
     let private_key = SigningKey::from_random();
@@ -247,7 +247,7 @@ fn create_to_keystore(
     private_key: Felt,
     salt: Felt,
     class_hash: Felt,
-    account_type: &AccountType,
+    account_type: AccountType,
     keystore_path: &Utf8PathBuf,
     account_path: &Utf8PathBuf,
     legacy: bool,

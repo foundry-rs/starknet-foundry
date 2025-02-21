@@ -45,7 +45,7 @@ pub fn prepare_account_json(
     address: Felt,
     deployed: bool,
     legacy: bool,
-    account_type: &AccountType,
+    account_type: AccountType,
     class_hash: Option<Felt>,
     salt: Option<Felt>,
 ) -> serde_json::Value {
