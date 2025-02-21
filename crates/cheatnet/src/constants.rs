@@ -4,16 +4,8 @@ use std::sync::Arc;
 use blockifier::execution::contract_class::ContractClassV1;
 
 use blockifier::execution::contract_class::ContractClass;
-use blockifier::state::cached_state::CachedState;
-use conversions::felt::FromShortString;
-
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::calculate_variable_address;
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::store;
-use crate::state::ExtendedStateReader;
-use starknet_types_core::felt::Felt;
 
 use crate::data::contract_class_no_entrypoints::NO_ENTRYPOINTS_CASM;
-use crate::data::strk_erc20_lockable::STRK_ERC_20_LOCKABLE_CASM;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
@@ -61,20 +53,12 @@ pub fn build_testing_state() -> DictStateReader {
         TryFromHexStr::try_from_hex_str(TEST_ERC20_CONTRACT_CLASS_HASH).unwrap();
     let test_contract_class_hash =
         TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap();
-
-    let strk_contract_address = TryFromHexStr::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
-    let strk_class_hash = TryFromHexStr::try_from_hex_str(STRK_CLASS_HASH).unwrap();
-
     let class_hash_to_class = HashMap::from([
         // This dummy test contract class hash and class is put here only to satisfy blockifier
         // this class is not used and the test contract cannot be called
         (
             test_contract_class_hash,
             get_contract_class(NO_ENTRYPOINTS_CASM),
-        ),
-        (
-            strk_class_hash,
-            get_contract_class(STRK_ERC_20_LOCKABLE_CASM),
         ),
     ]);
 
@@ -83,7 +67,6 @@ pub fn build_testing_state() -> DictStateReader {
     let address_to_class_hash = HashMap::from([
         (test_erc20_address, test_erc20_class_hash),
         (test_address, test_contract_class_hash),
-        (strk_contract_address, strk_class_hash),
     ]);
 
     DictStateReader {
@@ -106,35 +89,5 @@ pub fn build_test_entry_point() -> CallEntryPoint {
         caller_address: ContractAddress::default(),
         call_type: CallType::Call,
         initial_gas: u64::MAX,
-    }
-}
-
-pub fn setup_predeployed_strk_token(state: &mut CachedState<ExtendedStateReader>) {
-    let storage_values = HashMap::from([
-        (
-            calculate_variable_address(Felt::from_short_string("ERC20_name").unwrap(), None),
-            Felt::from_short_string("Starknet Token").unwrap(),
-        ),
-        (
-            calculate_variable_address(Felt::from_short_string("ERC20_symbol").unwrap(), None),
-            Felt::from_short_string("STRK").unwrap(),
-        ),
-        (
-            calculate_variable_address(Felt::from_short_string("ERC20_decimals").unwrap(), None),
-            18.into(),
-        ),
-        (
-            calculate_variable_address(
-                Felt::from_short_string("ERC20_total_supply").unwrap(),
-                None,
-            ),
-            Felt::from_dec_str("1294321502661951977636254715").unwrap(),
-        ),
-    ]);
-
-    let strk_address: ContractAddress =
-        TryFromHexStr::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
-    for (key, value) in storage_values {
-        store(state, strk_address, key, value).expect("Could not store");
     }
 }

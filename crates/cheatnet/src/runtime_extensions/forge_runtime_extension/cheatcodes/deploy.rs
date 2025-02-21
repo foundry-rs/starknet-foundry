@@ -25,6 +25,7 @@ pub fn deploy_at(
     class_hash: &ClassHash,
     calldata: &[Felt],
     contract_address: ContractAddress,
+    ignore_resources: bool,
 ) -> Result<(ContractAddress, Vec<Felt>), CheatcodeError> {
     if let Ok(class_hash) = syscall_handler.state.get_class_hash_at(contract_address) {
         if class_hash != ClassHash::default() {
@@ -43,6 +44,14 @@ pub fn deploy_at(
 
     let calldata = Calldata(Arc::new(calldata.to_vec()));
 
+    // Remember the number of steps and memory holes before the deployment
+    let (prev_n_steps, prev_n_memory_holes) = ignore_resources
+        .then_some((
+            syscall_handler.resources.n_steps,
+            syscall_handler.resources.n_memory_holes,
+        ))
+        .unzip();
+
     let exec_result = cheated_syscalls::execute_deployment(
         syscall_handler.state,
         cheatnet_state,
@@ -52,12 +61,21 @@ pub fn deploy_at(
         calldata,
         u64::MAX,
     );
+
+    // Reset the number of steps and memory holes after the deployment
+    if let (Some(steps), Some(memory_holes)) = (prev_n_steps, prev_n_memory_holes) {
+        syscall_handler.resources.n_steps = steps;
+        syscall_handler.resources.n_memory_holes = memory_holes;
+    }
+
     cheatnet_state.increment_deploy_salt_base();
 
     match exec_result {
         Ok(call_info) => {
             let retdata = call_info.execution.retdata.0.clone();
-            syscall_handler.inner_calls.push(call_info);
+            if !ignore_resources {
+                syscall_handler.inner_calls.push(call_info);
+            }
             Ok((contract_address, retdata))
         }
         Err(err) => {
@@ -84,5 +102,6 @@ pub fn deploy(
         class_hash,
         calldata,
         contract_address,
+        false,
     )
 }

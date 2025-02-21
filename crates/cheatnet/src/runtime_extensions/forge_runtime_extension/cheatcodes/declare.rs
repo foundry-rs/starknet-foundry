@@ -3,6 +3,7 @@ use crate::runtime_extensions::forge_runtime_extension::{
     contracts_data::ContractsData,
 };
 use anyhow::{Context, Result};
+use blockifier::execution::contract_class::ContractClass;
 use blockifier::{
     execution::contract_class::{ContractClass as BlockifierContractClass, ContractClassV1},
     state::{errors::StateError, state_api::State},
@@ -11,7 +12,6 @@ use conversions::serde::serialize::CairoSerialize;
 use conversions::IntoConv;
 use starknet::core::types::contract::SierraClass;
 use starknet_api::core::ClassHash;
-
 #[derive(CairoSerialize)]
 pub enum DeclareResult {
     Success(ClassHash),
@@ -37,6 +37,14 @@ pub fn declare(
         .get_class_hash(contract_name)
         .expect("Failed to get class hash");
 
+    declare_with_contract_class(state, contract_class, class_hash)
+}
+
+pub fn declare_with_contract_class(
+    state: &mut dyn State,
+    contract_class: ContractClass,
+    class_hash: ClassHash,
+) -> Result<DeclareResult, CheatcodeError> {
     match state.get_compiled_contract_class(class_hash) {
         Err(StateError::UndeclaredClassHash(_)) => {
             // Class is undeclared; declare it.
