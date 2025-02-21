@@ -1,5 +1,5 @@
 use starknet::ClassHash;
-use sncast_std::{deploy, DeployResult, FeeSettings};
+use sncast_std::{deploy, FeeSettings};
 
 fn main() {
     let max_fee = 9999999;
