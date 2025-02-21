@@ -139,7 +139,7 @@ mod tests {
             name: "Scarb".to_string(),
             command: RefCell::new(ScarbCommand::new().arg("--version").command()),
             minimal_version: Version::new(2, 7, 0),
-            minimal_recommended_version: None,
+            minimal_recommended_version: Some(Version::new(2, 8, 5)),
             helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
                 .to_string(),
             version_parser: create_version_parser(
