@@ -15,6 +15,6 @@ mod MapSimpleValueSimpleKey {
 
     #[external(v0)]
     fn read(self: @ContractState, key: felt252) -> felt252 {
-        self.values.entry(key).read()
+        self.values.read(key)
     }
 }

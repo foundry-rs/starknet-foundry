@@ -6,11 +6,7 @@ trait ICheatCallerAddressChecker<TContractState> {
 
 #[starknet::contract]
 mod CheatCallerAddressChecker {
-    use box::BoxTrait;
-    use starknet::ContractAddressIntoFelt252;
-    use starknet::ContractAddress;
-    use option::Option;
-    use traits::Into;
+    use core::{option::Option, traits::Into};
 
     #[storage]
     struct Storage {

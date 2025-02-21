@@ -20,6 +20,7 @@ mod SpyEventsCheckerProxy {
     use starknet::ContractAddress;
     use super::ISpyEventsCheckerDispatcherTrait;
     use super::ISpyEventsCheckerDispatcher;
+    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     #[storage]
     struct Storage {

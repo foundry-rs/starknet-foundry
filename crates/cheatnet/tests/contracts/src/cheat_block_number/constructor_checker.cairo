@@ -6,7 +6,9 @@ trait IConstructorCheatBlockNumberChecker<TContractState> {
 
 #[starknet::contract]
 mod ConstructorCheatBlockNumberChecker {
-    use box::BoxTrait;
+    use core::box::BoxTrait;
+    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+
     #[storage]
     struct Storage {
         blk_nb: u64,

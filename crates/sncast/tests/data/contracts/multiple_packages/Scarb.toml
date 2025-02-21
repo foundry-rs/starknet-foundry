@@ -12,7 +12,7 @@ version = "0.1.0"
 [package]
 name = "main_workspace"
 version.workspace = true
-edition = "2023_10"
+edition = "2024_07"
 
 [dependencies]
 starknet.workspace = true

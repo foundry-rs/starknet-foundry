@@ -6,9 +6,9 @@ trait INoncer<TContractState> {
 
 #[starknet::contract]
 mod Noncer {
-    use array::ArrayTrait;
+    use core::{array::ArrayTrait, box::BoxTrait};
     use starknet::get_tx_info;
-    use box::BoxTrait;
+    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     #[storage]
     struct Storage {
