@@ -8,8 +8,8 @@ default = ["enable_for_tests"]
 enable_for_tests = []
 
 [dependencies]
-starknet = "2.7.0"
-assert_macros = "0.1.0"
+starknet = "2.8.2"
+assert_macros = "2.8.2"
 
 [dev-dependencies]
 snforge_std = { path = "../../../snforge_std" }
