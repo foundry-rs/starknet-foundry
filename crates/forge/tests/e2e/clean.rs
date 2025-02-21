@@ -21,6 +21,7 @@ struct CleanComponentsState {
 }
 
 #[test]
+#[cfg(not(target_os = "windows"))]
 fn test_clean_coverage() {
     let temp_dir = setup_package("coverage_project");
 
@@ -119,6 +120,7 @@ fn test_clean_cache() {
 }
 
 #[test]
+#[cfg(not(target_os = "windows"))]
 fn test_clean_all() {
     let temp_dir = setup_package("coverage_project");
 

@@ -33,6 +33,7 @@ pub const CAIRO_EDITION: &str = "2024_07";
 
 const MINIMAL_RUST_VERSION: Version = Version::new(1, 80, 1);
 const MINIMAL_SCARB_VERSION: Version = Version::new(2, 7, 0);
+const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 8, 5);
 const MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN: Version = Version::new(2, 10, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 
@@ -313,6 +314,12 @@ fn check_requirements(output_on_success: bool) -> Result<()> {
         });
 
         requirements_checker.check()?;
+    }
+    if scarb_version >= MINIMAL_SCARB_VERSION && scarb_version < MINIMAL_RECOMMENDED_SCARB_VERSION {
+        print_as_warning(&anyhow!(
+            "Your scarb version is outdated. We recommend updating to at least version {}",
+            MINIMAL_RECOMMENDED_SCARB_VERSION
+        ));
     }
 
     Ok(())
