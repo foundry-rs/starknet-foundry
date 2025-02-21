@@ -5,7 +5,6 @@ use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::state_api::State;
 use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::relocatable::Relocatable;
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     call_entry_point, AddressOrClassHash,
 };
@@ -41,7 +40,6 @@ pub mod state;
 fn build_syscall_hint_processor<'a>(
     call_entry_point: CallEntryPoint,
     state: &'a mut dyn State,
-    _execution_resources: &'a mut ExecutionResources,
     entry_point_execution_context: &'a mut EntryPointExecutionContext,
     hints: &'a HashMap<String, Hint>,
 ) -> SyscallHintProcessor<'a> {
@@ -94,14 +92,12 @@ pub fn deploy_contract(
         .unwrap()
         .unwrap_success();
 
-    let mut execution_resources = ExecutionResources::default();
     let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
         CallEntryPoint::default(),
         state,
-        &mut execution_resources,
         &mut entry_point_execution_context,
         &hints,
     );
@@ -123,14 +119,12 @@ pub fn deploy_wrapper(
     class_hash: &ClassHash,
     calldata: &[Felt],
 ) -> Result<ContractAddress, CheatcodeError> {
-    let mut execution_resources = ExecutionResources::default();
     let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
         CallEntryPoint::default(),
         state,
-        &mut execution_resources,
         &mut entry_point_execution_context,
         &hints,
     );
@@ -152,14 +146,12 @@ pub fn deploy_at_wrapper(
     calldata: &[Felt],
     contract_address: ContractAddress,
 ) -> Result<ContractAddress, CheatcodeError> {
-    let mut execution_resources = ExecutionResources::default();
     let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
         CallEntryPoint::default(),
         state,
-        &mut execution_resources,
         &mut entry_point_execution_context,
         &hints,
     );
@@ -198,14 +190,12 @@ pub fn call_contract(
         initial_gas: i64::MAX as u64,
     };
 
-    let mut execution_resources = ExecutionResources::default();
     let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
         entry_point.clone(),
         state,
-        &mut execution_resources,
         &mut entry_point_execution_context,
         &hints,
     );
