@@ -91,7 +91,6 @@ fn only_unit() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn only_lib_integration() {
     let temp = setup_package("targets/only_lib_integration");
     let output = test_runner(&temp).assert().code(0);
@@ -203,7 +202,6 @@ fn custom_target() {
 // We do not define `build-external-contracts = ["targets::*"]` for `integration` target
 // The test still passes because contracts are collected from `unit` target which includes
 // the contracts from package by the default
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn custom_target_custom_names() {
     let temp = setup_package("targets/custom_target_custom_names");
     let output = test_runner(&temp).assert().code(0);
@@ -253,7 +251,6 @@ fn custom_target_only_integration() {
 #[test]
 // Case: We define custom test target for integration test type
 // We delete `build-external-contracts = ["targets::*"]` for `integration` so the test fails
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn custom_target_only_integration_without_external() {
     let temp = setup_package("targets/custom_target_only_integration");
 
@@ -291,7 +288,6 @@ fn custom_target_only_integration_without_external() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn simple_package_no_starknet_contract_target() {
     let temp = setup_package("simple_package");
 
@@ -362,7 +358,6 @@ fn simple_package_no_starknet_contract_target() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn no_optimization_flag() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)

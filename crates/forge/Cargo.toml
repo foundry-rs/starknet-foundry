@@ -8,7 +8,6 @@ edition.workspace = true
 [features]
 smoke = []
 scarb_2_7_1 = []
-scarb_2_8_3 = []
 
 [dependencies]
 anyhow.workspace = true

@@ -122,8 +122,8 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
-      - run: cargo test --package forge --features scarb_2_8_3 --test main e2e::coverage
-      - run: cargo test --package forge --features scarb_2_8_3 --test main e2e::backtrace
+      - run: cargo test --package forge --test main e2e::coverage
+      - run: cargo test --package forge --test main e2e::backtrace
 
   test-coverage-error:
     name: Test coverage error
@@ -155,13 +155,13 @@ jobs:
           scarb-version: "2.8.3"
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: |
-          cargo test --package forge --features scarb_2_8_3 e2e::contract_artifacts
+          cargo test --package forge e2e::contract_artifacts
       - run: |
-          cargo test --package forge --features scarb_2_8_3 e2e::features
+          cargo test --package forge e2e::features
       - run: |
-          cargo test --package scarb-api --features scarb_2_8_3 get_starknet_artifacts_path
+          cargo test --package scarb-api get_starknet_artifacts_path
       - run: |
-          cargo test --package scarb-api --features scarb_2_8_3 test_load_contracts_artifacts
+          cargo test --package scarb-api test_load_contracts_artifacts
 
   test-forge-runner:
     name: Test Forge Runner
@@ -236,7 +236,7 @@ jobs:
           cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev ${{ env.DEVNET_REV }} --root $DEVNET_INSTALL_DIR
       - uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "2.7.0"
+          scarb-version: "2.8.5"
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests
         run: cargo test --release -p sncast

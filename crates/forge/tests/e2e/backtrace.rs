@@ -6,7 +6,6 @@ use std::fs;
 use toml_edit::{value, DocumentMut};
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn test_backtrace_missing_env() {
     let temp = setup_package("backtrace_vm_error");
 
@@ -23,7 +22,6 @@ fn test_backtrace_missing_env() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn test_backtrace() {
     let temp = setup_package("backtrace_vm_error");
 
@@ -59,7 +57,6 @@ fn test_backtrace() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn test_wrong_scarb_toml_configuration() {
     let temp = setup_package("backtrace_vm_error");
 
@@ -94,7 +91,6 @@ fn test_wrong_scarb_toml_configuration() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn test_backtrace_panic() {
     let temp = setup_package("backtrace_panic");
 
