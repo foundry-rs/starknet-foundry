@@ -71,9 +71,9 @@ pub fn extract_snippets_from_directory(
     for file in files {
         let path = file.path();
 
-        if EXTENSION.map_or(true, |ext| {
-            path.extension().and_then(|path_ext| path_ext.to_str()) == Some(ext)
-        }) {
+        if EXTENSION
+            .is_none_or(|ext| path.extension().and_then(|path_ext| path_ext.to_str()) == Some(ext))
+        {
             let snippets = extract_snippets_from_file(path, snippet_type)?;
             all_snippets.extend(snippets);
         }
