@@ -1,5 +1,4 @@
-use starknet::ContractAddress;
-use sncast_std::{call, CallResult};
+use sncast_std::call;
 
 // Some nonexistent contract
 const CONTRACT_ADDRESS: felt252 = 0x2137;

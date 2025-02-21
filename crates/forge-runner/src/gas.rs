@@ -12,7 +12,7 @@ use blockifier::transaction::objects::HasRelatedFeeType;
 use blockifier::utils::u64_from_usize;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::ExtendedStateReader;
-use starknet_api::execution_resources::GasVector;
+use starknet_api::execution_resources::{GasAmount, GasVector};
 use starknet_api::transaction::fields::GasVectorComputationMode;
 use starknet_api::transaction::EventContent;
 
@@ -40,10 +40,10 @@ pub fn calculate_used_gas(
     let computation_resources = ComputationResources {
         vm_resources: resources.execution_resources.clone(),
         n_reverted_steps: 0,
-        // FIXME correct value
-        sierra_gas: Default::default(),
-        // FIXME correct value
-        reverted_sierra_gas: Default::default(),
+        // TODO(#2977)
+        sierra_gas: GasAmount(0),
+        // TODO(#2977)
+        reverted_sierra_gas: GasAmount(0),
     };
 
     let transaction_resources = TransactionResources {
@@ -51,42 +51,36 @@ pub fn calculate_used_gas(
         computation: computation_resources,
     };
 
-    // FIXME this is the tricky part, how to figure the computation mode here
+    let use_kzg_da = transaction_context.block_context.block_info().use_kzg_da;
     Ok(transaction_resources.to_gas_vector(
         versioned_constants,
-        // FIXME actually check it
-        true,
+        use_kzg_da,
+        // TODO(#2977)
         &GasVectorComputationMode::NoL2Gas,
     ))
 }
 
 fn get_archival_data_resources(events: Vec<EventContent>) -> ArchivalDataResources {
-    // FIXME link source
-    let mut total_event_keys = 0;
-    let mut total_event_data_size = 0;
-    let n_events = events.len();
-
-    for event_content in events {
-        // TODO(barak: 18/03/2024): Once we start charging per byte
-        // change to num_bytes_keys
-        // and num_bytes_data.
-        total_event_data_size += u64_from_usize(event_content.data.0.len());
-        total_event_keys += u64_from_usize(event_content.keys.len());
+    // Based on from https://github.com/starkware-libs/sequencer/blob/fc0f06a07f3338ae1e11612dcaed9c59373bca37/crates/blockifier/src/execution/call_info.rs#L222
+    let mut event_summary = EventSummary {
+        n_events: events.len(),
+        ..Default::default()
+    };
+    for event in events {
+        event_summary.total_event_data_size += u64_from_usize(event.data.0.len());
+        event_summary.total_event_keys += u64_from_usize(event.keys.len());
     }
 
-    // FIXME this is a workaround because we cannot create `ArchivalDataResources` directly yet
+    // TODO(#2978) this is a workaround because we cannot create `ArchivalDataResources` directly yet
     //  because of private fields
     let dummy_execution_summary = ExecutionSummary {
         charged_resources: Default::default(),
         executed_class_hashes: Default::default(),
         visited_storage_entries: Default::default(),
         l2_to_l1_payload_lengths: vec![],
-        event_summary: EventSummary {
-            n_events,
-            total_event_keys,
-            total_event_data_size,
-        },
+        event_summary,
     };
+
     let dummy_starknet_resources = StarknetResources::new(
         // calldata length, signature length and code size are set to 0, because
         // we don't include them in estimations
@@ -153,8 +147,6 @@ fn get_state_resources(
             .fee_token_address(&transaction_context.tx_info.fee_type()),
     );
 
-    // let use_kzg_da = transaction_context.block_context.block_info().use_kzg_da;
-    // let l1_data_gas_cost = get_da_gas_cost(&state_changes_count, use_kzg_da);
     Ok(StateResources {
         state_changes_for_fee: state_changes_count,
     })
