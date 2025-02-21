@@ -61,17 +61,14 @@ pub fn calculate_used_gas(
 }
 
 fn get_archival_data_resources(events: Vec<EventContent>) -> ArchivalDataResources {
-    // FIXME link source
-    let mut total_event_keys = 0;
-    let mut total_event_data_size = 0;
-    let n_events = events.len();
-
-    for event_content in events {
-        // TODO(barak: 18/03/2024): Once we start charging per byte
-        // change to num_bytes_keys
-        // and num_bytes_data.
-        total_event_data_size += u64_from_usize(event_content.data.0.len());
-        total_event_keys += u64_from_usize(event_content.keys.len());
+    // Based on from https://github.com/starkware-libs/sequencer/blob/fc0f06a07f3338ae1e11612dcaed9c59373bca37/crates/blockifier/src/execution/call_info.rs#L222
+    let mut event_summary = EventSummary {
+        n_events: events.len(),
+        ..Default::default()
+    };
+    for event in events {
+        event_summary.total_event_data_size += u64_from_usize(event.data.0.len());
+        event_summary.total_event_keys += u64_from_usize(event.keys.len());
     }
 
     // TODO(#2978) this is a workaround because we cannot create `ArchivalDataResources` directly yet
@@ -81,12 +78,9 @@ fn get_archival_data_resources(events: Vec<EventContent>) -> ArchivalDataResourc
         executed_class_hashes: Default::default(),
         visited_storage_entries: Default::default(),
         l2_to_l1_payload_lengths: vec![],
-        event_summary: EventSummary {
-            n_events,
-            total_event_keys,
-            total_event_data_size,
-        },
+        event_summary,
     };
+
     let dummy_starknet_resources = StarknetResources::new(
         // calldata length, signature length and code size are set to 0, because
         // we don't include them in estimations
