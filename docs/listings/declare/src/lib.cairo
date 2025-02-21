@@ -1,4 +1,4 @@
-use sncast_std::{declare, DeclareResult, FeeSettings};
+use sncast_std::{declare, FeeSettings};
 
 fn main() {
     let max_fee = 9999999;
