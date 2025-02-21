@@ -12,7 +12,7 @@ use blockifier::transaction::objects::HasRelatedFeeType;
 use blockifier::utils::u64_from_usize;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::ExtendedStateReader;
-use starknet_api::execution_resources::GasVector;
+use starknet_api::execution_resources::{GasAmount, GasVector};
 use starknet_api::transaction::fields::GasVectorComputationMode;
 use starknet_api::transaction::EventContent;
 
@@ -40,10 +40,10 @@ pub fn calculate_used_gas(
     let computation_resources = ComputationResources {
         vm_resources: resources.execution_resources.clone(),
         n_reverted_steps: 0,
-        // FIXME correct value
-        sierra_gas: Default::default(),
-        // FIXME correct value
-        reverted_sierra_gas: Default::default(),
+        // TODO(#2977)
+        sierra_gas: GasAmount(0),
+        // TODO(#2977)
+        reverted_sierra_gas: GasAmount(0),
     };
 
     let transaction_resources = TransactionResources {
@@ -54,8 +54,8 @@ pub fn calculate_used_gas(
     let use_kzg_da = transaction_context.block_context.block_info().use_kzg_da;
     Ok(transaction_resources.to_gas_vector(
         versioned_constants,
-        // FIXME actually check it
-        true,
+        use_kzg_da,
+        // TODO(#2977)
         &GasVectorComputationMode::NoL2Gas,
     ))
 }
