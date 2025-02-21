@@ -493,7 +493,7 @@ dependencies = [
 [[package]]
 name = "blockifier"
 version = "0.14.0-rc.1"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.13.4#037cd7c27298970e5a6226fb98a08d2d692d55ea"
+source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.13.4#575dc705433641e521bf61a04edf06a7f487de97"
 dependencies = [
  "anyhow",
  "ark-ec",
@@ -3715,7 +3715,7 @@ dependencies = [
 [[package]]
 name = "papyrus_config"
 version = "0.14.0-rc.1"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.13.4#037cd7c27298970e5a6226fb98a08d2d692d55ea"
+source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.13.4#575dc705433641e521bf61a04edf06a7f487de97"
 dependencies = [
  "clap",
  "itertools 0.12.1",
@@ -5367,7 +5367,7 @@ dependencies = [
 [[package]]
 name = "starknet_api"
 version = "0.14.0-rc.1"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.13.4#037cd7c27298970e5a6226fb98a08d2d692d55ea"
+source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.13.4#575dc705433641e521bf61a04edf06a7f487de97"
 dependencies = [
  "bitvec",
  "cairo-lang-runner",
@@ -5395,7 +5395,7 @@ dependencies = [
 [[package]]
 name = "starknet_infra_utils"
 version = "0.14.0-rc.1"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.13.4#037cd7c27298970e5a6226fb98a08d2d692d55ea"
+source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.13.4#575dc705433641e521bf61a04edf06a7f487de97"
 dependencies = [
  "tokio",
  "tracing",
