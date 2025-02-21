@@ -1,4 +1,4 @@
-use conversions::{byte_array::ByteArray, felt::FromShortString};
+use conversions::byte_array::ByteArray;
 use regex::Regex;
 use starknet_types_core::felt::Felt;
 
@@ -69,7 +69,7 @@ mod test {
                     End of trace
                     "
                 ),
-                    Some(vec![Felt::from(344_693_033_283_u64)]); "felt")]
+                    Some(&vec![Felt::from(344_693_033_283_u64)]); "felt")]
     #[test_case(indoc!(r"
                     Beginning of trace
                     Got an exception while executing a hint: Execution failed. Failure reason:
@@ -79,16 +79,16 @@ mod test {
                     End of trace
                     "
                 ),
-                    Some(vec![Felt::from_hex_unchecked("0x54687265652073616420746967657273206174652077686561742e2054776f"), Felt::from_hex_unchecked("0x2074696765727320776572652066756c6c2e20546865206f74686572207469"), Felt::from_hex_unchecked("0x676572206e6f7420736f206d75636800000000000000000000000000000000")]); "felt array")]
+                    Some(&vec![Felt::from_hex_unchecked("0x54687265652073616420746967657273206174652077686561742e2054776f"), Felt::from_hex_unchecked("0x2074696765727320776572652066756c6c2e20546865206f74686572207469"), Felt::from_hex_unchecked("0x676572206e6f7420736f206d75636800000000000000000000000000000000")]); "felt array")]
     #[test_case(indoc!(r"
                     Got an exception while executing a hint: Execution failed. Failure reason:
                     Error in contract (contract address: 0x03cda836debfed3f83aa981d7a31733da3ae4f903dde9d833509d2f985d52241, class hash: 0x07ca8b953cb041ee517951d34880631e537682103870b9b018a7b493363b9b63, selector: 0x00a4695e9e8c278609a8e9362d5abe9852a904da970c7de84f0456c777d21137):
                     0x0 ('').
                     "
                 ),
-                    Some(vec![Felt::from(0)]); "empty")]
-    fn extracting_plain_panic_data(data: &str, expected: Option<Vec<Felt>>) {
-        assert_eq!(try_extract_panic_data(data), expected);
+                    Some(&vec![Felt::from(0)]); "empty")]
+    fn extracting_plain_panic_data(data: &str, expected: Option<&Vec<Felt>>) {
+        assert_eq!(try_extract_panic_data(data), expected.cloned());
     }
 
     #[allow(clippy::needless_pass_by_value)]
