@@ -74,7 +74,7 @@ fn get_archival_data_resources(events: Vec<EventContent>) -> ArchivalDataResourc
         total_event_keys += u64_from_usize(event_content.keys.len());
     }
 
-    // FIXME this is a workaround because we cannot create `ArchivalDataResources` directly yet
+    // TODO(#2978) this is a workaround because we cannot create `ArchivalDataResources` directly yet
     //  because of private fields
     let dummy_execution_summary = ExecutionSummary {
         charged_resources: Default::default(),
