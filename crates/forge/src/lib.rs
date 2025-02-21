@@ -129,7 +129,7 @@ enum ColorOption {
 }
 
 #[derive(Parser, Debug)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 pub struct TestArgs {
     /// Name used to filter tests
     test_filter: Option<String>,

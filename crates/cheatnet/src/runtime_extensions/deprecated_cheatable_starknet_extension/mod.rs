@@ -396,7 +396,7 @@ fn execute_inner_call(
 }
 
 // blockifier/src/execution/deprecated_syscalls/hint_processor.rs:409 (execute_library_call)
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 fn execute_library_call(
     syscall_handler: &mut DeprecatedSyscallHintProcessor<'_>,
     cheatnet_state: &mut CheatnetState,

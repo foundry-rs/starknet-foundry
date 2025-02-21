@@ -68,7 +68,7 @@ pub struct ForgeExtension<'a> {
 impl<'a> ExtensionLogic for ForgeExtension<'a> {
     type Runtime = CallToBlockifierRuntime<'a>;
 
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines)]
     fn handle_cheatcode(
         &mut self,
         selector: &str,

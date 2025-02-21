@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use crate::WaitForTransactionError;
 use crate::helpers::constants::STATE_FILE_VERSION;
 use crate::response::errors::StarknetCommandError;
@@ -173,7 +172,6 @@ impl ScriptTransactionEntry {
     }
 }
 
-#[allow(clippy::enum_variant_names)]
 #[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
 #[serde(tag = "type")]
 pub enum ScriptTransactionOutput {

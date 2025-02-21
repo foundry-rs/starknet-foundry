@@ -261,7 +261,7 @@ fn parse_output<T: DeserializeOwned>(output: &[u8]) -> T {
 }
 
 #[derive(Deserialize)]
-#[allow(dead_code)]
+#[expect(dead_code)]
 struct TransactionHashOutput {
     pub transaction_hash: String,
     contract_address: Option<String>,

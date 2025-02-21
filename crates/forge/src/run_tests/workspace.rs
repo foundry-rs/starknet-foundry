@@ -19,7 +19,6 @@ use scarb_ui::args::PackagesFilter;
 use shared::consts::SNFORGE_TEST_FILTER;
 use std::env;
 
-#[allow(clippy::too_many_lines)]
 pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
     match args.color {
         // SAFETY: This runs in a single-threaded environment.

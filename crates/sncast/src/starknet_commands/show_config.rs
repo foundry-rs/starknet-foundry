@@ -15,7 +15,6 @@ pub struct ShowConfig {
     pub rpc: RpcArgs,
 }
 
-#[allow(clippy::ptr_arg)]
 pub async fn show_config(
     show: &ShowConfig,
     provider: Option<&JsonRpcClient<HttpTransport>>,

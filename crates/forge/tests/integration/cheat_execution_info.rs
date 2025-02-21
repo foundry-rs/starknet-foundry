@@ -102,7 +102,7 @@ fn start_and_stop_cheat_transaction_hash_single_attribute() {
 
 #[test]
 #[ignore] // TODO(#2765)
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 fn start_cheat_execution_info_all_attributes_mocked() {
     let test = test_case!(
         indoc!(
@@ -404,7 +404,7 @@ fn start_cheat_transaction_hash_multiple() {
 
 #[test]
 #[ignore] // TODO(#2765)
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 fn start_cheat_execution_info_all() {
     let test = test_case!(
         indoc!(

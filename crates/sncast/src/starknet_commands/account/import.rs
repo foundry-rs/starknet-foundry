@@ -54,7 +54,6 @@ pub struct Import {
     pub salt: Option<Felt>,
 
     /// If passed, a profile with the provided name and corresponding data will be created in snfoundry.toml
-    #[allow(clippy::struct_field_names)]
     #[clap(long, conflicts_with = "network")]
     pub add_profile: Option<String>,
 

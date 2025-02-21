@@ -4,7 +4,6 @@ use indoc::formatdoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
-#[allow(clippy::too_many_lines)]
 fn file_reading() {
     let temp = setup_package_with_file_patterns(
         "file_reading",

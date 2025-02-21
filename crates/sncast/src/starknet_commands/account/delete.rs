@@ -31,7 +31,6 @@ pub struct Delete {
     pub network_name: Option<String>,
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn delete(
     name: &str,
     path: &Utf8PathBuf,

@@ -8,7 +8,6 @@ use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_syntax::node::{ast::FunctionWithBody, db::SyntaxGroup};
 use indoc::formatdoc;
 
-#[allow(clippy::needless_pass_by_value)]
 pub fn extend_with_config_cheatcodes<Collector>(
     args: TokenStream,
     item: TokenStream,

@@ -56,7 +56,6 @@ impl StateReader for PhantomStateReader {
     }
 }
 
-#[allow(clippy::too_many_lines)]
 pub fn run_config_pass(
     args: Vec<Felt>,
     test_details: &TestDetails,

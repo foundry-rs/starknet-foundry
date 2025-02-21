@@ -46,7 +46,6 @@ pub struct Declare {
     pub rpc: RpcArgs,
 }
 
-#[allow(clippy::too_many_lines)]
 pub async fn declare(
     declare: Declare,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,

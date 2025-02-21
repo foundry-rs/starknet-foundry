@@ -340,7 +340,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::float_cmp)]
+    #[expect(clippy::float_cmp)]
     fn resolve_env_vars() {
         let tempdir =
             copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", Some("childdir1"))

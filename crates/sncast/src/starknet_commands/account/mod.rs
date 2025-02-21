@@ -38,7 +38,7 @@ pub enum Commands {
     List(List),
 }
 
-#[allow(clippy::doc_markdown)]
+#[expect(clippy::doc_markdown)]
 #[derive(ValueEnum, Clone, Debug)]
 pub enum AccountType {
     /// OpenZeppelin account implementation
@@ -87,7 +87,6 @@ pub fn prepare_account_json(
     account_json
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn write_account_to_accounts_file(
     account: &str,
     accounts_file: &Utf8PathBuf,

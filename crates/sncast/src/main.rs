@@ -71,7 +71,7 @@ Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
 )]
 #[command(about = "sncast - All-in-one tool for interacting with Starknet smart contracts", long_about = None)]
 #[clap(name = "sncast")]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 struct Cli {
     /// Profile name in snfoundry.toml config file
     #[clap(short, long)]
@@ -222,7 +222,7 @@ fn main() -> Result<()> {
     }
 }
 
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 async fn run_async_command(
     cli: Cli,
     config: CastConfig,
