@@ -7,6 +7,7 @@ use std::fs;
 use toml_edit::{value, DocumentMut};
 
 #[test]
+#[cfg(not(target_os = "windows"))]
 fn test_coverage_project() {
     let temp = setup_package("coverage_project");
 
@@ -19,6 +20,7 @@ fn test_coverage_project() {
 }
 
 #[test]
+#[cfg(not(target_os = "windows"))]
 fn test_coverage_project_and_pass_args() {
     let temp = setup_package("coverage_project");
 
@@ -47,6 +49,7 @@ fn test_fail_on_scarb_version_lt_2_8_0() {
 }
 
 #[test]
+#[cfg(not(target_os = "windows"))]
 fn test_fail_wrong_set_up() {
     let temp = setup_package("coverage_project");
 
