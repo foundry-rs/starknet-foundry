@@ -5,9 +5,6 @@ pub trait IEmitter<TContractState> {
 
 #[starknet::contract]
 pub mod Emitter {
-    use core::result::ResultTrait;
-    use starknet::ClassHash;
-
     #[event]
     #[derive(Drop, starknet::Event)]
     pub enum Event {
