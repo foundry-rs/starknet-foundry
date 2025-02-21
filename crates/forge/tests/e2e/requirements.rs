@@ -45,9 +45,8 @@ fn test_warning_on_outdated_scarb() {
     Checking requirements
 
     ✅ Rust [..]
-    ✅ Scarb [..]
+    ⚠️  Scarb Version 2.7.1 doesn't satisfy minimum recommended [..]
     ✅ Universal Sierra Compiler [..]
-    ⚠️  Scarb is outdated. We recommend updating to at least version [..]
     "},
     );
 }
