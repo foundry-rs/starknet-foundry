@@ -316,10 +316,10 @@ fn check_requirements(output_on_success: bool) -> Result<()> {
         requirements_checker.check()?;
     }
     if scarb_version >= MINIMAL_SCARB_VERSION && scarb_version < MINIMAL_RECOMMENDED_SCARB_VERSION {
-        print_as_warning(&anyhow!(
-            "Your scarb version is outdated. We recommend updating to at least version {}",
+        println!(
+            "⚠️  Scarb is outdated. We recommend updating to at least version {}",
             MINIMAL_RECOMMENDED_SCARB_VERSION
-        ));
+        );
     }
 
     Ok(())
