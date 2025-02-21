@@ -1,5 +1,4 @@
-use starknet::ContractAddress;
-use sncast_std::{call, CallResult};
+use sncast_std::call;
 
 // A real contract deployed on Sepolia network
 const CONTRACT_ADDRESS: felt252 =
