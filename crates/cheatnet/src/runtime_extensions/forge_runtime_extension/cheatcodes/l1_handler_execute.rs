@@ -1,5 +1,5 @@
 use crate::{
-    runtime_extensions::call_to_blockifier_runtime_extension::rpc::{call_l1_handler, CallResult},
+    runtime_extensions::call_to_blockifier_runtime_extension::rpc::{CallResult, call_l1_handler},
     state::CheatnetState,
 };
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;

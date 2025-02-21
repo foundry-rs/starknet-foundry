@@ -1,12 +1,12 @@
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::response::errors::SNCastProviderError;
-use anyhow::{anyhow, bail, Context, Error, Result};
+use anyhow::{Context, Error, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use conversions::serde::serialize::CairoSerialize;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
-use rand::rngs::OsRng;
 use rand::RngCore;
+use rand::rngs::OsRng;
 use response::errors::SNCastStarknetError;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -24,9 +24,9 @@ use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
 use starknet::{
     accounts::{ExecutionEncoding, SingleOwnerAccount},
     providers::{
-        jsonrpc::{HttpTransport, JsonRpcClient},
         Provider, ProviderError,
         ProviderError::StarknetError,
+        jsonrpc::{HttpTransport, JsonRpcClient},
     },
     signers::{LocalWallet, SigningKey},
 };
@@ -353,12 +353,17 @@ pub async fn check_class_hash_exists(
     provider: &JsonRpcClient<HttpTransport>,
     class_hash: Felt,
 ) -> Result<()> {
-    match provider.get_class(BlockId::Tag(BlockTag::Latest), class_hash).await {
+    match provider
+        .get_class(BlockId::Tag(BlockTag::Latest), class_hash)
+        .await
+    {
         Ok(_) => Ok(()),
         Err(err) => match err {
-            StarknetError(ClassHashNotFound) => Err(anyhow!("Class with hash {class_hash:#x} is not declared, try using --class-hash with a hash of the declared class")),
-            _ => Err(handle_rpc_error(err))
-        }
+            StarknetError(ClassHashNotFound) => Err(anyhow!(
+                "Class with hash {class_hash:#x} is not declared, try using --class-hash with a hash of the declared class"
+            )),
+            _ => Err(handle_rpc_error(err)),
+        },
     }
 }
 
@@ -587,16 +592,18 @@ pub async fn wait_for_tx(
                 | starknet::core::types::TransactionStatus::AcceptedOnL1(execution_status),
             ) => match execution_status {
                 starknet::core::types::TransactionExecutionStatus::Succeeded => {
-                    return Ok("Transaction accepted")
+                    return Ok("Transaction accepted");
                 }
                 starknet::core::types::TransactionExecutionStatus::Reverted => {
-                    return get_revert_reason(provider, tx_hash).await
+                    return get_revert_reason(provider, tx_hash).await;
                 }
             },
             Ok(starknet::core::types::TransactionStatus::Received)
             | Err(StarknetError(TransactionHashNotFound)) => {
                 let remaining_time = wait_params.remaining_time(i);
-                println!("Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)");
+                println!(
+                    "Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)"
+                );
             }
             Err(ProviderError::RateLimited) => {
                 println!("Request rate limited while waiting for transaction to be accepted");
@@ -693,7 +700,9 @@ pub fn check_keystore_and_account_files_exist(
     }
     let path_to_account = Utf8PathBuf::from(account);
     if !path_to_account.exists() {
-        bail!("File containing the account does not exist: When using `--keystore` argument, the `--account` argument should be a path to the starkli JSON account file");
+        bail!(
+            "File containing the account does not exist: When using `--keystore` argument, the `--account` argument should be a path to the starkli JSON account file"
+        );
     }
     Ok(())
 }
@@ -731,8 +740,9 @@ pub fn get_default_state_file_name(script_name: &str, chain_id: &str) -> String 
 mod tests {
     use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
     use crate::{
-        chain_id_to_network_name, extract_or_generate_salt, get_account_data_from_accounts_file,
-        get_account_data_from_keystore, get_block_id, udc_uniqueness, AccountType,
+        AccountType, chain_id_to_network_name, extract_or_generate_salt,
+        get_account_data_from_accounts_file, get_account_data_from_keystore, get_block_id,
+        udc_uniqueness,
     };
     use camino::Utf8PathBuf;
     use conversions::string::IntoHexStr;
@@ -887,9 +897,10 @@ mod tests {
         )
         .unwrap_err();
 
-        assert!(err
-            .to_string()
-            .contains("Braavos accounts cannot be deployed with multisig on"));
+        assert!(
+            err.to_string()
+                .contains("Braavos accounts cannot be deployed with multisig on")
+        );
     }
 
     #[test]
@@ -901,9 +912,10 @@ mod tests {
         )
         .unwrap_err();
 
-        assert!(err
-            .to_string()
-            .contains("Braavos accounts can only be deployed with one seed signer"));
+        assert!(
+            err.to_string()
+                .contains("Braavos accounts can only be deployed with one seed signer")
+        );
     }
 
     #[test]
@@ -915,8 +927,9 @@ mod tests {
             &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         );
         let err = account.unwrap_err();
-        assert!(err
-            .to_string()
-            .contains("Account = user1 not found under network = CUSTOM_CHAIN_ID"));
+        assert!(
+            err.to_string()
+                .contains("Account = user1 not found under network = CUSTOM_CHAIN_ID")
+        );
     }
 }

@@ -11,9 +11,9 @@ use blockifier::{
 };
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::forge_config_extension::{
-    config::RawForgeConfig, ForgeConfigExtension,
+    ForgeConfigExtension, config::RawForgeConfig,
 };
-use runtime::{starknet::context::build_context, ExtendedRuntime, StarknetRuntime};
+use runtime::{ExtendedRuntime, StarknetRuntime, starknet::context::build_context};
 use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_types_core::felt::Felt;
 use std::{default::Default, num::NonZeroU128};

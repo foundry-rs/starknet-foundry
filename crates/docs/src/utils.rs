@@ -1,9 +1,9 @@
 use crate::snippet::Snippet;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use camino::Utf8PathBuf;
 use std::{env, fs, path::PathBuf, str::FromStr};
 use tempfile::TempDir;
-use toml_edit::{value, DocumentMut};
+use toml_edit::{DocumentMut, value};
 
 #[must_use]
 pub fn get_nth_ancestor(levels_up: usize) -> PathBuf {
@@ -37,7 +37,9 @@ pub fn print_snippets_validation_summary(snippets: &[Snippet], tool_name: &str) 
         .count();
     let ignored_snippets_count = snippets.len() - validated_snippets_count;
 
-    println!("Finished validation of {tool_name} docs snippets\nValidated: {validated_snippets_count}, Ignored: {ignored_snippets_count}");
+    println!(
+        "Finished validation of {tool_name} docs snippets\nValidated: {validated_snippets_count}, Ignored: {ignored_snippets_count}"
+    );
 }
 
 pub fn print_ignored_snippet_message(snippet: &Snippet) {

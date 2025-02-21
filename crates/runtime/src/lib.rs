@@ -1,12 +1,12 @@
 use anyhow::Result;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::SyscallResult;
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::errors::StateError;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
 use cairo_lang_runner::casm_run::{
-    extract_buffer, extract_relocatable, get_ptr, vm_get_range, MemBuffer,
+    MemBuffer, extract_buffer, extract_relocatable, get_ptr, vm_get_range,
 };
 use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
 use cairo_lang_utils::bigint::BigIntAsHex;

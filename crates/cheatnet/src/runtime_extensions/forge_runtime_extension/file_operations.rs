@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use conversions::felt::TryInferFormat;
 use conversions::{
     byte_array::ByteArray, serde::serialize::SerializeToFeltVec, string::TryFromDecStr,
@@ -64,7 +64,9 @@ fn value_into_vec(value: &Value, output: &mut Vec<Felt>) -> Result<(), FromStrEr
             Ok(())
         }
         _ => {
-            unreachable!("flatten_serde_json::flatten leaves only numbers string and array of numbers and strings");
+            unreachable!(
+                "flatten_serde_json::flatten leaves only numbers string and array of numbers and strings"
+            );
         }
     }
 }

@@ -1,7 +1,7 @@
 use crate::{CleanArgs, CleanComponent};
-use anyhow::{ensure, Context, Result};
+use anyhow::{Context, Result, ensure};
 use camino::Utf8PathBuf;
-use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
+use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use std::fs;
 
 const COVERAGE_DIR: &str = "coverage";

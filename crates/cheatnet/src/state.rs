@@ -1,4 +1,4 @@
-use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
+use crate::constants::{TEST_CONTRACT_CLASS_HASH, build_test_entry_point};
 use crate::forking::state::ForkStateReader;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::{

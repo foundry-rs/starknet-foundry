@@ -1,8 +1,9 @@
 use anyhow::Result;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::{
+    SierraCasmRunner,
     casm_run::{build_cairo_runner, run_function_with_runner},
-    initialize_vm, SierraCasmRunner,
+    initialize_vm,
 };
 use cairo_vm::{
     hint_processor::hint_processor_definition::HintProcessor,

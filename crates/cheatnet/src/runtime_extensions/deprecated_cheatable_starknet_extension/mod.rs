@@ -11,7 +11,7 @@ use blockifier::execution::deprecated_syscalls::{
 };
 use blockifier::execution::entry_point::{CallEntryPoint, CallType, ConstructorContext};
 use blockifier::execution::execution_utils::{
-    execute_deployment, write_maybe_relocatable, ReadOnlySegment,
+    ReadOnlySegment, execute_deployment, write_maybe_relocatable,
 };
 use conversions::FromConv;
 
@@ -22,7 +22,7 @@ use cairo_vm::vm::vm_core::VirtualMachine;
 use num_traits::ToPrimitive;
 use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_api::core::{
-    calculate_contract_address, ClassHash, ContractAddress, EntryPointSelector,
+    ClassHash, ContractAddress, EntryPointSelector, calculate_contract_address,
 };
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::transaction::Calldata;

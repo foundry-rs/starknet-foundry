@@ -4,7 +4,7 @@ use forge_runner::coverage_api::{COVERAGE_DIR, OUTPUT_FILE_NAME};
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use std::fs;
-use toml_edit::{value, DocumentMut};
+use toml_edit::{DocumentMut, value};
 
 #[test]
 #[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]

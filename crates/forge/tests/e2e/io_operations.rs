@@ -1,4 +1,4 @@
-use super::common::runner::{setup_package_with_file_patterns, test_runner, BASE_FILE_PATTERNS};
+use super::common::runner::{BASE_FILE_PATTERNS, setup_package_with_file_patterns, test_runner};
 use assert_fs::fixture::PathChild;
 use indoc::formatdoc;
 use shared::test_utils::output_assert::assert_stdout_contains;

@@ -9,9 +9,9 @@ use cheatnet::constants::build_testing_state;
 use cheatnet::forking::{cache::CACHE_VERSION, state::ForkStateReader};
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader};
+use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
 use conversions::string::TryFromHexStr;
-use conversions::IntoConv;
 use futures::future::join_all;
 use runtime::EnhancedHintError;
 use serde_json::Value;
@@ -419,13 +419,11 @@ async fn using_specified_block_nb_is_cached() {
             "0x0"
         );
         assert_eq!(
-            cache["class_hash_at"].as_object().unwrap()
-                ["0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9"],
+            cache["class_hash_at"].as_object().unwrap()["0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9"],
             "0x6a7eb29ee38b0a0b198e39ed6ad458d2e460264b463351a0acfc05822d61550"
         );
 
-        match cache["compiled_contract_class"].as_object().unwrap()
-            ["0x6a7eb29ee38b0a0b198e39ed6ad458d2e460264b463351a0acfc05822d61550"]
+        match cache["compiled_contract_class"].as_object().unwrap()["0x6a7eb29ee38b0a0b198e39ed6ad458d2e460264b463351a0acfc05822d61550"]
         {
             Value::Object(_) => {}
             _ => panic!("The compiled_contract_class entry is not an object"),

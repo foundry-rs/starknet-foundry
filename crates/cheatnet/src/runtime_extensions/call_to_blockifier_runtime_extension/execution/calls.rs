@@ -3,8 +3,8 @@ use blockifier::{
         entry_point::{CallEntryPoint, CallType},
         execution_utils::ReadOnlySegment,
         syscalls::{
-            hint_processor::{create_retdata_segment, SyscallExecutionError, SyscallHintProcessor},
             SyscallResult,
+            hint_processor::{SyscallExecutionError, SyscallHintProcessor, create_retdata_segment},
         },
     },
     transaction::transaction_utils::update_remaining_gas,

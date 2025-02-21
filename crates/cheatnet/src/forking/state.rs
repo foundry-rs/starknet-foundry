@@ -33,7 +33,7 @@ use std::future::Future;
 use std::io::Read;
 use tokio::runtime::Handle;
 use tokio::task;
-use universal_sierra_compiler_api::{compile_sierra, SierraType};
+use universal_sierra_compiler_api::{SierraType, compile_sierra};
 use url::Url;
 
 #[derive(Debug)]
@@ -129,7 +129,8 @@ impl StateReader for ForkStateReader {
         )) {
             Ok(value) => {
                 let value_sf = value.into_();
-                self.cache.borrow_mut()
+                self.cache
+                    .borrow_mut()
                     .cache_get_storage_at(contract_address, key, value_sf);
                 Ok(value_sf)
             }
@@ -141,7 +142,7 @@ impl StateReader for ForkStateReader {
                     Felt::default(),
                 );
                 Ok(Felt::default())
-            },
+            }
             Err(x) => Err(StateReadError(format!(
                 "Unable to get storage at address: {contract_address:?} and key: {key:?} from fork ({x})"
             ))),

@@ -1,6 +1,6 @@
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
+use test_utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 

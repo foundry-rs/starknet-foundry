@@ -3,7 +3,7 @@ use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
 use crate::test_case_summary::{Single, TestCaseSummary};
-use anyhow::{ensure, Result};
+use anyhow::{Result, ensure};
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::state::cached_state::CachedState;
 use cairo_lang_runner::{RunResult, SierraCasmRunner};
@@ -14,13 +14,13 @@ use camino::{Utf8Path, Utf8PathBuf};
 use casm::{get_assembled_program, run_assembled_program};
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
-    get_all_used_resources, update_top_call_execution_resources, update_top_call_l1_resources,
-    update_top_call_vm_trace, ForgeExtension, ForgeRuntime,
+    ForgeExtension, ForgeRuntime, get_all_used_resources, update_top_call_execution_resources,
+    update_top_call_l1_resources, update_top_call_vm_trace,
 };
 use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredError, ExtendedStateReader,

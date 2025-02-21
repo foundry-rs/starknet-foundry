@@ -31,7 +31,7 @@ async fn test_happy_case_from_sncast_config() {
 
     assert_stderr_contains(
         output,
-        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]"
+        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]",
     );
 }
 
@@ -57,7 +57,7 @@ async fn test_happy_case_predefined_network() {
 
     assert_stderr_contains(
         output,
-        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]"
+        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]",
     );
 }
 
@@ -111,7 +111,7 @@ async fn test_network_with_url_defined_in_config_toml() {
 
     assert_stderr_contains(
         output,
-        "Error: The argument '--network' cannot be used when `url` is defined in `snfoundry.toml` for the active profile"
+        "Error: The argument '--network' cannot be used when `url` is defined in `snfoundry.toml` for the active profile",
     );
 }
 
@@ -136,7 +136,7 @@ async fn test_happy_case_from_cli_no_scarb() {
 
     assert_stderr_contains(
         output,
-        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]"
+        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]",
     );
 }
 

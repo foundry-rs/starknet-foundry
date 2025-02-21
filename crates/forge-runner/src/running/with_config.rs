@@ -1,13 +1,13 @@
 use crate::{
     function_args,
     package_tests::{
+        TestDetails,
         raw::TestTargetRaw,
         with_config::{TestCaseWithConfig, TestTargetWithConfig},
-        TestDetails,
     },
     running::config_run::run_config_pass,
 };
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use cairo_lang_sierra::{
     extensions::core::{CoreLibfunc, CoreType},
     ids::ConcreteTypeId,
@@ -20,7 +20,7 @@ use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, sync::Arc};
-use universal_sierra_compiler_api::{compile_sierra_at_path, SierraType};
+use universal_sierra_compiler_api::{SierraType, compile_sierra_at_path};
 
 pub fn test_target_with_config(test_target_raw: TestTargetRaw) -> Result<TestTargetWithConfig> {
     macro_rules! by_id {

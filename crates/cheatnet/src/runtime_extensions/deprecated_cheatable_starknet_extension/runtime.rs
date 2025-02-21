@@ -2,10 +2,10 @@ use crate::runtime_extensions::cheatable_starknet_runtime_extension::felt_from_p
 use anyhow::Result;
 use blockifier::execution::{
     deprecated_syscalls::{
-        hint_processor::DeprecatedSyscallHintProcessor, DeprecatedSyscallSelector,
+        DeprecatedSyscallSelector, hint_processor::DeprecatedSyscallHintProcessor,
     },
     hint_code,
-    syscalls::{hint_processor::SyscallExecutionError, SyscallResult},
+    syscalls::{SyscallResult, hint_processor::SyscallExecutionError},
 };
 use cairo_vm::{
     hint_processor::{

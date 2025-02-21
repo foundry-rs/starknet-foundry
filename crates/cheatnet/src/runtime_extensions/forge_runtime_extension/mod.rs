@@ -2,23 +2,23 @@ use self::contracts_data::ContractsData;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
 use crate::runtime_extensions::{
     call_to_blockifier_runtime_extension::{
-        rpc::{CallFailure, CallResult, UsedResources},
         CallToBlockifierRuntime,
+        rpc::{CallFailure, CallResult, UsedResources},
     },
     cheatable_starknet_runtime_extension::SyscallSelector,
     common::{get_relocated_vm_trace, sum_syscall_counters},
     forge_runtime_extension::cheatcodes::{
+        CheatcodeError,
         declare::declare,
         deploy::{deploy, deploy_at},
         generate_random_felt::generate_random_felt,
         get_class_hash::get_class_hash,
         l1_handler_execute::l1_handler_execute,
         storage::{calculate_variable_address, load, store},
-        CheatcodeError,
     },
 };
 use crate::state::CallTraceNode;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use blockifier::state::errors::StateError;
 use blockifier::{
     context::TransactionContext,
