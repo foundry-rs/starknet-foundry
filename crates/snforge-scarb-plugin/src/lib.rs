@@ -1,3 +1,4 @@
+#![warn(rust_2024_compatibility)]
 use attributes::fuzzer;
 use attributes::{
     available_gas::available_gas, fork::fork, fuzzer::fuzzer, ignore::ignore,

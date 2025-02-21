@@ -473,7 +473,10 @@ mod tests {
             .run()
             .unwrap();
 
-        env::set_var("ENV_URL_FORK234980670176", "http://some.rpc.url_from_env");
+        // SAFETY: This value is only read here and is not modified by other tests.
+        unsafe {
+            env::set_var("ENV_URL_FORK234980670176", "http://some.rpc.url_from_env");
+        }
         let config = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
             &scarb_metadata.workspace.members[0],
