@@ -278,14 +278,17 @@ fn check_requirements(output_on_success: bool) -> Result<()> {
         name: "Scarb".to_string(),
         command: RefCell::new(ScarbCommand::new().arg("--version").command()),
         minimal_version: MINIMAL_SCARB_VERSION,
+        minimal_recommended_version: Some(MINIMAL_RECOMMENDED_SCARB_VERSION),
         helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
             .to_string(),
         version_parser: create_version_parser("Scarb", r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)"),
     });
+
     requirements_checker.add_requirement(Requirement {
         name: "Universal Sierra Compiler".to_string(),
         command: RefCell::new(UniversalSierraCompilerCommand::new().arg("--version").command()),
         minimal_version: MINIMAL_USC_VERSION,
+        minimal_recommended_version: None,
         helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),
         version_parser: create_version_parser(
             "Universal Sierra Compiler",
@@ -305,6 +308,7 @@ fn check_requirements(output_on_success: bool) -> Result<()> {
                 cmd
             }),
             minimal_version: MINIMAL_RUST_VERSION,
+            minimal_recommended_version: None,
             version_parser: create_version_parser(
                 "Rust",
                 r"rustc (?<version>[0-9]+.[0-9]+.[0-9]+)",
@@ -314,11 +318,6 @@ fn check_requirements(output_on_success: bool) -> Result<()> {
         });
 
         requirements_checker.check()?;
-    }
-    if scarb_version >= MINIMAL_SCARB_VERSION && scarb_version < MINIMAL_RECOMMENDED_SCARB_VERSION {
-        println!(
-            "⚠️  Scarb is outdated. We recommend updating to at least version {MINIMAL_RECOMMENDED_SCARB_VERSION}"
-        );
     }
 
     Ok(())

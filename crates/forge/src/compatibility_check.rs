@@ -12,6 +12,7 @@ pub struct Requirement<'a> {
     pub version_parser: Box<VersionParser<'a>>,
     pub helper_text: String,
     pub minimal_version: Version,
+    pub minimal_recommended_version: Option<Version>,
 }
 
 pub struct RequirementsChecker<'a> {
@@ -52,15 +53,29 @@ impl<'a> RequirementsChecker<'a> {
         for requirement in &self.requirements {
             let raw_version = get_raw_version(&requirement.name, &requirement.command)?;
             let version = (requirement.version_parser)(&raw_version)?;
-            let is_valid = version >= requirement.minimal_version;
-            let command_output = if is_valid {
-                format!("✅ {} {}", requirement.name, version)
+            let is_valid = if let Some(minimal_recommended_version) =
+                &requirement.minimal_recommended_version
+            {
+                minimal_recommended_version <= &version
             } else {
-                all_valid = false;
-                format!(
-                    "❌ {} Version {} doesn't satisfy minimum {}\n{}",
-                    requirement.name, version, requirement.minimal_version, requirement.helper_text
-                )
+                requirement.minimal_version <= version
+            };
+            let command_output = match (is_valid, &requirement.minimal_recommended_version) {
+                (true, _) => format!("✅ {} {}", requirement.name, version),
+                (false, Some(minimal_recommended_version)) => format!(
+                    "⚠️  {} Version {} doesn't satisfy minimum recommended {}\n{}",
+                    requirement.name, version, minimal_recommended_version, requirement.helper_text
+                ),
+                (false, None) => {
+                    all_valid = false;
+                    format!(
+                        "❌ {} Version {} doesn't satisfy minimum {}\n{}",
+                        requirement.name,
+                        version,
+                        requirement.minimal_version,
+                        requirement.helper_text
+                    )
+                }
             };
 
             validation_output += command_output.as_str();
@@ -118,11 +133,13 @@ mod tests {
             helper_text: "Follow instructions from https://www.rust-lang.org/tools/install"
                 .to_string(),
             minimal_version: Version::new(1, 80, 1),
+            minimal_recommended_version: None,
         });
         requirements_checker.add_requirement(Requirement {
             name: "Scarb".to_string(),
             command: RefCell::new(ScarbCommand::new().arg("--version").command()),
             minimal_version: Version::new(2, 7, 0),
+            minimal_recommended_version: None,
             helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
                 .to_string(),
             version_parser: create_version_parser(
@@ -134,6 +151,7 @@ mod tests {
             name: "Universal Sierra Compiler".to_string(),
             command: RefCell::new(UniversalSierraCompilerCommand::new().arg("--version").command()),
             minimal_version: Version::new(2, 0, 0),
+             minimal_recommended_version: None,
             helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),
             version_parser: create_version_parser(
                 "Universal Sierra Compiler",
@@ -166,6 +184,7 @@ mod tests {
             helper_text: "Follow instructions from https://www.rust-lang.org/tools/install"
                 .to_string(),
             minimal_version: Version::new(999, 0, 0),
+            minimal_recommended_version: None,
         });
 
         let (validation_output, is_valid) =
