@@ -51,7 +51,7 @@ pub fn calculate_used_gas(
         computation: computation_resources,
     };
 
-    // FIXME this is the tricky part, how to figure the computation mode here
+    let use_kzg_da = transaction_context.block_context.block_info().use_kzg_da;
     Ok(transaction_resources.to_gas_vector(
         versioned_constants,
         // FIXME actually check it
