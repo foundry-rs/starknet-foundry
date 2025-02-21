@@ -22,12 +22,14 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt>> {
     .expect("Could not create entry point panic_data matching regex");
 
     if let Some(_captures) = re_felt_array.captures(err) {
-        let panic_data_felts: Vec<Felt> = re_felt_array
-            .captures_iter(err)
-            .filter_map(|cap| cap.get(1))
-            .map(|s| Felt::from_short_string(s.as_str()).unwrap())
-            .collect();
-        return Some(panic_data_felts);
+        if err.contains("Execution failed. Failure reason:\nError in contract") {
+            let panic_data_felts: Vec<Felt> = re_felt_array
+                .captures_iter(err)
+                .filter_map(|cap| cap.get(1))
+                .map(|s| Felt::from_short_string(s.as_str()).unwrap())
+                .collect();
+            return Some(panic_data_felts);
+        }
     }
 
     if let Some(captures) = re_string.captures(err) {
@@ -65,12 +67,10 @@ mod test {
                     Got an exception while executing a hint: Execution failed. Failure reason:
                     Error in contract (contract address: 0x03cda836debfed3f83aa981d7a31733da3ae4f903dde9d833509d2f985d52241, class hash: 0x07ca8b953cb041ee517951d34880631e537682103870b9b018a7b493363b9b63, selector: 0x00a4695e9e8c278609a8e9362d5abe9852a904da970c7de84f0456c777d21137):
                     0x50414e4943 ('PANIC').
-                    End of trace
                     "
                 ),
                     Some(&vec![Felt::from(344_693_033_283_u64)]); "felt")]
     #[test_case(indoc!(r"
-                    Beginning of trace
                     Got an exception while executing a hint: Execution failed. Failure reason:
                     Error in contract (contract address: 0x03cda836debfed3f83aa981d7a31733da3ae4f903dde9d833509d2f985d52241, class hash: 0x07ca8b953cb041ee517951d34880631e537682103870b9b018a7b493363b9b63, selector: 0x00a4695e9e8c278609a8e9362d5abe9852a904da970c7de84f0456c777d21137):
                     (0x54687265652073616420746967657273206174652077686561742e2054776f ('Three sad tigers ate wheat. Two'), 0x2074696765727320776572652066756c6c2e20546865206f74686572207469 (' tigers were full. The other ti'),
