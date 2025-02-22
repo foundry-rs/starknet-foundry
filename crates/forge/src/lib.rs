@@ -186,6 +186,10 @@ pub struct TestArgs {
     #[arg(long)]
     max_n_steps: Option<u32>,
 
+    /// Exclude tests matching the specified filter pattern
+    #[arg(long)]
+    exclude_filter: Option<String>,
+
     /// Specify features to enable
     #[command(flatten)]
     pub features: FeaturesSpec,
@@ -209,7 +213,7 @@ pub struct NewArgs {
     /// Do not initialize a new Git repository
     #[arg(long)]
     no_vcs: bool,
-    /// Try to create the project even if the specified directory at <PATH> is not empty, which can result in overwriting existing files
+    /// Try to create the project even if the specified directory at <PATH> is not empty
     #[arg(long)]
     overwrite: bool,
 }
