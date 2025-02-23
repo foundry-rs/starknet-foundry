@@ -40,6 +40,21 @@ fn test_coverage_project_and_pass_args() {
 fn test_fail_on_scarb_version_lt_2_8_0() {
     let temp = setup_package("coverage_project");
 
+    // By default, `starknet` and `assert_macros` are set to the ones compatible with minimal recommended scar version
+    // in `setup_package` function. Here, we need to change it to version compatible with scarb 2.7.1, otherwise, we will
+    // get "Version solving failed" error from scarb.
+    let manifest_path = temp.child("Scarb.toml");
+
+    let mut scarb_toml = fs::read_to_string(&manifest_path)
+        .unwrap()
+        .parse::<DocumentMut>()
+        .unwrap();
+
+    scarb_toml["dependencies"]["starknet"] = value("2.4.1");
+    scarb_toml["dependencies"]["assert_macros"] = value("0.1.0");
+
+    manifest_path.write_str(&scarb_toml.to_string()).unwrap();
+
     let output = test_runner(&temp).arg("--coverage").assert().failure();
 
     assert_stdout_contains(
