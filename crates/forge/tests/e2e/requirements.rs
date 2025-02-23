@@ -35,7 +35,7 @@ fn happy_path() {
 
 #[test]
 #[cfg_attr(not(feature = "scarb_2_7_1"), ignore)]
-fn test_warning_on_outdated_scarb() {
+fn test_warning_on_scarb_version_below_recommended() {
     let temp = setup_package("simple_package");
     let output = runner(&temp).arg("check-requirements").assert();
 
