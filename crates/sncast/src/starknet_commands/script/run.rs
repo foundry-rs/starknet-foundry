@@ -8,19 +8,14 @@ use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
 use cairo_lang_casm::hints::Hint;
-use cairo_lang_casm::instructions::Instruction;
-use cairo_lang_runnable_utils::builder::{
-    create_code_footer, create_entry_code_from_params, BuildError, EntryCodeConfig, RunnableBuilder,
-};
+use cairo_lang_runnable_utils::builder::{create_code_footer, EntryCodeConfig, RunnableBuilder};
 use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{Arg, RunResultValue, SierraCasmRunner};
-use cairo_lang_sierra::extensions::ConcreteType;
-use cairo_lang_sierra::program::{Function, VersionedProgram};
+use cairo_lang_sierra::program::VersionedProgram;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::serde::deserialize_program::HintParams;
-use cairo_vm::types::builtin_name::BuiltinName;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
@@ -319,7 +314,9 @@ pub fn run(
         .context("Failed to find main function in script - please make sure `sierra-replace-ids` is not set to `false` for `dev` profile in script's Scarb.toml")?;
 
     let entry_code_config = EntryCodeConfig::testing();
-    let (entry_code, builtins) = create_entry_code(&builder, func, entry_code_config)?;
+    let casm_program_wraper_info = builder.create_wrapper_info(func, entry_code_config)?;
+    let entry_code = casm_program_wraper_info.header;
+    let builtins = casm_program_wraper_info.builtins;
     let footer = create_code_footer();
 
     // import from cairo-lang-runner
@@ -453,34 +450,6 @@ fn inject_lib_artifact(
 
     artifacts.insert(SCRIPT_LIB_ARTIFACT_NAME.to_string(), lib_artifacts);
     Ok(artifacts.clone())
-}
-
-// Copied from https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runnable-utils/src/builder.rs#L193
-// TODO(#2953)
-fn create_entry_code(
-    builder: &RunnableBuilder,
-    func: &Function,
-    config: EntryCodeConfig,
-) -> Result<(Vec<Instruction>, Vec<BuiltinName>), BuildError> {
-    let param_types = builder.generic_id_and_size_from_concrete(&func.signature.param_types);
-    let return_types = builder.generic_id_and_size_from_concrete(&func.signature.ret_types);
-
-    let entry_point = func.entry_point.0;
-    let code_offset =
-        builder.casm_program().debug_info.sierra_statement_info[entry_point].start_offset;
-    // Finalizing for proof only if all returned values are builtins or droppable.
-    let droppable_return_value = func.signature.ret_types.iter().all(|ty| {
-        let info = builder.registry().get_type(ty).unwrap().info();
-        info.droppable || !builder.is_user_arg_type(&info.long_id.generic_id)
-    });
-    if !droppable_return_value {
-        assert!(
-            !config.finalize_segment_arena,
-            "Cannot finalize the segment arena when returning non-droppable values."
-        );
-    }
-
-    create_entry_code_from_params(&param_types, &return_types, code_offset, config)
 }
 
 fn hints_to_params(
