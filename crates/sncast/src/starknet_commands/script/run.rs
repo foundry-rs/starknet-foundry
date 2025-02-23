@@ -314,9 +314,9 @@ pub fn run(
         .context("Failed to find main function in script - please make sure `sierra-replace-ids` is not set to `false` for `dev` profile in script's Scarb.toml")?;
 
     let entry_code_config = EntryCodeConfig::testing();
-    let casm_program_wraper_info = builder.create_wrapper_info(func, entry_code_config)?;
-    let entry_code = casm_program_wraper_info.header;
-    let builtins = casm_program_wraper_info.builtins;
+    let casm_program_wrapper_info = builder.create_wrapper_info(func, entry_code_config)?;
+    let entry_code = casm_program_wrapper_info.header;
+    let builtins = casm_program_wrapper_info.builtins;
     let footer = create_code_footer();
 
     // import from cairo-lang-runner
