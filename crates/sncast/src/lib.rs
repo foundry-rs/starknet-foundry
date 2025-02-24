@@ -47,7 +47,7 @@ use conversions::byte_array::ByteArray;
 
 pub type NestedMap<T> = HashMap<String, HashMap<String, T>>;
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 #[serde(rename_all = "lowercase")]
 pub enum AccountType {
     #[serde(rename = "open_zeppelin")]
@@ -61,13 +61,23 @@ impl FromStr for AccountType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "open_zeppelin" | "oz" => Ok(AccountType::OpenZeppelin),
+            "open_zeppelin" | "open-zeppelin" | "oz" => Ok(AccountType::OpenZeppelin),
             "argent" => Ok(AccountType::Argent),
             "braavos" => Ok(AccountType::Braavos),
             account_type => Err(anyhow!("Invalid account type = {account_type}")),
         }
     }
 }
+
+// impl Display for AccountType {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         match self {
+//             AccountType::OpenZeppelin => write!(f, "open_zeppelin"),
+//             AccountType::Argent => write!(f, "argent"),
+//             AccountType::Braavos => write!(f, "braavos"),
+//         }
+//     }
+// }
 
 impl Display for AccountType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
