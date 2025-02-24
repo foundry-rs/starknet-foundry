@@ -1,18 +1,16 @@
-use conversions::{byte_array::ByteArray, felt::FromShortString};
+use conversions::byte_array::ByteArray;
 use regex::Regex;
 use starknet_types_core::felt::Felt;
 
 #[must_use]
 pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt>> {
-    // Matches panic data formatted with:
-    // https://github.com/starkware-libs/sequencer/blob/8211fbf1e2660884c4a9e67ddd93680495afde12/crates/starknet_api/src/execution_utils.rs
-    let re_felt_array = Regex::new(r"0x[a-fA-F0-9]+ \('([^']*)'\)")
-        .expect("Could not create felt panic_data matching regex");
-
-    let re_string = Regex::new(
-        r#"[\s\S]*Execution failed\. Failure reason:\nError in contract \(.+\):\n"([\s\S]*)"."#,
+    // Regex used to extract panic data from panicking proxy contract
+    let re_felt_array = Regex::new(
+        r"[\s\S]*Execution failed\. Failure reason:\nError in contract \(.+\):\n([\s\S]*).",
     )
     .expect("Could not create string panic_data matching regex");
+
+    let re_hex = Regex::new("0x[0-9a-fA-F]+").expect("Could not create hex matching regex");
 
     // CairoVM returns felts padded to 64 characters after 0x, unlike the spec's 63.
     // This regex (0x[a-fA-F0-9]{0,64}) handles the padded form and is different from the spec.
@@ -21,23 +19,30 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt>> {
     )
     .expect("Could not create entry point panic_data matching regex");
 
-    if let Some(_captures) = re_felt_array.captures(err) {
-        if err.contains("Execution failed. Failure reason:\nError in contract") {
-            let panic_data_felts: Vec<Felt> = re_felt_array
-                .captures_iter(err)
-                .filter_map(|cap| cap.get(1))
-                .map(|s| Felt::from_short_string(s.as_str()).unwrap())
-                .collect();
-            return Some(panic_data_felts);
-        }
-    }
+    if let Some(captures) = re_felt_array.captures(err) {
+        if let Some(panic_data) = captures.get(1) {
+            let string_match_str = panic_data.as_str();
 
-    if let Some(captures) = re_string.captures(err) {
-        if let Some(string_match) = captures.get(1) {
-            let string_match_str = string_match.as_str();
-            let panic_data_felts: Vec<Felt> =
-                ByteArray::from(string_match_str).serialize_with_magic();
-            return Some(panic_data_felts);
+            // Matches panic_data when proxy contract panicked with `ByteArray`
+            if string_match_str.starts_with('\"') {
+                let error = string_match_str.trim_matches('"');
+                let panic_data_felts: Vec<Felt> = ByteArray::from(error).serialize_with_magic();
+
+                return Some(panic_data_felts);
+            }
+
+            // Matches `panic_data` when a proxy contract panics, either:
+            // - with a single Felt "Ox"
+            // - with an array of Felts "("
+            // The difference comes from the `format_panic_data` implementation in `blockifier`.
+            // https://github.com/starkware-libs/sequencer/blob/8211fbf1e2660884c4a9e67ddd93680495afde12/crates/starknet_api/src/execution_utils.rs
+            if string_match_str.starts_with("0x") || string_match_str.starts_with('(') {
+                let panic_data_felts: Vec<Felt> = re_hex
+                    .find_iter(string_match_str)
+                    .map(|s| Felt::from_hex(s.as_str()).unwrap())
+                    .collect();
+                return Some(panic_data_felts);
+            }
         }
     }
 
@@ -64,27 +69,37 @@ mod test {
     use test_case::test_case;
 
     #[test_case(indoc!(r"
+                    Error at pc=0:366:
                     Got an exception while executing a hint: Execution failed. Failure reason:
-                    Error in contract (contract address: 0x03cda836debfed3f83aa981d7a31733da3ae4f903dde9d833509d2f985d52241, class hash: 0x07ca8b953cb041ee517951d34880631e537682103870b9b018a7b493363b9b63, selector: 0x00a4695e9e8c278609a8e9362d5abe9852a904da970c7de84f0456c777d21137):
-                    0x50414e4943 ('PANIC').
+                    Error in contract (contract address: 0x0033be52b9269700771b680f5905b305864f46e78bfbe79428f4bf7a933fb02f, class hash: 0x031b4bdf7360269d8bc059935f2e44d3ad487cbb781ff57527fd4b5ec13bf659, selector: 0x032e90fe8c4355e4732f08747d73146ef03dcd019ec3498c089dce91cf40aadc):
+                    0x1.
                     "
                 ),
-                    Some(&vec![Felt::from(344_693_033_283_u64)]); "felt")]
+                    Some(&vec![Felt::from(1)]); "non ascii felt")]
+    #[test_case(indoc!(r"
+                    Error at pc=0:366:
+                    Got an exception while executing a hint: Execution failed. Failure reason:
+                    Error in contract (contract address: 0x0033be52b9269700771b680f5905b305864f46e78bfbe79428f4bf7a933fb02f, class hash: 0x031b4bdf7360269d8bc059935f2e44d3ad487cbb781ff57527fd4b5ec13bf659, selector: 0x032e90fe8c4355e4732f08747d73146ef03dcd019ec3498c089dce91cf40aadc):
+                    0x41 ('A').
+                    "
+                ),
+                    Some(&vec![Felt::from(65)]); "ascii felt")]
+    #[test_case(indoc!(r"
+                    Error at pc=0:366:
+                    Got an exception while executing a hint: Execution failed. Failure reason:
+                    Error in contract (contract address: 0x0033be52b9269700771b680f5905b305864f46e78bfbe79428f4bf7a933fb02f, class hash: 0x031b4bdf7360269d8bc059935f2e44d3ad487cbb781ff57527fd4b5ec13bf659, selector: 0x032e90fe8c4355e4732f08747d73146ef03dcd019ec3498c089dce91cf40aadc):
+                    (0x1, 0x41 ('A'), 0x2, 0x42 ('B')).
+                    "
+                ),
+                    Some(&vec![Felt::from(1), Felt::from(65), Felt::from(2), Felt::from(66)]); "mixed felts")]
     #[test_case(indoc!(r"
                     Got an exception while executing a hint: Execution failed. Failure reason:
                     Error in contract (contract address: 0x03cda836debfed3f83aa981d7a31733da3ae4f903dde9d833509d2f985d52241, class hash: 0x07ca8b953cb041ee517951d34880631e537682103870b9b018a7b493363b9b63, selector: 0x00a4695e9e8c278609a8e9362d5abe9852a904da970c7de84f0456c777d21137):
                     (0x54687265652073616420746967657273206174652077686561742e2054776f ('Three sad tigers ate wheat. Two'), 0x2074696765727320776572652066756c6c2e20546865206f74686572207469 (' tigers were full. The other ti'),
-                    0x676572206e6f7420736f206d75636800000000000000000000000000000000 ('ger not so much')).
+                    0x676572206e6f7420736f206d756368 ('ger not so much')).
                     "
                 ),
                     Some(&vec![Felt::from_hex_unchecked("0x54687265652073616420746967657273206174652077686561742e2054776f"), Felt::from_hex_unchecked("0x2074696765727320776572652066756c6c2e20546865206f74686572207469"), Felt::from_hex_unchecked("0x676572206e6f7420736f206d756368")]); "felt array")]
-    #[test_case(indoc!(r"
-                    Got an exception while executing a hint: Execution failed. Failure reason:
-                    Error in contract (contract address: 0x03cda836debfed3f83aa981d7a31733da3ae4f903dde9d833509d2f985d52241, class hash: 0x07ca8b953cb041ee517951d34880631e537682103870b9b018a7b493363b9b63, selector: 0x00a4695e9e8c278609a8e9362d5abe9852a904da970c7de84f0456c777d21137):
-                    0x0 ('').
-                    "
-                ),
-                    Some(&vec![Felt::from(0)]); "empty")]
     fn extracting_plain_panic_data(data: &str, expected: Option<&Vec<Felt>>) {
         assert_eq!(try_extract_panic_data(data), expected.cloned());
     }
