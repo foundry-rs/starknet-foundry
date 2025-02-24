@@ -27,7 +27,7 @@ Then run:
 ```shell
 $ sncast \
     verify \
-    --contract-address 0x0589a8b8bf819b7820cb699ea1f6c409bc012c9b9160106ddc3dacd6a89653cf \
+    --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
     --contract-name HelloSncast \
     --verifier walnut \
     --network sepolia
@@ -45,7 +45,7 @@ $ sncast \
     Are you sure you want to proceed? (Y/n): Y
 
 command: verify
-message: Contract verification has started. You can check the verification status at the following link: https://api.walnut.dev/v1/verification/77f1d905-fdb4-4280-b7d6-57cd029d1259/status.
+message: Contract verification has started. You can check the verification status at the following link: https://app.walnut.dev/verification/status/77f1d905-fdb4-4280-b7d6-57cd029d1259.
 ```
 </details>
 <br>
