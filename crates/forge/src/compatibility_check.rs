@@ -15,10 +15,10 @@ pub struct Requirement<'a> {
     pub minimal_recommended_version: Option<Version>,
 }
 
-impl<'a> Requirement<'a> {
-    pub fn get_command_output(&self, version: Version) -> (String, bool) {
+impl Requirement<'_> {
+    pub fn get_command_output(&self, version: &Version) -> (String, bool) {
         let mut valid = true;
-        let (status, min_version_to_display) = if version < self.minimal_version {
+        let (status, min_version_to_display) = if version < &self.minimal_version {
             valid = false;
             (
                 "❌",
@@ -27,13 +27,13 @@ impl<'a> Requirement<'a> {
                     .unwrap_or(&self.minimal_version),
             )
         } else if let Some(minimal_recommended_version) = &self.minimal_recommended_version {
-            if version < *minimal_recommended_version {
+            if version < minimal_recommended_version {
                 ("⚠️", minimal_recommended_version)
             } else {
-                ("✅", &version)
+                ("✅", version)
             }
         } else {
-            ("✅", &version)
+            ("✅", version)
         };
 
         let command_output = format!(
@@ -83,7 +83,7 @@ impl<'a> RequirementsChecker<'a> {
             let raw_version = get_raw_version(&requirement.name, &requirement.command)?;
             let version = (requirement.version_parser)(&raw_version)?;
 
-            let (command_output, req_valid) = requirement.get_command_output(version);
+            let (command_output, req_valid) = requirement.get_command_output(&version);
             all_valid &= req_valid;
 
             validation_output += command_output.as_str();
