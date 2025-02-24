@@ -37,7 +37,7 @@ use runtime::{ExtendedRuntime, StarknetRuntime};
 use starknet_types_core::felt::Felt;
 
 // TODO(#2957) remove copied code
-// Copied from https://github.com/starkware-libs/sequencer/blob/545761f29b859d06f125bd6c332b6182845734f0/crates/blockifier/src/execution/entry_point_execution.rs#L180
+// Copied from https://github.com/starkware-libs/sequencer/blob/545761f29b859d06f125bd6c332b6182845734f0/crates/blockifier/src/execution/entry_point_execution.rs#L145
 fn prepare_program_extra_data(
     runner: &mut CairoRunner,
     contract_class: &CompiledClassV1,
