@@ -5,7 +5,7 @@ use starknet_types_core::felt::Felt;
 #[must_use]
 pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt>> {
     // Regex used to extract panic data from panicking proxy contract
-    let re_felt_array = Regex::new(
+    let re_error_prefix = Regex::new(
         r"[\s\S]*Execution failed\. Failure reason:\nError in contract \(.+\):\n([\s\S]*).",
     )
     .expect("Could not create string panic_data matching regex");
@@ -19,7 +19,7 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt>> {
     )
     .expect("Could not create entry point panic_data matching regex");
 
-    if let Some(captures) = re_felt_array.captures(err) {
+    if let Some(captures) = re_error_prefix.captures(err) {
         if let Some(panic_data) = captures.get(1) {
             let string_match_str = panic_data.as_str();
 
