@@ -37,7 +37,7 @@ In this section, we will walk through the process of installing Starknet Foundry
 
 > 📝 **Note**
 >
-> Ensure all requirements are installed and follow the required minimum versions.
+> Ensure all requirements are installed and follow the required minimal versions.
 > Starknet Foundry will not run if not following these requirements.
 
 To use Starknet Foundry, you need:
