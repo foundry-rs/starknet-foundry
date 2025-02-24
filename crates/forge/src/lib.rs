@@ -1,5 +1,4 @@
 use crate::compatibility_check::{create_version_parser, Requirement, RequirementsChecker};
-use anyhow::anyhow;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
@@ -8,7 +7,6 @@ use run_tests::workspace::run_for_workspace;
 use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
-use shared::print::print_as_warning;
 use std::cell::RefCell;
 use std::ffi::OsString;
 use std::process::Command;
@@ -17,7 +15,6 @@ use tokio::runtime::Builder;
 use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
 pub mod block_number_map;
-mod clean;
 mod combine_configs;
 mod compatibility_check;
 mod init;
@@ -90,35 +87,10 @@ enum ForgeSubcommand {
         #[command(flatten)]
         args: NewArgs,
     },
-    /// Clean `snforge` generated directories
-    Clean {
-        #[command(flatten)]
-        args: CleanArgs,
-    },
     /// Clean Forge cache directory
     CleanCache {},
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
-}
-
-#[derive(Parser, Debug)]
-pub struct CleanArgs {
-    #[arg(num_args = 1.., required = true)]
-    pub clean_components: Vec<CleanComponent>,
-}
-
-#[derive(ValueEnum, Debug, Clone, PartialEq, Eq)]
-pub enum CleanComponent {
-    /// Clean the `coverage` directory
-    Coverage,
-    /// Clean the `profile` directory
-    Profile,
-    /// Clean the `.snfoundry_cache` directory
-    Cache,
-    /// Clean the `snfoundry_trace` directory
-    Trace,
-    /// Clean all generated directories
-    All,
 }
 
 #[derive(ValueEnum, Debug, Clone)]
@@ -231,14 +203,7 @@ pub fn main_execution() -> Result<ExitStatus> {
             new::new(args)?;
             Ok(ExitStatus::Success)
         }
-        ForgeSubcommand::Clean { args } => {
-            clean::clean(args)?;
-            Ok(ExitStatus::Success)
-        }
         ForgeSubcommand::CleanCache {} => {
-            print_as_warning(&anyhow!(
-                "`snforge clean-cache` is deprecated and will be removed in the future. Use `snforge clean cache` instead"
-            ));
             let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
             let cache_dir = scarb_metadata.workspace.root.join(CACHE_DIR);
 
