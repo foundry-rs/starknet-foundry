@@ -15,6 +15,35 @@ pub struct Requirement<'a> {
     pub minimal_recommended_version: Option<Version>,
 }
 
+impl<'a> Requirement<'a> {
+    pub fn get_command_output(&self, version: Version) -> (String, bool) {
+        let mut valid = true;
+        let (status, min_version_to_display) = if version < self.minimal_version {
+            valid = false;
+            (
+                "❌",
+                self.minimal_recommended_version
+                    .as_ref()
+                    .unwrap_or(&self.minimal_version),
+            )
+        } else if let Some(minimal_recommended_version) = &self.minimal_recommended_version {
+            if version < *minimal_recommended_version {
+                ("⚠️", minimal_recommended_version)
+            } else {
+                ("✅", &version)
+            }
+        } else {
+            ("✅", &version)
+        };
+
+        let command_output = format!(
+            "{} {} Version {} doesn't satisfy minimum {}\n{}",
+            status, self.name, version, min_version_to_display, self.helper_text
+        );
+        (command_output, valid)
+    }
+}
+
 pub struct RequirementsChecker<'a> {
     output_on_success: bool,
     requirements: Vec<Requirement<'a>>,
@@ -53,30 +82,9 @@ impl<'a> RequirementsChecker<'a> {
         for requirement in &self.requirements {
             let raw_version = get_raw_version(&requirement.name, &requirement.command)?;
             let version = (requirement.version_parser)(&raw_version)?;
-            let is_valid = if let Some(minimal_recommended_version) =
-                &requirement.minimal_recommended_version
-            {
-                minimal_recommended_version <= &version
-            } else {
-                requirement.minimal_version <= version
-            };
-            let command_output = match (is_valid, &requirement.minimal_recommended_version) {
-                (true, _) => format!("✅ {} {}", requirement.name, version),
-                (false, Some(minimal_recommended_version)) => format!(
-                    "⚠️  {} Version {} doesn't satisfy minimum recommended {}\n{}",
-                    requirement.name, version, minimal_recommended_version, requirement.helper_text
-                ),
-                (false, None) => {
-                    all_valid = false;
-                    format!(
-                        "❌ {} Version {} doesn't satisfy minimum {}\n{}",
-                        requirement.name,
-                        version,
-                        requirement.minimal_version,
-                        requirement.helper_text
-                    )
-                }
-            };
+
+            let (command_output, req_valid) = requirement.get_command_output(version);
+            all_valid &= req_valid;
 
             validation_output += command_output.as_str();
             validation_output += "\n";
@@ -217,5 +225,29 @@ mod tests {
         assert!(is_valid);
         assert!(validation_output.contains("⚠️  Scarb Version"));
         assert!(validation_output.contains("doesn't satisfy minimum recommended 999.0.0"));
+    }
+
+    #[test]
+    fn failing_requirements_on_both_minimal_versions_defined() {
+        let mut requirements_checker = RequirementsChecker::new(true);
+        requirements_checker.add_requirement(Requirement {
+            name: "Scarb".to_string(),
+            command: RefCell::new(ScarbCommand::new().arg("--version").command()),
+            minimal_version: Version::new(111, 0, 0),
+            minimal_recommended_version: Some(Version::new(999, 0, 0)),
+            helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
+                .to_string(),
+            version_parser: create_version_parser(
+                "Scarb",
+                r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)",
+            ),
+        });
+
+        let (validation_output, is_valid) =
+            requirements_checker.check_and_prepare_output().unwrap();
+
+        assert!(!is_valid);
+        assert!(validation_output.contains("❌ Scarb Version"));
+        assert!(validation_output.contains("doesn't satisfy minimum 999.0.0"));
     }
 }
