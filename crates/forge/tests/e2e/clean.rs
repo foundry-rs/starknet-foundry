@@ -22,7 +22,6 @@ struct CleanComponentsState {
 
 #[test]
 #[cfg(not(target_os = "windows"))]
-#[ignore = "TODO(#2979)"]
 fn test_clean_coverage() {
     let temp_dir = setup_package("coverage_project");
 
@@ -122,7 +121,6 @@ fn test_clean_cache() {
 
 #[test]
 #[cfg(not(target_os = "windows"))]
-#[ignore = "TODO(#2979)"]
 fn test_clean_all() {
     let temp_dir = setup_package("coverage_project");
 
@@ -137,9 +135,16 @@ fn test_clean_all() {
 
     runner(&temp_dir).arg("clean").arg("all").assert().success();
 
+    let expected_state = CleanComponentsState {
+        coverage: false,
+        profile: false,
+        cache: false,
+        trace: false,
+    };
+
     assert_eq!(
         check_clean_components_state(temp_dir.path()),
-        clean_components_state
+        expected_state
     );
 }
 
@@ -170,45 +175,48 @@ fn test_clean_all_and_component() {
 }
 
 fn generate_clean_components(state: CleanComponentsState, temp_dir: &TempDir) {
-    let args = match state {
+    let run_test_runner = |args: &[&str]| {
+        test_runner(temp_dir).args(args).assert().success();
+    };
+
+    match state {
         CleanComponentsState {
             coverage: true,
             trace: true,
             cache: true,
             profile: false,
-        } => {
-            vec!["--coverage"]
-        }
+        } => run_test_runner(&["--coverage"]),
         CleanComponentsState {
             profile: true,
             trace: true,
             cache: true,
             coverage: false,
-        } => {
-            vec!["--build-profile"]
-        }
+        } => run_test_runner(&["--build-profile"]),
         CleanComponentsState {
             trace: true,
             cache: true,
             profile: false,
             coverage: false,
-        } => {
-            vec!["--save-trace-data"]
-        }
+        } => run_test_runner(&["--save-trace-data"]),
         CleanComponentsState {
             coverage: false,
             profile: false,
             trace: false,
             cache: true,
+        } => run_test_runner(&[]),
+        CleanComponentsState {
+            coverage: true,
+            profile: true,
+            trace: true,
+            cache: true,
         } => {
-            vec![]
+            run_test_runner(&["--coverage"]);
+            run_test_runner(&["--build-profile"]);
         }
         state => {
             panic!("Invalid state: {state:?}");
         }
     };
-
-    test_runner(temp_dir).args(&args).assert().success();
 
     assert_eq!(check_clean_components_state(temp_dir.path()), state);
 }
