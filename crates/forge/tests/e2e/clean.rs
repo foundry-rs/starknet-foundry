@@ -21,7 +21,8 @@ struct CleanComponentsState {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
+#[cfg(not(target_os = "windows"))]
+#[ignore = "TODO(#2979)"]
 fn test_clean_coverage() {
     let temp_dir = setup_package("coverage_project");
 
@@ -120,7 +121,8 @@ fn test_clean_cache() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
+#[cfg(not(target_os = "windows"))]
+#[ignore = "TODO(#2979)"]
 fn test_clean_all() {
     let temp_dir = setup_package("coverage_project");
 

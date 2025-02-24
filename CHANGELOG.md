@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - It is now required to include the `#[fuzzer]` attribute for fuzz tests to work
+- Scarb `2.8.5` is now the minimal recommended version. Using Starknet Foundry with versions below it is no longer officially supported and may not work.
 
 #### Deprecated
 

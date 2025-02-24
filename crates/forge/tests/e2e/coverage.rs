@@ -7,7 +7,6 @@ use std::fs;
 use toml_edit::{value, DocumentMut};
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn test_coverage_project() {
     let temp = setup_package("coverage_project");
 
@@ -20,7 +19,6 @@ fn test_coverage_project() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn test_coverage_project_and_pass_args() {
     let temp = setup_package("coverage_project");
 
@@ -36,20 +34,6 @@ fn test_coverage_project_and_pass_args() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_7_1"), ignore)]
-fn test_fail_on_scarb_version_lt_2_8_0() {
-    let temp = setup_package("coverage_project");
-
-    let output = test_runner(&temp).arg("--coverage").assert().failure();
-
-    assert_stdout_contains(
-        output,
-        "[ERROR] Coverage generation requires scarb version >= 2.8.0\n",
-    );
-}
-
-#[test]
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn test_fail_wrong_set_up() {
     let temp = setup_package("coverage_project");
 

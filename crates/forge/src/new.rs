@@ -15,7 +15,7 @@ use toml_edit::{value, Array, ArrayOfTables, DocumentMut, Item, Table, Value};
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 
-const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
+const DEFAULT_ASSERT_MACROS: Version = Version::new(2, 8, 5);
 const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
 
 fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {

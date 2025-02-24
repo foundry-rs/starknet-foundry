@@ -276,7 +276,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
     fn get_starknet_artifacts_path_for_test_build() {
         let temp = setup_package("basic_package");
 
@@ -318,7 +317,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
     fn get_starknet_artifacts_path_for_test_build_when_integration_tests_exist() {
         let temp = setup_package("basic_package");
         let tests_dir = temp.join("tests");
@@ -393,7 +391,7 @@ mod tests {
                 sierra = true
 
                 [dependencies]
-                starknet = "2.5.4"
+                starknet = "2.8.5"
                 "#,
             ))
             .unwrap();
@@ -407,7 +405,7 @@ mod tests {
         assert!(package_matches_version_requirement(
             &scarb_metadata,
             "starknet",
-            &VersionReq::parse("2.5").unwrap(),
+            &VersionReq::parse("2.8").unwrap(),
         )
         .unwrap());
 
@@ -421,7 +419,7 @@ mod tests {
         assert!(!package_matches_version_requirement(
             &scarb_metadata,
             "starknet",
-            &VersionReq::parse("2.8").unwrap(),
+            &VersionReq::parse("2.9").unwrap(),
         )
         .unwrap());
     }
