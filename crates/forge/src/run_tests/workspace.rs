@@ -22,8 +22,10 @@ use std::env;
 #[allow(clippy::too_many_lines)]
 pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
     match args.color {
-        ColorOption::Always => env::set_var("CLICOLOR_FORCE", "1"),
-        ColorOption::Never => env::set_var("CLICOLOR", "0"),
+        // SAFETY: This runs in a single-threaded environment.
+        ColorOption::Always => unsafe { env::set_var("CLICOLOR_FORCE", "1") },
+        // SAFETY: This runs in a single-threaded environment.
+        ColorOption::Never => unsafe { env::set_var("CLICOLOR", "0") },
         ColorOption::Auto => (),
     }
 
@@ -115,9 +117,15 @@ fn extract_failed_tests(
 }
 
 fn set_forge_test_filter(test_filter: String) {
-    env::set_var(SNFORGE_TEST_FILTER, test_filter);
+    // SAFETY: This runs in a single-threaded environment.
+    unsafe {
+        env::set_var(SNFORGE_TEST_FILTER, test_filter);
+    };
 }
 
 fn unset_forge_test_filter() {
-    env::remove_var(SNFORGE_TEST_FILTER);
+    // SAFETY: This runs in a single-threaded environment.
+    unsafe {
+        env::remove_var(SNFORGE_TEST_FILTER);
+    };
 }

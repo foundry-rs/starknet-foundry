@@ -864,7 +864,7 @@ mod tests {
 
     #[test]
     fn test_get_account_data_from_keystore() {
-        env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+        set_keystore_password_env();
         let account = get_account_data_from_keystore(
             "tests/data/keystore/my_account.json",
             &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
@@ -890,7 +890,7 @@ mod tests {
 
     #[test]
     fn test_get_braavos_account_from_keystore_with_multisig_on() {
-        env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+        set_keystore_password_env();
         let err = get_account_data_from_keystore(
             "tests/data/keystore/my_account_braavos_invalid_multisig.json",
             &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
@@ -905,7 +905,7 @@ mod tests {
 
     #[test]
     fn test_get_braavos_account_from_keystore_multiple_signers() {
-        env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+        set_keystore_password_env();
         let err = get_account_data_from_keystore(
             "tests/data/keystore/my_account_braavos_multiple_signers.json",
             &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
@@ -931,5 +931,15 @@ mod tests {
             err.to_string()
                 .contains("Account = user1 not found under network = CUSTOM_CHAIN_ID")
         );
+    }
+
+    fn set_keystore_password_env() {
+        // SAFETY: Tests run in parallel and share the same environment variables.
+        // However, we only set this variable once to a fixed value and never modify or unset it.
+        // The only potential issue would be if a test explicitly required this variable to be unset,
+        // but to the best of our knowledge, no such test exists.
+        unsafe {
+            env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+        };
     }
 }

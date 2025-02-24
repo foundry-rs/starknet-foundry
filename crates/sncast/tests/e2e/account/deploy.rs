@@ -1,4 +1,5 @@
 use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
+use crate::helpers::env::set_keystore_password_env;
 use crate::helpers::fixtures::copy_file;
 use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
@@ -14,7 +15,7 @@ use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
 };
 use starknet::core::types::TransactionReceipt::DeployAccount;
-use std::{env, fs};
+use std::fs;
 use tempfile::{TempDir, tempdir};
 use test_case::test_case;
 
@@ -302,7 +303,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         format!("tests/data/keystore/{account_file}"),
         tempdir.path().join(&account_file),
     );
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_keystore_password_env();
 
     let address = get_address_from_keystore(
         tempdir.path().join(keystore_file).to_str().unwrap(),
@@ -362,7 +363,7 @@ pub async fn test_keystore_already_deployed() {
         "tests/data/keystore/my_account.json",
         tempdir.path().join(account_file),
     );
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -405,7 +406,7 @@ pub async fn test_keystore_key_mismatch() {
         tempdir.path().join(account_file),
     );
 
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -443,7 +444,7 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
         "tests/data/keystore/my_account_undeployed.json",
         tempdir.path().join(account_file),
     );
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -481,7 +482,7 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
         "tests/data/keystore/my_key.json",
         tempdir.path().join(keystore_file),
     );
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -523,7 +524,7 @@ pub async fn test_deploy_keystore_no_status() {
         "tests/data/keystore/my_account_invalid.json",
         tempdir.path().join(account_file),
     );
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -565,7 +566,7 @@ pub async fn test_deploy_keystore_other_args() {
         "tests/data/keystore/my_account_undeployed_happy_case_other_args.json",
         tempdir.path().join(account_file),
     );
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_keystore_password_env();
 
     let address = get_address_from_keystore(
         tempdir.path().join(keystore_file),
