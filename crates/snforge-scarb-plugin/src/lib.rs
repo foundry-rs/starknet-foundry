@@ -19,7 +19,6 @@ mod utils;
 executable_attribute!("snforge_internal_test_executable");
 
 #[attribute_macro]
-#[allow(clippy::needless_pass_by_value)]
 fn __internal_config_statement(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     internal_config_statement(args, item)
 }
@@ -35,7 +34,6 @@ fn __fuzzer_wrapper(args: TokenStream, item: TokenStream) -> ProcMacroResult {
 }
 
 #[attribute_macro]
-#[allow(clippy::needless_pass_by_value)]
 fn test(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     test(args, item)
 }

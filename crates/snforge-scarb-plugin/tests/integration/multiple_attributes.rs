@@ -125,7 +125,7 @@ fn works_with_fuzzer() {
     );
 }
 
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 #[test]
 fn works_with_fuzzer_config_wrapper() {
     let item = TokenStream::new(FN_WITH_SINGLE_FELT252_PARAM.into());

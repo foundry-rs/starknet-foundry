@@ -38,7 +38,7 @@ pub struct Deploy {
     pub rpc: RpcArgs,
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 pub async fn deploy(
     provider: &JsonRpcClient<HttpTransport>,
     accounts_file: Utf8PathBuf,
@@ -178,7 +178,7 @@ async fn deploy_from_accounts_file(
     Ok(result)
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 async fn get_deployment_result(
     provider: &JsonRpcClient<HttpTransport>,
     account_type: AccountType,

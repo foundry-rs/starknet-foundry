@@ -75,7 +75,7 @@ pub fn fuzzer_config(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     extend_with_config_cheatcodes::<FuzzerCollector>(args, item)
 }
 
-#[allow(clippy::ptr_arg)]
+#[expect(clippy::ptr_arg)]
 fn fuzzer_internal(
     args: &TokenStream,
     item: &TokenStream,

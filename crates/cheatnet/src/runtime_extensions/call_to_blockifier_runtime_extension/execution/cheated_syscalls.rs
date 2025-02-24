@@ -38,7 +38,6 @@ use super::calls::{execute_inner_call, execute_library_call};
 use super::execution_info::get_cheated_exec_info_ptr;
 pub type SyscallSelector = DeprecatedSyscallSelector;
 
-#[allow(clippy::needless_pass_by_value)]
 pub fn get_execution_info_syscall(
     _request: EmptyRequest,
     vm: &mut VirtualMachine,

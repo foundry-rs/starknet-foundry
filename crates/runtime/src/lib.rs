@@ -383,14 +383,12 @@ impl<Extension: ExtensionLogic> ResourceTracker for ExtendedRuntime<Extension> {
     }
 }
 
-#[allow(dead_code)]
 #[derive(Debug)]
 pub enum SyscallHandlingResult {
     Forwarded,
     Handled,
 }
 
-#[allow(dead_code)]
 #[derive(Debug)]
 pub enum CheatcodeHandlingResult {
     Forwarded,
@@ -415,7 +413,6 @@ pub trait ExtensionLogic {
         Ok(SyscallHandlingResult::Forwarded)
     }
 
-    #[allow(clippy::trivially_copy_pass_by_ref)]
     fn handle_cheatcode(
         &mut self,
         _selector: &str,

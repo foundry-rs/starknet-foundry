@@ -75,7 +75,7 @@ impl ForkCacheContent {
     }
 }
 
-#[allow(clippy::to_string_trait_impl)]
+#[expect(clippy::to_string_trait_impl)]
 impl ToString for ForkCacheContent {
     fn to_string(&self) -> String {
         serde_json::to_string(self).expect("Could not serialize json cache")

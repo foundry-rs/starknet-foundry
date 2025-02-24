@@ -66,7 +66,7 @@ impl ForkStateReader {
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn other_provider_error<T>(boxed: impl ToString) -> Result<T, StateError> {
     let err_str = boxed.to_string();
 

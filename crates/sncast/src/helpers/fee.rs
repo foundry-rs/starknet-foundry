@@ -37,7 +37,6 @@ impl From<ScriptFeeSettings> for FeeArgs {
 }
 
 impl FeeArgs {
-    #[allow(clippy::too_many_lines)]
     pub async fn try_into_fee_settings<P: Provider>(
         &self,
         provider: P,

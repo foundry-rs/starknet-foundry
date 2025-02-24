@@ -59,7 +59,6 @@ pub struct Create {
     pub silent: bool,
 }
 
-#[allow(clippy::too_many_arguments)]
 pub async fn create(
     account: &str,
     accounts_file: &Utf8PathBuf,
@@ -242,7 +241,6 @@ where
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 fn create_to_keystore(
     private_key: Felt,
     salt: Felt,

@@ -139,7 +139,7 @@ pub struct RunResultWithInfo {
     pub(crate) fuzzer_args: Vec<String>,
 }
 
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 pub fn run_test_case(
     args: Vec<Felt>,
     case: &TestCaseWithResolvedConfig,

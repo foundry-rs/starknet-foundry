@@ -92,7 +92,7 @@ impl CastScriptExtension<'_> {
 impl<'a> ExtensionLogic for CastScriptExtension<'a> {
     type Runtime = StarknetRuntime<'a>;
 
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines)]
     fn handle_cheatcode(
         &mut self,
         selector: &str,
@@ -268,7 +268,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
     }
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 pub fn run(
     module_name: &str,
     metadata: &Metadata,

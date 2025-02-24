@@ -335,7 +335,7 @@ fn serding() {
 }
 
 #[test]
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 fn proxy_storage() {
     let test = test_case!(
         indoc!(
@@ -510,7 +510,6 @@ fn proxy_storage() {
 }
 
 #[test]
-#[allow(clippy::too_many_lines)]
 #[ignore] // Not doable right now in production
 fn proxy_dispatcher_panic() {
     let test = test_case!(

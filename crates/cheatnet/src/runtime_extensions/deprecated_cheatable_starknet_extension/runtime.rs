@@ -134,7 +134,6 @@ impl<Extension: DeprecatedExtensionLogic> HintProcessorLogic
 }
 
 impl<Extension: DeprecatedExtensionLogic> DeprecatedExtendedRuntime<Extension> {
-    #[allow(clippy::too_many_arguments)]
     fn execute_syscall_hint(
         &mut self,
         vm: &mut VirtualMachine,

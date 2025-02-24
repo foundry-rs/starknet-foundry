@@ -140,7 +140,7 @@ pub fn build_profiler_execution_resources(
 }
 
 #[must_use]
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub fn build_profiler_call_entry_point(
     value: CallEntryPoint,
     contracts_data: &ContractsData,

@@ -18,7 +18,6 @@ pub enum DeclareResult {
     AlreadyDeclared(ClassHash),
 }
 
-#[allow(clippy::implicit_hasher)]
 pub fn declare(
     state: &mut dyn State,
     contract_name: &str,

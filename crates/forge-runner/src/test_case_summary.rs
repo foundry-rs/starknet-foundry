@@ -39,12 +39,12 @@ impl GasStatistics {
         }
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(clippy::cast_precision_loss)]
     fn mean(gas_usages: &[u128]) -> f64 {
         (gas_usages.iter().sum::<u128>() / gas_usages.len() as u128) as f64
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(clippy::cast_precision_loss)]
     fn std_deviation(mean: f64, gas_usages: &[u128]) -> f64 {
         let sum_squared_diff = gas_usages
             .iter()
@@ -124,7 +124,7 @@ pub enum TestCaseSummary<T: TestType> {
     Skipped {},
 }
 
-#[allow(clippy::large_enum_variant)]
+#[expect(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub enum AnyTestCaseSummary {
     Fuzzing(TestCaseSummary<Fuzzing>),
@@ -213,7 +213,7 @@ impl TestCaseSummary<Fuzzing> {
 
 impl TestCaseSummary<Single> {
     #[must_use]
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments)]
     pub(crate) fn from_run_result_and_info(
         run_result: RunResult,
         test_case: &TestCaseWithResolvedConfig,

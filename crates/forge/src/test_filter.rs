@@ -32,7 +32,7 @@ pub(crate) enum IgnoredFilter {
 
 impl TestsFilter {
     #[must_use]
-    #[allow(clippy::fn_params_excessive_bools)]
+    #[expect(clippy::fn_params_excessive_bools)]
     pub fn from_flags(
         test_name_filter: Option<String>,
         exact_match: bool,
@@ -159,7 +159,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines)]
     fn filtering_tests() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
@@ -474,7 +474,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines)]
     fn filtering_with_exact_match() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
@@ -768,7 +768,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines)]
     fn filtering_with_include_ignored() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),

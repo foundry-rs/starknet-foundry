@@ -57,7 +57,7 @@ pub fn execute_inner_call(
 }
 
 // blockifier/src/execution/syscalls/hint_processor.rs:577 (execute_library_call)
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 pub fn execute_library_call(
     syscall_handler: &mut SyscallHintProcessor<'_>,
     cheatnet_state: &mut CheatnetState,

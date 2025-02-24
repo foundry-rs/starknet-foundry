@@ -10,8 +10,8 @@ use std::ffi::OsString;
 use std::num::NonZeroU32;
 use std::sync::Arc;
 
-#[allow(clippy::too_many_arguments)]
-#[allow(clippy::fn_params_excessive_bools)]
+#[expect(clippy::too_many_arguments)]
+#[expect(clippy::fn_params_excessive_bools)]
 pub fn combine_configs(
     exit_first: bool,
     fuzzer_runs: Option<NonZeroU32>,
