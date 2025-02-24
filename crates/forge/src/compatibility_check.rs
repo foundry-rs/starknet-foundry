@@ -168,7 +168,7 @@ mod tests {
 
         let (validation_output, is_valid) =
             requirements_checker.check_and_prepare_output().unwrap();
-        println!("validation_output: {validation_output}");
+
         assert!(is_valid);
         assert!(validation_output.contains("✅ Rust"));
         assert!(validation_output.contains("✅ Scarb"));
@@ -247,7 +247,6 @@ mod tests {
         let (validation_output, is_valid) =
             requirements_checker.check_and_prepare_output().unwrap();
 
-        println!("validation_output: {validation_output}");
         assert!(!is_valid);
         assert!(validation_output.contains("❌ Scarb Version"));
         assert!(validation_output.contains("doesn't satisfy minimal 999.0.0"));
