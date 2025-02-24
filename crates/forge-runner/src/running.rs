@@ -1,6 +1,5 @@
 use crate::backtrace::add_backtrace_footer;
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
-// use crate::gas::calculate_used_gas;
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
 use crate::test_case_summary::{Single, TestCaseSummary};
