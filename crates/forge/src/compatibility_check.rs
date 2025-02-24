@@ -193,4 +193,28 @@ mod tests {
         assert!(validation_output.contains("❌ Rust Version"));
         assert!(validation_output.contains("doesn't satisfy minimum 999.0.0"));
     }
+
+    #[test]
+    fn warning_requirements() {
+        let mut requirements_checker = RequirementsChecker::new(true);
+        requirements_checker.add_requirement(Requirement {
+            name: "Scarb".to_string(),
+            command: RefCell::new(ScarbCommand::new().arg("--version").command()),
+            minimal_version: Version::new(2, 8, 5),
+            minimal_recommended_version: Some(Version::new(999, 0, 0)),
+            helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
+                .to_string(),
+            version_parser: create_version_parser(
+                "Scarb",
+                r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)",
+            ),
+        });
+
+        let (validation_output, is_valid) =
+            requirements_checker.check_and_prepare_output().unwrap();
+
+        assert!(is_valid);
+        assert!(validation_output.contains("⚠️  Scarb Version"));
+        assert!(validation_output.contains("doesn't satisfy minimum recommended 999.0.0"));
+    }
 }
