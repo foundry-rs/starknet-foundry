@@ -4,8 +4,8 @@ use cairo_vm::{
     vm::vm_core::VirtualMachine,
 };
 use conversions::{
-    serde::serialize::{raw::RawFeltVec, SerializeToFeltVec},
     IntoConv,
+    serde::serialize::{SerializeToFeltVec, raw::RawFeltVec},
 };
 use starknet_types_core::felt::Felt;
 

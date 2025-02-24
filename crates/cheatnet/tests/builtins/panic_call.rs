@@ -3,9 +3,9 @@ use crate::common::call_contract;
 use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
 use cairo_lang_utils::byte_array::BYTE_ARRAY_MAGIC;
 use cheatnet::state::CheatnetState;
+use conversions::IntoConv;
 use conversions::felt::FromShortString;
 use conversions::string::TryFromHexStr;
-use conversions::IntoConv;
 use starknet_types_core::felt::Felt;
 
 #[test]
@@ -26,7 +26,10 @@ fn call_contract_error() {
         &[Felt::from(420)],
     );
 
-    assert_error(output, "\n    0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 ('Input too long for arguments')\n");
+    assert_error(
+        output,
+        "\n    0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 ('Input too long for arguments')\n",
+    );
 }
 
 #[test]

@@ -1,7 +1,7 @@
 use blockifier::versioned_constants::{EventLimits, VersionedConstants};
 use indoc::formatdoc;
 use std::path::Path;
-use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
+use test_utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
 use test_utils::running_tests::run_test_case;
 
 #[test]
@@ -138,16 +138,22 @@ fn too_many_events() {
     assert_case_output_contains(
         &result,
         "emit_too_many_events",
-        &format!("Got an exception while executing a hint: Exceeded the maximum number of events, number events: {emit_too_many_events}, max number events: {max_n_emitted_events}."),
+        &format!(
+            "Got an exception while executing a hint: Exceeded the maximum number of events, number events: {emit_too_many_events}, max number events: {max_n_emitted_events}."
+        ),
     );
     assert_case_output_contains(
         &result,
         "emit_too_many_data",
-        &format!("Got an exception while executing a hint: Exceeded the maximum data length, data length: {emit_too_many_data}, max data length: {max_data_length}."),
+        &format!(
+            "Got an exception while executing a hint: Exceeded the maximum data length, data length: {emit_too_many_data}, max data length: {max_data_length}."
+        ),
     );
     assert_case_output_contains(
         &result,
         "emit_too_many_keys",
-        &format!("Got an exception while executing a hint: Exceeded the maximum keys length, keys length: {emit_too_many_keys}, max keys length: {max_keys_length}."),
+        &format!(
+            "Got an exception while executing a hint: Exceeded the maximum keys length, keys length: {emit_too_many_keys}, max keys length: {max_keys_length}."
+        ),
     );
 }

@@ -10,8 +10,8 @@ use blockifier::execution::{
     deprecated_syscalls::DeprecatedSyscallSelector,
     execution_utils::ReadOnlySegment,
     syscalls::{
-        hint_processor::SyscallHintProcessor, SyscallRequest, SyscallResponse,
-        SyscallResponseWrapper,
+        SyscallRequest, SyscallResponse, SyscallResponseWrapper,
+        hint_processor::SyscallHintProcessor,
     },
 };
 use cairo_vm::types::relocatable::MaybeRelocatable;
@@ -23,7 +23,7 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use crate::state::CheatnetState;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    call_entry_point, AddressOrClassHash,
+    AddressOrClassHash, call_entry_point,
 };
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::{
     execution::cheated_syscalls::SingleSegmentResponse,
@@ -207,7 +207,7 @@ fn write_call_response(
                 error_data: panic_data,
             },
             CallFailure::Error { msg } => {
-                return Err(HintError::CustomHint(Box::from(msg.to_string())))
+                return Err(HintError::CustomHint(Box::from(msg.to_string())));
             }
         },
     };

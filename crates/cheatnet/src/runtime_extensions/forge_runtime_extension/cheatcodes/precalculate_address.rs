@@ -1,6 +1,6 @@
 use crate::CheatnetState;
 use conversions::IntoConv;
-use starknet_api::core::{calculate_contract_address, ClassHash, ContractAddress};
+use starknet_api::core::{ClassHash, ContractAddress, calculate_contract_address};
 use starknet_types_core::felt::Felt;
 
 use crate::constants as crate_constants;

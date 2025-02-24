@@ -1,12 +1,12 @@
-use super::data_representation::{AllowedCalldataArgument, CalldataPrimitive};
 use super::SupportedCalldataKind;
-use anyhow::{bail, Context, Result};
+use super::data_representation::{AllowedCalldataArgument, CalldataPrimitive};
+use anyhow::{Context, Result, bail};
 use cairo_lang_parser::utils::SimpleParserDatabase;
+use cairo_lang_syntax::node::Terminal;
 use cairo_lang_syntax::node::ast::{
     Expr, ExprUnary, TerminalFalse, TerminalLiteralNumber, TerminalShortString, TerminalString,
     TerminalTrue, UnaryOperator,
 };
-use cairo_lang_syntax::node::Terminal;
 use starknet::core::types::contract::AbiEntry;
 use std::ops::Neg;
 

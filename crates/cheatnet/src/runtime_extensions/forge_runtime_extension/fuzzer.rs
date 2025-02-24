@@ -21,7 +21,9 @@ pub(crate) fn generate_arg(
 
     ensure!(
         min_big_int <= max_big_int,
-        format!("`generate_arg` cheatcode: `min_value` must be <= `max_value`, provided values after deserialization: {min_big_int} and {max_big_int}")
+        format!(
+            "`generate_arg` cheatcode: `min_value` must be <= `max_value`, provided values after deserialization: {min_big_int} and {max_big_int}"
+        )
     );
 
     let value = if let Some(fuzzer_rng) = fuzzer_rng {

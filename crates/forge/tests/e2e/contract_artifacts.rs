@@ -307,19 +307,25 @@ fn simple_package_no_starknet_contract_target() {
 
     let output = test_runner(&temp).assert().code(1);
 
-    assert!(temp
-        .join("target/dev/simple_package_integrationtest.test.starknet_artifacts.json")
-        .exists());
-    assert!(temp
-        .join("target/dev/simple_package_integrationtest_HelloStarknet.test.contract_class.json")
-        .exists());
+    assert!(
+        temp.join("target/dev/simple_package_integrationtest.test.starknet_artifacts.json")
+            .exists()
+    );
+    assert!(
+        temp.join(
+            "target/dev/simple_package_integrationtest_HelloStarknet.test.contract_class.json"
+        )
+        .exists()
+    );
 
-    assert!(temp
-        .join("target/dev/simple_package_unittest.test.starknet_artifacts.json")
-        .exists());
-    assert!(temp
-        .join("target/dev/simple_package_unittest_HelloStarknet.test.contract_class.json")
-        .exists());
+    assert!(
+        temp.join("target/dev/simple_package_unittest.test.starknet_artifacts.json")
+            .exists()
+    );
+    assert!(
+        temp.join("target/dev/simple_package_unittest_HelloStarknet.test.contract_class.json")
+            .exists()
+    );
 
     assert_stdout_contains(
         output,
@@ -370,9 +376,10 @@ fn no_optimization_flag() {
         .assert()
         .success();
 
-    assert!(temp
-        .join("target/dev/erc20_package_ERC20.contract_class.json")
-        .exists());
+    assert!(
+        temp.join("target/dev/erc20_package_ERC20.contract_class.json")
+            .exists()
+    );
     assert_stdout_contains(
         output,
         indoc! {r"

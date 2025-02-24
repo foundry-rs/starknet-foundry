@@ -1,18 +1,19 @@
 use super::package::RunForPackageArgs;
 use crate::{
-    block_number_map::BlockNumberMap, pretty_printing, run_tests::package::run_for_package,
-    scarb::build_artifacts_with_scarb, shared_cache::FailedTestsCache,
-    warn::warn_if_snforge_std_not_compatible, ColorOption, ExitStatus, TestArgs,
+    ColorOption, ExitStatus, TestArgs, block_number_map::BlockNumberMap, pretty_printing,
+    run_tests::package::run_for_package, scarb::build_artifacts_with_scarb,
+    shared_cache::FailedTestsCache, warn::warn_if_snforge_std_not_compatible,
 };
 use anyhow::{Context, Result};
+use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
 use forge_runner::{
     coverage_api::can_coverage_be_generated,
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
 };
-use forge_runner::{test_target_summary::TestTargetSummary, CACHE_DIR};
 use scarb_api::{
+    ScarbCommand,
     metadata::{Metadata, MetadataCommandExt, PackageMetadata},
-    target_dir_for_workspace, ScarbCommand,
+    target_dir_for_workspace,
 };
 use scarb_ui::args::PackagesFilter;
 use shared::consts::SNFORGE_TEST_FILTER;
@@ -21,8 +22,10 @@ use std::env;
 #[allow(clippy::too_many_lines)]
 pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
     match args.color {
-        ColorOption::Always => env::set_var("CLICOLOR_FORCE", "1"),
-        ColorOption::Never => env::set_var("CLICOLOR", "0"),
+        // SAFETY: This runs in a single-threaded environment.
+        ColorOption::Always => unsafe { env::set_var("CLICOLOR_FORCE", "1") },
+        // SAFETY: This runs in a single-threaded environment.
+        ColorOption::Never => unsafe { env::set_var("CLICOLOR", "0") },
         ColorOption::Auto => (),
     }
 
@@ -114,9 +117,15 @@ fn extract_failed_tests(
 }
 
 fn set_forge_test_filter(test_filter: String) {
-    env::set_var(SNFORGE_TEST_FILTER, test_filter);
+    // SAFETY: This runs in a single-threaded environment.
+    unsafe {
+        env::set_var(SNFORGE_TEST_FILTER, test_filter);
+    };
 }
 
 fn unset_forge_test_filter() {
-    env::remove_var(SNFORGE_TEST_FILTER);
+    // SAFETY: This runs in a single-threaded environment.
+    unsafe {
+        env::remove_var(SNFORGE_TEST_FILTER);
+    };
 }

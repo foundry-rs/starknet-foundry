@@ -3,16 +3,16 @@ use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::{
     block_number_map::BlockNumberMap,
-    run_tests::package::{run_for_package, RunForPackageArgs},
+    run_tests::package::{RunForPackageArgs, run_for_package},
     scarb::load_test_artifacts,
     test_filter::TestsFilter,
 };
+use forge_runner::CACHE_DIR;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
 use forge_runner::test_target_summary::TestTargetSummary;
-use forge_runner::CACHE_DIR;
-use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
+use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use std::num::NonZeroU32;
 use std::sync::Arc;
 use tempfile::tempdir;
