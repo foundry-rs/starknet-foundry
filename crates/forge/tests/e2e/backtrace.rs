@@ -6,7 +6,6 @@ use std::fs;
 use toml_edit::{value, DocumentMut};
 
 #[test]
-#[cfg(not(target_os = "windows"))]
 fn test_backtrace_missing_env() {
     let temp = setup_package("backtrace_vm_error");
 
@@ -23,7 +22,6 @@ fn test_backtrace_missing_env() {
 }
 
 #[test]
-#[cfg(not(target_os = "windows"))]
 fn test_backtrace() {
     let temp = setup_package("backtrace_vm_error");
 
@@ -40,26 +38,25 @@ fn test_backtrace() {
             error occurred in contract 'InnerContract' at pc: '72'
             stack backtrace:
                0: backtrace_vm_error::InnerContract::inner_call
-                   at [..]/src/lib.cairo:47:9
+                   at [..]lib.cairo:47:9
                1: backtrace_vm_error::InnerContract::InnerContract::inner
-                   at [..]/src/lib.cairo:38:13
+                   at [..]lib.cairo:38:13
                2: backtrace_vm_error::InnerContract::__wrapper__InnerContract__inner
-                   at [..]/src/lib.cairo:37:9
+                   at [..]lib.cairo:37:9
 
             error occurred in contract 'OuterContract' at pc: '107'
             stack backtrace:
                0: backtrace_vm_error::IInnerContractDispatcherImpl::inner
-                   at [..]/src/lib.cairo:22:1
+                   at [..]lib.cairo:22:1
                1: backtrace_vm_error::OuterContract::OuterContract::outer
-                   at [..]/src/lib.cairo:17:13
+                   at [..]lib.cairo:17:13
                2: backtrace_vm_error::OuterContract::__wrapper__OuterContract__outer
-                   at [..]/src/lib.cairo:15:9"
+                   at [..]lib.cairo:15:9"
         },
     );
 }
 
 #[test]
-#[cfg(not(target_os = "windows"))]
 fn test_wrong_scarb_toml_configuration() {
     let temp = setup_package("backtrace_vm_error");
 
@@ -94,7 +91,6 @@ fn test_wrong_scarb_toml_configuration() {
 }
 
 #[test]
-#[cfg(not(target_os = "windows"))]
 fn test_backtrace_panic() {
     let temp = setup_package("backtrace_panic");
 
@@ -111,16 +107,16 @@ fn test_backtrace_panic() {
             error occurred in contract 'InnerContract' at pc: '70'
             stack backtrace:
                0: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
-                   at [..]/src/lib.cairo:34:9
+                   at [..]lib.cairo:34:9
 
             error occurred in contract 'OuterContract' at pc: '107'
             stack backtrace:
                0: backtrace_panic::IInnerContractDispatcherImpl::inner
-                   at [..]/src/lib.cairo:22:1
+                   at [..]lib.cairo:22:1
                1: backtrace_panic::OuterContract::OuterContract::outer
-                   at [..]/src/lib.cairo:17:13
+                   at [..]lib.cairo:17:13
                2: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
-                   at [..]/src/lib.cairo:15:9"
+                   at [..]lib.cairo:15:9"
         },
     );
 }
