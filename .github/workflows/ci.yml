@@ -106,43 +106,6 @@ jobs:
       - name: nextest partition ${{ matrix.partition }}/8
         run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/8' --archive-file 'nextest-archive-${{ matrix.os }}.tar.zst' e2e
 
-  test-scarb-2-8-5:
-    name: Test scarb 2.8.5
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
-      - uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: "2.8.5"
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
-
-      - name: Install cairo-coverage
-        run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
-
-      - run: cargo test --package forge --test main e2e::coverage
-      - run: cargo test --package forge --test main e2e::backtrace
-
-  test-coverage-error:
-    name: Test coverage error
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
-      - uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: "2.7.1"
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
-
-      - name: Install cairo-coverage
-        run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
-
-      - run: cargo test --package forge --features scarb_2_7_1 --test main e2e::coverage::test_fail_on_scarb_version_lt_2_8_0
-
   test-contracts-artifacts:
     name: Test contracts artifacts
     runs-on: ubuntu-latest
