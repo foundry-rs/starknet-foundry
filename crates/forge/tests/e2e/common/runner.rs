@@ -237,7 +237,12 @@ pub(crate) fn get_remote_url() -> String {
             .output_checked()
             .unwrap();
 
-        String::from_utf8(output.stdout).unwrap().trim().to_string()
+        String::from_utf8(output.stdout)
+            .unwrap()
+            .trim()
+            .strip_prefix("https://github.com/")
+            .unwrap()
+            .to_string()
     }
 }
 
