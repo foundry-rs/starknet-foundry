@@ -58,9 +58,7 @@ impl<'a> RequirementsChecker<'a> {
             let is_recommended = requirement
                 .minimal_recommended_version
                 .as_ref()
-                .map_or(true, |minimal_recommended_version| {
-                    version >= *minimal_recommended_version
-                });
+                .is_none_or(|minimal_recommended_version| version >= *minimal_recommended_version);
 
             let min_version_to_display = requirement
                 .minimal_recommended_version
