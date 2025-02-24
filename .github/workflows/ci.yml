@@ -119,7 +119,7 @@ jobs:
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
       - run: cargo test --package forge --features scarb_2_7_1 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
-      - run: cargo test --package forge --features scarb_2_7_1 --test main compatibility_check::tests::warning_requirements
+      - run: cargo test --package forge --features scarb_2_7_1 --test --lib compatibility_check::tests::warning_requirements
 
 
   test-contracts-artifacts:
