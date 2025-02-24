@@ -10,7 +10,7 @@ use scarb_api::ScarbCommand;
 use semver::Version;
 
 const DEFAULT_ASSERT_MACROS: Version = Version::new(2, 8, 5);
-const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 5);
+const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
 
 pub fn get_local_snforge_std_absolute_path() -> Result<PathBuf> {
     Ok(get_project_root()?.canonicalize()?.join("snforge_std"))
