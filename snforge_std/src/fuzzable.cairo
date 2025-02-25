@@ -20,7 +20,7 @@ impl FuzzableFelt of Fuzzable<felt252> {
 
 mod nums {
     use super::{Fuzzable, generate_arg, Debug};
-    use core::num::traits::{Bounded, One, Zero};
+    use core::num::traits::{Bounded, Zero};
 
     pub impl FuzzableNum<
         T, +Zero<T>, +Bounded<T>, +Drop<T>, +Serde<T>, +Into<T, felt252>, +Debug<T>

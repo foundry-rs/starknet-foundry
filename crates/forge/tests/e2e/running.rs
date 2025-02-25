@@ -1170,6 +1170,7 @@ fn create_new_project_and_check_gitignore() {
     let project_path = temp.join("project");
 
     runner(&temp)
+        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
         .args(["new", "--name", "test_name"])
         .arg(&project_path)
         .assert()
