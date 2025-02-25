@@ -14,7 +14,7 @@ use sncast::helpers::account::generate_account_name;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
-use sncast::{check_class_hash_exists, get_chain_id, handle_rpc_error, AccountType};
+use sncast::{AccountType, check_class_hash_exists, get_chain_id, handle_rpc_error};
 use starknet::core::types::{BlockId, BlockTag, StarknetError};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::providers::{Provider, ProviderError};

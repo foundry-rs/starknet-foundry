@@ -1,6 +1,5 @@
 use crate::starknet_commands::account::{
-    add_created_profile_to_configuration, prepare_account_json,
-    write_account_to_accounts_file,
+    add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
 };
 use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
@@ -16,8 +15,8 @@ use sncast::helpers::constants::{
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountCreateResponse;
 use sncast::{
-    Network, check_class_hash_exists, check_if_legacy_contract, extract_or_generate_salt,
-    get_chain_id, get_keystore_password, handle_account_factory_error, AccountType,
+    AccountType, Network, check_class_hash_exists, check_if_legacy_contract,
+    extract_or_generate_salt, get_chain_id, get_keystore_password, handle_account_factory_error,
 };
 use starknet::accounts::{
     AccountDeploymentV1, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,

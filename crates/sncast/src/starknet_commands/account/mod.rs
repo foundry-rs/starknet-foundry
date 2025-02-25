@@ -11,7 +11,7 @@ use configuration::{
 };
 use serde_json::json;
 use sncast::{
-    chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig, AccountType,
+    AccountType, chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig,
 };
 use starknet::signers::SigningKey;
 use starknet_types_core::felt::Felt;
