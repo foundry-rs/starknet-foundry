@@ -1,7 +1,7 @@
 use super::{BufferReadError, BufferReadResult, BufferReader, CairoDeserialize};
 use crate::{IntoConv, byte_array::ByteArray};
 use num_traits::cast::ToPrimitive;
-use starknet::providers::Url;
+use starknet::{core::types::U256, providers::Url};
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 use std::num::NonZero;
@@ -118,4 +118,5 @@ impl_deserialize_for_num_type!(u16);
 impl_deserialize_for_num_type!(u32);
 impl_deserialize_for_num_type!(u64);
 impl_deserialize_for_num_type!(u128);
+impl_deserialize_for_num_type!(U256);
 impl_deserialize_for_num_type!(usize);

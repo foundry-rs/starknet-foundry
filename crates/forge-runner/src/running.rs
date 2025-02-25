@@ -2,6 +2,7 @@ use crate::backtrace::add_backtrace_footer;
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
+use crate::test_case_setup::{declare_strk, predeploy_strk, update_resources_after_predeployment};
 use crate::test_case_summary::{Single, TestCaseSummary};
 use anyhow::{Result, ensure};
 use blockifier::execution::entry_point::EntryPointExecutionContext;
@@ -12,7 +13,7 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use camino::{Utf8Path, Utf8PathBuf};
 use casm::{get_assembled_program, run_assembled_program};
-use cheatnet::constants as cheatnet_constants;
+use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
@@ -25,6 +26,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredError, ExtendedStateReader,
 };
+
 use entry_code::create_entry_code;
 use hints::{hints_by_representation, hints_to_params};
 use rand::prelude::StdRng;
@@ -160,7 +162,7 @@ pub fn run_test_case(
     let hints_dict = hints_to_params(&assembled_program);
 
     let mut state_reader = ExtendedStateReader {
-        dict_state_reader: cheatnet_constants::build_testing_state(),
+        dict_state_reader: build_testing_state(),
         fork_state_reader: get_fork_state_reader(
             runtime_config.cache_dir,
             case.config.fork_config.as_ref(),
@@ -175,8 +177,11 @@ pub fn run_test_case(
         set_max_steps(&mut context, max_n_steps);
     }
     let mut cached_state = CachedState::new(state_reader);
+
+    declare_strk(&mut cached_state);
+
     let mut execution_resources = ExecutionResources::default();
-    let syscall_handler = build_syscall_handler(
+    let mut syscall_handler = build_syscall_handler(
         &mut cached_state,
         &string_to_hint,
         &mut execution_resources,
@@ -188,6 +193,9 @@ pub fn run_test_case(
         block_info,
         ..Default::default()
     };
+
+    predeploy_strk(&mut syscall_handler, &mut cheatnet_state);
+
     cheatnet_state.trace_data.is_vm_trace_needed = runtime_config.is_vm_trace_needed;
 
     let cheatable_runtime = ExtendedRuntime {
@@ -279,11 +287,15 @@ pub fn run_test_case(
 
     let transaction_context = get_context(&forge_runtime).tx_context.clone();
     let used_resources = get_all_used_resources(forge_runtime, &transaction_context);
+    let used_resources = update_resources_after_predeployment(&used_resources);
     let gas = calculate_used_gas(
         &transaction_context,
         &mut cached_state,
         used_resources.clone(),
     )?;
+
+    // We need to subtract the gas used for predeployment of STRK token
+    let gas = gas - 736;
 
     Ok(RunResultWithInfo {
         run_result: run_result.map(|(gas_counter, memory, value)| RunResult {
