@@ -21,7 +21,7 @@ trait SupportedCalldataKind {
 }
 
 /// A main function that transforms expressions supported by the transformer
-/// to their correspondning serializable struct representations
+/// to their corresponding serializable struct representations
 pub(super) fn build_representation(
     expression: Expr,
     expected_type: &str,
