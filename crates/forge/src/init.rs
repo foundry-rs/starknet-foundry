@@ -1,4 +1,4 @@
-use crate::{NewArgs, new};
+use crate::{NewArgs, Template, new};
 use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use shared::print::print_as_warning;
@@ -21,5 +21,6 @@ pub fn init(project_name: &str) -> Result<()> {
         name: Some(project_name.to_string()),
         no_vcs: false,
         overwrite: true,
+        template: Template::BalanceContract,
     })
 }
