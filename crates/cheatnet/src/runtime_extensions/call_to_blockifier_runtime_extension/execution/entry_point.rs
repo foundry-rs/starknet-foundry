@@ -283,7 +283,7 @@ fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {
         storage_read_values: vec![],
         accessed_storage_keys: HashSet::new(),
         read_class_hash_values: vec![],
-        // This defaults to `CairoSteps` as of writing this, but it could be changed in the future
+        // TODO(#2977) This defaults to `CairoSteps` as of writing this, but it could be changed in the future
         tracked_resource: Default::default(),
         accessed_contract_addresses: Default::default(),
     }
