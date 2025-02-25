@@ -1,10 +1,10 @@
 use crate::helpers::configuration::CastConfig;
-use crate::{get_provider, Network};
-use anyhow::{bail, Context, Result};
+use crate::{Network, get_provider};
+use anyhow::{Context, Result, bail};
 use clap::Args;
 use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
-use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
+use starknet::providers::{JsonRpcClient, jsonrpc::HttpTransport};
 use std::env::current_exe;
 use std::time::UNIX_EPOCH;
 
@@ -23,7 +23,9 @@ pub struct RpcArgs {
 impl RpcArgs {
     pub async fn get_provider(&self, config: &CastConfig) -> Result<JsonRpcClient<HttpTransport>> {
         if self.network.is_some() && !config.url.is_empty() {
-            bail!("The argument '--network' cannot be used when `url` is defined in `snfoundry.toml` for the active profile")
+            bail!(
+                "The argument '--network' cannot be used when `url` is defined in `snfoundry.toml` for the active profile"
+            )
         }
 
         let url = if let Some(network) = self.network {

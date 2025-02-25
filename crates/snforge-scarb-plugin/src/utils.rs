@@ -30,7 +30,7 @@ pub fn format_error_message(variants: &[Diagnostic]) -> String {
 /// This macro is used instead of a function because it can perform lazy evaluation and has better readability.
 #[macro_export]
 macro_rules! branch {
-    ($($result:expr),+) => {{
+    ($($result:expr_2021),+) => {{
         let mut messages = Vec::new();
         let mut result = None;
 

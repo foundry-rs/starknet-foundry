@@ -5,7 +5,7 @@ use crate::helpers::fixtures::invoke_contract;
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
-use snapbox::cmd::{cargo_bin, Command};
+use snapbox::cmd::{Command, cargo_bin};
 use std::path::PathBuf;
 
 #[test]

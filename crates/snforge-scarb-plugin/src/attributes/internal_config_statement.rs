@@ -27,8 +27,8 @@ pub fn internal_config_statement(args: TokenStream, item: TokenStream) -> ProcMa
 
 // we need to insert empty config statement in case there was no config used
 // so function will be stopped in configuration mode run
-#[allow(clippy::ptr_arg)]
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::ptr_arg)]
+#[expect(clippy::needless_pass_by_value)]
 fn internal_config_statement_internal(
     db: &dyn SyntaxGroup,
     func: &FunctionWithBody,

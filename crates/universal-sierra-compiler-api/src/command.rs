@@ -6,7 +6,6 @@ use std::process::{Command, Stdio};
 
 /// A builder for `universal-sierra-compiler` command invocation.
 #[derive(Clone, Debug, Default)]
-#[allow(clippy::struct_excessive_bools)]
 pub struct UniversalSierraCompilerCommand {
     args: Vec<OsString>,
     current_dir: Option<PathBuf>,

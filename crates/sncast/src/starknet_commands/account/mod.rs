@@ -3,11 +3,11 @@ use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
 use crate::starknet_commands::account::import::Import;
 use crate::starknet_commands::account::list::List;
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::{Args, Subcommand};
 use configuration::{
-    find_config_file, load_config, search_config_upwards_relative_to, CONFIG_FILENAME,
+    CONFIG_FILENAME, find_config_file, load_config, search_config_upwards_relative_to,
 };
 use serde_json::json;
 use sncast::{
@@ -78,7 +78,6 @@ pub fn prepare_account_json(
     account_json
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn write_account_to_accounts_file(
     account: &str,
     accounts_file: &Utf8PathBuf,

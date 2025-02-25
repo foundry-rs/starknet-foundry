@@ -1,12 +1,11 @@
 use anyhow::{Context, Result};
-use blockifier::blockifier::block::BlockInfo;
 use camino::{Utf8Path, Utf8PathBuf};
 use fs2::FileExt;
 use regex::Regex;
 use runtime::starknet::context::SerializableBlockInfo;
 use serde::{Deserialize, Serialize};
 use starknet::core::types::ContractClass;
-use starknet_api::block::BlockNumber;
+use starknet_api::block::{BlockInfo, BlockNumber};
 use starknet_api::core::{ClassHash, ContractAddress, Nonce};
 use starknet_api::state::StorageKey;
 use starknet_types_core::felt::Felt;
@@ -75,7 +74,7 @@ impl ForkCacheContent {
     }
 }
 
-#[allow(clippy::to_string_trait_impl)]
+#[expect(clippy::to_string_trait_impl)]
 impl ToString for ForkCacheContent {
     fn to_string(&self) -> String {
         serde_json::to_string(self).expect("Could not serialize json cache")

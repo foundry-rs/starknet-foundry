@@ -29,12 +29,9 @@ pub const BRAAVOS_BASE_ACCOUNT_CLASS_HASH: Felt =
     felt!("0x013bfe114fb1cf405bfc3a7f8dbe2d91db146c17521d40dcf57e16d6b59fa8e6");
 
 // used in wait_for_tx. Txs will be fetched every 5s with timeout of 300s - so 60 attempts
-#[allow(dead_code)]
 pub const WAIT_TIMEOUT: u16 = 300;
-#[allow(dead_code)]
 pub const WAIT_RETRY_INTERVAL: u8 = 5;
 
-#[allow(dead_code)]
 pub const DEFAULT_ACCOUNTS_FILE: &str = "~/.starknet_accounts/starknet_open_zeppelin_accounts.json";
 
 pub const KEYSTORE_PASSWORD_ENV_VAR: &str = "KEYSTORE_PASSWORD";

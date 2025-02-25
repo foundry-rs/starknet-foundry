@@ -12,11 +12,11 @@ In this section, we will walk through the process of installing Starknet Foundry
     * [Requirements](#requirements)
     * [Linux and macOS](#linux-and-macos)
         * [Install asdf](#install-asdf)
-        * [Install Scarb version >= 2.7.0](#install-scarb-version--270)
+        * [Install Scarb version >= 2.8.5](#install-scarb-version--285)
         * [(Optional for Scarb >= 2.10.0) Rust Installation](#optional-for-scarb--21001-rust-installation)
         * [Install Starknet Foundry](#install-starknet-foundry)
     * [Windows](#windows)
-        * [Install Scarb version >= 2.7.0](#install-scarb-version--270-1)
+        * [Install Scarb version >= 2.8.5](#install-scarb-version--285-1)
         * [(Optional for Scarb >= 2.10.0) Rust Installation](#optional-for-scarb--21001-rust-installation-1)
         * [Install Universal Sierra Compiler](#install-universal-sierra-compiler)
         * [Install Starknet Foundry](#install-starknet-foundry-1)
@@ -37,12 +37,12 @@ In this section, we will walk through the process of installing Starknet Foundry
 
 > 📝 **Note**
 >
-> Ensure all requirements are installed and follow the required minimum versions.
+> Ensure all requirements are installed and follow the required minimal versions.
 > Starknet Foundry will not run if not following these requirements.
 
 To use Starknet Foundry, you need:
 
-- [Scarb](https://docs.swmansion.com/scarb/download.html) version >= 2.7.0
+- [Scarb](https://docs.swmansion.com/scarb/download.html) version >= 2.8.5
 - [Universal-Sierra-Compiler](https://github.com/software-mansion/universal-sierra-compiler)
 - _(Optional for Scarb >= 2.10.0)_[^note] [Rust](https://www.rust-lang.org/tools/install) version >= 1.80.1
 
@@ -77,7 +77,7 @@ To verify that asdf was installed, run
 asdf --version
 ```
 
-### Install Scarb version >= 2.7.0
+### Install Scarb version >= 2.8.5
 
 First, add Scarb plugin to asdf
 
@@ -103,7 +103,7 @@ To verify that Scarb was installed, run
 scarb --version
 ```
 
-and verify that version is >= 2.7.0
+and verify that version is >= 2.8.5
 
 ### (Optional for Scarb >= 2.10.0)[^note] Rust Installation
 
@@ -174,7 +174,7 @@ sncast --version
 >
 > If you are using WSL, please follow the [Linux and macOS](#linux-and-macos) guide.
 
-### Install Scarb version >= 2.7.0
+### Install Scarb version >= 2.8.5
 
 Follow the instructions from [Scarb docs](https://docs.swmansion.com/scarb/download.html#windows).
 
@@ -191,7 +191,7 @@ To verify that Scarb was installed, run
 scarb --version
 ```
 
-and verify that version is >= 2.7.0
+and verify that version is >= 2.8.5
 
 ### (Optional for Scarb >= 2.10.0)[^note] Rust Installation
 

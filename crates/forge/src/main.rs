@@ -1,4 +1,4 @@
-use forge::{main_execution, pretty_printing, ExitStatus};
+use forge::{ExitStatus, main_execution, pretty_printing};
 
 fn main() {
     match main_execution() {

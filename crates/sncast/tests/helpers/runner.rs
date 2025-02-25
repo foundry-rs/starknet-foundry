@@ -1,4 +1,4 @@
-use snapbox::cmd::{cargo_bin, Command};
+use snapbox::cmd::{Command, cargo_bin};
 
 #[must_use]
 pub fn runner(args: &[&str]) -> Command {

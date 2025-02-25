@@ -8,7 +8,7 @@ use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_syntax::node::{ast::FunctionWithBody, db::SyntaxGroup};
 use cairo_lang_utils::Upcast;
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub fn into_proc_macro_result(
     args: TokenStream,
     item: TokenStream,

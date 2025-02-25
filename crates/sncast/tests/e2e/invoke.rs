@@ -9,9 +9,9 @@ use crate::helpers::fixtures::{
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
-use snapbox::cmd::{cargo_bin, Command};
-use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
+use snapbox::cmd::{Command, cargo_bin};
 use sncast::AccountType;
+use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use starknet::core::types::TransactionReceipt::Invoke;
 use starknet_types_core::felt::Felt;
 use std::path::PathBuf;
@@ -174,7 +174,7 @@ async fn test_contract_does_not_exist() {
 
     assert_stderr_contains(
         output,
-        "Error: An error occurred in the called contract[..]Requested contract address[..]is not deployed[..]"
+        "Error: An error occurred in the called contract[..]Requested contract address[..]is not deployed[..]",
     );
 }
 

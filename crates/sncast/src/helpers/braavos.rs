@@ -107,7 +107,7 @@ where
     type Provider = P;
     type SignError = S::SignError;
 
-    #[allow(clippy::misnamed_getters)]
+    #[expect(clippy::misnamed_getters)]
     fn class_hash(&self) -> Felt {
         self.base_class_hash
     }

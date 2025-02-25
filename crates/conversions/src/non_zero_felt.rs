@@ -1,6 +1,6 @@
 use crate::FromConv;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
-use std::num::{NonZeroU128, NonZeroU64};
+use std::num::{NonZeroU64, NonZeroU128};
 
 impl FromConv<NonZeroU64> for NonZeroFelt {
     fn from_(value: NonZeroU64) -> Self {
