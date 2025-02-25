@@ -33,7 +33,6 @@ pub struct Call {
     pub rpc: RpcArgs,
 }
 
-#[allow(clippy::ptr_arg)]
 pub async fn call(
     contract_address: Felt,
     entry_point_selector: Felt,

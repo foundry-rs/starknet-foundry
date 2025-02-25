@@ -1,8 +1,8 @@
 use super::common::runner::{runner, setup_package, test_runner};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
-use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::ScarbCommand;
+use scarb_api::metadata::MetadataCommandExt;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use std::path::Path;
 
@@ -11,7 +11,7 @@ const PROFILE_DIR: &str = "profile";
 const CACHE_DIR: &str = ".snfoundry_cache";
 const TRACE_DIR: &str = "snfoundry_trace";
 
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 struct CleanComponentsState {
     coverage: bool,

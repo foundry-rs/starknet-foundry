@@ -10,8 +10,8 @@ use crate::helpers::constants::{
 };
 use camino::Utf8PathBuf;
 use conversions::string::IntoHexStr;
-use sncast::{get_account, ValidatedWaitParams};
-use sncast::{handle_wait_for_tx, wait_for_tx, WaitForTx};
+use sncast::{ValidatedWaitParams, get_account};
+use sncast::{WaitForTx, handle_wait_for_tx, wait_for_tx};
 use starknet::contract::ContractFactory;
 use starknet_types_core::felt::Felt;
 

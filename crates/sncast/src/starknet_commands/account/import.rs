@@ -1,9 +1,9 @@
 use super::deploy::compute_account_address;
 use crate::starknet_commands::account::{
-    add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
-    AccountType,
+    AccountType, add_created_profile_to_configuration, prepare_account_json,
+    write_account_to_accounts_file,
 };
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
@@ -14,7 +14,7 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
 use sncast::{
-    check_class_hash_exists, get_chain_id, handle_rpc_error, AccountType as SNCastAccountType,
+    AccountType as SNCastAccountType, check_class_hash_exists, get_chain_id, handle_rpc_error,
 };
 use starknet::core::types::{BlockId, BlockTag, StarknetError};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
@@ -54,7 +54,6 @@ pub struct Import {
     pub salt: Option<Felt>,
 
     /// If passed, a profile with the provided name and corresponding data will be created in snfoundry.toml
-    #[allow(clippy::struct_field_names)]
     #[clap(long, conflicts_with = "network")]
     pub add_profile: Option<String>,
 
@@ -116,8 +115,8 @@ pub async fn import(
         from_provider
     } else {
         bail!(
-        "Class hash for the account address {:#x} could not be found. Please provide the class hash",
-        import.address
+            "Class hash for the account address {:#x} could not be found. Please provide the class hash",
+            import.address
         );
     };
 

@@ -6,7 +6,7 @@ use blockifier::{
         entry_point::{CallEntryPoint, CallType},
         execution_utils::ReadOnlySegment,
         syscalls::{
-            hint_processor::{create_retdata_segment, SyscallExecutionError, SyscallHintProcessor},
+            hint_processor::{SyscallExecutionError, SyscallHintProcessor, create_retdata_segment},
             syscall_base::SyscallResult,
         },
     },
@@ -57,7 +57,7 @@ pub fn execute_inner_call(
 }
 
 // blockifier/src/execution/syscalls/hint_processor.rs:577 (execute_library_call)
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 pub fn execute_library_call(
     syscall_handler: &mut SyscallHintProcessor<'_>,
     cheatnet_state: &mut CheatnetState,

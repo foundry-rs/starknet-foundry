@@ -1,9 +1,9 @@
 use crate::common::assertions::ClassHashAssert;
 use crate::common::{get_contracts, state::create_cached_state};
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::{
-    declare, DeclareResult,
-};
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::{
+    DeclareResult, declare,
+};
 use runtime::EnhancedHintError;
 
 #[test]

@@ -1,8 +1,8 @@
-use crate::runtime_extensions::common::create_execute_calldata;
 use crate::CheatnetState;
+use crate::runtime_extensions::common::create_execute_calldata;
 use conversions::IntoConv;
 use runtime::starknet::constants::TEST_ADDRESS;
-use starknet_api::core::{calculate_contract_address, ClassHash, ContractAddress};
+use starknet_api::core::{ClassHash, ContractAddress, calculate_contract_address};
 use starknet_types_core::felt::Felt;
 
 impl CheatnetState {

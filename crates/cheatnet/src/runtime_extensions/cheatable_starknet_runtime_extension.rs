@@ -6,8 +6,8 @@ use anyhow::Result;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::execution::syscalls::hint_processor::OUT_OF_GAS_ERROR;
 use blockifier::execution::syscalls::{
-    syscall_base::SyscallResult, SyscallRequest, SyscallRequestWrapper, SyscallResponse,
-    SyscallResponseWrapper,
+    SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper,
+    syscall_base::SyscallResult,
 };
 use blockifier::execution::{
     common_hints::HintExecutionResult,

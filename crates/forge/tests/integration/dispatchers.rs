@@ -1,6 +1,6 @@
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
+use test_utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
@@ -335,7 +335,7 @@ fn serding() {
 }
 
 #[test]
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 fn proxy_storage() {
     let test = test_case!(
         indoc!(
@@ -510,7 +510,6 @@ fn proxy_storage() {
 }
 
 #[test]
-#[allow(clippy::too_many_lines)]
 fn proxy_dispatcher_panic() {
     let test = test_case!(
         indoc!(
@@ -676,9 +675,9 @@ fn nonexistent_method_call() {
 
     assert_failed(&result);
     assert_case_output_contains(
-       & result,
+        &result,
         "nonexistent_method_call",
-        "Entry point selector 0x1fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485 not found in contract"
+        "Entry point selector 0x1fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485 not found in contract",
     );
 }
 
@@ -778,7 +777,7 @@ fn nonexistent_libcall_function() {
     assert_case_output_contains(
         &result,
         "nonexistent_libcall_function",
-        "(0x454e545259504f494e545f4e4f545f464f554e44 ('ENTRYPOINT_NOT_FOUND'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))"
+        "(0x454e545259504f494e545f4e4f545f464f554e44 ('ENTRYPOINT_NOT_FOUND'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))",
     );
 }
 

@@ -1,13 +1,13 @@
-use anyhow::{anyhow, Context, Result};
-use anyhow::{bail, Ok};
+use anyhow::{Context, Result, anyhow};
+use anyhow::{Ok, bail};
 use camino::Utf8PathBuf;
 use clap::{Args, ValueEnum};
 use promptly::prompt;
 use reqwest::StatusCode;
 use scarb_api::StarknetContractArtifacts;
 use serde::Serialize;
-use sncast::response::structs::VerifyResponse;
 use sncast::Network;
+use sncast::response::structs::VerifyResponse;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::ffi::OsStr;
@@ -23,7 +23,7 @@ struct WalnutVerificationInterface {
 trait VerificationInterface {
     fn new(network: Network, workspace_dir: Utf8PathBuf) -> Self;
     async fn verify(&self, contract_address: Felt, contract_name: String)
-        -> Result<VerifyResponse>;
+    -> Result<VerifyResponse>;
     fn gen_explorer_url(&self) -> Result<String>;
 }
 
@@ -169,7 +169,9 @@ pub async fn verify(
 ) -> Result<VerifyResponse> {
     // Let's ask confirmation
     if !confirm_verification {
-        let prompt_text = format!("\n\tYou are about to submit the entire workspace code to the third-party verifier at {verifier}.\n\n\tImportant: Make sure your project does not include sensitive information like private keys. The snfoundry.toml file will be uploaded. Keep the keystore outside the project to prevent it from being uploaded.\n\n\tAre you sure you want to proceed? (Y/n)");
+        let prompt_text = format!(
+            "\n\tYou are about to submit the entire workspace code to the third-party verifier at {verifier}.\n\n\tImportant: Make sure your project does not include sensitive information like private keys. The snfoundry.toml file will be uploaded. Keep the keystore outside the project to prevent it from being uploaded.\n\n\tAre you sure you want to proceed? (Y/n)"
+        );
         let input: String = prompt(prompt_text)?;
 
         if !input.starts_with('Y') {

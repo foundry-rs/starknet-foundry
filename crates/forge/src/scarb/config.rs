@@ -36,8 +36,7 @@ pub const SCARB_MANIFEST_TEMPLATE_CONTENT: &str = r#"
 # enable_for_tests = []                                      # Feature name and list of other features that should be enabled with it
 "#;
 
-#[allow(clippy::module_name_repetitions)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 #[derive(Debug, PartialEq, Default, Deserialize)]
 pub struct ForgeConfigFromScarb {
     /// Should runner exit after first failed test

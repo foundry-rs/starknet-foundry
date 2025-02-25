@@ -73,7 +73,7 @@ pub fn print_failures(all_failed_tests: &[AnyTestCaseSummary]) {
     }
 }
 
-#[allow(clippy::implicit_hasher)]
+#[expect(clippy::implicit_hasher)]
 pub fn print_latest_blocks_numbers(url_to_latest_block_number_map: &HashMap<Url, BlockNumber>) {
     if !url_to_latest_block_number_map.is_empty() {
         println!();

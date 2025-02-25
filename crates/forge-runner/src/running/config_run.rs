@@ -8,9 +8,9 @@ use anyhow::Result;
 use blockifier::state::{cached_state::CachedState, state_api::StateReader};
 use cairo_lang_runner::Arg;
 use cheatnet::runtime_extensions::forge_config_extension::{
-    config::RawForgeConfig, ForgeConfigExtension,
+    ForgeConfigExtension, config::RawForgeConfig,
 };
-use runtime::{starknet::context::build_context, ExtendedRuntime, StarknetRuntime};
+use runtime::{ExtendedRuntime, StarknetRuntime, starknet::context::build_context};
 use starknet_api::block::{
     BlockInfo, BlockNumber, BlockTimestamp, GasPrice, GasPriceVector, GasPrices, NonzeroGasPrice,
 };
@@ -55,7 +55,6 @@ impl StateReader for PhantomStateReader {
     }
 }
 
-#[allow(clippy::too_many_lines)]
 pub fn run_config_pass(
     test_details: &TestDetails,
     casm_program: &AssembledProgramWithDebugInfo,

@@ -4,23 +4,23 @@ use crate::runtime_extensions::common::sum_syscall_counters;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
 use crate::runtime_extensions::{
     call_to_blockifier_runtime_extension::{
-        rpc::{CallFailure, CallResult},
         CallToBlockifierRuntime,
+        rpc::{CallFailure, CallResult},
     },
     cheatable_starknet_runtime_extension::SyscallSelector,
     common::get_relocated_vm_trace,
     forge_runtime_extension::cheatcodes::{
+        CheatcodeError,
         declare::declare,
         deploy::{deploy, deploy_at},
         generate_random_felt::generate_random_felt,
         get_class_hash::get_class_hash,
         l1_handler_execute::l1_handler_execute,
         storage::{calculate_variable_address, load, store},
-        CheatcodeError,
     },
 };
 use crate::state::{CallTrace, CallTraceNode};
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::CallExecution;
 use blockifier::execution::entry_point::CallEntryPoint;
@@ -38,11 +38,11 @@ use cairo_vm::vm::{
     errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
     vm_core::VirtualMachine,
 };
+use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
 use conversions::felt::TryInferFormat;
 use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::CairoSerialize;
-use conversions::IntoConv;
 use data_transformer::cairo_types::CairoU256;
 use rand::prelude::StdRng;
 use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
@@ -75,7 +75,7 @@ pub struct ForgeExtension<'a> {
 impl<'a> ExtensionLogic for ForgeExtension<'a> {
     type Runtime = CallToBlockifierRuntime<'a>;
 
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines)]
     fn handle_cheatcode(
         &mut self,
         selector: &str,

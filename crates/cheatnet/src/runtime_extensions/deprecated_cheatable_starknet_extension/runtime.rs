@@ -2,7 +2,7 @@ use crate::runtime_extensions::cheatable_starknet_runtime_extension::felt_from_p
 use anyhow::Result;
 use blockifier::execution::{
     deprecated_syscalls::{
-        hint_processor::DeprecatedSyscallHintProcessor, DeprecatedSyscallSelector,
+        DeprecatedSyscallSelector, hint_processor::DeprecatedSyscallHintProcessor,
     },
     hint_code,
 };
@@ -123,7 +123,6 @@ impl<Extension: DeprecatedExtensionLogic> HintProcessorLogic
 }
 
 impl<Extension: DeprecatedExtensionLogic> DeprecatedExtendedRuntime<Extension> {
-    #[allow(clippy::too_many_arguments)]
     fn execute_syscall_hint(
         &mut self,
         vm: &mut VirtualMachine,

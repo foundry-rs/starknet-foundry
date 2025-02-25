@@ -1,11 +1,11 @@
-use crate::compatibility_check::{create_version_parser, Requirement, RequirementsChecker};
-use anyhow::anyhow;
+use crate::compatibility_check::{Requirement, RequirementsChecker, create_version_parser};
 use anyhow::Result;
+use anyhow::anyhow;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge_runner::CACHE_DIR;
 use run_tests::workspace::run_for_workspace;
-use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
+use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
 use shared::print::print_as_warning;
@@ -130,7 +130,7 @@ enum ColorOption {
 }
 
 #[derive(Parser, Debug)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 pub struct TestArgs {
     /// Name used to filter tests
     test_filter: Option<String>,

@@ -4,8 +4,8 @@ use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::errors::StateError;
 use cairo_lang_casm::hints::{ExternalHint, Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::{extract_relocatable, get_val, vm_get_range, MemBuffer};
-use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref, Arg};
+use cairo_lang_runner::casm_run::{MemBuffer, extract_relocatable, get_val, vm_get_range};
+use cairo_lang_runner::{Arg, casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::hint_processor::hint_processor_definition::{
     HintProcessor, HintProcessorLogic, HintReference,
@@ -172,7 +172,7 @@ impl HintProcessorLogic for StarknetRuntime<'_> {
                     return Ok(vm.add_relocation_rule(
                         extract_relocatable(vm, src)?,
                         extract_relocatable(vm, dst)?,
-                    )?)
+                    )?);
                 }
                 // Copied from https://github.com/starkware-libs/cairo/blob/3d5631d3f6563b5f97c11c816f530be99095a843/crates/cairo-lang-runner/src/casm_run/mod.rs#L1320
                 Hint::External(ExternalHint::WriteRunParam { index, dst }) => {
@@ -421,14 +421,12 @@ impl<Extension: ExtensionLogic> ResourceTracker for ExtendedRuntime<Extension> {
     }
 }
 
-#[allow(dead_code)]
 #[derive(Debug)]
 pub enum SyscallHandlingResult {
     Forwarded,
     Handled,
 }
 
-#[allow(dead_code)]
 #[derive(Debug)]
 pub enum CheatcodeHandlingResult {
     Forwarded,
@@ -453,7 +451,6 @@ pub trait ExtensionLogic {
         Ok(SyscallHandlingResult::Forwarded)
     }
 
-    #[allow(clippy::trivially_copy_pass_by_ref)]
     fn handle_cheatcode(
         &mut self,
         _selector: &str,

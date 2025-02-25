@@ -22,8 +22,8 @@ impl StateReader for DictStateReader {
         key: StorageKey,
     ) -> StateResult<Felt> {
         Err(StateError::StateReadError(format!(
-                "Unable to get storage at address: {contract_address:?} and key: {key:?} from DictStateReader"
-            )))
+            "Unable to get storage at address: {contract_address:?} and key: {key:?} from DictStateReader"
+        )))
     }
 
     fn get_nonce_at(&self, contract_address: ContractAddress) -> StateResult<Nonce> {

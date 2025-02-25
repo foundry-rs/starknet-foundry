@@ -30,7 +30,7 @@ use std::io::Read;
 use std::sync::Arc;
 use tokio::runtime::Handle;
 use tokio::task;
-use universal_sierra_compiler_api::{compile_sierra, SierraType};
+use universal_sierra_compiler_api::{SierraType, compile_sierra};
 use url::Url;
 
 #[derive(Debug)]
@@ -63,7 +63,7 @@ impl ForkStateReader {
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn other_provider_error<T>(boxed: impl ToString) -> Result<T, StateError> {
     let err_str = boxed.to_string();
 
@@ -126,7 +126,8 @@ impl StateReader for ForkStateReader {
         )) {
             Ok(value) => {
                 let value_sf = value.into_();
-                self.cache.borrow_mut()
+                self.cache
+                    .borrow_mut()
                     .cache_get_storage_at(contract_address, key, value_sf);
                 Ok(value_sf)
             }
