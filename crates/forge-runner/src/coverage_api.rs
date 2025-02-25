@@ -45,6 +45,7 @@ pub fn run_coverage(saved_trace_data_paths: &[PathBuf], coverage_args: &[OsStrin
         .collect();
 
     let mut command = Command::new(coverage);
+    command.arg("run");
 
     if coverage_args.iter().all(|arg| arg != "--output-path") {
         let dir_to_save_coverage = PathBuf::from(COVERAGE_DIR);
