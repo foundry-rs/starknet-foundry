@@ -9,12 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.38.0] - 2025-02-25
 
-### Cast
-
-#### Changed
-
-- `--name` flag is now optional when using `account create` (default name is generated) 
-
 ### Forge
 
 #### Added
@@ -32,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Deprecated
 
 - `snforge clean-cache` command
+
+### Cast
+
+#### Changed
+
+- `--name` flag is now optional when using `account create` (default name is generated)
 
 ## [0.37.0] - 2025-02-03
 
