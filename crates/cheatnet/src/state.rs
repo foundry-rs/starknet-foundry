@@ -173,6 +173,7 @@ pub struct CallTrace {
     pub used_l1_resources: L1Resources,
     pub used_syscalls: SyscallCounter,
     pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
+    pub gas_consumed: u64,
 }
 
 impl CairoSerialize for CallTrace {
@@ -202,6 +203,7 @@ impl CallTrace {
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
             vm_trace: None,
+            gas_consumed: 0,
         }
     }
 }
@@ -507,6 +509,33 @@ impl TraceData {
         last_call.used_execution_resources = execution_resources;
 
         last_call.used_syscalls = used_syscalls;
+
+        last_call.used_l1_resources.l2_l1_message_sizes = l2_to_l1_messages
+            .iter()
+            .map(|ordered_message| ordered_message.message.payload.0.len())
+            .collect();
+
+        last_call.result = result;
+        last_call.vm_trace = vm_trace;
+    }
+
+    pub fn exit_nested_call_nowee(
+        &mut self,
+        gas_consumed: u64,
+        used_syscalls: SyscallCounter,
+        result: CallResult,
+        l2_to_l1_messages: &[OrderedL2ToL1Message],
+        vm_trace: Option<Vec<RelocatedTraceEntry>>,
+    ) {
+        let CallStackElement {
+            call_trace: last_call,
+            ..
+        } = self.current_call_stack.pop();
+
+        let mut last_call = last_call.borrow_mut();
+        last_call.gas_consumed = gas_consumed;
+
+        last_call.used_syscalls = used_syscalls; // co z syscallami? sprawdzić tez w constantsach czy dla sierra gazu syscalle/builtiny mają innym specjaln koszt (raczej maja)
 
         last_call.used_l1_resources.l2_l1_message_sizes = l2_to_l1_messages
             .iter()

@@ -10,6 +10,7 @@ use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use blockifier::{
     execution::{
         call_info::CallInfo,
+        contract_class::TrackedResource,
         entry_point::{
             handle_empty_constructor, CallEntryPoint, CallType, ConstructorContext,
             EntryPointExecutionContext, EntryPointExecutionResult,
@@ -143,6 +144,7 @@ pub fn execute_call_entry_point(
     match result {
         Ok((call_info, syscall_counter, vm_trace)) => {
             remove_syscall_resources_and_exit_success_call(
+                // szymczyk: to tutaj
                 &call_info,
                 &syscall_counter,
                 context,
@@ -175,21 +177,66 @@ fn remove_syscall_resources_and_exit_success_call(
     cheatnet_state: &mut CheatnetState,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
 ) {
+    // szymczyk: tutaj sierra gaz
     let versioned_constants = context.tx_context.block_context.versioned_constants();
     // We don't want the syscall resources to pollute the results
-    let mut resources = call_info.resources.clone();
-    resources -= &versioned_constants.get_additional_os_syscall_resources(syscall_counter);
+    match &context.tracked_resource_stack.first() {
+        Some(TrackedResource::CairoSteps) => {
+            let mut resources = call_info.resources.clone();
 
-    let nested_syscall_counter_sum =
-        aggregate_nested_syscall_counters(&cheatnet_state.trace_data.current_call_stack.top());
-    let syscall_counter = sum_syscall_counters(nested_syscall_counter_sum, syscall_counter);
-    cheatnet_state.trace_data.exit_nested_call(
-        resources,
-        syscall_counter,
-        CallResult::from_success(call_info),
-        &call_info.execution.l2_to_l1_messages,
-        vm_trace,
-    );
+            resources -= &versioned_constants.get_additional_os_syscall_resources(syscall_counter);
+
+            let nested_syscall_counter_sum = aggregate_nested_syscall_counters(
+                &cheatnet_state.trace_data.current_call_stack.top(),
+            );
+            let syscall_counter = sum_syscall_counters(nested_syscall_counter_sum, syscall_counter);
+            cheatnet_state.trace_data.exit_nested_call(
+                resources,
+                syscall_counter,
+                CallResult::from_success(call_info),
+                &call_info.execution.l2_to_l1_messages,
+                vm_trace,
+            );
+        }
+        Some(TrackedResource::SierraGas) => {
+            dbg!("sierra");
+            let gas_consumed = call_info.execution.gas_consumed;
+
+            let nested_syscall_counter_sum = aggregate_nested_syscall_counters(
+                &cheatnet_state.trace_data.current_call_stack.top(),
+            );
+            let syscall_counter = sum_syscall_counters(nested_syscall_counter_sum, syscall_counter);
+            cheatnet_state.trace_data.exit_nested_call_nowee(
+                gas_consumed,
+                syscall_counter,
+                CallResult::from_success(call_info),
+                &call_info.execution.l2_to_l1_messages,
+                vm_trace,
+            );
+        }
+        _ => todo!(),
+    };
+    // let mut resources = call_info.resources.clone();
+    // let gas = call_info.execution.gas_consumed;
+    //
+    // dbg!("cojes");
+    // dbg!(&context.tracked_resource_stack);
+    // dbg!(&resources);
+    // dbg!(&syscall_counter);
+    // dbg!(&gas);
+    // //resources -= &versioned_constants.get_additional_os_syscall_resources(syscall_counter);
+    // dbg!("a nic");
+    //
+    // let nested_syscall_counter_sum =
+    //     aggregate_nested_syscall_counters(&cheatnet_state.trace_data.current_call_stack.top());
+    // let syscall_counter = sum_syscall_counters(nested_syscall_counter_sum, syscall_counter);
+    // cheatnet_state.trace_data.exit_nested_call(
+    //     resources,
+    //     syscall_counter,
+    //     CallResult::from_success(call_info),
+    //     &call_info.execution.l2_to_l1_messages,
+    //     vm_trace,
+    // );
 }
 
 fn exit_error_call(
@@ -267,6 +314,7 @@ fn get_mocked_function_cheat_status<'a>(
 }
 
 fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {
+    dbg!("DUPAAAA");
     CallInfo {
         call: CallEntryPoint {
             class_hash: Some(call.class_hash.unwrap_or_default()),
@@ -285,7 +333,7 @@ fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {
         accessed_storage_keys: HashSet::new(),
         read_class_hash_values: vec![],
         // This defaults to `CairoSteps` as of writing this, but it could be changed in the future
-        tracked_resource: Default::default(),
+        tracked_resource: Default::default(), //
         accessed_contract_addresses: Default::default(),
     }
 }

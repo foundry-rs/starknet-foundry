@@ -1,4 +1,5 @@
 use crate::{
+    forge_config::ForgeTrackedResource,
     package_tests::{
         raw::TestTargetRaw,
         with_config::{TestCaseWithConfig, TestTargetWithConfig},
@@ -20,7 +21,10 @@ use rayon::iter::ParallelIterator;
 use std::{collections::HashMap, sync::Arc};
 use universal_sierra_compiler_api::{compile_sierra_at_path, SierraType};
 
-pub fn test_target_with_config(test_target_raw: TestTargetRaw) -> Result<TestTargetWithConfig> {
+pub fn test_target_with_config(
+    test_target_raw: TestTargetRaw,
+    tracked_resource: &ForgeTrackedResource,
+) -> Result<TestTargetWithConfig> {
     macro_rules! by_id {
         ($field:ident) => {{
             let temp: HashMap<_, _> = test_target_raw
@@ -64,7 +68,7 @@ pub fn test_target_with_config(test_target_raw: TestTargetRaw) -> Result<TestTar
 
             let test_details = build_test_details(func, &type_declarations, &type_size_map);
 
-            let raw_config = run_config_pass(&test_details, &casm_program)?;
+            let raw_config = run_config_pass(&test_details, &casm_program, tracked_resource)?;
 
             Ok(TestCaseWithConfig {
                 config: raw_config.into(),

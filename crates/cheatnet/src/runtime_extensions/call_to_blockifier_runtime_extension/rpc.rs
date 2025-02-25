@@ -28,6 +28,7 @@ use starknet_types_core::felt::Felt;
 pub struct UsedResources {
     pub syscall_counter: SyscallCounter,
     pub execution_resources: ExecutionResources,
+    pub gas_consumed: u64,
     pub l2_to_l1_payload_lengths: Vec<usize>,
     pub l1_handler_payload_lengths: Vec<usize>,
     pub events: Vec<EventContent>,

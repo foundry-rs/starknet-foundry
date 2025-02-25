@@ -409,7 +409,10 @@ impl<Extension: ExtensionLogic> ResourceTracker for ExtendedRuntime<Extension> {
     }
 
     fn consume_step(&mut self) {
+        //dbg!("sraka");
         self.extended_runtime.consume_step();
+        //dbg!("dupa");
+        //dbg!(self.consumed());
     }
 
     fn get_n_steps(&self) -> Option<usize> {

@@ -46,11 +46,14 @@ pub fn run_assembled_program(
 
     let mut runner = build_cairo_runner(data, builtins, hints_dict)?;
 
+    dbg!("w casmie");
+
     run_function_with_runner(
         |vm| initialize_vm(vm, data_len),
         hint_processor,
         &mut runner,
     )?;
+    dbg!("po casmie");
 
     Ok(runner)
 }

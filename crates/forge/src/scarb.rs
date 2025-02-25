@@ -3,6 +3,7 @@ use anyhow::{Context, Result};
 use cairo_lang_sierra::program::VersionedProgram;
 use camino::Utf8Path;
 use configuration::PackageConfig;
+use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::package_tests::raw::TestTargetRaw;
 use forge_runner::package_tests::TestTargetLocation;
 use scarb_api::{test_targets_by_name, ScarbCommand};
@@ -229,6 +230,7 @@ mod tests {
                 fuzzer_runs: None,
                 fuzzer_seed: None,
                 max_n_steps: None,
+                tracked_resource: ForgeTrackedResource::CairoSteps,
                 detailed_resources: false,
                 save_trace_data: false,
                 build_profile: false,
@@ -489,6 +491,7 @@ mod tests {
                 fuzzer_runs: None,
                 fuzzer_seed: None,
                 max_n_steps: None,
+                tracked_resource: ForgeTrackedResource::CairoSteps,
                 detailed_resources: false,
                 save_trace_data: false,
                 build_profile: false,

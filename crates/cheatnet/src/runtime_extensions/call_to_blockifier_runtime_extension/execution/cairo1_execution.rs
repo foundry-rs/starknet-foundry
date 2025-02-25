@@ -195,6 +195,9 @@ pub fn execute_entry_point_call_cairo1(
         program_extra_data_length,
         tracked_resource,
     )?;
+    //    dbg!("dupaaa cairo1 execution");
+    //     dbg!(&call_info.execution.gas_consumed);
+    //     dbg!(&call_info.resources);
     if call_info.execution.failed {
         return Err(EntryPointExecutionErrorWithTrace {
             source: EntryPointExecutionError::ExecutionFailed {
@@ -235,8 +238,8 @@ pub fn cheatable_run_entry_point(
 
     // region: Modified blockifier code
     // Relocate trace to then collect it
-    runner.relocate(true).map_err(CairoRunError::from)?;
-    // endregion
+    runner.relocate(true).map_err(CairoRunError::from)?; //
+                                                         // endregion
 
     Ok(())
 }

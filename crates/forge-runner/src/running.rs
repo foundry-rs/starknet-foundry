@@ -5,6 +5,7 @@ use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
 use crate::test_case_summary::{Single, TestCaseSummary};
 use anyhow::{ensure, Result};
+use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::state::cached_state::CachedState;
 use cairo_lang_runner::{Arg, RunResult, SierraCasmRunner};
@@ -80,12 +81,14 @@ pub fn run_test(
         if send.is_closed() {
             return TestCaseSummary::Skipped {};
         }
+        dbg!("lets gooooo");
         let run_result = run_test_case(
             &case,
             &casm_program,
             &RuntimeConfig::from(&test_runner_config),
             None,
         );
+        dbg!("przeszlo run_result");
 
         // TODO: code below is added to fix snforge tests
         // remove it after improve exit-first tests
@@ -183,8 +186,14 @@ pub fn run_test_case(
     let block_info = state_reader.get_block_info()?;
     let chain_id = state_reader.get_chain_id()?;
 
-    let mut context = build_context(&block_info, chain_id);
+    let mut context = build_context(
+        &block_info,
+        chain_id,
+        &TrackedResource::from(runtime_config.tracked_resource),
+    );
+    //dbg!(&context);
 
+    // szymczyk: w zależności od tego czy trackujemy vm resources?
     if let Some(max_n_steps) = runtime_config.max_n_steps {
         set_max_steps(&mut context, max_n_steps);
     }
@@ -241,7 +250,7 @@ pub fn run_test_case(
                 let vm_resources_without_inner_calls = runner
                     .get_execution_resources()
                     .expect("Execution resources missing")
-                    .filter_unused_builtins();
+                    .filter_unused_builtins(); // szymczyk: todo, dla sierra nie dodwac tego? czy zostawić i jolo?
                 add_vm_execution_resources_to_top_call(
                     &mut forge_runtime,
                     &vm_resources_without_inner_calls,

@@ -567,6 +567,7 @@ pub fn add_vm_execution_resources_to_top_call(
 }
 
 pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
+    // szymczyk: pytanie czy to w ogóle tu ma być wszystko najebane? moze zmienic nazwe funkcji?
     // call representing the test code
     let top_call = runtime
         .extended_runtime
@@ -578,8 +579,10 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
         .top();
 
     let all_execution_resources = add_execution_resources(top_call.clone());
+    let all_sierra_gas_consumed = add_sierra_gas_consumed(top_call.clone());
     let mut top_call = top_call.borrow_mut();
     top_call.used_execution_resources = all_execution_resources;
+    top_call.gas_consumed = all_sierra_gas_consumed;
 
     let top_call_syscalls = runtime
         .extended_runtime
@@ -663,6 +666,7 @@ fn add_syscall_resources(
 
 #[allow(clippy::needless_pass_by_value)]
 fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResources {
+    //
     let mut execution_resources = top_call.borrow().used_execution_resources.clone();
     for nested_call in &top_call.borrow().nested_calls {
         match nested_call {
@@ -673,6 +677,19 @@ fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResourc
         }
     }
     execution_resources
+}
+
+fn add_sierra_gas_consumed(top_call: Rc<RefCell<CallTrace>>) -> u64 {
+    let mut gas_consumed = top_call.borrow().gas_consumed.clone();
+    for nested_call in &top_call.borrow().nested_calls {
+        match nested_call {
+            CallTraceNode::EntryPointCall(nested_call) => {
+                gas_consumed += &add_sierra_gas_consumed(nested_call.clone());
+            }
+            CallTraceNode::DeployWithoutConstructor => {}
+        }
+    }
+    gas_consumed
 }
 
 #[must_use]
@@ -717,6 +734,7 @@ pub fn get_all_used_resources(
         .top();
 
     let execution_resources = top_call.borrow().used_execution_resources.clone();
+    let sierra_gas_consumed = top_call.borrow().gas_consumed.clone();
 
     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
     let events = runtime_call_info
@@ -740,6 +758,7 @@ pub fn get_all_used_resources(
         events,
         syscall_counter: top_call_syscalls,
         execution_resources,
+        gas_consumed: sierra_gas_consumed,
         l1_handler_payload_lengths,
         l2_to_l1_payload_lengths,
     }

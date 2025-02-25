@@ -3,6 +3,7 @@ use anyhow::anyhow;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
+use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::CACHE_DIR;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
@@ -193,6 +194,10 @@ pub struct TestArgs {
     /// Build contracts separately in the scarb starknet contract target
     #[arg(long)]
     no_optimization: bool,
+
+    /// Specify tracked resource type
+    #[arg(long, value_enum, default_value_t)]
+    tracked_resource: ForgeTrackedResource,
 
     /// Additional arguments for cairo-coverage or cairo-profiler
     #[clap(last = true)]

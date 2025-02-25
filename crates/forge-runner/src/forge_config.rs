@@ -1,8 +1,12 @@
+use blockifier::execution::contract_class::TrackedResource;
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
+use clap::ValueEnum;
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::ffi::OsString;
 use std::num::NonZeroU32;
+use std::str::FromStr;
 use std::sync::Arc;
 
 #[derive(Debug, PartialEq)]
@@ -21,6 +25,7 @@ pub struct TestRunnerConfig {
     pub cache_dir: Utf8PathBuf,
     pub contracts_data: ContractsData,
     pub environment_variables: HashMap<String, String>,
+    pub tracked_resource: ForgeTrackedResource,
 }
 
 #[derive(Debug, PartialEq)]
@@ -35,6 +40,34 @@ pub struct ExecutionDataToSave {
     pub profile: bool,
     pub coverage: bool,
     pub additional_args: Vec<OsString>,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Deserialize, Eq, ValueEnum)]
+pub enum ForgeTrackedResource {
+    #[default]
+    CairoSteps,
+    SierraGas,
+}
+
+impl FromStr for ForgeTrackedResource {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "cairosteps" => Ok(Self::CairoSteps),
+            "sierragas" => Ok(Self::SierraGas),
+            _ => Ok(Self::CairoSteps), // szymczyk: log error
+        }
+    }
+}
+
+impl From<&ForgeTrackedResource> for TrackedResource {
+    fn from(m: &ForgeTrackedResource) -> Self {
+        match m {
+            ForgeTrackedResource::CairoSteps => TrackedResource::CairoSteps,
+            ForgeTrackedResource::SierraGas => TrackedResource::SierraGas,
+        }
+    }
 }
 
 impl ExecutionDataToSave {
@@ -66,6 +99,7 @@ pub struct RuntimeConfig<'a> {
     pub cache_dir: &'a Utf8PathBuf,
     pub contracts_data: &'a ContractsData,
     pub environment_variables: &'a HashMap<String, String>,
+    pub tracked_resource: &'a ForgeTrackedResource,
 }
 
 impl<'a> RuntimeConfig<'a> {
@@ -77,6 +111,7 @@ impl<'a> RuntimeConfig<'a> {
             cache_dir: &value.cache_dir,
             contracts_data: &value.contracts_data,
             environment_variables: &value.environment_variables,
+            tracked_resource: &value.tracked_resource,
         }
     }
 }
