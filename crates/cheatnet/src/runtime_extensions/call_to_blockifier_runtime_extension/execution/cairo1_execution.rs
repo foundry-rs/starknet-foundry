@@ -65,7 +65,6 @@ fn prepare_program_extra_data(
     // additional `ret` statement).
     let mut ptr = (runner.vm.get_pc() + contract_class.bytecode_length())?;
     // Push a `ret` opcode.
-
     write_felt(
         &mut runner.vm,
         &mut ptr,
