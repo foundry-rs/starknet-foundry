@@ -153,7 +153,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
     fn test_load_contracts_artifacts() {
         let temp = crate::tests::setup_package("basic_package");
         let tests_dir = temp.join("tests");

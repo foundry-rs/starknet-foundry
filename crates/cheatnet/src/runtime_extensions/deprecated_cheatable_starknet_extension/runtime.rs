@@ -5,7 +5,6 @@ use blockifier::execution::{
         DeprecatedSyscallSelector, hint_processor::DeprecatedSyscallHintProcessor,
     },
     hint_code,
-    syscalls::{SyscallResult, hint_processor::SyscallExecutionError},
 };
 use cairo_vm::{
     hint_processor::{
@@ -33,16 +32,6 @@ pub struct DeprecatedStarknetRuntime<'a> {
 impl SyscallPtrAccess for DeprecatedStarknetRuntime<'_> {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
         &mut self.hint_handler.syscall_ptr
-    }
-
-    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
-        if ptr != self.hint_handler.syscall_ptr {
-            return Err(SyscallExecutionError::BadSyscallPointer {
-                expected_ptr: self.hint_handler.syscall_ptr,
-                actual_ptr: ptr,
-            });
-        }
-        Result::Ok(())
     }
 }
 
@@ -144,7 +133,7 @@ impl<Extension: DeprecatedExtensionLogic> DeprecatedExtendedRuntime<Extension> {
         ap_tracking: &ApTracking,
     ) -> Result<(), HintError> {
         let initial_syscall_ptr = get_ptr_from_var_name("syscall_ptr", vm, ids_data, ap_tracking)?;
-        self.verify_syscall_ptr(initial_syscall_ptr)?;
+
         let selector = DeprecatedSyscallSelector::try_from(felt_from_ptr_immutable(
             vm,
             &initial_syscall_ptr,
@@ -172,10 +161,6 @@ impl<Extension: DeprecatedExtensionLogic> SyscallPtrAccess
 {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
         self.extended_runtime.get_mut_syscall_ptr()
-    }
-
-    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
-        self.extended_runtime.verify_syscall_ptr(ptr)
     }
 }
 

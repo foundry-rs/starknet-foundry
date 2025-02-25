@@ -510,23 +510,18 @@ fn proxy_storage() {
 }
 
 #[test]
-#[ignore] // Not doable right now in production
 fn proxy_dispatcher_panic() {
     let test = test_case!(
         indoc!(
             r#"
-        use array::ArrayTrait;
-        use result::ResultTrait;
-        use option::OptionTrait;
-        use traits::TryInto;
-        use traits::Into;
+        use snforge_std::DeclareResultTrait;
         use starknet::ContractAddress;
-        use starknet::Felt252TryIntoContractAddress;
         use snforge_std::{ declare, ContractClassTrait };
+        use core::panic_with_felt252;
 
         fn deploy_contract(name: ByteArray, constructor_calldata: @Array<felt252>) -> ContractAddress {
-            let contract = declare(name).unwrap();
-            let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+            let contract = declare(name).unwrap().contract_class();
+            let (contract_address, _) = contract.deploy(constructor_calldata).unwrap();
             contract_address
         }
 
@@ -563,7 +558,6 @@ fn proxy_dispatcher_panic() {
 
             #[starknet::contract]
             mod Caller {
-                use result::ResultTrait;
                 use starknet::ContractAddress;
 
                 #[starknet::interface]
@@ -605,6 +599,8 @@ fn proxy_dispatcher_panic() {
 
             #[starknet::contract]
             mod Executor {
+                use core::panic_with_felt252;
+
                 #[storage]
                 struct Storage {}
 

@@ -1,14 +1,11 @@
 use anyhow::Result;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::syscalls::SyscallResult;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::errors::StateError;
-use cairo_lang_casm::hints::{Hint, StarknetHint};
+use cairo_lang_casm::hints::{ExternalHint, Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::{
-    MemBuffer, extract_buffer, extract_relocatable, get_ptr, vm_get_range,
-};
-use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
+use cairo_lang_runner::casm_run::{MemBuffer, extract_relocatable, get_val, vm_get_range};
+use cairo_lang_runner::{Arg, casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::hint_processor::hint_processor_definition::{
     HintProcessor, HintProcessorLogic, HintReference,
@@ -27,6 +24,7 @@ use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::raw::RawFeltVec;
 use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
 use indoc::indoc;
+use num_traits::cast::ToPrimitive;
 use starknet_api::StarknetApiError;
 use starknet_types_core::felt::Felt;
 use std::any::Any;
@@ -55,39 +53,49 @@ const CAIRO_TEST_CHEATCODES: [&str; 14] = [
 ];
 pub trait SyscallPtrAccess {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable;
-
-    fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> SyscallResult<()>;
 }
 
 pub struct StarknetRuntime<'a> {
     pub hint_handler: SyscallHintProcessor<'a>,
+    // Required for handling `External` hints
+    //
+    // See https://github.com/starkware-libs/cairo/blob/dfb5d3fdcf80bff30c205c14163f99c890dbdc10/crates/cairo-lang-runner/src/casm_run/mod.rs#L94
+    pub user_args: Vec<Vec<Arg>>,
 }
 
 impl SyscallPtrAccess for StarknetRuntime<'_> {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
         &mut self.hint_handler.syscall_ptr
     }
-
-    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
-        self.hint_handler.verify_syscall_ptr(ptr)
-    }
 }
 
 impl ResourceTracker for StarknetRuntime<'_> {
     fn consumed(&self) -> bool {
-        self.hint_handler.context.vm_run_resources.consumed()
+        self.hint_handler.base.context.vm_run_resources.consumed()
     }
 
     fn consume_step(&mut self) {
-        self.hint_handler.context.vm_run_resources.consume_step();
+        self.hint_handler
+            .base
+            .context
+            .vm_run_resources
+            .consume_step();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        self.hint_handler.context.vm_run_resources.get_n_steps()
+        self.hint_handler
+            .base
+            .context
+            .vm_run_resources
+            .get_n_steps()
     }
 
     fn run_resources(&self) -> &RunResources {
-        self.hint_handler.context.vm_run_resources.run_resources()
+        self.hint_handler
+            .base
+            .context
+            .vm_run_resources
+            .run_resources()
     }
 }
 
@@ -121,6 +129,10 @@ fn fetch_cheatcode_input(
     Ok(inputs)
 }
 
+fn args_size(args: &[Arg]) -> usize {
+    args.iter().map(Arg::size).sum()
+}
+
 impl HintProcessorLogic for StarknetRuntime<'_> {
     fn execute_hint(
         &mut self,
@@ -131,29 +143,65 @@ impl HintProcessorLogic for StarknetRuntime<'_> {
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
 
-        if let Some(Hint::Starknet(StarknetHint::Cheatcode {
-            selector,
-            input_start: _,
-            input_end: _,
-            output_start: _,
-            output_end: _,
-        })) = maybe_extended_hint
-        {
-            let selector = parse_selector(selector)?;
+        if let Some(extended_hint) = maybe_extended_hint {
+            match extended_hint {
+                Hint::Starknet(StarknetHint::Cheatcode {
+                    selector,
+                    input_start: _,
+                    input_end: _,
+                    output_start: _,
+                    output_end: _,
+                }) => {
+                    let selector = parse_selector(selector)?;
 
-            let is_cairo_test_fn = CAIRO_TEST_CHEATCODES.contains(&selector.as_str());
+                    let is_cairo_test_fn = CAIRO_TEST_CHEATCODES.contains(&selector.as_str());
 
-            let error = format!(
-                "Function `{selector}` is not supported in this runtime\n{}",
-                if is_cairo_test_fn {
-                    "Check if functions are imported from `snforge_std`/`sncast_std` NOT from `starknet::testing`"
-                } else {
-                    "Check if used library (`snforge_std` or `sncast_std`) is compatible with used binary, probably one of them is not updated"
+                    let error = format!(
+                        "Function `{selector}` is not supported in this runtime\n{}",
+                        if is_cairo_test_fn {
+                            "Check if functions are imported from `snforge_std`/`sncast_std` NOT from `starknet::testing`"
+                        } else {
+                            "Check if used library (`snforge_std` or `sncast_std`) is compatible with used binary, probably one of them is not updated"
+                        }
+                    );
+
+                    return Err(CustomHint(error.into()));
                 }
-            );
-
-            return Err(HintError::CustomHint(error.into()));
-        }
+                // Copied from https://github.com/starkware-libs/cairo/blob/3d5631d3f6563b5f97c11c816f530be99095a843/crates/cairo-lang-runner/src/casm_run/mod.rs#L1316
+                Hint::External(ExternalHint::AddRelocationRule { src, dst }) => {
+                    return Ok(vm.add_relocation_rule(
+                        extract_relocatable(vm, src)?,
+                        extract_relocatable(vm, dst)?,
+                    )?);
+                }
+                // Copied from https://github.com/starkware-libs/cairo/blob/3d5631d3f6563b5f97c11c816f530be99095a843/crates/cairo-lang-runner/src/casm_run/mod.rs#L1320
+                Hint::External(ExternalHint::WriteRunParam { index, dst }) => {
+                    let index = get_val(vm, index)?.to_usize().expect("Got a bad index.");
+                    let mut stack =
+                        vec![(cell_ref_to_relocatable(dst, vm), &self.user_args[index])];
+                    while let Some((mut buffer, values)) = stack.pop() {
+                        for value in values {
+                            match value {
+                                Arg::Value(v) => {
+                                    vm.insert_value(buffer, v)?;
+                                    buffer += 1;
+                                }
+                                Arg::Array(arr) => {
+                                    let arr_buffer = vm.add_memory_segment();
+                                    stack.push((arr_buffer, arr));
+                                    vm.insert_value(buffer, arr_buffer)?;
+                                    buffer += 1;
+                                    vm.insert_value(buffer, (arr_buffer + args_size(arr))?)?;
+                                    buffer += 1;
+                                }
+                            }
+                        }
+                    }
+                    return Ok(());
+                }
+                _ => {}
+            }
+        };
 
         self.hint_handler
             .execute_hint(vm, exec_scopes, hint_data, constants)
@@ -207,8 +255,8 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
                         output_end,
                     },
                 ),
-                StarknetHint::SystemCall { system } => {
-                    self.execute_syscall_hint(vm, exec_scopes, hint_data, constants, system)
+                StarknetHint::SystemCall { .. } => {
+                    self.execute_syscall_hint(vm, exec_scopes, hint_data, constants)
                 }
             },
             _ => self
@@ -295,13 +343,7 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
         constants: &HashMap<String, Felt>,
-        system: &ResOperand,
     ) -> Result<(), HintError> {
-        let (cell, offset) = extract_buffer(system);
-        let system_ptr = get_ptr(vm, cell, &offset)?;
-
-        self.verify_syscall_ptr(system_ptr)?;
-
         // We peek into memory to check the selector
         let selector = DeprecatedSyscallSelector::try_from(
             vm.get_integer(*self.get_mut_syscall_ptr())
@@ -358,10 +400,6 @@ impl<Extension: ExtensionLogic> SignalPropagator for ExtendedRuntime<Extension> 
 impl<Extension: ExtensionLogic> SyscallPtrAccess for ExtendedRuntime<Extension> {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
         self.extended_runtime.get_mut_syscall_ptr()
-    }
-
-    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
-        self.extended_runtime.verify_syscall_ptr(ptr)
     }
 }
 
@@ -470,13 +508,13 @@ pub enum EnhancedHintError {
 impl From<BufferReadError> for EnhancedHintError {
     fn from(value: BufferReadError) -> Self {
         EnhancedHintError::Anyhow(
-            anyhow::Error::from(value)
-                .context(
-                    indoc!(r"
+                anyhow::Error::from(value)
+                    .context(
+                        indoc!(r"
                         Reading from buffer failed, this can be caused by calling starknet::testing::cheatcode with invalid arguments.
                         Probably `snforge_std`/`sncast_std` version is incompatible, check above for incompatibility warning.
                     ")
-                )
-        )
+                    )
+            )
     }
 }

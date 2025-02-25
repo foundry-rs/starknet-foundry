@@ -1,6 +1,5 @@
 use std::marker::PhantomData;
 
-use crate::constants::TEST_ADDRESS;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::execution_utils::felt_from_ptr;
 use blockifier::execution::syscalls::{
@@ -17,8 +16,8 @@ use blockifier::execution::{
 use cairo_vm::types::relocatable::MaybeRelocatable;
 use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
 use runtime::{ExtendedRuntime, ExtensionLogic, SyscallHandlingResult, SyscallPtrAccess};
+use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::ContractAddress;
-use starknet_api::deprecated_contract_class::EntryPointType;
 
 use crate::state::CheatnetState;
 
@@ -32,6 +31,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::{
 
 use super::cheatable_starknet_runtime_extension::CheatableStarknetRuntime;
 use conversions::string::TryFromHexStr;
+use runtime::starknet::constants::TEST_ADDRESS;
 
 pub mod execution;
 pub mod panic_data;
@@ -111,7 +111,7 @@ impl ExecuteCall for CallContractRequest {
             storage_address: contract_address,
             caller_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
             call_type: CallType::Call,
-            initial_gas: u64::MAX,
+            initial_gas: i64::MAX as u64,
         };
 
         call_entry_point(

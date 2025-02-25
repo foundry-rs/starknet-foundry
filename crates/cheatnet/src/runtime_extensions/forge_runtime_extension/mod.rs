@@ -1,12 +1,14 @@
 use self::contracts_data::ContractsData;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
+use crate::runtime_extensions::common::sum_syscall_counters;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
 use crate::runtime_extensions::{
     call_to_blockifier_runtime_extension::{
         CallToBlockifierRuntime,
-        rpc::{CallFailure, CallResult, UsedResources},
+        rpc::{CallFailure, CallResult},
     },
     cheatable_starknet_runtime_extension::SyscallSelector,
-    common::{get_relocated_vm_trace, sum_syscall_counters},
+    common::get_relocated_vm_trace,
     forge_runtime_extension::cheatcodes::{
         CheatcodeError,
         declare::declare,
@@ -17,14 +19,15 @@ use crate::runtime_extensions::{
         storage::{calculate_variable_address, load, store},
     },
 };
-use crate::state::CallTraceNode;
+use crate::state::{CallTrace, CallTraceNode};
 use anyhow::{Context, Result, anyhow};
+use blockifier::context::TransactionContext;
+use blockifier::execution::call_info::CallExecution;
+use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::state::errors::StateError;
 use blockifier::{
-    context::TransactionContext,
     execution::{
-        call_info::{CallExecution, CallInfo},
-        deprecated_syscalls::DeprecatedSyscallSelector,
+        call_info::CallInfo, deprecated_syscalls::DeprecatedSyscallSelector,
         syscalls::hint_processor::SyscallCounter,
     },
     versioned_constants::VersionedConstants,
@@ -35,20 +38,24 @@ use cairo_vm::vm::{
     errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
     vm_core::VirtualMachine,
 };
+use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
 use conversions::felt::TryInferFormat;
 use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::CairoSerialize;
 use data_transformer::cairo_types::CairoU256;
 use rand::prelude::StdRng;
+use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
 };
 use starknet::signers::SigningKey;
-use starknet_api::{core::ClassHash, deprecated_contract_class::EntryPointType::L1Handler};
+use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
 use starknet_types_core::felt::Felt;
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 pub mod cheatcodes;
@@ -121,8 +128,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
+                    .base
                     .state
-                    .get_compiled_contract_class(class)
+                    .get_compiled_class(class)
                 {
                     Err(StateError::UndeclaredClassHash(_)) => true,
                     Err(err) => return Err(err.into()),
@@ -133,6 +141,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
+                    .base
                     .state
                     .get_class_hash_at(contract)?
                     == ClassHash::default()
@@ -156,6 +165,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
+                    .base
                     .state;
 
                 let contract_name: String = input_reader.read::<ByteArray>()?.to_string();
@@ -226,6 +236,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
+                    .base
                     .state;
 
                 match get_class_hash(*state, contract_address) {
@@ -448,6 +459,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
+                    .base
                     .state;
                 let target = input_reader.read()?;
                 let storage_address = input_reader.read()?;
@@ -461,6 +473,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
+                    .base
                     .state;
                 let target = input_reader.read()?;
                 let storage_address = input_reader.read()?;
@@ -536,16 +549,10 @@ fn handle_declare_deploy_result<T: CairoSerialize>(
     Ok(CheatcodeHandlingResult::from_serializable(result))
 }
 
-pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
-    let all_execution_resources = runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .resources
-        .clone();
-
-    // call representing the test code
+pub fn add_vm_execution_resources_to_top_call(
+    runtime: &mut ForgeRuntime,
+    resources: &ExecutionResources,
+) {
     let top_call = runtime
         .extended_runtime
         .extended_runtime
@@ -556,6 +563,22 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
         .top();
     let mut top_call = top_call.borrow_mut();
 
+    top_call.used_execution_resources += resources;
+}
+
+pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
+    // call representing the test code
+    let top_call = runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .trace_data
+        .current_call_stack
+        .top();
+
+    let all_execution_resources = add_execution_resources(top_call.clone());
+    let mut top_call = top_call.borrow_mut();
     top_call.used_execution_resources = all_execution_resources;
 
     let top_call_syscalls = runtime
@@ -597,6 +620,7 @@ pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
         .extended_runtime
         .extended_runtime
         .hint_handler
+        .base
         .l2_to_l1_messages
         .iter()
         .map(|ordered_message| ordered_message.message.payload.0.len())
@@ -633,10 +657,22 @@ fn add_syscall_resources(
     syscall_counter: &SyscallCounter,
 ) -> ExecutionResources {
     let mut total_vm_usage = execution_resources.filter_unused_builtins();
-    total_vm_usage += &versioned_constants
-        .get_additional_os_syscall_resources(syscall_counter)
-        .expect("Could not get additional costs");
+    total_vm_usage += &versioned_constants.get_additional_os_syscall_resources(syscall_counter);
     total_vm_usage
+}
+
+#[allow(clippy::needless_pass_by_value)]
+fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResources {
+    let mut execution_resources = top_call.borrow().used_execution_resources.clone();
+    for nested_call in &top_call.borrow().nested_calls {
+        match nested_call {
+            CallTraceNode::EntryPointCall(nested_call) => {
+                execution_resources += &add_execution_resources(nested_call.clone());
+            }
+            CallTraceNode::DeployWithoutConstructor => {}
+        }
+    }
+    execution_resources
 }
 
 #[must_use]
@@ -645,8 +681,10 @@ pub fn get_all_used_resources(
     transaction_context: &TransactionContext,
 ) -> UsedResources {
     let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
-    let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.l2_to_l1_messages;
-    let top_call_events = starknet_runtime.hint_handler.events;
+    let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.base.l2_to_l1_messages;
+    let top_call_events = starknet_runtime.hint_handler.base.events;
+
+    let versioned_constants = transaction_context.block_context.versioned_constants();
 
     // used just to obtain payloads of L2 -> L1 messages
     let runtime_call_info = CallInfo {
@@ -655,10 +693,15 @@ pub fn get_all_used_resources(
             events: top_call_events,
             ..Default::default()
         },
-        inner_calls: starknet_runtime.hint_handler.inner_calls,
+        call: CallEntryPoint {
+            class_hash: Some(Felt::from_hex(TEST_CONTRACT_CLASS_HASH).unwrap().into_()),
+            ..Default::default()
+        },
+        inner_calls: starknet_runtime.hint_handler.base.inner_calls,
         ..Default::default()
     };
-    let l2_to_l1_payload_lengths = runtime_call_info.get_l2_to_l1_payload_lengths();
+    let summary = runtime_call_info.summarize(versioned_constants);
+    let l2_to_l1_payload_lengths = summary.l2_to_l1_payload_lengths;
 
     let l1_handler_payload_lengths =
         get_l1_handlers_payloads_lengths(&runtime_call_info.inner_calls);
@@ -674,6 +717,7 @@ pub fn get_all_used_resources(
         .top();
 
     let execution_resources = top_call.borrow().used_execution_resources.clone();
+
     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
     let events = runtime_call_info
         .iter() // This method iterates over inner calls as well
@@ -686,7 +730,6 @@ pub fn get_all_used_resources(
         })
         .collect();
 
-    let versioned_constants = transaction_context.block_context.versioned_constants();
     let execution_resources = add_syscall_resources(
         versioned_constants,
         &execution_resources,

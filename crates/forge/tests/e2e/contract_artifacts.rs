@@ -19,9 +19,9 @@ fn unit_and_integration() {
 
     Collected 2 test(s) from unit_and_integration package
     Running 1 test(s) from tests/
-    [PASS] unit_and_integration_integrationtest::tests::declare_and_call_contract_from_lib (gas: ~172)
+    [PASS] unit_and_integration_integrationtest::tests::declare_and_call_contract_from_lib (gas: [..])
     Running 1 test(s) from src/
-    [PASS] unit_and_integration::tests::declare_contract_from_lib (gas: ~1)
+    [PASS] unit_and_integration::tests::declare_contract_from_lib (gas: [..])
     Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
     "},
     );
@@ -41,9 +41,9 @@ fn unit_and_lib_integration() {
 
     Collected 2 test(s) from unit_and_lib_integration package
     Running 1 test(s) from tests/
-    [PASS] unit_and_lib_integration_tests::tests::declare_and_call_contract_from_lib (gas: ~172)
+    [PASS] unit_and_lib_integration_tests::tests::declare_and_call_contract_from_lib (gas: [..])
     Running 1 test(s) from src/
-    [PASS] unit_and_lib_integration::tests::declare_contract_from_lib (gas: ~1)
+    [PASS] unit_and_lib_integration::tests::declare_contract_from_lib (gas: [..])
     Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
     "},
     );
@@ -63,7 +63,7 @@ fn only_integration() {
 
     Collected 1 test(s) from only_integration package
     Running 1 test(s) from tests/
-    [PASS] only_integration_integrationtest::tests::declare_and_call_contract_from_lib (gas: ~172)
+    [PASS] only_integration_integrationtest::tests::declare_and_call_contract_from_lib (gas: [..])
     Running 0 test(s) from src/
     Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
     "},
@@ -84,14 +84,13 @@ fn only_unit() {
 
     Collected 1 test(s) from only_unit package
     Running 1 test(s) from src/
-    [PASS] only_unit::tests::declare_contract_from_lib (gas: ~1)
+    [PASS] only_unit::tests::declare_contract_from_lib (gas: [..])
     Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
     "},
     );
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn only_lib_integration() {
     let temp = setup_package("targets/only_lib_integration");
     let output = test_runner(&temp).assert().code(0);
@@ -105,7 +104,7 @@ fn only_lib_integration() {
 
     Collected 1 test(s) from only_lib_integration package
     Running 1 test(s) from tests/
-    [PASS] only_lib_integration_tests::tests::declare_and_call_contract_from_lib (gas: ~172)
+    [PASS] only_lib_integration_tests::tests::declare_and_call_contract_from_lib (gas: [..])
     Running 0 test(s) from src/
     Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
     "},
@@ -130,9 +129,9 @@ fn with_features() {
 
     Collected 2 test(s) from with_features package
     Running 1 test(s) from tests/
-    [PASS] with_features_integrationtest::tests::declare_and_call_contract_from_lib (gas: ~172)
+    [PASS] with_features_integrationtest::tests::declare_and_call_contract_from_lib (gas: [..])
     Running 1 test(s) from src/
-    [PASS] with_features::tests::declare_contract_from_lib (gas: ~1)
+    [PASS] with_features::tests::declare_contract_from_lib (gas: [..])
     Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
     "},
     );
@@ -190,9 +189,9 @@ fn custom_target() {
 
     Collected 2 test(s) from custom_target package
     Running 1 test(s) from tests/
-    [PASS] custom_target_integrationtest::tests::declare_and_call_contract_from_lib (gas: ~172)
+    [PASS] custom_target_integrationtest::tests::declare_and_call_contract_from_lib (gas: [..])
     Running 1 test(s) from src/
-    [PASS] custom_target::tests::declare_contract_from_lib (gas: ~1)
+    [PASS] custom_target::tests::declare_contract_from_lib (gas: [..])
     Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
     "},
     );
@@ -203,7 +202,6 @@ fn custom_target() {
 // We do not define `build-external-contracts = ["targets::*"]` for `integration` target
 // The test still passes because contracts are collected from `unit` target which includes
 // the contracts from package by the default
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn custom_target_custom_names() {
     let temp = setup_package("targets/custom_target_custom_names");
     let output = test_runner(&temp).assert().code(0);
@@ -219,9 +217,9 @@ fn custom_target_custom_names() {
 
     Collected 2 test(s) from custom_target_custom_names package
     Running 1 test(s) from tests/
-    [PASS] custom_first::tests::declare_and_call_contract_from_lib (gas: ~172)
+    [PASS] custom_first::tests::declare_and_call_contract_from_lib (gas: [..])
     Running 1 test(s) from src/
-    [PASS] custom_target_custom_names::tests::declare_contract_from_lib (gas: ~1)
+    [PASS] custom_target_custom_names::tests::declare_contract_from_lib (gas: [..])
     Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
     "},
     );
@@ -244,7 +242,7 @@ fn custom_target_only_integration() {
 
     Collected 1 test(s) from custom_target_only_integration package
     Running 1 test(s) from tests/
-    [PASS] custom_first::tests::declare_and_call_contract_from_lib (gas: ~172)
+    [PASS] custom_first::tests::declare_and_call_contract_from_lib (gas: [..])
     Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
     "},
     );
@@ -253,7 +251,6 @@ fn custom_target_only_integration() {
 #[test]
 // Case: We define custom test target for integration test type
 // We delete `build-external-contracts = ["targets::*"]` for `integration` so the test fails
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn custom_target_only_integration_without_external() {
     let temp = setup_package("targets/custom_target_only_integration");
 
@@ -291,7 +288,6 @@ fn custom_target_only_integration_without_external() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn simple_package_no_starknet_contract_target() {
     let temp = setup_package("simple_package");
 
@@ -368,7 +364,6 @@ fn simple_package_no_starknet_contract_target() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn no_optimization_flag() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)

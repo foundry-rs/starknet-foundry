@@ -7,6 +7,7 @@ use conversions::IntoConv;
 use conversions::felt::FromShortString;
 use conversions::string::TryFromHexStr;
 use starknet_types_core::felt::Felt;
+use test_case::test_case;
 
 #[test]
 fn call_contract_error() {
@@ -100,4 +101,41 @@ fn call_proxied_contract_bytearray_panic() {
             Felt::from(26),
         ],
     );
+}
+
+#[test_case(&[Felt::from(1), Felt::from(1)], &[Felt::from(1)])]
+#[test_case(&[Felt::from(1), Felt::from(65)], &[Felt::from(65)])]
+#[test_case(&[Felt::from(4), Felt::from(1), Felt::from(65), Felt::from(2), Felt::from(66)],
+            &[Felt::from(1), Felt::from(65), Felt::from(2), Felt::from(66)])]
+fn call_proxied_contract_felts_panic(input: &[Felt], expected_panic: &[Felt]) {
+    let mut cached_state = create_cached_state();
+    let mut cheatnet_state = CheatnetState::default();
+
+    let proxy = deploy_contract(
+        &mut cached_state,
+        &mut cheatnet_state,
+        "ByteArrayPanickingContractProxy",
+        &[],
+    );
+    let bytearray_panicking_contract = deploy_contract(
+        &mut cached_state,
+        &mut cheatnet_state,
+        "ByteArrayPanickingContract",
+        &[],
+    );
+
+    let selector_felts = felt_selector_from_name("call_felts_panicking_contract");
+
+    let mut contract_call_args = vec![bytearray_panicking_contract.into_()];
+    contract_call_args.extend_from_slice(input);
+
+    let output = call_contract(
+        &mut cached_state,
+        &mut cheatnet_state,
+        &proxy,
+        selector_felts,
+        &contract_call_args,
+    );
+
+    assert_panic(output, expected_panic);
 }
