@@ -153,4 +153,4 @@ jobs:
       - name: Publish snforge_scarb_plugin
         if: needs.check-version.outputs.plugin_uploaded == 'false' || github.event_name == 'workflow_dispatch'
         working-directory: crates/snforge-scarb-plugin
-        run: scarb publish
+        run: scarb publish --allow-dirty
