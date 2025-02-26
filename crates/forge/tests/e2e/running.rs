@@ -428,7 +428,7 @@ fn with_include_ignored_flag_and_filter() {
 }
 
 #[test]
-fn with_exclude_filter_flag() {
+fn with_exclude_flag() {
     let temp = setup_package("simple_package");
 
     // Exclude the test "test_failing"

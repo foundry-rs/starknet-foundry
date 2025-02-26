@@ -85,7 +85,7 @@ impl RunForPackageArgs {
             args.include_ignored,
             args.rerun_failed,
             FailedTestsCache::new(cache_dir),
-            args.exclude_filter.clone(),
+            args.exclude.clone(),
         );
 
         Ok(RunForPackageArgs {
@@ -154,7 +154,8 @@ pub async fn run_for_package(
 
         let forge_config = forge_config.clone();
 
-        let summary = run_for_test_target(test_target, forge_config, &tests_filter).await?;
+        let summary =
+            run_for_test_target(test_target, forge_config, &tests_filter, &package_name).await?;
 
         match summary {
             TestTargetRunResult::Ok(summary) => {

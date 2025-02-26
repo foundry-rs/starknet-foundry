@@ -25,7 +25,7 @@ pub async fn run_for_test_target(
     tests: TestTargetWithResolvedConfig,
     forge_config: Arc<ForgeConfig>,
     tests_filter: &TestsFilter,
-    package_name: &str,
+    _package_name: &str,
 ) -> Result<TestTargetRunResult> {
     let sierra_program = &tests.sierra_program.program;
     let casm_program = tests.casm_program.clone();

@@ -225,6 +225,7 @@ fn fork_aliased_decorator_overrding() {
                     false,
                     false,
                     Default::default(),
+                    None
                 ),
                 forge_config: Arc::new(ForgeConfig {
                     test_runner_config: Arc::new(TestRunnerConfig {
