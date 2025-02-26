@@ -135,7 +135,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "2.10.0-rc.1"
+          scarb-version: "2.10.0"
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
