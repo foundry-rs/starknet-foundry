@@ -11,7 +11,7 @@ snforge.workspace = true
 
 [dependencies]
 addition = { path = "../addition" }
-starknet = "2.7.0"
+starknet = "2.8.5"
 
 [dev-dependencies]
 snforge_std.workspace = true

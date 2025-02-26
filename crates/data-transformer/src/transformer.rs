@@ -1,5 +1,5 @@
 use super::sierra_abi::{build_representation, parsing::parse_expression};
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{Context, Result, bail, ensure};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::Expr;
 use conversions::serde::serialize::SerializeToFeltVec;

@@ -1,4 +1,4 @@
-use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
+use crate::constants::build_test_entry_point;
 use crate::forking::state::ForkStateReader;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::{
@@ -6,25 +6,24 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execut
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
-use blockifier::blockifier::block::BlockInfo;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
+use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
-use blockifier::{
-    execution::contract_class::ContractClass,
-    state::state_api::{StateReader, StateResult},
-};
+use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_annotations::trace_data::L1Resources;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use conversions::serde::deserialize::CairoDeserialize;
 use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use conversions::string::TryFromHexStr;
+use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::starknet::context::SerializableBlockInfo;
 use runtime::starknet::state::DictStateReader;
+use starknet_api::block::BlockInfo;
 use starknet_api::core::{ChainId, EntryPointSelector};
-use starknet_api::transaction::ContractAddressSalt;
+use starknet_api::transaction::fields::ContractAddressSalt;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
     state::StorageKey,
@@ -102,14 +101,14 @@ impl StateReader for ExtendedStateReader {
             })
     }
 
-    fn get_compiled_contract_class(&self, class_hash: ClassHash) -> StateResult<ContractClass> {
+    fn get_compiled_class(&self, class_hash: ClassHash) -> StateResult<RunnableCompiledClass> {
         self.dict_state_reader
-            .get_compiled_contract_class(class_hash)
+            .get_compiled_class(class_hash)
             .or_else(|_| {
                 self.fork_state_reader
                     .as_ref()
                     .map_or(Err(UndeclaredClassHash(class_hash)), |reader| {
-                        reader.get_compiled_contract_class(class_hash)
+                        reader.get_compiled_class(class_hash)
                     })
             })
     }
@@ -160,6 +159,7 @@ impl<T> CheatStatus<T> {
 }
 
 /// Tree structure representing trace of a call.
+#[derive(Debug)]
 pub struct CallTrace {
     pub run_with_call_header: bool,
     // only these are serialized
@@ -207,7 +207,7 @@ impl CallTrace {
 }
 
 /// Enum representing node of a trace of a call.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum CallTraceNode {
     EntryPointCall(Rc<RefCell<CallTrace>>),
     DeployWithoutConstructor,
@@ -224,33 +224,25 @@ impl CallTraceNode {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct CallStackElement {
-    // when we exit the call we use it to calculate resources used by the call
-    resources_used_before_call: ExecutionResources,
     call_trace: Rc<RefCell<CallTrace>>,
     cheated_data: CheatedData,
 }
 
+#[derive(Debug)]
 pub struct NotEmptyCallStack(Vec<CallStackElement>);
 
 impl NotEmptyCallStack {
     pub fn from(elem: Rc<RefCell<CallTrace>>) -> Self {
         NotEmptyCallStack(vec![CallStackElement {
-            resources_used_before_call: ExecutionResources::default(),
             call_trace: elem,
             cheated_data: Default::default(),
         }])
     }
 
-    pub fn push(
-        &mut self,
-        elem: Rc<RefCell<CallTrace>>,
-        resources_used_before_call: ExecutionResources,
-        cheated_data: CheatedData,
-    ) {
+    pub fn push(&mut self, elem: Rc<RefCell<CallTrace>>, cheated_data: CheatedData) {
         self.0.push(CallStackElement {
-            resources_used_before_call,
             call_trace: elem,
             cheated_data,
         });
@@ -315,6 +307,7 @@ pub struct CheatedData {
     pub tx_info: CheatedTxInfo,
 }
 
+#[derive(Debug)]
 pub struct TraceData {
     pub current_call_stack: NotEmptyCallStack,
     pub is_vm_trace_needed: bool,
@@ -476,12 +469,7 @@ impl CheatnetState {
 }
 
 impl TraceData {
-    pub fn enter_nested_call(
-        &mut self,
-        entry_point: CallEntryPoint,
-        resources_used_before_call: ExecutionResources,
-        cheated_data: CheatedData,
-    ) {
+    pub fn enter_nested_call(&mut self, entry_point: CallEntryPoint, cheated_data: CheatedData) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
             run_with_call_header: false,
@@ -494,8 +482,7 @@ impl TraceData {
             .nested_calls
             .push(CallTraceNode::EntryPointCall(new_call.clone()));
 
-        self.current_call_stack
-            .push(new_call, resources_used_before_call, cheated_data);
+        self.current_call_stack.push(new_call, cheated_data);
     }
 
     pub fn set_class_hash_for_current_call(&mut self, class_hash: ClassHash) {
@@ -505,21 +492,20 @@ impl TraceData {
 
     pub fn exit_nested_call(
         &mut self,
-        resources_used_after_call: &ExecutionResources,
+        execution_resources: ExecutionResources,
         used_syscalls: SyscallCounter,
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
         vm_trace: Option<Vec<RelocatedTraceEntry>>,
     ) {
         let CallStackElement {
-            resources_used_before_call,
             call_trace: last_call,
             ..
         } = self.current_call_stack.pop();
 
         let mut last_call = last_call.borrow_mut();
-        last_call.used_execution_resources =
-            resources_used_after_call - &resources_used_before_call;
+        last_call.used_execution_resources = execution_resources;
+
         last_call.used_syscalls = used_syscalls;
 
         last_call.used_l1_resources.l2_l1_message_sizes = l2_to_l1_messages

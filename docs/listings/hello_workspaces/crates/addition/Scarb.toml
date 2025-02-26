@@ -4,7 +4,7 @@ version.workspace = true
 edition = "2024_07"
 
 [dependencies]
-starknet = "2.7.0"
+starknet = "2.8.5"
 
 [dev-dependencies]
 snforge_std.workspace = true

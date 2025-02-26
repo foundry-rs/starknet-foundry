@@ -1,10 +1,9 @@
-#![allow(dead_code)]
+use crate::WaitForTransactionError;
 use crate::helpers::constants::STATE_FILE_VERSION;
 use crate::response::errors::StarknetCommandError;
 use crate::response::structs::{DeclareResponse, DeployResponse, InvokeResponse};
 use crate::state::hashing::generate_id;
-use crate::WaitForTransactionError;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use serde::{Deserialize, Serialize};
@@ -173,7 +172,6 @@ impl ScriptTransactionEntry {
     }
 }
 
-#[allow(clippy::enum_variant_names)]
 #[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
 #[serde(tag = "type")]
 pub enum ScriptTransactionOutput {
@@ -313,8 +311,8 @@ mod tests {
     use crate::response::structs::DeclareTransactionResponse;
     use crate::state::state_file::ScriptTransactionOutput::ErrorResponse;
     use camino::Utf8PathBuf;
-    use conversions::string::TryFromHexStr;
     use conversions::IntoConv;
+    use conversions::string::TryFromHexStr;
     use starknet_types_core::felt::Felt;
     use tempfile::TempDir;
 

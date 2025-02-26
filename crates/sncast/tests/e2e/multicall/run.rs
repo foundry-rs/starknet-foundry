@@ -2,7 +2,7 @@ use crate::helpers::constants::{ACCOUNT_FILE_PATH, MULTICALL_CONFIGS_DIR, URL};
 use crate::helpers::fixtures::create_and_deploy_oz_account;
 use crate::helpers::runner::runner;
 use indoc::{formatdoc, indoc};
-use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
+use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
 use std::path::Path;
 use test_case::test_case;
 

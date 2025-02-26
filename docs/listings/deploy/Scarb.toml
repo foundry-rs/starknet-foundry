@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024_07"
 
 [dependencies]
-starknet = "2.7.0"
+starknet = "2.8.5"
 sncast_std = { path = "../../../sncast_std" }
 
 [dev-dependencies]

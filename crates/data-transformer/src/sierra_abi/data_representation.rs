@@ -1,5 +1,5 @@
-use crate::cairo_types::{CairoBytes31, CairoU256, CairoU384, CairoU512, CairoU96};
-use anyhow::{bail, Context};
+use crate::cairo_types::{CairoBytes31, CairoU96, CairoU256, CairoU384, CairoU512};
+use anyhow::{Context, bail};
 use conversions::felt::FromShortString;
 use conversions::{
     byte_array::ByteArray,

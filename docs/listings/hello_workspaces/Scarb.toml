@@ -25,7 +25,7 @@ snforge.workspace = true
 [dependencies]
 fibonacci = { path = "crates/fibonacci" }
 addition = { path = "crates/addition" }
-starknet = "2.7.0"
+starknet = "2.8.5"
 
 [dev-dependencies]
 snforge_std.workspace = true

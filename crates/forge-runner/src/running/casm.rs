@@ -1,8 +1,9 @@
 use anyhow::Result;
 use cairo_lang_casm::instructions::Instruction;
+use cairo_lang_runnable_utils::builder::create_code_footer;
 use cairo_lang_runner::{
     casm_run::{build_cairo_runner, run_function_with_runner},
-    initialize_vm, SierraCasmRunner,
+    initialize_vm,
 };
 use cairo_vm::{
     hint_processor::hint_processor_definition::HintProcessor,
@@ -45,7 +46,11 @@ pub fn run_assembled_program(
 
     let mut runner = build_cairo_runner(data, builtins, hints_dict)?;
 
-    run_function_with_runner(data_len, initialize_vm, hint_processor, &mut runner)?;
+    run_function_with_runner(
+        |vm| initialize_vm(vm, data_len),
+        hint_processor,
+        &mut runner,
+    )?;
 
     Ok(runner)
 }
@@ -73,7 +78,7 @@ fn add_header(
 }
 
 fn add_footer(assembled_program: &mut AssembledCairoProgramWithSerde) {
-    let footer = SierraCasmRunner::create_code_footer();
+    let footer = create_code_footer();
 
     for instruction in footer {
         assembled_program
