@@ -27,22 +27,22 @@ license-file = "LICENSE"
 [workspace.dependencies]
 blockifier = { git = "https://github.com/cptartur/sequencer.git", branch = "main-v0.13.4", default-features = false, features = ["testing"] }
 starknet_api = { git = "https://github.com/cptartur/sequencer.git", branch = "main-v0.13.4" }
-cairo-lang-casm = { version = "2.10.0", features = ["serde"] }
-cairo-lang-runner = "2.10.0"
-cairo-lang-sierra-to-casm = "2.10.0"
-cairo-lang-sierra = "2.10.0"
-cairo-lang-utils = "2.10.0"
-cairo-lang-starknet = "2.10.0"
-cairo-lang-runnable-utils = "2.10.0"
-cairo-lang-filesystem = "2.10.0"
-cairo-lang-diagnostics = "2.10.0"
-cairo-lang-sierra-type-size = "2.10.0"
-cairo-lang-syntax = "2.10.0"
-cairo-lang-test-plugin = "2.10.0"
-cairo-lang-starknet-classes = "2.10.0"
-cairo-lang-parser = "2.10.0"
+cairo-lang-casm = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e", features = ["serde"] }
+cairo-lang-runner = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
+cairo-lang-sierra-to-casm = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
+cairo-lang-sierra = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
+cairo-lang-utils = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
+cairo-lang-starknet = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
+cairo-lang-runnable-utils = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
+cairo-lang-filesystem = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
+cairo-lang-diagnostics = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
+cairo-lang-sierra-type-size = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
+cairo-lang-syntax = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
+cairo-lang-test-plugin = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
+cairo-lang-starknet-classes = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
+cairo-lang-parser = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
 cairo-lang-macro = "0.1.0"
-cairo-vm = "1.0.2"
+cairo-vm = "2.0.0"
 cairo-annotations = "0.2.2"
 dirs = "5.0.1"
 dialoguer = "0.11.0"
