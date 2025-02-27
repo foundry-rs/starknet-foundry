@@ -1047,28 +1047,19 @@ fn incompatible_snforge_std_version_warning() {
         [..]Compiling[..]
         [..]Finished[..]
 
-
-        Collected 4 test(s) from steps package
-        Running 4 test(s) from src/
-        [PASS] steps::tests::steps_much_less_than_10000000 [..]
+        Collected 2 test(s) from steps package
+        Running 2 test(s) from src/
+        [PASS] steps::tests::steps_less_than_10000000 [..]
         [FAIL] steps::tests::steps_more_than_10000000
 
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
             Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps
 
-        [FAIL] steps::tests::steps_much_more_than_10000000
-
-        Failure data:
-            Could not reach the end of the program. RunResources has no remaining steps.
-            Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps
-
-        [PASS] steps::tests::steps_less_than_10000000 [..]
-        Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
         Failures:
             steps::tests::steps_more_than_10000000
-            steps::tests::steps_much_more_than_10000000
         "},
     );
 }
