@@ -135,7 +135,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "2.10.0-rc.1"
+          scarb-version: "2.10.0"
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -153,4 +153,4 @@ jobs:
       - name: Publish snforge_scarb_plugin
         if: needs.check-version.outputs.plugin_uploaded == 'false' || github.event_name == 'workflow_dispatch'
         working-directory: crates/snforge-scarb-plugin
-        run: scarb publish
+        run: scarb publish --allow-dirty
