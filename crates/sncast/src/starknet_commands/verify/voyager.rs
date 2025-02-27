@@ -194,11 +194,14 @@ impl VerificationInterface for Voyager {
     fn new(network: Network, workspace_dir: Utf8PathBuf) -> Result<Self> {
         let manifest_path = scarb_utils::get_scarb_manifest_for(workspace_dir.as_ref())?;
         let metadata = scarb_utils::get_scarb_metadata_with_deps(&manifest_path)?;
-        let url_str = match network {
-            Network::Mainnet => "https://free-rpc.nethermind.io/mainnet-juno",
-            Network::Sepolia => "https://free-rpc.nethermind.io/sepolia-juno",
+        let url_str = match env::var("STARKNET_RPC_URL") {
+            Ok(addr) => addr,
+            Err(_) => match network {
+                Network::Mainnet => "https://api.voyager.online/beta".to_string(),
+                Network::Sepolia => "https://sepolia-api.voyager.online/beta".to_string(),
+            },
         };
-        let url = Url::parse(url_str)?;
+        let url = Url::parse(&url_str)?;
         let provider = JsonRpcClient::new(HttpTransport::new(url));
         Ok(Voyager {
             network,
