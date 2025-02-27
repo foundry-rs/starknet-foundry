@@ -4,10 +4,10 @@ use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
 use conversions::string::IntoHexStr;
 use core::str;
-use fs_extra::dir::{copy, CopyOptions};
-use serde::de::DeserializeOwned;
+use fs_extra::dir::{CopyOptions, copy};
 use serde::Deserialize;
-use serde_json::{json, Map, Value};
+use serde::de::DeserializeOwned;
+use serde_json::{Map, Value, json};
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH,
@@ -16,7 +16,7 @@ use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::state::state_file::{
     ScriptTransactionEntry, ScriptTransactionOutput, ScriptTransactionStatus,
 };
-use sncast::{apply_optional, get_chain_id, get_keystore_password, AccountType};
+use sncast::{AccountType, apply_optional, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider};
 use starknet::accounts::{
     Account, AccountFactory, ArgentAccountFactory, ExecutionV1, OpenZeppelinAccountFactory,
@@ -24,8 +24,8 @@ use starknet::accounts::{
 use starknet::core::types::{Call, InvokeTransactionResult, TransactionReceipt};
 use starknet::core::utils::get_contract_address;
 use starknet::core::utils::get_selector_from_name;
-use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
+use starknet::providers::jsonrpc::HttpTransport;
 use starknet::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
@@ -33,7 +33,7 @@ use std::env;
 use std::fs;
 use std::fs::File;
 use std::io::{BufRead, Write};
-use tempfile::{tempdir, TempDir};
+use tempfile::{TempDir, tempdir};
 use toml::Table;
 use url::Url;
 
@@ -261,7 +261,7 @@ fn parse_output<T: DeserializeOwned>(output: &[u8]) -> T {
 }
 
 #[derive(Deserialize)]
-#[allow(dead_code)]
+#[expect(dead_code)]
 struct TransactionHashOutput {
     pub transaction_hash: String,
     contract_address: Option<String>,

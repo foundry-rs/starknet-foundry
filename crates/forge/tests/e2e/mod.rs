@@ -8,6 +8,8 @@ mod collection;
 mod color;
 mod components;
 mod contract_artifacts;
+#[cfg(not(target_os = "windows"))]
+// TODO(#2990): Run coverage test on Windows
 mod coverage;
 mod docs_snippets_validation;
 mod env;

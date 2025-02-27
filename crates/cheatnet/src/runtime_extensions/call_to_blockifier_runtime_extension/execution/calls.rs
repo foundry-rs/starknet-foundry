@@ -1,22 +1,23 @@
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
+use blockifier::execution::syscalls::hint_processor::ENTRYPOINT_FAILED_ERROR;
 use blockifier::{
+    execution::execution_utils::update_remaining_gas,
     execution::{
         entry_point::{CallEntryPoint, CallType},
         execution_utils::ReadOnlySegment,
         syscalls::{
-            hint_processor::{create_retdata_segment, SyscallExecutionError, SyscallHintProcessor},
-            SyscallResult,
+            hint_processor::{SyscallExecutionError, SyscallHintProcessor, create_retdata_segment},
+            syscall_base::SyscallResult,
         },
     },
-    transaction::transaction_utils::update_remaining_gas,
 };
 use cairo_vm::vm::vm_core::VirtualMachine;
 use starknet_api::{
+    contract_class::EntryPointType,
     core::{ClassHash, EntryPointSelector},
-    deprecated_contract_class::EntryPointType,
-    transaction::Calldata,
+    transaction::fields::Calldata,
 };
-
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
+use starknet_types_core::felt::Felt;
 
 use super::entry_point::execute_call_entry_point;
 
@@ -31,33 +32,32 @@ pub fn execute_inner_call(
     // region: Modified blockifier code
     let call_info = execute_call_entry_point(
         call,
-        syscall_handler.state,
+        syscall_handler.base.state,
         cheatnet_state,
-        syscall_handler.resources,
-        syscall_handler.context,
+        syscall_handler.base.context,
     )?;
     // endregion
 
-    let raw_retdata = &call_info.execution.retdata.0;
+    let mut raw_retdata = call_info.execution.retdata.0.clone();
 
     if call_info.execution.failed {
-        // TODO(spapini): Append an error word according to starknet spec if needed.
-        // Something like "EXECUTION_ERROR".
-        return Err(SyscallExecutionError::SyscallError {
-            error_data: raw_retdata.clone(),
+        raw_retdata
+            .push(Felt::from_hex(ENTRYPOINT_FAILED_ERROR).map_err(SyscallExecutionError::from)?);
+        return Err(SyscallExecutionError::Revert {
+            error_data: raw_retdata,
         });
     }
 
-    let retdata_segment = create_retdata_segment(vm, syscall_handler, raw_retdata)?;
+    let retdata_segment = create_retdata_segment(vm, syscall_handler, &raw_retdata)?;
     update_remaining_gas(remaining_gas, &call_info);
 
-    syscall_handler.inner_calls.push(call_info);
+    syscall_handler.base.inner_calls.push(call_info);
 
     Ok(retdata_segment)
 }
 
 // blockifier/src/execution/syscalls/hint_processor.rs:577 (execute_library_call)
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 pub fn execute_library_call(
     syscall_handler: &mut SyscallHintProcessor<'_>,
     cheatnet_state: &mut CheatnetState,

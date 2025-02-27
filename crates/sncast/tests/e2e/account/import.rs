@@ -464,7 +464,7 @@ pub async fn test_accept_only_one_private_key() {
 
     assert_stderr_contains(
         output,
-        "error: the argument '--private-key <PRIVATE_KEY>' cannot be used with '--private-key-file <PRIVATE_KEY_FILE_PATH>'"
+        "error: the argument '--private-key <PRIVATE_KEY>' cannot be used with '--private-key-file <PRIVATE_KEY_FILE_PATH>'",
     );
 }
 

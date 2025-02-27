@@ -1,10 +1,9 @@
 use crate::CheatnetState;
-use conversions::IntoConv;
-use starknet_api::core::{calculate_contract_address, ClassHash, ContractAddress};
-use starknet_types_core::felt::Felt;
-
-use crate::constants as crate_constants;
 use crate::runtime_extensions::common::create_execute_calldata;
+use conversions::IntoConv;
+use runtime::starknet::constants::TEST_ADDRESS;
+use starknet_api::core::{ClassHash, ContractAddress, calculate_contract_address};
+use starknet_types_core::felt::Felt;
 
 impl CheatnetState {
     #[must_use]
@@ -16,7 +15,7 @@ impl CheatnetState {
         let salt = self.get_salt();
 
         let execute_calldata = create_execute_calldata(calldata);
-        let deployer_address = Felt::from_hex(crate_constants::TEST_ADDRESS).unwrap();
+        let deployer_address = Felt::from_hex(TEST_ADDRESS).unwrap();
         calculate_contract_address(
             salt,
             *class_hash,

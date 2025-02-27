@@ -1,8 +1,9 @@
 use super::{
     resolve_config::resolve_config,
-    test_target::{run_for_test_target, TestTargetRunResult},
+    test_target::{TestTargetRunResult, run_for_test_target},
 };
 use crate::{
+    TestArgs,
     block_number_map::BlockNumberMap,
     combine_configs::combine_configs,
     pretty_printing,
@@ -16,7 +17,6 @@ use crate::{
         warn_if_available_gas_used_with_incompatible_scarb_version,
         warn_if_incompatible_rpc_version,
     },
-    TestArgs,
 };
 use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};

@@ -18,13 +18,16 @@ pub trait SyscallHintProcessorExt {
 
 impl SyscallHintProcessorExt for SyscallHintProcessor<'_> {
     fn contract_address(&self) -> ContractAddress {
-        self.call.code_address.unwrap_or(self.call.storage_address)
+        self.base
+            .call
+            .code_address
+            .unwrap_or(self.base.call.storage_address)
     }
     fn last_event(&self) -> &OrderedEvent {
-        self.events.last().unwrap()
+        self.base.events.last().unwrap()
     }
     fn last_l2_to_l1_message(&self) -> &OrderedL2ToL1Message {
-        self.l2_to_l1_messages.last().unwrap()
+        self.base.l2_to_l1_messages.last().unwrap()
     }
 }
 

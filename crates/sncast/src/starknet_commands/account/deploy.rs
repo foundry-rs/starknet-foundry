@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
@@ -9,17 +9,17 @@ use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::InvokeResponse;
 use sncast::{
-    apply_optional, chain_id_to_network_name, check_account_file_exists,
+    AccountType, WaitForTx, apply_optional, chain_id_to_network_name, check_account_file_exists,
     get_account_data_from_accounts_file, get_account_data_from_keystore, get_keystore_password,
-    handle_rpc_error, handle_wait_for_tx, AccountType, WaitForTx,
+    handle_rpc_error, handle_wait_for_tx,
 };
 use starknet::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
 use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
 use starknet::core::types::BlockTag::Pending;
 use starknet::core::types::{BlockId, StarknetError::ClassHashNotFound};
 use starknet::core::utils::get_contract_address;
-use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::ProviderError::StarknetError;
+use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
@@ -38,7 +38,7 @@ pub struct Deploy {
     pub rpc: RpcArgs,
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 pub async fn deploy(
     provider: &JsonRpcClient<HttpTransport>,
     accounts_file: Utf8PathBuf,
@@ -178,7 +178,7 @@ async fn deploy_from_accounts_file(
     Ok(result)
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 async fn get_deployment_result(
     provider: &JsonRpcClient<HttpTransport>,
     account_type: AccountType,

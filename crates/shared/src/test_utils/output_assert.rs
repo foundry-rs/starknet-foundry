@@ -67,14 +67,14 @@ fn assert_output_contains(output: &str, lines: &str) {
     assert!(contains, "Output does not match:\n\n{out}");
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub fn assert_stdout_contains(output: impl AsOutput, lines: impl AsRef<str>) {
     let stdout = output.as_stdout();
 
     assert_output_contains(stdout, lines.as_ref());
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub fn assert_stderr_contains(output: impl AsOutput, lines: impl AsRef<str>) {
     let stderr = output.as_stderr();
 

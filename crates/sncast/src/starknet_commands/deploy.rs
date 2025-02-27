@@ -1,18 +1,18 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::DeployResponse;
+use sncast::{WaitForTx, handle_wait_for_tx};
 use sncast::{extract_or_generate_salt, udc_uniqueness};
-use sncast::{handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
 use starknet::contract::ContractFactory;
 use starknet::core::utils::get_udc_deployed_address;
-use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
+use starknet::providers::jsonrpc::HttpTransport;
 use starknet::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 
@@ -57,7 +57,7 @@ pub struct DeployArguments {
     pub arguments: Option<String>,
 }
 
-#[allow(clippy::ptr_arg, clippy::too_many_arguments)]
+#[expect(clippy::ptr_arg, clippy::too_many_arguments)]
 pub async fn deploy(
     class_hash: Felt,
     calldata: &Vec<Felt>,
