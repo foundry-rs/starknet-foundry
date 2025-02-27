@@ -837,7 +837,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-casm"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-utils 2.11.0",
  "indoc",
@@ -876,7 +876,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-compiler"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "anyhow",
  "cairo-lang-defs 2.11.0",
@@ -910,7 +910,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-debug"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-utils 2.11.0",
 ]
@@ -935,7 +935,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-defs"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-debug 2.11.0",
  "cairo-lang-diagnostics 2.11.0",
@@ -963,7 +963,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-diagnostics"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-debug 2.11.0",
  "cairo-lang-filesystem 2.11.0",
@@ -984,7 +984,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-eq-solver"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-utils 2.11.0",
  "good_lp",
@@ -1009,7 +1009,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-filesystem"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-debug 2.11.0",
  "cairo-lang-utils 2.11.0",
@@ -1044,7 +1044,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-formatter"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "anyhow",
  "cairo-lang-diagnostics 2.11.0",
@@ -1088,7 +1088,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-lowering"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "bincode 1.3.3",
  "cairo-lang-debug 2.11.0",
@@ -1162,7 +1162,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-parser"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-diagnostics 2.11.0",
  "cairo-lang-filesystem 2.11.0",
@@ -1201,7 +1201,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-plugins"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-defs 2.11.0",
  "cairo-lang-diagnostics 2.11.0",
@@ -1236,7 +1236,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-proc-macros"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-debug 2.11.0",
  "quote",
@@ -1259,7 +1259,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-project"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-filesystem 2.11.0",
  "cairo-lang-utils 2.11.0",
@@ -1289,7 +1289,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-runnable-utils"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-casm 2.11.0",
  "cairo-lang-sierra 2.11.0",
@@ -1336,7 +1336,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-runner"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "ark-ff 0.5.0",
  "ark-secp256k1 0.5.0",
@@ -1392,7 +1392,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-semantic"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-debug 2.11.0",
  "cairo-lang-defs 2.11.0",
@@ -1445,7 +1445,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-sierra"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "anyhow",
  "cairo-lang-utils 2.11.0",
@@ -1487,7 +1487,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-sierra-ap-change"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-eq-solver 2.11.0",
  "cairo-lang-sierra 2.11.0",
@@ -1518,7 +1518,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-sierra-gas"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-eq-solver 2.11.0",
  "cairo-lang-sierra 2.11.0",
@@ -1557,7 +1557,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-sierra-generator"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-debug 2.11.0",
  "cairo-lang-defs 2.11.0",
@@ -1601,7 +1601,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-sierra-to-casm"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "assert_matches",
  "cairo-lang-casm 2.11.0",
@@ -1631,7 +1631,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-sierra-type-size"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-sierra 2.11.0",
  "cairo-lang-utils 2.11.0",
@@ -1670,7 +1670,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-starknet"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "anyhow",
  "cairo-lang-compiler 2.11.0",
@@ -1722,7 +1722,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-starknet-classes"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-casm 2.11.0",
  "cairo-lang-sierra 2.11.0",
@@ -1761,7 +1761,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-syntax"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-debug 2.11.0",
  "cairo-lang-filesystem 2.11.0",
@@ -1788,7 +1788,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-syntax-codegen"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "genco",
  "xshell",
@@ -1797,7 +1797,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-test-plugin"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "anyhow",
  "cairo-lang-compiler 2.11.0",
@@ -1836,7 +1836,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-test-utils"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "cairo-lang-formatter 2.11.0",
  "cairo-lang-utils 2.11.0",
@@ -1864,7 +1864,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-utils"
 version = "2.11.0"
-source = "git+https://github.com/cptartur/cairo.git?branch=spr%2Fmain%2F141dee6e#f71938a9632b637255c353e064f088c41fc19473"
+source = "git+https://github.com/cptartur/cairo.git?rev=f71938a9632b637255c353e064f088c41fc19473#f71938a9632b637255c353e064f088c41fc19473"
 dependencies = [
  "hashbrown 0.15.2",
  "indexmap 2.7.1",

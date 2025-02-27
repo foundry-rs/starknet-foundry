@@ -27,20 +27,20 @@ license-file = "LICENSE"
 [workspace.dependencies]
 blockifier = { git = "https://github.com/cptartur/sequencer.git", branch = "main-v0.13.4", default-features = false, features = ["testing"] }
 starknet_api = { git = "https://github.com/cptartur/sequencer.git", branch = "main-v0.13.4" }
-cairo-lang-casm = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e", features = ["serde"] }
-cairo-lang-runner = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
-cairo-lang-sierra-to-casm = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
-cairo-lang-sierra = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
-cairo-lang-utils = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
-cairo-lang-starknet = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
-cairo-lang-runnable-utils = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
-cairo-lang-filesystem = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
-cairo-lang-diagnostics = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
-cairo-lang-sierra-type-size = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
-cairo-lang-syntax = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
-cairo-lang-test-plugin = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
-cairo-lang-starknet-classes = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
-cairo-lang-parser = { git = "https://github.com/cptartur/cairo.git", branch = "spr/main/141dee6e" }
+cairo-lang-casm = { git = "https://github.com/cptartur/cairo.git", rev = "f71938a9632b637255c353e064f088c41fc19473", features = ["serde"] }
+cairo-lang-runner = { git = "https://github.com/cptartur/cairo.git", rev = "f71938a9632b637255c353e064f088c41fc19473" }
+cairo-lang-sierra-to-casm = { git = "https://github.com/cptartur/cairo.git", rev = "f71938a9632b637255c353e064f088c41fc19473" }
+cairo-lang-sierra = { git = "https://github.com/cptartur/cairo.git", rev = "f71938a9632b637255c353e064f088c41fc19473" }
+cairo-lang-utils = { git = "https://github.com/cptartur/cairo.git", rev = "f71938a9632b637255c353e064f088c41fc19473" }
+cairo-lang-starknet = { git = "https://github.com/cptartur/cairo.git", rev = "f71938a9632b637255c353e064f088c41fc19473" }
+cairo-lang-runnable-utils = { git = "https://github.com/cptartur/cairo.git", rev = "f71938a9632b637255c353e064f088c41fc19473" }
+cairo-lang-filesystem = { git = "https://github.com/cptartur/cairo.git", rev = "f71938a9632b637255c353e064f088c41fc19473" }
+cairo-lang-diagnostics = { git = "https://github.com/cptartur/cairo.git", rev = "f71938a9632b637255c353e064f088c41fc19473" }
+cairo-lang-sierra-type-size = { git = "https://github.com/cptartur/cairo.git", rev = "f71938a9632b637255c353e064f088c41fc19473" }
+cairo-lang-syntax = { git = "https://github.com/cptartur/cairo.git", rev = "f71938a9632b637255c353e064f088c41fc19473" }
+cairo-lang-test-plugin = { git = "https://github.com/cptartur/cairo.git", rev = "f71938a9632b637255c353e064f088c41fc19473" }
+cairo-lang-starknet-classes = { git = "https://github.com/cptartur/cairo.git", rev = "f71938a9632b637255c353e064f088c41fc19473" }
+cairo-lang-parser = { git = "https://github.com/cptartur/cairo.git", rev = "f71938a9632b637255c353e064f088c41fc19473" }
 cairo-lang-macro = "0.1.0"
 cairo-vm = "2.0.0"
 cairo-annotations = "0.2.2"
