@@ -49,6 +49,11 @@ pub async fn run_for_test_target(
 
         // Check if the test case should be excluded
         if tests_filter.is_excluded(&case) {
+            tasks.push(tokio::task::spawn(async {
+                Ok(AnyTestCaseSummary::Single(TestCaseSummary::Excluded {
+                    name: case_name,
+                }))
+            }));
             continue;
         }
 

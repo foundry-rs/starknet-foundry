@@ -39,4 +39,12 @@ impl TestTargetSummary {
             .filter(|tu| tu.is_ignored())
             .count()
     }
+
+    #[must_use]
+    pub fn count_excluded(&self) -> usize {
+        self.test_case_summaries
+            .iter()
+            .filter(|tu| tu.is_excluded())
+            .count()
+    }
 }
