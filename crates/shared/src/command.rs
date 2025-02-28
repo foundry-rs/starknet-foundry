@@ -1,4 +1,4 @@
-use anyhow::{Context, Ok, Result, bail};
+use anyhow::{bail, Context, Ok, Result};
 use std::process::{Command, Output};
 
 pub trait CommandExt {

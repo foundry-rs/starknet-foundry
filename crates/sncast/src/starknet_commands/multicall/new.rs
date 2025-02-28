@@ -1,4 +1,4 @@
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use sncast::{

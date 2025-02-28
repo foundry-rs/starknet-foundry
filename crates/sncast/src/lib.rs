@@ -1,12 +1,12 @@
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::response::errors::SNCastProviderError;
-use anyhow::{Context, Error, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use conversions::serde::serialize::CairoSerialize;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
-use rand::RngCore;
 use rand::rngs::OsRng;
+use rand::RngCore;
 use response::errors::SNCastStarknetError;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -24,9 +24,9 @@ use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
 use starknet::{
     accounts::{ExecutionEncoding, SingleOwnerAccount},
     providers::{
+        jsonrpc::{HttpTransport, JsonRpcClient},
         Provider, ProviderError,
         ProviderError::StarknetError,
-        jsonrpc::{HttpTransport, JsonRpcClient},
     },
     signers::{LocalWallet, SigningKey},
 };
@@ -740,9 +740,8 @@ pub fn get_default_state_file_name(script_name: &str, chain_id: &str) -> String 
 mod tests {
     use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
     use crate::{
-        AccountType, chain_id_to_network_name, extract_or_generate_salt,
-        get_account_data_from_accounts_file, get_account_data_from_keystore, get_block_id,
-        udc_uniqueness,
+        chain_id_to_network_name, extract_or_generate_salt, get_account_data_from_accounts_file,
+        get_account_data_from_keystore, get_block_id, udc_uniqueness, AccountType,
     };
     use camino::Utf8PathBuf;
     use conversions::string::IntoHexStr;
@@ -897,10 +896,9 @@ mod tests {
         )
         .unwrap_err();
 
-        assert!(
-            err.to_string()
-                .contains("Braavos accounts cannot be deployed with multisig on")
-        );
+        assert!(err
+            .to_string()
+            .contains("Braavos accounts cannot be deployed with multisig on"));
     }
 
     #[test]
@@ -912,10 +910,9 @@ mod tests {
         )
         .unwrap_err();
 
-        assert!(
-            err.to_string()
-                .contains("Braavos accounts can only be deployed with one seed signer")
-        );
+        assert!(err
+            .to_string()
+            .contains("Braavos accounts can only be deployed with one seed signer"));
     }
 
     #[test]
@@ -927,10 +924,9 @@ mod tests {
             &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         );
         let err = account.unwrap_err();
-        assert!(
-            err.to_string()
-                .contains("Account = user1 not found under network = CUSTOM_CHAIN_ID")
-        );
+        assert!(err
+            .to_string()
+            .contains("Account = user1 not found under network = CUSTOM_CHAIN_ID"));
     }
 
     fn set_keystore_password_env() {

@@ -1,4 +1,4 @@
-use std::num::{NonZeroU64, NonZeroU128};
+use std::num::{NonZeroU128, NonZeroU64};
 
 use crate::helpers::constants::URL;
 use sncast::helpers::constants::OZ_CLASS_HASH;
@@ -82,11 +82,9 @@ async fn test_max_fee_less_than_max_gas() {
         .await
         .unwrap_err();
 
-    assert!(
-        error
-            .to_string()
-            .contains("--max-fee should be greater than or equal to --max-gas amount")
-    );
+    assert!(error
+        .to_string()
+        .contains("--max-fee should be greater than or equal to --max-gas amount"));
 }
 
 #[tokio::test]
@@ -104,11 +102,9 @@ async fn test_max_fee_less_than_max_gas_unit_price() {
         .await
         .unwrap_err();
 
-    assert!(
-        error
-            .to_string()
-            .contains("--max-fee should be greater than or equal to --max-gas-unit-price")
-    );
+    assert!(error
+        .to_string()
+        .contains("--max-fee should be greater than or equal to --max-gas-unit-price"));
 }
 #[tokio::test]
 async fn test_get_max_fee() {

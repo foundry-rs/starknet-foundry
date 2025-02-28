@@ -1,8 +1,8 @@
 use super::common::runner::{runner, setup_package, test_runner};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
-use scarb_api::ScarbCommand;
 use scarb_api::metadata::MetadataCommandExt;
+use scarb_api::ScarbCommand;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use std::path::Path;
 

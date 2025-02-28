@@ -3,9 +3,9 @@ use anyhow::{Context, Result};
 use cairo_lang_sierra::program::VersionedProgram;
 use camino::Utf8Path;
 use configuration::PackageConfig;
-use forge_runner::package_tests::TestTargetLocation;
 use forge_runner::package_tests::raw::TestTargetRaw;
-use scarb_api::{ScarbCommand, test_targets_by_name};
+use forge_runner::package_tests::TestTargetLocation;
+use scarb_api::{test_targets_by_name, ScarbCommand};
 use scarb_metadata::PackageMetadata;
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
@@ -118,8 +118,8 @@ pub fn load_test_artifacts(
 mod tests {
     use super::*;
     use crate::scarb::config::ForkTarget;
-    use assert_fs::TempDir;
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
+    use assert_fs::TempDir;
     use camino::Utf8PathBuf;
     use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
     use configuration::load_package_config;
@@ -252,10 +252,9 @@ mod tests {
         );
         let err = result.unwrap_err();
 
-        assert!(
-            err.to_string()
-                .contains("Failed to find metadata for package")
-        );
+        assert!(err
+            .to_string()
+            .contains("Failed to find metadata for package"));
     }
 
     #[test]
@@ -282,7 +281,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(config, Default::default());
+        assert_eq!(config, ForgeConfigFromScarb::default());
     }
 
     #[test]
@@ -348,10 +347,8 @@ mod tests {
             &scarb_metadata.workspace.members[0],
         )
         .unwrap_err();
-        assert!(
-            format!("{err:?}")
-                .contains("block_id must contain exactly one key: 'tag', 'hash', or 'number'")
-        );
+        assert!(format!("{err:?}")
+            .contains("block_id must contain exactly one key: 'tag', 'hash', or 'number'"));
     }
 
     #[test]
@@ -382,10 +379,8 @@ mod tests {
             &scarb_metadata.workspace.members[0],
         )
         .unwrap_err();
-        assert!(
-            format!("{err:?}")
-                .contains("unknown field `wrong_variant`, expected one of `tag`, `hash`, `number`")
-        );
+        assert!(format!("{err:?}")
+            .contains("unknown field `wrong_variant`, expected one of `tag`, `hash`, `number`"));
     }
 
     #[test]

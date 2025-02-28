@@ -1,5 +1,5 @@
 use crate::artifacts::StarknetArtifactsFiles;
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 pub use command::*;
 use scarb_metadata::{Metadata, PackageId, PackageMetadata, TargetMetadata};
@@ -26,28 +26,27 @@ fn get_starknet_artifacts_paths_from_test_targets(
     target_dir: &Utf8Path,
     test_targets: &HashMap<String, &TargetMetadata>,
 ) -> Option<StarknetArtifactsFiles> {
-    let artifact = |name: &str,
-                    metadata: &TargetMetadata|
-     -> Option<(Utf8PathBuf, Option<String>)> {
-        let path = format!("{name}.test.starknet_artifacts.json");
-        let path = target_dir.join(&path);
-        let path = if path.exists() {
-            Some(path)
-        } else {
-            print_as_warning(&anyhow!(
+    let artifact =
+        |name: &str, metadata: &TargetMetadata| -> Option<(Utf8PathBuf, Option<String>)> {
+            let path = format!("{name}.test.starknet_artifacts.json");
+            let path = target_dir.join(&path);
+            let path = if path.exists() {
+                Some(path)
+            } else {
+                print_as_warning(&anyhow!(
                 "File = {path} missing when it should be existing, perhaps due to Scarb problem."
             ));
-            None
+                None
+            };
+
+            let test_type = metadata
+                .params
+                .get("test-type")
+                .and_then(|value| value.as_str())
+                .map(ToString::to_string);
+
+            path.map(|path| (Utf8PathBuf::from_str(path.as_str()).unwrap(), test_type))
         };
-
-        let test_type = metadata
-            .params
-            .get("test-type")
-            .and_then(|value| value.as_str())
-            .map(ToString::to_string);
-
-        path.map(|path| (Utf8PathBuf::from_str(path.as_str()).unwrap(), test_type))
-    };
 
     let artifacts = test_targets
         .iter()
@@ -187,8 +186,8 @@ pub fn test_targets_by_name(package: &PackageMetadata) -> HashMap<String, &Targe
 mod tests {
     use super::*;
     use crate::metadata::MetadataCommandExt;
-    use assert_fs::TempDir;
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
+    use assert_fs::TempDir;
     use camino::Utf8PathBuf;
     use indoc::{formatdoc, indoc};
     use std::fs;
@@ -367,13 +366,11 @@ mod tests {
                     )
                 )
                 .unwrap(),
-                vec![
-                    Utf8PathBuf::from_path_buf(
-                        temp.path()
-                            .join("target/dev/basic_package_unittest.test.starknet_artifacts.json")
-                    )
-                    .unwrap(),
-                ]
+                vec![Utf8PathBuf::from_path_buf(
+                    temp.path()
+                        .join("target/dev/basic_package_unittest.test.starknet_artifacts.json")
+                )
+                .unwrap(),]
             ),
         );
     }
@@ -405,32 +402,26 @@ mod tests {
             .run()
             .unwrap();
 
-        assert!(
-            package_matches_version_requirement(
-                &scarb_metadata,
-                "starknet",
-                &VersionReq::parse("2.8").unwrap(),
-            )
-            .unwrap()
-        );
+        assert!(package_matches_version_requirement(
+            &scarb_metadata,
+            "starknet",
+            &VersionReq::parse("2.8").unwrap(),
+        )
+        .unwrap());
 
-        assert!(
-            package_matches_version_requirement(
-                &scarb_metadata,
-                "not_existing",
-                &VersionReq::parse("2.5").unwrap(),
-            )
-            .is_err()
-        );
+        assert!(package_matches_version_requirement(
+            &scarb_metadata,
+            "not_existing",
+            &VersionReq::parse("2.5").unwrap(),
+        )
+        .is_err());
 
-        assert!(
-            !package_matches_version_requirement(
-                &scarb_metadata,
-                "starknet",
-                &VersionReq::parse("2.9").unwrap(),
-            )
-            .unwrap()
-        );
+        assert!(!package_matches_version_requirement(
+            &scarb_metadata,
+            "starknet",
+            &VersionReq::parse("2.9").unwrap(),
+        )
+        .unwrap());
     }
 
     #[test]

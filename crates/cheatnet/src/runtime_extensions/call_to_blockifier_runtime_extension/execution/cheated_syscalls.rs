@@ -1,18 +1,18 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_constructor_entry_point;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::{
-    DeployRequest, DeployResponse, LibraryCallRequest, SyscallResponse, syscall_base::SyscallResult,
+    syscall_base::SyscallResult, DeployRequest, DeployResponse, LibraryCallRequest, SyscallResponse,
 };
 use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
 use blockifier::execution::{
     execution_utils::ReadOnlySegment,
-    syscalls::{WriteResponseResult, hint_processor::write_segment},
+    syscalls::{hint_processor::write_segment, WriteResponseResult},
 };
 use blockifier::state::errors::StateError;
 use blockifier::{
     execution::execution_utils::update_remaining_gas,
-    execution::syscalls::{CallContractRequest, hint_processor::create_retdata_segment},
+    execution::syscalls::{hint_processor::create_retdata_segment, CallContractRequest},
 };
 use blockifier::{
     execution::{

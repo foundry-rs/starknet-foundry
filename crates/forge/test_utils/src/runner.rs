@@ -1,8 +1,8 @@
 use crate::{get_assert_macros_version, tempdir_with_tool_versions};
-use anyhow::{Context, Result, anyhow};
+use anyhow::{anyhow, Context, Result};
 use assert_fs::{
-    TempDir,
     fixture::{FileTouch, FileWriteStr, PathChild},
+    TempDir,
 };
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use cairo_vm::types::builtin_name::BuiltinName;
@@ -13,8 +13,8 @@ use forge_runner::{
 };
 use indoc::formatdoc;
 use scarb_api::{
-    ScarbCommand, StarknetContractArtifacts, get_contracts_artifacts_and_source_sierra_paths,
-    metadata::MetadataCommandExt, target_dir_for_workspace,
+    get_contracts_artifacts_and_source_sierra_paths, metadata::MetadataCommandExt,
+    target_dir_for_workspace, ScarbCommand, StarknetContractArtifacts,
 };
 use semver::Version;
 use shared::command::CommandExt;
@@ -205,7 +205,7 @@ impl<'a> TestCase {
                     name,
                     (
                         StarknetContractArtifacts { sierra, casm },
-                        Default::default(),
+                        Utf8PathBuf::default(),
                     ),
                 ))
             })

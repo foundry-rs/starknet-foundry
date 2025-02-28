@@ -1,6 +1,6 @@
 use crate::{
-    CheatnetState,
     state::{CheatSpan, CheatStatus},
+    CheatnetState,
 };
 use conversions::serde::{deserialize::CairoDeserialize, serialize::CairoSerialize};
 use starknet_api::core::ContractAddress;

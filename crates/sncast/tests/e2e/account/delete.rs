@@ -2,7 +2,7 @@ use crate::helpers::constants::ACCOUNT_FILE_PATH;
 use crate::helpers::runner::runner;
 use crate::{e2e::account::helpers::create_tempdir_with_accounts_file, helpers::constants::URL};
 use indoc::indoc;
-use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
+use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
 
 #[test]
 pub fn test_no_accounts_in_network() {

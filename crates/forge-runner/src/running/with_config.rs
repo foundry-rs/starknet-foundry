@@ -1,12 +1,12 @@
 use crate::{
     package_tests::{
-        TestDetails,
         raw::TestTargetRaw,
         with_config::{TestCaseWithConfig, TestTargetWithConfig},
+        TestDetails,
     },
     running::config_run::run_config_pass,
 };
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use cairo_lang_sierra::{
     extensions::core::{CoreLibfunc, CoreType},
     ids::ConcreteTypeId,
@@ -18,7 +18,7 @@ use cairo_lang_utils::unordered_hash_map::UnorderedHashMap;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use std::{collections::HashMap, sync::Arc};
-use universal_sierra_compiler_api::{SierraType, compile_sierra_at_path};
+use universal_sierra_compiler_api::{compile_sierra_at_path, SierraType};
 
 pub fn test_target_with_config(test_target_raw: TestTargetRaw) -> Result<TestTargetWithConfig> {
     macro_rules! by_id {

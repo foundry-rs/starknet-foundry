@@ -1,11 +1,11 @@
-use crate::compatibility_check::{Requirement, RequirementsChecker, create_version_parser};
-use anyhow::Result;
+use crate::compatibility_check::{create_version_parser, Requirement, RequirementsChecker};
 use anyhow::anyhow;
+use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge_runner::CACHE_DIR;
 use run_tests::workspace::run_for_workspace;
-use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
+use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
 use shared::print::print_as_warning;
@@ -25,7 +25,7 @@ mod new;
 pub mod pretty_printing;
 pub mod run_tests;
 pub mod scarb;
-mod shared_cache;
+pub mod shared_cache;
 pub mod test_filter;
 mod warn;
 

@@ -3,7 +3,7 @@ use anyhow::Result;
 use camino::Utf8PathBuf;
 use std::collections::HashSet;
 
-use crate::{AccountData, read_and_parse_json_file};
+use crate::{read_and_parse_json_file, AccountData};
 
 pub fn generate_account_name(accounts_file: &Utf8PathBuf) -> Result<String> {
     let mut id = 1;

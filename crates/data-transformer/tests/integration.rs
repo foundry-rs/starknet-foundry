@@ -272,8 +272,8 @@ async fn test_happy_case_tuple_function_cairo_expression_input() -> anyhow::Resu
 }
 
 #[tokio::test]
-async fn test_happy_case_tuple_function_with_nested_struct_cairo_expression_input()
--> anyhow::Result<()> {
+async fn test_happy_case_tuple_function_with_nested_struct_cairo_expression_input(
+) -> anyhow::Result<()> {
     let contract_class = CLASS.get_or_init(init_class).await.to_owned();
 
     let input = String::from(
@@ -452,8 +452,8 @@ async fn test_happy_case_enum_function_empty_variant_cairo_expression_input() ->
     Ok(())
 }
 #[tokio::test]
-async fn test_happy_case_enum_function_one_argument_variant_cairo_expression_input()
--> anyhow::Result<()> {
+async fn test_happy_case_enum_function_one_argument_variant_cairo_expression_input(
+) -> anyhow::Result<()> {
     let contract_class = CLASS.get_or_init(init_class).await.to_owned();
 
     let input = String::from("Enum::Two(128)");
@@ -472,8 +472,8 @@ async fn test_happy_case_enum_function_one_argument_variant_cairo_expression_inp
 }
 
 #[tokio::test]
-async fn test_happy_case_enum_function_nested_struct_variant_cairo_expression_input()
--> anyhow::Result<()> {
+async fn test_happy_case_enum_function_nested_struct_variant_cairo_expression_input(
+) -> anyhow::Result<()> {
     let contract_class = CLASS.get_or_init(init_class).await.to_owned();
 
     let input =

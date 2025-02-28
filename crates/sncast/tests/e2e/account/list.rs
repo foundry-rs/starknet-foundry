@@ -1,7 +1,7 @@
 use anyhow::Context;
 use indoc::formatdoc;
-use serde_json::{Value, json};
-use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
+use serde_json::{json, Value};
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains, AsOutput};
 use tempfile::tempdir;
 
 use crate::{e2e::account::helpers::create_tempdir_with_accounts_file, helpers::runner::runner};

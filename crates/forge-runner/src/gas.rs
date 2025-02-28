@@ -1,7 +1,7 @@
 use crate::test_case_summary::{Single, TestCaseSummary};
 use blockifier::abi::constants;
 use blockifier::context::TransactionContext;
-use blockifier::execution::call_info::{EventSummary, ExecutionSummary};
+use blockifier::execution::call_info::{ChargedResources, EventSummary, ExecutionSummary};
 use blockifier::fee::resources::{
     ArchivalDataResources, ComputationResources, MessageResources, StarknetResources,
     StateResources, TransactionResources,
@@ -13,8 +13,9 @@ use blockifier::utils::u64_from_usize;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::ExtendedStateReader;
 use starknet_api::execution_resources::{GasAmount, GasVector};
-use starknet_api::transaction::EventContent;
 use starknet_api::transaction::fields::GasVectorComputationMode;
+use starknet_api::transaction::EventContent;
+use std::collections::HashSet;
 
 pub fn calculate_used_gas(
     transaction_context: &TransactionContext,
@@ -74,9 +75,9 @@ fn get_archival_data_resources(events: Vec<EventContent>) -> ArchivalDataResourc
     // TODO(#2978) this is a workaround because we cannot create `ArchivalDataResources` directly yet
     //  because of private fields
     let dummy_execution_summary = ExecutionSummary {
-        charged_resources: Default::default(),
-        executed_class_hashes: Default::default(),
-        visited_storage_entries: Default::default(),
+        charged_resources: ChargedResources::default(),
+        executed_class_hashes: HashSet::default(),
+        visited_storage_entries: HashSet::default(),
         l2_to_l1_payload_lengths: vec![],
         event_summary,
     };

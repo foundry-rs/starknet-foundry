@@ -5,7 +5,7 @@ use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector::{
 use cairo_vm::types::builtin_name::BuiltinName;
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::{Contract, assert_builtin, assert_passed, assert_syscall};
+use test_utils::runner::{assert_builtin, assert_passed, assert_syscall, Contract};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 

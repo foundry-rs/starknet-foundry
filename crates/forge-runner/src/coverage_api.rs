@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, ensure};
+use anyhow::{ensure, Context, Result};
 use indoc::{formatdoc, indoc};
 use scarb_api::metadata::Metadata;
 use semver::Version;

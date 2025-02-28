@@ -1,10 +1,10 @@
 use crate::helpers::configuration::CastConfig;
-use crate::{Network, get_provider};
-use anyhow::{Context, Result, bail};
+use crate::{get_provider, Network};
+use anyhow::{bail, Context, Result};
 use clap::Args;
 use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
-use starknet::providers::{JsonRpcClient, jsonrpc::HttpTransport};
+use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
 use std::env::current_exe;
 use std::time::UNIX_EPOCH;
 

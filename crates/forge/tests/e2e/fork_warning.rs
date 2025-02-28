@@ -1,6 +1,6 @@
 use super::common::runner::{setup_package, test_runner};
 use assert_fs::fixture::{FileWriteStr, PathChild};
-use axum::{Router, extract::Query, response::Redirect, routing::any};
+use axum::{extract::Query, response::Redirect, routing::any, Router};
 use indoc::formatdoc;
 use lazy_static::lazy_static;
 use shared::consts::EXPECTED_RPC_VERSION;

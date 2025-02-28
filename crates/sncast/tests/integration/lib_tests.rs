@@ -27,10 +27,9 @@ async fn test_get_provider_invalid_url() {
 async fn test_get_provider_empty_url() {
     let provider = get_provider("");
     let err = provider.unwrap_err();
-    assert!(
-        err.to_string()
-            .contains("RPC url not passed nor found in snfoundry.toml")
-    );
+    assert!(err
+        .to_string()
+        .contains("RPC url not passed nor found in snfoundry.toml"));
 }
 
 #[tokio::test]
@@ -63,10 +62,9 @@ async fn test_get_account_no_file() {
     )
     .await;
     let err = account.unwrap_err();
-    assert!(
-        err.to_string()
-            .contains("Accounts file = tests/data/accounts/nonexistentfile.json does not exist!")
-    );
+    assert!(err
+        .to_string()
+        .contains("Accounts file = tests/data/accounts/nonexistentfile.json does not exist!"));
 }
 
 #[tokio::test]
@@ -97,10 +95,9 @@ async fn test_get_account_no_account() {
     )
     .await;
     let err = account.unwrap_err();
-    assert!(
-        err.to_string()
-            .contains("Account name not passed nor found in snfoundry.toml")
-    );
+    assert!(err
+        .to_string()
+        .contains("Account name not passed nor found in snfoundry.toml"));
 }
 
 #[tokio::test]
@@ -114,10 +111,9 @@ async fn test_get_account_no_user_for_network() {
     )
     .await;
     let err = account.unwrap_err();
-    assert!(
-        err.to_string()
-            .contains("Account = user100 not found under network = alpha-sepolia")
-    );
+    assert!(err
+        .to_string()
+        .contains("Account = user100 not found under network = alpha-sepolia"));
 }
 
 #[tokio::test]

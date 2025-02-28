@@ -2,7 +2,7 @@ use crate::runtime_extensions::cheatable_starknet_runtime_extension::felt_from_p
 use anyhow::Result;
 use blockifier::execution::{
     deprecated_syscalls::{
-        DeprecatedSyscallSelector, hint_processor::DeprecatedSyscallHintProcessor,
+        hint_processor::DeprecatedSyscallHintProcessor, DeprecatedSyscallSelector,
     },
     hint_code,
 };

@@ -1,5 +1,5 @@
 use super::{BufferWriter, CairoSerialize};
-use crate::{IntoConv, byte_array::ByteArray};
+use crate::{byte_array::ByteArray, IntoConv};
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use starknet::core::types::{ContractErrorData, TransactionExecutionErrorData};
 use starknet_api::core::EthAddress;

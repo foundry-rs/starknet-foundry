@@ -5,7 +5,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetSta
 use crate::runtime_extensions::common::{get_relocated_vm_trace, sum_syscall_counters};
 use crate::state::{CallTrace, CallTraceNode, CheatStatus, EncounteredError};
 use blockifier::execution::call_info::{CallExecution, Retdata};
-use blockifier::execution::contract_class::RunnableCompiledClass;
+use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
 use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use blockifier::{
     execution::{
@@ -29,7 +29,7 @@ use starknet_api::{
 };
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use thiserror::Error;
 use conversions::FromConv;
@@ -72,7 +72,7 @@ pub fn execute_call_entry_point(
                 ret_data.iter().map(|datum| Felt::from_(*datum)).collect();
             cheatnet_state.trace_data.exit_nested_call(
                 ExecutionResources::default(),
-                Default::default(),
+                HashMap::default(),
                 CallResult::Success {
                     ret_data: ret_data_f252,
                 },
@@ -203,7 +203,7 @@ fn exit_error_call(
     };
     cheatnet_state.trace_data.exit_nested_call(
         ExecutionResources::default(),
-        Default::default(),
+        HashMap::default(),
         CallResult::from_err(error, &identifier),
         &[],
         vm_trace,
@@ -284,8 +284,8 @@ fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {
         accessed_storage_keys: HashSet::new(),
         read_class_hash_values: vec![],
         // TODO(#2977) This defaults to `CairoSteps` as of writing this, but it could be changed in the future
-        tracked_resource: Default::default(),
-        accessed_contract_addresses: Default::default(),
+        tracked_resource: TrackedResource::default(),
+        accessed_contract_addresses: HashSet::default(),
     }
 }
 

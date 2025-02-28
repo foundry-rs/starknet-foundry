@@ -1,7 +1,6 @@
 use crate::test_filter::TestsFilter;
 use anyhow::Result;
 use forge_runner::{
-    TestCaseFilter,
     forge_config::ForgeConfig,
     maybe_generate_coverage, maybe_save_trace_and_profile,
     package_tests::with_config_resolved::TestTargetWithResolvedConfig,
@@ -9,8 +8,9 @@ use forge_runner::{
     run_for_test_case,
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
     test_target_summary::TestTargetSummary,
+    TestCaseFilter,
 };
-use futures::{StreamExt, stream::FuturesUnordered};
+use futures::{stream::FuturesUnordered, StreamExt};
 use std::sync::Arc;
 use tokio::sync::mpsc::channel;
 

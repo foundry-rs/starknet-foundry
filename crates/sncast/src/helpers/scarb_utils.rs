@@ -1,10 +1,9 @@
-use anyhow::{Context, Result, anyhow};
+use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_api::{
-    ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
     get_contracts_artifacts_and_source_sierra_paths,
     metadata::{Metadata, MetadataCommand, PackageMetadata},
-    target_dir_for_workspace,
+    target_dir_for_workspace, ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
 };
 use scarb_ui::args::PackagesFilter;
 use shared::{command::CommandExt, print::print_as_warning};
@@ -203,11 +202,9 @@ mod tests {
     #[test]
     fn test_get_scarb_metadata_not_found() {
         let metadata_err = get_scarb_metadata(&"Scarb.toml".into()).unwrap_err();
-        assert!(
-            metadata_err
-                .to_string()
-                .contains("Failed to read the `Scarb.toml` manifest file.")
-        );
+        assert!(metadata_err
+            .to_string()
+            .contains("Failed to read the `Scarb.toml` manifest file."));
     }
 
     #[test]
