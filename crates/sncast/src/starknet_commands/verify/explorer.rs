@@ -14,7 +14,9 @@ pub struct VerificationPayload {
 #[async_trait::async_trait]
 pub trait VerificationInterface {
     fn new(network: Network, workspace_dir: Utf8PathBuf) -> Self;
+
     async fn verify(&self, contract_address: Felt, contract_name: String)
         -> Result<VerifyResponse>;
+
     fn gen_explorer_url(&self) -> Result<String>;
 }
