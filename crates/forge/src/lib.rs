@@ -25,7 +25,7 @@ mod new;
 pub mod pretty_printing;
 pub mod run_tests;
 pub mod scarb;
-mod shared_cache;
+pub mod shared_cache;
 pub mod test_filter;
 mod warn;
 
