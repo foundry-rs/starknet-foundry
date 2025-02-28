@@ -166,8 +166,8 @@ impl StateReader for ForkStateReader {
             Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => {
                 self.cache
                     .borrow_mut()
-                    .cache_get_nonce_at(contract_address, Default::default());
-                Ok(Default::default())
+                    .cache_get_nonce_at(contract_address, Nonce::default());
+                Ok(Nonce::default())
             }
             Err(x) => Err(StateReadError(format!(
                 "Unable to get nonce at {contract_address:?} from fork ({x})"
@@ -194,8 +194,8 @@ impl StateReader for ForkStateReader {
             Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => {
                 self.cache
                     .borrow_mut()
-                    .cache_get_class_hash_at(contract_address, Default::default());
-                Ok(Default::default())
+                    .cache_get_class_hash_at(contract_address, ClassHash::default());
+                Ok(ClassHash::default())
             }
             Err(ProviderError::Other(boxed)) => other_provider_error(boxed),
             Err(x) => Err(StateReadError(format!(
