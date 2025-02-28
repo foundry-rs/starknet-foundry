@@ -3,6 +3,7 @@ use clap::ValueEnum;
 use clap_complete::Shell;
 use indoc::formatdoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
+
 #[test]
 fn test_happy_case() {
     for variant in Shell::value_variants() {
