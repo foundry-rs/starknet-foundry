@@ -16,7 +16,7 @@ Running 3 test(s) from tests/
 [PASS] hello_snforge_integrationtest::test_contract::test_calling (gas: ~1)
 [PASS] hello_snforge_integrationtest::test_contract::test_executing (gas: ~1)
 [PASS] hello_snforge_integrationtest::test_contract::test_calling_another (gas: ~1)
-Tests: 3 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 3 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
 ```
 </details>
 <br>
@@ -39,7 +39,7 @@ Running 0 test(s) from src/
 Running 2 test(s) from tests/
 [PASS] hello_snforge_integrationtest::test_contract::test_calling_another (gas: ~1)
 [PASS] hello_snforge_integrationtest::test_contract::test_calling (gas: ~1)
-Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 1 filtered out
+Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, 1 filtered out
 ```
 </details>
 <br>
@@ -66,10 +66,34 @@ Collected 1 test(s) from hello_snforge package
 Running 1 test(s) from tests/
 [PASS] hello_snforge_integrationtest::test_contract::test_calling (gas: ~1)
 Running 0 test(s) from src/
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, other filtered out
 ```
 </details>
 <br>
+
+## Excluding Tests
+
+You can use the `--exclude` flag to run all tests *except* those matching a specified filter pattern. This is useful for temporarily excluding problematic tests or focusing on a subset of tests by excluding others.
+
+```shell
+$ snforge test --exclude "failing"
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Collected 3 test(s) from hello_snforge package
+Running 0 test(s) from src/
+Running 2 test(s) from tests/
+[PASS] hello_snforge_integrationtest::test_contract::test_calling (gas: ~1)
+[PASS] hello_snforge_integrationtest::test_contract::test_executing (gas: ~1)
+Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 1 excluded, 0 filtered out
+```
+</details>
+<br>
+
+The excluded tests are still counted in the test summary but are not executed.
 
 ## Stopping Test Execution After First Failed Test
 
@@ -95,7 +119,7 @@ Failure data:
 Failures:
     failing_example_tests::test_failing
 
-Tests: 0 passed, 1 failed, 2 skipped, 0 ignored, 0 filtered out
+Tests: 0 passed, 1 failed, 2 skipped, 0 ignored, 0 excluded, 0 filtered out
 ```
 </details>
 <br>
@@ -127,7 +151,7 @@ Running 2 test(s) from tests/
         syscalls: (CallContract: 3, StorageRead: 3, Deploy: 1, StorageWrite: 1)
         
 Running 0 test(s) from src/
-Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
 ```
 </details>
 <br>

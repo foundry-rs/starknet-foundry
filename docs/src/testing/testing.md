@@ -29,7 +29,7 @@ $ snforge test
 Collected 1 test(s) from first_test package
 Running 1 test(s) from src/
 [PASS] first_test::tests::test_sum (gas: ~1)
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
 ```
 </details>
 <br>
@@ -57,7 +57,7 @@ Running 1 test(s) from src/
 Failure data:
     0x70616e6963206d657373616765 ('panic message')
 
-Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
 
 Failures:
     panicking_test::tests::failing
@@ -108,7 +108,7 @@ Running 5 test(s) from src/
 [PASS] should_panic_example::tests::should_panic_exact (gas: ~1)
 [PASS] should_panic_example::tests::should_panic_expected_is_substring (gas: ~1)
 [PASS] should_panic_example::tests::should_panic_check_data (gas: ~1)
-Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
 ```
 </details>
 <br>
@@ -133,7 +133,7 @@ $ snforge test
 Collected 1 test(s) from ignoring_example package
 Running 1 test(s) from src/
 [IGNORE] ignoring_example::tests::ignored_test
-Tests: 0 passed, 0 failed, 0 skipped, 1 ignored, 0 filtered out
+Tests: 0 passed, 0 failed, 0 skipped, 1 ignored, 0 excluded, 0 filtered out
 ```
 </details>
 <br>
