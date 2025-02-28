@@ -70,9 +70,9 @@ mod tests {
             false,
             false,
             None,
-            Default::default(),
-            Default::default(),
-            &Default::default(),
+            ContractsData::default(),
+            Utf8PathBuf::default(),
+            &ForgeConfigFromScarb::default(),
             &[],
         );
         let config2 = combine_configs(
@@ -84,9 +84,9 @@ mod tests {
             false,
             false,
             None,
-            Default::default(),
-            Default::default(),
-            &Default::default(),
+            ContractsData::default(),
+            Utf8PathBuf::default(),
+            &ForgeConfigFromScarb::default(),
             &[],
         );
 
@@ -109,9 +109,9 @@ mod tests {
             false,
             false,
             None,
-            Default::default(),
-            Default::default(),
-            &Default::default(),
+            ContractsData::default(),
+            Utf8PathBuf::default(),
+            &ForgeConfigFromScarb::default(),
             &[],
         );
         assert_eq!(
@@ -123,8 +123,8 @@ mod tests {
                     fuzzer_seed: config.test_runner_config.fuzzer_seed,
                     max_n_steps: None,
                     is_vm_trace_needed: false,
-                    cache_dir: Default::default(),
-                    contracts_data: Default::default(),
+                    cache_dir: Utf8PathBuf::default(),
+                    contracts_data: ContractsData::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
                 }),
                 output_config: Arc::new(OutputConfig {
@@ -158,8 +158,8 @@ mod tests {
             false,
             false,
             None,
-            Default::default(),
-            Default::default(),
+            ContractsData::default(),
+            Utf8PathBuf::default(),
             &config_from_scarb,
             &[],
         );
@@ -172,8 +172,8 @@ mod tests {
                     fuzzer_seed: 500,
                     max_n_steps: Some(1_000_000),
                     is_vm_trace_needed: true,
-                    cache_dir: Default::default(),
-                    contracts_data: Default::default(),
+                    cache_dir: Utf8PathBuf::default(),
+                    contracts_data: ContractsData::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
                 }),
                 output_config: Arc::new(OutputConfig {
@@ -211,8 +211,8 @@ mod tests {
             true,
             true,
             Some(1_000_000),
-            Default::default(),
-            Default::default(),
+            ContractsData::default(),
+            Utf8PathBuf::default(),
             &config_from_scarb,
             &[],
         );
@@ -226,8 +226,8 @@ mod tests {
                     fuzzer_seed: 32,
                     max_n_steps: Some(1_000_000),
                     is_vm_trace_needed: true,
-                    cache_dir: Default::default(),
-                    contracts_data: Default::default(),
+                    cache_dir: Utf8PathBuf::default(),
+                    contracts_data: ContractsData::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
                 }),
                 output_config: Arc::new(OutputConfig {
