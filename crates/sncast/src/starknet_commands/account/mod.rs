@@ -50,7 +50,7 @@ pub fn prepare_account_json(
     salt: Option<Felt>,
 ) -> serde_json::Value {
     let acc_type_str = account_type.to_string();
-    let mut acc_type = match acc_type_str.as_str() {
+    let acc_type = match acc_type_str.as_str() {
         "OpenZeppelin" => "open_zeppelin".to_string(),
         "Argent" => "argent".to_string(),
         "Braavos" => "braavos".to_string(),
