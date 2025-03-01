@@ -1,6 +1,7 @@
-use blockifier::execution::contract_class::ContractClass;
+use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::state::errors::StateError;
 use blockifier::state::state_api::{StateReader, StateResult};
+use starknet_api::contract_class::ContractClass;
 use starknet_api::core::CompiledClassHash;
 use starknet_api::core::{ClassHash, ContractAddress, Nonce};
 use starknet_api::state::StorageKey;
@@ -21,8 +22,8 @@ impl StateReader for DictStateReader {
         key: StorageKey,
     ) -> StateResult<Felt> {
         Err(StateError::StateReadError(format!(
-                "Unable to get storage at address: {contract_address:?} and key: {key:?} from DictStateReader"
-            )))
+            "Unable to get storage at address: {contract_address:?} and key: {key:?} from DictStateReader"
+        )))
     }
 
     fn get_nonce_at(&self, contract_address: ContractAddress) -> StateResult<Nonce> {
@@ -38,10 +39,10 @@ impl StateReader for DictStateReader {
             .ok_or(StateError::UnavailableContractAddress(contract_address))
     }
 
-    fn get_compiled_contract_class(&self, class_hash: ClassHash) -> StateResult<ContractClass> {
+    fn get_compiled_class(&self, class_hash: ClassHash) -> StateResult<RunnableCompiledClass> {
         let contract_class = self.class_hash_to_class.get(&class_hash).cloned();
         match contract_class {
-            Some(contract_class) => Ok(contract_class),
+            Some(contract_class) => Ok(contract_class.try_into()?),
             _ => Err(StateError::UndeclaredClassHash(class_hash)),
         }
     }

@@ -1,7 +1,7 @@
 use crate::shared_cache::FailedTestsCache;
 use anyhow::Result;
-use forge_runner::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use forge_runner::TestCaseFilter;
+use forge_runner::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -32,7 +32,7 @@ pub(crate) enum IgnoredFilter {
 
 impl TestsFilter {
     #[must_use]
-    #[allow(clippy::fn_params_excessive_bools)]
+    #[expect(clippy::fn_params_excessive_bools)]
     pub fn from_flags(
         test_name_filter: Option<String>,
         exact_match: bool,
@@ -123,6 +123,7 @@ impl TestCaseFilter for TestsFilter {
 
 #[cfg(test)]
 mod tests {
+    use crate::shared_cache::FailedTestsCache;
     use crate::test_filter::TestsFilter;
     use cairo_lang_sierra::program::Program;
     use cairo_lang_sierra::program::ProgramArtifact;
@@ -132,7 +133,7 @@ mod tests {
     };
     use forge_runner::package_tests::{TestDetails, TestTargetLocation};
     use std::sync::Arc;
-    use universal_sierra_compiler_api::{compile_sierra, SierraType};
+    use universal_sierra_compiler_api::{SierraType, compile_sierra};
 
     fn program_for_testing() -> ProgramArtifact {
         ProgramArtifact {
@@ -149,21 +150,23 @@ mod tests {
     #[test]
     #[should_panic(expected = "Arguments only_ignored and include_ignored cannot be both true")]
     fn from_flags_only_ignored_and_include_ignored_both_true() {
-        let _ = TestsFilter::from_flags(None, false, true, true, false, Default::default());
+        let _ =
+            TestsFilter::from_flags(None, false, true, true, false, FailedTestsCache::default());
     }
 
     #[test]
     #[should_panic(expected = "Argument test_name_filter cannot be None with exact_match")]
     fn from_flags_exact_match_true_without_test_filter_name() {
-        let _ = TestsFilter::from_flags(None, true, false, false, false, Default::default());
+        let _ =
+            TestsFilter::from_flags(None, true, false, false, false, FailedTestsCache::default());
     }
 
     #[test]
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines)]
     fn filtering_tests() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
-            sierra_program_path: Default::default(),
+            sierra_program_path: Arc::default(),
             casm_program: Arc::new(
                 compile_sierra(
                     &serde_json::to_value(&program_for_testing().program).unwrap(),
@@ -230,7 +233,7 @@ mod tests {
             false,
             false,
             false,
-            Default::default(),
+            FailedTestsCache::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -259,7 +262,7 @@ mod tests {
             false,
             false,
             false,
-            Default::default(),
+            FailedTestsCache::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -287,7 +290,7 @@ mod tests {
             false,
             false,
             false,
-            Default::default(),
+            FailedTestsCache::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -353,7 +356,7 @@ mod tests {
             false,
             false,
             false,
-            Default::default(),
+            FailedTestsCache::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -367,7 +370,7 @@ mod tests {
             false,
             false,
             false,
-            Default::default(),
+            FailedTestsCache::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -432,7 +435,7 @@ mod tests {
     fn filtering_with_no_tests() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
-            sierra_program_path: Default::default(),
+            sierra_program_path: Arc::default(),
             casm_program: Arc::new(
                 compile_sierra(
                     &serde_json::to_value(&program_for_testing().program).unwrap(),
@@ -450,7 +453,7 @@ mod tests {
             false,
             false,
             false,
-            Default::default(),
+            FailedTestsCache::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -464,7 +467,7 @@ mod tests {
             false,
             false,
             false,
-            Default::default(),
+            FailedTestsCache::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -474,11 +477,11 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines)]
     fn filtering_with_exact_match() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
-            sierra_program_path: Default::default(),
+            sierra_program_path: Arc::default(),
             casm_program: Arc::new(
                 compile_sierra(
                     &serde_json::to_value(&program_for_testing().program).unwrap(),
@@ -545,7 +548,7 @@ mod tests {
             false,
             false,
             false,
-            Default::default(),
+            FailedTestsCache::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -559,7 +562,7 @@ mod tests {
             false,
             false,
             false,
-            Default::default(),
+            FailedTestsCache::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -573,7 +576,7 @@ mod tests {
             false,
             false,
             false,
-            Default::default(),
+            FailedTestsCache::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -601,7 +604,7 @@ mod tests {
             false,
             false,
             false,
-            Default::default(),
+            FailedTestsCache::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -629,7 +632,7 @@ mod tests {
             false,
             false,
             false,
-            Default::default(),
+            FailedTestsCache::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -643,7 +646,7 @@ mod tests {
             false,
             false,
             false,
-            Default::default(),
+            FailedTestsCache::default(),
         );
 
         let mut filtered = mocked_tests.clone();
@@ -670,7 +673,7 @@ mod tests {
     fn filtering_with_only_ignored() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
-            sierra_program_path: Default::default(),
+            sierra_program_path: Arc::default(),
             casm_program: Arc::new(
                 compile_sierra(
                     &serde_json::to_value(&program_for_testing().program).unwrap(),
@@ -732,7 +735,7 @@ mod tests {
         };
 
         let tests_filter =
-            TestsFilter::from_flags(None, false, true, false, false, Default::default());
+            TestsFilter::from_flags(None, false, true, false, false, FailedTestsCache::default());
         let mut filtered = mocked_tests;
         tests_filter.filter_tests(&mut filtered.test_cases).unwrap();
 
@@ -768,11 +771,11 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines)]
     fn filtering_with_include_ignored() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
-            sierra_program_path: Default::default(),
+            sierra_program_path: Arc::default(),
             casm_program: Arc::new(
                 compile_sierra(
                     &serde_json::to_value(&program_for_testing().program).unwrap(),
@@ -834,7 +837,7 @@ mod tests {
         };
 
         let tests_filter =
-            TestsFilter::from_flags(None, false, false, true, false, Default::default());
+            TestsFilter::from_flags(None, false, false, true, false, FailedTestsCache::default());
         let mut filtered = mocked_tests;
         tests_filter.filter_tests(&mut filtered.test_cases).unwrap();
 

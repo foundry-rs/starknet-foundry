@@ -12,6 +12,7 @@ pub struct FailedTestsCache {
 const FILE_WITH_PREV_TESTS_FAILED: &str = ".prev_tests_failed";
 
 impl FailedTestsCache {
+    #[must_use]
     pub fn new(cache_dir: &Utf8PathBuf) -> Self {
         Self {
             cache_file: cache_dir.join(FILE_WITH_PREV_TESTS_FAILED),

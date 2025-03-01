@@ -9,7 +9,7 @@ use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stderr_contains;
 use sncast::get_default_state_file_name;
-use sncast::state::state_file::{read_txs_from_state_file, ScriptTransactionStatus};
+use sncast::state::state_file::{ScriptTransactionStatus, read_txs_from_state_file};
 use tempfile::tempdir;
 use test_case::test_case;
 
@@ -369,10 +369,12 @@ async fn test_run_script_twice_with_state_file_enabled() {
     .unwrap();
     let tx_entries_after_first_run = read_txs_from_state_file(&state_file_path).unwrap().unwrap();
 
-    assert!(tx_entries_after_first_run
-        .transactions
-        .iter()
-        .all(|(_, value)| value.status == ScriptTransactionStatus::Success));
+    assert!(
+        tx_entries_after_first_run
+            .transactions
+            .iter()
+            .all(|(_, value)| value.status == ScriptTransactionStatus::Success)
+    );
 
     assert_eq!(tx_entries_after_first_run.transactions.len(), 3);
 
@@ -433,7 +435,14 @@ async fn test_state_file_contains_all_failed_txs() {
     let declare_tx_entry = tx_entries_after_first_run
         .get("2341f038132e07bd9fa3cabf5fa0c3fde26b0fc03e7b09198dbd230e1b1e071c")
         .unwrap();
-    assert_tx_entry_failed(declare_tx_entry, "declare", ScriptTransactionStatus::Error, vec!["Failed to find Not_this_time artifact in starknet_artifacts.json file. Please make sure you have specified correct package using `--package` flag and that you have enabled sierra and casm code generation in Scarb.toml."]);
+    assert_tx_entry_failed(
+        declare_tx_entry,
+        "declare",
+        ScriptTransactionStatus::Error,
+        vec![
+            "Failed to find Not_this_time artifact in starknet_artifacts.json file. Please make sure you have specified correct package using `--package` flag and that you have enabled sierra and casm code generation in Scarb.toml.",
+        ],
+    );
 
     let deploy_tx_entry = tx_entries_after_first_run
         .get("2402e1bcaf641961a4e97b76cad1e91f9522e4a34e57b5f740f3ea529b853c8f")

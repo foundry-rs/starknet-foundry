@@ -11,7 +11,7 @@ use blockifier::execution::deprecated_syscalls::{
 };
 use blockifier::execution::entry_point::{CallEntryPoint, CallType, ConstructorContext};
 use blockifier::execution::execution_utils::{
-    execute_deployment, write_maybe_relocatable, ReadOnlySegment,
+    ReadOnlySegment, execute_deployment, write_maybe_relocatable,
 };
 use conversions::FromConv;
 
@@ -21,11 +21,11 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use num_traits::ToPrimitive;
 use starknet_api::block::{BlockNumber, BlockTimestamp};
+use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{
-    calculate_contract_address, ClassHash, ContractAddress, EntryPointSelector,
+    ClassHash, ContractAddress, EntryPointSelector, calculate_contract_address,
 };
-use starknet_api::deprecated_contract_class::EntryPointType;
-use starknet_api::transaction::Calldata;
+use starknet_api::transaction::fields::Calldata;
 use starknet_types_core::felt::Felt;
 
 use self::runtime::{
@@ -263,13 +263,17 @@ fn deploy(
         storage_address: deployed_contract_address,
         caller_address: deployer_address,
     };
+    let mut remaining_gas = syscall_handler
+        .context
+        .gas_costs()
+        .base
+        .default_initial_gas_cost;
     let call_info = execute_deployment(
         syscall_handler.state,
-        syscall_handler.resources,
         syscall_handler.context,
         ctor_context,
         request.constructor_calldata,
-        syscall_handler.context.gas_costs().initial_gas_cost,
+        &mut remaining_gas,
     )?;
     syscall_handler.inner_calls.push(call_info);
 
@@ -304,7 +308,11 @@ fn call_contract(
         storage_address,
         caller_address: syscall_handler.storage_address,
         call_type: CallType::Call,
-        initial_gas: syscall_handler.context.gas_costs().initial_gas_cost,
+        initial_gas: syscall_handler
+            .context
+            .gas_costs()
+            .base
+            .default_initial_gas_cost,
     };
     let retdata_segment =
         execute_inner_call(&mut entry_point, vm, syscall_handler, cheatnet_state)?;
@@ -376,7 +384,6 @@ fn execute_inner_call(
         call,
         syscall_handler.state,
         cheatnet_state,
-        syscall_handler.resources,
         syscall_handler.context,
     )?;
     // endregion
@@ -396,7 +403,7 @@ fn execute_inner_call(
 }
 
 // blockifier/src/execution/deprecated_syscalls/hint_processor.rs:409 (execute_library_call)
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 fn execute_library_call(
     syscall_handler: &mut DeprecatedSyscallHintProcessor<'_>,
     cheatnet_state: &mut CheatnetState,
@@ -422,7 +429,11 @@ fn execute_library_call(
         storage_address: syscall_handler.storage_address,
         caller_address: syscall_handler.caller_address,
         call_type: CallType::Delegate,
-        initial_gas: syscall_handler.context.gas_costs().initial_gas_cost,
+        initial_gas: syscall_handler
+            .context
+            .gas_costs()
+            .base
+            .default_initial_gas_cost,
     };
 
     execute_inner_call(&mut entry_point, vm, syscall_handler, cheatnet_state)

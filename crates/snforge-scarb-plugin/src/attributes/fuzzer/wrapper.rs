@@ -23,8 +23,8 @@ pub fn fuzzer_wrapper(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     })
 }
 
-#[allow(clippy::ptr_arg)]
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::ptr_arg)]
+#[expect(clippy::needless_pass_by_value)]
 fn fuzzer_wrapper_internal(
     db: &dyn SyntaxGroup,
     func: &FunctionWithBody,

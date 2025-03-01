@@ -1,6 +1,7 @@
 use crate::helpers::constants::{
     ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
 };
+use crate::helpers::env::set_keystore_password_env;
 use crate::helpers::fixtures::{
     duplicate_contract_directory_with_salt, get_accounts_path, get_keystores_path,
 };
@@ -8,8 +9,6 @@ use crate::helpers::runner::runner;
 use configuration::copy_config_to_tempdir;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
-use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
-use std::env;
 
 #[tokio::test]
 async fn test_happy_case_from_sncast_config() {
@@ -31,7 +30,7 @@ async fn test_happy_case_from_sncast_config() {
 
     assert_stderr_contains(
         output,
-        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]"
+        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]",
     );
 }
 
@@ -57,7 +56,7 @@ async fn test_happy_case_predefined_network() {
 
     assert_stderr_contains(
         output,
-        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]"
+        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]",
     );
 }
 
@@ -111,7 +110,7 @@ async fn test_network_with_url_defined_in_config_toml() {
 
     assert_stderr_contains(
         output,
-        "Error: The argument '--network' cannot be used when `url` is defined in `snfoundry.toml` for the active profile"
+        "Error: The argument '--network' cannot be used when `url` is defined in `snfoundry.toml` for the active profile",
     );
 }
 
@@ -136,7 +135,7 @@ async fn test_happy_case_from_cli_no_scarb() {
 
     assert_stderr_contains(
         output,
-        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]"
+        "Error: An error occurred in the called contract[..]Requested contract address [..] is not deployed[..]",
     );
 }
 
@@ -327,7 +326,7 @@ async fn test_keystore_undeployed_account() {
         "Map",
     ];
 
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_keystore_password_env();
     let snapbox = runner(&args).current_dir(contract_path.path());
     let output = snapbox.assert().failure();
 
@@ -352,7 +351,7 @@ async fn test_keystore_declare() {
         "Map",
     ];
 
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_keystore_password_env();
     let snapbox = runner(&args).current_dir(contract_path.path());
 
     assert!(snapbox.assert().success().get_output().stderr.is_empty());

@@ -1,6 +1,6 @@
-use crate::helpers::configuration::{show_explorer_links_default, CastConfig};
-use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use crate::ValidatedWaitParams;
+use crate::helpers::configuration::{CastConfig, show_explorer_links_default};
+use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use indoc::formatdoc;

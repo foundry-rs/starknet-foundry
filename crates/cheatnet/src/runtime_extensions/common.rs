@@ -1,7 +1,7 @@
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
-use starknet_api::transaction::Calldata;
+use starknet_api::transaction::fields::Calldata;
 use starknet_types_core::felt::Felt;
 
 #[must_use]

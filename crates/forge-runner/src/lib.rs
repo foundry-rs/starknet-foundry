@@ -2,24 +2,24 @@ use crate::coverage_api::run_coverage;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use build_trace_data::save_trace_data;
 use cairo_lang_sierra::program::{ConcreteTypeLongId, Function, TypeDeclaration};
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_config_extension::config::RawFuzzerConfig;
-use futures::stream::FuturesUnordered;
 use futures::StreamExt;
+use futures::stream::FuturesUnordered;
 use package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use profiler_api::run_profiler;
-use rand::prelude::StdRng;
 use rand::SeedableRng;
+use rand::prelude::StdRng;
 use shared::print::print_as_warning;
 use shared::spinner::Spinner;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
-use tokio::sync::mpsc::{channel, Sender};
+use tokio::sync::mpsc::{Sender, channel};
 use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
@@ -211,7 +211,7 @@ fn run_with_fuzzing(
     })
 }
 
-#[allow(clippy::implicit_hasher)]
+#[expect(clippy::implicit_hasher)]
 #[must_use]
 pub fn function_args(
     function: &Function,

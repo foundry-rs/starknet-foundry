@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2023_01"
 
 [dependencies]
-assert_macros = "0.1.0"
+assert_macros = "2.8.5"

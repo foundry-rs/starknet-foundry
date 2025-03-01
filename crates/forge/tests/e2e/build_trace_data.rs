@@ -14,22 +14,28 @@ fn simple_package_save_trace() {
     let temp = setup_package("simple_package");
     test_runner(&temp).arg("--save-trace-data").assert().code(1);
 
-    assert!(temp
-        .join(TRACE_DIR)
-        .join("simple_package_tests_test_fib.json")
-        .exists());
-    assert!(!temp
-        .join(TRACE_DIR)
-        .join("simple_package_integrationtest_test_simple_test_failing.json")
-        .exists());
-    assert!(!temp
-        .join(TRACE_DIR)
-        .join("simple_package_tests_ignored_test.json")
-        .exists());
-    assert!(temp
-        .join(TRACE_DIR)
-        .join("simple_package_integrationtest_ext_function_test_test_simple.json")
-        .exists());
+    assert!(
+        temp.join(TRACE_DIR)
+            .join("simple_package_tests_test_fib.json")
+            .exists()
+    );
+    assert!(
+        !temp
+            .join(TRACE_DIR)
+            .join("simple_package_integrationtest_test_simple_test_failing.json")
+            .exists()
+    );
+    assert!(
+        !temp
+            .join(TRACE_DIR)
+            .join("simple_package_tests_ignored_test.json")
+            .exists()
+    );
+    assert!(
+        temp.join(TRACE_DIR)
+            .join("simple_package_integrationtest_ext_function_test_test_simple.json")
+            .exists()
+    );
 
     let trace_data = fs::read_to_string(
         temp.join(TRACE_DIR)

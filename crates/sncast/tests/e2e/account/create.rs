@@ -4,16 +4,16 @@ use crate::helpers::runner::runner;
 use configuration::copy_config_to_tempdir;
 use indoc::{formatdoc, indoc};
 
+use crate::helpers::env::set_create_keystore_password_env;
 use conversions::string::IntoHexStr;
 use serde_json::{json, to_string_pretty};
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use snapbox::assert_matches;
-use sncast::helpers::constants::{
-    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
-    CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
-};
 use sncast::AccountType;
-use std::{env, fs};
+use sncast::helpers::constants::{
+    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH,
+};
+use std::fs;
 use tempfile::tempdir;
 use test_case::test_case;
 
@@ -337,7 +337,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let keystore_file = "my_key.json";
     let account_file = "my_account.json";
-    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_create_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -385,7 +385,7 @@ pub async fn test_happy_case_keystore_add_profile() {
     let keystore_file = "my_key.json";
     let account_file = "my_account.json";
     let accounts_json_file = "accounts.json";
-    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_create_keystore_password_env();
 
     let args = vec![
         "--accounts-file",
@@ -430,7 +430,7 @@ pub async fn test_keystore_without_account() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let keystore_file = "my_key.json";
 
-    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_create_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -464,7 +464,7 @@ pub async fn test_keystore_file_already_exists() {
         "tests/data/keystore/my_key.json",
         temp_dir.path().join(keystore_file),
     );
-    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_create_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -501,7 +501,7 @@ pub async fn test_keystore_account_file_already_exists() {
         temp_dir.path().join(account_file),
     );
 
-    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_create_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -532,7 +532,7 @@ pub async fn test_happy_case_keystore_int_format() {
     let keystore_file = "my_key_int.json";
     let account_file = "my_account_int.json";
 
-    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_create_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -580,7 +580,7 @@ pub async fn test_happy_case_keystore_hex_format() {
     let keystore_file = "my_key_hex.json";
     let account_file = "my_account_hex.json";
 
-    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_create_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -619,7 +619,7 @@ pub async fn test_happy_case_keystore_hex_format() {
 }
 
 #[tokio::test]
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 pub async fn test_happy_case_default_name_generation() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";

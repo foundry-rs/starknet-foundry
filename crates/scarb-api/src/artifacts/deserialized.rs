@@ -9,7 +9,6 @@ pub struct StarknetArtifacts {
     pub contracts: Vec<StarknetContract>,
 }
 
-#[allow(dead_code)]
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub struct StarknetContract {
     pub id: String,
@@ -18,7 +17,6 @@ pub struct StarknetContract {
     pub artifacts: StarknetContractArtifactPaths,
 }
 
-#[allow(dead_code)]
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub struct StarknetContractArtifactPaths {
     pub sierra: Utf8PathBuf,
