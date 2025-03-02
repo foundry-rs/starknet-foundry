@@ -5,6 +5,7 @@ use super::{
 use crate::{
     TestArgs,
     block_number_map::BlockNumberMap,
+    check_sierra_gas_version_requirement,
     combine_configs::combine_configs,
     pretty_printing,
     scarb::{
@@ -72,6 +73,7 @@ impl RunForPackageArgs {
             args.build_profile,
             args.coverage,
             args.max_n_steps,
+            args.tracked_resource,
             contracts_data,
             cache_dir.clone(),
             &forge_config_from_scarb,
@@ -101,11 +103,17 @@ async fn test_package_with_config_resolved(
     test_targets: Vec<TestTargetRaw>,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
+    forge_config: &ForgeConfig,
 ) -> Result<Vec<TestTargetWithResolvedConfig>> {
     let mut test_targets_with_resolved_config = Vec::with_capacity(test_targets.len());
 
     for test_target in test_targets {
-        let test_target = test_target_with_config(test_target)?;
+        check_sierra_gas_version_requirement(&forge_config)?;
+
+        let test_target = test_target_with_config(
+            test_target,
+            &forge_config.test_runner_config.tracked_resource,
+        )?;
 
         let test_target = resolve_config(test_target, fork_targets, block_number_map).await?;
 
@@ -129,8 +137,13 @@ pub async fn run_for_package(
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
 ) -> Result<Vec<TestTargetSummary>> {
-    let mut test_targets =
-        test_package_with_config_resolved(test_targets, &fork_targets, block_number_map).await?;
+    let mut test_targets = test_package_with_config_resolved(
+        test_targets,
+        &fork_targets,
+        block_number_map,
+        &forge_config,
+    )
+    .await?;
     let all_tests = sum_test_cases(&test_targets);
 
     for test_target in &mut test_targets {

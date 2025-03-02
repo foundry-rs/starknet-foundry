@@ -1,9 +1,10 @@
 use crate::compatibility_check::{Requirement, RequirementsChecker, create_version_parser};
-use anyhow::Result;
 use anyhow::anyhow;
+use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge_runner::CACHE_DIR;
+use forge_runner::forge_config::{ForgeConfig, ForgeTrackedResource};
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
@@ -36,6 +37,7 @@ const MINIMAL_SCARB_VERSION: Version = Version::new(2, 7, 0);
 const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 8, 5);
 const MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN: Version = Version::new(2, 10, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
+const MINIMAL_SIERRA_VERSION_FOR_SIERRA_GAS: Version = Version::new(1, 7, 0);
 
 #[derive(Parser, Debug)]
 #[command(
@@ -195,6 +197,10 @@ pub struct TestArgs {
     #[arg(long)]
     no_optimization: bool,
 
+    /// Specify tracked resource type
+    #[arg(long, value_enum, default_value_t)]
+    tracked_resource: ForgeTrackedResource,
+
     /// Additional arguments for cairo-coverage or cairo-profiler
     #[clap(last = true)]
     additional_args: Vec<OsString>,
@@ -319,5 +325,65 @@ fn check_requirements(output_on_success: bool) -> Result<()> {
         requirements_checker.check()?;
     }
 
+    Ok(())
+}
+
+fn verify_contracts_sierra_versions(forge_config: &ForgeConfig) -> Result<()> {
+    if let Some(contract_names) = forge_config
+        .test_runner_config
+        .contracts_data
+        .get_contract_names()
+    {
+        for contract in contract_names {
+            let sierra_str = &forge_config
+                .test_runner_config
+                .contracts_data
+                .get_artifacts(contract)
+                .context(format!("Missing Sierra JSON for contract: {}", contract))?
+                .sierra;
+
+            let contract_version = parse_sierra_version(sierra_str)?;
+            assert!(MINIMAL_SIERRA_VERSION_FOR_SIERRA_GAS <= contract_version);
+        }
+    }
+    Ok(())
+}
+
+fn parse_sierra_version(sierra_str: &String) -> Result<Version> {
+    let sierra_json: serde_json::Value =
+        serde_json::from_str(sierra_str).context("Failed to parse Sierra JSON")?;
+
+    let parsed_values: Vec<u8> = sierra_json["sierra_program"]
+        .as_array()
+        .context("Unable to read `sierra_program`. Ensure it is an array of felts.")?
+        .iter()
+        .take(3)
+        .filter_map(|x| x.as_str())
+        .map(|s| {
+            u8::from_str_radix(s.strip_prefix("0x").unwrap_or(s), 16)
+                .context(format!("Invalid hex value: {}", s))
+        })
+        .collect::<Result<_, _>>()?;
+
+    Version::parse(
+        format!(
+            "{}.{}.{}",
+            &parsed_values[0], &parsed_values[1], &parsed_values[2]
+        )
+        .as_str(),
+    )
+    .map_err(|err| err.into())
+}
+
+pub(crate) fn check_sierra_gas_version_requirement(forge_config: &ForgeConfig) -> Result<()> {
+    if &forge_config.test_runner_config.tracked_resource == &ForgeTrackedResource::SierraGas {
+        verify_contracts_sierra_versions(&forge_config).expect(
+            format!(
+                "Tracking SierraGas is not supported for sierra <= {}",
+                MINIMAL_SIERRA_VERSION_FOR_SIERRA_GAS
+            )
+            .as_str(),
+        );
+    };
     Ok(())
 }

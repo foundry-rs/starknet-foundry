@@ -10,7 +10,7 @@ use forge::{
 };
 use forge_runner::CACHE_DIR;
 use forge_runner::forge_config::{
-    ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
+    ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
 };
 use forge_runner::test_target_summary::TestTargetSummary;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
@@ -62,6 +62,8 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
                     fuzzer_seed: 12345,
                     max_n_steps: None,
                     is_vm_trace_needed: false,
+                    tracked_resource: ForgeTrackedResource::CairoSteps,
+                    // todo: szymczyk: add tests for SierraGas
                     cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
                         .unwrap()
                         .join(CACHE_DIR),

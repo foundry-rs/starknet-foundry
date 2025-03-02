@@ -105,6 +105,11 @@ impl ContractsData {
     ) -> Option<&FunctionName> {
         self.selectors.get(entry_point_selector)
     }
+
+    #[must_use]
+    pub fn get_contract_names(&self) -> Option<Vec<&ContractName>> {
+        (!self.contracts.is_empty()).then(|| self.contracts.keys().collect())
+    }
 }
 
 fn build_name_selector_map(abi: Vec<AbiEntry>) -> HashMap<EntryPointSelector, FunctionName> {
