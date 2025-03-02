@@ -2294,6 +2294,7 @@ dependencies = [
  "cheatnet",
  "console",
  "conversions",
+ "debugging",
  "futures",
  "indoc",
  "itertools 0.12.1",
