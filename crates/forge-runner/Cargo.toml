@@ -41,6 +41,10 @@ runtime = { path = "../runtime" }
 conversions = { path = "../conversions" }
 scarb-api = { path = "../scarb-api" }
 shared = { path = "../shared" }
+debugging = { path = "../debugging" }
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 which.workspace = true
 sanitize-filename.workspace = true
+
+[features]
+debugging = []
