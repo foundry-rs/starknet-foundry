@@ -1,6 +1,6 @@
 #[starknet::interface]
 pub trait ILibraryContract<TContractState> {
-    fn get_value(self: @TContractState,) -> felt252;
+    fn get_value(self: @TContractState) -> felt252;
     fn set_value(ref self: TContractState, number: felt252);
 }
 
@@ -9,11 +9,11 @@ pub mod LibraryContract {
     use starknet::storage::{StoragePointerWriteAccess, StoragePointerReadAccess};
     #[storage]
     struct Storage {
-        value: felt252
+        value: felt252,
     }
 
     #[external(v0)]
-    pub fn get_value(self: @ContractState,) -> felt252 {
+    pub fn get_value(self: @ContractState) -> felt252 {
         self.value.read()
     }
 

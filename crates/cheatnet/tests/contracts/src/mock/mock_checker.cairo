@@ -25,7 +25,7 @@ mod MockChecker {
 
     #[storage]
     struct Storage {
-        stored_thing: felt252
+        stored_thing: felt252,
     }
 
     #[constructor]

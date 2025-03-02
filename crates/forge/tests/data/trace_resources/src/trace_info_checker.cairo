@@ -10,21 +10,21 @@ pub trait ITraceInfoChecker<T> {
 mod TraceInfoChecker {
     use super::ITraceInfoChecker;
     use trace_resources::trace_info_proxy::{
-        ITraceInfoProxyDispatcher, ITraceInfoProxyDispatcherTrait
+        ITraceInfoProxyDispatcher, ITraceInfoProxyDispatcherTrait,
     };
-    use starknet::{ ContractAddress, ClassHash };
+    use starknet::{ContractAddress, ClassHash};
     use core::panic_with_felt252;
     use super::super::use_builtins_and_syscalls;
 
     #[storage]
     struct Storage {
-        balance: u8
+        balance: u8,
     }
 
     #[abi(embed_v0)]
     impl ITraceInfoChceckerImpl of ITraceInfoChecker<ContractState> {
         fn from_proxy(
-            ref self: ContractState, data: felt252, empty_hash: ClassHash, salt: felt252
+            ref self: ContractState, data: felt252, empty_hash: ClassHash, salt: felt252,
         ) -> felt252 {
             use_builtins_and_syscalls(empty_hash, salt);
 
@@ -44,7 +44,7 @@ mod TraceInfoChecker {
         from_address: felt252,
         proxy_address: ContractAddress,
         empty_hash: ClassHash,
-        salt: felt252
+        salt: felt252,
     ) -> felt252 {
         let my_address = use_builtins_and_syscalls(empty_hash, salt);
 

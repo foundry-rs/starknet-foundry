@@ -22,7 +22,7 @@ mod ConstructorCheatBlockNumberChecker {
 
     #[abi(embed_v0)]
     impl IConstructorCheatBlockNumberChecker of super::IConstructorCheatBlockNumberChecker<
-        ContractState
+        ContractState,
     > {
         fn get_stored_block_number(ref self: ContractState) -> u64 {
             self.blk_nb.read()

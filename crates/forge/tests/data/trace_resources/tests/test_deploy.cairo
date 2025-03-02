@@ -17,7 +17,7 @@ fn test_deploy() {
     proxy.deploy(@array![checker_address.into(), empty_hash.into(), 1]).unwrap();
 
     deploy_syscall(
-        proxy.class_hash, 0, array![checker_address.into(), empty_hash.into(), 2].span(), false
+        proxy.class_hash, 0, array![checker_address.into(), empty_hash.into(), 2].span(), false,
     )
         .unwrap_syscall();
 
@@ -26,7 +26,7 @@ fn test_deploy() {
         .unwrap();
 
     deploy_syscall(
-        proxy.class_hash, 12412, array![checker_address.into(), empty_hash.into(), 4].span(), false
+        proxy.class_hash, 12412, array![checker_address.into(), empty_hash.into(), 4].span(), false,
     )
         .unwrap_syscall();
 }

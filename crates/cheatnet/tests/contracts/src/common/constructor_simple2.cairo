@@ -10,7 +10,7 @@ mod ConstructorSimple2 {
 
     #[storage]
     struct Storage {
-        number: felt252
+        number: felt252,
     }
 
     #[constructor]

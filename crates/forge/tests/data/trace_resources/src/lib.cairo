@@ -3,9 +3,7 @@ pub mod trace_dummy;
 pub mod trace_info_checker;
 pub mod trace_info_proxy;
 
-use starknet::{
-    ContractAddress, ClassHash, get_contract_address, SyscallResultTrait
-};
+use starknet::{ContractAddress, ClassHash, get_contract_address, SyscallResultTrait};
 use starknet::syscalls::{get_block_hash_syscall, emit_event_syscall, send_message_to_l1_syscall};
 
 pub fn use_builtins_and_syscalls(empty_hash: ClassHash, salt: felt252) -> ContractAddress {

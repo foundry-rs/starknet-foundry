@@ -10,7 +10,7 @@ mod TraceDummy {
 
     #[storage]
     struct Storage {
-        balance: u8
+        balance: u8,
     }
 
     #[abi(embed_v0)]

@@ -33,7 +33,7 @@ mod Cairo1Contract_v1 {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        End: EndCalled
+        End: EndCalled,
     }
 
     #[derive(Drop, starknet::Event)]
@@ -46,12 +46,12 @@ mod Cairo1Contract_v1 {
         fn start(
             ref self: ContractState,
             cairo0_address: ContractAddress,
-            expected_caller_address: ContractAddress
+            expected_caller_address: ContractAddress,
         ) {
             let contract_address = get_contract_address();
 
             let cairo0_contract = super::ICairo0ContractDispatcher {
-                contract_address: cairo0_address
+                contract_address: cairo0_address,
             };
 
             self.expected_caller_address.write(expected_caller_address);
@@ -71,8 +71,8 @@ mod Cairo1Contract_v1 {
             self
                 .emit(
                     Event::End(
-                        EndCalled { expected_caller_address: expected_caller_address.into() }
-                    )
+                        EndCalled { expected_caller_address: expected_caller_address.into() },
+                    ),
                 );
         }
     }

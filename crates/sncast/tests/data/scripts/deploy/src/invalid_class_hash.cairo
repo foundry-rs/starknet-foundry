@@ -1,6 +1,4 @@
-use sncast_std::{
-    get_nonce, deploy, FeeSettings,
-};
+use sncast_std::{get_nonce, deploy, FeeSettings};
 use starknet::{ClassHash};
 
 fn main() {
@@ -16,9 +14,9 @@ fn main() {
         Option::Some(salt),
         true,
         FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None,
         },
-        Option::Some(deploy_nonce)
+        Option::Some(deploy_nonce),
     )
         .unwrap_err();
 
