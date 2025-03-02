@@ -1,10 +1,10 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::Args;
-use conversions::{serde::deserialize::CairoDeserialize, FromConv, TryFromConv};
+use conversions::{FromConv, TryFromConv, serde::deserialize::CairoDeserialize};
 use starknet::core::types::BlockId;
 use starknet::providers::Provider;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
-use std::num::{NonZeroU128, NonZeroU64};
+use std::num::{NonZeroU64, NonZeroU128};
 
 #[derive(Args, Debug, Clone)]
 pub struct FeeArgs {
@@ -37,7 +37,6 @@ impl From<ScriptFeeSettings> for FeeArgs {
 }
 
 impl FeeArgs {
-    #[allow(clippy::too_many_lines)]
     pub async fn try_into_fee_settings<P: Provider>(
         &self,
         provider: P,
@@ -45,7 +44,9 @@ impl FeeArgs {
     ) -> Result<FeeSettings> {
         let settings = match (self.max_fee, self.max_gas, self.max_gas_unit_price) {
             (Some(_), Some(_), Some(_)) => {
-                bail!("Passing all --max-fee, --max-gas and --max-gas-unit-price is conflicting. Please pass only two of them or less")
+                bail!(
+                    "Passing all --max-fee, --max-gas and --max-gas-unit-price is conflicting. Please pass only two of them or less"
+                )
             }
             (None, _, _) => FeeSettings {
                 max_gas: self

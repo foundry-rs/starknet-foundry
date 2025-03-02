@@ -1,13 +1,15 @@
-use std::cell::RefCell;
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
+use crate::runtime_extensions::common::{get_relocated_vm_trace, sum_syscall_counters};
 use crate::state::{CallTrace, CallTraceNode, CheatStatus, EncounteredError};
 use blockifier::execution::call_info::{CallExecution, Retdata};
+use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
+use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use blockifier::{
     execution::{
         call_info::CallInfo,
-        contract_class::ContractClass,
         entry_point::{
             handle_empty_constructor, CallEntryPoint, CallType, ConstructorContext,
             EntryPointExecutionContext, EntryPointExecutionResult,
@@ -18,21 +20,19 @@ use blockifier::{
     state::state_api::State,
 };
 use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
-use starknet_api::{
-    core::ClassHash,
-    deprecated_contract_class::EntryPointType,
-    transaction::{Calldata, TransactionVersion},
-};
-use std::collections::HashSet;
-use std::rc::Rc;
-use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
-use starknet_types_core::felt::Felt;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
+use conversions::string::TryFromHexStr;
+use starknet_api::{
+    contract_class::EntryPointType,
+    core::ClassHash,
+    transaction::{fields::Calldata, TransactionVersion},
+};
+use starknet_types_core::felt::Felt;
+use std::cell::RefCell;
+use std::collections::{HashMap, HashSet};
+use std::rc::Rc;
 use thiserror::Error;
 use conversions::FromConv;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
-use crate::runtime_extensions::common::{get_relocated_vm_trace, sum_syscall_counters};
-use conversions::string::TryFromHexStr;
 
 pub(crate) type ContractClassEntryPointExecutionResult = Result<
     (CallInfo, SyscallCounter, Option<Vec<RelocatedTraceEntry>>),
@@ -40,12 +40,10 @@ pub(crate) type ContractClassEntryPointExecutionResult = Result<
 >;
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
-#[allow(clippy::too_many_lines)]
 pub fn execute_call_entry_point(
     entry_point: &mut CallEntryPoint, // Instead of 'self'
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
-    resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
     let cheated_data = if let CallType::Delegate = entry_point.call_type {
@@ -63,11 +61,9 @@ pub fn execute_call_entry_point(
 
     // region: Modified blockifier code
     // We skip recursion depth validation here.
-    cheatnet_state.trace_data.enter_nested_call(
-        entry_point.clone(),
-        resources.clone(),
-        cheated_data,
-    );
+    cheatnet_state
+        .trace_data
+        .enter_nested_call(entry_point.clone(), cheated_data);
 
     if let Some(cheat_status) = get_mocked_function_cheat_status(entry_point, cheatnet_state) {
         if let CheatStatus::Cheated(ret_data, _) = (*cheat_status).clone() {
@@ -75,8 +71,8 @@ pub fn execute_call_entry_point(
             let ret_data_f252: Vec<Felt> =
                 ret_data.iter().map(|datum| Felt::from_(*datum)).collect();
             cheatnet_state.trace_data.exit_nested_call(
-                resources,
-                Default::default(),
+                ExecutionResources::default(),
+                HashMap::default(),
                 CallResult::Success {
                     ret_data: ret_data_f252,
                 },
@@ -122,24 +118,22 @@ pub fn execute_call_entry_point(
     }
     // Add class hash to the call, that will appear in the output (call info).
     entry_point.class_hash = Some(class_hash);
-    let contract_class = state.get_compiled_contract_class(class_hash)?;
+    let contract_class = state.get_compiled_class(class_hash)?;
 
     // Region: Modified blockifier code
     let result = match contract_class {
-        ContractClass::V0(deprecated_class) => execute_entry_point_call_cairo0(
+        RunnableCompiledClass::V0(compiled_class_v0) => execute_entry_point_call_cairo0(
             entry_point.clone(),
-            deprecated_class,
+            compiled_class_v0,
             state,
             cheatnet_state,
-            resources,
             context,
         ),
-        ContractClass::V1(contract_class) => execute_entry_point_call_cairo1(
+        RunnableCompiledClass::V1(compiled_class_v1) => execute_entry_point_call_cairo1(
             entry_point.clone(),
-            &contract_class,
+            &compiled_class_v1,
             state,
             cheatnet_state,
-            resources,
             context,
         ),
     };
@@ -151,7 +145,6 @@ pub fn execute_call_entry_point(
                 &call_info,
                 &syscall_counter,
                 context,
-                resources,
                 cheatnet_state,
                 vm_trace,
             );
@@ -167,7 +160,7 @@ pub fn execute_call_entry_point(
                     .encountered_errors
                     .push(EncounteredError { pc, class_hash });
             }
-            exit_error_call(&err, cheatnet_state, resources, entry_point, trace);
+            exit_error_call(&err, cheatnet_state, entry_point, trace);
             Err(err)
         }
     }
@@ -178,15 +171,14 @@ fn remove_syscall_resources_and_exit_success_call(
     call_info: &CallInfo,
     syscall_counter: &SyscallCounter,
     context: &mut EntryPointExecutionContext,
-    resources: &mut ExecutionResources,
     cheatnet_state: &mut CheatnetState,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
 ) {
     let versioned_constants = context.tx_context.block_context.versioned_constants();
     // We don't want the syscall resources to pollute the results
-    *resources -= &versioned_constants
-        .get_additional_os_syscall_resources(syscall_counter)
-        .expect("Could not get additional resources");
+    let mut resources = call_info.resources.clone();
+    resources -= &versioned_constants.get_additional_os_syscall_resources(syscall_counter);
+
     let nested_syscall_counter_sum =
         aggregate_nested_syscall_counters(&cheatnet_state.trace_data.current_call_stack.top());
     let syscall_counter = sum_syscall_counters(nested_syscall_counter_sum, syscall_counter);
@@ -202,7 +194,6 @@ fn remove_syscall_resources_and_exit_success_call(
 fn exit_error_call(
     error: &EntryPointExecutionError,
     cheatnet_state: &mut CheatnetState,
-    resources: &mut ExecutionResources,
     entry_point: &CallEntryPoint,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
 ) {
@@ -211,8 +202,8 @@ fn exit_error_call(
         CallType::Delegate => AddressOrClassHash::ClassHash(entry_point.class_hash.unwrap()),
     };
     cheatnet_state.trace_data.exit_nested_call(
-        resources,
-        Default::default(),
+        ExecutionResources::default(),
+        HashMap::default(),
         CallResult::from_err(error, &identifier),
         &[],
         vm_trace,
@@ -223,20 +214,25 @@ fn exit_error_call(
 pub fn execute_constructor_entry_point(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
-    resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
     ctor_context: &ConstructorContext,
     calldata: Calldata,
     remaining_gas: u64,
 ) -> EntryPointExecutionResult<CallInfo> {
     // Ensure the class is declared (by reading it).
-    let contract_class = state.get_compiled_contract_class(ctor_context.class_hash)?;
+    let contract_class = state.get_compiled_class(ctor_context.class_hash)?;
     let Some(constructor_selector) = contract_class.constructor_selector() else {
         // Contract has no constructor.
         cheatnet_state
             .trace_data
             .add_deploy_without_constructor_node();
-        return handle_empty_constructor(ctor_context, calldata, remaining_gas);
+        return handle_empty_constructor(
+            contract_class,
+            context,
+            ctor_context,
+            calldata,
+            remaining_gas,
+        );
     };
 
     let mut constructor_call = CallEntryPoint {
@@ -251,13 +247,7 @@ pub fn execute_constructor_entry_point(
         initial_gas: remaining_gas,
     };
     // region: Modified blockifier code
-    execute_call_entry_point(
-        &mut constructor_call,
-        state,
-        cheatnet_state,
-        resources,
-        context,
-    )
+    execute_call_entry_point(&mut constructor_call, state, cheatnet_state, context)
     // endregion
 }
 
@@ -277,7 +267,10 @@ fn get_mocked_function_cheat_status<'a>(
 
 fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {
     CallInfo {
-        call,
+        call: CallEntryPoint {
+            class_hash: Some(call.class_hash.unwrap_or_default()),
+            ..call
+        },
         execution: CallExecution {
             retdata: Retdata(ret_data),
             events: vec![],
@@ -289,6 +282,10 @@ fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {
         inner_calls: vec![],
         storage_read_values: vec![],
         accessed_storage_keys: HashSet::new(),
+        read_class_hash_values: vec![],
+        // TODO(#2977) This defaults to `CairoSteps` as of writing this, but it could be changed in the future
+        tracked_resource: TrackedResource::default(),
+        accessed_contract_addresses: HashSet::default(),
     }
 }
 

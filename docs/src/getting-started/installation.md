@@ -12,12 +12,12 @@ In this section, we will walk through the process of installing Starknet Foundry
     * [Requirements](#requirements)
     * [Linux and macOS](#linux-and-macos)
         * [Install asdf](#install-asdf)
-        * [Install Scarb version >= 2.7.0](#install-scarb-version--270)
-        * [(Optional for Scarb >= 2.10.0) Rust Installation](#optional-for-scarb--2100note-rust-installation)
+        * [Install Scarb version >= 2.8.5](#install-scarb-version--285)
+        * [(Optional for Scarb >= 2.10.0) Rust Installation](#optional-for-scarb--21001-rust-installation)
         * [Install Starknet Foundry](#install-starknet-foundry)
     * [Windows](#windows)
-        * [Install Scarb version >= 2.7.0](#install-scarb-version--270-1)
-        * [(Optional for Scarb >= 2.10.0) Rust Installation](#optional-for-scarb--2100-rust-installation)
+        * [Install Scarb version >= 2.8.5](#install-scarb-version--285-1)
+        * [(Optional for Scarb >= 2.10.0) Rust Installation](#optional-for-scarb--21001-rust-installation-1)
         * [Install Universal Sierra Compiler](#install-universal-sierra-compiler)
         * [Install Starknet Foundry](#install-starknet-foundry-1)
     * [Common Errors](#common-errors)
@@ -38,23 +38,23 @@ In this section, we will walk through the process of installing Starknet Foundry
 
 > 📝 **Note**
 >
-> Ensure all requirements are installed and follow the required minimum versions.
+> Ensure all requirements are installed and follow the required minimal versions.
 > Starknet Foundry will not run if not following these requirements.
 
 To use Starknet Foundry, you need:
 
-- [Scarb](https://docs.swmansion.com/scarb/download.html) version >= 2.7.0
+- [Scarb](https://docs.swmansion.com/scarb/download.html) version >= 2.8.5
 - [Universal-Sierra-Compiler](https://github.com/software-mansion/universal-sierra-compiler)
 - _(Optional for Scarb >= 2.10.0)_[^note] [Rust](https://www.rust-lang.org/tools/install) version >= 1.80.1
 
 all installed and added to your `PATH` environment variable.
 
 [^note]: Additionally, your platform must be one of the supported:
-* aarch64-apple-darwin
-* aarch64-unknown-linux-gnu
-* x86_64-apple-darwin
-* x86_64-pc-windows-msvc
-* x86_64-unknown-linux-gnu
+* `aarch64-apple-darwin`
+* `aarch64-unknown-linux-gnu`
+* `x86_64-apple-darwin`
+* `x86_64-pc-windows-msvc`
+* `x86_64-unknown-linux-gnu`
 
 > 📝 **Note**
 >
@@ -78,7 +78,7 @@ To verify that asdf was installed, run
 asdf --version
 ```
 
-### Install Scarb version >= 2.7.0
+### Install Scarb version >= 2.8.5
 
 First, add Scarb plugin to asdf
 
@@ -95,7 +95,7 @@ asdf install scarb latest
 Set a version globally (in your ~/.tool-versions file):
 
 ```shell
-asdf global scarb latest
+asdf set --home scarb latest
 ```
 
 To verify that Scarb was installed, run
@@ -104,7 +104,7 @@ To verify that Scarb was installed, run
 scarb --version
 ```
 
-and verify that version is >= 2.7.0
+and verify that version is >= 2.8.5
 
 ### (Optional for Scarb >= 2.10.0)[^note] Rust Installation
 
@@ -114,11 +114,11 @@ and verify that version is >= 2.7.0
 >
 > * You are using Scarb version <= 2.10.0
 > * Your platform is not one of the following supported platforms:
->   * aarch64-apple-darwin
->   * aarch64-unknown-linux-gnu
->   * x86_64-apple-darwin
->   * x86_64-pc-windows-msvc
->   * x86_64-unknown-linux-gnu
+>   * `aarch64-apple-darwin`
+>   * `aarch64-unknown-linux-gnu`
+>   * `x86_64-apple-darwin`
+>   * `x86_64-pc-windows-msvc`
+>   * `x86_64-unknown-linux-gnu`
 
 ```shell
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -151,7 +151,7 @@ asdf install starknet-foundry latest
 Set a version globally (in your ~/.tool-versions file):
 
 ```shell
-asdf global starknet-foundry latest
+asdf set --home starknet-foundry latest
 ```
 
 To verify that Starknet Foundry was installed, run
@@ -175,7 +175,7 @@ sncast --version
 >
 > If you are using WSL, please follow the [Linux and macOS](#linux-and-macos) guide.
 
-### Install Scarb version >= 2.7.0
+### Install Scarb version >= 2.8.5
 
 Follow the instructions from [Scarb docs](https://docs.swmansion.com/scarb/download.html#windows).
 
@@ -192,7 +192,7 @@ To verify that Scarb was installed, run
 scarb --version
 ```
 
-and verify that version is >= 2.7.0
+and verify that version is >= 2.8.5
 
 ### (Optional for Scarb >= 2.10.0)[^note] Rust Installation
 
@@ -200,9 +200,9 @@ and verify that version is >= 2.7.0
 >
 > Rust installation is only required if:
 >
-> You are using Scarb version <= 2.10.0, *OR*
+> * You are using Scarb version <= 2.10.0
 > * Your platform is not one of the following supported platforms:
->   * x86_64-pc-windows-msvc
+>   * `x86_64-pc-windows-msvc`
 
 Go to [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install) and follow the installation
 instructions.
@@ -269,13 +269,13 @@ Users may encounter this error when trying to use `snforge` or `sncast` without 
 ```shell
 No version is set for command snforge
 Consider adding one of the following versions in your config file at $HOME/.tool_versions
-starknet-foundry 0.32.0
+starknet-foundry 0.37.0
 ```
 
 This error indicates that `Starknet Foundry` version is unset. To resolve it, set the version globally using asdf:
 
 ```shell
-asdf global starknet-foundry <version>
+asdf set --home starknet-foundry latest
 ```
 
 For additional information on asdf version management, see

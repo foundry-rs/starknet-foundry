@@ -9,6 +9,8 @@ mod color;
 mod completions;
 mod components;
 mod contract_artifacts;
+#[cfg(not(target_os = "windows"))]
+// TODO(#2990): Run coverage test on Windows
 mod coverage;
 mod docs_snippets_validation;
 mod env;
@@ -19,6 +21,7 @@ mod fork_warning;
 mod forking;
 mod fuzzing;
 mod io_operations;
+mod new;
 mod requirements;
 mod running;
 mod steps;

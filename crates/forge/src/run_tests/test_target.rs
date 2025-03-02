@@ -1,17 +1,16 @@
 use anyhow::Result;
-use cairo_lang_runner::RunnerError;
 use forge_runner::{
+    TestCaseFilter,
     forge_config::ForgeConfig,
-    function_args, maybe_generate_coverage, maybe_save_trace_and_profile,
+    maybe_generate_coverage, maybe_save_trace_and_profile,
     package_tests::with_config_resolved::TestTargetWithResolvedConfig,
     printing::print_test_result,
     run_for_test_case,
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
     test_target_summary::TestTargetSummary,
-    TestCaseFilter,
 };
-use futures::{stream::FuturesUnordered, StreamExt};
-use std::{collections::HashMap, sync::Arc};
+use futures::{StreamExt, stream::FuturesUnordered};
+use std::sync::Arc;
 use tokio::sync::mpsc::channel;
 
 #[non_exhaustive]
@@ -25,7 +24,6 @@ pub async fn run_for_test_target(
     forge_config: Arc<ForgeConfig>,
     tests_filter: &impl TestCaseFilter,
 ) -> Result<TestTargetRunResult> {
-    let sierra_program = &tests.sierra_program.program;
     let casm_program = tests.casm_program.clone();
 
     let mut tasks = FuturesUnordered::new();
@@ -35,12 +33,6 @@ pub async fn run_for_test_target(
     // As `spawn_blocking` can't be prematurely cancelled (refer: https://dtantsur.github.io/rust-openstack/tokio/task/fn.spawn_blocking.html),
     // a channel is used to signal the task that test processing is no longer necessary.
     let (send, mut rec) = channel(1);
-
-    let type_declarations: HashMap<_, _> = sierra_program
-        .type_declarations
-        .iter()
-        .map(|f| (f.id.id, f))
-        .collect();
 
     for case in tests.test_cases {
         let case_name = case.name.clone();
@@ -55,18 +47,9 @@ pub async fn run_for_test_target(
             continue;
         };
 
-        let function = sierra_program
-            .funcs
-            .iter()
-            .find(|f| f.id.debug_name.as_ref().unwrap().ends_with(&case_name))
-            .ok_or(RunnerError::MissingFunction { suffix: case_name })?;
-
-        let args = function_args(function, &type_declarations);
-
         let case = Arc::new(case);
 
         tasks.push(run_for_test_case(
-            args,
             case,
             casm_program.clone(),
             forge_config.clone(),

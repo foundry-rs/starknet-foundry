@@ -6,7 +6,7 @@ use itertools::Itertools;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::collections::HashMap;
 use std::fs;
-use universal_sierra_compiler_api::{compile_sierra_at_path, SierraType};
+use universal_sierra_compiler_api::{SierraType, compile_sierra_at_path};
 
 mod deserialized;
 mod representation;
@@ -153,7 +153,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
     fn test_load_contracts_artifacts() {
         let temp = crate::tests::setup_package("basic_package");
         let tests_dir = temp.join("tests");
@@ -187,10 +186,12 @@ mod tests {
         .unwrap();
 
         // Load other artifact files and add them to the temporary directory
-        let other_files = vec![Utf8PathBuf::from_path_buf(
-            base_artifacts_path.join("basic_package_unittest.test.starknet_artifacts.json"),
-        )
-        .unwrap()];
+        let other_files = vec![
+            Utf8PathBuf::from_path_buf(
+                base_artifacts_path.join("basic_package_unittest.test.starknet_artifacts.json"),
+            )
+            .unwrap(),
+        ];
 
         // Create `StarknetArtifactsFiles`
         let artifacts_files = StarknetArtifactsFiles::new(base_file, other_files);

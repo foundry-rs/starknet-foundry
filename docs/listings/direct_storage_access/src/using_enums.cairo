@@ -5,7 +5,7 @@ pub trait IEnumsStorageContract<TContractState> {
 
 #[starknet::contract]
 pub mod EnumsStorageContract {
-    use starknet::{storage::{StoragePointerWriteAccess, StoragePathEntry, Map}};
+    use starknet::{storage::{StoragePathEntry, Map}};
 
     #[storage]
     struct Storage {

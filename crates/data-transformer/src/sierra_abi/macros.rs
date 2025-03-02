@@ -1,12 +1,12 @@
 use super::data_representation::{AllowedCalldataArgument, CalldataArrayMacro};
 use super::parsing::{parse_expression, parse_inline_macro};
-use super::{build_representation, SupportedCalldataKind};
-use anyhow::{bail, Context, Result};
+use super::{SupportedCalldataKind, build_representation};
+use anyhow::{Context, Result, bail};
 use cairo_lang_parser::utils::SimpleParserDatabase;
+use cairo_lang_syntax::node::TypedSyntaxNode;
 use cairo_lang_syntax::node::ast::{
     Expr, ExprInlineMacro, GenericArgValue, PathSegment, PathSegment::Simple,
 };
-use cairo_lang_syntax::node::TypedSyntaxNode;
 use itertools::Itertools;
 use starknet::core::types::contract::AbiEntry;
 

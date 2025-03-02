@@ -91,14 +91,14 @@ fn work_on_enum() {
 #[test]
 fn work_on_empty_enum() {
     #[derive(CairoSerialize, Debug, PartialEq, Eq)]
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     enum Foo {}
 }
 
 #[test]
 fn work_with_nested() {
     #[derive(CairoSerialize, Debug, PartialEq, Eq)]
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     enum Foo {
         A,
         B(Felt),

@@ -39,12 +39,12 @@ impl GasStatistics {
         }
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(clippy::cast_precision_loss)]
     fn mean(gas_usages: &[u128]) -> f64 {
         (gas_usages.iter().sum::<u128>() / gas_usages.len() as u128) as f64
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(clippy::cast_precision_loss)]
     fn std_deviation(mean: f64, gas_usages: &[u128]) -> f64 {
         let sum_squared_diff = gas_usages
             .iter()
@@ -110,6 +110,8 @@ pub enum TestCaseSummary<T: TestType> {
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt>,
+        /// Random arguments used in the fuzz test case run
+        fuzzer_args: Vec<String>,
         /// Statistics of the test run
         test_statistics: <T as TestType>::TestStatistics,
     },
@@ -122,7 +124,7 @@ pub enum TestCaseSummary<T: TestType> {
     Skipped {},
 }
 
-#[allow(clippy::large_enum_variant)]
+#[expect(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub enum AnyTestCaseSummary {
     Fuzzing(TestCaseSummary<Fuzzing>),
@@ -192,11 +194,13 @@ impl TestCaseSummary<Fuzzing> {
                 name,
                 msg,
                 arguments,
+                fuzzer_args,
                 test_statistics: (),
             } => TestCaseSummary::Failed {
                 name,
                 msg,
                 arguments,
+                fuzzer_args,
                 test_statistics: FuzzingStatistics {
                     runs: results.len(),
                 },
@@ -209,11 +213,12 @@ impl TestCaseSummary<Fuzzing> {
 
 impl TestCaseSummary<Single> {
     #[must_use]
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments)]
     pub(crate) fn from_run_result_and_info(
         run_result: RunResult,
         test_case: &TestCaseWithResolvedConfig,
         arguments: Vec<Felt>,
+        fuzzer_args: Vec<String>,
         gas: u128,
         used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
@@ -246,6 +251,7 @@ impl TestCaseSummary<Single> {
                     name,
                     msg,
                     arguments,
+                    fuzzer_args,
                     test_statistics: (),
                 },
             },
@@ -254,6 +260,7 @@ impl TestCaseSummary<Single> {
                     name,
                     msg,
                     arguments,
+                    fuzzer_args,
                     test_statistics: (),
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
@@ -262,6 +269,7 @@ impl TestCaseSummary<Single> {
                             name,
                             msg,
                             arguments,
+                            fuzzer_args,
                             test_statistics: (),
                         }
                     }

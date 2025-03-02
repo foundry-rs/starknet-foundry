@@ -1,10 +1,10 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use scarb_metadata::{Metadata, PackageId};
-use serde_json::Number;
+use serde_json::{Map, Number};
 use std::{env, fs};
 
 use camino::Utf8PathBuf;
-use tempfile::{tempdir, TempDir};
+use tempfile::{TempDir, tempdir};
 use toml::Value;
 pub const CONFIG_FILENAME: &str = "snfoundry.toml";
 
@@ -48,7 +48,7 @@ pub fn get_profile(
 
     match get_with_ownership(tool_config, profile_name) {
         Some(profile_value) => Ok(profile_value),
-        None if profile_name == "default" => Ok(serde_json::Value::Object(Default::default())),
+        None if profile_name == "default" => Ok(serde_json::Value::Object(Map::default())),
         None => Err(anyhow!("Profile [{}] not found in config", profile_name)),
     }
 }
@@ -340,7 +340,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::float_cmp)]
+    #[expect(clippy::float_cmp)]
     fn resolve_env_vars() {
         let tempdir =
             copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", Some("childdir1"))
@@ -360,13 +360,17 @@ mod tests {
             panic!("Expected failure");
         }
 
-        // present env variables
-        env::set_var("VALUE_STRING123132", "nfsaufbnsailfbsbksdabfnkl");
-        env::set_var("VALUE_STRING123142", "nfsasnsidnnsailfbsbksdabdkdkl");
-        env::set_var("VALUE_INT123132", "321312");
-        env::set_var("VALUE_FLOAT123132", "321.312");
-        env::set_var("VALUE_BOOL1231321", "true");
-        env::set_var("VALUE_BOOL1231322", "false");
+        // Present env variables
+
+        // SAFETY: These values are only read here and are not modified by other tests.
+        unsafe {
+            env::set_var("VALUE_STRING123132", "nfsaufbnsailfbsbksdabfnkl");
+            env::set_var("VALUE_STRING123142", "nfsasnsidnnsailfbsbksdabdkdkl");
+            env::set_var("VALUE_INT123132", "321312");
+            env::set_var("VALUE_FLOAT123132", "321.312");
+            env::set_var("VALUE_BOOL1231321", "true");
+            env::set_var("VALUE_BOOL1231322", "false");
+        };
         let config = load_config::<StubComplexConfig>(
             Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
             Some(&String::from("with-envs")),

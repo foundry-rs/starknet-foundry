@@ -23,7 +23,7 @@ pub enum ScarbCommandError {
 
 /// A builder for `scarb` command invocation.
 #[derive(Clone, Debug, Default)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 pub struct ScarbCommand {
     args: Vec<OsString>,
     current_dir: Option<PathBuf>,

@@ -1,8 +1,8 @@
 use crate::starknet_commands::account::{
-    add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
-    AccountType,
+    AccountType, add_created_profile_to_configuration, prepare_account_json,
+    write_account_to_accounts_file,
 };
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
@@ -16,15 +16,15 @@ use sncast::helpers::constants::{
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountCreateResponse;
 use sncast::{
-    check_class_hash_exists, check_if_legacy_contract, extract_or_generate_salt, get_chain_id,
-    get_keystore_password, handle_account_factory_error, Network,
+    Network, check_class_hash_exists, check_if_legacy_contract, extract_or_generate_salt,
+    get_chain_id, get_keystore_password, handle_account_factory_error,
 };
 use starknet::accounts::{
     AccountDeploymentV1, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
 };
 use starknet::core::types::FeeEstimate;
-use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
+use starknet::providers::jsonrpc::HttpTransport;
 use starknet::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 
@@ -59,7 +59,6 @@ pub struct Create {
     pub silent: bool,
 }
 
-#[allow(clippy::too_many_arguments)]
 pub async fn create(
     account: &str,
     accounts_file: &Utf8PathBuf,
@@ -242,7 +241,6 @@ where
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 fn create_to_keystore(
     private_key: Felt,
     salt: Felt,

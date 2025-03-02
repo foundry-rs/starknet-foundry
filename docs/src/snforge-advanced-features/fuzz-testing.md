@@ -12,7 +12,8 @@ against a large number of possible arguments.
 
 ## Random Fuzzing
 
-To convert a test to a random fuzz test, simply add arguments to the test function.
+To convert a standard test into a random fuzz test, you need to add parameters to the test function
+and include the [`#[fuzzer]`](../testing/test-attributes.md#fuzzer) attribute.
 These arguments can then be used in the test body.
 The test will be run many times against different randomly generated values.
 
@@ -29,11 +30,12 @@ $ snforge test
 <details>
 <summary>Output:</summary>
 
+<!-- TODO (#2926) -->
 ```shell
 Collected 2 test(s) from fuzz_testing package
 Running 2 test(s) from src/
-[PASS] fuzz_testing::with_parameters::tests::test_sum (runs: 22, gas: {max: ~1, min: ~1, mean: ~1.00, std deviation: ~0.00})
-[PASS] fuzz_testing::basic_example::tests::test_sum (runs: 256, gas: {max: ~1, min: ~1, mean: ~1.00, std deviation: ~0.00})
+[PASS] fuzz_testing::with_parameters::tests::test_sum (runs: 22, gas: {max: ~124, min: ~121, mean: ~123.00, std deviation: ~0.90})
+[PASS] fuzz_testing::basic_example::tests::test_sum (runs: 256, gas: {max: ~124, min: ~121, mean: ~123.00, std deviation: ~0.81})
 Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 Fuzzer seed: [..]
 ```
@@ -42,17 +44,15 @@ Fuzzer seed: [..]
 
 ## Types Supported by the Fuzzer
 
-Fuzzer currently supports generating values of these types
+Fuzzer currently supports generating values for these types out of the box:
 
-- `u8`
-- `u16`
-- `u32`
-- `u64`
-- `u128`
-- `u256`
 - `felt252`
+- `u8`, `u16`, `u32`, `u64`, `u128`, `u256`
+- `i8`, `i16`, `i32`, `i64`, `i128`
+- `ByteArray`
 
-Trying to use arguments of different type in test definition will result in an error.
+To use other types, it is required to implement the [`Fuzzable`](../appendix/snforge-library/fuzzable.md) trait for them.
+Providing non-fuzzable types will result in a compilation error.
 
 ## Fuzzer Configuration
 

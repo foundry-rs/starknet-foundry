@@ -1,8 +1,8 @@
-use anyhow::{anyhow, Result};
-use conversions::{string::IntoHexStr, IntoConv};
+use anyhow::{Result, anyhow};
+use conversions::{IntoConv, string::IntoHexStr};
 use starknet::{
     core::types::{BlockId, MaybePendingBlockWithTxHashes},
-    providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider},
+    providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
 };
 use starknet_api::block::BlockNumber;
 use starknet_types_core::felt::Felt;

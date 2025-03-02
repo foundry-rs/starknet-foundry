@@ -1,3 +1,5 @@
+#![warn(rust_2024_compatibility)]
+use attributes::fuzzer;
 use attributes::{
     available_gas::available_gas, fork::fork, fuzzer::fuzzer, ignore::ignore,
     internal_config_statement::internal_config_statement, should_panic::should_panic, test::test,
@@ -17,13 +19,21 @@ mod utils;
 executable_attribute!("snforge_internal_test_executable");
 
 #[attribute_macro]
-#[allow(clippy::needless_pass_by_value)]
 fn __internal_config_statement(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     internal_config_statement(args, item)
 }
 
 #[attribute_macro]
-#[allow(clippy::needless_pass_by_value)]
+fn __fuzzer_config(args: TokenStream, item: TokenStream) -> ProcMacroResult {
+    fuzzer::fuzzer_config(args, item)
+}
+
+#[attribute_macro]
+fn __fuzzer_wrapper(args: TokenStream, item: TokenStream) -> ProcMacroResult {
+    fuzzer::wrapper::fuzzer_wrapper(args, item)
+}
+
+#[attribute_macro]
 fn test(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     test(args, item)
 }
