@@ -41,9 +41,7 @@ pub fn calculate_used_gas(
     let computation_resources = ComputationResources {
         vm_resources: resources.execution_resources.clone(),
         n_reverted_steps: 0,
-        // TODO(#2977)
-        sierra_gas: GasAmount(0),
-        // TODO(#2977)
+        sierra_gas: resources.gas_consumed,
         reverted_sierra_gas: GasAmount(0),
     };
 

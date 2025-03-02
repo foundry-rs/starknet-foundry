@@ -17,6 +17,7 @@ use forge::run_tests::package::RunForPackageArgs;
 use forge::scarb::load_test_artifacts;
 use forge::shared_cache::FailedTestsCache;
 use forge_runner::CACHE_DIR;
+use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
@@ -152,6 +153,7 @@ fn fork_aliased_decorator() {
                             .unwrap()
                             .join(CACHE_DIR),
                         contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
+                        tracked_resource: ForgeTrackedResource::CairoSteps,
                         environment_variables: test.env().clone(),
                     }),
                     output_config: Arc::new(OutputConfig {
@@ -237,6 +239,7 @@ fn fork_aliased_decorator_overrding() {
                             .unwrap()
                             .join(CACHE_DIR),
                         contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
+                        tracked_resource: ForgeTrackedResource::CairoSteps,
                         environment_variables: test.env().clone(),
                     }),
                     output_config: Arc::new(OutputConfig {
