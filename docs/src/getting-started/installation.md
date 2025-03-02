@@ -336,14 +336,14 @@ test = "snforge test"
   <summary><strong>Bash</strong></summary>
 
 Completions are configured by doing the following:
-```shell
+```bash
 mkdir -p "${ASDF_DATA_DIR:-$HOME/.asdf}/completions"
 sncast completion bash > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/sncast.bash"
 snforge completion bash > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/snforge.bash"
 ```
 
 Then add the following to your `.bash`:
-```shell
+```bash
 # source completion scripts
 . "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/sncast.bash"     
 . "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/snforge.bash"
@@ -355,14 +355,14 @@ Then add the following to your `.bash`:
   <summary><strong>ZSH</strong></summary>
 
 Completions are configured by doing the following:
-```shell
+```bash
 mkdir -p "${ASDF_DATA_DIR:-$HOME/.asdf}/completions"
 sncast completion zsh > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/_sncast"
 snforge completion zsh > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/_snforge"
 ```
 
 Then add the following to your `.zshrc`:
-```shell
+```bash
 # append completions to fpath
 fpath=(${ASDF_DATA_DIR:-$HOME/.asdf}/completions $fpath)
 # initialise completions with ZSH's compinit
@@ -376,7 +376,7 @@ This is to enable autocompletion in [ZSH](https://wiki.archlinux.org/title/Zsh#C
   <summary><strong>Fish</strong></summary>
 
 Completions are configured by doing the following:
-```shell
+```bash
 sncast completion fish > ~/.config/fish/completions/sncast.fish
 snforge completion fish > ~/.config/fish/completions/snforge.fish
 ```
@@ -388,7 +388,7 @@ snforge completion fish > ~/.config/fish/completions/snforge.fish
 
 Completions are configured by doing the following:
 
-```shell
+```bash
 sncast completion elvish >> ~/.config/elvish/rc.elv
 snforge completion elvish >> ~/.config/elvish/rc.elv
 ```
@@ -397,7 +397,23 @@ snforge completion elvish >> ~/.config/elvish/rc.elv
 
 <details>
   <summary><strong>PowerShell</strong></summary>
-    📄 Doc is under construction.
+Open your profile script with:
+
+```bash
+mkdir -Path (Split-Path -Parent $profile) -ErrorAction SilentlyContinue
+notepad $profile
+```
+
+Add the line and save the file:
+```bash
+Invoke-Expression -Command $(sncast completion powershell | Out-String)
+Invoke-Expression -Command $(snforge completion powershell | Out-String)
+``` 
+At the start of the PowerShell session, you may encounter an error due to a restrictive `ExecutionPolicy`. You can resolve this issue by running the following command:
+
+```bash
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
 </details>
 
 ## Universal-Sierra-Compiler update
