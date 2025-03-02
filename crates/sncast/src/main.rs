@@ -14,7 +14,7 @@ use crate::starknet_commands::deploy::DeployArguments;
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
 use configuration::load_config;
-use shared::auto_completions::{generate_completions, Completion};
+use shared::auto_completions::{Completion, generate_completions};
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};

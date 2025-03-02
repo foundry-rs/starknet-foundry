@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Args, Command};
-use clap_complete::{generate, Generator, Shell};
+use clap_complete::{Generator, Shell, generate};
 use std::io;
 
 #[derive(Args, Debug)]
@@ -8,8 +8,8 @@ pub struct Completion {
     pub shell: Option<Shell>,
 }
 
-pub fn print_completions<G: Generator>(gen: G, cmd: &mut Command) {
-    generate(gen, cmd, cmd.get_name().to_string(), &mut io::stdout());
+pub fn print_completions<G: Generator>(shell: G, cmd: &mut Command) {
+    generate(shell, cmd, cmd.get_name().to_string(), &mut io::stdout());
 }
 
 pub fn generate_completions(shell: Option<Shell>, cmd: &mut Command) -> Result<()> {
