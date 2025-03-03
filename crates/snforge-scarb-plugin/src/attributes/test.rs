@@ -1,4 +1,6 @@
-use super::{internal_config_statement::InternalConfigStatementCollector, AttributeInfo};
+use super::{internal_config_statement::InternalConfigStatementCollector, AttributeInfo, ErrorExt};
+use crate::attributes::fuzzer::wrapper::FuzzerWrapperCollector;
+use crate::attributes::fuzzer::{FuzzerCollector, FuzzerConfigCollector};
 use crate::{
     args::Arguments,
     common::{into_proc_macro_result, with_parsed_values},
@@ -6,7 +8,6 @@ use crate::{
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_syntax::node::{ast::FunctionWithBody, db::SyntaxGroup, Terminal, TypedSyntaxNode};
 use indoc::formatdoc;
-
 use std::env::{self, VarError};
 
 pub struct TestCollector;
@@ -32,6 +33,7 @@ fn test_internal(
     _warns: &mut Vec<Diagnostic>,
 ) -> Result<String, Diagnostics> {
     args.assert_is_empty::<TestCollector>()?;
+    ensure_parameters_only_with_fuzzer_attribute(db, func)?;
 
     let config = InternalConfigStatementCollector::ATTR_NAME;
 
@@ -65,4 +67,37 @@ fn test_internal(
 
 fn get_forge_test_filter() -> Result<String, VarError> {
     env::var("SNFORGE_TEST_FILTER")
+}
+
+fn ensure_parameters_only_with_fuzzer_attribute(
+    db: &dyn SyntaxGroup,
+    func: &FunctionWithBody,
+) -> Result<(), Diagnostic> {
+    if !(func
+        .declaration(db)
+        .signature(db)
+        .parameters(db)
+        .elements(db)
+        .is_empty()
+        || func.attributes(db).elements(db).iter().any(|attr| {
+            [
+                FuzzerCollector::ATTR_NAME,
+                FuzzerWrapperCollector::ATTR_NAME,
+                FuzzerConfigCollector::ATTR_NAME,
+            ]
+            .contains(
+                &attr
+                    .attr(db)
+                    .as_syntax_node()
+                    .get_text_without_trivia(db)
+                    .as_str(),
+            )
+        }))
+    {
+        Err(TestCollector::error(
+            "function with parameters must have #[fuzzer] attribute",
+        ))?;
+    }
+
+    Ok(())
 }

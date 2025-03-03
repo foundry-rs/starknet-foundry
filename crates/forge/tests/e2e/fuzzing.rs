@@ -1,4 +1,5 @@
 use super::common::runner::{setup_package, test_runner};
+use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild};
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 
@@ -285,5 +286,35 @@ fn generate_arg_cheatcode() {
         [PASS] fuzzing_integrationtest::generate_arg::use_generate_arg_outside_fuzzer (gas: ~1)
         Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 22 filtered out
         "#},
+    );
+}
+
+#[test]
+fn no_fuzzer_attribute() {
+    let temp = setup_package("fuzzing");
+    let test_file = temp.child("tests/no_attribute.cairo");
+
+    test_file.touch().unwrap();
+    test_file
+        .write_str(indoc! {r"
+        #[test]
+        fn no_attribute(arg: felt252) {
+            assert(1 == 1, '');
+        }
+        "})
+        .unwrap();
+
+    let output = test_runner(&temp).assert().code(2);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        error: Plugin diagnostic: #[test] function with parameters must have #[fuzzer] attribute
+         --> [..]tests/no_attribute.cairo:1:1
+        #[test]
+
+        error: could not compile `fuzzing_integrationtest` due to previous error
+        [ERROR] Failed to build test artifacts with Scarb: `scarb` exited with error
+        "},
     );
 }
