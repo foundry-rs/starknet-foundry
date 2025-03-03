@@ -19,7 +19,11 @@ fn test_happy_case() {
 
 #[test]
 fn test_generate_completions_unsupported_shell() {
-    std::env::set_var("SHELL", "/bin/unsupported");
+    // SAFETY: Tests run in parallel and share the same environment variables.
+    // However, this modification is applies only to this one test.
+    unsafe {
+        std::env::set_var("SHELL", "/bin/unsupported");
+    }
 
     let snapbox = Command::new(snforge_test_bin_path()).arg("completion");
 
