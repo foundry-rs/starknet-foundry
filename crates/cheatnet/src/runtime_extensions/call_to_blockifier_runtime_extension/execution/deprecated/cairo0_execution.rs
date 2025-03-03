@@ -13,6 +13,7 @@ use blockifier::execution::deprecated_entry_point_execution::{
 use blockifier::execution::entry_point::{CallEntryPoint, EntryPointExecutionContext};
 use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::execution::execution_utils::Args;
+use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
 use blockifier::state::state_api::State;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
 use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner};
@@ -58,11 +59,11 @@ pub fn execute_entry_point_call_cairo0(
     )
     .on_error_get_last_pc(&mut runner)?;
 
-    let syscall_counter = cheatable_syscall_handler
-        .extended_runtime
-        .hint_handler
-        .syscall_counter
-        .clone();
+    // let syscall_counter = cheatable_syscall_handler
+    //     .extended_runtime
+    //     .hint_handler
+    //     .syscall_counter
+    //     .clone();
 
     let execution_result = finalize_execution(
         runner,
@@ -72,7 +73,7 @@ pub fn execute_entry_point_call_cairo0(
         n_total_args,
     )?;
 
-    Ok((execution_result, syscall_counter, None))
+    Ok((execution_result, SyscallUsageMap::default(), None))
     // endregion
 }
 

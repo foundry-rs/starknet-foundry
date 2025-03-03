@@ -1,6 +1,6 @@
 use self::contracts_data::ContractsData;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
-use crate::runtime_extensions::common::sum_syscall_counters;
+// use crate::runtime_extensions::common::sum_syscall_counters;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
 use crate::runtime_extensions::{
     call_to_blockifier_runtime_extension::{
@@ -24,11 +24,11 @@ use anyhow::{Context, Result, anyhow};
 use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::CallExecution;
 use blockifier::execution::entry_point::CallEntryPoint;
+use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
 use blockifier::state::errors::StateError;
 use blockifier::{
     execution::{
         call_info::CallInfo, deprecated_syscalls::DeprecatedSyscallSelector,
-        syscalls::hint_processor::SyscallCounter,
     },
     versioned_constants::VersionedConstants,
 };
@@ -581,24 +581,23 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
     let mut top_call = top_call.borrow_mut();
     top_call.used_execution_resources = all_execution_resources;
 
-    let top_call_syscalls = runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .syscall_counter
-        .clone();
+    // let top_call_syscalls = runtime
+    //     .extended_runtime
+    //     .extended_runtime
+    //     .extended_runtime
+    //     .hint_handler
+    //     .syscalls_usage;
 
-    // Only sum 1-level since these include syscalls from inner calls
-    let nested_calls_syscalls = top_call
-        .nested_calls
-        .iter()
-        .filter_map(CallTraceNode::extract_entry_point_call)
-        .fold(SyscallCounter::new(), |syscalls, trace| {
-            sum_syscall_counters(syscalls, &trace.borrow().used_syscalls)
-        });
-
-    top_call.used_syscalls = sum_syscall_counters(top_call_syscalls, &nested_calls_syscalls);
+    // // Only sum 1-level since these include syscalls from inner calls
+    // let nested_calls_syscalls = top_call
+    //     .nested_calls
+    //     .iter()
+    //     .filter_map(CallTraceNode::extract_entry_point_call)
+    //     .fold(SyscallCounter::new(), |syscalls, trace| {
+    //         sum_syscall_counters(syscalls, &trace.borrow().used_syscalls)
+    //     });
+    //
+    // top_call.used_syscalls = sum_syscall_counters(top_call_syscalls, &nested_calls_syscalls);
 }
 
 // Only top-level is considered relevant since we can't have l1 handlers deeper than 1 level of nesting
@@ -654,7 +653,7 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &mut C
 fn add_syscall_resources(
     versioned_constants: &VersionedConstants,
     execution_resources: &ExecutionResources,
-    syscall_counter: &SyscallCounter,
+    syscall_counter: &SyscallUsageMap,
 ) -> ExecutionResources {
     let mut total_vm_usage = execution_resources.filter_unused_builtins();
     total_vm_usage += &versioned_constants.get_additional_os_syscall_resources(syscall_counter);
@@ -718,7 +717,7 @@ pub fn get_all_used_resources(
 
     let execution_resources = top_call.borrow().used_execution_resources.clone();
 
-    let top_call_syscalls = top_call.borrow().used_syscalls.clone();
+    // let top_call_syscalls = top_call.borrow().used_syscalls.clone();
     let events = runtime_call_info
         .iter() // This method iterates over inner calls as well
         .flat_map(|call_info| {
@@ -730,15 +729,15 @@ pub fn get_all_used_resources(
         })
         .collect();
 
-    let execution_resources = add_syscall_resources(
-        versioned_constants,
-        &execution_resources,
-        &top_call_syscalls,
-    );
+    // let execution_resources = add_syscall_resources(
+    //     versioned_constants,
+    //     &execution_resources,
+    //     &top_call_syscalls,
+    // );
 
     UsedResources {
         events,
-        syscall_counter: top_call_syscalls,
+        // syscall_counter: top_call_syscalls,
         execution_resources,
         l1_handler_payload_lengths,
         l2_to_l1_payload_lengths,

@@ -2,11 +2,10 @@ use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
-use crate::runtime_extensions::common::{get_relocated_vm_trace, sum_syscall_counters};
+use crate::runtime_extensions::common::{get_relocated_vm_trace};
 use crate::state::{CallTrace, CallTraceNode, CheatStatus, EncounteredError};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
-use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use blockifier::{
     execution::{
         call_info::CallInfo,
@@ -31,11 +30,12 @@ use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
+use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
 use thiserror::Error;
 use conversions::FromConv;
 
 pub(crate) type ContractClassEntryPointExecutionResult = Result<
-    (CallInfo, SyscallCounter, Option<Vec<RelocatedTraceEntry>>),
+    (CallInfo, SyscallUsageMap, Option<Vec<RelocatedTraceEntry>>),
     EntryPointExecutionErrorWithTrace,
 >;
 
@@ -72,7 +72,7 @@ pub fn execute_call_entry_point(
                 ret_data.iter().map(|datum| Felt::from_(*datum)).collect();
             cheatnet_state.trace_data.exit_nested_call(
                 ExecutionResources::default(),
-                HashMap::default(),
+                // HashMap::default(),
                 CallResult::Success {
                     ret_data: ret_data_f252,
                 },
@@ -143,7 +143,7 @@ pub fn execute_call_entry_point(
         Ok((call_info, syscall_counter, vm_trace)) => {
             remove_syscall_resources_and_exit_success_call(
                 &call_info,
-                &syscall_counter,
+                // &syscall_counter,
                 context,
                 cheatnet_state,
                 vm_trace,
@@ -169,7 +169,7 @@ pub fn execute_call_entry_point(
 
 fn remove_syscall_resources_and_exit_success_call(
     call_info: &CallInfo,
-    syscall_counter: &SyscallCounter,
+    // syscall_counter: &SyscallCounter,
     context: &mut EntryPointExecutionContext,
     cheatnet_state: &mut CheatnetState,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
@@ -177,14 +177,14 @@ fn remove_syscall_resources_and_exit_success_call(
     let versioned_constants = context.tx_context.block_context.versioned_constants();
     // We don't want the syscall resources to pollute the results
     let mut resources = call_info.resources.clone();
-    resources -= &versioned_constants.get_additional_os_syscall_resources(syscall_counter);
+    // resources -= &versioned_constants.get_additional_os_syscall_resources(syscall_counter);
 
-    let nested_syscall_counter_sum =
-        aggregate_nested_syscall_counters(&cheatnet_state.trace_data.current_call_stack.top());
-    let syscall_counter = sum_syscall_counters(nested_syscall_counter_sum, syscall_counter);
+    // let nested_syscall_counter_sum =
+    //     aggregate_nested_syscall_counters(&cheatnet_state.trace_data.current_call_stack.top());
+    // let syscall_counter = sum_syscall_counters(nested_syscall_counter_sum, syscall_counter);
     cheatnet_state.trace_data.exit_nested_call(
         resources,
-        syscall_counter,
+        // syscall_counter,
         CallResult::from_success(call_info),
         &call_info.execution.l2_to_l1_messages,
         vm_trace,
@@ -203,7 +203,7 @@ fn exit_error_call(
     };
     cheatnet_state.trace_data.exit_nested_call(
         ExecutionResources::default(),
-        HashMap::default(),
+        // HashMap::default(),
         CallResult::from_err(error, &identifier),
         &[],
         vm_trace,
@@ -289,27 +289,27 @@ fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {
     }
 }
 
-fn aggregate_nested_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter {
-    let mut result = SyscallCounter::new();
-    for nested_call_node in &trace.borrow().nested_calls {
-        if let CallTraceNode::EntryPointCall(nested_call) = nested_call_node {
-            let sub_trace_counter = aggregate_syscall_counters(nested_call);
-            result = sum_syscall_counters(result, &sub_trace_counter);
-        }
-    }
-    result
-}
-
-fn aggregate_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter {
-    let mut result = trace.borrow().used_syscalls.clone();
-    for nested_call_node in &trace.borrow().nested_calls {
-        if let CallTraceNode::EntryPointCall(nested_call) = nested_call_node {
-            let sub_trace_counter = aggregate_nested_syscall_counters(nested_call);
-            result = sum_syscall_counters(result, &sub_trace_counter);
-        }
-    }
-    result
-}
+// fn aggregate_nested_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter {
+//     let mut result = SyscallCounter::new();
+//     for nested_call_node in &trace.borrow().nested_calls {
+//         if let CallTraceNode::EntryPointCall(nested_call) = nested_call_node {
+//             let sub_trace_counter = aggregate_syscall_counters(nested_call);
+//             result = sum_syscall_counters(result, &sub_trace_counter);
+//         }
+//     }
+//     result
+// }
+// 
+// fn aggregate_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter {
+//     let mut result = trace.borrow().used_syscalls.clone();
+//     for nested_call_node in &trace.borrow().nested_calls {
+//         if let CallTraceNode::EntryPointCall(nested_call) = nested_call_node {
+//             let sub_trace_counter = aggregate_nested_syscall_counters(nested_call);
+//             result = sum_syscall_counters(result, &sub_trace_counter);
+//         }
+//     }
+//     result
+// }
 
 #[derive(Debug, Error)]
 #[error("{}", source)]

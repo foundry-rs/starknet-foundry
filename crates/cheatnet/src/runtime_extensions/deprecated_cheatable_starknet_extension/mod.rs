@@ -233,8 +233,11 @@ fn increment_syscall_count(
     syscall_handler: &mut DeprecatedSyscallHintProcessor,
     selector: DeprecatedSyscallSelector,
 ) {
-    let syscall_count = syscall_handler.syscall_counter.entry(selector).or_default();
-    *syscall_count += 1;
+    syscall_handler
+        .syscalls_usage
+        .entry(selector)
+        .or_default()
+        .increment_call_count();
 }
 
 //blockifier/src/execution/deprecated_syscalls/mod.rs:303 (deploy)
