@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- `snforge completion` command - used to generate autocompletion script
+
+### Cast
+
+#### Added
+
+- `sncast completion` command - used to generate autocompletion script
+
 ## [0.38.0] - 2025-02-25
 
 ### Forge

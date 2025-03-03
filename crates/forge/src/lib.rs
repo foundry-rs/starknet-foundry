@@ -2,12 +2,13 @@ use crate::compatibility_check::{Requirement, RequirementsChecker, create_versio
 use anyhow::Result;
 use anyhow::anyhow;
 use camino::Utf8PathBuf;
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use forge_runner::CACHE_DIR;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
+use shared::auto_completions::{Completion, generate_completions};
 use shared::print::print_as_warning;
 use std::cell::RefCell;
 use std::ffi::OsString;
@@ -100,6 +101,8 @@ enum ForgeSubcommand {
     CleanCache {},
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
+    /// Generate completion script
+    Completion(Completion),
 }
 
 #[derive(Parser, Debug)]
@@ -267,6 +270,10 @@ pub fn main_execution() -> Result<ExitStatus> {
         }
         ForgeSubcommand::CheckRequirements => {
             check_requirements(true)?;
+            Ok(ExitStatus::Success)
+        }
+        ForgeSubcommand::Completion(completion) => {
+            generate_completions(completion.shell, &mut Cli::command())?;
             Ok(ExitStatus::Success)
         }
     }

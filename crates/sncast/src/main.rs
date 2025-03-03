@@ -12,8 +12,9 @@ use std::io::IsTerminal;
 
 use crate::starknet_commands::deploy::DeployArguments;
 use camino::Utf8PathBuf;
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
 use configuration::load_config;
+use shared::auto_completions::{Completion, generate_completions};
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
@@ -150,6 +151,9 @@ enum Commands {
 
     /// Verify a contract
     Verify(Verify),
+
+    /// Generate completion script
+    Completion(Completion),
 }
 
 #[derive(Debug, Clone, clap::Args)]
@@ -644,6 +648,11 @@ async fn run_async_command(
             .await;
 
             print_command_result("verify", &result, numbers_format, output_format)?;
+            Ok(())
+        }
+
+        Commands::Completion(completion) => {
+            generate_completions(completion.shell, &mut Cli::command())?;
             Ok(())
         }
 

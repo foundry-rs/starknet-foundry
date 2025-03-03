@@ -32,6 +32,7 @@ serde.workspace = true
 starknet.workspace = true
 num-bigint.workspace = true
 clap.workspace = true
+clap_complete.workspace = true
 console.workspace = true
 rand.workspace = true
 scarb-metadata.workspace = true
