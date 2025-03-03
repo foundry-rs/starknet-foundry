@@ -574,6 +574,7 @@ pub fn add_resources_to_top_call(
         TrackedResource::CairoSteps => top_call.used_execution_resources += resources,
         TrackedResource::SierraGas => {
             top_call.gas_consumed += vm_resources_to_sierra_gas(resources, &versioned_constants).0;
+            //dbg!("dupa");
         }
     };
 }
@@ -754,33 +755,27 @@ pub fn get_all_used_resources(
         .top();
 
     let mut execution_resources = top_call.borrow().used_execution_resources.clone();
-    let sierra_gas_consumed = top_call.borrow().gas_consumed.clone();
+    let mut sierra_gas_consumed = top_call.borrow().gas_consumed.clone();
     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
 
-    // todo: szymczyk : verify syscalls should only be summed for execution resources
-    execution_resources = add_syscall_execution_resources(
-        versioned_constants,
-        &execution_resources,
-        &top_call_syscalls,
-    );
-    // match tracked_resource {
-    //     TrackedResource::CairoSteps => {
-    //         execution_resources = add_syscall_execution_resources(
-    //             versioned_constants,
-    //             &execution_resources,
-    //             &top_call_syscalls,
-    //         );
-    //     }
-    //     TrackedResource::SierraGas => {
-    //         let syscalls_consumed_gas: u64 = top_call_syscalls
-    //             .iter()
-    //             .map(|(name, count)| {
-    //                 versioned_constants.get_syscall_gas_cost(name) * (*count as u64)
-    //             })
-    //             .sum();
-    //         sierra_gas_consumed += syscalls_consumed_gas;
-    //     }
-    // }
+    match tracked_resource {
+        TrackedResource::CairoSteps => {
+            execution_resources = add_syscall_execution_resources(
+                versioned_constants,
+                &execution_resources,
+                &top_call_syscalls,
+            );
+        }
+        TrackedResource::SierraGas => {
+            let syscalls_consumed_gas: u64 = top_call_syscalls
+                .iter()
+                .map(|(name, count)| {
+                    versioned_constants.get_syscall_gas_cost(name) * (*count as u64)
+                })
+                .sum();
+            sierra_gas_consumed += syscalls_consumed_gas;
+        }
+    }
 
     let events = runtime_call_info
         .iter() // This method iterates over inner calls as well

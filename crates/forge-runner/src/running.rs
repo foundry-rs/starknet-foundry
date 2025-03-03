@@ -318,6 +318,8 @@ pub fn run_test_case(
         used_resources.clone(),
     )?;
 
+    dbg!(&gas);
+
     Ok(RunResultWithInfo {
         run_result: run_result.map(|(gas_counter, memory, value)| RunResult {
             used_resources: used_resources.execution_resources.clone(),
@@ -327,7 +329,7 @@ pub fn run_test_case(
             profiling_info: None,
         }),
         // TODO(#2977) return triplet
-        gas_used: u128::from(gas.l1_gas.0 + gas.l1_data_gas.0),
+        gas_used: u128::from(gas.l1_gas.0 + gas.l1_data_gas.0 + (gas.l2_gas.0 as f64 * 0.0025 / 100 as f64) as u64), // GasVector
         used_resources,
         call_trace: call_trace_ref,
         encountered_errors,

@@ -55,7 +55,7 @@ pub fn calculate_used_gas(
         versioned_constants,
         use_kzg_da,
         // TODO(#2977)
-        &GasVectorComputationMode::NoL2Gas,
+        &GasVectorComputationMode::All, //
     ))
 }
 
