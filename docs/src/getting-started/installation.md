@@ -332,6 +332,8 @@ test = "snforge test"
 
 ## Set up shell completions (optional)
 
+Shell completions allow your terminal to suggest and automatically complete commands and options when you press `Tab`.
+
 <details>
   <summary><strong>Bash</strong></summary>
 
