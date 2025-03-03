@@ -246,36 +246,6 @@ async fn test_verification_abort() {
 }
 
 #[tokio::test]
-async fn test_missing_argument() {
-    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
-
-    let args = vec![
-        "--accounts-file",
-        ACCOUNT_FILE_PATH,
-        "verify",
-        "--contract-name",
-        "Map",
-        "--verifier",
-        "walnut",
-        "--network",
-        "sepolia",
-    ];
-
-    let snapbox = runner(&args).current_dir(contract_path.path());
-
-    let output = snapbox.assert().failure();
-
-    assert_stderr_contains(
-        output,
-        formatdoc!(
-            r"
-        Error: You must provide either --class-hash or --contract-address.
-        "
-        ),
-    );
-}
-
-#[tokio::test]
 async fn test_wrong_contract_name_passed() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 

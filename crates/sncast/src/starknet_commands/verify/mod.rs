@@ -1,20 +1,26 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use camino::Utf8PathBuf;
-use clap::{Args, ValueEnum};
+use clap::{ArgGroup, Args, ValueEnum};
 use promptly::prompt;
 use scarb_api::StarknetContractArtifacts;
-use sncast::{response::structs::VerifyResponse, Network};
+use sncast::{Network, response::structs::VerifyResponse};
 use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, fmt};
 
 pub mod explorer;
 pub mod walnut;
 
+use explorer::ContractIdentifier;
 use explorer::VerificationInterface;
 use walnut::WalnutVerificationInterface;
 
 #[derive(Args)]
 #[command(about = "Verify a contract through a block explorer")]
+#[clap(group(
+    ArgGroup::new("contract_identifier")
+        .required(true)
+        .args(&["class_hash", "contract_address"])
+))]
 pub struct Verify {
     /// Class hash of a contract to be verified
     #[clap(short = 'g', long)]
@@ -43,17 +49,6 @@ pub struct Verify {
     /// Specifies scarb package to be used
     #[clap(long)]
     pub package: Option<String>,
-}
-
-impl Verify {
-    pub fn validate(&self) -> Result<()> {
-        if self.class_hash.is_none() && self.contract_address.is_none() {
-            return Err(anyhow!(
-                "You must provide either --class-hash or --contract-address."
-            ));
-        }
-        Ok(())
-    }
 }
 
 #[derive(ValueEnum, Clone, Debug)]
@@ -99,13 +94,26 @@ pub async fn verify(
         .parent()
         .ok_or(anyhow!("Failed to obtain workspace dir"))?;
 
+    let contract_identifier = match (verify.class_hash, verify.contract_address) {
+        (Some(class_hash), None) => ContractIdentifier::ClassHash {
+            class_hash: class_hash.to_fixed_hex_string(),
+        },
+        (None, Some(contract_address)) => ContractIdentifier::Address {
+            contract_address: contract_address.to_fixed_hex_string(),
+        },
+
+        _ => {
+            return Err(anyhow!(
+                "Exactly one of class_hash or contract_address must be provided."
+            ));
+        }
+    };
+
     match verifier {
         Verifier::Walnut => {
             let walnut =
                 WalnutVerificationInterface::new(verify.network, workspace_dir.to_path_buf());
-            walnut
-                .verify(verify.class_hash, verify.contract_address, contract_name)
-                .await
+            walnut.verify(contract_identifier, contract_name).await
         }
     }
 }

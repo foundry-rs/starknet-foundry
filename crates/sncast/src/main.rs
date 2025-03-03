@@ -620,8 +620,6 @@ async fn run_async_command(
         }
 
         Commands::Verify(verify) => {
-            verify.validate()?;
-
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &verify.package)?;
             let artifacts = build_and_load_artifacts(

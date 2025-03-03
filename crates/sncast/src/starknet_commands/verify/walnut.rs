@@ -1,14 +1,13 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use reqwest::StatusCode;
-use sncast::response::structs::VerifyResponse;
 use sncast::Network;
-use starknet_types_core::felt::Felt;
+use sncast::response::structs::VerifyResponse;
 use std::env;
 use std::ffi::OsStr;
 use walkdir::WalkDir;
 
-use super::explorer::{VerificationInterface, VerificationPayload};
+use super::explorer::{ContractIdentifier, VerificationInterface, VerificationPayload};
 
 pub struct WalnutVerificationInterface {
     network: Network,
@@ -26,8 +25,7 @@ impl VerificationInterface for WalnutVerificationInterface {
 
     async fn verify(
         &self,
-        class_hash: Option<Felt>,
-        contract_address: Option<Felt>,
+        identifier: ContractIdentifier,
         contract_name: String,
     ) -> Result<VerifyResponse> {
         // Read all files name along with their contents in a JSON format
@@ -56,15 +54,10 @@ impl VerificationInterface for WalnutVerificationInterface {
         // Serialize the JSON object to a JSON string
         let source_code = serde_json::Value::Object(file_data);
 
-        // Convert contract address and class hash from the Felt to String
-        let contract_address_str = contract_address.map(|addr| addr.to_fixed_hex_string());
-        let class_hash_str = class_hash.map(|hash| hash.to_fixed_hex_string());
-
         // Create the JSON payload with "contract name," "address," and "source_code" fields
         let payload = VerificationPayload {
             contract_name,
-            class_hash: class_hash_str,
-            contract_address: contract_address_str,
+            identifier,
             source_code,
         };
 
