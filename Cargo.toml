@@ -25,8 +25,8 @@ license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-blockifier = { git = "https://github.com/cptartur/sequencer.git", branch = "main-v0.13.4", default-features = false, features = ["testing"] }
-starknet_api = { git = "https://github.com/cptartur/sequencer.git", branch = "main-v0.13.4" }
+blockifier = { git = "https://github.com/starkware-libs/sequencer.git", branch = "avi/windows-resource-limits", default-features = false, features = ["testing"] }
+starknet_api = { git = "https://github.com/starkware-libs/sequencer.git", branch = "avi/windows-resource-limits" }
 cairo-lang-casm = { version = "2.10.0", features = ["serde"] }
 cairo-lang-runner = "2.10.0"
 cairo-lang-sierra-to-casm = "2.10.0"
