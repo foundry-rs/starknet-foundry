@@ -19,8 +19,21 @@ pub fn print_test_result(any_test_result: &AnyTestCaseSummary, print_detailed_re
                 gas_info,
                 ..
             } => Some(format!(
-                " (runs: {runs}, gas: {{max: ~{}, min: ~{}, mean: ~{:.2}, std deviation: ~{:.2}}})",
-                gas_info.max, gas_info.min, gas_info.mean, gas_info.std_deviation
+                " (runs: {runs}, l1_gas: {{max: ~{}, min: ~{}, mean: ~{:.2}, std deviation: ~{:.2}}},\
+                l1_data_gas: {{max: ~{}, min: ~{}, mean: ~{:.2}, std deviation: ~{:.2}}},\
+                l2_gas: {{max: ~{}, min: ~{}, mean: ~{:.2}, std deviation: ~{:.2}}})",
+                gas_info.l1_gas.max,
+                gas_info.l1_gas.min,
+                gas_info.l1_gas.mean,
+                gas_info.l1_gas.std_deviation,
+                gas_info.l1_data_gas.max,
+                gas_info.l1_data_gas.min,
+                gas_info.l1_data_gas.mean,
+                gas_info.l1_data_gas.std_deviation,
+                gas_info.l2_gas.max,
+                gas_info.l2_gas.min,
+                gas_info.l2_gas.mean,
+                gas_info.l2_gas.std_deviation
             )),
             TestCaseSummary::Failed {
                 fuzzer_args,
@@ -34,7 +47,10 @@ pub fn print_test_result(any_test_result: &AnyTestCaseSummary, print_detailed_re
 
     let gas_usage = match any_test_result {
         AnyTestCaseSummary::Single(TestCaseSummary::Passed { gas_info, .. }) => {
-            format!(" (gas: ~{gas_info})")
+            format!(
+                " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
+                gas_info.l1_gas, gas_info.l1_data_gas, gas_info.l2_gas
+            )
         }
         _ => String::new(),
     };

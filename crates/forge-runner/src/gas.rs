@@ -54,8 +54,7 @@ pub fn calculate_used_gas(
     Ok(transaction_resources.to_gas_vector(
         versioned_constants,
         use_kzg_da,
-        // TODO(#2977)
-        &GasVectorComputationMode::All, //
+        &GasVectorComputationMode::All,
     ))
 }
 
@@ -152,7 +151,7 @@ fn get_state_resources(
 }
 
 pub fn check_available_gas(
-    available_gas: Option<usize>,
+    available_gas: Option<GasVector>,
     summary: TestCaseSummary<Single>,
 ) -> TestCaseSummary<Single> {
     match summary {
@@ -161,11 +160,17 @@ pub fn check_available_gas(
             arguments,
             gas_info,
             ..
-        } if available_gas.is_some_and(|available_gas| gas_info > available_gas as u128) => {
+        } if available_gas.is_some_and(|available_gas| {
+            gas_info.l1_gas > available_gas.l1_gas
+                || gas_info.l1_data_gas > available_gas.l1_data_gas
+                || gas_info.l2_gas > available_gas.l2_gas
+        }) =>
+        {
             TestCaseSummary::Failed {
                 name,
                 msg: Some(format!(
-                    "\n\tTest cost exceeded the available gas. Consumed gas: ~{gas_info}"
+                    "\n\tTest cost exceeded the available gas. Consumed l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{}",
+                    gas_info.l1_gas, gas_info.l1_data_gas, gas_info.l2_gas
                 )),
                 arguments,
                 fuzzer_args: Vec::default(),

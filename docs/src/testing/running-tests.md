@@ -13,9 +13,9 @@ $ snforge test
 Collected 3 test(s) from hello_snforge package
 Running 0 test(s) from src/
 Running 3 test(s) from tests/
-[PASS] hello_snforge_integrationtest::test_contract::test_calling (gas: ~1)
-[PASS] hello_snforge_integrationtest::test_contract::test_executing (gas: ~1)
-[PASS] hello_snforge_integrationtest::test_contract::test_calling_another (gas: ~1)
+[PASS] hello_snforge_integrationtest::test_contract::test_calling (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] hello_snforge_integrationtest::test_contract::test_executing (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] hello_snforge_integrationtest::test_contract::test_calling_another (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Tests: 3 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 </details>
@@ -37,8 +37,8 @@ $ snforge test calling
 Collected 2 test(s) from hello_snforge package
 Running 0 test(s) from src/
 Running 2 test(s) from tests/
-[PASS] hello_snforge_integrationtest::test_contract::test_calling_another (gas: ~1)
-[PASS] hello_snforge_integrationtest::test_contract::test_calling (gas: ~1)
+[PASS] hello_snforge_integrationtest::test_contract::test_calling_another (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] hello_snforge_integrationtest::test_contract::test_calling (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 1 filtered out
 ```
 </details>
@@ -64,7 +64,7 @@ $ snforge test hello_snforge_integrationtest::test_contract::test_calling --exac
 ```shell
 Collected 1 test(s) from hello_snforge package
 Running 1 test(s) from tests/
-[PASS] hello_snforge_integrationtest::test_contract::test_calling (gas: ~1)
+[PASS] hello_snforge_integrationtest::test_contract::test_calling (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Running 0 test(s) from src/
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
 ```
@@ -114,13 +114,13 @@ $ snforge test --detailed-resources
 ```shell
 Collected 2 test(s) from hello_starknet package
 Running 2 test(s) from tests/
-[PASS] hello_starknet_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value (gas: ~105)
+[PASS] hello_starknet_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~360000)
         steps: 3405
         memory holes: 22
         builtins: (range_check: 77, pedersen: 7)
         syscalls: (CallContract: 2, StorageRead: 1, Deploy: 1)
         
-[PASS] hello_starknet_integrationtest::test_contract::test_increase_balance (gas: ~172)
+[PASS] hello_starknet_integrationtest::test_contract::test_increase_balance (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~480000)
         steps: 4535
         memory holes: 15
         builtins: (range_check: 95, pedersen: 7)

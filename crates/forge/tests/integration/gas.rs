@@ -1,4 +1,5 @@
 use indoc::indoc;
+use starknet_api::execution_resources::{GasAmount, GasVector};
 use std::path::Path;
 use test_utils::runner::{Contract, assert_gas, assert_passed};
 use test_utils::running_tests::run_test_case;
@@ -6,6 +7,10 @@ use test_utils::test_case;
 
 // all calculations are based on formula from
 // https://docs.starknet.io/architecture-and-concepts/network-architecture/fee-mechanism/#overall_fee
+
+// To convert L2 gas <-> L1 gas for cairo steps resources, following formula was taken:
+// 0.0025 L1 gas = 100 L2 gas
+// as per https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-all-three-bounds-are-present-5
 
 #[test]
 fn declare_cost_is_omitted() {
@@ -31,7 +36,16 @@ fn declare_cost_is_omitted() {
 
     assert_passed(&result);
     // 1 = cost of 230 steps (because int(0.0025 * 230) = 1)
-    assert_gas(&result, "declare_cost_is_omitted", 1);
+    // 0 l1_gas + 0 l1_data_gas + 1 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "declare_cost_is_omitted",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(0),
+            l2_gas: GasAmount(40000),
+        },
+    );
 }
 
 #[test]
@@ -63,9 +77,18 @@ fn deploy_syscall_cost() {
     assert_passed(&result);
     // l = 1 (updated contract class)
     // n = 1 (unique contracts updated - in this case it's the new contract address)
-    // ( l + n * 2 ) * felt_size_in_bytes(32) = 96 (total l1 cost)
+    // ( l + n * 2 ) * felt_size_in_bytes(32) = 96 (total l1 data cost)
     // 11 = cost of 2 keccak builtins from constructor (because int(5.12 * 2) = 11)
-    assert_gas(&result, "deploy_syscall_cost", 96 + 11);
+    // 0 l1_gas + 96 l1_data_gas + 11 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "deploy_syscall_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(440000),
+        },
+    );
 }
 
 #[test]
@@ -95,7 +118,16 @@ fn snforge_std_deploy_cost() {
     assert_passed(&result);
     // 96 = gas cost of onchain data (deploy cost)
     // 11 = cost of 2 keccak builtins = 11 (because int(5.12 * 2) = 11)
-    assert_gas(&result, "deploy_cost", 96 + 11);
+    // 0 l1_gas + 96 l1_data_gas + 11 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "deploy_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(440000),
+        },
+    );
 }
 
 #[test]
@@ -113,7 +145,16 @@ fn keccak_cost() {
 
     assert_passed(&result);
     // 6 = cost of 1 keccak builtin (because int(5.12 * 1) = 6)
-    assert_gas(&result, "keccak_cost", 6);
+    // 0 l1_gas + 0 l1_data_gas + 6 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "keccak_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(0),
+            l2_gas: GasAmount(240000),
+        },
+    );
 }
 
 #[test]
@@ -150,7 +191,16 @@ fn contract_keccak_cost() {
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
     // 26 = cost of 5 keccak builtins (because int(5.12 * 5) = 26)
-    assert_gas(&result, "contract_keccak_cost", 96 + 26);
+    // 0 l1_gas + 96 l1_data_gas + 26 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "contract_keccak_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(1040000),
+        },
+    );
 }
 
 #[test]
@@ -168,7 +218,16 @@ fn range_check_cost() {
 
     assert_passed(&result);
     // 1 = cost of 1 range check builtin (because int(0.04 * 1) = 1)
-    assert_gas(&result, "range_check_cost", 1);
+    // 0 l1_gas + 0 l1_data_gas + 1 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "range_check_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(0),
+            l2_gas: GasAmount(40000),
+        },
+    );
 }
 
 /// Declare, deploy and function call consume 13 `range_check_builtin`s
@@ -208,7 +267,16 @@ fn contract_range_check_cost() {
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
     // 8 = cost of 191 range check builtins (because int(0.04 * 191) = 8)
-    assert_gas(&result, "contract_range_check_cost", 96 + 8);
+    // 0 l1_gas + 96 l1_data_gas + 8 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "contract_range_check_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(320000),
+        },
+    );
 }
 
 #[test]
@@ -227,7 +295,16 @@ fn bitwise_cost() {
 
     assert_passed(&result);
     // 1 = cost of 1 bitwise builtin, because int(0.16 * 1) = 1
-    assert_gas(&result, "bitwise_cost", 1);
+    // 0 l1_gas + 0 l1_data_gas + 1 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "bitwise_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(0),
+            l2_gas: GasAmount(40000),
+        },
+    );
 }
 
 /// We have to use 6 bitwise operations in the `bitwise` function to exceed steps cost
@@ -265,7 +342,16 @@ fn contract_bitwise_cost() {
     assert_passed(&result);
     // 96 = cost of deploy l1 cost (see snforge_std_deploy_cost test)
     // 48 = cost of 300 bitwise builtins (because int(0.16 * 300) = 48)
-    assert_gas(&result, "contract_bitwise_cost", 96 + 48);
+    // 0 l1_gas + 96 l1_data_gas + 48 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "contract_bitwise_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(1920000),
+        },
+    );
 }
 
 #[test]
@@ -284,7 +370,16 @@ fn pedersen_cost() {
 
     assert_passed(&result);
     // 1 = cost of 1 pedersen builtin (because int(0.16 * 1) = 1)
-    assert_gas(&result, "pedersen_cost", 1);
+    // 0 l1_gas + 0 l1_data_gas + 1 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "pedersen_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(0),
+            l2_gas: GasAmount(40000),
+        },
+    );
 }
 
 /// We have to use 12 pedersen operations in the `pedersen` function to exceed steps cost
@@ -322,7 +417,16 @@ fn contract_pedersen_cost() {
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
     // 7 = cost of 86 pedersen builtins (because int(0.08 * 86) = 7)
-    assert_gas(&result, "contract_pedersen_cost", 96 + 7);
+    // 0 l1_gas + 96 l1_data_gas + 7 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "contract_pedersen_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(280000),
+        },
+    );
 }
 
 #[test]
@@ -341,7 +445,16 @@ fn poseidon_cost() {
 
     assert_passed(&result);
     // 1 = cost of 1 poseidon builtin (because int(0.08 * 1) = 1)
-    assert_gas(&result, "poseidon_cost", 1);
+    // 0 l1_gas + 0 l1_data_gas + 1 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "poseidon_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(0),
+            l2_gas: GasAmount(40000),
+        },
+    );
 }
 
 /// We have to use 12 poseidon operations in the `poseidon` function to exceed steps cost
@@ -380,7 +493,16 @@ fn contract_poseidon_cost() {
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
     // 13 = cost of 160 poseidon builtins (because int(0.08 * 160) = 13)
-    assert_gas(&result, "contract_poseidon_cost", 96 + 13);
+    // 0 l1_gas + 96 l1_data_gas + 13 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "contract_poseidon_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(520000),
+        },
+    );
 }
 
 #[test]
@@ -401,7 +523,16 @@ fn ec_op_cost() {
 
     assert_passed(&result);
     // 3 = cost of 1 ec_op builtin (because int(2.56 * 1) = 3)
-    assert_gas(&result, "ec_op_cost", 3);
+    // 0 l1_gas + 0 l1_data_gas + 3 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "ec_op_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(0),
+            l2_gas: GasAmount(120000),
+        },
+    );
 }
 
 #[test]
@@ -438,7 +569,16 @@ fn contract_ec_op_cost() {
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
     // 26 = cost of 10 ec_op builtins (because int(2.56 * 10) = 26)
-    assert_gas(&result, "contract_ec_op_cost", 96 + 26);
+    // 0 l1_gas + 96 l1_data_gas + 26 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "contract_ec_op_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(1040000),
+        },
+    );
 }
 
 #[test]
@@ -477,7 +617,16 @@ fn storage_write_cost() {
     // 96 = gas cost of deployment
     // storage_updates(1) * 2 * 32 = 64
     // storage updates from zero value(1) * 32 = 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
-    assert_gas(&result, "storage_write_cost", 7 + 96 + 64 + 32);
+    // 0 l1_gas + (96 + 64 + 32) l1_data_gas + 7 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "storage_write_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(192),
+            l2_gas: GasAmount(280000),
+        },
+    );
 }
 
 #[test]
@@ -511,7 +660,16 @@ fn storage_write_from_test_cost() {
     // n(1) * 2 * 32 = 64
     // m(1) * 2 * 32 = 64
     // storage updates from zero value(1) * 32 = 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
-    assert_gas(&result, "storage_write_from_test_cost", 1 + 64 + 64 + 32);
+    // 0 l1_gas + (64 + 64 + 32) l1_data_gas + 1 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "storage_write_from_test_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(160),
+            l2_gas: GasAmount(40000),
+        },
+    );
 }
 
 #[test]
@@ -556,10 +714,15 @@ fn multiple_storage_writes_cost() {
     // m(1) * 2 * 32 = 64
     // l(1) * 32 = 32
     // storage updates from zero value(1) * 32 = 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
+    // 0 l1_gas + (64 + 64 + 32 + 32) l1_data_gas + 10 * (100 / 0.0025) l2 gas
     assert_gas(
         &result,
         "multiple_storage_writes_cost",
-        10 + 64 + 64 + 32 + 32,
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(192),
+            l2_gas: GasAmount(400000),
+        },
     );
 }
 
@@ -598,7 +761,16 @@ fn l1_message_cost() {
     // 2614 * 0.0025 = 6.535 ~ 7 = gas cost of steps
     // 96 = gas cost of deployment
     // 29524 = gas cost of onchain data
-    assert_gas(&result, "l1_message_cost", 7 + 96 + 29524);
+    // 29524 l1_gas + 96 l1_data_gas + 7 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "l1_message_cost",
+        GasVector {
+            l1_gas: GasAmount(29524),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(280000),
+        },
+    );
 }
 
 #[test]
@@ -617,7 +789,16 @@ fn l1_message_from_test_cost() {
     assert_passed(&result);
     // 224 * 0.0025 = 0.56 ~ 1 = gas cost of steps
     // 26764 = gas cost of onchain data
-    assert_gas(&result, "l1_message_from_test_cost", 1 + 26764);
+    // 26764 l1_gas + 0 l1_data_gas + 1 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "l1_message_from_test_cost",
+        GasVector {
+            l1_gas: GasAmount(26764),
+            l1_data_gas: GasAmount(0),
+            l2_gas: GasAmount(40000),
+        },
+    );
 }
 
 #[test]
@@ -671,7 +852,16 @@ fn l1_message_cost_for_proxy() {
     // n(2) * 2 * 32 = 128
     // l(2) * 32 = 64
     // 29524 = gas cost of message
-    assert_gas(&result, "l1_message_cost_for_proxy", 14 + 128 + 64 + 29524);
+    // 29524 l1_gas + (128 + 64) l1_data_gas + 14 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "l1_message_cost_for_proxy",
+        GasVector {
+            l1_gas: GasAmount(29524),
+            l1_data_gas: GasAmount(192),
+            l2_gas: GasAmount(560000),
+        },
+    );
 }
 
 #[test]
@@ -715,7 +905,16 @@ fn l1_handler_cost() {
     //         + 5000 (1 * 5000, 5000 is gas per counter decrease, ref: https://github.com/starkware-libs/sequencer/blob/main/crates/blockifier/src/fee/resources.rs#L364-L368)
     //
     //
-    assert_gas(&result, "l1_handler_cost", 96 + 21 + 15923);
+    // 15923 l1_gas + 96 l1_data_gas + 21 * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "l1_handler_cost",
+        GasVector {
+            l1_gas: GasAmount(15923),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(840000),
+        },
+    );
 }
 
 #[test]
@@ -746,7 +945,16 @@ fn events_cost() {
     // 156 range_check_builtin ~= 7
     // 6 gas for 50 event values
     // ~13 gas for 50 event keys
-    assert_gas(&result, "events_cost", 7 + 6 + 13);
+    // 0 l1_gas + 0 l1_data_gas + (7 + 6 + ~13) * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "events_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(0),
+            l2_gas: GasAmount(1048000),
+        },
+    );
 }
 
 #[test]
@@ -783,5 +991,14 @@ fn events_contract_cost() {
     // 96 = gas cost of onchain data (deploy cost)
     // 6 gas for 50 event values
     // ~13 gas for 50 event keys
-    assert_gas(&result, "event_emission_cost", 11 + 96 + 6 + 13);
+    // 0 l1_gas + 96 l1_data_gas + (11 + 6 + ~13) * (100 / 0.0025) l2 gas
+    assert_gas(
+        &result,
+        "event_emission_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(1208000),
+        },
+    );
 }

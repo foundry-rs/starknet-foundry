@@ -43,6 +43,7 @@ use hints::{hints_by_representation, hints_to_params};
 use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
+use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::default::Default;
@@ -147,7 +148,7 @@ pub(crate) fn run_fuzz_test(
 pub struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, Box<CairoRunError>>,
     pub(crate) call_trace: Rc<RefCell<CallTrace>>,
-    pub(crate) gas_used: u128,
+    pub(crate) gas_used: GasVector,
     pub(crate) used_resources: UsedResources,
     pub(crate) encountered_errors: Vec<EncounteredError>,
     pub(crate) fuzzer_args: Vec<String>,
@@ -161,7 +162,7 @@ pub fn run_test_case(
     fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
 ) -> Result<RunResultWithInfo> {
     ensure!(
-        case.config.available_gas != Some(0),
+        case.config.available_gas != Some(GasVector::default()),
         "\n\t`available_gas` attribute was incorrectly configured. Make sure you use scarb >= 2.4.4\n"
     );
 
@@ -318,8 +319,6 @@ pub fn run_test_case(
         used_resources.clone(),
     )?;
 
-    dbg!(&gas);
-
     Ok(RunResultWithInfo {
         run_result: run_result.map(|(gas_counter, memory, value)| RunResult {
             used_resources: used_resources.execution_resources.clone(),
@@ -328,8 +327,7 @@ pub fn run_test_case(
             value,
             profiling_info: None,
         }),
-        // TODO(#2977) return triplet
-        gas_used: u128::from(gas.l1_gas.0 + gas.l1_data_gas.0 + (gas.l2_gas.0 as f64 * 0.0025 / 100 as f64) as u64), // GasVector
+        gas_used: gas,
         used_resources,
         call_trace: call_trace_ref,
         encountered_errors,

@@ -6,6 +6,7 @@ use semver::{Comparator, Op, Version, VersionReq};
 use shared::print::print_as_warning;
 use shared::rpc::create_rpc_client;
 use shared::verify_and_warn_if_incompatible_rpc_version;
+use starknet_api::execution_resources::GasVector;
 use std::collections::HashSet;
 use url::Url;
 
@@ -14,7 +15,7 @@ pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
 ) -> Result<()> {
     for test_target in test_targets {
         for case in &test_target.test_cases {
-            if case.config.available_gas == Some(0)
+            if case.config.available_gas == Some(GasVector::default())
                 && ScarbCommand::version().run()?.scarb <= Version::new(2, 4, 3)
             {
                 print_as_warning(&anyhow!(

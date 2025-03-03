@@ -17,6 +17,7 @@ tempfile.workspace = true
 tokio.workspace = true
 project-root.workspace = true
 semver.workspace = true
+starknet_api.workspace = true
 forge = { path = "../../forge" }
 scarb-api = { path = "../../scarb-api" }
 forge_runner = { path = "../../forge-runner" }

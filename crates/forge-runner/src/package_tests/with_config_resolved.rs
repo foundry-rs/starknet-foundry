@@ -2,6 +2,7 @@ use super::{TestCase, TestTarget};
 use crate::expected_result::ExpectedTestResult;
 use cheatnet::runtime_extensions::forge_config_extension::config::RawFuzzerConfig;
 use starknet_api::block::BlockNumber;
+use starknet_api::execution_resources::GasVector;
 use url::Url;
 
 pub type TestTargetWithResolvedConfig = TestTarget<TestCaseResolvedConfig>;
@@ -19,7 +20,7 @@ pub struct ResolvedForkConfig {
 ///     fetches block number
 #[derive(Debug, Clone, PartialEq)]
 pub struct TestCaseResolvedConfig {
-    pub available_gas: Option<usize>,
+    pub available_gas: Option<GasVector>,
     pub ignored: bool,
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<ResolvedForkConfig>,

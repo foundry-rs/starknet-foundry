@@ -5611,6 +5611,7 @@ dependencies = [
  "scarb-api",
  "semver",
  "shared",
+ "starknet_api",
  "tempfile",
  "tokio",
 ]

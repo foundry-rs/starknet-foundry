@@ -75,8 +75,16 @@ fn fuzzed_while_loop() {
     };
 
     // TODO (#2926)
-    assert_eq!(gas_info.min, 2);
-    assert_eq!(gas_info.max, 23);
-    assert!((gas_info.mean - 12.).abs() < f64::EPSILON);
-    assert!((gas_info.std_deviation - 6.24).abs() < 0.01);
+    assert_eq!(gas_info.l1_gas.min, 0);
+    assert_eq!(gas_info.l1_gas.max, 0);
+    assert_eq!(gas_info.l1_gas.mean, 0.00);
+    assert_eq!(gas_info.l1_gas.std_deviation, 0.00);
+    assert_eq!(gas_info.l1_data_gas.min, 0);
+    assert_eq!(gas_info.l1_data_gas.max, 0);
+    assert_eq!(gas_info.l1_data_gas.mean, 0.00);
+    assert_eq!(gas_info.l1_data_gas.std_deviation, 0.00);
+    assert_eq!(gas_info.l2_gas.min, 80000);
+    assert_eq!(gas_info.l2_gas.max, 920000);
+    assert!((gas_info.l2_gas.mean - 504218.).abs() < f64::EPSILON);
+    assert!((gas_info.l2_gas.std_deviation - 562099.86).abs() < 0.01);
 }
