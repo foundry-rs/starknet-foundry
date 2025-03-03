@@ -15,7 +15,7 @@ use std::fs::OpenOptions;
 use std::io::{Read, Write};
 use url::Url;
 
-pub const CACHE_VERSION: usize = 3;
+pub const CACHE_VERSION: usize = 4;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct ForkCacheContent {
