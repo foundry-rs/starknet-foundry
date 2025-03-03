@@ -20,7 +20,7 @@ fn test_happy_case() {
 #[test]
 fn test_generate_completions_unsupported_shell() {
     // SAFETY: Tests run in parallel and share the same environment variables.
-    // However, this modification is applies only to this one test.
+    // However, this modification applies only to this one test.
     unsafe {
         std::env::set_var("SHELL", "/bin/unsupported");
     }
