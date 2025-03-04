@@ -9,6 +9,7 @@ use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_syntax::node::{ast::FunctionWithBody, db::SyntaxGroup, Terminal, TypedSyntaxNode};
 use indoc::formatdoc;
 use std::env::{self, VarError};
+use std::ops::Not;
 
 pub struct TestCollector;
 
@@ -73,31 +74,42 @@ fn ensure_parameters_only_with_fuzzer_attribute(
     db: &dyn SyntaxGroup,
     func: &FunctionWithBody,
 ) -> Result<(), Diagnostic> {
-    if !(func
-        .declaration(db)
-        .signature(db)
-        .parameters(db)
-        .elements(db)
-        .is_empty()
-        || func.attributes(db).elements(db).iter().any(|attr| {
-            [
-                FuzzerCollector::ATTR_NAME,
-                FuzzerWrapperCollector::ATTR_NAME,
-                FuzzerConfigCollector::ATTR_NAME,
-            ]
-            .contains(
-                &attr
-                    .attr(db)
-                    .as_syntax_node()
-                    .get_text_without_trivia(db)
-                    .as_str(),
-            )
-        }))
-    {
+    if has_parameters(db, func) && no_fuzzer_attribute(db, func) {
         Err(TestCollector::error(
             "function with parameters must have #[fuzzer] attribute",
         ))?;
     }
 
     Ok(())
+}
+
+fn has_parameters(db: &dyn SyntaxGroup, func: &FunctionWithBody) -> bool {
+    func.declaration(db)
+        .signature(db)
+        .parameters(db)
+        .elements(db)
+        .is_empty()
+        .not()
+}
+
+fn no_fuzzer_attribute(db: &dyn SyntaxGroup, func: &FunctionWithBody) -> bool {
+    const FUZZER_ATTRIBUTES: [&str; 3] = [
+        FuzzerCollector::ATTR_NAME,
+        FuzzerWrapperCollector::ATTR_NAME,
+        FuzzerConfigCollector::ATTR_NAME,
+    ];
+
+    func.attributes(db)
+        .elements(db)
+        .iter()
+        .any(|attr| {
+            FUZZER_ATTRIBUTES.contains(
+                &attr
+                    .attr(db)
+                    .as_syntax_node()
+                    .get_text_without_trivia(db)
+                    .as_str(),
+            )
+        })
+        .not()
 }
