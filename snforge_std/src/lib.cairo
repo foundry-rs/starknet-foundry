@@ -16,6 +16,7 @@ pub use cheatcodes::events::EventSpyTrait;
 pub use cheatcodes::events::EventSpyAssertionsTrait;
 pub use cheatcodes::events::EventsFilterTrait;
 pub use cheatcodes::events::spy_events;
+pub use cheatcodes::events::IsEmitted;
 
 pub use cheatcodes::message_to_l1::{
     spy_messages_to_l1, MessageToL1, MessageToL1Spy, MessageToL1SpyTrait, MessageToL1FilterTrait,
