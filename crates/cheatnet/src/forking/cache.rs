@@ -13,13 +13,16 @@ use std::collections::HashMap;
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
+use std::string::ToString;
 use url::Url;
 
-pub const CACHE_VERSION: usize = 4;
+pub fn cache_version() -> String {
+    env!("CARGO_PKG_VERSION").replace('.', "_")
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 struct ForkCacheContent {
-    cache_version: usize,
+    cache_version: String,
     storage_at: HashMap<ContractAddress, HashMap<StorageKey, Felt>>,
     nonce_at: HashMap<ContractAddress, Nonce>,
     class_hash_at: HashMap<ContractAddress, ClassHash>,
@@ -30,7 +33,7 @@ struct ForkCacheContent {
 impl Default for ForkCacheContent {
     fn default() -> Self {
         Self {
-            cache_version: CACHE_VERSION,
+            cache_version: cache_version(),
             storage_at: HashMap::default(),
             nonce_at: HashMap::default(),
             class_hash_at: HashMap::default(),
@@ -45,9 +48,11 @@ impl ForkCacheContent {
         let cache: Self =
             serde_json::from_str(serialized).expect("Could not deserialize cache from json");
 
-        assert!(
-            cache.cache_version == CACHE_VERSION,
-            "Expected the Version {CACHE_VERSION}"
+        assert_eq!(
+            cache.cache_version,
+            cache_version(),
+            "Expected the Version {}",
+            cache_version()
         );
 
         cache
@@ -247,7 +252,8 @@ fn cache_file_path_from_fork_config(
     let sanitized_path = re.replace_all(url.as_str(), "_");
 
     let cache_file_path = cache_dir.join(format!(
-        "{sanitized_path}_{block_number}_v{CACHE_VERSION}.json"
+        "{sanitized_path}_{block_number}_v{}.json",
+        cache_version()
     ));
 
     fs::create_dir_all(cache_file_path.parent().unwrap())

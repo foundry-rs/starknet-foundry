@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- Cache version updated to `4`
+- From now the cache version is pinned to the forge version.
 
 ## [0.38.0] - 2025-02-25
 
