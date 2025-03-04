@@ -16,6 +16,7 @@ use std::io::{Read, Write};
 use std::string::ToString;
 use url::Url;
 
+#[must_use]
 pub fn cache_version() -> String {
     env!("CARGO_PKG_VERSION").replace('.', "_")
 }
