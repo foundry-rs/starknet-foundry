@@ -1,6 +1,5 @@
-use sncast_std::{deploy, DeployResult, FeeSettings};
-use starknet::{ClassHash, Felt252TryIntoClassHash};
-use traits::Into;
+use sncast_std::{deploy, FeeSettings};
+use starknet::{ClassHash};
 
 fn main() {
     let max_fee = 99999999999999999;
@@ -15,9 +14,9 @@ fn main() {
         Option::Some(salt),
         true,
         FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None,
         },
-        Option::None
+        Option::None,
     )
         .expect('deploy failed');
 

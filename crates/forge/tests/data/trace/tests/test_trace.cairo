@@ -1,6 +1,7 @@
 use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 use snforge_std::{declare, ContractClassTrait};
 use snforge_std::trace::{get_call_trace};
+use core::panic_with_felt252;
 
 use trace_info::{
     RecursiveCallerDispatcher, RecursiveCallerDispatcherTrait, RecursiveCall, FailingSafeDispatcher,

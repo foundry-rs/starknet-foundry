@@ -1,5 +1,5 @@
 #[starknet::contract]
-mod supercomplexcode1 {
+pub mod supercomplexcode1 {
     #[storage]
     struct Storage {}
 

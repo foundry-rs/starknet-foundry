@@ -1,10 +1,6 @@
-use sncast_std::{
-    get_nonce, deploy, DeployResult, ScriptCommandError, ProviderError, StarknetError, FeeSettings,
-    TransactionExecutionErrorData
-};
+use sncast_std::{get_nonce, deploy, ScriptCommandError, ProviderError, StarknetError, FeeSettings};
 
-use starknet::{ClassHash, Felt252TryIntoClassHash};
-use traits::Into;
+use starknet::{ClassHash};
 
 fn main() {
     let max_fee = 99999999999999999;
@@ -21,9 +17,9 @@ fn main() {
         Option::Some(salt),
         true,
         FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None,
         },
-        Option::Some(deploy_nonce)
+        Option::Some(deploy_nonce),
     )
         .unwrap_err();
 
@@ -31,8 +27,8 @@ fn main() {
 
     assert(
         ScriptCommandError::ProviderError(
-            ProviderError::StarknetError(StarknetError::InvalidTransactionNonce)
+            ProviderError::StarknetError(StarknetError::InvalidTransactionNonce),
         ) == deploy_result,
-        'ohno'
+        'ohno',
     )
 }

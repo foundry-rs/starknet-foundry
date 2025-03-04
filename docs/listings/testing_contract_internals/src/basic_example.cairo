@@ -3,6 +3,7 @@ trait IContract<TContractState> {}
 
 #[starknet::contract]
 pub mod Contract {
+    use starknet::storage::{StoragePointerReadAccess};
     #[storage]
     pub struct Storage {
         pub balance: felt252,
@@ -23,7 +24,7 @@ pub mod Contract {
 #[cfg(test)]
 mod tests {
     use core::starknet::storage::{
-        StoragePointerReadAccess, StoragePointerWriteAccess
+        StoragePointerReadAccess, StoragePointerWriteAccess,
     }; // <--- Ad. 1
     use super::Contract;
     use super::Contract::{InternalTrait, other_internal_function}; // <--- Ad. 2
