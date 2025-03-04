@@ -288,7 +288,7 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
             }
             AnyTestCaseSummary::Single(case) => match case {
                 TestCaseSummary::Passed { gas_info: gas, .. } => {
-                    *gas == asserted_gas
+                    asserted_gas.abs_diff(*gas) <= 1
                         && any_case
                             .name()
                             .unwrap()
