@@ -25,7 +25,6 @@ use starknet_api::core::{ChainId, ClassHash, CompiledClassHash, ContractAddress,
 use starknet_api::state::StorageKey;
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::io::Read;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
