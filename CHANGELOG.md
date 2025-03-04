@@ -81,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `sncast completion` command - used to generate autocompletion script
+- `sncast verify` now supports verifying against [voyager](https://voyager.online/) block explorer.
 
 ## [0.38.3] - 2025-03-07
 
