@@ -310,7 +310,7 @@ fn no_fuzzer_attribute() {
         output,
         indoc! {r"
         error: Plugin diagnostic: #[test] function with parameters must have #[fuzzer] attribute
-         --> [..]tests/no_attribute.cairo:1:1
+         --> [..]no_attribute.cairo:1:1
         #[test]
 
         error: could not compile `fuzzing_integrationtest` due to previous error
