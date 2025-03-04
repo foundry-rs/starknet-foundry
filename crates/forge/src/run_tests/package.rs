@@ -29,10 +29,12 @@ use forge_runner::{
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
+use log::debug;
 use scarb_api::get_contracts_artifacts_and_source_sierra_paths;
 use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
 
+#[derive(Debug)]
 pub struct RunForPackageArgs {
     pub test_targets: Vec<TestTargetRaw>,
     pub tests_filter: TestsFilter,
@@ -129,8 +131,11 @@ pub async fn run_for_package(
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
 ) -> Result<Vec<TestTargetSummary>> {
+    debug!("Resolving config for package = {package_name}");
     let mut test_targets =
         test_package_with_config_resolved(test_targets, &fork_targets, block_number_map).await?;
+    debug!("Resolved config for package = {package_name}");
+
     let all_tests = sum_test_cases(&test_targets);
 
     for test_target in &mut test_targets {
@@ -146,6 +151,9 @@ pub async fn run_for_package(
     let mut summaries = vec![];
 
     for test_target in test_targets {
+        let test_target_kind = test_target.tests_location.clone();
+        let test_target_path = test_target.sierra_program_path.clone();
+        debug!("Running test target kind = {test_target_kind:?} at path = {test_target_path}");
         pretty_printing::print_running_tests(
             test_target.tests_location,
             test_target.test_cases.len(),
@@ -154,6 +162,9 @@ pub async fn run_for_package(
         let forge_config = forge_config.clone();
 
         let summary = run_for_test_target(test_target, forge_config, &tests_filter).await?;
+        debug!(
+            "Finished run for test target kind = {test_target_kind:?} at path = {test_target_path}"
+        );
 
         match summary {
             TestTargetRunResult::Ok(summary) => {

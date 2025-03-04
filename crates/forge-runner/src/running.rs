@@ -39,6 +39,7 @@ use cheatnet::state::{
 };
 use entry_code::create_entry_code;
 use hints::{hints_by_representation, hints_to_params};
+use log::debug;
 use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
@@ -159,6 +160,8 @@ pub fn run_test_case(
     runtime_config: &RuntimeConfig,
     fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
 ) -> Result<RunResultWithInfo> {
+    let case_name = case.name.clone();
+    debug!("Running test case = {case_name}");
     ensure!(
         case.config.available_gas != Some(0),
         "\n\t`available_gas` attribute was incorrectly configured. Make sure you use scarb >= 2.4.4\n"
@@ -233,6 +236,7 @@ pub fn run_test_case(
         extended_runtime: call_to_blockifier_runtime,
     };
 
+    debug!("Running test case = {case_name} on VM");
     let run_result =
         match run_assembled_program(&assembled_program, builtins, hints_dict, &mut forge_runtime) {
             Ok(mut runner) => {
@@ -271,6 +275,12 @@ pub fn run_test_case(
             Err(err) => Err(err),
         };
 
+    if run_result.is_ok() {
+        debug!("Test case = {case_name} run result success");
+    } else {
+        debug!("Test case = {case_name} run result failure");
+    };
+
     let encountered_errors = forge_runtime
         .extended_runtime
         .extended_runtime
@@ -300,6 +310,7 @@ pub fn run_test_case(
         used_resources.clone(),
     )?;
 
+    debug!("Finished running test case = {case_name}");
     Ok(RunResultWithInfo {
         run_result: run_result.map(|(gas_counter, memory, value)| RunResult {
             used_resources: used_resources.execution_resources.clone(),

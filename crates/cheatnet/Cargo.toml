@@ -43,6 +43,7 @@ k256.workspace = true
 p256.workspace = true
 shared.workspace = true
 rand.workspace = true
+log.workspace = true
 
 [dev-dependencies]
 futures.workspace = true

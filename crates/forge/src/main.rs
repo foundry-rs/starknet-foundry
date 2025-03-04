@@ -1,6 +1,7 @@
 use forge::{ExitStatus, main_execution, pretty_printing};
 
 fn main() {
+    env_logger::init();
     match main_execution() {
         Ok(ExitStatus::Success) => std::process::exit(0),
         Ok(ExitStatus::Failure) => std::process::exit(1),

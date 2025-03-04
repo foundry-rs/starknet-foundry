@@ -11,6 +11,7 @@ use cairo_vm::types::program::Program;
 use camino::Utf8Path;
 use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
+use log::debug;
 use num_bigint::BigUint;
 use runtime::starknet::context::SerializableGasPrices;
 use starknet::core::types::{
@@ -82,7 +83,14 @@ impl BlockInfoReader for ForkStateReader {
             return Ok(cache_hit);
         }
 
-        match sync(self.client.get_block_with_tx_hashes(self.block_id())) {
+        debug!("Getting block info for block_id = {:?}", self.block_id());
+        let result = sync(self.client.get_block_with_tx_hashes(self.block_id()));
+        debug!(
+            "Result getting block info for block_id = {:?} = {result:?}",
+            self.block_id()
+        );
+
+        match result {
             Ok(MaybePendingBlockWithTxHashes::Block(block)) => {
                 let block_info = BlockInfo {
                     block_number: BlockNumber(block.block_number),
@@ -119,11 +127,16 @@ impl StateReader for ForkStateReader {
             return Ok(cache_hit);
         }
 
-        match sync(self.client.get_storage_at(
+        debug!("Getting storage for contract_address = {contract_address:?}, key = {key:?}");
+        let result = sync(self.client.get_storage_at(
             Felt::from_(contract_address),
             Felt::from_(*key.0.key()),
             self.block_id(),
-        )) {
+        ));
+        debug!(
+            "Result getting storage for contract_address = {contract_address:?}, key = {key:?} = {result:?}"
+        );
+        match result {
             Ok(value) => {
                 let value_sf = value.into_();
                 self.cache
@@ -150,11 +163,13 @@ impl StateReader for ForkStateReader {
         if let Some(cache_hit) = self.cache.borrow().get_nonce_at(&contract_address) {
             return Ok(cache_hit);
         }
-
-        match sync(
+        debug!("Getting nonce for contract_address = {contract_address:?}");
+        let result = sync(
             self.client
                 .get_nonce(self.block_id(), Felt::from_(contract_address)),
-        ) {
+        );
+        debug!("Result getting nonce for contract_address = {contract_address:?} = {result:?}");
+        match result {
             Ok(nonce) => {
                 let nonce = nonce.into_();
                 self.cache
@@ -179,11 +194,15 @@ impl StateReader for ForkStateReader {
         if let Some(cache_hit) = self.cache.borrow().get_class_hash_at(&contract_address) {
             return Ok(cache_hit);
         }
-
-        match sync(
+        debug!("Getting class hash for contract_address = {contract_address:?}");
+        let result = sync(
             self.client
                 .get_class_hash_at(self.block_id(), Felt::from_(contract_address)),
-        ) {
+        );
+        debug!(
+            "Result getting class hash for contract_address = {contract_address:?} = {result:?}"
+        );
+        match result {
             Ok(class_hash) => {
                 let class_hash = class_hash.into_();
                 self.cache
@@ -211,10 +230,15 @@ impl StateReader for ForkStateReader {
             if let Some(cache_hit) = cache.get_compiled_contract_class(&class_hash) {
                 Ok(cache_hit)
             } else {
-                match sync(
+                debug!("Getting compiled class for class_hash = {class_hash:?}");
+                let result = sync(
                     self.client
                         .get_class(self.block_id(), Felt::from_(class_hash)),
-                ) {
+                );
+                debug!(
+                    "Result getting compiled class for class_hash = {class_hash:?} = {result:?}"
+                );
+                match result {
                     Ok(contract_class) => {
                         Ok(cache.insert_compiled_contract_class(class_hash, contract_class))
                     }

@@ -13,6 +13,7 @@ use std::cell::RefCell;
 use std::ffi::OsString;
 use std::process::Command;
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
+use log::debug;
 use tokio::runtime::Builder;
 use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
@@ -250,6 +251,7 @@ pub fn main_execution() -> Result<ExitStatus> {
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Test { args } => {
+            debug!("Running 'test' command");
             check_requirements(false)?;
             let cores = if let Ok(available_cores) = available_parallelism() {
                 available_cores.get()
@@ -257,6 +259,8 @@ pub fn main_execution() -> Result<ExitStatus> {
                 eprintln!("Failed to get the number of available cores, defaulting to 1");
                 1
             };
+            debug!("Available cores = {cores}");
+
 
             let rt = Builder::new_multi_thread()
                 .max_blocking_threads(cores)
