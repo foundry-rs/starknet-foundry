@@ -393,7 +393,7 @@ fn fail_with_unnamed_arg() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(
-            "#[fuzzer] can be used with named attributes only",
+            "#[fuzzer] can be used with named arguments only",
         )],
     );
 }

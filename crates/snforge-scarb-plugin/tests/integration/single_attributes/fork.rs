@@ -18,7 +18,7 @@ fn fails_without_block() {
                     All options failed
                     - variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
                     - variant: #[fork] expected arguments: 1, got: 0
-                    - variant: #[fork] can be used with unnamed attributes only
+                    - variant: #[fork] can be used with unnamed arguments only
                     Resolve at least one of them
                 "
             ))
@@ -40,7 +40,7 @@ fn fails_without_url() {
                 All options failed
                 - variant: <url> argument is missing
                 - variant: #[fork] expected arguments: 1, got: 0
-                - variant: #[fork] can be used with unnamed attributes only
+                - variant: #[fork] can be used with unnamed arguments only
                 Resolve at least one of them
             "
         ))],
@@ -83,7 +83,7 @@ fn fails_with_invalid_url() {
                 All options failed
                 - variant: #[fork] <url> is not a valid url
                 - variant: #[fork] expected arguments: 1, got: 0
-                - variant: #[fork] can be used with unnamed attributes only
+                - variant: #[fork] can be used with unnamed arguments only
                 Resolve at least one of them
             "
         ))],
