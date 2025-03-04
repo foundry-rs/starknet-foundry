@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Fixed
+
+- `snforge_scarb_plugin` now emits an error when parameters are passed without using the `#[fuzzer]` attribute
+
 ## [0.38.0] - 2025-02-25
 
 ### Forge
