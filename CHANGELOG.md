@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- Basic debug logging to some parts of code
+
+#### Fixed
+
+- Reverted the code that was causing execution to hang if using forking 
+
 ## [0.38.0] - 2025-02-25
 
 ### Forge

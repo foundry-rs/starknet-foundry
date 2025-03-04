@@ -4,6 +4,7 @@ use anyhow::anyhow;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge_runner::CACHE_DIR;
+use log::debug;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
@@ -250,6 +251,7 @@ pub fn main_execution() -> Result<ExitStatus> {
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Test { args } => {
+            debug!("Running 'test' command");
             check_requirements(false)?;
             let cores = if let Ok(available_cores) = available_parallelism() {
                 available_cores.get()
@@ -257,6 +259,7 @@ pub fn main_execution() -> Result<ExitStatus> {
                 eprintln!("Failed to get the number of available cores, defaulting to 1");
                 1
             };
+            debug!("Available cores = {cores}");
 
             let rt = Builder::new_multi_thread()
                 .max_blocking_threads(cores)

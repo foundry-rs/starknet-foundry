@@ -10,10 +10,12 @@ use forge_runner::{
     test_target_summary::TestTargetSummary,
 };
 use futures::{StreamExt, stream::FuturesUnordered};
+use log::debug;
 use std::sync::Arc;
 use tokio::sync::mpsc::channel;
 
 #[non_exhaustive]
+#[derive(Debug)]
 pub enum TestTargetRunResult {
     Ok(TestTargetSummary),
     Interrupted(TestTargetSummary),
@@ -48,6 +50,7 @@ pub async fn run_for_test_target(
         };
 
         let case = Arc::new(case);
+        debug!("Scheduled test case = {case_name}");
 
         tasks.push(run_for_test_case(
             case,
@@ -64,6 +67,8 @@ pub async fn run_for_test_target(
 
     while let Some(task) = tasks.next().await {
         let result = task??;
+        let name = result.name();
+        debug!("Finished test = {name:?}");
 
         print_test_result(&result, forge_config.output_config.detailed_resources);
 
@@ -91,6 +96,7 @@ pub async fn run_for_test_target(
     let summary = TestTargetSummary {
         test_case_summaries: results,
     };
+    debug!("Finished run for target, summary = {summary:?}");
 
     if interrupted {
         Ok(TestTargetRunResult::Interrupted(summary))

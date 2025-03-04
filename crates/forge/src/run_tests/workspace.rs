@@ -10,6 +10,7 @@ use forge_runner::{
     coverage_api::can_coverage_be_generated,
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
 };
+use log::debug;
 use scarb_api::{
     ScarbCommand,
     metadata::{Metadata, MetadataCommandExt, PackageMetadata},
@@ -55,6 +56,7 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
         }
     }
 
+    debug!("Building artifacts with Scarb");
     build_artifacts_with_scarb(
         filter.clone(),
         args.features.clone(),
@@ -69,6 +71,8 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
     let cache_dir = workspace_root.join(CACHE_DIR);
 
     for package in packages {
+        let package_name = package.name.clone();
+        debug!("Building args for package = {package_name}");
         env::set_current_dir(&package.root)?;
 
         let args = RunForPackageArgs::build(
@@ -79,10 +83,12 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
             &artifacts_dir_path,
         )?;
 
+        debug!("Running for package = {package_name}");
         let tests_file_summaries = run_for_package(args, &mut block_number_map).await?;
 
         all_failed_tests.extend(extract_failed_tests(tests_file_summaries));
     }
+    debug!("Finished running for packages");
 
     FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
 
