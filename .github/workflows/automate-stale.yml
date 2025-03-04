@@ -31,4 +31,8 @@ jobs:
             Hi! This pull request hasn't had any activity for a while, so I am
             marking it as stale. It will close in ${{ env.DAYS_BEFORE_CLOSE }}
             days if it is not updated. Thanks for contributing!
-          close-pr-message: false
+          close-pr-message: |
+            This pull request has been automatically closed due to inactivity.  
+            Feel free to reopen it or create a new one if needed.
+            Thanks for contributing!
+            
