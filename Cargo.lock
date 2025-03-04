@@ -493,7 +493,7 @@ dependencies = [
 [[package]]
 name = "blockifier"
 version = "0.14.0-rc.1"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.13.4#575dc705433641e521bf61a04edf06a7f487de97"
+source = "git+https://github.com/starkware-libs/sequencer.git?branch=avi%2Fwindows-resource-limits#3e3ca9f799ac3b6cb1e06450eb3fbda6ece0e285"
 dependencies = [
  "anyhow",
  "ark-ec",
@@ -527,6 +527,7 @@ dependencies = [
  "starknet-types-core",
  "starknet_api",
  "starknet_infra_utils",
+ "starknet_sierra_multicompile",
  "strum 0.25.0",
  "strum_macros 0.25.3",
  "tempfile",
@@ -3712,7 +3713,7 @@ dependencies = [
 [[package]]
 name = "papyrus_config"
 version = "0.14.0-rc.1"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.13.4#575dc705433641e521bf61a04edf06a7f487de97"
+source = "git+https://github.com/starkware-libs/sequencer.git?branch=avi%2Fwindows-resource-limits#3e3ca9f799ac3b6cb1e06450eb3fbda6ece0e285"
 dependencies = [
  "clap",
  "itertools 0.12.1",
@@ -4309,6 +4310,15 @@ dependencies = [
  "spin",
  "untrusted",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "rlimit"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7043b63bd0cd1aaa628e476b80e6d4023a3b50eb32789f2728908107bd0c793a"
+dependencies = [
+ "libc",
 ]
 
 [[package]]
@@ -5364,7 +5374,7 @@ dependencies = [
 [[package]]
 name = "starknet_api"
 version = "0.14.0-rc.1"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.13.4#575dc705433641e521bf61a04edf06a7f487de97"
+source = "git+https://github.com/starkware-libs/sequencer.git?branch=avi%2Fwindows-resource-limits#3e3ca9f799ac3b6cb1e06450eb3fbda6ece0e285"
 dependencies = [
  "bitvec",
  "cairo-lang-runner",
@@ -5392,10 +5402,30 @@ dependencies = [
 [[package]]
 name = "starknet_infra_utils"
 version = "0.14.0-rc.1"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.13.4#575dc705433641e521bf61a04edf06a7f487de97"
+source = "git+https://github.com/starkware-libs/sequencer.git?branch=avi%2Fwindows-resource-limits#3e3ca9f799ac3b6cb1e06450eb3fbda6ece0e285"
 dependencies = [
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "starknet_sierra_multicompile"
+version = "0.14.0-rc.1"
+source = "git+https://github.com/starkware-libs/sequencer.git?branch=avi%2Fwindows-resource-limits#3e3ca9f799ac3b6cb1e06450eb3fbda6ece0e285"
+dependencies = [
+ "cairo-lang-sierra",
+ "cairo-lang-starknet-classes",
+ "cairo-lang-utils",
+ "papyrus_config",
+ "rlimit",
+ "serde",
+ "serde_json",
+ "starknet-types-core",
+ "starknet_api",
+ "starknet_infra_utils",
+ "tempfile",
+ "thiserror 1.0.69",
+ "validator",
 ]
 
 [[package]]

@@ -53,19 +53,18 @@ fn format_detailed_resources(used_resources: &UsedResources) -> String {
     let vm_resources = &used_resources.execution_resources;
 
     let sorted_builtins = sort_by_value(&vm_resources.builtin_instance_counter);
-    let sorted_syscalls = sort_by_value(&used_resources.syscall_counter);
+    // let sorted_syscalls = sort_by_value(&used_resources.syscall_counter);
 
     let builtins = format_items(&sorted_builtins);
-    let syscalls = format_items(&sorted_syscalls);
+    // let syscalls = format_items(&sorted_syscalls);
 
     format!(
         "
         steps: {}
         memory holes: {}
         builtins: ({})
-        syscalls: ({})
         ",
-        vm_resources.n_steps, vm_resources.n_memory_holes, builtins, syscalls,
+        vm_resources.n_steps, vm_resources.n_memory_holes, builtins,
     )
 }
 

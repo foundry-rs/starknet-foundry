@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use blockifier::execution::syscalls::hint_processor::SyscallCounter;
+// use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use cairo_annotations::trace_data::{
     CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint,
     CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
@@ -57,7 +57,7 @@ pub fn build_profiler_call_trace(
         entry_point,
         cumulative_resources: build_profiler_execution_resources(
             value.used_execution_resources.clone(),
-            value.used_syscalls.clone(),
+            // value.used_syscalls.clone(),
         ),
         used_l1_resources: value.used_l1_resources.clone(),
         nested_calls: value
@@ -119,12 +119,12 @@ fn build_profiler_call_trace_node(
 #[must_use]
 pub fn build_profiler_execution_resources(
     execution_resources: ExecutionResources,
-    syscall_counter: SyscallCounter,
+    // syscall_counter: SyscallCounter,
 ) -> ProfilerExecutionResources {
-    let mut profiler_syscall_counter = HashMap::new();
-    for (key, val) in syscall_counter {
-        profiler_syscall_counter.insert(build_profiler_deprecated_syscall_selector(key), val);
-    }
+    // let mut profiler_syscall_counter = HashMap::new();
+    // for (key, val) in syscall_counter {
+    //     profiler_syscall_counter.insert(build_profiler_deprecated_syscall_selector(key), val);
+    // }
     ProfilerExecutionResources {
         vm_resources: VmExecutionResources {
             n_steps: execution_resources.n_steps,

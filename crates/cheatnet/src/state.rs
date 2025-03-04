@@ -9,7 +9,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages
 use blockifier::execution::call_info::OrderedL2ToL1Message;
 use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::execution::entry_point::CallEntryPoint;
-use blockifier::execution::syscalls::hint_processor::SyscallCounter;
+// use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_annotations::trace_data::L1Resources;
@@ -172,7 +172,7 @@ pub struct CallTrace {
     // These also include resources used by internal calls
     pub used_execution_resources: ExecutionResources,
     pub used_l1_resources: L1Resources,
-    pub used_syscalls: SyscallCounter,
+    // pub used_syscalls: SyscallCounter,
     pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
 }
 
@@ -199,7 +199,7 @@ impl CallTrace {
             entry_point: CallEntryPoint::default(),
             used_execution_resources: ExecutionResources::default(),
             used_l1_resources: L1Resources::default(),
-            used_syscalls: SyscallCounter::default(),
+            // used_syscalls: SyscallCounter::default(),
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
             vm_trace: None,
@@ -494,7 +494,7 @@ impl TraceData {
     pub fn exit_nested_call(
         &mut self,
         execution_resources: ExecutionResources,
-        used_syscalls: SyscallCounter,
+        // used_syscalls: SyscallCounter,
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
         vm_trace: Option<Vec<RelocatedTraceEntry>>,
@@ -507,7 +507,7 @@ impl TraceData {
         let mut last_call = last_call.borrow_mut();
         last_call.used_execution_resources = execution_resources;
 
-        last_call.used_syscalls = used_syscalls;
+        // last_call.used_syscalls = used_syscalls;
 
         last_call.used_l1_resources.l2_l1_message_sizes = l2_to_l1_messages
             .iter()

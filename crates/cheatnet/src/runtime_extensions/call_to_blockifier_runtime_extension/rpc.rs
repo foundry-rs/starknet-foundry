@@ -9,7 +9,7 @@ use blockifier::execution::{
     call_info::CallInfo,
     entry_point::{CallEntryPoint, CallType, EntryPointExecutionResult},
     errors::{EntryPointExecutionError, PreExecutionError},
-    syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor},
+    syscalls::hint_processor::{SyscallHintProcessor},
 };
 use blockifier::state::errors::StateError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
@@ -26,7 +26,7 @@ use starknet_types_core::felt::Felt;
 
 #[derive(Clone, Debug, Default)]
 pub struct UsedResources {
-    pub syscall_counter: SyscallCounter,
+    // pub syscall_counter: SyscallCounter,
     pub execution_resources: ExecutionResources,
     pub l2_to_l1_payload_lengths: Vec<usize>,
     pub l1_handler_payload_lengths: Vec<usize>,

@@ -15,7 +15,7 @@ use blockifier::execution::execution_utils::{
 use blockifier::execution::stack_trace::{
     Cairo1RevertHeader, extract_trailing_cairo1_revert_trace,
 };
-use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::execution::syscalls::hint_processor::{SyscallHintProcessor, SyscallUsageMap};
 use blockifier::versioned_constants::GasCosts;
 use blockifier::{
     execution::{
@@ -181,11 +181,11 @@ pub fn execute_entry_point_call_cairo1(
     .on_error_get_last_pc(&mut runner)?;
 
     let trace = get_relocated_vm_trace(&mut runner);
-    let syscall_counter = cheatable_runtime
-        .extended_runtime
-        .hint_handler
-        .syscall_counter
-        .clone();
+    // let syscall_counter = cheatable_runtime
+    //     .extended_runtime
+    //     .hint_handler
+    //     .syscall_counter
+    //     .clone();
 
     let call_info = finalize_execution(
         runner,
@@ -206,7 +206,7 @@ pub fn execute_entry_point_call_cairo1(
         });
     }
 
-    Ok((call_info, syscall_counter, trace))
+    Ok((call_info, SyscallUsageMap::default(), trace))
     // endregion
 }
 
