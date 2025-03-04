@@ -1,4 +1,4 @@
-use crate::{FromConv, from_thru_felt};
+use crate::{from_thru_felt, FromConv};
 use conversions::padded_felt::PaddedFelt;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce, PatriciaKey};
 use starknet_api::hash::StarkHash;

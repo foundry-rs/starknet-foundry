@@ -3,11 +3,11 @@ use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
 use crate::starknet_commands::account::import::Import;
 use crate::starknet_commands::account::list::List;
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Args, Subcommand, ValueEnum};
 use configuration::{
-    CONFIG_FILENAME, find_config_file, load_config, search_config_upwards_relative_to,
+    find_config_file, load_config, search_config_upwards_relative_to, CONFIG_FILENAME,
 };
 use serde_json::json;
 use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};

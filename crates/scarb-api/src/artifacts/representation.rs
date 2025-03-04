@@ -1,4 +1,4 @@
-use crate::artifacts::deserialized::{StarknetArtifacts, artifacts_for_package};
+use crate::artifacts::deserialized::{artifacts_for_package, StarknetArtifacts};
 use anyhow::anyhow;
 use camino::{Utf8Path, Utf8PathBuf};
 
@@ -38,8 +38,8 @@ impl StarknetArtifactsRepresentation {
 #[cfg(test)]
 mod tests {
     use crate::ScarbCommand;
-    use assert_fs::TempDir;
     use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy};
+    use assert_fs::TempDir;
     use camino::Utf8PathBuf;
 
     use super::*;

@@ -6,7 +6,7 @@ use anyhow::{Context, Result};
 use data_transformer::Calldata;
 use sncast::helpers::account::generate_account_name;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
-use sncast::response::print::{OutputFormat, print_command_result};
+use sncast::response::print::{print_command_result, OutputFormat};
 use std::io;
 use std::io::IsTerminal;
 
@@ -19,15 +19,14 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::interactive::prompt_to_add_account_as_default;
 use sncast::helpers::scarb_utils::{
-    BuildConfig, assert_manifest_path_exists, build, build_and_load_artifacts,
-    get_package_metadata, get_scarb_metadata_with_deps,
+    assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
+    get_scarb_metadata_with_deps, BuildConfig,
 };
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::structs::DeclareResponse;
 use sncast::{
-    NumbersFormat, ValidatedWaitParams, WaitForTx, chain_id_to_network_name, get_account,
-    get_block_id, get_chain_id, get_class_hash_by_address, get_contract_class,
-    get_default_state_file_name,
+    chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_class_hash_by_address,
+    get_contract_class, get_default_state_file_name, NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::core::types::ContractClass;
 use starknet::core::utils::get_selector_from_name;

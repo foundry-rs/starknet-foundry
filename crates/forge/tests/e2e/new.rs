@@ -2,10 +2,10 @@
 use super::common::runner::{get_current_branch, get_remote_url};
 
 use super::common::runner::{runner, snforge_test_bin_path, test_runner};
-use assert_fs::TempDir;
 use assert_fs::fixture::{FileTouch, PathChild};
-use forge::CAIRO_EDITION;
+use assert_fs::TempDir;
 use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
+use forge::CAIRO_EDITION;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::assert_matches;

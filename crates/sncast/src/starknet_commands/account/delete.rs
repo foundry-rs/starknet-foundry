@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args};
 use promptly::prompt;

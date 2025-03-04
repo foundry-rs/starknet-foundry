@@ -4,16 +4,16 @@ use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::Contr
 use forge::shared_cache::FailedTestsCache;
 use forge::{
     block_number_map::BlockNumberMap,
-    run_tests::package::{RunForPackageArgs, run_for_package},
+    run_tests::package::{run_for_package, RunForPackageArgs},
     scarb::load_test_artifacts,
     test_filter::TestsFilter,
 };
-use forge_runner::CACHE_DIR;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
 use forge_runner::test_target_summary::TestTargetSummary;
-use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
+use forge_runner::CACHE_DIR;
+use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use std::num::NonZeroU32;
 use std::sync::Arc;
 use tempfile::tempdir;
@@ -54,6 +54,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
                 false,
                 false,
                 FailedTestsCache::default(),
+                None,
             ),
             forge_config: Arc::new(ForgeConfig {
                 test_runner_config: Arc::new(TestRunnerConfig {

@@ -1,11 +1,11 @@
-use crate::compatibility_check::{Requirement, RequirementsChecker, create_version_parser};
-use anyhow::Result;
+use crate::compatibility_check::{create_version_parser, Requirement, RequirementsChecker};
 use anyhow::anyhow;
+use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge_runner::CACHE_DIR;
 use run_tests::workspace::run_for_workspace;
-use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
+use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
 use shared::print::print_as_warning;
@@ -186,6 +186,10 @@ pub struct TestArgs {
     /// Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
     #[arg(long)]
     max_n_steps: Option<u32>,
+
+    /// Exclude tests matching the specified filter pattern
+    #[arg(long)]
+    exclude: Option<String>,
 
     /// Specify features to enable
     #[command(flatten)]

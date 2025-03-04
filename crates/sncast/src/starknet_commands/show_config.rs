@@ -5,8 +5,8 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::{Decimal, ShowConfigResponse};
 use sncast::{chain_id_to_network_name, get_chain_id};
-use starknet::providers::JsonRpcClient;
 use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::JsonRpcClient;
 
 #[derive(Args)]
 #[command(about = "Show current configuration being used", long_about = None)]

@@ -1,8 +1,8 @@
 use super::cheat_execution_info::{
     BlockInfoMockOperations, CheatArguments, ExecutionInfoMockOperations, Operation,
 };
-use crate::CheatnetState;
 use crate::state::CheatSpan;
+use crate::CheatnetState;
 use starknet_api::core::ContractAddress;
 
 impl CheatnetState {

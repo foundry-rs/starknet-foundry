@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests_non_zero_felt {
-    use std::num::{NonZeroU64, NonZeroU128};
+    use std::num::{NonZeroU128, NonZeroU64};
 
     use conversions::FromConv;
     use starknet_types_core::felt::{Felt, NonZeroFelt};

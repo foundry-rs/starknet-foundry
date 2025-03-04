@@ -1,7 +1,7 @@
 use super::data_representation::{
     AllowedCalldataArgument, CalldataEnum, CalldataStruct, CalldataStructField, CalldataTuple,
 };
-use anyhow::{Context, Result, bail, ensure};
+use anyhow::{bail, ensure, Context, Result};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{
     Expr, ExprFunctionCall, ExprListParenthesized, ExprPath, ExprStructCtorCall,
@@ -13,7 +13,7 @@ use starknet::core::types::contract::{AbiEntry, AbiEnum, AbiNamedMember, AbiStru
 use std::collections::HashSet;
 
 use super::parsing::{parse_argument_list, parse_expression};
-use super::{SupportedCalldataKind, build_representation};
+use super::{build_representation, SupportedCalldataKind};
 
 pub trait EnumOrStruct {
     const VARIANT: &'static str;

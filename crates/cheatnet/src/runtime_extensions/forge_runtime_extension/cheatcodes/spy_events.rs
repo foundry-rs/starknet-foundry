@@ -1,6 +1,6 @@
 use crate::CheatnetState;
 use blockifier::execution::call_info::OrderedEvent;
-use conversions::{FromConv, serde::serialize::CairoSerialize};
+use conversions::{serde::serialize::CairoSerialize, FromConv};
 use starknet_api::core::ContractAddress;
 use starknet_types_core::felt::Felt;
 

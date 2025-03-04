@@ -4,8 +4,8 @@ use std::sync::Arc;
 
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
-use conversions::IntoConv;
 use conversions::string::TryFromHexStr;
+use conversions::IntoConv;
 use indoc::indoc;
 use runtime::starknet::constants::{
     TEST_ADDRESS, TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR,

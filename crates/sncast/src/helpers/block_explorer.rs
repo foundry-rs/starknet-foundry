@@ -1,4 +1,4 @@
-use crate::{Network, response::explorer_link::ExplorerError};
+use crate::{response::explorer_link::ExplorerError, Network};
 use conversions::padded_felt::PaddedFelt;
 use serde::{Deserialize, Serialize};
 
@@ -149,9 +149,9 @@ impl LinkProvider for NftScan {
 #[cfg(test)]
 mod tests {
     use crate::{
-        Network,
         helpers::block_explorer::Service,
         response::{explorer_link::OutputLink, structs::DeployResponse},
+        Network,
     };
     use conversions::padded_felt::PaddedFelt;
     use regex::Regex;

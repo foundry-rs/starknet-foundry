@@ -8,9 +8,9 @@ use anyhow::Result;
 use blockifier::state::{cached_state::CachedState, state_api::StateReader};
 use cairo_lang_runner::Arg;
 use cheatnet::runtime_extensions::forge_config_extension::{
-    ForgeConfigExtension, config::RawForgeConfig,
+    config::RawForgeConfig, ForgeConfigExtension,
 };
-use runtime::{ExtendedRuntime, StarknetRuntime, starknet::context::build_context};
+use runtime::{starknet::context::build_context, ExtendedRuntime, StarknetRuntime};
 use starknet_api::block::{
     BlockInfo, BlockNumber, BlockTimestamp, GasPrice, GasPriceVector, GasPrices, NonzeroGasPrice,
 };

@@ -1,6 +1,6 @@
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use indoc::indoc;
-use test_utils::runner::{TestCase, assert_passed};
+use test_utils::runner::{assert_passed, TestCase};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 

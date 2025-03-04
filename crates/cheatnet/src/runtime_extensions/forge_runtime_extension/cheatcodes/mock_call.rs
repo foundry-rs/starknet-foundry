@@ -1,5 +1,5 @@
-use crate::CheatnetState;
 use crate::state::{CheatSpan, CheatStatus};
+use crate::CheatnetState;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
 use starknet_types_core::felt::Felt;
 use std::collections::hash_map::Entry;

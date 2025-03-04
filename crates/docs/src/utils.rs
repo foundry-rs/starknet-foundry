@@ -1,9 +1,9 @@
 use crate::snippet::Snippet;
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
 use std::{env, fs, path::PathBuf, str::FromStr};
 use tempfile::TempDir;
-use toml_edit::{DocumentMut, value};
+use toml_edit::{value, DocumentMut};
 
 #[must_use]
 pub fn get_nth_ancestor(levels_up: usize) -> PathBuf {

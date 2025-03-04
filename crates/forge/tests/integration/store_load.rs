@@ -1,7 +1,7 @@
 use indoc::{formatdoc, indoc};
 use shared::test_utils::node_url::node_rpc_url;
 use std::path::Path;
-use test_utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
+use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
 
 #[test]

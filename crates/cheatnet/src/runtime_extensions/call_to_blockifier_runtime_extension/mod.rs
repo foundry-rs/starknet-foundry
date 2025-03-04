@@ -9,8 +9,8 @@ use blockifier::execution::{
     deprecated_syscalls::DeprecatedSyscallSelector,
     execution_utils::ReadOnlySegment,
     syscalls::{
-        SyscallRequest, SyscallResponse, SyscallResponseWrapper,
-        hint_processor::SyscallHintProcessor,
+        hint_processor::SyscallHintProcessor, SyscallRequest, SyscallResponse,
+        SyscallResponseWrapper,
     },
 };
 use cairo_vm::types::relocatable::MaybeRelocatable;
@@ -22,7 +22,7 @@ use starknet_api::core::ContractAddress;
 use crate::state::CheatnetState;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    AddressOrClassHash, call_entry_point,
+    call_entry_point, AddressOrClassHash,
 };
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::{
     execution::cheated_syscalls::SingleSegmentResponse,

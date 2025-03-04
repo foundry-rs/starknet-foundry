@@ -1,14 +1,14 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
     ContractClassEntryPointExecutionResult, OnErrorLastPc,
 };
-use crate::runtime_extensions::deprecated_cheatable_starknet_extension::DeprecatedCheatableStarknetRuntimeExtension;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::deprecated_cheatable_starknet_extension::runtime::{
     DeprecatedExtendedRuntime, DeprecatedStarknetRuntime,
 };
+use crate::runtime_extensions::deprecated_cheatable_starknet_extension::DeprecatedCheatableStarknetRuntimeExtension;
 use blockifier::execution::contract_class::CompiledClassV0;
 use blockifier::execution::deprecated_entry_point_execution::{
-    VmExecutionContext, finalize_execution, initialize_execution_context, prepare_call_arguments,
+    finalize_execution, initialize_execution_context, prepare_call_arguments, VmExecutionContext,
 };
 use blockifier::execution::entry_point::{CallEntryPoint, EntryPointExecutionContext};
 use blockifier::execution::errors::EntryPointExecutionError;

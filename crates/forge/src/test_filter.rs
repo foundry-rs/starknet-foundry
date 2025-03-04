@@ -1,7 +1,8 @@
 use crate::shared_cache::FailedTestsCache;
 use anyhow::Result;
-use forge_runner::TestCaseFilter;
-use forge_runner::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
+use forge_runner::{
+    package_tests::with_config_resolved::TestCaseWithResolvedConfig, TestCaseFilter,
+};
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -14,13 +15,16 @@ pub struct TestsFilter {
     last_failed_filter: bool,
 
     failed_tests_cache: FailedTestsCache,
+    // based on exclude filter
+    exclude_filter: Option<NameFilter>,
 }
 
 #[derive(Debug, PartialEq)]
-pub(crate) enum NameFilter {
+pub enum NameFilter {
     All,
     Match(String),
     ExactMatch(String),
+    Exclude(String),
 }
 
 #[derive(Debug, PartialEq)]
@@ -40,6 +44,7 @@ impl TestsFilter {
         include_ignored: bool,
         rerun_failed: bool,
         failed_tests_cache: FailedTestsCache,
+        exclude_filter: Option<String>,
     ) -> Self {
         assert!(
             !(only_ignored && include_ignored),
@@ -65,11 +70,14 @@ impl TestsFilter {
             NameFilter::All
         };
 
+        let exclude_filter = exclude_filter.map(NameFilter::Exclude);
+
         Self {
             name_filter,
             ignored_filter,
             last_failed_filter: rerun_failed,
             failed_tests_cache,
+            exclude_filter,
         }
     }
 
@@ -78,7 +86,7 @@ impl TestsFilter {
         test_cases: &mut Vec<TestCaseWithResolvedConfig>,
     ) -> Result<()> {
         match &self.name_filter {
-            NameFilter::All => {}
+            NameFilter::All | NameFilter::Exclude(_) => {}
             NameFilter::Match(filter) => {
                 test_cases.retain(|tc| tc.name.contains(filter));
             }
@@ -97,6 +105,10 @@ impl TestsFilter {
             }
         }
 
+        if let Some(NameFilter::Exclude(filter)) = &self.exclude_filter {
+            test_cases.retain(|tc| !tc.name.contains(filter));
+        }
+
         match self.ignored_filter {
             // if NotIgnored (default) we filter ignored tests later and display them as ignored
             IgnoredFilter::All | IgnoredFilter::NotIgnored => {}
@@ -106,6 +118,13 @@ impl TestsFilter {
         };
 
         Ok(())
+    }
+
+    pub(crate) fn is_excluded(&self, test_case: &TestCaseWithResolvedConfig) -> bool {
+        if let Some(NameFilter::Exclude(filter)) = &self.exclude_filter {
+            return test_case.name.contains(filter);
+        }
+        false
     }
 }
 
@@ -133,7 +152,7 @@ mod tests {
     };
     use forge_runner::package_tests::{TestDetails, TestTargetLocation};
     use std::sync::Arc;
-    use universal_sierra_compiler_api::{SierraType, compile_sierra};
+    use universal_sierra_compiler_api::{compile_sierra, SierraType};
 
     fn program_for_testing() -> ProgramArtifact {
         ProgramArtifact {
@@ -150,15 +169,29 @@ mod tests {
     #[test]
     #[should_panic(expected = "Arguments only_ignored and include_ignored cannot be both true")]
     fn from_flags_only_ignored_and_include_ignored_both_true() {
-        let _ =
-            TestsFilter::from_flags(None, false, true, true, false, FailedTestsCache::default());
+        let _ = TestsFilter::from_flags(
+            None,
+            false,
+            true,
+            true,
+            false,
+            FailedTestsCache::default(),
+            None,
+        );
     }
 
     #[test]
     #[should_panic(expected = "Argument test_name_filter cannot be None with exact_match")]
     fn from_flags_exact_match_true_without_test_filter_name() {
-        let _ =
-            TestsFilter::from_flags(None, true, false, false, false, FailedTestsCache::default());
+        let _ = TestsFilter::from_flags(
+            None,
+            true,
+            false,
+            false,
+            false,
+            FailedTestsCache::default(),
+            None,
+        );
     }
 
     #[test]
@@ -234,6 +267,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -263,6 +297,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -291,6 +326,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -357,6 +393,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -371,6 +408,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -454,6 +492,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -468,6 +507,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -549,6 +589,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -563,6 +604,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -577,6 +619,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -605,6 +648,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -633,6 +677,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -647,6 +692,7 @@ mod tests {
             false,
             false,
             FailedTestsCache::default(),
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -734,8 +780,15 @@ mod tests {
             tests_location: TestTargetLocation::Tests,
         };
 
-        let tests_filter =
-            TestsFilter::from_flags(None, false, true, false, false, FailedTestsCache::default());
+        let tests_filter = TestsFilter::from_flags(
+            None,
+            false,
+            true,
+            false,
+            false,
+            FailedTestsCache::default(),
+            None,
+        );
         let mut filtered = mocked_tests;
         tests_filter.filter_tests(&mut filtered.test_cases).unwrap();
 
@@ -836,8 +889,15 @@ mod tests {
             tests_location: TestTargetLocation::Tests,
         };
 
-        let tests_filter =
-            TestsFilter::from_flags(None, false, false, true, false, FailedTestsCache::default());
+        let tests_filter = TestsFilter::from_flags(
+            None,
+            false,
+            false,
+            true,
+            false,
+            FailedTestsCache::default(),
+            None,
+        );
         let mut filtered = mocked_tests;
         tests_filter.filter_tests(&mut filtered.test_cases).unwrap();
 

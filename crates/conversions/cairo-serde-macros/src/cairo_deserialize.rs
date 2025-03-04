@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
-use syn::{Data, DeriveInput, Fields, GenericParam, Generics, parse_macro_input, parse_quote};
+use syn::{parse_macro_input, parse_quote, Data, DeriveInput, Fields, GenericParam, Generics};
 
 // works by calling `CairoDeserialize::deserialize(reader)` on all fields of struct
 // for enums by reading 1 felt that is then matched on to determine which variant should be used

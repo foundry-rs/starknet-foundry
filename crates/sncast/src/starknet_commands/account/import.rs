@@ -1,9 +1,9 @@
 use super::deploy::compute_account_address;
 use crate::starknet_commands::account::{
-    AccountType, add_created_profile_to_configuration, prepare_account_json,
-    write_account_to_accounts_file,
+    add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
+    AccountType,
 };
-use anyhow::{Context, Result, bail, ensure};
+use anyhow::{bail, ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
@@ -14,7 +14,7 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
 use sncast::{
-    AccountType as SNCastAccountType, check_class_hash_exists, get_chain_id, handle_rpc_error,
+    check_class_hash_exists, get_chain_id, handle_rpc_error, AccountType as SNCastAccountType,
 };
 use starknet::core::types::{BlockId, BlockTag, StarknetError};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};

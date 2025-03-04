@@ -1,9 +1,8 @@
 use super::{
     resolve_config::resolve_config,
-    test_target::{TestTargetRunResult, run_for_test_target},
+    test_target::{run_for_test_target, TestTargetRunResult},
 };
 use crate::{
-    TestArgs,
     block_number_map::BlockNumberMap,
     combine_configs::combine_configs,
     pretty_printing,
@@ -17,6 +16,7 @@ use crate::{
         warn_if_available_gas_used_with_incompatible_scarb_version,
         warn_if_incompatible_rpc_version,
     },
+    TestArgs,
 };
 use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
@@ -85,6 +85,7 @@ impl RunForPackageArgs {
             args.include_ignored,
             args.rerun_failed,
             FailedTestsCache::new(cache_dir),
+            args.exclude.clone(),
         );
 
         Ok(RunForPackageArgs {
@@ -153,7 +154,8 @@ pub async fn run_for_package(
 
         let forge_config = forge_config.clone();
 
-        let summary = run_for_test_target(test_target, forge_config, &tests_filter).await?;
+        let summary =
+            run_for_test_target(test_target, forge_config, &tests_filter, &package_name).await?;
 
         match summary {
             TestTargetRunResult::Ok(summary) => {

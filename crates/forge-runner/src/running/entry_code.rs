@@ -1,6 +1,6 @@
 use crate::package_tests::TestDetails;
 use cairo_lang_casm::instructions::Instruction;
-use cairo_lang_runnable_utils::builder::{EntryCodeConfig, create_entry_code_from_params};
+use cairo_lang_runnable_utils::builder::{create_entry_code_from_params, EntryCodeConfig};
 use cairo_vm::types::builtin_name::BuiltinName;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
