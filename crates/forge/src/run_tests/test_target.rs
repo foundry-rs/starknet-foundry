@@ -67,7 +67,7 @@ pub async fn run_for_test_target(
 
     while let Some(task) = tasks.next().await {
         let result = task??;
-        let name = result.name().clone();
+        let name = result.name();
         debug!("Finished test = {name:?}");
 
         print_test_result(&result, forge_config.output_config.detailed_resources);

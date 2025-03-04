@@ -151,7 +151,7 @@ pub async fn run_for_package(
     let mut summaries = vec![];
 
     for test_target in test_targets {
-        let test_target_kind = test_target.tests_location.clone();
+        let test_target_kind = test_target.tests_location;
         let test_target_path = test_target.sierra_program_path.clone();
         debug!("Running test target kind = {test_target_kind:?} at path = {test_target_path}");
         pretty_printing::print_running_tests(

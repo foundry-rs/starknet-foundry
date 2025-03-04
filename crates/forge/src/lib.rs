@@ -4,6 +4,7 @@ use anyhow::anyhow;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge_runner::CACHE_DIR;
+use log::debug;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
@@ -13,7 +14,6 @@ use std::cell::RefCell;
 use std::ffi::OsString;
 use std::process::Command;
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
-use log::debug;
 use tokio::runtime::Builder;
 use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
@@ -260,7 +260,6 @@ pub fn main_execution() -> Result<ExitStatus> {
                 1
             };
             debug!("Available cores = {cores}");
-
 
             let rt = Builder::new_multi_thread()
                 .max_blocking_threads(cores)
