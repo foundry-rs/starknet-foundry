@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- Testing events api improvements. New `IsEmitted` trait. `Into` and `PartialEq` trait implementations for snforge_std Events.
+
 #### Fixed
 
 - `snforge_scarb_plugin` now emits an error when parameters are passed without using the `#[fuzzer]` attribute
