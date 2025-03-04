@@ -66,7 +66,7 @@ pub trait EventSpyAssertionsTrait<T, impl TEvent: starknet::Event<T>, impl TDrop
 }
 
 impl EventSpyAssertionsTraitImpl<
-    T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>, +Clone<T>
+    T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>
 > of EventSpyAssertionsTrait<T> {
     fn assert_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>) {
         let mut i = 0;
@@ -103,19 +103,23 @@ impl EventSpyAssertionsTraitImpl<
     }
 }
 
-fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>, +Clone<T>>(
+fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
     self: @Array<(ContractAddress, Event)>,
     expected_emitted_by: @ContractAddress,
     expected_event: @T
 ) -> bool {
-    let expected_event: Event = expected_event.clone().into();
+    let mut expected_keys = array![];
+    let mut expected_data = array![];
+    expected_event.append_keys_and_data(ref expected_keys, ref expected_data);
 
     let mut i = 0;
     let mut is_emitted = false;
     while i < self.len() {
         let (from, event) = self.at(i);
 
-        if from == expected_emitted_by && event == @expected_event {
+        if from == expected_emitted_by
+            && event.keys == @expected_keys
+            && event.data == @expected_data {
             is_emitted = true;
             break;
         };
@@ -151,6 +155,7 @@ impl EventIntoImpl<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> of I
         Event { keys, data }
     }
 }
+
 
 impl EventTraitImpl of starknet::Event<Event> {
     fn append_keys_and_data(self: @Event, ref keys: Array<felt252>, ref data: Array<felt252>) {

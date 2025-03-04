@@ -9,12 +9,12 @@ pub mod SpyEventsChecker {
     struct Storage {}
 
     #[event]
-    #[derive(Drop, starknet::Event, Clone)]
+    #[derive(Drop, starknet::Event)]
     pub enum Event {
         FirstEvent: FirstEvent
     }
 
-    #[derive(Drop, starknet::Event, Clone)]
+    #[derive(Drop, starknet::Event)]
     pub struct FirstEvent {
         pub some_data: felt252
     }
