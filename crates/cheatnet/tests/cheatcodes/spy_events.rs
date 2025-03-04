@@ -318,8 +318,8 @@ fn test_emitted_by_emit_events_syscall() {
     );
 }
 
-#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn capture_cairo0_event() {
+#[test]
+fn capture_cairo0_event() {
     let temp_dir = TempDir::new().unwrap();
     let mut cached_state = create_fork_cached_state_at(53_626, temp_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
