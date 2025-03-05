@@ -4,6 +4,7 @@ use cheatnet::runtime_extensions::forge_config_extension::config::{
     Expected, RawForgeConfig, RawForkConfig, RawFuzzerConfig, RawShouldPanicConfig,
 };
 use conversions::serde::serialize::SerializeToFeltVec;
+use starknet_api::execution_resources::GasVector;
 
 pub type TestTargetWithConfig = TestTarget<TestCaseConfig>;
 
@@ -13,7 +14,7 @@ pub type TestCaseWithConfig = TestCase<TestCaseConfig>;
 /// see [`super::with_config_resolved::TestCaseResolvedConfig`] for more info
 #[derive(Debug, Clone)]
 pub struct TestCaseConfig {
-    pub available_gas: Option<usize>,
+    pub available_gas: Option<GasVector>,
     pub ignored: bool,
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<RawForkConfig>,
@@ -23,7 +24,7 @@ pub struct TestCaseConfig {
 impl From<RawForgeConfig> for TestCaseConfig {
     fn from(value: RawForgeConfig) -> Self {
         Self {
-            available_gas: value.available_gas.map(|v| v.gas),
+            available_gas: value.available_gas.map(|v| v.to_gas_vector()),
             ignored: value.ignore.is_some_and(|v| v.is_ignored),
             expected_result: value.should_panic.into(),
             fork_config: value.fork,
