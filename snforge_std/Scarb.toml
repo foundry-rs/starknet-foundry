@@ -1,6 +1,6 @@
 [package]
 name = "snforge_std"
-version = "0.38.0"
+version = "0.38.1"
 edition = "2024_07"
 description = "Cairo testing library"
 documentation = "https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library.html"
@@ -9,4 +9,4 @@ license-file = "../LICENSE"
 re-export-cairo-plugins = ["snforge_scarb_plugin"]
 
 [dependencies]
-snforge_scarb_plugin = { path = "../crates/snforge-scarb-plugin" }
+snforge_scarb_plugin = "^0.38.1"
