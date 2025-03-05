@@ -7,7 +7,7 @@ version = "0.37.0"
 
 [[package]]
 name = "snforge_std"
-version = "0.37.0"
+version = "0.37.1"
 dependencies = [
  "snforge_scarb_plugin",
 ]
