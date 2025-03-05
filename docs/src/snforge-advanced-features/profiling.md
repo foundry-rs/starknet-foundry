@@ -12,6 +12,11 @@ All you have to do is use the [`--save-trace-data`](../appendix/snforge/test.md#
 $ snforge test --save-trace-data
 ```
 
+> 💡 **Tip**
+>
+> You can choose which resource to track (cairo-steps or sierra-gas) using `--tracked-resource` flag
+> Tracking sierra gas is only available for sierra 1.7.0+
+
 The files with traces will be saved to `snfoundry_trace` directory. Each one of these files can then be used as an input
 for the [cairo-profiler](https://github.com/software-mansion/cairo-profiler).
 
