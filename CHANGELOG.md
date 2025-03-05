@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `snforge completion` command - used to generate autocompletion script
+- new `--tracked-resource` flag, that will change currently tracked resource
+  (`cairo-steps` for vm resources - default; `sierra-gas` for sierra gas consumed resources in cairo native)
 
 ### Cast
 

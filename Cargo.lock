@@ -2550,6 +2550,7 @@ dependencies = [
  "cairo-vm",
  "camino",
  "cheatnet",
+ "clap",
  "console",
  "conversions",
  "debugging",
