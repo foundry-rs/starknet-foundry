@@ -781,7 +781,7 @@ fn incompatible_snforge_std_version_warning() {
         .unwrap()
         .parse::<DocumentMut>()
         .unwrap();
-    scarb_toml["dev-dependencies"]["snforge_std"] = value("0.34.0");
+    scarb_toml["dev-dependencies"]["snforge_std"] = value("0.37.0");
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
     let output = test_runner(&temp).assert().failure();
