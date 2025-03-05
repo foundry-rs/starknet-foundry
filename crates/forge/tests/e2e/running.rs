@@ -841,6 +841,33 @@ fn detailed_resources_flag() {
 }
 
 #[test]
+#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
+fn detailed_resources_flag_sierra_gas() {
+    let temp = setup_package("erc20_package");
+    let output = test_runner(&temp)
+        .arg("--detailed-resources")
+        .arg("--tracked-resource")
+        .arg("sierra-gas")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 1 test(s) from erc20_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] erc20_package_integrationtest::test_complex::complex[..]
+                sierra_gas_consumed: ([..])
+                syscalls: ([..])
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        "},
+    );
+}
+
+#[test]
 fn catch_runtime_errors() {
     let temp = setup_package("simple_package");
 

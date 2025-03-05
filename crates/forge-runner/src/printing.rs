@@ -1,8 +1,13 @@
+use crate::forge_config::ForgeTrackedResource;
 use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary};
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use console::style;
 
-pub fn print_test_result(any_test_result: &AnyTestCaseSummary, print_detailed_resources: bool) {
+pub fn print_test_result(
+    any_test_result: &AnyTestCaseSummary,
+    print_detailed_resources: bool,
+    tracked_resource: ForgeTrackedResource,
+) {
     if any_test_result.is_skipped() {
         return;
     }
@@ -42,7 +47,7 @@ pub fn print_test_result(any_test_result: &AnyTestCaseSummary, print_detailed_re
 
     let used_resources = match (print_detailed_resources, any_test_result) {
         (true, AnyTestCaseSummary::Single(TestCaseSummary::Passed { used_resources, .. })) => {
-            format_detailed_resources(used_resources)
+            format_detailed_resources(used_resources, tracked_resource)
         }
         _ => String::new(),
     };
@@ -52,24 +57,39 @@ pub fn print_test_result(any_test_result: &AnyTestCaseSummary, print_detailed_re
     );
 }
 
-fn format_detailed_resources(used_resources: &UsedResources) -> String {
-    let vm_resources = &used_resources.execution_resources;
-
-    let sorted_builtins = sort_by_value(&vm_resources.builtin_instance_counter);
+fn format_detailed_resources(
+    used_resources: &UsedResources,
+    tracked_resource: ForgeTrackedResource,
+) -> String {
     let sorted_syscalls = sort_by_value(&used_resources.syscall_counter);
-
-    let builtins = format_items(&sorted_builtins);
     let syscalls = format_items(&sorted_syscalls);
 
-    format!(
-        "
+    match tracked_resource {
+        ForgeTrackedResource::CairoSteps => {
+            let vm_resources = &used_resources.execution_resources;
+            let sorted_builtins = sort_by_value(&vm_resources.builtin_instance_counter);
+            let builtins = format_items(&sorted_builtins);
+
+            format!(
+                "
         steps: {}
         memory holes: {}
         builtins: ({})
         syscalls: ({})
-        ",
-        vm_resources.n_steps, vm_resources.n_memory_holes, builtins, syscalls,
-    )
+            ",
+                vm_resources.n_steps, vm_resources.n_memory_holes, builtins, syscalls,
+            )
+        }
+        ForgeTrackedResource::SierraGas => {
+            format!(
+                "
+        sierra_gas_consumed: ({})
+        syscalls: ({})
+            ",
+                used_resources.gas_consumed.0, syscalls,
+            )
+        }
+    }
 }
 
 fn sort_by_value<'a, K, V, M>(map: M) -> Vec<(&'a K, &'a V)>

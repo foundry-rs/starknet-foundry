@@ -8,6 +8,7 @@ edition.workspace = true
 [features]
 smoke = []
 scarb_2_7_1 = []
+scarb_since_2_10 = []
 debugging = ["forge_runner/debugging"]
 assert_non_exact_gas = ["test_utils/assert_non_exact_gas"]
 
