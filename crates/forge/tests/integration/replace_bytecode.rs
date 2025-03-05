@@ -1,3 +1,4 @@
+use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
 use std::path::Path;
 use test_utils::runner::{Contract, assert_passed};
@@ -44,7 +45,7 @@ fn override_entrypoint() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -100,7 +101,7 @@ fn libcall_in_cheated() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -137,7 +138,7 @@ fn contract_not_deployed() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -174,7 +175,7 @@ fn class_hash_not_declared() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }

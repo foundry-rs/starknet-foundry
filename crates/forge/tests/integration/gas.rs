@@ -1,3 +1,4 @@
+use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
 use starknet_api::execution_resources::{GasAmount, GasVector};
 use std::path::Path;
@@ -31,7 +32,7 @@ fn declare_cost_is_omitted_cairo_steps() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 1 = cost of 230 steps (because int(0.0025 * 230) = 1)
@@ -71,7 +72,7 @@ fn deploy_syscall_cost_cairo_steps() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // l = 1 (updated contract class)
@@ -112,7 +113,7 @@ fn snforge_std_deploy_cost_cairo_steps() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 96 = gas cost of onchain data (deploy cost)
@@ -140,7 +141,7 @@ fn keccak_cost_cairo_steps() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 6 = cost of 1 keccak builtin (because int(5.12 * 1) = 6)
@@ -185,7 +186,7 @@ fn contract_keccak_cost_cairo_steps() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
@@ -213,7 +214,7 @@ fn range_check_cost_cairo_steps() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 1 = cost of 1 range check builtin (because int(0.04 * 1) = 1)
@@ -261,7 +262,7 @@ fn contract_range_check_cost_cairo_steps() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
@@ -290,7 +291,7 @@ fn bitwise_cost_cairo_steps() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 1 = cost of 1 bitwise builtin, because int(0.16 * 1) = 1
@@ -336,7 +337,7 @@ fn contract_bitwise_cost_cairo_steps() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 96 = cost of deploy l1 cost (see snforge_std_deploy_cost test)
@@ -365,7 +366,7 @@ fn pedersen_cost_cairo_steps() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 1 = cost of 1 pedersen builtin (because int(0.16 * 1) = 1)
@@ -411,7 +412,7 @@ fn contract_pedersen_cost_cairo_steps() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
@@ -440,7 +441,7 @@ fn poseidon_cost_cairo_steps() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 1 = cost of 1 poseidon builtin (because int(0.08 * 1) = 1)
@@ -487,7 +488,7 @@ fn contract_poseidon_cost_cairo_steps() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
@@ -518,7 +519,7 @@ fn ec_op_cost_cairo_steps() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 3 = cost of 1 ec_op builtin (because int(2.56 * 1) = 3)
@@ -563,7 +564,7 @@ fn contract_ec_op_cost_cairo_steps() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
@@ -609,7 +610,7 @@ fn storage_write_cost_cairo_steps() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 2576 * 0.0025 = 6.44 ~ 7 = gas cost of steps
@@ -649,7 +650,7 @@ fn storage_write_from_test_cost_cairo_steps() {
     "
     ),);
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 173 * 0.0025 = 0.4325 ~ 1 = gas cost of steps
@@ -701,7 +702,7 @@ fn multiple_storage_writes_cost_cairo_steps() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // (3598 + 9 memory holes) * 0.0025 = 9.0175 ~ 10 = gas cost of steps
@@ -754,7 +755,7 @@ fn l1_message_cost_cairo_steps() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 2614 * 0.0025 = 6.535 ~ 7 = gas cost of steps
@@ -783,7 +784,7 @@ fn l1_message_from_test_cost_cairo_steps() {
     "
     ),);
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 224 * 0.0025 = 0.56 ~ 1 = gas cost of steps
@@ -841,7 +842,7 @@ fn l1_message_cost_for_proxy_cairo_steps() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 5205 * 0.0025 = 13.0125 ~ 14 = gas cost of steps
@@ -888,7 +889,7 @@ fn l1_handler_cost_cairo_steps() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
     // TODO(#2960): These calculations are based on code from blockifier 0.14.0-rc.1
     // ATM, they are a bit different from the formula in the docs
@@ -938,7 +939,7 @@ fn events_cost_cairo_steps() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     // 156 range_check_builtin ~= 7
@@ -984,7 +985,7 @@ fn events_contract_cost_cairo_steps() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
     // 4119 * 0.0025 = 10.2975 ~ 11 = gas cost of steps
     // 96 = gas cost of onchain data (deploy cost)
@@ -1023,7 +1024,7 @@ fn declare_cost_is_omitted_sierra_gas() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
     // 23860 = reported consumed sierra gas
@@ -1064,7 +1065,7 @@ fn deploy_syscall_cost_sierra_gas() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
     // l = 1 (updated contract class)
@@ -1112,7 +1113,7 @@ fn snforge_std_deploy_cost_sierra_gas() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
     // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
@@ -1143,7 +1144,7 @@ fn keccak_cost_sierra_gas() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
     // 10000 = cost of 1 keccak syscall (1 * 100 * 100)
@@ -1191,7 +1192,7 @@ fn contract_keccak_cost_sierra_gas() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
     // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
@@ -1244,7 +1245,7 @@ fn contract_range_check_cost_sierra_gas() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
     // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
@@ -1293,7 +1294,7 @@ fn storage_write_cost_sierra_gas() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
     // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
@@ -1349,7 +1350,7 @@ fn multiple_storage_writes_cost_sierra_gas() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
     // 64 = n(1) * 2 * 32
@@ -1410,7 +1411,7 @@ fn l1_message_cost_sierra_gas() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
     // 29524 = gas cost of l2 -> l1 message
@@ -1475,7 +1476,7 @@ fn l1_message_cost_for_proxy_sierra_gas() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
     // 29524 = gas cost of l2 -> l1 message
@@ -1524,7 +1525,7 @@ fn events_cost_sierra_gas() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
     // 512000 = 50 * 10240
@@ -1579,7 +1580,7 @@ fn events_contract_cost_sierra_gas() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
     assert_passed(&result);
     // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
     // 512000 = event keys cost (see `events_contract_cost_sierra_gas` test)

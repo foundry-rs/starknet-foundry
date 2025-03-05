@@ -405,9 +405,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(
-        expected = "Tracking SierraGas is not supported for sierra <= 1.7.0: Contract version 1.6.0 is lower than required minimal sierra version"
-    )]
     fn sierra_gas_version_requirement_fail() {
         let mut contracts = HashMap::new();
         contracts.insert(ContractName::from("MockedContract"),
@@ -434,6 +431,6 @@ mod tests {
                 execution_data_to_save: ExecutionDataToSave::default(),
             }),
         };
-        let _ = check_sierra_gas_version_requirement(&forge_config);
+        assert!(check_sierra_gas_version_requirement(&forge_config).is_err());
     }
 }

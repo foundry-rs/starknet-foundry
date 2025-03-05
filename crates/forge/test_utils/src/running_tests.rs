@@ -20,7 +20,10 @@ use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
 #[must_use]
-pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
+pub fn run_test_case(
+    test: &TestCase,
+    tracked_resource: ForgeTrackedResource,
+) -> Vec<TestTargetSummary> {
     ScarbCommand::new_with_stdio()
         .current_dir(test.path().unwrap())
         .arg("build")
@@ -62,8 +65,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
                     fuzzer_seed: 12345,
                     max_n_steps: None,
                     is_vm_trace_needed: false,
-                    tracked_resource: ForgeTrackedResource::SierraGas,
-                    // todo: szymczyk: add tests for SierraGas
+                    tracked_resource,
                     cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
                         .unwrap()
                         .join(CACHE_DIR),
