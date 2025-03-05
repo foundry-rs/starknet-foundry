@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- From now the cache version is pinned to the forge version.
+- Fork cache version is pinned to the forge version.
 
 #### Fixed
 
