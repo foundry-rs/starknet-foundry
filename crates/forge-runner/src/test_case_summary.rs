@@ -13,6 +13,7 @@ use cheatnet::state::{CallTrace as InternalCallTrace, EncounteredError};
 use conversions::byte_array::ByteArray;
 use num_traits::Pow;
 use shared::utils::build_readable_text;
+use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::option::Option;
@@ -20,6 +21,13 @@ use std::rc::Rc;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasStatistics {
+    pub l1_gas: GasStatisticsComponent,
+    pub l1_data_gas: GasStatisticsComponent,
+    pub l2_gas: GasStatisticsComponent,
+}
+
+#[derive(Debug, PartialEq, Clone, Default)]
+pub struct GasStatisticsComponent {
     pub min: u128,
     pub max: u128,
     pub mean: f64,
@@ -28,14 +36,49 @@ pub struct GasStatistics {
 
 impl GasStatistics {
     #[must_use]
-    pub fn new(gas_usages: &[u128]) -> Self {
-        let mean = Self::mean(gas_usages);
+    pub fn new(gas_usages: &[GasVector]) -> Self {
+        let l1_gas_values: Vec<u128> = gas_usages
+            .iter()
+            .map(|gv| u128::from(gv.l1_gas.0))
+            .collect();
+        let l1_data_gas_values: Vec<u128> = gas_usages
+            .iter()
+            .map(|gv| u128::from(gv.l1_data_gas.0))
+            .collect();
+        let l2_gas_values: Vec<u128> = gas_usages
+            .iter()
+            .map(|gv| u128::from(gv.l2_gas.0))
+            .collect();
+
+        let l1_gas_mean = Self::mean(l1_gas_values.as_ref());
+        let l1_data_gas_mean = Self::mean(l1_data_gas_values.as_ref());
+        let l2_gas_mean = Self::mean(l2_gas_values.as_ref());
 
         GasStatistics {
-            min: gas_usages.iter().min().copied().unwrap(),
-            max: gas_usages.iter().max().copied().unwrap(),
-            mean,
-            std_deviation: Self::std_deviation(mean, gas_usages),
+            l1_gas: {
+                GasStatisticsComponent {
+                    min: l1_gas_values.iter().min().copied().unwrap(),
+                    max: l1_gas_values.iter().max().copied().unwrap(),
+                    mean: l1_gas_mean,
+                    std_deviation: Self::std_deviation(l1_gas_mean, l1_gas_values.as_ref()),
+                }
+            },
+            l1_data_gas: {
+                GasStatisticsComponent {
+                    min: l1_data_gas_values.iter().min().copied().unwrap(),
+                    max: l1_data_gas_values.iter().max().copied().unwrap(),
+                    mean: l1_data_gas_mean,
+                    std_deviation: Self::std_deviation(l1_gas_mean, l1_data_gas_values.as_ref()),
+                }
+            },
+            l2_gas: {
+                GasStatisticsComponent {
+                    min: l2_gas_values.iter().min().copied().unwrap(),
+                    max: l2_gas_values.iter().max().copied().unwrap(),
+                    mean: l2_gas_mean,
+                    std_deviation: Self::std_deviation(l1_gas_mean, l2_gas_values.as_ref()),
+                }
+            },
         }
     }
 
@@ -77,7 +120,7 @@ impl TestType for Fuzzing {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Single;
 impl TestType for Single {
-    type GasInfo = u128;
+    type GasInfo = GasVector;
     type TestStatistics = ();
     type TraceData = VersionedProfilerCallTrace;
 }
@@ -128,7 +171,6 @@ pub enum TestCaseSummary<T: TestType> {
     Skipped {},
 }
 
-#[expect(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub enum AnyTestCaseSummary {
     Fuzzing(TestCaseSummary<Fuzzing>),
@@ -190,7 +232,7 @@ impl TestCaseSummary<Fuzzing> {
                 debugging_trace,
             } => {
                 let runs = results.len();
-                let gas_usages: Vec<u128> = results
+                let gas_usages: Vec<GasVector> = results
                     .into_iter()
                     .map(|a| match a {
                         TestCaseSummary::Passed { gas_info, .. } => gas_info,
@@ -202,7 +244,7 @@ impl TestCaseSummary<Fuzzing> {
                     name,
                     msg,
                     arguments,
-                    gas_info: GasStatistics::new(&gas_usages),
+                    gas_info: GasStatistics::new(gas_usages.as_ref()),
                     used_resources: UsedResources::default(),
                     test_statistics: FuzzingStatistics { runs },
                     trace_data: (),
@@ -240,7 +282,7 @@ impl TestCaseSummary<Single> {
         test_case: &TestCaseWithResolvedConfig,
         arguments: Vec<Felt>,
         fuzzer_args: Vec<String>,
-        gas: u128,
+        gas: GasVector,
         used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
         encountered_errors: &[EncounteredError],

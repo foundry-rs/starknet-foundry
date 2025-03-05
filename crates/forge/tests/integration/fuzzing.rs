@@ -5,6 +5,8 @@ use test_utils::runner::{TestCase, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
+const ALLOWED_ERROR: f64 = 0.01;
+
 #[test]
 fn fuzzed_argument() {
     let test = test_case!(indoc!(
@@ -76,8 +78,16 @@ fn fuzzed_while_loop() {
     };
 
     // TODO (#2926)
-    assert_eq!(gas_info.min, 2);
-    assert!(gas_info.max.abs_diff(23) <= 1);
-    assert!((gas_info.mean - 12.).abs() < f64::EPSILON);
-    assert!((gas_info.std_deviation - 6.24).abs() < 0.05);
+    assert_eq!(gas_info.l1_gas.min, 0);
+    assert_eq!(gas_info.l1_gas.max, 0);
+    assert!(gas_info.l1_gas.mean < ALLOWED_ERROR);
+    assert!(gas_info.l1_gas.std_deviation < ALLOWED_ERROR);
+    assert_eq!(gas_info.l1_data_gas.min, 0);
+    assert_eq!(gas_info.l1_data_gas.max, 0);
+    assert!(gas_info.l1_data_gas.mean < ALLOWED_ERROR);
+    assert!(gas_info.l1_data_gas.std_deviation < ALLOWED_ERROR);
+    assert_eq!(gas_info.l2_gas.min, 80000);
+    assert_eq!(gas_info.l2_gas.max, 920_000);
+    assert!((gas_info.l2_gas.mean - 504_218.).abs() < f64::EPSILON);
+    assert!((gas_info.l2_gas.std_deviation - 562_099.86).abs() < ALLOWED_ERROR);
 }

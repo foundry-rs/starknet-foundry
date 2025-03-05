@@ -3,6 +3,7 @@ use serde::{
     Deserialize, Deserializer,
     de::{self, MapAccess, Visitor},
 };
+use starknet_api::execution_resources::{GasAmount, GasVector};
 use starknet_types_core::felt::Felt;
 use std::str::FromStr;
 use std::{fmt, num::NonZeroU32};
@@ -11,7 +12,20 @@ use url::Url;
 
 #[derive(Debug, Clone, CairoDeserialize)]
 pub struct RawAvailableGasConfig {
-    pub gas: usize,
+    pub l1_gas: usize,
+    pub l1_data_gas: usize,
+    pub l2_gas: usize,
+}
+
+impl RawAvailableGasConfig {
+    #[must_use]
+    pub fn to_gas_vector(&self) -> GasVector {
+        GasVector {
+            l1_gas: GasAmount(self.l1_gas as u64),
+            l1_data_gas: GasAmount(self.l1_data_gas as u64),
+            l2_gas: GasAmount(self.l2_gas as u64),
+        }
+    }
 }
 
 // fork

@@ -1,6 +1,8 @@
 #[derive(Drop, Serde)]
 pub struct AvailableGasConfig {
-    pub gas: felt252
+    pub l1_gas: felt252,
+    pub l1_data_gas: felt252,
+    pub l2_gas: felt252
 }
 
 #[derive(Drop, Serde)]
