@@ -4,56 +4,58 @@ use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::available_gas::available_gas;
 
 #[test]
-fn fails_with_empty() {
+fn works_with_empty() {
     let item = TokenStream::new(EMPTY_FN.into());
     let args = TokenStream::new("()".into());
 
     let result = available_gas(args, item);
 
+    assert_output(
+        &result,
+        "
+            fn empty_fn() {
+                if snforge_std::_internals::_is_config_run() {
+                    let mut data = array![];
+                    snforge_std::_config_types::AvailableGasConfig {
+                        l1_gas: 0x0,
+                        l1_data_gas: 0x0,
+                        l2_gas: 0x0
+                    }
+                    .serialize(ref data);
+                    starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
+                    return;
+                }
+            }
+        ",
+    );
+
     assert_diagnostics(
         &result,
         &[
             Diagnostic::warn("#[available_gas] used with empty argument list. Either remove () or specify some arguments"),
-            Diagnostic::error(
-            "#[available_gas] expected arguments: 1, got: 0",
-        )],
-    );
-}
-
-#[test]
-fn fails_with_more_than_one() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new("(123,123,123)".into());
-
-    let result = available_gas(args, item);
-
-    assert_diagnostics(
-        &result,
-        &[Diagnostic::error(
-            "#[available_gas] expected arguments: 1, got: 3",
-        )],
+        ],
     );
 }
 
 #[test]
 fn fails_with_non_number_literal() {
     let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(r#"("123")"#.into());
+    let args = TokenStream::new(r#"(l2_gas: "123")"#.into());
 
     let result = available_gas(args, item);
 
     assert_diagnostics(
         &result,
         &[Diagnostic::error(
-            "#[available_gas] <0> should be number literal",
+            "#[available_gas] <l2_gas> should be number literal",
         )],
     );
 }
 
 #[test]
-fn work_with_number() {
+fn work_with_number_some_set() {
     let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new("(123)".into());
+    let args = TokenStream::new("(l1_gas: 123)".into());
 
     let result = available_gas(args, item);
 
@@ -67,7 +69,41 @@ fn work_with_number() {
                     let mut data = array![];
 
                     snforge_std::_config_types::AvailableGasConfig {
-                        gas: 0x7b
+                        l1_gas: 0x7b,
+                        l1_data_gas: 0x0,
+                        l2_gas: 0x0
+                    }
+                    .serialize(ref data);
+
+                    starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
+
+                    return;
+                }
+            }
+        ",
+    );
+}
+
+#[test]
+fn work_with_number_all_set() {
+    let item = TokenStream::new(EMPTY_FN.into());
+    let args = TokenStream::new("(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)".into());
+
+    let result = available_gas(args, item);
+
+    assert_diagnostics(&result, &[]);
+
+    assert_output(
+        &result,
+        "
+            fn empty_fn() {
+                if snforge_std::_internals::_is_config_run() {
+                    let mut data = array![];
+
+                    snforge_std::_config_types::AvailableGasConfig {
+                        l1_gas: 0x1,
+                        l1_data_gas: 0x2,
+                        l2_gas: 0x3
                     }
                     .serialize(ref data);
 
