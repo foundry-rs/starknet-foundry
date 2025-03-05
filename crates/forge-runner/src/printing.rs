@@ -66,23 +66,31 @@ pub fn print_test_result(any_test_result: &AnyTestCaseSummary, print_detailed_re
 }
 
 fn format_detailed_resources(used_resources: &UsedResources) -> String {
-    let vm_resources = &used_resources.execution_resources;
-
-    let sorted_builtins = sort_by_value(&vm_resources.builtin_instance_counter);
     let sorted_syscalls = sort_by_value(&used_resources.syscall_counter);
-
-    let builtins = format_items(&sorted_builtins);
     let syscalls = format_items(&sorted_syscalls);
 
-    format!(
-        "
+    if used_resources.gas_consumed.0 == 0 {
+        let vm_resources = &used_resources.execution_resources;
+        let sorted_builtins = sort_by_value(&vm_resources.builtin_instance_counter);
+        let builtins = format_items(&sorted_builtins);
+        format!(
+            "
         steps: {}
         memory holes: {}
         builtins: ({})
         syscalls: ({})
-        ",
-        vm_resources.n_steps, vm_resources.n_memory_holes, builtins, syscalls,
-    )
+            ",
+            vm_resources.n_steps, vm_resources.n_memory_holes, builtins, syscalls,
+        )
+    } else {
+        format!(
+            "
+        sierra_gas_consumed: ({})
+        syscalls: ({})
+            ",
+            used_resources.gas_consumed.0, syscalls,
+        )
+    }
 }
 
 fn sort_by_value<'a, K, V, M>(map: M) -> Vec<(&'a K, &'a V)>

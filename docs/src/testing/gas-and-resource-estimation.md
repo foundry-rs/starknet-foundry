@@ -1,6 +1,6 @@
 # Gas and VM Resources Estimation
 
-`snforge` supports gas and other VM resources estimation for each individual test case. 
+`snforge` supports gas and other VM resources estimation for each individual test case. //
 
 It does not calculate the final transaction fee, for details on how fees are calculated, 
 please refer to fee mechanism in [Starknet documentation](https://docs.starknet.io/architecture-and-concepts/network-architecture/fee-mechanism).
@@ -11,7 +11,7 @@ please refer to fee mechanism in [Starknet documentation](https://docs.starknet.
 
 When the test passes with no errors, estimated gas is displayed this way:
 ```shell
-[PASS] tests::simple_test (gas: ~1)
+[PASS] tests::simple_test (l1_gas: ~1, l1_data_gas: ~1, l2_gas: ~1)
 ```
 
 This gas calculation is based on the estimated VM resources (that you can [display additionally on demand](#usage)), 
@@ -21,7 +21,7 @@ deployed contracts, storage updates, events and l1 <> l2 messages.
 
 While using the fuzzing feature additional gas statistics will be displayed:
 ```shell
-[PASS] tests::fuzzing_test (runs: 256, gas: {max: ~126, min: ~1, mean: ~65.00, std deviation: ~37.31})
+[PASS] tests::fuzzing_test (runs: 256, l1_gas: {max: ~126, min: ~1, mean: ~65.00, std deviation: ~37.31}, l1_data_gas: {max: ~126, min: ~1, mean: ~65.00, std deviation: ~37.31}, l2_gas: {max: ~126, min: ~1, mean: ~65.00, std deviation: ~37.31})
 ```
 
 > 📝 **Note**
@@ -29,9 +29,10 @@ While using the fuzzing feature additional gas statistics will be displayed:
 > Starknet-Foundry uses blob-based gas calculation formula in order to calculate gas usage. 
 > For details on the exact formula, [see the docs](https://docs.starknet.io/architecture-and-concepts/network-architecture/fee-mechanism/#overall_fee_blob). 
 
-## VM Resources estimation 
+## Resources estimation 
 
 It is possible to enable more detailed breakdown of resources, on which the gas calculations are based on.
+Depending on `--tracked-resource`, vm resources or sierra gas will be displayed.
 
 ### Usage
 In order to run tests with this feature, run the `test` command with the appropriate flag:
