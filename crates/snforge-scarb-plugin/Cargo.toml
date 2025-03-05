@@ -1,27 +1,27 @@
 [package]
 name = "snforge_scarb_plugin"
-version.workspace = true
-edition.workspace = true
+version = "0.34.1"
+edition = "2021"
 publish = false
 
 [lib]
 crate-type = ["rlib", "cdylib"]
 
 [dependencies]
-cairo-lang-macro.workspace = true
-cairo-lang-parser.workspace = true
-cairo-lang-utils.workspace = true
-cairo-lang-syntax.workspace = true
-cairo-lang-diagnostics.workspace = true
-cairo-lang-filesystem.workspace = true
-cairo-lang-sierra.workspace = true
+cairo-lang-macro = "=0.1.0"
+cairo-lang-parser = "=2.7.0"
+cairo-lang-utils = "=2.7.0"
+cairo-lang-syntax = "=2.7.0"
+cairo-lang-diagnostics = "=2.7.0"
+cairo-lang-filesystem = "=2.7.0"
+cairo-lang-sierra = "=2.7.0"
 
-url.workspace = true
-indoc.workspace = true
-serde_json.workspace = true
-smol_str.workspace = true
-num-bigint.workspace = true
+url = { "version" = "=2.5.4", "features" = ["serde"] }
+indoc = "=2.0.5"
+serde_json = "=1.0.132"
+smol_str = "=0.2.2"
+num-bigint = { version = "=0.4.6", features = ["rand"] }
 
 [dev-dependencies]
-lazy_static = "1.4.0"
+lazy_static = "1.5.0"
 regex = "1.11.1"

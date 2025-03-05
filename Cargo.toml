@@ -13,9 +13,10 @@ members = [
     "crates/scarb-api",
     "crates/configuration",
     "crates/universal-sierra-compiler-api",
-    "crates/snforge-scarb-plugin",
     "crates/docs",
 ]
+
+exclude = ["crates/snforge-scarb-plugin"]
 
 [workspace.package]
 version = "0.34.0"
