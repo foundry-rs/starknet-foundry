@@ -16,7 +16,7 @@ cairo-lang-syntax = "=2.10.0"
 url = "=2.5.4"
 indoc = "=2.0.5"
 smol_str = "=0.2.2"
-num-bigint = "0.4.6"
+num-bigint = "=0.4.6"
 
 [dev-dependencies]
 lazy_static = "1.5.0"
