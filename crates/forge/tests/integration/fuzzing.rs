@@ -1,3 +1,4 @@
+use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use indoc::indoc;
 use test_utils::runner::{TestCase, assert_passed};
@@ -21,7 +22,7 @@ fn fuzzed_argument() {
     "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -43,7 +44,7 @@ fn fuzzer_different_types() {
     "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -65,7 +66,7 @@ fn fuzzed_while_loop() {
     "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     let test_target_summary = TestCase::find_test_result(&result);
     let AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed { gas_info, .. }) =

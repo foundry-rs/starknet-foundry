@@ -1,3 +1,4 @@
+use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
 use num_bigint::BigUint;
 use starknet_types_core::felt::Felt;
@@ -22,7 +23,7 @@ fn read_short_string() {
     ));
     test.set_env("MY_ENV_VAR", "'env_var_value'");
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -42,7 +43,7 @@ fn read_felt252() {
     ));
     test.set_env("MY_ENV_VAR", "1234567");
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -66,7 +67,7 @@ fn read_bytearray() {
         r#""very long string literal very very long very very long""#,
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -88,7 +89,7 @@ fn read_overflow_felt252() {
     let value = (Felt::prime() + BigUint::from(1_u32)).to_string();
     test.set_env("MY_ENV_VAR", &value);
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -110,7 +111,7 @@ fn read_invalid_short_string() {
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     test.set_env("MY_ENV_VAR", value);
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
     assert_case_output_contains(
@@ -132,7 +133,7 @@ fn read_non_existent() {
         }
     "#
     ));
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
     assert_case_output_contains(
