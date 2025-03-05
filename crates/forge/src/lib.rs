@@ -38,6 +38,7 @@ const MINIMAL_SCARB_VERSION: Version = Version::new(2, 7, 0);
 const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 8, 5);
 const MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN: Version = Version::new(2, 10, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
+const MINIMAL_SIERRA_VERSION_FOR_SIERRA_GAS: Version = Version::new(1, 7, 0);
 
 #[derive(Parser, Debug)]
 #[command(

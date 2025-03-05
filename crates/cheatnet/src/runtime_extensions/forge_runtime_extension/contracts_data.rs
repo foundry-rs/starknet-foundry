@@ -10,7 +10,7 @@ use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::{ClassHash, EntryPointSelector};
 use std::collections::HashMap;
 
-type ContractName = String;
+pub type ContractName = String;
 type FunctionName = String;
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -104,6 +104,11 @@ impl ContractsData {
         entry_point_selector: &EntryPointSelector,
     ) -> Option<&FunctionName> {
         self.selectors.get(entry_point_selector)
+    }
+
+    #[must_use]
+    pub fn get_contract_names(&self) -> Option<Vec<&ContractName>> {
+        (!self.contracts.is_empty()).then(|| self.contracts.keys().collect())
     }
 }
 
