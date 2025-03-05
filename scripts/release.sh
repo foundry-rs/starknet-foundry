@@ -23,8 +23,7 @@ rm crates/snforge-scarb-plugin/Scarb.toml.bak 2> /dev/null
 VERSION_UNDERSCORED=$(echo "$VERSION" | tr '.' '_')
 
 DIRECTORY="crates/forge/tests/data/forking/.snfoundry_cache"
-OLD_FILE=$(ls "$DIRECTORY" | grep -E '_v[0-9_]+\.json')
-OLD_FILE_PATH="$DIRECTORY/$OLD_FILE"
+OLD_FILE_PATH=$(find "$DIRECTORY" -type f -regex '.*_v[0-9][0-9_]*\.json')
 NEW_FILE_PATH=$(echo "$OLD_FILE_PATH" | sed -E "s/_v[0-9_]+\.json$/_v${VERSION_UNDERSCORED}.json/")
 
 mv "$OLD_FILE_PATH" "$NEW_FILE_PATH"
