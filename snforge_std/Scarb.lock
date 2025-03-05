@@ -3,11 +3,13 @@ version = 1
 
 [[package]]
 name = "snforge_scarb_plugin"
-version = "0.32.0"
+version = "0.32.1"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:e3b8b979bf00c19b5c482b13cda08ea3d72dd6e9e53d081747b84b48b4cdaf5e"
 
 [[package]]
 name = "snforge_std"
-version = "0.32.0"
+version = "0.32.1"
 dependencies = [
  "snforge_scarb_plugin",
 ]
