@@ -40,6 +40,7 @@ pub(crate) type ContractClassEntryPointExecutionResult = Result<
 >;
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
+#[expect(clippy::too_many_lines)]
 pub fn execute_call_entry_point(
     entry_point: &mut CallEntryPoint, // Instead of 'self'
     state: &mut dyn State,

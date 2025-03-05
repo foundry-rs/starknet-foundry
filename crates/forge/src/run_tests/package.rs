@@ -5,8 +5,8 @@ use super::{
 use crate::{
     TestArgs,
     block_number_map::BlockNumberMap,
-    check_sierra_gas_version_requirement,
     combine_configs::combine_configs,
+    compatibility_check::check_sierra_gas_version_requirement,
     pretty_printing,
     scarb::{
         config::{ForgeConfigFromScarb, ForkTarget},
@@ -108,7 +108,7 @@ async fn test_package_with_config_resolved(
     let mut test_targets_with_resolved_config = Vec::with_capacity(test_targets.len());
 
     for test_target in test_targets {
-        check_sierra_gas_version_requirement(&forge_config)?;
+        check_sierra_gas_version_requirement(forge_config)?;
 
         let test_target = test_target_with_config(
             test_target,

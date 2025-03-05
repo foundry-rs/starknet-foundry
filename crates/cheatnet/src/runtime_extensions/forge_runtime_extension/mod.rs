@@ -558,7 +558,7 @@ pub fn add_resources_to_top_call(
     runtime: &mut ForgeRuntime,
     resources: &ExecutionResources,
     tracked_resource: &TrackedResource,
-    versioned_constants: VersionedConstants,
+    versioned_constants: &VersionedConstants,
 ) {
     let top_call = runtime
         .extended_runtime
@@ -573,7 +573,7 @@ pub fn add_resources_to_top_call(
     match tracked_resource {
         TrackedResource::CairoSteps => top_call.used_execution_resources += resources,
         TrackedResource::SierraGas => {
-            top_call.gas_consumed += vm_resources_to_sierra_gas(resources, &versioned_constants).0;
+            top_call.gas_consumed += vm_resources_to_sierra_gas(resources, versioned_constants).0;
         }
     };
 }
@@ -597,7 +597,7 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime, tracked_resource: &
             top_call
         }
         TrackedResource::SierraGas => {
-            let all_sierra_gas_consumed = add_sierra_gas_resources(top_call.clone());
+            let all_sierra_gas_consumed = add_sierra_gas_resources(&top_call);
             let mut top_call = top_call.borrow_mut();
             top_call.gas_consumed = all_sierra_gas_consumed;
             top_call
@@ -697,12 +697,12 @@ fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResourc
     execution_resources
 }
 
-fn add_sierra_gas_resources(top_call: Rc<RefCell<CallTrace>>) -> u64 {
-    let mut gas_consumed = top_call.borrow().gas_consumed.clone();
+fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
+    let mut gas_consumed = top_call.borrow().gas_consumed;
     for nested_call in &top_call.borrow().nested_calls {
         match nested_call {
             CallTraceNode::EntryPointCall(nested_call) => {
-                gas_consumed += &add_sierra_gas_resources(nested_call.clone());
+                gas_consumed += &add_sierra_gas_resources(nested_call);
             }
             CallTraceNode::DeployWithoutConstructor => {}
         }
@@ -754,7 +754,7 @@ pub fn get_all_used_resources(
         .top();
 
     let mut execution_resources = top_call.borrow().used_execution_resources.clone();
-    let mut sierra_gas_consumed = top_call.borrow().gas_consumed.clone();
+    let mut sierra_gas_consumed = top_call.borrow().gas_consumed;
     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
 
     match tracked_resource {
@@ -806,13 +806,13 @@ fn n_steps_to_sierra_gas(n_steps: usize, versioned_constants: &VersionedConstant
         .step_gas_cost;
     let n_steps_gas_cost = n_steps_u64.checked_mul(gas_per_step).unwrap_or_else(|| {
         panic!(
-            "Multiplication overflow while converting steps to gas. steps: {}, gas per step: {}.",
-            n_steps, gas_per_step
+            "Multiplication overflow while converting steps to gas. steps: {n_steps}, gas per step: {gas_per_step}."
         )
     });
     GasAmount(n_steps_gas_cost)
 }
 
+#[must_use]
 pub fn vm_resources_to_sierra_gas(
     resources: &ExecutionResources,
     versioned_constants: &VersionedConstants,
@@ -822,9 +822,8 @@ pub fn vm_resources_to_sierra_gas(
     let n_steps_gas_cost = n_steps_to_sierra_gas(resources.total_n_steps(), versioned_constants);
     n_steps_gas_cost.checked_add(builtins_gas_cost).unwrap_or_else(|| {
         panic!(
-            "Addition overflow while converting vm resources to gas. steps gas: {}, builtins gas: \
-             {}.",
-            n_steps_gas_cost, builtins_gas_cost
+            "Addition overflow while converting vm resources to gas. steps gas: {n_steps_gas_cost}, \
+            builtins gas: {builtins_gas_cost}."
         )
     })
 }

@@ -193,6 +193,8 @@ pub fn run_test_case(
         .block_context
         .versioned_constants()
         .clone();
+
+    #[expect(clippy::clone_on_copy)]
     let tracked_resource = context
         .tracked_resource_stack
         .last()
@@ -260,7 +262,7 @@ pub fn run_test_case(
                     &mut forge_runtime,
                     &vm_resources_without_inner_calls,
                     &tracked_resource,
-                    versioned_constants,
+                    &versioned_constants,
                 );
 
                 let ap = runner.relocated_trace.as_ref().unwrap().last().unwrap().ap;

@@ -37,12 +37,18 @@ pub struct GasStatisticsComponent {
 impl GasStatistics {
     #[must_use]
     pub fn new(gas_usages: &[GasVector]) -> Self {
-        let l1_gas_values: Vec<u128> = gas_usages.iter().map(|gv| gv.l1_gas.0 as u128).collect();
+        let l1_gas_values: Vec<u128> = gas_usages
+            .iter()
+            .map(|gv| u128::from(gv.l1_gas.0))
+            .collect();
         let l1_data_gas_values: Vec<u128> = gas_usages
             .iter()
-            .map(|gv| gv.l1_data_gas.0 as u128)
+            .map(|gv| u128::from(gv.l1_data_gas.0))
             .collect();
-        let l2_gas_values: Vec<u128> = gas_usages.iter().map(|gv| gv.l2_gas.0 as u128).collect();
+        let l2_gas_values: Vec<u128> = gas_usages
+            .iter()
+            .map(|gv| u128::from(gv.l2_gas.0))
+            .collect();
 
         let l1_gas_mean = Self::mean(l1_gas_values.as_ref());
         let l1_data_gas_mean = Self::mean(l1_data_gas_values.as_ref());
@@ -161,7 +167,6 @@ pub enum TestCaseSummary<T: TestType> {
     Skipped {},
 }
 
-#[expect(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub enum AnyTestCaseSummary {
     Fuzzing(TestCaseSummary<Fuzzing>),

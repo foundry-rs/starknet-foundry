@@ -62,7 +62,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
                     fuzzer_seed: 12345,
                     max_n_steps: None,
                     is_vm_trace_needed: false,
-                    tracked_resource: ForgeTrackedResource::CairoSteps,
+                    tracked_resource: ForgeTrackedResource::SierraGas,
                     // todo: szymczyk: add tests for SierraGas
                     cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
                         .unwrap()

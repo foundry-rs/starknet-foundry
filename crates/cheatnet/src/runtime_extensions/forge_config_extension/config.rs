@@ -18,6 +18,7 @@ pub struct RawAvailableGasConfig {
 }
 
 impl RawAvailableGasConfig {
+    #[must_use]
     pub fn to_gas_vector(&self) -> GasVector {
         GasVector {
             l1_gas: GasAmount(self.l1_gas as u64),
