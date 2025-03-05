@@ -1,7 +1,7 @@
 [package]
 name = "snforge_std"
-version = "0.30.0"
+version = "0.30.1"
 edition = "2023_10"
 
 [dependencies]
-snforge_scarb_plugin = { path = "../crates/snforge-scarb-plugin" }
+snforge_scarb_plugin = "^0.30.1"
