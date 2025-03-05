@@ -3,7 +3,7 @@ version = 1
 
 [[package]]
 name = "snforge_scarb_plugin"
-version = "0.37.0"
+version = "0.37.1"
 
 [[package]]
 name = "snforge_std"
