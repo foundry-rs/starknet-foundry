@@ -8,4 +8,4 @@ repository = "https://github.com/foundry-rs/starknet-foundry"
 license-file = "../LICENSE"
 
 [dependencies]
-snforge_scarb_plugin = { path = "../crates/snforge-scarb-plugin" }
+snforge_scarb_plugin = "^0.37.1"
