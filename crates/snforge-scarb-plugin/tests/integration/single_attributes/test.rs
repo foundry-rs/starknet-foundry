@@ -1,4 +1,4 @@
-use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN};
+use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN, FN_WITH_SINGLE_FELT252_PARAM};
 use cairo_lang_macro::{Diagnostic, TokenStream};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::test::test;
@@ -50,5 +50,20 @@ fn is_used_once() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error("#[test] can only be used once per item")],
+    );
+}
+
+#[test]
+fn fails_with_params() {
+    let item = TokenStream::new(FN_WITH_SINGLE_FELT252_PARAM.into());
+    let args = TokenStream::new(String::new());
+
+    let result = test(args, item);
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(
+            "#[test] function with parameters must have #[fuzzer] attribute",
+        )],
     );
 }
