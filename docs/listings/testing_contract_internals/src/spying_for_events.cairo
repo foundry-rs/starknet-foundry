@@ -8,12 +8,12 @@ pub mod Emitter {
     #[event]
     #[derive(Drop, starknet::Event)]
     pub enum Event {
-        ThingEmitted: ThingEmitted
+        ThingEmitted: ThingEmitted,
     }
 
     #[derive(Drop, starknet::Event)]
     pub struct ThingEmitted {
-        pub thing: felt252
+        pub thing: felt252,
     }
 
     #[storage]

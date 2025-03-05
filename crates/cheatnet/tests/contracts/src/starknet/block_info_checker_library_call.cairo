@@ -13,7 +13,7 @@ trait IBlockInfoCheckerLibCall<TContractState> {
     fn read_block_number_with_lib_call(ref self: TContractState, class_hash: ClassHash) -> u64;
     fn read_block_timestamp_with_lib_call(ref self: TContractState, class_hash: ClassHash) -> u64;
     fn read_sequencer_address_with_lib_call(
-        ref self: TContractState, class_hash: ClassHash
+        ref self: TContractState, class_hash: ClassHash,
     ) -> ContractAddress;
 }
 
@@ -33,13 +33,13 @@ mod BlockInfoCheckerLibCall {
             block_info_checker.read_block_number()
         }
         fn read_block_timestamp_with_lib_call(
-            ref self: ContractState, class_hash: ClassHash
+            ref self: ContractState, class_hash: ClassHash,
         ) -> u64 {
             let block_info_checker = IBlockInfoCheckerLibraryDispatcher { class_hash };
             block_info_checker.read_block_timestamp()
         }
         fn read_sequencer_address_with_lib_call(
-            ref self: ContractState, class_hash: ClassHash
+            ref self: ContractState, class_hash: ClassHash,
         ) -> ContractAddress {
             let block_info_checker = IBlockInfoCheckerLibraryDispatcher { class_hash };
             block_info_checker.read_sequencer_address()

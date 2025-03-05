@@ -1,7 +1,7 @@
 #[starknet::contract]
 mod MapSimpleValueSimpleKey {
     use starknet::{
-        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map}
+        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map},
     };
     #[storage]
     struct Storage {
@@ -15,6 +15,6 @@ mod MapSimpleValueSimpleKey {
 
     #[external(v0)]
     fn read(self: @ContractState, key: felt252) -> felt252 {
-        self.values.entry(key).read()
+        self.values.read(key)
     }
 }

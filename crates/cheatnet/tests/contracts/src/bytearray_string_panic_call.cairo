@@ -32,7 +32,7 @@ mod ByteArrayPanickingContract {
 trait IByteArrayPanickingContractProxy<TContractState> {
     fn call_bytearray_panicking_contract(self: @TContractState, contract_address: ContractAddress);
     fn call_felts_panicking_contract(
-        self: @TContractState, contract_address: ContractAddress, data: Array<felt252>
+        self: @TContractState, contract_address: ContractAddress, data: Array<felt252>,
     );
 }
 
@@ -47,13 +47,13 @@ mod ByteArrayPanickingContractProxy {
     #[abi(embed_v0)]
     impl Impl of super::IByteArrayPanickingContractProxy<ContractState> {
         fn call_bytearray_panicking_contract(
-            self: @ContractState, contract_address: ContractAddress
+            self: @ContractState, contract_address: ContractAddress,
         ) {
             IByteArrayPanickingContractDispatcher { contract_address }.do_panic();
         }
 
         fn call_felts_panicking_contract(
-            self: @ContractState, contract_address: ContractAddress, data: Array<felt252>
+            self: @ContractState, contract_address: ContractAddress, data: Array<felt252>,
         ) {
             IByteArrayPanickingContractDispatcher { contract_address }.do_panic_felts(data);
         }

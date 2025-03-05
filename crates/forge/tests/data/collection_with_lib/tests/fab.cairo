@@ -1,4 +1,4 @@
-use super::fibfabfob::fab_fn;
+use collection_with_lib::fab::fab_impl::fab_fn;
 
 mod fab_mod;
 

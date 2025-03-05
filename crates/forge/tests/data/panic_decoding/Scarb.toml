@@ -1,7 +1,10 @@
 [package]
 name = "panic_decoding"
 version = "0.1.0"
-edition = "2023_01"
+edition = "2024_07"
 
 [dependencies]
 assert_macros = "2.8.5"
+
+[dev-dependencies]
+snforge_std = { path = "../../../../../snforge_std" }
