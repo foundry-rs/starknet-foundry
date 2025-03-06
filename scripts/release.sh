@@ -19,6 +19,9 @@ rm snforge_std/Scarb.toml.bak 2> /dev/null
 sed -i.bak "/\[package\]/,/version =/ s/version = \".*/version = \"${VERSION}\"/" crates/snforge-scarb-plugin/Scarb.toml
 rm crates/snforge-scarb-plugin/Scarb.toml.bak 2> /dev/null
 
+sed -i.bak "/\[package\]/,/version =/ s/version = \".*/version = \"${VERSION}\"/" crates/snforge-scarb-plugin/Cargo.toml
+rm crates/snforge-scarb-plugin/Cargo.toml.bak 2> /dev/null
+
 # start: Update cache test data
 VERSION_UNDERSCORED=$(echo "$VERSION" | tr '.' '_')
 
@@ -36,3 +39,4 @@ scarb --manifest-path snforge_std/Scarb.toml build
 
 cargo update -p forge
 cargo update -p sncast
+cargo update -p snforge_scarb_plugin --manifest-path crates/snforge-scarb-plugin/Cargo.toml
