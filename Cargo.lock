@@ -1254,7 +1254,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "cheatnet"
-version = "0.38.0"
+version = "0.38.2"
 dependencies = [
  "anyhow",
  "bimap",
@@ -1894,7 +1894,7 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
 name = "docs"
-version = "0.38.0"
+version = "0.38.2"
 dependencies = [
  "anyhow",
  "camino",
@@ -2147,7 +2147,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.38.0"
+version = "0.38.2"
 dependencies = [
  "anyhow",
  "assert_fs",
@@ -2197,7 +2197,7 @@ dependencies = [
 
 [[package]]
 name = "forge_runner"
-version = "0.38.0"
+version = "0.38.2"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -4952,7 +4952,7 @@ dependencies = [
 
 [[package]]
 name = "sncast"
-version = "0.38.0"
+version = "0.38.2"
 dependencies = [
  "anyhow",
  "async-trait",
