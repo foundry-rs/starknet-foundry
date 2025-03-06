@@ -6,7 +6,8 @@ use blockifier::state::cached_state::CachedState;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use camino::Utf8Path;
 use cheatnet::constants::build_testing_state;
-use cheatnet::forking::{cache::CACHE_VERSION, state::ForkStateReader};
+use cheatnet::forking::cache::cache_version;
+use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader};
 use conversions::IntoConv;
@@ -406,7 +407,7 @@ fn using_specified_block_nb_is_cached() {
         let cache = read_cache(
             cache_dir
                 .path()
-                .join(format!("*v{CACHE_VERSION}.json"))
+                .join(format!("*v{}.json", cache_version()))
                 .to_str()
                 .unwrap(),
         );
@@ -486,7 +487,7 @@ fn test_cache_merging() {
         let cache = read_cache(
             cache_dir
                 .path()
-                .join(format!("*v{CACHE_VERSION}.json"))
+                .join(format!("*v{}.json", cache_version()))
                 .to_str()
                 .unwrap(),
         );
@@ -599,7 +600,7 @@ fn test_cached_block_info_merging() {
         let cache = read_cache(
             cache_dir
                 .path()
-                .join(format!("*v{CACHE_VERSION}.json"))
+                .join(format!("*v{}.json", cache_version()))
                 .to_str()
                 .unwrap(),
         );
