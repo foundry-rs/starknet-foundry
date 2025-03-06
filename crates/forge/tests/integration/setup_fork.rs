@@ -15,6 +15,7 @@ use tokio::runtime::Runtime;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::run_tests::package::RunForPackageArgs;
 use forge::scarb::load_test_artifacts;
+use forge::shared_cache::FailedTestsCache;
 use forge_runner::CACHE_DIR;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
@@ -138,7 +139,7 @@ fn fork_aliased_decorator() {
                     false,
                     false,
                     false,
-                    Default::default(),
+                    FailedTestsCache::default(),
                 ),
                 forge_config: Arc::new(ForgeConfig {
                     test_runner_config: Arc::new(TestRunnerConfig {
@@ -223,7 +224,7 @@ fn fork_aliased_decorator_overrding() {
                     false,
                     false,
                     false,
-                    Default::default(),
+                    FailedTestsCache::default(),
                 ),
                 forge_config: Arc::new(ForgeConfig {
                     test_runner_config: Arc::new(TestRunnerConfig {

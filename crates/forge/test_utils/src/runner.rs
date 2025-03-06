@@ -205,7 +205,7 @@ impl<'a> TestCase {
                     name,
                     (
                         StarknetContractArtifacts { sierra, casm },
-                        Default::default(),
+                        Utf8PathBuf::default(),
                     ),
                 ))
             })
