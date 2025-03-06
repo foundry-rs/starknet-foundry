@@ -3,8 +3,11 @@ use super::{
     entry_code::create_entry_code,
     hints::{hints_by_representation, hints_to_params},
 };
-use crate::{package_tests::TestDetails, running::build_syscall_handler};
+use crate::{
+    forge_config::ForgeTrackedResource, package_tests::TestDetails, running::build_syscall_handler,
+};
 use anyhow::Result;
+use blockifier::execution::contract_class::TrackedResource;
 use blockifier::state::{cached_state::CachedState, state_api::StateReader};
 use cairo_lang_runner::Arg;
 use cheatnet::runtime_extensions::forge_config_extension::{
@@ -58,6 +61,7 @@ impl StateReader for PhantomStateReader {
 pub fn run_config_pass(
     test_details: &TestDetails,
     casm_program: &AssembledProgramWithDebugInfo,
+    tracked_resource: &ForgeTrackedResource,
 ) -> Result<RawForgeConfig> {
     let mut cached_state = CachedState::new(PhantomStateReader);
     let gas_price_vector = GasPriceVector {
@@ -83,7 +87,7 @@ pub fn run_config_pass(
     let string_to_hint = hints_by_representation(&assembled_program);
     let hints_dict = hints_to_params(&assembled_program);
 
-    let mut context = build_context(&block_info, None);
+    let mut context = build_context(&block_info, None, &TrackedResource::from(tracked_resource));
 
     let syscall_handler = build_syscall_handler(
         &mut cached_state,

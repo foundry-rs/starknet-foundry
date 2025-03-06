@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+#### Added
+- new `--tracked-resource` flag, that will change currently tracked resource
+  (`cairo-steps` for vm resources - default; `sierra-gas` for sierra gas consumed resources in cairo native)
+
 ## [0.38.2] - 2025-03-06
 
 ### Forge

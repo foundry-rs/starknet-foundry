@@ -2,7 +2,7 @@ use crate::scarb::config::ForgeConfigFromScarb;
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge_runner::forge_config::{
-    ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
+    ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
 };
 use rand::{RngCore, thread_rng};
 use std::env;
@@ -21,6 +21,7 @@ pub fn combine_configs(
     build_profile: bool,
     coverage: bool,
     max_n_steps: Option<u32>,
+    tracked_resource: ForgeTrackedResource,
     contracts_data: ContractsData,
     cache_dir: Utf8PathBuf,
     forge_config_from_scarb: &ForgeConfigFromScarb,
@@ -46,6 +47,7 @@ pub fn combine_configs(
             is_vm_trace_needed: execution_data_to_save.is_vm_trace_needed(),
             cache_dir,
             contracts_data,
+            tracked_resource,
             environment_variables: env::vars().collect(),
         }),
         output_config: Arc::new(OutputConfig {
@@ -70,6 +72,7 @@ mod tests {
             false,
             false,
             None,
+            ForgeTrackedResource::CairoSteps,
             ContractsData::default(),
             Utf8PathBuf::default(),
             &ForgeConfigFromScarb::default(),
@@ -84,6 +87,7 @@ mod tests {
             false,
             false,
             None,
+            ForgeTrackedResource::CairoSteps,
             ContractsData::default(),
             Utf8PathBuf::default(),
             &ForgeConfigFromScarb::default(),
@@ -109,6 +113,7 @@ mod tests {
             false,
             false,
             None,
+            ForgeTrackedResource::CairoSteps,
             ContractsData::default(),
             Utf8PathBuf::default(),
             &ForgeConfigFromScarb::default(),
@@ -122,6 +127,7 @@ mod tests {
                     fuzzer_runs: NonZeroU32::new(256).unwrap(),
                     fuzzer_seed: config.test_runner_config.fuzzer_seed,
                     max_n_steps: None,
+                    tracked_resource: ForgeTrackedResource::CairoSteps,
                     is_vm_trace_needed: false,
                     cache_dir: Utf8PathBuf::default(),
                     contracts_data: ContractsData::default(),
@@ -147,6 +153,7 @@ mod tests {
             build_profile: true,
             coverage: true,
             max_n_steps: Some(1_000_000),
+            tracked_resource: ForgeTrackedResource::CairoSteps,
         };
 
         let config = combine_configs(
@@ -158,6 +165,7 @@ mod tests {
             false,
             false,
             None,
+            ForgeTrackedResource::CairoSteps,
             ContractsData::default(),
             Utf8PathBuf::default(),
             &config_from_scarb,
@@ -171,6 +179,7 @@ mod tests {
                     fuzzer_runs: NonZeroU32::new(1234).unwrap(),
                     fuzzer_seed: 500,
                     max_n_steps: Some(1_000_000),
+                    tracked_resource: ForgeTrackedResource::CairoSteps,
                     is_vm_trace_needed: true,
                     cache_dir: Utf8PathBuf::default(),
                     contracts_data: ContractsData::default(),
@@ -201,6 +210,7 @@ mod tests {
             build_profile: false,
             coverage: false,
             max_n_steps: Some(1234),
+            tracked_resource: ForgeTrackedResource::CairoSteps,
         };
         let config = combine_configs(
             true,
@@ -211,6 +221,7 @@ mod tests {
             true,
             true,
             Some(1_000_000),
+            ForgeTrackedResource::CairoSteps,
             ContractsData::default(),
             Utf8PathBuf::default(),
             &config_from_scarb,
@@ -225,6 +236,7 @@ mod tests {
                     fuzzer_runs: NonZeroU32::new(100).unwrap(),
                     fuzzer_seed: 32,
                     max_n_steps: Some(1_000_000),
+                    tracked_resource: ForgeTrackedResource::CairoSteps,
                     is_vm_trace_needed: true,
                     cache_dir: Utf8PathBuf::default(),
                     contracts_data: ContractsData::default(),

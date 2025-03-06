@@ -96,6 +96,7 @@ pub fn build_transaction_context(
 pub fn build_context(
     block_info: &BlockInfo,
     chain_id: Option<ChainId>,
+    tracked_resource: &TrackedResource,
 ) -> EntryPointExecutionContext {
     let transaction_context = Arc::new(build_transaction_context(block_info, chain_id));
 
@@ -112,9 +113,7 @@ pub fn build_context(
         context.n_emitted_events,
         context.n_sent_messages_to_l1,
     ));
-    context
-        .tracked_resource_stack
-        .push(TrackedResource::CairoSteps);
+    context.tracked_resource_stack.push(*tracked_resource);
 
     context
 }
