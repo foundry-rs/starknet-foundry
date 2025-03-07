@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Issue with uploading `snforge_std` to scarbs package registry that prevented it from including package reexports required in Scarb >= 2.11.0
+
 ## [0.38.2] - 2025-03-06
 
 ### Forge
