@@ -211,6 +211,15 @@ mod tests {
 
     #[test]
     fn test_parse_hex_str() {
+        let hex_str = "0x0000000000000000000000000000000000000000000000000000000000000001";
+        let result = parse_input_to_felt(&hex_str.to_string());
+
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), Felt::try_from_hex_str("0x1").unwrap());
+    }
+
+    #[test]
+    fn test_parse_hex_str_padded() {
         let hex_str = "0x1a2b3c";
         let result = parse_input_to_felt(&hex_str.to_string());
 
