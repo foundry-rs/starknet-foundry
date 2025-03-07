@@ -13,12 +13,13 @@ members = [
     "crates/scarb-api",
     "crates/configuration",
     "crates/universal-sierra-compiler-api",
-    "crates/snforge-scarb-plugin",
     "crates/docs",
 ]
 
+exclude = ["crates/snforge-scarb-plugin"]
+
 [workspace.package]
-version = "0.38.0"
+version = "0.38.3"
 edition = "2024"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"

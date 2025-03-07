@@ -28,8 +28,8 @@ impl ReplaceBytecodeTrait for TestEnvironment {
     }
 }
 
-#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn fork() {
+#[test]
+fn fork() {
     let cache_dir = TempDir::new().unwrap();
     let mut test_env = TestEnvironment::new();
     test_env.cached_state = create_fork_cached_state_at(53_300, cache_dir.path().to_str().unwrap());
