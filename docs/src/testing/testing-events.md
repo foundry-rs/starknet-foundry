@@ -64,6 +64,8 @@ From this moment all events emitted by the `SpyEventsChecker` contract will be s
 Since `events` is an array holding a tuple of `ContractAddress` and `Event`, we unpack it using `let (from, event)`.
 4. If the event is emitted by calling `self.emit` method, its hashed name is saved under the `keys.at(0)`
 (this way Starknet handles events)
+5. We can make sure that the event mock was emitted.
+6. Emitted events can be explicitly compared.
 
 > 📝 **Note**
 > To assert the `name` property we have to hash a string with the `selector!` macro.
