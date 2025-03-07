@@ -1,6 +1,6 @@
 [package]
 name = "snforge_scarb_plugin"
-version = "0.38.2"
+version = "0.38.3"
 edition = "2024_07"
 include = ["target/scarb/cairo-plugin/"]
 
