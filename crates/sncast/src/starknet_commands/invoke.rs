@@ -70,20 +70,24 @@ pub async fn execute_calls(
         .await?;
 
     let FeeSettings {
-        max_gas,
-        max_gas_unit_price,
+        l1_gas,
+        l1_gas_unit_price,
+        l2_gas,
+        l2_gas_unit_price,
+        l1_data_gas,
+        l1_data_gas_unit_price,
     } = fee_settings;
     let execution_calls = account.execute_v3(calls);
 
-    let execution = apply_optional(
-        execution_calls,
-        max_gas.map(std::num::NonZero::get),
-        ExecutionV3::gas,
-    );
+    let execution = apply_optional(execution_calls, l1_gas, ExecutionV3::l1_gas);
+    let execution = apply_optional(execution, l1_gas_unit_price, ExecutionV3::l1_gas_price);
+    let execution = apply_optional(execution, l2_gas, ExecutionV3::l2_gas);
+    let execution = apply_optional(execution, l2_gas_unit_price, ExecutionV3::l2_gas_price);
+    let execution = apply_optional(execution, l1_data_gas, ExecutionV3::l1_data_gas);
     let execution = apply_optional(
         execution,
-        max_gas_unit_price.map(std::num::NonZero::get),
-        ExecutionV3::gas_price,
+        l1_data_gas_unit_price,
+        ExecutionV3::l1_data_gas_price,
     );
     let execution = apply_optional(execution, nonce, ExecutionV3::nonce);
     let result = execution.send().await;

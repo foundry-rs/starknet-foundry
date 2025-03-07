@@ -76,18 +76,38 @@ pub async fn deploy(
     let factory = ContractFactory::new(class_hash, account);
 
     let FeeSettings {
-        max_gas,
-        max_gas_unit_price,
+        l1_gas,
+        l1_gas_unit_price,
+        l2_gas,
+        l2_gas_unit_price,
+        l1_data_gas,
+        l1_data_gas_unit_price,
     } = fee_settings;
     let execution = factory.deploy_v3(calldata.clone(), salt, unique);
 
-    let execution = match max_gas {
+    let execution = match l1_gas {
         None => execution,
-        Some(max_gas) => execution.gas(max_gas.into()),
+        Some(l1_gas) => execution.l1_gas(l1_gas),
     };
-    let execution = match max_gas_unit_price {
+    let execution = match l1_gas_unit_price {
         None => execution,
-        Some(max_gas_unit_price) => execution.gas_price(max_gas_unit_price.into()),
+        Some(l1_gas_unit_price) => execution.l1_gas_price(l1_gas_unit_price),
+    };
+    let execution = match l2_gas {
+        None => execution,
+        Some(l2_gas) => execution.l2_gas(l2_gas),
+    };
+    let execution = match l2_gas_unit_price {
+        None => execution,
+        Some(l2_gas_unit_price) => execution.l2_gas_price(l2_gas_unit_price),
+    };
+    let execution = match l1_data_gas {
+        None => execution,
+        Some(l1_data_gas) => execution.l1_data_gas(l1_data_gas),
+    };
+    let execution = match l1_data_gas_unit_price {
+        None => execution,
+        Some(l1_data_gas_unit_price) => execution.l1_data_gas_price(l1_data_gas_unit_price),
     };
     let execution = match nonce {
         None => execution,

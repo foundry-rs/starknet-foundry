@@ -194,7 +194,7 @@ async fn get_deployment_result(
             let factory = ArgentAccountFactory::new(
                 class_hash,
                 chain_id,
-                Felt::ZERO,
+                Some(Felt::ZERO),
                 LocalWallet::from_signing_key(private_key),
                 provider,
             )
@@ -244,19 +244,32 @@ where
         .await?;
 
     let FeeSettings {
-        max_gas,
-        max_gas_unit_price,
+        l1_gas,
+        l1_gas_unit_price,
+        l2_gas,
+        l2_gas_unit_price,
+        l1_data_gas,
+        l1_data_gas_unit_price,
     } = fee_settings;
     let deployment = account_factory.deploy_v3(salt);
+
+    let deployment = apply_optional(deployment, l1_gas, AccountDeploymentV3::l1_gas);
     let deployment = apply_optional(
         deployment,
-        max_gas.map(std::num::NonZero::get),
-        AccountDeploymentV3::gas,
+        l1_gas_unit_price,
+        AccountDeploymentV3::l1_gas_price,
     );
+    let deployment = apply_optional(deployment, l2_gas, AccountDeploymentV3::l2_gas);
     let deployment = apply_optional(
         deployment,
-        max_gas_unit_price.map(std::num::NonZero::get),
-        AccountDeploymentV3::gas_price,
+        l2_gas_unit_price,
+        AccountDeploymentV3::l2_gas_price,
+    );
+    let deployment = apply_optional(deployment, l1_data_gas, AccountDeploymentV3::l1_data_gas);
+    let deployment = apply_optional(
+        deployment,
+        l1_data_gas_unit_price,
+        AccountDeploymentV3::l1_data_gas_price,
     );
     let result = deployment.send().await;
 

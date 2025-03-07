@@ -79,23 +79,27 @@ pub async fn declare(
         .map_err(anyhow::Error::from)?;
 
     let FeeSettings {
-        max_gas,
-        max_gas_unit_price,
+        l1_gas,
+        l1_gas_unit_price,
+        l2_gas,
+        l2_gas_unit_price,
+        l1_data_gas,
+        l1_data_gas_unit_price,
     } = fee_settings;
     let declaration = account.declare_v3(
         Arc::new(contract_definition.flatten().map_err(anyhow::Error::from)?),
         casm_class_hash,
     );
 
+    let declaration = apply_optional(declaration, l1_gas, DeclarationV3::l1_gas);
+    let declaration = apply_optional(declaration, l1_gas_unit_price, DeclarationV3::l1_gas_price);
+    let declaration = apply_optional(declaration, l2_gas, DeclarationV3::l2_gas);
+    let declaration = apply_optional(declaration, l2_gas_unit_price, DeclarationV3::l2_gas_price);
+    let declaration = apply_optional(declaration, l1_data_gas, DeclarationV3::l1_data_gas);
     let declaration = apply_optional(
         declaration,
-        max_gas.map(std::num::NonZero::get),
-        DeclarationV3::gas,
-    );
-    let declaration = apply_optional(
-        declaration,
-        max_gas_unit_price.map(std::num::NonZero::get),
-        DeclarationV3::gas_price,
+        l1_data_gas_unit_price,
+        DeclarationV3::l1_data_gas_price,
     );
     let declaration = apply_optional(declaration, declare.nonce, DeclarationV3::nonce);
 
