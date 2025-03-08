@@ -21,8 +21,12 @@ pub struct DeployResult {
 #[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub struct FeeSettings {
     pub max_fee: Option<felt252>,
-    pub max_gas: Option<u64>,
-    pub max_gas_unit_price: Option<u128>,
+    pub l1_gas: Option<u64>,
+    pub l1_gas_price: Option<u128>,
+    pub l2_gas: Option<u64>,
+    pub l2_gas_price: Option<u128>,
+    pub l1_data_gas: Option<u64>,
+    pub l1_data_gas_price: Option<u128>,
 }
 ```
 

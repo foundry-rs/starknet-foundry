@@ -45,7 +45,7 @@ Optional.
 
 Maximum L1 gas for the `invoke` transaction. When not used, defaults to auto-estimation. (Only for STRK fee payment)
 
-## ` --l1-gas-unit-price <L1_GAS_UNIT_PRICE>`
+## ` --l1-gas-price <l1_gas_price>`
 Optional.
 
 Maximum L1 gas unit price for the `invoke` transaction paid in Fri. When not used, defaults to auto-estimation. (Only for STRK fee payment)
@@ -55,7 +55,7 @@ Optional.
 
 Maximum L2 gas for the `invoke` transaction. When not used, defaults to auto-estimation. (Only for Wei fee payment)
 
-## `--l2-gas-unit-price <L2_GAS_PRICE>`
+## `--l2-gas-price <L2_GAS_PRICE>`
 Optional.
 
 Maximum L2 gas unit price for the `invoke` transaction paid in Fri. When not used, defaults to auto-estimation. (Only for Wei fee payment)
@@ -65,7 +65,7 @@ Optional.
 
 Maximum L1 data gas for the `invoke` transaction. When not used, defaults to auto-estimation. (Only for STRK fee payment)
 
-## `--l1-data-gas-unit-price <L1_DATA_GAS_UNIT_PRICE>`
+## `--l1-data-gas-price <l1_data_gas_price>`
 Optional.
 
 Maximum L1 data gas unit price for the `invoke` transaction paid in Fri. When not used, defaults to auto-estimation. (Only for STRK fee payment)
