@@ -7,7 +7,6 @@ use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
-use regex::Regex;
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
 use sncast::helpers::configuration::CastConfig;
@@ -181,20 +180,9 @@ fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<Felt> {
 }
 
 fn parse_input_to_felt(input: &String) -> Result<Felt> {
-    // Original regex from spec https://github.com/starkware-libs/starknet-specs/blob/6d88b7399f56260ece3821c71f9ce53ec55f830b/api/starknet_api_openrpc.json#L1303
-    // doesn't allow for padded felts, hence we use adjusted one
-    let felt_re = Regex::new(r"^0x[0-9a-fA-F]{1,64}$").unwrap();
-    if input.starts_with("0x") && !felt_re.is_match(input) {
-        bail!(
-            "Failed to parse value {} to felt. Invalid hex value was passed",
-            input
-        );
-    } else if let Ok(felt_from_hex) = Felt::try_from_hex_str(input) {
-        return Ok(felt_from_hex);
-    } else if let Ok(felt_from_dec) = Felt::try_from_dec_str(input) {
-        return Ok(felt_from_dec);
-    }
-    bail!("Failed to parse value {} to felt", input);
+    Felt::try_from_hex_str(&input)
+        .or_else(|_| Felt::try_from_dec_str(&input))
+        .with_context(|| format!("Failed to parse the value {input} as a felt"))
 }
 
 fn get_private_key_from_input() -> Result<Felt> {
