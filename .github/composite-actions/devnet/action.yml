@@ -25,6 +25,14 @@ runs:
         path: starknet-devnet-rs/target/release
         key: ${{ runner.os }}-starknet-devnet-rs-target-release-${{ inputs.devnet_sha }}
 
+    - name: Clone starknet-devnet-rs
+      if: steps.cache-devnet.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        git clone https://github.com/0xSpaceShard/starknet-devnet-rs.git starknet-devnet-rs
+        cd starknet-devnet-rs
+        git checkout ${{ inputs.devnet_sha }}
+
     - name: Build and install devnet
       shell: bash
       run: |
