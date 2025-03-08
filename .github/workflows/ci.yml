@@ -2,6 +2,7 @@ name: CI
 
 env:
   DEVNET_REV: d9ab44a8589ca4b8c3bab0367cc1d5be0c301550
+  CACHE_ON_FAILURE: true
 
 on:
   pull_request:
