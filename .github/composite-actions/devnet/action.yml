@@ -28,15 +28,25 @@ runs:
     - name: Build and install devnet
       shell: bash
       run: |
-        DEVNET_INSTALL_DIR = "${{ github.workspace }}\crates\sncast\tests\utils\devnet"
-        cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev ${{ env.DEVNET_SHA }} --root $DEVNET_INSTALL_DIR
+        DEVNET_INSTALL_DIR="$(git rev-parse --show-toplevel)/crates/sncast/tests/utils/devnet"
+        mkdir -p "$DEVNET_INSTALL_DIR"
+
+        if [[ ! -d starknet-devnet-rs/target/release ]]; then
+          cd starknet-devnet-rs
+          cargo build --release
+          cp ./target/release/starknet-devnet "$DEVNET_INSTALL_DIR"
+        else
+          echo "Found existing starknet-devnet-rs build, skipping compilation."
+          cp starknet-devnet-rs/target/release/starknet-devnet "$DEVNET_INSTALL_DIR"
+        fi
 
     - name: Verify devnet installation
       shell: bash
       run: |
-        DEVNET_INSTALL_DIR="$(git rev-parse --show-toplevel)/starknet_py/tests/e2e/devnet/bin"
+        DEVNET_INSTALL_DIR="$(git rev-parse --show-toplevel)/crates/sncast/tests/utils/devnet"
         if [[ -x "$DEVNET_INSTALL_DIR/starknet-devnet" ]]; then
           echo "starknet-devnet successfully installed at $DEVNET_INSTALL_DIR"
         else
           echo "starknet-devnet installation failed!" && exit 1
         fi
+
