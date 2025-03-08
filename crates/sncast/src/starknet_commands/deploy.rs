@@ -77,11 +77,11 @@ pub async fn deploy(
 
     let FeeSettings {
         l1_gas,
-        l1_gas_unit_price,
+        l1_gas_price,
         l2_gas,
-        l2_gas_unit_price,
+        l2_gas_price,
         l1_data_gas,
-        l1_data_gas_unit_price,
+        l1_data_gas_price,
     } = fee_settings;
     let execution = factory.deploy_v3(calldata.clone(), salt, unique);
 
@@ -89,25 +89,25 @@ pub async fn deploy(
         None => execution,
         Some(l1_gas) => execution.l1_gas(l1_gas),
     };
-    let execution = match l1_gas_unit_price {
+    let execution = match l1_gas_price {
         None => execution,
-        Some(l1_gas_unit_price) => execution.l1_gas_price(l1_gas_unit_price),
+        Some(l1_gas_price) => execution.l1_gas_price(l1_gas_price),
     };
     let execution = match l2_gas {
         None => execution,
         Some(l2_gas) => execution.l2_gas(l2_gas),
     };
-    let execution = match l2_gas_unit_price {
+    let execution = match l2_gas_price {
         None => execution,
-        Some(l2_gas_unit_price) => execution.l2_gas_price(l2_gas_unit_price),
+        Some(l2_gas_price) => execution.l2_gas_price(l2_gas_price),
     };
     let execution = match l1_data_gas {
         None => execution,
         Some(l1_data_gas) => execution.l1_data_gas(l1_data_gas),
     };
-    let execution = match l1_data_gas_unit_price {
+    let execution = match l1_data_gas_price {
         None => execution,
-        Some(l1_data_gas_unit_price) => execution.l1_data_gas_price(l1_data_gas_unit_price),
+        Some(l1_data_gas_price) => execution.l1_data_gas_price(l1_data_gas_price),
     };
     let execution = match nonce {
         None => execution,

@@ -68,27 +68,22 @@ pub async fn execute_calls(
     let fee_settings = fee_args
         .try_into_fee_settings(account.provider(), account.block_id())
         .await?;
-
     let FeeSettings {
         l1_gas,
-        l1_gas_unit_price,
+        l1_gas_price,
         l2_gas,
-        l2_gas_unit_price,
+        l2_gas_price,
         l1_data_gas,
-        l1_data_gas_unit_price,
+        l1_data_gas_price,
     } = fee_settings;
     let execution_calls = account.execute_v3(calls);
 
     let execution = apply_optional(execution_calls, l1_gas, ExecutionV3::l1_gas);
-    let execution = apply_optional(execution, l1_gas_unit_price, ExecutionV3::l1_gas_price);
+    let execution = apply_optional(execution, l1_gas_price, ExecutionV3::l1_gas_price);
     let execution = apply_optional(execution, l2_gas, ExecutionV3::l2_gas);
-    let execution = apply_optional(execution, l2_gas_unit_price, ExecutionV3::l2_gas_price);
+    let execution = apply_optional(execution, l2_gas_price, ExecutionV3::l2_gas_price);
     let execution = apply_optional(execution, l1_data_gas, ExecutionV3::l1_data_gas);
-    let execution = apply_optional(
-        execution,
-        l1_data_gas_unit_price,
-        ExecutionV3::l1_data_gas_price,
-    );
+    let execution = apply_optional(execution, l1_data_gas_price, ExecutionV3::l1_data_gas_price);
     let execution = apply_optional(execution, nonce, ExecutionV3::nonce);
     let result = execution.send().await;
 

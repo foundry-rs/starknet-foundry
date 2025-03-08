@@ -245,30 +245,22 @@ where
 
     let FeeSettings {
         l1_gas,
-        l1_gas_unit_price,
+        l1_gas_price,
         l2_gas,
-        l2_gas_unit_price,
+        l2_gas_price,
         l1_data_gas,
-        l1_data_gas_unit_price,
+        l1_data_gas_price,
     } = fee_settings;
     let deployment = account_factory.deploy_v3(salt);
 
     let deployment = apply_optional(deployment, l1_gas, AccountDeploymentV3::l1_gas);
-    let deployment = apply_optional(
-        deployment,
-        l1_gas_unit_price,
-        AccountDeploymentV3::l1_gas_price,
-    );
+    let deployment = apply_optional(deployment, l1_gas_price, AccountDeploymentV3::l1_gas_price);
     let deployment = apply_optional(deployment, l2_gas, AccountDeploymentV3::l2_gas);
-    let deployment = apply_optional(
-        deployment,
-        l2_gas_unit_price,
-        AccountDeploymentV3::l2_gas_price,
-    );
+    let deployment = apply_optional(deployment, l2_gas_price, AccountDeploymentV3::l2_gas_price);
     let deployment = apply_optional(deployment, l1_data_gas, AccountDeploymentV3::l1_data_gas);
     let deployment = apply_optional(
         deployment,
-        l1_data_gas_unit_price,
+        l1_data_gas_price,
         AccountDeploymentV3::l1_data_gas_price,
     );
     let result = deployment.send().await;

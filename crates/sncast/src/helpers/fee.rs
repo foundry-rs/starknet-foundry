@@ -1,6 +1,6 @@
-use anyhow::{Result, ensure};
+use anyhow::{Result, bail, ensure};
 use clap::Args;
-use conversions::{TryIntoConv, serde::deserialize::CairoDeserialize};
+use conversions::serde::deserialize::CairoDeserialize;
 use starknet::core::types::BlockId;
 use starknet::providers::Provider;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
@@ -17,7 +17,7 @@ pub struct FeeArgs {
 
     /// Max L1 gas price in Fri. If not provided, will be automatically estimated.
     #[clap(long)]
-    pub l1_gas_unit_price: Option<Felt>,
+    pub l1_gas_price: Option<Felt>,
 
     /// Max L2 gas amount. If not provided, will be automatically estimated.
     #[clap(long)]
@@ -25,7 +25,7 @@ pub struct FeeArgs {
 
     /// Max L2 gas price in Fri. If not provided, will be automatically estimated.
     #[clap(long)]
-    pub l2_gas_unit_price: Option<Felt>,
+    pub l2_gas_price: Option<Felt>,
 
     /// Max L1 data gas amount. If not provided, will be automatically estimated.
     #[clap(long)]
@@ -33,7 +33,7 @@ pub struct FeeArgs {
 
     /// Max L1 data gas price in Fri. If not provided, will be automatically estimated.
     #[clap(long)]
-    pub l1_data_gas_unit_price: Option<Felt>,
+    pub l1_data_gas_price: Option<Felt>,
 }
 
 impl From<ScriptFeeSettings> for FeeArgs {
@@ -41,106 +41,164 @@ impl From<ScriptFeeSettings> for FeeArgs {
         let ScriptFeeSettings {
             max_fee,
             l1_gas,
-            l1_gas_unit_price,
+            l1_gas_price,
             l2_gas,
-            l2_gas_unit_price,
+            l2_gas_price,
             l1_data_gas,
-            l1_data_gas_unit_price,
+            l1_data_gas_price,
         } = script_fee_settings;
         Self {
             max_fee,
             l1_gas: l1_gas.map(|value| Felt::from(value)),
-            l1_gas_unit_price: l1_gas_unit_price.map(|value| Felt::from(value)),
+            l1_gas_price: l1_gas_price.map(|value| Felt::from(value)),
             l2_gas: l2_gas.map(|value| Felt::from(value)),
-            l2_gas_unit_price: l2_gas_unit_price.map(|value| Felt::from(value)),
+            l2_gas_price: l2_gas_price.map(|value| Felt::from(value)),
             l1_data_gas: l1_data_gas.map(|value| Felt::from(value)),
-            l1_data_gas_unit_price: l1_data_gas_unit_price.map(|value| Felt::from(value)),
+            l1_data_gas_price: l1_data_gas_price.map(|value| Felt::from(value)),
         }
     }
 }
 
 impl FeeArgs {
+    fn ensure_max_fee_greater_or_equal_than_resource_bounds_values(&self) -> Result<()> {
+        if let Some(max_fee) = self.max_fee {
+            if let Some(l1_gas) = self.l1_gas {
+                ensure!(
+                    Felt::from(max_fee) >= l1_gas,
+                    "--max-fee should be greater than or equal to --l1-gas"
+                );
+            }
+            if let Some(l1_gas_price) = self.l1_gas_price {
+                ensure!(
+                    Felt::from(max_fee) >= l1_gas_price,
+                    "--max-fee should be greater than or equal to --l1-gas-price"
+                );
+            }
+            if let Some(l2_gas) = self.l2_gas {
+                ensure!(
+                    Felt::from(max_fee) >= l2_gas,
+                    "--max-fee should be greater than or equal to --l2-gas"
+                );
+            }
+            if let Some(l2_gas_price) = self.l2_gas_price {
+                ensure!(
+                    Felt::from(max_fee) >= l2_gas_price,
+                    "--max-fee should be greater than or equal to --l2-gas-price"
+                );
+            }
+            if let Some(l1_data_gas) = self.l1_data_gas {
+                ensure!(
+                    Felt::from(max_fee) >= l1_data_gas,
+                    "--max-fee should be greater than or equal to --l1-data-gas"
+                );
+            }
+            if let Some(l1_data_gas_price) = self.l1_data_gas_price {
+                ensure!(
+                    Felt::from(max_fee) >= l1_data_gas_price,
+                    "--max-fee should be greater than or equal to --l1-data-gas-price"
+                );
+            }
+            Ok(())
+        } else {
+            Ok(())
+        }
+    }
+
     pub async fn try_into_fee_settings<P: Provider>(
         &self,
         provider: P,
         block_id: BlockId,
     ) -> Result<FeeSettings> {
-        let mut fee_settings = FeeSettings {
-            l1_gas: self.l1_gas.map_or(None, |value| {
-                Some(u64::try_from(value).expect("Failed to convert l1_gas"))
-            }),
-            l1_gas_unit_price: self.l1_gas_unit_price.map_or(None, |value| {
-                Some(u128::try_from(value).expect("Failed to convert l1_gas_unit_price"))
-            }),
-            l2_gas: self.l2_gas.map_or(None, |value| {
-                Some(u64::try_from(value).expect("Failed to convert l2_gas"))
-            }),
-            l2_gas_unit_price: self.l2_gas_unit_price.map_or(None, |value| {
-                Some(u128::try_from(value).expect("Failed to convert l2_gas_unit_price"))
-            }),
-            l1_data_gas: self.l1_data_gas.map_or(None, |value| {
-                Some(u64::try_from(value).expect("Failed to convert l1_data_gas"))
-            }),
-            l1_data_gas_unit_price: self.l1_data_gas_unit_price.map_or(None, |value| {
-                Some(u128::try_from(value).expect("Failed to convert l1_data_gas_unit_price"))
-            }),
-        };
+        match (
+            self.max_fee,
+            self.l1_gas,
+            self.l1_gas_price,
+            self.l2_gas,
+            self.l2_gas_price,
+            self.l1_data_gas,
+            self.l1_data_gas_price,
+        ) {
+            (Some(_), Some(_), Some(_), Some(_), Some(_), Some(_), Some(_)) => {
+                bail!(
+                    "Passing all --max-fee, --l1-gas, --l1-gas-price, --l2-gas, --l2-gas-price, --l1-data-gas and --l1-data-gas-price is conflicting. Please pass only two of them or less"
+                );
+            }
+            _ => {
+                self.ensure_max_fee_greater_or_equal_than_resource_bounds_values()?;
+                let fee_settings = FeeSettings {
+                    // FIXME: Either remove or restore this logic
+                    // (None, _, _, _, _, _, _) => Ok(FeeSettings {
+                    l1_gas: self
+                        .l1_gas
+                        .map(|val| u64::try_from(val).expect("Failed to convert l1_gas")),
+                    l1_gas_price: self
+                        .l1_data_gas_price
+                        .map(|val| u128::try_from(val).expect("Failed to convert l1_gas_price")),
+                    l2_gas: self
+                        .l2_gas
+                        .map(|val| u64::try_from(val).expect("Failed to convert l2_gas")),
+                    l2_gas_price: self
+                        .l2_gas_price
+                        .map(|val| u128::try_from(val).expect("Failed to convert l2_gas_price")),
+                    l1_data_gas: self
+                        .l1_data_gas
+                        .map(|val| u64::try_from(val).expect("Failed to convert l1_data_gas")),
+                    l1_data_gas_price: self.l1_data_gas_price.map(|val| {
+                        u128::try_from(val).expect("Failed to convert l1_data_gas_price")
+                    }),
+                };
+                Ok(fee_settings)
+            } // FIXME: Either remove or restore this logic
+              // (Some(_), _, _, _, _, _, _) => {
+              //     let block = provider.get_block_with_tx_hashes(block_id).await?;
+              //     let mut fee_settings = FeeSettings {
+              //         l1_gas: self.l1_gas.map_or(None, |value| {
+              //             Some(u64::try_from(value).expect("Failed to convert l1_gas"))
+              //         }),
+              //         l1_gas_price: self.l1_gas_price.map_or(None, |value| {
+              //             Some(u128::try_from(value).expect("Failed to convert l1_gas_price"))
+              //         }),
+              //         l2_gas: self.l2_gas.map_or(None, |value| {
+              //             Some(u64::try_from(value).expect("Failed to convert l2_gas"))
+              //         }),
+              //         l2_gas_price: self.l2_gas_price.map_or(None, |value| {
+              //             Some(u128::try_from(value).expect("Failed to convert l2_gas_price"))
+              //         }),
+              //         l1_data_gas: self.l1_data_gas.map_or(None, |value| {
+              //             Some(u64::try_from(value).expect("Failed to convert l1_data_gas"))
+              //         }),
+              //         l1_data_gas_price: self.l1_data_gas_price.map_or(None, |value| {
+              //             Some(u128::try_from(value).expect("Failed to convert l1_data_gas_price"))
+              //         }),
+              //     };
 
-        if fee_settings.l1_gas_unit_price.is_none()
-            || fee_settings.l2_gas_unit_price.is_none()
-            || fee_settings.l1_data_gas_unit_price.is_none()
-        {
-            let block = provider.get_block_with_tx_hashes(block_id).await?;
+              //     fee_settings.l1_gas_price.get_or_insert(
+              //         block
+              //             .l1_gas_price()
+              //             .price_in_fri
+              //             .try_into_()
+              //             .expect("Failed to convert fetched l1_gas_price"),
+              //     );
+              //     fee_settings.l2_gas_price.get_or_insert(
+              //         block
+              //             .l2_gas_price()
+              //             .price_in_fri
+              //             .try_into_()
+              //             .expect("Failed to convert fetched l2_gas_price"),
+              //     );
+              //     fee_settings.l1_data_gas_price.get_or_insert(
+              //         block
+              //             .l1_data_gas_price()
+              //             .price_in_fri
+              //             .try_into_()
+              //             .expect("Failed to convert fetched l1_data_gas_price"),
+              //     );
 
-            fee_settings.l1_gas_unit_price.get_or_insert(
-                block
-                    .l1_gas_price()
-                    .price_in_fri
-                    .try_into_()
-                    .expect("Failed to convert l1_gas_price from Felt to u128"),
-            );
-            fee_settings.l2_gas_unit_price.get_or_insert(
-                block
-                    .l2_gas_price()
-                    .price_in_fri
-                    .try_into_()
-                    .expect("Failed to convert l2_gas_price from Felt to u128"),
-            );
-            fee_settings.l1_data_gas_unit_price.get_or_insert(
-                block
-                    .l1_data_gas_price()
-                    .price_in_fri
-                    .try_into_()
-                    .expect("Failed to convert l1_data_gas_price from Felt to u128"),
-            );
+              //     self.ensure_max_fee_greater_or_equal_than_resource_bounds_values()?;
+
+              //     return Ok(fee_settings);
+              // }
         }
-
-        let calculated_total_fee = fee_settings.l1_gas.map_or(0, |l1_gas| {
-            (l1_gas as u128)
-                .checked_mul(fee_settings.l1_gas_unit_price.unwrap_or(0))
-                .expect("Failed to calculate total fee")
-        }) + fee_settings.l2_gas.map_or(0, |l2_gas| {
-            (l2_gas as u128)
-                .checked_mul(fee_settings.l2_gas_unit_price.unwrap_or(0))
-                .expect("Failed to calculate total fee")
-        }) + fee_settings.l1_data_gas.map_or(0, |l1_data_gas| {
-            (l1_data_gas as u128)
-                .checked_mul(fee_settings.l1_data_gas_unit_price.unwrap_or(0))
-                .expect("Failed to calculate total fee")
-        });
-
-        if let Some(max_fee) = self.max_fee {
-            ensure!(
-                calculated_total_fee
-                    <= u128::try_from(Felt::from(max_fee))
-                        .expect("Failed to convert max_fee from NonZeroFelt to u128"),
-                "Calculated total fee exceeds the provided max fee. Calculated total fee: {}, Max fee: {}",
-                calculated_total_fee,
-                Felt::from(max_fee)
-            );
-        }
-
-        Ok(fee_settings)
     }
 }
 
@@ -150,21 +208,21 @@ impl FeeArgs {
 pub struct ScriptFeeSettings {
     max_fee: Option<NonZeroFelt>,
     l1_gas: Option<u64>,
-    l1_gas_unit_price: Option<u128>,
+    l1_gas_price: Option<u128>,
     l2_gas: Option<u64>,
-    l2_gas_unit_price: Option<u128>,
+    l2_gas_price: Option<u128>,
     l1_data_gas: Option<u64>,
-    l1_data_gas_unit_price: Option<u128>,
+    l1_data_gas_price: Option<u128>,
 }
 
 #[derive(Debug, PartialEq)]
 pub struct FeeSettings {
     pub l1_gas: Option<u64>,
-    pub l1_gas_unit_price: Option<u128>,
+    pub l1_gas_price: Option<u128>,
     pub l2_gas: Option<u64>,
-    pub l2_gas_unit_price: Option<u128>,
+    pub l2_gas_price: Option<u128>,
     pub l1_data_gas: Option<u64>,
-    pub l1_data_gas_unit_price: Option<u128>,
+    pub l1_data_gas_price: Option<u128>,
 }
 
 // fn print_max_fee_conversion_info(
