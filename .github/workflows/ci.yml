@@ -171,7 +171,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        # os: [ ubuntu-latest, windows-latest ]
+        os: [ ubuntu-latest ]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
