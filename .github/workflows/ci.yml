@@ -1,7 +1,7 @@
 name: CI
 
 env:
-  DEVNET_REV: ef789b700770fa27a2fc057b3d1c610771be27d9
+  DEVNET_REV: d9ab44a8589ca4b8c3bab0367cc1d5be0c301550
 
 on:
   pull_request:
@@ -179,20 +179,23 @@ jobs:
       - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
       - name: Install starknet-devnet-rs on Linux/Macos
         if: runner.os != 'Windows'
-        run: |
-          ./scripts/install_devnet.sh
-      - name: Cache devnet build
-        if: runner.os == 'Windows'
-        id: windows-devnet-cache
-        uses: actions/cache@v4
+        # run: |
+        #   ./scripts/install_devnet.sh
+        uses: ./.github/composite-actions/devnet
         with:
-          path: ${{ github.workspace }}\crates\sncast\tests\utils\devnet
-          key: ${{ runner.os }}-devnet-${{ env.DEVNET_REV }}
-      - name: Install devnet
-        if: runner.os == 'Windows' && steps.windows-devnet-cache.outputs.cache-hit != 'true'
-        run: |
-          $DEVNET_INSTALL_DIR = "${{ github.workspace }}\crates\sncast\tests\utils\devnet"
-          cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev ${{ env.DEVNET_REV }} --root $DEVNET_INSTALL_DIR
+          devnet_sha: ${{ env.DEVNET_REV }}
+      # - name: Cache devnet build
+      #   if: runner.os == 'Windows'
+      #   id: windows-devnet-cache
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ${{ github.workspace }}\crates\sncast\tests\utils\devnet
+      #     key: ${{ runner.os }}-devnet-${{ env.DEVNET_REV }}
+      # - name: Install devnet
+      #   if: runner.os == 'Windows' && steps.windows-devnet-cache.outputs.cache-hit != 'true'
+      #   run: |
+      #     $DEVNET_INSTALL_DIR = "${{ github.workspace }}\crates\sncast\tests\utils\devnet"
+      #     cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev ${{ env.DEVNET_REV }} --root $DEVNET_INSTALL_DIR
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests
