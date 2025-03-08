@@ -38,10 +38,14 @@ pub async fn test_happy_case(class_hash: &str, account_type: &str) {
         URL,
         "--name",
         "my_account",
-        "--max-gas",
-        "1000",
-        "--max-gas-unit-price",
-        "100000000000",
+        "--max-fee",
+        "99999999999999999",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -78,6 +82,12 @@ pub async fn test_happy_case_max_fee() {
         "my_account",
         "--max-fee",
         "100000000000000",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -114,6 +124,12 @@ pub async fn test_happy_case_add_profile() {
         "my_account",
         "--max-fee",
         "99999999999999999",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -148,6 +164,12 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
         "my_account",
         "--max-fee",
         "10000000000000000",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -201,6 +223,12 @@ pub async fn test_valid_class_hash() {
         "my_account",
         "--max-fee",
         "10000000000000000",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -325,6 +353,12 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         URL,
         "--max-fee",
         "99999999999999999",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -376,6 +410,12 @@ pub async fn test_keystore_already_deployed() {
         URL,
         "--max-fee",
         "10000000000000000",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -419,6 +459,12 @@ pub async fn test_keystore_key_mismatch() {
         URL,
         "--max-fee",
         "10000000000000000",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -457,6 +503,12 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
         URL,
         "--max-fee",
         "10000000000000000",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -495,6 +547,12 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
         URL,
         "--max-fee",
         "10000000000000000",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -537,6 +595,12 @@ pub async fn test_deploy_keystore_no_status() {
         URL,
         "--max-fee",
         "10000000000000000",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -592,6 +656,12 @@ pub async fn test_deploy_keystore_other_args() {
         "some-name",
         "--max-fee",
         "99999999999999999",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());

@@ -37,6 +37,12 @@ async fn test_happy_case_human_readable() {
         "Map",
         "--max-fee",
         "99999999999999999",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "1000000000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -84,6 +90,12 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         "Map",
         "--max-fee",
         "99999999999999999",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -178,6 +190,12 @@ async fn test_happy_case_specify_package() {
         "main_workspace",
         "--max-fee",
         "99999999999999999",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -243,6 +261,12 @@ async fn test_invalid_nonce() {
         "Map",
         "--max-fee",
         "99999999999999999",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
         "--nonce",
         "12345",
     ];
@@ -385,9 +409,11 @@ fn test_too_low_gas() {
         URL,
         "--contract-name",
         "Map",
-        "--max-gas-unit-price",
+        "--l1-gas",
         "1",
-        "--max-gas",
+        "--l2-gas",
+        "1",
+        "--l1-data-gas",
         "1",
     ];
 
@@ -398,7 +424,7 @@ fn test_too_low_gas() {
         output,
         indoc! {r"
         command: declare
-        error: Max fee is smaller than the minimal transaction cost
+        error: The transaction's resources don't cover validation or the minimal transaction fee
         "},
     );
 }
@@ -472,6 +498,12 @@ async fn test_many_packages_default() {
         "supercomplexcode2",
         "--max-fee",
         "99999999999999999",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -503,6 +535,12 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         "FibonacciContract",
         "--max-fee",
         "99999999999999999",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -533,6 +571,12 @@ async fn test_worskpaces_package_no_contract() {
         "whatever",
         "--max-fee",
         "99999999999999999",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -569,6 +613,12 @@ async fn test_no_scarb_profile() {
         "Map",
         "--max-fee",
         "99999999999999999",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "100000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path());

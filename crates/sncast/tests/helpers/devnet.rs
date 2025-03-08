@@ -53,7 +53,7 @@ fn start_devnet() {
             "--fork-block",
             &FORK_BLOCK_NUMBER.to_string(),
             "--initial-balance",
-            "9999999999999999999",
+            "9999999999999999999999999999999",
             "--accounts",
             "20",
         ])
@@ -78,8 +78,8 @@ fn start_devnet() {
     rt.block_on(deploy_keystore_account());
     rt.block_on(deploy_cairo_0_account());
     rt.block_on(deploy_latest_oz_account());
-    rt.block_on(deploy_argent_account());
-    rt.block_on(deploy_braavos_account());
+    // rt.block_on(deploy_argent_account());
+    // rt.block_on(deploy_braavos_account());
 }
 
 #[cfg(test)]

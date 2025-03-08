@@ -26,7 +26,7 @@ async fn test_happy_path() {
     .await;
 
     assert!(res.is_ok());
-    assert!(matches!(res.unwrap(), "Transaction accepted"));
+    assert!(matches!(res.unwrap().as_str(), "Transaction accepted"));
 }
 
 #[tokio::test]
@@ -43,11 +43,17 @@ async fn test_rejected_transaction() {
 
     let factory = ContractFactory::new(MAP_CONTRACT_CLASS_HASH_SEPOLIA.parse().unwrap(), account);
     let deployment = factory
-        .deploy_v1(Vec::new(), Felt::ONE, false)
-        .max_fee(Felt::ONE);
-    let resp = deployment.send().await.unwrap_err();
+        .deploy_v3(Vec::new(), Felt::ONE, false)
+        .l1_gas(1)
+        .l2_gas(1)
+        .l1_data_gas(1);
 
-    assert!(resp.to_string().contains("InsufficientMaxFee"));
+    let resp = deployment.send().await.unwrap_err();
+    println!("{}", resp.to_string());
+    assert!(
+        resp.to_string()
+            .contains("InsufficientResourcesForValidate")
+    );
 }
 
 #[tokio::test]

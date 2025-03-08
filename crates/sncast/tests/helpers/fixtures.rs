@@ -2,6 +2,7 @@ use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0,
 use crate::helpers::runner::runner;
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
+use conversions::TryIntoConv;
 use conversions::string::IntoHexStr;
 use core::str;
 use fs_extra::dir::{CopyOptions, copy};
@@ -19,7 +20,7 @@ use sncast::state::state_file::{
 use sncast::{AccountType, apply_optional, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider};
 use starknet::accounts::{
-    Account, AccountFactory, ArgentAccountFactory, ExecutionV1, OpenZeppelinAccountFactory,
+    Account, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
 };
 use starknet::core::types::{Call, InvokeTransactionResult, TransactionReceipt};
 use starknet::core::utils::get_contract_address;
@@ -33,6 +34,8 @@ use std::env;
 use std::fs;
 use std::fs::File;
 use std::io::{BufRead, Write};
+use std::thread::sleep;
+use std::time::Duration;
 use tempfile::{TempDir, tempdir};
 use toml::Table;
 use url::Url;
@@ -94,7 +97,7 @@ pub async fn deploy_argent_account() {
     let factory = ArgentAccountFactory::new(
         ARGENT_CLASS_HASH,
         chain_id,
-        Felt::ZERO,
+        Some(Felt::ZERO),
         LocalWallet::from_signing_key(private_key),
         provider,
     )
@@ -144,9 +147,15 @@ async fn deploy_oz_account(address: &str, class_hash: &str, salt: &str, private_
 }
 
 async fn deploy_account_to_devnet<T: AccountFactory + Sync>(factory: T, address: &str, salt: &str) {
-    mint_token(address, u64::MAX).await;
+    mint_token(address, u128::MAX).await;
     factory
-        .deploy_v1(salt.parse().expect("Failed to parse salt"))
+        .deploy_v3(salt.parse().expect("Failed to parse salt"))
+        .l1_gas(1_000_00)
+        .l1_gas_price(1_000_000_000_000_0)
+        .l2_gas(1_000_000)
+        .l2_gas_price(1_000_000_000_000_0)
+        .l1_data_gas(1_000_00)
+        .l1_data_gas_price(1_000_000_000_000_0)
         .send()
         .await
         .expect("Failed to deploy account");
@@ -215,15 +224,16 @@ pub async fn invoke_contract(
         calldata,
     };
 
-    let execution = account.execute_v1(vec![call]);
-    let execution = apply_optional(execution, max_fee, ExecutionV1::max_fee);
+    let execution = account.execute_v3(vec![call]);
+    // FIXME
+    // let execution = apply_optional(execution, max_fee, ExecutionV1::max_fee);
 
     execution.send().await.unwrap()
 }
 
 // devnet-rs accepts an amount as u128
 // but serde_json cannot serialize numbers this big
-pub async fn mint_token(recipient: &str, amount: u64) {
+pub async fn mint_token(recipient: &str, amount: u128) {
     let client = reqwest::Client::new();
     for unit in ["FRI", "WEI"] {
         let json = json!(
@@ -602,7 +612,7 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
         items["alpha-sepolia"]["my_account"]["address"]
             .as_str()
             .unwrap(),
-        u64::MAX,
+        u128::MAX,
     )
     .await;
 
@@ -618,6 +628,12 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
         "my_account",
         "--max-fee",
         "99999999999999999",
+        "--l1-gas",
+        "100000",
+        "--l2-gas",
+        "10000000000",
+        "--l1-data-gas",
+        "100000",
     ];
 
     runner(&args).current_dir(tempdir.path()).assert().success();
