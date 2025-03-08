@@ -113,9 +113,9 @@ jobs:
 
           OUTPUT_BINARY="${PACKAGE_NAME}_v${PACKAGE_VERSION}_${TARGET}.${EXT}"
 
-          mv ./target/${TARGET}/release/${LIB_NAME}.${EXT} ./target/${TARGET}/release/${OUTPUT_BINARY}
+          mv ./crates/snforge-scarb-plugin/target/${TARGET}/release/${LIB_NAME}.${EXT} ./crates/snforge-scarb-plugin/target/${TARGET}/release/${OUTPUT_BINARY}
 
-          echo "OUTPUT_BINARY_PATH=./target/${TARGET}/release/${OUTPUT_BINARY}" >> $GITHUB_ENV
+          echo "OUTPUT_BINARY_PATH=./crates/snforge-scarb-plugin/target/${TARGET}/release/${OUTPUT_BINARY}" >> $GITHUB_ENV
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -135,7 +135,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "2.10.0"
+          scarb-version: "2.11.0"
 
       - name: Download artifacts
         uses: actions/download-artifact@v4

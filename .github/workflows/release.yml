@@ -276,7 +276,7 @@ jobs:
 
       - uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "2.8.5"
+          scarb-version: "2.11.0"
 
       - name: Publish sncast_std
         working-directory: sncast_std
