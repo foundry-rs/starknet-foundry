@@ -28,7 +28,7 @@ runs:
     - name: Build and install devnet
       shell: bash
       run: |
-        $DEVNET_INSTALL_DIR = "${{ github.workspace }}\crates\sncast\tests\utils\devnet"
+        DEVNET_INSTALL_DIR = "${{ github.workspace }}\crates\sncast\tests\utils\devnet"
         cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev ${{ env.DEVNET_SHA }} --root $DEVNET_INSTALL_DIR
 
     - name: Verify devnet installation
