@@ -49,12 +49,12 @@ impl From<ScriptFeeSettings> for FeeArgs {
         } = script_fee_settings;
         Self {
             max_fee,
-            l1_gas: l1_gas.map(|value| Felt::from(value)),
-            l1_gas_price: l1_gas_price.map(|value| Felt::from(value)),
-            l2_gas: l2_gas.map(|value| Felt::from(value)),
-            l2_gas_price: l2_gas_price.map(|value| Felt::from(value)),
-            l1_data_gas: l1_data_gas.map(|value| Felt::from(value)),
-            l1_data_gas_price: l1_data_gas_price.map(|value| Felt::from(value)),
+            l1_gas: l1_gas.map(Felt::from),
+            l1_gas_price: l1_gas_price.map(Felt::from),
+            l2_gas: l2_gas.map(Felt::from),
+            l2_gas_price: l2_gas_price.map(Felt::from),
+            l1_data_gas: l1_data_gas.map(Felt::from),
+            l1_data_gas_price: l1_data_gas_price.map(Felt::from),
         }
     }
 }
@@ -106,8 +106,9 @@ impl FeeArgs {
 
     pub async fn try_into_fee_settings<P: Provider>(
         &self,
-        provider: P,
-        block_id: BlockId,
+        // FIXME
+        _provider: P,
+        _block_id: BlockId,
     ) -> Result<FeeSettings> {
         match (
             self.max_fee,

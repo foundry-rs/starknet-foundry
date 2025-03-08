@@ -8,7 +8,8 @@ use starknet::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 use url::Url;
 
-const MAX_FEE: u64 = 1_000_000_000_000;
+// FIXME
+// const MAX_FEE: u64 = 1_000_000_000_000;
 
 async fn get_factory() -> OpenZeppelinAccountFactory<LocalWallet, JsonRpcClient<HttpTransport>> {
     let parsed_url = Url::parse(URL).unwrap();
@@ -27,12 +28,12 @@ async fn test_happy_case() {
 
     let args = FeeArgs {
         max_fee: None,
-        l1_gas: Some(Felt::from(100_u32).try_into().unwrap()),
-        l1_gas_price: Some(Felt::from(200_u32).try_into().unwrap()),
-        l2_gas: Some(Felt::from(100_u32).try_into().unwrap()),
-        l2_gas_price: Some(Felt::from(200_u32).try_into().unwrap()),
-        l1_data_gas: Some(Felt::from(100_u32).try_into().unwrap()),
-        l1_data_gas_price: Some(Felt::from(200_u32).try_into().unwrap()),
+        l1_gas: Some(Felt::from(100_u32)),
+        l1_gas_price: Some(Felt::from(200_u32)),
+        l2_gas: Some(Felt::from(100_u32)),
+        l2_gas_price: Some(Felt::from(200_u32)),
+        l1_data_gas: Some(Felt::from(100_u32)),
+        l1_data_gas_price: Some(Felt::from(200_u32)),
     };
 
     let settings = args
@@ -59,12 +60,12 @@ async fn test_all_args() {
 
     let args = FeeArgs {
         max_fee: Some(Felt::from(100_u32).try_into().unwrap()),
-        l1_gas: Some(Felt::from(100_u32).try_into().unwrap()),
-        l1_gas_price: Some(Felt::from(200_u32).try_into().unwrap()),
-        l2_gas: Some(Felt::from(100_u32).try_into().unwrap()),
-        l2_gas_price: Some(Felt::from(200_u32).try_into().unwrap()),
-        l1_data_gas: Some(Felt::from(100_u32).try_into().unwrap()),
-        l1_data_gas_price: Some(Felt::from(200_u32).try_into().unwrap()),
+        l1_gas: Some(Felt::from(100_u32)),
+        l1_gas_price: Some(Felt::from(200_u32)),
+        l2_gas: Some(Felt::from(100_u32)),
+        l2_gas_price: Some(Felt::from(200_u32)),
+        l1_data_gas: Some(Felt::from(100_u32)),
+        l1_data_gas_price: Some(Felt::from(200_u32)),
     };
 
     let error = args
@@ -79,7 +80,7 @@ async fn test_all_args() {
 use test_case::test_case;
 #[test_case(FeeArgs {
         max_fee: Some(Felt::from(50_u32).try_into().unwrap()),
-        l1_gas: Some(Felt::from(100_u32).try_into().unwrap()),
+        l1_gas: Some(Felt::from(100_u32)),
         l1_gas_price: None,
         l2_gas: None,
         l2_gas_price: None,
@@ -89,7 +90,7 @@ use test_case::test_case;
 #[test_case(FeeArgs {
         max_fee: Some(Felt::from(50_u32).try_into().unwrap()),
         l1_gas: None,
-        l1_gas_price: Some(Felt::from(100_u32).try_into().unwrap()),
+        l1_gas_price: Some(Felt::from(100_u32)),
         l2_gas: None,
         l2_gas_price: None,
         l1_data_gas: None,
@@ -99,7 +100,7 @@ use test_case::test_case;
         max_fee: Some(Felt::from(50_u32).try_into().unwrap()),
         l1_gas: None,
         l1_gas_price: None,
-        l2_gas: Some(Felt::from(100_u32).try_into().unwrap()),
+        l2_gas: Some(Felt::from(100_u32)),
         l2_gas_price: None,
         l1_data_gas: None,
         l1_data_gas_price: None,
@@ -110,7 +111,7 @@ use test_case::test_case;
         l1_gas_price: None,
         l2_gas: None,
         l2_gas_price: None,
-        l1_data_gas: Some(Felt::from(100_u32).try_into().unwrap()),
+        l1_data_gas: Some(Felt::from(100_u32)),
         l1_data_gas_price: None,
     }, "--l1-data-gas")]
 #[test_case(FeeArgs {
@@ -120,7 +121,7 @@ use test_case::test_case;
         l2_gas: None,
         l2_gas_price: None,
         l1_data_gas: None,
-        l1_data_gas_price: Some(Felt::from(100_u32).try_into().unwrap()),
+        l1_data_gas_price: Some(Felt::from(100_u32)),
     }, "--l1-data-gas-price")]
 #[tokio::test]
 async fn test_max_fee_less_than_resource_bounds_value(fee_args: FeeArgs, flag: &str) {
@@ -133,7 +134,7 @@ async fn test_max_fee_less_than_resource_bounds_value(fee_args: FeeArgs, flag: &
     assert!(
         error
             .to_string()
-            .contains(format!("--max-fee should be greater than or equal to {}", flag).as_str())
+            .contains(format!("--max-fee should be greater than or equal to {flag}").as_str())
     );
 }
 
@@ -175,12 +176,12 @@ async fn test_max_fee_none() {
 
     let args = FeeArgs {
         max_fee: None,
-        l1_gas: Some(Felt::from(100_u32).try_into().unwrap()),
-        l1_gas_price: Some(Felt::from(100_u32).try_into().unwrap()),
-        l2_gas: Some(Felt::from(100_u32).try_into().unwrap()),
-        l2_gas_price: Some(Felt::from(100_u32).try_into().unwrap()),
-        l1_data_gas: Some(Felt::from(100_u32).try_into().unwrap()),
-        l1_data_gas_price: Some(Felt::from(100_u32).try_into().unwrap()),
+        l1_gas: Some(Felt::from(100_u32)),
+        l1_gas_price: Some(Felt::from(100_u32)),
+        l2_gas: Some(Felt::from(100_u32)),
+        l2_gas_price: Some(Felt::from(100_u32)),
+        l1_data_gas: Some(Felt::from(100_u32)),
+        l1_data_gas_price: Some(Felt::from(100_u32)),
     };
 
     let settings = args

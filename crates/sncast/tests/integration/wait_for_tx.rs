@@ -49,7 +49,7 @@ async fn test_rejected_transaction() {
         .l1_data_gas(1);
 
     let resp = deployment.send().await.unwrap_err();
-    println!("{}", resp.to_string());
+
     assert!(
         resp.to_string()
             .contains("InsufficientResourcesForValidate")

@@ -56,7 +56,7 @@ struct InvokeCall {
 }
 
 pub async fn run(
-    run: Run,
+    run: Box<Run>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
