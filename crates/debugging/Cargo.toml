@@ -1,0 +1,12 @@
+[package]
+name = "debugging"
+version = "1.0.0"
+edition.workspace = true
+
+[dependencies]
+starknet_api.workspace = true
+blockifier.workspace = true
+ptree.workspace = true
+console.workspace = true
+starknet-types-core.workspace = true
+cheatnet = { path = "../cheatnet" }
