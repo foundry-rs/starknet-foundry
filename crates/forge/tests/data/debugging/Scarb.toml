@@ -1,0 +1,10 @@
+[package]
+name = "trace_info"
+version = "0.1.0"
+edition = "2023_01"
+
+[dependencies]
+starknet = ">=2.8.0"
+
+[dev-dependencies]
+snforge_std = { path = "../../../../../snforge_std" }
