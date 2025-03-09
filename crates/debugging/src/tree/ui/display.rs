@@ -1,4 +1,4 @@
-use crate::trace::{CallerAddress, StorageAddress};
+use crate::trace::{CallerAddress, ContractName, StorageAddress};
 use blockifier::execution::entry_point::CallType;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
@@ -20,6 +20,13 @@ pub trait NodeDisplay {
         let tag = console::style(Self::TAG).magenta();
         let content = self.string_pretty();
         format!("[{tag}] {content}")
+    }
+}
+
+impl NodeDisplay for ContractName {
+    const TAG: &'static str = "contract name";
+    fn string_pretty(&self) -> String {
+        self.0.to_string()
     }
 }
 
