@@ -10,6 +10,7 @@ pub fn print_test_result(any_test_result: &AnyTestCaseSummary, print_detailed_re
     let result_name = any_test_result.name().unwrap();
 
     let result_msg = result_message(any_test_result);
+    let result_debug_trace = result_debug_trace(any_test_result);
 
     let mut fuzzer_report = None;
     if let AnyTestCaseSummary::Fuzzing(test_result) = any_test_result {
@@ -46,7 +47,9 @@ pub fn print_test_result(any_test_result: &AnyTestCaseSummary, print_detailed_re
         _ => String::new(),
     };
 
-    println!("{result_header} {result_name}{fuzzer_report}{gas_usage}{used_resources}{result_msg}");
+    println!(
+        "{result_header} {result_name}{fuzzer_report}{gas_usage}{used_resources}{result_msg}\n\n{result_debug_trace}"
+    );
 }
 
 fn format_detailed_resources(used_resources: &UsedResources) -> String {
@@ -114,4 +117,11 @@ fn result_header(any_test_result: &AnyTestCaseSummary) -> String {
         return format!("[{}]", style("IGNORE").yellow());
     }
     unreachable!()
+}
+
+fn result_debug_trace(any_test_result: &AnyTestCaseSummary) -> String {
+    any_test_result
+        .debugging_trace()
+        .map(ToString::to_string)
+        .unwrap_or_default()
 }
