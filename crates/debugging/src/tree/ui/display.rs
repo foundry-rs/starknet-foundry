@@ -1,10 +1,9 @@
-use crate::trace::{CallerAddress, ContractName, StorageAddress};
+use crate::trace::{CallerAddress, ContractName, Selector, StorageAddress};
 use blockifier::execution::entry_point::CallType;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
 };
 use starknet_api::contract_class::EntryPointType;
-use starknet_api::core::EntryPointSelector;
 use starknet_api::transaction::fields::Calldata;
 use starknet_types_core::felt::Felt;
 use std::fmt::Debug;
@@ -30,10 +29,12 @@ impl NodeDisplay for ContractName {
     }
 }
 
-impl NodeDisplay for EntryPointSelector {
+impl NodeDisplay for Selector {
     const TAG: &'static str = "selector";
     fn string_pretty(&self) -> String {
-        string_hex(self.0)
+        self.function_name
+            .as_ref()
+            .map_or_else(|| string_hex(self.selector.0), ToString::to_string)
     }
 }
 
