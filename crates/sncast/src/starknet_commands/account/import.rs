@@ -179,9 +179,9 @@ fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<Felt> {
     Ok(private_key_string.parse()?)
 }
 
-fn parse_input_to_felt(input: &String) -> Result<Felt> {
-    Felt::try_from_hex_str(&input)
-        .or_else(|_| Felt::try_from_dec_str(&input))
+fn parse_input_to_felt(input: &str) -> Result<Felt> {
+    Felt::try_from_hex_str(input)
+        .or_else(|_| Felt::try_from_dec_str(input))
         .with_context(|| format!("Failed to parse the value {input} as a felt"))
 }
 
@@ -200,7 +200,7 @@ mod tests {
     #[test]
     fn test_parse_hex_str() {
         let hex_str = "0x0000000000000000000000000000000000000000000000000000000000000001";
-        let result = parse_input_to_felt(&hex_str.to_string());
+        let result = parse_input_to_felt(hex_str);
 
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), Felt::try_from_hex_str("0x1").unwrap());
@@ -209,7 +209,7 @@ mod tests {
     #[test]
     fn test_parse_hex_str_padded() {
         let hex_str = "0x1a2b3c";
-        let result = parse_input_to_felt(&hex_str.to_string());
+        let result = parse_input_to_felt(hex_str);
 
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), Felt::try_from_hex_str("0x1a2b3c").unwrap());
@@ -218,20 +218,17 @@ mod tests {
     #[test]
     fn test_parse_hex_str_invalid() {
         let hex_str = "0xz";
-        let result = parse_input_to_felt(&hex_str.to_string());
+        let result = parse_input_to_felt(hex_str);
 
         assert!(result.is_err());
         let error_message = result.unwrap_err().to_string();
-        assert_eq!(
-            "Failed to parse value 0xz to felt. Invalid hex value was passed",
-            error_message
-        );
+        assert_eq!("Failed to parse the value 0xz as a felt", error_message);
     }
 
     #[test]
     fn test_parse_dec_str() {
         let dec_str = "123";
-        let result = parse_input_to_felt(&dec_str.to_string());
+        let result = parse_input_to_felt(dec_str);
 
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), Felt::from(123));
@@ -240,20 +237,20 @@ mod tests {
     #[test]
     fn test_parse_dec_str_negative() {
         let dec_str = "-123";
-        let result = parse_input_to_felt(&dec_str.to_string());
+        let result = parse_input_to_felt(dec_str);
 
         assert!(result.is_err());
         let error_message = result.unwrap_err().to_string();
-        assert_eq!("Failed to parse value -123 to felt", error_message);
+        assert_eq!("Failed to parse the value -123 as a felt", error_message);
     }
 
     #[test]
     fn test_parse_invalid_str() {
         let invalid_str = "invalid";
-        let result = parse_input_to_felt(&invalid_str.to_string());
+        let result = parse_input_to_felt(invalid_str);
 
         assert!(result.is_err());
         let error_message = result.unwrap_err().to_string();
-        assert_eq!("Failed to parse value invalid to felt", error_message);
+        assert_eq!("Failed to parse the value invalid as a felt", error_message);
     }
 }
