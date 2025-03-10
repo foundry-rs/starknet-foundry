@@ -20,7 +20,10 @@ use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
 #[must_use]
-pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
+pub fn run_test_case(
+    test: &TestCase,
+    tracked_resource: ForgeTrackedResource,
+) -> Vec<TestTargetSummary> {
     ScarbCommand::new_with_stdio()
         .current_dir(test.path().unwrap())
         .arg("build")
@@ -66,7 +69,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
                         .unwrap()
                         .join(CACHE_DIR),
                     contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
-                    tracked_resource: ForgeTrackedResource::CairoSteps,
+                    tracked_resource,
                     environment_variables: test.env().clone(),
                 }),
                 output_config: Arc::new(OutputConfig {

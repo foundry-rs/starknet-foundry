@@ -1,3 +1,4 @@
+use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
 use std::path::Path;
 use test_utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
@@ -35,7 +36,7 @@ fn storage_access_from_tests() {
     "
     ),);
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -141,7 +142,7 @@ fn simple_syscalls() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -185,7 +186,7 @@ fn get_block_hash_syscall_in_dispatcher() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -271,7 +272,7 @@ fn library_calls() {
         )
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -299,7 +300,7 @@ fn disabled_syscalls() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
     assert_case_output_contains(
@@ -326,7 +327,7 @@ fn get_block_hash() {
     "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -394,7 +395,7 @@ fn cant_call_test_contract() {
         )
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
     assert_case_output_contains(&result, "cant_call_test_contract", "ENTRYPOINT_NOT_FOUND");
@@ -439,7 +440,7 @@ fn storage_access_default_values() {
     "
     ),);
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -561,7 +562,7 @@ fn simple_cheatcodes() {
     "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -597,7 +598,7 @@ fn spy_events_simple() {
         "
     ),);
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -666,7 +667,7 @@ fn spy_struct_events() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -695,7 +696,7 @@ fn inconsistent_syscall_pointers() {
         }
     "#
     ),);
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -783,7 +784,7 @@ fn caller_address_in_called_contract() {
             )
         )
     );
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -855,7 +856,7 @@ fn felt252_dict_usage() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }

@@ -1,3 +1,4 @@
+use forge_runner::forge_config::ForgeTrackedResource;
 use std::path::Path;
 
 use indoc::indoc;
@@ -34,7 +35,7 @@ fn should_panic() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -74,7 +75,7 @@ fn should_panic_unknown_entry_point() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }

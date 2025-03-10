@@ -1,3 +1,4 @@
+use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
 use test_utils::running_tests::run_test_case;
 use test_utils::{runner::assert_passed, test_case};
@@ -34,7 +35,7 @@ fn test_stark_sign_msg_hash_range() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -63,7 +64,7 @@ fn test_stark_curve() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -94,7 +95,7 @@ fn test_secp256k1_curve() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -125,7 +126,7 @@ fn test_secp256r1_curve() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -167,7 +168,7 @@ fn test_secp256_curves() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -211,7 +212,7 @@ fn test_stark_secp256k1_curves() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -267,7 +268,7 @@ fn test_invalid_secret_key() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
