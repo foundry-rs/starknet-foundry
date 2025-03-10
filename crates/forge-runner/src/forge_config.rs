@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use blockifier::execution::contract_class::TrackedResource;
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
@@ -7,7 +6,6 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::ffi::OsString;
 use std::num::NonZeroU32;
-use std::str::FromStr;
 use std::sync::Arc;
 
 #[derive(Debug, PartialEq)]
@@ -48,21 +46,6 @@ pub enum ForgeTrackedResource {
     #[default]
     CairoSteps,
     SierraGas,
-}
-
-impl FromStr for ForgeTrackedResource {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "cairosteps" => Ok(Self::CairoSteps),
-            "sierragas" => Ok(Self::SierraGas),
-            _ => Err(anyhow!(
-                "Unexpected input '{}'; expected 'CairoSteps' or 'SierraGas'",
-                s
-            )),
-        }
-    }
 }
 
 impl From<&ForgeTrackedResource> for TrackedResource {
