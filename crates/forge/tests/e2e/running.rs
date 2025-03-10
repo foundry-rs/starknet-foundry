@@ -929,3 +929,24 @@ fn call_nonexistent_selector() {
         "},
     );
 }
+
+#[test]
+#[cfg_attr(feature = "scarb_since_2_10", ignore)]
+fn sierra_gas_with_older_scarb() {
+    let temp = setup_package("erc20_package");
+    let output = test_runner(&temp)
+        .arg("--detailed-resources")
+        .arg("--tracked-resource")
+        .arg("sierra-gas")
+        .assert()
+        .failure();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+        [ERROR] Tracking SierraGas is not supported for sierra <= 1.7.0: Contract version [..] is lower than required minimal sierra version
+        "},
+    );
+}
