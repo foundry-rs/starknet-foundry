@@ -4,8 +4,9 @@ use crate::{
     cairo_expression::CairoExpression,
     types::{Number, ParseFromExpr},
 };
-use cairo_lang_macro::Diagnostic;
-use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup, helpers::GetIdentifier};
+use cairo_lang_macro::{quote, Diagnostic, TokenStream};
+use cairo_lang_parser::utils::SimpleParserDatabase;
+use cairo_lang_syntax::node::{ast::Expr, helpers::GetIdentifier};
 
 #[derive(Debug, Clone, Copy)]
 pub enum BlockIdVariants {
@@ -32,24 +33,24 @@ pub enum BlockId {
 }
 
 impl CairoExpression for BlockId {
-    fn as_cairo_expression(&self) -> String {
+    fn as_cairo_expression(&self) -> TokenStream {
         match self {
-            Self::Hash(hash) => format!(
-                "snforge_std::_internals::config_types::BlockId::BlockHash({})",
-                hash.as_cairo_expression()
-            ),
-            Self::Number(number) => format!(
-                "snforge_std::_internals::config_types::BlockId::BlockNumber({})",
-                number.as_cairo_expression()
-            ),
-            Self::Tag => "snforge_std::_internals::config_types::BlockId::BlockTag".to_string(),
+            Self::Hash(hash) => {
+                let block_hash = hash.as_cairo_expression();
+                quote!(snforge_std::_internals::config_types::BlockId::BlockHash(#block_hash))
+            }
+            Self::Number(number) => {
+                let block_number = number.as_cairo_expression();
+                quote!(snforge_std::_internals::config_types::BlockId::BlockNumber(#block_number))
+            }
+            Self::Tag => quote!(snforge_std::_internals::config_types::BlockId::BlockTag),
         }
     }
 }
 
 impl ParseFromExpr<(BlockIdVariants, &Expr)> for BlockId {
     fn parse_from_expr<T: crate::attributes::AttributeInfo>(
-        db: &dyn SyntaxGroup,
+        db: &SimpleParserDatabase,
         (variant, block_args): &(BlockIdVariants, &Expr),
         arg_name: &str,
     ) -> Result<Self, Diagnostic> {
