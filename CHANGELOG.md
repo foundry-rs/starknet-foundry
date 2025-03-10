@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- Testing events api improvements. New `IsEmitted` trait. `Into` and `PartialEq` trait implementations for snforge_std Events.
+
 #### Fixed
 
 - Issue with uploading `snforge_std` to scarbs package registry that prevented it from including package reexports required in Scarb >= 2.11.0

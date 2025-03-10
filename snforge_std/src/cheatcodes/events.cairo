@@ -8,7 +8,7 @@ pub fn spy_events() -> EventSpy {
 }
 
 /// Raw event format (as seen via the RPC-API), can be used for asserting the emitted events.
-#[derive(Drop, Clone, Serde, Debug)]
+#[derive(Drop, Clone, Serde, Debug, PartialEq)]
 pub struct Event {
     pub keys: Array<felt252>,
     pub data: Array<felt252>
@@ -74,7 +74,7 @@ impl EventSpyAssertionsTraitImpl<
 
         while i < events.len() {
             let (from, event) = events.at(i);
-            let emitted = is_emitted(@received_events, from, event);
+            let emitted = is_emitted(@received_events.events, from, event);
 
             if !emitted {
                 let from: felt252 = (*from).into();
@@ -91,7 +91,7 @@ impl EventSpyAssertionsTraitImpl<
 
         while i < events.len() {
             let (from, event) = events.at(i);
-            let emitted = is_emitted(@received_events, from, event);
+            let emitted = is_emitted(@received_events.events, from, event);
 
             if emitted {
                 let from: felt252 = (*from).into();
@@ -104,7 +104,9 @@ impl EventSpyAssertionsTraitImpl<
 }
 
 fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
-    self: @Events, expected_emitted_by: @ContractAddress, expected_event: @T
+    self: @Array<(ContractAddress, Event)>,
+    expected_emitted_by: @ContractAddress,
+    expected_event: @T
 ) -> bool {
     let mut expected_keys = array![];
     let mut expected_data = array![];
@@ -112,8 +114,8 @@ fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
 
     let mut i = 0;
     let mut is_emitted = false;
-    while i < self.events.len() {
-        let (from, event) = self.events.at(i);
+    while i < self.len() {
+        let (from, event) = self.at(i);
 
         if from == expected_emitted_by
             && event.keys == @expected_keys
@@ -126,6 +128,34 @@ fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
     };
     return is_emitted;
 }
+
+pub trait IsEmitted {
+    fn is_emitted(
+        self: @Array<(ContractAddress, Event)>,
+        expected_emitted_by: @ContractAddress,
+        expected_event: @Event
+    ) -> bool;
+}
+
+pub impl IsEmittedImpl of IsEmitted {
+    fn is_emitted(
+        self: @Array<(ContractAddress, Event)>,
+        expected_emitted_by: @ContractAddress,
+        expected_event: @Event
+    ) -> bool {
+        is_emitted(self, expected_emitted_by, expected_event)
+    }
+}
+
+impl EventIntoImpl<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> of Into<T, Event> {
+    fn into(self: T) -> Event {
+        let mut keys = array![];
+        let mut data = array![];
+        self.append_keys_and_data(ref keys, ref data);
+        Event { keys, data }
+    }
+}
+
 
 impl EventTraitImpl of starknet::Event<Event> {
     fn append_keys_and_data(self: @Event, ref keys: Array<felt252>, ref data: Array<felt252>) {
