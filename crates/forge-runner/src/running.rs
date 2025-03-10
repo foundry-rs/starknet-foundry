@@ -181,24 +181,9 @@ pub fn run_test_case(
     };
     let block_info = state_reader.get_block_info()?;
     let chain_id = state_reader.get_chain_id()?;
+    let tracked_resource = TrackedResource::from(runtime_config.tracked_resource);
 
-    let mut context = build_context(
-        &block_info,
-        chain_id,
-        &TrackedResource::from(runtime_config.tracked_resource),
-    );
-    let versioned_constants = context
-        .tx_context
-        .block_context
-        .versioned_constants()
-        .clone();
-
-    #[expect(clippy::clone_on_copy)]
-    let tracked_resource = context
-        .tracked_resource_stack
-        .last()
-        .expect("Unexpected empty tracked resource.")
-        .clone();
+    let mut context = build_context(&block_info, chain_id, &tracked_resource);
 
     if let Some(max_n_steps) = runtime_config.max_n_steps {
         set_max_steps(&mut context, max_n_steps);
@@ -261,7 +246,6 @@ pub fn run_test_case(
                     &mut forge_runtime,
                     &vm_resources_without_inner_calls,
                     &tracked_resource,
-                    &versioned_constants,
                 );
 
                 let ap = runner.relocated_trace.as_ref().unwrap().last().unwrap().ap;

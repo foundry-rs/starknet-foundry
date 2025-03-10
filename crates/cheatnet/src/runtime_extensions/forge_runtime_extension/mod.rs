@@ -558,8 +558,17 @@ pub fn add_resources_to_top_call(
     runtime: &mut ForgeRuntime,
     resources: &ExecutionResources,
     tracked_resource: &TrackedResource,
-    versioned_constants: &VersionedConstants,
 ) {
+    let versioned_constants = runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .base
+        .context
+        .tx_context
+        .block_context
+        .versioned_constants();
     let top_call = runtime
         .extended_runtime
         .extended_runtime
@@ -687,11 +696,8 @@ fn add_syscall_execution_resources(
 fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
     let mut gas_consumed = top_call.borrow().gas_consumed;
     for nested_call in &top_call.borrow().nested_calls {
-        match nested_call {
-            CallTraceNode::EntryPointCall(nested_call) => {
-                gas_consumed += &add_sierra_gas_resources(nested_call);
-            }
-            CallTraceNode::DeployWithoutConstructor => {}
+        if let CallTraceNode::EntryPointCall(nested_call) = nested_call {
+            gas_consumed += &add_sierra_gas_resources(nested_call);
         }
     }
     gas_consumed
@@ -813,6 +819,8 @@ fn n_steps_to_sierra_gas(n_steps: usize, versioned_constants: &VersionedConstant
     GasAmount(n_steps_gas_cost)
 }
 
+// region: Modified blockifier code
+// https://github.com/starkware-libs/sequencer/blob/main-v0.13.4/crates/blockifier/src/bouncer.rs#L320
 #[must_use]
 pub fn vm_resources_to_sierra_gas(
     resources: &ExecutionResources,

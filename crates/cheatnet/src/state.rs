@@ -204,7 +204,7 @@ impl CallTrace {
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
             vm_trace: None,
-            gas_consumed: 0,
+            gas_consumed: u64::default(),
         }
     }
 }
