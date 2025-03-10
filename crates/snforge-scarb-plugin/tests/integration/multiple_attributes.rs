@@ -1,14 +1,15 @@
-use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN, FN_WITH_SINGLE_FELT252_PARAM};
-use cairo_lang_macro::TokenStream;
-use indoc::formatdoc;
+use crate::utils::{assert_diagnostics, assert_output};
+use cairo_lang_macro::{quote, TokenStream};
 use snforge_scarb_plugin::attributes::fuzzer::wrapper::fuzzer_wrapper;
 use snforge_scarb_plugin::attributes::fuzzer::{fuzzer, fuzzer_config};
 use snforge_scarb_plugin::attributes::{available_gas::available_gas, fork::fork, test::test};
 
 #[test]
 fn works_with_few_attributes() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(String::new());
+    let item = quote!(
+        fn empty_fn() {}
+    );
+    let args = TokenStream::empty();
 
     let result = test(args, item);
 
@@ -24,7 +25,7 @@ fn works_with_few_attributes() {
     );
 
     let item = result.token_stream;
-    let args = TokenStream::new("(123)".into());
+    let args = quote!((123));
 
     let result = available_gas(args, item);
 
@@ -46,14 +47,14 @@ fn works_with_few_attributes() {
 
                     starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
 
-                    return; 
+                    return;
                 }
             }
         ",
     );
 
     let item = result.token_stream;
-    let args = TokenStream::new(r#"("test")"#.into());
+    let args = quote!(("test"));
 
     let result = fork(args, item);
 
@@ -82,7 +83,7 @@ fn works_with_few_attributes() {
 
                     starknet::testing::cheatcode::<'set_config_fork'>(data.span());
 
-                    return; 
+                    return;
                 }
             }
         "#,
@@ -91,8 +92,10 @@ fn works_with_few_attributes() {
 
 #[test]
 fn works_with_fuzzer() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(String::new());
+    let item = quote!(
+        fn empty_fn() {}
+    );
+    let args = TokenStream::empty();
 
     let result = test(args, item);
 
@@ -108,7 +111,7 @@ fn works_with_fuzzer() {
     );
 
     let item = result.token_stream;
-    let args = TokenStream::new("(runs: 123, seed: 321)".into());
+    let args = quote!((runs: 123, seed: 321));
 
     let result = fuzzer(args, item);
 
@@ -128,8 +131,10 @@ fn works_with_fuzzer() {
 
 #[test]
 fn works_with_fuzzer_config_wrapper() {
-    let item = TokenStream::new(FN_WITH_SINGLE_FELT252_PARAM.into());
-    let args = TokenStream::new("(999)".into());
+    let item = quote!(
+        fn empty_fn(f: felt252) {}
+    );
+    let args = quote!((999));
 
     let result = available_gas(args, item);
 
@@ -157,18 +162,15 @@ fn works_with_fuzzer_config_wrapper() {
 
     // Cannot apply `test` attribute here as it would cause an error
     // due to the function having a parameter
-    let item = TokenStream::new(formatdoc!(
-        r"
+    let item = result.token_stream;
+    let item = quote!(
         #[snforge_internal_test_executable]
         #[__internal_config_statement]
-        {}
-        ",
-        result.token_stream
-    ));
-    let args = TokenStream::new("(runs: 123, seed: 321)".into());
+        #item
+    );
+    let args = quote!((runs: 123, seed: 321));
 
     let result = fuzzer_config(args, item);
-
     assert_diagnostics(&result, &[]);
 
     assert_output(
@@ -204,7 +206,7 @@ fn works_with_fuzzer_config_wrapper() {
     );
 
     let item = result.token_stream;
-    let args = TokenStream::new(String::new());
+    let args = TokenStream::empty();
 
     let result = fuzzer_wrapper(args, item);
 

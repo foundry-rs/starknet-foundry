@@ -1,12 +1,13 @@
-use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN, FN_WITH_SINGLE_FELT252_PARAM};
-use cairo_lang_macro::{Diagnostic, TokenStream};
-use indoc::formatdoc;
+use crate::utils::{assert_diagnostics, assert_output};
+use cairo_lang_macro::{quote, Diagnostic, TokenStream};
 use snforge_scarb_plugin::attributes::test::test;
 
 #[test]
 fn appends_internal_config_and_executable() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(String::new());
+    let item = quote!(
+        fn empty_fn() {}
+    );
+    let args = TokenStream::empty();
 
     let result = test(args, item);
 
@@ -24,8 +25,10 @@ fn appends_internal_config_and_executable() {
 
 #[test]
 fn fails_with_non_empty_args() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new("(123)".into());
+    let item = quote!(
+        fn empty_fn() {}
+    );
+    let args = quote!((123));
 
     let result = test(args, item);
 
@@ -37,13 +40,11 @@ fn fails_with_non_empty_args() {
 
 #[test]
 fn is_used_once() {
-    let item = TokenStream::new(formatdoc!(
-        "
-            #[test]
-            {EMPTY_FN}
-        "
-    ));
-    let args = TokenStream::new(String::new());
+    let item = quote!(
+        #[test]
+        fn empty_fn() {}
+    );
+    let args = TokenStream::empty();
 
     let result = test(args, item);
 
@@ -55,8 +56,10 @@ fn is_used_once() {
 
 #[test]
 fn fails_with_params() {
-    let item = TokenStream::new(FN_WITH_SINGLE_FELT252_PARAM.into());
-    let args = TokenStream::new(String::new());
+    let item = quote!(
+        fn empty_fn(f: felt252) {}
+    );
+    let args = TokenStream::empty();
 
     let result = test(args, item);
 

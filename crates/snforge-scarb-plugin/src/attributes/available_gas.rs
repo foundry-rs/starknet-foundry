@@ -5,8 +5,8 @@ use crate::{
     config_statement::extend_with_config_cheatcodes,
     types::{Number, ParseFromExpr},
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
-use cairo_lang_syntax::node::db::SyntaxGroup;
+use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
+use cairo_lang_parser::utils::SimpleParserDatabase;
 
 pub struct AvailableGasCollector;
 
@@ -20,19 +20,17 @@ impl AttributeTypeData for AvailableGasCollector {
 
 impl AttributeCollector for AvailableGasCollector {
     fn args_into_config_expression(
-        db: &dyn SyntaxGroup,
+        db: &SimpleParserDatabase,
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
-    ) -> Result<String, Diagnostics> {
+    ) -> Result<TokenStream, Diagnostics> {
         let &[arg] = args.unnamed_only::<Self>()?.of_length::<1, Self>()?;
 
         let gas = Number::parse_from_expr::<Self>(db, arg.1, arg.0.to_string().as_str())?;
 
         let gas = gas.as_cairo_expression();
 
-        Ok(format!(
-            "snforge_std::_config_types::AvailableGasConfig {{ gas: {gas} }}"
-        ))
+        Ok(quote!(snforge_std::_config_types::AvailableGasConfig { gas: #gas }))
     }
 }
 
