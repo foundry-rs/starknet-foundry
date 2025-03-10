@@ -202,7 +202,6 @@ mod tests {
         let hex_str = "0x0000000000000000000000000000000000000000000000000000000000000001";
         let result = parse_input_to_felt(hex_str);
 
-        assert!(result.is_ok());
         assert_eq!(result.unwrap(), Felt::try_from_hex_str("0x1").unwrap());
     }
 
@@ -211,7 +210,6 @@ mod tests {
         let hex_str = "0x1a2b3c";
         let result = parse_input_to_felt(hex_str);
 
-        assert!(result.is_ok());
         assert_eq!(result.unwrap(), Felt::try_from_hex_str("0x1a2b3c").unwrap());
     }
 
@@ -230,7 +228,6 @@ mod tests {
         let dec_str = "123";
         let result = parse_input_to_felt(dec_str);
 
-        assert!(result.is_ok());
         assert_eq!(result.unwrap(), Felt::from(123));
     }
 
