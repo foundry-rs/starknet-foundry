@@ -1,9 +1,6 @@
 use async_trait::async_trait;
 use starknet::{
-    accounts::{
-        AccountFactory, PreparedAccountDeploymentV1, PreparedAccountDeploymentV3,
-        RawAccountDeploymentV1, RawAccountDeploymentV3,
-    },
+    accounts::{AccountFactory, PreparedAccountDeploymentV3, RawAccountDeploymentV3},
     core::types::{BlockId, BlockTag},
     providers::Provider,
     signers::{Signer, SignerInteractivityContext},
@@ -126,16 +123,6 @@ where
 
     fn block_id(&self) -> BlockId {
         self.block_id
-    }
-
-    async fn sign_deployment_v1(
-        &self,
-        deployment: &RawAccountDeploymentV1,
-        query_only: bool,
-    ) -> Result<Vec<Felt>, Self::SignError> {
-        let tx_hash = PreparedAccountDeploymentV1::from_raw(deployment.clone(), self)
-            .transaction_hash(query_only);
-        self.sign_deployment(tx_hash).await
     }
 
     async fn sign_deployment_v3(

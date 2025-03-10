@@ -13,6 +13,7 @@ have a `main` function in the module you want to run. `sncast_std` docs can be f
 Please note that **`sncast script` is in development**. While it is already possible to declare, deploy, invoke and call
 contracts from within Cairo, its interface, internals and feature set can change rapidly each version.
 
+<!-- TODO(#2490): Update fee usage here -->
 > ⚠️⚠️ By default, the nonce for each transaction is being taken from the pending block ⚠️⚠️
 >
 > Some RPC nodes can be configured with higher poll intervals, which means they may return "older" nonces

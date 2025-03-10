@@ -73,14 +73,14 @@ pub enum SNCastStarknetError {
     ClassAlreadyDeclared,
     #[error("Invalid transaction nonce")]
     InvalidTransactionNonce,
-    #[error("Max fee is smaller than the minimal transaction cost")]
-    InsufficientMaxFee,
+    #[error("The transaction's resources don't cover validation or the minimal transaction fee")]
+    InsufficientResourcesForValidate,
     #[error("Account balance is too small to cover transaction fee")]
     InsufficientAccountBalance,
     #[error("Contract failed the validation = {0}")]
     ValidationFailure(ByteArray),
     #[error("Contract failed to compile in starknet")]
-    CompilationFailed,
+    CompilationFailed(ByteArray),
     #[error("Contract class size is too large")]
     ContractClassSizeIsTooLarge,
     #[error("No account")]
@@ -114,14 +114,18 @@ impl From<StarknetError> for SNCastStarknetError {
             }
             StarknetError::ClassAlreadyDeclared => SNCastStarknetError::ClassAlreadyDeclared,
             StarknetError::InvalidTransactionNonce => SNCastStarknetError::InvalidTransactionNonce,
-            StarknetError::InsufficientMaxFee => SNCastStarknetError::InsufficientMaxFee,
+            StarknetError::InsufficientResourcesForValidate => {
+                SNCastStarknetError::InsufficientResourcesForValidate
+            }
             StarknetError::InsufficientAccountBalance => {
                 SNCastStarknetError::InsufficientAccountBalance
             }
             StarknetError::ValidationFailure(err) => {
                 SNCastStarknetError::ValidationFailure(ByteArray::from(err.as_str()))
             }
-            StarknetError::CompilationFailed => SNCastStarknetError::CompilationFailed,
+            StarknetError::CompilationFailed(msg) => {
+                SNCastStarknetError::CompilationFailed(ByteArray::from(msg.as_str()))
+            }
             StarknetError::ContractClassSizeIsTooLarge => {
                 SNCastStarknetError::ContractClassSizeIsTooLarge
             }

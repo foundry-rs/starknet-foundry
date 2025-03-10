@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Deserializer, Value};
 use shared::rpc::create_rpc_client;
 use starknet::accounts::{AccountFactory, AccountFactoryError};
+use starknet::core::types::ContractExecutionError;
 use starknet::core::types::{
     BlockId, BlockTag,
     BlockTag::{Latest, Pending},
@@ -294,7 +295,9 @@ pub async fn get_contract_class(
         // Imitate error thrown on chain to achieve particular error message (Issue #2554)
         let artificial_transaction_revert_error = SNCastProviderError::StarknetError(
             SNCastStarknetError::ContractError(ContractErrorData {
-                revert_error: format!("Class with hash {class_hash:#x} is not declared"),
+                revert_error: ContractExecutionError::Message(format!(
+                    "Class with hash {class_hash:#x} is not declared"
+                )),
             }),
         );
 
@@ -507,7 +510,9 @@ pub async fn get_class_hash_by_address(
         // Imitate error thrown on chain to achieve particular error message (Issue #2554)
         let artificial_transaction_revert_error = SNCastProviderError::StarknetError(
             SNCastStarknetError::ContractError(ContractErrorData {
-                revert_error: format!("Requested contract address {address:#x} is not deployed",),
+                revert_error: ContractExecutionError::Message(format!(
+                    "Requested contract address {address:#x} is not deployed",
+                )),
             }),
         );
 
@@ -576,7 +581,7 @@ pub async fn wait_for_tx(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: Felt,
     wait_params: ValidatedWaitParams,
-) -> Result<&str, WaitForTransactionError> {
+) -> Result<String, WaitForTransactionError> {
     println!("Transaction hash: {tx_hash:#x}");
 
     let retries = wait_params.get_retries();
@@ -591,11 +596,11 @@ pub async fn wait_for_tx(
                 starknet::core::types::TransactionStatus::AcceptedOnL2(execution_status)
                 | starknet::core::types::TransactionStatus::AcceptedOnL1(execution_status),
             ) => match execution_status {
-                starknet::core::types::TransactionExecutionStatus::Succeeded => {
-                    return Ok("Transaction accepted");
+                starknet::core::types::ExecutionResult::Succeeded => {
+                    return Ok("Transaction accepted".to_string());
                 }
-                starknet::core::types::TransactionExecutionStatus::Reverted => {
-                    return get_revert_reason(provider, tx_hash).await;
+                starknet::core::types::ExecutionResult::Reverted { reason } => {
+                    return Ok(reason);
                 }
             },
             Ok(starknet::core::types::TransactionStatus::Received)
@@ -616,28 +621,6 @@ pub async fn wait_for_tx(
     }
 
     Err(WaitForTransactionError::TimedOut)
-}
-
-async fn get_revert_reason(
-    provider: &JsonRpcClient<HttpTransport>,
-    tx_hash: Felt,
-) -> Result<&str, WaitForTransactionError> {
-    let receipt_with_block_info = provider
-        .get_transaction_receipt(tx_hash)
-        .await
-        .map_err(SNCastProviderError::from)?;
-
-    if let starknet::core::types::ExecutionResult::Reverted { reason } =
-        receipt_with_block_info.receipt.execution_result()
-    {
-        Err(WaitForTransactionError::TransactionError(
-            TransactionError::Reverted(ErrorData {
-                data: ByteArray::from(reason.as_str()),
-            }),
-        ))
-    } else {
-        unreachable!();
-    }
 }
 
 #[must_use]

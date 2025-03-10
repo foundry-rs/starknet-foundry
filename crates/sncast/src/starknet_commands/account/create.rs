@@ -20,7 +20,7 @@ use sncast::{
     get_chain_id, get_keystore_password, handle_account_factory_error,
 };
 use starknet::accounts::{
-    AccountDeploymentV1, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
+    AccountDeploymentV3, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
 };
 use starknet::core::types::FeeEstimate;
 use starknet::providers::JsonRpcClient;
@@ -181,7 +181,7 @@ async fn generate_account(
         }
         AccountType::Argent => {
             let factory =
-                ArgentAccountFactory::new(class_hash, chain_id, Felt::ZERO, signer, provider)
+                ArgentAccountFactory::new(class_hash, chain_id, Some(Felt::ZERO), signer, provider)
                     .await?;
             get_address_and_deployment_fee(factory, salt).await?
         }
@@ -220,12 +220,12 @@ async fn get_address_and_deployment_fee<T>(
 where
     T: AccountFactory + Sync,
 {
-    let deployment = account_factory.deploy_v1(salt);
+    let deployment = account_factory.deploy_v3(salt);
     Ok((deployment.address(), get_deployment_fee(&deployment).await?))
 }
 
 async fn get_deployment_fee<T>(
-    account_deployment: &AccountDeploymentV1<'_, T>,
+    account_deployment: &AccountDeploymentV3<'_, T>,
 ) -> Result<FeeEstimate>
 where
     T: AccountFactory + Sync,

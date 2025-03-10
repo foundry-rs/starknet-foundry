@@ -27,14 +27,16 @@ impl CairoSerialize for CallEntryPoint {
 
 impl CairoSerialize for ContractErrorData {
     fn serialize(&self, output: &mut BufferWriter) {
-        ByteArray::from(self.revert_error.as_str()).serialize(output);
+        // TODO: Implement
+        ByteArray::from("").serialize(output);
     }
 }
 
 impl CairoSerialize for TransactionExecutionErrorData {
     fn serialize(&self, output: &mut BufferWriter) {
         self.transaction_index.serialize(output);
-        ByteArray::from(self.execution_error.as_str()).serialize(output);
+        // TODO: Implement
+        ByteArray::from("").serialize(output);
     }
 }
 

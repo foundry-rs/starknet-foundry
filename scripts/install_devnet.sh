@@ -2,8 +2,8 @@
 set -e
 
 DEVNET_INSTALL_DIR="$(git rev-parse --show-toplevel)/crates/sncast/tests/utils/devnet"
-DEVNET_REPO="https://github.com/0xSpaceShard/starknet-devnet-rs"
-DEVNET_VER="v0.2.2"
+DEVNET_REPO="https://github.com/franciszekjob/starknet-devnet"
+DEVNET_VER="v0.13.4-rc.0"
 
 echo "Devnet installation directory: $DEVNET_INSTALL_DIR"
 

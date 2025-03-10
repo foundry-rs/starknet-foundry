@@ -3,7 +3,9 @@ use starknet_types_core::felt::Felt;
 
 pub const ACCOUNT: &str = "user1";
 pub const ACCOUNT_FILE_PATH: &str = "tests/data/accounts/accounts.json";
-pub const SEPOLIA_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_7";
+// FIXME
+// pub const SEPOLIA_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_7";
+pub const SEPOLIA_RPC_URL: &str = "https://rpc.pathfinder.equilibrium.co/testnet-sepolia/rpc/v0_8";
 
 pub const URL: &str = "http://127.0.0.1:5055/rpc";
 pub const NETWORK: &str = "testnet";
@@ -23,7 +25,7 @@ pub const DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS: &str =
 
 // OpenZeppelin account contract v0.8.1
 pub const DEVNET_OZ_CLASS_HASH_CAIRO_1: Felt =
-    felt!("0x061dac032f228abef9c6626f995015233097ae253a7f72d68552db02f2971b8f");
+    felt!("0x044cab2e6a3a7bc516425d06d76c6ffd56ae308864dbc66f8e75028e3784aa29");
 
 pub const MAP_CONTRACT_ADDRESS_SEPOLIA: &str =
     "0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008";
