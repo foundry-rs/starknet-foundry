@@ -1,5 +1,6 @@
 use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN, FN_WITH_SINGLE_FELT252_PARAM};
 use cairo_lang_macro::TokenStream;
+use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::fuzzer::wrapper::fuzzer_wrapper;
 use snforge_scarb_plugin::attributes::fuzzer::{fuzzer, fuzzer_config};
 use snforge_scarb_plugin::attributes::{available_gas::available_gas, fork::fork, test::test};
@@ -125,7 +126,6 @@ fn works_with_fuzzer() {
     );
 }
 
-#[expect(clippy::too_many_lines)]
 #[test]
 fn works_with_fuzzer_config_wrapper() {
     let item = TokenStream::new(FN_WITH_SINGLE_FELT252_PARAM.into());
@@ -155,36 +155,16 @@ fn works_with_fuzzer_config_wrapper() {
         ",
     );
 
-    let item = result.token_stream;
-    let args = TokenStream::new(String::new());
-
-    let result = test(args, item);
-
-    assert_diagnostics(&result, &[]);
-
-    assert_output(
-        &result,
-        "
-            #[snforge_internal_test_executable]
-            #[__internal_config_statement]
-            fn empty_fn(f: felt252) {
-                if snforge_std::_internals::_is_config_run() {
-                    let mut data = array![];
-
-                    snforge_std::_config_types::AvailableGasConfig {
-                        gas: 0x3e7
-                    }
-                    .serialize(ref data);
-
-                    starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
-
-                    return;
-                }
-            }
+    // Cannot apply `test` attribute here as it would cause an error
+    // due to the function having a parameter
+    let item = TokenStream::new(formatdoc!(
+        r"
+        #[snforge_internal_test_executable]
+        #[__internal_config_statement]
+        {}
         ",
-    );
-
-    let item = result.token_stream;
+        result.token_stream
+    ));
     let args = TokenStream::new("(runs: 123, seed: 321)".into());
 
     let result = fuzzer_config(args, item);

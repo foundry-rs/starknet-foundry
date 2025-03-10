@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use starknet::ContractAddress;
     use starknet::contract_address_const;
 
     #[starknet::interface]
