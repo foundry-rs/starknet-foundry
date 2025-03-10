@@ -7,7 +7,6 @@ use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
-use regex::Regex;
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
 use sncast::helpers::configuration::CastConfig;
@@ -180,20 +179,10 @@ fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<Felt> {
     Ok(private_key_string.parse()?)
 }
 
-fn parse_input_to_felt(input: &String) -> Result<Felt> {
-    // Regex is from spec https://github.com/starkware-libs/starknet-specs/blob/6d88b7399f56260ece3821c71f9ce53ec55f830b/api/starknet_api_openrpc.json#L1303
-    let felt_re = Regex::new(r"^0x(0|[a-fA-F1-9]{1}[a-fA-F0-9]{0,62})$").unwrap();
-    if input.starts_with("0x") && !felt_re.is_match(input) {
-        bail!(
-            "Failed to parse value {} to felt. Invalid hex value was passed",
-            input
-        );
-    } else if let Ok(felt_from_hex) = Felt::try_from_hex_str(input) {
-        return Ok(felt_from_hex);
-    } else if let Ok(felt_from_dec) = Felt::try_from_dec_str(input) {
-        return Ok(felt_from_dec);
-    }
-    bail!("Failed to parse value {} to felt", input);
+fn parse_input_to_felt(input: &str) -> Result<Felt> {
+    Felt::try_from_hex_str(input)
+        .or_else(|_| Felt::try_from_dec_str(input))
+        .with_context(|| format!("Failed to parse the value {input} as a felt"))
 }
 
 fn get_private_key_from_input() -> Result<Felt> {
@@ -210,52 +199,55 @@ mod tests {
 
     #[test]
     fn test_parse_hex_str() {
-        let hex_str = "0x1a2b3c";
-        let result = parse_input_to_felt(&hex_str.to_string());
+        let hex_str = "0x0000000000000000000000000000000000000000000000000000000000000001";
+        let result = parse_input_to_felt(hex_str);
 
-        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), Felt::try_from_hex_str("0x1").unwrap());
+    }
+
+    #[test]
+    fn test_parse_hex_str_padded() {
+        let hex_str = "0x1a2b3c";
+        let result = parse_input_to_felt(hex_str);
+
         assert_eq!(result.unwrap(), Felt::try_from_hex_str("0x1a2b3c").unwrap());
     }
 
     #[test]
     fn test_parse_hex_str_invalid() {
         let hex_str = "0xz";
-        let result = parse_input_to_felt(&hex_str.to_string());
+        let result = parse_input_to_felt(hex_str);
 
         assert!(result.is_err());
         let error_message = result.unwrap_err().to_string();
-        assert_eq!(
-            "Failed to parse value 0xz to felt. Invalid hex value was passed",
-            error_message
-        );
+        assert_eq!("Failed to parse the value 0xz as a felt", error_message);
     }
 
     #[test]
     fn test_parse_dec_str() {
         let dec_str = "123";
-        let result = parse_input_to_felt(&dec_str.to_string());
+        let result = parse_input_to_felt(dec_str);
 
-        assert!(result.is_ok());
         assert_eq!(result.unwrap(), Felt::from(123));
     }
 
     #[test]
     fn test_parse_dec_str_negative() {
         let dec_str = "-123";
-        let result = parse_input_to_felt(&dec_str.to_string());
+        let result = parse_input_to_felt(dec_str);
 
         assert!(result.is_err());
         let error_message = result.unwrap_err().to_string();
-        assert_eq!("Failed to parse value -123 to felt", error_message);
+        assert_eq!("Failed to parse the value -123 as a felt", error_message);
     }
 
     #[test]
     fn test_parse_invalid_str() {
         let invalid_str = "invalid";
-        let result = parse_input_to_felt(&invalid_str.to_string());
+        let result = parse_input_to_felt(invalid_str);
 
         assert!(result.is_err());
         let error_message = result.unwrap_err().to_string();
-        assert_eq!("Failed to parse value invalid to felt", error_message);
+        assert_eq!("Failed to parse the value invalid as a felt", error_message);
     }
 }
