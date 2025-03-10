@@ -1,4 +1,4 @@
-#![warn(rust_2024_compatibility)]
+#![warn(rust_2021_compatibility)]
 use attributes::fuzzer;
 use attributes::{
     available_gas::available_gas, disable_predeployed_contracts::disable_predeployed_contracts,
@@ -16,6 +16,8 @@ mod config_statement;
 mod parse;
 mod types;
 mod utils;
+
+pub use utils::create_single_token;
 
 executable_attribute!("snforge_internal_test_executable");
 
