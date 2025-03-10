@@ -24,7 +24,7 @@ fn works_with_few_attributes() {
     );
 
     let item = result.token_stream;
-    let args = TokenStream::new("(123)".into());
+    let args = TokenStream::new("(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)".into());
 
     let result = available_gas(args, item);
 
@@ -40,7 +40,9 @@ fn works_with_few_attributes() {
                     let mut data = array![];
 
                     snforge_std::_config_types::AvailableGasConfig {
-                        gas: 0x7b
+                        l1_gas: 0x1,
+                        l1_data_gas: 0x2,
+                        l2_gas: 0x3
                     }
                     .serialize(ref data);
 
@@ -69,7 +71,9 @@ fn works_with_few_attributes() {
                     let mut data = array![];
 
                     snforge_std::_config_types::AvailableGasConfig {
-                        gas: 0x7b
+                        l1_gas: 0x1,
+                        l1_data_gas: 0x2,
+                        l2_gas: 0x3
                     }
                     .serialize(ref data);
 
@@ -129,7 +133,7 @@ fn works_with_fuzzer() {
 #[test]
 fn works_with_fuzzer_config_wrapper() {
     let item = TokenStream::new(FN_WITH_SINGLE_FELT252_PARAM.into());
-    let args = TokenStream::new("(999)".into());
+    let args = TokenStream::new("(l2_gas: 999)".into());
 
     let result = available_gas(args, item);
 
@@ -143,7 +147,9 @@ fn works_with_fuzzer_config_wrapper() {
                     let mut data = array![];
 
                     snforge_std::_config_types::AvailableGasConfig {
-                        gas: 0x3e7
+                        l1_gas: 0x0,
+                        l1_data_gas: 0x0,
+                        l2_gas: 0x3e7
                     }
                     .serialize(ref data);
 
@@ -181,7 +187,9 @@ fn works_with_fuzzer_config_wrapper() {
                     let mut data = array![];
 
                     snforge_std::_config_types::AvailableGasConfig {
-                        gas: 0x3e7
+                        l1_gas: 0x0,
+                        l1_data_gas: 0x0,
+                        l2_gas: 0x3e7
                     }
                     .serialize(ref data);
 
@@ -220,7 +228,9 @@ fn works_with_fuzzer_config_wrapper() {
                     let mut data = array![];
 
                     snforge_std::_config_types::AvailableGasConfig {
-                        gas: 0x3e7
+                        l1_gas: 0x0,
+                        l1_data_gas: 0x0,
+                        l2_gas: 0x3e7
                     }
                     .serialize(ref data);
 
