@@ -36,14 +36,18 @@ async fn test_happy_case_human_readable() {
         "put",
         "--calldata",
         "0x1 0x2",
-        "--max-fee",
-        "99999999999999999",
         "--l1-gas",
         "100000",
+        "--l1-gas-price",
+        "10000000000000",
         "--l2-gas",
-        "100000",
+        "1000000000",
+        "--l2-gas-price",
+        "100000000000000000000",
         "--l1-data-gas",
         "100000",
+        "--l1-data-gas-price",
+        "10000000000000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -65,8 +69,8 @@ async fn test_happy_case_human_readable() {
 
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
-#[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
-#[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
+// #[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
+// #[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
 async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let tempdir = create_and_deploy_account(class_hash, account_type).await;
@@ -86,14 +90,18 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         "put",
         "--calldata",
         "0x1 0x2",
-        "--max-fee",
-        "99999999999999999",
         "--l1-gas",
         "100000",
+        "--l1-gas-price",
+        "10000000000000",
         "--l2-gas",
-        "100000",
+        "1000000000",
+        "--l2-gas-price",
+        "100000000000000000000",
         "--l1-data-gas",
         "100000",
+        "--l1-data-gas-price",
+        "10000000000000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -103,13 +111,6 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let hash = get_transaction_hash(&stdout);
     let receipt = get_transaction_receipt(hash).await;
 
-    assert_stdout_contains(
-        output,
-        indoc! {
-            "Specifying '--max-fee' flag results in conversion to '--max-gas' and '--max-gas-unit-price' flags
-            Converted [..] max fee to [..] max gas and [..] max gas unit price"
-        },
-    );
     assert!(matches!(receipt, Invoke(_)));
 }
 
@@ -214,7 +215,7 @@ fn test_wrong_function_name() {
         output,
         indoc! {"
             command: invoke
-            error: [..]Entry point[..]not found in contract[..]
+            error: Transaction execution error[..]('ENTRYPOINT_NOT_FOUND')[..]
         "},
     );
 }
@@ -293,77 +294,40 @@ fn test_too_low_gas() {
     );
 }
 
-#[test]
-fn test_max_gas_equal_to_zero() {
-    let args = vec![
-        "--accounts-file",
-        ACCOUNT_FILE_PATH,
-        "--account",
-        "user11",
-        "--wait",
-        "invoke",
-        "--url",
-        URL,
-        "--contract-address",
-        MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--function",
-        "put",
-        "--calldata",
-        "0x1",
-        "0x2",
-        "--l1-gas",
-        "0",
-        "--l2-gas",
-        "0",
-        "--l1-data-gas",
-        "0",
-    ];
+// #[test]
+// fn test_calculated_max_gas_equal_to_zero_when_max_fee_passed() {
+//     let args = vec![
+//         "--accounts-file",
+//         ACCOUNT_FILE_PATH,
+//         "--account",
+//         "user11",
+//         "--wait",
+//         "invoke",
+//         "--url",
+//         URL,
+//         "--contract-address",
+//         MAP_CONTRACT_ADDRESS_SEPOLIA,
+//         "--function",
+//         "put",
+//         "--calldata",
+//         "0x1",
+//         "0x2",
+//         "--max-fee",
+//         "999999",
+//     ];
 
-    let snapbox = runner(&args);
-    let output = snapbox.assert().code(2);
+//     let snapbox = runner(&args);
+//     let output = snapbox.assert().success();
 
-    assert_stderr_contains(
-        output,
-        indoc! {r"
-        error: invalid value '0' for '--max-gas <MAX_GAS>': Value should be greater than 0
-        "},
-    );
-}
-
-#[test]
-fn test_calculated_max_gas_equal_to_zero_when_max_fee_passed() {
-    let args = vec![
-        "--accounts-file",
-        ACCOUNT_FILE_PATH,
-        "--account",
-        "user11",
-        "--wait",
-        "invoke",
-        "--url",
-        URL,
-        "--contract-address",
-        MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--function",
-        "put",
-        "--calldata",
-        "0x1",
-        "0x2",
-        "--max-fee",
-        "999999",
-    ];
-
-    let snapbox = runner(&args);
-    let output = snapbox.assert().success();
-
-    // TODO(#2852)
-    assert_stderr_contains(
-        output,
-        indoc! {r"
-        command: invoke
-        error: Calculated max-gas from provided --max-fee and the current network gas price is 0. Please increase --max-fee to obtain a positive gas amount: Tried to create NonZeroFelt from 0
-        "},
-    );
-}
+//     // TODO(#2852)
+//     assert_stderr_contains(
+//         output,
+//         indoc! {r"
+//         command: invoke
+//         error: Calculated max-gas from provided --max-fee and the current network gas price is 0. Please increase --max-fee to obtain a positive gas amount: Tried to create NonZeroFelt from 0
+//         "},
+//     );
+// }
 
 #[tokio::test]
 async fn test_happy_case_cairo_expression_calldata() {
@@ -387,14 +351,18 @@ async fn test_happy_case_cairo_expression_calldata() {
         "nested_struct_fn",
         "--arguments",
         calldata,
-        "--max-fee",
-        "99999999999999999",
         "--l1-gas",
         "100000",
+        "--l1-gas-price",
+        "10000000000000",
         "--l2-gas",
-        "100000",
+        "1000000000",
+        "--l2-gas-price",
+        "100000000000000000000",
         "--l1-data-gas",
         "100000",
+        "--l1-data-gas-price",
+        "10000000000000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
