@@ -87,6 +87,12 @@ Do not activate the `default` feature.
 Build contract artifacts in a separate [starknet contract target](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#starknet-contract-target).
 Enabling this flag will slow down the compilation process, but the built contracts will more closely resemble the ones used on real networks. This is set to `true` when using Scarb version less than `2.8.3`.
 
+## `--tracked-resource`
+
+Set tracked resource for test execution. Impacts overall test gas cost. Valid values:
+- `cairo-steps` (default): track cairo steps, uses vm `ExecutionResources` (steps, builtins, memory holes) to describe  resources consumed by the test.
+- `sierra-gas` (sierra 1.7.0+ is required): track sierra gas, uses cairo native `CallExecution` (sierra gas consumption) to describe computation resources consumed by the test.
+
 ## `-h`, `--help`
 
 Print help.
