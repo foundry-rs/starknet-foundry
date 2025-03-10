@@ -1,14 +1,12 @@
-use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN};
-use cairo_lang_macro::{Diagnostic, TokenStream};
-use indoc::formatdoc;
+use crate::utils::{assert_diagnostics, assert_output, empty_function};
+use cairo_lang_macro::{quote, Diagnostic, TokenStream};
 use snforge_scarb_plugin::attributes::disable_predeployed_contracts::disable_predeployed_contracts;
 
 #[test]
 fn fails_with_args() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new("(123)".into());
+    let args = quote!((123));
 
-    let result = disable_predeployed_contracts(args, item);
+    let result = disable_predeployed_contracts(args, empty_function());
 
     assert_diagnostics(
         &result,
@@ -20,10 +18,9 @@ fn fails_with_args() {
 
 #[test]
 fn works_without_args() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(String::new());
+    let args = TokenStream::empty();
 
-    let result = disable_predeployed_contracts(args, item);
+    let result = disable_predeployed_contracts(args, empty_function());
 
     assert_diagnostics(&result, &[]);
 
@@ -50,13 +47,11 @@ fn works_without_args() {
 
 #[test]
 fn is_used_once() {
-    let item = TokenStream::new(formatdoc!(
-        "
-            #[disable_predeployed_contracts]
-            {EMPTY_FN}
-        "
-    ));
-    let args = TokenStream::new(String::new());
+    let item = quote! {
+        #[disable_predeployed_contracts]
+        fn empty_fn() {}
+    };
+    let args = TokenStream::empty();
 
     let result = disable_predeployed_contracts(args, item);
 

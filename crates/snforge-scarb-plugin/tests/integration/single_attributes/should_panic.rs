@@ -1,14 +1,12 @@
-use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN};
-use cairo_lang_macro::{Diagnostic, TokenStream};
-use indoc::formatdoc;
+use crate::utils::{assert_diagnostics, assert_output, empty_function};
+use cairo_lang_macro::{quote, Diagnostic, TextSpan, Token, TokenStream, TokenTree};
 use snforge_scarb_plugin::attributes::should_panic::should_panic;
 
 #[test]
 fn work_with_empty() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(String::new());
+    let args = TokenStream::empty();
 
-    let result = should_panic(args, item);
+    let result = should_panic(args, empty_function());
 
     assert_diagnostics(&result, &[]);
 
@@ -34,10 +32,9 @@ fn work_with_empty() {
 
 #[test]
 fn work_with_expected_string() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(r#"(expected: "panic data")"#.into());
+    let args = quote!((expected: "panic data"));
 
-    let result = should_panic(args, item);
+    let result = should_panic(args, empty_function());
 
     assert_diagnostics(&result, &[]);
 
@@ -63,10 +60,9 @@ fn work_with_expected_string() {
 
 #[test]
 fn work_with_expected_string_escaped() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(r#"(expected: "can\"t \0 null byte")"#.into());
+    let args = quote!((expected: "can\"t \0 null byte"));
 
-    let result = should_panic(args, item);
+    let result = should_panic(args, empty_function());
 
     assert_diagnostics(&result, &[]);
 
@@ -92,10 +88,12 @@ fn work_with_expected_string_escaped() {
 
 #[test]
 fn work_with_expected_short_string() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(r"(expected: 'panic data')".into());
+    let args = TokenStream::new(vec![TokenTree::Ident(Token::new(
+        "(expected: 'panic data')",
+        TextSpan::call_site(),
+    ))]);
 
-    let result = should_panic(args, item);
+    let result = should_panic(args, empty_function());
 
     assert_diagnostics(&result, &[]);
 
@@ -121,10 +119,12 @@ fn work_with_expected_short_string() {
 
 #[test]
 fn work_with_expected_short_string_escaped() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(r"(expected: 'can\'t')".into());
+    let args = TokenStream::new(vec![TokenTree::Ident(Token::new(
+        r"(expected: 'can\'t')",
+        TextSpan::call_site(),
+    ))]);
 
-    let result = should_panic(args, item);
+    let result = should_panic(args, empty_function());
 
     assert_diagnostics(&result, &[]);
 
@@ -150,10 +150,12 @@ fn work_with_expected_short_string_escaped() {
 
 #[test]
 fn work_with_expected_tuple() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(r"(expected: ('panic data', ' or not'))".into());
+    let args = TokenStream::new(vec![TokenTree::Ident(Token::new(
+        r"(expected: ('panic data', ' or not'))",
+        TextSpan::call_site(),
+    ))]);
 
-    let result = should_panic(args, item);
+    let result = should_panic(args, empty_function());
 
     assert_diagnostics(&result, &[]);
 
@@ -179,13 +181,11 @@ fn work_with_expected_tuple() {
 
 #[test]
 fn is_used_once() {
-    let item = TokenStream::new(formatdoc!(
-        "
-            #[should_panic]
-            {EMPTY_FN}
-        "
-    ));
-    let args = TokenStream::new(String::new());
+    let item = quote!(
+        #[should_panic]
+        fn empty_fn() {}
+    );
+    let args = TokenStream::empty();
 
     let result = should_panic(args, item);
 
