@@ -17,6 +17,8 @@ mod parse;
 mod types;
 mod utils;
 
+pub use utils::create_single_token;
+
 executable_attribute!("snforge_internal_test_executable");
 
 #[attribute_macro]
