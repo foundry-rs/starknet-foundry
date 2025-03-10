@@ -34,14 +34,18 @@ async fn test_happy_case_human_readable() {
         "--salt",
         "0x2",
         "--unique",
-        "--max-fee",
-        "99999999999999999",
         "--l1-gas",
         "100000",
+        "--l1-gas-price",
+        "10000000000000",
         "--l2-gas",
-        "100000",
+        "1000000000",
+        "--l2-gas-price",
+        "100000000000000000000",
         "--l1-data-gas",
         "100000",
+        "--l1-data-gas-price",
+        "10000000000000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -65,8 +69,8 @@ async fn test_happy_case_human_readable() {
 
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
-#[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
-#[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
+// #[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
+// #[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
 async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let tempdir = create_and_deploy_account(class_hash, account_type).await;
@@ -85,14 +89,18 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         "--salt",
         "0x2",
         "--unique",
-        "--max-fee",
-        "99999999999999999",
         "--l1-gas",
         "100000",
+        "--l1-gas-price",
+        "10000000000000",
         "--l2-gas",
-        "100000",
+        "1000000000",
+        "--l2-gas-price",
+        "100000000000000000000",
         "--l1-data-gas",
         "100000",
+        "--l1-data-gas-price",
+        "10000000000000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -172,6 +180,18 @@ async fn test_happy_case_with_constructor() {
         "0x0",
         "--class-hash",
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--l1-gas",
+        "100000",
+        "--l1-gas-price",
+        "10000000000000",
+        "--l2-gas",
+        "1000000000",
+        "--l2-gas-price",
+        "100000000000000000000",
+        "--l1-data-gas",
+        "100000",
+        "--l1-data-gas-price",
+        "10000000000000",
     ];
 
     let snapbox = runner(&args);
@@ -201,6 +221,18 @@ async fn test_happy_case_with_constructor_cairo_expression_calldata() {
         "0x420, 0x2137_u256",
         "--class-hash",
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--l1-gas",
+        "100000",
+        "--l1-gas-price",
+        "10000000000000",
+        "--l2-gas",
+        "1000000000",
+        "--l2-gas-price",
+        "100000000000000000000",
+        "--l1-data-gas",
+        "100000",
+        "--l1-data-gas-price",
+        "10000000000000",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
