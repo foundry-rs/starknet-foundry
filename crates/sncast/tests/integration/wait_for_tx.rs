@@ -57,17 +57,23 @@ async fn test_rejected_transaction() {
 }
 
 #[tokio::test]
-#[should_panic(expected = "Transaction has been reverted = Insufficient max fee:")]
+#[should_panic(
+    expected = "Transaction execution failed: Provider(StarknetError(InsufficientResourcesForValidate))"
+)]
 async fn test_wait_for_reverted_transaction() {
     let provider = create_test_provider();
     let salt = "0x029c81e6487b5f9278faa6f454cda3c8eca259f99877faab823b3704327cd695";
-    let max_fee: u64 = 43_400_000_000_000 - 1;
 
     let transaction_hash = invoke_contract(
         ACCOUNT,
         UDC_ADDRESS.into_hex_string().as_str(),
         "deployContract",
-        Some(max_fee.into()),
+        Some(1),
+        Some(1),
+        Some(1),
+        Some(1),
+        Some(1),
+        Some(1),
         &[
             CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
             salt,
