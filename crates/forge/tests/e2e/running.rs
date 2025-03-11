@@ -946,7 +946,7 @@ fn sierra_gas_with_older_scarb() {
         indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
-        [ERROR] Tracking SierraGas is not supported for sierra <= 1.7.0: Contract version [..] is lower than required minimal sierra version
+        [ERROR] Tracking SierraGas is not supported for sierra <= 1.7.0: Contract version [..] is lower than required minimal sierra version 1.7.0
         "},
     );
 }

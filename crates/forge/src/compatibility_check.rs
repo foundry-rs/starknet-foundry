@@ -134,7 +134,7 @@ fn verify_contracts_sierra_versions(forge_config: &ForgeConfig) -> Result<()> {
             let contract_version = parse_sierra_version(sierra_str)?;
             if MINIMAL_SIERRA_VERSION_FOR_SIERRA_GAS > contract_version {
                 bail!(
-                    "Contract version {} is lower than required minimal sierra version",
+                    "Contract version {} is lower than required minimal sierra version {MINIMAL_SIERRA_VERSION_FOR_SIERRA_GAS}",
                     contract_version
                 );
             }
@@ -149,7 +149,7 @@ fn parse_sierra_version(sierra_str: &str) -> Result<Version> {
 
     let parsed_values: Vec<u8> = sierra_json["sierra_program"]
         .as_array()
-        .context("Unable to read `sierra_program`. Ensure it is an array of felts.")?
+        .context("Unable to read `sierra_program`.")?
         .iter()
         .take(3)
         .filter_map(|x| x.as_str())
@@ -431,6 +431,12 @@ mod tests {
                 execution_data_to_save: ExecutionDataToSave::default(),
             }),
         };
-        assert!(check_sierra_gas_version_requirement(&forge_config).is_err());
+        let result = check_sierra_gas_version_requirement(&forge_config).unwrap_err();
+        dbg!(&result.to_string());
+        assert!(
+            result
+                .to_string()
+                .contains("Tracking SierraGas is not supported for sierra <= 1.7.0")
+        );
     }
 }
