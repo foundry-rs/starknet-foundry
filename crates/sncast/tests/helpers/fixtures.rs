@@ -16,10 +16,10 @@ use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::state::state_file::{
     ScriptTransactionEntry, ScriptTransactionOutput, ScriptTransactionStatus,
 };
-use sncast::{AccountType, get_chain_id, get_keystore_password};
+use sncast::{AccountType, apply_optional, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider};
 use starknet::accounts::{
-    Account, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
+    Account, AccountFactory, ArgentAccountFactory, ExecutionV3, OpenZeppelinAccountFactory,
 };
 use starknet::core::types::{Call, InvokeTransactionResult, TransactionReceipt};
 use starknet::core::utils::get_contract_address;
@@ -192,8 +192,12 @@ pub async fn invoke_contract(
     account: &str,
     contract_address: &str,
     entry_point_name: &str,
-    // FIXME
-    _max_fee: Option<Felt>,
+    l1_gas: Option<u64>,
+    l1_gas_price: Option<u128>,
+    l2_gas: Option<u64>,
+    l2_gas_price: Option<u128>,
+    l1_data_gas: Option<u64>,
+    l1_data_gas_price: Option<u128>,
     constructor_calldata: &[&str],
 ) -> InvokeTransactionResult {
     let provider = get_provider(URL).expect("Could not get the provider");
@@ -223,10 +227,17 @@ pub async fn invoke_contract(
     };
 
     let execution = account.execute_v3(vec![call]);
-    // FIXME
-    // let execution = apply_optional(execution, max_fee, ExecutionV1::max_fee);
+    let execution = apply_optional(execution, l1_gas, ExecutionV3::l1_gas);
+    let execution = apply_optional(execution, l1_gas_price, ExecutionV3::l1_gas_price);
+    let execution = apply_optional(execution, l2_gas, ExecutionV3::l2_gas);
+    let execution = apply_optional(execution, l2_gas_price, ExecutionV3::l2_gas_price);
+    let execution = apply_optional(execution, l1_data_gas, ExecutionV3::l1_data_gas);
+    let execution = apply_optional(execution, l1_data_gas_price, ExecutionV3::l1_data_gas_price);
 
-    execution.send().await.unwrap()
+    execution
+        .send()
+        .await
+        .expect("Transaction execution failed")
 }
 
 // devnet-rs accepts an amount as u128
