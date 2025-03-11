@@ -93,6 +93,8 @@ pub enum SNCastStarknetError {
     UnsupportedTxVersion,
     #[error("Unsupported contract class version")]
     UnsupportedContractClassVersion,
+    #[error("Entry point not found in contract")]
+    EntryPointNotFound,
     #[error("Unexpected RPC error occurred: {0}")]
     UnexpectedError(anyhow::Error),
 }
@@ -141,6 +143,7 @@ impl From<StarknetError> for SNCastStarknetError {
             StarknetError::UnexpectedError(err) => {
                 SNCastStarknetError::UnexpectedError(anyhow!(err))
             }
+            StarknetError::EntrypointNotFound => SNCastStarknetError::EntryPointNotFound,
             other => SNCastStarknetError::UnexpectedError(anyhow!(other)),
         }
     }
