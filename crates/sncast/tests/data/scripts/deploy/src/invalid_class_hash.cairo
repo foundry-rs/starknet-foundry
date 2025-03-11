@@ -5,7 +5,15 @@ use starknet::{ClassHash, Felt252TryIntoClassHash};
 use traits::Into;
 
 fn main() {
-    let max_fee = 99999999999999999;
+    let fee_settings = FeeSettings {
+        max_fee: Option::Some(99999999999999999999),
+        l1_gas: Option::None,
+        l1_gas_price: Option::None,
+        l2_gas: Option::None,
+        l2_gas_price: Option::None,
+        l1_data_gas: Option::None,
+        l2_data_gas_price: Option::None,
+    };
     let salt = 0x3;
 
     let class_hash: ClassHash = 0xdddd.try_into().expect('Invalid class hash value');
@@ -16,9 +24,7 @@ fn main() {
         array![0x2, 0x2, 0x0],
         Option::Some(salt),
         true,
-        FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
-        },
+        fee_settings,
         Option::Some(deploy_nonce)
     )
         .unwrap_err();

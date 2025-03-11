@@ -2,7 +2,15 @@ use starknet::ClassHash;
 use sncast_std::{deploy, FeeSettings};
 
 fn main() {
-    let max_fee = 9999999;
+    let fee_settings = FeeSettings {
+        max_fee: Option::Some(9999999),
+        l1_gas: Option::None,
+        l1_gas_price: Option::None,
+        l2_gas: Option::None,
+        l2_gas_price: Option::None,
+        l1_data_gas: Option::None,
+        l2_data_gas_price: Option::None,
+    };
     let salt = 0x1;
     let nonce = 0x1;
 
@@ -11,14 +19,7 @@ fn main() {
         .expect('Invalid class hash value');
 
     let result = deploy(
-        class_hash,
-        ArrayTrait::new(),
-        Option::Some(salt),
-        true,
-        FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
-        },
-        Option::Some(nonce)
+        class_hash, ArrayTrait::new(), Option::Some(salt), true, fee_settings, Option::Some(nonce)
     )
         .expect('deploy failed');
 

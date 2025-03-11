@@ -4,17 +4,17 @@ use sncast_std::{
 };
 
 fn main() {
+    let fee_settings = FeeSettings {
+        max_fee: Option::None,
+        l1_gas: Option::Some(100000),
+        l1_gas_price: Option::Some(10000000000000),
+        l2_gas: Option::Some(1000000000),
+        l2_gas_price: Option::Some(100000000000000000000),
+        l1_data_gas: Option::Some(100000),
+        l2_data_gas_price: Option::Some(10000000000000),
+    };
     let declare_nonce = get_nonce('latest');
-    let declare_result = declare(
-        "Mapa",
-        FeeSettings {
-            max_fee: Option::None,
-            max_gas: Option::Some(9999999999999999999),
-            max_gas_unit_price: Option::Some(99999999999999999999999999999999999999)
-        },
-        Option::Some(declare_nonce)
-    )
-        .unwrap_err();
+    let declare_result = declare("Mapa", fee_settings, Option::Some(declare_nonce)).unwrap_err();
     println!("{:?}", declare_result);
 
     assert(

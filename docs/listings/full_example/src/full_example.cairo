@@ -1,18 +1,20 @@
 use sncast_std::{declare, deploy, invoke, call, DeclareResultTrait, get_nonce, FeeSettings};
 
 fn main() {
-    let max_fee = 999999999999999;
+    let fee_settings = FeeSettings {
+        max_fee: Option::Some(999999999999999),
+        l1_gas: Option::None,
+        l1_gas_price: Option::None,
+        l2_gas: Option::None,
+        l2_gas_price: Option::None,
+        l1_data_gas: Option::None,
+        l2_data_gas_price: Option::None,
+    };
     let salt = 0x3;
 
     let declare_nonce = get_nonce('latest');
 
-    let declare_result = declare(
-        "MapContract",
-        FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
-        },
-        Option::Some(declare_nonce)
-    )
+    let declare_result = declare("MapContract", fee_settings, Option::Some(declare_nonce))
         .expect('map declare failed');
 
     let class_hash = declare_result.class_hash();
@@ -23,9 +25,7 @@ fn main() {
         ArrayTrait::new(),
         Option::Some(salt),
         true,
-        FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
-        },
+        fee_settings,
         Option::Some(deploy_nonce)
     )
         .expect('map deploy failed');
@@ -38,9 +38,7 @@ fn main() {
         deploy_result.contract_address,
         selector!("put"),
         array![0x1, 0x2],
-        FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
-        },
+        fee_settings,
         Option::Some(invoke_nonce)
     )
         .expect('map invoke failed');
