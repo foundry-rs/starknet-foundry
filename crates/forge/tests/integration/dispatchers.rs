@@ -641,21 +641,28 @@ fn proxy_dispatcher_handle_panic() {
 
         #[starknet::interface]
         trait ICaller<T> {
-            fn invoke_executor(ref self: T);
+            fn invoke_caller2(ref self: T);
         }
 
         #[test]
         fn proxy_dispatcher_panic() {
             let executor_address = deploy_contract("Executor", @ArrayTrait::new());
-            let caller_constructor_calldata: Array<felt252> = array![executor_address.into()];
+            let caller2_constructor_calldata: Array<felt252> = array![executor_address.into()];
+            let caller2_address = deploy_contract("Caller2", @caller2_constructor_calldata);
+            let caller_constructor_calldata: Array<felt252> = array![caller2_address.into()];
             let caller_address = deploy_contract("Caller", @caller_constructor_calldata);
+            
+            let executor: felt252 = executor_address.into();
+            let caller2: felt252 = caller2_address.into();
+            let caller: felt252 = caller_address.into();
+            
+            println!("executor {}", executor);
+            println!("caller {}", caller);
+            println!("caller2 {}", caller2);
 
-            let caller_dispatcher = ICallerSafeDispatcher { contract_address: caller_address };
+            let caller_dispatcher = ICallerDispatcher { contract_address: caller_address };
 
-            match caller_dispatcher.invoke_executor() {
-                Result::Ok(_) => panic_with_felt252('should have panicked'),
-                Result::Err(x) => assert(*x.at(0) == 'panic_msg', 'wrong panic msg')
-            }
+            caller_dispatcher.invoke_caller2();
         }
     "#
         ),
@@ -665,7 +672,7 @@ fn proxy_dispatcher_handle_panic() {
                 r"
             #[starknet::interface]
             trait ICaller<TContractState> {
-                fn invoke_executor(
+                fn invoke_caller2(
                     self: @TContractState,
                 );
             }
@@ -673,10 +680,11 @@ fn proxy_dispatcher_handle_panic() {
             #[starknet::contract]
             mod Caller {
                 use starknet::ContractAddress;
+                use core::panic_with_felt252;
 
                 #[starknet::interface]
-                trait IExecutor<T> {
-                    fn invoke_with_panic(self: @T);
+                trait ICaller2<T> {
+                    fn invoke_executor(self: @T);
                 }
 
                 #[storage]
@@ -691,11 +699,14 @@ fn proxy_dispatcher_handle_panic() {
 
                 #[abi(embed_v0)]
                 impl CallerImpl of super::ICaller<ContractState> {
-                    fn invoke_executor(
+                    fn invoke_caller2(
                         self: @ContractState,
                     ) {
-                        let dispatcher = IExecutorDispatcher { contract_address: self.executor_address.read() };
-                        dispatcher.invoke_with_panic()
+                        let dispatcher = ICaller2SafeDispatcher { contract_address: self.executor_address.read() };
+                        match dispatcher.invoke_executor() {
+                            Result::Ok(_) => {},
+                            Result::Err(x) => panic_with_felt252('shouldnt have panicked'),
+                        }
                     }
                 }
             }
@@ -716,6 +727,7 @@ fn proxy_dispatcher_handle_panic() {
             #[starknet::contract]
             mod Caller2 {
                 use starknet::ContractAddress;
+                use core::panic_with_felt252;
 
                 #[starknet::interface]
                 trait IExecutor<T> {
@@ -737,8 +749,11 @@ fn proxy_dispatcher_handle_panic() {
                     fn invoke_executor(
                         self: @ContractState,
                     ) {
-                        let dispatcher = IExecutorDispatcher { contract_address: self.executor_address.read() };
-                        dispatcher.invoke_with_panic()
+                        let dispatcher = IExecutorSafeDispatcher { contract_address: self.executor_address.read() };
+                        match dispatcher.invoke_with_panic() {
+                            Result::Ok(_) => panic_with_felt252('should have panicked'),
+                            Result::Err(x) => {},
+                        }
                     }
                 }
             }
