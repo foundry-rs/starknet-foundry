@@ -621,6 +621,121 @@ fn proxy_dispatcher_panic() {
     assert_passed(&result);
 }
 
+
+#[test]
+#[allow(clippy::too_many_lines)]
+fn proxy_dispatcher_handle_panic() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use snforge_std::DeclareResultTrait;
+        use starknet::ContractAddress;
+        use snforge_std::{ declare, ContractClassTrait };
+        use core::panic_with_felt252;
+
+        fn deploy_contract(name: ByteArray, constructor_calldata: @Array<felt252>) -> ContractAddress {
+            let contract = declare(name).unwrap().contract_class();
+            let (contract_address, _) = contract.deploy(constructor_calldata).unwrap();
+            contract_address
+        }
+
+        #[starknet::interface]
+        trait ICaller<T> {
+            fn invoke_executor(ref self: T);
+        }
+
+        #[test]
+        fn proxy_dispatcher_panic() {
+            let executor_address = deploy_contract("Executor", @ArrayTrait::new());
+            let caller_constructor_calldata: Array<felt252> = array![executor_address.into()];
+            let caller_address = deploy_contract("Caller", @caller_constructor_calldata);
+
+            let caller_dispatcher = ICallerSafeDispatcher { contract_address: caller_address };
+
+            match caller_dispatcher.invoke_executor() {
+                Result::Ok(_) => panic_with_felt252('should have panicked'),
+                Result::Err(x) => assert(*x.at(0) == 'panic_msg', 'wrong panic msg')
+            }
+        }
+    "#
+        ),
+        Contract::new(
+            "Caller",
+            indoc!(
+                r"
+            #[starknet::interface]
+            trait ICaller<TContractState> {
+                fn invoke_executor(
+                    self: @TContractState,
+                );
+            }
+
+            #[starknet::contract]
+            mod Caller {
+                use starknet::ContractAddress;
+
+                #[starknet::interface]
+                trait IExecutor<T> {
+                    fn invoke_with_panic(self: @T);
+                }
+
+                #[storage]
+                struct Storage {
+                    executor_address: ContractAddress
+                }
+
+                #[constructor]
+                fn constructor(ref self: ContractState, executor_address: ContractAddress) {
+                    self.executor_address.write(executor_address);
+                }
+
+                #[abi(embed_v0)]
+                impl CallerImpl of super::ICaller<ContractState> {
+                    fn invoke_executor(
+                        self: @ContractState,
+                    ) {
+                        let dispatcher = IExecutorDispatcher { contract_address: self.executor_address.read() };
+                        dispatcher.invoke_with_panic()
+                    }
+                }
+            }
+            "
+            )
+        ),
+        Contract::new(
+            "Executor",
+            indoc!(
+                r"
+            #[starknet::interface]
+            trait IExecutor<TContractState> {
+                fn invoke_with_panic(ref self: TContractState);
+            }
+
+            #[starknet::contract]
+            mod Executor {
+                use core::panic_with_felt252;
+
+                #[storage]
+                struct Storage {}
+
+                #[abi(embed_v0)]
+                impl ExecutorImpl of super::IExecutor<ContractState> {
+                    fn invoke_with_panic(ref self: ContractState) {
+                        panic_with_felt252('panic_msg');
+                    }
+                }
+            }
+            "
+            )
+        )
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+}
+
+
 #[test]
 fn nonexistent_method_call() {
     let test = test_case!(
