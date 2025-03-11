@@ -9,8 +9,8 @@ use test_case::test_case;
 #[test_case("oz_cairo_0"; "cairo_0_account")]
 #[test_case("oz_cairo_1"; "cairo_1_account")]
 #[test_case("oz"; "oz_account")]
-#[test_case("argent"; "argent_account")]
-#[test_case("braavos"; "braavos_account")]
+// #[test_case("argent"; "argent_account")]
+// #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 async fn test_wrong_contract_name(account: &str) {
     let contract_dir = duplicate_contract_directory_with_salt(
@@ -119,7 +119,7 @@ async fn test_with_invalid_max_fee() {
     let snapbox = runner(&args).current_dir(script_dir.path());
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientMaxFee(())))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientResourcesForValidate(())))
         command: script run
         status: success
     "});

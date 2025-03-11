@@ -30,20 +30,22 @@ async fn test_failing() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
+    // "call deserialize failed"
 
     assert_stdout_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
         command: script run
         message:[..]
             0x63616c6c206661696c6564 ('call failed')
 
         status: script panicked
-        "},
+        "#},
     );
 }
 
 #[tokio::test]
+// #[ignore = "FIXME"]
 async fn test_call_invalid_entry_point() {
     let tempdir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/call", Vec::<String>::new());
@@ -86,6 +88,7 @@ async fn test_call_invalid_address() {
 }
 
 #[tokio::test]
+// #[ignore = "FIXME"]
 async fn test_call_invalid_calldata() {
     let tempdir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/call", Vec::<String>::new());

@@ -57,6 +57,8 @@ pub enum SNCastStarknetError {
     FailedToReceiveTransaction,
     #[error("There is no contract at the specified address")]
     ContractNotFound,
+    #[error("Requested entrypoint does not exist in the contract")]
+    EntryPointNotFound,
     #[error("Block was not found")]
     BlockNotFound,
     #[error("There is no transaction with such an index")]
@@ -93,8 +95,6 @@ pub enum SNCastStarknetError {
     UnsupportedTxVersion,
     #[error("Unsupported contract class version")]
     UnsupportedContractClassVersion,
-    #[error("Entry point not found in contract")]
-    EntryPointNotFound,
     #[error("Unexpected RPC error occurred: {0}")]
     UnexpectedError(anyhow::Error),
 }

@@ -35,7 +35,7 @@ async fn test_max_fee_too_low(account: &str) {
     assert_stdout_contains(
         output,
         indoc! {r"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientMaxFee(())))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientResourcesForValidate(())))
         command: script run
         status: success
         "},
