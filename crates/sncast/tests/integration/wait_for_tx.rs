@@ -2,7 +2,7 @@ use crate::helpers::{
     constants::{ACCOUNT, ACCOUNT_FILE_PATH},
     fixtures::{create_test_provider, invoke_contract},
 };
-use sncast::helpers::constants::UDC_ADDRESS;
+use sncast::helpers::{constants::UDC_ADDRESS, fee::FeeSettings};
 
 use crate::helpers::constants::{
     CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
@@ -64,16 +64,19 @@ async fn test_wait_for_reverted_transaction() {
     let provider = create_test_provider();
     let salt = "0x029c81e6487b5f9278faa6f454cda3c8eca259f99877faab823b3704327cd695";
 
+    let fee_settings = FeeSettings {
+        l1_gas: Some(1),
+        l1_gas_price: Some(1),
+        l2_gas: Some(1),
+        l2_gas_price: Some(1),
+        l1_data_gas: Some(1),
+        l1_data_gas_price: Some(1),
+    };
     let transaction_hash = invoke_contract(
         ACCOUNT,
         UDC_ADDRESS.into_hex_string().as_str(),
         "deployContract",
-        Some(1),
-        Some(1),
-        Some(1),
-        Some(1),
-        Some(1),
-        Some(1),
+        fee_settings,
         &[
             CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
             salt,

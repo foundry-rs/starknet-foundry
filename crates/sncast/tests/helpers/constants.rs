@@ -41,3 +41,18 @@ pub const CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA: &str =
 
 pub const DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA: &str =
     "0x016ad425af4585102e139d4fb2c76ce786d1aaa1cfcd88a51f3ed66601b23cdd";
+
+pub const TEST_RESOURCE_BOUNDS_FLAGS: [&str; 12] = [
+    "--l1-gas",
+    "100000",
+    "--l1-gas-price",
+    "10000000000000",
+    "--l2-gas",
+    "1000000000",
+    "--l2-gas-price",
+    "100000000000000000000",
+    "--l1-data-gas",
+    "100000",
+    "--l1-data-gas-price",
+    "10000000000000",
+];
