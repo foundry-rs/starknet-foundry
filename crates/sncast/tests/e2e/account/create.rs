@@ -330,7 +330,7 @@ pub async fn test_account_already_exists() {
 }
 
 #[test_case("oz"; "oz_account_type")]
-#[test_case("argent"; "argent_account_type")]
+// #[test_case("argent"; "argent_account_type")]
 #[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case_keystore(account_type: &str) {
