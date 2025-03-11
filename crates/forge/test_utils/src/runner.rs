@@ -289,9 +289,7 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
             }
             AnyTestCaseSummary::Single(case) => match case {
                 TestCaseSummary::Passed { gas_info: gas, .. } => {
-                    gas.l1_gas.0 == asserted_gas.l1_gas.0
-                        && gas.l1_data_gas.0 == asserted_gas.l1_data_gas.0
-                        && gas.l2_gas.0 == asserted_gas.l2_gas.0
+                    *gas == asserted_gas
                         && any_case
                             .name()
                             .unwrap()
