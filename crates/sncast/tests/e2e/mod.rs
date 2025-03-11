@@ -1,5 +1,6 @@
 mod account;
 mod call;
+mod completions;
 mod declare;
 mod deploy;
 mod invoke;
