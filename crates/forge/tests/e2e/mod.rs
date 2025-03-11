@@ -9,7 +9,6 @@ mod color;
 mod completions;
 mod components;
 mod contract_artifacts;
-
 mod coverage;
 #[cfg(feature = "debugging")]
 mod debugging;
