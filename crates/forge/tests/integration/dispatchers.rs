@@ -703,6 +703,49 @@ fn proxy_dispatcher_handle_panic() {
             )
         ),
         Contract::new(
+            "Caller2",
+            indoc!(
+                r"
+            #[starknet::interface]
+            trait ICaller2<TContractState> {
+                fn invoke_executor(
+                    self: @TContractState,
+                );
+            }
+
+            #[starknet::contract]
+            mod Caller2 {
+                use starknet::ContractAddress;
+
+                #[starknet::interface]
+                trait IExecutor<T> {
+                    fn invoke_with_panic(self: @T);
+                }
+
+                #[storage]
+                struct Storage {
+                    executor_address: ContractAddress
+                }
+
+                #[constructor]
+                fn constructor(ref self: ContractState, executor_address: ContractAddress) {
+                    self.executor_address.write(executor_address);
+                }
+
+                #[abi(embed_v0)]
+                impl Caller2Impl of super::ICaller2<ContractState> {
+                    fn invoke_executor(
+                        self: @ContractState,
+                    ) {
+                        let dispatcher = IExecutorDispatcher { contract_address: self.executor_address.read() };
+                        dispatcher.invoke_with_panic()
+                    }
+                }
+            }
+            "
+            )
+        ),
+        Contract::new(
             "Executor",
             indoc!(
                 r"
