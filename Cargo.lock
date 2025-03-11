@@ -1353,6 +1353,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap_complete"
+version = "4.5.44"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "375f9d8255adeeedd51053574fd8d4ba875ea5fa558e86617b07f09f1680c8b6"
+dependencies = [
+ "clap",
+]
+
+[[package]]
 name = "clap_derive"
 version = "4.5.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2239,6 +2248,7 @@ dependencies = [
  "camino",
  "cheatnet",
  "clap",
+ "clap_complete",
  "configuration",
  "console",
  "conversions",
@@ -5064,6 +5074,8 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "cairo-lang-runner",
+ "clap",
+ "clap_complete",
  "console",
  "indicatif",
  "regex",
@@ -5189,6 +5201,7 @@ dependencies = [
  "cairo-vm",
  "camino",
  "clap",
+ "clap_complete",
  "configuration",
  "const-hex",
  "conversions",
