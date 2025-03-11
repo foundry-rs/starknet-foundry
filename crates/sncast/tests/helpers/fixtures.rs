@@ -12,6 +12,7 @@ use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH,
 };
+use sncast::helpers::fee::FeeSettings;
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::state::state_file::{
     ScriptTransactionEntry, ScriptTransactionOutput, ScriptTransactionStatus,
@@ -188,17 +189,11 @@ fn get_from_json_as_str<'a>(entry: &'a Value, key: &str) -> &'a str {
         .unwrap_or_else(|| panic!("Failed to get {key} key"))
 }
 
-#[expect(clippy::too_many_arguments)]
 pub async fn invoke_contract(
     account: &str,
     contract_address: &str,
     entry_point_name: &str,
-    l1_gas: Option<u64>,
-    l1_gas_price: Option<u128>,
-    l2_gas: Option<u64>,
-    l2_gas_price: Option<u128>,
-    l1_data_gas: Option<u64>,
-    l1_data_gas_price: Option<u128>,
+    fee_settings: FeeSettings,
     constructor_calldata: &[&str],
 ) -> InvokeTransactionResult {
     let provider = get_provider(URL).expect("Could not get the provider");
@@ -228,12 +223,28 @@ pub async fn invoke_contract(
     };
 
     let execution = account.execute_v3(vec![call]);
-    let execution = apply_optional(execution, l1_gas, ExecutionV3::l1_gas);
-    let execution = apply_optional(execution, l1_gas_price, ExecutionV3::l1_gas_price);
-    let execution = apply_optional(execution, l2_gas, ExecutionV3::l2_gas);
-    let execution = apply_optional(execution, l2_gas_price, ExecutionV3::l2_gas_price);
-    let execution = apply_optional(execution, l1_data_gas, ExecutionV3::l1_data_gas);
-    let execution = apply_optional(execution, l1_data_gas_price, ExecutionV3::l1_data_gas_price);
+    let execution = apply_optional(execution, fee_settings.l1_gas, ExecutionV3::l1_gas);
+    let execution = apply_optional(
+        execution,
+        fee_settings.l1_gas_price,
+        ExecutionV3::l1_gas_price,
+    );
+    let execution = apply_optional(execution, fee_settings.l2_gas, ExecutionV3::l2_gas);
+    let execution = apply_optional(
+        execution,
+        fee_settings.l2_gas_price,
+        ExecutionV3::l2_gas_price,
+    );
+    let execution = apply_optional(
+        execution,
+        fee_settings.l1_data_gas,
+        ExecutionV3::l1_data_gas,
+    );
+    let execution = apply_optional(
+        execution,
+        fee_settings.l1_data_gas_price,
+        ExecutionV3::l1_data_gas_price,
+    );
 
     execution
         .send()

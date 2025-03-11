@@ -6,6 +6,7 @@ use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use snapbox::cmd::{Command, cargo_bin};
+use sncast::helpers::fee::FeeSettings;
 use std::path::PathBuf;
 
 #[test]
@@ -60,16 +61,19 @@ fn test_happy_case_cairo_expression_calldata() {
 
 #[tokio::test]
 async fn test_call_after_storage_changed() {
+    let fee_settings = FeeSettings {
+        l1_gas: Some(100_000),
+        l1_gas_price: Some(10_000_000_000_000),
+        l2_gas: Some(10_000_000_000),
+        l2_gas_price: Some(1_000_000_000_000_000_000_000),
+        l1_data_gas: Some(100_000),
+        l1_data_gas_price: Some(10_000_000_000_000),
+    };
     invoke_contract(
         "user2",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "put",
-        Some(100_000),
-        Some(10_000_000_000_000),
-        Some(10_000_000_000),
-        Some(1_000_000_000_000_000_000_000),
-        Some(100_000),
-        Some(10_000_000_000_000),
+        fee_settings,
         &["0x2", "0x3"],
     )
     .await;
