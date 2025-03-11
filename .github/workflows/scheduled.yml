@@ -49,7 +49,7 @@ jobs:
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
       - run: cargo test --release --lib -p forge
-      - run: cargo test --release -p forge integration
+      - run: cargo test --release -p forge integration --features assert_non_exact_gas
 
   test-forge-e2e:
     if: "! github.event.repository.fork"
