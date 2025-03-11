@@ -188,6 +188,7 @@ fn get_from_json_as_str<'a>(entry: &'a Value, key: &str) -> &'a str {
         .unwrap_or_else(|| panic!("Failed to get {key} key"))
 }
 
+#[expect(clippy::too_many_arguments)]
 pub async fn invoke_contract(
     account: &str,
     contract_address: &str,
