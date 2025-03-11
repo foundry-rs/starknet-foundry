@@ -50,35 +50,10 @@ impl GasStatistics {
             .map(|gv| u128::from(gv.l2_gas.0))
             .collect();
 
-        let l1_gas_mean = Self::mean(l1_gas_values.as_ref());
-        let l1_data_gas_mean = Self::mean(l1_data_gas_values.as_ref());
-        let l2_gas_mean = Self::mean(l2_gas_values.as_ref());
-
         GasStatistics {
-            l1_gas: {
-                GasStatisticsComponent {
-                    min: l1_gas_values.iter().min().copied().unwrap(),
-                    max: l1_gas_values.iter().max().copied().unwrap(),
-                    mean: l1_gas_mean,
-                    std_deviation: Self::std_deviation(l1_gas_mean, l1_gas_values.as_ref()),
-                }
-            },
-            l1_data_gas: {
-                GasStatisticsComponent {
-                    min: l1_data_gas_values.iter().min().copied().unwrap(),
-                    max: l1_data_gas_values.iter().max().copied().unwrap(),
-                    mean: l1_data_gas_mean,
-                    std_deviation: Self::std_deviation(l1_gas_mean, l1_data_gas_values.as_ref()),
-                }
-            },
-            l2_gas: {
-                GasStatisticsComponent {
-                    min: l2_gas_values.iter().min().copied().unwrap(),
-                    max: l2_gas_values.iter().max().copied().unwrap(),
-                    mean: l2_gas_mean,
-                    std_deviation: Self::std_deviation(l1_gas_mean, l2_gas_values.as_ref()),
-                }
-            },
+            l1_gas: { Self::calculate_component(l1_gas_values.as_ref()) },
+            l1_data_gas: { Self::calculate_component(l1_data_gas_values.as_ref()) },
+            l2_gas: { Self::calculate_component(l2_gas_values.as_ref()) },
         }
     }
 
@@ -95,6 +70,16 @@ impl GasStatistics {
             .sum::<f64>();
 
         (sum_squared_diff / gas_usages.len() as f64).sqrt()
+    }
+
+    fn calculate_component(gas_usages: &[u128]) -> GasStatisticsComponent {
+        let mean = Self::mean(gas_usages);
+        GasStatisticsComponent {
+            min: gas_usages.iter().min().copied().unwrap(),
+            max: gas_usages.iter().max().copied().unwrap(),
+            mean,
+            std_deviation: Self::std_deviation(mean, gas_usages),
+        }
     }
 }
 

@@ -1,6 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN};
 use cairo_lang_macro::{Diagnostic, TokenStream};
-use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::available_gas::available_gas;
 
 #[test]
@@ -118,20 +117,30 @@ fn work_with_number_all_set() {
 
 #[test]
 fn is_used_once() {
-    let item = TokenStream::new(formatdoc!(
-        "
-            #[available_gas]
-            {EMPTY_FN}
-        "
-    ));
-    let args = TokenStream::new("(123)".into());
+    let item = TokenStream::new(EMPTY_FN.into());
+    let args = TokenStream::new("(l2_gas: 1, l2_gas: 3)".into());
 
     let result = available_gas(args, item);
 
     assert_diagnostics(
         &result,
         &[Diagnostic::error(
-            "#[available_gas] can only be used once per item",
+            "<l2_gas> argument was specified 2 times, expected to be used only once",
+        )],
+    );
+}
+
+#[test]
+fn does_not_work_with_unnamed_number() {
+    let item = TokenStream::new(EMPTY_FN.into());
+    let args = TokenStream::new("(3)".into());
+
+    let result = available_gas(args, item);
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(
+            "#[available_gas] can be used with named arguments only",
         )],
     );
 }
