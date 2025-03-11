@@ -68,12 +68,20 @@ pub async fn deploy(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
 ) -> Result<DeployResponse, StarknetCommandError> {
-    let fee_settings = fee_args
-        .try_into_fee_settings(account.provider(), account.block_id())
-        .await?;
-
     let salt = extract_or_generate_salt(salt);
     let factory = ContractFactory::new(class_hash, account);
+
+    let execution = factory.deploy_v3(calldata.clone(), salt, unique);
+
+    let fee_settings = if fee_args.max_fee.is_some() {
+        let fee_estimate = execution
+            .estimate_fee()
+            .await
+            .expect("Failed to estimate fee");
+        fee_args.try_into_fee_settings(&Some(fee_estimate))
+    } else {
+        fee_args.try_into_fee_settings(&None)
+    };
 
     let FeeSettings {
         l1_gas,
@@ -82,8 +90,7 @@ pub async fn deploy(
         l2_gas_price,
         l1_data_gas,
         l1_data_gas_price,
-    } = fee_settings;
-    let execution = factory.deploy_v3(calldata.clone(), salt, unique);
+    } = fee_settings.expect("Failed to convert fee settings");
 
     let execution = match l1_gas {
         None => execution,

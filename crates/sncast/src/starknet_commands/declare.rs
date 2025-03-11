@@ -53,11 +53,6 @@ pub async fn declare(
     wait_config: WaitForTx,
     skip_on_already_declared: bool,
 ) -> Result<DeclareResponse, StarknetCommandError> {
-    let fee_settings = declare
-        .fee_args
-        .try_into_fee_settings(account.provider(), account.block_id())
-        .await?;
-
     let contract_artifacts =
         artifacts
             .get(&declare.contract)
@@ -78,6 +73,21 @@ pub async fn declare(
         .class_hash()
         .map_err(anyhow::Error::from)?;
 
+    let declaration = account.declare_v3(
+        Arc::new(contract_definition.flatten().map_err(anyhow::Error::from)?),
+        casm_class_hash,
+    );
+
+    let fee_settings = if declare.fee_args.max_fee.is_some() {
+        let fee_estimate = declaration
+            .estimate_fee()
+            .await
+            .expect("Failed to estimate fee");
+        declare.fee_args.try_into_fee_settings(&Some(fee_estimate))
+    } else {
+        declare.fee_args.try_into_fee_settings(&None)
+    };
+
     let FeeSettings {
         l1_gas,
         l1_gas_price,
@@ -85,11 +95,7 @@ pub async fn declare(
         l2_gas_price,
         l1_data_gas,
         l1_data_gas_price,
-    } = fee_settings;
-    let declaration = account.declare_v3(
-        Arc::new(contract_definition.flatten().map_err(anyhow::Error::from)?),
-        casm_class_hash,
-    );
+    } = fee_settings.expect("Failed to convert fee settings");
 
     let declaration = apply_optional(declaration, l1_gas, DeclarationV3::l1_gas);
     let declaration = apply_optional(declaration, l1_gas_price, DeclarationV3::l1_gas_price);
@@ -101,6 +107,7 @@ pub async fn declare(
         l1_data_gas_price,
         DeclarationV3::l1_data_gas_price,
     );
+
     let declaration = apply_optional(declaration, declare.nonce, DeclarationV3::nonce);
 
     let declared = declaration.send().await;

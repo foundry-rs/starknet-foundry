@@ -65,9 +65,18 @@ pub async fn execute_calls(
     nonce: Option<Felt>,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse, StarknetCommandError> {
-    let fee_settings = fee_args
-        .try_into_fee_settings(account.provider(), account.block_id())
-        .await?;
+    let execution_calls = account.execute_v3(calls);
+
+    let fee_settings = if fee_args.max_fee.is_some() {
+        let fee_estimate = execution_calls
+            .estimate_fee()
+            .await
+            .expect("Failed to estimate fee");
+        fee_args.try_into_fee_settings(&Some(fee_estimate))
+    } else {
+        fee_args.try_into_fee_settings(&None)
+    };
+
     let FeeSettings {
         l1_gas,
         l1_gas_price,
@@ -75,8 +84,7 @@ pub async fn execute_calls(
         l2_gas_price,
         l1_data_gas,
         l1_data_gas_price,
-    } = fee_settings;
-    let execution_calls = account.execute_v3(calls);
+    } = fee_settings.expect("Failed to convert fee settings");
 
     let execution = apply_optional(execution_calls, l1_gas, ExecutionV3::l1_gas);
     let execution = apply_optional(execution, l1_gas_price, ExecutionV3::l1_gas_price);

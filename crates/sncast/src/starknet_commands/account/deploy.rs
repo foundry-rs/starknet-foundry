@@ -239,9 +239,17 @@ async fn deploy_account<T>(
 where
     T: AccountFactory + Sync,
 {
-    let fee_settings = fee_args
-        .try_into_fee_settings(account_factory.provider(), account_factory.block_id())
-        .await?;
+    let deployment = account_factory.deploy_v3(salt);
+
+    let fee_settings = if fee_args.max_fee.is_some() {
+        let fee_estimate = deployment
+            .estimate_fee()
+            .await
+            .expect("Failed to estimate fee");
+        fee_args.try_into_fee_settings(&Some(fee_estimate))
+    } else {
+        fee_args.try_into_fee_settings(&None)
+    };
 
     let FeeSettings {
         l1_gas,
@@ -250,8 +258,7 @@ where
         l2_gas_price,
         l1_data_gas,
         l1_data_gas_price,
-    } = fee_settings;
-    let deployment = account_factory.deploy_v3(salt);
+    } = fee_settings.expect("Failed to convert fee settings");
 
     let deployment = apply_optional(deployment, l1_gas, AccountDeploymentV3::l1_gas);
     let deployment = apply_optional(deployment, l1_gas_price, AccountDeploymentV3::l1_gas_price);
