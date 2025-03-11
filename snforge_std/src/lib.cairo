@@ -123,6 +123,8 @@ pub use cheatcodes::execution_info::account_contract_address::start_cheat_accoun
 
 pub use cheatcodes::generate_random_felt::generate_random_felt;
 
+pub use cheatcodes::block_hash::cheat_block_hash;
+
 pub mod fuzzable;
 
 pub mod fs;

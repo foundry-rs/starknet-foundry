@@ -1,8 +1,11 @@
+use super::calls::{execute_inner_call, execute_library_call};
+use super::execution_info::get_cheated_exec_info_ptr;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_constructor_entry_point;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::{
-    DeployRequest, DeployResponse, LibraryCallRequest, SyscallResponse, syscall_base::SyscallResult,
+    DeployRequest, DeployResponse, GetBlockHashRequest, GetBlockHashResponse, LibraryCallRequest,
+    SyscallResponse, syscall_base::SyscallResult,
 };
 use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
 use blockifier::execution::{
@@ -26,15 +29,14 @@ use blockifier::{
 };
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::vm_core::VirtualMachine;
+use starknet_api::block::BlockHash;
 use starknet_api::core::calculate_contract_address;
+use starknet_api::hash::StarkHash;
 use starknet_api::{
     contract_class::EntryPointType,
     core::{ClassHash, ContractAddress},
     transaction::fields::Calldata,
 };
-
-use super::calls::{execute_inner_call, execute_library_call};
-use super::execution_info::get_cheated_exec_info_ptr;
 pub type SyscallSelector = DeprecatedSyscallSelector;
 
 pub fn get_execution_info_syscall(
@@ -195,6 +197,30 @@ pub fn call_contract_syscall(
         segment: retdata_segment,
     })
     // endregion
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub fn get_block_hash_syscall(
+    request: GetBlockHashRequest,
+    _vm: &mut VirtualMachine,
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
+    _remaining_gas: &mut u64,
+) -> SyscallResult<GetBlockHashResponse> {
+    let block_hash = if let Some(block_hash) = cheatnet_state
+        .block_hash
+        .get(&request.block_number.0)
+        .copied()
+    {
+        BlockHash(StarkHash::from(block_hash))
+    } else {
+        BlockHash(
+            syscall_handler
+                .base
+                .get_block_hash(request.block_number.0)?,
+        )
+    };
+    Ok(GetBlockHashResponse { block_hash })
 }
 
 #[derive(Debug)]

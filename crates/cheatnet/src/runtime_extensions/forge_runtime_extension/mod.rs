@@ -512,6 +512,17 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 Ok(CheatcodeHandlingResult::from_serializable(()))
             }
+            "set_block_hash" => {
+                let block_number = input_reader.read()?;
+                let block_hash = input_reader.read()?;
+
+                extended_runtime
+                    .extended_runtime
+                    .extension
+                    .cheatnet_state
+                    .set_block_hash(block_number, block_hash);
+                Ok(CheatcodeHandlingResult::from_serializable(()))
+            }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }
     }
