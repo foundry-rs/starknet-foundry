@@ -11,7 +11,10 @@ use configuration::CONFIG_FILENAME;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::AccountType;
-use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
+use sncast::helpers::constants::{
+    // ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH,
+    OZ_CLASS_HASH,
+};
 use starknet::core::types::TransactionReceipt::Declare;
 use starknet_types_core::felt::Felt;
 use std::fs;

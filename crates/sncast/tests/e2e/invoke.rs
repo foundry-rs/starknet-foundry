@@ -11,7 +11,10 @@ use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use snapbox::cmd::{Command, cargo_bin};
 use sncast::AccountType;
-use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
+use sncast::helpers::constants::{
+    // ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH,
+    OZ_CLASS_HASH,
+};
 use starknet::core::types::TransactionReceipt::Invoke;
 use starknet_types_core::felt::Felt;
 use std::path::PathBuf;

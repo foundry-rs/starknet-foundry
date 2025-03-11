@@ -1,30 +1,29 @@
-use crate::helpers::constants::URL;
-use sncast::helpers::constants::OZ_CLASS_HASH;
+// use crate::helpers::constants::URL;
+// use sncast::helpers::constants::OZ_CLASS_HASH;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
-use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::{JsonRpcClient, Provider};
-use starknet::signers::{LocalWallet, SigningKey};
+// use starknet::providers::jsonrpc::HttpTransport;
+// use starknet::providers::{JsonRpcClient, Provider};
+// use starknet::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
-use url::Url;
+// use url::Url;
 
 // FIXME
 // const MAX_FEE: u64 = 1_000_000_000_000;
 
-async fn get_factory() -> OpenZeppelinAccountFactory<LocalWallet, JsonRpcClient<HttpTransport>> {
-    let parsed_url = Url::parse(URL).unwrap();
-    let provider = JsonRpcClient::new(HttpTransport::new(parsed_url));
-    let chain_id = provider.chain_id().await.unwrap();
-    let signer = LocalWallet::from_signing_key(SigningKey::from_random());
+// async fn get_factory() -> OpenZeppelinAccountFactory<LocalWallet, JsonRpcClient<HttpTransport>> {
+//     let parsed_url = Url::parse(URL).unwrap();
+//     let provider = JsonRpcClient::new(HttpTransport::new(parsed_url));
+//     let chain_id = provider.chain_id().await.unwrap();
+//     let signer = LocalWallet::from_signing_key(SigningKey::from_random());
 
-    OpenZeppelinAccountFactory::new(OZ_CLASS_HASH, chain_id, signer, provider)
-        .await
-        .unwrap()
-}
+//     OpenZeppelinAccountFactory::new(OZ_CLASS_HASH, chain_id, signer, provider)
+//         .await
+//         .unwrap()
+// }
 
 #[tokio::test]
 async fn test_happy_case() {
-    let factory = get_factory().await;
+    // let factory = get_factory().await;
 
     let args = FeeArgs {
         max_fee: None,
@@ -36,10 +35,7 @@ async fn test_happy_case() {
         l1_data_gas_price: Some(Felt::from(200_u32)),
     };
 
-    let settings = args
-        .try_into_fee_settings(factory.provider(), factory.block_id())
-        .await
-        .unwrap();
+    let settings = args.try_into_fee_settings(&None).unwrap();
 
     assert_eq!(
         settings,
@@ -56,7 +52,7 @@ async fn test_happy_case() {
 
 #[tokio::test]
 async fn test_all_args() {
-    let factory = get_factory().await;
+    // let factory = get_factory().await;
 
     let args = FeeArgs {
         max_fee: Some(Felt::from(100_u32).try_into().unwrap()),
@@ -68,10 +64,7 @@ async fn test_all_args() {
         l1_data_gas_price: Some(Felt::from(200_u32)),
     };
 
-    let error = args
-        .try_into_fee_settings(factory.provider(), factory.block_id())
-        .await
-        .unwrap_err();
+    let error = args.try_into_fee_settings(&None).unwrap_err();
 
     assert!(error.to_string().contains("Passing all --max-fee, --l1-gas, --l1-gas-price, --l2-gas, --l2-gas-price, --l1-data-gas and --l1-data-gas-price is conflicting. Please pass only two of them or less"
     ));
@@ -125,12 +118,9 @@ use test_case::test_case;
     }, "--l1-data-gas-price")]
 #[tokio::test]
 async fn test_max_fee_less_than_resource_bounds_value(fee_args: FeeArgs, flag: &str) {
-    let factory = get_factory().await;
+    // let factory = get_factory().await;
 
-    let error = fee_args
-        .try_into_fee_settings(factory.provider(), factory.block_id())
-        .await
-        .unwrap_err();
+    let error = fee_args.try_into_fee_settings(&None).unwrap_err();
     assert!(
         error
             .to_string()
@@ -172,7 +162,7 @@ async fn test_max_fee_less_than_resource_bounds_value(fee_args: FeeArgs, flag: &
 
 #[tokio::test]
 async fn test_max_fee_none() {
-    let factory = get_factory().await;
+    // let factory = get_factory().await;
 
     let args = FeeArgs {
         max_fee: None,
@@ -184,10 +174,7 @@ async fn test_max_fee_none() {
         l1_data_gas_price: Some(Felt::from(100_u32)),
     };
 
-    let settings = args
-        .try_into_fee_settings(factory.provider(), factory.block_id())
-        .await
-        .unwrap();
+    let settings = args.try_into_fee_settings(&None).unwrap();
 
     assert_eq!(
         settings,
@@ -204,7 +191,7 @@ async fn test_max_fee_none() {
 
 #[tokio::test]
 async fn test_all_args_none() {
-    let factory = get_factory().await;
+    // let factory = get_factory().await;
 
     let args = FeeArgs {
         max_fee: None,
@@ -216,10 +203,7 @@ async fn test_all_args_none() {
         l1_data_gas_price: None,
     };
 
-    let settings = args
-        .try_into_fee_settings(factory.provider(), factory.block_id())
-        .await
-        .unwrap();
+    let settings = args.try_into_fee_settings(&None).unwrap();
 
     assert_eq!(
         settings,

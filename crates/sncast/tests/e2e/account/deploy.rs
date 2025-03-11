@@ -103,10 +103,6 @@ pub async fn test_happy_case_max_fee() {
     let snapbox = runner(&args).current_dir(tempdir.path());
     let bdg = snapbox.assert();
 
-    let stderr = std::str::from_utf8(&bdg.get_output().stderr);
-
-    println!("{:?}", stderr);
-
     let hash = get_transaction_hash(&bdg.get_output().stdout);
     let receipt = get_transaction_receipt(hash).await;
 

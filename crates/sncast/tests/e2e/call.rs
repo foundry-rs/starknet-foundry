@@ -64,12 +64,12 @@ async fn test_call_after_storage_changed() {
         "user2",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "put",
-        Some(100000),
-        Some(10000000000000),
-        Some(10000000000),
-        Some(1000000000000000000000),
-        Some(100000),
-        Some(10000000000000),
+        Some(100_000),
+        Some(10_000_000_000_000),
+        Some(10_000_000_000),
+        Some(1_000_000_000_000_000_000_000),
+        Some(100_000),
+        Some(10_000_000_000_000),
         &["0x2", "0x3"],
     )
     .await;
