@@ -93,6 +93,8 @@ pub enum TestCaseSummary<T: TestType> {
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt>,
+        /// Trace of the test case run
+        debugging_trace: Option<debugging::Trace>,
         /// Information on used gas
         gas_info: <T as TestType>::GasInfo,
         /// Resources used during test
@@ -108,6 +110,8 @@ pub enum TestCaseSummary<T: TestType> {
         name: String,
         /// Message returned by the test case run
         msg: Option<String>,
+        /// Trace of the test case run
+        debugging_trace: Option<debugging::Trace>,
         /// Arguments used in the test case run
         arguments: Vec<Felt>,
         /// Random arguments used in the fuzz test case run
@@ -150,6 +154,19 @@ impl<T: TestType> TestCaseSummary<T> {
             _ => None,
         }
     }
+
+    #[must_use]
+    pub fn debugging_trace(&self) -> Option<&debugging::Trace> {
+        match self {
+            TestCaseSummary::Passed {
+                debugging_trace, ..
+            }
+            | TestCaseSummary::Failed {
+                debugging_trace, ..
+            } => debugging_trace.as_ref(),
+            _ => None,
+        }
+    }
 }
 
 impl TestCaseSummary<Fuzzing> {
@@ -170,6 +187,7 @@ impl TestCaseSummary<Fuzzing> {
                 used_resources: _,
                 test_statistics: (),
                 trace_data: _,
+                debugging_trace,
             } => {
                 let runs = results.len();
                 let gas_usages: Vec<u128> = results
@@ -188,6 +206,7 @@ impl TestCaseSummary<Fuzzing> {
                     used_resources: UsedResources::default(),
                     test_statistics: FuzzingStatistics { runs },
                     trace_data: (),
+                    debugging_trace,
                 }
             }
             TestCaseSummary::Failed {
@@ -195,6 +214,7 @@ impl TestCaseSummary<Fuzzing> {
                 msg,
                 arguments,
                 fuzzer_args,
+                debugging_trace,
                 test_statistics: (),
             } => TestCaseSummary::Failed {
                 name,
@@ -204,6 +224,7 @@ impl TestCaseSummary<Fuzzing> {
                 test_statistics: FuzzingStatistics {
                     runs: results.len(),
                 },
+                debugging_trace,
             },
             TestCaseSummary::Ignored { name } => TestCaseSummary::Ignored { name: name.clone() },
             TestCaseSummary::Skipped {} => TestCaseSummary::Skipped {},
@@ -229,6 +250,10 @@ impl TestCaseSummary<Single> {
         let name = test_case.name.clone();
         let msg = extract_result_data(&run_result, &test_case.config.expected_result)
             .map(|msg| add_backtrace_footer(msg, contracts_data, encountered_errors));
+
+        let debugging_trace =
+            cfg!(feature = "debugging").then(|| debugging::Trace::from_call_trace(call_trace));
+
         match run_result.value {
             RunResultValue::Success(_) => match &test_case.config.expected_result {
                 ExpectedTestResult::Success => {
@@ -244,6 +269,7 @@ impl TestCaseSummary<Single> {
                             contracts_data,
                             versioned_program_path,
                         )),
+                        debugging_trace,
                     };
                     check_available_gas(test_case.config.available_gas, summary)
                 }
@@ -253,6 +279,7 @@ impl TestCaseSummary<Single> {
                     arguments,
                     fuzzer_args,
                     test_statistics: (),
+                    debugging_trace,
                 },
             },
             RunResultValue::Panic(value) => match &test_case.config.expected_result {
@@ -262,6 +289,7 @@ impl TestCaseSummary<Single> {
                     arguments,
                     fuzzer_args,
                     test_statistics: (),
+                    debugging_trace,
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
                     ExpectedPanicValue::Exact(expected) if !is_matching(&value, expected) => {
@@ -271,6 +299,7 @@ impl TestCaseSummary<Single> {
                             arguments,
                             fuzzer_args,
                             test_statistics: (),
+                            debugging_trace,
                         }
                     }
                     _ => TestCaseSummary::Passed {
@@ -285,6 +314,7 @@ impl TestCaseSummary<Single> {
                             contracts_data,
                             versioned_program_path,
                         )),
+                        debugging_trace,
                     },
                 },
             },
@@ -377,6 +407,14 @@ impl AnyTestCaseSummary {
         match self {
             AnyTestCaseSummary::Fuzzing(case) => case.msg(),
             AnyTestCaseSummary::Single(case) => case.msg(),
+        }
+    }
+
+    #[must_use]
+    pub fn debugging_trace(&self) -> Option<&debugging::Trace> {
+        match self {
+            AnyTestCaseSummary::Fuzzing(case) => case.debugging_trace(),
+            AnyTestCaseSummary::Single(case) => case.debugging_trace(),
         }
     }
 
