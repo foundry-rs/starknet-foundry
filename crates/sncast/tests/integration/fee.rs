@@ -118,8 +118,6 @@ use test_case::test_case;
     }, "--l1-data-gas-price")]
 #[tokio::test]
 async fn test_max_fee_less_than_resource_bounds_value(fee_args: FeeArgs, flag: &str) {
-    // let factory = get_factory().await;
-
     let error = fee_args.try_into_fee_settings(&None).unwrap_err();
     assert!(
         error
