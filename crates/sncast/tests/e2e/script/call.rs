@@ -34,13 +34,13 @@ async fn test_failing() {
 
     assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         command: script run
         message:[..]
             0x63616c6c206661696c6564 ('call failed')
 
         status: script panicked
-        "#},
+        "},
     );
 }
 
@@ -57,11 +57,11 @@ async fn test_call_invalid_entry_point() {
 
     assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::EntryPointNotFound(())))
         command: script run
         status: success
-        "#},
+        "},
     );
 }
 
@@ -99,11 +99,11 @@ async fn test_call_invalid_calldata() {
 
     assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         CallResult { data: [7733229381460288120802334208475838166080759535023995805565484692595] }
         CallResult { data: [485748461484230571791265682659113160264223489397539653310998840191492914] }
         command: script run
         status: success
-        "#},
+        "},
     );
 }
