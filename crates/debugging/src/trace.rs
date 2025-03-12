@@ -13,7 +13,7 @@ use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct Trace {
-    pub selector: EntryPointSelector,
+    pub selector: Selector,
     pub trace_info: TraceInfo,
 }
 
@@ -27,6 +27,12 @@ pub struct TraceInfo {
     pub call_type: CallType,
     pub nested_calls: Vec<Trace>,
     pub call_result: CallResult,
+}
+
+#[derive(Debug, Clone)]
+pub struct Selector {
+    pub selector: EntryPointSelector,
+    pub function_name: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -64,7 +70,12 @@ impl Trace {
         };
 
         Self {
-            selector: call_trace.entry_point.entry_point_selector,
+            selector: Selector {
+                selector: call_trace.entry_point.entry_point_selector,
+                function_name: contracts_data
+                    .get_function_name(&call_trace.entry_point.entry_point_selector)
+                    .cloned(),
+            },
             trace_info,
         }
     }
