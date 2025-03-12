@@ -15,6 +15,6 @@ pub struct Multicall {
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
-    Run(Box<Run>),
+    Run(Run),
     New(New),
 }

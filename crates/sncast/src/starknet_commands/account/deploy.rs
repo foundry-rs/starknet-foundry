@@ -258,7 +258,7 @@ where
         l2_gas_price,
         l1_data_gas,
         l1_data_gas_price,
-    } = fee_settings.expect("Failed to convert fee settings");
+    } = fee_settings.expect("Failed to convert to fee settings");
 
     let deployment = apply_optional(deployment, l1_gas, AccountDeploymentV3::l1_gas);
     let deployment = apply_optional(deployment, l1_gas_price, AccountDeploymentV3::l1_gas_price);

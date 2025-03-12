@@ -2,7 +2,6 @@ name: CI
 
 env:
   DEVNET_REV: d9ab44a8589ca4b8c3bab0367cc1d5be0c301550
-  CACHE_ON_FAILURE: true
 
 on:
   pull_request:
@@ -195,21 +194,18 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           ./scripts/install_devnet.sh
-        # uses: ./.github/composite-actions/devnet
-        # with:
-        #   devnet_sha: ${{ env.DEVNET_REV }}
-      # - name: Cache devnet build
-      #   if: runner.os == 'Windows'
-      #   id: windows-devnet-cache
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: ${{ github.workspace }}\crates\sncast\tests\utils\devnet
-      #     key: ${{ runner.os }}-devnet-${{ env.DEVNET_REV }}
-      # - name: Install devnet
-      #   if: runner.os == 'Windows' && steps.windows-devnet-cache.outputs.cache-hit != 'true'
-      #   run: |
-      #     $DEVNET_INSTALL_DIR = "${{ github.workspace }}\crates\sncast\tests\utils\devnet"
-      #     cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev ${{ env.DEVNET_REV }} --root $DEVNET_INSTALL_DIR
+      - name: Cache devnet build
+        if: runner.os == 'Windows'
+        id: windows-devnet-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}\crates\sncast\tests\utils\devnet
+          key: ${{ runner.os }}-devnet-${{ env.DEVNET_REV }}
+      - name: Install devnet
+        if: runner.os == 'Windows' && steps.windows-devnet-cache.outputs.cache-hit != 'true'
+        run: |
+          $DEVNET_INSTALL_DIR = "${{ github.workspace }}\crates\sncast\tests\utils\devnet"
+          cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev ${{ env.DEVNET_REV }} --root $DEVNET_INSTALL_DIR
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests

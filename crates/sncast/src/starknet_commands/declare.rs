@@ -95,7 +95,7 @@ pub async fn declare(
         l2_gas_price,
         l1_data_gas,
         l1_data_gas_price,
-    } = fee_settings.expect("Failed to convert fee settings");
+    } = fee_settings.expect("Failed to convert to fee settings");
 
     let declaration = apply_optional(declaration, l1_gas, DeclarationV3::l1_gas);
     let declaration = apply_optional(declaration, l1_gas_price, DeclarationV3::l1_gas_price);
@@ -107,7 +107,6 @@ pub async fn declare(
         l1_data_gas_price,
         DeclarationV3::l1_data_gas_price,
     );
-
     let declaration = apply_optional(declaration, declare.nonce, DeclarationV3::nonce);
 
     let declared = declaration.send().await;
