@@ -8,6 +8,7 @@ edition.workspace = true
 [features]
 smoke = []
 scarb_2_7_1 = []
+debugging = ["forge_runner/debugging"]
 
 [dependencies]
 anyhow.workspace = true
@@ -32,6 +33,7 @@ serde.workspace = true
 starknet.workspace = true
 num-bigint.workspace = true
 clap.workspace = true
+clap_complete.workspace = true
 console.workspace = true
 rand.workspace = true
 scarb-metadata.workspace = true

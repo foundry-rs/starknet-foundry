@@ -162,6 +162,7 @@ pub fn check_available_gas(
             name,
             arguments,
             gas_info,
+            debugging_trace,
             ..
         } if available_gas.is_some_and(|available_gas| gas_info > available_gas as u128) => {
             TestCaseSummary::Failed {
@@ -172,6 +173,7 @@ pub fn check_available_gas(
                 arguments,
                 fuzzer_args: Vec::default(),
                 test_statistics: (),
+                debugging_trace,
             }
         }
         _ => summary,
