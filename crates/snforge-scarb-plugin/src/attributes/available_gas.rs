@@ -7,7 +7,6 @@ use crate::{
 };
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_syntax::node::db::SyntaxGroup;
-use num_bigint::BigInt;
 
 pub struct AvailableGasCollector;
 
@@ -26,24 +25,25 @@ impl AttributeCollector for AvailableGasCollector {
         _warns: &mut Vec<Diagnostic>,
     ) -> Result<String, Diagnostics> {
         let named_args = args.named_only::<Self>()?;
+        let max = u64::MAX;
 
         let l1_gas = named_args
             .as_once_optional("l1_gas")?
             .map(|arg| Number::parse_from_expr::<Self>(db, arg, "l1_gas"))
             .transpose()?
-            .unwrap_or(Number(BigInt::ZERO));
+            .unwrap_or(Number(max.into()));
 
         let l1_data_gas = named_args
             .as_once_optional("l1_data_gas")?
             .map(|arg| Number::parse_from_expr::<Self>(db, arg, "l1_data_gas"))
             .transpose()?
-            .unwrap_or(Number(BigInt::ZERO));
+            .unwrap_or(Number(max.into()));
 
         let l2_gas = named_args
             .as_once_optional("l2_gas")?
             .map(|arg| Number::parse_from_expr::<Self>(db, arg, "l2_gas"))
             .transpose()?
-            .unwrap_or(Number(BigInt::ZERO));
+            .unwrap_or(Number(max.into()));
 
         let l1_gas_expr = l1_gas.as_cairo_expression();
         let l1_data_gas_expr = l1_data_gas.as_cairo_expression();
