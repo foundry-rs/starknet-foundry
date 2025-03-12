@@ -41,7 +41,7 @@ fn compilation_fails_when_no_features_passed() {
         [..]Compiling[..]
         [..]Finished[..]
 
-        error: Function not found.
+        error[..] Function not found.
     "},
     );
 }
