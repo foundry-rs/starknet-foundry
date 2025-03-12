@@ -199,7 +199,7 @@ jobs:
       - name: Smoke test
         shell: bash
         env:
-          # FIXME
+          # TODO: Update RPC_URL to our node
           # RPC_URL: "http://188.34.188.184:7070/rpc/v0_7"
           RPC_URL: "https://rpc.pathfinder.equilibrium.co/testnet-sepolia/rpc/v0_8"
         run: |
