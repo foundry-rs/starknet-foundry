@@ -52,8 +52,6 @@ async fn test_happy_case() {
 
 #[tokio::test]
 async fn test_all_args() {
-    // let factory = get_factory().await;
-
     let args = FeeArgs {
         max_fee: Some(Felt::from(100_u32).try_into().unwrap()),
         l1_gas: Some(Felt::from(100_u32)),
@@ -66,7 +64,7 @@ async fn test_all_args() {
 
     let error = args.try_into_fee_settings(&None).unwrap_err();
 
-    assert!(error.to_string().contains("Passing all --max-fee, --l1-gas, --l1-gas-price, --l2-gas, --l2-gas-price, --l1-data-gas and --l1-data-gas-price is conflicting. Please pass only two of them or less"
+    assert!(error.to_string().contains("Passing all --max-fee, --l1-gas, --l1-gas-price, --l2-gas, --l2-gas-price, --l1-data-gas and --l1-data-gas-price is conflicting."
     ));
 }
 
