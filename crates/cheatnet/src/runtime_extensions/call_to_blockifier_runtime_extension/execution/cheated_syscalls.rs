@@ -1,9 +1,7 @@
 use super::calls::{execute_inner_call, execute_library_call};
 use super::execution_info::get_cheated_exec_info_ptr;
-use crate::CHEAT_MAGIC;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_constructor_entry_point;
-use crate::state::CheatSpan;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::{
     DeployRequest, DeployResponse, GetBlockHashRequest, GetBlockHashResponse, LibraryCallRequest,
@@ -31,9 +29,7 @@ use blockifier::{
 };
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use starknet_api::block::BlockHash;
 use starknet_api::core::calculate_contract_address;
-use starknet_api::hash::StarkHash;
 use starknet_api::{
     contract_class::EntryPointType,
     core::{ClassHash, ContractAddress},
@@ -211,43 +207,14 @@ pub fn get_block_hash_syscall(
     _remaining_gas: &mut u64,
 ) -> SyscallResult<GetBlockHashResponse> {
     let contract_address = syscall_handler.storage_address();
+    let block_number = request.block_number.0;
 
-    let block_hash = if let Some(entry) = cheatnet_state
-        .block_hash_contracts
-        .get(&(contract_address, request.block_number.0))
-        .copied()
-    {
-        let (cheat_span, mut block_hash) = entry;
-        if let CheatSpan::TargetCalls(num) = cheat_span {
-            if num == 1 {
-                cheatnet_state
-                    .block_hash_contracts
-                    .remove(&(contract_address, request.block_number.0));
-            } else if num == CHEAT_MAGIC {
-                block_hash = syscall_handler
-                    .base
-                    .get_block_hash(request.block_number.0)?;
-            } else {
-                cheatnet_state.block_hash_contracts.insert(
-                    (contract_address, request.block_number.0),
-                    (CheatSpan::TargetCalls(num - 1), block_hash),
-                );
-            }
-        }
-        BlockHash(StarkHash::from(block_hash))
-    } else if let Some(block_hash) = cheatnet_state
-        .global_block_hash
-        .get(&request.block_number.0)
-        .copied()
-    {
-        BlockHash(StarkHash::from(block_hash))
-    } else {
-        BlockHash(
-            syscall_handler
-                .base
-                .get_block_hash(request.block_number.0)?,
-        )
-    };
+    let block_hash = cheatnet_state.get_block_hash_for_contract(
+        contract_address,
+        block_number,
+        syscall_handler,
+    )?;
+
     Ok(GetBlockHashResponse { block_hash })
 }
 
