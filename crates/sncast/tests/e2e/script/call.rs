@@ -97,6 +97,8 @@ async fn test_call_invalid_calldata() {
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
+    // 7733229381460288120802334208475838166080759535023995805565484692595 is "Input too long for arguments"
+    // 485748461484230571791265682659113160264223489397539653310998840191492914 is "Failed to deserialize param #2"
     assert_stdout_contains(
         output,
         indoc! {r"

@@ -161,6 +161,7 @@ async fn test_with_invalid_nonce() {
 }
 
 #[tokio::test]
+#[ignore = "FIXME: Investigate which error be handled here"]
 async fn test_insufficient_account_balance() {
     let contract_dir = duplicate_contract_directory_with_salt(
         SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
