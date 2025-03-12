@@ -147,8 +147,8 @@ fn works_with_fuzzer_config_wrapper() {
                     let mut data = array![];
 
                     snforge_std::_config_types::AvailableGasConfig {
-                        l1_gas: 0x0,
-                        l1_data_gas: 0x0,
+                        l1_gas: 0xffffffffffffffff,
+                        l1_data_gas: 0xffffffffffffffff,
                         l2_gas: 0x3e7
                     }
                     .serialize(ref data);
@@ -187,8 +187,8 @@ fn works_with_fuzzer_config_wrapper() {
                     let mut data = array![];
 
                     snforge_std::_config_types::AvailableGasConfig {
-                        l1_gas: 0x0,
-                        l1_data_gas: 0x0,
+                        l1_gas: 0xffffffffffffffff,
+                        l1_data_gas: 0xffffffffffffffff,
                         l2_gas: 0x3e7
                     }
                     .serialize(ref data);
@@ -228,8 +228,8 @@ fn works_with_fuzzer_config_wrapper() {
                     let mut data = array![];
 
                     snforge_std::_config_types::AvailableGasConfig {
-                        l1_gas: 0x0,
-                        l1_data_gas: 0x0,
+                        l1_gas: 0xffffffffffffffff,
+                        l1_data_gas: 0xffffffffffffffff,
                         l2_gas: 0x3e7
                     }
                     .serialize(ref data);

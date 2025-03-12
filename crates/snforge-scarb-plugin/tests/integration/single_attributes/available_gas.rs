@@ -16,9 +16,9 @@ fn works_with_empty() {
                 if snforge_std::_internals::_is_config_run() {
                     let mut data = array![];
                     snforge_std::_config_types::AvailableGasConfig {
-                        l1_gas: 0x0,
-                        l1_data_gas: 0x0,
-                        l2_gas: 0x0
+                        l1_gas: 0xffffffffffffffff,
+                        l1_data_gas: 0xffffffffffffffff,
+                        l2_gas: 0xffffffffffffffff
                     }
                     .serialize(ref data);
                     starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
@@ -69,8 +69,8 @@ fn work_with_number_some_set() {
 
                     snforge_std::_config_types::AvailableGasConfig {
                         l1_gas: 0x7b,
-                        l1_data_gas: 0x0,
-                        l2_gas: 0x0
+                        l1_data_gas: 0xffffffffffffffff,
+                        l2_gas: 0xffffffffffffffff
                     }
                     .serialize(ref data);
 
