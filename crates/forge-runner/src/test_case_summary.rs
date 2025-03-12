@@ -59,7 +59,8 @@ impl GasStatistics {
 
     #[expect(clippy::cast_precision_loss)]
     fn mean(gas_usages: &[u128]) -> f64 {
-        (gas_usages.iter().sum::<u128>() / gas_usages.len() as u128) as f64
+        let sum: f64 = gas_usages.iter().map(|&x| x as f64).sum();
+        sum / gas_usages.len() as f64
     }
 
     #[expect(clippy::cast_precision_loss)]

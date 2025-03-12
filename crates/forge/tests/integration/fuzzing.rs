@@ -88,6 +88,6 @@ fn fuzzed_while_loop() {
     assert!(gas_info.l1_data_gas.std_deviation < ALLOWED_ERROR);
     assert_eq!(gas_info.l2_gas.min, 80000);
     assert_eq!(gas_info.l2_gas.max, 920_000);
-    assert!((gas_info.l2_gas.mean - 504_218.).abs() < f64::EPSILON);
+    assert!((gas_info.l2_gas.mean - 504_218.75).abs() < f64::EPSILON);
     assert!((gas_info.l2_gas.std_deviation - 248_434.50).abs() < ALLOWED_ERROR);
 }
