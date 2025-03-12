@@ -140,7 +140,7 @@ impl FeeArgs {
                 (self.l1_data_gas_price, "--l1-data-gas-price"),
             ];
 
-            for (gas_value, flag) in gas_checks.iter() {
+            for (gas_value, flag) in &gas_checks {
                 ensure!(
                     max_fee_felt >= gas_value.unwrap_or_default(),
                     "--max-fee should be greater than or equal to {}",
