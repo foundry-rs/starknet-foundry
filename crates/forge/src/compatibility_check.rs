@@ -1,6 +1,4 @@
-use crate::MINIMAL_SIERRA_VERSION_FOR_SIERRA_GAS;
-use anyhow::{Context, Result, anyhow, bail};
-use forge_runner::forge_config::{ForgeConfig, ForgeTrackedResource};
+use anyhow::{Context, Result, anyhow};
 use regex::Regex;
 use semver::Version;
 use std::cell::RefCell;
@@ -117,80 +115,10 @@ fn get_raw_version(name: &str, command: &RefCell<Command>) -> Result<String> {
         .to_string())
 }
 
-fn verify_contracts_sierra_versions(forge_config: &ForgeConfig) -> Result<()> {
-    if let Some(contract_names) = forge_config
-        .test_runner_config
-        .contracts_data
-        .get_contract_names()
-    {
-        for contract in contract_names {
-            let sierra_str = &forge_config
-                .test_runner_config
-                .contracts_data
-                .get_artifacts(contract)
-                .context(format!("Missing Sierra JSON for contract: {contract}"))?
-                .sierra;
-
-            let contract_version = parse_sierra_version(sierra_str)?;
-            if MINIMAL_SIERRA_VERSION_FOR_SIERRA_GAS > contract_version {
-                bail!(
-                    "Contract version {} is lower than required minimal sierra version {MINIMAL_SIERRA_VERSION_FOR_SIERRA_GAS}",
-                    contract_version
-                );
-            }
-        }
-    }
-    Ok(())
-}
-
-fn parse_sierra_version(sierra_str: &str) -> Result<Version> {
-    let sierra_json: serde_json::Value =
-        serde_json::from_str(sierra_str).context("Failed to parse Sierra JSON")?;
-
-    let parsed_values: Vec<u8> = sierra_json["sierra_program"]
-        .as_array()
-        .context("Unable to read `sierra_program`.")?
-        .iter()
-        .take(3)
-        .filter_map(|x| x.as_str())
-        .map(|s| {
-            u8::from_str_radix(s.strip_prefix("0x").unwrap_or(s), 16)
-                .context(format!("Invalid hex value: {s}"))
-        })
-        .collect::<Result<_, _>>()?;
-
-    Version::parse(
-        format!(
-            "{}.{}.{}",
-            &parsed_values[0], &parsed_values[1], &parsed_values[2]
-        )
-        .as_str(),
-    )
-    .map_err(std::convert::Into::into)
-}
-
-pub(crate) fn check_sierra_gas_version_requirement(forge_config: &ForgeConfig) -> Result<()> {
-    if forge_config.test_runner_config.tracked_resource == ForgeTrackedResource::SierraGas {
-        verify_contracts_sierra_versions(forge_config).with_context(||
-            format!(
-                "Tracking SierraGas is not supported for sierra <= {MINIMAL_SIERRA_VERSION_FOR_SIERRA_GAS}"
-            ))?;
-    };
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use camino::Utf8PathBuf;
-    use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::{
-        ContractName, ContractsData,
-    };
-    use forge_runner::forge_config::{ExecutionDataToSave, OutputConfig, TestRunnerConfig};
-    use scarb_api::{ScarbCommand, StarknetContractArtifacts};
-    use std::collections::HashMap;
-    use std::num::NonZeroU32;
-    use std::sync::Arc;
+    use scarb_api::ScarbCommand;
     use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
     #[test]
@@ -320,123 +248,5 @@ mod tests {
         assert!(!is_valid);
         assert!(validation_output.contains("❌ Scarb Version"));
         assert!(validation_output.contains("doesn't satisfy minimal 999.0.0"));
-    }
-
-    #[test]
-    fn sierra_gas_version_requirement_happy_case() {
-        let mut contracts = HashMap::new();
-        contracts.insert(ContractName::from("MockedContract"),
-                         (StarknetContractArtifacts {
-                             sierra: String::from("{\"sierra_program\":[\"0x1\",\"0x7\",\"0x0\"],\"sierra_program_debug_info\":{\"type_names\":[],\"libfunc_names\":[],\"user_func_names\":[]},\"contract_class_version\":\"0.1.0\",\"entry_points_by_type\":{\"EXTERNAL\":[],\"L1_HANDLER\":[],\"CONSTRUCTOR\":[]},\"abi\":[]}"),
-                             casm: String::new()},
-                          Utf8PathBuf::from("whatever")
-                         ));
-
-        let forge_config = ForgeConfig {
-            test_runner_config: Arc::new(TestRunnerConfig {
-                exit_first: false,
-                fuzzer_runs: NonZeroU32::new(256).unwrap(),
-                fuzzer_seed: 12345,
-                max_n_steps: None,
-                is_vm_trace_needed: false,
-                tracked_resource: ForgeTrackedResource::SierraGas,
-                cache_dir: Utf8PathBuf::default(),
-                contracts_data: ContractsData::try_from(contracts).unwrap(),
-                environment_variables: HashMap::default(),
-            }),
-            output_config: Arc::new(OutputConfig {
-                detailed_resources: false,
-                execution_data_to_save: ExecutionDataToSave::default(),
-            }),
-        };
-        assert!(check_sierra_gas_version_requirement(&forge_config).is_ok());
-    }
-
-    #[test]
-    fn sierra_gas_version_requirement_cairo_steps() {
-        let mut contracts = HashMap::new();
-        contracts.insert(ContractName::from("MockedContract"),
-                         (StarknetContractArtifacts {
-                             sierra: String::from("{\"sierra_program\":[\"0x1\",\"0x6\",\"0x0\"],\"sierra_program_debug_info\":{\"type_names\":[],\"libfunc_names\":[],\"user_func_names\":[]},\"contract_class_version\":\"0.1.0\",\"entry_points_by_type\":{\"EXTERNAL\":[],\"L1_HANDLER\":[],\"CONSTRUCTOR\":[]},\"abi\":[]}"),
-                             casm: String::new()},
-                          Utf8PathBuf::from("whatever")
-                         ));
-
-        let forge_config = ForgeConfig {
-            test_runner_config: Arc::new(TestRunnerConfig {
-                exit_first: false,
-                fuzzer_runs: NonZeroU32::new(256).unwrap(),
-                fuzzer_seed: 12345,
-                max_n_steps: None,
-                is_vm_trace_needed: false,
-                tracked_resource: ForgeTrackedResource::CairoSteps,
-                cache_dir: Utf8PathBuf::default(),
-                contracts_data: ContractsData::try_from(contracts).unwrap(),
-                environment_variables: HashMap::default(),
-            }),
-            output_config: Arc::new(OutputConfig {
-                detailed_resources: false,
-                execution_data_to_save: ExecutionDataToSave::default(),
-            }),
-        };
-        assert!(check_sierra_gas_version_requirement(&forge_config).is_ok());
-    }
-
-    #[test]
-    fn sierra_gas_version_requirement_no_contracts() {
-        let forge_config = ForgeConfig {
-            test_runner_config: Arc::new(TestRunnerConfig {
-                exit_first: false,
-                fuzzer_runs: NonZeroU32::new(256).unwrap(),
-                fuzzer_seed: 12345,
-                max_n_steps: None,
-                is_vm_trace_needed: false,
-                tracked_resource: ForgeTrackedResource::SierraGas,
-                cache_dir: Utf8PathBuf::default(),
-                contracts_data: ContractsData::default(),
-                environment_variables: HashMap::default(),
-            }),
-            output_config: Arc::new(OutputConfig {
-                detailed_resources: false,
-                execution_data_to_save: ExecutionDataToSave::default(),
-            }),
-        };
-        assert!(check_sierra_gas_version_requirement(&forge_config).is_ok());
-    }
-
-    #[test]
-    fn sierra_gas_version_requirement_fail() {
-        let mut contracts = HashMap::new();
-        contracts.insert(ContractName::from("MockedContract"),
-                         (StarknetContractArtifacts {
-                             sierra: String::from("{\"sierra_program\":[\"0x1\",\"0x6\",\"0x0\"],\"sierra_program_debug_info\":{\"type_names\":[],\"libfunc_names\":[],\"user_func_names\":[]},\"contract_class_version\":\"0.1.0\",\"entry_points_by_type\":{\"EXTERNAL\":[],\"L1_HANDLER\":[],\"CONSTRUCTOR\":[]},\"abi\":[]}"),
-                             casm: String::new()},
-                          Utf8PathBuf::from("whatever")
-                         ));
-
-        let forge_config = ForgeConfig {
-            test_runner_config: Arc::new(TestRunnerConfig {
-                exit_first: false,
-                fuzzer_runs: NonZeroU32::new(256).unwrap(),
-                fuzzer_seed: 12345,
-                max_n_steps: None,
-                is_vm_trace_needed: false,
-                tracked_resource: ForgeTrackedResource::SierraGas,
-                cache_dir: Utf8PathBuf::default(),
-                contracts_data: ContractsData::try_from(contracts).unwrap(),
-                environment_variables: HashMap::default(),
-            }),
-            output_config: Arc::new(OutputConfig {
-                detailed_resources: false,
-                execution_data_to_save: ExecutionDataToSave::default(),
-            }),
-        };
-        let result = check_sierra_gas_version_requirement(&forge_config).unwrap_err();
-        dbg!(&result.to_string());
-        assert!(
-            result
-                .to_string()
-                .contains("Tracking SierraGas is not supported for sierra <= 1.7.0")
-        );
     }
 }
