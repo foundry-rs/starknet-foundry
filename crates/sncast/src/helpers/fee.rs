@@ -1,4 +1,4 @@
-use anyhow::{Result, ensure};
+use anyhow::{Result, bail, ensure};
 use clap::Args;
 use conversions::serde::deserialize::CairoDeserialize;
 use starknet::core::types::FeeEstimate;
@@ -61,6 +61,7 @@ impl From<ScriptFeeSettings> for FeeArgs {
 impl FeeArgs {
     pub fn try_into_fee_settings(&self, fee_estimate: &Option<FeeEstimate>) -> Result<FeeSettings> {
         if let Some(max_fee) = self.max_fee {
+            self.check_conflicting_flags()?;
             self.ensure_max_fee_greater_than_gas_values()?;
 
             ensure!(
@@ -147,6 +148,21 @@ impl FeeArgs {
                     *flag
                 );
             }
+        }
+        Ok(())
+    }
+    fn check_conflicting_flags(&self) -> Result<()> {
+        if self.max_fee.is_some()
+            && self.l1_gas.is_some()
+            && self.l1_gas_price.is_some()
+            && self.l2_gas.is_some()
+            && self.l2_gas_price.is_some()
+            && self.l1_data_gas.is_some()
+            && self.l1_data_gas_price.is_some()
+        {
+            bail!(
+                "Passing all --max-fee, --l1-gas, --l1-gas-price, --l2-gas, --l2-gas-price, --l1-data-gas and --l1-data-gas-price is conflicting."
+            );
         }
         Ok(())
     }
