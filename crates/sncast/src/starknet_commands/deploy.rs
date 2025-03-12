@@ -90,7 +90,7 @@ pub async fn deploy(
         l2_gas_price,
         l1_data_gas,
         l1_data_gas_price,
-    } = fee_settings.expect("Failed to convert fee settings");
+    } = fee_settings.expect("Failed to convert to fee settings");
 
     let execution = match l1_gas {
         None => execution,

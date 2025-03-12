@@ -169,7 +169,6 @@ fn test_wrong_calldata() {
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
 
-    // FIXME: Investigate why it's returned as response and not as error
     // 0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 is "Input too long for arguments"
     assert_stdout_contains(
         output,

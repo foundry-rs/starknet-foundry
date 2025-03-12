@@ -199,8 +199,8 @@ jobs:
       - name: Smoke test
         shell: bash
         env:
-          # TODO: Update RPC_URL to our node
-          # RPC_URL: "http://188.34.188.184:7070/rpc/v0_7"
+          # TODO: Change RPC_URL to our node once it's updated
+          # RPC_URL: "http://188.34.188.184:7070/rpc/v0_8" 
           RPC_URL: "https://rpc.pathfinder.equilibrium.co/testnet-sepolia/rpc/v0_8"
         run: |
           BINARY_PATH="${{ env.BINARY_PATH }}"
