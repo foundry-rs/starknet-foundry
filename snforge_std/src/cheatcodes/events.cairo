@@ -126,18 +126,14 @@ fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
     expected_emitted_by: @ContractAddress,
     expected_event: @T
 ) -> bool {
-    let mut expected_keys = array![];
-    let mut expected_data = array![];
-    expected_event.append_keys_and_data(ref expected_keys, ref expected_data);
+    let expected_event = expected_event.into();
 
     let mut i = 0;
     let mut is_emitted = false;
     while i < self.len() {
         let (from, event) = self.at(i);
 
-        if from == expected_emitted_by
-            && event.keys == @expected_keys
-            && event.data == @expected_data {
+        if from == expected_emitted_by && event == @expected_event {
             is_emitted = true;
             break;
         };
@@ -155,7 +151,14 @@ impl EventIntoImpl<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> of I
         Event { keys, data }
     }
 }
-
+impl EventSnapIntoImpl<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> of Into<@T, Event> {
+    fn into(self: @T) -> Event {
+        let mut keys = array![];
+        let mut data = array![];
+        self.append_keys_and_data(ref keys, ref data);
+        Event { keys, data }
+    }
+}
 
 impl EventTraitImpl of starknet::Event<Event> {
     fn append_keys_and_data(self: @Event, ref keys: Array<felt252>, ref data: Array<felt252>) {
