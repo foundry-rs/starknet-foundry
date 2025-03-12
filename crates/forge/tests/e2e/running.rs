@@ -944,9 +944,12 @@ fn sierra_gas_with_older_scarb() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        [..]Compiling[..]
-        [..]Finished[..]
-        [ERROR] Tracking SierraGas is not supported for sierra <= 1.7.0: Contract version [..] is lower than required minimal sierra version 1.7.0
+        Checking requirements
+        [..]Scarb Version [..] doesn't satisfy minimal 2.10.0[..]
+        [..]This version of scarb is the minimum required in order to support sierra gas tracking (it comes with sierra >= 1.7.0 support)[..]
+        [..]Follow instructions from https://docs.swmansion.com/scarb/download.html[..]
+        [..]
+        [ERROR] Requirements not satisfied
         "},
     );
 }
