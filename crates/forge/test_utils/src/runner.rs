@@ -302,6 +302,7 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
 
 // This logic is used to assert exact gas values in CI for the minimal supported Scarb version
 // and to assert gas values with a margin in scheduled tests, as values can vary for different Scarb versions
+// FOR LOCAL DEVELOPMENT ALWAYS USE EXACT CALCULATIONS
 fn assert_gas_with_margin(gas: u128, asserted_gas: u128) -> bool {
     if cfg!(feature = "assert_non_exact_gas") {
         asserted_gas.abs_diff(gas) <= 10
