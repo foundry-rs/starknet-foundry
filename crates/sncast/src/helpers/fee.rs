@@ -61,6 +61,8 @@ impl From<ScriptFeeSettings> for FeeArgs {
 impl FeeArgs {
     pub fn try_into_fee_settings(&self, fee_estimate: &Option<FeeEstimate>) -> Result<FeeSettings> {
         if let Some(max_fee) = self.max_fee {
+            self.ensure_max_fee_greater_than_gas_values()?;
+
             ensure!(
                 fee_estimate.is_some(),
                 "Fee estimate is required when passing max fee is provided"
@@ -123,6 +125,30 @@ impl FeeArgs {
             };
             Ok(fee_settings)
         }
+    }
+
+    fn ensure_max_fee_greater_than_gas_values(&self) -> Result<()> {
+        if let Some(max_fee) = self.max_fee {
+            let max_fee_felt = Felt::from(max_fee);
+
+            let gas_checks = [
+                (self.l1_gas, "--l1-gas"),
+                (self.l1_gas_price, "--l1-gas-price"),
+                (self.l2_gas, "--l2-gas"),
+                (self.l2_gas_price, "--l2-gas-price"),
+                (self.l1_data_gas, "--l1-data-gas"),
+                (self.l1_data_gas_price, "--l1-data-gas-price"),
+            ];
+
+            for (gas_value, flag) in gas_checks.iter() {
+                ensure!(
+                    max_fee_felt >= gas_value.unwrap_or_default(),
+                    "--max-fee should be greater than or equal to {}",
+                    *flag
+                );
+            }
+        }
+        Ok(())
     }
 }
 
