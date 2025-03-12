@@ -1,5 +1,6 @@
 use super::calls::{execute_inner_call, execute_library_call};
 use super::execution_info::get_cheated_exec_info_ptr;
+use crate::CHEAT_MAGIC;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_constructor_entry_point;
 use crate::state::CheatSpan;
@@ -216,12 +217,16 @@ pub fn get_block_hash_syscall(
         .get(&(contract_address, request.block_number.0))
         .copied()
     {
-        let (cheat_span, block_hash) = entry;
+        let (cheat_span, mut block_hash) = entry;
         if let CheatSpan::TargetCalls(num) = cheat_span {
             if num == 1 {
                 cheatnet_state
                     .block_hash_contracts
                     .remove(&(contract_address, request.block_number.0));
+            } else if num == CHEAT_MAGIC {
+                block_hash = syscall_handler
+                    .base
+                    .get_block_hash(request.block_number.0)?;
             } else {
                 cheatnet_state.block_hash_contracts.insert(
                     (contract_address, request.block_number.0),
