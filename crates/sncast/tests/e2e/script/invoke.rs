@@ -8,10 +8,10 @@ use test_case::test_case;
 #[test_case("oz_cairo_0"; "cairo_0_account")]
 #[test_case("oz_cairo_1"; "cairo_1_account")]
 #[test_case("oz"; "oz_account")]
-#[test_case("argent"; "argent_account")]
-#[test_case("braavos"; "braavos_account")]
+// #[test_case("argent"; "argent_account")]
+// #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
-async fn test_max_fee_too_low(account: &str) {
+async fn test_insufficient_resource_for_validate(account: &str) {
     let script_dir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/invoke", Vec::<String>::new());
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);

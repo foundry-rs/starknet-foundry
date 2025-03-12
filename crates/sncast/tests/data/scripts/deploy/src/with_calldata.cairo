@@ -4,13 +4,13 @@ use traits::Into;
 
 fn main() {
     let fee_settings = FeeSettings {
-        max_fee: Option::Some(99999999999999999999),
-        l1_gas: Option::None,
-        l1_gas_price: Option::None,
-        l2_gas: Option::None,
-        l2_gas_price: Option::None,
-        l1_data_gas: Option::None,
-        l2_data_gas_price: Option::None,
+        max_fee: Option::None,
+        l1_gas: Option::Some(100000),
+        l1_gas_price: Option::Some(10000000000000),
+        l2_gas: Option::Some(1000000000),
+        l2_gas_price: Option::Some(100000000000000000000),
+        l1_data_gas: Option::Some(100000),
+        l2_data_gas_price: Option::Some(10000000000000),
     };
     let salt = 0x3;
     let class_hash: ClassHash = 0x059426c817fb8103edebdbf1712fa084c6744b2829db9c62d1ea4dce14ee6ded
