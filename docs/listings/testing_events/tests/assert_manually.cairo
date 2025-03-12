@@ -2,7 +2,7 @@ use snforge_std::{
     declare, ContractClassTrait, DeclareResultTrait, spy_events, EventSpyAssertionsTrait,
     EventSpyTrait, // Add for fetching events directly
     Event, // A structure describing a raw `Event`
-    IsEmitted // Method for checking if a given event was ever emitted
+    IsEmitted // Trait for checking if a given event was ever emitted
 };
 
 use testing_events::contract::{
@@ -23,12 +23,6 @@ fn test_complex_assertions() {
 
     assert(events.events.len() == 1, 'There should be one event');
 
-    let (from, event) = events.events.at(0); // Ad 3.
-    assert(from == @contract_address, 'Emitted from wrong address');
-    assert(event.keys.len() == 1, 'There should be one key');
-    assert(event.keys.at(0) == @selector!("FirstEvent"), 'Wrong event name'); // Ad 4.
-    assert(event.data.len() == 1, 'There should be one data');
-
     let emitted_event: Event = SpyEventsChecker::Event::FirstEvent(
         SpyEventsChecker::FirstEvent { some_data: 123 }
     )
@@ -36,6 +30,12 @@ fn test_complex_assertions() {
 
     let expected_events = array![(contract_address, emitted_event.clone())];
 
-    assert!(events.events.is_emitted(@contract_address, @emitted_event)); // Ad 5.
-    assert!(events.events == expected_events); // Ad 6.
+    assert!(events.events.is_emitted(@contract_address, @emitted_event)); // Ad 3.
+    assert!(events.events == expected_events); // Ad 4.
+
+    let (from, event) = events.events.at(0); // Ad 5.
+    assert(from == @contract_address, 'Emitted from wrong address');
+    assert(event.keys.len() == 1, 'There should be one key');
+    assert(event.keys.at(0) == @selector!("FirstEvent"), 'Wrong event name'); // Ad 6.
+    assert(event.data.len() == 1, 'There should be one data');
 }

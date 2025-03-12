@@ -21,7 +21,7 @@ pub struct EventSpy {
 }
 
 /// A wrapper structure on an array of events to handle filtering smoothly.
-#[derive(Drop, Serde, Clone, Debug)]
+#[derive(Drop, Serde, Clone, Debug, PartialEq)]
 pub struct Events {
     pub events: Array<(ContractAddress, Event)>
 }
@@ -103,6 +103,24 @@ impl EventSpyAssertionsTraitImpl<
     }
 }
 
+pub trait IsEmitted {
+    fn is_emitted(
+        self: @Array<(ContractAddress, Event)>,
+        expected_emitted_by: @ContractAddress,
+        expected_event: @Event
+    ) -> bool;
+}
+
+pub impl IsEmittedImpl of IsEmitted {
+    fn is_emitted(
+        self: @Array<(ContractAddress, Event)>,
+        expected_emitted_by: @ContractAddress,
+        expected_event: @Event
+    ) -> bool {
+        is_emitted(self, expected_emitted_by, expected_event)
+    }
+}
+
 fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
     self: @Array<(ContractAddress, Event)>,
     expected_emitted_by: @ContractAddress,
@@ -127,24 +145,6 @@ fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
         i += 1;
     };
     return is_emitted;
-}
-
-pub trait IsEmitted {
-    fn is_emitted(
-        self: @Array<(ContractAddress, Event)>,
-        expected_emitted_by: @ContractAddress,
-        expected_event: @Event
-    ) -> bool;
-}
-
-pub impl IsEmittedImpl of IsEmitted {
-    fn is_emitted(
-        self: @Array<(ContractAddress, Event)>,
-        expected_emitted_by: @ContractAddress,
-        expected_event: @Event
-    ) -> bool {
-        is_emitted(self, expected_emitted_by, expected_event)
-    }
 }
 
 impl EventIntoImpl<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> of Into<T, Event> {

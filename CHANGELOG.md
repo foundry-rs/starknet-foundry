@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Testing events api improvements. New `IsEmitted` trait. `Into` and `PartialEq` trait implementations for snforge_std Events.
+- Testing events api improvements. New `IsEmitted` trait. Implemented `Into<snforge_std::Event>` for `starknet::Event` and `PartialEq` trait implementations for `snforge_std::Event` and `snforge_std::Events`.
 
 #### Fixed
 

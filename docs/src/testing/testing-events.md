@@ -60,12 +60,12 @@ Let's go through important parts of the provided code:
 1. After contract deployment we created the spy with `spy_events` cheatcode.
 From this moment all events emitted by the `SpyEventsChecker` contract will be spied.
 2. We have to call `get_events` method on the created spy to fetch our events and get the `Events` structure.
-3. To get our particular event, we need to access the `events` property and get the event under an index.
+3. We can check if certain event was emitted.
+4. Emitted events can be explicitly compared.
+5. To get our particular event, we need to access the `events` property and get the event under an index.
 Since `events` is an array holding a tuple of `ContractAddress` and `Event`, we unpack it using `let (from, event)`.
-4. If the event is emitted by calling `self.emit` method, its hashed name is saved under the `keys.at(0)`
+6. If the event is emitted by calling `self.emit` method, its hashed name is saved under the `keys.at(0)`
 (this way Starknet handles events)
-5. We can make sure that the event mock was emitted.
-6. Emitted events can be explicitly compared.
 
 > 📝 **Note**
 > To assert the `name` property we have to hash a string with the `selector!` macro.
