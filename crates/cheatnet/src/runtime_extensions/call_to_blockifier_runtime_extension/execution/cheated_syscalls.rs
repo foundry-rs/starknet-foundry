@@ -2,6 +2,7 @@ use super::calls::{execute_inner_call, execute_library_call};
 use super::execution_info::get_cheated_exec_info_ptr;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_constructor_entry_point;
+use crate::state::CheatSpan;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::{
     DeployRequest, DeployResponse, GetBlockHashRequest, GetBlockHashResponse, LibraryCallRequest,
@@ -37,6 +38,7 @@ use starknet_api::{
     core::{ClassHash, ContractAddress},
     transaction::fields::Calldata,
 };
+
 pub type SyscallSelector = DeprecatedSyscallSelector;
 
 pub fn get_execution_info_syscall(
@@ -207,8 +209,29 @@ pub fn get_block_hash_syscall(
     cheatnet_state: &mut CheatnetState,
     _remaining_gas: &mut u64,
 ) -> SyscallResult<GetBlockHashResponse> {
-    let block_hash = if let Some(block_hash) = cheatnet_state
-        .block_hash
+    let contract_address = syscall_handler.storage_address();
+
+    let block_hash = if let Some(entry) = cheatnet_state
+        .block_hash_contracts
+        .get(&(contract_address, request.block_number.0))
+        .copied()
+    {
+        let (cheat_span, block_hash) = entry;
+        if let CheatSpan::TargetCalls(num) = cheat_span {
+            if num == 1 {
+                cheatnet_state
+                    .block_hash_contracts
+                    .remove(&(contract_address, request.block_number.0));
+            } else {
+                cheatnet_state.block_hash_contracts.insert(
+                    (contract_address, request.block_number.0),
+                    (CheatSpan::TargetCalls(num - 1), block_hash),
+                );
+            }
+        }
+        BlockHash(StarkHash::from(block_hash))
+    } else if let Some(block_hash) = cheatnet_state
+        .global_block_hash
         .get(&request.block_number.0)
         .copied()
     {
