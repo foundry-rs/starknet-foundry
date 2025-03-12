@@ -88,7 +88,7 @@ async fn test_calldata_ids() {
         "--l1-gas-price",
         "10000000000000",
         "--l2-gas",
-        "10000000000",
+        "1000000000",
         "--l2-gas-price",
         "100000000000000000000",
         "--l1-data-gas",

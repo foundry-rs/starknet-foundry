@@ -64,8 +64,8 @@ async fn test_call_after_storage_changed() {
     let fee_settings = FeeSettings {
         l1_gas: Some(100_000),
         l1_gas_price: Some(10_000_000_000_000),
-        l2_gas: Some(10_000_000_000),
-        l2_gas_price: Some(1_000_000_000_000_000_000_000),
+        l2_gas: Some(1_000_000_000),
+        l2_gas_price: Some(100_000_000_000_000_000),
         l1_data_gas: Some(100_000),
         l1_data_gas_price: Some(10_000_000_000_000),
     };
@@ -144,7 +144,7 @@ fn test_wrong_function_name() {
         output,
         indoc! {r"
         command: call
-        error: Entry point not found in contract
+        error: Requested entrypoint does not exist in the contract
         "},
     );
 }
