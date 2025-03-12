@@ -194,7 +194,7 @@ async fn get_deployment_result(
             let factory = ArgentAccountFactory::new(
                 class_hash,
                 chain_id,
-                Some(Felt::ZERO),
+                None,
                 LocalWallet::from_signing_key(private_key),
                 provider,
             )

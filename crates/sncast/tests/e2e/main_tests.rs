@@ -349,6 +349,18 @@ async fn test_keystore_declare() {
         URL,
         "--contract-name",
         "Map",
+        "--l1-gas",
+        "100000",
+        "--l1-gas-price",
+        "10000000000000",
+        "--l2-gas",
+        "1000000000",
+        "--l2-gas-price",
+        "100000000000000000000",
+        "--l1-data-gas",
+        "100000",
+        "--l1-data-gas-price",
+        "10000000000000",
     ];
 
     set_keystore_password_env();

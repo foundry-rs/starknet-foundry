@@ -95,7 +95,7 @@ pub async fn deploy_argent_account() {
     let factory = ArgentAccountFactory::new(
         ARGENT_CLASS_HASH,
         chain_id,
-        Some(Felt::ZERO),
+        None,
         LocalWallet::from_signing_key(private_key),
         provider,
     )
@@ -647,14 +647,18 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
         URL,
         "--name",
         "my_account",
-        "--max-fee",
-        "99999999999999999",
         "--l1-gas",
         "100000",
+        "--l1-gas-price",
+        "10000000000000",
         "--l2-gas",
-        "10000000000",
+        "1000000000",
+        "--l2-gas-price",
+        "100000000000000000000",
         "--l1-data-gas",
         "100000",
+        "--l1-data-gas-price",
+        "10000000000000",
     ];
 
     runner(&args).current_dir(tempdir.path()).assert().success();

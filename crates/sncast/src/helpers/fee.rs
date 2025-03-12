@@ -63,12 +63,14 @@ impl FeeArgs {
         if let Some(max_fee) = self.max_fee {
             ensure!(
                 fee_estimate.is_some(),
-                "Fee estimate is required when passing --max-fee"
+                "Fee estimate is required when passing max fee is provided"
             );
 
             ensure!(
                 Felt::from(max_fee) >= fee_estimate.as_ref().unwrap().overall_fee,
-                "Estimated fee is higher than provided --max-fee"
+                "Estimated fee ({}) is higher than provided max fee ({})",
+                fee_estimate.as_ref().unwrap().overall_fee,
+                Felt::from(max_fee)
             );
 
             let fee_settings = FeeSettings {
@@ -146,19 +148,6 @@ pub struct FeeSettings {
     pub l1_data_gas: Option<u64>,
     pub l1_data_gas_price: Option<u128>,
 }
-
-// fn print_max_fee_conversion_info(
-//     max_fee: impl Into<Felt>,
-//     max_gas: impl Into<Felt>,
-//     max_gas_unit_price: impl Into<Felt>,
-// ) {
-//     let max_fee: Felt = max_fee.into();
-//     let max_gas: Felt = max_gas.into();
-//     let max_gas_unit_price: Felt = max_gas_unit_price.into();
-//     println!(
-//         "Specifying '--max-fee' flag results in conversion to '--max-gas' and '--max-gas-unit-price' flags\nConverted {max_fee} max fee to {max_gas} max gas and {max_gas_unit_price} max gas unit price\n",
-//     );
-// }
 
 fn parse_non_zero_felt(s: &str) -> Result<NonZeroFelt, String> {
     let felt: Felt = s.parse().map_err(|_| "Failed to parse value")?;
