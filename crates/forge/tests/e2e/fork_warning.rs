@@ -39,7 +39,7 @@ fn setup_redirect_server() {
 }
 
 #[test]
-#[ignore = "FIXME"]
+#[ignore = "TODO(#3088)"]
 fn should_print_warning() {
     let temp = setup_package("empty");
     let mut node_url = node_url();
@@ -89,7 +89,7 @@ fn should_print_warning() {
 }
 
 #[test]
-#[ignore = "FIXME"]
+#[ignore = "TODO(#3088)"]
 fn should_dedup_urls() {
     let temp = setup_package("empty");
     let mut node_url = node_url();
@@ -147,7 +147,7 @@ fn should_dedup_urls() {
 }
 
 #[test]
-#[ignore = "FIXME"]
+#[ignore = "TODO(#3088)"]
 fn should_print_foreach() {
     setup_redirect_server();
 
