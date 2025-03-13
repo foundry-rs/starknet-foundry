@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `sncast completion` command - used to generate autocompletion script
 
+#### Changed
+
+- `verify` command now supports the `--class-hash` for Walnut verification
+
 ## [0.38.3] - 2025-03-07
 
 ### Forge
