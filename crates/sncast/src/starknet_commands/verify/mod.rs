@@ -103,9 +103,7 @@ pub async fn verify(
         },
 
         _ => {
-            return Err(anyhow!(
-                "Exactly one of class_hash or contract_address must be provided."
-            ));
+            unreachable!("Exactly one of class_hash or contract_address must be provided.");
         }
     };
 
