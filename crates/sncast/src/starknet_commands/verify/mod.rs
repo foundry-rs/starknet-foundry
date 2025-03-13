@@ -59,15 +59,19 @@ impl fmt::Display for Verifier {
 }
 
 pub async fn verify(
-    contract_address: Felt,
-    contract_name: String,
-    verifier: Verifier,
-    network: Network,
-    confirm_verification: bool,
-    package: Option<String>,
+    args: Verify,
     manifest_path: &Utf8PathBuf,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<VerifyResponse> {
+    let Verify {
+        contract_address,
+        contract_name,
+        verifier,
+        network,
+        confirm_verification,
+        package,
+    } = args;
+
     // Let's ask confirmation
     if !confirm_verification {
         let prompt_text = format!(
