@@ -146,7 +146,9 @@ fn test_wrong_calldata() {
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
         [..]
         [..]: Error in the called contract ([..]):
-        Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
+        Execution failed. Failure reason:
+        [..]
+        [..] ('Failed to deserialize param #2').
         " })))
         command: script run
         status: success
