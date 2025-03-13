@@ -6,8 +6,7 @@ set -e
 # The latest patch versions for the two versions preceding the current one
 
 function get_all_patch_versions() {
-  # Omit version 2.8.0 as it has a bug when using the `assert_macros` package
-  asdf list all scarb "$1" | grep -v "rc" | grep -v "2.8.0"
+  asdf list all scarb "$1" | grep -v "rc"
 }
 
 function get_latest_patch_version() {
@@ -18,10 +17,7 @@ major_minor_versions=($(get_all_patch_versions | cut -d . -f 1,2 | sort -uV | ta
 
 declare -a scarb_versions
 
-if [[ ${major_minor_versions[0]} != "2.6" ]]; then
-  scarb_versions+=($(get_latest_patch_version "${major_minor_versions[0]}"))
-fi
-
+scarb_versions+=($(get_latest_patch_version "${major_minor_versions[0]}"))
 scarb_versions+=($(get_latest_patch_version "${major_minor_versions[1]}"))
 
 scarb_versions+=($(get_all_patch_versions "${major_minor_versions[2]}"))
