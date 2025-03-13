@@ -80,7 +80,7 @@ fn start_devnet() {
     rt.block_on(deploy_keystore_account());
     rt.block_on(deploy_cairo_0_account());
     rt.block_on(deploy_latest_oz_account());
-    // FIXME: Devnet returns error that balance is 0, even though we prefund these accounts
+    // TODO(#3089): Devnet returns error that balance is 0, even though we prefund these accounts
     // rt.block_on(deploy_argent_account());
     // rt.block_on(deploy_braavos_account());
 }

@@ -1,7 +1,8 @@
 name: CI
 
 env:
-  DEVNET_REV: d9ab44a8589ca4b8c3bab0367cc1d5be0c301550
+  # TODO(#3087): Update SHA once devnet stable release is available
+  DEVNET_REV: ef789b700770fa27a2fc057b3d1c610771be27d9
 
 on:
   pull_request:
