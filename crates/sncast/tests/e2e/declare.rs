@@ -85,19 +85,10 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         URL,
         "--contract-name",
         "Map",
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success().get_output().stdout.clone();
@@ -190,19 +181,10 @@ async fn test_happy_case_specify_package() {
         "supercomplexcode",
         "--package",
         "main_workspace",
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
@@ -233,19 +215,10 @@ async fn test_contract_already_declared() {
         URL,
         "--contract-name",
         "Map",
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     runner(&args).current_dir(tempdir.path()).assert().success();
 
@@ -277,21 +250,12 @@ async fn test_invalid_nonce() {
         URL,
         "--contract-name",
         "Map",
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
         "--nonce",
         "12345",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(contract_path.path());
     let output = snapbox.assert().success();
@@ -487,19 +451,10 @@ fn test_scarb_no_casm_artifact() {
         URL,
         "--contract-name",
         "minimal_contract",
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS)
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -530,19 +485,10 @@ async fn test_many_packages_default() {
         URL,
         "--contract-name",
         "supercomplexcode2",
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().failure();
@@ -571,19 +517,10 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         "cast_fibonacci",
         "--contract-name",
         "FibonacciContract",
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
@@ -611,19 +548,10 @@ async fn test_worskpaces_package_no_contract() {
         "cast_addition",
         "--contract-name",
         "whatever",
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -657,19 +585,10 @@ async fn test_no_scarb_profile() {
         URL,
         "--contract-name",
         "Map",
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "10000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(contract_path.path());
     let output = snapbox.assert().success();

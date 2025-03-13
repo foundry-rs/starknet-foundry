@@ -1,4 +1,6 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, MULTICALL_CONFIGS_DIR, URL};
+use crate::helpers::constants::{
+    ACCOUNT_FILE_PATH, MULTICALL_CONFIGS_DIR, TEST_RESOURCE_BOUNDS_FLAGS, URL,
+};
 use crate::helpers::fixtures::create_and_deploy_oz_account;
 use crate::helpers::runner::runner;
 use indoc::{formatdoc, indoc};
@@ -31,19 +33,10 @@ async fn test_happy_case(account: &str) {
         URL,
         "--path",
         path,
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "10000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args);
     let output = snapbox.assert();
@@ -84,19 +77,10 @@ async fn test_calldata_ids() {
         URL,
         "--path",
         path,
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert();
@@ -279,19 +263,10 @@ async fn test_numeric_inputs() {
         URL,
         "--path",
         path,
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "10000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert();
