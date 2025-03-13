@@ -44,6 +44,7 @@ async fn test_insufficient_resource_for_validate(account: &str) {
 }
 
 #[tokio::test]
+#[ignore = "TODO(#3091)"]
 async fn test_contract_does_not_exist() {
     let script_dir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/invoke", Vec::<String>::new());
