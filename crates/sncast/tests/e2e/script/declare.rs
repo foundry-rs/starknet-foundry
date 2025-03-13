@@ -9,6 +9,7 @@ use test_case::test_case;
 #[test_case("oz_cairo_0"; "cairo_0_account")]
 #[test_case("oz_cairo_1"; "cairo_1_account")]
 #[test_case("oz"; "oz_account")]
+// TODO(#3089)
 // #[test_case("argent"; "argent_account")]
 // #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
@@ -161,7 +162,7 @@ async fn test_with_invalid_nonce() {
 }
 
 #[tokio::test]
-#[ignore = "FIXME: Investigate which error be handled here"]
+#[ignore = "TODO(#3091)"]
 async fn test_insufficient_account_balance() {
     let contract_dir = duplicate_contract_directory_with_salt(
         SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
