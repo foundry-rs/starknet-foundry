@@ -93,7 +93,8 @@ fn should_print_warning() {
 fn should_dedup_urls() {
     let temp = setup_package("empty");
     let mut node_url = node_url();
-    node_url.set_path("rpc/v0_6");
+
+    node_url.set_path("rpc/v0_5");
     temp.child("tests/test.cairo")
         .write_str(
             formatdoc!(
@@ -122,7 +123,7 @@ fn should_dedup_urls() {
             r"
                 [..]Compiling[..]
                 [..]Finished[..]
-                [WARNING] RPC node with the url {node_url} uses incompatible version 0.6.0. Expected version: {EXPECTED_RPC_VERSION}
+                [WARNING] RPC node with the url {node_url} uses incompatible version 0.5.1. Expected version: {EXPECTED_RPC_VERSION}
 
 
                 Collected 2 test(s) from empty package
@@ -153,7 +154,7 @@ fn should_print_foreach() {
 
     let temp = setup_package("empty");
     let mut node_url = node_url();
-    node_url.set_path("rpc/v0_6");
+    node_url.set_path("rpc/v0_5");
 
     temp.child("tests/test.cairo")
         .write_str(
