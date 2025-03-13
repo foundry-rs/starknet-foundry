@@ -69,14 +69,22 @@ impl fmt::Display for Verifier {
 }
 
 pub async fn verify(
-    verify: Verify,
+    args: Verify,
     manifest_path: &Utf8PathBuf,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<VerifyResponse> {
-    let verifier = verify.verifier;
+    let Verify {
+        contract_address,
+        class_hash,
+        contract_name,
+        verifier,
+        network,
+        confirm_verification,
+        package,
+    } = args;
 
     // Let's ask confirmation
-    if !verify.confirm_verification {
+    if !confirm_verification {
         let prompt_text = format!(
             "\n\tYou are about to submit the entire workspace code to the third-party verifier at {verifier}.\n\n\tImportant: Make sure your project does not include sensitive information like private keys. The snfoundry.toml file will be uploaded. Keep the keystore outside the project to prevent it from being uploaded.\n\n\tAre you sure you want to proceed? (Y/n)"
         );
@@ -87,7 +95,7 @@ pub async fn verify(
         }
     }
 
-    let contract_name = verify.contract_name;
+    let contract_name = contract_name;
     if !artifacts.contains_key(&contract_name) {
         return Err(anyhow!("Contract named '{contract_name}' was not found"));
     }
@@ -98,7 +106,7 @@ pub async fn verify(
         .parent()
         .ok_or(anyhow!("Failed to obtain workspace dir"))?;
 
-    let contract_identifier = match (verify.class_hash, verify.contract_address) {
+    let contract_identifier = match (class_hash, contract_address) {
         (Some(class_hash), None) => ContractIdentifier::ClassHash {
             class_hash: class_hash.to_fixed_hex_string(),
         },
@@ -115,13 +123,13 @@ pub async fn verify(
         Verifier::Walnut => {
             let walnut = WalnutVerificationInterface::new(network, workspace_dir.to_path_buf())?;
             walnut
-                .verify(contract_identifier, contract_name, verify.package)
+                .verify(contract_identifier, contract_name, package)
                 .await
         }
         Verifier::Voyager => {
             let voyager = Voyager::new(network, workspace_dir.to_path_buf())?;
             voyager
-                .verify(contract_identifier, contract_name, verify.package)
+                .verify(contract_identifier, contract_name, package)
                 .await
         }
     }

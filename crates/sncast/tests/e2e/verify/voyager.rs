@@ -50,7 +50,7 @@ async fn test_happy_case() {
         "license": null
     });
     Mock::given(method("POST"))
-        .and(path(format!("class-verify/{:#068x}", class_hash)))
+        .and(path(format!("class-verify/{class_hash:#068x}")))
         .and(body_partial_json(&expected_body))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
         .expect(1)
@@ -131,7 +131,7 @@ async fn test_failed_verification() {
         "license": null
     });
     Mock::given(method("POST"))
-        .and(path(format!("class-verify/{:#068x}", class_hash)))
+        .and(path(format!("class-verify/{class_hash:#068x}")))
         .and(body_partial_json(&expected_body))
         .respond_with(ResponseTemplate::new(400).set_body_json(json!({ "error": error })))
         .expect(1)
@@ -213,7 +213,7 @@ async fn test_failed_hash_lookup() {
         "license": null
     });
     Mock::given(method("POST"))
-        .and(path(format!("class-verify/{:#068x}", class_hash)))
+        .and(path(format!("class-verify/{class_hash:#068x}")))
         .and(body_partial_json(&expected_body))
         .respond_with(ResponseTemplate::new(400))
         .expect(0)
@@ -292,7 +292,7 @@ async fn test_virtual_workspaces() {
         "license": null
     });
     Mock::given(method("POST"))
-        .and(path(format!("class-verify/{:#068x}", class_hash)))
+        .and(path(format!("class-verify/{class_hash:#068x}")))
         .and(body_partial_json(&expected_body))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
         .expect(1)
@@ -375,7 +375,7 @@ async fn test_no_package() {
         "license": null
     });
     Mock::given(method("POST"))
-        .and(path(format!("class-verify/{:#068x}", class_hash)))
+        .and(path(format!("class-verify/{class_hash:#068x}")))
         .and(body_partial_json(&expected_body))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
         .expect(0)
