@@ -38,6 +38,8 @@ use tempfile::{TempDir, tempdir};
 use toml::Table;
 use url::Url;
 
+use super::constants::TEST_RESOURCE_BOUNDS_FLAGS;
+
 const SCRIPT_ORIGIN_TIMESTAMP: u64 = 1_709_853_748;
 
 pub async fn deploy_keystore_account() {
@@ -645,19 +647,10 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
         URL,
         "--name",
         "my_account",
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     runner(&args).current_dir(tempdir.path()).assert().success();
 

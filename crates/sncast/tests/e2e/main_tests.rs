@@ -1,5 +1,6 @@
 use crate::helpers::constants::{
-    ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
+    ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA,
+    TEST_RESOURCE_BOUNDS_FLAGS, URL,
 };
 use crate::helpers::env::set_keystore_password_env;
 use crate::helpers::fixtures::{
@@ -349,19 +350,10 @@ async fn test_keystore_declare() {
         URL,
         "--contract-name",
         "Map",
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     set_keystore_password_env();
     let snapbox = runner(&args).current_dir(contract_path.path());

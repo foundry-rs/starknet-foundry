@@ -1,6 +1,6 @@
 use crate::helpers::constants::{
     ACCOUNT, ACCOUNT_FILE_PATH, CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
-    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
+    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_CLASS_HASH_SEPOLIA, TEST_RESOURCE_BOUNDS_FLAGS, URL,
 };
 use crate::helpers::fixtures::{
     create_and_deploy_account, create_and_deploy_oz_account, get_transaction_hash,
@@ -34,19 +34,10 @@ async fn test_happy_case_human_readable() {
         "--salt",
         "0x2",
         "--unique",
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -90,19 +81,10 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         "--salt",
         "0x2",
         "--unique",
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
@@ -182,19 +164,10 @@ async fn test_happy_case_with_constructor() {
         "0x0",
         "--class-hash",
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success().get_output().stdout.clone();
@@ -223,19 +196,10 @@ async fn test_happy_case_with_constructor_cairo_expression_calldata() {
         "0x420, 0x2137_u256",
         "--class-hash",
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success().get_output().stdout.clone();

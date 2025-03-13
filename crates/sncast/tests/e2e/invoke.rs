@@ -1,6 +1,6 @@
 use crate::helpers::constants::{
     ACCOUNT, ACCOUNT_FILE_PATH, DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA,
-    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
+    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_ADDRESS_SEPOLIA, TEST_RESOURCE_BOUNDS_FLAGS, URL,
 };
 use crate::helpers::fixtures::{
     create_and_deploy_account, create_and_deploy_oz_account, get_transaction_hash,
@@ -39,19 +39,10 @@ async fn test_happy_case_human_readable() {
         "put",
         "--calldata",
         "0x1 0x2",
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -94,19 +85,10 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         "put",
         "--calldata",
         "0x1 0x2",
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -355,19 +337,10 @@ async fn test_happy_case_cairo_expression_calldata() {
         "nested_struct_fn",
         "--arguments",
         calldata,
-        "--l1-gas",
-        "100000",
-        "--l1-gas-price",
-        "10000000000000",
-        "--l2-gas",
-        "1000000000",
-        "--l2-gas-price",
-        "100000000000000000000",
-        "--l1-data-gas",
-        "100000",
-        "--l1-data-gas-price",
-        "10000000000000",
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success().get_output().stdout.clone();
