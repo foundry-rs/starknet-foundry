@@ -297,7 +297,7 @@ pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &
         items["alpha-sepolia"]["my_account"]["address"]
             .as_str()
             .unwrap(),
-        9_999_999_999_999_999_999_999_999_999_999,
+        9_999_999_999_999_999_999,
     )
     .await;
     tempdir
@@ -330,11 +330,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         &account_type.parse().unwrap(),
     );
 
-    mint_token(
-        &address.into_hex_string(),
-        9_999_999_999_999_999_999_999_999_999_999,
-    )
-    .await;
+    mint_token(&address.into_hex_string(), 9_999_999_999_999_999_999).await;
 
     let args = vec![
         "--keystore",
@@ -654,11 +650,7 @@ pub async fn test_deploy_keystore_other_args() {
         &AccountType::OpenZeppelin,
     );
 
-    mint_token(
-        &address.into_hex_string(),
-        9_999_999_999_999_999_999_999_999_999_999,
-    )
-    .await;
+    mint_token(&address.into_hex_string(), 9_999_999_999_999_999_999).await;
 
     let args = vec![
         "--accounts-file",

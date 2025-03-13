@@ -60,9 +60,12 @@ impl From<ScriptFeeSettings> for FeeArgs {
 
 impl FeeArgs {
     pub fn try_into_fee_settings(&self, fee_estimate: &Option<FeeEstimate>) -> Result<FeeSettings> {
+        // If some resource bounds values are lacking, starknet-rs will estimate them automatically
+        // but in case someone passes --max-fee flag, we need to make estimation on our own
+        // to check if the fee estimate isn't higher than provided max fee
         if let Some(max_fee) = self.max_fee {
             self.check_conflicting_flags()?;
-            self.ensure_max_fee_greater_than_gas_values()?;
+            self.validate_max_fee_meets_resource_bounds()?;
 
             ensure!(
                 fee_estimate.is_some(),
@@ -128,7 +131,7 @@ impl FeeArgs {
         }
     }
 
-    fn ensure_max_fee_greater_than_gas_values(&self) -> Result<()> {
+    fn validate_max_fee_meets_resource_bounds(&self) -> Result<()> {
         if let Some(max_fee) = self.max_fee {
             let max_fee_felt = Felt::from(max_fee);
 
@@ -151,6 +154,7 @@ impl FeeArgs {
         }
         Ok(())
     }
+
     fn check_conflicting_flags(&self) -> Result<()> {
         if self.max_fee.is_some()
             && self.l1_gas.is_some()
