@@ -18,6 +18,39 @@ static TEMPLATES_DIR: Dir = include_dir!("snforge_templates");
 const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
 const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
 
+struct Dependency {
+    name: String,
+    version: String,
+    dev: bool,
+}
+
+struct TemplateManifestConfig {
+    dependencies: Vec<Dependency>,
+    contract_target: bool,
+}
+
+impl TryFrom<&Template> for TemplateManifestConfig {
+    type Error = anyhow::Error;
+
+    fn try_from(template: &Template) -> Result<Self> {
+        let cairo_version = ScarbCommand::version().run()?.cairo;
+        match template {
+            Template::CairoProgram => Ok(TemplateManifestConfig {
+                dependencies: vec![],
+                contract_target: false,
+            }),
+            Template::BalanceContract => Ok(TemplateManifestConfig {
+                dependencies: vec![Dependency {
+                    name: "starknet".to_string(),
+                    version: cairo_version.to_string(),
+                    dev: false,
+                }],
+                contract_target: true,
+            }),
+        }
+    }
+}
+
 fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
     fs::write(
         path,
@@ -56,7 +89,7 @@ fn add_template_to_scarb_manifest(path: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-fn overwrite_or_copy_files(
+fn overwrite_or_copy_template_files(
     dir: &Dir,
     template_path: &Path,
     project_path: &Path,
@@ -68,7 +101,7 @@ fn overwrite_or_copy_files(
         match entry {
             DirEntry::Dir(dir) => {
                 fs::create_dir_all(&destination)?;
-                overwrite_or_copy_files(dir, template_path, project_path, project_name)?;
+                overwrite_or_copy_template_files(dir, template_path, project_path, project_name)?;
             }
             DirEntry::File(file) => {
                 let contents = file.contents();
@@ -87,13 +120,16 @@ fn replace_project_name(contents: &[u8], project_name: &str) -> Result<Vec<u8>> 
     Ok(contents.into_bytes())
 }
 
-fn update_config(config_path: &Path, template: &Template) -> Result<()> {
-    let config_file = fs::read_to_string(config_path)?;
-    let mut document = config_file
+fn update_config(
+    scarb_manifest_path: &Path,
+    template_config: &TemplateManifestConfig,
+) -> Result<()> {
+    let scarb_toml_content = fs::read_to_string(scarb_manifest_path)?;
+    let mut document = scarb_toml_content
         .parse::<DocumentMut>()
         .context("invalid document")?;
 
-    if !matches!(template, Template::CairoProgram) {
+    if template_config.contract_target {
         add_target_to_toml(&mut document);
     }
 
@@ -102,7 +138,7 @@ fn update_config(config_path: &Path, template: &Template) -> Result<()> {
     add_assert_macros(&mut document)?;
     add_allow_prebuilt_macros(&mut document)?;
 
-    fs::write(config_path, document.to_string())?;
+    fs::write(scarb_manifest_path, document.to_string())?;
 
     Ok(())
 }
@@ -192,6 +228,7 @@ pub fn new(
         template,
     }: NewArgs,
 ) -> Result<()> {
+    ScarbCommand::new().ensure_available()?;
     if !overwrite {
         ensure!(
             !path.exists() || path.read_dir().is_ok_and(|mut i| i.next().is_none()),
@@ -238,12 +275,14 @@ pub fn new(
         create_snfoundry_manifest(&snfoundry_manifest_path)?;
     }
 
-    add_dependencies_to_scarb_toml(&project_path, &template)?;
-    update_config(&scarb_manifest_path, &template)?;
-    extend_gitignore(&project_path)?;
+    let template_config = TemplateManifestConfig::try_from(&template)?;
+    add_dependencies(&scarb_manifest_path, &template_config)?;
+    update_config(&scarb_manifest_path, &template_config)?;
 
     let template_dir = get_template_dir(&template)?;
-    overwrite_or_copy_files(&template_dir, template_dir.path(), &project_path, &name)?;
+    overwrite_or_copy_template_files(&template_dir, template_dir.path(), &project_path, &name)?;
+
+    extend_gitignore(&project_path)?;
 
     // Fetch to create lock file.
     ScarbCommand::new_with_stdio()
@@ -255,46 +294,40 @@ pub fn new(
     Ok(())
 }
 
-fn add_dependencies_to_scarb_toml(project_path: &PathBuf, template: &Template) -> Result<()> {
-    let snforge_version = env!("CARGO_PKG_VERSION");
-    let cairo_version = ScarbCommand::version().run()?.cairo;
-
+fn add_dependencies(
+    scarb_manifest_path: &PathBuf,
+    template_config: &TemplateManifestConfig,
+) -> Result<()> {
     if env::var("DEV_DISABLE_SNFORGE_STD_DEPENDENCY").is_err() {
-        add_dependency(project_path, "snforge_std", snforge_version, true)?;
+        let snforge_version = env!("CARGO_PKG_VERSION");
+        add_dependency(
+            scarb_manifest_path,
+            &Dependency {
+                name: "snforge_std".to_string(),
+                version: snforge_version.to_string(),
+                dev: true,
+            },
+        )?;
     }
 
-    match template {
-        Template::BalanceContract => {
-            add_dependency(project_path, "starknet", &cairo_version.to_string(), false)?;
-        }
-        Template::CairoProgram => {}
+    for dep in &template_config.dependencies {
+        add_dependency(scarb_manifest_path, dep)?;
     }
 
     Ok(())
 }
 
-fn add_dependency(
-    project_path: &PathBuf,
-    dep_name: &str,
-    version: &str,
-    is_dev: bool,
-) -> Result<()> {
-    let scarb_manifest_path = project_path.join("Scarb.toml");
-
+fn add_dependency(scarb_manifest_path: &PathBuf, dependency: &Dependency) -> Result<()> {
     let mut cmd = ScarbCommand::new_with_stdio();
+    cmd.manifest_path(scarb_manifest_path).offline().arg("add");
 
-    cmd.current_dir(project_path)
-        .manifest_path(scarb_manifest_path.clone())
-        .offline()
-        .arg("add");
-
-    if is_dev {
+    if dependency.dev {
         cmd.arg("--dev");
     }
 
-    cmd.arg(format!("{dep_name}@{version}"))
+    cmd.arg(format!("{}@{}", dependency.name, dependency.version))
         .run()
-        .context(format!("Failed to add {dep_name} dependency"))?;
+        .context(format!("Failed to add {} dependency", dependency.name))?;
 
     Ok(())
 }

@@ -12,7 +12,7 @@ Name of a package to create, defaults to the directory name.
 
 ## `-t`, `--template`
 
-Name of a template to use in creating the new project. Possible values:
+Name of a template to use when creating a new project. Possible values:
 - `balance-contract` (default): Basic contract with example tests.
 - `cairo-program`: Simple Cairo program with unit tests.
 
