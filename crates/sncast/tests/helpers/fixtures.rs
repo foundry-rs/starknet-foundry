@@ -145,7 +145,7 @@ async fn deploy_oz_account(address: &str, class_hash: &str, salt: &str, private_
 }
 
 async fn deploy_account_to_devnet<T: AccountFactory + Sync>(factory: T, address: &str, salt: &str) {
-    mint_token(address, u128::MAX).await;
+    mint_token(address, u64::MAX).await;
     factory
         .deploy_v3(salt.parse().expect("Failed to parse salt"))
         .l1_gas(100_000)
@@ -254,7 +254,7 @@ pub async fn invoke_contract(
 
 // devnet-rs accepts an amount as u128
 // but serde_json cannot serialize numbers this big
-pub async fn mint_token(recipient: &str, amount: u128) {
+pub async fn mint_token(recipient: &str, amount: u64) {
     let client = reqwest::Client::new();
     for unit in ["FRI", "WEI"] {
         let json = json!(
@@ -633,7 +633,7 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
         items["alpha-sepolia"]["my_account"]["address"]
             .as_str()
             .unwrap(),
-        u128::MAX,
+        u64::MAX,
     )
     .await;
 

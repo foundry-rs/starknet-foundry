@@ -18,6 +18,8 @@ pub enum StarknetError {
     FailedToReceiveTransaction,
     /// Contract not found
     ContractNotFound,
+    /// Requested entrypoint does not exist in the contract
+    EntryPointNotFound,
     /// Block not found
     BlockNotFound,
     /// Invalid transaction index in a block

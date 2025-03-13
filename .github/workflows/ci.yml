@@ -182,7 +182,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # os: [ ubuntu-latest, windows-latest ]
+        # TODO(#3083): Restore running sncast tests on Windows
         os: [ ubuntu-latest ]
     steps:
       - uses: actions/checkout@v4

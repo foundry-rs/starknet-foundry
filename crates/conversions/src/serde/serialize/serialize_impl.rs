@@ -1,7 +1,9 @@
 use super::{BufferWriter, CairoSerialize};
 use crate::{IntoConv, byte_array::ByteArray};
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use starknet::core::types::{ContractErrorData, TransactionExecutionErrorData};
+use starknet::core::types::{
+    ContractErrorData, ContractExecutionError, TransactionExecutionErrorData,
+};
 use starknet_api::core::EthAddress;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
 use starknet_api::transaction::fields::Calldata;
@@ -27,16 +29,28 @@ impl CairoSerialize for CallEntryPoint {
 
 impl CairoSerialize for ContractErrorData {
     fn serialize(&self, output: &mut BufferWriter) {
-        // TODO: Implement
-        ByteArray::from("").serialize(output);
+        self.revert_error.serialize(output);
+    }
+}
+
+impl CairoSerialize for ContractExecutionError {
+    fn serialize(&self, output: &mut BufferWriter) {
+        match &self {
+            ContractExecutionError::Nested(inner) => {
+                inner.class_hash.serialize(output);
+                inner.contract_address.serialize(output);
+                inner.selector.serialize(output);
+                inner.error.serialize(output);
+            }
+            ContractExecutionError::Message(msg) => ByteArray::from(msg.as_str()).serialize(output),
+        }
     }
 }
 
 impl CairoSerialize for TransactionExecutionErrorData {
     fn serialize(&self, output: &mut BufferWriter) {
         self.transaction_index.serialize(output);
-        // TODO: Implement
-        ByteArray::from("").serialize(output);
+        self.execution_error.serialize(output);
     }
 }
 
