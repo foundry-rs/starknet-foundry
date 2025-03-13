@@ -108,6 +108,7 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     assert!(matches!(receipt, Declare(_)));
 }
 
+// TODO(#3090)
 // #[test_case(Some("100000000000000000"), None, None; "max_fee")]
 // #[test_case(None, Some("100000"), None; "max_gas")]
 // #[test_case(None, None, Some("100000000000000"); "max_gas_unit_price")]

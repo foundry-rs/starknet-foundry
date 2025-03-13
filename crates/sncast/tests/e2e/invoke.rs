@@ -72,6 +72,7 @@ async fn test_happy_case_human_readable() {
 
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
+// TODO(#3089)
 // #[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
 // #[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
@@ -117,7 +118,7 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     assert!(matches!(receipt, Invoke(_)));
 }
 
-// FIXME
+// TODO(#3090)
 // #[test_case(Some("99999999999999999"), None, None; "max_fee")]
 // #[test_case(None, Some("999"), None; "max_gas")]
 // #[test_case(None, None, Some("999999999999"); "max_gas_unit_price")]
