@@ -1,7 +1,7 @@
 name: CI
 
 env:
-  # TODO(#3087): Update SHA once devnet stable release is available
+  # TODO(#3087): Update SHA once devnet release is available
   DEVNET_REV: ef789b700770fa27a2fc057b3d1c610771be27d9
 
 on:
