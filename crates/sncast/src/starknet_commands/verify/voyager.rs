@@ -1,8 +1,4 @@
-use anyhow::{anyhow, Context, Result};
-use cairo_lang_defs::db::DefsGroup;
-use cairo_lang_filesystem::db::FilesGroup;
-use cairo_lang_filesystem::ids::CrateLongId;
-use cairo_lang_utils::Upcast;
+use anyhow::{Context, Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
 use itertools::Itertools;
 use reqwest::{self, StatusCode};
@@ -15,8 +11,8 @@ use sncast::{helpers::scarb_utils, response::structs::VerifyResponse};
 use starknet::{
     core::types::{BlockId, BlockTag},
     providers::{
-        jsonrpc::{HttpTransport, JsonRpcClient},
         Provider,
+        jsonrpc::{HttpTransport, JsonRpcClient},
     },
 };
 use starknet_types_core::felt::Felt;
@@ -24,7 +20,6 @@ use std::{collections::HashMap, env, ffi::OsStr, fmt, fs, path::PathBuf};
 use url::Url;
 use walkdir::WalkDir;
 
-pub mod db;
 use super::explorer::VerificationInterface;
 
 const CAIRO_EXT: &str = "cairo";
@@ -40,7 +35,6 @@ pub struct Body {
     pub compiler_version: semver::Version,
     pub scarb_version: semver::Version,
     pub project_dir_path: Utf8PathBuf,
-    pub contract_file: PathBuf,
     pub name: String,
     pub package_name: String,
     pub license: Option<String>,
@@ -263,14 +257,22 @@ impl VerificationInterface for Voyager {
 
         let selected = (if workspace_packages.len() > 1 {
             match package {
-                Some(package_name) => {
-                    if let Some(p) = workspace_packages.into_iter().find(|p| p.name == package_name) {
+                Some(ref package_name) => {
+                    if let Some(p) = workspace_packages
+                        .into_iter()
+                        .find(|p| p.name == *package_name)
+                    {
                         Ok(p)
                     } else {
-                        Err(anyhow!("Package {} not found in scarb metadata", package_name))
+                        Err(anyhow!(
+                            "Package {} not found in scarb metadata",
+                            package_name
+                        ))
                     }
-                },
-                None => Err(anyhow!("More than one package found in scarb metadata - specify package using --package flag")),
+                }
+                None => Err(anyhow!(
+                    "More than one package found in scarb metadata - specify package using --package flag"
+                )),
             }
         } else {
             if let Some(p) = workspace_packages.pop() {
@@ -279,27 +281,6 @@ impl VerificationInterface for Voyager {
                 Err(anyhow!("No packages found in scarb metadata"))
             }
         })?;
-
-        let db = db::VoyagerDatabase::new(db::get_project_config(&self.metadata, &selected));
-        let crate_id = db.intern_crate(CrateLongId::Real(selected.name.clone().into()));
-
-        let modules = db.crate_modules(crate_id);
-        let module = modules.iter().find_map(|id| {
-            if id.name(db.upcast()) != contract_name {
-                return None;
-            }
-            db.module_main_file(*id).ok()
-        });
-
-        let contract_file = module
-            .ok_or(anyhow!("Couldn't find file for module: {contract_name}"))
-            .and_then(|file_id| {
-                let file_path = file_id.full_path(db.upcast());
-                Ok(PathBuf::from(file_path.clone())
-                    .strip_prefix(&prefix)
-                    .map(|p| p.to_path_buf())
-                    .map_err(|_| anyhow!("Couldn't strip {prefix} from {file_path}"))?)
-            })?;
 
         let project_dir_path = self
             .metadata
@@ -328,7 +309,6 @@ impl VerificationInterface for Voyager {
         let body = Body {
             compiler_version: cairo_version,
             scarb_version,
-            contract_file,
             project_dir_path: project_dir_path.to_path_buf(),
             name: contract_name.clone(),
             license: selected.manifest_metadata.license.clone(),
