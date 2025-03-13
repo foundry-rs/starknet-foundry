@@ -109,7 +109,9 @@ fn test_wrong_function_name() {
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
         [..]
         [..]: Error in the called contract ([..]):
-        Entry point EntryPointSelector([..]) not found in contract.
+        Execution failed. Failure reason:
+        [..]
+        [..] ('ENTRYPOINT_NOT_FOUND').
         " })))
         command: script run
         status: success
