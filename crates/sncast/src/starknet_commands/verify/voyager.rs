@@ -332,7 +332,7 @@ impl VerificationInterface for Voyager {
             .json(&body)
             .send()
             .await
-            .context("Falied to submit contract for verification")?;
+            .context("Failed to submit contract for verification")?;
 
         match response.status() {
             StatusCode::OK => {
