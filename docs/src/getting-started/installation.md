@@ -31,6 +31,10 @@ In this section, we will walk through the process of installing Starknet Foundry
         * [Linux and macOS](#linux-and-macos-2)
         * [Windows](#windows-2)
     * [How to build Starknet Foundry from source code](#how-to-build-starknet-foundry-from-source-code)
+* [Uninstalling](#uninstalling)
+   * [Linux and MacOS](#linux--macos)
+   * [Windows](#windows-3)
+
 
 <!-- TOC -->
 
@@ -441,3 +445,91 @@ the [source code](https://github.com/foundry-rs/starknet-foundry) as follows:
 2. Run `cd starknet-foundry && cargo build --release`. This will create a `target` directory.
 3. Move the `target` directory to the desired location (e.g. `~/.starknet-foundry`).
 4. Add `DESIRED_LOCATION/target/release/` to your `PATH`.
+
+# Uninstalling
+This section will guide you in how to uninstall Starknet Foundry.
+
+## Linux & MacOS
+If you installed **Starknet Foundry** using `asdf`, follow these steps to remove it.
+
+### Starknet-Foundry
+First, remove the plugin from `asdf`:
+```bash
+asdf plugin remove starknet-foundry
+```
+
+To ensure Starknet Foundry is fully removed, run:
+```bash
+snforge --version
+```
+
+If the command is not found, the uninstallation was successful.
+
+### Scarb (If needed)
+To remove all installed versions of Scarb, run:
+```bash
+asdf plugin remove scarb
+```
+
+To verify that Scarb has been removed:
+```bash
+scarb --version
+```
+
+If the command is not found, the uninstallation was successful.
+
+To ensure complete removal, delete Scarb-related files from the 
+asdf installation directory:
+```bash
+rm -rf ~/.asdf/installs/scarb
+rm -rf ~/.asdf/plugins/scarb
+```
+
+## Windows
+### Remove Starknet Foundry Files
+If you installed Starknet Foundry by extracting a ZIP file, manually delete the installation folder. The recommended location was:
+```powershell
+rm -r -Force "$env:LOCALAPPDATA\Programs\snfoundry"
+```
+
+Alternatively, you can delete it manually by navigating to:
+📂 C:\Users\YourUsername\AppData\Local\Programs\snfoundry
+Right-click the folder and select Delete.
+
+### Remove Starknet Foundry from System PATH
+If you added snfoundry/bin to your system PATH, you need to remove it:
+
+For Windows 10 & 11:
+1.	Open the Start Menu, search for “Environment Variables”, and open Edit the system environment variables.
+2.	In the System Properties window, click Environment Variables.
+3.	Under System variables (or User variables), find the Path entry and select Edit.
+4.	Look for an entry similar to:
+```
+C:\Users\YourUsername\AppData\Local\Programs\snfoundry\bin
+```
+5.	Select it and click Delete, then OK to save changes.
+
+### Uninstall Universal Sierra Compiler (Optional, if installed)
+If you installed Universal Sierra Compiler, remove it as well:
+```powershell
+rm -r -Force "$env:LOCALAPPDATA\Programs\universal-sierra-compiler"
+```
+
+Also, remove its bin path from system Environment Variables, following the same steps as above.
+
+### Uninstall Scarb (If No Longer Needed)
+If you installed Scarb manually, remove it:
+```powershell
+rm -r -Force "$env:LOCALAPPDATA\Programs\scarb"
+```
+
+Then, remove scarb/bin from your system PATH using the steps mentioned earlier.
+
+### Verify Uninstallation
+To ensure Starknet Foundry is fully removed, open a Command Prompt or PowerShell and run:
+```powershell
+snforge --version
+sncast --version
+```
+
+If you see “command not found”, the uninstallation was successful. 
