@@ -2,6 +2,7 @@
 set -e
 
 DEVNET_INSTALL_DIR="$(git rev-parse --show-toplevel)/crates/sncast/tests/utils/devnet"
+# TODO(#3087): Use official devnet release
 DEVNET_REPO="https://github.com/franciszekjob/starknet-devnet"
 DEVNET_VER="v0.13.4-rc.0"
 
