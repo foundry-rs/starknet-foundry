@@ -3,9 +3,8 @@ use starknet_types_core::felt::Felt;
 
 pub const ACCOUNT: &str = "user1";
 pub const ACCOUNT_FILE_PATH: &str = "tests/data/accounts/accounts.json";
-// TODO(#3084)
-// pub const SEPOLIA_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_7";
-pub const SEPOLIA_RPC_URL: &str = "https://rpc.pathfinder.equilibrium.co/testnet-sepolia/rpc/v0_8";
+
+pub const SEPOLIA_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_8";
 
 pub const URL: &str = "http://127.0.0.1:5055/rpc";
 pub const NETWORK: &str = "testnet";
