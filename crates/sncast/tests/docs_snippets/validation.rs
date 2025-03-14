@@ -1,5 +1,6 @@
 use std::fs;
 
+use crate::helpers::constants::TEST_RESOURCE_BOUNDS_FLAGS;
 use crate::helpers::fixtures::copy_directory_to_tempdir;
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
@@ -62,6 +63,15 @@ fn test_docs_snippets() {
                 args[network_pos] = "--url";
                 args[network_pos + 1] = "http://127.0.0.1:5055";
             }
+        }
+
+        // TODO()
+        // We need to add the resource bounds flags to the args, because auto-estimate from devnet doesn't cover tx costs
+        if args
+            .iter()
+            .any(|arg| *arg == "declare" || *arg == "deploy" || *arg == "invoke")
+        {
+            args.extend(TEST_RESOURCE_BOUNDS_FLAGS);
         }
 
         let snapbox = runner(&args).current_dir(tempdir.path());
