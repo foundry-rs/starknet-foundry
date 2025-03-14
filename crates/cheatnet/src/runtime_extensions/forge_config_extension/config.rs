@@ -10,14 +10,32 @@ use std::{fmt, num::NonZeroU32};
 use url::Url;
 // available gas
 
-#[derive(Debug, Clone, CairoDeserialize)]
-pub struct RawAvailableGasConfig {
+#[derive(Debug, Clone, Copy, CairoDeserialize, PartialEq)]
+pub enum RawAvailableGasConfig {
+    MaxGas(usize),
+    MaxResourceBounds(RawAvailableResourceBoundsConfig),
+}
+
+impl RawAvailableGasConfig {
+    #[must_use]
+    pub fn is_zero(&self) -> bool {
+        match self {
+            RawAvailableGasConfig::MaxGas(amount) => *amount == 0,
+            RawAvailableGasConfig::MaxResourceBounds(bounds) => {
+                bounds.to_gas_vector() == GasVector::default()
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, CairoDeserialize, PartialEq)]
+pub struct RawAvailableResourceBoundsConfig {
     pub l1_gas: usize,
     pub l1_data_gas: usize,
     pub l2_gas: usize,
 }
 
-impl RawAvailableGasConfig {
+impl RawAvailableResourceBoundsConfig {
     #[must_use]
     pub fn to_gas_vector(&self) -> GasVector {
         GasVector {

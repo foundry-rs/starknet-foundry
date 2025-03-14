@@ -37,7 +37,8 @@ fn declare_cost_is_omitted_cairo_steps() {
     assert_passed(&result);
     // 1 = cost of 230 steps (because int(0.0025 * 230) = 1)
     //      -> as stated in the top comment, 1 cairo step = 0.0025 L1 gas = 100 L2 gas
-    //         since 230 steps = 1 gas, to convert this to l2 gas we need to multiply by 40000
+    //         0.0025 * 230 = 0,575 (BUT rounding up to 1, since this is as little as possible)
+    //         since 230 steps = 1 gas, to convert this to l2 gas we need to multiply by 40000 (100/0.0025)
     // 0 l1_gas + 0 l1_data_gas + 1 * (100 / 0.0025) l2 gas
     assert_gas(
         &result,
