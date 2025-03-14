@@ -169,28 +169,16 @@ async fn test_invalid_call_data() {
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
-    // TODO(#3091) error from devnet doesn't match this
-    // assert_stdout_contains(
-    //     output,
-    //     indoc! {r#"
-    //     [..]
-    //     ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Transaction execution has failed:
-    //     [..]
-    //     [..]: Error in the contract class constructor ([..]):
-    //     Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
-    //     " })))
-    //     command: script run
-    //     status: success
-    //     "#},
-    // );
     assert_stdout_contains(
         output,
         indoc! {r#"
         [..]
         ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Transaction execution has failed:
         [..]
+        [..]: Error in the contract class constructor ([..]):
+        Execution failed. Failure reason:
         Error in contract [..]:
-        [..] ('Failed to deserialize param #2').
+        0x4661696c656420746f20646573657269616c697a6520706172616d202332 ('Failed to deserialize param #2').
         " })))
         command: script run
         status: success
