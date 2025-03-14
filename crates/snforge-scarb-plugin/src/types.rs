@@ -61,9 +61,9 @@ impl Number {
     ) -> Result<(), Diagnostic> {
         let max = u64::MAX;
         if *self > Number(max.into()) {
-            Err(T::error(format!(
+            return Err(T::error(format!(
                 "{arg_name} it too large (max permissible value is {max})"
-            )))?;
+            )));
         }
         Ok(())
     }

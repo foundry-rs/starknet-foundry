@@ -945,6 +945,7 @@ fn events_cost_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
+    // todo(3078): verify gas required be event keys and data
     // 156 range_check_builtin ~= 7
     // 6 gas for 50 event values
     // ~13 gas for 50 event keys
