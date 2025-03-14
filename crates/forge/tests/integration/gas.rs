@@ -11,6 +11,7 @@ use test_utils::test_case;
 // important info from this link regarding gas calculations:
 // 1 cairo step = 0.0025 L1 gas = 100 L2 gas
 // 1 sierra gas = 1 l2 gas
+// Costs of syscalls (if provided) are taken from versioned_constants (blockifier)
 
 #[test]
 fn declare_cost_is_omitted_cairo_steps() {
