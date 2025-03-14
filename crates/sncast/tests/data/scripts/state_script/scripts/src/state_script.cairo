@@ -4,17 +4,19 @@ use sncast_std::{
 };
 
 fn main() {
-    let max_fee = 99999999999999999;
+    let fee_settings = FeeSettings {
+        max_fee: Option::None,
+        l1_gas: Option::Some(1000000),
+        l1_gas_price: Option::Some(10000000000000),
+        l2_gas: Option::Some(1000000000),
+        l2_gas_price: Option::Some(100000000000000000),
+        l1_data_gas: Option::Some(1000000),
+        l2_data_gas_price: Option::Some(10000000000000),
+    };
     let salt = 0x5;
 
     let declare_nonce = get_nonce('latest');
-    let declare_result = declare(
-        "State",
-        FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
-        },
-        Option::Some(declare_nonce)
-    )
+    let declare_result = declare("State", fee_settings, Option::Some(declare_nonce))
         .expect('state declare failed');
 
     let class_hash = declare_result.class_hash();
@@ -24,9 +26,7 @@ fn main() {
         ArrayTrait::new(),
         Option::Some(salt),
         true,
-        FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
-        },
+        fee_settings,
         Option::Some(deploy_nonce)
     )
         .expect('state deploy failed');
@@ -37,9 +37,7 @@ fn main() {
         deploy_result.contract_address,
         selector!("put"),
         array![0x1, 0x2],
-        FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
-        },
+        fee_settings,
         Option::Some(invoke_nonce)
     )
         .expect('state invoke failed');

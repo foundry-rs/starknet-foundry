@@ -30,6 +30,7 @@ async fn test_failing() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
+    // "call deserialize failed"
 
     assert_stdout_contains(
         output,
@@ -56,11 +57,11 @@ async fn test_call_invalid_entry_point() {
 
     assert_stdout_contains(
         output,
-        indoc! {r#"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Entry point EntryPointSelector([..]) not found in contract." })))
+        indoc! {r"
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::EntryPointNotFound(())))
         command: script run
         status: success
-        "#},
+        "},
     );
 }
 
@@ -96,13 +97,15 @@ async fn test_call_invalid_calldata() {
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
+    // 7733229381460288120802334208475838166080759535023995805565484692595 is "Input too long for arguments"
+    // 485748461484230571791265682659113160264223489397539653310998840191492914 is "Failed to deserialize param #2"
     assert_stdout_contains(
         output,
-        indoc! {r#"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Execution failed. Failure reason: 0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 ('Input too long for arguments')." })))
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Execution failed. Failure reason: 0x4661696c656420746f20646573657269616c697a6520706172616d202332 ('Failed to deserialize param #2')." })))
+        indoc! {r"
+        CallResult { data: [7733229381460288120802334208475838166080759535023995805565484692595] }
+        CallResult { data: [485748461484230571791265682659113160264223489397539653310998840191492914] }
         command: script run
         status: success
-        "#},
+        "},
     );
 }
