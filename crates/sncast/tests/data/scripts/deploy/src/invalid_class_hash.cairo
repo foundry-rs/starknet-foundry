@@ -27,7 +27,7 @@ fn main() {
         fee_settings,
         Option::Some(deploy_nonce)
     )
-        .unwrap();
+        .unwrap_err();
 
     println!("{:?}", deploy_result);
 }
