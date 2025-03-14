@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `snforge completion` command - used to generate autocompletion script
+- Cheats to manipulate `get_block_hash_syscall` output.
 
 ### Cast
 

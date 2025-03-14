@@ -1,8 +1,11 @@
+use super::calls::{execute_inner_call, execute_library_call};
+use super::execution_info::get_cheated_exec_info_ptr;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_constructor_entry_point;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::{
-    DeployRequest, DeployResponse, LibraryCallRequest, SyscallResponse, syscall_base::SyscallResult,
+    DeployRequest, DeployResponse, GetBlockHashRequest, GetBlockHashResponse, LibraryCallRequest,
+    SyscallResponse, syscall_base::SyscallResult,
 };
 use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
 use blockifier::execution::{
@@ -33,8 +36,6 @@ use starknet_api::{
     transaction::fields::Calldata,
 };
 
-use super::calls::{execute_inner_call, execute_library_call};
-use super::execution_info::get_cheated_exec_info_ptr;
 pub type SyscallSelector = DeprecatedSyscallSelector;
 
 pub fn get_execution_info_syscall(
@@ -195,6 +196,26 @@ pub fn call_contract_syscall(
         segment: retdata_segment,
     })
     // endregion
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub fn get_block_hash_syscall(
+    request: GetBlockHashRequest,
+    _vm: &mut VirtualMachine,
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
+    _remaining_gas: &mut u64,
+) -> SyscallResult<GetBlockHashResponse> {
+    let contract_address = syscall_handler.storage_address();
+    let block_number = request.block_number.0;
+
+    let block_hash = cheatnet_state.get_block_hash_for_contract(
+        contract_address,
+        block_number,
+        syscall_handler,
+    )?;
+
+    Ok(GetBlockHashResponse { block_hash })
 }
 
 #[derive(Debug)]
