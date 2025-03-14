@@ -162,7 +162,10 @@ pub fn run_test_case(
     fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
 ) -> Result<RunResultWithInfo> {
     ensure!(
-        case.config.available_gas != Some(GasVector::default()),
+        case.config
+            .available_gas
+            .as_ref()
+            .is_none_or(|gas| !gas.is_zero()),
         "\n\t`available_gas` attribute was incorrectly configured. Make sure you use scarb >= 2.4.4\n"
     );
 
