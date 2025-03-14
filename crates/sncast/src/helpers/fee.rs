@@ -1,4 +1,4 @@
-use anyhow::{Result, bail, ensure};
+use anyhow::{Result, anyhow, bail, ensure};
 use clap::Args;
 use conversions::serde::deserialize::CairoDeserialize;
 use starknet::core::types::FeeEstimate;
@@ -67,41 +67,52 @@ impl FeeArgs {
             self.check_conflicting_flags()?;
             self.validate_max_fee_meets_resource_bounds()?;
 
-            ensure!(
-                fee_estimate.is_some(),
-                "Fee estimate is required when passing max fee is provided"
-            );
+            let fee_estimate = fee_estimate.clone().ok_or_else(|| {
+                anyhow!("Fee estimate must be calculated when max_fee is provided")
+            })?;
+
+            let l1_gas = self.l1_gas.unwrap_or(fee_estimate.l1_gas_consumed);
+            let l1_gas_price = self.l1_gas_price.unwrap_or(fee_estimate.l1_gas_price);
+            let l2_gas = self.l2_gas.unwrap_or(fee_estimate.l2_gas_consumed);
+            let l2_gas_price = self.l2_gas_price.unwrap_or(fee_estimate.l2_gas_price);
+            let l1_data_gas = self
+                .l1_data_gas
+                .unwrap_or(fee_estimate.l1_data_gas_consumed);
+            let l1_data_gas_price = self
+                .l1_data_gas_price
+                .unwrap_or(fee_estimate.l1_data_gas_price);
+
+            let overall_fee =
+                l1_gas * l1_gas_price + l2_gas * l2_gas_price + l1_data_gas * l1_data_gas_price;
 
             ensure!(
-                Felt::from(max_fee) >= fee_estimate.as_ref().unwrap().overall_fee,
+                Felt::from(max_fee) >= overall_fee,
                 "Estimated fee ({}) is higher than provided max fee ({})",
-                fee_estimate.as_ref().unwrap().overall_fee,
+                overall_fee,
                 Felt::from(max_fee)
             );
 
             let fee_settings = FeeSettings {
                 l1_gas: Some(
-                    u64::try_from(fee_estimate.as_ref().unwrap().l1_gas_consumed)
-                        .expect("Failed to convert l1_gas"),
+                    u64::try_from(fee_estimate.l1_gas_consumed).expect("Failed to convert l1_gas"),
                 ),
                 l1_gas_price: Some(
-                    u128::try_from(fee_estimate.as_ref().unwrap().l1_gas_price)
+                    u128::try_from(fee_estimate.l1_gas_price)
                         .expect("Failed to convert l1_gas_price"),
                 ),
                 l2_gas: Some(
-                    u64::try_from(fee_estimate.as_ref().unwrap().l2_gas_consumed)
-                        .expect("Failed to convert l2_gas"),
+                    u64::try_from(fee_estimate.l2_gas_consumed).expect("Failed to convert l2_gas"),
                 ),
                 l2_gas_price: Some(
-                    u128::try_from(fee_estimate.as_ref().unwrap().l2_gas_price)
+                    u128::try_from(fee_estimate.l2_gas_price)
                         .expect("Failed to convert l2_gas_price"),
                 ),
                 l1_data_gas: Some(
-                    u64::try_from(fee_estimate.as_ref().unwrap().l1_data_gas_consumed)
+                    u64::try_from(fee_estimate.l1_data_gas_consumed)
                         .expect("Failed to convert l1_data_gas"),
                 ),
                 l1_data_gas_price: Some(
-                    u128::try_from(fee_estimate.as_ref().unwrap().l1_data_gas_price)
+                    u128::try_from(fee_estimate.l1_data_gas_price)
                         .expect("Failed to convert l1_data_gas_price"),
                 ),
             };
