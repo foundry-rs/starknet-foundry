@@ -44,7 +44,6 @@ async fn test_insufficient_resource_for_validate(account: &str) {
 }
 
 #[tokio::test]
-#[ignore = "TODO(#3091)"]
 async fn test_contract_does_not_exist() {
     let script_dir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/invoke", Vec::<String>::new());
@@ -70,7 +69,7 @@ async fn test_contract_does_not_exist() {
         output,
         indoc! {r#"
         [..]
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
+        ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Transaction execution has failed:
         [..]
         [..]: Error in the called contract ([..]):
         Requested contract address [..] is not deployed.
