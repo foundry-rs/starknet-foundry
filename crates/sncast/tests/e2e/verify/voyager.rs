@@ -44,7 +44,6 @@ async fn test_happy_case() {
 
     let expected_body = json!({
         "project_dir_path": ".",
-        "contract_file": "src/lib.cairo",
         "name": "Map",
         "package_name": "map",
         "license": null
@@ -125,7 +124,6 @@ async fn test_failed_verification() {
 
     let expected_body = json!({
         "project_dir_path": ".",
-        "contract_file": "src/lib.cairo",
         "name": "Map",
         "package_name": "map",
         "license": null
@@ -207,7 +205,6 @@ async fn test_failed_hash_lookup() {
 
     let expected_body = json!({
         "project_dir_path": ".",
-        "contract_file": "src/lib.cairo",
         "name": "Map",
         "package_name": "map",
         "license": null
@@ -286,7 +283,6 @@ async fn test_virtual_workspaces() {
 
     let expected_body = json!({
         "project_dir_path": ".",
-        "contract_file": "crates/cast_fibonacci/src/lib.cairo",
         "name": "FibonacciContract",
         "package_name": "cast_fibonacci",
         "license": null
@@ -369,7 +365,6 @@ async fn test_no_package() {
 
     let expected_body = json!({
         "project_dir_path": ".",
-        "contract_file": "crates/cast_fibonacci/src/lib.cairo",
         "name": "FibonacciContract",
         "package_name": "cast_fibonacci",
         "license": null
