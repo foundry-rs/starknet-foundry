@@ -72,19 +72,19 @@ If the test exceeds the limit, it fails with an appropriate error.
 
 #### Usage
 
-Asserts that the test does not use more than 5 units of l2 gas.
+Asserts that the test does not use more than 5 units of l2 gas:
 
 ```rust
 #[available_gas(l2_gas: 5)]
 ```
 
-Asserts that the test does not use more than 5 units of l1 gas, l1 data gas and l2 gas each.
+Asserts that the test does not use more than 5 units of l1 gas, l1 data gas and l2 gas each:
 
 ```rust
 #[available_gas(l1_gas: 5, l1_data_gas: 5, l2_gas: 5)]
 ```
 
-Asserts that the test does not use more than 5 units of gas overall.
+Asserts that the test does not use more than 5 units of gas overall:
 
 ```rust
 #[available_gas(5)]

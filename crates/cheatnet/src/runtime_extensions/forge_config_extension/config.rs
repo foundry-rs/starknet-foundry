@@ -22,7 +22,7 @@ impl RawAvailableGasConfig {
         match self {
             RawAvailableGasConfig::MaxGas(amount) => *amount == 0,
             RawAvailableGasConfig::MaxResourceBounds(bounds) => {
-                bounds.to_gas_vector() == GasVector::default()
+                bounds.to_gas_vector() == GasVector::ZERO
             }
         }
     }
