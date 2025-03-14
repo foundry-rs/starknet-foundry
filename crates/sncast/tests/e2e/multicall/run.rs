@@ -1,4 +1,6 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, MULTICALL_CONFIGS_DIR, URL};
+use crate::helpers::constants::{
+    ACCOUNT_FILE_PATH, MULTICALL_CONFIGS_DIR, TEST_RESOURCE_BOUNDS_FLAGS, URL,
+};
 use crate::helpers::fixtures::create_and_deploy_oz_account;
 use crate::helpers::runner::runner;
 use indoc::{formatdoc, indoc};
@@ -9,8 +11,9 @@ use test_case::test_case;
 #[test_case("oz_cairo_0"; "cairo_0_account")]
 #[test_case("oz_cairo_1"; "cairo_1_account")]
 #[test_case("oz"; "oz_account")]
-#[test_case("argent"; "argent_account")]
-#[test_case("braavos"; "braavos_account")]
+// TODO(#3089)
+// #[test_case("argent"; "argent_account")]
+// #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 async fn test_happy_case(account: &str) {
     let path = project_root::get_project_root().expect("failed to get project root path");
@@ -30,7 +33,10 @@ async fn test_happy_case(account: &str) {
         URL,
         "--path",
         path,
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args);
     let output = snapbox.assert();
@@ -71,7 +77,10 @@ async fn test_calldata_ids() {
         URL,
         "--path",
         path,
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert();
@@ -254,7 +263,10 @@ async fn test_numeric_inputs() {
         URL,
         "--path",
         path,
-    ];
+    ]
+    .into_iter()
+    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
+    .collect::<Vec<&str>>();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert();

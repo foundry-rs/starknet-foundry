@@ -68,26 +68,53 @@ pub async fn deploy(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
 ) -> Result<DeployResponse, StarknetCommandError> {
-    let fee_settings = fee_args
-        .try_into_fee_settings(account.provider(), account.block_id())
-        .await?;
-
     let salt = extract_or_generate_salt(salt);
     let factory = ContractFactory::new(class_hash, account);
 
-    let FeeSettings {
-        max_gas,
-        max_gas_unit_price,
-    } = fee_settings;
     let execution = factory.deploy_v3(calldata.clone(), salt, unique);
 
-    let execution = match max_gas {
-        None => execution,
-        Some(max_gas) => execution.gas(max_gas.into()),
+    let fee_settings = if fee_args.max_fee.is_some() {
+        let fee_estimate = execution
+            .estimate_fee()
+            .await
+            .expect("Failed to estimate fee");
+        fee_args.try_into_fee_settings(&Some(fee_estimate))
+    } else {
+        fee_args.try_into_fee_settings(&None)
     };
-    let execution = match max_gas_unit_price {
+
+    let FeeSettings {
+        l1_gas,
+        l1_gas_price,
+        l2_gas,
+        l2_gas_price,
+        l1_data_gas,
+        l1_data_gas_price,
+    } = fee_settings.expect("Failed to convert to fee settings");
+
+    let execution = match l1_gas {
         None => execution,
-        Some(max_gas_unit_price) => execution.gas_price(max_gas_unit_price.into()),
+        Some(l1_gas) => execution.l1_gas(l1_gas),
+    };
+    let execution = match l1_gas_price {
+        None => execution,
+        Some(l1_gas_price) => execution.l1_gas_price(l1_gas_price),
+    };
+    let execution = match l2_gas {
+        None => execution,
+        Some(l2_gas) => execution.l2_gas(l2_gas),
+    };
+    let execution = match l2_gas_price {
+        None => execution,
+        Some(l2_gas_price) => execution.l2_gas_price(l2_gas_price),
+    };
+    let execution = match l1_data_gas {
+        None => execution,
+        Some(l1_data_gas) => execution.l1_data_gas(l1_data_gas),
+    };
+    let execution = match l1_data_gas_price {
+        None => execution,
+        Some(l1_data_gas_price) => execution.l1_data_gas_price(l1_data_gas_price),
     };
     let execution = match nonce {
         None => execution,

@@ -2,7 +2,7 @@ use crate::helpers::{
     constants::{ACCOUNT, ACCOUNT_FILE_PATH},
     fixtures::{create_test_provider, invoke_contract},
 };
-use sncast::helpers::constants::UDC_ADDRESS;
+use sncast::helpers::{constants::UDC_ADDRESS, fee::FeeSettings};
 
 use crate::helpers::constants::{
     CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
@@ -26,7 +26,7 @@ async fn test_happy_path() {
     .await;
 
     assert!(res.is_ok());
-    assert!(matches!(res.unwrap(), "Transaction accepted"));
+    assert!(matches!(res.unwrap().as_str(), "Transaction accepted"));
 }
 
 #[tokio::test]
@@ -43,25 +43,40 @@ async fn test_rejected_transaction() {
 
     let factory = ContractFactory::new(MAP_CONTRACT_CLASS_HASH_SEPOLIA.parse().unwrap(), account);
     let deployment = factory
-        .deploy_v1(Vec::new(), Felt::ONE, false)
-        .max_fee(Felt::ONE);
+        .deploy_v3(Vec::new(), Felt::ONE, false)
+        .l1_gas(1)
+        .l2_gas(1)
+        .l1_data_gas(1);
+
     let resp = deployment.send().await.unwrap_err();
 
-    assert!(resp.to_string().contains("InsufficientMaxFee"));
+    assert!(
+        resp.to_string()
+            .contains("InsufficientResourcesForValidate")
+    );
 }
 
 #[tokio::test]
-#[should_panic(expected = "Transaction has been reverted = Insufficient max fee:")]
+#[should_panic(
+    expected = "Transaction execution failed: Provider(StarknetError(InsufficientResourcesForValidate))"
+)]
 async fn test_wait_for_reverted_transaction() {
     let provider = create_test_provider();
     let salt = "0x029c81e6487b5f9278faa6f454cda3c8eca259f99877faab823b3704327cd695";
-    let max_fee: u64 = 43_400_000_000_000 - 1;
 
+    let fee_settings = FeeSettings {
+        l1_gas: Some(1),
+        l1_gas_price: Some(1),
+        l2_gas: Some(1),
+        l2_gas_price: Some(1),
+        l1_data_gas: Some(1),
+        l1_data_gas_price: Some(1),
+    };
     let transaction_hash = invoke_contract(
         ACCOUNT,
         UDC_ADDRESS.into_hex_string().as_str(),
         "deployContract",
-        Some(max_fee.into()),
+        fee_settings,
         &[
             CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
             salt,
