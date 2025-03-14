@@ -11,6 +11,7 @@ use test_utils::test_case;
 // important info from this link regarding gas calculations:
 // 1 cairo step = 0.0025 L1 gas = 100 L2 gas
 // 1 sierra gas = 1 l2 gas
+// Costs of syscalls (if provided) are taken from versioned_constants (blockifier)
 
 #[test]
 fn declare_cost_is_omitted_cairo_steps() {
@@ -1003,6 +1004,579 @@ fn events_contract_cost_cairo_steps() {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
             l2_gas: GasAmount(1_208_000),
+        },
+    );
+}
+
+#[test]
+#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
+fn declare_cost_is_omitted_sierra_gas() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use snforge_std::declare;
+            #[test]
+            fn declare_cost_is_omitted() {
+                declare("GasChecker").unwrap();
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "GasChecker".to_string(),
+            Path::new("tests/data/contracts/gas_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+    // 23860 = reported consumed sierra gas
+    // 0 l1_gas + 0 l1_data_gas + 23860 l2 gas
+    assert_gas(
+        &result,
+        "declare_cost_is_omitted",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(0),
+            l2_gas: GasAmount(23860),
+        },
+    );
+}
+
+#[test]
+#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
+fn deploy_syscall_cost_sierra_gas() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use core::clone::Clone;
+            use snforge_std::{declare, DeclareResultTrait};
+            use starknet::{SyscallResult, deploy_syscall};
+            #[test]
+            fn deploy_syscall_cost() {
+                let contract = declare("GasConstructorChecker").unwrap().contract_class().clone();
+                let (address, _) = deploy_syscall(contract.class_hash, 0, array![].span(), false).unwrap();
+                assert(address != 0.try_into().unwrap(), 'wrong deployed addr');
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "GasConstructorChecker".to_string(),
+            Path::new("tests/data/contracts/gas_constructor_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+    // l = 1 (updated contract class)
+    // n = 1 (unique contracts updated - in this case it's the new contract address)
+    // ( l + n * 2 ) * felt_size_in_bytes(32) = 96 (total l1 data cost)
+    //
+    // 20000 = cost of 2 keccak syscall (because 2 * 100 * 100) (from constructor)
+    //      -> 1 keccak syscall costs 100 cairo steps
+    // 142810 = cost of 1 deploy syscall (because 1 * 1132 * 100 + 7 * 4050 + 18 * 70)
+    //      -> 1 deploy syscall costs 1132 cairo steps, 7 pedersen and 18 range check builtins
+    //      -> 1 pedersen costs 4050, 1 range check costs 70
+    // 468864 = reported consumed sierra gas
+    // 0 l1_gas + 96 l1_data_gas + (20000 + 142810 + 468864) l2 gas
+    assert_gas(
+        &result,
+        "deploy_syscall_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(631_674),
+        },
+    );
+}
+
+#[test]
+#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
+fn snforge_std_deploy_cost_sierra_gas() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
+            #[test]
+            fn deploy_cost() {
+                let contract = declare("GasConstructorChecker").unwrap().contract_class();
+                let (address, _) = contract.deploy(@array![]).unwrap();
+                assert(address != 0.try_into().unwrap(), 'wrong deployed addr');
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "GasConstructorChecker".to_string(),
+            Path::new("tests/data/contracts/gas_constructor_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+    // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
+    // 20000 = cost of 2 keccak syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 487334 = reported consumed sierra gas
+    // 0 l1_gas + 96 l1_data_gas + (20000 + 142810 + 487334) l2 gas
+    assert_gas(
+        &result,
+        "deploy_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(650_144),
+        },
+    );
+}
+
+#[test]
+#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
+fn keccak_cost_sierra_gas() {
+    let test = test_case!(indoc!(
+        r"
+            #[test]
+            fn keccak_cost() {
+                keccak::keccak_u256s_le_inputs(array![1].span());
+            }
+        "
+    ));
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+    // 10000 = cost of 1 keccak syscall (1 * 100 * 100)
+    //      -> 1 keccak syscall costs 100 cairo steps
+    // 56510 = reported consumed sierra gas
+    // 0 l1_gas + 0 l1_data_gas + (10000 + 56510) l2 gas
+    assert_gas(
+        &result,
+        "keccak_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(0),
+            l2_gas: GasAmount(66510),
+        },
+    );
+}
+
+#[test]
+#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
+fn contract_keccak_cost_sierra_gas() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
+            #[starknet::interface]
+            trait IGasChecker<TContractState> {
+                fn keccak(self: @TContractState, repetitions: u32);
+            }
+            #[test]
+            fn contract_keccak_cost() {
+                let contract = declare("GasChecker").unwrap().contract_class();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = IGasCheckerDispatcher { contract_address };
+                dispatcher.keccak(5);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "GasChecker".to_string(),
+            Path::new("tests/data/contracts/gas_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+    // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
+    // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 50000 = cost of 5 keccak syscall (5 * 100 * 100)
+    //      -> 1 keccak syscall costs 100 cairo steps
+    // 87650 = cost of 1 call contract syscall (because 1 * 866 * 100 + 15 * 70)
+    //      -> 1 call contract syscall costs 866 cairo steps and 15 range check builtins
+    //      -> 1 range check costs 70
+    // 1158935 = reported consumed sierra gas
+    // 0 l1_gas + 96 l1_data_gas + (142810 + 50000 + 87650 + 1158935) l2 gas
+    assert_gas(
+        &result,
+        "contract_keccak_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(1_439_395),
+        },
+    );
+}
+
+#[test]
+#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
+fn contract_range_check_cost_sierra_gas() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
+            #[starknet::interface]
+            trait IGasChecker<TContractState> {
+                fn range_check(self: @TContractState);
+            }
+            #[test]
+            fn contract_range_check_cost() {
+                let contract = declare("GasChecker").unwrap().contract_class();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = IGasCheckerDispatcher { contract_address };
+                dispatcher.range_check();
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "GasChecker".to_string(),
+            Path::new("tests/data/contracts/gas_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+    // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
+    // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 87650 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
+    // 129970 = reported consumed sierra gas
+    // 0 l1_gas + 96 l1_data_gas + (142810 + 87650 + 129970) l2 gas
+    assert_gas(
+        &result,
+        "contract_range_check_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(360_430),
+        },
+    );
+}
+
+#[test]
+#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
+fn storage_write_cost_sierra_gas() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
+            #[starknet::interface]
+            trait IGasChecker<TContractState> {
+                fn change_balance(ref self: TContractState, new_balance: u64);
+            }
+            #[test]
+            fn storage_write_cost() {
+                let contract = declare("GasChecker").unwrap().contract_class();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = IGasCheckerDispatcher { contract_address };
+                dispatcher.change_balance(1);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "GasChecker".to_string(),
+            Path::new("tests/data/contracts/gas_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+    // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
+    // 64 = storage_updates(1) * 2 * 32
+    // 32 = storage updates from zero value(1) * 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
+    // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 87650 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
+    // 10000 = cost of 1 storage write syscall (because 1 * 93 * 100 + 1 * 70 = 9370)
+    //      -> 1 storage write syscall costs 93 cairo steps and 1 range check builtin
+    //      -> 1 range check costs 70
+    //      -> the minimum total cost is `syscall_base_gas_cost`, which is pre-charged by the compiler (atm it is 100 * 100)
+    // 52310 = reported consumed sierra gas
+    // 0 l1_gas + (96 + 64 + 32) l1_data_gas + (142810 + 87650 + 10000 + 52310) l2 gas
+    assert_gas(
+        &result,
+        "storage_write_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(192),
+            l2_gas: GasAmount(292_770),
+        },
+    );
+}
+
+#[test]
+#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
+fn multiple_storage_writes_cost_sierra_gas() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
+            #[starknet::interface]
+            trait IGasChecker<TContractState> {
+                fn change_balance(ref self: TContractState, new_balance: u64);
+            }
+            #[test]
+            fn multiple_storage_writes_cost() {
+                let contract = declare("GasChecker").unwrap().contract_class();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = IGasCheckerDispatcher { contract_address };
+                dispatcher.change_balance(1);
+                dispatcher.change_balance(1);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "GasChecker".to_string(),
+            Path::new("tests/data/contracts/gas_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+    // 64 = n(1) * 2 * 32
+    // 64 = m(1) * 2 * 32
+    // 32 = l(1) * 32
+    //      -> l = number of class hash updates
+    //      -> n = unique contracts updated
+    //      -> m = unique(!) values updated
+    // 32 = storage updates from zero value(1) * 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
+    // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 175300 = cost of 2 call contract syscalls (because 2 * 866 * 100 + 2 * 15 * 70)
+    //      -> 1 call contract syscall costs 866 cairo steps and 15 range check builtins
+    //      -> 1 range check costs 70
+    // 20000 = cost of 2 storage write syscall (because 2 * 93 * 100 + 2 * 70 = 18740)
+    //      -> 1 storage write syscall costs 93 cairo steps and 1 range check builtin
+    //      -> 1 range check costs 70
+    //      -> the minimum total cost is `syscall_base_gas_cost`, which is pre-charged by the compiler (atm it is 100 * 100)
+    // 59790 = reported consumed sierra gas
+    // 0 l1_gas + (64 + 64 + 32 + 32) l1_data_gas + (142810 + 175300 + 20000 + 59790) l2 gas
+    assert_gas(
+        &result,
+        "multiple_storage_writes_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(192),
+            l2_gas: GasAmount(397_900),
+        },
+    );
+}
+
+#[test]
+#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
+fn l1_message_cost_sierra_gas() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
+            #[starknet::interface]
+            trait IGasChecker<TContractState> {
+                fn send_l1_message(self: @TContractState);
+            }
+            #[test]
+            fn l1_message_cost() {
+                let contract = declare("GasChecker").unwrap().contract_class();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = IGasCheckerDispatcher { contract_address };
+                dispatcher.send_l1_message();
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "GasChecker".to_string(),
+            Path::new("tests/data/contracts/gas_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+    // todo(2960): verify l2 -> l1 message cost
+    // 29524 = gas cost of l2 -> l1 message
+    // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
+    // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 87650 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
+    // 14170 = cost of 1 SendMessageToL1 syscall (because 1 * 141 * 100 + 1 * 70 )
+    //      -> 1 storage write syscall costs 141 cairo steps and 1 range check builtin
+    //      -> 1 range check costs 70
+    // 50870 = reported consumed sierra gas
+    // 29524 l1_gas + 96 l1_data_gas + (142810 + 87650 + 14170 + 50870) l2 gas
+    assert_gas(
+        &result,
+        "l1_message_cost",
+        GasVector {
+            l1_gas: GasAmount(29524),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(295_500),
+        },
+    );
+}
+
+#[test]
+#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
+fn l1_message_cost_for_proxy_sierra_gas() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use starknet::ContractAddress;
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
+            #[starknet::interface]
+            trait IGasCheckerProxy<TContractState> {
+                fn send_l1_message_from_gas_checker(
+                    self: @TContractState,
+                    address: ContractAddress
+                );
+            }
+            #[test]
+            fn l1_message_cost_for_proxy() {
+                let contract = declare("GasChecker").unwrap().contract_class();
+                let (gas_checker_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let contract = declare("GasCheckerProxy").unwrap().contract_class();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = IGasCheckerProxyDispatcher { contract_address };
+                dispatcher.send_l1_message_from_gas_checker(gas_checker_address);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "GasChecker".to_string(),
+            Path::new("tests/data/contracts/gas_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "GasCheckerProxy".to_string(),
+            Path::new("tests/data/contracts/gas_checker_proxy.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+    // todo(2960): verify l2 -> l1 message cost
+    // 29524 = gas cost of l2 -> l1 message
+    // 128 = n(2) * 2 * 32
+    // 64 = l(2) * 32
+    //      -> l = number of class hash updates
+    //      -> n = unique contracts updated
+    // 285620 = cost of 2 deploy syscall (because 2 * 1132 * 100 + 2 * 7 * 4050 + 2 * 18 * 70)
+    //      -> 1 deploy syscall costs 1132 cairo steps, 7 pedersen and 18 range check builtins
+    //      -> 1 pedersen costs 4050, 1 range check costs 70
+    // 175300 = cost of 2 call contract syscalls (see `multiple_storage_writes_cost_sierra_gas` test)
+    // 14170 = cost of 1 SendMessageToL1 syscall (see `l1_message_cost_sierra_gas` test)
+    // 113720 = reported consumed sierra gas
+    // 29524 l1_gas + (128 + 64) l1_data_gas + (285620 + 175300 + 14170 + 113720) l2 gas
+    assert_gas(
+        &result,
+        "l1_message_cost_for_proxy",
+        GasVector {
+            l1_gas: GasAmount(29524),
+            l1_data_gas: GasAmount(192),
+            l2_gas: GasAmount(588_810),
+        },
+    );
+}
+
+#[test]
+#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
+fn events_cost_sierra_gas() {
+    let test = test_case!(indoc!(
+        r"
+            use starknet::syscalls::emit_event_syscall;
+            #[test]
+            fn events_cost() {
+                let mut keys = array![];
+                let mut values =  array![];
+                let mut i: u32 = 0;
+                while i < 50 {
+                    keys.append('key');
+                    values.append(1);
+                    i += 1;
+                };
+                emit_event_syscall(keys.span(), values.span()).unwrap();
+            }
+        "
+    ));
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+
+    assert_passed(&result);
+    // 512000 = 50 * 10240
+    //      -> we emit 50 keys, each taking up 1 felt of space
+    //      -> L2 gas cost for event key is 10240 gas/felt
+    // 256000 = 50 * 5120
+    //      -> we emit 50 keys, each having 1 felt of data
+    //      -> L2 gas cost for event data is 5120 gas/felt
+    // 10000 = cost of 1 emit event syscall (because 1 * 61 * 100 + 1 * 70 = 6170)
+    //      -> 1 emit event syscall costs 61 cairo steps and 1 range check builtin
+    //      -> 1 range check costs 70
+    //      -> the minimum total cost is `syscall_base_gas_cost`, which is pre-charged by the compiler (atm it is 100 * 100)
+    // 186880 = reported consumed sierra gas
+    // 0 l1_gas + 0 l1_data_gas + (512000 + 256000 + 10000 + 186880) l2 gas
+    assert_gas(
+        &result,
+        "events_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(0),
+            l2_gas: GasAmount(964_880),
+        },
+    );
+}
+
+#[test]
+#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
+fn events_contract_cost_sierra_gas() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
+            #[starknet::interface]
+            trait IGasChecker<TContractState> {
+                fn emit_event(ref self: TContractState, n_keys_and_vals: u32);
+            }
+            #[test]
+            fn event_emission_cost() {
+                let (contract_address, _) = declare("GasChecker").unwrap().contract_class().deploy(@array![]).unwrap();
+                let dispatcher = IGasCheckerDispatcher { contract_address };
+                dispatcher.emit_event(50);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "GasChecker",
+            Path::new("tests/data/contracts/gas_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
+    assert_passed(&result);
+    // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
+    // 512000 = event keys cost (see `events_contract_cost_sierra_gas` test)
+    // 256000 = event data cost (see `events_contract_cost_sierra_gas` test)
+    // 10000 = cost of 1 emit event syscall (see `events_contract_cost_sierra_gas` test)
+    // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 87650 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
+    // 230550 = reported consumed sierra gas
+    // 0 l1_gas + 0 l1_data_gas + (512000 + 256000 + 10000 + 142810 + 87650 + 230550) l2 gas
+    assert_gas(
+        &result,
+        "event_emission_cost",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(96),
+            l2_gas: GasAmount(1_239_010),
         },
     );
 }
