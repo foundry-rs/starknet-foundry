@@ -1,4 +1,4 @@
-use anyhow::{Result, bail, ensure};
+use anyhow::{Result, anyhow, ensure};
 use clap::Args;
 use conversions::serde::deserialize::CairoDeserialize;
 use starknet::core::types::FeeEstimate;
@@ -7,7 +7,7 @@ use starknet_types_core::felt::{Felt, NonZeroFelt};
 #[derive(Args, Debug, Clone)]
 pub struct FeeArgs {
     /// Max fee for the transaction. If not provided, will be automatically estimated.
-    #[clap(value_parser = parse_non_zero_felt, short, long)]
+    #[clap(value_parser = parse_non_zero_felt, short, long, conflicts_with_all = &["l1_gas", "l1_gas_price", "l2_gas", "l2_gas_price", "l1_data_gas", "l1_data_gas_price"])]
     pub max_fee: Option<NonZeroFelt>,
 
     /// Max L1 gas amount. If not provided, will be automatically estimated.
@@ -64,44 +64,40 @@ impl FeeArgs {
         // but in case someone passes --max-fee flag, we need to make estimation on our own
         // to check if the fee estimate isn't higher than provided max fee
         if let Some(max_fee) = self.max_fee {
-            self.check_conflicting_flags()?;
             self.validate_max_fee_meets_resource_bounds()?;
 
-            ensure!(
-                fee_estimate.is_some(),
-                "Fee estimate is required when passing max fee is provided"
-            );
+            let fee_estimate = fee_estimate.clone().ok_or_else(|| {
+                anyhow!("Fee estimate must be calculated when max_fee is provided")
+            })?;
 
             ensure!(
-                Felt::from(max_fee) >= fee_estimate.as_ref().unwrap().overall_fee,
+                Felt::from(max_fee) >= fee_estimate.overall_fee,
                 "Estimated fee ({}) is higher than provided max fee ({})",
-                fee_estimate.as_ref().unwrap().overall_fee,
+                fee_estimate.overall_fee,
                 Felt::from(max_fee)
             );
 
             let fee_settings = FeeSettings {
                 l1_gas: Some(
-                    u64::try_from(fee_estimate.as_ref().unwrap().l1_gas_consumed)
-                        .expect("Failed to convert l1_gas"),
+                    u64::try_from(fee_estimate.l1_gas_consumed).expect("Failed to convert l1_gas"),
                 ),
                 l1_gas_price: Some(
-                    u128::try_from(fee_estimate.as_ref().unwrap().l1_gas_price)
+                    u128::try_from(fee_estimate.l1_gas_price)
                         .expect("Failed to convert l1_gas_price"),
                 ),
                 l2_gas: Some(
-                    u64::try_from(fee_estimate.as_ref().unwrap().l2_gas_consumed)
-                        .expect("Failed to convert l2_gas"),
+                    u64::try_from(fee_estimate.l2_gas_consumed).expect("Failed to convert l2_gas"),
                 ),
                 l2_gas_price: Some(
-                    u128::try_from(fee_estimate.as_ref().unwrap().l2_gas_price)
+                    u128::try_from(fee_estimate.l2_gas_price)
                         .expect("Failed to convert l2_gas_price"),
                 ),
                 l1_data_gas: Some(
-                    u64::try_from(fee_estimate.as_ref().unwrap().l1_data_gas_consumed)
+                    u64::try_from(fee_estimate.l1_data_gas_consumed)
                         .expect("Failed to convert l1_data_gas"),
                 ),
                 l1_data_gas_price: Some(
-                    u128::try_from(fee_estimate.as_ref().unwrap().l1_data_gas_price)
+                    u128::try_from(fee_estimate.l1_data_gas_price)
                         .expect("Failed to convert l1_data_gas_price"),
                 ),
             };
@@ -151,22 +147,6 @@ impl FeeArgs {
                     *flag
                 );
             }
-        }
-        Ok(())
-    }
-
-    fn check_conflicting_flags(&self) -> Result<()> {
-        if self.max_fee.is_some()
-            && self.l1_gas.is_some()
-            && self.l1_gas_price.is_some()
-            && self.l2_gas.is_some()
-            && self.l2_gas_price.is_some()
-            && self.l1_data_gas.is_some()
-            && self.l1_data_gas_price.is_some()
-        {
-            bail!(
-                "Passing all --max-fee, --l1-gas, --l1-gas-price, --l2-gas, --l2-gas-price, --l1-data-gas and --l1-data-gas-price is conflicting."
-            );
         }
         Ok(())
     }
