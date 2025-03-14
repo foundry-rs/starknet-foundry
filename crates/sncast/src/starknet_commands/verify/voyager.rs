@@ -175,6 +175,41 @@ fn biggest_common_prefix<P: AsRef<Utf8Path> + Clone>(
     biggest_prefix.to_path_buf()
 }
 
+impl Voyager {
+    fn gather_files(&self) -> Result<(Utf8PathBuf, HashMap<String, Utf8PathBuf>)> {
+        let mut packages = vec![];
+        gather_packages(&self.metadata, &mut packages)?;
+
+        let mut sources: Vec<Utf8PathBuf> = vec![];
+        for package in &packages {
+            let mut package_sources = package_sources(package)?;
+            sources.append(&mut package_sources);
+        }
+
+        let prefix = biggest_common_prefix(&sources, &self.metadata.workspace.root);
+        let manifest_path = &self.metadata.workspace.manifest_path;
+        let manifest = manifest_path
+            .strip_prefix(&prefix)
+            .map_err(|_| anyhow!("Couldn't strip {prefix} from {manifest_path}"))?;
+
+        let mut files: HashMap<String, Utf8PathBuf> = sources
+            .iter()
+            .map(|p| -> Result<(String, Utf8PathBuf)> {
+                let name = p
+                    .strip_prefix(&prefix)
+                    .map_err(|_| anyhow!("Couldn't strip {prefix} from {p}"))?;
+                Ok((name.to_string(), p.clone()))
+            })
+            .try_collect()?;
+        files.insert(
+            manifest.to_string(),
+            self.metadata.workspace.manifest_path.clone(),
+        );
+
+        Ok((prefix, files))
+    }
+}
+
 #[async_trait::async_trait]
 impl VerificationInterface for Voyager {
     fn new(network: Network, workspace_dir: Utf8PathBuf) -> Result<Self> {
@@ -207,21 +242,6 @@ impl VerificationInterface for Voyager {
             .get_class_hash_at(BlockId::Tag(BlockTag::Latest), contract_address)
             .await?;
 
-        let mut packages = vec![];
-        gather_packages(&self.metadata, &mut packages)?;
-
-        let mut sources: Vec<Utf8PathBuf> = vec![];
-        for package in &packages {
-            let mut package_sources = package_sources(package)?;
-            sources.append(&mut package_sources);
-        }
-
-        let prefix = biggest_common_prefix(&sources, &self.metadata.workspace.root);
-        let manifest_path = &self.metadata.workspace.manifest_path;
-        let manifest = manifest_path
-            .strip_prefix(&prefix)
-            .map_err(|_| anyhow!("Couldn't strip {prefix} from {manifest_path}"))?;
-
         let cairo_version = self.metadata.app_version_info.cairo.version.clone();
         let scarb_version = self.metadata.app_version_info.version.clone();
 
@@ -232,20 +252,6 @@ impl VerificationInterface for Voyager {
             .filter(|&package_meta| self.metadata.workspace.members.contains(&package_meta.id))
             .cloned()
             .collect();
-
-        let mut files: HashMap<String, Utf8PathBuf> = sources
-            .iter()
-            .map(|p| -> Result<(String, Utf8PathBuf)> {
-                let name = p
-                    .strip_prefix(&prefix)
-                    .map_err(|_| anyhow!("Couldn't strip {prefix} from {p}"))?;
-                Ok((name.to_string(), p.clone()))
-            })
-            .try_collect()?;
-        files.insert(
-            manifest.to_string(),
-            self.metadata.workspace.manifest_path.clone(),
-        );
 
         let selected = (if workspace_packages.len() > 1 {
             match package {
@@ -272,6 +278,7 @@ impl VerificationInterface for Voyager {
             Err(anyhow!("No packages found in scarb metadata"))
         })?;
 
+        let (prefix, files) = self.gather_files()?;
         let project_dir_path = self
             .metadata
             .workspace
