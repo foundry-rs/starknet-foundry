@@ -29,10 +29,11 @@ While using the fuzzing feature additional gas statistics will be displayed:
 > Starknet-Foundry uses blob-based gas calculation formula in order to calculate gas usage. 
 > For details on the exact formula, [see the docs](https://docs.starknet.io/architecture-and-concepts/network-architecture/fee-mechanism/#overall_fee_blob). 
 
-## Resources estimation 
+## Resources Estimation 
 
 It is possible to enable more detailed breakdown of resources, on which the gas calculations are based on.
 Depending on `--tracked-resource`, vm resources or sierra gas will be displayed.
+To learn more about tracked resource flag, see [--tracked-resource](../appendix/snforge/test.md#--tracked-resource).
 
 ### Usage
 In order to run tests with this feature, run the `test` command with the appropriate flag:
