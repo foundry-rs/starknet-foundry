@@ -51,8 +51,23 @@ impl ParseFromExpr<Expr> for Felt {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Number(pub(crate) BigInt);
+
+impl Number {
+    pub fn validate_in_gas_range<T: AttributeInfo>(
+        &self,
+        arg_name: &str,
+    ) -> Result<(), Diagnostic> {
+        let max = u64::MAX;
+        if *self > Number(max.into()) {
+            return Err(T::error(format!(
+                "{arg_name} it too large (max permissible value is {max})"
+            )));
+        }
+        Ok(())
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct ShortString(pub(crate) String);

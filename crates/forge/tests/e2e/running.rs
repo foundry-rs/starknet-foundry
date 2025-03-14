@@ -565,8 +565,8 @@ fn with_panic_data_decoding() {
         Failure data:
             (0x7b ('{'), 0x616161 ('aaa'), 0x800000000000011000000000000000000000000000000000000000000000000, 0x98, 0x7c ('|'), 0x95)
 
-        [PASS] panic_decoding_integrationtest::test_panic_decoding::test_simple2 (gas: [..])
-        [PASS] panic_decoding_integrationtest::test_panic_decoding::test_simple (gas: [..])
+        [PASS] panic_decoding_integrationtest::test_panic_decoding::test_simple2 (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+        [PASS] panic_decoding_integrationtest::test_panic_decoding::test_simple (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] panic_decoding_integrationtest::test_panic_decoding::test_assert_eq
 
         Failure data:
@@ -720,12 +720,12 @@ fn should_panic() {
         Failure data:
             Expected to panic but didn't
 
-        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_no_data (gas: [..])
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_no_data (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
 
         Success data:
             0x0 ('')
 
-        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_check_data (gas: [..])
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_check_data (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_not_matching_suffix
 
         Failure data:
@@ -733,8 +733,8 @@ fn should_panic() {
             Actual:    [0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x0, 0x546869732077696c6c2070616e6963, 0xf] (This will panic)
             Expected:  [0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x0, 0x77696c6c2070616e696363, 0xb] (will panicc)
 
-        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_match_suffix (gas: [..])
-        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_felt_matching (gas: [..])
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_match_suffix (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_felt_matching (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_felt_with_byte_array
 
         Failure data:
@@ -742,7 +742,7 @@ fn should_panic() {
             Actual:    [0x546869732077696c6c2070616e6963] (This will panic)
             Expected:  [0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x0, 0x546869732077696c6c2070616e6963, 0xf] (This will panic)
 
-        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_multiple_messages (gas: [..])
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_multiple_messages (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
 
         Failure data:

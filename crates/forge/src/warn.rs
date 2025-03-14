@@ -14,7 +14,10 @@ pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
 ) -> Result<()> {
     for test_target in test_targets {
         for case in &test_target.test_cases {
-            if case.config.available_gas == Some(0)
+            if case
+                .config
+                .available_gas
+                .as_ref().is_some_and(cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableGasConfig::is_zero)
                 && ScarbCommand::version().run()?.scarb <= Version::new(2, 4, 3)
             {
                 print_as_warning(&anyhow!(

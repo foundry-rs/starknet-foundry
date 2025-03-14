@@ -18,6 +18,7 @@ use scarb_api::{
 };
 use semver::Version;
 use shared::command::CommandExt;
+use starknet_api::execution_resources::GasVector;
 use std::{
     collections::HashMap,
     fs,
@@ -276,7 +277,7 @@ pub fn assert_case_output_contains(
     }));
 }
 
-pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_gas: u128) {
+pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_gas: GasVector) {
     let test_name_suffix = format!("::{test_case_name}");
 
     let result = TestCase::find_test_result(result);
