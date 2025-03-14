@@ -25,7 +25,7 @@ fn correct_available_gas_with_unnamed_argument() {
     let test = test_utils::test_case!(indoc!(
         r"
             #[test]
-            #[available_gas(440000)]
+            #[available_gas(11)]
             fn keccak_cost() {
                 keccak::keccak_u256s_le_inputs(array![1].span());
             }

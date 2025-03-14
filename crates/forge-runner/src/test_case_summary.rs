@@ -16,6 +16,7 @@ use shared::utils::build_readable_text;
 use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
+use std::fmt;
 use std::option::Option;
 use std::rc::Rc;
 
@@ -26,61 +27,75 @@ pub struct GasStatistics {
     pub l2_gas: GasStatisticsComponent,
 }
 
+impl fmt::Display for GasStatistics {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "(l1_gas: {}, l1_data_gas: {}, l2_gas: {})",
+            self.l1_gas, self.l1_data_gas, self.l2_gas
+        )
+    }
+}
+
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasStatisticsComponent {
-    pub min: u128,
-    pub max: u128,
+    pub min: u64,
+    pub max: u64,
     pub mean: f64,
     pub std_deviation: f64,
+}
+
+impl GasStatisticsComponent {
+    #[must_use]
+    pub fn new(gas_usages: &[u64]) -> Self {
+        let mean = GasStatistics::mean(gas_usages);
+        Self {
+            min: *gas_usages.iter().min().unwrap(),
+            max: *gas_usages.iter().max().unwrap(),
+            mean,
+            std_deviation: GasStatistics::std_deviation(mean, gas_usages),
+        }
+    }
+}
+
+impl fmt::Display for GasStatisticsComponent {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{{max: ~{}, min: ~{}, mean: ~{:.2}, std deviation: ~{:.2}}}",
+            self.max, self.min, self.mean, self.std_deviation
+        )
+    }
 }
 
 impl GasStatistics {
     #[must_use]
     pub fn new(gas_usages: &[GasVector]) -> Self {
-        let l1_gas_values: Vec<u128> = gas_usages
-            .iter()
-            .map(|gv| u128::from(gv.l1_gas.0))
-            .collect();
-        let l1_data_gas_values: Vec<u128> = gas_usages
-            .iter()
-            .map(|gv| u128::from(gv.l1_data_gas.0))
-            .collect();
-        let l2_gas_values: Vec<u128> = gas_usages
-            .iter()
-            .map(|gv| u128::from(gv.l2_gas.0))
-            .collect();
+        let l1_gas_values: Vec<u64> = gas_usages.iter().map(|gv| gv.l1_gas.0).collect();
+        let l1_data_gas_values: Vec<u64> = gas_usages.iter().map(|gv| gv.l1_data_gas.0).collect();
+        let l2_gas_values: Vec<u64> = gas_usages.iter().map(|gv| gv.l2_gas.0).collect();
 
         GasStatistics {
-            l1_gas: { Self::calculate_component(l1_gas_values.as_ref()) },
-            l1_data_gas: { Self::calculate_component(l1_data_gas_values.as_ref()) },
-            l2_gas: { Self::calculate_component(l2_gas_values.as_ref()) },
+            l1_gas: { GasStatisticsComponent::new(l1_gas_values.as_ref()) },
+            l1_data_gas: { GasStatisticsComponent::new(l1_data_gas_values.as_ref()) },
+            l2_gas: { GasStatisticsComponent::new(l2_gas_values.as_ref()) },
         }
     }
 
-    #[expect(clippy::cast_precision_loss)]
-    fn mean(gas_usages: &[u128]) -> f64 {
+    #[allow(clippy::cast_precision_loss)]
+    fn mean(gas_usages: &[u64]) -> f64 {
         let sum: f64 = gas_usages.iter().map(|&x| x as f64).sum();
         sum / gas_usages.len() as f64
     }
 
-    #[expect(clippy::cast_precision_loss)]
-    fn std_deviation(mean: f64, gas_usages: &[u128]) -> f64 {
+    #[allow(clippy::cast_precision_loss)]
+    fn std_deviation(mean: f64, gas_usages: &[u64]) -> f64 {
         let sum_squared_diff = gas_usages
             .iter()
             .map(|&x| (x as f64 - mean).pow(2))
             .sum::<f64>();
 
         (sum_squared_diff / gas_usages.len() as f64).sqrt()
-    }
-
-    fn calculate_component(gas_usages: &[u128]) -> GasStatisticsComponent {
-        let mean = Self::mean(gas_usages);
-        GasStatisticsComponent {
-            min: gas_usages.iter().min().copied().unwrap(),
-            max: gas_usages.iter().max().copied().unwrap(),
-            mean,
-            std_deviation: Self::std_deviation(mean, gas_usages),
-        }
     }
 }
 
@@ -158,6 +173,7 @@ pub enum TestCaseSummary<T: TestType> {
 }
 
 #[derive(Debug)]
+#[expect(clippy::large_enum_variant)]
 pub enum AnyTestCaseSummary {
     Fuzzing(TestCaseSummary<Fuzzing>),
     Single(TestCaseSummary<Single>),
@@ -480,5 +496,82 @@ impl AnyTestCaseSummary {
             AnyTestCaseSummary::Single(TestCaseSummary::Ignored { .. })
                 | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Ignored { .. })
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use starknet_api::execution_resources::GasAmount;
+
+    const FLOAT_ERROR: f64 = 0.01;
+
+    #[test]
+    fn test_mean_basic() {
+        let data = [1, 2, 3, 4, 5];
+        let result = GasStatistics::mean(&data);
+        assert!((result - 3.0).abs() < FLOAT_ERROR);
+    }
+
+    #[test]
+    fn test_mean_single_element() {
+        let data = [42];
+        let result = GasStatistics::mean(&data);
+        assert!((result - 42.0).abs() < FLOAT_ERROR);
+    }
+
+    #[test]
+    fn test_std_deviation_basic() {
+        let data = [1, 2, 3, 4, 5];
+        let mean_value = GasStatistics::mean(&data);
+        let result = GasStatistics::std_deviation(mean_value, &data);
+        assert!((result - 1.414).abs() < FLOAT_ERROR);
+    }
+
+    #[test]
+    fn test_std_deviation_single_element() {
+        let data = [10];
+        let mean_value = GasStatistics::mean(&data);
+        let result = GasStatistics::std_deviation(mean_value, &data);
+        assert!(result.abs() < FLOAT_ERROR);
+    }
+
+    #[test]
+    fn test_gas_statistics_new() {
+        let gas_usages = vec![
+            GasVector {
+                l1_gas: GasAmount(10),
+                l1_data_gas: GasAmount(20),
+                l2_gas: GasAmount(30),
+            },
+            GasVector {
+                l1_gas: GasAmount(20),
+                l1_data_gas: GasAmount(40),
+                l2_gas: GasAmount(60),
+            },
+            GasVector {
+                l1_gas: GasAmount(30),
+                l1_data_gas: GasAmount(60),
+                l2_gas: GasAmount(90),
+            },
+        ];
+
+        let stats = GasStatistics::new(&gas_usages);
+
+        assert_eq!(stats.l1_gas.min, 10);
+        assert_eq!(stats.l1_data_gas.min, 20);
+        assert_eq!(stats.l2_gas.min, 30);
+
+        assert_eq!(stats.l1_gas.max, 30);
+        assert_eq!(stats.l1_data_gas.max, 60);
+        assert_eq!(stats.l2_gas.max, 90);
+
+        assert!((stats.l1_gas.mean - 20.0).abs() < FLOAT_ERROR);
+        assert!((stats.l1_data_gas.mean - 40.0).abs() < FLOAT_ERROR);
+        assert!((stats.l2_gas.mean - 60.0).abs() < FLOAT_ERROR);
+
+        assert!((stats.l1_gas.std_deviation - 8.165).abs() < FLOAT_ERROR);
+        assert!((stats.l1_data_gas.std_deviation - 16.33).abs() < FLOAT_ERROR);
+        assert!((stats.l2_gas.std_deviation - 24.49).abs() < FLOAT_ERROR);
     }
 }

@@ -24,23 +24,7 @@ pub fn print_test_result(
                 test_statistics: FuzzingStatistics { runs },
                 gas_info,
                 ..
-            } => Some(format!(
-                " (runs: {runs}, l1_gas: {{max: ~{}, min: ~{}, mean: ~{:.2}, std deviation: ~{:.2}}},\
-                l1_data_gas: {{max: ~{}, min: ~{}, mean: ~{:.2}, std deviation: ~{:.2}}},\
-                l2_gas: {{max: ~{}, min: ~{}, mean: ~{:.2}, std deviation: ~{:.2}}})",
-                gas_info.l1_gas.max,
-                gas_info.l1_gas.min,
-                gas_info.l1_gas.mean,
-                gas_info.l1_gas.std_deviation,
-                gas_info.l1_data_gas.max,
-                gas_info.l1_data_gas.min,
-                gas_info.l1_data_gas.mean,
-                gas_info.l1_data_gas.std_deviation,
-                gas_info.l2_gas.max,
-                gas_info.l2_gas.min,
-                gas_info.l2_gas.mean,
-                gas_info.l2_gas.std_deviation
-            )),
+            } => Some(format!(" (runs: {runs}, {gas_info})",)),
             TestCaseSummary::Failed {
                 fuzzer_args,
                 test_statistics: FuzzingStatistics { runs },
