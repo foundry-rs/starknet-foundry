@@ -1401,6 +1401,7 @@ fn l1_message_cost_sierra_gas() {
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
+    // todo(2960): verify l2 -> l1 message cost
     // 29524 = gas cost of l2 -> l1 message
     // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
     // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
@@ -1462,6 +1463,7 @@ fn l1_message_cost_for_proxy_sierra_gas() {
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
+    // todo(2960): verify l2 -> l1 message cost
     // 29524 = gas cost of l2 -> l1 message
     // 128 = n(2) * 2 * 32
     // 64 = l(2) * 32
