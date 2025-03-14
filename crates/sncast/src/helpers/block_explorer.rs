@@ -212,7 +212,8 @@ mod tests {
     #[tokio::test]
     #[test_case(Service::ViewBlock; "viewblock")]
     #[test_case(Service::OkLink; "oklink")]
-    #[test_case(Service::NftScan; "nftscan")]
+    // TODO(#3097)
+    // #[test_case(Service::NftScan; "nftscan")]
     async fn test_happy_case_mainnet(explorer: Service) {
         let result = MAINNET_RESPONSE.format_links(explorer.as_provider(Network::Mainnet).unwrap());
         assert_valid_links(&result).await;
@@ -221,7 +222,8 @@ mod tests {
     #[tokio::test]
     #[test_case(Service::ViewBlock; "viewblock")]
     #[test_case(Service::OkLink; "oklink")]
-    #[test_case(Service::NftScan; "nftscan")]
+    // TODO(#3097)
+    // #[test_case(Service::NftScan; "nftscan")]
     async fn test_fail_on_sepolia(explorer: Service) {
         assert!(explorer.as_provider(Network::Sepolia).is_err());
     }

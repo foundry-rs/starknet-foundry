@@ -97,7 +97,7 @@ pub async fn deploy_argent_account() {
     let factory = ArgentAccountFactory::new(
         ARGENT_CLASS_HASH,
         chain_id,
-        None,
+        Some(Felt::ZERO),
         LocalWallet::from_signing_key(private_key),
         provider,
     )
