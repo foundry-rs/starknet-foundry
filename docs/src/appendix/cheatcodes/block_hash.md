@@ -6,7 +6,7 @@ Cheatcodes modifying `get_block_hash_syscall` output:
 
 > `fn cheat_block_hash(contract_address: ContractAddress, block_number: u64, block_hash: felt252, span: CheatSpan)`
 
-Changes the block hash for the given block number.
+Changes the block hash for the given block number and contract address.
 
 ## `start_cheat_block_hash_global`
 
