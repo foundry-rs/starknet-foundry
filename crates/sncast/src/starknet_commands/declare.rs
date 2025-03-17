@@ -9,7 +9,7 @@ use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
 };
-use sncast::{ErrorData, WaitForTx, apply_optional, apply_optional_fields, handle_wait_for_tx};
+use sncast::{ErrorData, WaitForTx, apply_optional_fields, handle_wait_for_tx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, DeclarationV3};
 use starknet::core::types::{DeclareTransactionResult, StarknetError};

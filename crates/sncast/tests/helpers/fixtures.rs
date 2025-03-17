@@ -17,9 +17,7 @@ use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::state::state_file::{
     ScriptTransactionEntry, ScriptTransactionOutput, ScriptTransactionStatus,
 };
-use sncast::{
-    AccountType, apply_optional, apply_optional_fields, get_chain_id, get_keystore_password,
-};
+use sncast::{AccountType, apply_optional_fields, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider};
 use starknet::accounts::{
     Account, AccountFactory, ArgentAccountFactory, ExecutionV3, OpenZeppelinAccountFactory,

@@ -722,11 +722,11 @@ pub fn apply_optional<T, R, F: FnOnce(T, R) -> T>(initial: T, option: Option<R>,
 macro_rules! apply_optional_fields {
     ($initial:expr, $( $option:expr => $setter:expr ),* ) => {
         {
-            let mut declaration = $initial;
+            let mut value = $initial;
             $(
-                declaration = apply_optional(declaration, $option, $setter);
+                value = ::sncast::apply_optional(value, $option, $setter);
             )*
-            declaration
+            value
         }
     };
 }
