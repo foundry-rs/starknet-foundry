@@ -6,7 +6,7 @@ use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::InvokeResponse;
-use sncast::{WaitForTx, apply_optional, apply_optional_fields, handle_wait_for_tx};
+use sncast::{WaitForTx, apply_optional_fields, handle_wait_for_tx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, ExecutionV3, SingleOwnerAccount};
 use starknet::core::types::{Call, InvokeTransactionResult};

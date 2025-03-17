@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `sncast completion` command - used to generate autocompletion script
-- `--l1-gas`, `--l1-gas-price`, `l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price` flags
+- `--l1-gas`, `--l1-gas-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price` flags
 - `l1_gas`, `l1_gas_price`, `l2_gas`, `l2_gas_price`, `l1_data_gas`, `l1_data_gas_price` fields in `FeeSettings`
 
 #### Removed
