@@ -69,6 +69,10 @@ fn cheat_block_hash_simple() {
 
     let contract_address = test_env.deploy("CheatBlockHashChecker", &[]);
 
+    let output =
+        test_env.call_contract(&contract_address, "get_block_hash", &[BLOCK_NUMBER.into()]);
+    assert_success(output, &[Felt::from(0)]);
+
     test_env.start_cheat_block_hash(contract_address, BLOCK_NUMBER, Felt::from(123));
 
     let output =
