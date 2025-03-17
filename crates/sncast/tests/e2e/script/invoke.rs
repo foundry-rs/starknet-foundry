@@ -110,7 +110,8 @@ fn test_wrong_function_name() {
         [..]
         [..]: Error in the called contract ([..]):
         Execution failed. Failure reason:
-        [..]
+        Error in contract (contract address: [..], class hash: [..], selector: [..]):
+        Error in contract (contract address: [..], class hash: [..], selector: [..]):
         [..] ('ENTRYPOINT_NOT_FOUND').
         " })))
         command: script run
@@ -149,7 +150,8 @@ fn test_wrong_calldata() {
         [..]
         [..]: Error in the called contract ([..]):
         Execution failed. Failure reason:
-        [..]
+        Error in contract (contract address: [..], class hash: [..], selector: [..]):
+        Error in contract (contract address: [..], class hash: [..], selector: [..]):
         [..] ('Failed to deserialize param #2').
         " })))
         command: script run

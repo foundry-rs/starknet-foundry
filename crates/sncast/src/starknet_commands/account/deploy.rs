@@ -9,7 +9,7 @@ use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::InvokeResponse;
 use sncast::{
-    AccountType, WaitForTx, apply_optional, apply_optional_fields, chain_id_to_network_name,
+    AccountType, WaitForTx, apply_optional_fields, chain_id_to_network_name,
     check_account_file_exists, get_account_data_from_accounts_file, get_account_data_from_keystore,
     get_keystore_password, handle_rpc_error, handle_wait_for_tx,
 };
