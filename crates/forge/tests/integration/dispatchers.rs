@@ -237,8 +237,7 @@ fn handling_bytearray_based_errors() {
             let panic_data = safe_dispatcher.do_a_panic_with_bytearray().unwrap_err();
             let str_err = try_deserialize_bytearray_error(panic_data.span()).expect('wrong format');
             assert(
-                str_err == "This is a very long
- and multiline message that is certain to fill the buffer",
+                str_err == "This is a very long\n and multiline message that is certain to fill the buffer",
                 'wrong string received'
             );
 
