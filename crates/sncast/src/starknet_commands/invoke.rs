@@ -72,9 +72,9 @@ pub async fn execute_calls(
             .estimate_fee()
             .await
             .expect("Failed to estimate fee");
-        fee_args.try_into_fee_settings(&Some(fee_estimate))
+        fee_args.try_into_fee_settings(Some(&fee_estimate))
     } else {
-        fee_args.try_into_fee_settings(&None)
+        fee_args.try_into_fee_settings(None)
     };
 
     let FeeSettings {

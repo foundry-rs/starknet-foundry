@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow, bail, ensure};
+use anyhow::{Result, anyhow, ensure};
 use clap::Args;
 use conversions::serde::deserialize::CairoDeserialize;
 use starknet::core::types::FeeEstimate;
@@ -7,7 +7,7 @@ use starknet_types_core::felt::{Felt, NonZeroFelt};
 #[derive(Args, Debug, Clone)]
 pub struct FeeArgs {
     /// Max fee for the transaction. If not provided, will be automatically estimated.
-    #[clap(value_parser = parse_non_zero_felt, short, long)]
+    #[clap(value_parser = parse_non_zero_felt, short, long, conflicts_with_all = ["l1_gas", "l1_gas_price", "l2_gas", "l2_gas_price", "l1_data_gas", "l1_data_gas_price"])]
     pub max_fee: Option<NonZeroFelt>,
 
     /// Max L1 gas amount. If not provided, will be automatically estimated.
@@ -59,36 +59,21 @@ impl From<ScriptFeeSettings> for FeeArgs {
 }
 
 impl FeeArgs {
-    pub fn try_into_fee_settings(&self, fee_estimate: &Option<FeeEstimate>) -> Result<FeeSettings> {
+    pub fn try_into_fee_settings(&self, fee_estimate: Option<&FeeEstimate>) -> Result<FeeSettings> {
         // If some resource bounds values are lacking, starknet-rs will estimate them automatically
         // but in case someone passes --max-fee flag, we need to make estimation on our own
         // to check if the fee estimate isn't higher than provided max fee
         if let Some(max_fee) = self.max_fee {
-            self.check_conflicting_flags()?;
             self.validate_max_fee_meets_resource_bounds()?;
 
-            let fee_estimate = fee_estimate.clone().ok_or_else(|| {
+            let fee_estimate = fee_estimate.ok_or_else(|| {
                 anyhow!("Fee estimate must be calculated when max_fee is provided")
             })?;
 
-            let l1_gas = self.l1_gas.unwrap_or(fee_estimate.l1_gas_consumed);
-            let l1_gas_price = self.l1_gas_price.unwrap_or(fee_estimate.l1_gas_price);
-            let l2_gas = self.l2_gas.unwrap_or(fee_estimate.l2_gas_consumed);
-            let l2_gas_price = self.l2_gas_price.unwrap_or(fee_estimate.l2_gas_price);
-            let l1_data_gas = self
-                .l1_data_gas
-                .unwrap_or(fee_estimate.l1_data_gas_consumed);
-            let l1_data_gas_price = self
-                .l1_data_gas_price
-                .unwrap_or(fee_estimate.l1_data_gas_price);
-
-            let overall_fee =
-                l1_gas * l1_gas_price + l2_gas * l2_gas_price + l1_data_gas * l1_data_gas_price;
-
             ensure!(
-                Felt::from(max_fee) >= overall_fee,
+                Felt::from(max_fee) >= fee_estimate.overall_fee,
                 "Estimated fee ({}) is higher than provided max fee ({})",
-                overall_fee,
+                fee_estimate.overall_fee,
                 Felt::from(max_fee)
             );
 
@@ -165,24 +150,9 @@ impl FeeArgs {
         }
         Ok(())
     }
-
-    fn check_conflicting_flags(&self) -> Result<()> {
-        if self.max_fee.is_some()
-            && self.l1_gas.is_some()
-            && self.l1_gas_price.is_some()
-            && self.l2_gas.is_some()
-            && self.l2_gas_price.is_some()
-            && self.l1_data_gas.is_some()
-            && self.l1_data_gas_price.is_some()
-        {
-            bail!(
-                "Passing all --max-fee, --l1-gas, --l1-gas-price, --l2-gas, --l2-gas-price, --l1-data-gas and --l1-data-gas-price is conflicting."
-            );
-        }
-        Ok(())
-    }
 }
 
+// TODO(#3102): Refactor to be enum with max fee and triplet variants
 /// Struct used in `sncast script` for deserializing from cairo, `FeeSettings` can't be
 /// used as it missing `max_fee`
 #[derive(Debug, PartialEq, CairoDeserialize)]

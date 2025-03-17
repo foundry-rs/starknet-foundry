@@ -38,7 +38,7 @@ use tempfile::{TempDir, tempdir};
 use toml::Table;
 use url::Url;
 
-use super::constants::TEST_RESOURCE_BOUNDS_FLAGS;
+use super::fee::apply_test_resource_bounds_flags;
 
 const SCRIPT_ORIGIN_TIMESTAMP: u64 = 1_709_853_748;
 
@@ -647,10 +647,8 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
         URL,
         "--name",
         "my_account",
-    ]
-    .into_iter()
-    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
-    .collect::<Vec<&str>>();
+    ];
+    let args = apply_test_resource_bounds_flags(args);
 
     runner(&args).current_dir(tempdir.path()).assert().success();
 
