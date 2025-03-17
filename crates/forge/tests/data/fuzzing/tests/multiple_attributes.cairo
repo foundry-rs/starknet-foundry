@@ -1,7 +1,7 @@
 use fuzzing::adder;
 use fuzzing::fib;
 
-#[available_gas(100)]
+#[available_gas(l2_gas: 40000000)]
 #[fuzzer(runs: 50, seed: 123)]
 #[test]
 fn with_available_gas(a: usize) {
@@ -18,7 +18,7 @@ fn with_should_panic(a: u64) {
     assert(b < 0, 'panic message');
 }
 
-#[available_gas(5)]
+#[available_gas(l2_gas: 5)]
 #[should_panic(expected: 'panic message')]
 #[test]
 #[fuzzer(runs: 300)]
