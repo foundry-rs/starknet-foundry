@@ -27,6 +27,7 @@ struct Dependency {
 struct TemplateManifestConfig {
     dependencies: Vec<Dependency>,
     contract_target: bool,
+    fork_config: bool,
 }
 
 impl TryFrom<&Template> for TemplateManifestConfig {
@@ -38,6 +39,7 @@ impl TryFrom<&Template> for TemplateManifestConfig {
             Template::CairoProgram => Ok(TemplateManifestConfig {
                 dependencies: vec![],
                 contract_target: false,
+                fork_config: false,
             }),
             Template::BalanceContract => Ok(TemplateManifestConfig {
                 dependencies: vec![Dependency {
@@ -46,6 +48,23 @@ impl TryFrom<&Template> for TemplateManifestConfig {
                     dev: false,
                 }],
                 contract_target: true,
+                fork_config: false,
+            }),
+            Template::Erc20Contract => Ok(TemplateManifestConfig {
+                dependencies: vec![
+                    Dependency {
+                        name: "starknet".to_string(),
+                        version: cairo_version.to_string(),
+                        dev: false,
+                    },
+                    Dependency {
+                        name: "openzeppelin_token".to_string(),
+                        version: get_oz_version()?.to_string(),
+                        dev: false,
+                    },
+                ],
+                contract_target: true,
+                fork_config: true,
             }),
         }
     }
@@ -138,6 +157,10 @@ fn update_config(
     add_assert_macros(&mut document)?;
     add_allow_prebuilt_macros(&mut document)?;
 
+    if template_config.fork_config {
+        add_fork_config(&mut document)?;
+    }
+
     fs::write(scarb_manifest_path, document.to_string())?;
 
     Ok(())
@@ -168,11 +191,11 @@ fn set_cairo_edition(document: &mut DocumentMut, cairo_edition: &str) {
 }
 
 fn add_assert_macros(document: &mut DocumentMut) -> Result<()> {
-    let scarb_version = ScarbCommand::version().run()?.scarb;
-    let version = if scarb_version < MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS {
+    let versions = ScarbCommand::version().run()?;
+    let version = if versions.scarb < MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS {
         DEFAULT_ASSERT_MACROS
     } else {
-        scarb_version
+        versions.cairo
     };
 
     document
@@ -202,6 +225,34 @@ fn add_allow_prebuilt_macros(document: &mut DocumentMut) -> Result<()> {
     );
 
     tool_table.insert("scarb", Item::Table(scarb_table));
+
+    Ok(())
+}
+
+fn add_fork_config(document: &mut DocumentMut) -> Result<()> {
+    let tool_section = document.entry("tool").or_insert(Item::Table(Table::new()));
+    let tool_table = tool_section
+        .as_table_mut()
+        .context("Failed to get tool table from Scarb.toml")?;
+
+    let mut fork_table = Table::new();
+    fork_table.insert("name", Item::Value(Value::from("SEPOLIA_LATEST")));
+    fork_table.insert("url", Item::Value(Value::from(FREE_RPC_PROVIDER_URL)));
+
+    let mut block_id_table = Table::new();
+    block_id_table.insert("tag", Item::Value(Value::from("latest")));
+    fork_table.insert(
+        "block_id",
+        Item::Value(Value::from(block_id_table.into_inline_table())),
+    );
+
+    let mut array_of_tables = ArrayOfTables::new();
+    array_of_tables.push(fork_table);
+
+    let mut fork = Table::new();
+    fork.set_implicit(true);
+    fork.insert("fork", Item::ArrayOfTables(array_of_tables));
+    tool_table.insert("snforge", Item::Table(fork));
 
     Ok(())
 }
@@ -349,10 +400,24 @@ fn get_template_dir(template: &Template) -> Result<Dir> {
     let dir_name = match template {
         Template::CairoProgram => "cairo_program",
         Template::BalanceContract => "balance_contract",
+        Template::Erc20Contract => "erc20_contract",
     };
 
     TEMPLATES_DIR
         .get_dir(dir_name)
         .ok_or_else(|| anyhow!("Directory {dir_name} not found"))
         .cloned()
+}
+
+fn get_oz_version() -> Result<Version> {
+    let scarb_version = ScarbCommand::version().run()?.scarb;
+
+    let oz_version = match scarb_version {
+        ver if ver >= Version::new(2, 9, 4) => Version::new(1, 0, 0),
+        ver if ver >= Version::new(2, 9, 1) => Version::new(0, 20, 0),
+        ver if ver >= Version::new(2, 8, 4) => Version::new(0, 19, 0),
+        _ => bail!("Minimal Scarb version to create a new project with ERC-20 template is 2.8.4"),
+    };
+
+    Ok(oz_version)
 }
