@@ -13,13 +13,13 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Deserializer, Value};
 use shared::rpc::create_rpc_client;
 use starknet::accounts::{AccountFactory, AccountFactoryError};
-use starknet::core::types::ContractExecutionError;
 use starknet::core::types::{
     BlockId, BlockTag,
     BlockTag::{Latest, Pending},
     ContractClass, ContractErrorData,
     StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
 };
+use starknet::core::types::{ContractExecutionError, ExecutionResult};
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
 use starknet::{
@@ -595,14 +595,18 @@ pub async fn wait_for_tx(
             Ok(
                 starknet::core::types::TransactionStatus::AcceptedOnL2(execution_status)
                 | starknet::core::types::TransactionStatus::AcceptedOnL1(execution_status),
-            ) => match execution_status {
-                starknet::core::types::ExecutionResult::Succeeded => {
-                    return Ok("Transaction accepted".to_string());
-                }
-                starknet::core::types::ExecutionResult::Reverted { reason } => {
-                    return Ok(reason);
-                }
-            },
+            ) => {
+                return match execution_status {
+                    ExecutionResult::Succeeded => Ok("Transaction accepted".to_string()),
+                    ExecutionResult::Reverted { reason } => {
+                        Err(WaitForTransactionError::TransactionError(
+                            TransactionError::Reverted(ErrorData {
+                                data: ByteArray::from(reason.as_str()),
+                            }),
+                        ))
+                    }
+                };
+            }
             Ok(starknet::core::types::TransactionStatus::Received)
             | Err(StarknetError(TransactionHashNotFound)) => {
                 let remaining_time = wait_params.remaining_time(i);
@@ -712,6 +716,19 @@ pub fn apply_optional<T, R, F: FnOnce(T, R) -> T>(initial: T, option: Option<R>,
         Some(value) => function(initial, value),
         None => initial,
     }
+}
+
+#[macro_export]
+macro_rules! apply_optional_fields {
+    ($initial:expr, $( $option:expr => $setter:expr ),* ) => {
+        {
+            let mut declaration = $initial;
+            $(
+                declaration = apply_optional(declaration, $option, $setter);
+            )*
+            declaration
+        }
+    };
 }
 
 #[must_use]

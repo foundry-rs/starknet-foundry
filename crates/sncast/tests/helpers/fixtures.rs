@@ -17,7 +17,9 @@ use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::state::state_file::{
     ScriptTransactionEntry, ScriptTransactionOutput, ScriptTransactionStatus,
 };
-use sncast::{AccountType, apply_optional, get_chain_id, get_keystore_password};
+use sncast::{
+    AccountType, apply_optional, apply_optional_fields, get_chain_id, get_keystore_password,
+};
 use sncast::{get_account, get_provider};
 use starknet::accounts::{
     Account, AccountFactory, ArgentAccountFactory, ExecutionV3, OpenZeppelinAccountFactory,
@@ -38,7 +40,7 @@ use tempfile::{TempDir, tempdir};
 use toml::Table;
 use url::Url;
 
-use super::constants::TEST_RESOURCE_BOUNDS_FLAGS;
+use super::fee::apply_test_resource_bounds_flags;
 
 const SCRIPT_ORIGIN_TIMESTAMP: u64 = 1_709_853_748;
 
@@ -97,7 +99,7 @@ pub async fn deploy_argent_account() {
     let factory = ArgentAccountFactory::new(
         ARGENT_CLASS_HASH,
         chain_id,
-        None,
+        Some(Felt::ZERO),
         LocalWallet::from_signing_key(private_key),
         provider,
     )
@@ -225,27 +227,14 @@ pub async fn invoke_contract(
     };
 
     let execution = account.execute_v3(vec![call]);
-    let execution = apply_optional(execution, fee_settings.l1_gas, ExecutionV3::l1_gas);
-    let execution = apply_optional(
+    let execution = apply_optional_fields!(
         execution,
-        fee_settings.l1_gas_price,
-        ExecutionV3::l1_gas_price,
-    );
-    let execution = apply_optional(execution, fee_settings.l2_gas, ExecutionV3::l2_gas);
-    let execution = apply_optional(
-        execution,
-        fee_settings.l2_gas_price,
-        ExecutionV3::l2_gas_price,
-    );
-    let execution = apply_optional(
-        execution,
-        fee_settings.l1_data_gas,
-        ExecutionV3::l1_data_gas,
-    );
-    let execution = apply_optional(
-        execution,
-        fee_settings.l1_data_gas_price,
-        ExecutionV3::l1_data_gas_price,
+        fee_settings.l1_gas => ExecutionV3::l1_gas,
+        fee_settings.l1_gas_price => ExecutionV3::l1_gas_price,
+        fee_settings.l2_gas => ExecutionV3::l2_gas,
+        fee_settings.l2_gas_price => ExecutionV3::l2_gas_price,
+        fee_settings.l1_data_gas => ExecutionV3::l1_data_gas,
+        fee_settings.l1_data_gas_price => ExecutionV3::l1_data_gas_price
     );
 
     execution
@@ -647,10 +636,8 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
         URL,
         "--name",
         "my_account",
-    ]
-    .into_iter()
-    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
-    .collect::<Vec<&str>>();
+    ];
+    let args = apply_test_resource_bounds_flags(args);
 
     runner(&args).current_dir(tempdir.path()).assert().success();
 

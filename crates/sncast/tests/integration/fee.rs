@@ -13,7 +13,7 @@ async fn test_happy_case() {
         l1_data_gas_price: Some(Felt::from(200_u32)),
     };
 
-    let settings = args.try_into_fee_settings(&None).unwrap();
+    let settings = args.try_into_fee_settings(None).unwrap();
 
     assert_eq!(
         settings,
@@ -26,24 +26,6 @@ async fn test_happy_case() {
             l1_data_gas_price: Some(200),
         }
     );
-}
-
-#[tokio::test]
-async fn test_all_args() {
-    let args = FeeArgs {
-        max_fee: Some(Felt::from(100_u32).try_into().unwrap()),
-        l1_gas: Some(Felt::from(100_u32)),
-        l1_gas_price: Some(Felt::from(200_u32)),
-        l2_gas: Some(Felt::from(100_u32)),
-        l2_gas_price: Some(Felt::from(200_u32)),
-        l1_data_gas: Some(Felt::from(100_u32)),
-        l1_data_gas_price: Some(Felt::from(200_u32)),
-    };
-
-    let error = args.try_into_fee_settings(&None).unwrap_err();
-
-    assert!(error.to_string().contains("Passing all --max-fee, --l1-gas, --l1-gas-price, --l2-gas, --l2-gas-price, --l1-data-gas and --l1-data-gas-price is conflicting."
-    ));
 }
 
 use test_case::test_case;
@@ -94,7 +76,7 @@ use test_case::test_case;
     }, "--l1-data-gas-price")]
 #[tokio::test]
 async fn test_max_fee_less_than_resource_bounds_value(fee_args: FeeArgs, flag: &str) {
-    let error = fee_args.try_into_fee_settings(&None).unwrap_err();
+    let error = fee_args.try_into_fee_settings(None).unwrap_err();
     assert!(
         error
             .to_string()
@@ -114,7 +96,7 @@ async fn test_max_fee_none() {
         l1_data_gas_price: Some(Felt::from(100_u32)),
     };
 
-    let settings = args.try_into_fee_settings(&None).unwrap();
+    let settings = args.try_into_fee_settings(None).unwrap();
 
     assert_eq!(
         settings,
@@ -141,7 +123,7 @@ async fn test_all_args_none() {
         l1_data_gas_price: None,
     };
 
-    let settings = args.try_into_fee_settings(&None).unwrap();
+    let settings = args.try_into_fee_settings(None).unwrap();
 
     assert_eq!(
         settings,
