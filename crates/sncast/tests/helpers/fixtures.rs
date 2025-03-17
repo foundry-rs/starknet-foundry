@@ -17,7 +17,9 @@ use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::state::state_file::{
     ScriptTransactionEntry, ScriptTransactionOutput, ScriptTransactionStatus,
 };
-use sncast::{AccountType, apply_optional, get_chain_id, get_keystore_password};
+use sncast::{
+    AccountType, apply_optional, apply_optional_fields, get_chain_id, get_keystore_password,
+};
 use sncast::{get_account, get_provider};
 use starknet::accounts::{
     Account, AccountFactory, ArgentAccountFactory, ExecutionV3, OpenZeppelinAccountFactory,
@@ -225,27 +227,14 @@ pub async fn invoke_contract(
     };
 
     let execution = account.execute_v3(vec![call]);
-    let execution = apply_optional(execution, fee_settings.l1_gas, ExecutionV3::l1_gas);
-    let execution = apply_optional(
+    let execution = apply_optional_fields!(
         execution,
-        fee_settings.l1_gas_price,
-        ExecutionV3::l1_gas_price,
-    );
-    let execution = apply_optional(execution, fee_settings.l2_gas, ExecutionV3::l2_gas);
-    let execution = apply_optional(
-        execution,
-        fee_settings.l2_gas_price,
-        ExecutionV3::l2_gas_price,
-    );
-    let execution = apply_optional(
-        execution,
-        fee_settings.l1_data_gas,
-        ExecutionV3::l1_data_gas,
-    );
-    let execution = apply_optional(
-        execution,
-        fee_settings.l1_data_gas_price,
-        ExecutionV3::l1_data_gas_price,
+        fee_settings.l1_gas => ExecutionV3::l1_gas,
+        fee_settings.l1_gas_price => ExecutionV3::l1_gas_price,
+        fee_settings.l2_gas => ExecutionV3::l2_gas,
+        fee_settings.l2_gas_price => ExecutionV3::l2_gas_price,
+        fee_settings.l1_data_gas => ExecutionV3::l1_data_gas,
+        fee_settings.l1_data_gas_price => ExecutionV3::l1_data_gas_price
     );
 
     execution

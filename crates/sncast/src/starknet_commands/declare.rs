@@ -9,7 +9,7 @@ use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
 };
-use sncast::{ErrorData, WaitForTx, apply_optional, handle_wait_for_tx};
+use sncast::{ErrorData, WaitForTx, apply_optional, apply_optional_fields, handle_wait_for_tx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, DeclarationV3};
 use starknet::core::types::{DeclareTransactionResult, StarknetError};
@@ -97,17 +97,16 @@ pub async fn declare(
         l1_data_gas_price,
     } = fee_settings.expect("Failed to convert to fee settings");
 
-    let declaration = apply_optional(declaration, l1_gas, DeclarationV3::l1_gas);
-    let declaration = apply_optional(declaration, l1_gas_price, DeclarationV3::l1_gas_price);
-    let declaration = apply_optional(declaration, l2_gas, DeclarationV3::l2_gas);
-    let declaration = apply_optional(declaration, l2_gas_price, DeclarationV3::l2_gas_price);
-    let declaration = apply_optional(declaration, l1_data_gas, DeclarationV3::l1_data_gas);
-    let declaration = apply_optional(
+    let declaration = apply_optional_fields!(
         declaration,
-        l1_data_gas_price,
-        DeclarationV3::l1_data_gas_price,
+        l1_gas => DeclarationV3::l1_gas,
+        l1_gas_price => DeclarationV3::l1_gas_price,
+        l2_gas => DeclarationV3::l2_gas,
+        l2_gas_price => DeclarationV3::l2_gas_price,
+        l1_data_gas => DeclarationV3::l1_data_gas,
+        l1_data_gas_price => DeclarationV3::l1_data_gas_price,
+        declare.nonce => DeclarationV3::nonce
     );
-    let declaration = apply_optional(declaration, declare.nonce, DeclarationV3::nonce);
 
     let declared = declaration.send().await;
 

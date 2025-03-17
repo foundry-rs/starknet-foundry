@@ -6,7 +6,7 @@ use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::InvokeResponse;
-use sncast::{WaitForTx, apply_optional, handle_wait_for_tx};
+use sncast::{WaitForTx, apply_optional, apply_optional_fields, handle_wait_for_tx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, ExecutionV3, SingleOwnerAccount};
 use starknet::core::types::{Call, InvokeTransactionResult};
@@ -86,13 +86,16 @@ pub async fn execute_calls(
         l1_data_gas_price,
     } = fee_settings.expect("Failed to convert to fee settings");
 
-    let execution = apply_optional(execution_calls, l1_gas, ExecutionV3::l1_gas);
-    let execution = apply_optional(execution, l1_gas_price, ExecutionV3::l1_gas_price);
-    let execution = apply_optional(execution, l2_gas, ExecutionV3::l2_gas);
-    let execution = apply_optional(execution, l2_gas_price, ExecutionV3::l2_gas_price);
-    let execution = apply_optional(execution, l1_data_gas, ExecutionV3::l1_data_gas);
-    let execution = apply_optional(execution, l1_data_gas_price, ExecutionV3::l1_data_gas_price);
-    let execution = apply_optional(execution, nonce, ExecutionV3::nonce);
+    let execution = apply_optional_fields!(
+        execution_calls,
+        l1_gas => ExecutionV3::l1_gas,
+        l1_gas_price => ExecutionV3::l1_gas_price,
+        l2_gas => ExecutionV3::l2_gas,
+        l2_gas_price => ExecutionV3::l2_gas_price,
+        l1_data_gas => ExecutionV3::l1_data_gas,
+        l1_data_gas_price => ExecutionV3::l1_data_gas_price,
+        nonce => ExecutionV3::nonce
+    );
     let result = execution.send().await;
 
     match result {

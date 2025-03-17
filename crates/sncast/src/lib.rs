@@ -718,6 +718,19 @@ pub fn apply_optional<T, R, F: FnOnce(T, R) -> T>(initial: T, option: Option<R>,
     }
 }
 
+#[macro_export]
+macro_rules! apply_optional_fields {
+    ($initial:expr, $( $option:expr => $setter:expr ),* ) => {
+        {
+            let mut declaration = $initial;
+            $(
+                declaration = apply_optional(declaration, $option, $setter);
+            )*
+            declaration
+        }
+    };
+}
+
 #[must_use]
 pub fn get_default_state_file_name(script_name: &str, chain_id: &str) -> String {
     format!("{script_name}_{chain_id}_{DEFAULT_STATE_FILE_SUFFIX}")

@@ -9,9 +9,9 @@ use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::InvokeResponse;
 use sncast::{
-    AccountType, WaitForTx, apply_optional, chain_id_to_network_name, check_account_file_exists,
-    get_account_data_from_accounts_file, get_account_data_from_keystore, get_keystore_password,
-    handle_rpc_error, handle_wait_for_tx,
+    AccountType, WaitForTx, apply_optional, apply_optional_fields, chain_id_to_network_name,
+    check_account_file_exists, get_account_data_from_accounts_file, get_account_data_from_keystore,
+    get_keystore_password, handle_rpc_error, handle_wait_for_tx,
 };
 use starknet::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
 use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
@@ -260,15 +260,14 @@ where
         l1_data_gas_price,
     } = fee_settings.expect("Failed to convert to fee settings");
 
-    let deployment = apply_optional(deployment, l1_gas, AccountDeploymentV3::l1_gas);
-    let deployment = apply_optional(deployment, l1_gas_price, AccountDeploymentV3::l1_gas_price);
-    let deployment = apply_optional(deployment, l2_gas, AccountDeploymentV3::l2_gas);
-    let deployment = apply_optional(deployment, l2_gas_price, AccountDeploymentV3::l2_gas_price);
-    let deployment = apply_optional(deployment, l1_data_gas, AccountDeploymentV3::l1_data_gas);
-    let deployment = apply_optional(
+    let deployment = apply_optional_fields!(
         deployment,
-        l1_data_gas_price,
-        AccountDeploymentV3::l1_data_gas_price,
+        l1_gas => AccountDeploymentV3::l1_gas,
+        l1_gas_price => AccountDeploymentV3::l1_gas_price,
+        l2_gas => AccountDeploymentV3::l2_gas,
+        l2_gas_price => AccountDeploymentV3::l2_gas_price,
+        l1_data_gas => AccountDeploymentV3::l1_data_gas,
+        l1_data_gas_price => AccountDeploymentV3::l1_data_gas_price
     );
     let result = deployment.send().await;
 
