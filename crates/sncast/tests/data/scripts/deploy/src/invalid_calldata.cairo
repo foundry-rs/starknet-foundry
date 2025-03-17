@@ -24,7 +24,7 @@ fn main() {
     let deploy_result = deploy(
         class_hash, array![0x2], Option::Some(salt), true, fee_settings, Option::Some(deploy_nonce)
     )
-        .unwrap();
+        .unwrap_err();
 
     println!("{:?}", deploy_result);
 }

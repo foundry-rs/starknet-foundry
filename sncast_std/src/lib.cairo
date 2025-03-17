@@ -224,6 +224,8 @@ impl DisplayDeployResult of Display<DeployResult> {
         )
     }
 }
+
+// TODO(#3102): Refactor to be enum with max fee and triplet variants
 #[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub struct FeeSettings {
     pub max_fee: Option<felt252>,

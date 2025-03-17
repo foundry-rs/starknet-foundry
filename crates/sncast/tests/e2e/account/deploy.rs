@@ -1,5 +1,6 @@
-use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, TEST_RESOURCE_BOUNDS_FLAGS, URL};
+use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::env::set_keystore_password_env;
+use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::copy_file;
 use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
@@ -40,10 +41,8 @@ pub async fn test_happy_case(class_hash: &str, account_type: &str) {
         URL,
         "--name",
         "my_account",
-    ]
-    .into_iter()
-    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
-    .collect::<Vec<&str>>();
+    ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let bdg = snapbox.assert();
@@ -77,10 +76,8 @@ pub async fn test_happy_case_max_fee() {
         URL,
         "--name",
         "my_account",
-    ]
-    .into_iter()
-    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
-    .collect::<Vec<&str>>();
+    ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let bdg = snapbox.assert();
@@ -114,10 +111,8 @@ pub async fn test_happy_case_add_profile() {
         "deploy",
         "--name",
         "my_account",
-    ]
-    .into_iter()
-    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
-    .collect::<Vec<&str>>();
+    ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert();
@@ -149,10 +144,8 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
         URL,
         "--name",
         "my_account",
-    ]
-    .into_iter()
-    .chain(TEST_RESOURCE_BOUNDS_FLAGS)
-    .collect::<Vec<&str>>();
+    ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert();
@@ -174,10 +167,8 @@ pub async fn test_valid_class_hash() {
         "deploy",
         "--name",
         "my_account",
-    ]
-    .into_iter()
-    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
-    .collect::<Vec<&str>>();
+    ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
@@ -190,34 +181,35 @@ pub async fn test_valid_class_hash() {
     "});
 }
 
-// #[tokio::test]
-// pub async fn test_valid_no_max_fee() {
-//     let tempdir = create_account(true, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
-//     let accounts_file = "accounts.json";
+#[tokio::test]
+#[ignore = "TODO(#3100)"]
+pub async fn test_valid_no_max_fee() {
+    let tempdir = create_account(true, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
+    let accounts_file = "accounts.json";
 
-//     let args = vec![
-//         "--profile",
-//         "deploy_profile",
-//         "--accounts-file",
-//         accounts_file,
-//         "account",
-//         "deploy",
-//         "--url",
-//         URL,
-//         "--name",
-//         "my_account",
-//     ];
+    let args = vec![
+        "--profile",
+        "deploy_profile",
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "deploy",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+    ];
 
-//     let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
-//     snapbox.assert().success().stdout_matches(indoc! {r"
-//         command: account deploy
-//         transaction_hash: [..]
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        command: account deploy
+        transaction_hash: [..]
 
-//         To see invocation details, visit:
-//         transaction: [..]
-//     "});
-// }
+        To see invocation details, visit:
+        transaction: [..]
+    "});
+}
 
 pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &str) -> TempDir {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
@@ -301,10 +293,8 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         "deploy",
         "--url",
         URL,
-    ]
-    .into_iter()
-    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
-    .collect::<Vec<&str>>();
+    ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
@@ -350,10 +340,8 @@ pub async fn test_keystore_already_deployed() {
         "deploy",
         "--url",
         URL,
-    ]
-    .into_iter()
-    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
-    .collect::<Vec<&str>>();
+    ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -394,10 +382,8 @@ pub async fn test_keystore_key_mismatch() {
         "deploy",
         "--url",
         URL,
-    ]
-    .into_iter()
-    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
-    .collect::<Vec<&str>>();
+    ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -433,10 +419,8 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
         "deploy",
         "--url",
         URL,
-    ]
-    .into_iter()
-    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
-    .collect::<Vec<&str>>();
+    ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -472,10 +456,8 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
         "deploy",
         "--url",
         URL,
-    ]
-    .into_iter()
-    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
-    .collect::<Vec<&str>>();
+    ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -515,10 +497,8 @@ pub async fn test_deploy_keystore_no_status() {
         "deploy",
         "--url",
         URL,
-    ]
-    .into_iter()
-    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
-    .collect::<Vec<&str>>();
+    ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -575,10 +555,8 @@ pub async fn test_deploy_keystore_other_args() {
         URL,
         "--name",
         "some-name",
-    ]
-    .into_iter()
-    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
-    .collect::<Vec<&str>>();
+    ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"

@@ -1,7 +1,8 @@
 use crate::helpers::constants::{
     ACCOUNT, ACCOUNT_FILE_PATH, DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA,
-    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_ADDRESS_SEPOLIA, TEST_RESOURCE_BOUNDS_FLAGS, URL,
+    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
 };
+use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
     create_and_deploy_account, create_and_deploy_oz_account, get_transaction_hash,
     get_transaction_receipt,
@@ -15,6 +16,7 @@ use sncast::helpers::constants::{
     // ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH,
     OZ_CLASS_HASH,
 };
+use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Invoke;
 use starknet_types_core::felt::Felt;
 use std::path::PathBuf;
@@ -39,10 +41,8 @@ async fn test_happy_case_human_readable() {
         "put",
         "--calldata",
         "0x1 0x2",
-    ]
-    .into_iter()
-    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
-    .collect::<Vec<&str>>();
+    ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -85,10 +85,8 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         "put",
         "--calldata",
         "0x1 0x2",
-    ]
-    .into_iter()
-    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
-    .collect::<Vec<&str>>();
+    ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -100,58 +98,82 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     assert!(matches!(receipt, Invoke(_)));
 }
 
-// TODO(#3090)
-// #[test_case(Some("99999999999999999"), None, None; "max_fee")]
-// #[test_case(None, Some("999"), None; "max_gas")]
-// #[test_case(None, None, Some("999999999999"); "max_gas_unit_price")]
-// #[test_case(None, None, None; "none")]
-// #[test_case(Some("99999999999999999"), None, Some("999999999999"); "max_fee_max_gas_unit_price")]
-// #[test_case(None, Some("999"), Some("999999999999"); "max_gas_max_gas_unit_price")]
-// #[test_case(Some("999999999999999"), Some("999"), None; "max_fee_max_gas")]
-// #[tokio::test]
-// async fn test_happy_case_different_fees(
-//     max_fee: Option<&str>,
-//     max_gas: Option<&str>,
-//     max_gas_unit_price: Option<&str>,
-// ) {
-//     let tempdir = create_and_deploy_oz_account().await;
-//     let mut args = vec![
-//         "--accounts-file",
-//         "accounts.json",
-//         "--account",
-//         "my_account",
-//         "--int-format",
-//         "--json",
-//         "invoke",
-//         "--url",
-//         URL,
-//         "--contract-address",
-//         MAP_CONTRACT_ADDRESS_SEPOLIA,
-//         "--function",
-//         "put",
-//         "--calldata",
-//         "0x1 0x2",
-//     ];
-//     let options = [
-//         ("--max-fee", max_fee),
-//         ("--max-gas", max_gas),
-//         ("--max-gas-unit-price", max_gas_unit_price),
-//     ];
+// TODO(#3100)
+// #[test_case(FeeArgs{
+//     max_fee: Some(NonZeroFelt::try_from(Felt::from(1000000000000000000000000)).unwrap()),
+//     l1_data_gas: None,
+//     l1_data_gas_price:  None,
+//     l1_gas:  None,
+//     l1_gas_price:  None,
+//     l2_gas:  None,
+//     l2_gas_price:  None,
+// }; "max_fee")]
+#[test_case(FeeArgs{
+    max_fee: None,
+    l1_data_gas: Some(100_000.into()),
+    l1_data_gas_price: Some(10_000_000_000_000_u64.into()),
+    l1_gas: Some(100_000.into()),
+    l1_gas_price: Some(10_000_000_000_000_u64.into()),
+    l2_gas: Some(1_000_000_000.into()),
+    l2_gas_price: Some(100_000_000_000_000_000_000_u128.into()),
+}; "resource_bounds")]
+#[tokio::test]
+async fn test_happy_case_different_fees(fee_args: FeeArgs) {
+    let tempdir = create_and_deploy_oz_account().await;
+    let mut args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "--int-format",
+        "--json",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 0x2",
+    ];
+    let options = [
+        (
+            "--max-fee",
+            fee_args.max_fee.map(Felt::from).map(|x| x.to_string()),
+        ),
+        ("--l1-data-gas", fee_args.l1_data_gas.map(|x| x.to_string())),
+        (
+            "--l1-data-gas-price",
+            fee_args.l1_data_gas_price.map(|x| x.to_string()),
+        ),
+        ("--l1-gas", fee_args.l1_gas.map(|x| x.to_string())),
+        (
+            "--l1-gas-price",
+            fee_args.l1_gas_price.map(|x| x.to_string()),
+        ),
+        ("--l2-gas", fee_args.l2_gas.map(|x| x.to_string())),
+        (
+            "--l2-gas-price",
+            fee_args.l2_gas_price.map(|x| x.to_string()),
+        ),
+    ];
 
-//     for &(key, value) in &options {
-//         if let Some(val) = value {
-//             args.append(&mut vec![key, val]);
-//         }
-//     }
+    for &(key, ref value) in &options {
+        if let Some(val) = value.as_ref() {
+            args.push(key);
+            args.push(val);
+        }
+    }
 
-//     let snapbox = runner(&args).current_dir(tempdir.path());
-//     let output = snapbox.assert().success().get_output().stdout.clone();
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success().get_output().stdout.clone();
 
-//     let hash = get_transaction_hash(&output);
-//     let receipt = get_transaction_receipt(hash).await;
+    let hash = get_transaction_hash(&output);
+    let receipt = get_transaction_receipt(hash).await;
 
-//     assert!(matches!(receipt, Invoke(_)));
-// }
+    assert!(matches!(receipt, Invoke(_)));
+}
 
 #[tokio::test]
 async fn test_contract_does_not_exist() {
@@ -280,41 +302,6 @@ fn test_too_low_gas() {
     );
 }
 
-// #[test]
-// fn test_calculated_max_gas_equal_to_zero_when_max_fee_passed() {
-//     let args = vec![
-//         "--accounts-file",
-//         ACCOUNT_FILE_PATH,
-//         "--account",
-//         "user11",
-//         "--wait",
-//         "invoke",
-//         "--url",
-//         URL,
-//         "--contract-address",
-//         MAP_CONTRACT_ADDRESS_SEPOLIA,
-//         "--function",
-//         "put",
-//         "--calldata",
-//         "0x1",
-//         "0x2",
-//         "--max-fee",
-//         "999999",
-//     ];
-
-//     let snapbox = runner(&args);
-//     let output = snapbox.assert().success();
-
-//     // TODO(#2852)
-//     assert_stderr_contains(
-//         output,
-//         indoc! {r"
-//         command: invoke
-//         error: Calculated max-gas from provided --max-fee and the current network gas price is 0. Please increase --max-fee to obtain a positive gas amount: Tried to create NonZeroFelt from 0
-//         "},
-//     );
-// }
-
 #[tokio::test]
 async fn test_happy_case_cairo_expression_calldata() {
     let tempdir = create_and_deploy_oz_account().await;
@@ -337,10 +324,8 @@ async fn test_happy_case_cairo_expression_calldata() {
         "nested_struct_fn",
         "--arguments",
         calldata,
-    ]
-    .into_iter()
-    .chain(TEST_RESOURCE_BOUNDS_FLAGS.into_iter())
-    .collect::<Vec<&str>>();
+    ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success().get_output().stdout.clone();
