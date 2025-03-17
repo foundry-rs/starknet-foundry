@@ -26,8 +26,7 @@ impl CheatnetState {
                 self.block_hash_contracts
                     .remove(&(contract_address, block_number));
 
-                if self.global_block_hash.contains_key(&block_number) {
-                    let (_, except) = self.global_block_hash.get_mut(&block_number).unwrap();
+                if let Some((_, except)) = self.global_block_hash.get_mut(&block_number) {
                     except.push(contract_address);
                 }
             }
