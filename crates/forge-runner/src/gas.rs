@@ -166,6 +166,7 @@ pub fn check_available_gas(
             ..
         } if available_gas.is_some_and(|available_gas| match available_gas {
             RawAvailableGasConfig::MaxGas(gas) => {
+                // todo(3109): remove uunnamed argument in available_gas
                 print_as_warning(&anyhow!(
                     "Setting available_gas with unnamed argument is deprecated. \
                 Consider setting resource bounds (l1_gas, l1_data_gas and l2_gas) explicitly."
