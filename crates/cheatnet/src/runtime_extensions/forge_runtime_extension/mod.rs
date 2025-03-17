@@ -819,8 +819,7 @@ fn n_steps_to_sierra_gas(n_steps: usize, versioned_constants: &VersionedConstant
     GasAmount(n_steps_gas_cost)
 }
 
-// region: Modified blockifier code
-// https://github.com/starkware-libs/sequencer/blob/main-v0.13.4/crates/blockifier/src/bouncer.rs#L320
+// Based on: https://github.com/starkware-libs/sequencer/blob/main-v0.13.4/crates/blockifier/src/bouncer.rs#L320
 #[must_use]
 pub fn vm_resources_to_sierra_gas(
     resources: &ExecutionResources,
