@@ -35,7 +35,7 @@ fn test_backtrace() {
         indoc! {
            "Failure data:
                 (0x454e545259504f494e545f4e4f545f464f554e44 ('ENTRYPOINT_NOT_FOUND'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
-            error occurred in contract 'InnerContract' at pc: '72'
+            error occurred in contract 'InnerContract' at pc: '[..]'
             stack backtrace:
                0: backtrace_vm_error::InnerContract::inner_call
                    at [..]lib.cairo:47:9
@@ -44,7 +44,7 @@ fn test_backtrace() {
                2: backtrace_vm_error::InnerContract::__wrapper__InnerContract__inner
                    at [..]lib.cairo:37:9
 
-            error occurred in contract 'OuterContract' at pc: '107'
+            error occurred in contract 'OuterContract' at pc: '[..]'
             stack backtrace:
                0: backtrace_vm_error::IInnerContractDispatcherImpl::inner
                    at [..]lib.cairo:22:1
@@ -104,12 +104,12 @@ fn test_backtrace_panic() {
         indoc! {
            "Success data:
                 0x61616161 ('aaaa')
-            error occurred in contract 'InnerContract' at pc: '70'
+            error occurred in contract 'InnerContract' at pc: '[..]'
             stack backtrace:
                0: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
                    at [..]lib.cairo:34:9
 
-            error occurred in contract 'OuterContract' at pc: '107'
+            error occurred in contract 'OuterContract' at pc: '[..]'
             stack backtrace:
                0: backtrace_panic::IInnerContractDispatcherImpl::inner
                    at [..]lib.cairo:22:1

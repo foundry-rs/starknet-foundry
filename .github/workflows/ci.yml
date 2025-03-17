@@ -152,6 +152,18 @@ jobs:
       - name: Run Data Transformer tests
         run: cargo test --release -p data-transformer
 
+  test-forge-debugging:
+    name: Test Forge Debugging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
+      - uses: software-mansion/setup-scarb@22f50f68eb6ffacfc173786dab19aa7d49b43441 # v1.5.0
+      - uses: software-mansion/setup-universal-sierra-compiler@58146c4184fa6ec5e8aaf02309ab85e35f782ed0 # v1.0.0
+      - name: Run Forge Debugging tests
+        run: cargo test --release -p forge --features debugging --test main e2e::debugging
+
   test-forge-scarb-plugin:
     name: Test Forge Scarb Plugin
     runs-on: ubuntu-latest
@@ -162,7 +174,8 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run Forge Scarb Plugin tests
-        run: cargo test --release -p snforge_scarb_plugin
+        working-directory: crates/snforge-scarb-plugin
+        run: cargo test --release
 
   test-cast:
     name: Test Cast
