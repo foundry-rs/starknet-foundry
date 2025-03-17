@@ -65,7 +65,7 @@ fn fork_simple_decorator() {
         node_rpc_url()
     ).as_str());
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -285,7 +285,7 @@ fn fork_cairo0_contract() {
         node_rpc_url()
     ).as_str());
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -385,7 +385,7 @@ fn get_block_info_in_forked_block() {
         Path::new("tests/data/contracts/block_info_checker.cairo"),
     ).unwrap());
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -406,7 +406,7 @@ fn fork_get_block_info_fails() {
         .as_str()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
     assert_case_output_contains(
@@ -445,7 +445,7 @@ fn incompatible_abi() {
     )
     .as_str());
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
