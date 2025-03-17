@@ -1,8 +1,8 @@
 use crate::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
-use crate::{NewArgs, CAIRO_EDITION};
-use anyhow::{anyhow, bail, ensure, Context, Ok, Result};
+use crate::{CAIRO_EDITION, NewArgs};
+use anyhow::{Context, Ok, Result, anyhow, bail, ensure};
 use camino::Utf8PathBuf;
-use include_dir::{include_dir, Dir};
+use include_dir::{Dir, include_dir};
 use indoc::formatdoc;
 use scarb_api::ScarbCommand;
 use semver::Version;
@@ -11,7 +11,7 @@ use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use toml_edit::{value, Array, ArrayOfTables, DocumentMut, Item, Table, Value};
+use toml_edit::{Array, ArrayOfTables, DocumentMut, Item, Table, Value, value};
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 

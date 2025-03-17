@@ -1,9 +1,9 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::{Args, ValueEnum};
 use promptly::prompt;
 use scarb_api::StarknetContractArtifacts;
-use sncast::{response::structs::VerifyResponse, Network};
+use sncast::{Network, response::structs::VerifyResponse};
 use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, fmt};
 pub mod explorer;

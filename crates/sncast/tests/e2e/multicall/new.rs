@@ -1,7 +1,7 @@
 use crate::helpers::constants::ACCOUNT_FILE_PATH;
 use crate::helpers::runner::runner;
 use indoc::{formatdoc, indoc};
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains, AsOutput};
+use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
 use sncast::helpers::constants::DEFAULT_MULTICALL_CONTENTS;
 use tempfile::tempdir;
 

@@ -1,7 +1,7 @@
 use conversions::{byte_array::ByteArray, serde::deserialize::CairoDeserialize};
 use serde::{
-    de::{self, MapAccess, Visitor},
     Deserialize, Deserializer,
+    de::{self, MapAccess, Visitor},
 };
 use starknet_types_core::felt::Felt;
 use std::str::FromStr;

@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
-use quote::{quote, quote_spanned, ToTokens};
+use quote::{ToTokens, quote, quote_spanned};
 use syn::spanned::Spanned;
-use syn::{parse_macro_input, parse_quote, Data, DeriveInput, Fields, GenericParam, Generics};
+use syn::{Data, DeriveInput, Fields, GenericParam, Generics, parse_macro_input, parse_quote};
 
 // works by calling `CairoSerialize::serialize(writer)` on all fields of struct
 // for enums by writing 1 felt that is number of variant, then variant members

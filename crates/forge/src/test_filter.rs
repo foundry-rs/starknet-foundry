@@ -1,7 +1,7 @@
 use crate::shared_cache::FailedTestsCache;
 use anyhow::Result;
 use forge_runner::{
-    package_tests::with_config_resolved::TestCaseWithResolvedConfig, TestCaseFilter,
+    TestCaseFilter, package_tests::with_config_resolved::TestCaseWithResolvedConfig,
 };
 
 #[derive(Debug, PartialEq)]
@@ -152,7 +152,7 @@ mod tests {
     };
     use forge_runner::package_tests::{TestDetails, TestTargetLocation};
     use std::sync::Arc;
-    use universal_sierra_compiler_api::{compile_sierra, SierraType};
+    use universal_sierra_compiler_api::{SierraType, compile_sierra};
 
     fn program_for_testing() -> ProgramArtifact {
         ProgramArtifact {

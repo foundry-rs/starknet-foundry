@@ -11,7 +11,7 @@ use blockifier::execution::deprecated_syscalls::{
 };
 use blockifier::execution::entry_point::{CallEntryPoint, CallType, ConstructorContext};
 use blockifier::execution::execution_utils::{
-    execute_deployment, write_maybe_relocatable, ReadOnlySegment,
+    ReadOnlySegment, execute_deployment, write_maybe_relocatable,
 };
 use conversions::FromConv;
 
@@ -23,7 +23,7 @@ use num_traits::ToPrimitive;
 use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{
-    calculate_contract_address, ClassHash, ContractAddress, EntryPointSelector,
+    ClassHash, ContractAddress, EntryPointSelector, calculate_contract_address,
 };
 use starknet_api::transaction::fields::Calldata;
 use starknet_types_core::felt::Felt;

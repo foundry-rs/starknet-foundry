@@ -1,7 +1,7 @@
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use serde::Serialize;
-use sncast::{response::structs::VerifyResponse, Network};
+use sncast::{Network, response::structs::VerifyResponse};
 use starknet_types_core::felt::Felt;
 
 #[derive(Serialize, Debug)]
@@ -16,7 +16,7 @@ pub trait VerificationInterface {
     fn new(network: Network, workspace_dir: Utf8PathBuf) -> Self;
 
     async fn verify(&self, contract_address: Felt, contract_name: String)
-        -> Result<VerifyResponse>;
+    -> Result<VerifyResponse>;
 
     fn gen_explorer_url(&self) -> Result<String>;
 }

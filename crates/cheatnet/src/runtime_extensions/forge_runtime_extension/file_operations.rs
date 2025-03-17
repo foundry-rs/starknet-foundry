@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use conversions::felt::TryInferFormat;
 use conversions::{
     byte_array::ByteArray, serde::serialize::SerializeToFeltVec, string::TryFromDecStr,

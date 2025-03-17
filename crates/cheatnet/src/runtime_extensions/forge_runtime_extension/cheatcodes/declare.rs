@@ -5,8 +5,8 @@ use crate::runtime_extensions::forge_runtime_extension::{
 use anyhow::{Context, Result};
 use blockifier::execution::contract_class::{CompiledClassV1, RunnableCompiledClass};
 use blockifier::state::{errors::StateError, state_api::State};
-use conversions::serde::serialize::CairoSerialize;
 use conversions::IntoConv;
+use conversions::serde::serialize::CairoSerialize;
 use starknet::core::types::contract::SierraClass;
 use starknet_api::contract_class::SierraVersion;
 use starknet_api::core::{ClassHash, CompiledClassHash};

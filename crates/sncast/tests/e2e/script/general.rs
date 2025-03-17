@@ -9,7 +9,7 @@ use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stderr_contains;
 use sncast::get_default_state_file_name;
-use sncast::state::state_file::{read_txs_from_state_file, ScriptTransactionStatus};
+use sncast::state::state_file::{ScriptTransactionStatus, read_txs_from_state_file};
 use tempfile::tempdir;
 use test_case::test_case;
 
@@ -369,10 +369,12 @@ async fn test_run_script_twice_with_state_file_enabled() {
     .unwrap();
     let tx_entries_after_first_run = read_txs_from_state_file(&state_file_path).unwrap().unwrap();
 
-    assert!(tx_entries_after_first_run
-        .transactions
-        .iter()
-        .all(|(_, value)| value.status == ScriptTransactionStatus::Success));
+    assert!(
+        tx_entries_after_first_run
+            .transactions
+            .iter()
+            .all(|(_, value)| value.status == ScriptTransactionStatus::Success)
+    );
 
     assert_eq!(tx_entries_after_first_run.transactions.len(), 3);
 

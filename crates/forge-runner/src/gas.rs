@@ -13,8 +13,8 @@ use blockifier::utils::u64_from_usize;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::ExtendedStateReader;
 use starknet_api::execution_resources::{GasAmount, GasVector};
-use starknet_api::transaction::fields::GasVectorComputationMode;
 use starknet_api::transaction::EventContent;
+use starknet_api::transaction::fields::GasVectorComputationMode;
 use std::collections::HashSet;
 
 pub fn calculate_used_gas(

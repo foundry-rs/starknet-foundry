@@ -9,10 +9,10 @@ use conversions::string::IntoHexStr;
 use serde_json::{json, to_string_pretty};
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use snapbox::assert_matches;
+use sncast::AccountType;
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH,
 };
-use sncast::AccountType;
 use std::fs;
 use tempfile::tempdir;
 use test_case::test_case;

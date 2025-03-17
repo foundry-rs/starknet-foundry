@@ -1,8 +1,8 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use reqwest::StatusCode;
-use sncast::response::structs::VerifyResponse;
 use sncast::Network;
+use sncast::response::structs::VerifyResponse;
 use starknet_types_core::felt::Felt;
 use std::env;
 use std::ffi::OsStr;

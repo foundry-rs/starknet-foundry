@@ -6,7 +6,7 @@ use blockifier::{
         entry_point::{CallEntryPoint, CallType},
         execution_utils::ReadOnlySegment,
         syscalls::{
-            hint_processor::{create_retdata_segment, SyscallExecutionError, SyscallHintProcessor},
+            hint_processor::{SyscallExecutionError, SyscallHintProcessor, create_retdata_segment},
             syscall_base::SyscallResult,
         },
     },

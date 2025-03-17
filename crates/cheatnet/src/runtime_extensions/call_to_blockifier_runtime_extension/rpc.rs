@@ -14,7 +14,7 @@ use blockifier::execution::{
 use blockifier::state::errors::StateError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use conversions::{
-    byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr, IntoConv,
+    IntoConv, byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr,
 };
 use shared::utils::build_readable_text;
 use starknet_api::{

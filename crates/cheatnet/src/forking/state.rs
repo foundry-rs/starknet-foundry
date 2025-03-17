@@ -30,7 +30,7 @@ use std::io::Read;
 use std::sync::Arc;
 use tokio::runtime::Handle;
 use tokio::task;
-use universal_sierra_compiler_api::{compile_sierra, SierraType};
+use universal_sierra_compiler_api::{SierraType, compile_sierra};
 use url::Url;
 
 #[derive(Debug)]

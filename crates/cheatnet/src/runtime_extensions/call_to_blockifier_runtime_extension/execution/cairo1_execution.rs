@@ -1,19 +1,19 @@
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
     ContractClassEntryPointExecutionResult, EntryPointExecutionErrorWithTrace, OnErrorLastPc,
 };
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use crate::runtime_extensions::common::get_relocated_vm_trace;
 use blockifier::execution::contract_class::CompiledClassV1;
 use blockifier::execution::entry_point_execution::{
-    finalize_execution, prepare_call_arguments, VmExecutionContext,
+    VmExecutionContext, finalize_execution, prepare_call_arguments,
 };
 use blockifier::execution::errors::PreExecutionError;
 use blockifier::execution::execution_utils::{
-    write_felt, write_maybe_relocatable, ReadOnlySegments,
+    ReadOnlySegments, write_felt, write_maybe_relocatable,
 };
 use blockifier::execution::stack_trace::{
-    extract_trailing_cairo1_revert_trace, Cairo1RevertHeader,
+    Cairo1RevertHeader, extract_trailing_cairo1_revert_trace,
 };
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::versioned_constants::GasCosts;

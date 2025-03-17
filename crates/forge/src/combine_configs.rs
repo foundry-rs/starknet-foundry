@@ -4,7 +4,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::Contr
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
-use rand::{thread_rng, RngCore};
+use rand::{RngCore, thread_rng};
 use std::env;
 use std::ffi::OsString;
 use std::num::NonZeroU32;

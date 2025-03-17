@@ -1,14 +1,14 @@
 use crate::starknet_commands::declare::Declare;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
-use crate::{get_account, WaitForTx};
-use anyhow::{anyhow, Context, Result};
+use crate::{WaitForTx, get_account};
+use anyhow::{Context, Result, anyhow};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
 use cairo_lang_casm::hints::Hint;
-use cairo_lang_runnable_utils::builder::{create_code_footer, EntryCodeConfig, RunnableBuilder};
+use cairo_lang_runnable_utils::builder::{EntryCodeConfig, RunnableBuilder, create_code_footer};
 use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{Arg, RunResultValue, SierraCasmRunner};
@@ -24,13 +24,13 @@ use clap::Args;
 use conversions::byte_array::ByteArray;
 use conversions::serde::deserialize::BufferReader;
 use forge_runner::running::{has_segment_arena, syscall_handler_offset};
-use runtime::starknet::context::{build_context, SerializableBlockInfo};
+use runtime::starknet::context::{SerializableBlockInfo, build_context};
 use runtime::starknet::state::DictStateReader;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic, StarknetRuntime,
     SyscallHandlingResult,
 };
-use scarb_api::{package_matches_version_requirement, StarknetContractArtifacts};
+use scarb_api::{StarknetContractArtifacts, package_matches_version_requirement};
 use scarb_metadata::{Metadata, PackageMetadata};
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::print::print_as_warning;
@@ -47,8 +47,8 @@ use sncast::state::hashing::{
 use sncast::state::state_file::StateManager;
 use starknet::accounts::{Account, SingleOwnerAccount};
 use starknet::core::types::{BlockId, BlockTag::Pending};
-use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
+use starknet::providers::jsonrpc::HttpTransport;
 use starknet::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;

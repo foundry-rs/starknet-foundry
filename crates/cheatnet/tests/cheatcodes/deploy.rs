@@ -1,4 +1,4 @@
-use crate::common::assertions::{assert_success, ClassHashAssert};
+use crate::common::assertions::{ClassHashAssert, assert_success};
 use crate::common::state::create_cached_state;
 use crate::common::{
     call_contract, deploy_at_wrapper, deploy_contract, deploy_wrapper, felt_selector_from_name,
@@ -8,11 +8,11 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
 };
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::state::CheatnetState;
-use conversions::felt::FromShortString;
 use conversions::IntoConv;
+use conversions::felt::FromShortString;
 use runtime::EnhancedHintError;
 use starknet_api::core::ContractAddress;
 use starknet_types_core::felt::Felt;

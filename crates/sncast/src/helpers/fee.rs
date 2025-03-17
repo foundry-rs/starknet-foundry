@@ -1,10 +1,10 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::Args;
-use conversions::{serde::deserialize::CairoDeserialize, FromConv, TryFromConv};
+use conversions::{FromConv, TryFromConv, serde::deserialize::CairoDeserialize};
 use starknet::core::types::BlockId;
 use starknet::providers::Provider;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
-use std::num::{NonZeroU128, NonZeroU64};
+use std::num::{NonZeroU64, NonZeroU128};
 
 #[derive(Args, Debug, Clone)]
 pub struct FeeArgs {

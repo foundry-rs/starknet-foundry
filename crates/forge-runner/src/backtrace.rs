@@ -1,11 +1,11 @@
 use anyhow::{Context, Result};
+use cairo_annotations::annotations::TryFromDebugInfo;
 use cairo_annotations::annotations::coverage::{
     CodeLocation, ColumnNumber, CoverageAnnotationsV1, LineNumber, VersionedCoverageAnnotations,
 };
 use cairo_annotations::annotations::profiler::{
     FunctionName, ProfilerAnnotationsV1, VersionedProfilerAnnotations,
 };
-use cairo_annotations::annotations::TryFromDebugInfo;
 use cairo_lang_sierra::program::StatementIdx;
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet_classes::contract_class::ContractClass;
@@ -195,7 +195,7 @@ struct BacktraceStack<'a> {
 impl Display for Backtrace<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let function_name = &self.function_name.0;
-        let path = truncate_at_char(&self.code_location.0 .0, '[');
+        let path = truncate_at_char(&self.code_location.0.0, '[');
         let line = self.code_location.1.start.line + LineNumber(1); // most editors start line numbers from 1
         let col = self.code_location.1.start.col + ColumnNumber(1); // most editors start column numbers from 1
 
