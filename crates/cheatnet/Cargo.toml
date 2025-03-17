@@ -1,6 +1,6 @@
 [package]
 name = "cheatnet"
-version = "1.0.0"
+version.workspace = true
 edition.workspace = true
 
 [features]
@@ -45,7 +45,6 @@ shared.workspace = true
 rand.workspace = true
 
 [dev-dependencies]
-futures.workspace = true
 ctor.workspace = true
 indoc.workspace = true
 rayon.workspace = true

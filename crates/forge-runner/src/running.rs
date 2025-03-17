@@ -414,6 +414,12 @@ fn extract_test_case_summary(
                         arguments: args,
                         fuzzer_args: result_with_info.fuzzer_args,
                         test_statistics: (),
+                        debugging_trace: cfg!(feature = "debugging").then(|| {
+                            debugging::Trace::from_call_trace(
+                                &result_with_info.call_trace,
+                                contracts_data,
+                            )
+                        }),
                     }
                 }
             }
@@ -426,6 +432,7 @@ fn extract_test_case_summary(
             arguments: args,
             fuzzer_args: Vec::default(),
             test_statistics: (),
+            debugging_trace: None,
         },
     }
 }
