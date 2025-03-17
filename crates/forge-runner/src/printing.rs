@@ -24,10 +24,7 @@ pub fn print_test_result(
                 test_statistics: FuzzingStatistics { runs },
                 gas_info,
                 ..
-            } => Some(format!(
-                " (runs: {runs}, gas: {{max: ~{}, min: ~{}, mean: ~{:.2}, std deviation: ~{:.2}}})",
-                gas_info.max, gas_info.min, gas_info.mean, gas_info.std_deviation
-            )),
+            } => Some(format!(" (runs: {runs}, {gas_info})",)),
             TestCaseSummary::Failed {
                 fuzzer_args,
                 test_statistics: FuzzingStatistics { runs },
@@ -40,7 +37,10 @@ pub fn print_test_result(
 
     let gas_usage = match any_test_result {
         AnyTestCaseSummary::Single(TestCaseSummary::Passed { gas_info, .. }) => {
-            format!(" (gas: ~{gas_info})")
+            format!(
+                " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
+                gas_info.l1_gas, gas_info.l1_data_gas, gas_info.l2_gas
+            )
         }
         _ => String::new(),
     };
