@@ -1,8 +1,8 @@
+use crate::CheatnetState;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::{
     CheatArguments, Operation,
 };
 use crate::state::CheatSpan;
-use crate::{CHEAT_MAGIC, CheatnetState};
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use starknet_api::block::BlockHash;
@@ -27,14 +27,13 @@ impl CheatnetState {
                     .remove(&(contract_address, block_number));
 
                 if self.global_block_hash.contains_key(&block_number) {
-                    self.block_hash_contracts.insert(
-                        (contract_address, block_number),
-                        (CheatSpan::TargetCalls(CHEAT_MAGIC), Felt::from(CHEAT_MAGIC)),
-                    );
+                    let (_, except) = self.global_block_hash.get_mut(&block_number).unwrap();
+                    except.push(contract_address);
                 }
             }
             Operation::StartGlobal(block_hash) => {
-                self.global_block_hash.insert(block_number, block_hash);
+                self.global_block_hash
+                    .insert(block_number, (block_hash, vec![]));
 
                 self.block_hash_contracts
                     .retain(|(_, bn), _| *bn != block_number);
@@ -85,7 +84,7 @@ impl CheatnetState {
         block_number: u64,
         syscall_handler: &SyscallHintProcessor,
     ) -> SyscallResult<BlockHash> {
-        if let Some((cheat_span, mut block_hash)) = self
+        if let Some((cheat_span, block_hash)) = self
             .block_hash_contracts
             .get(&(contract_address, block_number))
             .copied()
@@ -94,10 +93,6 @@ impl CheatnetState {
                 CheatSpan::TargetCalls(1) => {
                     self.block_hash_contracts
                         .remove(&(contract_address, block_number));
-                }
-                CheatSpan::TargetCalls(num) if num == CHEAT_MAGIC => {
-                    // If CHEAT_MAGIC is set, fall back to actual block hash
-                    block_hash = syscall_handler.base.get_block_hash(block_number)?;
                 }
                 CheatSpan::TargetCalls(num) => {
                     self.block_hash_contracts.insert(
@@ -110,8 +105,10 @@ impl CheatnetState {
             return Ok(BlockHash(StarkHash::from(block_hash)));
         }
 
-        if let Some(block_hash) = self.global_block_hash.get(&block_number).copied() {
-            return Ok(BlockHash(StarkHash::from(block_hash)));
+        if let Some((block_hash, except)) = self.global_block_hash.get(&block_number) {
+            if !except.contains(&contract_address) {
+                return Ok(BlockHash(StarkHash::from(*block_hash)));
+            }
         }
 
         Ok(BlockHash(

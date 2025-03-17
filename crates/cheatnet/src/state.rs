@@ -335,7 +335,7 @@ pub struct CheatnetState {
     pub encountered_errors: Vec<EncounteredError>,
     pub fuzzer_args: Vec<String>,
     pub block_hash_contracts: HashMap<(ContractAddress, u64), (CheatSpan, Felt)>,
-    pub global_block_hash: HashMap<u64, Felt>,
+    pub global_block_hash: HashMap<u64, (Felt, Vec<ContractAddress>)>,
 }
 
 impl Default for CheatnetState {
