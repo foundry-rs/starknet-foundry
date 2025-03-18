@@ -128,7 +128,6 @@ fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
 ) -> bool {
     let expected_event: Event = expected_event.into();
 
-    let mut i = 0;
     let mut is_emitted = false;
     for (from, event) in events
         .clone() {
@@ -136,8 +135,6 @@ fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
                 is_emitted = true;
                 break;
             };
-
-            i += 1;
         };
     return is_emitted;
 }
