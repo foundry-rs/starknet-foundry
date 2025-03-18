@@ -74,7 +74,7 @@ impl EventSpyAssertionsTraitImpl<
 
         while i < events.len() {
             let (from, event) = events.at(i);
-            let emitted = is_emitted(@received_events.events, *from, event);
+            let emitted = received_events.is_emitted(*from, event);
 
             if !emitted {
                 let from: felt252 = (*from).into();
@@ -91,7 +91,7 @@ impl EventSpyAssertionsTraitImpl<
 
         while i < events.len() {
             let (from, event) = events.at(i);
-            let emitted = is_emitted(@received_events.events, *from, event);
+            let emitted = received_events.is_emitted(*from, event);
 
             if emitted {
                 let from: felt252 = (*from).into();
@@ -103,41 +103,27 @@ impl EventSpyAssertionsTraitImpl<
     }
 }
 
-pub trait IsEmitted {
-    fn is_emitted(
-        self: @Array<(ContractAddress, Event)>,
-        expected_emitted_by: ContractAddress,
-        expected_event: @Event
-    ) -> bool;
+pub trait IsEmitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> {
+    fn is_emitted(self: @Events, expected_emitted_by: ContractAddress, expected_event: @T) -> bool;
 }
 
-pub impl IsEmittedImpl of IsEmitted {
-    fn is_emitted(
-        self: @Array<(ContractAddress, Event)>,
-        expected_emitted_by: ContractAddress,
-        expected_event: @Event
-    ) -> bool {
-        is_emitted(self, expected_emitted_by, expected_event)
+pub impl IsEmittedImpl<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> of IsEmitted<T> {
+    fn is_emitted(self: @Events, expected_emitted_by: ContractAddress, expected_event: @T) -> bool {
+        let expected_event: Event = expected_event.into();
+
+        let mut is_emitted = false;
+        for (from, event) in self
+            .events
+            .clone() {
+                if from == expected_emitted_by && event == expected_event {
+                    is_emitted = true;
+                    break;
+                };
+            };
+        return is_emitted;
     }
 }
 
-fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
-    events: @Array<(ContractAddress, Event)>,
-    expected_emitted_by: ContractAddress,
-    expected_event: @T
-) -> bool {
-    let expected_event: Event = expected_event.into();
-
-    let mut is_emitted = false;
-    for (from, event) in events
-        .clone() {
-            if from == expected_emitted_by && event == expected_event {
-                is_emitted = true;
-                break;
-            };
-        };
-    return is_emitted;
-}
 
 impl EventIntoImpl<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> of Into<T, Event> {
     fn into(self: T) -> Event {

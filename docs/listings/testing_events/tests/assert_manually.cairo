@@ -30,7 +30,7 @@ fn test_complex_assertions() {
 
     let expected_events = array![(contract_address, expected_event.clone())];
 
-    assert!(events.events.is_emitted(contract_address, @expected_event)); // Ad 3.
+    assert!(events.is_emitted(contract_address, @expected_event)); // Ad 3.
     assert!(events.events == expected_events); // Ad 4.
 
     let (from, event) = events.events.at(0); // Ad 5.
