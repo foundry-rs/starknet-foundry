@@ -9,6 +9,8 @@ use testing_events::contract::{
     SpyEventsChecker, ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait
 };
 
+use starknet::ContractAddress;
+
 #[test]
 fn test_complex_assertions() {
     let contract = declare("SpyEventsChecker").unwrap().contract_class();
@@ -23,14 +25,16 @@ fn test_complex_assertions() {
 
     assert(events.events.len() == 1, 'There should be one event');
 
-    let expected_event: Event = SpyEventsChecker::Event::FirstEvent(
+    let expected_event = SpyEventsChecker::Event::FirstEvent(
         SpyEventsChecker::FirstEvent { some_data: 123 }
-    )
-        .into();
-
-    let expected_events = array![(contract_address, expected_event.clone())];
+    );
 
     assert!(events.is_emitted(contract_address, @expected_event)); // Ad 3.
+
+    let expected_events: Array<(ContractAddress, Event)> = array![
+        (contract_address, expected_event.into())
+    ];
+
     assert!(events.events == expected_events); // Ad 4.
 
     let (from, event) = events.events.at(0); // Ad 5.
