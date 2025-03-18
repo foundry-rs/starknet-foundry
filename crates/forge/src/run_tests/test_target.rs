@@ -65,7 +65,11 @@ pub async fn run_for_test_target(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        print_test_result(&result, forge_config.output_config.detailed_resources);
+        print_test_result(
+            &result,
+            forge_config.output_config.detailed_resources,
+            forge_config.test_runner_config.tracked_resource,
+        );
 
         let trace_path = maybe_save_trace_and_profile(
             &result,
