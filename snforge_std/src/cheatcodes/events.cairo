@@ -105,7 +105,7 @@ impl EventSpyAssertionsTraitImpl<
 
 pub trait IsEmitted {
     fn is_emitted(
-        events: @Array<(ContractAddress, Event)>,
+        self: @Array<(ContractAddress, Event)>,
         expected_emitted_by: ContractAddress,
         expected_event: @Event
     ) -> bool;
@@ -113,11 +113,11 @@ pub trait IsEmitted {
 
 pub impl IsEmittedImpl of IsEmitted {
     fn is_emitted(
-        events: @Array<(ContractAddress, Event)>,
+        self: @Array<(ContractAddress, Event)>,
         expected_emitted_by: ContractAddress,
         expected_event: @Event
     ) -> bool {
-        is_emitted(events, expected_emitted_by, expected_event)
+        is_emitted(self, expected_emitted_by, expected_event)
     }
 }
 
