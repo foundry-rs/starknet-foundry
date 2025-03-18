@@ -53,7 +53,7 @@ pub fn prepare_account_json(
         "private_key": format!("{:#x}", private_key.secret_scalar()),
         "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
         "address": format!("{address:#x}"),
-        "type": format!("{}", account_type).to_lowercase().replace("openzeppelin", "open_zeppelin"),
+        "type": format!("{account_type}").to_lowercase().replace("openzeppelin", "open_zeppelin"),
         "deployed": deployed,
         "legacy": legacy,
     });
