@@ -1,8 +1,11 @@
+use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use indoc::indoc;
 use test_utils::runner::{TestCase, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
+
+const ALLOWED_ERROR: f64 = 0.05;
 
 #[test]
 fn fuzzed_argument() {
@@ -21,7 +24,7 @@ fn fuzzed_argument() {
     "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -43,7 +46,7 @@ fn fuzzer_different_types() {
     "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -65,7 +68,7 @@ fn fuzzed_while_loop() {
     "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     let test_target_summary = TestCase::find_test_result(&result);
     let AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed { gas_info, .. }) =
@@ -75,8 +78,16 @@ fn fuzzed_while_loop() {
     };
 
     // TODO (#2926)
-    assert_eq!(gas_info.min, 2);
-    assert_eq!(gas_info.max, 23);
-    assert!((gas_info.mean - 12.).abs() < f64::EPSILON);
-    assert!((gas_info.std_deviation - 6.24).abs() < 0.01);
+    assert_eq!(gas_info.l1_gas.min, 0);
+    assert_eq!(gas_info.l1_gas.max, 0);
+    assert!(gas_info.l1_gas.mean < ALLOWED_ERROR);
+    assert!(gas_info.l1_gas.std_deviation < ALLOWED_ERROR);
+    assert_eq!(gas_info.l1_data_gas.min, 0);
+    assert_eq!(gas_info.l1_data_gas.max, 0);
+    assert!(gas_info.l1_data_gas.mean < ALLOWED_ERROR);
+    assert!(gas_info.l1_data_gas.std_deviation < ALLOWED_ERROR);
+    // different scarbs yield different results here, we do not care about the values that much
+    assert!(gas_info.l2_gas.min < gas_info.l2_gas.max);
+    assert!(gas_info.l2_gas.mean > 0.0);
+    assert!(gas_info.l2_gas.std_deviation > 0.0);
 }

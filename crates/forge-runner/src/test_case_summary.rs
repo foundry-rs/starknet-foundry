@@ -13,39 +13,83 @@ use cheatnet::state::{CallTrace as InternalCallTrace, EncounteredError};
 use conversions::byte_array::ByteArray;
 use num_traits::Pow;
 use shared::utils::build_readable_text;
+use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
+use std::fmt;
 use std::option::Option;
 use std::rc::Rc;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasStatistics {
-    pub min: u128,
-    pub max: u128,
+    pub l1_gas: GasStatisticsComponent,
+    pub l1_data_gas: GasStatisticsComponent,
+    pub l2_gas: GasStatisticsComponent,
+}
+
+impl fmt::Display for GasStatistics {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "(l1_gas: {}, l1_data_gas: {}, l2_gas: {})",
+            self.l1_gas, self.l1_data_gas, self.l2_gas
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Default)]
+pub struct GasStatisticsComponent {
+    pub min: u64,
+    pub max: u64,
     pub mean: f64,
     pub std_deviation: f64,
 }
 
+impl GasStatisticsComponent {
+    #[must_use]
+    pub fn new(gas_usages: &[u64]) -> Self {
+        let mean = GasStatistics::mean(gas_usages);
+        Self {
+            min: *gas_usages.iter().min().unwrap(),
+            max: *gas_usages.iter().max().unwrap(),
+            mean,
+            std_deviation: GasStatistics::std_deviation(mean, gas_usages),
+        }
+    }
+}
+
+impl fmt::Display for GasStatisticsComponent {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{{max: ~{}, min: ~{}, mean: ~{:.2}, std deviation: ~{:.2}}}",
+            self.max, self.min, self.mean, self.std_deviation
+        )
+    }
+}
+
 impl GasStatistics {
     #[must_use]
-    pub fn new(gas_usages: &[u128]) -> Self {
-        let mean = Self::mean(gas_usages);
+    pub fn new(gas_usages: &[GasVector]) -> Self {
+        let l1_gas_values: Vec<u64> = gas_usages.iter().map(|gv| gv.l1_gas.0).collect();
+        let l1_data_gas_values: Vec<u64> = gas_usages.iter().map(|gv| gv.l1_data_gas.0).collect();
+        let l2_gas_values: Vec<u64> = gas_usages.iter().map(|gv| gv.l2_gas.0).collect();
 
         GasStatistics {
-            min: gas_usages.iter().min().copied().unwrap(),
-            max: gas_usages.iter().max().copied().unwrap(),
-            mean,
-            std_deviation: Self::std_deviation(mean, gas_usages),
+            l1_gas: { GasStatisticsComponent::new(l1_gas_values.as_ref()) },
+            l1_data_gas: { GasStatisticsComponent::new(l1_data_gas_values.as_ref()) },
+            l2_gas: { GasStatisticsComponent::new(l2_gas_values.as_ref()) },
         }
     }
 
-    #[expect(clippy::cast_precision_loss)]
-    fn mean(gas_usages: &[u128]) -> f64 {
-        (gas_usages.iter().sum::<u128>() / gas_usages.len() as u128) as f64
+    #[allow(clippy::cast_precision_loss)]
+    fn mean(gas_usages: &[u64]) -> f64 {
+        let sum: f64 = gas_usages.iter().map(|&x| x as f64).sum();
+        sum / gas_usages.len() as f64
     }
 
-    #[expect(clippy::cast_precision_loss)]
-    fn std_deviation(mean: f64, gas_usages: &[u128]) -> f64 {
+    #[allow(clippy::cast_precision_loss)]
+    fn std_deviation(mean: f64, gas_usages: &[u64]) -> f64 {
         let sum_squared_diff = gas_usages
             .iter()
             .map(|&x| (x as f64 - mean).pow(2))
@@ -77,7 +121,7 @@ impl TestType for Fuzzing {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Single;
 impl TestType for Single {
-    type GasInfo = u128;
+    type GasInfo = GasVector;
     type TestStatistics = ();
     type TraceData = VersionedProfilerCallTrace;
 }
@@ -93,6 +137,8 @@ pub enum TestCaseSummary<T: TestType> {
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt>,
+        /// Trace of the test case run
+        debugging_trace: Option<debugging::Trace>,
         /// Information on used gas
         gas_info: <T as TestType>::GasInfo,
         /// Resources used during test
@@ -108,6 +154,8 @@ pub enum TestCaseSummary<T: TestType> {
         name: String,
         /// Message returned by the test case run
         msg: Option<String>,
+        /// Trace of the test case run
+        debugging_trace: Option<debugging::Trace>,
         /// Arguments used in the test case run
         arguments: Vec<Felt>,
         /// Random arguments used in the fuzz test case run
@@ -124,8 +172,8 @@ pub enum TestCaseSummary<T: TestType> {
     Skipped {},
 }
 
-#[expect(clippy::large_enum_variant)]
 #[derive(Debug)]
+#[expect(clippy::large_enum_variant)]
 pub enum AnyTestCaseSummary {
     Fuzzing(TestCaseSummary<Fuzzing>),
     Single(TestCaseSummary<Single>),
@@ -150,6 +198,19 @@ impl<T: TestType> TestCaseSummary<T> {
             _ => None,
         }
     }
+
+    #[must_use]
+    pub fn debugging_trace(&self) -> Option<&debugging::Trace> {
+        match self {
+            TestCaseSummary::Passed {
+                debugging_trace, ..
+            }
+            | TestCaseSummary::Failed {
+                debugging_trace, ..
+            } => debugging_trace.as_ref(),
+            _ => None,
+        }
+    }
 }
 
 impl TestCaseSummary<Fuzzing> {
@@ -170,9 +231,10 @@ impl TestCaseSummary<Fuzzing> {
                 used_resources: _,
                 test_statistics: (),
                 trace_data: _,
+                debugging_trace,
             } => {
                 let runs = results.len();
-                let gas_usages: Vec<u128> = results
+                let gas_usages: Vec<GasVector> = results
                     .into_iter()
                     .map(|a| match a {
                         TestCaseSummary::Passed { gas_info, .. } => gas_info,
@@ -184,10 +246,11 @@ impl TestCaseSummary<Fuzzing> {
                     name,
                     msg,
                     arguments,
-                    gas_info: GasStatistics::new(&gas_usages),
+                    gas_info: GasStatistics::new(gas_usages.as_ref()),
                     used_resources: UsedResources::default(),
                     test_statistics: FuzzingStatistics { runs },
                     trace_data: (),
+                    debugging_trace,
                 }
             }
             TestCaseSummary::Failed {
@@ -195,6 +258,7 @@ impl TestCaseSummary<Fuzzing> {
                 msg,
                 arguments,
                 fuzzer_args,
+                debugging_trace,
                 test_statistics: (),
             } => TestCaseSummary::Failed {
                 name,
@@ -204,6 +268,7 @@ impl TestCaseSummary<Fuzzing> {
                 test_statistics: FuzzingStatistics {
                     runs: results.len(),
                 },
+                debugging_trace,
             },
             TestCaseSummary::Ignored { name } => TestCaseSummary::Ignored { name: name.clone() },
             TestCaseSummary::Skipped {} => TestCaseSummary::Skipped {},
@@ -219,7 +284,7 @@ impl TestCaseSummary<Single> {
         test_case: &TestCaseWithResolvedConfig,
         arguments: Vec<Felt>,
         fuzzer_args: Vec<String>,
-        gas: u128,
+        gas: GasVector,
         used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
         encountered_errors: &[EncounteredError],
@@ -229,6 +294,10 @@ impl TestCaseSummary<Single> {
         let name = test_case.name.clone();
         let msg = extract_result_data(&run_result, &test_case.config.expected_result)
             .map(|msg| add_backtrace_footer(msg, contracts_data, encountered_errors));
+
+        let debugging_trace = cfg!(feature = "debugging")
+            .then(|| debugging::Trace::from_call_trace(call_trace, contracts_data));
+
         match run_result.value {
             RunResultValue::Success(_) => match &test_case.config.expected_result {
                 ExpectedTestResult::Success => {
@@ -244,6 +313,7 @@ impl TestCaseSummary<Single> {
                             contracts_data,
                             versioned_program_path,
                         )),
+                        debugging_trace,
                     };
                     check_available_gas(test_case.config.available_gas, summary)
                 }
@@ -253,6 +323,7 @@ impl TestCaseSummary<Single> {
                     arguments,
                     fuzzer_args,
                     test_statistics: (),
+                    debugging_trace,
                 },
             },
             RunResultValue::Panic(value) => match &test_case.config.expected_result {
@@ -262,6 +333,7 @@ impl TestCaseSummary<Single> {
                     arguments,
                     fuzzer_args,
                     test_statistics: (),
+                    debugging_trace,
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
                     ExpectedPanicValue::Exact(expected) if !is_matching(&value, expected) => {
@@ -271,6 +343,7 @@ impl TestCaseSummary<Single> {
                             arguments,
                             fuzzer_args,
                             test_statistics: (),
+                            debugging_trace,
                         }
                     }
                     _ => TestCaseSummary::Passed {
@@ -285,6 +358,7 @@ impl TestCaseSummary<Single> {
                             contracts_data,
                             versioned_program_path,
                         )),
+                        debugging_trace,
                     },
                 },
             },
@@ -381,6 +455,14 @@ impl AnyTestCaseSummary {
     }
 
     #[must_use]
+    pub fn debugging_trace(&self) -> Option<&debugging::Trace> {
+        match self {
+            AnyTestCaseSummary::Fuzzing(case) => case.debugging_trace(),
+            AnyTestCaseSummary::Single(case) => case.debugging_trace(),
+        }
+    }
+
+    #[must_use]
     pub fn is_passed(&self) -> bool {
         matches!(
             self,
@@ -414,5 +496,82 @@ impl AnyTestCaseSummary {
             AnyTestCaseSummary::Single(TestCaseSummary::Ignored { .. })
                 | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Ignored { .. })
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use starknet_api::execution_resources::GasAmount;
+
+    const FLOAT_ERROR: f64 = 0.01;
+
+    #[test]
+    fn test_mean_basic() {
+        let data = [1, 2, 3, 4, 5];
+        let result = GasStatistics::mean(&data);
+        assert!((result - 3.0).abs() < FLOAT_ERROR);
+    }
+
+    #[test]
+    fn test_mean_single_element() {
+        let data = [42];
+        let result = GasStatistics::mean(&data);
+        assert!((result - 42.0).abs() < FLOAT_ERROR);
+    }
+
+    #[test]
+    fn test_std_deviation_basic() {
+        let data = [1, 2, 3, 4, 5];
+        let mean_value = GasStatistics::mean(&data);
+        let result = GasStatistics::std_deviation(mean_value, &data);
+        assert!((result - 1.414).abs() < FLOAT_ERROR);
+    }
+
+    #[test]
+    fn test_std_deviation_single_element() {
+        let data = [10];
+        let mean_value = GasStatistics::mean(&data);
+        let result = GasStatistics::std_deviation(mean_value, &data);
+        assert!(result.abs() < FLOAT_ERROR);
+    }
+
+    #[test]
+    fn test_gas_statistics_new() {
+        let gas_usages = vec![
+            GasVector {
+                l1_gas: GasAmount(10),
+                l1_data_gas: GasAmount(20),
+                l2_gas: GasAmount(30),
+            },
+            GasVector {
+                l1_gas: GasAmount(20),
+                l1_data_gas: GasAmount(40),
+                l2_gas: GasAmount(60),
+            },
+            GasVector {
+                l1_gas: GasAmount(30),
+                l1_data_gas: GasAmount(60),
+                l2_gas: GasAmount(90),
+            },
+        ];
+
+        let stats = GasStatistics::new(&gas_usages);
+
+        assert_eq!(stats.l1_gas.min, 10);
+        assert_eq!(stats.l1_data_gas.min, 20);
+        assert_eq!(stats.l2_gas.min, 30);
+
+        assert_eq!(stats.l1_gas.max, 30);
+        assert_eq!(stats.l1_data_gas.max, 60);
+        assert_eq!(stats.l2_gas.max, 90);
+
+        assert!((stats.l1_gas.mean - 20.0).abs() < FLOAT_ERROR);
+        assert!((stats.l1_data_gas.mean - 40.0).abs() < FLOAT_ERROR);
+        assert!((stats.l2_gas.mean - 60.0).abs() < FLOAT_ERROR);
+
+        assert!((stats.l1_gas.std_deviation - 8.165).abs() < FLOAT_ERROR);
+        assert!((stats.l1_data_gas.std_deviation - 16.33).abs() < FLOAT_ERROR);
+        assert!((stats.l2_gas.std_deviation - 24.49).abs() < FLOAT_ERROR);
     }
 }

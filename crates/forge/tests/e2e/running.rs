@@ -565,8 +565,8 @@ fn with_panic_data_decoding() {
         Failure data:
             (0x7b ('{'), 0x616161 ('aaa'), 0x800000000000011000000000000000000000000000000000000000000000000, 0x98, 0x7c ('|'), 0x95)
 
-        [PASS] panic_decoding_integrationtest::test_panic_decoding::test_simple2 (gas: [..])
-        [PASS] panic_decoding_integrationtest::test_panic_decoding::test_simple (gas: [..])
+        [PASS] panic_decoding_integrationtest::test_panic_decoding::test_simple2 (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+        [PASS] panic_decoding_integrationtest::test_panic_decoding::test_simple (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] panic_decoding_integrationtest::test_panic_decoding::test_assert_eq
 
         Failure data:
@@ -720,12 +720,12 @@ fn should_panic() {
         Failure data:
             Expected to panic but didn't
 
-        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_no_data (gas: [..])
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_no_data (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
 
         Success data:
             0x0 ('')
 
-        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_check_data (gas: [..])
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_check_data (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_not_matching_suffix
 
         Failure data:
@@ -733,8 +733,8 @@ fn should_panic() {
             Actual:    [0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x0, 0x546869732077696c6c2070616e6963, 0xf] (This will panic)
             Expected:  [0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x0, 0x77696c6c2070616e696363, 0xb] (will panicc)
 
-        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_match_suffix (gas: [..])
-        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_felt_matching (gas: [..])
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_match_suffix (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_felt_matching (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_felt_with_byte_array
 
         Failure data:
@@ -742,7 +742,7 @@ fn should_panic() {
             Actual:    [0x546869732077696c6c2070616e6963] (This will panic)
             Expected:  [0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3, 0x0, 0x546869732077696c6c2070616e6963, 0xf] (This will panic)
 
-        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_multiple_messages (gas: [..])
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_multiple_messages (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
 
         Failure data:
@@ -781,7 +781,9 @@ fn incompatible_snforge_std_version_warning() {
         .unwrap()
         .parse::<DocumentMut>()
         .unwrap();
-    scarb_toml["dev-dependencies"]["snforge_std"] = value("0.34.0");
+    scarb_toml["dev-dependencies"]["snforge_std"] = value("0.34.1");
+    // TODO(#3069)
+    scarb_toml["dev-dependencies"]["snforge_scarb_plugin"] = value("0.34.1");
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
     let output = test_runner(&temp).assert().failure();
@@ -793,28 +795,19 @@ fn incompatible_snforge_std_version_warning() {
         [..]Compiling[..]
         [..]Finished[..]
 
-
-        Collected 4 test(s) from steps package
-        Running 4 test(s) from src/
-        [PASS] steps::tests::steps_much_less_than_10000000 [..]
+        Collected 2 test(s) from steps package
+        Running 2 test(s) from src/
+        [PASS] steps::tests::steps_less_than_10000000 [..]
         [FAIL] steps::tests::steps_more_than_10000000
 
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
             Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps
 
-        [FAIL] steps::tests::steps_much_more_than_10000000
-
-        Failure data:
-            Could not reach the end of the program. RunResources has no remaining steps.
-            Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps
-
-        [PASS] steps::tests::steps_less_than_10000000 [..]
-        Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
         Failures:
             steps::tests::steps_more_than_10000000
-            steps::tests::steps_much_more_than_10000000
         "},
     );
 }
@@ -841,6 +834,33 @@ fn detailed_resources_flag() {
                 steps: [..]
                 memory holes: [..]
                 builtins: ([..])
+                syscalls: ([..])
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        "},
+    );
+}
+
+#[test]
+#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
+fn detailed_resources_flag_sierra_gas() {
+    let temp = setup_package("erc20_package");
+    let output = test_runner(&temp)
+        .arg("--detailed-resources")
+        .arg("--tracked-resource")
+        .arg("sierra-gas")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 1 test(s) from erc20_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] erc20_package_integrationtest::test_complex::complex[..]
+                sierra_gas_consumed: ([..])
                 syscalls: ([..])
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "},
@@ -906,6 +926,30 @@ fn call_nonexistent_selector() {
         Running 1 test(s) from tests/
         [PASS] nonexistent_selector_integrationtest::test_contract::test_unwrapped_call_contract_syscall [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        "},
+    );
+}
+
+#[test]
+#[cfg_attr(feature = "scarb_since_2_10", ignore)]
+fn sierra_gas_with_older_scarb() {
+    let temp = setup_package("erc20_package");
+    let output = test_runner(&temp)
+        .arg("--detailed-resources")
+        .arg("--tracked-resource")
+        .arg("sierra-gas")
+        .assert()
+        .failure();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        Checking requirements
+        [..]Scarb Version [..] doesn't satisfy minimal 2.10.0[..]
+        [..]This version of scarb is the minimum required in order to support sierra gas tracking (it comes with sierra >= 1.7.0 support)[..]
+        [..]Follow instructions from https://docs.swmansion.com/scarb/download.html[..]
+        [..]
+        [ERROR] Requirements not satisfied
         "},
     );
 }

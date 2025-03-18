@@ -78,6 +78,14 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                     SyscallSelector::Deploy,
                 )
                 .map(|()| SyscallHandlingResult::Handled),
+            SyscallSelector::GetBlockHash => self
+                .execute_syscall(
+                    syscall_handler,
+                    vm,
+                    cheated_syscalls::get_block_hash_syscall,
+                    SyscallSelector::GetBlockHash,
+                )
+                .map(|()| SyscallHandlingResult::Handled),
             _ => Ok(SyscallHandlingResult::Forwarded),
         }
     }
@@ -122,6 +130,7 @@ fn get_syscall_cost(
         SyscallSelector::CallContract => gas_costs.syscalls.call_contract,
         SyscallSelector::Deploy => gas_costs.syscalls.deploy,
         SyscallSelector::GetExecutionInfo => gas_costs.syscalls.get_execution_info,
+        SyscallSelector::GetBlockHash => gas_costs.syscalls.get_block_hash,
         _ => unreachable!("Syscall has no associated cost"),
     }
 }

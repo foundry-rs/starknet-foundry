@@ -11,11 +11,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
+- `snforge completion` command - used to generate autocompletion script
+- Cheats for `get_block_hash_syscall`
+- new `--tracked-resource` flag, that will change currently tracked resource
+  (`cairo-steps` for vm resources - default; `sierra-gas` for sierra gas consumed resources in cairo native)
 - Testing events api improvements. New `IsEmitted` trait. Implemented `Into<snforge_std::Event>` for `starknet::Event` and `PartialEq` trait implementations for `snforge_std::Event` and `snforge_std::Events`.
+
+
+#### Changed
+- gas is now reported using resource bounds triplet (l1_gas, l1_data_gas and l2_gas)
+- `available_gas` now accepts named arguments denoting resource bounds (eg #[available_gas(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)])
+
+### Cast
+
+#### Added
+
+- `sncast completion` command - used to generate autocompletion script
+
+## [0.38.3] - 2025-03-07
+
+### Forge
+
+#### Fixed
+
+- Issue with uploading `snforge_std` to scarbs package registry that prevented it from including package reexports required in Scarb >= 2.11.0
+
+## [0.38.2] - 2025-03-06
+
+### Forge
+
+#### Changed
+
+- Fork cache version is pinned to the forge version.
 
 #### Fixed
 
 - `snforge_scarb_plugin` now emits an error when parameters are passed without using the `#[fuzzer]` attribute
+- A bug that was causing execution to hang if using forking
 
 ## [0.38.0] - 2025-02-25
 
