@@ -181,8 +181,7 @@ async fn generate_account(
         }
         AccountType::Argent => {
             let factory =
-                ArgentAccountFactory::new(class_hash, chain_id, Some(Felt::ZERO), signer, provider)
-                    .await?;
+                ArgentAccountFactory::new(class_hash, chain_id, None, signer, provider).await?;
 
             get_address_and_deployment_fee(factory, salt).await?
         }

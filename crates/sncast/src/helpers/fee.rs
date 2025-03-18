@@ -1,6 +1,6 @@
 use anyhow::{Result, anyhow, ensure};
 use clap::Args;
-use conversions::serde::deserialize::CairoDeserialize;
+use conversions::{TryFromConv, serde::deserialize::CairoDeserialize};
 use starknet::core::types::FeeEstimate;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 
@@ -77,52 +77,12 @@ impl FeeArgs {
                 Felt::from(max_fee)
             );
 
-            let fee_settings = FeeSettings {
-                l1_gas: Some(
-                    u64::try_from(fee_estimate.l1_gas_consumed).expect("Failed to convert l1_gas"),
-                ),
-                l1_gas_price: Some(
-                    u128::try_from(fee_estimate.l1_gas_price)
-                        .expect("Failed to convert l1_gas_price"),
-                ),
-                l2_gas: Some(
-                    u64::try_from(fee_estimate.l2_gas_consumed).expect("Failed to convert l2_gas"),
-                ),
-                l2_gas_price: Some(
-                    u128::try_from(fee_estimate.l2_gas_price)
-                        .expect("Failed to convert l2_gas_price"),
-                ),
-                l1_data_gas: Some(
-                    u64::try_from(fee_estimate.l1_data_gas_consumed)
-                        .expect("Failed to convert l1_data_gas"),
-                ),
-                l1_data_gas_price: Some(
-                    u128::try_from(fee_estimate.l1_data_gas_price)
-                        .expect("Failed to convert l1_data_gas_price"),
-                ),
-            };
+            let fee_settings = FeeSettings::try_from_(fee_estimate.clone())
+                .expect("Failed to convert FeeEstimate to FeeSettings");
             Ok(fee_settings)
         } else {
-            let fee_settings = FeeSettings {
-                l1_gas: self
-                    .l1_gas
-                    .map(|val| u64::try_from(val).expect("Failed to convert l1_gas")),
-                l1_gas_price: self
-                    .l1_gas_price
-                    .map(|val| u128::try_from(val).expect("Failed to convert l1_gas_price")),
-                l2_gas: self
-                    .l2_gas
-                    .map(|val| u64::try_from(val).expect("Failed to convert l2_gas")),
-                l2_gas_price: self
-                    .l2_gas_price
-                    .map(|val| u128::try_from(val).expect("Failed to convert l2_gas_price")),
-                l1_data_gas: self
-                    .l1_data_gas
-                    .map(|val| u64::try_from(val).expect("Failed to convert l1_data_gas")),
-                l1_data_gas_price: self
-                    .l1_data_gas_price
-                    .map(|val| u128::try_from(val).expect("Failed to convert l1_data_gas_price")),
-            };
+            let fee_settings = FeeSettings::try_from_(self.clone())
+                .expect("Failed to convert FeeArgs to FeeSettings");
             Ok(fee_settings)
         }
     }
@@ -174,6 +134,60 @@ pub struct FeeSettings {
     pub l2_gas_price: Option<u128>,
     pub l1_data_gas: Option<u64>,
     pub l1_data_gas_price: Option<u128>,
+}
+
+impl TryFromConv<FeeEstimate> for FeeSettings {
+    type Error = String;
+    fn try_from_(fee_estimate: FeeEstimate) -> Result<FeeSettings, std::string::String> {
+        Ok(FeeSettings {
+            l1_gas: Some(
+                u64::try_from(fee_estimate.l1_gas_consumed).expect("Failed to convert l1_gas"),
+            ),
+            l1_gas_price: Some(
+                u128::try_from(fee_estimate.l1_gas_price).expect("Failed to convert l1_gas_price"),
+            ),
+            l2_gas: Some(
+                u64::try_from(fee_estimate.l2_gas_consumed).expect("Failed to convert l2_gas"),
+            ),
+            l2_gas_price: Some(
+                u128::try_from(fee_estimate.l2_gas_price).expect("Failed to convert l2_gas_price"),
+            ),
+            l1_data_gas: Some(
+                u64::try_from(fee_estimate.l1_data_gas_consumed)
+                    .expect("Failed to convert l1_data_gas"),
+            ),
+            l1_data_gas_price: Some(
+                u128::try_from(fee_estimate.l1_data_gas_price)
+                    .expect("Failed to convert l1_data_gas_price"),
+            ),
+        })
+    }
+}
+
+impl TryFromConv<FeeArgs> for FeeSettings {
+    type Error = String;
+    fn try_from_(fee_args: FeeArgs) -> Result<FeeSettings, std::string::String> {
+        Ok(FeeSettings {
+            l1_gas: fee_args
+                .l1_gas
+                .map(|val| u64::try_from(val).expect("Failed to convert l1_gas")),
+            l1_gas_price: fee_args
+                .l1_gas_price
+                .map(|val| u128::try_from(val).expect("Failed to convert l1_gas_price")),
+            l2_gas: fee_args
+                .l2_gas
+                .map(|val| u64::try_from(val).expect("Failed to convert l2_gas")),
+            l2_gas_price: fee_args
+                .l2_gas_price
+                .map(|val| u128::try_from(val).expect("Failed to convert l2_gas_price")),
+            l1_data_gas: fee_args
+                .l1_data_gas
+                .map(|val| u64::try_from(val).expect("Failed to convert l1_data_gas")),
+            l1_data_gas_price: fee_args
+                .l1_data_gas_price
+                .map(|val| u128::try_from(val).expect("Failed to convert l1_data_gas_price")),
+        })
+    }
 }
 
 fn parse_non_zero_felt(s: &str) -> Result<NonZeroFelt, String> {

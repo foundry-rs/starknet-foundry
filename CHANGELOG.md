@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--l1-gas`, `--l1-gas-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price` flags
 - `l1_gas`, `l1_gas_price`, `l2_gas`, `l2_gas_price`, `l1_data_gas`, `l1_data_gas_price` fields in `FeeSettings`
 
+#### Changed
+
+- Updated argent class hash used in account creation to v0.4.0
+- Updated braavos class hashes used in account creation to v1.1.0
+
 #### Removed
 
 - `--max-gas` and `--max-gas-unit-price` flags
