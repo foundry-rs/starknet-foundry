@@ -1,4 +1,4 @@
-use camino::Utf8PathBuf;
+use cheatnet::forking::cache::CacheDir;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use std::collections::HashMap;
 use std::ffi::OsString;
@@ -18,7 +18,7 @@ pub struct TestRunnerConfig {
     pub fuzzer_seed: u64,
     pub max_n_steps: Option<u32>,
     pub is_vm_trace_needed: bool,
-    pub cache_dir: Utf8PathBuf,
+    pub cache_dir: Arc<CacheDir>,
     pub contracts_data: ContractsData,
     pub environment_variables: HashMap<String, String>,
 }
@@ -63,7 +63,7 @@ impl ExecutionDataToSave {
 pub struct RuntimeConfig<'a> {
     pub max_n_steps: Option<u32>,
     pub is_vm_trace_needed: bool,
-    pub cache_dir: &'a Utf8PathBuf,
+    pub cache_dir: Arc<CacheDir>,
     pub contracts_data: &'a ContractsData,
     pub environment_variables: &'a HashMap<String, String>,
 }

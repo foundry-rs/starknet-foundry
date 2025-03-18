@@ -25,6 +25,7 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use camino::{Utf8Path, Utf8PathBuf};
 use casm::{get_assembled_program, run_assembled_program};
 use cheatnet::constants as cheatnet_constants;
+use cheatnet::forking::cache::CacheDir;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
@@ -174,7 +175,7 @@ pub fn run_test_case(
     let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(),
         fork_state_reader: get_fork_state_reader(
-            runtime_config.cache_dir,
+            runtime_config.cache_dir.clone(),
             case.config.fork_config.as_ref(),
         )?,
     };
@@ -438,7 +439,7 @@ fn extract_test_case_summary(
 }
 
 fn get_fork_state_reader(
-    cache_dir: &Utf8Path,
+    cache_dir: Arc<CacheDir>,
     fork_config: Option<&ResolvedForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
     fork_config

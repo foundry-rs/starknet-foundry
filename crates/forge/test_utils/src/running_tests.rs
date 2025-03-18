@@ -1,5 +1,6 @@
 use crate::runner::TestCase;
 use camino::Utf8PathBuf;
+use cheatnet::forking::cache::CacheDir;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::shared_cache::FailedTestsCache;
 use forge::{
@@ -62,9 +63,11 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
                     fuzzer_seed: 12345,
                     max_n_steps: None,
                     is_vm_trace_needed: false,
-                    cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
-                        .unwrap()
-                        .join(CACHE_DIR),
+                    cache_dir: Arc::new(CacheDir::new(
+                        Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
+                            .unwrap()
+                            .join(CACHE_DIR),
+                    )),
                     contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
                     environment_variables: test.env().clone(),
                 }),

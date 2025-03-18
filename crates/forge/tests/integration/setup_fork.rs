@@ -5,17 +5,15 @@ use std::path::Path;
 use std::sync::Arc;
 
 use camino::Utf8PathBuf;
+use cheatnet::forking::cache::CacheDir;
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::block_number_map::BlockNumberMap;
+use forge::run_tests::package::RunForPackageArgs;
 use forge::run_tests::package::run_for_package;
 use forge::scarb::config::ForkTarget;
-use forge::test_filter::TestsFilter;
-use tempfile::tempdir;
-use tokio::runtime::Runtime;
-
-use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use forge::run_tests::package::RunForPackageArgs;
 use forge::scarb::load_test_artifacts;
 use forge::shared_cache::FailedTestsCache;
+use forge::test_filter::TestsFilter;
 use forge_runner::CACHE_DIR;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
@@ -23,9 +21,11 @@ use forge_runner::forge_config::{
 use scarb_api::ScarbCommand;
 use scarb_api::metadata::MetadataCommandExt;
 use shared::test_utils::node_url::node_rpc_url;
+use tempfile::tempdir;
 use test_utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
+use tokio::runtime::Runtime;
 
 #[test]
 fn fork_simple_decorator() {
@@ -148,9 +148,11 @@ fn fork_aliased_decorator() {
                         fuzzer_seed: 12345,
                         max_n_steps: None,
                         is_vm_trace_needed: false,
-                        cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
-                            .unwrap()
-                            .join(CACHE_DIR),
+                        cache_dir: Arc::new(CacheDir::new(
+                            Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
+                                .unwrap()
+                                .join(CACHE_DIR),
+                        )),
                         contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
                         environment_variables: test.env().clone(),
                     }),
@@ -233,9 +235,11 @@ fn fork_aliased_decorator_overrding() {
                         fuzzer_seed: 12345,
                         max_n_steps: None,
                         is_vm_trace_needed: false,
-                        cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
-                            .unwrap()
-                            .join(CACHE_DIR),
+                        cache_dir: Arc::new(CacheDir::new(
+                            Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
+                                .unwrap()
+                                .join(CACHE_DIR),
+                        )),
                         contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
                         environment_variables: test.env().clone(),
                     }),

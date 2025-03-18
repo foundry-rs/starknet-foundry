@@ -1,9 +1,12 @@
 use blockifier::state::cached_state::CachedState;
+use camino::Utf8PathBuf;
 use cheatnet::constants::build_testing_state;
+use cheatnet::forking::cache::CacheDir;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::ExtendedStateReader;
 use shared::test_utils::node_url::node_rpc_url;
 use starknet_api::block::BlockNumber;
+use std::sync::Arc;
 
 pub fn create_cached_state() -> CachedState<ExtendedStateReader> {
     CachedState::new(ExtendedStateReader {
@@ -24,7 +27,12 @@ pub fn create_fork_cached_state_at(
     CachedState::new(ExtendedStateReader {
         dict_state_reader: build_testing_state(),
         fork_state_reader: Some(
-            ForkStateReader::new(node_url, BlockNumber(block_number), cache_dir.into()).unwrap(),
+            ForkStateReader::new(
+                node_url,
+                BlockNumber(block_number),
+                Arc::new(CacheDir::new(Utf8PathBuf::from(cache_dir))),
+            )
+            .unwrap(),
         ),
     })
 }
