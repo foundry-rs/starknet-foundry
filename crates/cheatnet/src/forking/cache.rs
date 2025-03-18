@@ -172,6 +172,8 @@ impl CacheDir {
             .expect("Could not write cache to file");
 
         fs2::FileExt::unlock(&file)?;
+        
+        drop(dir);
 
         Ok(())
     }
