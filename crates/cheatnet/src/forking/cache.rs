@@ -136,6 +136,9 @@ impl CacheDir {
         }
     }
 
+    // We technically do not write to value held by RwLock directly (underlying path)
+    //  but we write to the directory represented by it.  
+    #[allow(clippy::readonly_write_lock)]
     fn save(
         &self,
         url: &Url,
