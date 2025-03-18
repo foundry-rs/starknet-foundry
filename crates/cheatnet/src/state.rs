@@ -174,6 +174,7 @@ pub struct CallTrace {
     pub used_l1_resources: L1Resources,
     pub used_syscalls: SyscallCounter,
     pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
+    pub gas_consumed: u64,
 }
 
 impl CairoSerialize for CallTrace {
@@ -203,6 +204,7 @@ impl CallTrace {
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
             vm_trace: None,
+            gas_consumed: u64::default(),
         }
     }
 }
@@ -334,6 +336,8 @@ pub struct CheatnetState {
     pub trace_data: TraceData,
     pub encountered_errors: Vec<EncounteredError>,
     pub fuzzer_args: Vec<String>,
+    pub block_hash_contracts: HashMap<(ContractAddress, u64), (CheatSpan, Felt)>,
+    pub global_block_hash: HashMap<u64, (Felt, Vec<ContractAddress>)>,
 }
 
 impl Default for CheatnetState {
@@ -361,6 +365,8 @@ impl Default for CheatnetState {
             },
             encountered_errors: vec![],
             fuzzer_args: Vec::default(),
+            block_hash_contracts: HashMap::default(),
+            global_block_hash: HashMap::default(),
         }
     }
 }
@@ -494,6 +500,7 @@ impl TraceData {
     pub fn exit_nested_call(
         &mut self,
         execution_resources: ExecutionResources,
+        gas_consumed: u64,
         used_syscalls: SyscallCounter,
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
@@ -506,6 +513,7 @@ impl TraceData {
 
         let mut last_call = last_call.borrow_mut();
         last_call.used_execution_resources = execution_resources;
+        last_call.gas_consumed = gas_consumed;
 
         last_call.used_syscalls = used_syscalls;
 
