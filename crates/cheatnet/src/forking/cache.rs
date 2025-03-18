@@ -15,7 +15,7 @@ use std::fs;
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
 use std::string::ToString;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 use url::Url;
 
 #[must_use]
@@ -94,13 +94,13 @@ impl Display for ForkCacheContent {
 
 #[derive(Debug)]
 pub struct CacheDir {
-    dir: Mutex<Utf8PathBuf>,
+    dir: RwLock<Utf8PathBuf>,
 }
 
 #[cfg(feature = "testing")]
 impl PartialEq for CacheDir {
     fn eq(&self, other: &Self) -> bool {
-        *self.dir.lock().unwrap() == *other.dir.lock().unwrap()
+        *self.dir.read().unwrap() == *other.dir.read().unwrap()
     }
 }
 
@@ -108,12 +108,12 @@ impl CacheDir {
     #[must_use]
     pub fn new(path: Utf8PathBuf) -> Self {
         Self {
-            dir: Mutex::new(path),
+            dir: RwLock::new(path),
         }
     }
 
     fn load(&self, url: &Url, block_number: BlockNumber) -> Result<ForkCacheContent> {
-        let dir = self.dir.lock().unwrap();
+        let dir = self.dir.read().unwrap();
 
         let cache_file = cache_file_path_from_fork_config(url, block_number, &dir)?;
         let mut file = OpenOptions::new()
@@ -142,7 +142,7 @@ impl CacheDir {
         block_number: BlockNumber,
         fork_cache_content: &ForkCacheContent,
     ) -> Result<()> {
-        let dir = self.dir.lock().unwrap();
+        let dir = self.dir.write().unwrap();
 
         let cache_file = cache_file_path_from_fork_config(url, block_number, &dir)?;
 
