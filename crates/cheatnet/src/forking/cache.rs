@@ -93,13 +93,15 @@ impl Display for ForkCacheContent {
 }
 
 #[derive(Debug)]
-pub struct ForkCache {
-    fork_cache_content: ForkCacheContent,
-    cache_file: Utf8PathBuf,
 pub struct CacheDir {
     dir: Mutex<Utf8PathBuf>,
 }
 
+#[cfg(feature = "testing")]
+impl PartialEq for CacheDir {
+    fn eq(&self, other: &Self) -> bool {
+        *self.dir.lock().unwrap() == *other.dir.lock().unwrap()
+    }
 }
 
 impl CacheDir {

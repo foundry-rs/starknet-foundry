@@ -5,13 +5,15 @@ use std::ffi::OsString;
 use std::num::NonZeroU32;
 use std::sync::Arc;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
+#[cfg_attr(feature = "testing", derive(PartialEq))]
 pub struct ForgeConfig {
     pub test_runner_config: Arc<TestRunnerConfig>,
     pub output_config: Arc<OutputConfig>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
+#[cfg_attr(feature = "testing", derive(PartialEq))]
 pub struct TestRunnerConfig {
     pub exit_first: bool,
     pub fuzzer_runs: NonZeroU32,
@@ -74,7 +76,7 @@ impl<'a> RuntimeConfig<'a> {
         Self {
             max_n_steps: value.max_n_steps,
             is_vm_trace_needed: value.is_vm_trace_needed,
-            cache_dir: &value.cache_dir,
+            cache_dir: value.cache_dir.clone(),
             contracts_data: &value.contracts_data,
             environment_variables: &value.environment_variables,
         }

@@ -48,3 +48,4 @@ sanitize-filename.workspace = true
 
 [features]
 debugging = []
+testing = []
