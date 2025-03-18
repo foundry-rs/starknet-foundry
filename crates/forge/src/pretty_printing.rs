@@ -50,12 +50,13 @@ pub(crate) fn print_test_summary(summaries: &[TestTargetSummary], filtered: Opti
         );
     } else {
         println!(
-            "{}: {} passed, {} failed, {} skipped, {} ignored, other filtered out",
+            "{}: {} passed, {} failed, {} skipped, {} ignored, {} excluded, other filtered out",
             style("Tests").bold(),
             passed,
             failed,
             skipped,
-            ignored
+            ignored,
+            excluded
         );
     }
 }

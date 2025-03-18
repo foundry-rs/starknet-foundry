@@ -35,7 +35,7 @@ fn collection_with_lib() {
         [PASS] collection_with_lib_tests::fab::test_fab [..]
         [PASS] collection_with_lib_tests::fibfabfob::test_fib [..]
         [PASS] collection_with_lib_tests::fibfabfob::test_fab [..]
-        Tests: 17 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 17 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
         "},
     );
 }
@@ -73,7 +73,7 @@ fn collection_without_lib() {
         [PASS] collection_without_lib_integrationtest::fab::test_fab [..]
         [PASS] collection_without_lib_integrationtest::fibfabfob::test_fob [..]
         [PASS] collection_without_lib_integrationtest::fibfabfob::test_fib [..]
-        Tests: 17 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 17 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
         "},
     );
 }

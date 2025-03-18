@@ -24,7 +24,7 @@ fn features() {
         Running 2 test(s) from tests/
         [PASS] features_integrationtest::test::test_mock_function [..]
         [PASS] features_integrationtest::test::test_mock_contract [..]
-        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
         "},
     );
 }
