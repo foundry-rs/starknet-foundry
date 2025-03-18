@@ -1,3 +1,4 @@
+use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
 use std::path::Path;
 use test_utils::runner::{Contract, assert_passed};
@@ -61,7 +62,7 @@ fn mock_call_simple() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
 }
 
@@ -136,7 +137,7 @@ fn mock_call_complex_types() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
 }
 
@@ -204,6 +205,6 @@ fn mock_calls() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
 }

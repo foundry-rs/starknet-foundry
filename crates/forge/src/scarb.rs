@@ -123,6 +123,7 @@ mod tests {
     use camino::Utf8PathBuf;
     use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
     use configuration::load_package_config;
+    use forge_runner::forge_config::ForgeTrackedResource;
     use indoc::{formatdoc, indoc};
     use scarb_api::metadata::MetadataCommandExt;
     use scarb_metadata::PackageId;
@@ -229,6 +230,7 @@ mod tests {
                 fuzzer_runs: None,
                 fuzzer_seed: None,
                 max_n_steps: None,
+                tracked_resource: ForgeTrackedResource::CairoSteps,
                 detailed_resources: false,
                 save_trace_data: false,
                 build_profile: false,
@@ -497,6 +499,7 @@ mod tests {
                 fuzzer_runs: None,
                 fuzzer_seed: None,
                 max_n_steps: None,
+                tracked_resource: ForgeTrackedResource::CairoSteps,
                 detailed_resources: false,
                 save_trace_data: false,
                 build_profile: false,
