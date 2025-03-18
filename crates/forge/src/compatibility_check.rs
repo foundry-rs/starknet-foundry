@@ -1,6 +1,7 @@
 use anyhow::{Context, Result, anyhow};
 use regex::Regex;
 use semver::Version;
+use shared::command::CommandExt;
 use std::cell::RefCell;
 use std::process::Command;
 
@@ -33,7 +34,7 @@ impl<'a> RequirementsChecker<'a> {
     }
 
     pub fn check(&self) -> Result<()> {
-        let (validation_output, all_requirements_valid) = self.check_and_prepare_output()?;
+        let (validation_output, all_requirements_valid) = self.check_and_prepare_output();
 
         if self.output_on_success || !all_requirements_valid {
             println!("{validation_output}");
@@ -46,48 +47,53 @@ impl<'a> RequirementsChecker<'a> {
         }
     }
 
-    fn check_and_prepare_output(&self) -> Result<(String, bool)> {
+    fn check_and_prepare_output(&self) -> (String, bool) {
         let mut validation_output = "Checking requirements\n\n".to_string();
         let mut all_valid = true;
 
         for requirement in &self.requirements {
-            let raw_version = get_raw_version(&requirement.name, &requirement.command)?;
-            let version = (requirement.version_parser)(&raw_version)?;
+            let version = get_version(&requirement.command, &requirement.version_parser);
 
-            let is_valid = version >= requirement.minimal_version;
-            let is_recommended = requirement
-                .minimal_recommended_version
-                .as_ref()
-                .is_none_or(|minimal_recommended_version| version >= *minimal_recommended_version);
+            let output = if let Ok(version) = version {
+                let is_valid = version >= requirement.minimal_version;
+                let is_recommended = requirement.minimal_recommended_version.as_ref().is_none_or(
+                    |minimal_recommended_version| version >= *minimal_recommended_version,
+                );
 
-            let min_version_to_display = requirement
-                .minimal_recommended_version
-                .as_ref()
-                .unwrap_or(&requirement.minimal_version);
+                let min_version_to_display = requirement
+                    .minimal_recommended_version
+                    .as_ref()
+                    .unwrap_or(&requirement.minimal_version);
 
-            let command_output = if !is_valid {
+                if !is_valid {
+                    all_valid = false;
+                    format!(
+                        "❌ {} Version {} doesn't satisfy minimal {}\n{}",
+                        requirement.name, version, min_version_to_display, requirement.helper_text
+                    )
+                } else if !is_recommended {
+                    format!(
+                        "⚠️  {} Version {} doesn't satisfy minimal recommended {}\n{}",
+                        requirement.name,
+                        version,
+                        requirement.minimal_recommended_version.as_ref().unwrap(),
+                        requirement.helper_text
+                    )
+                } else {
+                    format!("✅ {} {}", requirement.name, version)
+                }
+            } else {
                 all_valid = false;
                 format!(
-                    "❌ {} Version {} doesn't satisfy minimal {}\n{}",
-                    requirement.name, version, min_version_to_display, requirement.helper_text
+                    "❌ {} is not installed or not added to the PATH\n{}\n",
+                    requirement.name, requirement.helper_text
                 )
-            } else if !is_recommended {
-                format!(
-                    "⚠️  {} Version {} doesn't satisfy minimal recommended {}\n{}",
-                    requirement.name,
-                    version,
-                    requirement.minimal_recommended_version.as_ref().unwrap(),
-                    requirement.helper_text
-                )
-            } else {
-                format!("✅ {} {}", requirement.name, version)
             };
-
-            validation_output += command_output.as_str();
+            validation_output += output.as_str();
             validation_output += "\n";
         }
 
-        Ok((validation_output, all_valid))
+        (validation_output, all_valid)
     }
 }
 
@@ -105,11 +111,13 @@ pub fn create_version_parser<'a>(name: &'a str, pattern: &'a str) -> Box<Version
     })
 }
 
-fn get_raw_version(name: &str, command: &RefCell<Command>) -> Result<String> {
-    let raw_current_version = command
-        .borrow_mut()
-        .output()
-        .with_context(|| format!("Failed to run version command for {name}"))?;
+fn get_version(command: &RefCell<Command>, parser: &VersionParser) -> Result<Version> {
+    let raw_version = get_raw_version(command)?;
+    parser(&raw_version)
+}
+
+fn get_raw_version(command: &RefCell<Command>) -> Result<String> {
+    let raw_current_version = command.borrow_mut().output_checked()?;
     Ok(String::from_utf8_lossy(&raw_current_version.stdout)
         .trim()
         .to_string())
@@ -118,6 +126,10 @@ fn get_raw_version(name: &str, command: &RefCell<Command>) -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert_fs::{
+        TempDir,
+        fixture::{FileWriteStr, PathChild},
+    };
     use scarb_api::ScarbCommand;
     use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
@@ -164,8 +176,7 @@ mod tests {
             ),
         });
 
-        let (validation_output, is_valid) =
-            requirements_checker.check_and_prepare_output().unwrap();
+        let (validation_output, is_valid) = requirements_checker.check_and_prepare_output();
 
         assert!(is_valid);
         assert!(validation_output.contains("✅ Rust"));
@@ -193,8 +204,7 @@ mod tests {
             minimal_recommended_version: None,
         });
 
-        let (validation_output, is_valid) =
-            requirements_checker.check_and_prepare_output().unwrap();
+        let (validation_output, is_valid) = requirements_checker.check_and_prepare_output();
         assert!(!is_valid);
         assert!(validation_output.contains("❌ Rust Version"));
         assert!(validation_output.contains("doesn't satisfy minimal 999.0.0"));
@@ -217,8 +227,7 @@ mod tests {
             ),
         });
 
-        let (validation_output, is_valid) =
-            requirements_checker.check_and_prepare_output().unwrap();
+        let (validation_output, is_valid) = requirements_checker.check_and_prepare_output();
 
         println!("{validation_output}");
         assert!(is_valid);
@@ -242,11 +251,61 @@ mod tests {
             ),
         });
 
-        let (validation_output, is_valid) =
-            requirements_checker.check_and_prepare_output().unwrap();
+        let (validation_output, is_valid) = requirements_checker.check_and_prepare_output();
 
         assert!(!is_valid);
         assert!(validation_output.contains("❌ Scarb Version"));
         assert!(validation_output.contains("doesn't satisfy minimal 999.0.0"));
+    }
+
+    #[test]
+    #[cfg_attr(not(feature = "no_scarb_installed"), ignore)]
+    fn fail_to_run_command() {
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir
+            .child(".tool-versions")
+            .write_str("scarb 2.9.9\n")
+            .unwrap();
+
+        let mut requirements_checker = RequirementsChecker::new(true);
+        requirements_checker.add_requirement(Requirement {
+            name: "Scarb".to_string(),
+            command: RefCell::new(
+                ScarbCommand::new()
+                    .arg("--version")
+                    .current_dir(temp_dir.path())
+                    .command(),
+            ),
+            minimal_version: Version::new(2, 8, 5),
+            minimal_recommended_version: Some(Version::new(2, 9, 3)),
+            helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
+                .to_string(),
+            version_parser: create_version_parser(
+                "Scarb",
+                r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)",
+            ),
+        });
+        requirements_checker.add_requirement(Requirement {
+            name: "Universal Sierra Compiler".to_string(),
+            command: RefCell::new(UniversalSierraCompilerCommand::new().arg("--version").command()),
+            minimal_version: Version::new(2, 4, 0),
+            minimal_recommended_version: None,
+            helper_text: "Reinstall `snforge` using the same installation method or follow instructions from https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#universal-sierra-compiler-update".to_string(),
+            version_parser: create_version_parser(
+                "Universal Sierra Compiler",
+                r"universal-sierra-compiler (?<version>[0-9]+.[0-9]+.[0-9]+)",
+            ),
+        });
+
+        let (validation_output, is_valid) = requirements_checker.check_and_prepare_output();
+
+        assert!(!is_valid);
+        assert!(validation_output.contains("❌ Scarb is not installed or not added to the PATH"));
+        assert!(
+            validation_output.contains(
+                "Follow instructions from https://docs.swmansion.com/scarb/download.html"
+            )
+        );
+        assert!(validation_output.contains("✅ Universal Sierra Compiler 2.4.0"));
     }
 }
