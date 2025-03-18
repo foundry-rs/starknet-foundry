@@ -264,7 +264,7 @@ fn create_to_keystore(
             json!({
                 "version": 1,
                 "variant": {
-                    "type": "open_zeppelin",
+                    "type": AccountType::OpenZeppelin,
                     "version": 1,
                     "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
                     "legacy": legacy,
@@ -280,7 +280,7 @@ fn create_to_keystore(
             json!({
                 "version": 1,
                 "variant": {
-                    "type": "argent",
+                    "type": AccountType::Argent,
                     "version": 1,
                     "owner": format!("{:#x}", private_key.verifying_key().scalar()),
                     "guardian": "0x0",
@@ -297,7 +297,7 @@ fn create_to_keystore(
                 {
                   "version": 1,
                   "variant": {
-                    "type": "braavos",
+                    "type": AccountType::Braavos,
                     "version": 1,
                     "multisig": {
                       "status": "off"
