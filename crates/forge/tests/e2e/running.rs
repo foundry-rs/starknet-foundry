@@ -443,7 +443,7 @@ fn with_exclude_flag() {
         [..]Compiling[..]
         [..]Finished[..]
         
-        Collected 12 test(s) from simple_package package
+        Collected 13 test(s) from simple_package package
         Running 2 test(s) from src/
         [IGNORE] simple_package::tests::ignored_test
         [PASS] simple_package::tests::test_fib [..]
@@ -461,6 +461,8 @@ fn with_exclude_flag() {
         [PASS] simple_package_integrationtest::test_simple::test_two_and_two (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [PASS] simple_package_integrationtest::test_simple::test_simple2 (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+        [EXCLUDED] simple_package_integrationtest::test_simple::test_failing
+
         Tests: 9 passed, 1 failed, 0 skipped, 2 ignored, 1 excluded, 0 filtered out
 
         Failures:

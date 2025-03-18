@@ -87,9 +87,10 @@ $ snforge test --exclude "test_calling_another"
 ```shell
 Collected 3 test(s) from hello_snforge package
 Running 0 test(s) from src/
-Running 2 test(s) from tests/
-[PASS] hello_snforge_integrationtest::test_contract::test_calling (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-[PASS] hello_snforge_integrationtest::test_contract::test_executing (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+Running 3 test(s) from tests/
+[PASS] hello_snforge_integrationtest::test_contract::test_calling (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+[PASS] hello_snforge_integrationtest::test_contract::test_executing (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+[EXCLUDED] hello_snforge_integrationtest::test_contract::test_calling_another
 Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 1 excluded, 0 filtered out
 ```
 

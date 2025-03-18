@@ -136,6 +136,9 @@ fn result_header(any_test_result: &AnyTestCaseSummary) -> String {
     if any_test_result.is_ignored() {
         return format!("[{}]", style("IGNORE").yellow());
     }
+    if any_test_result.is_excluded() {
+        return format!("[{}]", style("EXCLUDED").yellow());
+    }
     unreachable!()
 }
 

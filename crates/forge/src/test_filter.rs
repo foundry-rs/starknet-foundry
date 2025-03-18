@@ -105,10 +105,6 @@ impl TestsFilter {
             }
         }
 
-        if let Some(NameFilter::Exclude(filter)) = &self.exclude_filter {
-            test_cases.retain(|tc| !tc.name.contains(filter));
-        }
-
         match self.ignored_filter {
             // if NotIgnored (default) we filter ignored tests later and display them as ignored
             IgnoredFilter::All | IgnoredFilter::NotIgnored => {}
