@@ -74,7 +74,7 @@ impl EventSpyAssertionsTraitImpl<
 
         while i < events.len() {
             let (from, event) = events.at(i);
-            let emitted = is_emitted(@received_events.events, from, event);
+            let emitted = is_emitted(@received_events.events, *from, event);
 
             if !emitted {
                 let from: felt252 = (*from).into();
@@ -91,7 +91,7 @@ impl EventSpyAssertionsTraitImpl<
 
         while i < events.len() {
             let (from, event) = events.at(i);
-            let emitted = is_emitted(@received_events.events, from, event);
+            let emitted = is_emitted(@received_events.events, *from, event);
 
             if emitted {
                 let from: felt252 = (*from).into();
@@ -106,7 +106,7 @@ impl EventSpyAssertionsTraitImpl<
 pub trait IsEmitted {
     fn is_emitted(
         events: @Array<(ContractAddress, Event)>,
-        expected_emitted_by: @ContractAddress,
+        expected_emitted_by: ContractAddress,
         expected_event: @Event
     ) -> bool;
 }
@@ -114,7 +114,7 @@ pub trait IsEmitted {
 pub impl IsEmittedImpl of IsEmitted {
     fn is_emitted(
         events: @Array<(ContractAddress, Event)>,
-        expected_emitted_by: @ContractAddress,
+        expected_emitted_by: ContractAddress,
         expected_event: @Event
     ) -> bool {
         is_emitted(events, expected_emitted_by, expected_event)
@@ -123,23 +123,22 @@ pub impl IsEmittedImpl of IsEmitted {
 
 fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
     events: @Array<(ContractAddress, Event)>,
-    expected_emitted_by: @ContractAddress,
+    expected_emitted_by: ContractAddress,
     expected_event: @T
 ) -> bool {
-    let expected_event = expected_event.into();
+    let expected_event: Event = expected_event.into();
 
     let mut i = 0;
     let mut is_emitted = false;
-    while i < events.len() {
-        let (from, event) = events.at(i);
+    for (from, event) in events
+        .clone() {
+            if from == expected_emitted_by && event == expected_event {
+                is_emitted = true;
+                break;
+            };
 
-        if from == expected_emitted_by && event == @expected_event {
-            is_emitted = true;
-            break;
+            i += 1;
         };
-
-        i += 1;
-    };
     return is_emitted;
 }
 
