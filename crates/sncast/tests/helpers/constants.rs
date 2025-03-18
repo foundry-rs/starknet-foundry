@@ -22,7 +22,6 @@ pub const DEVNET_OZ_CLASS_HASH_CAIRO_0: &str =
 pub const DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS: &str =
     "0x691a61b12a7105b1372cc377f135213c11e8400a546f6b0e7ea0296046690ce";
 
-// OpenZeppelin account contract v0.8.1
 pub const DEVNET_OZ_CLASS_HASH_CAIRO_1: Felt =
     felt!("0x044cab2e6a3a7bc516425d06d76c6ffd56ae308864dbc66f8e75028e3784aa29");
 

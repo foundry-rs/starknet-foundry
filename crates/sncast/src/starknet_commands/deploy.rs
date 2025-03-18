@@ -102,34 +102,6 @@ pub async fn deploy(
         l1_data_gas_price => DeploymentV3::l1_data_gas_price,
         nonce => DeploymentV3::nonce
     );
-    // let execution = match l1_gas {
-    //     None => execution,
-    //     Some(l1_gas) => execution.l1_gas(l1_gas),
-    // };
-    // let execution = match l1_gas_price {
-    //     None => execution,
-    //     Some(l1_gas_price) => execution.l1_gas_price(l1_gas_price),
-    // };
-    // let execution = match l2_gas {
-    //     None => execution,
-    //     Some(l2_gas) => execution.l2_gas(l2_gas),
-    // };
-    // let execution = match l2_gas_price {
-    //     None => execution,
-    //     Some(l2_gas_price) => execution.l2_gas_price(l2_gas_price),
-    // };
-    // let execution = match l1_data_gas {
-    //     None => execution,
-    //     Some(l1_data_gas) => execution.l1_data_gas(l1_data_gas),
-    // };
-    // let execution = match l1_data_gas_price {
-    //     None => execution,
-    //     Some(l1_data_gas_price) => execution.l1_data_gas_price(l1_data_gas_price),
-    // };
-    // let execution = match nonce {
-    //     None => execution,
-    //     Some(nonce) => execution.nonce(nonce),
-    // };
     let result = deployment.send().await;
 
     match result {
