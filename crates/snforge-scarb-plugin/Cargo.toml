@@ -10,9 +10,9 @@ crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 cairo-lang-macro = "=0.1.0"
-cairo-lang-parser = "=2.10.0"
-cairo-lang-utils = "=2.10.0"
-cairo-lang-syntax = "=2.10.0"
+cairo-lang-parser = "=2.10.1"
+cairo-lang-utils = "=2.10.1"
+cairo-lang-syntax = "=2.10.1"
 url = "=2.5.4"
 indoc = "=2.0.5"
 smol_str = "=0.2.2"

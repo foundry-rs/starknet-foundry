@@ -50,8 +50,8 @@ $ snforge test
 Collected 2 test(s) from hello_starknet package
 Running 0 test(s) from src/
 Running 2 test(s) from tests/
-[PASS] hello_starknet_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value (gas: ~105)
-[PASS] hello_starknet_integrationtest::test_contract::test_increase_balance (gas: ~172)
+[PASS] hello_starknet_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~360000)
+[PASS] hello_starknet_integrationtest::test_contract::test_increase_balance (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~480000)
 Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
 ```
 </details>
