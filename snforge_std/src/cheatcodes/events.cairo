@@ -122,7 +122,7 @@ pub impl IsEmittedImpl of IsEmitted {
 }
 
 fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
-    self: @Array<(ContractAddress, Event)>,
+    events: @Array<(ContractAddress, Event)>,
     expected_emitted_by: @ContractAddress,
     expected_event: @T
 ) -> bool {
@@ -130,8 +130,8 @@ fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
 
     let mut i = 0;
     let mut is_emitted = false;
-    while i < self.len() {
-        let (from, event) = self.at(i);
+    while i < events.len() {
+        let (from, event) = events.at(i);
 
         if from == expected_emitted_by && event == @expected_event {
             is_emitted = true;
