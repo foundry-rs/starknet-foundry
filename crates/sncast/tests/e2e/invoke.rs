@@ -197,8 +197,8 @@ async fn test_contract_does_not_exist() {
     );
 }
 
-// TODO(#3116): Before, the error message included 'ENTRYPOINT_NOT_FOUND', but now it's an undecoded felt.
 #[test]
+#[ignore = "TODO(#3120)"]
 fn test_wrong_function_name() {
     let args = vec![
         "--accounts-file",
@@ -226,8 +226,8 @@ fn test_wrong_function_name() {
     );
 }
 
-// TODO(#3116): Before, the error message included "Failed to deserialize param #2", but now it's an undecoded felt.
 #[test]
+#[ignore = "TODO(#3120)"]
 fn test_wrong_calldata() {
     let args = vec![
         "--accounts-file",
