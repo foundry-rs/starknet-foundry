@@ -30,7 +30,7 @@ runtime = { path = "../runtime" }
 conversions = { path = "../conversions" }
 data-transformer = { path = "../data-transformer" }
 configuration = { path = "../configuration" }
-shared = { path = "../shared", features = ["testing"] }
+shared = { path = "../shared" }
 forge_runner = { path = "../forge-runner" }
 cairo-lang-runner.workspace = true
 cairo-lang-sierra-to-casm.workspace = true
@@ -65,6 +65,7 @@ test-case.workspace = true
 fs_extra.workspace = true
 wiremock.workspace = true
 docs = { workspace = true, features = ["testing"] }
+shared = { path = "../shared", features = ["testing"] }
 
 [[bin]]
 name = "sncast"

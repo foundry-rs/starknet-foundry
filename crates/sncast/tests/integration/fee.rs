@@ -5,12 +5,12 @@ use starknet_types_core::felt::Felt;
 async fn test_happy_case() {
     let args = FeeArgs {
         max_fee: None,
-        l1_gas: Some(Felt::from(100_u32)),
-        l1_gas_price: Some(Felt::from(200_u32)),
-        l2_gas: Some(Felt::from(100_u32)),
-        l2_gas_price: Some(Felt::from(200_u32)),
-        l1_data_gas: Some(Felt::from(100_u32)),
-        l1_data_gas_price: Some(Felt::from(200_u32)),
+        l1_gas: Some(100),
+        l1_gas_price: Some(200),
+        l2_gas: Some(100),
+        l2_gas_price: Some(200),
+        l1_data_gas: Some(100),
+        l1_data_gas_price: Some(200),
     };
 
     let settings = args.try_into_fee_settings(None).unwrap();
@@ -31,7 +31,7 @@ async fn test_happy_case() {
 use test_case::test_case;
 #[test_case(FeeArgs {
         max_fee: Some(Felt::from(50_u32).try_into().unwrap()),
-        l1_gas: Some(Felt::from(100_u32)),
+        l1_gas: Some(100),
         l1_gas_price: None,
         l2_gas: None,
         l2_gas_price: None,
@@ -41,7 +41,7 @@ use test_case::test_case;
 #[test_case(FeeArgs {
         max_fee: Some(Felt::from(50_u32).try_into().unwrap()),
         l1_gas: None,
-        l1_gas_price: Some(Felt::from(100_u32)),
+        l1_gas_price: Some(100),
         l2_gas: None,
         l2_gas_price: None,
         l1_data_gas: None,
@@ -51,7 +51,7 @@ use test_case::test_case;
         max_fee: Some(Felt::from(50_u32).try_into().unwrap()),
         l1_gas: None,
         l1_gas_price: None,
-        l2_gas: Some(Felt::from(100_u32)),
+        l2_gas: Some(100),
         l2_gas_price: None,
         l1_data_gas: None,
         l1_data_gas_price: None,
@@ -62,7 +62,7 @@ use test_case::test_case;
         l1_gas_price: None,
         l2_gas: None,
         l2_gas_price: None,
-        l1_data_gas: Some(Felt::from(100_u32)),
+        l1_data_gas: Some(100),
         l1_data_gas_price: None,
     }, "--l1-data-gas")]
 #[test_case(FeeArgs {
@@ -72,7 +72,7 @@ use test_case::test_case;
         l2_gas: None,
         l2_gas_price: None,
         l1_data_gas: None,
-        l1_data_gas_price: Some(Felt::from(100_u32)),
+        l1_data_gas_price: Some(100),
     }, "--l1-data-gas-price")]
 #[tokio::test]
 async fn test_max_fee_less_than_resource_bounds_value(fee_args: FeeArgs, flag: &str) {
@@ -88,12 +88,12 @@ async fn test_max_fee_less_than_resource_bounds_value(fee_args: FeeArgs, flag: &
 async fn test_max_fee_none() {
     let args = FeeArgs {
         max_fee: None,
-        l1_gas: Some(Felt::from(100_u32)),
-        l1_gas_price: Some(Felt::from(100_u32)),
-        l2_gas: Some(Felt::from(100_u32)),
-        l2_gas_price: Some(Felt::from(100_u32)),
-        l1_data_gas: Some(Felt::from(100_u32)),
-        l1_data_gas_price: Some(Felt::from(100_u32)),
+        l1_gas: Some(100),
+        l1_gas_price: Some(100),
+        l2_gas: Some(100),
+        l2_gas_price: Some(100),
+        l1_data_gas: Some(100),
+        l1_data_gas_price: Some(100),
     };
 
     let settings = args.try_into_fee_settings(None).unwrap();
