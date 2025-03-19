@@ -16,6 +16,7 @@ use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Declare;
 use starknet_types_core::felt::Felt;
 use std::fs;
+use tempfile::tempdir;
 use test_case::test_case;
 
 #[tokio::test]
@@ -614,6 +615,42 @@ async fn test_no_scarb_profile() {
             To see declaration details, visit:
             class: [..]
             transaction: [..]
+        "},
+    );
+}
+
+// TODO(#3118: Remove this test, once integration with braavos is restored
+#[tokio::test]
+async fn test_braavos_disabled() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "human_readable",
+    );
+    let tempdir = tempdir().expect("Failed to create a temporary directory");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        &accounts_json_path,
+        "--account",
+        "braavos",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+    ];
+    let args = apply_test_resource_bounds_flags(args);
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Error: Integration with Braavos accounts is currently disabled
         "},
     );
 }
