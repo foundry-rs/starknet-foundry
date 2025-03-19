@@ -253,7 +253,7 @@ fn test_wrong_calldata() {
         output,
         indoc! {r"
         command: deploy
-        error: error: Transaction execution error [..]
+        error: Transaction execution error [..]
         "},
     );
 }
