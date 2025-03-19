@@ -151,6 +151,7 @@ impl CacheDir {
 
         let mut file = OpenOptions::new()
             .write(true)
+            .read(true)
             .create(true)
             .truncate(false)
             .open(&cache_file)?;
