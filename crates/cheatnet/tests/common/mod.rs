@@ -1,4 +1,5 @@
 use assertions::ClassHashAssert;
+use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType, EntryPointExecutionContext};
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
@@ -92,7 +93,11 @@ pub fn deploy_contract(
         .unwrap()
         .unwrap_success();
 
-    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);
+    let mut entry_point_execution_context = build_context(
+        &cheatnet_state.block_info,
+        None,
+        &TrackedResource::CairoSteps,
+    );
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
@@ -119,7 +124,11 @@ pub fn deploy_wrapper(
     class_hash: &ClassHash,
     calldata: &[Felt],
 ) -> Result<ContractAddress, CheatcodeError> {
-    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);
+    let mut entry_point_execution_context = build_context(
+        &cheatnet_state.block_info,
+        None,
+        &TrackedResource::CairoSteps,
+    );
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
@@ -146,7 +155,11 @@ pub fn deploy_at_wrapper(
     calldata: &[Felt],
     contract_address: ContractAddress,
 ) -> Result<ContractAddress, CheatcodeError> {
-    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);
+    let mut entry_point_execution_context = build_context(
+        &cheatnet_state.block_info,
+        None,
+        &TrackedResource::CairoSteps,
+    );
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
@@ -190,7 +203,11 @@ pub fn call_contract(
         initial_gas: i64::MAX as u64,
     };
 
-    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);
+    let mut entry_point_execution_context = build_context(
+        &cheatnet_state.block_info,
+        None,
+        &TrackedResource::CairoSteps,
+    );
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(

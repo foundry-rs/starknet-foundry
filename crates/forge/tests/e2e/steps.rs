@@ -84,7 +84,7 @@ fn should_default_to_10m() {
 
             Collected 2 test(s) from steps package
             Running 2 test(s) from src/
-            [PASS] steps::tests::steps_less_than_10000000 (gas: ~[..])
+            [PASS] steps::tests::steps_less_than_10000000 (l1_gas: ~[..], l1_data_gas: ~[..], l2_gas: ~[..])
             [FAIL] steps::tests::steps_more_than_10000000
 
             Failure data:
