@@ -58,6 +58,7 @@ pub fn build_profiler_call_trace(
         cumulative_resources: build_profiler_execution_resources(
             value.used_execution_resources.clone(),
             value.used_syscalls.clone(),
+            value.gas_consumed,
         ),
         used_l1_resources: value.used_l1_resources.clone(),
         nested_calls: value
@@ -120,6 +121,7 @@ fn build_profiler_call_trace_node(
 pub fn build_profiler_execution_resources(
     execution_resources: ExecutionResources,
     syscall_counter: SyscallCounter,
+    gas_consumed: u64,
 ) -> ProfilerExecutionResources {
     let mut profiler_syscall_counter = HashMap::new();
     for (key, val) in syscall_counter {
@@ -135,6 +137,7 @@ pub fn build_profiler_execution_resources(
                 .map(|(key, value)| (key.to_str_with_suffix().to_owned(), value))
                 .collect(),
         },
+        gas_consumed: Some(gas_consumed),
     }
 }
 

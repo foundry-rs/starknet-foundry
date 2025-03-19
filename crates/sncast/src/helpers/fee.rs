@@ -1,6 +1,6 @@
 use anyhow::{Result, anyhow, ensure};
 use clap::Args;
-use conversions::{TryFromConv, serde::deserialize::CairoDeserialize};
+use conversions::serde::deserialize::CairoDeserialize;
 use starknet::core::types::FeeEstimate;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 
@@ -12,27 +12,27 @@ pub struct FeeArgs {
 
     /// Max L1 gas amount. If not provided, will be automatically estimated.
     #[clap(long)]
-    pub l1_gas: Option<Felt>,
+    pub l1_gas: Option<u64>,
 
     /// Max L1 gas price in Fri. If not provided, will be automatically estimated.
     #[clap(long)]
-    pub l1_gas_price: Option<Felt>,
+    pub l1_gas_price: Option<u128>,
 
     /// Max L2 gas amount. If not provided, will be automatically estimated.
     #[clap(long)]
-    pub l2_gas: Option<Felt>,
+    pub l2_gas: Option<u64>,
 
     /// Max L2 gas price in Fri. If not provided, will be automatically estimated.
     #[clap(long)]
-    pub l2_gas_price: Option<Felt>,
+    pub l2_gas_price: Option<u128>,
 
     /// Max L1 data gas amount. If not provided, will be automatically estimated.
     #[clap(long)]
-    pub l1_data_gas: Option<Felt>,
+    pub l1_data_gas: Option<u64>,
 
     /// Max L1 data gas price in Fri. If not provided, will be automatically estimated.
     #[clap(long)]
-    pub l1_data_gas_price: Option<Felt>,
+    pub l1_data_gas_price: Option<u128>,
 }
 
 impl From<ScriptFeeSettings> for FeeArgs {
@@ -48,12 +48,12 @@ impl From<ScriptFeeSettings> for FeeArgs {
         } = script_fee_settings;
         Self {
             max_fee,
-            l1_gas: l1_gas.map(Felt::from),
-            l1_gas_price: l1_gas_price.map(Felt::from),
-            l2_gas: l2_gas.map(Felt::from),
-            l2_gas_price: l2_gas_price.map(Felt::from),
-            l1_data_gas: l1_data_gas.map(Felt::from),
-            l1_data_gas_price: l1_data_gas_price.map(Felt::from),
+            l1_gas,
+            l1_gas_price,
+            l2_gas,
+            l2_gas_price,
+            l1_data_gas,
+            l1_data_gas_price,
         }
     }
 }
@@ -77,12 +77,11 @@ impl FeeArgs {
                 Felt::from(max_fee)
             );
 
-            let fee_settings = FeeSettings::try_from_(fee_estimate.clone())
+            let fee_settings = FeeSettings::try_from(fee_estimate.clone())
                 .expect("Failed to convert FeeEstimate to FeeSettings");
             Ok(fee_settings)
         } else {
-            let fee_settings = FeeSettings::try_from_(self.clone())
-                .expect("Failed to convert FeeArgs to FeeSettings");
+            let fee_settings = FeeSettings::from(self.clone());
             Ok(fee_settings)
         }
     }
@@ -91,13 +90,18 @@ impl FeeArgs {
         if let Some(max_fee) = self.max_fee {
             let max_fee_felt = Felt::from(max_fee);
 
+            // Gas amounts and gas prices are different types, hence we
+            // change them to Felt to compare them
             let gas_checks = [
-                (self.l1_gas, "--l1-gas"),
-                (self.l1_gas_price, "--l1-gas-price"),
-                (self.l2_gas, "--l2-gas"),
-                (self.l2_gas_price, "--l2-gas-price"),
-                (self.l1_data_gas, "--l1-data-gas"),
-                (self.l1_data_gas_price, "--l1-data-gas-price"),
+                (self.l1_gas.map(Felt::from), "--l1-gas"),
+                (self.l1_gas_price.map(Felt::from), "--l1-gas-price"),
+                (self.l2_gas.map(Felt::from), "--l2-gas"),
+                (self.l2_gas_price.map(Felt::from), "--l2-gas-price"),
+                (self.l1_data_gas.map(Felt::from), "--l1-data-gas"),
+                (
+                    self.l1_data_gas_price.map(Felt::from),
+                    "--l1-data-gas-price",
+                ),
             ];
 
             for (gas_value, flag) in &gas_checks {
@@ -136,9 +140,9 @@ pub struct FeeSettings {
     pub l1_data_gas_price: Option<u128>,
 }
 
-impl TryFromConv<FeeEstimate> for FeeSettings {
-    type Error = String;
-    fn try_from_(fee_estimate: FeeEstimate) -> Result<FeeSettings, std::string::String> {
+impl TryFrom<FeeEstimate> for FeeSettings {
+    type Error = anyhow::Error;
+    fn try_from(fee_estimate: FeeEstimate) -> Result<FeeSettings, anyhow::Error> {
         Ok(FeeSettings {
             l1_gas: Some(
                 u64::try_from(fee_estimate.l1_gas_consumed).expect("Failed to convert l1_gas"),
@@ -164,29 +168,16 @@ impl TryFromConv<FeeEstimate> for FeeSettings {
     }
 }
 
-impl TryFromConv<FeeArgs> for FeeSettings {
-    type Error = String;
-    fn try_from_(fee_args: FeeArgs) -> Result<FeeSettings, std::string::String> {
-        Ok(FeeSettings {
-            l1_gas: fee_args
-                .l1_gas
-                .map(|val| u64::try_from(val).expect("Failed to convert l1_gas")),
-            l1_gas_price: fee_args
-                .l1_gas_price
-                .map(|val| u128::try_from(val).expect("Failed to convert l1_gas_price")),
-            l2_gas: fee_args
-                .l2_gas
-                .map(|val| u64::try_from(val).expect("Failed to convert l2_gas")),
-            l2_gas_price: fee_args
-                .l2_gas_price
-                .map(|val| u128::try_from(val).expect("Failed to convert l2_gas_price")),
-            l1_data_gas: fee_args
-                .l1_data_gas
-                .map(|val| u64::try_from(val).expect("Failed to convert l1_data_gas")),
-            l1_data_gas_price: fee_args
-                .l1_data_gas_price
-                .map(|val| u128::try_from(val).expect("Failed to convert l1_data_gas_price")),
-        })
+impl From<FeeArgs> for FeeSettings {
+    fn from(fee_args: FeeArgs) -> FeeSettings {
+        FeeSettings {
+            l1_gas: fee_args.l1_gas,
+            l1_gas_price: fee_args.l1_gas_price,
+            l2_gas: fee_args.l2_gas,
+            l2_gas_price: fee_args.l2_gas_price,
+            l1_data_gas: fee_args.l1_data_gas,
+            l1_data_gas_price: fee_args.l1_data_gas_price,
+        }
     }
 }
 

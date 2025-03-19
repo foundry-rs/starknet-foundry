@@ -1,7 +1,8 @@
+use std::str::FromStr;
+
 use super::deploy::compute_account_address;
 use crate::starknet_commands::account::{
-    AccountType, add_created_profile_to_configuration, prepare_account_json,
-    write_account_to_accounts_file,
+    add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
 };
 use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
@@ -13,9 +14,7 @@ use sncast::helpers::braavos::BRAAVOS_DISABLED_MESSAGE;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
-use sncast::{
-    AccountType as SNCastAccountType, check_class_hash_exists, get_chain_id, handle_rpc_error,
-};
+use sncast::{AccountType, check_class_hash_exists, get_chain_id, handle_rpc_error};
 use starknet::core::types::{BlockId, BlockTag, StarknetError};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::providers::{Provider, ProviderError};
@@ -34,7 +33,7 @@ pub struct Import {
     pub address: Felt,
 
     /// Type of the account
-    #[clap(short = 't', long = "type")]
+    #[clap(short = 't', long = "type", value_parser = AccountType::from_str)]
     pub account_type: AccountType,
 
     /// Class hash of the account
@@ -127,12 +126,7 @@ pub async fn import(
 
     let chain_id = get_chain_id(provider).await?;
     if let Some(salt) = import.salt {
-        // TODO(#2571)
-        let sncast_account_type = match import.account_type {
-            AccountType::Argent => SNCastAccountType::Argent,
-            AccountType::Braavos => SNCastAccountType::Braavos,
-            AccountType::Oz => SNCastAccountType::OpenZeppelin,
-        };
+        let sncast_account_type = import.account_type;
         let computed_address =
             compute_account_address(salt, private_key, class_hash, sncast_account_type, chain_id);
         ensure!(
@@ -150,7 +144,7 @@ pub async fn import(
         import.address,
         deployed,
         legacy,
-        &import.account_type,
+        import.account_type,
         Some(class_hash),
         import.salt,
     );

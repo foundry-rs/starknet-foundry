@@ -1,15 +1,7 @@
-use sncast_std::{declare, FeeSettings};
+use sncast_std::{declare, FeeSettingsTrait};
 
 fn main() {
-    let fee_settings = FeeSettings {
-        max_fee: Option::Some(9999999),
-        l1_gas: Option::None,
-        l1_gas_price: Option::None,
-        l2_gas: Option::None,
-        l2_gas_price: Option::None,
-        l1_data_gas: Option::None,
-        l2_data_gas_price: Option::None,
-    };
+    let fee_settings = FeeSettingsTrait::max_fee(9999999);
 
     let result = declare("HelloStarknet", fee_settings, Option::None).expect('declare failed');
 

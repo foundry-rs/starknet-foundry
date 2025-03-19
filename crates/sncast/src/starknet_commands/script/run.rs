@@ -2,6 +2,7 @@ use crate::starknet_commands::declare::Declare;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{WaitForTx, get_account};
 use anyhow::{Context, Result, anyhow};
+use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::execution_utils::ReadOnlySegments;
@@ -326,7 +327,11 @@ pub fn run(
     let (hints_dict, string_to_hint) = hints_to_params(assembled_program.hints);
 
     // hint processor
-    let mut context = build_context(&SerializableBlockInfo::default().into(), None);
+    let mut context = build_context(
+        &SerializableBlockInfo::default().into(),
+        None,
+        &TrackedResource::CairoSteps,
+    );
 
     let mut blockifier_state = CachedState::new(DictStateReader::default());
 

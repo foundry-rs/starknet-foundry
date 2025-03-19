@@ -1,16 +1,8 @@
 use starknet::ClassHash;
-use sncast_std::{deploy, FeeSettings};
+use sncast_std::{deploy, FeeSettingsTrait};
 
 fn main() {
-    let fee_settings = FeeSettings {
-        max_fee: Option::Some(9999999),
-        l1_gas: Option::None,
-        l1_gas_price: Option::None,
-        l2_gas: Option::None,
-        l2_gas_price: Option::None,
-        l1_data_gas: Option::None,
-        l2_data_gas_price: Option::None,
-    };
+    let fee_settings = FeeSettingsTrait::max_fee(9999999);
     let salt = 0x1;
     let nonce = 0x1;
 
