@@ -157,8 +157,9 @@ impl CacheDir {
 
         file.lock_exclusive().expect("Could not lock on cache file");
 
-        let cache_file_content =
-            fs::read_to_string(&cache_file).expect("Should have been able to read the cache");
+        let mut cache_file_content = String::new();
+        file.read_to_string(&mut cache_file_content)
+            .expect("Should have been able to read the cache");
 
         let output = if cache_file_content.is_empty() {
             fork_cache_content.to_string()
