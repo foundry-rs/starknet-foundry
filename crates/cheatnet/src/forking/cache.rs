@@ -153,7 +153,7 @@ impl CacheDir {
             .write(true)
             .read(true)
             .create(true)
-            .truncate(false)
+            .truncate(true)
             .open(&cache_file)?;
 
         file.lock_exclusive().expect("Could not lock on cache file");
