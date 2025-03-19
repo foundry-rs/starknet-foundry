@@ -108,12 +108,12 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
 // }; "max_fee")]
 #[test_case(FeeArgs{
     max_fee: None,
-    l1_data_gas: Some(100_000.into()),
-    l1_data_gas_price: Some(10_000_000_000_000_u64.into()),
-    l1_gas: Some(100_000.into()),
-    l1_gas_price: Some(10_000_000_000_000_u64.into()),
-    l2_gas: Some(1_000_000_000.into()),
-    l2_gas_price: Some(100_000_000_000_000_000_000_u128.into()),
+    l1_data_gas: Some(100_000),
+    l1_data_gas_price: Some(10_000_000_000_000),
+    l1_gas: Some(100_000),
+    l1_gas_price: Some(10_000_000_000_000),
+    l2_gas: Some(1_000_000_000),
+    l2_gas_price: Some(100_000_000_000_000_000_000),
 }; "resource_bounds")]
 #[tokio::test]
 async fn test_happy_case_different_fees(fee_args: FeeArgs) {
@@ -123,12 +123,12 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
         &format!(
             "{}{}{}{}{}{}{}",
             fee_args.max_fee.map_or(Felt::from(0), Felt::from),
-            fee_args.l1_data_gas.unwrap_or(Felt::from(1)),
-            fee_args.l1_data_gas_price.unwrap_or(Felt::from(2)),
-            fee_args.l1_gas.unwrap_or(Felt::from(3)),
-            fee_args.l1_gas_price.unwrap_or(Felt::from(4)),
-            fee_args.l2_gas.unwrap_or(Felt::from(5)),
-            fee_args.l2_gas_price.unwrap_or(Felt::from(6))
+            fee_args.l1_data_gas.unwrap_or(1),
+            fee_args.l1_data_gas_price.unwrap_or(2),
+            fee_args.l1_gas.unwrap_or(3),
+            fee_args.l1_gas_price.unwrap_or(4),
+            fee_args.l2_gas.unwrap_or(5),
+            fee_args.l2_gas_price.unwrap_or(6)
         ),
     );
     let tempdir = create_and_deploy_oz_account().await;
