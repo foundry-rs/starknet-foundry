@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::fmt::Display;
 use std::fs;
 use std::fs::OpenOptions;
-use std::io::{Read, Write};
+use std::io::{Read, Seek, Write};
 use std::string::ToString;
 use std::sync::{Arc, RwLock};
 use url::Url;
@@ -153,7 +153,7 @@ impl CacheDir {
             .write(true)
             .read(true)
             .create(true)
-            .truncate(true)
+            .truncate(false)
             .open(&cache_file)?;
 
         file.lock_exclusive().expect("Could not lock on cache file");
@@ -170,6 +170,8 @@ impl CacheDir {
             fs_fork_cache_content.to_string()
         };
 
+        file.set_len(0).expect("Failed to truncate file");
+        file.rewind().expect("Failed to rewind file");
         file.write_all(output.as_bytes())
             .expect("Could not write cache to file");
 
