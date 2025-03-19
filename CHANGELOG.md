@@ -24,7 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Updated argent class hash used in account creation to v0.4.0
-- Updated braavos class hashes used in account creation to v1.1.0
 
 #### Removed
 

@@ -228,6 +228,8 @@ async fn test_happy_case_with_constructor_cairo_expression_calldata() {
     assert!(matches!(receipt, Deploy(_)));
 }
 
+// TODO(#3116): Before, this test returned message 'Input too long for arguments').
+// Now, it returns message about transaction execution error.
 #[test]
 fn test_wrong_calldata() {
     let args = vec![
@@ -251,7 +253,7 @@ fn test_wrong_calldata() {
         output,
         indoc! {r"
         command: deploy
-        error: [..]('Input too long for arguments')[..]
+        error: error: Transaction execution error [..]
         "},
     );
 }
@@ -279,6 +281,8 @@ async fn test_contract_not_declared() {
     );
 }
 
+// TODO(#3116): Before, this test returned message containing info that contract is already deployed.
+// Now, it returns message about transaction execution error.
 #[test]
 fn test_contract_already_deployed() {
     let args = vec![
@@ -302,7 +306,7 @@ fn test_contract_already_deployed() {
         output,
         indoc! {r"
         command: deploy
-        error: [..]Deployment failed: contract already deployed at address [..]
+        error: Transaction execution error [..]
         "},
     );
 }

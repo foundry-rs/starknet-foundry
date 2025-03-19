@@ -197,6 +197,7 @@ async fn test_contract_does_not_exist() {
     );
 }
 
+// TODO(#3116): Before, the error message included 'ENTRYPOINT_NOT_FOUND', but now it's an undecoded felt.
 #[test]
 fn test_wrong_function_name() {
     let args = vec![
@@ -220,7 +221,7 @@ fn test_wrong_function_name() {
         output,
         indoc! {"
             command: invoke
-            error: Transaction execution error[..]('ENTRYPOINT_NOT_FOUND')[..]
+            error: Transaction execution error [..]0x454e545259504f494e545f4e4f545f464f554e44[..]
         "},
     );
 }
