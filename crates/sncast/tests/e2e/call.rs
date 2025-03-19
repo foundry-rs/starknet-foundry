@@ -4,7 +4,7 @@ use crate::helpers::constants::{
 use crate::helpers::fixtures::invoke_contract;
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::assert_stderr_contains;
 use snapbox::cmd::{Command, cargo_bin};
 use sncast::helpers::fee::FeeSettings;
 use std::path::PathBuf;
@@ -171,12 +171,12 @@ fn test_wrong_calldata() {
 
     // TODO(#3107)
     // 0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 is "Input too long for arguments"
-    assert_stdout_contains(
+    assert_stderr_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
         command: call
-        response: [0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473]
-        "},
+        error: An error occurred in the called contract = [..] error: Message("[\"0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473\"]") }) }
+        "#},
     );
 }
 
