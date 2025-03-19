@@ -100,9 +100,9 @@ async fn test_call_invalid_calldata() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        indoc! {r#"
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Execution failed. Failure reason: 0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 ('Input too long for arguments')." })))
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Execution failed. Failure reason: 0x4661696c656420746f20646573657269616c697a6520706172616d202332 ('Failed to deserialize param #2')." })))
+        command: script run
         status: success
         "#},
     );
