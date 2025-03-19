@@ -11,7 +11,7 @@ use starknet_api::state::StorageKey;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::fs;
-use std::fs::OpenOptions;
+use std::fs::{File, OpenOptions};
 use std::io::{Read, Seek, Write};
 use std::string::ToString;
 use url::Url;
@@ -99,6 +99,18 @@ impl Drop for ForkCache {
     }
 }
 
+trait FileTruncateExtension {
+    fn clear(&mut self) -> Result<()>;
+}
+
+impl FileTruncateExtension for File {
+    fn clear(&mut self) -> Result<()> {
+        self.set_len(0).context("Failed to truncate file")?;
+        self.rewind().context("Failed to rewind file")?;
+        Ok(())
+    }
+}
+
 impl ForkCache {
     pub(crate) fn load_or_new(
         url: &Url,
@@ -154,8 +166,7 @@ impl ForkCache {
             fs_fork_cache_content.to_string()
         };
 
-        file.set_len(0).expect("Failed to truncate file");
-        file.rewind().expect("Failed to rewind file");
+        file.clear().expect("Failed to clear file");
         file.write_all(output.as_bytes())
             .expect("Could not write cache to file");
 
