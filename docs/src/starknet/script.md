@@ -23,13 +23,10 @@ contracts from within Cairo, its interface, internals and feature set can change
 > Example:
 >
 > ```rust
+>      let fee_settings = FeeSettingsTrait::estimate();
 >      let declare_result = declare(
 >        "Map",
->        FeeSettings {
->           max_fee: Option::None,
->           max_gas: Option::Some(999999),
->           max_gas_unit_price: Option::Some(100000000000)
->        },
+>        fee_settings,
 >        Option::Some(nonce)
 >    )
 >        .expect('declare failed');
@@ -413,6 +410,35 @@ status: script panicked
 ```
 </details>
 <br>
+
+### Fee settings
+
+Passing fee settings is possible in a few different ways:
+
+1. Using auto estimation:
+
+```rust
+let fee_settings = FeeSettingsTrait::estimate();
+```
+
+2. Manually setting the resource bounds:
+
+```rust
+let fee_settings = FeeSettingsTrait::resource_bounds(
+  100000, // l1 gas
+  10000000000000, // l1 gas price
+  1000000000, // l2 gas
+  100000000000000000000, // l2 gas price
+  100000, // l1 data gas
+  10000000000000, // l1 data gas price
+);
+```
+
+3. Specifying the maximum fee:
+
+```rust
+let fee_settings = FeeSettingsTrait::max_fee(100000000000000000000);
+```
 
 ## Error handling
 
