@@ -931,7 +931,7 @@ fn call_nonexistent_selector() {
 }
 
 #[test]
-#[cfg_attr(feature = "scarb_since_2_10", ignore)]
+#[cfg_attr(not(feature = "scarb_2_7_1"), ignore)]
 fn sierra_gas_with_older_scarb() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)
