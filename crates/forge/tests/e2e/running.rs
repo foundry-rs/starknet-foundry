@@ -1,11 +1,20 @@
-use super::common::runner::{get_current_branch, get_remote_url, setup_package, test_runner};
-use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
+use super::common::runner::{
+    get_current_branch, get_remote_url, runner, setup_package, snforge_test_bin_path, test_runner,
+};
+use assert_fs::TempDir;
+use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
+use forge::CAIRO_EDITION;
+use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stdout_contains;
-use std::{fs, str::FromStr};
-use test_utils::tempdir_with_tool_versions;
-use toml_edit::{DocumentMut, value};
+use snapbox::assert_matches;
+use snapbox::cmd::Command as SnapboxCommand;
+use std::ffi::OsString;
+use std::path::PathBuf;
+use std::{env, fs, iter, path::Path, str::FromStr};
+use test_utils::{get_local_snforge_std_absolute_path, tempdir_with_tool_versions};
+use toml_edit::{DocumentMut, Formatted, InlineTable, Item, Value, value};
 
 #[test]
 fn simple_package() {
@@ -43,7 +52,7 @@ fn simple_package() {
         0x6661696c696e6720636865636b ('failing check')
 
     [PASS] simple_package_integrationtest::without_prefix::five [..]
-    Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
+    Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 excluded, 0 filtered out
 
     Failures:
         simple_package_integrationtest::test_simple::test_failing
@@ -114,7 +123,7 @@ fn simple_package_with_git_dependency() {
             0x6661696c696e6720636865636b ('failing check')
 
         [PASS] simple_package_integrationtest::without_prefix::five [..]
-        Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
+        Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 excluded, 0 filtered out
 
         Failures:
             simple_package_integrationtest::test_simple::test_failing
@@ -166,7 +175,7 @@ fn with_filter() {
         Running 2 test(s) from tests/
         [PASS] simple_package_integrationtest::test_simple::test_two [..]
         [PASS] simple_package_integrationtest::test_simple::test_two_and_two [..]
-        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 11 filtered out
+        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, 11 filtered out
         "},
     );
 }
@@ -192,7 +201,7 @@ fn with_filter_matching_module() {
         [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
         [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
         [PASS] simple_package_integrationtest::ext_function_test::test_simple [..]
-        Tests: 2 passed, 0 failed, 0 skipped, 1 ignored, 10 filtered out
+        Tests: 2 passed, 0 failed, 0 skipped, 1 ignored, 0 excluded, 10 filtered out
         "},
     );
 }
@@ -218,7 +227,7 @@ fn with_exact_filter() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] simple_package_integrationtest::test_simple::test_two [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, other filtered out
         "},
     );
 }
@@ -244,7 +253,7 @@ fn with_exact_filter_and_duplicated_test_names() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] duplicated_test_names_integrationtest::tests_a::test_simple [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, other filtered out
         "},
     );
 }
@@ -265,7 +274,7 @@ fn with_non_matching_filter() {
         Collected 0 test(s) from simple_package package
         Running 0 test(s) from src/
         Running 0 test(s) from tests/
-        Tests: 0 passed, 0 failed, 0 skipped, 0 ignored, 13 filtered out
+        Tests: 0 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, 13 filtered out
         "},
     );
 }
@@ -292,7 +301,7 @@ fn with_ignored_flag() {
         Failure data:
             0x6e6f742070617373696e67 ('not passing')
 
-        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 11 filtered out
+        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 excluded, 11 filtered out
 
         Failures:
             simple_package_integrationtest::ext_function_test::ignored_test
@@ -341,7 +350,7 @@ fn with_include_ignored_flag() {
             0x6661696c696e6720636865636b ('failing check')
 
         [PASS] simple_package_integrationtest::without_prefix::five [..]
-        Tests: 10 passed, 3 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 10 passed, 3 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
 
         Failures:
             simple_package_integrationtest::ext_function_test::ignored_test
@@ -376,7 +385,7 @@ fn with_ignored_flag_and_filter() {
         Failure data:
             0x6e6f742070617373696e67 ('not passing')
 
-        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 12 filtered out
+        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 excluded, 12 filtered out
 
         Failures:
             simple_package_integrationtest::ext_function_test::ignored_test
@@ -410,10 +419,54 @@ fn with_include_ignored_flag_and_filter() {
         Failure data:
             0x6e6f742070617373696e67 ('not passing')
 
-        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 11 filtered out
+        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 excluded, 11 filtered out
 
         Failures:
             simple_package_integrationtest::ext_function_test::ignored_test
+        "},
+    );
+}
+
+#[test]
+fn with_exclude_flag() {
+    let temp = setup_package("simple_package");
+    // Exclude the test "test_failing"
+    let output = test_runner(&temp)
+        .arg("--exclude")
+        .arg("test_failing")
+        .assert()
+        .code(1); // Assuming no other test fails
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        Collected 13 test(s) from simple_package package
+        Running 2 test(s) from src/
+        [IGNORE] simple_package::tests::ignored_test
+        [PASS] simple_package::tests::test_fib [..]
+        [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
+        [PASS] simple_package_integrationtest::test_simple::test_two (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+        [FAIL] simple_package_integrationtest::test_simple::test_another_failing
+
+        Failure data:
+            0x6661696c696e6720636865636b ('failing check')
+
+        [PASS] simple_package_integrationtest::ext_function_test::test_my_test (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+        [PASS] simple_package_integrationtest::test_simple::test_simple (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+        [PASS] simple_package_integrationtest::ext_function_test::test_simple (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+        [PASS] simple_package_integrationtest::without_prefix::five (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+        [PASS] simple_package_integrationtest::test_simple::test_two_and_two (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+        [PASS] simple_package_integrationtest::test_simple::test_simple2 (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+        [PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+        [EXCLUDED] simple_package_integrationtest::test_simple::test_failing
+
+        Tests: 9 passed, 1 failed, 0 skipped, 2 ignored, 1 excluded, 0 filtered out
+
+        Failures:
+            simple_package_integrationtest::test_simple::test_another_failing
         "},
     );
 }
@@ -456,7 +509,7 @@ fn with_rerun_failed_flag_without_cache() {
             simple_package_integrationtest::test_simple::test_another_failing
         [IGNORE] simple_package::tests::ignored_test
         [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
-        Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
+        Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 excluded, 0 filtered out
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
 
@@ -489,7 +542,7 @@ fn with_rerun_failed_flag_and_name_filter() {
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
 
-        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 12 filtered out
+        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 excluded, 12 filtered out
 
         Failures:
             simple_package_integrationtest::test_simple::test_another_failing
@@ -525,7 +578,7 @@ fn with_rerun_failed_flag() {
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
 
-        Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 11 filtered out
+        Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 0 excluded, 11 filtered out
 
         Failures:
             simple_package_integrationtest::test_simple::test_another_failing
@@ -586,7 +639,7 @@ fn with_panic_data_decoding() {
             x: 5
             y: 6"
 
-        Tests: 2 passed, 6 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 2 passed, 6 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
 
         Failures:
             panic_decoding_integrationtest::test_panic_decoding::test_panic_decoding2
@@ -642,7 +695,7 @@ fn with_exit_first() {
         Failure data:
             0x73696d706c6520636865636b ('simple check')
 
-        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 0 filtered out
+        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 0 excluded, 0 filtered out
 
         Failures:
             exit_first_integrationtest::ext_function_test::simple_test
@@ -670,12 +723,257 @@ fn with_exit_first_flag() {
         Failure data:
             0x73696d706c6520636865636b ('simple check')
 
-        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 0 filtered out
+        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 0 excluded, 0 filtered out
 
         Failures:
             exit_first_integrationtest::ext_function_test::simple_test
         "},
     );
+}
+
+#[test]
+fn init_new_project() {
+    let temp = tempdir_with_tool_versions().unwrap();
+
+    let output = runner(&temp)
+        .args(["init", "test_name"])
+        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc!(
+            r"
+                [WARNING] Command `snforge init` is deprecated and will be removed in the future. Please use `snforge new` instead.
+            "
+        ),
+    );
+
+    validate_init(&temp.join("test_name"), false);
+}
+
+#[test]
+fn create_new_project_dir_not_exist() {
+    let temp = tempdir_with_tool_versions().unwrap();
+    let project_path = temp.join("new").join("project");
+
+    runner(&temp)
+        .args(["new", "--name", "test_name"])
+        .arg(&project_path)
+        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
+        .assert()
+        .success();
+
+    validate_init(&project_path, false);
+}
+
+#[test]
+fn create_new_project_dir_not_empty() {
+    let temp = tempdir_with_tool_versions().unwrap();
+    temp.child("empty.txt").touch().unwrap();
+
+    let output = runner(&temp)
+        .args(["new", "--name", "test_name"])
+        .arg(temp.path())
+        .assert()
+        .code(2);
+
+    assert_stdout_contains(
+        output,
+        indoc!(
+            r"
+                [ERROR] The provided path [..] points to a non-empty directory. If you wish to create a project in this directory, use the `--overwrite` flag
+            "
+        ),
+    );
+}
+
+#[test]
+fn create_new_project_dir_exists_and_empty() {
+    let temp = tempdir_with_tool_versions().unwrap();
+    let project_path = temp.join("new").join("project");
+
+    fs::create_dir_all(&project_path).unwrap();
+    assert!(project_path.exists());
+
+    runner(&temp)
+        .args(["new", "--name", "test_name"])
+        .arg(&project_path)
+        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
+        .assert()
+        .success();
+
+    validate_init(&project_path, false);
+}
+
+#[test]
+fn init_new_project_from_scarb() {
+    let temp = tempdir_with_tool_versions().unwrap();
+
+    SnapboxCommand::new("scarb")
+        .current_dir(&temp)
+        .args(["new", "test_name"])
+        .env("SCARB_INIT_TEST_RUNNER", "starknet-foundry")
+        .env(
+            "PATH",
+            append_to_path_var(snforge_test_bin_path().parent().unwrap()),
+        )
+        .assert()
+        .success();
+
+    validate_init(&temp.join("test_name"), true);
+}
+
+pub fn append_to_path_var(path: &Path) -> OsString {
+    let script_path = iter::once(path.to_path_buf());
+    let os_path = env::var_os("PATH").unwrap();
+    let other_paths = env::split_paths(&os_path);
+    env::join_paths(script_path.chain(other_paths)).unwrap()
+}
+
+fn validate_init(project_path: &PathBuf, validate_snforge_std: bool) {
+    let manifest_path = project_path.join("Scarb.toml");
+    let scarb_toml = fs::read_to_string(manifest_path.clone()).unwrap();
+
+    let snforge_std_assert = if validate_snforge_std {
+        "\nsnforge_std = \"[..]\""
+    } else {
+        ""
+    };
+
+    let expected = formatdoc!(
+        r#"
+            [package]
+            name = "test_name"
+            version = "0.1.0"
+            edition = "{CAIRO_EDITION}"
+
+            # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
+
+            [dependencies]
+            starknet = "[..]"
+
+            [dev-dependencies]{}
+            assert_macros = "[..]"
+
+            [[target.starknet-contract]]
+            sierra = true
+
+            [scripts]
+            test = "snforge test"
+
+            [tool.scarb]
+            allow-prebuilt-plugins = ["snforge_std"]
+            {SCARB_MANIFEST_TEMPLATE_CONTENT}
+        "#,
+        snforge_std_assert
+    ).trim_end()
+    .to_string()+ "\n";
+
+    assert_matches(&expected, &scarb_toml);
+
+    let mut scarb_toml = DocumentMut::from_str(&scarb_toml).unwrap();
+
+    let dependencies = scarb_toml
+        .get_mut("dev-dependencies")
+        .unwrap()
+        .as_table_mut()
+        .unwrap();
+
+    let local_snforge_std = get_local_snforge_std_absolute_path()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string();
+
+    let mut snforge_std = InlineTable::new();
+    snforge_std.insert("path", Value::String(Formatted::new(local_snforge_std)));
+
+    dependencies.remove("snforge_std");
+    dependencies.insert("snforge_std", Item::Value(Value::InlineTable(snforge_std)));
+
+    std::fs::write(manifest_path, scarb_toml.to_string()).unwrap();
+
+    let output = test_runner(&TempDir::new().unwrap())
+        .current_dir(project_path)
+        .assert()
+        .success();
+
+    let expected = indoc!(
+        r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+        Collected 2 test(s) from test_name package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [PASS] test_name_integrationtest::test_contract::test_increase_balance [..]
+        [PASS] test_name_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value [..]
+        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
+        "
+    );
+
+    assert_stdout_contains(output, expected);
+}
+
+#[test]
+#[cfg(feature = "smoke")]
+fn test_init_project_with_custom_snforge_dependency_git() {
+    let temp = tempdir_with_tool_versions().unwrap();
+
+    runner(&temp)
+        .args(["new", "test_name"])
+        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
+        .assert()
+        .success();
+
+    let project_path = temp.join("test_name");
+    let manifest_path = project_path.join("Scarb.toml");
+
+    let scarb_toml = std::fs::read_to_string(&manifest_path).unwrap();
+    let mut scarb_toml = DocumentMut::from_str(&scarb_toml).unwrap();
+
+    let dependencies = scarb_toml
+        .get_mut("dev-dependencies")
+        .unwrap()
+        .as_table_mut()
+        .unwrap();
+
+    let branch = get_current_branch();
+    let remote_url = format!("https://github.com/{}", get_remote_url());
+
+    let mut snforge_std = InlineTable::new();
+    snforge_std.insert("git", Value::String(Formatted::new(remote_url.clone())));
+    snforge_std.insert("branch", Value::String(Formatted::new(branch)));
+
+    dependencies.remove("snforge_std");
+    dependencies.insert("snforge_std", Item::Value(Value::InlineTable(snforge_std)));
+
+    std::fs::write(&manifest_path, scarb_toml.to_string()).unwrap();
+
+    let output = test_runner(&temp)
+        .current_dir(&project_path)
+        .assert()
+        .success();
+
+    let expected = formatdoc!(
+        r"
+        [..]Updating git repository {}
+        [..]Compiling test_name v0.1.0[..]
+        [..]Finished[..]
+
+        Collected 2 test(s) from test_name package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [PASS] test_name_integrationtest::test_contract::test_increase_balance [..]
+        [PASS] test_name_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value [..]
+        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
+        ",
+        remote_url.trim_end_matches(".git")
+    );
+
+    assert_stdout_contains(output, expected);
 }
 
 #[test]
@@ -756,7 +1054,7 @@ fn should_panic() {
             Actual:    [0x6661696c696e6720636865636b] (failing check)
             Expected:  [0x0] ()
 
-        Tests: 5 passed, 9 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 5 passed, 9 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
 
         Failures:
             should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
@@ -804,7 +1102,7 @@ fn incompatible_snforge_std_version_warning() {
             Could not reach the end of the program. RunResources has no remaining steps.
             Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps
 
-        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
 
         Failures:
             steps::tests::steps_more_than_10000000
@@ -835,7 +1133,7 @@ fn detailed_resources_flag() {
                 memory holes: [..]
                 builtins: ([..])
                 syscalls: ([..])
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
         "},
     );
 }
@@ -862,7 +1160,7 @@ fn detailed_resources_flag_sierra_gas() {
         [PASS] erc20_package_integrationtest::test_complex::complex[..]
                 sierra_gas_consumed: ([..])
                 syscalls: ([..])
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
         "},
     );
 }
@@ -925,7 +1223,7 @@ fn call_nonexistent_selector() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] nonexistent_selector_integrationtest::test_contract::test_unwrapped_call_contract_syscall [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
         "},
     );
 }
@@ -952,4 +1250,34 @@ fn sierra_gas_with_older_scarb() {
         [ERROR] Requirements not satisfied
         "},
     );
+}
+
+#[test]
+fn create_new_project_and_check_gitignore() {
+    let temp = tempdir_with_tool_versions().unwrap();
+    let project_path = temp.join("project");
+
+    runner(&temp)
+        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
+        .args(["new", "--name", "test_name"])
+        .arg(&project_path)
+        .assert()
+        .success();
+
+    let gitignore_path = project_path.join(".gitignore");
+    assert!(gitignore_path.exists(), ".gitignore file should exist");
+
+    let gitignore_content = fs::read_to_string(gitignore_path).unwrap();
+
+    let expected_gitignore_content = indoc! {
+        r"
+        target
+        .snfoundry_cache/
+        snfoundry_trace/
+        coverage/
+        profile/
+        "
+    };
+
+    assert_eq!(gitignore_content, expected_gitignore_content);
 }

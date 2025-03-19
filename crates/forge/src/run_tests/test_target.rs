@@ -1,3 +1,4 @@
+use crate::test_filter::TestsFilter;
 use anyhow::Result;
 use forge_runner::{
     TestCaseFilter,
@@ -22,7 +23,8 @@ pub enum TestTargetRunResult {
 pub async fn run_for_test_target(
     tests: TestTargetWithResolvedConfig,
     forge_config: Arc<ForgeConfig>,
-    tests_filter: &impl TestCaseFilter,
+    tests_filter: &TestsFilter,
+    _package_name: &str,
 ) -> Result<TestTargetRunResult> {
     let casm_program = tests.casm_program.clone();
 
@@ -36,6 +38,16 @@ pub async fn run_for_test_target(
 
     for case in tests.test_cases {
         let case_name = case.name.clone();
+
+        // Check if the test case should be excluded
+        if tests_filter.is_excluded(&case) {
+            tasks.push(tokio::task::spawn(async {
+                Ok(AnyTestCaseSummary::Single(TestCaseSummary::Excluded {
+                    name: case_name,
+                }))
+            }));
+            continue;
+        }
 
         if !tests_filter.should_be_run(&case) {
             tasks.push(tokio::task::spawn(async {
