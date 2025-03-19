@@ -19,7 +19,8 @@ use test_case::test_case;
 
 #[test_case("oz"; "oz_account_type")]
 #[test_case("argent"; "argent_account_type")]
-#[test_case("braavos"; "braavos_account_type")]
+// TODO(#3118): Re-enable this test once braavos integration is restored
+// #[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
