@@ -92,30 +92,28 @@ impl Display for ForkCacheContent {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct CacheDir {
-    dir: RwLock<Utf8PathBuf>,
+    dir: Utf8PathBuf,
 }
 
-#[cfg(feature = "testing")]
-impl PartialEq for CacheDir {
-    fn eq(&self, other: &Self) -> bool {
-        *self.dir.read().unwrap() == *other.dir.read().unwrap()
-    }
-}
+// #[cfg(feature = "testing")]
+// impl PartialEq for CacheDir {
+//     fn eq(&self, other: &Self) -> bool {
+//         *self.dir.read().unwrap() == *other.dir.read().unwrap()
+//     }
+// }
 
 impl CacheDir {
     #[must_use]
     pub fn new(path: Utf8PathBuf) -> Self {
-        Self {
-            dir: RwLock::new(path),
-        }
+        Self { dir: path }
     }
 
     fn load(&self, url: &Url, block_number: BlockNumber) -> Result<ForkCacheContent> {
-        let dir = self.dir.read().unwrap();
+        // let dir = self.dir.read().unwrap();
 
-        let cache_file = cache_file_path_from_fork_config(url, block_number, &dir)?;
+        let cache_file = cache_file_path_from_fork_config(url, block_number, &self.dir)?;
         let mut file = OpenOptions::new()
             .write(true)
             .read(true)
@@ -145,9 +143,9 @@ impl CacheDir {
         block_number: BlockNumber,
         fork_cache_content: &ForkCacheContent,
     ) -> Result<()> {
-        let dir = self.dir.write().unwrap();
+        // let dir = self.dir.write().unwrap();
 
-        let cache_file = cache_file_path_from_fork_config(url, block_number, &dir)?;
+        let cache_file = cache_file_path_from_fork_config(url, block_number, &self.dir)?;
 
         let mut file = OpenOptions::new()
             .write(true)
