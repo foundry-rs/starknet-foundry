@@ -1,18 +1,9 @@
-use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeployResult, DeclareResultTrait, InvokeResult,
-    CallResult, get_nonce, FeeSettings
-};
+use sncast_std::{declare, deploy, invoke, call, DeclareResultTrait, get_nonce, FeeSettingsTrait};
 
 fn second_contract() {
-    let fee_settings = FeeSettings {
-        max_fee: Option::None,
-        l1_gas: Option::Some(1000000),
-        l1_gas_price: Option::Some(10000000000000),
-        l2_gas: Option::Some(1000000000),
-        l2_gas_price: Option::Some(100000000000000000),
-        l1_data_gas: Option::Some(1000000),
-        l2_data_gas_price: Option::Some(10000000000000),
-    };
+    let fee_settings = FeeSettingsTrait::resource_bounds(
+        100000, 10000000000000, 1000000000, 100000000000000000000, 100000, 10000000000000,
+    );
 
     let declare_result = declare("Mapa2", fee_settings, Option::None)
         .expect('mapa2 declare failed');
@@ -44,15 +35,9 @@ fn second_contract() {
 }
 
 fn main() {
-    let fee_settings = FeeSettings {
-        max_fee: Option::None,
-        l1_gas: Option::Some(1000000),
-        l1_gas_price: Option::Some(10000000000000),
-        l2_gas: Option::Some(1000000000),
-        l2_gas_price: Option::Some(100000000000000000),
-        l1_data_gas: Option::Some(1000000),
-        l2_data_gas_price: Option::Some(10000000000000),
-    };
+    let fee_settings = FeeSettingsTrait::resource_bounds(
+        100000, 10000000000000, 1000000000, 100000000000000000000, 100000, 10000000000000,
+    );
     let salt = 0x3;
 
     let declare_nonce = get_nonce('latest');

@@ -1,15 +1,7 @@
-use sncast_std::{declare, deploy, invoke, call, DeclareResultTrait, get_nonce, FeeSettings};
+use sncast_std::{declare, deploy, invoke, call, DeclareResultTrait, get_nonce, FeeSettingsTrait};
 
 fn main() {
-    let fee_settings = FeeSettings {
-        max_fee: Option::Some(999999999999999),
-        l1_gas: Option::None,
-        l1_gas_price: Option::None,
-        l2_gas: Option::None,
-        l2_gas_price: Option::None,
-        l1_data_gas: Option::None,
-        l2_data_gas_price: Option::None,
-    };
+    let fee_settings = FeeSettingsTrait::max_fee(999999999999999);
     let salt = 0x3;
 
     let declare_nonce = get_nonce('latest');
