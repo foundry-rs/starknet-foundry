@@ -49,4 +49,3 @@ clap.workspace = true
 
 [features]
 debugging = []
-testing = []

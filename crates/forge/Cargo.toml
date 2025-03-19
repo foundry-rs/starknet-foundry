@@ -65,5 +65,3 @@ cairo-lang-starknet-classes.workspace = true
 walkdir.workspace = true
 test-case.workspace = true
 docs = { workspace = true, features = ["testing"] }
-forge_runner = { path = "../forge-runner", features = ["testing"] }
-cheatnet = { path = "../cheatnet", features = ["testing"] }
