@@ -6,7 +6,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
 use serde_json::json;
-use sncast::helpers::braavos::{BRAAVOS_DISABLED_MESSAGE, BraavosAccountFactory};
+use sncast::helpers::braavos::{BraavosAccountFactory, assert_non_braavos_account_type};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
@@ -68,9 +68,7 @@ pub async fn create(
     create: &Create,
 ) -> Result<AccountCreateResponse> {
     // TODO(#3118): Remove this check once braavos integration is restored
-    if let AccountType::Braavos = create.account_type {
-        bail!(BRAAVOS_DISABLED_MESSAGE)
-    }
+    assert_non_braavos_account_type(create.account_type)?;
 
     let add_profile = create.add_profile.clone();
     let salt = extract_or_generate_salt(create.salt);
