@@ -44,16 +44,15 @@ pub trait EventsFilterTrait {
 
 impl EventsFilterTraitImpl of EventsFilterTrait {
     fn emitted_by(self: @Events, contract_address: ContractAddress) -> Events {
-        let mut counter = 0;
         let mut new_events = array![];
 
-        while counter < self.events.len() {
-            let (from, event) = self.events.at(counter);
-            if *from == contract_address {
-                new_events.append((*from, event.clone()));
+        for (from, event) in self
+            .events
+            .span() {
+                if *from == contract_address {
+                    new_events.append((*from, event.clone()));
+                };
             };
-            counter += 1;
-        };
         Events { events: new_events }
     }
 }
@@ -67,37 +66,31 @@ pub trait EventSpyAssertionsTrait<T, +starknet::Event<T>, +Drop<T>> {
 
 impl EventSpyAssertionsTraitImpl<T, +starknet::Event<T>, +Drop<T>> of EventSpyAssertionsTrait<T> {
     fn assert_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>) {
-        let mut i = 0;
         let received_events = self.get_events();
 
-        while i < events.len() {
-            let (from, event) = events.at(i);
-            let emitted = received_events.is_emitted(*from, event);
+        for (from, event) in events
+            .span() {
+                let emitted = received_events.is_emitted(*from, event);
 
-            if !emitted {
-                let from: felt252 = (*from).into();
-                panic!("Event with matching data and keys was not emitted from {}", from);
-            }
-
-            i += 1;
-        };
+                if !emitted {
+                    let from: felt252 = (*from).into();
+                    panic!("Event with matching data and keys was not emitted from {}", from);
+                }
+            };
     }
 
     fn assert_not_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>) {
-        let mut i = 0;
         let received_events = self.get_events();
 
-        while i < events.len() {
-            let (from, event) = events.at(i);
-            let emitted = received_events.is_emitted(*from, event);
+        for (from, event) in events
+            .span() {
+                let emitted = received_events.is_emitted(*from, event);
 
-            if emitted {
-                let from: felt252 = (*from).into();
-                panic!("Event with matching data and keys was emitted from {}", from);
-            }
-
-            i += 1;
-        };
+                if emitted {
+                    let from: felt252 = (*from).into();
+                    panic!("Event with matching data and keys was emitted from {}", from);
+                }
+            };
     }
 }
 
