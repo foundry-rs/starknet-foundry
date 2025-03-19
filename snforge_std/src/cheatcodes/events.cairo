@@ -60,14 +60,12 @@ impl EventsFilterTraitImpl of EventsFilterTrait {
 
 /// Allows to assert the expected events emission (or lack thereof),
 /// in the scope of [`EventSpy`] structure.
-pub trait EventSpyAssertionsTrait<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> {
+pub trait EventSpyAssertionsTrait<T, +starknet::Event<T>, +Drop<T>> {
     fn assert_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
     fn assert_not_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
 }
 
-impl EventSpyAssertionsTraitImpl<
-    T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>
-> of EventSpyAssertionsTrait<T> {
+impl EventSpyAssertionsTraitImpl<T, +starknet::Event<T>, +Drop<T>> of EventSpyAssertionsTrait<T> {
     fn assert_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>) {
         let mut i = 0;
         let received_events = self.get_events();
@@ -103,19 +101,19 @@ impl EventSpyAssertionsTraitImpl<
     }
 }
 
-pub trait IsEmitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> {
+pub trait IsEmitted<T, +starknet::Event<T>, +Drop<T>> {
     fn is_emitted(self: @Events, expected_emitted_by: ContractAddress, expected_event: @T) -> bool;
 }
 
-pub impl IsEmittedImpl<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> of IsEmitted<T> {
+pub impl IsEmittedImpl<T, +starknet::Event<T>, +Drop<T>> of IsEmitted<T> {
     fn is_emitted(self: @Events, expected_emitted_by: ContractAddress, expected_event: @T) -> bool {
         let expected_event: Event = expected_event.into();
 
         let mut is_emitted = false;
         for (from, event) in self
             .events
-            .clone() {
-                if from == expected_emitted_by && event == expected_event {
+            .span() {
+                if from == @expected_emitted_by && event == @expected_event {
                     is_emitted = true;
                     break;
                 };
@@ -125,7 +123,7 @@ pub impl IsEmittedImpl<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> 
 }
 
 
-impl EventIntoImpl<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> of Into<T, Event> {
+impl EventIntoImpl<T, +starknet::Event<T>, +Drop<T>> of Into<T, Event> {
     fn into(self: T) -> Event {
         let mut keys = array![];
         let mut data = array![];
@@ -133,7 +131,8 @@ impl EventIntoImpl<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> of I
         Event { keys, data }
     }
 }
-impl EventSnapIntoImpl<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> of Into<@T, Event> {
+
+impl EventSnapIntoImpl<T, +starknet::Event<T>, +Drop<T>> of Into<@T, Event> {
     fn into(self: @T) -> Event {
         let mut keys = array![];
         let mut data = array![];
