@@ -1,6 +1,5 @@
 use crate::scarb::config::ForgeConfigFromScarb;
 use camino::Utf8PathBuf;
-use cheatnet::forking::cache::CacheDir;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
@@ -46,7 +45,7 @@ pub fn combine_configs(
                 .unwrap_or_else(|| thread_rng().next_u64()),
             max_n_steps: max_n_steps.or(forge_config_from_scarb.max_n_steps),
             is_vm_trace_needed: execution_data_to_save.is_vm_trace_needed(),
-            cache_dir: Arc::new(CacheDir::new(cache_dir)),
+            cache_dir,
             contracts_data,
             tracked_resource,
             environment_variables: env::vars().collect(),
@@ -130,7 +129,7 @@ mod tests {
                     max_n_steps: None,
                     tracked_resource: ForgeTrackedResource::CairoSteps,
                     is_vm_trace_needed: false,
-                    cache_dir: Arc::new(CacheDir::new(Utf8PathBuf::default())),
+                    cache_dir: Utf8PathBuf::default(),
                     contracts_data: ContractsData::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
                 }),
@@ -182,7 +181,7 @@ mod tests {
                     max_n_steps: Some(1_000_000),
                     tracked_resource: ForgeTrackedResource::CairoSteps,
                     is_vm_trace_needed: true,
-                    cache_dir: Arc::new(CacheDir::new(Utf8PathBuf::default())),
+                    cache_dir: Utf8PathBuf::default(),
                     contracts_data: ContractsData::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
                 }),
@@ -239,7 +238,7 @@ mod tests {
                     max_n_steps: Some(1_000_000),
                     tracked_resource: ForgeTrackedResource::CairoSteps,
                     is_vm_trace_needed: true,
-                    cache_dir: Arc::new(CacheDir::new(Utf8PathBuf::default())),
+                    cache_dir: Utf8PathBuf::default(),
                     contracts_data: ContractsData::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
                 }),

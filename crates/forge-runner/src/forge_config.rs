@@ -1,5 +1,5 @@
 use blockifier::execution::contract_class::TrackedResource;
-use cheatnet::forking::cache::CacheDir;
+use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use clap::ValueEnum;
 use serde::Deserialize;
@@ -8,22 +8,20 @@ use std::ffi::OsString;
 use std::num::NonZeroU32;
 use std::sync::Arc;
 
-#[derive(Debug)]
-#[cfg_attr(feature = "testing", derive(PartialEq))]
+#[derive(Debug, PartialEq)]
 pub struct ForgeConfig {
     pub test_runner_config: Arc<TestRunnerConfig>,
     pub output_config: Arc<OutputConfig>,
 }
 
-#[derive(Debug)]
-#[cfg_attr(feature = "testing", derive(PartialEq))]
+#[derive(Debug, PartialEq)]
 pub struct TestRunnerConfig {
     pub exit_first: bool,
     pub fuzzer_runs: NonZeroU32,
     pub fuzzer_seed: u64,
     pub max_n_steps: Option<u32>,
     pub is_vm_trace_needed: bool,
-    pub cache_dir: Arc<CacheDir>,
+    pub cache_dir: Utf8PathBuf,
     pub contracts_data: ContractsData,
     pub environment_variables: HashMap<String, String>,
     pub tracked_resource: ForgeTrackedResource,
@@ -85,7 +83,7 @@ impl ExecutionDataToSave {
 pub struct RuntimeConfig<'a> {
     pub max_n_steps: Option<u32>,
     pub is_vm_trace_needed: bool,
-    pub cache_dir: Arc<CacheDir>,
+    pub cache_dir: &'a Utf8PathBuf,
     pub contracts_data: &'a ContractsData,
     pub environment_variables: &'a HashMap<String, String>,
     pub tracked_resource: &'a ForgeTrackedResource,
@@ -97,7 +95,7 @@ impl<'a> RuntimeConfig<'a> {
         Self {
             max_n_steps: value.max_n_steps,
             is_vm_trace_needed: value.is_vm_trace_needed,
-            cache_dir: value.cache_dir.clone(),
+            cache_dir: &value.cache_dir,
             contracts_data: &value.contracts_data,
             environment_variables: &value.environment_variables,
             tracked_resource: &value.tracked_resource,

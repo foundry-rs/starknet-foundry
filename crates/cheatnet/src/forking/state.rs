@@ -1,4 +1,4 @@
-use crate::forking::cache::{CacheDir, ForkCache};
+use crate::forking::cache::ForkCache;
 use crate::state::BlockInfoReader;
 use anyhow::{Context, Result};
 use blockifier::execution::contract_class::{
@@ -8,6 +8,7 @@ use blockifier::state::errors::StateError::{self, StateReadError, UndeclaredClas
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_lang_utils::bigint::BigUintAsHex;
 use cairo_vm::types::program::Program;
+use camino::Utf8Path;
 use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
@@ -39,7 +40,7 @@ pub struct ForkStateReader {
 }
 
 impl ForkStateReader {
-    pub fn new(url: Url, block_number: BlockNumber, cache_dir: Arc<CacheDir>) -> Result<Self> {
+    pub fn new(url: Url, block_number: BlockNumber, cache_dir: &Utf8Path) -> Result<Self> {
         Ok(ForkStateReader {
             cache: RefCell::new(
                 ForkCache::load_or_new(&url, block_number, cache_dir)

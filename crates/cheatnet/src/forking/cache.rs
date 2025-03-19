@@ -10,12 +10,10 @@ use starknet_api::core::{ClassHash, ContractAddress, Nonce};
 use starknet_api::state::StorageKey;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
-use std::fmt::Display;
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::{Read, Seek, Write};
 use std::string::ToString;
-use std::sync::{Arc, RwLock};
 use url::Url;
 
 #[must_use]
@@ -82,38 +80,32 @@ impl ForkCacheContent {
     }
 }
 
-impl Display for ForkCacheContent {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            serde_json::to_string(self).expect("Could not serialize json cache")
-        )
+#[expect(clippy::to_string_trait_impl)]
+impl ToString for ForkCacheContent {
+    fn to_string(&self) -> String {
+        serde_json::to_string(self).expect("Could not serialize json cache")
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct CacheDir {
-    dir: Utf8PathBuf,
+#[derive(Debug)]
+pub struct ForkCache {
+    fork_cache_content: ForkCacheContent,
+    cache_file: Utf8PathBuf,
 }
 
-// #[cfg(feature = "testing")]
-// impl PartialEq for CacheDir {
-//     fn eq(&self, other: &Self) -> bool {
-//         *self.dir.read().unwrap() == *other.dir.read().unwrap()
-//     }
-// }
-
-impl CacheDir {
-    #[must_use]
-    pub fn new(path: Utf8PathBuf) -> Self {
-        Self { dir: path }
+impl Drop for ForkCache {
+    fn drop(&mut self) {
+        self.save();
     }
+}
 
-    fn load(&self, url: &Url, block_number: BlockNumber) -> Result<ForkCacheContent> {
-        // let dir = self.dir.read().unwrap();
-
-        let cache_file = cache_file_path_from_fork_config(url, block_number, &self.dir)?;
+impl ForkCache {
+    pub(crate) fn load_or_new(
+        url: &Url,
+        block_number: BlockNumber,
+        cache_dir: &Utf8Path,
+    ) -> Result<Self> {
+        let cache_file = cache_file_path_from_fork_config(url, block_number, cache_dir)?;
         let mut file = OpenOptions::new()
             .write(true)
             .read(true)
@@ -127,32 +119,26 @@ impl CacheDir {
             .context("Could not read cache file")?;
 
         // File was just created
-        if cache_file_content.is_empty() {
-            Ok(ForkCacheContent::default())
+        let fork_cache_content = if cache_file_content.is_empty() {
+            ForkCacheContent::default()
         } else {
-            Ok(ForkCacheContent::from_str(cache_file_content.as_str()))
-        }
+            ForkCacheContent::from_str(cache_file_content.as_str())
+        };
+
+        Ok(ForkCache {
+            fork_cache_content,
+            cache_file,
+        })
     }
 
-    // We technically do not write to value held by RwLock directly (underlying path)
-    //  but we write to the directory represented by it.
-    #[allow(clippy::readonly_write_lock)]
-    fn save(
-        &self,
-        url: &Url,
-        block_number: BlockNumber,
-        fork_cache_content: &ForkCacheContent,
-    ) -> Result<()> {
-        // let dir = self.dir.write().unwrap();
-
-        let cache_file = cache_file_path_from_fork_config(url, block_number, &self.dir)?;
-
+    fn save(&self) {
         let mut file = OpenOptions::new()
             .write(true)
             .read(true)
             .create(true)
             .truncate(false)
-            .open(&cache_file)?;
+            .open(&self.cache_file)
+            .unwrap();
 
         file.lock_exclusive().expect("Could not lock on cache file");
 
@@ -161,10 +147,10 @@ impl CacheDir {
             .expect("Should have been able to read the cache");
 
         let output = if cache_file_content.is_empty() {
-            fork_cache_content.to_string()
+            self.fork_cache_content.to_string()
         } else {
             let mut fs_fork_cache_content = ForkCacheContent::from_str(&cache_file_content);
-            fs_fork_cache_content.extend(fork_cache_content);
+            fs_fork_cache_content.extend(&self.fork_cache_content);
             fs_fork_cache_content.to_string()
         };
 
@@ -173,45 +159,7 @@ impl CacheDir {
         file.write_all(output.as_bytes())
             .expect("Could not write cache to file");
 
-        fs2::FileExt::unlock(&file)?;
-
-        Ok(())
-    }
-}
-
-#[derive(Debug)]
-pub struct ForkCache {
-    fork_cache_content: ForkCacheContent,
-    cache_dir: Arc<CacheDir>,
-    block_number: BlockNumber,
-    url: Url,
-}
-
-impl Drop for ForkCache {
-    fn drop(&mut self) {
-        self.save();
-    }
-}
-
-impl ForkCache {
-    pub(crate) fn load_or_new(
-        url: &Url,
-        block_number: BlockNumber,
-        cache_dir: Arc<CacheDir>,
-    ) -> Result<Self> {
-        let fork_cache_content = cache_dir.load(url, block_number)?;
-        Ok(Self {
-            fork_cache_content,
-            cache_dir,
-            block_number,
-            url: url.clone(),
-        })
-    }
-
-    fn save(&mut self) {
-        self.cache_dir
-            .save(&self.url, self.block_number, &self.fork_cache_content)
-            .expect("Failed to save");
+        fs2::FileExt::unlock(&file).unwrap();
     }
 
     pub(crate) fn get_storage_at(

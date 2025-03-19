@@ -4,9 +4,9 @@ use crate::common::state::{create_fork_cached_state, create_fork_cached_state_at
 use crate::common::{call_contract, deploy_contract, deploy_wrapper, felt_selector_from_name};
 use blockifier::state::cached_state::CachedState;
 use cairo_vm::vm::errors::hint_errors::HintError;
-use camino::Utf8PathBuf;
+use camino::Utf8Path;
 use cheatnet::constants::build_testing_state;
-use cheatnet::forking::cache::{CacheDir, cache_version};
+use cheatnet::forking::cache::cache_version;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader};
@@ -19,7 +19,6 @@ use serde_json::Value;
 use starknet_api::block::BlockNumber;
 use starknet_api::core::ContractAddress;
 use starknet_types_core::felt::Felt;
-use std::sync::Arc;
 use tempfile::TempDir;
 
 #[test]
@@ -646,9 +645,7 @@ fn test_calling_nonexistent_url() {
             ForkStateReader::new(
                 nonexistent_url,
                 BlockNumber(1),
-                Arc::new(CacheDir::new(
-                    Utf8PathBuf::from_path_buf(temp_dir.into_path()).unwrap(),
-                )),
+                Utf8Path::from_path(temp_dir.path()).unwrap(),
             )
             .unwrap(),
         ),
