@@ -1089,7 +1089,7 @@ fn incompatible_snforge_std_version_warning() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.[..], [..]
+        [WARNING] Package snforge_std version does not meet the recommended version requirement ^0.[..], [..]
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -1229,7 +1229,7 @@ fn call_nonexistent_selector() {
 }
 
 #[test]
-#[cfg_attr(feature = "scarb_since_2_10", ignore)]
+#[cfg_attr(not(feature = "scarb_2_7_1"), ignore)]
 fn sierra_gas_with_older_scarb() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)

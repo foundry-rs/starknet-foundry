@@ -67,7 +67,7 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
 fn snforge_std_version_requirement() -> VersionReq {
     let version = Version::parse(env!("CARGO_PKG_VERSION")).unwrap();
     let comparator = Comparator {
-        op: Op::Exact,
+        op: Op::Caret,
         major: version.major,
         minor: Some(version.minor),
         patch: Some(version.patch),
