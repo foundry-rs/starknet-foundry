@@ -140,3 +140,6 @@ where
             .is_interactive(SignerInteractivityContext::Other)
     }
 }
+
+pub const BRAAVOS_DISABLED_MESSAGE: &str =
+    "Integration with Braavos accounts is currently disabled";
