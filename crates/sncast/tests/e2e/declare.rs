@@ -647,10 +647,6 @@ async fn test_braavos_disabled() {
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().failure();
 
-    let stderr = std::str::from_utf8(&output.get_output().stderr);
-
-    println!("{:?}", stderr);
-
     assert_stderr_contains(
         output,
         indoc! {r"
