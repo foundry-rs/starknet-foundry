@@ -39,8 +39,7 @@ fn start_devnet() {
     let devnet_path = if cfg!(target_os = "windows") {
         "tests/utils/devnet/bin/starknet-devnet.exe"
     } else {
-        // "tests/utils/devnet/starknet-devnet"
-        "/Users/franciszekjob/Projects/forks/starknet-devnet/target/aarch64-apple-darwin/release/starknet-devnet"
+        "tests/utils/devnet/starknet-devnet"
     };
 
     Command::new(devnet_path)
