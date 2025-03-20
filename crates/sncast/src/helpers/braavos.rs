@@ -146,7 +146,7 @@ where
 
 pub fn assert_non_braavos_account_type(account_type: AccountType) -> Result<(), Error> {
     if let AccountType::Braavos = account_type {
-        bail!("Integration with Braavos accounts is currently disabled")
+        bail!("Using Braavos accounts with `sncast` is currently disabled")
     }
     Ok(())
 }

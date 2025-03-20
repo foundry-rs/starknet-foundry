@@ -848,7 +848,7 @@ fn test_braavos_disabled() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        error: Integration with Braavos accounts is currently disabled
+        error: Using Braavos accounts with `sncast` is currently disabled
         "},
     );
 }

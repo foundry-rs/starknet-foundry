@@ -18,7 +18,7 @@ account information stored locally - this will not remove the account from Stark
 
 <!-- TODO(#3118): Remove this warning and uncomment braavos from possible account variants -->
 > ⚠️ **Warning**
-> Integration with braavos accounts is currently disabled.
+> Using Braavos accounts with `sncast` is currently disabled.
 
 ## Examples
 
