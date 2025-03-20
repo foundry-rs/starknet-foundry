@@ -14,11 +14,17 @@ pub struct CairoU384 {
 impl CairoU384 {
     #[must_use]
     pub fn from_bytes(bytes: &[u8; 48]) -> Self {
+        fn to_u128(slice: &[u8]) -> u128 {
+            let mut padded = [0u8; 16];
+            padded[4..].copy_from_slice(slice);
+            u128::from_be_bytes(padded)
+        }
+
         Self {
-            limb_0: u128::from_be_bytes(bytes[36..48].try_into().unwrap()),
-            limb_1: u128::from_be_bytes(bytes[24..36].try_into().unwrap()),
-            limb_2: u128::from_be_bytes(bytes[12..24].try_into().unwrap()),
-            limb_3: u128::from_be_bytes(bytes[00..12].try_into().unwrap()),
+            limb_0: to_u128(&bytes[36..48]),
+            limb_1: to_u128(&bytes[24..36]),
+            limb_2: to_u128(&bytes[12..24]),
+            limb_3: to_u128(&bytes[0..12]),
         }
     }
 }

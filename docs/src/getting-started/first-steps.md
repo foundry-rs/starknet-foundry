@@ -50,8 +50,8 @@ $ snforge test
 Collected 2 test(s) from hello_starknet package
 Running 0 test(s) from src/
 Running 2 test(s) from tests/
-[PASS] hello_starknet_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value (gas: ~105)
-[PASS] hello_starknet_integrationtest::test_contract::test_increase_balance (gas: ~172)
+[PASS] hello_starknet_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~360000)
+[PASS] hello_starknet_integrationtest::test_contract::test_increase_balance (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~480000)
 Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 </details>
@@ -101,3 +101,13 @@ Additionally, ensure that starknet-contract target is enabled in the `Scarb.toml
 # ...
 [[target.starknet-contract]]
 ```
+
+> 📝 **Note**
+>
+> You can additionally specify `scarb` settings to avoid compiling Cairo plugin which `snforge_std` depends on. The plugin is written in Rust and, by default, is compiled locally on the user's side.
+> ```
+> [tool.scarb]  
+> allow-prebuilt-plugins = ["snforge_std"]
+> ```
+> This configuration requires Scarb version >= 2.10.0 .
+>

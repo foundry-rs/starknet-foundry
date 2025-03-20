@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args};
 use promptly::prompt;
@@ -31,7 +31,6 @@ pub struct Delete {
     pub network_name: Option<String>,
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn delete(
     name: &str,
     path: &Utf8PathBuf,
@@ -54,8 +53,9 @@ pub fn delete(
 
     // Let's ask confirmation
     if !yes {
-        let prompt_text =
-            format!("Do you want to remove the account {name} deployed to network {network_name} from local file {path}? (Y/n)");
+        let prompt_text = format!(
+            "Do you want to remove the account {name} deployed to network {network_name} from local file {path}? (Y/n)"
+        );
         let input: String = prompt(prompt_text)?;
 
         if !input.starts_with('Y') {

@@ -1,4 +1,5 @@
 use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
+use crate::helpers::env::set_keystore_password_env;
 use crate::helpers::fixtures::copy_file;
 use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
@@ -8,14 +9,14 @@ use configuration::copy_config_to_tempdir;
 use conversions::string::IntoHexStr;
 use indoc::indoc;
 use serde_json::Value;
-use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
+use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
+use sncast::AccountType;
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
 };
-use sncast::AccountType;
 use starknet::core::types::TransactionReceipt::DeployAccount;
-use std::{env, fs};
-use tempfile::{tempdir, TempDir};
+use std::fs;
+use tempfile::{TempDir, tempdir};
 use test_case::test_case;
 
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0, "oz"; "cairo_0_class_hash")]
@@ -23,7 +24,7 @@ use test_case::test_case;
 #[test_case(&ARGENT_CLASS_HASH.into_hex_string(), "argent"; "argent_class_hash")]
 #[test_case(&BRAAVOS_CLASS_HASH.into_hex_string(), "braavos"; "braavos_class_hash")]
 #[tokio::test]
-pub async fn test_happy_case_eth(class_hash: &str, account_type: &str) {
+pub async fn test_happy_case(class_hash: &str, account_type: &str) {
     let tempdir = create_account(false, class_hash, account_type).await;
     let accounts_file = "accounts.json";
 
@@ -37,88 +38,6 @@ pub async fn test_happy_case_eth(class_hash: &str, account_type: &str) {
         URL,
         "--name",
         "my_account",
-        "--max-fee",
-        "99999999999999999",
-        "--fee-token",
-        "eth",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let bdg = snapbox.assert();
-
-    let hash = get_transaction_hash(&bdg.get_output().stdout);
-    let receipt = get_transaction_receipt(hash).await;
-
-    assert!(matches!(receipt, DeployAccount(_)));
-
-    let stdout_str = bdg.as_stdout();
-    assert!(stdout_str.contains("account deploy"));
-    assert!(stdout_str.contains("transaction_hash"));
-
-    let contents = fs::read_to_string(tempdir.path().join(accounts_file)).unwrap();
-    let items: Value = serde_json::from_str(&contents).expect("Failed to parse accounts file at ");
-    assert_eq!(items["alpha-sepolia"]["my_account"]["deployed"], true);
-}
-
-#[tokio::test]
-pub async fn test_happy_case_v1() {
-    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "--json",
-        "account",
-        "deploy",
-        "--url",
-        URL,
-        "--name",
-        "my_account",
-        "--max-fee",
-        "99999999999999999",
-        "--version",
-        "v1",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let bdg = snapbox.assert();
-
-    let hash = get_transaction_hash(&bdg.get_output().stdout);
-    let receipt = get_transaction_receipt(hash).await;
-
-    assert!(matches!(receipt, DeployAccount(_)));
-
-    let stdout_str = bdg.as_stdout();
-    assert!(stdout_str.contains("account deploy"));
-    assert!(stdout_str.contains("transaction_hash"));
-
-    let contents = fs::read_to_string(tempdir.path().join(accounts_file)).unwrap();
-    let items: Value = serde_json::from_str(&contents).expect("Failed to parse accounts file at ");
-    assert_eq!(items["alpha-sepolia"]["my_account"]["deployed"], true);
-}
-
-#[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0, "oz"; "cairo_0_class_hash")]
-#[test_case(&OZ_CLASS_HASH.into_hex_string(), "oz"; "cairo_1_class_hash")]
-#[test_case(&ARGENT_CLASS_HASH.into_hex_string(), "argent"; "argent_class_hash")]
-#[test_case(&BRAAVOS_CLASS_HASH.into_hex_string(), "braavos"; "braavos_class_hash")]
-#[tokio::test]
-pub async fn test_happy_case_strk(class_hash: &str, account_type: &str) {
-    let tempdir = create_account(false, class_hash, account_type).await;
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "--json",
-        "account",
-        "deploy",
-        "--url",
-        URL,
-        "--name",
-        "my_account",
-        "--fee-token",
-        "strk",
         "--max-gas",
         "1000",
         "--max-gas-unit-price",
@@ -143,7 +62,7 @@ pub async fn test_happy_case_strk(class_hash: &str, account_type: &str) {
 }
 
 #[tokio::test]
-pub async fn test_happy_case_v3() {
+pub async fn test_happy_case_max_fee() {
     let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
     let accounts_file = "accounts.json";
 
@@ -157,48 +76,6 @@ pub async fn test_happy_case_v3() {
         URL,
         "--name",
         "my_account",
-        "--version",
-        "v3",
-        "--max-gas",
-        "1000",
-        "--max-gas-unit-price",
-        "100000000000",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let bdg = snapbox.assert();
-
-    let hash = get_transaction_hash(&bdg.get_output().stdout);
-    let receipt = get_transaction_receipt(hash).await;
-
-    assert!(matches!(receipt, DeployAccount(_)));
-
-    let stdout_str = bdg.as_stdout();
-    assert!(stdout_str.contains("account deploy"));
-    assert!(stdout_str.contains("transaction_hash"));
-
-    let contents = fs::read_to_string(tempdir.path().join(accounts_file)).unwrap();
-    let items: Value = serde_json::from_str(&contents).expect("Failed to parse accounts file at ");
-    assert_eq!(items["alpha-sepolia"]["my_account"]["deployed"], true);
-}
-
-#[tokio::test]
-pub async fn test_happy_case_strk_max_fee() {
-    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "--json",
-        "account",
-        "deploy",
-        "--url",
-        URL,
-        "--name",
-        "my_account",
-        "--fee-token",
-        "strk",
         "--max-fee",
         "100000000000000",
     ];
@@ -237,8 +114,6 @@ pub async fn test_happy_case_add_profile() {
         "my_account",
         "--max-fee",
         "99999999999999999",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -273,79 +148,12 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
         "my_account",
         "--max-fee",
         "10000000000000000",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert();
 
     assert_stderr_contains(output, error);
-}
-
-#[tokio::test]
-async fn test_too_low_max_fee() {
-    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "--wait",
-        "account",
-        "deploy",
-        "--url",
-        URL,
-        "--name",
-        "my_account",
-        "--max-fee",
-        "1",
-        "--fee-token",
-        "eth",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-
-    let output = snapbox.assert().success();
-    assert_stderr_contains(
-        output,
-        indoc! {r"
-        command: account deploy
-        error: Max fee is smaller than the minimal transaction cost
-        "},
-    );
-}
-
-#[test_case("eth", "v3"; "eth-v3")]
-#[test_case("strk", "v1"; "strk-v3")]
-#[tokio::test]
-async fn test_invalid_version_and_token_combination(fee_token: &str, version: &str) {
-    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "--wait",
-        "account",
-        "deploy",
-        "--url",
-        URL,
-        "--name",
-        "my_account",
-        "--fee-token",
-        fee_token,
-        "--version",
-        version,
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-
-    let output = snapbox.assert().failure();
-    assert_stderr_contains(
-        output,
-        format!("Error: {fee_token} fee token is not supported for {version} deployment."),
-    );
 }
 
 #[tokio::test]
@@ -378,103 +186,6 @@ async fn test_default_fee_token() {
 }
 
 #[tokio::test]
-async fn test_fee_token_deprecation_warning_eth() {
-    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "--wait",
-        "account",
-        "deploy",
-        "--url",
-        URL,
-        "--name",
-        "my_account",
-        "--fee-token",
-        "eth",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-
-    snapbox.assert().success().stdout_matches(indoc! {r"
-        [WARNING] Specifying '--fee-token' flag is deprecated and will be removed in the future.
-        [WARNING] Eth transactions will stop being supported in the future due to 'SNIP-16'
-        Transaction hash: [..]
-        command: account deploy
-        transaction_hash: [..]
-
-        To see invocation details, visit:
-        transaction: [..]
-    "});
-}
-
-#[tokio::test]
-async fn test_fee_token_deprecation_warning_strk() {
-    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "--wait",
-        "account",
-        "deploy",
-        "--url",
-        URL,
-        "--name",
-        "my_account",
-        "--fee-token",
-        "strk",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-
-    snapbox.assert().success().stdout_matches(indoc! {r"
-        [WARNING] Specifying '--fee-token' flag is deprecated and will be removed in the future.
-        Transaction hash: [..]
-        command: account deploy
-        transaction_hash: [..]
-
-        To see invocation details, visit:
-        transaction: [..]
-    "});
-}
-
-#[tokio::test]
-async fn test_version_deprecation_warning() {
-    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "--wait",
-        "account",
-        "deploy",
-        "--url",
-        URL,
-        "--name",
-        "my_account",
-        "--version",
-        "v3",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-
-    snapbox.assert().success().stdout_matches(indoc! {r"
-        [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 will become the only type of transaction available.
-        Transaction hash: [..]
-        command: account deploy
-        transaction_hash: [..]
-
-        To see invocation details, visit:
-        transaction: [..]
-    "});
-}
-
-#[tokio::test]
 pub async fn test_valid_class_hash() {
     let tempdir = create_account(true, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
     let accounts_file = "accounts.json";
@@ -495,7 +206,7 @@ pub async fn test_valid_class_hash() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
-        Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags
+        Specifying '--max-fee' flag results in conversion to '--max-gas' and '--max-gas-unit-price' flags
         Converted [..] max fee to [..] max gas and [..] max gas unit price
 
         command: account deploy
@@ -592,7 +303,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         format!("tests/data/keystore/{account_file}"),
         tempdir.path().join(&account_file),
     );
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_keystore_password_env();
 
     let address = get_address_from_keystore(
         tempdir.path().join(keystore_file).to_str().unwrap(),
@@ -619,7 +330,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags
+        Specifying '--max-fee' flag results in conversion to '--max-gas' and '--max-gas-unit-price' flags
         Converted [..] max fee to [..] max gas and [..] max gas unit price
 
         command: account deploy
@@ -652,7 +363,7 @@ pub async fn test_keystore_already_deployed() {
         "tests/data/keystore/my_account.json",
         tempdir.path().join(account_file),
     );
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -665,8 +376,6 @@ pub async fn test_keystore_already_deployed() {
         URL,
         "--max-fee",
         "10000000000000000",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -697,7 +406,7 @@ pub async fn test_keystore_key_mismatch() {
         tempdir.path().join(account_file),
     );
 
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -710,8 +419,6 @@ pub async fn test_keystore_key_mismatch() {
         URL,
         "--max-fee",
         "10000000000000000",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -737,7 +444,7 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
         "tests/data/keystore/my_account_undeployed.json",
         tempdir.path().join(account_file),
     );
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -750,8 +457,6 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
         URL,
         "--max-fee",
         "10000000000000000",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -777,7 +482,7 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
         "tests/data/keystore/my_key.json",
         tempdir.path().join(keystore_file),
     );
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -790,8 +495,6 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
         URL,
         "--max-fee",
         "10000000000000000",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -821,7 +524,7 @@ pub async fn test_deploy_keystore_no_status() {
         "tests/data/keystore/my_account_invalid.json",
         tempdir.path().join(account_file),
     );
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -834,8 +537,6 @@ pub async fn test_deploy_keystore_no_status() {
         URL,
         "--max-fee",
         "10000000000000000",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -865,7 +566,7 @@ pub async fn test_deploy_keystore_other_args() {
         "tests/data/keystore/my_account_undeployed_happy_case_other_args.json",
         tempdir.path().join(account_file),
     );
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_keystore_password_env();
 
     let address = get_address_from_keystore(
         tempdir.path().join(keystore_file),
@@ -895,7 +596,7 @@ pub async fn test_deploy_keystore_other_args() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
-        Specifying '--max-fee' flag while using v3 transactions results in conversion to '--max-gas' and '--max-gas-unit-price' flags
+        Specifying '--max-fee' flag results in conversion to '--max-gas' and '--max-gas-unit-price' flags
         Converted [..] max fee to [..] max gas and [..] max gas unit price
 
         command: account deploy

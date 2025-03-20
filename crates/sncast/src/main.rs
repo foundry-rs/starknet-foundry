@@ -4,31 +4,32 @@ use crate::starknet_commands::{
 };
 use anyhow::{Context, Result};
 use data_transformer::Calldata;
+use sncast::helpers::account::generate_account_name;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
-use sncast::response::print::{print_command_result, OutputFormat};
+use sncast::response::print::{OutputFormat, print_command_result};
 use std::io;
 use std::io::IsTerminal;
 
 use crate::starknet_commands::deploy::DeployArguments;
 use camino::Utf8PathBuf;
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
 use configuration::load_config;
+use shared::auto_completions::{Completion, generate_completions};
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
-use sncast::helpers::fee::PayableTransaction;
 use sncast::helpers::interactive::prompt_to_add_account_as_default;
 use sncast::helpers::scarb_utils::{
-    assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
-    get_scarb_metadata_with_deps, BuildConfig,
+    BuildConfig, assert_manifest_path_exists, build, build_and_load_artifacts,
+    get_package_metadata, get_scarb_metadata_with_deps,
 };
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::structs::DeclareResponse;
 use sncast::{
-    chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_class_hash_by_address,
-    get_contract_class, get_default_state_file_name, NumbersFormat, ValidatedWaitParams, WaitForTx,
+    NumbersFormat, ValidatedWaitParams, WaitForTx, chain_id_to_network_name, get_account,
+    get_block_id, get_chain_id, get_class_hash_by_address, get_contract_class,
+    get_default_state_file_name,
 };
-use starknet::accounts::ConnectedAccount;
 use starknet::core::types::ContractClass;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
@@ -71,7 +72,7 @@ Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
 )]
 #[command(about = "sncast - All-in-one tool for interacting with Starknet smart contracts", long_about = None)]
 #[clap(name = "sncast")]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 struct Cli {
     /// Profile name in snfoundry.toml config file
     #[clap(short, long)]
@@ -150,6 +151,9 @@ enum Commands {
 
     /// Verify a contract
     Verify(Verify),
+
+    /// Generate completion script
+    Completion(Completion),
 }
 
 #[derive(Debug, Clone, clap::Args)]
@@ -222,7 +226,7 @@ fn main() -> Result<()> {
     }
 }
 
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 async fn run_async_command(
     cli: Cli,
     config: CastConfig,
@@ -237,8 +241,6 @@ async fn run_async_command(
     match cli.command {
         Commands::Declare(declare) => {
             let provider = declare.rpc.get_provider(&config).await?;
-
-            let fee_token = declare.validate_and_get_token()?;
 
             let account = get_account(
                 &config.account,
@@ -265,7 +267,6 @@ async fn run_async_command(
                 &artifacts,
                 wait_config,
                 false,
-                fee_token,
             )
             .await
             .map_err(handle_starknet_command_error)
@@ -290,8 +291,6 @@ async fn run_async_command(
         }
 
         Commands::Deploy(deploy) => {
-            let fee_token = deploy.validate_and_get_token()?;
-
             let Deploy {
                 arguments,
                 fee_args,
@@ -309,12 +308,6 @@ async fn run_async_command(
             )
             .await?;
 
-            let fee_settings = fee_args
-                .clone()
-                .fee_token(fee_token)
-                .try_into_fee_settings(&provider, account.block_id())
-                .await?;
-
             // safe to unwrap because "constructor" is a standardized name
             let selector = get_selector_from_name("constructor").unwrap();
 
@@ -328,7 +321,7 @@ async fn run_async_command(
                 &calldata,
                 deploy.salt,
                 deploy.unique,
-                fee_settings,
+                fee_args,
                 deploy.nonce,
                 &account,
                 wait_config,
@@ -380,8 +373,6 @@ async fn run_async_command(
         }
 
         Commands::Invoke(invoke) => {
-            let fee_token = invoke.validate_and_get_token()?;
-
             let Invoke {
                 contract_address,
                 function,
@@ -401,8 +392,6 @@ async fn run_async_command(
                 config.keystore,
             )
             .await?;
-
-            let fee_args = fee_args.fee_token(fee_token);
 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
@@ -484,7 +473,7 @@ async fn run_async_command(
         Commands::Account(account) => match account.command {
             account::Commands::Import(import) => {
                 let provider = import.rpc.get_provider(&config).await?;
-                let result = starknet_commands::account::import::import(
+                let result = account::import::import(
                     import.name.clone(),
                     &config.accounts_file,
                     &provider,
@@ -518,7 +507,7 @@ async fn run_async_command(
                     create
                         .name
                         .clone()
-                        .context("Required argument `--name` not provided")?
+                        .unwrap_or_else(|| generate_account_name(&config.accounts_file).unwrap())
                 } else {
                     config.account.clone()
                 };
@@ -556,9 +545,7 @@ async fn run_async_command(
             account::Commands::Deploy(deploy) => {
                 let provider = deploy.rpc.get_provider(&config).await?;
 
-                let fee_token = deploy.validate_and_get_token()?;
-
-                let fee_args = deploy.fee_args.clone().fee_token(fee_token);
+                let fee_args = deploy.fee_args.clone();
 
                 let chain_id = get_chain_id(&provider).await?;
                 let keystore_path = config.keystore.clone();
@@ -661,6 +648,11 @@ async fn run_async_command(
             .await;
 
             print_command_result("verify", &result, numbers_format, output_format)?;
+            Ok(())
+        }
+
+        Commands::Completion(completion) => {
+            generate_completions(completion.shell, &mut Cli::command())?;
             Ok(())
         }
 

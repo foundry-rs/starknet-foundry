@@ -1,5 +1,6 @@
 use anyhow::Result;
 use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
+use forge_runner::forge_config::ForgeTrackedResource;
 use serde::{Deserialize, Deserializer};
 use std::{collections::HashSet, num::NonZeroU32};
 use url::Url;
@@ -36,8 +37,7 @@ pub const SCARB_MANIFEST_TEMPLATE_CONTENT: &str = r#"
 # enable_for_tests = []                                      # Feature name and list of other features that should be enabled with it
 "#;
 
-#[allow(clippy::module_name_repetitions)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 #[derive(Debug, PartialEq, Default, Deserialize)]
 pub struct ForgeConfigFromScarb {
     /// Should runner exit after first failed test
@@ -64,6 +64,9 @@ pub struct ForgeConfigFromScarb {
     pub fork: Vec<ForkTarget>,
     /// Limit of steps
     pub max_n_steps: Option<u32>,
+    /// Set tracked resource
+    #[serde(default)]
+    pub tracked_resource: ForgeTrackedResource,
 }
 
 #[derive(Debug, PartialEq, Clone, Deserialize)]

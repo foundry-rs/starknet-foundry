@@ -3,7 +3,7 @@
 `snforge` supports gas and other VM resources estimation for each individual test case. 
 
 It does not calculate the final transaction fee, for details on how fees are calculated, 
-please refer to fee mechanism in [Starknet documentation](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism).
+please refer to fee mechanism in [Starknet documentation](https://docs.starknet.io/architecture-and-concepts/network-architecture/fee-mechanism).
 
 ## Gas Estimation
 
@@ -11,7 +11,7 @@ please refer to fee mechanism in [Starknet documentation](https://docs.starknet.
 
 When the test passes with no errors, estimated gas is displayed this way:
 ```shell
-[PASS] tests::simple_test (gas: ~1)
+[PASS] tests::simple_test (l1_gas: ~1, l1_data_gas: ~1, l2_gas: ~1)
 ```
 
 This gas calculation is based on the estimated VM resources (that you can [display additionally on demand](#usage)), 
@@ -21,17 +21,19 @@ deployed contracts, storage updates, events and l1 <> l2 messages.
 
 While using the fuzzing feature additional gas statistics will be displayed:
 ```shell
-[PASS] tests::fuzzing_test (runs: 256, gas: {max: ~126, min: ~1, mean: ~65.00, std deviation: ~37.31})
+[PASS] tests::fuzzing_test (runs: 256, l1_gas: {max: ~126, min: ~1, mean: ~65.00, std deviation: ~37.31}, l1_data_gas: {max: ~126, min: ~1, mean: ~65.00, std deviation: ~37.31}, l2_gas: {max: ~126, min: ~1, mean: ~65.00, std deviation: ~37.31})
 ```
 
 > 📝 **Note**
 >  
 > Starknet-Foundry uses blob-based gas calculation formula in order to calculate gas usage. 
-> For details on the exact formula, [see the docs](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#overall_fee_blob). 
+> For details on the exact formula, [see the docs](https://docs.starknet.io/architecture-and-concepts/network-architecture/fee-mechanism/#overall_fee_blob). 
 
-## VM Resources estimation 
+## Resources Estimation 
 
 It is possible to enable more detailed breakdown of resources, on which the gas calculations are based on.
+Depending on `--tracked-resource`, vm resources or sierra gas will be displayed.
+To learn more about tracked resource flag, see [--tracked-resource](../appendix/snforge/test.md#--tracked-resource).
 
 ### Usage
 In order to run tests with this feature, run the `test` command with the appropriate flag:
@@ -46,18 +48,18 @@ $ snforge test --detailed-resources
 ```shell
 Collected 2 test(s) from hello_starknet package
 Running 2 test(s) from tests/
-[PASS] hello_starknet_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value (gas: ~105)
+[PASS] hello_starknet_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~360000)
         steps: 3405
         memory holes: 22
         builtins: (range_check: 77, pedersen: 7)
         syscalls: (CallContract: 2, StorageRead: 1, Deploy: 1)
-        
-[PASS] hello_starknet_integrationtest::test_contract::test_increase_balance (gas: ~172)
+
+[PASS] hello_starknet_integrationtest::test_contract::test_increase_balance (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~480000)
         steps: 4535
         memory holes: 15
         builtins: (range_check: 95, pedersen: 7)
         syscalls: (CallContract: 3, StorageRead: 3, Deploy: 1, StorageWrite: 1)
-        
+
 Running 0 test(s) from src/
 Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```

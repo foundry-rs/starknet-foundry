@@ -123,6 +123,13 @@ pub use cheatcodes::execution_info::account_contract_address::start_cheat_accoun
 
 pub use cheatcodes::generate_random_felt::generate_random_felt;
 
+pub use cheatcodes::block_hash::cheat_block_hash;
+pub use cheatcodes::block_hash::start_cheat_block_hash_global;
+pub use cheatcodes::block_hash::stop_cheat_block_hash;
+pub use cheatcodes::block_hash::stop_cheat_block_hash_global;
+pub use cheatcodes::block_hash::start_cheat_block_hash;
+
+pub mod fuzzable;
 
 pub mod fs;
 
@@ -142,4 +149,5 @@ pub mod _internals {
     use super::_cheatcode;
 
     pub use _cheatcode::_is_config_run;
+    pub use _cheatcode::_save_fuzzer_arg;
 }

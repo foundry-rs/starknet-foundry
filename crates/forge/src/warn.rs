@@ -1,6 +1,6 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use forge_runner::package_tests::with_config_resolved::TestTargetWithResolvedConfig;
-use scarb_api::{package_matches_version_requirement, ScarbCommand};
+use scarb_api::{ScarbCommand, package_matches_version_requirement};
 use scarb_metadata::Metadata;
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::print::print_as_warning;
@@ -14,7 +14,10 @@ pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
 ) -> Result<()> {
     for test_target in test_targets {
         for case in &test_target.test_cases {
-            if case.config.available_gas == Some(0)
+            if case
+                .config
+                .available_gas
+                .as_ref().is_some_and(cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableGasConfig::is_zero)
                 && ScarbCommand::version().run()?.scarb <= Version::new(2, 4, 3)
             {
                 print_as_warning(&anyhow!(
@@ -64,7 +67,7 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
 fn snforge_std_version_requirement() -> VersionReq {
     let version = Version::parse(env!("CARGO_PKG_VERSION")).unwrap();
     let comparator = Comparator {
-        op: Op::Exact,
+        op: Op::Caret,
         major: version.major,
         minor: Some(version.minor),
         patch: Some(version.patch),
@@ -82,7 +85,9 @@ pub fn warn_if_snforge_std_not_compatible(scarb_metadata: &Metadata) -> Result<(
         "snforge_std",
         &snforge_std_version_requirement,
     )? {
-        print_as_warning(&anyhow!("Package snforge_std version does not meet the recommended version requirement {snforge_std_version_requirement}, it might result in unexpected behaviour"));
+        print_as_warning(&anyhow!(
+            "Package snforge_std version does not meet the recommended version requirement {snforge_std_version_requirement}, it might result in unexpected behaviour"
+        ));
     }
     Ok(())
 }

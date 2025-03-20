@@ -1,4 +1,4 @@
-use crate::{handle_rpc_error, ErrorData, WaitForTransactionError};
+use crate::{ErrorData, WaitForTransactionError, handle_rpc_error};
 use anyhow::anyhow;
 use conversions::serde::serialize::CairoSerialize;
 

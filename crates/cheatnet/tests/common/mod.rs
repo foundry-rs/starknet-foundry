@@ -1,36 +1,36 @@
 use assertions::ClassHashAssert;
+use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType, EntryPointExecutionContext};
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::state_api::State;
 use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::relocatable::Relocatable;
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use cheatnet::constants::TEST_ADDRESS;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    call_entry_point, AddressOrClassHash,
+    AddressOrClassHash, call_entry_point,
 };
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
 };
 use cheatnet::runtime_extensions::common::create_execute_calldata;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
     deploy, deploy_at,
 };
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::CheatnetState;
-use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
+use conversions::string::TryFromHexStr;
+use runtime::starknet::constants::TEST_ADDRESS;
 use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::{
-    get_contracts_artifacts_and_source_sierra_paths, target_dir_for_workspace, ScarbCommand,
+    ScarbCommand, get_contracts_artifacts_and_source_sierra_paths, target_dir_for_workspace,
 };
 use starknet::core::utils::get_selector_from_name;
+use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
-use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 
@@ -41,13 +41,11 @@ pub mod state;
 fn build_syscall_hint_processor<'a>(
     call_entry_point: CallEntryPoint,
     state: &'a mut dyn State,
-    execution_resources: &'a mut ExecutionResources,
     entry_point_execution_context: &'a mut EntryPointExecutionContext,
     hints: &'a HashMap<String, Hint>,
 ) -> SyscallHintProcessor<'a> {
     SyscallHintProcessor::new(
         state,
-        execution_resources,
         entry_point_execution_context,
         Relocatable {
             segment_index: 0,
@@ -95,14 +93,16 @@ pub fn deploy_contract(
         .unwrap()
         .unwrap_success();
 
-    let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);
+    let mut entry_point_execution_context = build_context(
+        &cheatnet_state.block_info,
+        None,
+        &TrackedResource::CairoSteps,
+    );
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
         CallEntryPoint::default(),
         state,
-        &mut execution_resources,
         &mut entry_point_execution_context,
         &hints,
     );
@@ -124,14 +124,16 @@ pub fn deploy_wrapper(
     class_hash: &ClassHash,
     calldata: &[Felt],
 ) -> Result<ContractAddress, CheatcodeError> {
-    let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);
+    let mut entry_point_execution_context = build_context(
+        &cheatnet_state.block_info,
+        None,
+        &TrackedResource::CairoSteps,
+    );
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
         CallEntryPoint::default(),
         state,
-        &mut execution_resources,
         &mut entry_point_execution_context,
         &hints,
     );
@@ -153,14 +155,16 @@ pub fn deploy_at_wrapper(
     calldata: &[Felt],
     contract_address: ContractAddress,
 ) -> Result<ContractAddress, CheatcodeError> {
-    let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);
+    let mut entry_point_execution_context = build_context(
+        &cheatnet_state.block_info,
+        None,
+        &TrackedResource::CairoSteps,
+    );
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
         CallEntryPoint::default(),
         state,
-        &mut execution_resources,
         &mut entry_point_execution_context,
         &hints,
     );
@@ -196,17 +200,19 @@ pub fn call_contract(
         storage_address: *contract_address,
         caller_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
         call_type: CallType::Call,
-        initial_gas: u64::MAX,
+        initial_gas: i64::MAX as u64,
     };
 
-    let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);
+    let mut entry_point_execution_context = build_context(
+        &cheatnet_state.block_info,
+        None,
+        &TrackedResource::CairoSteps,
+    );
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
         entry_point.clone(),
         state,
-        &mut execution_resources,
         &mut entry_point_execution_context,
         &hints,
     );

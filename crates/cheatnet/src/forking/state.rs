@@ -1,14 +1,13 @@
 use crate::forking::cache::ForkCache;
 use crate::state::BlockInfoReader;
 use anyhow::{Context, Result};
-use blockifier::blockifier::block::BlockInfo;
 use blockifier::execution::contract_class::{
-    ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
+    CompiledClassV0, CompiledClassV0Inner, CompiledClassV1, RunnableCompiledClass,
 };
 use blockifier::state::errors::StateError::{self, StateReadError, UndeclaredClassHash};
 use blockifier::state::state_api::{StateReader, StateResult};
-use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_utils::bigint::BigUintAsHex;
+use cairo_vm::types::program::Program;
 use camino::Utf8Path;
 use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
@@ -20,26 +19,23 @@ use starknet::core::types::{
 use starknet::core::utils::parse_cairo_short_string;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider, ProviderError};
-use starknet_api::block::{BlockNumber, BlockTimestamp};
+use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp};
+use starknet_api::contract_class::SierraVersion;
 use starknet_api::core::{ChainId, ClassHash, CompiledClassHash, ContractAddress, Nonce};
-use starknet_api::deprecated_contract_class::{
-    ContractClass as DeprecatedContractClass, EntryPoint, EntryPointType,
-};
 use starknet_api::state::StorageKey;
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
-use std::collections::HashMap;
-use std::future::Future;
 use std::io::Read;
-use tokio::runtime::Handle;
-use tokio::task;
-use universal_sierra_compiler_api::{compile_sierra, SierraType};
+use std::sync::Arc;
+use tokio::runtime::Runtime;
+use universal_sierra_compiler_api::{SierraType, compile_sierra};
 use url::Url;
 
 #[derive(Debug)]
 pub struct ForkStateReader {
     client: JsonRpcClient<HttpTransport>,
     block_number: BlockNumber,
+    runtime: Runtime,
     cache: RefCell<ForkCache>,
 }
 
@@ -52,11 +48,12 @@ impl ForkStateReader {
             ),
             client: JsonRpcClient::new(HttpTransport::new(url)),
             block_number,
+            runtime: Runtime::new().expect("Could not instantiate Runtime"),
         })
     }
 
     pub fn chain_id(&self) -> Result<ChainId> {
-        let id = sync(self.client.chain_id())?;
+        let id = self.runtime.block_on(self.client.chain_id())?;
         let id = parse_cairo_short_string(&id)?;
         Ok(ChainId::from(id))
     }
@@ -66,7 +63,7 @@ impl ForkStateReader {
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn other_provider_error<T>(boxed: impl ToString) -> Result<T, StateError> {
     let err_str = boxed.to_string();
 
@@ -85,7 +82,10 @@ impl BlockInfoReader for ForkStateReader {
             return Ok(cache_hit);
         }
 
-        match sync(self.client.get_block_with_tx_hashes(self.block_id())) {
+        match self
+            .runtime
+            .block_on(self.client.get_block_with_tx_hashes(self.block_id()))
+        {
             Ok(MaybePendingBlockWithTxHashes::Block(block)) => {
                 let block_info = BlockInfo {
                     block_number: BlockNumber(block.block_number),
@@ -122,14 +122,15 @@ impl StateReader for ForkStateReader {
             return Ok(cache_hit);
         }
 
-        match sync(self.client.get_storage_at(
+        match self.runtime.block_on(self.client.get_storage_at(
             Felt::from_(contract_address),
             Felt::from_(*key.0.key()),
             self.block_id(),
         )) {
             Ok(value) => {
                 let value_sf = value.into_();
-                self.cache.borrow_mut()
+                self.cache
+                    .borrow_mut()
                     .cache_get_storage_at(contract_address, key, value_sf);
                 Ok(value_sf)
             }
@@ -141,7 +142,7 @@ impl StateReader for ForkStateReader {
                     Felt::default(),
                 );
                 Ok(Felt::default())
-            },
+            }
             Err(x) => Err(StateReadError(format!(
                 "Unable to get storage at address: {contract_address:?} and key: {key:?} from fork ({x})"
             ))),
@@ -153,7 +154,7 @@ impl StateReader for ForkStateReader {
             return Ok(cache_hit);
         }
 
-        match sync(
+        match self.runtime.block_on(
             self.client
                 .get_nonce(self.block_id(), Felt::from_(contract_address)),
         ) {
@@ -168,8 +169,8 @@ impl StateReader for ForkStateReader {
             Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => {
                 self.cache
                     .borrow_mut()
-                    .cache_get_nonce_at(contract_address, Default::default());
-                Ok(Default::default())
+                    .cache_get_nonce_at(contract_address, Nonce::default());
+                Ok(Nonce::default())
             }
             Err(x) => Err(StateReadError(format!(
                 "Unable to get nonce at {contract_address:?} from fork ({x})"
@@ -182,7 +183,7 @@ impl StateReader for ForkStateReader {
             return Ok(cache_hit);
         }
 
-        match sync(
+        match self.runtime.block_on(
             self.client
                 .get_class_hash_at(self.block_id(), Felt::from_(contract_address)),
         ) {
@@ -196,8 +197,8 @@ impl StateReader for ForkStateReader {
             Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => {
                 self.cache
                     .borrow_mut()
-                    .cache_get_class_hash_at(contract_address, Default::default());
-                Ok(Default::default())
+                    .cache_get_class_hash_at(contract_address, ClassHash::default());
+                Ok(ClassHash::default())
             }
             Err(ProviderError::Other(boxed)) => other_provider_error(boxed),
             Err(x) => Err(StateReadError(format!(
@@ -206,17 +207,14 @@ impl StateReader for ForkStateReader {
         }
     }
 
-    fn get_compiled_contract_class(
-        &self,
-        class_hash: ClassHash,
-    ) -> StateResult<ContractClassBlockifier> {
+    fn get_compiled_class(&self, class_hash: ClassHash) -> StateResult<RunnableCompiledClass> {
         let mut cache = self.cache.borrow_mut();
 
         let contract_class = {
             if let Some(cache_hit) = cache.get_compiled_contract_class(&class_hash) {
                 Ok(cache_hit)
             } else {
-                match sync(
+                match self.runtime.block_on(
                     self.client
                         .get_class(self.block_id(), Felt::from_(class_hash)),
                 ) {
@@ -251,38 +249,33 @@ impl StateReader for ForkStateReader {
                 });
 
                 match compile_sierra::<String>(&sierra_contract_class, &SierraType::Contract) {
-                    Ok(casm_contract_class_raw) => {
-                        let casm_contract_class: CasmContractClass =
-                            serde_json::from_str(&casm_contract_class_raw)
-                                .expect("Unable to deserialize CasmContractClass");
-
-                        Ok(ContractClassBlockifier::V1(
-                            ContractClassV1::try_from(casm_contract_class)
-                                .expect("Unable to create ContractClassV1 from CasmContractClass"),
-                        ))
-                    }
+                    Ok(casm_contract_class_raw) => Ok(RunnableCompiledClass::V1(
+                        CompiledClassV1::try_from_json_string(
+                            &casm_contract_class_raw,
+                            SierraVersion::LATEST,
+                        )
+                        .expect("Unable to create RunnableCompiledClass::V1"),
+                    )),
                     Err(err) => Err(StateReadError(err.to_string())),
                 }
             }
             ContractClassStarknet::Legacy(legacy_class) => {
-                let converted_entry_points: HashMap<EntryPointType, Vec<EntryPoint>> =
-                    serde_json::from_str(
-                        &serde_json::to_string(&legacy_class.entry_points_by_type).unwrap(),
-                    )
-                    .unwrap();
+                let converted_entry_points = serde_json::from_str(
+                    &serde_json::to_string(&legacy_class.entry_points_by_type).unwrap(),
+                )
+                .unwrap();
 
                 let mut decoder = GzDecoder::new(&legacy_class.program[..]);
                 let mut converted_program = String::new();
                 decoder.read_to_string(&mut converted_program).unwrap();
 
-                Ok(ContractClassBlockifier::V0(
-                    ContractClassV0::try_from(DeprecatedContractClass {
-                        abi: None,
-                        program: serde_json::from_str(&converted_program).unwrap(),
+                Ok(RunnableCompiledClass::V0(CompiledClassV0(Arc::new(
+                    CompiledClassV0Inner {
+                        program: Program::from_bytes(converted_program.as_ref(), None)
+                            .expect("Unable to load program from converted_program"),
                         entry_points_by_type: converted_entry_points,
-                    })
-                    .unwrap(),
-                ))
+                    },
+                ))))
             }
         }
     }
@@ -292,8 +285,4 @@ impl StateReader for ForkStateReader {
             "Unable to get compiled class hash from the fork".to_string(),
         ))
     }
-}
-
-fn sync<R>(action: impl Future<Output = R>) -> R {
-    task::block_in_place(move || Handle::current().block_on(action))
 }

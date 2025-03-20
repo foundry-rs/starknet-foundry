@@ -1,11 +1,12 @@
 use crate::consts::EXPECTED_RPC_VERSION;
 use crate::print::print_as_warning;
 use crate::rpc::{get_rpc_version, is_expected_version};
-use anyhow::{anyhow, Result};
-use starknet::providers::jsonrpc::HttpTransport;
+use anyhow::{Result, anyhow};
 use starknet::providers::JsonRpcClient;
+use starknet::providers::jsonrpc::HttpTransport;
 use std::fmt::Display;
 
+pub mod auto_completions;
 pub mod command;
 pub mod consts;
 pub mod print;

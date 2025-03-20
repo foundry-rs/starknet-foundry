@@ -12,7 +12,6 @@ pub struct ForgeConfigExtension<'a> {
 impl<'a> ExtensionLogic for ForgeConfigExtension<'a> {
     type Runtime = StarknetRuntime<'a>;
 
-    #[allow(clippy::too_many_lines)]
     fn handle_cheatcode(
         &mut self,
         selector: &str,

@@ -1,5 +1,5 @@
 use starknet::ClassHash;
-use sncast_std::{deploy, DeployResult, FeeSettings, EthFeeSettings};
+use sncast_std::{deploy, FeeSettings};
 
 fn main() {
     let max_fee = 9999999;
@@ -15,7 +15,9 @@ fn main() {
         ArrayTrait::new(),
         Option::Some(salt),
         true,
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        FeeSettings {
+            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
+        },
         Option::Some(nonce)
     )
         .expect('deploy failed');

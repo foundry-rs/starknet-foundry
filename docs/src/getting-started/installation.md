@@ -6,45 +6,55 @@ In this section, we will walk through the process of installing Starknet Foundry
 ## Contents
 
 <!-- TOC -->
+
 * [Installation](#installation)
-  * [Contents](#contents)
-  * [Requirements](#requirements)
-  * [Linux and macOS](#linux-and-macos)
-    * [Install Rust version >= 1.80.1](#install-rust-version--1801)
-    * [Install asdf](#install-asdf)
-    * [Install Scarb version >= 2.7.0](#install-scarb-version--270)
-    * [Install Starknet Foundry](#install-starknet-foundry)
-  * [Windows](#windows)
-    * [Install Rust version >= 1.80.1](#install-rust-version--1801-1)
-    * [Install Scarb version >= 2.7.0](#install-scarb-version--270-1)
-    * [Install Universal Sierra Compiler](#install-universal-sierra-compiler)
-    * [Install Starknet Foundry](#install-starknet-foundry-1)
-  * [Common Errors](#common-errors)
-    * [No Version Set (Linux and macOS Only)](#no-version-set-linux-and-macos-only)
-    * [Invalid Rust Version](#invalid-rust-version)
-      * [Linux and macOS](#linux-and-macos-1)
-      * [Windows](#windows-1)
-    * [`scarb test` Isn’t Running `snforge`](#scarb-test-isnt-running-snforge)
-  * [Universal-Sierra-Compiler update](#universal-sierra-compiler-update)
-    * [Linux and macOS](#linux-and-macos-2)
-    * [Windows](#windows-2)
-  * [How to build Starknet Foundry from source code](#how-to-build-starknet-foundry-from-source-code)
+    * [Contents](#contents)
+    * [Requirements](#requirements)
+    * [Linux and macOS](#linux-and-macos)
+        * [Install asdf](#install-asdf)
+        * [Install Scarb version >= 2.8.5](#install-scarb-version--285)
+        * [(Optional for Scarb >= 2.10.0) Rust Installation](#optional-for-scarb--21001-rust-installation)
+        * [Install Starknet Foundry](#install-starknet-foundry)
+    * [Windows](#windows)
+        * [Install Scarb version >= 2.8.5](#install-scarb-version--285-1)
+        * [(Optional for Scarb >= 2.10.0) Rust Installation](#optional-for-scarb--21001-rust-installation-1)
+        * [Install Universal Sierra Compiler](#install-universal-sierra-compiler)
+        * [Install Starknet Foundry](#install-starknet-foundry-1)
+    * [Common Errors](#common-errors)
+        * [No Version Set (Linux and macOS Only)](#no-version-set-linux-and-macos-only)
+        * [Invalid Rust Version](#invalid-rust-version)
+            * [Linux and macOS](#linux-and-macos-1)
+            * [Windows](#windows-1)
+        * [`scarb test` Isn’t Running `snforge`](#scarb-test-isnt-running-snforge)
+    * [Shell completions (Optional)](#set-up-shell-completions-optional)
+    * [Universal-Sierra-Compiler update](#universal-sierra-compiler-update)
+        * [Linux and macOS](#linux-and-macos-2)
+        * [Windows](#windows-2)
+    * [How to build Starknet Foundry from source code](#how-to-build-starknet-foundry-from-source-code)
+
 <!-- TOC -->
 
 ## Requirements
 
 > 📝 **Note**
 >
-> Ensure all requirements are installed and follow the required minimum versions.
+> Ensure all requirements are installed and follow the required minimal versions.
 > Starknet Foundry will not run if not following these requirements.
 
 To use Starknet Foundry, you need:
 
-- [Scarb](https://docs.swmansion.com/scarb/download.html) version >= 2.7.0
+- [Scarb](https://docs.swmansion.com/scarb/download.html) version >= 2.8.5
 - [Universal-Sierra-Compiler](https://github.com/software-mansion/universal-sierra-compiler)
-- [Rust](https://www.rust-lang.org/tools/install) version >= 1.80.1
+- _(Optional for Scarb >= 2.10.0)_[^note] [Rust](https://www.rust-lang.org/tools/install) version >= 1.80.1
 
 all installed and added to your `PATH` environment variable.
+
+[^note]: Additionally, your platform must be one of the supported:
+* `aarch64-apple-darwin`
+* `aarch64-unknown-linux-gnu`
+* `x86_64-apple-darwin`
+* `x86_64-pc-windows-msvc`
+* `x86_64-unknown-linux-gnu`
 
 > 📝 **Note**
 >
@@ -58,31 +68,6 @@ all installed and added to your `PATH` environment variable.
 > If you already have installed Rust, Scarb and asdf simply run
 > `asdf plugin add starknet-foundry`
 
-### Install Rust version >= 1.80.1
-
-> ℹ️ **Info**
->
-> `snforge` relies on Scarb's [_procedural macros_](https://github.com/foundry-rs/starknet-foundry/issues/2299) to
-> create
-`snforge_scarb_plugin` which is a part of `snforge_std`.
-> This plugin is required for `snforge` test to work.
-> Currently, _procedural macros_ require Rust installation to function.
-> This will be changed in the upcoming versions of Scarb.
-
-```shell
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-
-To verify that correct Rust version was installed, run
-
-```shell
-rustc --version
-```
-
-and verify that version is >= 1.80.1
-
-See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
-
 ### Install asdf
 
 Follow the instructions from [asdf docs](https://asdf-vm.com/guide/getting-started.html#getting-started).
@@ -93,7 +78,7 @@ To verify that asdf was installed, run
 asdf --version
 ```
 
-### Install Scarb version >= 2.7.0
+### Install Scarb version >= 2.8.5
 
 First, add Scarb plugin to asdf
 
@@ -110,7 +95,7 @@ asdf install scarb latest
 Set a version globally (in your ~/.tool-versions file):
 
 ```shell
-asdf global scarb latest
+asdf set --home scarb latest
 ```
 
 To verify that Scarb was installed, run
@@ -119,7 +104,35 @@ To verify that Scarb was installed, run
 scarb --version
 ```
 
-and verify that version is >= 2.7.0
+and verify that version is >= 2.8.5
+
+### (Optional for Scarb >= 2.10.0)[^note] Rust Installation
+
+> ℹ️️ **Info**
+>
+> Rust installation is only required if **ANY** of the following is true:
+>
+> * You are using Scarb version <= 2.10.0
+> * Your platform is not one of the following supported platforms:
+>   * `aarch64-apple-darwin`
+>   * `aarch64-unknown-linux-gnu`
+>   * `x86_64-apple-darwin`
+>   * `x86_64-pc-windows-msvc`
+>   * `x86_64-unknown-linux-gnu`
+
+```shell
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+To verify that correct Rust version was installed, run
+
+```shell
+rustc --version
+```
+
+and verify that version is >= 1.80.1
+
+See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
 
 ### Install Starknet Foundry
 
@@ -138,7 +151,7 @@ asdf install starknet-foundry latest
 Set a version globally (in your ~/.tool-versions file):
 
 ```shell
-asdf global starknet-foundry latest
+asdf set --home starknet-foundry latest
 ```
 
 To verify that Starknet Foundry was installed, run
@@ -156,36 +169,13 @@ sncast --version
 ## Windows
 
 > 🐧 **Info** - WSL (Windows Subsystem for Linux)
-> 
-> Starknet Foundry can be installed natively on Windows, but currently, for smoother experience, it is recommended to use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
-> 
+>
+> Starknet Foundry can be installed natively on Windows, but currently, for smoother experience, it is recommended to
+> use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
+>
 > If you are using WSL, please follow the [Linux and macOS](#linux-and-macos) guide.
 
-
-### Install Rust version >= 1.80.1
-
-> ℹ️ **Info**
->
-> `snforge` relies on Scarb's [_procedural macros_](https://github.com/foundry-rs/starknet-foundry/issues/2299) to
-> create
-`snforge_scarb_plugin` which is a part of `snforge_std`.
-> This plugin is required for `snforge` test to work.
-> Currently, _procedural macros_ require Rust installation to function.
-> This will be changed in the upcoming versions of Scarb.
-
-Go to [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install) and follow the installation instructions.
-
-To verify that correct Rust version was installed, run
-
-```shell
-rustc --version
-```
-
-and verify that version is >= 1.80.1
-
-See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
-
-### Install Scarb version >= 2.7.0
+### Install Scarb version >= 2.8.5
 
 Follow the instructions from [Scarb docs](https://docs.swmansion.com/scarb/download.html#windows).
 
@@ -202,12 +192,36 @@ To verify that Scarb was installed, run
 scarb --version
 ```
 
-and verify that version is >= 2.7.0
+and verify that version is >= 2.8.5
+
+### (Optional for Scarb >= 2.10.0)[^note] Rust Installation
+
+> ℹ️️ **Info**
+>
+> Rust installation is only required if:
+>
+> * You are using Scarb version <= 2.10.0
+> * Your platform is not one of the following supported platforms:
+>   * `x86_64-pc-windows-msvc`
+
+Go to [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install) and follow the installation
+instructions.
+
+To verify that correct Rust version was installed, run
+
+```shell
+rustc --version
+```
+
+and verify that version is >= 1.80.1
+
+See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
 
 ### Install Universal Sierra Compiler
 
 1. Download the release archive matching your CPU architecture
-   from [https://github.com/software-mansion/universal-sierra-compiler/releases/latest](https://github.com/software-mansion/universal-sierra-compiler/releases/latest). Look for package with `windows`
+   from [https://github.com/software-mansion/universal-sierra-compiler/releases/latest](https://github.com/software-mansion/universal-sierra-compiler/releases/latest).
+   Look for package with `windows`
    in the name e.g.
    `universal-sierra-compiler-v2.3.0-x86_64-pc-windows-msvc.zip`.
 2. Extract it to a location where you would like to have Starknet Foundry installed. We recommend
@@ -225,7 +239,8 @@ universal-sierra-compiler --version
 ### Install Starknet Foundry
 
 1. Download the release archive matching your CPU architecture
-   from [https://github.com/foundry-rs/starknet-foundry/releases/latest](https://github.com/foundry-rs/starknet-foundry/releases/latest). Look for package with `windows` in the name e.g.
+   from [https://github.com/foundry-rs/starknet-foundry/releases/latest](https://github.com/foundry-rs/starknet-foundry/releases/latest).
+   Look for package with `windows` in the name e.g.
    `starknet-foundry-v0.34.0-x86_64-pc-windows-msvc.zip`.
 2. Extract it to a location where you would like to have Starknet Foundry installed. We recommend
    `%LOCALAPPDATA%\Programs\snfoundry`.
@@ -254,13 +269,13 @@ Users may encounter this error when trying to use `snforge` or `sncast` without 
 ```shell
 No version is set for command snforge
 Consider adding one of the following versions in your config file at $HOME/.tool_versions
-starknet-foundry 0.32.0
+starknet-foundry 0.37.0
 ```
 
 This error indicates that `Starknet Foundry` version is unset. To resolve it, set the version globally using asdf:
 
 ```shell
-asdf global starknet-foundry <version>
+asdf set --home starknet-foundry latest
 ```
 
 For additional information on asdf version management, see
@@ -314,6 +329,94 @@ Make sure to include this section in `Scarb.toml`
 [scripts]
 test = "snforge test"
 ```
+
+## Set up shell completions (optional)
+
+Shell completions allow your terminal to suggest and automatically complete commands and options when you press `Tab`.
+
+<details>
+  <summary><strong>Bash</strong></summary>
+
+Completions are configured by doing the following:
+```bash
+mkdir -p "${ASDF_DATA_DIR:-$HOME/.asdf}/completions"
+sncast completion bash > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/sncast.bash"
+snforge completion bash > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/snforge.bash"
+```
+
+Then add the following to your `.bash`:
+```bash
+# source completion scripts
+. "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/sncast.bash"     
+. "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/snforge.bash"
+```
+
+</details>
+
+<details>
+  <summary><strong>ZSH</strong></summary>
+
+Completions are configured by doing the following:
+```bash
+mkdir -p "${ASDF_DATA_DIR:-$HOME/.asdf}/completions"
+sncast completion zsh > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/_sncast"
+snforge completion zsh > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/_snforge"
+```
+
+Then add the following to your `.zshrc`:
+```bash
+# append completions to fpath
+fpath=(${ASDF_DATA_DIR:-$HOME/.asdf}/completions $fpath)
+# initialise completions with ZSH's compinit
+autoload -Uz compinit && compinit
+```
+This is to enable autocompletion in [ZSH](https://wiki.archlinux.org/title/Zsh#Command_completion).
+
+</details>
+
+<details>
+  <summary><strong>Fish</strong></summary>
+
+Completions are configured by doing the following:
+```bash
+sncast completion fish > ~/.config/fish/completions/sncast.fish
+snforge completion fish > ~/.config/fish/completions/snforge.fish
+```
+
+</details>
+
+<details>
+  <summary><strong>Elvish</strong></summary>
+
+Completions are configured by doing the following:
+
+```bash
+sncast completion elvish >> ~/.config/elvish/rc.elv
+snforge completion elvish >> ~/.config/elvish/rc.elv
+```
+
+</details>
+
+<details>
+  <summary><strong>PowerShell</strong></summary>
+Open your profile script with:
+
+```bash
+mkdir -Path (Split-Path -Parent $profile) -ErrorAction SilentlyContinue
+notepad $profile
+```
+
+Add the line and save the file:
+```bash
+Invoke-Expression -Command $(sncast completion powershell | Out-String)
+Invoke-Expression -Command $(snforge completion powershell | Out-String)
+``` 
+At the start of the PowerShell session, you may encounter an error due to a restrictive `ExecutionPolicy`. You can resolve this issue by running the following command:
+
+```bash
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+</details>
 
 ## Universal-Sierra-Compiler update
 

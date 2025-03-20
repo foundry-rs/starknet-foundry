@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use cairo_lang_casm::hints::Hint;
 use camino::Utf8Path;
 use num_bigint::BigInt;
@@ -9,12 +9,10 @@ use std::io::Write;
 use std::str::from_utf8;
 use tempfile::Builder;
 
-use crate::spinner::spawn_usc_spinner;
 pub use command::*;
 use shared::command::CommandExt;
 
 mod command;
-mod spinner;
 
 pub type CasmCodeOffset = usize;
 pub type CasmInstructionIdx = usize;
@@ -72,25 +70,20 @@ pub fn compile_sierra_at_path<T: UniversalSierraCompilerOutput>(
     sierra_file_path: &Utf8Path,
     sierra_type: &SierraType,
 ) -> Result<T> {
-    let usc_output = {
-        let _spinner = spawn_usc_spinner(sierra_file_path)?;
-
-        let mut usc_command = UniversalSierraCompilerCommand::new();
-        usc_command
-            .inherit_stderr()
-            .args(vec![
-                &("compile-".to_string() + &sierra_type.to_string()),
-                "--sierra-path",
-                sierra_file_path.as_str(),
-            ])
-            .command()
-            .output_checked()
-            .context(
-                "Error while compiling Sierra. \
-            Make sure you have the latest universal-sierra-compiler binary installed. \
-            Contact us if it doesn't help",
-            )?
-    };
+    let usc_output = UniversalSierraCompilerCommand::new()
+        .inherit_stderr()
+        .args(vec![
+            &("compile-".to_string() + &sierra_type.to_string()),
+            "--sierra-path",
+            sierra_file_path.as_str(),
+        ])
+        .command()
+        .output_checked()
+        .context(
+            "Error while compiling Sierra. \
+        Make sure you have the latest universal-sierra-compiler binary installed. \
+        Contact us if it doesn't help",
+        )?;
 
     Ok(T::convert(from_utf8(&usc_output.stdout)?.to_string()))
 }

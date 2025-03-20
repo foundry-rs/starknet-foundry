@@ -1,23 +1,19 @@
-use std::collections::HashSet;
+use std::str::FromStr;
 
 use super::deploy::compute_account_address;
-use super::NestedMap;
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
-    AccountType,
 };
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
-use regex::Regex;
+use sncast::check_if_legacy_contract;
+use sncast::helpers::account::generate_account_name;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
-use sncast::{
-    check_class_hash_exists, get_chain_id, handle_rpc_error, AccountType as SNCastAccountType,
-};
-use sncast::{check_if_legacy_contract, read_and_parse_json_file, AccountData};
+use sncast::{AccountType, check_class_hash_exists, get_chain_id, handle_rpc_error};
 use starknet::core::types::{BlockId, BlockTag, StarknetError};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::providers::{Provider, ProviderError};
@@ -36,7 +32,7 @@ pub struct Import {
     pub address: Felt,
 
     /// Type of the account
-    #[clap(short = 't', long = "type")]
+    #[clap(short = 't', long = "type", value_parser = AccountType::from_str)]
     pub account_type: AccountType,
 
     /// Class hash of the account
@@ -56,7 +52,6 @@ pub struct Import {
     pub salt: Option<Felt>,
 
     /// If passed, a profile with the provided name and corresponding data will be created in snfoundry.toml
-    #[allow(clippy::struct_field_names)]
     #[clap(long, conflicts_with = "network")]
     pub add_profile: Option<String>,
 
@@ -118,19 +113,14 @@ pub async fn import(
         from_provider
     } else {
         bail!(
-        "Class hash for the account address {:#x} could not be found. Please provide the class hash",
-        import.address
+            "Class hash for the account address {:#x} could not be found. Please provide the class hash",
+            import.address
         );
     };
 
     let chain_id = get_chain_id(provider).await?;
     if let Some(salt) = import.salt {
-        // TODO(#2571)
-        let sncast_account_type = match import.account_type {
-            AccountType::Argent => SNCastAccountType::Argent,
-            AccountType::Braavos => SNCastAccountType::Braavos,
-            AccountType::Oz => SNCastAccountType::OpenZeppelin,
-        };
+        let sncast_account_type = import.account_type;
         let computed_address =
             compute_account_address(salt, private_key, class_hash, sncast_account_type, chain_id);
         ensure!(
@@ -148,7 +138,7 @@ pub async fn import(
         import.address,
         deployed,
         legacy,
-        &import.account_type,
+        import.account_type,
         Some(class_hash),
         import.salt,
     );
@@ -183,54 +173,16 @@ fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<Felt> {
     Ok(private_key_string.parse()?)
 }
 
-fn parse_input_to_felt(input: &String) -> Result<Felt> {
-    // Regex is from spec https://github.com/starkware-libs/starknet-specs/blob/6d88b7399f56260ece3821c71f9ce53ec55f830b/api/starknet_api_openrpc.json#L1303
-    let felt_re = Regex::new(r"^0x(0|[a-fA-F1-9]{1}[a-fA-F0-9]{0,62})$").unwrap();
-    if input.starts_with("0x") && !felt_re.is_match(input) {
-        bail!(
-            "Failed to parse value {} to felt. Invalid hex value was passed",
-            input
-        );
-    } else if let Ok(felt_from_hex) = Felt::try_from_hex_str(input) {
-        return Ok(felt_from_hex);
-    } else if let Ok(felt_from_dec) = Felt::try_from_dec_str(input) {
-        return Ok(felt_from_dec);
-    }
-    bail!("Failed to parse value {} to felt", input);
+fn parse_input_to_felt(input: &str) -> Result<Felt> {
+    Felt::try_from_hex_str(input)
+        .or_else(|_| Felt::try_from_dec_str(input))
+        .with_context(|| format!("Failed to parse the value {input} as a felt"))
 }
 
 fn get_private_key_from_input() -> Result<Felt> {
     let input = rpassword::prompt_password("Type in your private key and press enter: ")
         .expect("Failed to read private key from input");
     parse_input_to_felt(&input)
-}
-
-fn generate_account_name(accounts_file: &Utf8PathBuf) -> Result<String> {
-    let mut id = 1;
-
-    if !accounts_file.exists() {
-        return Ok(format!("account-{id}"));
-    }
-
-    let networks: NestedMap<AccountData> = read_and_parse_json_file(accounts_file)?;
-    let mut result = HashSet::new();
-
-    for (_, accounts) in networks {
-        for (name, _) in accounts {
-            if let Some(id) = name
-                .strip_prefix("account-")
-                .and_then(|id| id.parse::<u32>().ok())
-            {
-                result.insert(id);
-            };
-        }
-    }
-
-    while result.contains(&id) {
-        id += 1;
-    }
-
-    Ok(format!("account-{id}"))
 }
 
 #[cfg(test)]
@@ -241,52 +193,55 @@ mod tests {
 
     #[test]
     fn test_parse_hex_str() {
-        let hex_str = "0x1a2b3c";
-        let result = parse_input_to_felt(&hex_str.to_string());
+        let hex_str = "0x0000000000000000000000000000000000000000000000000000000000000001";
+        let result = parse_input_to_felt(hex_str);
 
-        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), Felt::try_from_hex_str("0x1").unwrap());
+    }
+
+    #[test]
+    fn test_parse_hex_str_padded() {
+        let hex_str = "0x1a2b3c";
+        let result = parse_input_to_felt(hex_str);
+
         assert_eq!(result.unwrap(), Felt::try_from_hex_str("0x1a2b3c").unwrap());
     }
 
     #[test]
     fn test_parse_hex_str_invalid() {
         let hex_str = "0xz";
-        let result = parse_input_to_felt(&hex_str.to_string());
+        let result = parse_input_to_felt(hex_str);
 
         assert!(result.is_err());
         let error_message = result.unwrap_err().to_string();
-        assert_eq!(
-            "Failed to parse value 0xz to felt. Invalid hex value was passed",
-            error_message
-        );
+        assert_eq!("Failed to parse the value 0xz as a felt", error_message);
     }
 
     #[test]
     fn test_parse_dec_str() {
         let dec_str = "123";
-        let result = parse_input_to_felt(&dec_str.to_string());
+        let result = parse_input_to_felt(dec_str);
 
-        assert!(result.is_ok());
         assert_eq!(result.unwrap(), Felt::from(123));
     }
 
     #[test]
     fn test_parse_dec_str_negative() {
         let dec_str = "-123";
-        let result = parse_input_to_felt(&dec_str.to_string());
+        let result = parse_input_to_felt(dec_str);
 
         assert!(result.is_err());
         let error_message = result.unwrap_err().to_string();
-        assert_eq!("Failed to parse value -123 to felt", error_message);
+        assert_eq!("Failed to parse the value -123 as a felt", error_message);
     }
 
     #[test]
     fn test_parse_invalid_str() {
         let invalid_str = "invalid";
-        let result = parse_input_to_felt(&invalid_str.to_string());
+        let result = parse_input_to_felt(invalid_str);
 
         assert!(result.is_err());
         let error_message = result.unwrap_err().to_string();
-        assert_eq!("Failed to parse value invalid to felt", error_message);
+        assert_eq!("Failed to parse the value invalid as a felt", error_message);
     }
 }

@@ -8,7 +8,9 @@ edition.workspace = true
 [features]
 smoke = []
 scarb_2_7_1 = []
-scarb_2_8_3 = []
+scarb_since_2_10 = []
+debugging = ["forge_runner/debugging"]
+assert_non_exact_gas = ["test_utils/assert_non_exact_gas"]
 
 [dependencies]
 anyhow.workspace = true
@@ -23,9 +25,9 @@ configuration = { path = "../configuration" }
 scarb-api = { path = "../scarb-api" }
 forge_runner = { path = "../forge-runner" }
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
-cairo-lang-runner.workspace = true
 cairo-lang-sierra.workspace = true
 cairo-annotations.workspace = true
+cairo-lang-runnable-utils.workspace = true
 starknet-types-core.workspace = true
 regex.workspace = true
 serde_json.workspace = true
@@ -33,6 +35,7 @@ serde.workspace = true
 starknet.workspace = true
 num-bigint.workspace = true
 clap.workspace = true
+clap_complete.workspace = true
 console.workspace = true
 rand.workspace = true
 scarb-metadata.workspace = true

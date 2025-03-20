@@ -13,4 +13,3 @@ tempfile.workspace = true
 num-bigint.workspace = true
 cairo-lang-casm.workspace = true
 camino.workspace = true
-indicatif.workspace = true

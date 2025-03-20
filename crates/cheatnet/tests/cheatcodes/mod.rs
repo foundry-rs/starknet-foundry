@@ -5,6 +5,7 @@ use starknet_types_core::felt::Felt;
 
 mod test_environment;
 
+mod cheat_block_hash;
 mod cheat_block_number;
 mod cheat_block_timestamp;
 mod cheat_caller_address;
@@ -16,6 +17,7 @@ mod generate_random_felt;
 mod get_class_hash;
 mod load;
 mod mock_call;
+mod multiple_writes_same_storage;
 mod precalculate_address;
 mod replace_bytecode;
 mod spy_events;

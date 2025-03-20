@@ -1,8 +1,8 @@
 use crate::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
-use crate::{NewArgs, CAIRO_EDITION};
-use anyhow::{anyhow, bail, ensure, Context, Ok, Result};
+use crate::{CAIRO_EDITION, NewArgs};
+use anyhow::{Context, Ok, Result, anyhow, bail, ensure};
 use camino::Utf8PathBuf;
-use include_dir::{include_dir, Dir};
+use include_dir::{Dir, include_dir};
 use indoc::formatdoc;
 use scarb_api::ScarbCommand;
 use semver::Version;
@@ -11,7 +11,7 @@ use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use toml_edit::{value, ArrayOfTables, DocumentMut, Item, Table};
+use toml_edit::{Array, ArrayOfTables, DocumentMut, Item, Table, Value, value};
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 
@@ -96,6 +96,7 @@ fn update_config(config_path: &Path, scarb: &Version) -> Result<()> {
     set_cairo_edition(&mut document, CAIRO_EDITION);
     add_test_script(&mut document);
     add_assert_macros(&mut document, scarb)?;
+    add_allow_prebuilt_macros(&mut document)?;
 
     fs::write(config_path, document.to_string())?;
 
@@ -142,12 +143,37 @@ fn add_assert_macros(document: &mut DocumentMut, scarb: &Version) -> Result<()> 
     Ok(())
 }
 
+fn add_allow_prebuilt_macros(document: &mut DocumentMut) -> Result<()> {
+    let tool_section = document.entry("tool").or_insert(Item::Table(Table::new()));
+    let tool_table = tool_section
+        .as_table_mut()
+        .context("Failed to get tool table from Scarb.toml")?;
+    tool_table.set_implicit(true);
+
+    let mut scarb_table = Table::new();
+
+    let mut allow_prebuilt_macros = Array::new();
+    allow_prebuilt_macros.push("snforge_std");
+
+    scarb_table.insert(
+        "allow-prebuilt-plugins",
+        Item::Value(Value::Array(allow_prebuilt_macros)),
+    );
+
+    tool_table.insert("scarb", Item::Table(scarb_table));
+
+    Ok(())
+}
+
 fn extend_gitignore(path: &Path) -> Result<()> {
     if path.join(".gitignore").exists() {
         let mut file = OpenOptions::new()
             .append(true)
             .open(path.join(".gitignore"))?;
         writeln!(file, ".snfoundry_cache/")?;
+        writeln!(file, "snfoundry_trace/")?;
+        writeln!(file, "coverage/")?;
+        writeln!(file, "profile/")?;
     }
     Ok(())
 }
@@ -163,7 +189,9 @@ pub fn new(
     if !overwrite {
         ensure!(
             !path.exists() || path.read_dir().is_ok_and(|mut i| i.next().is_none()),
-            format!("The provided path `{path}` points to a non-empty directory. If you wish to create a project in this directory, use the `--overwrite` flag")
+            format!(
+                "The provided path `{path}` points to a non-empty directory. If you wish to create a project in this directory, use the `--overwrite` flag"
+            )
         );
     }
     let name = infer_name(name, &path)?;

@@ -272,8 +272,8 @@ async fn test_happy_case_tuple_function_cairo_expression_input() -> anyhow::Resu
 }
 
 #[tokio::test]
-async fn test_happy_case_tuple_function_with_nested_struct_cairo_expression_input(
-) -> anyhow::Result<()> {
+async fn test_happy_case_tuple_function_with_nested_struct_cairo_expression_input()
+-> anyhow::Result<()> {
     let contract_class = CLASS.get_or_init(init_class).await.to_owned();
 
     let input = String::from(
@@ -452,8 +452,8 @@ async fn test_happy_case_enum_function_empty_variant_cairo_expression_input() ->
     Ok(())
 }
 #[tokio::test]
-async fn test_happy_case_enum_function_one_argument_variant_cairo_expression_input(
-) -> anyhow::Result<()> {
+async fn test_happy_case_enum_function_one_argument_variant_cairo_expression_input()
+-> anyhow::Result<()> {
     let contract_class = CLASS.get_or_init(init_class).await.to_owned();
 
     let input = String::from("Enum::Two(128)");
@@ -472,8 +472,8 @@ async fn test_happy_case_enum_function_one_argument_variant_cairo_expression_inp
 }
 
 #[tokio::test]
-async fn test_happy_case_enum_function_nested_struct_variant_cairo_expression_input(
-) -> anyhow::Result<()> {
+async fn test_happy_case_enum_function_nested_struct_variant_cairo_expression_input()
+-> anyhow::Result<()> {
     let contract_class = CLASS.get_or_init(init_class).await.to_owned();
 
     let input =
@@ -569,11 +569,6 @@ async fn test_happy_case_complex_struct_function_cairo_expression_input() -> any
     Ok(())
 }
 
-// TODO add similar test but with enums (Issue #2553)
-//  - take existing contract code
-//  - find/create a library with an enum
-//  - add to project as a dependency
-//  - create enum with the same name in your contract code
 #[tokio::test]
 async fn test_external_struct_function_ambiguous_struct_name_cairo_expression_input() {
     let contract_class = CLASS.get_or_init(init_class).await.to_owned();
@@ -662,4 +657,37 @@ async fn test_happy_case_contract_constructor() -> anyhow::Result<()> {
     assert_eq!(result, expected_output);
 
     Ok(())
+}
+
+#[tokio::test]
+async fn test_external_enum_function_ambiguous_enum_name_cairo_expression_input() {
+    // https://sepolia.starkscan.co/class/0x019ea00ebe2d83fb210fbd6f52c302b83c69e3c8c934f9404c87861e9d3aebbc#code
+    let test_class_hash: Felt = Felt::from_hex_unchecked(
+        "0x019ea00ebe2d83fb210fbd6f52c302b83c69e3c8c934f9404c87861e9d3aebbc",
+    );
+
+    let client = JsonRpcClient::new(HttpTransport::new(
+        shared::test_utils::node_url::node_rpc_url(),
+    ));
+
+    let contract_class = client
+        .get_class(BlockId::Tag(BlockTag::Latest), test_class_hash)
+        .await
+        .unwrap();
+
+    let input = String::from(
+        "
+            TransactionState::Init() , \
+            TransactionState::NotFound()
+            ",
+    );
+
+    let result = Calldata::new(input).serialized(
+        contract_class,
+        &get_selector_from_name("external_enum_fn").unwrap(),
+    );
+
+    result.unwrap_err().assert_contains(
+        r#"Found more than one enum "TransactionState" in ABI, please specify a full path to the item"#,
+    );
 }

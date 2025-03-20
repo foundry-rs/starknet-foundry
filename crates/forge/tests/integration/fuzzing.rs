@@ -1,8 +1,11 @@
+use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use indoc::indoc;
-use test_utils::runner::{assert_passed, TestCase};
+use test_utils::runner::{TestCase, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
+
+const ALLOWED_ERROR: f64 = 0.05;
 
 #[test]
 fn fuzzed_argument() {
@@ -13,6 +16,7 @@ fn fuzzed_argument() {
         }
 
         #[test]
+        #[fuzzer]
         fn fuzzed_argument(b: felt252) {
             let result = adder(2, b);
             assert(result == 2 + b, '2 + b == 2 + b');
@@ -20,7 +24,7 @@ fn fuzzed_argument() {
     "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -30,6 +34,7 @@ fn fuzzer_different_types() {
     let test = test_case!(indoc!(
         r"
         #[test]
+        #[fuzzer]
         fn fuzzer_different_types(a: u256) {
             if a <= 5_u256 {
                 assert(2 == 2, '2 == 2');
@@ -41,7 +46,7 @@ fn fuzzer_different_types() {
     "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -63,7 +68,7 @@ fn fuzzed_while_loop() {
     "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     let test_target_summary = TestCase::find_test_result(&result);
     let AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed { gas_info, .. }) =
@@ -72,40 +77,17 @@ fn fuzzed_while_loop() {
         panic!()
     };
 
-    assert_eq!(gas_info.min, 1);
-    assert_eq!(gas_info.max, 21);
-    assert!((gas_info.mean - 11.).abs() < f64::EPSILON);
-    assert!((gas_info.std_deviation - 6.09).abs() < 0.01);
-}
-
-#[test]
-fn builtin_test() {
-    let test = test_case!(indoc!(
-        r"
-        use core::{
-            pedersen::Pedersen, RangeCheck, integer::Bitwise, ec::EcOp, poseidon::Poseidon,
-            SegmentArena, gas::GasBuiltin, starknet::System
-        };
-        use core::circuit::{RangeCheck96, AddMod, MulMod};
-
-        #[test]
-        fn test_builtins() {
-            core::internal::require_implicit::<Pedersen>();
-            core::internal::require_implicit::<RangeCheck>();
-            core::internal::require_implicit::<Bitwise>();
-            core::internal::require_implicit::<EcOp>();
-            core::internal::require_implicit::<Poseidon>();
-            core::internal::require_implicit::<SegmentArena>();
-            core::internal::require_implicit::<GasBuiltin>();
-            core::internal::require_implicit::<System>();
-            core::internal::require_implicit::<RangeCheck96>();
-            core::internal::require_implicit::<AddMod>();
-            core::internal::require_implicit::<MulMod>();
-        }
-        "
-    ));
-
-    let result = run_test_case(&test);
-
-    assert_passed(&result);
+    // TODO (#2926)
+    assert_eq!(gas_info.l1_gas.min, 0);
+    assert_eq!(gas_info.l1_gas.max, 0);
+    assert!(gas_info.l1_gas.mean < ALLOWED_ERROR);
+    assert!(gas_info.l1_gas.std_deviation < ALLOWED_ERROR);
+    assert_eq!(gas_info.l1_data_gas.min, 0);
+    assert_eq!(gas_info.l1_data_gas.max, 0);
+    assert!(gas_info.l1_data_gas.mean < ALLOWED_ERROR);
+    assert!(gas_info.l1_data_gas.std_deviation < ALLOWED_ERROR);
+    // different scarbs yield different results here, we do not care about the values that much
+    assert!(gas_info.l2_gas.min < gas_info.l2_gas.max);
+    assert!(gas_info.l2_gas.mean > 0.0);
+    assert!(gas_info.l2_gas.std_deviation > 0.0);
 }

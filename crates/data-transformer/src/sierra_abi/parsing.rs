@@ -1,13 +1,13 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use cairo_lang_diagnostics::DiagnosticsBuilder;
 use cairo_lang_filesystem::ids::{FileKind, FileLongId, VirtualFile};
 use cairo_lang_parser::parser::Parser;
 use cairo_lang_parser::utils::SimpleParserDatabase;
+use cairo_lang_syntax::node::Terminal;
 use cairo_lang_syntax::node::ast::{
     ArgClause, ArgList, Expr, ExprInlineMacro, Modifier, PathSegment, PathSegment::Simple,
     WrappedArgList,
 };
-use cairo_lang_syntax::node::Terminal;
 use cairo_lang_utils::Intern;
 use itertools::Itertools;
 
@@ -110,8 +110,11 @@ pub fn parse_inline_macro(
             let arglist = args.arguments(db);
             parse_argument_list(&arglist, db)
         }
-        WrappedArgList::ParenthesizedArgList(_) | WrappedArgList::BracedArgList(_) =>
-            bail!("`array` macro supports only square brackets: array![]"),
-        WrappedArgList::Missing(_) => unreachable!("If any type of parentheses is missing, then diagnostics have been reported and whole flow should have already been terminated.")
+        WrappedArgList::ParenthesizedArgList(_) | WrappedArgList::BracedArgList(_) => {
+            bail!("`array` macro supports only square brackets: array![]")
+        }
+        WrappedArgList::Missing(_) => unreachable!(
+            "If any type of parentheses is missing, then diagnostics have been reported and whole flow should have already been terminated."
+        ),
     }
 }

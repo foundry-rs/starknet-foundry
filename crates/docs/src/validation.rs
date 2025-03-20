@@ -26,12 +26,12 @@ pub fn extract_snippets_from_file(
             let command_match = caps.name("command")?;
             let output = caps.name("output").map(|m| {
                 static GAS_RE: LazyLock<Regex> =
-                    LazyLock::new(|| Regex::new(r"gas: ~\d+").unwrap());
+                    LazyLock::new(|| Regex::new(r"gas: (?:~\d+|\{.+\})").unwrap());
                 static EXECUTION_RESOURCES_RE: LazyLock<Regex> = LazyLock::new(|| {
                     Regex::new(r"(steps|memory holes|builtins|syscalls): (\d+|\(.+\))").unwrap()
                 });
 
-                let output = GAS_RE.replace_all(m.as_str(), "gas: ~[..]").to_string();
+                let output = GAS_RE.replace_all(m.as_str(), "gas: [..]").to_string();
                 EXECUTION_RESOURCES_RE
                     .replace_all(output.as_str(), "${1}: [..]")
                     .to_string()
@@ -71,9 +71,9 @@ pub fn extract_snippets_from_directory(
     for file in files {
         let path = file.path();
 
-        if EXTENSION.map_or(true, |ext| {
-            path.extension().and_then(|path_ext| path_ext.to_str()) == Some(ext)
-        }) {
+        if EXTENSION
+            .is_none_or(|ext| path.extension().and_then(|path_ext| path_ext.to_str()) == Some(ext))
+        {
             let snippets = extract_snippets_from_file(path, snippet_type)?;
             all_snippets.extend(snippets);
         }

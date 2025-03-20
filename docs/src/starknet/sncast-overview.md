@@ -6,7 +6,7 @@ Starknet Foundry `sncast` is a command line tool for performing Starknet RPC cal
 > At the moment, `sncast` only supports contracts written in [Cairo](https://github.com/starkware-libs/cairo) v1 and v2.
 
 > ⚠️ **Warning**
-> Currently, support is only provided for accounts that use the default signature based on the [Stark curve](https://docs.starknet.io/documentation/architecture_and_concepts/Cryptography/stark-curve).
+> Currently, support is only provided for accounts that use the default signature based on the [Stark curve](https://docs.starknet.io/architecture-and-concepts/cryptography/#stark-curve).
 
 ## How to Use `sncast`
 
@@ -96,7 +96,6 @@ $ sncast --account my_account \
     deploy \
 	--network sepolia \
     --class-hash 0x0227f52a4d2138816edf8231980d5f9e6e0c8a3deab45b601a1fcee3d4427b02 \
-    --fee-token strk
 ```
 
 <details>

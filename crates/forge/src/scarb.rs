@@ -3,9 +3,9 @@ use anyhow::{Context, Result};
 use cairo_lang_sierra::program::VersionedProgram;
 use camino::Utf8Path;
 use configuration::PackageConfig;
-use forge_runner::package_tests::raw::TestTargetRaw;
 use forge_runner::package_tests::TestTargetLocation;
-use scarb_api::{test_targets_by_name, ScarbCommand};
+use forge_runner::package_tests::raw::TestTargetRaw;
+use scarb_api::{ScarbCommand, test_targets_by_name};
 use scarb_metadata::PackageMetadata;
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
@@ -118,11 +118,12 @@ pub fn load_test_artifacts(
 mod tests {
     use super::*;
     use crate::scarb::config::ForkTarget;
-    use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use assert_fs::TempDir;
+    use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use camino::Utf8PathBuf;
     use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
     use configuration::load_package_config;
+    use forge_runner::forge_config::ForgeTrackedResource;
     use indoc::{formatdoc, indoc};
     use scarb_api::metadata::MetadataCommandExt;
     use scarb_metadata::PackageId;
@@ -229,6 +230,7 @@ mod tests {
                 fuzzer_runs: None,
                 fuzzer_seed: None,
                 max_n_steps: None,
+                tracked_resource: ForgeTrackedResource::CairoSteps,
                 detailed_resources: false,
                 save_trace_data: false,
                 build_profile: false,
@@ -252,9 +254,10 @@ mod tests {
         );
         let err = result.unwrap_err();
 
-        assert!(err
-            .to_string()
-            .contains("Failed to find metadata for package"));
+        assert!(
+            err.to_string()
+                .contains("Failed to find metadata for package")
+        );
     }
 
     #[test]
@@ -281,7 +284,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(config, Default::default());
+        assert_eq!(config, ForgeConfigFromScarb::default());
     }
 
     #[test]
@@ -347,8 +350,10 @@ mod tests {
             &scarb_metadata.workspace.members[0],
         )
         .unwrap_err();
-        assert!(format!("{err:?}")
-            .contains("block_id must contain exactly one key: 'tag', 'hash', or 'number'"));
+        assert!(
+            format!("{err:?}")
+                .contains("block_id must contain exactly one key: 'tag', 'hash', or 'number'")
+        );
     }
 
     #[test]
@@ -379,8 +384,10 @@ mod tests {
             &scarb_metadata.workspace.members[0],
         )
         .unwrap_err();
-        assert!(format!("{err:?}")
-            .contains("unknown field `wrong_variant`, expected one of `tag`, `hash`, `number`"));
+        assert!(
+            format!("{err:?}")
+                .contains("unknown field `wrong_variant`, expected one of `tag`, `hash`, `number`")
+        );
     }
 
     #[test]
@@ -468,7 +475,10 @@ mod tests {
             .run()
             .unwrap();
 
-        env::set_var("ENV_URL_FORK234980670176", "http://some.rpc.url_from_env");
+        // SAFETY: This value is only read here and is not modified by other tests.
+        unsafe {
+            env::set_var("ENV_URL_FORK234980670176", "http://some.rpc.url_from_env");
+        }
         let config = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
             &scarb_metadata.workspace.members[0],
@@ -489,6 +499,7 @@ mod tests {
                 fuzzer_runs: None,
                 fuzzer_seed: None,
                 max_n_steps: None,
+                tracked_resource: ForgeTrackedResource::CairoSteps,
                 detailed_resources: false,
                 save_trace_data: false,
                 build_profile: false,

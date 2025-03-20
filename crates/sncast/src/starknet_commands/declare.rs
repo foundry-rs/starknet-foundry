@@ -1,19 +1,17 @@
-use anyhow::{anyhow, Context, Result};
-use clap::{Args, ValueEnum};
-use conversions::byte_array::ByteArray;
+use anyhow::{Context, Result, anyhow};
+use clap::Args;
 use conversions::IntoConv;
+use conversions::byte_array::ByteArray;
 use scarb_api::StarknetContractArtifacts;
-use sncast::helpers::error::token_not_supported_for_declaration;
-use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
+use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
-use sncast::helpers::version::parse_version;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
 };
-use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, ErrorData, WaitForTx};
+use sncast::{ErrorData, WaitForTx, apply_optional, handle_wait_for_tx};
 use starknet::accounts::AccountError::Provider;
-use starknet::accounts::{ConnectedAccount, DeclarationV2, DeclarationV3};
+use starknet::accounts::{ConnectedAccount, DeclarationV3};
 use starknet::core::types::{DeclareTransactionResult, StarknetError};
 use starknet::providers::ProviderError;
 use starknet::{
@@ -44,38 +42,19 @@ pub struct Declare {
     #[clap(long)]
     pub package: Option<String>,
 
-    /// Version of the declaration (can be inferred from fee token)
-    #[clap(short, long, value_parser = parse_version::<DeclareVersion>)]
-    pub version: Option<DeclareVersion>,
-
     #[clap(flatten)]
     pub rpc: RpcArgs,
 }
 
-#[derive(ValueEnum, Debug, Clone)]
-pub enum DeclareVersion {
-    V2,
-    V3,
-}
-
-impl_payable_transaction!(Declare, token_not_supported_for_declaration,
-    DeclareVersion::V2 => FeeToken::Eth,
-    DeclareVersion::V3 => FeeToken::Strk
-);
-
-#[allow(clippy::too_many_lines)]
 pub async fn declare(
     declare: Declare,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
     wait_config: WaitForTx,
     skip_on_already_declared: bool,
-    fee_token: FeeToken,
 ) -> Result<DeclareResponse, StarknetCommandError> {
     let fee_settings = declare
         .fee_args
-        .clone()
-        .fee_token(fee_token)
         .try_into_fee_settings(account.provider(), account.block_id())
         .await?;
 
@@ -99,43 +78,28 @@ pub async fn declare(
         .class_hash()
         .map_err(anyhow::Error::from)?;
 
-    let declared = match fee_settings {
-        FeeSettings::Eth { max_fee } => {
-            let declaration = account.declare_v2(
-                Arc::new(contract_definition.flatten().map_err(anyhow::Error::from)?),
-                casm_class_hash,
-            );
+    let FeeSettings {
+        max_gas,
+        max_gas_unit_price,
+    } = fee_settings;
+    let declaration = account.declare_v3(
+        Arc::new(contract_definition.flatten().map_err(anyhow::Error::from)?),
+        casm_class_hash,
+    );
 
-            let declaration =
-                apply_optional(declaration, max_fee.map(Felt::from), DeclarationV2::max_fee);
-            let declaration = apply_optional(declaration, declare.nonce, DeclarationV2::nonce);
+    let declaration = apply_optional(
+        declaration,
+        max_gas.map(std::num::NonZero::get),
+        DeclarationV3::gas,
+    );
+    let declaration = apply_optional(
+        declaration,
+        max_gas_unit_price.map(std::num::NonZero::get),
+        DeclarationV3::gas_price,
+    );
+    let declaration = apply_optional(declaration, declare.nonce, DeclarationV3::nonce);
 
-            declaration.send().await
-        }
-        FeeSettings::Strk {
-            max_gas,
-            max_gas_unit_price,
-        } => {
-            let declaration = account.declare_v3(
-                Arc::new(contract_definition.flatten().map_err(anyhow::Error::from)?),
-                casm_class_hash,
-            );
-
-            let declaration = apply_optional(
-                declaration,
-                max_gas.map(std::num::NonZero::get),
-                DeclarationV3::gas,
-            );
-            let declaration = apply_optional(
-                declaration,
-                max_gas_unit_price.map(std::num::NonZero::get),
-                DeclarationV3::gas_price,
-            );
-            let declaration = apply_optional(declaration, declare.nonce, DeclarationV3::nonce);
-
-            declaration.send().await
-        }
-    };
+    let declared = declaration.send().await;
 
     match declared {
         Ok(DeclareTransactionResult {

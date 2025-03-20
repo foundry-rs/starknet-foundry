@@ -1,18 +1,21 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_constructor_entry_point;
+use super::calls::{execute_inner_call, execute_library_call};
+use super::execution_info::get_cheated_exec_info_ptr;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_constructor_entry_point;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::{
-    DeployRequest, DeployResponse, LibraryCallRequest, SyscallResponse, SyscallResult,
+    DeployRequest, DeployResponse, GetBlockHashRequest, GetBlockHashResponse, LibraryCallRequest,
+    SyscallResponse, syscall_base::SyscallResult,
 };
 use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
 use blockifier::execution::{
     execution_utils::ReadOnlySegment,
-    syscalls::{hint_processor::write_segment, WriteResponseResult},
+    syscalls::{WriteResponseResult, hint_processor::write_segment},
 };
 use blockifier::state::errors::StateError;
 use blockifier::{
-    execution::syscalls::{hint_processor::create_retdata_segment, CallContractRequest},
-    transaction::transaction_utils::update_remaining_gas,
+    execution::execution_utils::update_remaining_gas,
+    execution::syscalls::{CallContractRequest, hint_processor::create_retdata_segment},
 };
 use blockifier::{
     execution::{
@@ -25,20 +28,16 @@ use blockifier::{
     state::state_api::State,
 };
 use cairo_vm::types::relocatable::Relocatable;
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use starknet_api::core::calculate_contract_address;
 use starknet_api::{
+    contract_class::EntryPointType,
     core::{ClassHash, ContractAddress},
-    deprecated_contract_class::EntryPointType,
-    transaction::Calldata,
+    transaction::fields::Calldata,
 };
 
-use super::calls::{execute_inner_call, execute_library_call};
-use super::execution_info::get_cheated_exec_info_ptr;
 pub type SyscallSelector = DeprecatedSyscallSelector;
 
-#[allow(clippy::needless_pass_by_value)]
 pub fn get_execution_info_syscall(
     _request: EmptyRequest,
     vm: &mut VirtualMachine,
@@ -88,10 +87,9 @@ pub fn deploy_syscall(
         caller_address: deployer_address,
     };
     let call_info = execute_deployment(
-        syscall_handler.state,
+        syscall_handler.base.state,
         cheatnet_state,
-        syscall_handler.resources,
-        syscall_handler.context,
+        syscall_handler.base.context,
         &ctor_context,
         request.constructor_calldata,
         *remaining_gas,
@@ -101,7 +99,7 @@ pub fn deploy_syscall(
         create_retdata_segment(vm, syscall_handler, &call_info.execution.retdata.0)?;
     update_remaining_gas(remaining_gas, &call_info);
 
-    syscall_handler.inner_calls.push(call_info);
+    syscall_handler.base.inner_calls.push(call_info);
 
     Ok(DeployResponse {
         contract_address: deployed_contract_address,
@@ -113,7 +111,6 @@ pub fn deploy_syscall(
 pub fn execute_deployment(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
-    resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
     ctor_context: &ConstructorContext,
     constructor_calldata: Calldata,
@@ -132,7 +129,6 @@ pub fn execute_deployment(
     let call_info = execute_constructor_entry_point(
         state,
         cheatnet_state,
-        resources,
         context,
         ctor_context,
         constructor_calldata,
@@ -200,6 +196,26 @@ pub fn call_contract_syscall(
         segment: retdata_segment,
     })
     // endregion
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub fn get_block_hash_syscall(
+    request: GetBlockHashRequest,
+    _vm: &mut VirtualMachine,
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
+    _remaining_gas: &mut u64,
+) -> SyscallResult<GetBlockHashResponse> {
+    let contract_address = syscall_handler.storage_address();
+    let block_number = request.block_number.0;
+
+    let block_hash = cheatnet_state.get_block_hash_for_contract(
+        contract_address,
+        block_number,
+        syscall_handler,
+    )?;
+
+    Ok(GetBlockHashResponse { block_hash })
 }
 
 #[derive(Debug)]

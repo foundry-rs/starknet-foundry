@@ -9,50 +9,13 @@ use crate::helpers::fixtures::{
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
-use snapbox::cmd::{cargo_bin, Command};
-use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
+use snapbox::cmd::{Command, cargo_bin};
 use sncast::AccountType;
+use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use starknet::core::types::TransactionReceipt::Deploy;
 use starknet_types_core::felt::Felt;
 use std::path::PathBuf;
 use test_case::test_case;
-
-#[test_case("oz_cairo_0"; "cairo_0_account")]
-#[test_case("oz_cairo_1"; "cairo_1_account")]
-#[test_case("oz"; "oz_account")]
-#[test_case("argent"; "argent_account")]
-#[test_case("braavos"; "braavos_account")]
-#[tokio::test]
-async fn test_happy_case_eth(account: &str) {
-    let args = vec![
-        "--accounts-file",
-        ACCOUNT_FILE_PATH,
-        "--account",
-        account,
-        "--int-format",
-        "--json",
-        "deploy",
-        "--url",
-        URL,
-        "--class-hash",
-        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
-        "--salt",
-        "0x2",
-        "--unique",
-        "--max-fee",
-        "99999999999999999",
-        "--fee-token",
-        "eth",
-    ];
-
-    let snapbox = runner(&args);
-    let output = snapbox.assert().success().get_output().stdout.clone();
-
-    let hash = get_transaction_hash(&output);
-    let receipt = get_transaction_receipt(hash).await;
-
-    assert!(matches!(receipt, Deploy(_)));
-}
 
 #[tokio::test]
 async fn test_happy_case_human_readable() {
@@ -73,8 +36,6 @@ async fn test_happy_case_human_readable() {
         "--unique",
         "--max-fee",
         "99999999999999999",
-        "--fee-token",
-        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -101,7 +62,7 @@ async fn test_happy_case_human_readable() {
 #[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
 #[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
-async fn test_happy_case_strk(class_hash: Felt, account_type: AccountType) {
+async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let tempdir = create_and_deploy_account(class_hash, account_type).await;
     let args = vec![
         "--accounts-file",
@@ -120,8 +81,6 @@ async fn test_happy_case_strk(class_hash: Felt, account_type: AccountType) {
         "--unique",
         "--max-fee",
         "99999999999999999",
-        "--fee-token",
-        "strk",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -132,40 +91,6 @@ async fn test_happy_case_strk(class_hash: Felt, account_type: AccountType) {
     assert!(matches!(receipt, Deploy(_)));
 }
 
-#[test_case("v1"; "v1")]
-#[test_case("v3"; "v3")]
-#[tokio::test]
-async fn test_happy_case_versions(version: &str) {
-    let tempdir = create_and_deploy_oz_account().await;
-    let args = vec![
-        "--accounts-file",
-        "accounts.json",
-        "--account",
-        "my_account",
-        "--int-format",
-        "--json",
-        "deploy",
-        "--url",
-        URL,
-        "--class-hash",
-        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
-        "--salt",
-        "0x2",
-        "--unique",
-        "--max-fee",
-        "99999999999999999",
-        "--version",
-        version,
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success().get_output().stdout.clone();
-
-    let hash = get_transaction_hash(&output);
-    let receipt = get_transaction_receipt(hash).await;
-
-    assert!(matches!(receipt, Deploy(_)));
-}
 #[test_case(Some("99999999999999999"), None, None; "max_fee")]
 #[test_case(None, Some("999"), None; "max_gas")]
 #[test_case(None, None, Some("999999999999"); "max_gas_unit_price")]
@@ -174,7 +99,7 @@ async fn test_happy_case_versions(version: &str) {
 #[test_case(None, Some("999"), Some("999999999999"); "max_gas_max_gas_unit_price")]
 #[test_case(Some("999999999999999"), Some("999"), None; "max_fee_max_gas")]
 #[tokio::test]
-async fn test_happy_case_strk_different_fees(
+async fn test_happy_case_different_fees(
     max_fee: Option<&str>,
     max_gas: Option<&str>,
     max_gas_unit_price: Option<&str>,
@@ -196,8 +121,6 @@ async fn test_happy_case_strk_different_fees(
         "--salt",
         "0x2",
         "--unique",
-        "--fee-token",
-        "strk",
     ];
     let options = [
         ("--max-fee", max_fee),
@@ -219,42 +142,6 @@ async fn test_happy_case_strk_different_fees(
     assert!(matches!(receipt, Deploy(_)));
 }
 
-#[test_case("eth", "v3"; "eth-v3")]
-#[test_case("strk", "v1"; "strk-v1")]
-#[tokio::test]
-async fn test_invalid_version_and_token_combination(fee_token: &str, version: &str) {
-    let tempdir = create_and_deploy_oz_account().await;
-
-    let args = vec![
-        "--accounts-file",
-        "accounts.json",
-        "--account",
-        "my_account",
-        "--int-format",
-        "--json",
-        "deploy",
-        "--url",
-        URL,
-        "--class-hash",
-        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
-        "--salt",
-        "0x2",
-        "--unique",
-        "--fee-token",
-        fee_token,
-        "--version",
-        version,
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-
-    let output = snapbox.assert().failure();
-    assert_stderr_contains(
-        output,
-        format!("Error: {fee_token} fee token is not supported for {version} deployment."),
-    );
-}
-
 #[tokio::test]
 async fn test_happy_case_with_constructor() {
     let args = vec![
@@ -267,8 +154,6 @@ async fn test_happy_case_with_constructor() {
         "deploy",
         "--url",
         URL,
-        "--fee-token",
-        "eth",
         "--constructor-calldata",
         "0x1",
         "0x1",
@@ -300,8 +185,6 @@ async fn test_happy_case_with_constructor_cairo_expression_calldata() {
         "deploy",
         "--url",
         URL,
-        "--fee-token",
-        "eth",
         "--arguments",
         "0x420, 0x2137_u256",
         "--class-hash",
@@ -327,8 +210,6 @@ fn test_wrong_calldata() {
         "deploy",
         "--url",
         URL,
-        "--fee-token",
-        "eth",
         "--class-hash",
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
         "--constructor-calldata",
@@ -359,8 +240,6 @@ async fn test_contract_not_declared() {
         URL,
         "--class-hash",
         "0x1",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args);
@@ -386,8 +265,6 @@ fn test_contract_already_deployed() {
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",
         "0x1",
-        "--fee-token",
-        "eth",
     ];
 
     let snapbox = runner(&args);
@@ -403,7 +280,7 @@ fn test_contract_already_deployed() {
 }
 
 #[test]
-fn test_too_low_max_fee() {
+fn test_too_low_gas() {
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -418,10 +295,10 @@ fn test_too_low_max_fee() {
         "--salt",
         "0x2",
         "--unique",
-        "--max-fee",
+        "--max-gas-unit-price",
         "1",
-        "--fee-token",
-        "eth",
+        "--max-gas",
+        "1",
     ];
 
     let snapbox = runner(&args);
@@ -462,47 +339,4 @@ async fn test_happy_case_shell() {
         .arg(URL)
         .arg(CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA);
     snapbox.assert().success();
-}
-
-#[tokio::test]
-async fn test_version_deprecation_warning() {
-    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
-
-    let args = vec![
-        "--accounts-file",
-        "accounts.json",
-        "--account",
-        "my_account",
-        "deploy",
-        "--url",
-        URL,
-        "--class-hash",
-        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
-        "--salt",
-        "0x2",
-        "--unique",
-        "--max-fee",
-        "99999999999999999",
-        "--version",
-        "v3",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
-
-    assert_stdout_contains(
-        output,
-        indoc! {
-            "
-            [WARNING] The '--version' flag is deprecated and will be removed in the future. Version 3 will become the only type of transaction available.
-            command: deploy
-            contract_address: 0x0[..]
-            transaction_hash: 0x0[..]
-
-            To see deployment details, visit:
-            contract: [..]
-            transaction: [..]
-            "
-        },
-    );
 }

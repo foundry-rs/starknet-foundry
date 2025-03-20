@@ -1,3 +1,4 @@
+use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::formatdoc;
 use shared::test_utils::node_url::node_rpc_url;
 use test_utils::runner::assert_passed;
@@ -47,7 +48,7 @@ fn cheat_caller_address_cairo0_contract() {
     )
     .as_str());
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -95,7 +96,7 @@ fn cheat_block_number_cairo0_contract() {
     )
     .as_str());
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -145,15 +146,16 @@ fn cheat_block_timestamp_cairo0_contract() {
     )
     .as_str());
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
 
 #[test]
 fn mock_call_cairo0_contract() {
-    let test = test_case!(formatdoc!(
-        r#"
+    let test = test_case!(
+        formatdoc!(
+            r#"
             use starknet::{{contract_address_const}};
             use snforge_std::{{start_mock_call, stop_mock_call}};
 
@@ -182,11 +184,12 @@ fn mock_call_cairo0_contract() {
                 assert(eth_dispatcher.name() == 'Ether', 'invalid name after mock');
             }}
         "#,
-        node_rpc_url(),
-    )
-    .as_str());
+            node_rpc_url(),
+        )
+        .as_str()
+    );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -231,7 +234,7 @@ fn store_load_cairo0_contract() {
     )
     .as_str());
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }

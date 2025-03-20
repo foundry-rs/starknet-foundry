@@ -1,6 +1,7 @@
+use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::{assert_passed, Contract};
+use test_utils::runner::{Contract, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
@@ -95,14 +96,14 @@ fn start_and_stop_cheat_transaction_hash_single_attribute() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
 
 #[test]
 #[ignore] // TODO(#2765)
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 fn start_cheat_execution_info_all_attributes_mocked() {
     let test = test_case!(
         indoc!(
@@ -268,7 +269,7 @@ fn start_cheat_execution_info_all_attributes_mocked() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -344,7 +345,7 @@ fn start_cheat_transaction_hash_cancel_mock_by_setting_attribute_to_none() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -397,14 +398,14 @@ fn start_cheat_transaction_hash_multiple() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
 
 #[test]
 #[ignore] // TODO(#2765)
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 fn start_cheat_execution_info_all() {
     let test = test_case!(
         indoc!(
@@ -531,7 +532,7 @@ fn start_cheat_execution_info_all() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -596,7 +597,7 @@ fn start_cheat_transaction_hash_complex() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -706,7 +707,7 @@ fn cheat_transaction_hash_with_span() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }

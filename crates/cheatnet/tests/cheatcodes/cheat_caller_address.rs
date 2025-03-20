@@ -1,7 +1,6 @@
 use crate::common::assertions::assert_success;
 use crate::common::get_contracts;
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
-use cheatnet::constants::TEST_ADDRESS;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use cheatnet::state::CheatSpan;
 use conversions::IntoConv;
@@ -12,6 +11,7 @@ use tempfile::TempDir;
 use super::test_environment::TestEnvironment;
 use crate::common::state::create_fork_cached_state_at;
 use conversions::string::TryFromHexStr;
+use runtime::starknet::constants::TEST_ADDRESS;
 
 trait CheatCallerAddressTrait {
     fn cheat_caller_address(
@@ -291,8 +291,8 @@ fn cheat_caller_address_one_then_all() {
     );
 }
 
-#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn cheat_caller_address_cairo0_callback() {
+#[test]
+fn cheat_caller_address_cairo0_callback() {
     let temp_dir = TempDir::new().unwrap();
     let cached_state = create_fork_cached_state_at(53_631, temp_dir.path().to_str().unwrap());
     let mut test_env = TestEnvironment::new();

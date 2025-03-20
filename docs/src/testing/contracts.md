@@ -8,7 +8,7 @@
 > using the appropriate version.
 >```toml
 > [dev-dependencies]
-> snforge_std = "0.33.0"
+> snforge_std = "0.37.0"
 > ```
 
 Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when
@@ -53,7 +53,7 @@ Running 2 test(s) from tests/
 Failure data:
     (0x50414e4943 ('PANIC'), 0x444159544148 ('DAYTAH'))
 
-[PASS] testing_smart_contracts_handling_errors_integrationtest::handle_panic::handling_string_errors (gas: ~103)
+[PASS] testing_smart_contracts_handling_errors_integrationtest::handle_panic::handling_string_errors (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~280000)
 Running 0 test(s) from src/
 Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
@@ -97,7 +97,7 @@ Running 2 test(s) from tests/
 Failure data:
     (0x50414e4943 ('PANIC'), 0x444159544148 ('DAYTAH'))
 
-[PASS] testing_smart_contracts_handling_errors_integrationtest::handle_panic::handling_string_errors (gas: ~103)
+[PASS] testing_smart_contracts_handling_errors_integrationtest::handle_panic::handling_string_errors (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~280000)
 Running 0 test(s) from src/
 Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
@@ -132,7 +132,7 @@ $ snforge test
 Collected 1 test(s) from testing_smart_contracts_safe_dispatcher package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
-[PASS] testing_smart_contracts_safe_dispatcher_integrationtest::safe_dispatcher::handling_errors (gas: ~103)
+[PASS] testing_smart_contracts_safe_dispatcher_integrationtest::safe_dispatcher::handling_errors (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~280000)
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 </details>

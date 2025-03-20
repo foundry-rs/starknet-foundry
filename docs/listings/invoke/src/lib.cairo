@@ -1,5 +1,5 @@
 use starknet::ContractAddress;
-use sncast_std::{invoke, InvokeResult, FeeSettings, EthFeeSettings};
+use sncast_std::{invoke, FeeSettings};
 
 fn main() {
     let contract_address: ContractAddress =
@@ -11,7 +11,9 @@ fn main() {
         contract_address,
         selector!("put"),
         array![0x1, 0x2],
-        FeeSettings::Eth(EthFeeSettings { max_fee: Option::None }),
+        FeeSettings {
+            max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None
+        },
         Option::None
     )
         .expect('invoke failed');

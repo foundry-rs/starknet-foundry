@@ -5,8 +5,8 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_exe
     CheatArguments, ExecutionInfoMockOperations, Operation, TxInfoMockOperations,
 };
 use cheatnet::state::CheatSpan;
-use conversions::serde::deserialize::{BufferReader, CairoDeserialize};
 use conversions::IntoConv;
+use conversions::serde::deserialize::{BufferReader, CairoDeserialize};
 use starknet_api::{core::ContractAddress, transaction::TransactionHash};
 use starknet_types_core::felt::Felt;
 

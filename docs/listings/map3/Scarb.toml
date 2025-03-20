@@ -11,7 +11,7 @@ sierra = false
 
 [dependencies]
 snforge_std = { path = "../../../snforge_std" }
-starknet = "2.7.0"
+starknet = "2.8.5"
 
 [scripts]
 test = "snforge test"
