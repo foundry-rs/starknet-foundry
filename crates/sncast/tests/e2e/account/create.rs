@@ -19,7 +19,8 @@ use test_case::test_case;
 
 #[test_case("oz"; "oz_account_type")]
 #[test_case("argent"; "argent_account_type")]
-#[test_case("braavos"; "braavos_account_type")]
+// TODO(#3118): Re-enable this test once braavos integration is restored
+// #[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
@@ -331,7 +332,8 @@ pub async fn test_account_already_exists() {
 
 #[test_case("oz"; "oz_account_type")]
 #[test_case("argent"; "argent_account_type")]
-#[test_case("braavos"; "braavos_account_type")]
+// TODO(#3118)
+// #[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case_keystore(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
@@ -818,4 +820,35 @@ fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&s
     };
 
     to_string_pretty(&account_json).unwrap()
+}
+
+#[test]
+fn test_braavos_disabled() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--salt",
+        "0x1",
+        "--type",
+        "braavos",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        error: Using Braavos accounts with `sncast` is currently disabled
+        "},
+    );
 }

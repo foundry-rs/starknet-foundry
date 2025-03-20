@@ -10,6 +10,7 @@ use clap::Args;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
+use sncast::helpers::braavos::assert_non_braavos_account_type;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
@@ -69,6 +70,9 @@ pub async fn import(
     provider: &JsonRpcClient<HttpTransport>,
     import: &Import,
 ) -> Result<AccountImportResponse> {
+    // TODO(#3118): Remove this check once braavos integration is restored
+    assert_non_braavos_account_type(import.account_type)?;
+
     let private_key = if let Some(passed_private_key) = &import.private_key {
         passed_private_key
     } else if let Some(passed_private_key_file_path) = &import.private_key_file_path {
