@@ -20,7 +20,7 @@ members = [
 exclude = ["crates/snforge-scarb-plugin"]
 
 [workspace.package]
-version = "0.38.3"
+version = "0.39.0"
 edition = "2024"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
@@ -44,7 +44,7 @@ cairo-lang-test-plugin = "2.11.2"
 cairo-lang-starknet-classes = "2.11.2"
 cairo-lang-parser = "2.11.2"
 cairo-vm = "1.0.2"
-cairo-annotations = "=0.3.0"
+cairo-annotations = "0.3.1"
 dirs = "6.0.0"
 dialoguer = "0.11.0"
 starknet-types-core = { version = "0.1.7", features = ["hash", "prime-bigint"] }

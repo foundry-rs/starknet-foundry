@@ -1,5 +1,6 @@
 use anyhow::Result;
 use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
+use forge_runner::forge_config::ForgeTrackedResource;
 use serde::{Deserialize, Deserializer};
 use std::{collections::HashSet, num::NonZeroU32};
 use url::Url;
@@ -63,6 +64,9 @@ pub struct ForgeConfigFromScarb {
     pub fork: Vec<ForkTarget>,
     /// Limit of steps
     pub max_n_steps: Option<u32>,
+    /// Set tracked resource
+    #[serde(default)]
+    pub tracked_resource: ForgeTrackedResource,
 }
 
 #[derive(Debug, PartialEq, Clone, Deserialize)]

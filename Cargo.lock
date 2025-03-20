@@ -780,9 +780,9 @@ checksum = "ade8366b8bd5ba243f0a58f036cc0ca8a2f069cff1a2351ef1cac6b083e16fc0"
 
 [[package]]
 name = "cairo-annotations"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6e8925548bb02e41cb71b0aa523744694d63a834cbd9d8a84e4a3646ae678f7"
+checksum = "d4b542cfcdce03448c9db7a2464ec9440c9943785749fc74bf6a1a829fefcea4"
 dependencies = [
  "cairo-lang-sierra",
  "cairo-lang-sierra-to-casm",
@@ -1411,7 +1411,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "cheatnet"
-version = "0.38.3"
+version = "0.39.0"
 dependencies = [
  "anyhow",
  "bimap",
@@ -2164,7 +2164,7 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
 name = "docs"
-version = "0.38.3"
+version = "0.39.0"
 dependencies = [
  "anyhow",
  "camino",
@@ -2482,7 +2482,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.38.3"
+version = "0.39.0"
 dependencies = [
  "anyhow",
  "assert_fs",
@@ -2533,7 +2533,7 @@ dependencies = [
 
 [[package]]
 name = "forge_runner"
-version = "0.38.3"
+version = "0.39.0"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -2550,6 +2550,7 @@ dependencies = [
  "cairo-vm",
  "camino",
  "cheatnet",
+ "clap",
  "console",
  "conversions",
  "debugging",
@@ -5610,7 +5611,7 @@ dependencies = [
 
 [[package]]
 name = "sncast"
-version = "0.38.3"
+version = "0.39.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6233,6 +6234,7 @@ dependencies = [
  "scarb-api",
  "semver",
  "shared",
+ "starknet_api",
  "tempfile",
  "tokio",
 ]
