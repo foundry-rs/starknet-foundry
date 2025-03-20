@@ -21,10 +21,14 @@ use crate::runtime_extensions::{
 };
 use crate::state::{CallTrace, CallTraceNode};
 use anyhow::{Context, Result, anyhow};
+use blockifier::bouncer::builtins_to_sierra_gas;
 use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::CallExecution;
+use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::state::errors::StateError;
+use blockifier::transaction::objects::ExecutionResourcesTraits;
+use blockifier::utils::u64_from_usize;
 use blockifier::{
     execution::{
         call_info::CallInfo, deprecated_syscalls::DeprecatedSyscallSelector,
@@ -51,6 +55,7 @@ use runtime::{
     SyscallHandlingResult,
 };
 use starknet::signers::SigningKey;
+use starknet_api::execution_resources::GasAmount;
 use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
@@ -512,6 +517,17 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 Ok(CheatcodeHandlingResult::from_serializable(()))
             }
+            "set_block_hash" => {
+                let block_number = input_reader.read()?;
+                let operation = input_reader.read()?;
+
+                extended_runtime
+                    .extended_runtime
+                    .extension
+                    .cheatnet_state
+                    .cheat_block_hash(block_number, operation);
+                Ok(CheatcodeHandlingResult::from_serializable(()))
+            }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }
     }
@@ -549,10 +565,21 @@ fn handle_declare_deploy_result<T: CairoSerialize>(
     Ok(CheatcodeHandlingResult::from_serializable(result))
 }
 
-pub fn add_vm_execution_resources_to_top_call(
+pub fn add_resources_to_top_call(
     runtime: &mut ForgeRuntime,
     resources: &ExecutionResources,
+    tracked_resource: &TrackedResource,
 ) {
+    let versioned_constants = runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .base
+        .context
+        .tx_context
+        .block_context
+        .versioned_constants();
     let top_call = runtime
         .extended_runtime
         .extended_runtime
@@ -563,10 +590,15 @@ pub fn add_vm_execution_resources_to_top_call(
         .top();
     let mut top_call = top_call.borrow_mut();
 
-    top_call.used_execution_resources += resources;
+    match tracked_resource {
+        TrackedResource::CairoSteps => top_call.used_execution_resources += resources,
+        TrackedResource::SierraGas => {
+            top_call.gas_consumed += vm_resources_to_sierra_gas(resources, versioned_constants).0;
+        }
+    };
 }
 
-pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
+pub fn update_top_call_resources(runtime: &mut ForgeRuntime, tracked_resource: &TrackedResource) {
     // call representing the test code
     let top_call = runtime
         .extended_runtime
@@ -577,9 +609,20 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
         .current_call_stack
         .top();
 
-    let all_execution_resources = add_execution_resources(top_call.clone());
-    let mut top_call = top_call.borrow_mut();
-    top_call.used_execution_resources = all_execution_resources;
+    let mut top_call = match tracked_resource {
+        TrackedResource::CairoSteps => {
+            let all_execution_resources = add_execution_resources(top_call.clone());
+            let mut top_call = top_call.borrow_mut();
+            top_call.used_execution_resources = all_execution_resources;
+            top_call
+        }
+        TrackedResource::SierraGas => {
+            let all_sierra_gas_consumed = add_sierra_gas_resources(&top_call);
+            let mut top_call = top_call.borrow_mut();
+            top_call.gas_consumed = all_sierra_gas_consumed;
+            top_call
+        }
+    };
 
     let top_call_syscalls = runtime
         .extended_runtime
@@ -651,7 +694,7 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &mut C
             get_relocated_vm_trace(cairo_runner);
     }
 }
-fn add_syscall_resources(
+fn add_syscall_execution_resources(
     versioned_constants: &VersionedConstants,
     execution_resources: &ExecutionResources,
     syscall_counter: &SyscallCounter,
@@ -659,6 +702,16 @@ fn add_syscall_resources(
     let mut total_vm_usage = execution_resources.filter_unused_builtins();
     total_vm_usage += &versioned_constants.get_additional_os_syscall_resources(syscall_counter);
     total_vm_usage
+}
+
+fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
+    let mut gas_consumed = top_call.borrow().gas_consumed;
+    for nested_call in &top_call.borrow().nested_calls {
+        if let CallTraceNode::EntryPointCall(nested_call) = nested_call {
+            gas_consumed += &add_sierra_gas_resources(nested_call);
+        }
+    }
+    gas_consumed
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -679,6 +732,7 @@ fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResourc
 pub fn get_all_used_resources(
     runtime: ForgeRuntime,
     transaction_context: &TransactionContext,
+    tracked_resource: TrackedResource,
 ) -> UsedResources {
     let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
     let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.base.l2_to_l1_messages;
@@ -698,6 +752,7 @@ pub fn get_all_used_resources(
             ..Default::default()
         },
         inner_calls: starknet_runtime.hint_handler.base.inner_calls,
+        tracked_resource,
         ..Default::default()
     };
     let summary = runtime_call_info.summarize(versioned_constants);
@@ -716,9 +771,29 @@ pub fn get_all_used_resources(
         .current_call_stack
         .top();
 
-    let execution_resources = top_call.borrow().used_execution_resources.clone();
-
+    let mut execution_resources = top_call.borrow().used_execution_resources.clone();
+    let mut sierra_gas_consumed = top_call.borrow().gas_consumed;
     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
+
+    match tracked_resource {
+        TrackedResource::CairoSteps => {
+            execution_resources = add_syscall_execution_resources(
+                versioned_constants,
+                &execution_resources,
+                &top_call_syscalls,
+            );
+        }
+        TrackedResource::SierraGas => {
+            let syscalls_consumed_gas: u64 = top_call_syscalls
+                .iter()
+                .map(|(name, count)| {
+                    versioned_constants.get_syscall_gas_cost(name) * (*count as u64)
+                })
+                .sum();
+            sierra_gas_consumed += syscalls_consumed_gas;
+        }
+    }
+
     let events = runtime_call_info
         .iter() // This method iterates over inner calls as well
         .flat_map(|call_info| {
@@ -730,17 +805,44 @@ pub fn get_all_used_resources(
         })
         .collect();
 
-    let execution_resources = add_syscall_resources(
-        versioned_constants,
-        &execution_resources,
-        &top_call_syscalls,
-    );
-
     UsedResources {
         events,
         syscall_counter: top_call_syscalls,
         execution_resources,
+        gas_consumed: GasAmount::from(sierra_gas_consumed),
         l1_handler_payload_lengths,
         l2_to_l1_payload_lengths,
     }
+}
+
+fn n_steps_to_sierra_gas(n_steps: usize, versioned_constants: &VersionedConstants) -> GasAmount {
+    let n_steps_u64 = u64_from_usize(n_steps);
+    let gas_per_step = versioned_constants
+        .os_constants
+        .gas_costs
+        .base
+        .step_gas_cost;
+    let n_steps_gas_cost = n_steps_u64.checked_mul(gas_per_step).unwrap_or_else(|| {
+        panic!(
+            "Multiplication overflow while converting steps to gas. steps: {n_steps}, gas per step: {gas_per_step}."
+        )
+    });
+    GasAmount(n_steps_gas_cost)
+}
+
+// Based on: https://github.com/starkware-libs/sequencer/blob/main-v0.13.4/crates/blockifier/src/bouncer.rs#L320
+#[must_use]
+pub fn vm_resources_to_sierra_gas(
+    resources: &ExecutionResources,
+    versioned_constants: &VersionedConstants,
+) -> GasAmount {
+    let builtins_gas_cost =
+        builtins_to_sierra_gas(&resources.prover_builtins(), versioned_constants);
+    let n_steps_gas_cost = n_steps_to_sierra_gas(resources.total_n_steps(), versioned_constants);
+    n_steps_gas_cost.checked_add(builtins_gas_cost).unwrap_or_else(|| {
+        panic!(
+            "Addition overflow while converting vm resources to gas. steps gas: {n_steps_gas_cost}, \
+            builtins gas: {builtins_gas_cost}."
+        )
+    })
 }
