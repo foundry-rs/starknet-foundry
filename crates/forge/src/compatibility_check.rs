@@ -16,6 +16,52 @@ pub struct Requirement<'a> {
     pub minimal_recommended_version: Option<Version>,
 }
 
+impl Requirement<'_> {
+    fn validate_and_get_output(&self) -> (bool, String) {
+        let version = get_version(&self.command, &self.version_parser);
+        let mut is_valid;
+
+        let output = if let Ok(version) = version {
+            is_valid = version >= self.minimal_version;
+            let is_recommended = self
+                .minimal_recommended_version
+                .as_ref()
+                .is_none_or(|minimal_recommended_version| version >= *minimal_recommended_version);
+
+            let min_version_to_display = self
+                .minimal_recommended_version
+                .as_ref()
+                .unwrap_or(&self.minimal_version);
+
+            if !is_valid {
+                is_valid = false;
+                format!(
+                    "❌ {} Version {} doesn't satisfy minimal {}\n{}",
+                    self.name, version, min_version_to_display, self.helper_text
+                )
+            } else if !is_recommended {
+                format!(
+                    "⚠️  {} Version {} doesn't satisfy minimal recommended {}\n{}",
+                    self.name,
+                    version,
+                    self.minimal_recommended_version.as_ref().unwrap(),
+                    self.helper_text
+                )
+            } else {
+                format!("✅ {} {}", self.name, version)
+            }
+        } else {
+            is_valid = false;
+            format!(
+                "❌ {} is not installed or not added to the PATH\n{}\n",
+                self.name, self.helper_text
+            )
+        };
+
+        (is_valid, output)
+    }
+}
+
 pub struct RequirementsChecker<'a> {
     output_on_success: bool,
     requirements: Vec<Requirement<'a>>,
@@ -52,43 +98,11 @@ impl<'a> RequirementsChecker<'a> {
         let mut all_valid = true;
 
         for requirement in &self.requirements {
-            let version = get_version(&requirement.command, &requirement.version_parser);
+            let (is_valid, output) = requirement.validate_and_get_output();
 
-            let output = if let Ok(version) = version {
-                let is_valid = version >= requirement.minimal_version;
-                let is_recommended = requirement.minimal_recommended_version.as_ref().is_none_or(
-                    |minimal_recommended_version| version >= *minimal_recommended_version,
-                );
-
-                let min_version_to_display = requirement
-                    .minimal_recommended_version
-                    .as_ref()
-                    .unwrap_or(&requirement.minimal_version);
-
-                if !is_valid {
-                    all_valid = false;
-                    format!(
-                        "❌ {} Version {} doesn't satisfy minimal {}\n{}",
-                        requirement.name, version, min_version_to_display, requirement.helper_text
-                    )
-                } else if !is_recommended {
-                    format!(
-                        "⚠️  {} Version {} doesn't satisfy minimal recommended {}\n{}",
-                        requirement.name,
-                        version,
-                        requirement.minimal_recommended_version.as_ref().unwrap(),
-                        requirement.helper_text
-                    )
-                } else {
-                    format!("✅ {} {}", requirement.name, version)
-                }
-            } else {
+            if !is_valid {
                 all_valid = false;
-                format!(
-                    "❌ {} is not installed or not added to the PATH\n{}\n",
-                    requirement.name, requirement.helper_text
-                )
-            };
+            }
             validation_output += output.as_str();
             validation_output += "\n";
         }
@@ -260,7 +274,7 @@ mod tests {
 
     #[test]
     #[cfg_attr(not(feature = "no_scarb_installed"), ignore)]
-    fn fail_to_run_command() {
+    fn failing_tool_not_installed() {
         let temp_dir = TempDir::new().unwrap();
         temp_dir
             .child(".tool-versions")
