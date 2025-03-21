@@ -33,6 +33,7 @@ impl CairoSerialize for ContractErrorData {
     }
 }
 
+// TODO(#3129)
 impl CairoSerialize for ContractExecutionError {
     fn serialize(&self, output: &mut BufferWriter) {
         match &self {
