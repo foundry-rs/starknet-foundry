@@ -3,7 +3,7 @@
 Cheatcodes modifying `block_number`:
 
 ## `cheat_block_number`
-> `fn cheat_block_number(target: ContractAddress, block_number: u64, span: CheatSpan)`
+> `fn cheat_block_number(contract_address: ContractAddress, block_number: u64, span: CheatSpan)`
 
 Changes the block number for the given target and span.
 
@@ -13,12 +13,12 @@ Changes the block number for the given target and span.
 Changes the block number for all targets.
 
 ## `start_cheat_block_number`
-> `fn start_cheat_block_number(target: ContractAddress, block_number: u64)`
+> `fn start_cheat_block_number(contract_address: ContractAddress, block_number: u64)`
 
 Changes the block number for the given target.
 
 ## `stop_cheat_block_number`
-> `fn stop_cheat_block_number(target: ContractAddress)`
+> `fn stop_cheat_block_number(contract_address: ContractAddress)`
 
 Cancels the `cheat_block_number` / `start_cheat_block_number` for the given target.
 

@@ -3,7 +3,7 @@
 Cheatcodes modifying `nonce_data_availability_mode`:
 
 ## `cheat_nonce_data_availability_mode`
-> `fn cheat_nonce_data_availability_mode(target: ContractAddress, nonce_data_availability_mode: u32, span: CheatSpan)`
+> `fn cheat_nonce_data_availability_mode(contract_address: ContractAddress, nonce_data_availability_mode: u32, span: CheatSpan)`
 
 Changes the transaction nonce data availability mode for the given target and span.
 
@@ -13,12 +13,12 @@ Changes the transaction nonce data availability mode for the given target and sp
 Changes the transaction nonce data availability mode for all targets.
 
 ## `start_cheat_nonce_data_availability_mode`
-> `fn start_cheat_nonce_data_availability_mode(target: ContractAddress, nonce_data_availability_mode: u32)`
+> `fn start_cheat_nonce_data_availability_mode(contract_address: ContractAddress, nonce_data_availability_mode: u32)`
 
 Changes the transaction nonce data availability mode for the given target.
 
 ## `stop_cheat_nonce_data_availability_mode`
-> `fn stop_cheat_nonce_data_availability_mode(target: ContractAddress)`
+> `fn stop_cheat_nonce_data_availability_mode(contract_address: ContractAddress)`
 
 Cancels the `cheat_nonce_data_availability_mode` / `start_cheat_nonce_data_availability_mode` for the given target.
 

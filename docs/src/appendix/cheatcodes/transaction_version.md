@@ -3,7 +3,7 @@
 Cheatcodes modifying transaction `version`:
 
 ## `cheat_transaction_version`
-> `fn cheat_transaction_version(target: ContractAddress, version: felt252, span: CheatSpan)`
+> `fn cheat_transaction_version(contract_address: ContractAddress, version: felt252, span: CheatSpan)`
 
 Changes the transaction version for the given target and span.
 
@@ -13,12 +13,12 @@ Changes the transaction version for the given target and span.
 Changes the transaction version for all targets.
 
 ## `start_cheat_transaction_version`
-> `fn start_cheat_transaction_version(target: ContractAddress, version: felt252)`
+> `fn start_cheat_transaction_version(contract_address: ContractAddress, version: felt252)`
 
 Changes the transaction version for the given target.
 
 ## `stop_cheat_transaction_version`
-> `fn stop_cheat_transaction_version(target: ContractAddress)`
+> `fn stop_cheat_transaction_version(contract_address: ContractAddress)`
 
 Cancels the `cheat_transaction_version` / `start_cheat_transaction_version` for the given target.
 

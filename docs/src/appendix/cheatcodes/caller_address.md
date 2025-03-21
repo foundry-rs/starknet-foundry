@@ -3,7 +3,7 @@
 Cheatcodes modifying `caller_address`:
 
 ## `cheat_caller_address`
-> `fn cheat_caller_address(target: ContractAddress, caller_address: ContractAddress, span: CheatSpan)`
+> `fn cheat_caller_address(contract_address: ContractAddress, caller_address: ContractAddress, span: CheatSpan)`
 
 Changes the caller address for the given target and span.
 
@@ -13,12 +13,12 @@ Changes the caller address for the given target and span.
 Changes the caller address for all targets.
 
 ## `start_cheat_caller_address`
-> `fn start_cheat_caller_address(target: ContractAddress, caller_address: ContractAddress)`
+> `fn start_cheat_caller_address(contract_address: ContractAddress, caller_address: ContractAddress)`
 
 Changes the caller address for the given target.
 
 ## `stop_cheat_caller_address`
-> `fn stop_cheat_caller_address(target: ContractAddress)`
+> `fn stop_cheat_caller_address(contract_address: ContractAddress)`
 
 Cancels the `cheat_caller_address` / `start_cheat_caller_address` for the given target.
 

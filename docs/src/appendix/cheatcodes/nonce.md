@@ -3,7 +3,7 @@
 Cheatcodes modifying `nonce`:
 
 ## `cheat_nonce`
-> `fn cheat_nonce(target: ContractAddress, nonce: felt252, span: CheatSpan)`
+> `fn cheat_nonce(contract_address: ContractAddress, nonce: felt252, span: CheatSpan)`
 
 Changes the transaction nonce for the given target and span.
 
@@ -13,12 +13,12 @@ Changes the transaction nonce for the given target and span.
 Changes the transaction nonce for all targets.
 
 ## `start_cheat_nonce`
-> `fn start_cheat_nonce(target: ContractAddress, nonce: felt252)`
+> `fn start_cheat_nonce(contract_address: ContractAddress, nonce: felt252)`
 
 Changes the transaction nonce for the given target.
 
 ## `stop_cheat_nonce`
-> `fn stop_cheat_nonce(target: ContractAddress)`
+> `fn stop_cheat_nonce(contract_address: ContractAddress)`
 
 Cancels the `cheat_nonce` / `start_cheat_nonce` for the given target.
 

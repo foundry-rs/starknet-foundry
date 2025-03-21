@@ -3,7 +3,7 @@
 Cheatcodes modifying `block_timestamp`:
 
 ## `cheat_block_timestamp`
-> `fn cheat_block_timestamp(target: ContractAddress, block_timestamp: u64, span: CheatSpan)`
+> `fn cheat_block_timestamp(contract_address: ContractAddress, block_timestamp: u64, span: CheatSpan)`
 
 Changes the block timestamp for the given target and span.
 
@@ -13,12 +13,12 @@ Changes the block timestamp for the given target and span.
 Changes the block timestamp for all targets.
 
 ## `start_cheat_block_timestamp`
-> `fn start_cheat_block_timestamp(target: ContractAddress, block_timestamp: u64)`
+> `fn start_cheat_block_timestamp(contract_address: ContractAddress, block_timestamp: u64)`
 
 Changes the block timestamp for the given target.
 
 ## `stop_cheat_block_timestamp`
-> `fn stop_cheat_block_timestamp(target: ContractAddress)`
+> `fn stop_cheat_block_timestamp(contract_address: ContractAddress)`
 
 Cancels the `cheat_block_timestamp` / `start_cheat_block_timestamp` for the given target.
 

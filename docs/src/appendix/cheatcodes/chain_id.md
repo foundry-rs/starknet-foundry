@@ -3,7 +3,7 @@
 Cheatcodes modifying `chain_id`:
 
 ## `cheat_chain_id`
-> `fn cheat_chain_id(target: ContractAddress, chain_id: felt252, span: CheatSpan)`
+> `fn cheat_chain_id(contract_address: ContractAddress, chain_id: felt252, span: CheatSpan)`
 
 Changes the transaction chain_id for the given target and span.
 
@@ -13,12 +13,12 @@ Changes the transaction chain_id for the given target and span.
 Changes the transaction chain_id for all targets.
 
 ## `start_cheat_chain_id`
-> `fn start_cheat_chain_id(target: ContractAddress, chain_id: felt252)`
+> `fn start_cheat_chain_id(contract_address: ContractAddress, chain_id: felt252)`
 
 Changes the transaction chain_id for the given target.
 
 ## `stop_cheat_chain_id`
-> `fn stop_cheat_chain_id(target: ContractAddress)`
+> `fn stop_cheat_chain_id(contract_address: ContractAddress)`
 
 Cancels the `cheat_chain_id` / `start_cheat_chain_id` for the given target.
 
