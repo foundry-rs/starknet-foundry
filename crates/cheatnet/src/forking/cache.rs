@@ -11,8 +11,8 @@ use starknet_api::state::StorageKey;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::fs;
-use std::fs::OpenOptions;
-use std::io::{Read, Write};
+use std::fs::{File, OpenOptions};
+use std::io::{Read, Seek, Write};
 use std::string::ToString;
 use url::Url;
 
@@ -99,6 +99,18 @@ impl Drop for ForkCache {
     }
 }
 
+trait FileTruncateExtension {
+    fn clear(&mut self) -> Result<()>;
+}
+
+impl FileTruncateExtension for File {
+    fn clear(&mut self) -> Result<()> {
+        self.set_len(0).context("Failed to truncate file")?;
+        self.rewind().context("Failed to rewind file")?;
+        Ok(())
+    }
+}
+
 impl ForkCache {
     pub(crate) fn load_or_new(
         url: &Url,
@@ -134,6 +146,7 @@ impl ForkCache {
     fn save(&self) {
         let mut file = OpenOptions::new()
             .write(true)
+            .read(true)
             .create(true)
             .truncate(false)
             .open(&self.cache_file)
@@ -141,8 +154,9 @@ impl ForkCache {
 
         file.lock_exclusive().expect("Could not lock on cache file");
 
-        let cache_file_content =
-            fs::read_to_string(&self.cache_file).expect("Should have been able to read the cache");
+        let mut cache_file_content = String::new();
+        file.read_to_string(&mut cache_file_content)
+            .expect("Should have been able to read the cache");
 
         let output = if cache_file_content.is_empty() {
             self.fork_cache_content.to_string()
@@ -152,6 +166,7 @@ impl ForkCache {
             fs_fork_cache_content.to_string()
         };
 
+        file.clear().expect("Failed to clear file");
         file.write_all(output.as_bytes())
             .expect("Could not write cache to file");
 
