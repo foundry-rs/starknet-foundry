@@ -3,7 +3,7 @@
 Cheatcodes modifying `signature`:
 
 ## `cheat_signature`
-> `fn cheat_signature(target: ContractAddress, signature: Span<felt252>, span: CheatSpan)`
+> `fn cheat_signature(contract_address: ContractAddress, signature: Span<felt252>, span: CheatSpan)`
 
 Changes the transaction signature for the given target and span.
 
@@ -13,12 +13,12 @@ Changes the transaction signature for the given target and span.
 Changes the transaction signature for all targets.
 
 ## `start_cheat_signature`
-> `fn start_cheat_signature(target: ContractAddress, signature: Span<felt252>)`
+> `fn start_cheat_signature(contract_address: ContractAddress, signature: Span<felt252>)`
 
 Changes the transaction signature for the given target.
 
 ## `stop_cheat_signature`
-> `fn stop_cheat_signature(target: ContractAddress)`
+> `fn stop_cheat_signature(contract_address: ContractAddress)`
 
 Cancels the `cheat_signature` / `start_cheat_signature` for the given target.
 

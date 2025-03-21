@@ -3,7 +3,7 @@
 Cheatcodes modifying `max_fee`:
 
 ## `cheat_max_fee`
-> `fn cheat_max_fee(target: ContractAddress, max_fee: u128, span: CheatSpan)`
+> `fn cheat_max_fee(contract_address: ContractAddress, max_fee: u128, span: CheatSpan)`
 
 Changes the transaction max fee for the given target and span.
 
@@ -13,12 +13,12 @@ Changes the transaction max fee for the given target and span.
 Changes the transaction max fee for all targets.
 
 ## `start_cheat_max_fee`
-> `fn start_cheat_max_fee(target: ContractAddress, max_fee: u128)`
+> `fn start_cheat_max_fee(contract_address: ContractAddress, max_fee: u128)`
 
 Changes the transaction max fee for the given target.
 
 ## `stop_cheat_max_fee`
-> `fn stop_cheat_max_fee(target: ContractAddress)`
+> `fn stop_cheat_max_fee(contract_address: ContractAddress)`
 
 Cancels the `cheat_max_fee` / `start_cheat_max_fee` for the given target.
 
