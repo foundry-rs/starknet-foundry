@@ -66,9 +66,8 @@ impl FeeArgs {
         if let Some(max_fee) = self.max_fee {
             self.validate_max_fee_meets_resource_bounds()?;
 
-            let fee_estimate = fee_estimate.ok_or_else(|| {
-                anyhow!("Fee estimate must be calculated when max_fee is provided")
-            })?;
+            let fee_estimate = fee_estimate
+                .ok_or_else(|| anyhow!("Fee estimate must be passed when max_fee is provided"))?;
 
             ensure!(
                 Felt::from(max_fee) >= fee_estimate.overall_fee,
