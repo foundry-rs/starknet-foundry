@@ -1100,3 +1100,7 @@ snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v
 #### Added
 
 - Initial release
+
+### Fixed
+
+- Adjusted `target: ContractAddress` to `contract_address: ContractAddress` in the cheatcode docs where applicable
