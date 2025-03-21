@@ -1,6 +1,6 @@
 use self::contracts_data::ContractsData;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
-use crate::runtime_extensions::common::sum_syscall_counters;
+use crate::runtime_extensions::common::sum_syscall_usage;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
 use crate::runtime_extensions::{
     call_to_blockifier_runtime_extension::{
@@ -32,7 +32,7 @@ use blockifier::utils::u64_from_usize;
 use blockifier::{
     execution::{
         call_info::CallInfo, deprecated_syscalls::DeprecatedSyscallSelector,
-        syscalls::hint_processor::SyscallCounter,
+        syscalls::hint_processor::SyscallUsageMap,
     },
     versioned_constants::VersionedConstants,
 };
@@ -184,6 +184,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
                 syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
+                // TODO: Add linear_factor logic here
 
                 handle_declare_deploy_result(deploy(
                     syscall_handler,
@@ -200,6 +201,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
                 syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
+                // TODO: Add linear_factor logic here
 
                 handle_declare_deploy_result(deploy_at(
                     syscall_handler,
@@ -629,7 +631,7 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime, tracked_resource: &
         .extended_runtime
         .extended_runtime
         .hint_handler
-        .syscall_counter
+        .syscalls_usage
         .clone();
 
     // Only sum 1-level since these include syscalls from inner calls
@@ -637,11 +639,11 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime, tracked_resource: &
         .nested_calls
         .iter()
         .filter_map(CallTraceNode::extract_entry_point_call)
-        .fold(SyscallCounter::new(), |syscalls, trace| {
-            sum_syscall_counters(syscalls, &trace.borrow().used_syscalls)
+        .fold(SyscallUsageMap::new(), |syscalls, trace| {
+            sum_syscall_usage(syscalls, &trace.borrow().used_syscalls)
         });
 
-    top_call.used_syscalls = sum_syscall_counters(top_call_syscalls, &nested_calls_syscalls);
+    top_call.used_syscalls = sum_syscall_usage(top_call_syscalls, &nested_calls_syscalls);
 }
 
 // Only top-level is considered relevant since we can't have l1 handlers deeper than 1 level of nesting
@@ -697,10 +699,10 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &mut C
 fn add_syscall_execution_resources(
     versioned_constants: &VersionedConstants,
     execution_resources: &ExecutionResources,
-    syscall_counter: &SyscallCounter,
+    syscall_usage: &SyscallUsageMap,
 ) -> ExecutionResources {
     let mut total_vm_usage = execution_resources.filter_unused_builtins();
-    total_vm_usage += &versioned_constants.get_additional_os_syscall_resources(syscall_counter);
+    total_vm_usage += &versioned_constants.get_additional_os_syscall_resources(syscall_usage);
     total_vm_usage
 }
 
@@ -787,7 +789,11 @@ pub fn get_all_used_resources(
             let syscalls_consumed_gas: u64 = top_call_syscalls
                 .iter()
                 .map(|(name, count)| {
-                    versioned_constants.get_syscall_gas_cost(name) * (*count as u64)
+                    // TODO: Verify this logic
+                    versioned_constants
+                        .get_syscall_gas_cost(name)
+                        .get_syscall_cost(0)
+                        * (count.call_count as u64)
                 })
                 .sum();
             sierra_gas_consumed += syscalls_consumed_gas;
@@ -807,7 +813,7 @@ pub fn get_all_used_resources(
 
     UsedResources {
         events,
-        syscall_counter: top_call_syscalls,
+        syscall_usage: top_call_syscalls,
         execution_resources,
         gas_consumed: GasAmount::from(sierra_gas_consumed),
         l1_handler_payload_lengths,

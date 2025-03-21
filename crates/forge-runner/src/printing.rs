@@ -61,7 +61,15 @@ fn format_detailed_resources(
     used_resources: &UsedResources,
     tracked_resource: ForgeTrackedResource,
 ) -> String {
-    let sorted_syscalls = sort_by_value(&used_resources.syscall_counter);
+    // TODO: Temp logic
+    let mut sorted_syscalls: Vec<_> = used_resources
+        .syscall_usage
+        .clone()
+        .into_iter()
+        .map(|(a, b)| (a, b.call_count))
+        .collect();
+    sorted_syscalls.sort_by(|a, b| b.1.cmp(&a.1));
+
     let syscalls = format_items(&sorted_syscalls);
 
     match tracked_resource {

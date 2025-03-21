@@ -1,4 +1,4 @@
-use blockifier::execution::syscalls::hint_processor::SyscallCounter;
+use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use starknet_api::transaction::fields::Calldata;
@@ -10,9 +10,11 @@ pub fn create_execute_calldata(calldata: &[Felt]) -> Calldata {
 }
 
 #[must_use]
-pub fn sum_syscall_counters(mut a: SyscallCounter, b: &SyscallCounter) -> SyscallCounter {
+pub fn sum_syscall_usage(mut a: SyscallUsageMap, b: &SyscallUsageMap) -> SyscallUsageMap {
     for (key, value) in b {
-        *a.entry(*key).or_default() += *value;
+        // TODO: Verify this logic
+        a.entry(*key).or_default().call_count += value.call_count;
+        // a.entry(*key).or_default().linear_factor += value.linear_factor;
     }
     a
 }
