@@ -6,6 +6,7 @@ use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
 use snapbox::cmd::{Command, cargo_bin};
+use sncast::helpers::fee::FeeSettings;
 use std::path::PathBuf;
 
 #[test]
@@ -60,11 +61,19 @@ fn test_happy_case_cairo_expression_calldata() {
 
 #[tokio::test]
 async fn test_call_after_storage_changed() {
+    let fee_settings = FeeSettings {
+        l1_gas: Some(100_000),
+        l1_gas_price: Some(10_000_000_000_000),
+        l2_gas: Some(1_000_000_000),
+        l2_gas_price: Some(100_000_000_000_000_000),
+        l1_data_gas: Some(100_000),
+        l1_data_gas_price: Some(10_000_000_000_000),
+    };
     invoke_contract(
         "user2",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "put",
-        None,
+        fee_settings,
         &["0x2", "0x3"],
     )
     .await;
@@ -135,7 +144,7 @@ fn test_wrong_function_name() {
         output,
         indoc! {r"
         command: call
-        error: An error occurred [..]Entry point[..]not found in contract[..]
+        error: Requested entrypoint does not exist in the contract
         "},
     );
 }
@@ -160,12 +169,14 @@ fn test_wrong_calldata() {
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
 
+    // TODO(#3107)
+    // 0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 is "Input too long for arguments"
     assert_stderr_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
         command: call
-        error: An error occurred [..]Execution failed[..]Input too long for arguments[..]
-        "},
+        error: An error occurred in the called contract = [..] error: Message("[\"0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473\"]") }) }
+        "#},
     );
 }
 

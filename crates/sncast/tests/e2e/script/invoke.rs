@@ -108,7 +108,10 @@ fn test_wrong_function_name() {
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
         [..]
         [..]: Error in the called contract ([..]):
-        Entry point EntryPointSelector([..]) not found in contract.
+        Execution failed. Failure reason:
+        Error in contract (contract address: [..], class hash: [..], selector: [..]):
+        Error in contract (contract address: [..], class hash: [..], selector: [..]):
+        [..] ('ENTRYPOINT_NOT_FOUND').
         " })))
         command: script run
         status: success
@@ -145,7 +148,10 @@ fn test_wrong_calldata() {
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
         [..]
         [..]: Error in the called contract ([..]):
-        Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
+        Execution failed. Failure reason:
+        Error in contract (contract address: [..], class hash: [..], selector: [..]):
+        Error in contract (contract address: [..], class hash: [..], selector: [..]):
+        [..] ('Failed to deserialize param #2').
         " })))
         command: script run
         status: success

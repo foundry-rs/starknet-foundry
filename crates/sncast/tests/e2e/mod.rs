@@ -3,6 +3,7 @@ mod call;
 mod completions;
 mod declare;
 mod deploy;
+mod fee;
 mod invoke;
 mod main_tests;
 mod multicall;

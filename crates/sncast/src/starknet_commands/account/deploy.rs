@@ -9,9 +9,9 @@ use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::InvokeResponse;
 use sncast::{
-    AccountType, WaitForTx, apply_optional, chain_id_to_network_name, check_account_file_exists,
-    get_account_data_from_accounts_file, get_account_data_from_keystore, get_keystore_password,
-    handle_rpc_error, handle_wait_for_tx,
+    AccountType, WaitForTx, apply_optional_fields, chain_id_to_network_name,
+    check_account_file_exists, get_account_data_from_accounts_file, get_account_data_from_keystore,
+    get_keystore_password, handle_rpc_error, handle_wait_for_tx,
 };
 use starknet::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
 use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
@@ -194,7 +194,7 @@ async fn get_deployment_result(
             let factory = ArgentAccountFactory::new(
                 class_hash,
                 chain_id,
-                Felt::ZERO,
+                None,
                 LocalWallet::from_signing_key(private_key),
                 provider,
             )
@@ -239,24 +239,35 @@ async fn deploy_account<T>(
 where
     T: AccountFactory + Sync,
 {
-    let fee_settings = fee_args
-        .try_into_fee_settings(account_factory.provider(), account_factory.block_id())
-        .await?;
+    let deployment = account_factory.deploy_v3(salt);
+
+    let fee_settings = if fee_args.max_fee.is_some() {
+        let fee_estimate = deployment
+            .estimate_fee()
+            .await
+            .expect("Failed to estimate fee");
+        fee_args.try_into_fee_settings(Some(&fee_estimate))
+    } else {
+        fee_args.try_into_fee_settings(None)
+    };
 
     let FeeSettings {
-        max_gas,
-        max_gas_unit_price,
-    } = fee_settings;
-    let deployment = account_factory.deploy_v3(salt);
-    let deployment = apply_optional(
+        l1_gas,
+        l1_gas_price,
+        l2_gas,
+        l2_gas_price,
+        l1_data_gas,
+        l1_data_gas_price,
+    } = fee_settings.expect("Failed to convert to fee settings");
+
+    let deployment = apply_optional_fields!(
         deployment,
-        max_gas.map(std::num::NonZero::get),
-        AccountDeploymentV3::gas,
-    );
-    let deployment = apply_optional(
-        deployment,
-        max_gas_unit_price.map(std::num::NonZero::get),
-        AccountDeploymentV3::gas_price,
+        l1_gas => AccountDeploymentV3::l1_gas,
+        l1_gas_price => AccountDeploymentV3::l1_gas_price,
+        l2_gas => AccountDeploymentV3::l2_gas,
+        l2_gas_price => AccountDeploymentV3::l2_gas_price,
+        l1_data_gas => AccountDeploymentV3::l1_data_gas,
+        l1_data_gas_price => AccountDeploymentV3::l1_data_gas_price
     );
     let result = deployment.send().await;
 

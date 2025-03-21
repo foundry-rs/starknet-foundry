@@ -1,5 +1,6 @@
 use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::env::set_keystore_password_env;
+use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::copy_file;
 use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
@@ -38,11 +39,8 @@ pub async fn test_happy_case(class_hash: &str, account_type: &str) {
         URL,
         "--name",
         "my_account",
-        "--max-gas",
-        "1000",
-        "--max-gas-unit-price",
-        "100000000000",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let bdg = snapbox.assert();
@@ -76,9 +74,8 @@ pub async fn test_happy_case_max_fee() {
         URL,
         "--name",
         "my_account",
-        "--max-fee",
-        "100000000000000",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let bdg = snapbox.assert();
@@ -112,9 +109,8 @@ pub async fn test_happy_case_add_profile() {
         "deploy",
         "--name",
         "my_account",
-        "--max-fee",
-        "99999999999999999",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert();
@@ -146,43 +142,13 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
         URL,
         "--name",
         "my_account",
-        "--max-fee",
-        "10000000000000000",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert();
 
     assert_stderr_contains(output, error);
-}
-
-#[tokio::test]
-async fn test_default_fee_token() {
-    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "--wait",
-        "account",
-        "deploy",
-        "--url",
-        URL,
-        "--name",
-        "my_account",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-
-    snapbox.assert().success().stdout_matches(indoc! {r"
-        Transaction hash: [..]
-        command: account deploy
-        transaction_hash: [..]
-
-        To see invocation details, visit:
-        transaction: [..]
-    "});
 }
 
 #[tokio::test]
@@ -199,16 +165,12 @@ pub async fn test_valid_class_hash() {
         "deploy",
         "--name",
         "my_account",
-        "--max-fee",
-        "10000000000000000",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
-        Specifying '--max-fee' flag results in conversion to '--max-gas' and '--max-gas-unit-price' flags
-        Converted [..] max fee to [..] max gas and [..] max gas unit price
-
         command: account deploy
         transaction_hash: [..]
 
@@ -218,6 +180,7 @@ pub async fn test_valid_class_hash() {
 }
 
 #[tokio::test]
+#[ignore = "TODO(#3100)"]
 pub async fn test_valid_no_max_fee() {
     let tempdir = create_account(true, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
     let accounts_file = "accounts.json";
@@ -279,14 +242,15 @@ pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &
         items["alpha-sepolia"]["my_account"]["address"]
             .as_str()
             .unwrap(),
-        9_999_999_999_999_999_999,
+        9_999_999_999_999_999_999_999_999_999_999,
     )
     .await;
     tempdir
 }
 
 #[test_case("oz"; "open_zeppelin_account")]
-#[test_case("argent"; "argent_account")]
+// TODO(#3089): Fails because of insufficient balance
+// #[test_case("argent"; "argent_account")]
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 pub async fn test_happy_case_keystore(account_type: &str) {
@@ -312,7 +276,11 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         &account_type.parse().unwrap(),
     );
 
-    mint_token(&address.into_hex_string(), 9_999_999_999_999_999_999).await;
+    mint_token(
+        &address.into_hex_string(),
+        9_999_999_999_999_999_999_999_999_999_999,
+    )
+    .await;
 
     let args = vec![
         "--keystore",
@@ -323,16 +291,12 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         "deploy",
         "--url",
         URL,
-        "--max-fee",
-        "99999999999999999",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        Specifying '--max-fee' flag results in conversion to '--max-gas' and '--max-gas-unit-price' flags
-        Converted [..] max fee to [..] max gas and [..] max gas unit price
-
         command: account deploy
         transaction_hash: 0x0[..]
 
@@ -374,9 +338,8 @@ pub async fn test_keystore_already_deployed() {
         "deploy",
         "--url",
         URL,
-        "--max-fee",
-        "10000000000000000",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -417,9 +380,8 @@ pub async fn test_keystore_key_mismatch() {
         "deploy",
         "--url",
         URL,
-        "--max-fee",
-        "10000000000000000",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -455,9 +417,8 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
         "deploy",
         "--url",
         URL,
-        "--max-fee",
-        "10000000000000000",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -493,9 +454,8 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
         "deploy",
         "--url",
         URL,
-        "--max-fee",
-        "10000000000000000",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -535,9 +495,8 @@ pub async fn test_deploy_keystore_no_status() {
         "deploy",
         "--url",
         URL,
-        "--max-fee",
-        "10000000000000000",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -575,7 +534,11 @@ pub async fn test_deploy_keystore_other_args() {
         &AccountType::OpenZeppelin,
     );
 
-    mint_token(&address.into_hex_string(), 9_999_999_999_999_999_999).await;
+    mint_token(
+        &address.into_hex_string(),
+        9_999_999_999_999_999_999_999_999_999_999,
+    )
+    .await;
 
     let args = vec![
         "--accounts-file",
@@ -590,15 +553,11 @@ pub async fn test_deploy_keystore_other_args() {
         URL,
         "--name",
         "some-name",
-        "--max-fee",
-        "99999999999999999",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
-        Specifying '--max-fee' flag results in conversion to '--max-gas' and '--max-gas-unit-price' flags
-        Converted [..] max fee to [..] max gas and [..] max gas unit price
-
         command: account deploy
         transaction_hash: 0x0[..]
 

@@ -31,6 +31,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `sncast completion` command - used to generate autocompletion script
+- `--l1-gas`, `--l1-gas-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price` flags
+
+#### Changed
+
+- Updated argent class hash used in account creation to v0.4.0
+
+#### Removed
+
+- `--max-gas` and `--max-gas-unit-price` flags
 
 ## [0.38.3] - 2025-03-07
 
