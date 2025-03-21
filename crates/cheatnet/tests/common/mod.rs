@@ -1,6 +1,8 @@
 use assertions::ClassHashAssert;
 use blockifier::execution::contract_class::TrackedResource;
-use blockifier::execution::entry_point::{CallEntryPoint, CallType, EntryPointExecutionContext};
+use blockifier::execution::entry_point::{
+    CallEntryPoint, CallType, EntryPointExecutionContext, ExecutableCallEntryPoint,
+};
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::state_api::State;
@@ -44,6 +46,18 @@ fn build_syscall_hint_processor<'a>(
     entry_point_execution_context: &'a mut EntryPointExecutionContext,
     hints: &'a HashMap<String, Hint>,
 ) -> SyscallHintProcessor<'a> {
+    let call_entry_point = ExecutableCallEntryPoint {
+        class_hash: call_entry_point.class_hash.unwrap_or_default(),
+        code_address: call_entry_point.code_address,
+        entry_point_type: call_entry_point.entry_point_type,
+        entry_point_selector: call_entry_point.entry_point_selector,
+        calldata: call_entry_point.calldata,
+        storage_address: call_entry_point.storage_address,
+        caller_address: call_entry_point.caller_address,
+        call_type: call_entry_point.call_type,
+        initial_gas: call_entry_point.initial_gas,
+    };
+
     SyscallHintProcessor::new(
         state,
         entry_point_execution_context,

@@ -5,6 +5,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use crate::runtime_extensions::common::get_relocated_vm_trace;
 use blockifier::execution::contract_class::CompiledClassV1;
+use blockifier::execution::entry_point::ExecutableCallEntryPoint;
 use blockifier::execution::entry_point_execution::{
     VmExecutionContext, finalize_execution, prepare_call_arguments,
 };
@@ -19,10 +20,8 @@ use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::versioned_constants::GasCosts;
 use blockifier::{
     execution::{
-        contract_class::EntryPointV1,
-        entry_point::{CallEntryPoint, EntryPointExecutionContext},
-        errors::EntryPointExecutionError,
-        execution_utils::Args,
+        contract_class::EntryPointV1, entry_point::EntryPointExecutionContext,
+        errors::EntryPointExecutionError, execution_utils::Args,
     },
     state::state_api::State,
 };
@@ -80,12 +79,12 @@ fn prepare_program_extra_data(
 // TODO(#2957) remove copied code
 // Copied from https://github.com/starkware-libs/sequencer/blob/0e1e92e0b90790e4bec20721c069c312d6a60a13/crates/blockifier/src/execution/entry_point_execution.rs#L98
 fn initialize_execution_context<'a>(
-    call: CallEntryPoint,
+    call: ExecutableCallEntryPoint,
     compiled_class: &'a CompiledClassV1,
     state: &'a mut dyn State,
     context: &'a mut EntryPointExecutionContext,
 ) -> Result<VmExecutionContext<'a>, PreExecutionError> {
-    let entry_point = compiled_class.get_entry_point(&call)?;
+    let entry_point = compiled_class.get_entry_point(&call.type_and_selector())?;
 
     // Instantiate Cairo runner.
     let proof_mode = false;
@@ -130,7 +129,7 @@ fn initialize_execution_context<'a>(
 
 // blockifier/src/execution/cairo1_execution.rs:48 (execute_entry_point_call)
 pub fn execute_entry_point_call_cairo1(
-    call: CallEntryPoint,
+    call: ExecutableCallEntryPoint,
     compiled_class_v1: &CompiledClassV1,
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState, // Added parameter
@@ -181,10 +180,10 @@ pub fn execute_entry_point_call_cairo1(
     .on_error_get_last_pc(&mut runner)?;
 
     let trace = get_relocated_vm_trace(&mut runner);
-    let syscall_counter = cheatable_runtime
+    let syscall_usage_map = cheatable_runtime
         .extended_runtime
         .hint_handler
-        .syscall_counter
+        .syscalls_usage
         .clone();
 
     let call_info = finalize_execution(
@@ -206,7 +205,7 @@ pub fn execute_entry_point_call_cairo1(
         });
     }
 
-    Ok((call_info, syscall_counter, trace))
+    Ok((call_info, syscall_usage_map, trace))
     // endregion
 }
 
