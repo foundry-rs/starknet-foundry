@@ -228,13 +228,13 @@ impl DisplayDeployResult of Display<DeployResult> {
 // TODO(#3102): Refactor to be enum with max fee and triplet variants
 #[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub struct FeeSettings {
-    pub max_fee: Option<felt252>,
-    pub l1_gas: Option<u64>,
-    pub l1_gas_price: Option<u128>,
-    pub l2_gas: Option<u64>,
-    pub l2_gas_price: Option<u128>,
-    pub l1_data_gas: Option<u64>,
-    pub l2_data_gas_price: Option<u128>,
+    max_fee: Option<felt252>,
+    l1_gas: Option<u64>,
+    l1_gas_price: Option<u128>,
+    l2_gas: Option<u64>,
+    l2_gas_price: Option<u128>,
+    l1_data_gas: Option<u64>,
+    l2_data_gas_price: Option<u128>,
 }
 
 #[generate_trait]
