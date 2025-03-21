@@ -9,15 +9,15 @@ use std::num::{NonZeroU64, NonZeroU128};
 #[derive(Args, Debug, Clone)]
 pub struct FeeArgs {
     /// Max fee for the transaction. If not provided, will be automatically estimated.
-    #[clap(value_parser = parse_non_zero_felt, short, long)]
+    #[arg(value_parser = parse_non_zero_felt, short, long)]
     pub max_fee: Option<NonZeroFelt>,
 
     /// Max gas amount. If not provided, will be automatically estimated.
-    #[clap(value_parser = parse_non_zero_felt, long)]
+    #[arg(value_parser = parse_non_zero_felt, long)]
     pub max_gas: Option<NonZeroFelt>,
 
     /// Max gas price in Fri. If not provided, will be automatically estimated.
-    #[clap(value_parser = parse_non_zero_felt, long)]
+    #[arg(value_parser = parse_non_zero_felt, long)]
     pub max_gas_unit_price: Option<NonZeroFelt>,
 }
 

@@ -13,7 +13,7 @@ pub struct New {
     pub output_path: Option<Utf8PathBuf>,
 
     /// If the file specified in output-path exists, this flag decides if it is going to be overwritten
-    #[clap(short = 'o', long = "overwrite")]
+    #[arg(short = 'o', long = "overwrite")]
     pub overwrite: bool,
 }
 

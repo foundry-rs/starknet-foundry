@@ -27,7 +27,7 @@ pub mod list;
 #[derive(Args)]
 #[command(about = "Creates and deploys an account to the Starknet")]
 pub struct Account {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     pub command: Commands,
 }
 

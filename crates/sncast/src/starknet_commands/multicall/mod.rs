@@ -9,7 +9,7 @@ use run::Run;
 #[derive(Args)]
 #[command(about = "Execute multiple calls at once", long_about = None)]
 pub struct Multicall {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     pub command: Commands,
 }
 

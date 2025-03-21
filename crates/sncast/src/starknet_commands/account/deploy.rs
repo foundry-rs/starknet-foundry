@@ -28,13 +28,13 @@ use starknet_types_core::felt::Felt;
 #[command(about = "Deploy an account to the Starknet")]
 pub struct Deploy {
     /// Name of the account to be deployed
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub name: Option<String>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub fee_args: FeeArgs,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 
