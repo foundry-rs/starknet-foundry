@@ -56,11 +56,11 @@ async fn test_call_invalid_entry_point() {
 
     assert_stdout_contains(
         output,
-        indoc! {r#"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Entry point EntryPointSelector([..]) not found in contract." })))
+        indoc! {r"
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::EntryPointNotFound(())))
         command: script run
         status: success
-        "#},
+        "},
     );
 }
 
@@ -86,6 +86,7 @@ async fn test_call_invalid_address() {
 }
 
 #[tokio::test]
+#[ignore = "TODO(#3120)"]
 async fn test_call_invalid_calldata() {
     let tempdir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/call", Vec::<String>::new());

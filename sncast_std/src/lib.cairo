@@ -20,6 +20,8 @@ pub enum StarknetError {
     FailedToReceiveTransaction,
     /// Contract not found
     ContractNotFound,
+    /// Requested entrypoint does not exist in the contract
+    EntryPointNotFound,
     /// Block not found
     BlockNotFound,
     /// Invalid transaction index in a block
@@ -36,8 +38,8 @@ pub enum StarknetError {
     ClassAlreadyDeclared,
     /// Invalid transaction nonce
     InvalidTransactionNonce,
-    /// Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
-    InsufficientMaxFee,
+    /// The transaction's resources don't cover validation or the minimal transaction fee
+    InsufficientResourcesForValidate,
     /// Account balance is smaller than the transaction's max_fee
     InsufficientAccountBalance,
     /// Account validation failed
@@ -227,8 +229,58 @@ impl DisplayDeployResult of Display<DeployResult> {
 #[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub struct FeeSettings {
     pub max_fee: Option<felt252>,
-    pub max_gas: Option<u64>,
-    pub max_gas_unit_price: Option<u128>,
+    pub l1_gas: Option<u64>,
+    pub l1_gas_price: Option<u128>,
+    pub l2_gas: Option<u64>,
+    pub l2_gas_price: Option<u128>,
+    pub l1_data_gas: Option<u64>,
+    pub l2_data_gas_price: Option<u128>,
+}
+
+#[generate_trait]
+pub impl FeeSettingsImpl of FeeSettingsTrait {
+    fn resource_bounds(
+        l1_gas: u64,
+        l1_gas_price: u128,
+        l2_gas: u64,
+        l2_gas_price: u128,
+        l1_data_gas: u64,
+        l2_data_gas_price: u128
+    ) -> FeeSettings {
+        FeeSettings {
+            max_fee: Option::None,
+            l1_gas: Option::Some(l1_gas),
+            l1_gas_price: Option::Some(l1_gas_price),
+            l2_gas: Option::Some(l2_gas),
+            l2_gas_price: Option::Some(l2_gas_price),
+            l1_data_gas: Option::Some(l1_data_gas),
+            l2_data_gas_price: Option::Some(l2_data_gas_price),
+        }
+    }
+
+    fn max_fee(max_fee: felt252) -> FeeSettings {
+        FeeSettings {
+            max_fee: Option::Some(max_fee),
+            l1_gas: Option::None,
+            l1_gas_price: Option::None,
+            l2_gas: Option::None,
+            l2_gas_price: Option::None,
+            l1_data_gas: Option::None,
+            l2_data_gas_price: Option::None,
+        }
+    }
+
+    fn estimate() -> FeeSettings {
+        FeeSettings {
+            max_fee: Option::None,
+            l1_gas: Option::None,
+            l1_gas_price: Option::None,
+            l2_gas: Option::None,
+            l2_gas_price: Option::None,
+            l1_data_gas: Option::None,
+            l2_data_gas_price: Option::None,
+        }
+    }
 }
 
 pub fn deploy(
