@@ -65,14 +65,14 @@ pub struct Run {
     pub script_name: String,
 
     /// Specifies scarb package to be used
-    #[clap(long)]
+    #[arg(long)]
     pub package: Option<String>,
 
     /// Do not use the state file
-    #[clap(long)]
+    #[arg(long)]
     pub no_state_file: bool,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 
