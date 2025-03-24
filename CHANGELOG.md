@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `sncast completion` command - used to generate autocompletion script
 - `--l1-gas`, `--l1-gas-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price` flags
-- methods for setting fee settings in `FeeSettingsTrait`: `max_fee()`, `resource_bounds()` and `estimate()`
+- methods for setting fee settings in `FeeSettingsTrait`: `max_fee()`, `resource_bounds()` and `estimate()` (in `sncast_std`)
 
 #### Changed
 

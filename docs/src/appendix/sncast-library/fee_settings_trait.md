@@ -16,7 +16,7 @@ pub impl FeeSettingsImpl of FeeSettingsTrait {
     /// Ensures that total resource bounds of transaction execution won't exceed the given value.
     fn max_fee(max_fee: felt252) -> FeeSettings;
 
-    /// Performs an automatic estimation of the resrouce bounds.
+    /// Performs an automatic estimation of the resource bounds.
     fn estimate() -> FeeSettings;
 }
 ```
