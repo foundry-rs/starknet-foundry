@@ -421,7 +421,7 @@ Passing fee settings is possible in a few different ways:
 let fee_settings = FeeSettingsTrait::estimate();
 ```
 
-2. Manually setting the resource bounds:
+2. Manually setting the resource bounds (denoted in FRI):
 
 ```rust
 let fee_settings = FeeSettingsTrait::resource_bounds(
@@ -434,7 +434,7 @@ let fee_settings = FeeSettingsTrait::resource_bounds(
 );
 ```
 
-3. Specifying the maximum fee:
+3. Specifying the maximum fee (denoted in FRI):
 
 ```rust
 let fee_settings = FeeSettingsTrait::max_fee(100000000000000000000);
