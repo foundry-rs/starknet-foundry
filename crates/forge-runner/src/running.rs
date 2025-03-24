@@ -425,6 +425,7 @@ fn extract_test_case_summary(
                             debugging::Trace::from_call_trace(
                                 &result_with_info.call_trace,
                                 contracts_data,
+                                case.name.clone(),
                             )
                         }),
                     }
