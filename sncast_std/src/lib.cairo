@@ -234,7 +234,7 @@ pub struct FeeSettings {
     l2_gas: Option<u64>,
     l2_gas_price: Option<u128>,
     l1_data_gas: Option<u64>,
-    l2_data_gas_price: Option<u128>,
+    l1_data_gas_price: Option<u128>,
 }
 
 #[generate_trait]
@@ -245,7 +245,7 @@ pub impl FeeSettingsImpl of FeeSettingsTrait {
         l2_gas: u64,
         l2_gas_price: u128,
         l1_data_gas: u64,
-        l2_data_gas_price: u128
+        l1_data_gas_price: u128
     ) -> FeeSettings {
         FeeSettings {
             max_fee: Option::None,
@@ -254,7 +254,7 @@ pub impl FeeSettingsImpl of FeeSettingsTrait {
             l2_gas: Option::Some(l2_gas),
             l2_gas_price: Option::Some(l2_gas_price),
             l1_data_gas: Option::Some(l1_data_gas),
-            l2_data_gas_price: Option::Some(l2_data_gas_price),
+            l1_data_gas_price: Option::Some(l1_data_gas_price),
         }
     }
 
@@ -266,7 +266,7 @@ pub impl FeeSettingsImpl of FeeSettingsTrait {
             l2_gas: Option::None,
             l2_gas_price: Option::None,
             l1_data_gas: Option::None,
-            l2_data_gas_price: Option::None,
+            l1_data_gas_price: Option::None,
         }
     }
 
@@ -278,7 +278,7 @@ pub impl FeeSettingsImpl of FeeSettingsTrait {
             l2_gas: Option::None,
             l2_gas_price: Option::None,
             l1_data_gas: Option::None,
-            l2_data_gas_price: Option::None,
+            l1_data_gas_price: Option::None,
         }
     }
 }
