@@ -423,7 +423,7 @@ fn extract_test_case_summary(
                         test_statistics: (),
                         debugging_trace: cfg!(feature = "debugging").then(|| {
                             debugging::Trace::from_call_trace(
-                                &result_with_info.call_trace,
+                                &result_with_info.call_trace.borrow(),
                                 contracts_data,
                                 case.name.clone(),
                             )

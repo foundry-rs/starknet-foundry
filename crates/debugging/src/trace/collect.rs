@@ -7,16 +7,10 @@ use cheatnet::state::{CallTrace, CallTraceNode};
 use std::cell::RefCell;
 use std::rc::Rc;
 
-pub fn trace(
-    call_trace: &Rc<RefCell<CallTrace>>,
-    contracts_data: &ContractsData,
-    test_name: String,
-) -> Trace {
-    let call_trace = call_trace.borrow();
-
+pub fn trace(call_trace: &CallTrace, contracts_data: &ContractsData, test_name: String) -> Trace {
     Trace {
         test_name: TestName(test_name),
-        nested_calls: nested_calls(&call_trace, contracts_data),
+        nested_calls: nested_calls(call_trace, contracts_data),
     }
 }
 
@@ -59,11 +53,11 @@ fn contract_name(call_trace: &CallTrace, contracts_data: &ContractsData) -> Cont
             &call_trace
                 .entry_point
                 .class_hash
-                .expect("this should be set in `fn execute_call_entry_point` in cheatnet"),
+                .expect("class_hash should be set in `fn execute_call_entry_point` in cheatnet"),
         )
         .cloned()
         .map(ContractName)
-        .expect("this should be present in `ContractsData`")
+        .expect("contract name should be present in `ContractsData`")
 }
 
 fn selector(call_trace: &CallTrace, contracts_data: &ContractsData) -> Selector {
@@ -71,5 +65,5 @@ fn selector(call_trace: &CallTrace, contracts_data: &ContractsData) -> Selector 
         .get_function_name(&call_trace.entry_point.entry_point_selector)
         .cloned()
         .map(Selector)
-        .expect("this should be present in `ContractsData`")
+        .expect("selector should be present in `ContractsData`")
 }

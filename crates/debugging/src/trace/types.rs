@@ -7,10 +7,8 @@ use cheatnet::state::CallTrace;
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::ContractAddress;
 use starknet_api::transaction::fields::Calldata;
-use std::cell::RefCell;
 use std::fmt;
 use std::fmt::Display;
-use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct Trace {
@@ -52,9 +50,10 @@ pub struct StorageAddress(pub ContractAddress);
 pub struct CallerAddress(pub ContractAddress);
 
 impl Trace {
-    /// Creates a new [`Trace`] from a given `cheatnet` [`CallTrace`] and [`ContractsData`] and a test name.
+    /// Creates a new [`Trace`] from a given `cheatnet` [`CallTrace`], [`ContractsData`] and a test name.
+    #[must_use]
     pub fn from_call_trace(
-        call_trace: &Rc<RefCell<CallTrace>>,
+        call_trace: &CallTrace,
         contracts_data: &ContractsData,
         test_name: String,
     ) -> Self {
