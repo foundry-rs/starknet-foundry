@@ -312,10 +312,9 @@ fn check_requirements(
                 command: RefCell::new(ScarbCommand::new().arg("--version").command()),
                 minimal_version: MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS,
                 minimal_recommended_version: None,
-                helper_text: "This version of scarb is the minimum required in order to support sierra gas tracking \
+                helper_text: format!("To track sierra gas, minimal required scarb version is {MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS} \
                 (it comes with sierra >= 1.7.0 support)\n\
-                Follow instructions from https://docs.swmansion.com/scarb/download.html"
-                    .to_string(),
+                Follow instructions from https://docs.swmansion.com/scarb/download.html"),
                 version_parser: create_version_parser("Scarb", r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)"),
             });
         }
