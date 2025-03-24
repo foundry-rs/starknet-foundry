@@ -300,7 +300,7 @@ impl VerificationInterface for Voyager {
                 }
             })?;
 
-        println!("These are the files that I'm about to transfer:");
+        println!("The following files will be transferred:");
         for (name, path) in &files {
             println!("{name}: \n{path}");
         }
