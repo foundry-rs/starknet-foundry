@@ -14,6 +14,18 @@ pub struct TransactionExecutionErrorData {
     pub execution_error: ByteArray,
 }
 
+pub struct ContractExecutionErrorInner {
+    contract_address: ContractAddress,
+    class_hash: felt252,
+    selector: felt252,
+    error: Box<ContractExecutionError>,
+}
+
+pub enum ContractExecutionError {
+    Nested: ContractExecutionErrorInner,
+    Message: ByteArray
+}
+
 #[derive(Drop, Serde, PartialEq, Debug)]
 pub enum StarknetError {
     /// Failed to receive transaction
