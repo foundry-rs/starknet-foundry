@@ -262,27 +262,20 @@ impl VerificationInterface for Voyager {
 
         let selected = (if workspace_packages.len() > 1 {
             match package {
-                Some(ref package_name) => {
-                    if let Some(p) = workspace_packages
-                        .into_iter()
-                        .find(|p| p.name == *package_name)
-                    {
-                        Ok(p)
-                    } else {
-                        Err(anyhow!(
-                            "Package {} not found in scarb metadata",
-                            package_name
-                        ))
-                    }
-                }
+                Some(ref package_name) => workspace_packages
+                    .into_iter()
+                    .find(|p| p.name == *package_name)
+                    .ok_or(anyhow!(
+                        "Package {package_name} not found in scarb metadata"
+                    )),
                 None => Err(anyhow!(
                     "More than one package found in scarb metadata - specify package using --package flag"
                 )),
             }
-        } else if let Some(p) = workspace_packages.pop() {
-            Ok(p)
         } else {
-            Err(anyhow!("No packages found in scarb metadata"))
+            workspace_packages
+                .pop()
+                .ok_or(anyhow!("No packages found in scarb metadata"))
         })?;
 
         let (prefix, files) = self.gather_files()?;
