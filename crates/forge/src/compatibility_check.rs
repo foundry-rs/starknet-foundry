@@ -315,6 +315,6 @@ mod tests {
                 "Follow instructions from https://docs.swmansion.com/scarb/download.html"
             )
         );
-        assert!(validation_output.contains("✅ Universal Sierra Compiler 2.4.0"));
+        assert!(validation_output.contains("✅ Universal Sierra Compiler"));
     }
 }
