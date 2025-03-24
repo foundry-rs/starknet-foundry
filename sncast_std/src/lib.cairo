@@ -8,11 +8,169 @@ pub struct ErrorData {
     msg: ByteArray
 }
 
-#[derive(Drop, PartialEq, Serde, Debug)]
+#[derive(Drop, PartialEq)]
 pub struct TransactionExecutionErrorData {
     pub transaction_index: felt252,
-    // TODO(#3120): Implement `ContractExecutionError` and update below field type
-    pub execution_error: ByteArray,
+    pub execution_error: ContractExecutionError,
+}
+
+impl TransactionExecutionErrorDataSerde of Serde<TransactionExecutionErrorData> {
+    fn serialize(self: @TransactionExecutionErrorData, ref output: Array<felt252>) {
+        output.append(*self.transaction_index);
+        self.execution_error.serialize(ref output);
+    }
+    fn deserialize(ref serialized: Span<felt252>) -> Option<TransactionExecutionErrorData> {
+        let transaction_index = (*serialized.pop_front()?);
+        let execution_error = Serde::<ContractExecutionError>::deserialize(ref serialized).unwrap();
+        Option::Some(TransactionExecutionErrorData { transaction_index, execution_error })
+    }
+}
+
+
+#[derive(Drop, PartialEq, Copy)]
+pub enum ContractExecutionError {
+    Nested: Box<ContractExecutionErrorInner>,
+    Message: Span<felt252>,
+}
+
+#[derive(Drop, Serde, Copy)]
+pub struct ContractExecutionErrorInner {
+    contract_address: ContractAddress,
+    class_hash: felt252,
+    selector: felt252,
+    error: ContractExecutionError,
+}
+
+impl ContractExecutionErrorInnerPartialEq of PartialEq<Box<ContractExecutionErrorInner>> {
+    fn eq(lhs: @Box<ContractExecutionErrorInner>, rhs: @Box<ContractExecutionErrorInner>) -> bool {
+        let lhs = (*lhs).unbox();
+        let rhs = (*rhs).unbox();
+        lhs.contract_address == rhs.contract_address
+            && lhs.class_hash == rhs.class_hash
+            && lhs.selector == rhs.selector
+            && lhs.error == rhs.error
+    }
+}
+
+impl ContractExecutionErrorSerde of Serde<ContractExecutionError> {
+    fn serialize(self: @ContractExecutionError, ref output: Array<felt252>) {
+        match *self {
+            ContractExecutionError::Nested(inner) => {
+                let inner = inner.unbox();
+                output.append(0);
+                inner.serialize(ref output);
+            },
+            ContractExecutionError::Message(msg) => {
+                output.append(1);
+                // output.append_span(msg);
+                msg.serialize(ref output);
+            }
+        }
+    }
+    fn deserialize(ref serialized: Span<felt252>) -> Option<ContractExecutionError> {
+        let first = (*serialized.pop_front()?);
+
+        if first == 0 {
+            let inner = Serde::<ContractExecutionErrorInner>::deserialize(ref serialized).unwrap();
+            let inner = BoxTrait::new(inner);
+            Option::Some(ContractExecutionError::Nested(inner))
+        } else {
+            Option::Some(ContractExecutionError::Message(serialized))
+        }
+    }
+}
+
+impl BoxContractExecutionErrorSerde of Serde<Box<ContractExecutionError>> {
+    fn serialize(self: @Box<ContractExecutionError>, ref output: Array<felt252>) {
+        match (*self).unbox() {
+            ContractExecutionError::Nested(inner) => {
+                let inner = inner.unbox();
+                // output.append(0);
+                // inner.serialize(ref output);
+                inner.serialize(ref output);
+            },
+            ContractExecutionError::Message(msg) => {
+                for each in msg {
+                    output.append(*each);
+                } // output.append(1);
+                // msg.serialize(ref output);
+            }
+        }
+    }
+    fn deserialize(ref serialized: Span<felt252>) -> Option<Box<ContractExecutionError>> {
+        Option::Some(BoxTrait::new(ContractExecutionErrorSerde::deserialize(ref serialized)?))
+    }
+}
+
+fn span_to_array(span: Span<felt252>) -> Array::<felt252> {
+    let mut result = array![];
+    for each in span {
+        result.append(*each);
+    };
+    result
+}
+
+pub impl DisplayTransactionExecutionErrorData of Display<TransactionExecutionErrorData> {
+    fn fmt(self: @TransactionExecutionErrorData, ref f: Formatter) -> Result<(), Error> {
+        write!(
+            f,
+            "Transaction execution has failed: transaction_index: {}, execution_error: {}",
+            self.transaction_index,
+            self.execution_error
+        )
+    }
+}
+
+pub impl DisplayContractExecutionError of Display<ContractExecutionError> {
+    fn fmt(self: @ContractExecutionError, ref f: Formatter) -> Result<(), Error> {
+        match self {
+            ContractExecutionError::Nested(inner) => {
+                let inner = (*inner).unbox();
+                write!(
+                    f,
+                    "Error in contract (contract address: {}, class hash: {}, selector:
+                    {}):\n{}",
+                    inner.contract_address,
+                    inner.class_hash,
+                    inner.selector,
+                    inner.error
+                )
+            },
+            ContractExecutionError::Message(msg) => { write!(f, "Message({:?})", *msg) }
+        }
+    }
+}
+
+pub impl DisplayContractExecutionErrorInner of Display<ContractExecutionErrorInner> {
+    fn fmt(self: @ContractExecutionErrorInner, ref f: Formatter) -> Result<(), Error> {
+        write!(
+            f,
+            "Error in contract (contract_address: {}, class_hash: {}, selector: {}, error:
+            {}):\n",
+            self.contract_address,
+            self.class_hash,
+            self.selector,
+            self.error
+        )
+    }
+}
+
+pub impl DebugTransactionExecutionErrorData of Debug<TransactionExecutionErrorData> {
+    fn fmt(self: @TransactionExecutionErrorData, ref f: Formatter) -> Result<(), Error> {
+        Display::fmt(self, ref f)
+    }
+}
+
+pub impl DebugContractExecutionError of Debug<ContractExecutionError> {
+    fn fmt(self: @ContractExecutionError, ref f: Formatter) -> Result<(), Error> {
+        Display::fmt(self, ref f)
+    }
+}
+
+pub impl DebugContractExecutionErrorInner of Debug<ContractExecutionErrorInner> {
+    fn fmt(self: @ContractExecutionErrorInner, ref f: Formatter) -> Result<(), Error> {
+        Display::fmt(self, ref f)
+    }
 }
 
 #[derive(Drop, Serde, PartialEq, Debug)]
@@ -341,6 +499,22 @@ pub fn invoke(
     fee_settings: FeeSettings,
     nonce: Option<felt252>
 ) -> Result<InvokeResult, ScriptCommandError> {
+    // let mut raw = array![
+    //     4660.into(),
+    //     0.into(),
+    //     291.into(),
+    //     2271560481.into(),
+    //     4660.into(),
+    //     1.into(),
+    //     1,
+    //     184477651815859881857708426232370721322670788429034947509639899811272418401,
+    //     3265566911520157363207237164170485900701757214916046435088312658391615,
+    //     29
+    // ];
+    // let mut span = raw.span();
+    // let deserialized = Serde::<TransactionExecutionErrorData>::deserialize(ref span).unwrap();
+    // println!("deserialized: {:?}", deserialized);
+
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, entry_point_selector];
 
