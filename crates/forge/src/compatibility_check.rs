@@ -18,7 +18,7 @@ pub struct Requirement<'a> {
 
 impl Requirement<'_> {
     fn validate_and_get_output(&self) -> (bool, String) {
-        let version = get_version(&self.command, &self.version_parser);
+        let version = self.get_version();
         let mut is_valid;
 
         let output = if let Ok(version) = version {
@@ -60,6 +60,15 @@ impl Requirement<'_> {
 
         (is_valid, output)
     }
+
+    fn get_version(&self) -> Result<Version> {
+        let version_command_output = self.command.borrow_mut().output_checked()?;
+        let raw_version = String::from_utf8_lossy(&version_command_output.stdout)
+            .trim()
+            .to_string();
+
+        (self.version_parser)(&raw_version)
+    }
 }
 
 pub struct RequirementsChecker<'a> {
@@ -100,9 +109,7 @@ impl<'a> RequirementsChecker<'a> {
         for requirement in &self.requirements {
             let (is_valid, output) = requirement.validate_and_get_output();
 
-            if !is_valid {
-                all_valid = false;
-            }
+            all_valid &= is_valid;
             validation_output += output.as_str();
             validation_output += "\n";
         }
@@ -123,18 +130,6 @@ pub fn create_version_parser<'a>(name: &'a str, pattern: &'a str) -> Box<Version
             .as_str();
         Version::parse(version_str).with_context(|| "Failed to parse version")
     })
-}
-
-fn get_version(command: &RefCell<Command>, parser: &VersionParser) -> Result<Version> {
-    let raw_version = get_raw_version(command)?;
-    parser(&raw_version)
-}
-
-fn get_raw_version(command: &RefCell<Command>) -> Result<String> {
-    let raw_current_version = command.borrow_mut().output_checked()?;
-    Ok(String::from_utf8_lossy(&raw_current_version.stdout)
-        .trim()
-        .to_string())
 }
 
 #[cfg(test)]
