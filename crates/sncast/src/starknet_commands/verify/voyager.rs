@@ -293,7 +293,7 @@ impl VerificationInterface for Voyager {
             .strip_prefix(prefix)
             // backend expects this: "." for cwd
             .map(|p| {
-                if p == Utf8Path::new("") {
+                if p.as_str().is_empty() {
                     Utf8Path::new(".")
                 } else {
                     p
