@@ -70,9 +70,7 @@ impl EventSpyAssertionsTraitImpl<T, +starknet::Event<T>, +Drop<T>> of EventSpyAs
 
         for (from, event) in events
             .span() {
-                let emitted = received_events.is_emitted(*from, event);
-
-                if !emitted {
+                if !received_events.is_emitted(*from, event) {
                     let from: felt252 = (*from).into();
                     panic!("Event with matching data and keys was not emitted from {}", from);
                 }
@@ -84,9 +82,7 @@ impl EventSpyAssertionsTraitImpl<T, +starknet::Event<T>, +Drop<T>> of EventSpyAs
 
         for (from, event) in events
             .span() {
-                let emitted = received_events.is_emitted(*from, event);
-
-                if emitted {
+                if received_events.is_emitted(*from, event) {
                     let from: felt252 = (*from).into();
                     panic!("Event with matching data and keys was emitted from {}", from);
                 }
