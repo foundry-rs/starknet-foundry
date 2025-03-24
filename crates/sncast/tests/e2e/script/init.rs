@@ -43,7 +43,7 @@ fn test_script_init_happy_case() {
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
             [dependencies]
-            sncast_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{cast_version}" }}
+            sncast_std = "{cast_version}"
             starknet = ">={cairo_version}"
 
             [dev-dependencies]
