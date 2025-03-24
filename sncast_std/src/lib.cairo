@@ -11,19 +11,8 @@ pub struct ErrorData {
 #[derive(Drop, PartialEq, Serde, Debug)]
 pub struct TransactionExecutionErrorData {
     pub transaction_index: felt252,
+    // TODO(#3120): Implement `ContractExecutionError` and update below field type
     pub execution_error: ByteArray,
-}
-
-pub struct ContractExecutionErrorInner {
-    contract_address: ContractAddress,
-    class_hash: felt252,
-    selector: felt252,
-    error: Box<ContractExecutionError>,
-}
-
-pub enum ContractExecutionError {
-    Nested: ContractExecutionErrorInner,
-    Message: ByteArray
 }
 
 #[derive(Drop, Serde, PartialEq, Debug)]
@@ -237,7 +226,6 @@ impl DisplayDeployResult of Display<DeployResult> {
     }
 }
 
-// TODO(#3102): Refactor to be enum with max fee and triplet variants
 #[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub struct FeeSettings {
     max_fee: Option<felt252>,

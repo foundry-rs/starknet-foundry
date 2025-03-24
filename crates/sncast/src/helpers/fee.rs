@@ -115,7 +115,6 @@ impl FeeArgs {
     }
 }
 
-// TODO(#3102): Refactor to be enum with max fee and triplet variants
 /// Struct used in `sncast script` for deserializing from cairo, `FeeSettings` can't be
 /// used as it missing `max_fee`
 #[derive(Debug, PartialEq, CairoDeserialize)]
