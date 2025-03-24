@@ -3,13 +3,13 @@ Verify Cairo contract on a chosen verification provider.
 
 ## `--class-hash, -g <CLASS_HASH>`
 
-Required if `--contract-address` is not provided.
+Optional. Required if `--contract-address` is not provided.
 
 The class hash of the contract that is to be verified.
 
 ## `--contract-address, -d <CONTRACT_ADDRESS>`
 
-Required if `--class-hash` is not provided.
+Optional. Required if `--class-hash` is not provided.
 
 The address of the contract that is to be verified.
 
