@@ -85,19 +85,11 @@ fn add_dependencies(script_root_dir: &Utf8PathBuf) -> Result<()> {
 }
 
 fn add_sncast_std_dependency(script_root_dir: &Utf8PathBuf) -> Result<()> {
-    let cast_version = format!("v{}", env!("CARGO_PKG_VERSION"));
-
+    let cast_version = env!("CARGO_PKG_VERSION").to_string();
+    let dep_id = format!("sncast_std@{cast_version}");
     ScarbCommand::new()
         .current_dir(script_root_dir)
-        .args([
-            "--offline",
-            "add",
-            "sncast_std",
-            "--git",
-            "https://github.com/foundry-rs/starknet-foundry.git",
-            "--tag",
-            &cast_version,
-        ])
+        .args(["--offline", "add", &dep_id])
         .run()?;
 
     Ok(())
