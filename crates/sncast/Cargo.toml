@@ -7,12 +7,6 @@ edition.workspace = true
 [dependencies]
 anyhow.workspace = true
 camino.workspace = true
-cairo-lang-casm.workspace = true
-cairo-lang-runner.workspace = true
-cairo-lang-runnable-utils.workspace = true
-cairo-lang-sierra.workspace = true
-cairo-lang-sierra-to-casm.workspace = true
-cairo-lang-utils.workspace = true
 clap.workspace = true
 clap_complete.workspace = true
 serde_json.workspace = true
@@ -38,6 +32,12 @@ data-transformer = { path = "../data-transformer" }
 configuration = { path = "../configuration" }
 shared = { path = "../shared" }
 forge_runner = { path = "../forge-runner" }
+cairo-lang-runner.workspace = true
+cairo-lang-sierra-to-casm.workspace = true
+cairo-lang-runnable-utils.workspace = true
+cairo-lang-utils.workspace = true
+cairo-lang-sierra.workspace = true
+cairo-lang-casm.workspace = true
 itertools.workspace = true
 starknet-types-core.workspace = true
 cairo-vm.workspace = true
