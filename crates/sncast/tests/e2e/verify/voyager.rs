@@ -91,6 +91,86 @@ async fn test_happy_case() {
 }
 
 #[tokio::test]
+async fn test_happy_case_with_confirm_verification_flag() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+
+    let mock_server = MockServer::start().await;
+    let rpc_request = json!({
+        "id": 1,
+        "jsonrpc": "2.0",
+        "method": "starknet_getClassHashAt",
+        "params": [
+            "latest",
+            MAP_CONTRACT_ADDRESS_SEPOLIA
+        ]
+    });
+    let rpc_response = json!({
+        "id": 1,
+        "jsonrpc": "2.0",
+        "result": MAP_CONTRACT_CLASS_HASH_SEPOLIA
+    });
+
+    let mock_rpc = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(body_json(rpc_request))
+        .respond_with(ResponseTemplate::new(200).set_body_json(rpc_response))
+        .expect(1)
+        .mount(&mock_rpc)
+        .await;
+
+    let job_id = "2b206064-ffee-4955-8a86-1ff3b854416a";
+    let class_hash: Felt =
+        Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+
+    let expected_body = json!({
+        "project_dir_path": ".",
+        "name": "Map",
+        "package_name": "map",
+        "license": null
+    });
+    Mock::given(method("POST"))
+        .and(path(format!("class-verify/{class_hash:#068x}")))
+        .and(body_partial_json(&expected_body))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "voyager",
+        "--network",
+        "sepolia",
+        "--confirm-verification",
+    ];
+
+    let snapbox = runner(&args)
+        .env("VOYAGER_API_URL", mock_server.uri())
+        .env("STARKNET_RPC_URL", mock_rpc.uri())
+        .current_dir(contract_path.path());
+
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        formatdoc! {"
+        command: verify
+        message: Map submitted for verification, you can query the status at: {}/class-verify/job/{}
+        ",
+        mock_server.uri(),
+        job_id,
+        },
+    );
+}
+
+#[tokio::test]
 async fn test_failed_verification() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
@@ -170,7 +250,7 @@ async fn test_failed_verification() {
 }
 
 #[tokio::test]
-async fn test_failed_hash_lookup() {
+async fn test_failed_class_hash_lookup() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
     let mock_server = MockServer::start().await;
@@ -332,7 +412,7 @@ async fn test_virtual_workspaces() {
 }
 
 #[tokio::test]
-async fn test_no_package() {
+async fn test_contract_name_not_found() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
 
     let mock_server = MockServer::start().await;
