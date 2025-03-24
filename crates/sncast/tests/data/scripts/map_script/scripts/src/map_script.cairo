@@ -41,7 +41,6 @@ fn main() {
     let salt = 0x3;
 
     let declare_nonce = get_nonce('latest');
-    println!("DDD");
     let declare_result = declare("Mapa", fee_settings, Option::Some(declare_nonce))
         .expect('mapa declare failed');
 
