@@ -26,17 +26,17 @@ pub struct Invoke {
     #[arg(short, long)]
     pub function: String,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub arguments: Arguments,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub fee_args: FeeArgs,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[arg(short, long)]
     pub nonce: Option<Felt>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 

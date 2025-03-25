@@ -20,7 +20,7 @@ pub struct Call {
     #[arg(short, long)]
     pub function: String,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub arguments: Arguments,
 
     /// Block identifier on which call should be performed.
@@ -29,7 +29,7 @@ pub struct Call {
     #[arg(short, long, default_value = "pending")]
     pub block_id: String,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 

@@ -31,7 +31,7 @@ pub struct Declare {
     #[arg(short = 'c', long = "contract-name")]
     pub contract: String,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub fee_args: FeeArgs,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
@@ -42,7 +42,7 @@ pub struct Declare {
     #[arg(long)]
     pub package: Option<String>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 

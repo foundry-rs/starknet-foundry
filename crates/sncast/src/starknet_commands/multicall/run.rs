@@ -25,10 +25,10 @@ pub struct Run {
     #[arg(short = 'p', long = "path")]
     pub path: Utf8PathBuf,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub fee_args: FeeArgs,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 

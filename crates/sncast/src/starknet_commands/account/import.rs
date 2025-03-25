@@ -55,7 +55,7 @@ pub struct Import {
     #[arg(long, conflicts_with = "network")]
     pub add_profile: Option<String>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 
     /// If passed, the command will not trigger an interactive prompt to add an account as a default

@@ -51,7 +51,7 @@ pub struct Create {
     #[arg(short, long, requires = "account_type")]
     pub class_hash: Option<Felt>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 
     /// If passed, the command will not trigger an interactive prompt to add an account as a default

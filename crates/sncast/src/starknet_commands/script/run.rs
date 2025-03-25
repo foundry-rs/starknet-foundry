@@ -72,7 +72,7 @@ pub struct Run {
     #[arg(long)]
     pub no_state_file: bool,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 

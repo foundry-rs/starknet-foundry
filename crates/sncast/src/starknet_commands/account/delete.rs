@@ -23,7 +23,7 @@ pub struct Delete {
     #[arg(long, default_value = "false")]
     pub yes: bool,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 
     /// Literal name of the network used in accounts file

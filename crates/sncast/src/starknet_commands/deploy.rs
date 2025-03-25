@@ -23,7 +23,7 @@ pub struct Deploy {
     #[arg(short = 'g', long)]
     pub class_hash: Felt,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub arguments: DeployArguments,
 
     /// Salt for the address
@@ -34,14 +34,14 @@ pub struct Deploy {
     #[arg(long)]
     pub unique: bool,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub fee_args: FeeArgs,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[arg(short, long)]
     pub nonce: Option<Felt>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 

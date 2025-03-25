@@ -31,10 +31,10 @@ pub struct Deploy {
     #[arg(short, long)]
     pub name: Option<String>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub fee_args: FeeArgs,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 
