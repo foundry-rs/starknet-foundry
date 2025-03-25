@@ -218,8 +218,8 @@ impl VerificationInterface for Voyager {
         let url_str = match env::var("STARKNET_RPC_URL") {
             Ok(addr) => addr,
             Err(_) => match network {
-                Network::Mainnet => "https://api.voyager.online/beta".to_string(),
-                Network::Sepolia => "https://sepolia-api.voyager.online/beta".to_string(),
+                Network::Mainnet => "https://free-rpc.nethermind.io/mainnet-juno/v0_7".to_string(),
+                Network::Sepolia => "https://free-rpc.nethermind.io/sepolia-juno/v0_7".to_string(),
             },
         };
         let url = Url::parse(&url_str)?;
