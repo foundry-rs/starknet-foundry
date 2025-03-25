@@ -41,16 +41,24 @@ pub struct ContractExecutionErrorInner {
     error: ContractExecutionError,
 }
 
-impl ContractExecutionErrorInnerPartialEq of PartialEq<Box<ContractExecutionErrorInner>> {
+impl BoxContractExecutionErrorInnerPartialEq of PartialEq<Box<ContractExecutionErrorInner>> {
     fn eq(lhs: @Box<ContractExecutionErrorInner>, rhs: @Box<ContractExecutionErrorInner>) -> bool {
         let lhs = (lhs).as_snapshot().unbox();
         let rhs = (rhs).as_snapshot().unbox();
+        ContractExecutionErrorInnerPartialEq::eq(lhs, rhs)
+    }
+}
+
+
+impl ContractExecutionErrorInnerPartialEq of PartialEq<ContractExecutionErrorInner> {
+    fn eq(lhs: @ContractExecutionErrorInner, rhs: @ContractExecutionErrorInner) -> bool {
         lhs.contract_address == rhs.contract_address
             && lhs.class_hash == rhs.class_hash
             && lhs.selector == rhs.selector
             && lhs.error == rhs.error
     }
 }
+
 
 impl ContractExecutionErrorSerde of Serde<ContractExecutionError> {
     fn serialize(self: @ContractExecutionError, ref output: Array<felt252>) {
@@ -89,6 +97,7 @@ impl BoxContractExecutionErrorSerde of Serde<Box<ContractExecutionError>> {
         Option::Some(BoxTrait::new(ContractExecutionErrorSerde::deserialize(ref serialized)?))
     }
 }
+
 #[derive(Drop, Serde, PartialEq, Debug)]
 pub enum StarknetError {
     /// Failed to receive transaction
