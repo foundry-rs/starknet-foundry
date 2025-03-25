@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `--l1-gas`, `--l1-gas-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price` flags
-- methods for fee settings creation, in `FeeSettingsTrait`: `max_fee()`, `resource_bounds()` and `estimate()` in `sncast_std`
+- methods for fee settings creation, in `FeeSettingsTrait`: `max_fee()`, `resource_bounds()` and `estimate()` (in `sncast_std`)
 
 #### Changed
 
