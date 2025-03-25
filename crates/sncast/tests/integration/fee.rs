@@ -202,12 +202,7 @@ async fn test_max_fee_set_and_fee_estimate_none() {
         l1_data_gas_price: None,
     };
 
-    let err = args.try_into_fee_settings(None).unwrap_err();
-
-    assert_eq!(
-        err.to_string(),
-        "Fee estimate must be passed when max_fee is provided"
-    );
+    args.try_into_fee_settings(None).unwrap();
 }
 
 #[tokio::test]
