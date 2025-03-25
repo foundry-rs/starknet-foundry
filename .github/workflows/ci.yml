@@ -262,22 +262,16 @@ jobs:
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: cargo test --release -p scarb-api
 
-  scarbfmt:
+  scarb-fmt-and-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: software-mansion/setup-scarb@v1
-      - name: Check cairo files format
+      - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
+      - name: Check Cairo files formatting and linting
         run: |
-          output=$(find . -type f -name "Scarb.toml" -execdir sh -c '
-              echo "Running \"scarb fmt\" in directory: $PWD"
-              scarb fmt --check
-          ' \;)
-          echo "$output"
-          if grep -iq "Diff" <<< "$output"; then
-              exit 1
-          fi
-          exit 0
+          ./scripts/scarb_fmt.sh
+          ./scripts/scarb_lint.sh
 
   rustfmt:
     runs-on: ubuntu-latest
@@ -329,9 +323,6 @@ jobs:
       - name: Install Forge
         run: |
           cargo install --path crates/forge --locked
-      - name: Verify Cairo listings
-        run: |
-          ./scripts/verify_cairo_listings.sh
 
   typos:
     name: Check typos

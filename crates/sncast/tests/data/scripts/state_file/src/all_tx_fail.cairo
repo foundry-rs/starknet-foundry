@@ -1,11 +1,7 @@
-use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce,
-    FeeSettings
-};
+use sncast_std::{declare, deploy, invoke, get_nonce, FeeSettings};
 use starknet::{ClassHash, ContractAddress};
 
 fn main() {
-    let max_fee = 99999999999999999;
     let salt = 0x3;
 
     let nonexistent_class_hash: ClassHash = 0x10101.try_into().expect('Invalid class hash value');
