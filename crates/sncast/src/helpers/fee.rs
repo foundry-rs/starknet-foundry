@@ -64,8 +64,6 @@ impl FeeArgs {
         // but in case someone passes --max-fee flag, we need to make estimation on our own
         // to check if the fee estimate isn't higher than provided max fee
         if let Some(max_fee) = self.max_fee {
-            self.validate_max_fee_meets_resource_bounds()?;
-
             let fee_estimate =
                 fee_estimate.expect("Fee estimate must be passed when max_fee is provided");
 
@@ -83,35 +81,6 @@ impl FeeArgs {
             let fee_settings = FeeSettings::from(self.clone());
             Ok(fee_settings)
         }
-    }
-
-    fn validate_max_fee_meets_resource_bounds(&self) -> Result<()> {
-        if let Some(max_fee) = self.max_fee {
-            let max_fee_felt = Felt::from(max_fee);
-
-            // Gas amounts and gas prices are different types, hence we
-            // change them to Felt to compare them
-            let gas_checks = [
-                (self.l1_gas.map(Felt::from), "--l1-gas"),
-                (self.l1_gas_price.map(Felt::from), "--l1-gas-price"),
-                (self.l2_gas.map(Felt::from), "--l2-gas"),
-                (self.l2_gas_price.map(Felt::from), "--l2-gas-price"),
-                (self.l1_data_gas.map(Felt::from), "--l1-data-gas"),
-                (
-                    self.l1_data_gas_price.map(Felt::from),
-                    "--l1-data-gas-price",
-                ),
-            ];
-
-            for (gas_value, flag) in &gas_checks {
-                ensure!(
-                    max_fee_felt >= gas_value.unwrap_or_default(),
-                    "--max-fee should be greater than or equal to {}",
-                    *flag
-                );
-            }
-        }
-        Ok(())
     }
 }
 
