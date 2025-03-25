@@ -144,6 +144,7 @@
     * [get_nonce](appendix/sncast-library/get_nonce.md)
     * [tx_status](appendix/sncast-library/tx_status.md)
     * [errors](appendix/sncast-library/errors.md)
+    * [`FeeSettingsTrait`](appendix/sncast-library/fee_settings_trait.md)
 * [`snfoundry.toml` Reference](appendix/snfoundry-toml.md)
 * [`Scarb.toml` Reference](appendix/scarb-toml.md)
 * [Starknet Foundry Github Action](appendix/starknet-foundry-github-action.md)
