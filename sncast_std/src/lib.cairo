@@ -88,11 +88,9 @@ impl BoxContractExecutionErrorSerde of Serde<Box<ContractExecutionError>> {
                 let inner = inner.unbox();
                 inner.serialize(ref output);
             },
-            ContractExecutionError::Message(msg) => {
-                for byte_array_element in msg {
-                    output.append(*byte_array_element);
-                }
-            }
+            ContractExecutionError::Message(msg) => { for each in msg {
+                output.append(*each);
+            } }
         }
     }
     fn deserialize(ref serialized: Span<felt252>) -> Option<Box<ContractExecutionError>> {

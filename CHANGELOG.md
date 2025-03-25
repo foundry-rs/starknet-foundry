@@ -33,10 +33,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast completion` command - used to generate autocompletion script
 - `--l1-gas`, `--l1-gas-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price` flags
 - methods for fee settings creation, in `FeeSettingsTrait`: `max_fee()`, `resource_bounds()` and `estimate()` in `sncast_std`
+- `ContractExecutionError` and `ContractExecutionErrorInner` structs in `sncast_std`
 
 #### Changed
 
 - Updated argent class hash used in account creation to v0.4.0
+- field `msg` in `ErrorData` has been renamed to `revert_err` and is now of type `ContractExecutionError`
+- field `execution_error` in `TransactionExecutionErrorData` is now of type `ContractExecutionError`
 
 #### Removed
 
