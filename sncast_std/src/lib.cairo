@@ -60,6 +60,7 @@ impl BoxContractExecutionErrorInnerPartialEq of PartialEq<Box<ContractExecutionE
 
 impl ContractExecutionErrorSerde of Serde<ContractExecutionError> {
     fn serialize(self: @ContractExecutionError, ref output: Array<felt252>) {
+        // We need to add 0 and 1 because of enum variants serialization
         match self {
             ContractExecutionError::Nested(inner) => {
                 let inner = inner.as_snapshot().unbox();
