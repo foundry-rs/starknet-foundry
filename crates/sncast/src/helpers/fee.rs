@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow, ensure};
+use anyhow::{Result, ensure};
 use clap::Args;
 use conversions::serde::deserialize::CairoDeserialize;
 use starknet::core::types::FeeEstimate;
@@ -66,8 +66,8 @@ impl FeeArgs {
         if let Some(max_fee) = self.max_fee {
             self.validate_max_fee_meets_resource_bounds()?;
 
-            let fee_estimate = fee_estimate
-                .ok_or_else(|| anyhow!("Fee estimate must be passed when max_fee is provided"))?;
+            let fee_estimate =
+                fee_estimate.expect("Fee estimate must be passed when max_fee is provided");
 
             ensure!(
                 Felt::from(max_fee) >= fee_estimate.overall_fee,
@@ -183,4 +183,39 @@ fn parse_non_zero_felt(s: &str) -> Result<NonZeroFelt, String> {
     let felt: Felt = s.parse().map_err(|_| "Failed to parse value")?;
     felt.try_into()
         .map_err(|_| "Value should be greater than 0".to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::FeeSettings;
+    use starknet::core::types::{FeeEstimate, PriceUnit};
+    use starknet_types_core::felt::Felt;
+    use std::convert::TryFrom;
+
+    #[tokio::test]
+    async fn test_from_fee_estimate() {
+        let mock_fee_estimate = FeeEstimate {
+            l1_gas_consumed: Felt::from(1),
+            l1_gas_price: Felt::from(2),
+            l2_gas_consumed: Felt::from(3),
+            l2_gas_price: Felt::from(4),
+            l1_data_gas_consumed: Felt::from(5),
+            l1_data_gas_price: Felt::from(6),
+            unit: PriceUnit::Fri,
+            overall_fee: Felt::from(44),
+        };
+        let settings = FeeSettings::try_from(mock_fee_estimate).unwrap();
+
+        assert_eq!(
+            settings,
+            FeeSettings {
+                l1_gas: Some(1),
+                l1_gas_price: Some(2),
+                l2_gas: Some(3),
+                l2_gas_price: Some(4),
+                l1_data_gas: Some(5),
+                l1_data_gas_price: Some(6),
+            }
+        );
+    }
 }
