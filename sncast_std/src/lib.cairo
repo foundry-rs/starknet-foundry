@@ -5,6 +5,11 @@ use core::fmt::{Debug, Display, Error, Formatter};
 
 #[derive(Drop, PartialEq, Serde, Debug)]
 pub struct ErrorData {
+    msg: ByteArray
+}
+
+#[derive(Drop, PartialEq, Serde, Debug)]
+pub struct ContractErrorData {
     revert_error: ContractExecutionError
 }
 
@@ -75,13 +80,15 @@ impl ContractExecutionErrorSerde of Serde<ContractExecutionError> {
     }
     fn deserialize(ref serialized: Span<felt252>) -> Option<ContractExecutionError> {
         let first = (*serialized.pop_front()?);
-
+        println!("serialized: {:?}", serialized);
         if first == 0 {
-            let inner = Serde::<ContractExecutionErrorInner>::deserialize(ref serialized).unwrap();
+            let inner = Serde::<ContractExecutionErrorInner>::deserialize(ref serialized)
+                .expect('Failed to deserialize');
             let inner = BoxTrait::new(inner);
             Option::Some(ContractExecutionError::Nested(inner))
         } else {
-            let message = Serde::<ByteArray>::deserialize(ref serialized).unwrap();
+            let message = Serde::<ByteArray>::deserialize(ref serialized)
+                .expect('Failed to deserialize');
             Option::Some(ContractExecutionError::Message(message))
         }
     }
@@ -114,7 +121,7 @@ pub enum StarknetError {
     /// Transaction hash not found
     TransactionHashNotFound,
     /// Contract error
-    ContractError: ErrorData,
+    ContractError: ContractErrorData,
     /// Transaction execution error
     TransactionExecutionError: TransactionExecutionErrorData,
     /// Class already declared

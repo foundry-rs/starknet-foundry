@@ -100,8 +100,8 @@ async fn test_call_invalid_calldata() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { revert_error: ContractExecutionError::Nested(&ContractExecutionErrorInner { [..] error: ContractExecutionError::Message("["0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473"]") }) })))
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { revert_error: ContractExecutionError::Nested(&ContractExecutionErrorInner { [..] error: ContractExecutionError::Message("["0x4661696c656420746f20646573657269616c697a6520706172616d202332"]") }) })))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ContractErrorData { revert_error: ContractExecutionError::Nested(&ContractExecutionErrorInner { [..] error: ContractExecutionError::Message("["0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473"]") }) })))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ContractErrorData { revert_error: ContractExecutionError::Nested(&ContractExecutionErrorInner { [..] error: ContractExecutionError::Message("["0x4661696c656420746f20646573657269616c697a6520706172616d202332"]") }) })))
         command: script run
         status: success
         "#},
