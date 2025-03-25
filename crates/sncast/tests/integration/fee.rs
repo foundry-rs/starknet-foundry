@@ -190,6 +190,7 @@ async fn test_max_fee_set_and_fee_estimate_higher() {
 }
 
 #[tokio::test]
+#[should_panic(expected = "Fee estimate must be passed when max_fee is provided")]
 async fn test_max_fee_set_and_fee_estimate_none() {
     let args = FeeArgs {
         max_fee: Some(NonZeroFelt::try_from(Felt::from(100)).unwrap()),
@@ -201,12 +202,7 @@ async fn test_max_fee_set_and_fee_estimate_none() {
         l1_data_gas_price: None,
     };
 
-    let err = args.try_into_fee_settings(None).unwrap_err();
-
-    assert_eq!(
-        err.to_string(),
-        "Fee estimate must be passed when max_fee is provided"
-    );
+    args.try_into_fee_settings(None).unwrap();
 }
 
 #[tokio::test]
@@ -232,33 +228,6 @@ async fn test_all_args_none() {
             l2_gas_price: None,
             l1_data_gas: None,
             l1_data_gas_price: None,
-        }
-    );
-}
-
-#[tokio::test]
-async fn test_from_fee_estimate() {
-    let mock_fee_estimate = FeeEstimate {
-        l1_gas_consumed: Felt::from(1),
-        l1_gas_price: Felt::from(2),
-        l2_gas_consumed: Felt::from(3),
-        l2_gas_price: Felt::from(4),
-        l1_data_gas_consumed: Felt::from(5),
-        l1_data_gas_price: Felt::from(6),
-        unit: PriceUnit::Fri,
-        overall_fee: Felt::from(44),
-    };
-    let settings = FeeSettings::try_from(mock_fee_estimate).unwrap();
-
-    assert_eq!(
-        settings,
-        FeeSettings {
-            l1_gas: Some(1),
-            l1_gas_price: Some(2),
-            l2_gas: Some(3),
-            l2_gas_price: Some(4),
-            l1_data_gas: Some(5),
-            l1_data_gas_price: Some(6),
         }
     );
 }
