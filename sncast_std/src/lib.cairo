@@ -41,15 +41,6 @@ pub struct ContractExecutionErrorInner {
     error: ContractExecutionError,
 }
 
-impl BoxContractExecutionErrorInnerPartialEq of PartialEq<Box<ContractExecutionErrorInner>> {
-    fn eq(lhs: @Box<ContractExecutionErrorInner>, rhs: @Box<ContractExecutionErrorInner>) -> bool {
-        let lhs = (lhs).as_snapshot().unbox();
-        let rhs = (rhs).as_snapshot().unbox();
-        ContractExecutionErrorInnerPartialEq::eq(lhs, rhs)
-    }
-}
-
-
 impl ContractExecutionErrorInnerPartialEq of PartialEq<ContractExecutionErrorInner> {
     fn eq(lhs: @ContractExecutionErrorInner, rhs: @ContractExecutionErrorInner) -> bool {
         lhs.contract_address == rhs.contract_address
@@ -59,6 +50,13 @@ impl ContractExecutionErrorInnerPartialEq of PartialEq<ContractExecutionErrorInn
     }
 }
 
+impl BoxContractExecutionErrorInnerPartialEq of PartialEq<Box<ContractExecutionErrorInner>> {
+    fn eq(lhs: @Box<ContractExecutionErrorInner>, rhs: @Box<ContractExecutionErrorInner>) -> bool {
+        let lhs = (lhs).as_snapshot().unbox();
+        let rhs = (rhs).as_snapshot().unbox();
+        ContractExecutionErrorInnerPartialEq::eq(lhs, rhs)
+    }
+}
 
 impl ContractExecutionErrorSerde of Serde<ContractExecutionError> {
     fn serialize(self: @ContractExecutionError, ref output: Array<felt252>) {
