@@ -21,7 +21,8 @@ impl TransactionExecutionErrorDataSerde of Serde<TransactionExecutionErrorData> 
     }
     fn deserialize(ref serialized: Span<felt252>) -> Option<TransactionExecutionErrorData> {
         let transaction_index = (*serialized.pop_front()?);
-        let execution_error = Serde::<ContractExecutionError>::deserialize(ref serialized).unwrap();
+        let execution_error = Serde::<ContractExecutionError>::deserialize(ref serialized)
+            .expect('Failed to deserialize');
         Option::Some(TransactionExecutionErrorData { transaction_index, execution_error })
     }
 }
