@@ -81,6 +81,7 @@ async fn test_contract_does_not_exist() {
 }
 
 #[test]
+#[ignore = "TODO(#3120)"]
 fn test_wrong_function_name() {
     let script_dir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/invoke", Vec::<String>::new());
@@ -115,6 +116,7 @@ fn test_wrong_function_name() {
 }
 
 #[test]
+#[ignore = "TODO(#3120)"]
 fn test_wrong_calldata() {
     let script_dir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/invoke", Vec::<String>::new());

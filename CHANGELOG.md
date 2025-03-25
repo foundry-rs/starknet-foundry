@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated argent class hash used in account creation to v0.4.0
 - field `msg` in `ErrorData` has been renamed to `revert_err` and is now of type `ContractExecutionError` (in `sncast_std`)
 - field `execution_error` in `TransactionExecutionErrorData` is now of type `ContractExecutionError` (in `sncast_std`)
+- Using Braavos accounts with `sncast` is currently disabled
 
 #### Removed
 

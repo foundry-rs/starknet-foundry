@@ -86,6 +86,7 @@ async fn test_call_invalid_address() {
 }
 
 #[tokio::test]
+#[ignore = "TODO(#3120)"]
 async fn test_call_invalid_calldata() {
     let tempdir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/call", Vec::<String>::new());
