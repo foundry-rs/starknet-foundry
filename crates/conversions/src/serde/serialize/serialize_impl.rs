@@ -38,6 +38,7 @@ impl CairoSerialize for ContractExecutionError {
     fn serialize(&self, output: &mut BufferWriter) {
         match &self {
             ContractExecutionError::Nested(inner) => {
+                // Need to add 0 because of enum serialization
                 0.serialize(output);
                 inner.class_hash.serialize(output);
                 inner.contract_address.serialize(output);
@@ -45,6 +46,7 @@ impl CairoSerialize for ContractExecutionError {
                 inner.error.serialize(output);
             }
             ContractExecutionError::Message(msg) => {
+                // Need to add 1 because of enum serialization
                 1.serialize(output);
                 ByteArray::from(msg.as_str()).serialize(output);
             }
