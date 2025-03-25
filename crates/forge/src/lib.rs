@@ -71,7 +71,7 @@ Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
 "
 )]
 #[command(about = "snforge - a testing tool for Starknet contracts", long_about = None)]
-#[clap(name = "snforge")]
+#[command(name = "snforge")]
 pub struct Cli {
     #[command(subcommand)]
     subcommand: ForgeSubcommand,
@@ -205,7 +205,7 @@ pub struct TestArgs {
     tracked_resource: ForgeTrackedResource,
 
     /// Additional arguments for cairo-coverage or cairo-profiler
-    #[clap(last = true)]
+    #[arg(last = true)]
     additional_args: Vec<OsString>,
 }
 
