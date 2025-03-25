@@ -400,7 +400,7 @@ async fn test_braavos_disabled() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        Error: Using Braavos accounts with `sncast` is currently disabled
+        Error: Using Braavos accounts is temporarily disabled because they don't yet work with the RPC version supported by `sncast`
         "},
     );
 }
