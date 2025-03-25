@@ -2,7 +2,7 @@
 
 ```rust
 #[generate_trait]
-pub impl FeeSettingsImpl of FeeSettingsTrait {
+pub trait FeeSettingsTrait {
     /// Sets transaction resource bounds with specified gas values.
     fn resource_bounds(
         l1_gas: u64,

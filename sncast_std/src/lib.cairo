@@ -238,7 +238,7 @@ pub struct FeeSettings {
 }
 
 #[generate_trait]
-pub impl FeeSettingsImpl of FeeSettingsTrait {
+pub trait FeeSettingsTrait {
     fn resource_bounds(
         l1_gas: u64,
         l1_gas_price: u128,
@@ -258,7 +258,9 @@ pub impl FeeSettingsImpl of FeeSettingsTrait {
         }
     }
 
-    fn max_fee(max_fee: felt252) -> FeeSettings {
+    fn max_fee(
+        max_fee: felt252
+    ) -> FeeSettings {
         FeeSettings {
             max_fee: Option::Some(max_fee),
             l1_gas: Option::None,
