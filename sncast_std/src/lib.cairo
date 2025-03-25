@@ -9,10 +9,99 @@ pub struct ErrorData {
 }
 
 #[derive(Drop, PartialEq, Serde, Debug)]
+pub struct ContractErrorData {
+    revert_error: ContractExecutionError
+}
+
+#[derive(Drop, PartialEq, Debug)]
 pub struct TransactionExecutionErrorData {
-    pub transaction_index: felt252,
-    // TODO(#3120): Implement `ContractExecutionError` and update below field type
-    pub execution_error: ByteArray,
+    transaction_index: felt252,
+    execution_error: ContractExecutionError,
+}
+
+impl TransactionExecutionErrorDataSerde of Serde<TransactionExecutionErrorData> {
+    fn serialize(self: @TransactionExecutionErrorData, ref output: Array<felt252>) {
+        output.append(*self.transaction_index);
+        self.execution_error.serialize(ref output);
+    }
+    fn deserialize(ref serialized: Span<felt252>) -> Option<TransactionExecutionErrorData> {
+        let transaction_index = (*serialized.pop_front()?);
+        let execution_error = Serde::<ContractExecutionError>::deserialize(ref serialized)
+            .expect('Failed to deserialize');
+        Option::Some(TransactionExecutionErrorData { transaction_index, execution_error })
+    }
+}
+
+#[derive(Drop, PartialEq, Debug)]
+pub enum ContractExecutionError {
+    Nested: Box<ContractExecutionErrorInner>,
+    Message: ByteArray
+}
+
+#[derive(Drop, Serde, Debug)]
+pub struct ContractExecutionErrorInner {
+    contract_address: ContractAddress,
+    class_hash: felt252,
+    selector: felt252,
+    error: ContractExecutionError,
+}
+
+impl ContractExecutionErrorInnerPartialEq of PartialEq<ContractExecutionErrorInner> {
+    fn eq(lhs: @ContractExecutionErrorInner, rhs: @ContractExecutionErrorInner) -> bool {
+        lhs.contract_address == rhs.contract_address
+            && lhs.class_hash == rhs.class_hash
+            && lhs.selector == rhs.selector
+            && lhs.error == rhs.error
+    }
+}
+
+impl BoxContractExecutionErrorInnerPartialEq of PartialEq<Box<ContractExecutionErrorInner>> {
+    fn eq(lhs: @Box<ContractExecutionErrorInner>, rhs: @Box<ContractExecutionErrorInner>) -> bool {
+        let lhs = (lhs).as_snapshot().unbox();
+        let rhs = (rhs).as_snapshot().unbox();
+        ContractExecutionErrorInnerPartialEq::eq(lhs, rhs)
+    }
+}
+
+impl ContractExecutionErrorSerde of Serde<ContractExecutionError> {
+    fn serialize(self: @ContractExecutionError, ref output: Array<felt252>) {
+        // We need to add 0 and 1 because of enum variants serialization
+        match self {
+            ContractExecutionError::Nested(inner) => {
+                let inner = inner.as_snapshot().unbox();
+                output.append(0);
+                inner.serialize(ref output);
+            },
+            ContractExecutionError::Message(msg) => {
+                output.append(1);
+                msg.serialize(ref output);
+            }
+        }
+    }
+    fn deserialize(ref serialized: Span<felt252>) -> Option<ContractExecutionError> {
+        let first = (*serialized.pop_front()?);
+
+        if first == 0 {
+            let inner = Serde::<ContractExecutionErrorInner>::deserialize(ref serialized)
+                .expect('Failed to deserialize');
+            let inner = BoxTrait::new(inner);
+            Option::Some(ContractExecutionError::Nested(inner))
+        } else {
+            let message = Serde::<ByteArray>::deserialize(ref serialized)
+                .expect('Failed to deserialize');
+            Option::Some(ContractExecutionError::Message(message))
+        }
+    }
+}
+
+impl BoxContractExecutionErrorSerde of Serde<Box<ContractExecutionError>> {
+    fn serialize(self: @Box<ContractExecutionError>, ref output: Array<felt252>) {
+        let unboxed = self.as_snapshot().unbox();
+        Serde::<ContractExecutionError>::serialize(unboxed, ref output)
+    }
+    fn deserialize(ref serialized: Span<felt252>) -> Option<Box<ContractExecutionError>> {
+        Option::Some(BoxTrait::new(ContractExecutionErrorSerde::deserialize(ref serialized)?))
+    }
 }
 
 #[derive(Drop, Serde, PartialEq, Debug)]
@@ -32,7 +121,7 @@ pub enum StarknetError {
     /// Transaction hash not found
     TransactionHashNotFound,
     /// Contract error
-    ContractError: ErrorData,
+    ContractError: ContractErrorData,
     /// Transaction execution error
     TransactionExecutionError: TransactionExecutionErrorData,
     /// Class already declared

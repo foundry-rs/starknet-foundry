@@ -81,7 +81,6 @@ async fn test_contract_does_not_exist() {
 }
 
 #[test]
-#[ignore = "TODO(#3120)"]
 fn test_wrong_function_name() {
     let script_dir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/invoke", Vec::<String>::new());
@@ -103,18 +102,12 @@ fn test_wrong_function_name() {
     let snapbox = runner(&args).current_dir(script_dir.path());
     let output = snapbox.assert().success();
 
+    // TODO(#3116): Change message to string after issue with undecoded felt is resolved.
     assert_stdout_contains(
         output,
         indoc! {r#"
         [..]
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
-        [..]
-        [..]: Error in the called contract ([..]):
-        Execution failed. Failure reason:
-        Error in contract (contract address: [..], class hash: [..], selector: [..]):
-        Error in contract (contract address: [..], class hash: [..], selector: [..]):
-        [..] ('ENTRYPOINT_NOT_FOUND').
-        " })))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, [..] error: ContractExecutionError::Message("["0x454e545259504f494e545f4e4f545f464f554e44"]") }) }) }) })))
         command: script run
         status: success
         "#},
@@ -122,7 +115,6 @@ fn test_wrong_function_name() {
 }
 
 #[test]
-#[ignore = "TODO(#3120)"]
 fn test_wrong_calldata() {
     let script_dir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/invoke", Vec::<String>::new());
@@ -144,18 +136,11 @@ fn test_wrong_calldata() {
     let snapbox = runner(&args).current_dir(script_dir.path());
     let output = snapbox.assert().success();
 
+    // TODO(#3116): Change message to string after issue with undecoded felt is resolved.
     assert_stdout_contains(
         output,
         indoc! {r#"
-        [..]
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
-        [..]
-        [..]: Error in the called contract ([..]):
-        Execution failed. Failure reason:
-        Error in contract (contract address: [..], class hash: [..], selector: [..]):
-        Error in contract (contract address: [..], class hash: [..], selector: [..]):
-        [..] ('Failed to deserialize param #2').
-        " })))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, [..], error: ContractExecutionError::Message("["0x4661696c656420746f20646573657269616c697a6520706172616d202332"]") }) }) }) })))
         command: script run
         status: success
         "#},

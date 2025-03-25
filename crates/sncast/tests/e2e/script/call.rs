@@ -86,7 +86,6 @@ async fn test_call_invalid_address() {
 }
 
 #[tokio::test]
-#[ignore = "TODO(#3120)"]
 async fn test_call_invalid_calldata() {
     let tempdir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/call", Vec::<String>::new());
@@ -97,11 +96,12 @@ async fn test_call_invalid_calldata() {
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
+    // TODO(#3116): Change message to string after issue with undecoded felt is resolved.
     assert_stdout_contains(
         output,
         indoc! {r#"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Execution failed. Failure reason: 0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 ('Input too long for arguments')." })))
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Execution failed. Failure reason: 0x4661696c656420746f20646573657269616c697a6520706172616d202332 ('Failed to deserialize param #2')." })))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ContractErrorData { revert_error: ContractExecutionError::Nested(&ContractExecutionErrorInner { [..] error: ContractExecutionError::Message("["0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473"]") }) })))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ContractErrorData { revert_error: ContractExecutionError::Nested(&ContractExecutionErrorInner { [..] error: ContractExecutionError::Message("["0x4661696c656420746f20646573657269616c697a6520706172616d202332"]") }) })))
         command: script run
         status: success
         "#},
