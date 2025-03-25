@@ -13,11 +13,11 @@ use starknet_types_core::felt::Felt;
 #[command(about = "Call a contract instance on Starknet", long_about = None)]
 pub struct Call {
     /// Address of the called contract (hex)
-    #[clap(short = 'd', long)]
+    #[arg(short = 'd', long)]
     pub contract_address: Felt,
 
     /// Name of the contract function to be called
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub function: String,
 
     #[clap(flatten)]
@@ -26,7 +26,7 @@ pub struct Call {
     /// Block identifier on which call should be performed.
     /// Possible values: pending, latest, block hash (0x prefixed string)
     /// and block number (u64)
-    #[clap(short, long, default_value = "pending")]
+    #[arg(short, long, default_value = "pending")]
     pub block_id: String,
 
     #[clap(flatten)]

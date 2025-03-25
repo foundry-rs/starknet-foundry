@@ -22,7 +22,7 @@ use std::collections::HashMap;
 #[command(about = "Execute a multicall from a .toml file", long_about = None)]
 pub struct Run {
     /// Path to the toml file with declared operations
-    #[clap(short = 'p', long = "path")]
+    #[arg(short = 'p', long = "path")]
     pub path: Utf8PathBuf,
 
     #[clap(flatten)]

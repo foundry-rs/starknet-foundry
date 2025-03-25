@@ -20,25 +20,25 @@ use starknet_types_core::felt::Felt;
 #[command(about = "Deploy a contract on Starknet")]
 pub struct Deploy {
     /// Class hash of contract to deploy
-    #[clap(short = 'g', long)]
+    #[arg(short = 'g', long)]
     pub class_hash: Felt,
 
     #[clap(flatten)]
     pub arguments: DeployArguments,
 
     /// Salt for the address
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub salt: Option<Felt>,
 
     /// If true, salt will be modified with an account address
-    #[clap(long)]
+    #[arg(long)]
     pub unique: bool,
 
     #[clap(flatten)]
     pub fee_args: FeeArgs,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub nonce: Option<Felt>,
 
     #[clap(flatten)]
@@ -49,11 +49,11 @@ pub struct Deploy {
 #[group(multiple = false)]
 pub struct DeployArguments {
     /// Arguments of the called function serialized as a series of felts
-    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
+    #[arg(short, long, value_delimiter = ' ', num_args = 1..)]
     pub constructor_calldata: Option<Vec<String>>,
 
     // Arguments of the called function as a comma-separated string of Cairo expressions
-    #[clap(long)]
+    #[arg(long)]
     pub arguments: Option<String>,
 }
 

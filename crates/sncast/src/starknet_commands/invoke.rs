@@ -19,11 +19,11 @@ use starknet_types_core::felt::Felt;
 #[command(about = "Invoke a contract on Starknet")]
 pub struct Invoke {
     /// Address of contract to invoke
-    #[clap(short = 'd', long)]
+    #[arg(short = 'd', long)]
     pub contract_address: Felt,
 
     /// Name of the function to invoke
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub function: String,
 
     #[clap(flatten)]
@@ -33,7 +33,7 @@ pub struct Invoke {
     pub fee_args: FeeArgs,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub nonce: Option<Felt>,
 
     #[clap(flatten)]
