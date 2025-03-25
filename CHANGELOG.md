@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Updated argent class hash used in account creation to v0.4.0
+- Using Braavos accounts with `sncast` is currently disabled
 
 #### Removed
 
