@@ -23,7 +23,7 @@ Possible values: `mainnet`, `sepolia`.
 ## `--max-fee, -m <MAX_FEE>`
 Optional.
 
-Maximum fee for the `deploy_account` transaction depending on fee token or transaction version. If used, estimated overall fee can't be higher than this value. Must be greater than zero.
+Maximum fee for the `deploy_account` denoted in FRI. Must be greater than zero. If provided, it is not possible to use any of the following fee related flags: `--l1-gas`, `--l1-data-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price`.
 
 ## `--l1-gas <L1_GAS>`
 Optional.
