@@ -15,8 +15,8 @@ pub struct ContractErrorData {
 
 #[derive(Drop, PartialEq, Debug)]
 pub struct TransactionExecutionErrorData {
-    pub transaction_index: felt252,
-    pub execution_error: ContractExecutionError,
+    transaction_index: felt252,
+    execution_error: ContractExecutionError,
 }
 
 impl TransactionExecutionErrorDataSerde of Serde<TransactionExecutionErrorData> {
