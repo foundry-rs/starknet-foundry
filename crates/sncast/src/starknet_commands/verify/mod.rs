@@ -16,38 +16,38 @@ use walnut::WalnutVerificationInterface;
 
 #[derive(Args)]
 #[command(about = "Verify a contract through a block explorer")]
-#[clap(group(
+#[command(group(
     ArgGroup::new("contract_identifier")
         .required(true)
         .args(&["class_hash", "contract_address"])
 ))]
 pub struct Verify {
     /// Class hash of a contract to be verified
-    #[clap(short = 'g', long)]
+    #[arg(short = 'g', long)]
     pub class_hash: Option<Felt>,
 
     /// Address of a contract to be verified
-    #[clap(short = 'd', long)]
+    #[arg(short = 'd', long)]
     pub contract_address: Option<Felt>,
 
     /// Name of the contract that is being verified
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub contract_name: String,
 
     /// Block explorer to use for the verification
-    #[clap(short, long, value_enum, default_value_t = Verifier::Walnut)]
+    #[arg(short, long, value_enum, default_value_t = Verifier::Walnut)]
     pub verifier: Verifier,
 
     /// The network on which block explorer will do the verification
-    #[clap(short, long, value_enum)]
+    #[arg(short, long, value_enum)]
     pub network: Network,
 
     /// Assume "yes" as answer to confirmation prompt and run non-interactively
-    #[clap(long, default_value = "false")]
+    #[arg(long, default_value = "false")]
     pub confirm_verification: bool,
 
     /// Specifies scarb package to be used
-    #[clap(long)]
+    #[arg(long)]
     pub package: Option<String>,
 }
 

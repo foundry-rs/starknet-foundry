@@ -24,42 +24,42 @@ use starknet_types_core::felt::Felt;
 #[command(about = "Add an account to the accounts file")]
 pub struct Import {
     /// Name of the account to be imported
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub name: Option<String>,
 
     /// Address of the account
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub address: Felt,
 
     /// Type of the account
-    #[clap(short = 't', long = "type", value_parser = AccountType::from_str)]
+    #[arg(short = 't', long = "type", value_parser = AccountType::from_str)]
     pub account_type: AccountType,
 
     /// Class hash of the account
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub class_hash: Option<Felt>,
 
     /// Account private key
-    #[clap(long, group = "private_key_input")]
+    #[arg(long, group = "private_key_input")]
     pub private_key: Option<Felt>,
 
     /// Path to the file holding account private key
-    #[clap(long = "private-key-file", group = "private_key_input")]
+    #[arg(long = "private-key-file", group = "private_key_input")]
     pub private_key_file_path: Option<Utf8PathBuf>,
 
     /// Salt for the address
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub salt: Option<Felt>,
 
     /// If passed, a profile with the provided name and corresponding data will be created in snfoundry.toml
-    #[clap(long, conflicts_with = "network")]
+    #[arg(long, conflicts_with = "network")]
     pub add_profile: Option<String>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 
     /// If passed, the command will not trigger an interactive prompt to add an account as a default
-    #[clap(long)]
+    #[arg(long)]
     pub silent: bool,
 }
 
