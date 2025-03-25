@@ -27,18 +27,13 @@ impl TransactionExecutionErrorDataSerde of Serde<TransactionExecutionErrorData> 
     }
 }
 
-
-// TODO(#3120): We should implement displaying message variant as deserialized byte array.
-// ATM, it's dispplayed as a serialized one.
-#[derive(Drop, PartialEq, Copy, Debug)]
+#[derive(Drop, PartialEq, Debug)]
 pub enum ContractExecutionError {
     Nested: Box<ContractExecutionErrorInner>,
-    // We can't use `ByteArray` here, because `ContractExecutionError` must derive `Copy`.
-    // `Message` is a span of felts, which holds the serialized byte array elements.
-    Message: Span<felt252>,
+    Message: ByteArray
 }
 
-#[derive(Drop, Serde, Copy, Debug)]
+#[derive(Drop, Serde, Debug)]
 pub struct ContractExecutionErrorInner {
     contract_address: ContractAddress,
     class_hash: felt252,
@@ -48,8 +43,8 @@ pub struct ContractExecutionErrorInner {
 
 impl ContractExecutionErrorInnerPartialEq of PartialEq<Box<ContractExecutionErrorInner>> {
     fn eq(lhs: @Box<ContractExecutionErrorInner>, rhs: @Box<ContractExecutionErrorInner>) -> bool {
-        let lhs = (*lhs).unbox();
-        let rhs = (*rhs).unbox();
+        let lhs = (lhs).as_snapshot().unbox();
+        let rhs = (rhs).as_snapshot().unbox();
         lhs.contract_address == rhs.contract_address
             && lhs.class_hash == rhs.class_hash
             && lhs.selector == rhs.selector
@@ -59,9 +54,9 @@ impl ContractExecutionErrorInnerPartialEq of PartialEq<Box<ContractExecutionErro
 
 impl ContractExecutionErrorSerde of Serde<ContractExecutionError> {
     fn serialize(self: @ContractExecutionError, ref output: Array<felt252>) {
-        match *self {
+        match self {
             ContractExecutionError::Nested(inner) => {
-                let inner = inner.unbox();
+                let inner = inner.as_snapshot().unbox();
                 output.append(0);
                 inner.serialize(ref output);
             },
@@ -79,28 +74,21 @@ impl ContractExecutionErrorSerde of Serde<ContractExecutionError> {
             let inner = BoxTrait::new(inner);
             Option::Some(ContractExecutionError::Nested(inner))
         } else {
-            Option::Some(ContractExecutionError::Message(serialized))
+            let message = Serde::<ByteArray>::deserialize(ref serialized).unwrap();
+            Option::Some(ContractExecutionError::Message(message))
         }
     }
 }
 
 impl BoxContractExecutionErrorSerde of Serde<Box<ContractExecutionError>> {
     fn serialize(self: @Box<ContractExecutionError>, ref output: Array<felt252>) {
-        match (*self).unbox() {
-            ContractExecutionError::Nested(inner) => {
-                let inner = inner.unbox();
-                inner.serialize(ref output);
-            },
-            ContractExecutionError::Message(msg) => { for each in msg {
-                output.append(*each);
-            } }
-        }
+        let unboxed = self.as_snapshot().unbox();
+        Serde::<ContractExecutionError>::serialize(unboxed, ref output)
     }
     fn deserialize(ref serialized: Span<felt252>) -> Option<Box<ContractExecutionError>> {
         Option::Some(BoxTrait::new(ContractExecutionErrorSerde::deserialize(ref serialized)?))
     }
 }
-
 #[derive(Drop, Serde, PartialEq, Debug)]
 pub enum StarknetError {
     /// Failed to receive transaction

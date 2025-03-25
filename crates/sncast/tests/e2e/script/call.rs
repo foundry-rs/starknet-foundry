@@ -86,7 +86,6 @@ async fn test_call_invalid_address() {
 }
 
 #[tokio::test]
-#[ignore = "TODO(#3120)"]
 async fn test_call_invalid_calldata() {
     let tempdir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/call", Vec::<String>::new());
@@ -97,14 +96,14 @@ async fn test_call_invalid_calldata() {
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
-    // TODO(#3120): Update asserted message once displaying is implemented
+    // TODO(#3116): Change message to string after issue with undecoded felt is resolved.
     assert_stdout_contains(
         output,
-        indoc! {"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { revert_error: ContractExecutionError::Nested(&ContractExecutionErrorInner { [..] error: ContractExecutionError::Message([2, 161019049007022372777416340987812303282620498837842361643383982666764674358, 97522975666756167445258504733288874551174906205732890712698934399253815901, 0, 0]) }) })))
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { revert_error: ContractExecutionError::Nested(&ContractExecutionErrorInner { [..] error: ContractExecutionError::Message([2, 161019049007017550688154859146124165449376331526496475447250082491572630326, 94023844190060481618082450560698606437386733826467150857039051259452076595, 858923613, 4]) }) })))
+        indoc! {r#"
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { revert_error: ContractExecutionError::Nested(&ContractExecutionErrorInner { [..] error: ContractExecutionError::Message("["0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473"]") }) })))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { revert_error: ContractExecutionError::Nested(&ContractExecutionErrorInner { [..] error: ContractExecutionError::Message("["0x4661696c656420746f20646573657269616c697a6520706172616d202332"]") }) })))
         command: script run
         status: success
-        "},
+        "#},
     );
 }

@@ -81,7 +81,6 @@ async fn test_contract_does_not_exist() {
 }
 
 #[test]
-#[ignore = "TODO(#3120)"]
 fn test_wrong_function_name() {
     let script_dir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/invoke", Vec::<String>::new());
@@ -103,20 +102,19 @@ fn test_wrong_function_name() {
     let snapbox = runner(&args).current_dir(script_dir.path());
     let output = snapbox.assert().success();
 
-    // TODO(#3120): Update asserted message once displaying is implemented
+    // TODO(#3116): Change message to string after issue with undecoded felt is resolved.
     assert_stdout_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
         [..]
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, [..] error: ContractExecutionError::Message([1, 161019049007015932470845765948242586617553515362189813571442680017261454901, 271082501784130983606656111016682077, 15]) }) }) }) })))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, [..] error: ContractExecutionError::Message("["0x454e545259504f494e545f4e4f545f464f554e44"]") }) }) }) })))
         command: script run
         status: success
-        "},
+        "#},
     );
 }
 
 #[test]
-#[ignore = "TODO(#3120)"]
 fn test_wrong_calldata() {
     let script_dir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/invoke", Vec::<String>::new());
@@ -138,13 +136,13 @@ fn test_wrong_calldata() {
     let snapbox = runner(&args).current_dir(script_dir.path());
     let output = snapbox.assert().success();
 
-    // TODO(#3120): Update asserted message once displaying is implemented
+    // TODO(#3116): Change message to string after issue with undecoded felt is resolved.
     assert_stdout_contains(
         output,
-        indoc! {r"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, [..], error: ContractExecutionError::Message([2, 161019049007017550688154859146124165449376331526496475447250082491572630326, 94023844190060481618082450560698606437386733826467150857039051259452076595, 858923613, 4]) }) }) }) })))
+        indoc! {r#"
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, [..], error: ContractExecutionError::Message("["0x4661696c656420746f20646573657269616c697a6520706172616d202332"]") }) }) }) })))
         command: script run
         status: success
-        "},
+        "#},
     );
 }
