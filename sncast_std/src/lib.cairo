@@ -80,7 +80,7 @@ impl ContractExecutionErrorSerde of Serde<ContractExecutionError> {
     }
     fn deserialize(ref serialized: Span<felt252>) -> Option<ContractExecutionError> {
         let first = (*serialized.pop_front()?);
-        println!("serialized: {:?}", serialized);
+
         if first == 0 {
             let inner = Serde::<ContractExecutionErrorInner>::deserialize(ref serialized)
                 .expect('Failed to deserialize');
