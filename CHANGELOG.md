@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Updated argent class hash used in account creation to v0.4.0
-- `ContractError` to `ContractErrorData` for `ContractError` (in `sncast_std`)
+- wrapped error for `ContractError` is now of type `ContractErrorData` (in `sncast_std`)
 - field `execution_error` in `TransactionExecutionErrorData` is now of type `ContractExecutionError` (in `sncast_std`)
 - Using Braavos accounts is temporarily disabled because they don't yet work with the RPC version supported by `sncast`
 
