@@ -1,3 +1,4 @@
+use anyhow::{Error, bail};
 use async_trait::async_trait;
 use starknet::{
     accounts::{AccountFactory, PreparedAccountDeploymentV3, RawAccountDeploymentV3},
@@ -7,6 +8,8 @@ use starknet::{
 };
 use starknet_crypto::poseidon_hash_many;
 use starknet_types_core::felt::Felt;
+
+use crate::AccountType;
 
 // Adapted from strakli as there is currently no implementation of braavos account factory in starknet-rs
 pub struct BraavosAccountFactory<S, P> {
@@ -139,4 +142,11 @@ where
         self.signer
             .is_interactive(SignerInteractivityContext::Other)
     }
+}
+
+pub fn assert_non_braavos_account_type(account_type: AccountType) -> Result<(), Error> {
+    if let AccountType::Braavos = account_type {
+        bail!("Using Braavos accounts with `sncast` is currently disabled")
+    }
+    Ok(())
 }

@@ -4,6 +4,7 @@ use anyhow::{Context, Error, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use conversions::serde::serialize::CairoSerialize;
+use helpers::braavos::assert_non_braavos_account_type;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::RngCore;
 use rand::rngs::OsRng;
@@ -277,6 +278,11 @@ pub async fn get_account<'a>(
     } else {
         get_account_data_from_accounts_file(account, chain_id, accounts_file)?
     };
+
+    // TODO(#3118): Remove this check once braavos integration is restored
+    if let Some(account_type) = account_data.account_type {
+        assert_non_braavos_account_type(account_type)?;
+    }
 
     let account = build_account(account_data, chain_id, provider).await?;
 
