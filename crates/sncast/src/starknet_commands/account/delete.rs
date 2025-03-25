@@ -16,18 +16,18 @@ use sncast::{chain_id_to_network_name, get_chain_id};
     .multiple(false)))]
 pub struct Delete {
     /// Name of the account to be deleted
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub name: String,
 
     /// Assume "yes" as answer to confirmation prompt and run non-interactively
-    #[clap(long, default_value = "false")]
+    #[arg(long, default_value = "false")]
     pub yes: bool,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 
     /// Literal name of the network used in accounts file
-    #[clap(long)]
+    #[arg(long)]
     pub network_name: Option<String>,
 }
 

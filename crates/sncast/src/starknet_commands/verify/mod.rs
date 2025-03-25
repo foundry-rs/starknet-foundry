@@ -17,27 +17,27 @@ use walnut::WalnutVerificationInterface;
 #[command(about = "Verify a contract through a block explorer")]
 pub struct Verify {
     /// Address of a contract to be verified
-    #[clap(short = 'd', long)]
+    #[arg(short = 'd', long)]
     pub contract_address: Felt,
 
     /// Name of the contract that is being verified
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub contract_name: String,
 
     /// Block explorer to use for the verification
-    #[clap(short, long, value_enum, default_value_t = Verifier::Walnut)]
+    #[arg(short, long, value_enum, default_value_t = Verifier::Walnut)]
     pub verifier: Verifier,
 
     /// The network on which block explorer will do the verification
-    #[clap(short, long, value_enum)]
+    #[arg(short, long, value_enum)]
     pub network: Network,
 
     /// Assume "yes" as answer to confirmation prompt and run non-interactively
-    #[clap(long, default_value = "false")]
+    #[arg(long, default_value = "false")]
     pub confirm_verification: bool,
 
     /// Specifies scarb package to be used
-    #[clap(long)]
+    #[arg(long)]
     pub package: Option<String>,
 }
 
