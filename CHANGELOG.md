@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `verify` command now supports the `--class-hash` for Walnut verification
 
+- `sncast script init` command now initializes project with the `sncast_std` dependency from the [registry](https://scarbs.xyz/packages/sncast_std)
+
 ## [0.38.3] - 2025-03-07
 
 ### Forge
