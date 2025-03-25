@@ -847,6 +847,6 @@ pub async fn test_braavos_disabled() {
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: account import
-        error: Using Braavos accounts with `sncast` is currently disabled
+        error: Using Braavos accounts is temporarily disabled because they don't yet work with the RPC version supported by `sncast`
     "});
 }
