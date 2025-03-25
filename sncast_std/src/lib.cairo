@@ -32,6 +32,8 @@ impl TransactionExecutionErrorDataSerde of Serde<TransactionExecutionErrorData> 
 #[derive(Drop, PartialEq, Copy, Debug)]
 pub enum ContractExecutionError {
     Nested: Box<ContractExecutionErrorInner>,
+    // We can't use `ByteArray`` here, because `ContractExecutionError` must derive `Copy`.
+    // `Message` is a span of felts, which holds the serialized byte array elements.
     Message: Span<felt252>,
 }
 
