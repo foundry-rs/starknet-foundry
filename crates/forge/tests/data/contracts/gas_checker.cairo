@@ -25,7 +25,7 @@ mod GasChecker {
     impl IGasCheckerImpl of super::IGasChecker<ContractState> {
         fn keccak(self: @ContractState, repetitions: u32) {
             let mut i: u32 = 0;
-            while i < repetitions {
+            while i != repetitions {
                 keccak::keccak_u256s_le_inputs(array![1].span());
                 i += 1;
             }
@@ -176,7 +176,7 @@ mod GasChecker {
 
         fn bitwise(self: @ContractState, repetitions: u32) {
             let mut i: u32 = 0;
-            while i < repetitions {
+            while i != repetitions {
                 1_u8 & 1_u8;
                 i += 1;
             }
@@ -349,7 +349,7 @@ mod GasChecker {
 
         fn ec_op(self: @ContractState, repetitions: u32) {
             let mut i: u32 = 0;
-            while i < repetitions {
+            while i != repetitions {
                 EcPointTrait::new_from_x(1).unwrap().mul(2);
                 i += 1;
             }
@@ -360,21 +360,21 @@ mod GasChecker {
         }
 
         fn send_l1_message(self: @ContractState) {
-            starknet::send_message_to_l1_syscall(1, array![1, 2 ,3].span()).unwrap();
+            starknet::send_message_to_l1_syscall(1, array![1, 2, 3].span()).unwrap();
         }
 
         fn emit_event(self: @ContractState, n_keys_and_vals: u32) {
-             let mut keys = array![];
-             let mut values =  array![];
+            let mut keys = array![];
+            let mut values = array![];
 
-             let mut i: u32 = 0;
-             while i < n_keys_and_vals {
+            let mut i: u32 = 0;
+            while i != n_keys_and_vals {
                 keys.append('key');
                 values.append(1);
-                    i += 1;
-             };
+                i += 1;
+            };
 
-             starknet::emit_event_syscall(keys.span(), values.span()).unwrap();
+            starknet::emit_event_syscall(keys.span(), values.span()).unwrap();
         }
     }
 

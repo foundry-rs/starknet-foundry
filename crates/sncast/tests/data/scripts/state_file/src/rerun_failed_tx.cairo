@@ -1,7 +1,4 @@
-use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce,
-    FeeSettings
-};
+use sncast_std::{invoke, FeeSettings};
 
 fn main() {
     let map_contract_address = 0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008

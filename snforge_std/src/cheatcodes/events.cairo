@@ -47,7 +47,7 @@ impl EventsFilterTraitImpl of EventsFilterTrait {
         let mut counter = 0;
         let mut new_events = array![];
 
-        while counter < self.events.len() {
+        while counter != self.events.len() {
             let (from, event) = self.events.at(counter);
             if *from == contract_address {
                 new_events.append((*from, event.clone()));
@@ -72,7 +72,7 @@ impl EventSpyAssertionsTraitImpl<
         let mut i = 0;
         let received_events = self.get_events();
 
-        while i < events.len() {
+        while i != events.len() {
             let (from, event) = events.at(i);
             let emitted = is_emitted(@received_events, from, event);
 
@@ -89,7 +89,7 @@ impl EventSpyAssertionsTraitImpl<
         let mut i = 0;
         let received_events = self.get_events();
 
-        while i < events.len() {
+        while i != events.len() {
             let (from, event) = events.at(i);
             let emitted = is_emitted(@received_events, from, event);
 
@@ -112,7 +112,7 @@ fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
 
     let mut i = 0;
     let mut is_emitted = false;
-    while i < self.events.len() {
+    while i != self.events.len() {
         let (from, event) = self.events.at(i);
 
         if from == expected_emitted_by

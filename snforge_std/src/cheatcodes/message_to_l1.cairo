@@ -51,7 +51,7 @@ impl MessageToL1FilterTraitImpl of MessageToL1FilterTrait {
     fn sent_by(self: @MessagesToL1, contract_address: ContractAddress) -> MessagesToL1 {
         let mut counter = 0;
         let mut new_messages = array![];
-        while counter < self.messages.len() {
+        while counter != self.messages.len() {
             let (sent_by, msg) = self.messages.at(counter);
             if *sent_by == contract_address {
                 new_messages.append((*sent_by, msg.clone()));
@@ -63,7 +63,7 @@ impl MessageToL1FilterTraitImpl of MessageToL1FilterTrait {
     fn sent_to(self: @MessagesToL1, to_address: EthAddress) -> MessagesToL1 {
         let mut counter = 0;
         let mut new_messages = array![];
-        while counter < self.messages.len() {
+        while counter != self.messages.len() {
             let (sent_by, msg) = self.messages.at(counter);
             if *msg.to_address == to_address {
                 new_messages.append((*sent_by, msg.clone()));
@@ -86,7 +86,7 @@ impl MessageToL1SpyAssertionsTraitImpl of MessageToL1SpyAssertionsTrait {
         let mut i = 0;
         let sent_messages = self.get_messages();
 
-        while i < messages.len() {
+        while i != messages.len() {
             let (from, message) = messages.at(i);
             let sent = is_sent(@sent_messages, from, message);
 
@@ -101,7 +101,7 @@ impl MessageToL1SpyAssertionsTraitImpl of MessageToL1SpyAssertionsTrait {
         let mut i = 0;
         let sent_messages = self.get_messages();
 
-        while i < messages.len() {
+        while i != messages.len() {
             let (from, message) = messages.at(i);
             let emitted = is_sent(@sent_messages, from, message);
 
@@ -120,7 +120,7 @@ fn is_sent(
 ) -> bool {
     let mut i = 0;
     let mut is_emitted = false;
-    while i < messages.messages.len() {
+    while i != messages.messages.len() {
         let (from, message) = messages.messages.at(i);
 
         if from == expected_sent_by
