@@ -99,11 +99,11 @@ async fn test_call_invalid_calldata() {
     // TODO(#3120): Update asserted message once displaying is implemented
     assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {"
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { revert_error: ContractExecutionError::Nested(&ContractExecutionErrorInner { [..] error: ContractExecutionError::Message([2, 161019049007022372777416340987812303282620498837842361643383982666764674358, 97522975666756167445258504733288874551174906205732890712698934399253815901, 0, 0]) }) })))
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { revert_error: ContractExecutionError::Nested(&ContractExecutionErrorInner { [..] error: ContractExecutionError::Message([2, 161019049007017550688154859146124165449376331526496475447250082491572630326, 94023844190060481618082450560698606437386733826467150857039051259452076595, 858923613, 4]) }) })))
         command: script run
         status: success
-        "#},
+        "},
     );
 }

@@ -46,7 +46,7 @@ impl CairoSerialize for ContractExecutionError {
             }
             ContractExecutionError::Message(msg) => {
                 1.serialize(output);
-                ByteArray::from(msg.as_str()).serialize(output)
+                ByteArray::from(msg.as_str()).serialize(output);
             }
         }
     }

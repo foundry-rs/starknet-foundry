@@ -105,12 +105,12 @@ fn test_wrong_function_name() {
     // TODO(#3120): Update asserted message once displaying is implemented
     assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, [..] error: ContractExecutionError::Message([1, 161019049007015932470845765948242586617553515362189813571442680017261454901, 271082501784130983606656111016682077, 15]) }) }) }) })))
         command: script run
         status: success
-        "#},
+        "},
     );
 }
 
@@ -139,10 +139,10 @@ fn test_wrong_calldata() {
     // TODO(#3120): Update asserted message once displaying is implemented
     assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, [..], error: ContractExecutionError::Message([2, 161019049007017550688154859146124165449376331526496475447250082491572630326, 94023844190060481618082450560698606437386733826467150857039051259452076595, 858923613, 4]) }) }) }) })))
         command: script run
         status: success
-        "#},
+        "},
     );
 }
