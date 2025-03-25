@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow, ensure};
+use anyhow::{Result, ensure};
 use clap::Args;
 use conversions::serde::deserialize::CairoDeserialize;
 use starknet::core::types::FeeEstimate;
@@ -64,11 +64,8 @@ impl FeeArgs {
         // but in case someone passes --max-fee flag, we need to make estimation on our own
         // to check if the fee estimate isn't higher than provided max fee
         if let Some(max_fee) = self.max_fee {
-            self.validate_max_fee_meets_resource_bounds()?;
-
-            let fee_estimate = fee_estimate.ok_or_else(|| {
-                anyhow!("Fee estimate must be calculated when max_fee is provided")
-            })?;
+            let fee_estimate =
+                fee_estimate.expect("Fee estimate must be passed when max_fee is provided");
 
             ensure!(
                 Felt::from(max_fee) >= fee_estimate.overall_fee,
@@ -85,38 +82,8 @@ impl FeeArgs {
             Ok(fee_settings)
         }
     }
-
-    fn validate_max_fee_meets_resource_bounds(&self) -> Result<()> {
-        if let Some(max_fee) = self.max_fee {
-            let max_fee_felt = Felt::from(max_fee);
-
-            // Gas amounts and gas prices are different types, hence we
-            // change them to Felt to compare them
-            let gas_checks = [
-                (self.l1_gas.map(Felt::from), "--l1-gas"),
-                (self.l1_gas_price.map(Felt::from), "--l1-gas-price"),
-                (self.l2_gas.map(Felt::from), "--l2-gas"),
-                (self.l2_gas_price.map(Felt::from), "--l2-gas-price"),
-                (self.l1_data_gas.map(Felt::from), "--l1-data-gas"),
-                (
-                    self.l1_data_gas_price.map(Felt::from),
-                    "--l1-data-gas-price",
-                ),
-            ];
-
-            for (gas_value, flag) in &gas_checks {
-                ensure!(
-                    max_fee_felt >= gas_value.unwrap_or_default(),
-                    "--max-fee should be greater than or equal to {}",
-                    *flag
-                );
-            }
-        }
-        Ok(())
-    }
 }
 
-// TODO(#3102): Refactor to be enum with max fee and triplet variants
 /// Struct used in `sncast script` for deserializing from cairo, `FeeSettings` can't be
 /// used as it missing `max_fee`
 #[derive(Debug, PartialEq, CairoDeserialize)]
@@ -185,4 +152,39 @@ fn parse_non_zero_felt(s: &str) -> Result<NonZeroFelt, String> {
     let felt: Felt = s.parse().map_err(|_| "Failed to parse value")?;
     felt.try_into()
         .map_err(|_| "Value should be greater than 0".to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::FeeSettings;
+    use starknet::core::types::{FeeEstimate, PriceUnit};
+    use starknet_types_core::felt::Felt;
+    use std::convert::TryFrom;
+
+    #[tokio::test]
+    async fn test_from_fee_estimate() {
+        let mock_fee_estimate = FeeEstimate {
+            l1_gas_consumed: Felt::from(1),
+            l1_gas_price: Felt::from(2),
+            l2_gas_consumed: Felt::from(3),
+            l2_gas_price: Felt::from(4),
+            l1_data_gas_consumed: Felt::from(5),
+            l1_data_gas_price: Felt::from(6),
+            unit: PriceUnit::Fri,
+            overall_fee: Felt::from(44),
+        };
+        let settings = FeeSettings::try_from(mock_fee_estimate).unwrap();
+
+        assert_eq!(
+            settings,
+            FeeSettings {
+                l1_gas: Some(1),
+                l1_gas_price: Some(2),
+                l2_gas: Some(3),
+                l2_gas_price: Some(4),
+                l1_data_gas: Some(5),
+                l1_data_gas_price: Some(6),
+            }
+        );
+    }
 }

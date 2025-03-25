@@ -11,6 +11,7 @@ pub struct ErrorData {
 #[derive(Drop, PartialEq, Serde, Debug)]
 pub struct TransactionExecutionErrorData {
     pub transaction_index: felt252,
+    // TODO(#3120): Implement `ContractExecutionError` and update below field type
     pub execution_error: ByteArray,
 }
 
@@ -225,16 +226,15 @@ impl DisplayDeployResult of Display<DeployResult> {
     }
 }
 
-// TODO(#3102): Refactor to be enum with max fee and triplet variants
 #[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub struct FeeSettings {
-    pub max_fee: Option<felt252>,
-    pub l1_gas: Option<u64>,
-    pub l1_gas_price: Option<u128>,
-    pub l2_gas: Option<u64>,
-    pub l2_gas_price: Option<u128>,
-    pub l1_data_gas: Option<u64>,
-    pub l2_data_gas_price: Option<u128>,
+    max_fee: Option<felt252>,
+    l1_gas: Option<u64>,
+    l1_gas_price: Option<u128>,
+    l2_gas: Option<u64>,
+    l2_gas_price: Option<u128>,
+    l1_data_gas: Option<u64>,
+    l1_data_gas_price: Option<u128>,
 }
 
 #[generate_trait]
@@ -245,7 +245,7 @@ pub impl FeeSettingsImpl of FeeSettingsTrait {
         l2_gas: u64,
         l2_gas_price: u128,
         l1_data_gas: u64,
-        l2_data_gas_price: u128
+        l1_data_gas_price: u128
     ) -> FeeSettings {
         FeeSettings {
             max_fee: Option::None,
@@ -254,7 +254,7 @@ pub impl FeeSettingsImpl of FeeSettingsTrait {
             l2_gas: Option::Some(l2_gas),
             l2_gas_price: Option::Some(l2_gas_price),
             l1_data_gas: Option::Some(l1_data_gas),
-            l2_data_gas_price: Option::Some(l2_data_gas_price),
+            l1_data_gas_price: Option::Some(l1_data_gas_price),
         }
     }
 
@@ -266,7 +266,7 @@ pub impl FeeSettingsImpl of FeeSettingsTrait {
             l2_gas: Option::None,
             l2_gas_price: Option::None,
             l1_data_gas: Option::None,
-            l2_data_gas_price: Option::None,
+            l1_data_gas_price: Option::None,
         }
     }
 
@@ -278,7 +278,7 @@ pub impl FeeSettingsImpl of FeeSettingsTrait {
             l2_gas: Option::None,
             l2_gas_price: Option::None,
             l1_data_gas: Option::None,
-            l2_data_gas_price: Option::None,
+            l1_data_gas_price: Option::None,
         }
     }
 }

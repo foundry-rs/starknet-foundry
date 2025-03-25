@@ -13,7 +13,7 @@ Invokes a contract and returns `InvokeResult`.
 - `contract_address` - address of the contract to invoke.
 - `entry_point_selector` - the selector of the function to invoke.
 - `calldata` - inputs to the function to be invoked.
-- `fee_settings` - fee settings for the transaction.
+- `fee_settings` - fee settings for the transaction, see [`FeeSettingsTrait](./fee_settings_trait.md).
 - `nonce` - nonce for declare transaction. If not provided, nonce will be set automatically.
 
 ```rust
@@ -26,16 +26,5 @@ Structures used by the command:
 #[derive(Drop, Clone, Debug)]
 pub struct InvokeResult {
     pub transaction_hash: felt252,
-}
-
-#[derive(Drop, Copy, Debug, Serde, PartialEq)]
-pub struct FeeSettings {
-    pub max_fee: Option<felt252>,
-    pub l1_gas: Option<u64>,
-    pub l1_gas_price: Option<u128>,
-    pub l2_gas: Option<u64>,
-    pub l2_gas_price: Option<u128>,
-    pub l1_data_gas: Option<u64>,
-    pub l1_data_gas_price: Option<u128>,
 }
 ```

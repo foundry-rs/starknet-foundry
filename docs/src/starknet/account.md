@@ -75,8 +75,7 @@ with [StarkGate](https://starkgate.starknet.io/).
 $ sncast \
     account deploy \
     --network sepolia \
-	--name new_account \
-	--max-fee 9999999999999
+	--name new_account
 ```
 
 <details>
