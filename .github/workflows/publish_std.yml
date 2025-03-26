@@ -62,5 +62,10 @@ jobs:
             sed -i.bak "/\[package\]/,/version =/ s/version = \".*/version = \"${{ inputs.override_std_version }}\"/" Scarb.toml
             rm Scarb.toml.bak 2> /dev/null
           fi
-          scarb add snforge_scarb_plugin@${{ inputs.plugin_dep_version }}
+          if ${{ inputs.dev_registry == true }}; then
+            scarb add snforge_scarb_plugin@=${{ inputs.plugin_dep_version }}
+          else
+            scarb add snforge_scarb_plugin@${{ inputs.plugin_dep_version }}
+          fi
+          
           scarb publish --allow-dirty ${{ inputs.dev_registry == true && '--index https://scarbs.dev/' || '' }}

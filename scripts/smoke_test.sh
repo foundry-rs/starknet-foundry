@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+export DEV_DISABLE_SNFORGE_STD_DEPENDENCY=true
+
 RPC_URL="$1"
 SNFORGE_PATH="$2"
 SNCAST_PATH="$3"
@@ -21,9 +23,15 @@ scarb cache clean
 
 $SNFORGE_PATH new my_project_1
 pushd my_project_1 || exit
-sed -i.bak "/snforge_std/ s/\(snforge_std = \).*/\1{ version = \"=${VERSION}\", registry = \"https:\/\/scarbs.dev\/\" }/" Scarb.toml
+sed -i.bak "/^\[dev-dependencies\]/a\\
+snforge_std = { version = \"=${VERSION}\", registry = \"https://scarbs.dev/\" }\\
+" Scarb.toml
 rm Scarb.toml.bak 2>/dev/null
-if $SNFORGE_PATH test | grep -q 'Compiling snforge_scarb_plugin'; then
+
+test_output=$($SNFORGE_PATH test)
+test_exit=$?
+
+if [[ $test_exit -ne 0 ]] || echo "$test_output" | grep -q 'Compiling snforge_scarb_plugin'; then
     exit 1
 fi
 popd || exit
@@ -33,7 +41,9 @@ scarb cache clean
 
 $SNFORGE_PATH new my_project_2
 pushd my_project_2 || exit
-sed -i.bak "/snforge_std/ s/\(snforge_std = \).*/\1{ version = \"=${VERSION}\", registry = \"https:\/\/scarbs.dev\/\" }/" Scarb.toml
+sed -i.bak "/^\[dev-dependencies\]/a\\
+snforge_std = { version = \"=${VERSION}\", registry = \"https://scarbs.dev/\" }\\
+" Scarb.toml
 sed -i.bak '/^allow-prebuilt-plugins = \["snforge_std"\]$/d' Scarb.toml
 rm Scarb.toml.bak 2>/dev/null
 $SNFORGE_PATH test || exit
