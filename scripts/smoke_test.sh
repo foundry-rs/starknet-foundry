@@ -22,10 +22,10 @@ echo "Check forge registry prebuild"
 $SNFORGE_PATH new my_project_1
 pushd my_project_1 || exit
 sed -i.bak "/snforge_std/ s/\(snforge_std = \).*/\1{ version = \"${VERSION}\", registry = \"https:\/\/scarbs.dev\/\" }/" Scarb.toml
-rm Scarb.toml.bak 2> /dev/null
+rm Scarb.toml.bak 2>/dev/null
 if $SNFORGE_PATH test | grep -q 'Compiling snforge_scarb_plugin'; then
-  exit 1
-fi 
+    exit 1
+fi
 popd || exit
 scarb cache clean
 
@@ -36,11 +36,10 @@ $SNFORGE_PATH new my_project_2
 pushd my_project_2 || exit
 sed -i.bak "/snforge_std/ s/\(snforge_std = \).*/\1{ version = \"${VERSION}\", registry = \"https:\/\/scarbs.dev\/\" }/" Scarb.toml
 sed -i.bak '/^allow-prebuilt-plugins = \["snforge_std"\]$/d' Scarb.toml
-rm Scarb.toml.bak 2> /dev/null
+rm Scarb.toml.bak 2>/dev/null
 $SNFORGE_PATH test || exit
 popd || exit
 scarb cache clean
-
 
 # Check cast
 
@@ -48,5 +47,5 @@ if ! $SNCAST_PATH call \
     --url "$RPC_URL" \
     --contract-address 0x06b248bde9ce00d69099304a527640bc9515a08f0b49e5168e2096656f207e1d \
     --function "get" --calldata 0x1 | grep -q $'command: call\nresponse: [0x0]'; then
-  exit 1
+    exit 1
 fi
