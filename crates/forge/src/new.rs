@@ -202,11 +202,11 @@ fn set_cairo_edition(document: &mut DocumentMut, cairo_edition: &str) {
 }
 
 fn add_assert_macros(document: &mut DocumentMut) -> Result<()> {
-    let scarb_version = ScarbCommand::version().run()?.scarb;
-    let version = if scarb_version < MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS {
+    let versions = ScarbCommand::version().run()?;
+    let version = if versions.scarb < MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS {
         DEFAULT_ASSERT_MACROS
     } else {
-        scarb_version
+        versions.cairo
     };
 
     document
