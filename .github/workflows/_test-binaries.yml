@@ -1,0 +1,98 @@
+name: Test binaries
+
+on:
+  workflow_call:
+    inputs:
+      bin_version:
+        required: true
+        type: string
+      std_version:
+        required: true
+        type: string
+
+jobs:
+  test-binary:
+    name: Test binary
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+
+          - target: x86_64-apple-darwin
+            os: macos-latest
+
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          # TODO() Remove
+          scarb-version: "2.10.1"
+
+      - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
+        with:
+          toolchain: stable
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts-dl
+
+      - name: Move artifacts to staging director
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          mv artifacts-dl/build-*/starknet-foundry-* artifacts/
+
+      - name: Get binary path
+        shell: bash
+        run: |
+          if [[ ${{ matrix.target }} == *windows* ]]; then
+            BINARY_PATH="artifacts/starknet-foundry-${{ inputs.bin_version }}-${{ matrix.target }}.zip"
+          else
+            BINARY_PATH="artifacts/starknet-foundry-${{ inputs.bin_version }}-${{ matrix.target }}.tar.gz"
+          fi
+          echo "BINARY_PATH=$BINARY_PATH" >> $GITHUB_ENV
+
+      - name: Unpack artifact
+        shell: bash
+        run: |
+          if [[ ${{ matrix.target }} == *windows* ]]; then
+            unzip ${{ env.BINARY_PATH }}
+          else
+            tar xzvf ${{ env.BINARY_PATH }}
+          fi
+
+      - name: Install universal-sierra-compiler
+        uses: software-mansion/setup-universal-sierra-compiler@v1
+
+      - name: Smoke test
+        shell: bash
+        env:
+          RPC_URL: "http://188.34.188.184:7070/rpc/v0_7"
+        run: |
+          BINARY_PATH="${{ env.BINARY_PATH }}"
+          BINARY_PATH="${BINARY_PATH%.tar.gz}"
+          BINARY_PATH="${BINARY_PATH%.zip}"
+          BINARY_PATH="${BINARY_PATH#artifacts/}"
+          
+          if [[ ${{ matrix.target }} == *windows* ]]; then
+            SNFORGE_PATH=$(readlink -f $BINARY_PATH/bin/snforge.exe)
+            SNCAST_PATH=$(readlink -f $BINARY_PATH/bin/sncast.exe)
+          else
+            SNFORGE_PATH=$(readlink -f $BINARY_PATH/bin/snforge)
+            SNCAST_PATH=$(readlink -f $BINARY_PATH/bin/sncast)
+          fi
+          
+          REPO_URL=${{ github.repositoryUrl }}
+          REVISION=${{ github.sha }}
+          VERSION=${{ inputs.std_version }}
+          
+          ./scripts/smoke_test.sh "$RPC_URL" "$SNFORGE_PATH" "$SNCAST_PATH" "$REPO_URL" "$REVISION" "$VERSION"
+          

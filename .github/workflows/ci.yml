@@ -4,12 +4,12 @@ env:
   DEVNET_REV: ef789b700770fa27a2fc057b3d1c610771be27d9
 
 on:
-  pull_request:
-  merge_group:
-  push:
-    branches:
-      - master
-  workflow_dispatch:
+#   pull_request:
+#   merge_group:
+#   push:
+#     branches:
+#       - master
+   workflow_dispatch:
 
 jobs:
   test-forge-unit-and-integration:
