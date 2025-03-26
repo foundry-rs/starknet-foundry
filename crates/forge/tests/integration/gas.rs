@@ -1201,8 +1201,8 @@ fn contract_keccak_cost_sierra_gas() {
     // 87650 = cost of 1 call contract syscall (because 1 * 866 * 100 + 15 * 70)
     //      -> 1 call contract syscall costs 866 cairo steps and 15 range check builtins
     //      -> 1 range check costs 70
-    // 1238219 = reported consumed sierra gas
-    // 0 l1_gas + 96 l1_data_gas + (142810 + 50000 + 87650 + 1238219) l2 gas
+    // 1157519 = reported consumed sierra gas
+    // 0 l1_gas + 96 l1_data_gas + (142810 + 50000 + 87650 + 1157519) l2 gas
     assert_gas(
         &result,
         "contract_keccak_cost",
