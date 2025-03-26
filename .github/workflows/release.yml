@@ -75,8 +75,8 @@ jobs:
     uses: ./.github/workflows/publish_plugin.yml
     secrets: inherit
     with:
-      override_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}
-      scarb_args: "--index https://scarbs.dev/"
+      override_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
+      dev_registry: true
 
   dev-publish-std:
     needs: [verify-version, dev-publish-plugin]
@@ -84,9 +84,9 @@ jobs:
     uses: ./.github/workflows/publish_std.yml
     secrets: inherit
     with:
-      plugin_dep_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}
-      override_std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}
-      scarb_args: "--index https://scarbs.dev/"
+      plugin_dep_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
+      override_std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
+      dev_registry: true
 
   test-binary:
     name: Test binary
@@ -139,7 +139,7 @@ jobs:
 
   publish-to-registry:
     name: Publish packages to the registry
-    needs: [ create-release, publish-snforge-scarb-plugin ]
+    needs: [ verify-version, create-release, publish-snforge-scarb-plugin ]
     uses: ./.github/workflows/publish_std.yml
     secrets: inherit
     with:

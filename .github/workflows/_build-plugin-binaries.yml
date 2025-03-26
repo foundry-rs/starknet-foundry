@@ -1,4 +1,4 @@
-name: Buld snforge_scarb_plugin
+name: Build snforge_scarb_plugin
 
 on:
   workflow_call:

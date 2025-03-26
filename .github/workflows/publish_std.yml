@@ -3,10 +3,10 @@ name: Publish snforge_std and sncast_std
 on:
   workflow_call:
     inputs:
-      scarb_args:
+      dev_registry:
         required: false
-        type: string
-        default: ""
+        type: boolean
+        default: false
       override_std_version:
         required: false
         type: string
@@ -16,10 +16,10 @@ on:
         type: string
   workflow_dispatch:
     inputs:
-      scarb_args:
+      dev_registry:
         required: false
-        type: string
-        default: ""
+        type: boolean
+        default: false
       override_std_version:
         required: false
         type: string
@@ -33,7 +33,7 @@ jobs:
     name: Publish packages to the registry
     runs-on: ubuntu-latest
     env:
-      SCARB_REGISTRY_AUTH_TOKEN: ${{ secrets.SCARB_REGISTRY_AUTH_TOKEN }}
+      SCARB_REGISTRY_AUTH_TOKEN: ${{ inputs.dev_registry == true && secrets.DEV_SCARB_REGISTRY_AUTH_TOKEN || secrets.SCARB_REGISTRY_AUTH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -53,7 +53,7 @@ jobs:
             sed -i.bak "/\[package\]/,/version =/ s/version = \".*/version = \"${{ inputs.override_std_version }}\"/" Scarb.toml
             rm Scarb.toml.bak 2> /dev/null
           fi
-          scarb publish --allow-dirty ${{ inputs.scarb_args }}
+          scarb publish --allow-dirty ${{ inputs.dev_registry == true && '--index https://scarbs.dev/' || '' }}
 
       - name: Publish snforge_std
         working-directory: snforge_std
@@ -63,5 +63,4 @@ jobs:
             rm Scarb.toml.bak 2> /dev/null
           fi
           scarb add snforge_scarb_plugin@${{ inputs.plugin_dep_version }}
-          scarb publish --allow-dirty ${{ inputs.scarb_args }}
-          
+          scarb publish --allow-dirty ${{ inputs.dev_registry == true && '--index https://scarbs.dev/' || '' }}

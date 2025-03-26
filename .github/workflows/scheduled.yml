@@ -117,34 +117,34 @@ jobs:
 
       - run: cargo test --release -p sncast
 
-      verify-version:
-        name: Verify that version that triggered this workflow is greater than most recent  release
-        runs-on: ubuntu-latest
-        outputs:
-          version: ${{ steps.validVersion.outputs.version }}
-        steps:
-          - uses: actions/checkout@v4
-    
-          - name: Get version from Cargo.toml
-            id: lookupVersion
-            uses: mikefarah/yq@bbdd97482f2d439126582a59689eb1c855944955
-            with:
-              cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
-              
-          - name: Compare versions
-            id: validVersion
-            run: |
-              COMMIT_VERSION=${{ steps.lookupVersion.outputs.result }}
-              echo "Project version from this commit = $COMMIT_VERSION"
-              echo "version=$COMMIT_VERSION" >> "$GITHUB_OUTPUT"
-    
+  verify-version:
+    name: Verify that version that triggered this workflow is greater than most recent  release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.validVersion.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version from Cargo.toml
+        id: lookupVersion
+        uses: mikefarah/yq@bbdd97482f2d439126582a59689eb1c855944955
+        with:
+          cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
+          
+      - name: Compare versions
+        id: validVersion
+        run: |
+          COMMIT_VERSION=${{ steps.lookupVersion.outputs.result }}
+          echo "Project version from this commit = $COMMIT_VERSION"
+          echo "version=$COMMIT_VERSION" >> "$GITHUB_OUTPUT"
+
   build-plugin-binaries:
     name: Build plugin binaries
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     needs: verify-version
     uses: ./.github/workflows/_build-plugin-binaries.yml
     with:
-      override_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}
+      override_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
           
   publish-plugin:
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
@@ -152,7 +152,7 @@ jobs:
     uses: ./.github/workflows/publish_plugin.yml
     secrets: inherit
     with:
-      override_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}
+      override_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
       scarb_args: "--index https://scarbs.dev/"
 
   publish-std:
@@ -161,30 +161,29 @@ jobs:
     uses: ./.github/workflows/publish_std.yml
     secrets: inherit
     with:
-      plugin_dep_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}
-      override_std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}
+      plugin_dep_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
+      override_std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
       scarb_args: "--index https://scarbs.dev/"
 
   build-binaries:
-    # needs: [verify-version, publish-std]
     needs: [verify-version]
     uses: ./.github/workflows/_build-binaries.yml
     with:
-      version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}
+      version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
 
   test-binary:
     name: Test binary
-    needs: [ build-binaries, verify-version ]
+    needs: [ build-binaries, verify-version, publish-std ]
     uses: ./.github/workflows/_test-binaries.yml
     with:
-      bin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}
-      std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}
+      bin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
+      std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
 
 
   notify_if_failed:
     runs-on: ubuntu-latest
     if: always() && contains(needs.*.result, 'failure') && github.event_name == 'schedule'
-    needs: [ test-forge-unit-and-integration, test-forge-e2e, test-cast ]
+    needs: [ test-forge-unit-and-integration, test-forge-e2e, test-cast , build-plugin-binaries, build-binaries, publish-plugin, publish-std, test-binary ]
     steps:
       - name: Notify that the workflow has failed
         uses: slackapi/slack-github-action@v1.27.0
