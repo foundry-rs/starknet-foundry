@@ -11,7 +11,7 @@ on:
 
 jobs:
   get-scarb-versions:
-    if: ! github.event.repository.fork
+    if: "! github.event.repository.fork"
     name: Get Scarb versions
     outputs:
       versions: ${{ steps.get_versions.outputs.versions }}
