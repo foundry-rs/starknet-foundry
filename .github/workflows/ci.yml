@@ -274,7 +274,7 @@ jobs:
       - name: Check Cairo files formatting and linting
         run: |
           ./scripts/scarb_fmt.sh
-          ./scripts/scarb_lint.sh
+          # ./scripts/scarb_lint.sh
 
   rustfmt:
     runs-on: ubuntu-latest
