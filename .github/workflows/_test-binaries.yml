@@ -33,7 +33,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           # TODO() Remove
-          scarb-version: "2.10.1"
+          scarb-version: "2.11.0"
 
       - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
         with:

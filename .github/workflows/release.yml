@@ -133,6 +133,7 @@ jobs:
 
   publish-snforge-scarb-plugin:
     name: Publish snforge_scarb_plugin
+    needs: [test-binary]
     uses: ./.github/workflows/publish_plugin.yml
     secrets: inherit
 

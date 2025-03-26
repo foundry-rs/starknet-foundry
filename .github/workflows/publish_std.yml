@@ -21,7 +21,7 @@ on:
         type: string
         default: ""
       override_std_version:
-        required: true
+        required: false
         type: string
       # snforge_std in the repository has a plugin dependency specified as a relative path, which must be overridden each time before publishing.
       plugin_dep_version:
@@ -43,7 +43,8 @@ jobs:
 
       - uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: latest
+          # TODO() Remove
+          scarb-version: "2.11.0"
 
       - name: Publish sncast_std
         working-directory: sncast_std
