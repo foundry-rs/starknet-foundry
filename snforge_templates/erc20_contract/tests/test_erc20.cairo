@@ -70,7 +70,7 @@ fn test_fork_transfer() {
     let balance_before = erc20.balance_of(target_account);
     assert!(balance_before == 0, "Invalid balance");
 
-    cheat_caller_address(eth_contract_address, owner_account, CheatSpan::TargetCalls(1));
+    cheat_caller_address(strk_contract_address, owner_account, CheatSpan::TargetCalls(1));
 
     let transfer_value: u256 = 100;
     erc20.transfer(target_account, transfer_value);

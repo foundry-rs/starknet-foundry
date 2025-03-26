@@ -13,14 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `--template` flag to `snforge new` command that allows selecting a template for the new project. Possible values are `balance-contract` (default), `cairo-program` and `erc20-contract`
 
+## [0.40.0] - 2025-03-26
+
 ### Cast
 
 #### Added
 
 - `--l1-gas`, `--l1-gas-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price` flags
 - methods for fee settings creation, in `FeeSettingsTrait`: `max_fee()`, `resource_bounds()` and `estimate()` (in `sncast_std`)
-- `ContractExecutionError` and `ContractExecutionErrorInner` structs (in `sncast_std`)
-- `ContractErrorData` (in `sncast_std`)
 
 #### Changed
 
