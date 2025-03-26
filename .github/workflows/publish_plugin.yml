@@ -58,6 +58,10 @@ jobs:
   upload-to-registry:
     name: Upload snforge_scarb_plugin to the registry
     runs-on: ubuntu-latest
+    if: |
+      always() && 
+      (needs.check-version.result == 'success') && 
+      (inputs.build_plugin_binaries == false || needs.build-binaries.result == 'success')
     needs: [check-version, build-binaries]
     env:
       SCARB_REGISTRY_AUTH_TOKEN: ${{ inputs.dev_registry == true && secrets.DEV_SCARB_REGISTRY_AUTH_TOKEN || secrets.SCARB_REGISTRY_AUTH_TOKEN }}
