@@ -63,7 +63,8 @@ jobs:
             rm Scarb.toml.bak 2> /dev/null
           fi
           if ${{ inputs.dev_registry == true }}; then
-            scarb add snforge_scarb_plugin@=${{ inputs.plugin_dep_version }} || true
+            sed -i.bak "/snforge_scarb_plugin/ s/\(snforge_scarb_plugin = \).*/\1{ version = \"=${{ inputs.plugin_dep_version }}\", registry = \"https:\/\/scarbs.dev\/\" }/" Scarb.toml
+            rm Scarb.toml.bak 2>/dev/null
           else
             scarb add snforge_scarb_plugin@${{ inputs.plugin_dep_version }}
           fi
