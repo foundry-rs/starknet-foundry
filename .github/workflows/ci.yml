@@ -328,6 +328,9 @@ jobs:
       - name: Install Forge
         run: |
           cargo install --path crates/forge --locked
+      - name: Verify Cairo listings
+        run: |
+          ./scripts/verify_cairo_listings.sh
 
   typos:
     name: Check typos
