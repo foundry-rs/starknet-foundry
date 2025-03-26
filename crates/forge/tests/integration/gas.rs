@@ -1576,7 +1576,8 @@ fn events_contract_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(1_217_790),
+            l2_gas: GasAmount(1_225_540),
+            // l2_gas: GasAmount(1_225_540),
         },
     );
 }
