@@ -63,7 +63,7 @@ jobs:
             rm Scarb.toml.bak 2> /dev/null
           fi
           if ${{ inputs.dev_registry == true }}; then
-            scarb add snforge_scarb_plugin@=${{ inputs.plugin_dep_version }}
+            scarb add snforge_scarb_plugin@=${{ inputs.plugin_dep_version }} || true
           else
             scarb add snforge_scarb_plugin@${{ inputs.plugin_dep_version }}
           fi
