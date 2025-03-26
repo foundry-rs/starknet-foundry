@@ -16,8 +16,9 @@ use test_case::test_case;
 #[test_case("oz_cairo_0"; "cairo_0_account")]
 #[test_case("oz_cairo_1"; "cairo_1_account")]
 #[test_case("oz"; "oz_account")]
-#[test_case("argent"; "argent_account")]
-#[test_case("braavos"; "braavos_account")]
+// TODO(#3089)
+// #[test_case("argent"; "argent_account")]
+// #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 async fn test_happy_case(account: &str) {
     let contract_dir = duplicate_contract_directory_with_salt(

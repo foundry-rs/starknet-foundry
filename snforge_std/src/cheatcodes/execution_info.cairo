@@ -23,14 +23,14 @@ pub mod account_contract_address;
 
 
 #[derive(Serde, Drop, Copy)]
-struct CheatArguments<T> {
-    value: T,
-    span: CheatSpan,
-    target: ContractAddress,
+pub(crate) struct CheatArguments<T> {
+    pub(crate) value: T,
+    pub(crate) span: CheatSpan,
+    pub(crate) target: ContractAddress,
 }
 
 #[derive(Serde, Drop, Copy)]
-enum Operation<T> {
+pub(crate) enum Operation<T> {
     StartGlobal: T,
     Start: CheatArguments<T>,
     Stop: ContractAddress,

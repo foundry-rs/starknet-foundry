@@ -4,6 +4,7 @@ use anyhow::{Context, Error, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use conversions::serde::serialize::CairoSerialize;
+use helpers::braavos::assert_non_braavos_account_type;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::RngCore;
 use rand::rngs::OsRng;
@@ -19,6 +20,7 @@ use starknet::core::types::{
     ContractClass, ContractErrorData,
     StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
 };
+use starknet::core::types::{ContractExecutionError, ExecutionResult};
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
 use starknet::{
@@ -47,7 +49,7 @@ use conversions::byte_array::ByteArray;
 
 pub type NestedMap<T> = HashMap<String, HashMap<String, T>>;
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 #[serde(rename_all = "lowercase")]
 pub enum AccountType {
     #[serde(rename = "open_zeppelin")]
@@ -61,7 +63,7 @@ impl FromStr for AccountType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "open_zeppelin" | "oz" => Ok(AccountType::OpenZeppelin),
+            "open_zeppelin" | "open-zeppelin" | "oz" => Ok(AccountType::OpenZeppelin),
             "argent" => Ok(AccountType::Argent),
             "braavos" => Ok(AccountType::Braavos),
             account_type => Err(anyhow!("Invalid account type = {account_type}")),
@@ -277,6 +279,11 @@ pub async fn get_account<'a>(
         get_account_data_from_accounts_file(account, chain_id, accounts_file)?
     };
 
+    // TODO(#3118): Remove this check once braavos integration is restored
+    if let Some(account_type) = account_data.account_type {
+        assert_non_braavos_account_type(account_type)?;
+    }
+
     let account = build_account(account_data, chain_id, provider).await?;
 
     Ok(account)
@@ -294,7 +301,9 @@ pub async fn get_contract_class(
         // Imitate error thrown on chain to achieve particular error message (Issue #2554)
         let artificial_transaction_revert_error = SNCastProviderError::StarknetError(
             SNCastStarknetError::ContractError(ContractErrorData {
-                revert_error: format!("Class with hash {class_hash:#x} is not declared"),
+                revert_error: ContractExecutionError::Message(format!(
+                    "Class with hash {class_hash:#x} is not declared"
+                )),
             }),
         );
 
@@ -507,7 +516,9 @@ pub async fn get_class_hash_by_address(
         // Imitate error thrown on chain to achieve particular error message (Issue #2554)
         let artificial_transaction_revert_error = SNCastProviderError::StarknetError(
             SNCastStarknetError::ContractError(ContractErrorData {
-                revert_error: format!("Requested contract address {address:#x} is not deployed",),
+                revert_error: ContractExecutionError::Message(format!(
+                    "Requested contract address {address:#x} is not deployed",
+                )),
             }),
         );
 
@@ -576,7 +587,7 @@ pub async fn wait_for_tx(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: Felt,
     wait_params: ValidatedWaitParams,
-) -> Result<&str, WaitForTransactionError> {
+) -> Result<String, WaitForTransactionError> {
     println!("Transaction hash: {tx_hash:#x}");
 
     let retries = wait_params.get_retries();
@@ -590,14 +601,18 @@ pub async fn wait_for_tx(
             Ok(
                 starknet::core::types::TransactionStatus::AcceptedOnL2(execution_status)
                 | starknet::core::types::TransactionStatus::AcceptedOnL1(execution_status),
-            ) => match execution_status {
-                starknet::core::types::TransactionExecutionStatus::Succeeded => {
-                    return Ok("Transaction accepted");
-                }
-                starknet::core::types::TransactionExecutionStatus::Reverted => {
-                    return get_revert_reason(provider, tx_hash).await;
-                }
-            },
+            ) => {
+                return match execution_status {
+                    ExecutionResult::Succeeded => Ok("Transaction accepted".to_string()),
+                    ExecutionResult::Reverted { reason } => {
+                        Err(WaitForTransactionError::TransactionError(
+                            TransactionError::Reverted(ErrorData {
+                                data: ByteArray::from(reason.as_str()),
+                            }),
+                        ))
+                    }
+                };
+            }
             Ok(starknet::core::types::TransactionStatus::Received)
             | Err(StarknetError(TransactionHashNotFound)) => {
                 let remaining_time = wait_params.remaining_time(i);
@@ -616,28 +631,6 @@ pub async fn wait_for_tx(
     }
 
     Err(WaitForTransactionError::TimedOut)
-}
-
-async fn get_revert_reason(
-    provider: &JsonRpcClient<HttpTransport>,
-    tx_hash: Felt,
-) -> Result<&str, WaitForTransactionError> {
-    let receipt_with_block_info = provider
-        .get_transaction_receipt(tx_hash)
-        .await
-        .map_err(SNCastProviderError::from)?;
-
-    if let starknet::core::types::ExecutionResult::Reverted { reason } =
-        receipt_with_block_info.receipt.execution_result()
-    {
-        Err(WaitForTransactionError::TransactionError(
-            TransactionError::Reverted(ErrorData {
-                data: ByteArray::from(reason.as_str()),
-            }),
-        ))
-    } else {
-        unreachable!();
-    }
 }
 
 #[must_use]
@@ -729,6 +722,19 @@ pub fn apply_optional<T, R, F: FnOnce(T, R) -> T>(initial: T, option: Option<R>,
         Some(value) => function(initial, value),
         None => initial,
     }
+}
+
+#[macro_export]
+macro_rules! apply_optional_fields {
+    ($initial:expr, $( $option:expr => $setter:expr ),* ) => {
+        {
+            let mut value = $initial;
+            $(
+                value = ::sncast::apply_optional(value, $option, $setter);
+            )*
+            value
+        }
+    };
 }
 
 #[must_use]

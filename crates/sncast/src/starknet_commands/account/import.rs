@@ -1,7 +1,8 @@
+use std::str::FromStr;
+
 use super::deploy::compute_account_address;
 use crate::starknet_commands::account::{
-    AccountType, add_created_profile_to_configuration, prepare_account_json,
-    write_account_to_accounts_file,
+    add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
 };
 use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
@@ -9,12 +10,11 @@ use clap::Args;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
+use sncast::helpers::braavos::assert_non_braavos_account_type;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
-use sncast::{
-    AccountType as SNCastAccountType, check_class_hash_exists, get_chain_id, handle_rpc_error,
-};
+use sncast::{AccountType, check_class_hash_exists, get_chain_id, handle_rpc_error};
 use starknet::core::types::{BlockId, BlockTag, StarknetError};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::providers::{Provider, ProviderError};
@@ -25,42 +25,42 @@ use starknet_types_core::felt::Felt;
 #[command(about = "Add an account to the accounts file")]
 pub struct Import {
     /// Name of the account to be imported
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub name: Option<String>,
 
     /// Address of the account
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub address: Felt,
 
     /// Type of the account
-    #[clap(short = 't', long = "type")]
+    #[arg(short = 't', long = "type", value_parser = AccountType::from_str)]
     pub account_type: AccountType,
 
     /// Class hash of the account
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub class_hash: Option<Felt>,
 
     /// Account private key
-    #[clap(long, group = "private_key_input")]
+    #[arg(long, group = "private_key_input")]
     pub private_key: Option<Felt>,
 
     /// Path to the file holding account private key
-    #[clap(long = "private-key-file", group = "private_key_input")]
+    #[arg(long = "private-key-file", group = "private_key_input")]
     pub private_key_file_path: Option<Utf8PathBuf>,
 
     /// Salt for the address
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub salt: Option<Felt>,
 
     /// If passed, a profile with the provided name and corresponding data will be created in snfoundry.toml
-    #[clap(long, conflicts_with = "network")]
+    #[arg(long, conflicts_with = "network")]
     pub add_profile: Option<String>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 
     /// If passed, the command will not trigger an interactive prompt to add an account as a default
-    #[clap(long)]
+    #[arg(long)]
     pub silent: bool,
 }
 
@@ -70,6 +70,9 @@ pub async fn import(
     provider: &JsonRpcClient<HttpTransport>,
     import: &Import,
 ) -> Result<AccountImportResponse> {
+    // TODO(#3118): Remove this check once braavos integration is restored
+    assert_non_braavos_account_type(import.account_type)?;
+
     let private_key = if let Some(passed_private_key) = &import.private_key {
         passed_private_key
     } else if let Some(passed_private_key_file_path) = &import.private_key_file_path {
@@ -121,12 +124,7 @@ pub async fn import(
 
     let chain_id = get_chain_id(provider).await?;
     if let Some(salt) = import.salt {
-        // TODO(#2571)
-        let sncast_account_type = match import.account_type {
-            AccountType::Argent => SNCastAccountType::Argent,
-            AccountType::Braavos => SNCastAccountType::Braavos,
-            AccountType::Oz => SNCastAccountType::OpenZeppelin,
-        };
+        let sncast_account_type = import.account_type;
         let computed_address =
             compute_account_address(salt, private_key, class_hash, sncast_account_type, chain_id);
         ensure!(
@@ -144,7 +142,7 @@ pub async fn import(
         import.address,
         deployed,
         legacy,
-        &import.account_type,
+        import.account_type,
         Some(class_hash),
         import.salt,
     );

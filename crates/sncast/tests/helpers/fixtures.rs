@@ -12,14 +12,15 @@ use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH,
 };
+use sncast::helpers::fee::FeeSettings;
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::state::state_file::{
     ScriptTransactionEntry, ScriptTransactionOutput, ScriptTransactionStatus,
 };
-use sncast::{AccountType, apply_optional, get_chain_id, get_keystore_password};
+use sncast::{AccountType, apply_optional_fields, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider};
 use starknet::accounts::{
-    Account, AccountFactory, ArgentAccountFactory, ExecutionV1, OpenZeppelinAccountFactory,
+    Account, AccountFactory, ArgentAccountFactory, ExecutionV3, OpenZeppelinAccountFactory,
 };
 use starknet::core::types::{Call, InvokeTransactionResult, TransactionReceipt};
 use starknet::core::utils::get_contract_address;
@@ -36,6 +37,8 @@ use std::io::{BufRead, Write};
 use tempfile::{TempDir, tempdir};
 use toml::Table;
 use url::Url;
+
+use super::fee::apply_test_resource_bounds_flags;
 
 const SCRIPT_ORIGIN_TIMESTAMP: u64 = 1_709_853_748;
 
@@ -94,7 +97,7 @@ pub async fn deploy_argent_account() {
     let factory = ArgentAccountFactory::new(
         ARGENT_CLASS_HASH,
         chain_id,
-        Felt::ZERO,
+        None,
         LocalWallet::from_signing_key(private_key),
         provider,
     )
@@ -144,9 +147,15 @@ async fn deploy_oz_account(address: &str, class_hash: &str, salt: &str, private_
 }
 
 async fn deploy_account_to_devnet<T: AccountFactory + Sync>(factory: T, address: &str, salt: &str) {
-    mint_token(address, u64::MAX).await;
+    mint_token(address, u128::MAX).await;
     factory
-        .deploy_v1(salt.parse().expect("Failed to parse salt"))
+        .deploy_v3(salt.parse().expect("Failed to parse salt"))
+        .l1_gas(100_000)
+        .l1_gas_price(10_000_000_000_000)
+        .l2_gas(1_000_000)
+        .l2_gas_price(10_000_000_000_000)
+        .l1_data_gas(100_000)
+        .l1_data_gas_price(10_000_000_000_000)
         .send()
         .await
         .expect("Failed to deploy account");
@@ -186,7 +195,7 @@ pub async fn invoke_contract(
     account: &str,
     contract_address: &str,
     entry_point_name: &str,
-    max_fee: Option<Felt>,
+    fee_settings: FeeSettings,
     constructor_calldata: &[&str],
 ) -> InvokeTransactionResult {
     let provider = get_provider(URL).expect("Could not get the provider");
@@ -215,15 +224,24 @@ pub async fn invoke_contract(
         calldata,
     };
 
-    let execution = account.execute_v1(vec![call]);
-    let execution = apply_optional(execution, max_fee, ExecutionV1::max_fee);
+    let execution = account.execute_v3(vec![call]);
+    let execution = apply_optional_fields!(
+        execution,
+        fee_settings.l1_gas => ExecutionV3::l1_gas,
+        fee_settings.l1_gas_price => ExecutionV3::l1_gas_price,
+        fee_settings.l2_gas => ExecutionV3::l2_gas,
+        fee_settings.l2_gas_price => ExecutionV3::l2_gas_price,
+        fee_settings.l1_data_gas => ExecutionV3::l1_data_gas,
+        fee_settings.l1_data_gas_price => ExecutionV3::l1_data_gas_price
+    );
 
-    execution.send().await.unwrap()
+    execution
+        .send()
+        .await
+        .expect("Transaction execution failed")
 }
 
-// devnet-rs accepts an amount as u128
-// but serde_json cannot serialize numbers this big
-pub async fn mint_token(recipient: &str, amount: u64) {
+pub async fn mint_token(recipient: &str, amount: u128) {
     let client = reqwest::Client::new();
     for unit in ["FRI", "WEI"] {
         let json = json!(
@@ -602,7 +620,7 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
         items["alpha-sepolia"]["my_account"]["address"]
             .as_str()
             .unwrap(),
-        u64::MAX,
+        u128::MAX,
     )
     .await;
 
@@ -616,9 +634,8 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
         URL,
         "--name",
         "my_account",
-        "--max-fee",
-        "99999999999999999",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     runner(&args).current_dir(tempdir.path()).assert().success();
 
