@@ -118,7 +118,7 @@ jobs:
       - run: cargo test --release -p sncast
 
   verify-version:
-    name: Verify that version that triggered this workflow is greater than most recent  release
+    name: Get current foundry version
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.validVersion.outputs.version }}

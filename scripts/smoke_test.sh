@@ -21,7 +21,7 @@ scarb cache clean
 
 $SNFORGE_PATH new my_project_1
 pushd my_project_1 || exit
-sed -i.bak "/snforge_std/ s/\(snforge_std = \).*/\1{ version = \"${VERSION}\", registry = \"https:\/\/scarbs.dev\/\" }/" Scarb.toml
+sed -i.bak "/snforge_std/ s/\(snforge_std = \).*/\1{ version = \"=${VERSION}\", registry = \"https:\/\/scarbs.dev\/\" }/" Scarb.toml
 rm Scarb.toml.bak 2>/dev/null
 if $SNFORGE_PATH test | grep -q 'Compiling snforge_scarb_plugin'; then
     exit 1
@@ -33,7 +33,7 @@ scarb cache clean
 
 $SNFORGE_PATH new my_project_2
 pushd my_project_2 || exit
-sed -i.bak "/snforge_std/ s/\(snforge_std = \).*/\1{ version = \"${VERSION}\", registry = \"https:\/\/scarbs.dev\/\" }/" Scarb.toml
+sed -i.bak "/snforge_std/ s/\(snforge_std = \).*/\1{ version = \"=${VERSION}\", registry = \"https:\/\/scarbs.dev\/\" }/" Scarb.toml
 sed -i.bak '/^allow-prebuilt-plugins = \["snforge_std"\]$/d' Scarb.toml
 rm Scarb.toml.bak 2>/dev/null
 $SNFORGE_PATH test || exit
