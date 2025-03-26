@@ -43,7 +43,7 @@ jobs:
 
       - uses: software-mansion/setup-scarb@v1
         with:
-          # TODO() Remove
+          # TODO(#3144) Remove
           scarb-version: "2.11.0"
 
       - name: Publish sncast_std
