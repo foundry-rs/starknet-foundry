@@ -63,7 +63,7 @@ jobs:
     uses: ./.github/workflows/_build-binaries.yml
     with:
       version: ${{ needs.verify-version.outputs.version }}
-  
+
   build-plugin-binaries:
     name: Build plugin binaries
     needs: verify-version

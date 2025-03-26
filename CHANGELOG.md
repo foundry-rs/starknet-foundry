@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- `--l1-gas`, `--l1-gas-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price` flags
+- methods for fee settings creation, in `FeeSettingsTrait`: `max_fee()`, `resource_bounds()` and `estimate()` (in `sncast_std`)
+- `ContractExecutionError` and `ContractExecutionErrorInner` structs (in `sncast_std`)
+- `ContractErrorData` (in `sncast_std`)
+
+#### Changed
+
+- Updated argent class hash used in account creation to v0.4.0
+- wrapped error for `ContractError` is now of type `ContractErrorData` (in `sncast_std`)
+- field `execution_error` in `TransactionExecutionErrorData` is now of type `ContractExecutionError` (in `sncast_std`)
+- Using Braavos accounts is temporarily disabled because they don't yet work with the RPC version supported by `sncast`
+
+#### Removed
+
+- `--max-gas` and `--max-gas-unit-price` flags
+- `max_gas`, `max_gas_unit_price` fields in `FeeSettings` (in `sncast_std`)
+
 ## [0.39.0] - 2025-03-19
 
 ### Forge

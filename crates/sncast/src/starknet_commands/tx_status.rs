@@ -38,13 +38,13 @@ fn build_transaction_status_response(status: &TransactionStatus) -> TransactionS
             finality_status: FinalityStatus::Rejected,
             execution_status: None,
         },
-        TransactionStatus::AcceptedOnL2(tx_exec_status) => TransactionStatusResponse {
+        TransactionStatus::AcceptedOnL2(tx_exec_result) => TransactionStatusResponse {
             finality_status: FinalityStatus::AcceptedOnL2,
-            execution_status: Some(build_execution_status(*tx_exec_status)),
+            execution_status: Some(build_execution_status(tx_exec_result.status())),
         },
-        TransactionStatus::AcceptedOnL1(tx_exec_status) => TransactionStatusResponse {
+        TransactionStatus::AcceptedOnL1(tx_exec_result) => TransactionStatusResponse {
             finality_status: FinalityStatus::AcceptedOnL1,
-            execution_status: Some(build_execution_status(*tx_exec_status)),
+            execution_status: Some(build_execution_status(tx_exec_result.status())),
         },
     }
 }

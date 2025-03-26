@@ -1,22 +1,17 @@
 use sncast_std::{
-    get_nonce, declare, DeclareResult, ScriptCommandError, ProviderError, StarknetError, FeeSettings
+    get_nonce, declare, DeclareResult, ScriptCommandError, ProviderError, StarknetError,
+    FeeSettingsTrait
 };
 
 fn main() {
+    let fee_settings = FeeSettingsTrait::resource_bounds(1, 1, 1, 1, 1, 1,);
     let declare_nonce = get_nonce('latest');
-    let declare_result = declare(
-        "Mapa",
-        FeeSettings {
-            max_fee: Option::None, max_gas: Option::Some(1), max_gas_unit_price: Option::Some(1)
-        },
-        Option::Some(declare_nonce)
-    )
-        .unwrap_err();
+    let declare_result = declare("Mapa", fee_settings, Option::Some(declare_nonce)).unwrap_err();
     println!("{:?}", declare_result);
 
     assert(
         ScriptCommandError::ProviderError(
-            ProviderError::StarknetError(StarknetError::InsufficientMaxFee)
+            ProviderError::StarknetError(StarknetError::InsufficientResourcesForValidate)
         ) == declare_result,
         'ohno'
     )

@@ -75,7 +75,7 @@ jobs:
       - name: Smoke test
         shell: bash
         env:
-          RPC_URL: "http://188.34.188.184:7070/rpc/v0_7"
+          RPC_URL: "http://188.34.188.184:7070/rpc/v0_8"
         run: |
           BINARY_PATH="${{ env.BINARY_PATH }}"
           BINARY_PATH="${BINARY_PATH%.tar.gz}"
