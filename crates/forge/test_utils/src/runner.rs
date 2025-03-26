@@ -309,6 +309,7 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
 fn assert_gas_with_margin(gas: GasVector, asserted_gas: GasVector) -> bool {
     if cfg!(feature = "assert_non_exact_gas") {
         let diff = gas_vector_abs_diff(&gas, &asserted_gas);
+        println!("diff: {:?}", diff);
         diff.l1_gas.0 <= 10 && diff.l1_data_gas.0 <= 10 && diff.l2_gas.0 <= 200_000
     } else {
         gas == asserted_gas
