@@ -1209,7 +1209,7 @@ fn contract_keccak_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(1_518_775),
+            l2_gas: GasAmount(1_438_075),
         },
     );
 }
