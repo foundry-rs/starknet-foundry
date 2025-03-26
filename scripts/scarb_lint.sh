@@ -16,6 +16,8 @@ SKIPPED_PACKAGES=(
 
 export SKIPPED_PACKAGES_STR="${SKIPPED_PACKAGES[*]}"
 
+# In .tool-versions in root directory, we have scarb 2.8.5, hence we
+# need to switch to 2.10.0 which has `lint` command
 asdf set scarb 2.10.0
 
 output=$(find . -type f -name "Scarb.toml" -execdir bash -c '
