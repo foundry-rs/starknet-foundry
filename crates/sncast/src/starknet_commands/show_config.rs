@@ -11,7 +11,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 #[derive(Args)]
 #[command(about = "Show current configuration being used", long_about = None)]
 pub struct ShowConfig {
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 

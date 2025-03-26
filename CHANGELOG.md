@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.0] - 2025-03-26
+
+### Cast
+
+#### Added
+
+- `--l1-gas`, `--l1-gas-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price` flags
+- methods for fee settings creation, in `FeeSettingsTrait`: `max_fee()`, `resource_bounds()` and `estimate()` (in `sncast_std`)
+
+#### Changed
+
+- Updated argent class hash used in account creation to v0.4.0
+- wrapped error for `ContractError` is now of type `ContractErrorData` (in `sncast_std`)
+- field `execution_error` in `TransactionExecutionErrorData` is now of type `ContractExecutionError` (in `sncast_std`)
+- Using Braavos accounts is temporarily disabled because they don't yet work with the RPC version supported by `sncast`
+
+#### Removed
+
+- `--max-gas` and `--max-gas-unit-price` flags
+- `max_gas`, `max_gas_unit_price` fields in `FeeSettings` (in `sncast_std`)
+
 ## [0.39.0] - 2025-03-19
 
 ### Forge
@@ -17,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cheats for `get_block_hash_syscall`
 - new `--tracked-resource` flag, that will change currently tracked resource
   (`cairo-steps` for vm resources - default; `sierra-gas` for sierra gas consumed resources in cairo native)
+- Testing events api improvements. New `IsEmitted` trait. Implemented `Into<snforge_std::Event>` for `starknet::Event` and `PartialEq` trait implementations for `snforge_std::Event` and `snforge_std::Events`.
+
 
 #### Changed
 - gas is now reported using resource bounds triplet (l1_gas, l1_data_gas and l2_gas)
@@ -31,6 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `sncast completion` command - used to generate autocompletion script
+
+#### Changed
+
+- `sncast script init` command now initializes project with the `sncast_std` dependency from the [registry](https://scarbs.xyz/packages/sncast_std)
 
 ## [0.38.3] - 2025-03-07
 

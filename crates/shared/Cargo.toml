@@ -16,3 +16,6 @@ snapbox.workspace = true
 indicatif.workspace = true
 clap.workspace = true
 clap_complete.workspace = true
+
+[features]
+testing = []

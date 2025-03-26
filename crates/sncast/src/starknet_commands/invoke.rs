@@ -6,7 +6,7 @@ use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::InvokeResponse;
-use sncast::{WaitForTx, apply_optional, handle_wait_for_tx};
+use sncast::{WaitForTx, apply_optional_fields, handle_wait_for_tx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, ExecutionV3, SingleOwnerAccount};
 use starknet::core::types::{Call, InvokeTransactionResult};
@@ -19,24 +19,24 @@ use starknet_types_core::felt::Felt;
 #[command(about = "Invoke a contract on Starknet")]
 pub struct Invoke {
     /// Address of contract to invoke
-    #[clap(short = 'd', long)]
+    #[arg(short = 'd', long)]
     pub contract_address: Felt,
 
     /// Name of the function to invoke
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub function: String,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub arguments: Arguments,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub fee_args: FeeArgs,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub nonce: Option<Felt>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 
@@ -65,27 +65,37 @@ pub async fn execute_calls(
     nonce: Option<Felt>,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse, StarknetCommandError> {
-    let fee_settings = fee_args
-        .try_into_fee_settings(account.provider(), account.block_id())
-        .await?;
-
-    let FeeSettings {
-        max_gas,
-        max_gas_unit_price,
-    } = fee_settings;
     let execution_calls = account.execute_v3(calls);
 
-    let execution = apply_optional(
+    let fee_settings = if fee_args.max_fee.is_some() {
+        let fee_estimate = execution_calls
+            .estimate_fee()
+            .await
+            .expect("Failed to estimate fee");
+        fee_args.try_into_fee_settings(Some(&fee_estimate))
+    } else {
+        fee_args.try_into_fee_settings(None)
+    };
+
+    let FeeSettings {
+        l1_gas,
+        l1_gas_price,
+        l2_gas,
+        l2_gas_price,
+        l1_data_gas,
+        l1_data_gas_price,
+    } = fee_settings.expect("Failed to convert to fee settings");
+
+    let execution = apply_optional_fields!(
         execution_calls,
-        max_gas.map(std::num::NonZero::get),
-        ExecutionV3::gas,
+        l1_gas => ExecutionV3::l1_gas,
+        l1_gas_price => ExecutionV3::l1_gas_price,
+        l2_gas => ExecutionV3::l2_gas,
+        l2_gas_price => ExecutionV3::l2_gas_price,
+        l1_data_gas => ExecutionV3::l1_data_gas,
+        l1_data_gas_price => ExecutionV3::l1_data_gas_price,
+        nonce => ExecutionV3::nonce
     );
-    let execution = apply_optional(
-        execution,
-        max_gas_unit_price.map(std::num::NonZero::get),
-        ExecutionV3::gas_price,
-    );
-    let execution = apply_optional(execution, nonce, ExecutionV3::nonce);
     let result = execution.send().await;
 
     match result {

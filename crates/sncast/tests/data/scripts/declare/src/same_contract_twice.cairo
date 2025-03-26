@@ -1,19 +1,14 @@
 use sncast_std::{
     get_nonce, declare, DeclareResult, DeclareResultTrait, ScriptCommandError, ProviderError,
-    StarknetError, FeeSettings
+    StarknetError, FeeSettingsTrait
 };
 
 fn main() {
+    let fee_settings = FeeSettingsTrait::resource_bounds(
+        100000, 10000000000000, 1000000000, 100000000000000000000, 100000, 10000000000000,
+    );
     let declare_nonce = get_nonce('latest');
-    let first_declare_result = declare(
-        "Mapa",
-        FeeSettings {
-            max_fee: Option::None,
-            max_gas: Option::Some(999999),
-            max_gas_unit_price: Option::Some(100000000000)
-        },
-        Option::Some(declare_nonce)
-    )
+    let first_declare_result = declare("Mapa", fee_settings, Option::Some(declare_nonce))
         .expect('declare failed');
     println!("success");
 
@@ -27,15 +22,7 @@ fn main() {
     assert(*first_declare_result.class_hash() == class_hash, 'Class hashes must be equal');
 
     let declare_nonce = get_nonce('latest');
-    let second_declare_result = declare(
-        "Mapa",
-        FeeSettings {
-            max_fee: Option::None,
-            max_gas: Option::Some(999999),
-            max_gas_unit_price: Option::Some(100000000000)
-        },
-        Option::Some(declare_nonce)
-    )
+    let second_declare_result = declare("Mapa", fee_settings, Option::Some(declare_nonce))
         .expect('second declare failed');
 
     // Check if already declared contract was handled correctly
