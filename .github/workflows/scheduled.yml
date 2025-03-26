@@ -153,7 +153,7 @@ jobs:
     secrets: inherit
     with:
       override_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
-      scarb_args: "--index https://scarbs.dev/"
+      dev_registry: true
 
   publish-std:
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
@@ -163,7 +163,7 @@ jobs:
     with:
       plugin_dep_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
       override_std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
-      scarb_args: "--index https://scarbs.dev/"
+      dev_registry: true
 
   build-binaries:
     needs: [verify-version]
