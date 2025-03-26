@@ -66,12 +66,6 @@ fn debugging_trace() {
 
     let output = test_runner(&temp).assert().code(1);
 
-    let stdout = std::str::from_utf8(&output.get_output().stdout).unwrap();
-
-    println!("XXX");
-    println!("{}", stdout);
-    println!("XXX");
-
     assert_stdout_contains(
         output,
         formatdoc! {r"
