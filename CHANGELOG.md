@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.0] - 2025-03-19
+
 ### Forge
 
 #### Added
@@ -15,16 +17,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cheats for `get_block_hash_syscall`
 - new `--tracked-resource` flag, that will change currently tracked resource
   (`cairo-steps` for vm resources - default; `sierra-gas` for sierra gas consumed resources in cairo native)
+- Testing events api improvements. New `IsEmitted` trait. Implemented `Into<snforge_std::Event>` for `starknet::Event` and `PartialEq` trait implementations for `snforge_std::Event` and `snforge_std::Events`.
+
 
 #### Changed
 - gas is now reported using resource bounds triplet (l1_gas, l1_data_gas and l2_gas)
 - `available_gas` now accepts named arguments denoting resource bounds (eg #[available_gas(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)])
+
+#### Fixed
+
+- Bug with file locking that prevented forking from working on Windows
 
 ### Cast
 
 #### Added
 
 - `sncast completion` command - used to generate autocompletion script
+
+#### Changed
+
+- `sncast script init` command now initializes project with the `sncast_std` dependency from the [registry](https://scarbs.xyz/packages/sncast_std)
 
 ## [0.38.3] - 2025-03-07
 

@@ -85,19 +85,11 @@ fn add_dependencies(script_root_dir: &Utf8PathBuf) -> Result<()> {
 }
 
 fn add_sncast_std_dependency(script_root_dir: &Utf8PathBuf) -> Result<()> {
-    let cast_version = format!("v{}", env!("CARGO_PKG_VERSION"));
-
+    let cast_version = env!("CARGO_PKG_VERSION").to_string();
+    let dep_id = format!("sncast_std@{cast_version}");
     ScarbCommand::new()
         .current_dir(script_root_dir)
-        .args([
-            "--offline",
-            "add",
-            "sncast_std",
-            "--git",
-            "https://github.com/foundry-rs/starknet-foundry.git",
-            "--tag",
-            &cast_version,
-        ])
+        .args(["--offline", "add", &dep_id])
         .run()?;
 
     Ok(())
@@ -130,13 +122,20 @@ fn create_script_main_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> 
     fs::write(
         script_main_file_path,
         indoc! {r#"
-            use sncast_std::{call, CallResult};
+            use sncast_std::call;
 
             // The example below uses a contract deployed to the Sepolia testnet
+            const CONTRACT_ADDRESS: felt252 =
+                0x07e867f1fa6da2108dd2b3d534f1fbec411c5ec9504eb3baa1e49c7a0bef5ab5;
+
             fn main() {
-                let contract_address = 0x07e867f1fa6da2108dd2b3d534f1fbec411c5ec9504eb3baa1e49c7a0bef5ab5;
-                let call_result = call(contract_address.try_into().unwrap(), selector!("get_greeting"), array![]).expect('call failed');
-                assert(*call_result.data[1]=='Hello, Starknet!', *call_result.data[1]);
+                let call_result = call(
+                    CONTRACT_ADDRESS.try_into().unwrap(), selector!("get_greeting"), array![],
+                )
+                    .expect('call failed');
+
+                assert(*call_result.data[1] == 'Hello, Starknet!', *call_result.data[1]);
+
                 println!("{:?}", call_result);
             }
         "#},

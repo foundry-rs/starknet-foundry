@@ -13,7 +13,7 @@ pub struct TxStatus {
     /// Hash of the transaction
     pub transaction_hash: Felt,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 

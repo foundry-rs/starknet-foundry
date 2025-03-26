@@ -20,7 +20,7 @@ members = [
 exclude = ["crates/snforge-scarb-plugin"]
 
 [workspace.package]
-version = "0.38.3"
+version = "0.39.0"
 edition = "2024"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
@@ -51,7 +51,7 @@ starknet-types-core = { version = "0.1.7", features = ["hash", "prime-bigint"] }
 anyhow = "1.0.97"
 assert_fs = "1.1.2"
 camino = { version = "1.1.9", features = ["serde1"] }
-clap = { version = "4.5.32", features = ["derive"] }
+clap = { version = "4.5.32", features = ["derive", "deprecated"] }
 clap_complete = "4.5.46"
 console = "0.15.11"
 include_dir = "0.7.4"
