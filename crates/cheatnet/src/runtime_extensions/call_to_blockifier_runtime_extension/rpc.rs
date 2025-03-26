@@ -17,6 +17,7 @@ use conversions::{
     IntoConv, byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr,
 };
 use shared::utils::build_readable_text;
+use starknet_api::execution_resources::GasAmount;
 use starknet_api::{
     contract_class::EntryPointType,
     core::{ClassHash, ContractAddress},
@@ -28,6 +29,7 @@ use starknet_types_core::felt::Felt;
 pub struct UsedResources {
     pub syscall_counter: SyscallCounter,
     pub execution_resources: ExecutionResources,
+    pub gas_consumed: GasAmount,
     pub l2_to_l1_payload_lengths: Vec<usize>,
     pub l1_handler_payload_lengths: Vec<usize>,
     pub events: Vec<EventContent>,

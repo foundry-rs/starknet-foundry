@@ -1,13 +1,12 @@
 use crate::starknet_commands::account::{
-    AccountType, add_created_profile_to_configuration, prepare_account_json,
-    write_account_to_accounts_file,
+    add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
 };
 use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
 use serde_json::json;
-use sncast::helpers::braavos::BraavosAccountFactory;
+use sncast::helpers::braavos::{BraavosAccountFactory, assert_non_braavos_account_type};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
@@ -16,46 +15,47 @@ use sncast::helpers::constants::{
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountCreateResponse;
 use sncast::{
-    Network, check_class_hash_exists, check_if_legacy_contract, extract_or_generate_salt,
-    get_chain_id, get_keystore_password, handle_account_factory_error,
+    AccountType, Network, check_class_hash_exists, check_if_legacy_contract,
+    extract_or_generate_salt, get_chain_id, get_keystore_password, handle_account_factory_error,
 };
 use starknet::accounts::{
-    AccountDeploymentV1, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
+    AccountDeploymentV3, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
 };
 use starknet::core::types::FeeEstimate;
 use starknet::providers::JsonRpcClient;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
+use std::str::FromStr;
 
 #[derive(Args, Debug)]
 #[command(about = "Create an account with all important secrets")]
 pub struct Create {
     /// Type of the account
-    #[clap(value_enum, short = 't', long = "type", default_value_t = AccountType::Oz)]
+    #[arg(value_enum, short = 't', long = "type", value_parser = AccountType::from_str, default_value_t = AccountType::OpenZeppelin)]
     pub account_type: AccountType,
 
     /// Account name under which account information is going to be saved
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub name: Option<String>,
 
     /// Salt for the address
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub salt: Option<Felt>,
 
     /// If passed, a profile with provided name and corresponding data will be created in snfoundry.toml
-    #[clap(long, conflicts_with = "network")]
+    #[arg(long, conflicts_with = "network")]
     pub add_profile: Option<String>,
 
     /// Custom contract class hash of declared contract
-    #[clap(short, long, requires = "account_type")]
+    #[arg(short, long, requires = "account_type")]
     pub class_hash: Option<Felt>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 
     /// If passed, the command will not trigger an interactive prompt to add an account as a default
-    #[clap(long)]
+    #[arg(long)]
     pub silent: bool,
 }
 
@@ -67,17 +67,20 @@ pub async fn create(
     chain_id: Felt,
     create: &Create,
 ) -> Result<AccountCreateResponse> {
+    // TODO(#3118): Remove this check once braavos integration is restored
+    assert_non_braavos_account_type(create.account_type)?;
+
     let add_profile = create.add_profile.clone();
     let salt = extract_or_generate_salt(create.salt);
     let class_hash = create.class_hash.unwrap_or(match create.account_type {
-        AccountType::Oz => OZ_CLASS_HASH,
+        AccountType::OpenZeppelin => OZ_CLASS_HASH,
         AccountType::Argent => ARGENT_CLASS_HASH,
         AccountType::Braavos => BRAAVOS_CLASS_HASH,
     });
     check_class_hash_exists(provider, class_hash).await?;
 
     let (account_json, max_fee) =
-        generate_account(provider, salt, class_hash, &create.account_type).await?;
+        generate_account(provider, salt, class_hash, create.account_type).await?;
 
     let address: Felt = account_json["address"]
         .as_str()
@@ -104,7 +107,7 @@ pub async fn create(
             private_key,
             salt,
             class_hash,
-            &create.account_type,
+            create.account_type,
             &keystore,
             &account_path,
             legacy,
@@ -167,22 +170,22 @@ async fn generate_account(
     provider: &JsonRpcClient<HttpTransport>,
     salt: Felt,
     class_hash: Felt,
-    account_type: &AccountType,
+    account_type: AccountType,
 ) -> Result<(serde_json::Value, Felt)> {
     let chain_id = get_chain_id(provider).await?;
     let private_key = SigningKey::from_random();
     let signer = LocalWallet::from_signing_key(private_key.clone());
 
     let (address, fee_estimate) = match account_type {
-        AccountType::Oz => {
+        AccountType::OpenZeppelin => {
             let factory =
                 OpenZeppelinAccountFactory::new(class_hash, chain_id, signer, provider).await?;
             get_address_and_deployment_fee(factory, salt).await?
         }
         AccountType::Argent => {
             let factory =
-                ArgentAccountFactory::new(class_hash, chain_id, Felt::ZERO, signer, provider)
-                    .await?;
+                ArgentAccountFactory::new(class_hash, chain_id, None, signer, provider).await?;
+
             get_address_and_deployment_fee(factory, salt).await?
         }
         AccountType::Braavos => {
@@ -220,12 +223,12 @@ async fn get_address_and_deployment_fee<T>(
 where
     T: AccountFactory + Sync,
 {
-    let deployment = account_factory.deploy_v1(salt);
+    let deployment = account_factory.deploy_v3(salt);
     Ok((deployment.address(), get_deployment_fee(&deployment).await?))
 }
 
 async fn get_deployment_fee<T>(
-    account_deployment: &AccountDeploymentV1<'_, T>,
+    account_deployment: &AccountDeploymentV3<'_, T>,
 ) -> Result<FeeEstimate>
 where
     T: AccountFactory + Sync,
@@ -245,7 +248,7 @@ fn create_to_keystore(
     private_key: Felt,
     salt: Felt,
     class_hash: Felt,
-    account_type: &AccountType,
+    account_type: AccountType,
     keystore_path: &Utf8PathBuf,
     account_path: &Utf8PathBuf,
     legacy: bool,
@@ -259,13 +262,12 @@ fn create_to_keystore(
     let password = get_keystore_password(CREATE_KEYSTORE_PASSWORD_ENV_VAR)?;
     let private_key = SigningKey::from_secret_scalar(private_key);
     private_key.save_as_keystore(keystore_path, &password)?;
-
     let account_json = match account_type {
-        AccountType::Oz => {
+        AccountType::OpenZeppelin => {
             json!({
                 "version": 1,
                 "variant": {
-                    "type": format!("{account_type}"),
+                    "type": AccountType::OpenZeppelin,
                     "version": 1,
                     "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
                     "legacy": legacy,
@@ -281,7 +283,7 @@ fn create_to_keystore(
             json!({
                 "version": 1,
                 "variant": {
-                    "type": format!("{account_type}"),
+                    "type": AccountType::Argent,
                     "version": 1,
                     "owner": format!("{:#x}", private_key.verifying_key().scalar()),
                     "guardian": "0x0",
@@ -298,7 +300,7 @@ fn create_to_keystore(
                 {
                   "version": 1,
                   "variant": {
-                    "type": format!("{account_type}"),
+                    "type": AccountType::Braavos,
                     "version": 1,
                     "multisig": {
                       "status": "off"

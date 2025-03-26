@@ -15,7 +15,8 @@ use test_case::test_case;
 
 #[test_case("oz", "open_zeppelin"; "oz_account_type")]
 #[test_case("argent", "argent"; "argent_account_type")]
-#[test_case("braavos", "braavos"; "braavos_account_type")]
+// TODO(#3118)
+// #[test_case("braavos", "braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
@@ -818,4 +819,34 @@ pub async fn test_happy_case_default_name_generation() {
     let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
 
     assert_eq!(contents_json, all_accounts_content);
+}
+
+#[tokio::test]
+pub async fn test_braavos_disabled() {
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "import",
+        "--url",
+        URL,
+        "--name",
+        "my_account_import",
+        "--address",
+        "0x123",
+        "--private-key",
+        "0x456",
+        "--type",
+        "braavos",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: account import
+        error: Using Braavos accounts is temporarily disabled because they don't yet work with the RPC version supported by `sncast`
+    "});
 }

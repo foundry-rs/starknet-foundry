@@ -1,6 +1,6 @@
 [package]
 name = "snforge_scarb_plugin"
-version = "0.38.3"
+version = "0.39.0"
 edition = "2021"
 publish = false
 rust-version = "1.80.1"
@@ -10,9 +10,9 @@ crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 cairo-lang-macro = "=0.1.0"
-cairo-lang-parser = "=2.10.0"
-cairo-lang-utils = "=2.10.0"
-cairo-lang-syntax = "=2.10.0"
+cairo-lang-parser = "=2.10.1"
+cairo-lang-utils = "=2.10.1"
+cairo-lang-syntax = "=2.10.1"
 url = "=2.5.4"
 indoc = "=2.0.5"
 smol_str = "=0.2.2"
