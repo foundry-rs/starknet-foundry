@@ -1,16 +1,11 @@
-use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeployResult, DeclareResultTrait, InvokeResult,
-    CallResult, get_nonce, FeeSettings
-};
+use sncast_std::{declare, deploy, invoke, call, DeclareResultTrait, get_nonce, FeeSettingsTrait};
 
 fn second_contract() {
-    let declare_result = declare(
-        "Mapa2",
-        FeeSettings {
-            max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None
-        },
-        Option::None
-    )
+    let fee_settings = FeeSettingsTrait::resource_bounds(
+        100000, 10000000000000, 1000000000, 100000000000000000000, 100000, 10000000000000,
+    );
+
+    let declare_result = declare("Mapa2", fee_settings, Option::None)
         .expect('mapa2 declare failed');
 
     let deploy_result = deploy(
@@ -18,9 +13,7 @@ fn second_contract() {
         ArrayTrait::new(),
         Option::None,
         false,
-        FeeSettings {
-            max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None
-        },
+        fee_settings,
         Option::None
     )
         .expect('mapa deploy failed');
@@ -30,9 +23,7 @@ fn second_contract() {
         deploy_result.contract_address,
         selector!("put"),
         array![0x1, 0x3],
-        FeeSettings {
-            max_fee: Option::None, max_gas: Option::None, max_gas_unit_price: Option::None
-        },
+        fee_settings,
         Option::None
     )
         .expect('mapa2 invoke failed');
@@ -44,17 +35,13 @@ fn second_contract() {
 }
 
 fn main() {
-    let max_fee = 99999999999999999;
+    let fee_settings = FeeSettingsTrait::resource_bounds(
+        100000, 10000000000000, 1000000000, 100000000000000000000, 100000, 10000000000000,
+    );
     let salt = 0x3;
 
     let declare_nonce = get_nonce('latest');
-    let declare_result = declare(
-        "Mapa",
-        FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
-        },
-        Option::Some(declare_nonce)
-    )
+    let declare_result = declare("Mapa", fee_settings, Option::Some(declare_nonce))
         .expect('mapa declare failed');
 
     let class_hash = declare_result.class_hash();
@@ -64,9 +51,7 @@ fn main() {
         ArrayTrait::new(),
         Option::Some(salt),
         true,
-        FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
-        },
+        fee_settings,
         Option::Some(deploy_nonce)
     )
         .expect('mapa deploy failed');
@@ -77,9 +62,7 @@ fn main() {
         deploy_result.contract_address,
         selector!("put"),
         array![0x1, 0x2],
-        FeeSettings {
-            max_fee: Option::Some(max_fee), max_gas: Option::None, max_gas_unit_price: Option::None
-        },
+        fee_settings,
         Option::Some(invoke_nonce)
     )
         .expect('mapa invoke failed');
