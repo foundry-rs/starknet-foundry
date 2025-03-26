@@ -67,17 +67,18 @@ pub mod TokenSender {
             erc20.transfer_from(get_caller_address(), get_contract_address(), total_amount);
 
             // Distribute tokens to each recipient in the transfer list.
-            for t in transfer_list.span() {
-                erc20.transfer(*t.recipient, *t.amount);
-                self
-                    .emit(
-                        TransferSent {
-                            recipient: *t.recipient,
-                            token_address: token_address,
-                            amount: *t.amount,
-                        },
-                    );
-            };
+            for t in transfer_list
+                .span() {
+                    erc20.transfer(*t.recipient, *t.amount);
+                    self
+                        .emit(
+                            TransferSent {
+                                recipient: *t.recipient,
+                                token_address: token_address,
+                                amount: *t.amount,
+                            },
+                        );
+                };
         }
     }
 }
