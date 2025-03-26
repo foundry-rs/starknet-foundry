@@ -270,11 +270,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: software-mansion/setup-scarb@v1
-      # - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
+      - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
       - name: Check Cairo files formatting and linting
         run: |
           ./scripts/scarb_fmt.sh
-          # ./scripts/scarb_lint.sh
+          ./scripts/scarb_lint.sh
 
   rustfmt:
     runs-on: ubuntu-latest
