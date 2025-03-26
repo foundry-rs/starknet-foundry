@@ -8,8 +8,8 @@ REPO_URL="$4"
 REVISION="$5"
 VERSION="$6"
 
-# Check forge github
-echo "Check forge github"
+# Check forge std from github
+
 $SNFORGE_PATH init my_project_0
 pushd my_project_0 || exit
 scarb add --dev snforge_std --git "$REPO_URL" --rev "$REVISION"
@@ -17,8 +17,8 @@ $SNFORGE_PATH test || exit
 popd || exit
 scarb cache clean
 
-# Check forge registry prebuild
-echo "Check forge registry prebuild"
+# Check forge std from registry prebuild
+
 $SNFORGE_PATH new my_project_1
 pushd my_project_1 || exit
 sed -i.bak "/snforge_std/ s/\(snforge_std = \).*/\1{ version = \"${VERSION}\", registry = \"https:\/\/scarbs.dev\/\" }/" Scarb.toml
@@ -29,8 +29,7 @@ fi
 popd || exit
 scarb cache clean
 
-# Check forge registry build
-echo "Check forge registry build"
+# Check forge std from registry build
 
 $SNFORGE_PATH new my_project_2
 pushd my_project_2 || exit
