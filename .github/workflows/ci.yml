@@ -276,6 +276,7 @@ jobs:
       - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
       - name: Check Cairo files formatting and linting
         run: |
+          cargo build --release -p forge
           chmod +x ./scripts/setup_snforge_packages.sh
           ./scripts/setup_snforge_packages.sh
           ./scripts/scarb_fmt.sh
