@@ -273,7 +273,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: software-mansion/setup-scarb@v1
-      - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
       - name: Build forge
         run: cargo build --release -p forge
       - name: Setup template packages
@@ -283,6 +282,9 @@ jobs:
       - name: Check packages formatting
         run: ./scripts/scarb_fmt.sh
       - name: Check packages linting
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: "2.10.0"
         run: ./scripts/scarb_lint.sh
 
   rustfmt:
