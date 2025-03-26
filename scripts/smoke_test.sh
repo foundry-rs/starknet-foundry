@@ -10,7 +10,7 @@ VERSION="$6"
 
 # Check forge std from github
 
-$SNFORGE_PATH init my_project_0
+$SNFORGE_PATH new my_project_0
 pushd my_project_0 || exit
 scarb add --dev snforge_std --git "$REPO_URL" --rev "$REVISION"
 $SNFORGE_PATH test || exit
