@@ -192,6 +192,10 @@ pub struct TestArgs {
     #[arg(long)]
     max_n_steps: Option<u32>,
 
+    /// Exclude tests matching the specified filter pattern
+    #[arg(long)]
+    exclude: Option<String>,
+
     /// Specify features to enable
     #[command(flatten)]
     pub features: FeaturesSpec,

@@ -91,7 +91,7 @@ fn debugging_trace() {
         {debugging_trace}
 
         Running 0 test(s) from src/
-        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
 
         Failures:
             trace_info_integrationtest::test_trace::test_debugging_trace_fail
