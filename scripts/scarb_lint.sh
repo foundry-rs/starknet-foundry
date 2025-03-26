@@ -31,6 +31,8 @@ output=$(find . -type f -name "Scarb.toml" -execdir bash -c '
   scarb lint
 ' \;)
 
+echo "$output"
+
 asdf set scarb 2.8.5
 
 if grep -iq "warning: Plugin diagnostic:" <<< "$output"; then
