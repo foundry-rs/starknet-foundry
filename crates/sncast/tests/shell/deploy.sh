@@ -18,5 +18,15 @@ $CAST_BINARY \
   "$CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA" \
   --arguments \
   '0x420, 0x2137_u256' \
-  --max-fee \
-  99999999999999999 \
+  --l1-gas \
+  100000 \
+  --l1-gas-price \
+  10000000000000 \
+  --l2-gas \
+  1000000000 \
+  --l2-gas-price \
+  100000000000000000000 \
+  --l1-data-gas \
+  100000 \
+  --l1-data-gas-price \
+  10000000000000
