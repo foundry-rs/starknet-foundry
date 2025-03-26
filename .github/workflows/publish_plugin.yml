@@ -20,6 +20,10 @@ on:
       override_plugin_version:
         required: false
         type: string
+      build_plugin_binaries:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   check-version:
@@ -45,7 +49,7 @@ jobs:
   build-binaries:
     name: Build Plugin Binaries
     needs: check-version
-    if: github.event_name == 'workflow_dispatch'
+    if: inputs.build_plugin_binaries == true
     uses: ./.github/workflows/_build-plugin-binaries.yml
     with:
       override_plugin_version: ${{ inputs.override_plugin_version != '' && inputs.override_plugin_version || '' }}
