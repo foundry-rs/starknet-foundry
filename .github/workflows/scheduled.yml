@@ -11,7 +11,7 @@ on:
 
 jobs:
   get-scarb-versions:
-    if: "! github.event.repository.fork"
+    if: github.event.repository.fork == false
     name: Get Scarb versions
     outputs:
       versions: ${{ steps.get_versions.outputs.versions }}
@@ -31,7 +31,7 @@ jobs:
           echo "versions=[${scarb_versions[@]}]" >> "$GITHUB_OUTPUT"
 
   test-forge-unit-and-integration:
-    if: "! github.event.repository.fork"
+    if: github.event.repository.fork == false
     runs-on: ubuntu-latest
     needs: get-scarb-versions
     strategy:
@@ -52,7 +52,7 @@ jobs:
       - run: cargo test --release -p forge integration --features assert_non_exact_gas
 
   test-forge-e2e:
-    if: "! github.event.repository.fork"
+    if: github.event.repository.fork == false
     runs-on: ubuntu-latest
     needs: get-scarb-versions
     strategy:
@@ -95,7 +95,7 @@ jobs:
       - run: cargo test --release -p forge e2e
 
   test-cast:
-    if: "! github.event.repository.fork"
+    if: github.event.repository.fork == false
     runs-on: ubuntu-latest
     needs: get-scarb-versions
     strategy:
