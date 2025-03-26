@@ -20,13 +20,13 @@ pub const UDC_ADDRESS: Felt =
 pub const OZ_CLASS_HASH: Felt =
     felt!("0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6");
 pub const ARGENT_CLASS_HASH: Felt =
-    felt!("0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f");
+    felt!("0x02c8c7e6fbcfb3e8e15a46648e8914c6aa1fc506fc1e7fb3d1e19630716174bc");
 
 pub const BRAAVOS_CLASS_HASH: Felt =
     felt!("0x00816dd0297efc55dc1e7559020a3a825e81ef734b558f03c83325d4da7e6253");
 
 pub const BRAAVOS_BASE_ACCOUNT_CLASS_HASH: Felt =
-    felt!("0x013bfe114fb1cf405bfc3a7f8dbe2d91db146c17521d40dcf57e16d6b59fa8e6");
+    felt!("0x03d16c7a9a60b0593bd202f660a28c5d76e0403601d9ccc7e4fa253b6a70c201");
 
 // used in wait_for_tx. Txs will be fetched every 5s with timeout of 300s - so 60 attempts
 pub const WAIT_TIMEOUT: u16 = 300;

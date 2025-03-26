@@ -68,7 +68,7 @@ pub async fn create(
     create: &Create,
 ) -> Result<AccountCreateResponse> {
     // TODO(#3118): Remove this check once braavos integration is restored
-    assert_non_braavos_account_type(create.account_type)?;
+    // assert_non_braavos_account_type(create.account_type)?;
 
     let add_profile = create.add_profile.clone();
     let salt = extract_or_generate_salt(create.salt);

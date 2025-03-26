@@ -71,7 +71,7 @@ pub async fn import(
     import: &Import,
 ) -> Result<AccountImportResponse> {
     // TODO(#3118): Remove this check once braavos integration is restored
-    assert_non_braavos_account_type(import.account_type)?;
+    // assert_non_braavos_account_type(import.account_type)?;
 
     let private_key = if let Some(passed_private_key) = &import.private_key {
         passed_private_key
