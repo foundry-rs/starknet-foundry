@@ -11,6 +11,7 @@ use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use toml_edit::{Array, ArrayOfTables, DocumentMut, Item, Table, Value, value};
 
 static TEMPLATES_DIR: Dir = include_dir!("snforge_templates");
@@ -163,6 +164,20 @@ fn add_template_to_scarb_manifest(path: &PathBuf) -> Result<()> {
         .append(true)
         .open(path)
         .context("Failed to open Scarb.toml")?;
+
+    let scarb_toml = fs::read_to_string(path.clone()).unwrap();
+
+    let mut scarb_toml = DocumentMut::from_str(&scarb_toml).unwrap();
+
+    let cairo = scarb_toml
+        .entry("cairo")
+        .or_insert(Item::Table(Table::new()))
+        .as_table_mut()
+        .context("Failed to get cairo table from Scarb.toml")?;
+
+    cairo.entry("allow-warnings").or_insert(value(false));
+
+    std::fs::write(path, scarb_toml.to_string()).unwrap();
 
     file.write_all(SCARB_MANIFEST_TEMPLATE_CONTENT.as_bytes())
         .context("Failed to write to Scarb.toml")?;

@@ -217,6 +217,9 @@ fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool
             [dev-dependencies]{}
             assert_macros = "[..]"
 
+            [cairo]
+            allow-warnings = false
+
             {target_contract_entry}
 
             [scripts]
