@@ -35,6 +35,3 @@ if grep -iq "warning: Plugin diagnostic:" <<< "$output"; then
 elif grep -iq "warn: `edition` field not set in `[package]` section for package" <<< "$output"; then
     exit 1
 fi
-
-
-warn: `edition` field not set in `[package]` section for package

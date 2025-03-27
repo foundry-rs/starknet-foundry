@@ -10,6 +10,7 @@ echo "$output"
 
 templates=$(echo "$output" | grep "possible values:" | sed -E 's/.*possible values: (.*)]/\1/')
 IFS=', ' read -r -a templates <<< "$templates"
+
 for template in "${templates[@]}"; do
     echo "Initializing package for template: $template"
     package_name="${template//-/_}_test" # Replace hyphens with underscores, we can't have hyphens in package directory name

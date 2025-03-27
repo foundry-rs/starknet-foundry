@@ -1577,7 +1577,6 @@ fn events_contract_cost_sierra_gas() {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
             l2_gas: GasAmount(1_225_540),
-            // l2_gas: GasAmount(1_225_540),
         },
     );
 }
