@@ -38,6 +38,7 @@ popd || exit
 scarb cache clean
 
 # Check forge std from registry build
+rm -rf ~/.cargo/registry ~/.cargo/git
 
 $SNFORGE_PATH new my_project_2
 pushd my_project_2 || exit
