@@ -6,8 +6,6 @@ pushd "$SNFOUNDRY_ROOT" || exit
 
 output=$(target/release/snforge new --template 2>&1)
 
-echo "$output"
-
 templates=$(echo "$output" | grep "possible values:" | sed -E 's/.*possible values: (.*)]/\1/')
 IFS=', ' read -r -a templates <<< "$templates"
 
