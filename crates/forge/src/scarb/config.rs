@@ -6,6 +6,9 @@ use std::{collections::HashSet, num::NonZeroU32};
 use url::Url;
 
 pub const SCARB_MANIFEST_TEMPLATE_CONTENT: &str = r#"
+[cairo]
+allow-warnings = false
+
 # Visit https://foundry-rs.github.io/starknet-foundry/appendix/scarb-toml.html for more information
 
 # [tool.snforge]                                             # Define `snforge` tool section
