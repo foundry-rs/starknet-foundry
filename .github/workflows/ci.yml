@@ -280,9 +280,7 @@ jobs:
       - name: Build forge
         run: cargo build --release -p forge
       - name: Setup forge template packages
-        run: |
-          chmod +x ./scripts/setup_snforge_templates.sh
-          ./scripts/setup_snforge_templates.sh
+        run: ./scripts/setup_snforge_templates.sh
       - name: Check packages formatting
         run: ./scripts/scarb_fmt.sh
       - uses: software-mansion/setup-scarb@v1
