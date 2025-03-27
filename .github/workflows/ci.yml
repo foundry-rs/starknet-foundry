@@ -141,7 +141,8 @@ jobs:
 
       - run: |
           cargo test --package forge --features scarb_since_2_10 sierra_gas
-          cargo test --package forge --features scarb_since_2_10 check_forge_templates
+          cargo test --package forge --features scarb_since_2_10 validate_forge_templates
+          cargo test --package forge --features scarb_since_2_10 validate_libs
 
   test-forge-runner:
     name: Test Forge Runner
