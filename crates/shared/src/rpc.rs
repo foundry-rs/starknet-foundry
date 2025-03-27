@@ -14,7 +14,7 @@ pub fn create_rpc_client(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
 
 #[must_use]
 pub fn is_expected_version(version: &Version) -> bool {
-    // TODO(#3151)
+    // TODO(#3151): This is temporary adjustment as blast node returns 0.8.0-rc.3
     VersionReq::from_str(EXPECTED_RPC_VERSION)
         .expect("Failed to parse the expected RPC version")
         .matches(version)
