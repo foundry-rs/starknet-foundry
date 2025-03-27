@@ -24,10 +24,71 @@ struct Dependency {
     dev: bool,
 }
 
+impl Dependency {
+    fn add(&self, scarb_manifest_path: &PathBuf) -> Result<()> {
+        let mut cmd = ScarbCommand::new_with_stdio();
+        cmd.manifest_path(scarb_manifest_path).offline().arg("add");
+
+        if self.dev {
+            cmd.arg("--dev");
+        }
+
+        cmd.arg(format!("{}@{}", self.name, self.version))
+            .run()
+            .context(format!("Failed to add {} dependency", self.name))?;
+
+        Ok(())
+    }
+}
+
 struct TemplateManifestConfig {
     dependencies: Vec<Dependency>,
     contract_target: bool,
     fork_config: bool,
+}
+
+impl TemplateManifestConfig {
+    fn add_dependencies(&self, scarb_manifest_path: &PathBuf) -> Result<()> {
+        if env::var("DEV_DISABLE_SNFORGE_STD_DEPENDENCY").is_err() {
+            let snforge_version = env!("CARGO_PKG_VERSION");
+            Dependency {
+                name: "snforge_std".to_string(),
+                version: snforge_version.to_string(),
+                dev: true,
+            }
+            .add(scarb_manifest_path)?;
+        }
+
+        for dep in &self.dependencies {
+            dep.add(scarb_manifest_path)?;
+        }
+
+        Ok(())
+    }
+
+    fn update_config(&self, scarb_manifest_path: &Path) -> Result<()> {
+        let scarb_toml_content = fs::read_to_string(scarb_manifest_path)?;
+        let mut document = scarb_toml_content
+            .parse::<DocumentMut>()
+            .context("invalid document")?;
+
+        if self.contract_target {
+            add_target_to_toml(&mut document);
+        }
+
+        set_cairo_edition(&mut document, CAIRO_EDITION);
+        add_test_script(&mut document);
+        add_assert_macros(&mut document)?;
+        add_allow_prebuilt_macros(&mut document)?;
+
+        if self.fork_config {
+            add_fork_config(&mut document)?;
+        }
+
+        fs::write(scarb_manifest_path, document.to_string())?;
+
+        Ok(())
+    }
 }
 
 impl TryFrom<&Template> for TemplateManifestConfig {
@@ -137,33 +198,6 @@ fn replace_project_name(contents: &[u8], project_name: &str) -> Result<Vec<u8>> 
     let contents = std::str::from_utf8(contents).context("UTF-8 error")?;
     let contents = contents.replace("{{ PROJECT_NAME }}", project_name);
     Ok(contents.into_bytes())
-}
-
-fn update_config(
-    scarb_manifest_path: &Path,
-    template_config: &TemplateManifestConfig,
-) -> Result<()> {
-    let scarb_toml_content = fs::read_to_string(scarb_manifest_path)?;
-    let mut document = scarb_toml_content
-        .parse::<DocumentMut>()
-        .context("invalid document")?;
-
-    if template_config.contract_target {
-        add_target_to_toml(&mut document);
-    }
-
-    set_cairo_edition(&mut document, CAIRO_EDITION);
-    add_test_script(&mut document);
-    add_assert_macros(&mut document)?;
-    add_allow_prebuilt_macros(&mut document)?;
-
-    if template_config.fork_config {
-        add_fork_config(&mut document)?;
-    }
-
-    fs::write(scarb_manifest_path, document.to_string())?;
-
-    Ok(())
 }
 
 fn add_test_script(document: &mut DocumentMut) {
@@ -327,8 +361,8 @@ pub fn new(
     }
 
     let template_config = TemplateManifestConfig::try_from(&template)?;
-    add_dependencies(&scarb_manifest_path, &template_config)?;
-    update_config(&scarb_manifest_path, &template_config)?;
+    template_config.add_dependencies(&scarb_manifest_path)?;
+    template_config.update_config(&scarb_manifest_path)?;
 
     let template_dir = get_template_dir(&template)?;
     overwrite_or_copy_template_files(&template_dir, template_dir.path(), &project_path, &name)?;
@@ -341,44 +375,6 @@ pub fn new(
         .arg("fetch")
         .run()
         .context("Failed to fetch created project")?;
-
-    Ok(())
-}
-
-fn add_dependencies(
-    scarb_manifest_path: &PathBuf,
-    template_config: &TemplateManifestConfig,
-) -> Result<()> {
-    if env::var("DEV_DISABLE_SNFORGE_STD_DEPENDENCY").is_err() {
-        let snforge_version = env!("CARGO_PKG_VERSION");
-        add_dependency(
-            scarb_manifest_path,
-            &Dependency {
-                name: "snforge_std".to_string(),
-                version: snforge_version.to_string(),
-                dev: true,
-            },
-        )?;
-    }
-
-    for dep in &template_config.dependencies {
-        add_dependency(scarb_manifest_path, dep)?;
-    }
-
-    Ok(())
-}
-
-fn add_dependency(scarb_manifest_path: &PathBuf, dependency: &Dependency) -> Result<()> {
-    let mut cmd = ScarbCommand::new_with_stdio();
-    cmd.manifest_path(scarb_manifest_path).offline().arg("add");
-
-    if dependency.dev {
-        cmd.arg("--dev");
-    }
-
-    cmd.arg(format!("{}@{}", dependency.name, dependency.version))
-        .run()
-        .context(format!("Failed to add {} dependency", dependency.name))?;
 
     Ok(())
 }

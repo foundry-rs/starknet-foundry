@@ -5,8 +5,8 @@ use snforge_std::{
 };
 use starknet::{ContractAddress, contract_address_const};
 
-const ETH_TOKEN_ADDRESS: felt252 =
-    0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7;
+const STRK_TOKEN_ADDRESS: felt252 =
+    0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d;
 
 const INITIAL_SUPPLY: u256 = 10_000_000_000;
 
@@ -58,9 +58,9 @@ fn test_transfer() {
 #[fork("SEPOLIA_LATEST", block_number: 61804)]
 fn test_fork_transfer() {
     let target_account = contract_address_const::<2>();
-    let eth_contract_address = contract_address_const::<ETH_TOKEN_ADDRESS>();
+    let strk_contract_address = contract_address_const::<STRK_TOKEN_ADDRESS>();
 
-    let erc20 = ERC20ABIDispatcher { contract_address: eth_contract_address };
+    let erc20 = ERC20ABIDispatcher { contract_address: strk_contract_address };
 
     let owner_account: ContractAddress =
         0x04337e199aa6a8959aeb2a6afcd2f82609211104191a041e7b9ba2f4039768f0
@@ -70,7 +70,7 @@ fn test_fork_transfer() {
     let balance_before = erc20.balance_of(target_account);
     assert!(balance_before == 0, "Invalid balance");
 
-    cheat_caller_address(eth_contract_address, owner_account, CheatSpan::TargetCalls(1));
+    cheat_caller_address(strk_contract_address, owner_account, CheatSpan::TargetCalls(1));
 
     let transfer_value: u256 = 100;
     erc20.transfer(target_account, transfer_value);
