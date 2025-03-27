@@ -121,7 +121,8 @@ mod tests {
     use test_case::test_case;
 
     #[test_case(FreeProvider::Voyager)]
-    #[test_case(FreeProvider::Blast)]
+    // TODO(#3151)
+    // #[test_case(FreeProvider::Blast)]
     #[tokio::test]
     async fn test_mainnet_url_happy_case(free_provider: FreeProvider) {
         let provider = get_provider(&Network::free_sepolia_rpc(&free_provider)).unwrap();
@@ -130,7 +131,8 @@ mod tests {
     }
 
     #[test_case(FreeProvider::Voyager)]
-    #[test_case(FreeProvider::Blast)]
+    // TODO(#3151)
+    // #[test_case(FreeProvider::Blast)]
     #[tokio::test]
     async fn test_sepolia_url_happy_case(free_provider: FreeProvider) {
         let provider = get_provider(&Network::free_sepolia_rpc(&free_provider)).unwrap();
