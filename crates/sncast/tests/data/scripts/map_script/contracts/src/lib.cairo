@@ -8,7 +8,9 @@ trait IMap<TMapState> {
 
 #[starknet::contract]
 mod Mapa {
-    use starknet::{storage::{StoragePointerWriteAccess, StoragePathEntry, Map}};
+    use starknet::{
+        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map}
+    };
 
     #[storage]
     struct Storage {
@@ -33,7 +35,9 @@ mod Mapa {
 
 #[starknet::contract]
 mod Mapa2 {
-    use starknet::{storage::{StoragePointerWriteAccess, StoragePathEntry, Map}};
+    use starknet::{
+        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map}
+    };
 
     #[storage]
     struct Storage {

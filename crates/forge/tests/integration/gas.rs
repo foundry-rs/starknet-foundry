@@ -1201,15 +1201,15 @@ fn contract_keccak_cost_sierra_gas() {
     // 87650 = cost of 1 call contract syscall (because 1 * 866 * 100 + 15 * 70)
     //      -> 1 call contract syscall costs 866 cairo steps and 15 range check builtins
     //      -> 1 range check costs 70
-    // 1157519 = reported consumed sierra gas
-    // 0 l1_gas + 96 l1_data_gas + (142810 + 50000 + 87650 + 1157519) l2 gas
+    // 1158935 = reported consumed sierra gas
+    // 0 l1_gas + 96 l1_data_gas + (142810 + 50000 + 87650 + 1158935) l2 gas
     assert_gas(
         &result,
         "contract_keccak_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(1_438_075),
+            l2_gas: GasAmount(1_439_395),
         },
     );
 }
@@ -1568,15 +1568,15 @@ fn events_contract_cost_sierra_gas() {
     // 10000 = cost of 1 emit event syscall (see `events_contract_cost_sierra_gas` test)
     // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
     // 87650 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
-    // 209330 = reported consumed sierra gas
-    // 0 l1_gas + 96 l1_data_gas + (512000 + 256000 + 10000 + 142810 + 87650 + 209330) l2 gas
+    // 230550 = reported consumed sierra gas
+    // 0 l1_gas + 0 l1_data_gas + (512000 + 256000 + 10000 + 142810 + 87650 + 230550) l2 gas
     assert_gas(
         &result,
         "event_emission_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(1_225_540),
+            l2_gas: GasAmount(1_239_010),
         },
     );
 }

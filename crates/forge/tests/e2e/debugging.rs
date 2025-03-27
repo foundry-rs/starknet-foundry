@@ -13,48 +13,48 @@ const DEBUGGING_TRACE: &str = indoc! {r"
         ├─ [selector] execute_calls
         │  ├─ [contract name] SimpleContract
         │  ├─ [entry point type] External
-        │  ├─ [calldata] [0x2, 0x417934062c9a072bc24cd5ccd4c18a58e9781f9ed06f78205d63c222efa8de8, 0x2, 0x615fa271ad6fab6b379f68f64787160846fbb4b8e639722232d4a3e9812675e, 0x0, 0x615fa271ad6fab6b379f68f64787160846fbb4b8e639722232d4a3e9812675e, 0x0, 0x615fa271ad6fab6b379f68f64787160846fbb4b8e639722232d4a3e9812675e, 0x0]
-        │  ├─ [storage address] 0x26cbd91a1f45da60f4364c248bf52a5babf31c27dab750378e7e5b0d540c98e
+        │  ├─ [calldata] [0x2, 0x73668021e0dfc00aa573e654a0763dca79dbbfb5a60e4987f71a3472026994a, 0x2, 0x6ce4a1209f067bb71fbd98f37e1240f45beaf8fb22c39628cb2accfe4fb5bcb, 0x0, 0x6ce4a1209f067bb71fbd98f37e1240f45beaf8fb22c39628cb2accfe4fb5bcb, 0x0, 0x6ce4a1209f067bb71fbd98f37e1240f45beaf8fb22c39628cb2accfe4fb5bcb, 0x0]
+        │  ├─ [storage address] 0x29e61a26d304881d5944a9ab3446685cb791af1ff827f9d4bc34489a2ff9629
         │  ├─ [caller address] 0x1724987234973219347210837402
         │  ├─ [call type] Call
         │  ├─ [call result] success: []
         │  ├─ [selector] execute_calls
         │  │  ├─ [contract name] SimpleContract
         │  │  ├─ [entry point type] External
-        │  │  ├─ [calldata] [0x2, 0x615fa271ad6fab6b379f68f64787160846fbb4b8e639722232d4a3e9812675e, 0x0, 0x615fa271ad6fab6b379f68f64787160846fbb4b8e639722232d4a3e9812675e, 0x0]
-        │  │  ├─ [storage address] 0x417934062c9a072bc24cd5ccd4c18a58e9781f9ed06f78205d63c222efa8de8
-        │  │  ├─ [caller address] 0x26cbd91a1f45da60f4364c248bf52a5babf31c27dab750378e7e5b0d540c98e
+        │  │  ├─ [calldata] [0x2, 0x6ce4a1209f067bb71fbd98f37e1240f45beaf8fb22c39628cb2accfe4fb5bcb, 0x0, 0x6ce4a1209f067bb71fbd98f37e1240f45beaf8fb22c39628cb2accfe4fb5bcb, 0x0]
+        │  │  ├─ [storage address] 0x73668021e0dfc00aa573e654a0763dca79dbbfb5a60e4987f71a3472026994a
+        │  │  ├─ [caller address] 0x29e61a26d304881d5944a9ab3446685cb791af1ff827f9d4bc34489a2ff9629
         │  │  ├─ [call type] Call
         │  │  ├─ [call result] success: []
         │  │  ├─ [selector] execute_calls
         │  │  │  ├─ [contract name] SimpleContract
         │  │  │  ├─ [entry point type] External
         │  │  │  ├─ [calldata] [0x0]
-        │  │  │  ├─ [storage address] 0x615fa271ad6fab6b379f68f64787160846fbb4b8e639722232d4a3e9812675e
-        │  │  │  ├─ [caller address] 0x417934062c9a072bc24cd5ccd4c18a58e9781f9ed06f78205d63c222efa8de8
+        │  │  │  ├─ [storage address] 0x6ce4a1209f067bb71fbd98f37e1240f45beaf8fb22c39628cb2accfe4fb5bcb
+        │  │  │  ├─ [caller address] 0x73668021e0dfc00aa573e654a0763dca79dbbfb5a60e4987f71a3472026994a
         │  │  │  ├─ [call type] Call
         │  │  │  └─ [call result] success: []
         │  │  └─ [selector] execute_calls
         │  │     ├─ [contract name] SimpleContract
         │  │     ├─ [entry point type] External
         │  │     ├─ [calldata] [0x0]
-        │  │     ├─ [storage address] 0x615fa271ad6fab6b379f68f64787160846fbb4b8e639722232d4a3e9812675e
-        │  │     ├─ [caller address] 0x417934062c9a072bc24cd5ccd4c18a58e9781f9ed06f78205d63c222efa8de8
+        │  │     ├─ [storage address] 0x6ce4a1209f067bb71fbd98f37e1240f45beaf8fb22c39628cb2accfe4fb5bcb
+        │  │     ├─ [caller address] 0x73668021e0dfc00aa573e654a0763dca79dbbfb5a60e4987f71a3472026994a
         │  │     ├─ [call type] Call
         │  │     └─ [call result] success: []
         │  └─ [selector] execute_calls
         │     ├─ [contract name] SimpleContract
         │     ├─ [entry point type] External
         │     ├─ [calldata] [0x0]
-        │     ├─ [storage address] 0x615fa271ad6fab6b379f68f64787160846fbb4b8e639722232d4a3e9812675e
-        │     ├─ [caller address] 0x26cbd91a1f45da60f4364c248bf52a5babf31c27dab750378e7e5b0d540c98e
+        │     ├─ [storage address] 0x6ce4a1209f067bb71fbd98f37e1240f45beaf8fb22c39628cb2accfe4fb5bcb
+        │     ├─ [caller address] 0x29e61a26d304881d5944a9ab3446685cb791af1ff827f9d4bc34489a2ff9629
         │     ├─ [call type] Call
         │     └─ [call result] success: []
         └─ [selector] fail
            ├─ [contract name] SimpleContract
            ├─ [entry point type] External
            ├─ [calldata] [0x5, 0x1, 0x2, 0x3, 0x4, 0x5]
-           ├─ [storage address] 0x26cbd91a1f45da60f4364c248bf52a5babf31c27dab750378e7e5b0d540c98e
+           ├─ [storage address] 0x29e61a26d304881d5944a9ab3446685cb791af1ff827f9d4bc34489a2ff9629
            ├─ [caller address] 0x1724987234973219347210837402
            ├─ [call type] Call
            └─ [call result] panic: [0x1, 0x2, 0x3, 0x4, 0x5]

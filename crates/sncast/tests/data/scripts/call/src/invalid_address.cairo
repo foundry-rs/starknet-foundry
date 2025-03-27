@@ -3,7 +3,7 @@ use sncast_std::{call, CallResult, ScriptCommandError, ProviderError, StarknetEr
 fn main() {
     let eth = 0x049;
     let call_err: ScriptCommandError = call(
-        eth.try_into().expect('bad address'), selector!("decimals"), array![],
+        eth.try_into().expect('bad address'), selector!("decimals"), array![]
     )
         .unwrap_err();
 
@@ -11,8 +11,8 @@ fn main() {
 
     assert(
         ScriptCommandError::ProviderError(
-            ProviderError::StarknetError(StarknetError::ContractNotFound),
+            ProviderError::StarknetError(StarknetError::ContractNotFound)
         ) == call_err,
-        'ohno',
+        'ohno'
     )
 }
