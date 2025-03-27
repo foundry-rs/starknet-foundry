@@ -2509,6 +2509,7 @@ dependencies = [
  "lazy_static 1.5.0",
  "num-bigint",
  "openssl",
+ "project-root",
  "rand 0.8.5",
  "regex",
  "scarb-api",
