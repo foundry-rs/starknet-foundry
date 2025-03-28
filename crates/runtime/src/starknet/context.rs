@@ -17,12 +17,12 @@ use starknet_api::block::{BlockInfo, BlockNumber, BlockTimestamp, GasPrice};
 use starknet_api::block::{GasPriceVector, GasPrices, NonzeroGasPrice};
 use starknet_api::data_availability::DataAvailabilityMode;
 use starknet_api::execution_resources::GasAmount;
-use starknet_api::transaction::fields::TransactionSignature;
+use starknet_api::transaction::fields::{AccountDeploymentData, PaymasterData, Tip};
 use starknet_api::transaction::fields::{AllResourceBounds, ResourceBounds, ValidResourceBounds};
 use starknet_api::{
     contract_address,
     core::{ChainId, ContractAddress, Nonce},
-    transaction::{TransactionHash, TransactionVersion},
+    transaction::TransactionVersion,
 };
 use starknet_types_core::felt::Felt;
 use std::sync::Arc;
@@ -55,12 +55,9 @@ pub fn build_block_context(block_info: &BlockInfo, chain_id: Option<ChainId>) ->
 fn build_tx_info() -> TransactionInfo {
     TransactionInfo::Current(CurrentTransactionInfo {
         common_fields: CommonAccountFields {
-            transaction_hash: TransactionHash::default(),
             version: TransactionVersion::THREE,
-            signature: TransactionSignature::default(),
             nonce: Nonce(Felt::from(0_u8)),
-            sender_address: ContractAddress::default(),
-            only_query: false,
+            ..Default::default()
         },
         resource_bounds: ValidResourceBounds::AllResources(AllResourceBounds {
             l1_gas: ResourceBounds {
@@ -76,11 +73,11 @@ fn build_tx_info() -> TransactionInfo {
                 max_price_per_unit: GasPrice::from(1_u8),
             },
         }),
-        tip: Default::default(),
+        tip: Tip::default(),
         nonce_data_availability_mode: DataAvailabilityMode::L1,
         fee_data_availability_mode: DataAvailabilityMode::L1,
-        paymaster_data: Default::default(),
-        account_deployment_data: Default::default(),
+        paymaster_data: PaymasterData::default(),
+        account_deployment_data: AccountDeploymentData::default(),
     })
 }
 
@@ -99,6 +96,7 @@ pub fn build_transaction_context(
 pub fn build_context(
     block_info: &BlockInfo,
     chain_id: Option<ChainId>,
+    tracked_resource: &TrackedResource,
 ) -> EntryPointExecutionContext {
     let transaction_context = Arc::new(build_transaction_context(block_info, chain_id));
 
@@ -115,9 +113,7 @@ pub fn build_context(
         context.n_emitted_events,
         context.n_sent_messages_to_l1,
     ));
-    context
-        .tracked_resource_stack
-        .push(TrackedResource::CairoSteps);
+    context.tracked_resource_stack.push(*tracked_resource);
 
     context
 }

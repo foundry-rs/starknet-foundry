@@ -199,7 +199,7 @@ jobs:
       - name: Smoke test
         shell: bash
         env:
-          RPC_URL: "http://188.34.188.184:7070/rpc/v0_7"
+          RPC_URL: "http://188.34.188.184:7070/rpc/v0_8"
         run: |
           BINARY_PATH="${{ env.BINARY_PATH }}"
           BINARY_PATH="${BINARY_PATH%.tar.gz}"
@@ -274,7 +274,7 @@ jobs:
 
       - uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "2.8.5"
+          scarb-version: "2.11.0"
 
       - name: Publish sncast_std
         working-directory: sncast_std

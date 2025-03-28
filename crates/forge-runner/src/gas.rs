@@ -1,7 +1,8 @@
 use crate::test_case_summary::{Single, TestCaseSummary};
+use anyhow::anyhow;
 use blockifier::abi::constants;
 use blockifier::context::TransactionContext;
-use blockifier::execution::call_info::{EventSummary, ExecutionSummary};
+use blockifier::execution::call_info::{ChargedResources, EventSummary, ExecutionSummary};
 use blockifier::fee::resources::{
     ArchivalDataResources, ComputationResources, MessageResources, StarknetResources,
     StateResources, TransactionResources,
@@ -11,10 +12,13 @@ use blockifier::state::errors::StateError;
 use blockifier::transaction::objects::HasRelatedFeeType;
 use blockifier::utils::u64_from_usize;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
+use cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableGasConfig;
 use cheatnet::state::ExtendedStateReader;
+use shared::print::print_as_warning;
 use starknet_api::execution_resources::{GasAmount, GasVector};
 use starknet_api::transaction::EventContent;
 use starknet_api::transaction::fields::GasVectorComputationMode;
+use std::collections::HashSet;
 
 pub fn calculate_used_gas(
     transaction_context: &TransactionContext,
@@ -40,10 +44,8 @@ pub fn calculate_used_gas(
     let computation_resources = ComputationResources {
         vm_resources: resources.execution_resources.clone(),
         n_reverted_steps: 0,
-        // TODO(#2977)
-        sierra_gas: GasAmount(0),
-        // TODO(#2977)
-        reverted_sierra_gas: GasAmount(0),
+        sierra_gas: resources.gas_consumed,
+        reverted_sierra_gas: GasAmount::ZERO,
     };
 
     let transaction_resources = TransactionResources {
@@ -55,8 +57,7 @@ pub fn calculate_used_gas(
     Ok(transaction_resources.to_gas_vector(
         versioned_constants,
         use_kzg_da,
-        // TODO(#2977)
-        &GasVectorComputationMode::NoL2Gas,
+        &GasVectorComputationMode::All,
     ))
 }
 
@@ -74,9 +75,9 @@ fn get_archival_data_resources(events: Vec<EventContent>) -> ArchivalDataResourc
     // TODO(#2978) this is a workaround because we cannot create `ArchivalDataResources` directly yet
     //  because of private fields
     let dummy_execution_summary = ExecutionSummary {
-        charged_resources: Default::default(),
-        executed_class_hashes: Default::default(),
-        visited_storage_entries: Default::default(),
+        charged_resources: ChargedResources::default(),
+        executed_class_hashes: HashSet::default(),
+        visited_storage_entries: HashSet::default(),
         l2_to_l1_payload_lengths: vec![],
         event_summary,
     };
@@ -153,7 +154,7 @@ fn get_state_resources(
 }
 
 pub fn check_available_gas(
-    available_gas: Option<usize>,
+    available_gas: Option<RawAvailableGasConfig>,
     summary: TestCaseSummary<Single>,
 ) -> TestCaseSummary<Single> {
     match summary {
@@ -161,16 +162,39 @@ pub fn check_available_gas(
             name,
             arguments,
             gas_info,
+            debugging_trace,
             ..
-        } if available_gas.is_some_and(|available_gas| gas_info > available_gas as u128) => {
+        } if available_gas.is_some_and(|available_gas| match available_gas {
+            RawAvailableGasConfig::MaxGas(gas) => {
+                // todo(3109): remove uunnamed argument in available_gas
+                print_as_warning(&anyhow!(
+                    "Setting available_gas with unnamed argument is deprecated. \
+                Consider setting resource bounds (l1_gas, l1_data_gas and l2_gas) explicitly."
+                ));
+                // convert resource bounds to classic l1_gas using formula
+                // l1_gas + l1_data_gas + (l2_gas / 40000)
+                // because 100 l2_gas = 0.0025 l1_gas
+                gas_info.l1_gas + gas_info.l1_data_gas + (gas_info.l2_gas / 40000)
+                    > GasAmount(gas as u64)
+            }
+            RawAvailableGasConfig::MaxResourceBounds(bounds) => {
+                let av_gas = bounds.to_gas_vector();
+                gas_info.l1_gas > av_gas.l1_gas
+                    || gas_info.l1_data_gas > av_gas.l1_data_gas
+                    || gas_info.l2_gas > av_gas.l2_gas
+            }
+        }) =>
+        {
             TestCaseSummary::Failed {
                 name,
                 msg: Some(format!(
-                    "\n\tTest cost exceeded the available gas. Consumed gas: ~{gas_info}"
+                    "\n\tTest cost exceeded the available gas. Consumed l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{}",
+                    gas_info.l1_gas, gas_info.l1_data_gas, gas_info.l2_gas
                 )),
                 arguments,
                 fuzzer_args: Vec::default(),
                 test_statistics: (),
+                debugging_trace,
             }
         }
         _ => summary,

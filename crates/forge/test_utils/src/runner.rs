@@ -18,6 +18,7 @@ use scarb_api::{
 };
 use semver::Version;
 use shared::command::CommandExt;
+use starknet_api::execution_resources::{GasAmount, GasVector};
 use std::{
     collections::HashMap,
     fs,
@@ -205,7 +206,7 @@ impl<'a> TestCase {
                     name,
                     (
                         StarknetContractArtifacts { sierra, casm },
-                        Default::default(),
+                        Utf8PathBuf::default(),
                     ),
                 ))
             })
@@ -276,7 +277,7 @@ pub fn assert_case_output_contains(
     }));
 }
 
-pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_gas: u128) {
+pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_gas: GasVector) {
     let test_name_suffix = format!("::{test_case_name}");
 
     let result = TestCase::find_test_result(result);
@@ -288,7 +289,7 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
             }
             AnyTestCaseSummary::Single(case) => match case {
                 TestCaseSummary::Passed { gas_info: gas, .. } => {
-                    *gas == asserted_gas
+                    assert_gas_with_margin(*gas, asserted_gas)
                         && any_case
                             .name()
                             .unwrap()
@@ -298,6 +299,26 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
             },
         }
     }));
+}
+
+// This logic is used to assert exact gas values in CI for the minimal supported Scarb version
+// and to assert gas values with a margin in scheduled tests, as values can vary for different Scarb versions
+// FOR LOCAL DEVELOPMENT ALWAYS USE EXACT CALCULATIONS
+fn assert_gas_with_margin(gas: GasVector, asserted_gas: GasVector) -> bool {
+    if cfg!(feature = "assert_non_exact_gas") {
+        let diff = gas_vector_abs_diff(&gas, &asserted_gas);
+        diff.l1_gas.0 <= 10 && diff.l1_data_gas.0 <= 10 && diff.l2_gas.0 <= 200_000
+    } else {
+        gas == asserted_gas
+    }
+}
+
+fn gas_vector_abs_diff(a: &GasVector, b: &GasVector) -> GasVector {
+    GasVector {
+        l1_gas: GasAmount(a.l1_gas.0.abs_diff(b.l1_gas.0)),
+        l1_data_gas: GasAmount(a.l1_data_gas.0.abs_diff(b.l1_data_gas.0)),
+        l2_gas: GasAmount(a.l2_gas.0.abs_diff(b.l2_gas.0)),
+    }
 }
 
 pub fn assert_syscall(

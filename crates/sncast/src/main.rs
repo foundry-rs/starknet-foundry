@@ -12,8 +12,9 @@ use std::io::IsTerminal;
 
 use crate::starknet_commands::deploy::DeployArguments;
 use camino::Utf8PathBuf;
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
 use configuration::load_config;
+use shared::auto_completions::{Completion, generate_completions};
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
@@ -70,49 +71,49 @@ Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
 "
 )]
 #[command(about = "sncast - All-in-one tool for interacting with Starknet smart contracts", long_about = None)]
-#[clap(name = "sncast")]
+#[command(name = "sncast")]
 #[expect(clippy::struct_excessive_bools)]
 struct Cli {
     /// Profile name in snfoundry.toml config file
-    #[clap(short, long)]
+    #[arg(short, long)]
     profile: Option<String>,
 
     /// Account to be used for contract declaration;
     /// When using keystore (`--keystore`), this should be a path to account file
     /// When using accounts file, this should be an account name
-    #[clap(short = 'a', long)]
+    #[arg(short = 'a', long)]
     account: Option<String>,
 
     /// Path to the file holding accounts info
-    #[clap(long = "accounts-file")]
+    #[arg(long = "accounts-file")]
     accounts_file_path: Option<Utf8PathBuf>,
 
     /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
-    #[clap(short, long)]
+    #[arg(short, long)]
     keystore: Option<Utf8PathBuf>,
 
     /// If passed, values will be displayed as integers
-    #[clap(long, conflicts_with = "hex_format")]
+    #[arg(long, conflicts_with = "hex_format")]
     int_format: bool,
 
     /// If passed, values will be displayed as hex
-    #[clap(long, conflicts_with = "int_format")]
+    #[arg(long, conflicts_with = "int_format")]
     hex_format: bool,
 
     /// If passed, output will be displayed in json format
-    #[clap(short, long)]
+    #[arg(short, long)]
     json: bool,
 
     /// If passed, command will wait until transaction is accepted or rejected
-    #[clap(short = 'w', long)]
+    #[arg(short = 'w', long)]
     wait: bool,
 
     /// Adjusts the time after which --wait assumes transaction was not received or rejected
-    #[clap(long)]
+    #[arg(long)]
     wait_timeout: Option<u16>,
 
     /// Adjusts the time between consecutive attempts to fetch transaction by --wait flag
-    #[clap(long)]
+    #[arg(long)]
     wait_retry_interval: Option<u8>,
 
     #[command(subcommand)]
@@ -150,17 +151,20 @@ enum Commands {
 
     /// Verify a contract
     Verify(Verify),
+
+    /// Generate completion script
+    Completion(Completion),
 }
 
 #[derive(Debug, Clone, clap::Args)]
 #[group(multiple = false)]
 pub struct Arguments {
     /// Arguments of the called function serialized as a series of felts
-    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
+    #[arg(short, long, value_delimiter = ' ', num_args = 1..)]
     pub calldata: Option<Vec<String>>,
 
     // Arguments of the called function as a comma-separated string of Cairo expressions
-    #[clap(long)]
+    #[arg(long)]
     pub arguments: Option<String>,
 }
 
@@ -644,6 +648,11 @@ async fn run_async_command(
             .await;
 
             print_command_result("verify", &result, numbers_format, output_format)?;
+            Ok(())
+        }
+
+        Commands::Completion(completion) => {
+            generate_completions(completion.shell, &mut Cli::command())?;
             Ok(())
         }
 

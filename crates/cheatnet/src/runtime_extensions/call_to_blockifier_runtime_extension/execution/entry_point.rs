@@ -5,7 +5,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetSta
 use crate::runtime_extensions::common::{get_relocated_vm_trace, sum_syscall_counters};
 use crate::state::{CallTrace, CallTraceNode, CheatStatus, EncounteredError};
 use blockifier::execution::call_info::{CallExecution, Retdata};
-use blockifier::execution::contract_class::RunnableCompiledClass;
+use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
 use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use blockifier::{
     execution::{
@@ -29,7 +29,7 @@ use starknet_api::{
 };
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use thiserror::Error;
 use conversions::FromConv;
@@ -40,6 +40,7 @@ pub(crate) type ContractClassEntryPointExecutionResult = Result<
 >;
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
+#[expect(clippy::too_many_lines)]
 pub fn execute_call_entry_point(
     entry_point: &mut CallEntryPoint, // Instead of 'self'
     state: &mut dyn State,
@@ -72,14 +73,23 @@ pub fn execute_call_entry_point(
                 ret_data.iter().map(|datum| Felt::from_(*datum)).collect();
             cheatnet_state.trace_data.exit_nested_call(
                 ExecutionResources::default(),
-                Default::default(),
+                u64::default(),
+                HashMap::default(),
                 CallResult::Success {
                     ret_data: ret_data_f252,
                 },
                 &[],
                 None,
             );
-            return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
+            let tracked_resource = *context
+                .tracked_resource_stack
+                .last()
+                .expect("Unexpected empty tracked resource.");
+            return Ok(mocked_call_info(
+                entry_point.clone(),
+                ret_data.clone(),
+                tracked_resource,
+            ));
         }
     }
     // endregion
@@ -177,13 +187,33 @@ fn remove_syscall_resources_and_exit_success_call(
     let versioned_constants = context.tx_context.block_context.versioned_constants();
     // We don't want the syscall resources to pollute the results
     let mut resources = call_info.resources.clone();
-    resources -= &versioned_constants.get_additional_os_syscall_resources(syscall_counter);
+    let mut gas_consumed = call_info.execution.gas_consumed;
+
+    match &context
+        .tracked_resource_stack
+        .last()
+        .expect("Unexpected empty tracked resource.")
+    {
+        TrackedResource::CairoSteps => {
+            resources -= &versioned_constants.get_additional_os_syscall_resources(syscall_counter);
+        }
+        TrackedResource::SierraGas => {
+            let syscalls_consumed_gas: u64 = syscall_counter
+                .iter()
+                .map(|(name, count)| {
+                    versioned_constants.get_syscall_gas_cost(name) * (*count as u64)
+                })
+                .sum();
+            gas_consumed -= syscalls_consumed_gas;
+        }
+    };
 
     let nested_syscall_counter_sum =
         aggregate_nested_syscall_counters(&cheatnet_state.trace_data.current_call_stack.top());
     let syscall_counter = sum_syscall_counters(nested_syscall_counter_sum, syscall_counter);
     cheatnet_state.trace_data.exit_nested_call(
         resources,
+        gas_consumed,
         syscall_counter,
         CallResult::from_success(call_info),
         &call_info.execution.l2_to_l1_messages,
@@ -203,7 +233,8 @@ fn exit_error_call(
     };
     cheatnet_state.trace_data.exit_nested_call(
         ExecutionResources::default(),
-        Default::default(),
+        u64::default(),
+        HashMap::default(),
         CallResult::from_err(error, &identifier),
         &[],
         vm_trace,
@@ -265,7 +296,11 @@ fn get_mocked_function_cheat_status<'a>(
         .and_then(|contract_functions| contract_functions.get_mut(&call.entry_point_selector))
 }
 
-fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {
+fn mocked_call_info(
+    call: CallEntryPoint,
+    ret_data: Vec<Felt>,
+    tracked_resource: TrackedResource,
+) -> CallInfo {
     CallInfo {
         call: CallEntryPoint {
             class_hash: Some(call.class_hash.unwrap_or_default()),
@@ -283,9 +318,8 @@ fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {
         storage_read_values: vec![],
         accessed_storage_keys: HashSet::new(),
         read_class_hash_values: vec![],
-        // TODO(#2977) This defaults to `CairoSteps` as of writing this, but it could be changed in the future
-        tracked_resource: Default::default(),
-        accessed_contract_addresses: Default::default(),
+        tracked_resource,
+        accessed_contract_addresses: HashSet::default(),
     }
 }
 

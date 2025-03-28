@@ -13,6 +13,7 @@ use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_annotations::trace_data::L1Resources;
+use cairo_vm::Felt252;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use conversions::serde::deserialize::CairoDeserialize;
@@ -71,7 +72,7 @@ impl StateReader for ExtendedStateReader {
             .or_else(|_| {
                 self.fork_state_reader
                     .as_ref()
-                    .map_or(Ok(Default::default()), {
+                    .map_or(Ok(Felt252::default()), {
                         |reader| reader.get_storage_at(contract_address, key)
                     })
             })
@@ -83,7 +84,7 @@ impl StateReader for ExtendedStateReader {
             .or_else(|_| {
                 self.fork_state_reader
                     .as_ref()
-                    .map_or(Ok(Default::default()), {
+                    .map_or(Ok(Nonce::default()), {
                         |reader| reader.get_nonce_at(contract_address)
                     })
             })
@@ -95,7 +96,7 @@ impl StateReader for ExtendedStateReader {
             .or_else(|_| {
                 self.fork_state_reader
                     .as_ref()
-                    .map_or(Ok(Default::default()), {
+                    .map_or(Ok(ClassHash::default()), {
                         |reader| reader.get_class_hash_at(contract_address)
                     })
             })
@@ -173,6 +174,7 @@ pub struct CallTrace {
     pub used_l1_resources: L1Resources,
     pub used_syscalls: SyscallCounter,
     pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
+    pub gas_consumed: u64,
 }
 
 impl CairoSerialize for CallTrace {
@@ -194,14 +196,15 @@ impl CairoSerialize for CallTrace {
 impl CallTrace {
     fn default_successful_call() -> Self {
         Self {
-            run_with_call_header: Default::default(),
-            entry_point: Default::default(),
-            used_execution_resources: Default::default(),
-            used_l1_resources: Default::default(),
-            used_syscalls: Default::default(),
+            run_with_call_header: false,
+            entry_point: CallEntryPoint::default(),
+            used_execution_resources: ExecutionResources::default(),
+            used_l1_resources: L1Resources::default(),
+            used_syscalls: SyscallCounter::default(),
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
             vm_trace: None,
+            gas_consumed: u64::default(),
         }
     }
 }
@@ -237,7 +240,7 @@ impl NotEmptyCallStack {
     pub fn from(elem: Rc<RefCell<CallTrace>>) -> Self {
         NotEmptyCallStack(vec![CallStackElement {
             call_trace: elem,
-            cheated_data: Default::default(),
+            cheated_data: CheatedData::default(),
         }])
     }
 
@@ -294,7 +297,7 @@ pub struct CheatedTxInfo {
 impl CheatedTxInfo {
     #[must_use]
     pub fn is_mocked(&self) -> bool {
-        self != &Default::default()
+        self != &CheatedTxInfo::default()
     }
 }
 
@@ -333,6 +336,8 @@ pub struct CheatnetState {
     pub trace_data: TraceData,
     pub encountered_errors: Vec<EncounteredError>,
     pub fuzzer_args: Vec<String>,
+    pub block_hash_contracts: HashMap<(ContractAddress, u64), (CheatSpan, Felt)>,
+    pub global_block_hash: HashMap<u64, (Felt, Vec<ContractAddress>)>,
 }
 
 impl Default for CheatnetState {
@@ -346,10 +351,10 @@ impl Default for CheatnetState {
             ..CallTrace::default_successful_call()
         }));
         Self {
-            cheated_execution_info_contracts: Default::default(),
-            global_cheated_execution_info: Default::default(),
-            mocked_functions: Default::default(),
-            replaced_bytecode_contracts: Default::default(),
+            cheated_execution_info_contracts: HashMap::default(),
+            global_cheated_execution_info: ExecutionInfoMock::default(),
+            mocked_functions: HashMap::default(),
+            replaced_bytecode_contracts: HashMap::default(),
             detected_events: vec![],
             detected_messages_to_l1: vec![],
             deploy_salt_base: 0,
@@ -360,6 +365,8 @@ impl Default for CheatnetState {
             },
             encountered_errors: vec![],
             fuzzer_args: Vec::default(),
+            block_hash_contracts: HashMap::default(),
+            global_block_hash: HashMap::default(),
         }
     }
 }
@@ -493,6 +500,7 @@ impl TraceData {
     pub fn exit_nested_call(
         &mut self,
         execution_resources: ExecutionResources,
+        gas_consumed: u64,
         used_syscalls: SyscallCounter,
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
@@ -505,6 +513,7 @@ impl TraceData {
 
         let mut last_call = last_call.borrow_mut();
         last_call.used_execution_resources = execution_resources;
+        last_call.gas_consumed = gas_consumed;
 
         last_call.used_syscalls = used_syscalls;
 

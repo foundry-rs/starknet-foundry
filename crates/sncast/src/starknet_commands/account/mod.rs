@@ -5,15 +5,17 @@ use crate::starknet_commands::account::import::Import;
 use crate::starknet_commands::account::list::List;
 use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
-use clap::{Args, Subcommand, ValueEnum};
+use clap::{Args, Subcommand};
 use configuration::{
     CONFIG_FILENAME, find_config_file, load_config, search_config_upwards_relative_to,
 };
 use serde_json::json;
-use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
+use sncast::{
+    AccountType, chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig,
+};
 use starknet::signers::SigningKey;
 use starknet_types_core::felt::Felt;
-use std::{fmt, fs::OpenOptions, io::Write};
+use std::{fs::OpenOptions, io::Write};
 use toml::Value;
 
 pub mod create;
@@ -25,7 +27,7 @@ pub mod list;
 #[derive(Args)]
 #[command(about = "Creates and deploys an account to the Starknet")]
 pub struct Account {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     pub command: Commands,
 }
 
@@ -38,33 +40,12 @@ pub enum Commands {
     List(List),
 }
 
-#[expect(clippy::doc_markdown)]
-#[derive(ValueEnum, Clone, Debug)]
-pub enum AccountType {
-    /// OpenZeppelin account implementation
-    Oz,
-    /// Argent account implementation
-    Argent,
-    /// Braavos account implementation
-    Braavos,
-}
-
-impl fmt::Display for AccountType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            AccountType::Oz => write!(f, "open_zeppelin"),
-            AccountType::Argent => write!(f, "argent"),
-            AccountType::Braavos => write!(f, "braavos"),
-        }
-    }
-}
-
 pub fn prepare_account_json(
     private_key: &SigningKey,
     address: Felt,
     deployed: bool,
     legacy: bool,
-    account_type: &AccountType,
+    account_type: AccountType,
     class_hash: Option<Felt>,
     salt: Option<Felt>,
 ) -> serde_json::Value {
@@ -72,7 +53,7 @@ pub fn prepare_account_json(
         "private_key": format!("{:#x}", private_key.secret_scalar()),
         "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
         "address": format!("{address:#x}"),
-        "type": format!("{account_type}"),
+        "type": format!("{account_type}").to_lowercase().replace("openzeppelin", "open_zeppelin"),
         "deployed": deployed,
         "legacy": legacy,
     });

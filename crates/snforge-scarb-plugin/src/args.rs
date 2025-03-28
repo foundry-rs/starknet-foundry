@@ -71,7 +71,7 @@ impl Arguments {
         if self.shorthand.is_empty() && self.unnamed.is_empty() {
             Ok(&self.named)
         } else {
-            Err(T::error("can be used with named attributes only"))
+            Err(T::error("can be used with named arguments only"))
         }
     }
 
@@ -80,7 +80,7 @@ impl Arguments {
         if self.shorthand.is_empty() && self.named.is_empty() {
             Ok(UnnamedArgs::new(&self.unnamed))
         } else {
-            Err(T::error("can be used with unnamed attributes only"))
+            Err(T::error("can be used with unnamed arguments only"))
         }
     }
 

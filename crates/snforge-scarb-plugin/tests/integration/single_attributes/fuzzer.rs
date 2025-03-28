@@ -338,7 +338,7 @@ fn config_wrapper_work_with_fn_with_param() {
 fn wrapper_handle_attributes() {
     let item = TokenStream::new(formatdoc!(
         "
-            #[available_gas(1)]
+            #[available_gas(l2_gas: 40000)]
             #[test]
             {EMPTY_FN}
         "
@@ -360,7 +360,7 @@ fn wrapper_handle_attributes() {
                 empty_fn_actual_body(); 
             }
 
-            #[available_gas(1)]
+            #[available_gas(l2_gas: 40000)]
             #[__internal_config_statement]
             fn empty_fn_actual_body() {
             }
@@ -393,7 +393,7 @@ fn fail_with_unnamed_arg() {
     assert_diagnostics(
         &result,
         &[Diagnostic::error(
-            "#[fuzzer] can be used with named attributes only",
+            "#[fuzzer] can be used with named arguments only",
         )],
     );
 }

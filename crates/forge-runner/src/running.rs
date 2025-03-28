@@ -4,6 +4,7 @@ use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
 use crate::test_case_summary::{Single, TestCaseSummary};
 use anyhow::{Result, ensure};
+use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::state::cached_state::CachedState;
 use cairo_lang_runner::{Arg, RunResult, SierraCasmRunner};
@@ -31,8 +32,8 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::Use
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
-    ForgeExtension, ForgeRuntime, add_vm_execution_resources_to_top_call, get_all_used_resources,
-    update_top_call_execution_resources, update_top_call_l1_resources, update_top_call_vm_trace,
+    ForgeExtension, ForgeRuntime, add_resources_to_top_call, get_all_used_resources,
+    update_top_call_l1_resources, update_top_call_resources, update_top_call_vm_trace,
 };
 use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredError, ExtendedStateReader,
@@ -42,6 +43,7 @@ use hints::{hints_by_representation, hints_to_params};
 use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
+use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::default::Default;
@@ -146,7 +148,7 @@ pub(crate) fn run_fuzz_test(
 pub struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, Box<CairoRunError>>,
     pub(crate) call_trace: Rc<RefCell<CallTrace>>,
-    pub(crate) gas_used: u128,
+    pub(crate) gas_used: GasVector,
     pub(crate) used_resources: UsedResources,
     pub(crate) encountered_errors: Vec<EncounteredError>,
     pub(crate) fuzzer_args: Vec<String>,
@@ -160,7 +162,10 @@ pub fn run_test_case(
     fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
 ) -> Result<RunResultWithInfo> {
     ensure!(
-        case.config.available_gas != Some(0),
+        case.config
+            .available_gas
+            .as_ref()
+            .is_none_or(|gas| !gas.is_zero()),
         "\n\t`available_gas` attribute was incorrectly configured. Make sure you use scarb >= 2.4.4\n"
     );
 
@@ -180,8 +185,9 @@ pub fn run_test_case(
     };
     let block_info = state_reader.get_block_info()?;
     let chain_id = state_reader.get_chain_id()?;
+    let tracked_resource = TrackedResource::from(runtime_config.tracked_resource);
 
-    let mut context = build_context(&block_info, chain_id);
+    let mut context = build_context(&block_info, chain_id, &tracked_resource);
 
     if let Some(max_n_steps) = runtime_config.max_n_steps {
         set_max_steps(&mut context, max_n_steps);
@@ -240,9 +246,10 @@ pub fn run_test_case(
                     .get_execution_resources()
                     .expect("Execution resources missing")
                     .filter_unused_builtins();
-                add_vm_execution_resources_to_top_call(
+                add_resources_to_top_call(
                     &mut forge_runtime,
                     &vm_resources_without_inner_calls,
+                    &tracked_resource,
                 );
 
                 let ap = runner.relocated_trace.as_ref().unwrap().last().unwrap().ap;
@@ -281,7 +288,7 @@ pub fn run_test_case(
 
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
-    update_top_call_execution_resources(&mut forge_runtime);
+    update_top_call_resources(&mut forge_runtime, &tracked_resource);
     update_top_call_l1_resources(&mut forge_runtime);
 
     let fuzzer_args = forge_runtime
@@ -293,7 +300,8 @@ pub fn run_test_case(
         .clone();
 
     let transaction_context = get_context(&forge_runtime).tx_context.clone();
-    let used_resources = get_all_used_resources(forge_runtime, &transaction_context);
+    let used_resources =
+        get_all_used_resources(forge_runtime, &transaction_context, tracked_resource);
     let gas = calculate_used_gas(
         &transaction_context,
         &mut cached_state,
@@ -308,8 +316,7 @@ pub fn run_test_case(
             value,
             profiling_info: None,
         }),
-        // TODO(#2977) return triplet
-        gas_used: u128::from(gas.l1_gas.0 + gas.l1_data_gas.0),
+        gas_used: gas,
         used_resources,
         call_trace: call_trace_ref,
         encountered_errors,
@@ -414,6 +421,12 @@ fn extract_test_case_summary(
                         arguments: args,
                         fuzzer_args: result_with_info.fuzzer_args,
                         test_statistics: (),
+                        debugging_trace: cfg!(feature = "debugging").then(|| {
+                            debugging::Trace::from_call_trace(
+                                &result_with_info.call_trace,
+                                contracts_data,
+                            )
+                        }),
                     }
                 }
             }
@@ -426,6 +439,7 @@ fn extract_test_case_summary(
             arguments: args,
             fuzzer_args: Vec::default(),
             test_statistics: (),
+            debugging_trace: None,
         },
     }
 }

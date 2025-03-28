@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+    use starknet::contract_address_const;
     const CONTRACT_ADDRESS: felt252 =
         0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9;
 

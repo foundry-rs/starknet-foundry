@@ -5,7 +5,7 @@
 Declares a contract and returns `DeclareResult`.
 
 - `contract_name` - name of a contract as Cairo string. It is a name of the contract (part after `mod` keyword) e.g. `"HelloStarknet"`.
-- `fee_settings` - fee settings for the transaction.
+- `fee_settings` - fee settings for the transaction, see [`FeeSettingsTrait](./fee_settings_trait.md).
 - `nonce` - nonce for declare transaction. If not provided, nonce will be set automatically.
 
 ```rust
@@ -45,11 +45,5 @@ pub struct DeclareTransactionResult {
 #[derive(Drop, Copy, Debug, Serde)]
 pub struct AlreadyDeclaredResult {
     pub class_hash: ClassHash,
-}
-#[derive(Drop, Copy, Debug, Serde, PartialEq)]
-pub struct FeeSettings {
-    pub max_fee: Option<felt252>,
-    pub max_gas: Option<u64>,
-    pub max_gas_unit_price: Option<u128>,
 }
 ```

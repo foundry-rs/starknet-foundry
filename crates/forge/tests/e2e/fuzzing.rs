@@ -1,4 +1,5 @@
 use super::common::runner::{setup_package, test_runner};
+use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild};
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 
@@ -28,7 +29,7 @@ fn fuzzing() {
 
         [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10, [..]
         [PASS] fuzzing::tests::uint8_arg (runs: 256, [..]
-        [PASS] fuzzing::tests::fuzzed_while_loop (runs: 256, gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]})
+        [PASS] fuzzing::tests::fuzzed_while_loop (runs: 256, [..]
         [PASS] fuzzing::tests::uint16_arg (runs: 256, [..]
         [PASS] fuzzing::tests::uint32_arg (runs: 256, [..]
         [PASS] fuzzing::tests::uint64_arg (runs: 256, [..]
@@ -282,8 +283,38 @@ fn generate_arg_cheatcode() {
         Failure data:
             "`generate_arg` cheatcode: `min_value` must be <= `max_value`, provided values after deserialization: 101 and 100"
 
-        [PASS] fuzzing_integrationtest::generate_arg::use_generate_arg_outside_fuzzer (gas: ~1)
+        [PASS] fuzzing_integrationtest::generate_arg::use_generate_arg_outside_fuzzer (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
         Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 22 filtered out
         "#},
+    );
+}
+
+#[test]
+fn no_fuzzer_attribute() {
+    let temp = setup_package("fuzzing");
+    let test_file = temp.child("tests/no_attribute.cairo");
+
+    test_file.touch().unwrap();
+    test_file
+        .write_str(indoc! {r"
+        #[test]
+        fn no_attribute(arg: felt252) {
+            assert(1 == 1, '');
+        }
+        "})
+        .unwrap();
+
+    let output = test_runner(&temp).assert().code(2);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        error: Plugin diagnostic: #[test] function with parameters must have #[fuzzer] attribute
+         --> [..]no_attribute.cairo:1:1
+        #[test]
+
+        error: could not compile `fuzzing_integrationtest` due to previous error
+        [ERROR] Failed to build test artifacts with Scarb: `scarb` exited with error
+        "},
     );
 }

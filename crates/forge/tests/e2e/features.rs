@@ -41,12 +41,7 @@ fn compilation_fails_when_no_features_passed() {
         [..]Compiling[..]
         [..]Finished[..]
 
-        Collected 2 test(s) from features package
-        Running 2 test(s) from tests/
-        [FAIL] features_integrationtest::test::test_mock_contract
-
-        Failure data:
-            "Failed to get contract artifact for name = MockContract."
+        error[..] Function not found.
     "},
     );
 }

@@ -13,3 +13,4 @@ mod segment_arena_user;
 mod panic_call;
 mod store_load;
 mod bytearray_string_panic_call;
+mod cheat_block_hash;
