@@ -11,7 +11,7 @@ use wiremock::matchers::{body_json, body_partial_json, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 #[tokio::test]
-async fn test_happy_case() {
+async fn test_happy_case_contract_address() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
     let mock_server = MockServer::start().await;
@@ -62,6 +62,89 @@ async fn test_happy_case() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "voyager",
+        "--network",
+        "sepolia",
+    ];
+
+    let snapbox = runner(&args)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .env("STARKNET_RPC_URL", mock_rpc.uri())
+        .current_dir(contract_path.path())
+        .stdin("Y");
+
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        formatdoc! {"
+        command: verify
+        message: Map submitted for verification, you can query the status at: {}/class-verify/job/{}
+        ",
+        mock_server.uri(),
+        job_id,
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_happy_case_class_hash() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+
+    let mock_server = MockServer::start().await;
+    let rpc_request = json!({
+        "id": 1,
+        "jsonrpc": "2.0",
+        "method": "starknet_getClassHashAt",
+        "params": [
+            "latest",
+            MAP_CONTRACT_ADDRESS_SEPOLIA
+        ]
+    });
+    let contract_not_found = json!({
+      "error": {
+        "code": 20,
+        "message": "Contract not found"
+      },
+      "id": 1,
+      "jsonrpc": "2.0"
+    });
+
+    let mock_rpc = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(body_json(rpc_request))
+        .respond_with(ResponseTemplate::new(400).set_body_json(contract_not_found))
+        .expect(0)
+        .mount(&mock_rpc)
+        .await;
+
+    let job_id = "2b206064-ffee-4955-8a86-1ff3b854416a";
+    let class_hash: Felt =
+        Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+
+    let expected_body = json!({
+        "project_dir_path": ".",
+        "name": "Map",
+        "package_name": "map",
+        "license": null
+    });
+    Mock::given(method("POST"))
+        .and(path(format!("class-verify/{class_hash:#068x}")))
+        .and(body_partial_json(&expected_body))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--contract-name",
         "Map",
         "--verifier",
@@ -171,7 +254,7 @@ async fn test_happy_case_with_confirm_verification_flag() {
 }
 
 #[tokio::test]
-async fn test_failed_verification() {
+async fn test_failed_verification_contract_address() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
     let mock_server = MockServer::start().await;
@@ -222,6 +305,88 @@ async fn test_failed_verification() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "voyager",
+        "--network",
+        "sepolia",
+    ];
+
+    let snapbox = runner(&args)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .env("STARKNET_RPC_URL", mock_rpc.uri())
+        .current_dir(contract_path.path())
+        .stdin("Y");
+
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        formatdoc! {"
+        command: verify
+        error: {}
+        ",
+        error,
+        },
+    );
+}
+
+#[tokio::test]
+async fn test_failed_verification_class_hash() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+
+    let mock_server = MockServer::start().await;
+    let rpc_request = json!({
+        "id": 1,
+        "jsonrpc": "2.0",
+        "method": "starknet_getClassHashAt",
+        "params": [
+            "latest",
+            MAP_CONTRACT_ADDRESS_SEPOLIA
+        ]
+    });
+    let contract_not_found = json!({
+      "error": {
+        "code": 20,
+        "message": "Contract not found"
+      },
+      "id": 1,
+      "jsonrpc": "2.0"
+    });
+
+    let mock_rpc = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(body_json(rpc_request))
+        .respond_with(ResponseTemplate::new(400).set_body_json(contract_not_found))
+        .expect(0)
+        .mount(&mock_rpc)
+        .await;
+
+    let error = "some error message";
+    let class_hash: Felt =
+        Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+
+    let expected_body = json!({
+        "project_dir_path": ".",
+        "name": "Map",
+        "package_name": "map",
+        "license": null
+    });
+    Mock::given(method("POST"))
+        .and(path(format!("class-verify/{class_hash:#068x}")))
+        .and(body_partial_json(&expected_body))
+        .respond_with(ResponseTemplate::new(400).set_body_json(json!({ "error": error })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--contract-name",
         "Map",
         "--verifier",
