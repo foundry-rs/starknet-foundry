@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- `--template` flag to `snforge new` command that allows selecting a template for the new project. Possible values are `balance-contract` (default) and `cairo-program`
+
 ### Cast
 
 #### Changed
