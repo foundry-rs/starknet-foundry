@@ -8,7 +8,7 @@ trait IConstructorSimple<TContractState> {
 mod ConstructorSimple {
     #[storage]
     struct Storage {
-        number: felt252
+        number: felt252,
     }
 
     #[constructor]

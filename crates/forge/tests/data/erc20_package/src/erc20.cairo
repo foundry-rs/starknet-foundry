@@ -10,12 +10,12 @@ trait IERC20<TContractState> {
     fn allowance(self: @TContractState, owner: ContractAddress, spender: ContractAddress) -> u256;
     fn transfer(ref self: TContractState, recipient: ContractAddress, amount: u256);
     fn transfer_from(
-        ref self: TContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256
+        ref self: TContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256,
     );
     fn approve(ref self: TContractState, spender: ContractAddress, amount: u256);
     fn increase_allowance(ref self: TContractState, spender: ContractAddress, added_value: u256);
     fn decrease_allowance(
-        ref self: TContractState, spender: ContractAddress, subtracted_value: u256
+        ref self: TContractState, spender: ContractAddress, subtracted_value: u256,
     );
 }
 
@@ -62,7 +62,7 @@ mod ERC20 {
         symbol_: felt252,
         decimals_: u8,
         initial_supply: u256,
-        recipient: ContractAddress
+        recipient: ContractAddress,
     ) {
         self.name.write(name_);
         self.symbol.write(symbol_);
@@ -74,9 +74,9 @@ mod ERC20 {
             .emit(
                 Event::Transfer(
                     Transfer {
-                        from: contract_address_const::<0>(), to: recipient, value: initial_supply
-                    }
-                )
+                        from: contract_address_const::<0>(), to: recipient, value: initial_supply,
+                    },
+                ),
             );
     }
 
@@ -103,7 +103,7 @@ mod ERC20 {
         }
 
         fn allowance(
-            self: @ContractState, owner: ContractAddress, spender: ContractAddress
+            self: @ContractState, owner: ContractAddress, spender: ContractAddress,
         ) -> u256 {
             self.allowances.entry((owner, spender)).read()
         }
@@ -117,7 +117,7 @@ mod ERC20 {
             ref self: ContractState,
             sender: ContractAddress,
             recipient: ContractAddress,
-            amount: u256
+            amount: u256,
         ) {
             let caller = get_caller_address();
             self.spend_allowance(sender, caller, amount);
@@ -130,24 +130,24 @@ mod ERC20 {
         }
 
         fn increase_allowance(
-            ref self: ContractState, spender: ContractAddress, added_value: u256
+            ref self: ContractState, spender: ContractAddress, added_value: u256,
         ) {
             let caller = get_caller_address();
             self
                 .approve_helper(
-                    caller, spender, self.allowances.entry((caller, spender)).read() + added_value
+                    caller, spender, self.allowances.entry((caller, spender)).read() + added_value,
                 );
         }
 
         fn decrease_allowance(
-            ref self: ContractState, spender: ContractAddress, subtracted_value: u256
+            ref self: ContractState, spender: ContractAddress, subtracted_value: u256,
         ) {
             let caller = get_caller_address();
             self
                 .approve_helper(
                     caller,
                     spender,
-                    self.allowances.entry((caller, spender)).read() - subtracted_value
+                    self.allowances.entry((caller, spender)).read() - subtracted_value,
                 );
         }
     }
@@ -158,7 +158,7 @@ mod ERC20 {
             ref self: ContractState,
             sender: ContractAddress,
             recipient: ContractAddress,
-            amount: u256
+            amount: u256,
         ) {
             assert(!sender.is_zero(), 'ERC20: transfer from 0');
             assert(!recipient.is_zero(), 'ERC20: transfer to 0');
@@ -168,7 +168,7 @@ mod ERC20 {
         }
 
         fn spend_allowance(
-            ref self: ContractState, owner: ContractAddress, spender: ContractAddress, amount: u256
+            ref self: ContractState, owner: ContractAddress, spender: ContractAddress, amount: u256,
         ) {
             let current_allowance = self.allowances.entry((owner, spender)).read();
             let ONES_MASK = 0xffffffffffffffffffffffffffffffff_u128;
@@ -180,7 +180,7 @@ mod ERC20 {
         }
 
         fn approve_helper(
-            ref self: ContractState, owner: ContractAddress, spender: ContractAddress, amount: u256
+            ref self: ContractState, owner: ContractAddress, spender: ContractAddress, amount: u256,
         ) {
             assert(!spender.is_zero(), 'ERC20: approve from 0');
             self.allowances.entry((owner, spender)).write(amount);

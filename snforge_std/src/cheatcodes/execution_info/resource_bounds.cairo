@@ -1,5 +1,5 @@
 use super::{
-    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress
+    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress,
 };
 use starknet::ResourcesBounds;
 
@@ -10,7 +10,7 @@ use starknet::ResourcesBounds;
 /// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
 /// applied
 pub fn cheat_resource_bounds(
-    contract_address: ContractAddress, resource_bounds: Span<ResourcesBounds>, span: CheatSpan
+    contract_address: ContractAddress, resource_bounds: Span<ResourcesBounds>, span: CheatSpan,
 ) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
@@ -18,7 +18,7 @@ pub fn cheat_resource_bounds(
         .tx_info
         .resource_bounds =
             Operation::Start(
-                CheatArguments { value: resource_bounds, span, target: contract_address, }
+                CheatArguments { value: resource_bounds, span, target: contract_address },
             );
 
     cheat_execution_info(execution_info);
@@ -47,7 +47,7 @@ pub fn stop_cheat_resource_bounds_global() {
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `resource_bounds` - transaction resource bounds to be set
 pub fn start_cheat_resource_bounds(
-    contract_address: ContractAddress, resource_bounds: Span<ResourcesBounds>
+    contract_address: ContractAddress, resource_bounds: Span<ResourcesBounds>,
 ) {
     cheat_resource_bounds(contract_address, resource_bounds, CheatSpan::Indefinite);
 }

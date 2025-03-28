@@ -5,13 +5,13 @@ trait ISpyEventsChecker<TContractState> {
     fn do_not_emit(ref self: TContractState);
     fn emit_one_event(ref self: TContractState, some_data: felt252);
     fn emit_two_events(
-        ref self: TContractState, some_data: felt252, some_more_data: ContractAddress
+        ref self: TContractState, some_data: felt252, some_more_data: ContractAddress,
     );
     fn emit_three_events(
         ref self: TContractState,
         some_data: felt252,
         some_more_data: ContractAddress,
-        even_more_data: u256
+        even_more_data: u256,
     );
     fn emit_event_syscall(ref self: TContractState, some_key: felt252, some_data: felt252);
 }
@@ -34,21 +34,21 @@ mod SpyEventsChecker {
 
     #[derive(Drop, starknet::Event)]
     struct FirstEvent {
-        some_data: felt252
+        some_data: felt252,
     }
 
     #[derive(Drop, starknet::Event)]
     struct SecondEvent {
         some_data: felt252,
         #[key]
-        some_more_data: ContractAddress
+        some_more_data: ContractAddress,
     }
 
     #[derive(Drop, starknet::Event)]
     struct ThirdEvent {
         some_data: felt252,
         some_more_data: ContractAddress,
-        even_more_data: u256
+        even_more_data: u256,
     }
 
     #[abi(embed_v0)]
@@ -60,7 +60,7 @@ mod SpyEventsChecker {
         }
 
         fn emit_two_events(
-            ref self: ContractState, some_data: felt252, some_more_data: ContractAddress
+            ref self: ContractState, some_data: felt252, some_more_data: ContractAddress,
         ) {
             self.emit(Event::FirstEvent(FirstEvent { some_data }));
             self.emit(Event::SecondEvent(SecondEvent { some_data, some_more_data }));
@@ -70,7 +70,7 @@ mod SpyEventsChecker {
             ref self: ContractState,
             some_data: felt252,
             some_more_data: ContractAddress,
-            even_more_data: u256
+            even_more_data: u256,
         ) {
             self.emit(Event::FirstEvent(FirstEvent { some_data }));
             self.emit(Event::SecondEvent(SecondEvent { some_data, some_more_data }));

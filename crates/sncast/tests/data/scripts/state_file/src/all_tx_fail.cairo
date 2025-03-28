@@ -24,7 +24,7 @@ fn main() {
         Option::Some(salt),
         true,
         fee_settings,
-        Option::Some(deploy_nonce)
+        Option::Some(deploy_nonce),
     )
         .expect_err('error expected deploy');
 
@@ -34,7 +34,7 @@ fn main() {
         selector!("put"),
         array![0x1, 0x2],
         fee_settings,
-        Option::Some(invoke_nonce)
+        Option::Some(invoke_nonce),
     )
         .expect_err('error expected invoke');
 }

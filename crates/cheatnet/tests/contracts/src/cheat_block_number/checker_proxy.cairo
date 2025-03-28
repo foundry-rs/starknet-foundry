@@ -28,7 +28,7 @@ mod CheatBlockNumberCheckerProxy {
     impl ICheatBlockNumberCheckerProxy of super::ICheatBlockNumberCheckerProxy<ContractState> {
         fn get_cheated_block_number(self: @ContractState, address: ContractAddress) -> u64 {
             let cheat_block_number_checker = ICheatBlockNumberCheckerDispatcher {
-                contract_address: address
+                contract_address: address,
             };
             cheat_block_number_checker.get_block_number()
         }

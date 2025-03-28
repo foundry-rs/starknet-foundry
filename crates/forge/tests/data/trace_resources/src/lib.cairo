@@ -5,7 +5,7 @@ mod trace_info_proxy;
 
 use starknet::{
     ContractAddress, ClassHash, get_block_hash_syscall, get_contract_address, emit_event_syscall,
-    send_message_to_l1_syscall, SyscallResultTrait
+    send_message_to_l1_syscall, SyscallResultTrait,
 };
 
 fn use_builtins_and_syscalls(empty_hash: ClassHash, salt: felt252) -> ContractAddress {

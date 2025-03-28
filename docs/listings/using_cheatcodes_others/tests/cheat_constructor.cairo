@@ -1,6 +1,6 @@
 use snforge_std::{
     declare, ContractClassTrait, DeclareResultTrait, start_cheat_block_number,
-    start_cheat_block_timestamp
+    start_cheat_block_timestamp,
 };
 
 use using_cheatcodes_others::{ICheatcodeCheckerDispatcher, ICheatcodeCheckerDispatcherTrait};

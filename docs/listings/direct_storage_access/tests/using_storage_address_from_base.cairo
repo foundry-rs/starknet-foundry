@@ -5,7 +5,7 @@ use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, store, load};
 use starknet::storage_access::{storage_address_from_base};
 
 use direct_storage_access::felts_only::{
-    SimpleStorageContract, ISimpleStorageContractDispatcher, ISimpleStorageContractDispatcherTrait
+    SimpleStorageContract, ISimpleStorageContractDispatcher, ISimpleStorageContractDispatcherTrait,
 };
 
 #[test]
@@ -21,7 +21,7 @@ fn update_mapping() {
     let mut state = SimpleStorageContract::contract_state_for_testing();
 
     let storage_address = storage_address_from_base(
-        state.mapping.entry(key).as_ptr().__storage_pointer_address__.into()
+        state.mapping.entry(key).as_ptr().__storage_pointer_address__.into(),
     );
     let storage_value: Span<felt252> = array![data.into()].span();
     store(contract_address, storage_address.into(), storage_value);

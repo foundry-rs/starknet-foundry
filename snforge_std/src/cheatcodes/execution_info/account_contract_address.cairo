@@ -1,5 +1,5 @@
 use super::{
-    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress
+    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress,
 };
 
 /// Changes the address of an account which the transaction originates from, for the given contract
@@ -9,7 +9,7 @@ use super::{
 /// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
 /// applied
 pub fn cheat_account_contract_address(
-    contract_address: ContractAddress, account_contract_address: ContractAddress, span: CheatSpan
+    contract_address: ContractAddress, account_contract_address: ContractAddress, span: CheatSpan,
 ) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
@@ -17,7 +17,7 @@ pub fn cheat_account_contract_address(
         .tx_info
         .account_contract_address =
             Operation::Start(
-                CheatArguments { value: account_contract_address, span, target: contract_address, }
+                CheatArguments { value: account_contract_address, span, target: contract_address },
             );
 
     cheat_execution_info(execution_info);
@@ -49,10 +49,10 @@ pub fn stop_cheat_account_contract_address_global() {
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `account_contract_address` - transaction account deployment data to be set
 pub fn start_cheat_account_contract_address(
-    contract_address: ContractAddress, account_contract_address: ContractAddress
+    contract_address: ContractAddress, account_contract_address: ContractAddress,
 ) {
     cheat_account_contract_address(
-        contract_address, account_contract_address, CheatSpan::Indefinite
+        contract_address, account_contract_address, CheatSpan::Indefinite,
     );
 }
 

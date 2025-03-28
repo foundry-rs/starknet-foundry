@@ -13,7 +13,7 @@ fn should_panic_check_data() {
 }
 
 #[test]
-#[should_panic(expected: ('panic message', 'second message',))]
+#[should_panic(expected: ('panic message', 'second message'))]
 fn should_panic_multiple_messages() {
     let mut arr = ArrayTrait::new();
     arr.append('panic message');
@@ -45,7 +45,7 @@ fn expected_panic_but_didnt_with_expected() {
 }
 
 #[test]
-#[should_panic(expected: ('panic message', 'second message',))]
+#[should_panic(expected: ('panic message', 'second message'))]
 fn expected_panic_but_didnt_with_expected_multiple() {
     assert(1 == 1, 'err');
 }

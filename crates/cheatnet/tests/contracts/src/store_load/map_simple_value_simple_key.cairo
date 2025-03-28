@@ -1,7 +1,7 @@
 #[starknet::contract]
 mod MapSimpleValueSimpleKey {
     use starknet::{
-        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map}
+        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map},
     };
     #[storage]
     struct Storage {

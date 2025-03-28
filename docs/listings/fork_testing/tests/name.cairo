@@ -7,7 +7,7 @@ const CONTRACT_ADDRESS: felt252 =
 #[fork("SEPOLIA_LATEST")]
 fn test_using_forked_state() {
     let dispatcher = IPokemonGalleryDispatcher {
-        contract_address: CONTRACT_ADDRESS.try_into().unwrap()
+        contract_address: CONTRACT_ADDRESS.try_into().unwrap(),
     };
 
     dispatcher.like("Charizard");

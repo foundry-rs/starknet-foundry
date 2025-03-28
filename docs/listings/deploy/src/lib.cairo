@@ -11,7 +11,7 @@ fn main() {
         .expect('Invalid class hash value');
 
     let result = deploy(
-        class_hash, ArrayTrait::new(), Option::Some(salt), true, fee_settings, Option::Some(nonce)
+        class_hash, ArrayTrait::new(), Option::Some(salt), true, fee_settings, Option::Some(nonce),
     )
         .expect('deploy failed');
 

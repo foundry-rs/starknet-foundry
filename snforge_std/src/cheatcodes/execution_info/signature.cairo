@@ -1,5 +1,5 @@
 use super::{
-    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress
+    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress,
 };
 
 /// Changes the transaction signature for the given contract address and span.
@@ -8,14 +8,14 @@ use super::{
 /// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
 /// applied
 pub fn cheat_signature(
-    contract_address: ContractAddress, signature: Span<felt252>, span: CheatSpan
+    contract_address: ContractAddress, signature: Span<felt252>, span: CheatSpan,
 ) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
         .tx_info
         .signature =
-            Operation::Start(CheatArguments { value: signature, span, target: contract_address, });
+            Operation::Start(CheatArguments { value: signature, span, target: contract_address });
 
     cheat_execution_info(execution_info);
 }

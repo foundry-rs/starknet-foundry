@@ -15,12 +15,12 @@ mod CheatBlockTimestampChecker {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        BlockTimestampEmitted: BlockTimestampEmitted
+        BlockTimestampEmitted: BlockTimestampEmitted,
     }
 
     #[derive(Drop, starknet::Event)]
     struct BlockTimestampEmitted {
-        block_timestamp: u64
+        block_timestamp: u64,
     }
 
 
