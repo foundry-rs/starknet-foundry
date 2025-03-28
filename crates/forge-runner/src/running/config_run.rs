@@ -3,9 +3,8 @@ use super::{
     entry_code::create_entry_code,
     hints::{hints_by_representation, hints_to_params},
 };
-use crate::{
-    forge_config::ForgeTrackedResource, package_tests::TestDetails, running::build_syscall_handler,
-};
+use crate::running::syscall_handler::build_syscall_handler;
+use crate::{forge_config::ForgeTrackedResource, package_tests::TestDetails};
 use anyhow::Result;
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::state::{cached_state::CachedState, state_api::StateReader};
@@ -20,6 +19,7 @@ use starknet_api::block::{
 use starknet_types_core::felt::Felt;
 use std::default::Default;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
+
 struct PhantomStateReader;
 
 impl StateReader for PhantomStateReader {
