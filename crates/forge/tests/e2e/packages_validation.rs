@@ -8,31 +8,24 @@ use forge::Template;
 use project_root::get_project_root;
 use scarb_api::ScarbCommand;
 use test_case::test_case;
+use walkdir::WalkDir;
 
-fn find_files_recursively(dir_path: Utf8PathBuf, file_name: &str) -> Vec<Utf8PathBuf> {
-    let mut matches = Vec::new();
-    let paths = std::fs::read_dir(dir_path).unwrap();
-
-    for path in paths {
-        let path = path.unwrap().path();
-        if path.is_dir() {
-            matches.append(&mut find_files_recursively(
-                Utf8PathBuf::from(path.to_string_lossy().to_string()),
-                file_name,
-            ));
-        } else if path.to_string_lossy().contains(file_name) {
-            matches.push(Utf8PathBuf::from(path.to_string_lossy().to_string()));
-        }
-    }
-
-    matches
+fn find_files_recursively(dir_path: &Utf8PathBuf, file_name: &str) -> Vec<Utf8PathBuf> {
+    WalkDir::new(dir_path)
+        .into_iter()
+        .filter_map(std::result::Result::ok)
+        .filter(|entry| {
+            entry.file_type().is_file() && entry.file_name().to_string_lossy().contains(file_name)
+        })
+        .map(|entry| Utf8PathBuf::from(entry.path().to_string_lossy().to_string()))
+        .collect()
 }
 
 fn find_all_cairo_packages_paths() -> Vec<Utf8PathBuf> {
     let project_root = get_project_root().expect("Failed to get project root");
     let project_root =
         Utf8PathBuf::from_path_buf(project_root).expect("Failed to convert to Utf8PathBuf");
-    let manifests_paths = find_files_recursively(project_root, "Scarb.toml");
+    let manifests_paths = find_files_recursively(&project_root, "Scarb.toml");
     let cairo_packages_paths = manifests_paths
         .iter()
         .map(|manifest_path| {
