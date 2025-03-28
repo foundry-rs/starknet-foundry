@@ -6,7 +6,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
 use serde_json::json;
-use sncast::helpers::braavos::BraavosAccountFactory;
+use sncast::helpers::braavos::{BraavosAccountFactory, assert_non_braavos_account_type};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
@@ -19,7 +19,7 @@ use sncast::{
     extract_or_generate_salt, get_chain_id, get_keystore_password, handle_account_factory_error,
 };
 use starknet::accounts::{
-    AccountDeploymentV1, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
+    AccountDeploymentV3, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
 };
 use starknet::core::types::FeeEstimate;
 use starknet::providers::JsonRpcClient;
@@ -32,30 +32,30 @@ use std::str::FromStr;
 #[command(about = "Create an account with all important secrets")]
 pub struct Create {
     /// Type of the account
-    #[clap(value_enum, short = 't', long = "type", value_parser = AccountType::from_str, default_value_t = AccountType::OpenZeppelin)]
+    #[arg(value_enum, short = 't', long = "type", value_parser = AccountType::from_str, default_value_t = AccountType::OpenZeppelin)]
     pub account_type: AccountType,
 
     /// Account name under which account information is going to be saved
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub name: Option<String>,
 
     /// Salt for the address
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub salt: Option<Felt>,
 
     /// If passed, a profile with provided name and corresponding data will be created in snfoundry.toml
-    #[clap(long, conflicts_with = "network")]
+    #[arg(long, conflicts_with = "network")]
     pub add_profile: Option<String>,
 
     /// Custom contract class hash of declared contract
-    #[clap(short, long, requires = "account_type")]
+    #[arg(short, long, requires = "account_type")]
     pub class_hash: Option<Felt>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 
     /// If passed, the command will not trigger an interactive prompt to add an account as a default
-    #[clap(long)]
+    #[arg(long)]
     pub silent: bool,
 }
 
@@ -67,6 +67,9 @@ pub async fn create(
     chain_id: Felt,
     create: &Create,
 ) -> Result<AccountCreateResponse> {
+    // TODO(#3118): Remove this check once braavos integration is restored
+    assert_non_braavos_account_type(create.account_type)?;
+
     let add_profile = create.add_profile.clone();
     let salt = extract_or_generate_salt(create.salt);
     let class_hash = create.class_hash.unwrap_or(match create.account_type {
@@ -181,8 +184,8 @@ async fn generate_account(
         }
         AccountType::Argent => {
             let factory =
-                ArgentAccountFactory::new(class_hash, chain_id, Felt::ZERO, signer, provider)
-                    .await?;
+                ArgentAccountFactory::new(class_hash, chain_id, None, signer, provider).await?;
+
             get_address_and_deployment_fee(factory, salt).await?
         }
         AccountType::Braavos => {
@@ -220,12 +223,12 @@ async fn get_address_and_deployment_fee<T>(
 where
     T: AccountFactory + Sync,
 {
-    let deployment = account_factory.deploy_v1(salt);
+    let deployment = account_factory.deploy_v3(salt);
     Ok((deployment.address(), get_deployment_fee(&deployment).await?))
 }
 
 async fn get_deployment_fee<T>(
-    account_deployment: &AccountDeploymentV1<'_, T>,
+    account_deployment: &AccountDeploymentV3<'_, T>,
 ) -> Result<FeeEstimate>
 where
     T: AccountFactory + Sync,

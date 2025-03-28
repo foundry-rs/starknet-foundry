@@ -43,7 +43,7 @@ fn test_script_init_happy_case() {
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
             [dependencies]
-            sncast_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{cast_version}" }}
+            sncast_std = "{cast_version}"
             starknet = ">={cairo_version}"
 
             [dev-dependencies]
@@ -62,13 +62,20 @@ fn test_script_init_happy_case() {
     assert_eq!(
         main_file_content,
         indoc! {r#"
-            use sncast_std::{call, CallResult};
+            use sncast_std::call;
 
             // The example below uses a contract deployed to the Sepolia testnet
+            const CONTRACT_ADDRESS: felt252 =
+                0x07e867f1fa6da2108dd2b3d534f1fbec411c5ec9504eb3baa1e49c7a0bef5ab5;
+
             fn main() {
-                let contract_address = 0x07e867f1fa6da2108dd2b3d534f1fbec411c5ec9504eb3baa1e49c7a0bef5ab5;
-                let call_result = call(contract_address.try_into().unwrap(), selector!("get_greeting"), array![]).expect('call failed');
-                assert(*call_result.data[1]=='Hello, Starknet!', *call_result.data[1]);
+                let call_result = call(
+                    CONTRACT_ADDRESS.try_into().unwrap(), selector!("get_greeting"), array![],
+                )
+                    .expect('call failed');
+
+                assert(*call_result.data[1] == 'Hello, Starknet!', *call_result.data[1]);
+
                 println!("{:?}", call_result);
             }
         "#}
