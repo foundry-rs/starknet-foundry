@@ -1,5 +1,5 @@
 use super::{
-    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress
+    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress,
 };
 
 /// Changes the transaction nonce for the given contract address and span.
@@ -12,7 +12,7 @@ pub fn cheat_nonce(contract_address: ContractAddress, nonce: felt252, span: Chea
 
     execution_info
         .tx_info
-        .nonce = Operation::Start(CheatArguments { value: nonce, span, target: contract_address, });
+        .nonce = Operation::Start(CheatArguments { value: nonce, span, target: contract_address });
 
     cheat_execution_info(execution_info);
 }

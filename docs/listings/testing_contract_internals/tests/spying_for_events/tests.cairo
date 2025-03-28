@@ -1,7 +1,7 @@
 use core::array::ArrayTrait;
 use snforge_std::{
     declare, ContractClassTrait, spy_events, EventSpy, EventSpyTrait, EventSpyAssertionsTrait,
-    Event, test_address
+    Event, test_address,
 };
 use testing_contract_internals::spying_for_events::Emitter;
 
@@ -18,8 +18,8 @@ fn test_expect_event() {
             @array![
                 (
                     contract_address,
-                    Emitter::Event::ThingEmitted(Emitter::ThingEmitted { thing: 420 })
-                )
-            ]
+                    Emitter::Event::ThingEmitted(Emitter::ThingEmitted { thing: 420 }),
+                ),
+            ],
         )
 }

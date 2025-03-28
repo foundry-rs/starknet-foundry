@@ -20,12 +20,12 @@ mod CheatCallerAddressChecker {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        CallerAddressEmitted: CallerAddressEmitted
+        CallerAddressEmitted: CallerAddressEmitted,
     }
 
     #[derive(Drop, starknet::Event)]
     struct CallerAddressEmitted {
-        caller_address: felt252
+        caller_address: felt252,
     }
 
     #[abi(embed_v0)]
