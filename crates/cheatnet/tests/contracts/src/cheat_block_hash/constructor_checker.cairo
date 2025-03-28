@@ -23,7 +23,7 @@ mod ConstructorCheatBlockHashChecker {
 
     #[abi(embed_v0)]
     impl IConstructorCheatBlockHashChecker of super::IConstructorCheatBlockHashChecker<
-        ContractState,
+        ContractState
     > {
         fn get_stored_block_hash(ref self: ContractState) -> felt252 {
             self.blk_hash.read()

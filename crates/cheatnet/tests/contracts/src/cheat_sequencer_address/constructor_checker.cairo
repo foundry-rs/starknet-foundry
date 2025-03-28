@@ -24,7 +24,7 @@ mod ConstructorCheatSequencerAddressChecker {
 
     #[abi(embed_v0)]
     impl IConstructorCheatSequencerAddressChecker of super::IConstructorCheatSequencerAddressChecker<
-        ContractState,
+        ContractState
     > {
         fn get_stored_sequencer_address(ref self: ContractState) -> ContractAddress {
             self.seq_addr.read()

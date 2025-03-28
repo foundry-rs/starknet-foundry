@@ -4,7 +4,7 @@ use snforge_std::{declare, ContractClassTrait};
 
 use trace_resources::{
     trace_info_checker::{ITraceInfoCheckerLibraryDispatcher, ITraceInfoCheckerDispatcherTrait},
-    trace_info_proxy::{ITraceInfoProxyLibraryDispatcher, ITraceInfoProxyDispatcherTrait},
+    trace_info_proxy::{ITraceInfoProxyLibraryDispatcher, ITraceInfoProxyDispatcherTrait,}
 };
 
 #[test]
@@ -26,7 +26,7 @@ fn test_lib_call() {
     proxy_lib_dispatcher.call_two(checker_address, dummy_address, empty_hash, 3);
 
     let chcecker_lib_dispatcher = ITraceInfoCheckerLibraryDispatcher {
-        class_hash: checker.class_hash,
+        class_hash: checker.class_hash
     };
 
     chcecker_lib_dispatcher.from_proxy(4, empty_hash, 4);

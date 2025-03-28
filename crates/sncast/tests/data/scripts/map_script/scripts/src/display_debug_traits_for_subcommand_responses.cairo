@@ -25,7 +25,7 @@ fn main() {
         Option::Some(salt),
         true,
         fee_settings,
-        Option::Some(deploy_nonce),
+        Option::Some(deploy_nonce)
     )
         .expect('deploy failed');
     println!("deploy_result: {}", deploy_result);
@@ -39,7 +39,7 @@ fn main() {
         selector!("put"),
         array![0x1, 0x2],
         fee_settings,
-        Option::Some(invoke_nonce),
+        Option::Some(invoke_nonce)
     )
         .expect('invoke failed');
     println!("invoke_result: {}", invoke_result);

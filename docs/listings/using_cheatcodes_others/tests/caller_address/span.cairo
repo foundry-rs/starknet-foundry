@@ -2,7 +2,7 @@ use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, cheat_caller_
 use starknet::ContractAddress;
 
 use using_cheatcodes_others::{
-    ICheatcodeCheckerSafeDispatcher, ICheatcodeCheckerSafeDispatcherTrait,
+    ICheatcodeCheckerSafeDispatcher, ICheatcodeCheckerSafeDispatcherTrait
 };
 
 #[test]

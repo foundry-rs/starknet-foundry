@@ -22,7 +22,7 @@ pub trait ContractClassTrait {
     /// `constructor_calldata` - serialized calldata for the deploy constructor
     /// Returns the precalculated `ContractAddress`
     fn precalculate_address(
-        self: @ContractClass, constructor_calldata: @Array::<felt252>,
+        self: @ContractClass, constructor_calldata: @Array::<felt252>
     ) -> ContractAddress;
 
     /// Deploys a contract
@@ -32,7 +32,7 @@ pub trait ContractClassTrait {
     /// Returns the address the contract was deployed at and serialized constructor return data, or
     /// panic data if it failed
     fn deploy(
-        self: @ContractClass, constructor_calldata: @Array::<felt252>,
+        self: @ContractClass, constructor_calldata: @Array::<felt252>
     ) -> SyscallResult<(ContractAddress, Span<felt252>)>;
 
     /// Deploys a contract at a given address
@@ -45,7 +45,7 @@ pub trait ContractClassTrait {
     fn deploy_at(
         self: @ContractClass,
         constructor_calldata: @Array::<felt252>,
-        contract_address: ContractAddress,
+        contract_address: ContractAddress
     ) -> SyscallResult<(ContractAddress, Span<felt252>)>;
 
     /// Utility method for creating a new `ContractClass` instance
@@ -56,7 +56,7 @@ pub trait ContractClassTrait {
 
 impl ContractClassImpl of ContractClassTrait {
     fn precalculate_address(
-        self: @ContractClass, constructor_calldata: @Array::<felt252>,
+        self: @ContractClass, constructor_calldata: @Array::<felt252>
     ) -> ContractAddress {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
@@ -64,7 +64,7 @@ impl ContractClassImpl of ContractClassTrait {
     }
 
     fn deploy(
-        self: @ContractClass, constructor_calldata: @Array::<felt252>,
+        self: @ContractClass, constructor_calldata: @Array::<felt252>
     ) -> SyscallResult<(ContractAddress, Span<felt252>)> {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
@@ -74,7 +74,7 @@ impl ContractClassImpl of ContractClassTrait {
     fn deploy_at(
         self: @ContractClass,
         constructor_calldata: @Array::<felt252>,
-        contract_address: ContractAddress,
+        contract_address: ContractAddress
     ) -> SyscallResult<(ContractAddress, Span<felt252>)> {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
         inputs.append(contract_address.into());
@@ -98,7 +98,7 @@ impl DeclareResultImpl of DeclareResultTrait {
     fn contract_class(self: @DeclareResult) -> @ContractClass {
         match self {
             DeclareResult::Success(contract_class) => contract_class,
-            DeclareResult::AlreadyDeclared(contract_class) => contract_class,
+            DeclareResult::AlreadyDeclared(contract_class) => contract_class
         }
     }
 }
@@ -122,7 +122,7 @@ pub fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
 }
 
 fn _prepare_calldata(
-    class_hash: @ClassHash, constructor_calldata: @Array::<felt252>,
+    class_hash: @ClassHash, constructor_calldata: @Array::<felt252>
 ) -> Array::<felt252> {
     let class_hash: felt252 = class_hash.clone().into();
     let mut inputs: Array::<felt252> = array![class_hash];

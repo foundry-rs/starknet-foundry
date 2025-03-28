@@ -10,8 +10,8 @@ mod PanicCall {
                 'shortstring',
                 0,
                 0x800000000000011000000000000000000000000000000000000000000000000,
-                'shortstring2',
-            ],
+                'shortstring2'
+            ]
         );
     }
 }

@@ -4,7 +4,7 @@ use snforge_std::trace::{get_call_trace};
 
 use trace_info::{
     RecursiveCallerDispatcher, RecursiveCallerDispatcherTrait, RecursiveCall, FailingDispatcher,
-    FailingDispatcherTrait,
+    FailingDispatcherTrait
 };
 
 #[test]
@@ -29,11 +29,11 @@ fn run_test() {
         RecursiveCall {
             contract_address: contract_address_B,
             payload: array![
-                RecursiveCall { contract_address: contract_address_C, payload: array![] },
-                RecursiveCall { contract_address: contract_address_C, payload: array![] },
-            ],
+                RecursiveCall { contract_address: contract_address_C, payload: array![], },
+                RecursiveCall { contract_address: contract_address_C, payload: array![], }
+            ]
         },
-        RecursiveCall { contract_address: contract_address_C, payload: array![] },
+        RecursiveCall { contract_address: contract_address_C, payload: array![], }
     ];
 
     RecursiveCallerDispatcher { contract_address: contract_address_A }.execute_calls(calls);

@@ -7,7 +7,7 @@ const CONTRACT_ADDRESS: felt252 =
 #[fork(url: "https://starknet-sepolia.public.blastapi.io/rpc/v0_7", block_tag: latest)]
 fn test_using_forked_state() {
     let dispatcher = IPokemonGalleryDispatcher {
-        contract_address: CONTRACT_ADDRESS.try_into().unwrap(),
+        contract_address: CONTRACT_ADDRESS.try_into().unwrap()
     };
 
     dispatcher.like("Charizard");

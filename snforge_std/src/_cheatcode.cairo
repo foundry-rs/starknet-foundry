@@ -15,13 +15,13 @@ pub(crate) fn execute_cheatcode<const selector: felt252>(input: Span<felt252>) -
 }
 
 pub(crate) fn execute_cheatcode_and_deserialize<const selector: felt252, T, +Serde<T>>(
-    input: Span<felt252>,
+    input: Span<felt252>
 ) -> T {
     let mut serialized_output = execute_cheatcode::<selector>(input);
 
     match Serde::deserialize(ref serialized_output) {
         Option::Some(output) => output,
-        Option::None => panic!("snforge_std version mismatch: check the warning above"),
+        Option::None => panic!("snforge_std version mismatch: check the warning above")
     }
 }
 

@@ -10,7 +10,7 @@ pub struct L1Handler {
 pub trait L1HandlerTrait {
     fn new(target: ContractAddress, selector: felt252) -> L1Handler;
     fn execute(
-        self: L1Handler, from_address: felt252, payload: Span::<felt252>,
+        self: L1Handler, from_address: felt252, payload: Span::<felt252>
     ) -> SyscallResult<()>;
 }
 
@@ -20,7 +20,7 @@ impl L1HandlerImpl of L1HandlerTrait {
     /// `selector!("function_handler_name")` macro Returns a structure referring to a L1 handler
     /// function
     fn new(target: ContractAddress, selector: felt252) -> L1Handler {
-        L1Handler { target, selector }
+        L1Handler { target, selector, }
     }
 
     /// Mocks L1 -> L2 message from Ethereum handled by the given L1 handler function
@@ -29,7 +29,7 @@ impl L1HandlerImpl of L1HandlerTrait {
     /// `payload` - The handlers' function arguments serialized with `Serde`
     /// Returns () or panic data if it failed
     fn execute(
-        self: L1Handler, from_address: felt252, payload: Span::<felt252>,
+        self: L1Handler, from_address: felt252, payload: Span::<felt252>
     ) -> SyscallResult<()> {
         let mut inputs: Array::<felt252> = array![
             self.target.into(), self.selector, from_address.into(),

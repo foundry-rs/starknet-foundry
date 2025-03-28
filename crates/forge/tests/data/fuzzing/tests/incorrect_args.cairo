@@ -2,7 +2,7 @@ use fuzzing::adder;
 
 #[derive(Debug, Drop)]
 struct MyStruct {
-    a: felt252,
+    a: felt252
 }
 
 #[test]

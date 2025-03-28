@@ -5,12 +5,12 @@ use core::fmt::{Debug, Display, Error, Formatter};
 
 #[derive(Drop, PartialEq, Serde, Debug)]
 pub struct ErrorData {
-    msg: ByteArray,
+    msg: ByteArray
 }
 
 #[derive(Drop, PartialEq, Serde, Debug)]
 pub struct ContractErrorData {
-    revert_error: ContractExecutionError,
+    revert_error: ContractExecutionError
 }
 
 #[derive(Drop, PartialEq, Debug)]
@@ -35,7 +35,7 @@ impl TransactionExecutionErrorDataSerde of Serde<TransactionExecutionErrorData> 
 #[derive(Drop, PartialEq, Debug)]
 pub enum ContractExecutionError {
     Nested: Box<ContractExecutionErrorInner>,
-    Message: ByteArray,
+    Message: ByteArray
 }
 
 #[derive(Drop, Serde, Debug)]
@@ -75,7 +75,7 @@ impl ContractExecutionErrorSerde of Serde<ContractExecutionError> {
             ContractExecutionError::Message(msg) => {
                 output.append(1);
                 msg.serialize(ref output);
-            },
+            }
         }
     }
     fn deserialize(ref serialized: Span<felt252>) -> Option<ContractExecutionError> {
@@ -206,7 +206,7 @@ impl DisplayCallResult of Display<CallResult> {
 }
 
 pub fn call(
-    contract_address: ContractAddress, function_selector: felt252, calldata: Array::<felt252>,
+    contract_address: ContractAddress, function_selector: felt252, calldata: Array::<felt252>
 ) -> Result<CallResult, ScriptCommandError> {
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
@@ -221,7 +221,7 @@ pub fn call(
     let mut result_data: Result<CallResult, ScriptCommandError> =
         match Serde::<Result<CallResult>>::deserialize(ref buf) {
         Option::Some(result_data) => result_data,
-        Option::None => panic!("call deserialize failed"),
+        Option::None => panic!("call deserialize failed")
     };
 
     result_data
@@ -252,7 +252,7 @@ impl DeclareResultImpl of DeclareResultTrait {
     fn class_hash(self: @DeclareResult) -> @ClassHash {
         match self {
             DeclareResult::Success(result) => result.class_hash,
-            DeclareResult::AlreadyDeclared(result) => result.class_hash,
+            DeclareResult::AlreadyDeclared(result) => result.class_hash
         }
     }
 }
@@ -264,17 +264,15 @@ impl DisplayDeclareResult of Display<DeclareResult> {
                 f,
                 "class_hash: {}, transaction_hash: {}",
                 result.class_hash,
-                result.transaction_hash,
+                result.transaction_hash
             ),
-            DeclareResult::AlreadyDeclared(result) => write!(
-                f, "class_hash: {}", result.class_hash,
-            ),
+            DeclareResult::AlreadyDeclared(result) => write!(f, "class_hash: {}", result.class_hash)
         }
     }
 }
 
 pub fn declare(
-    contract_name: ByteArray, fee_settings: FeeSettings, nonce: Option<felt252>,
+    contract_name: ByteArray, fee_settings: FeeSettings, nonce: Option<felt252>
 ) -> Result<DeclareResult, ScriptCommandError> {
     let mut inputs = array![];
 
@@ -312,7 +310,7 @@ impl DisplayDeployResult of Display<DeployResult> {
             f,
             "contract_address: {}, transaction_hash: {}",
             *self.contract_address,
-            *self.transaction_hash,
+            *self.transaction_hash
         )
     }
 }
@@ -336,7 +334,7 @@ pub impl FeeSettingsImpl of FeeSettingsTrait {
         l2_gas: u64,
         l2_gas_price: u128,
         l1_data_gas: u64,
-        l1_data_gas_price: u128,
+        l1_data_gas_price: u128
     ) -> FeeSettings {
         FeeSettings {
             max_fee: Option::None,
@@ -380,7 +378,7 @@ pub fn deploy(
     salt: Option<felt252>,
     unique: bool,
     fee_settings: FeeSettings,
-    nonce: Option<felt252>,
+    nonce: Option<felt252>
 ) -> Result<DeployResult, ScriptCommandError> {
     let class_hash_felt: felt252 = class_hash.into();
     let mut inputs = array![class_hash_felt];
@@ -408,7 +406,7 @@ pub fn deploy(
     let mut result_data: Result<DeployResult, ScriptCommandError> =
         match Serde::<Result<DeployResult>>::deserialize(ref buf) {
         Option::Some(result_data) => result_data,
-        Option::None => panic!("deploy deserialize failed"),
+        Option::None => panic!("deploy deserialize failed")
     };
 
     result_data
@@ -430,7 +428,7 @@ pub fn invoke(
     entry_point_selector: felt252,
     calldata: Array::<felt252>,
     fee_settings: FeeSettings,
-    nonce: Option<felt252>,
+    nonce: Option<felt252>
 ) -> Result<InvokeResult, ScriptCommandError> {
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, entry_point_selector];
@@ -453,7 +451,7 @@ pub fn invoke(
     let mut result_data: Result<InvokeResult, ScriptCommandError> =
         match Serde::<Result<InvokeResult>>::deserialize(ref buf) {
         Option::Some(result_data) => result_data,
-        Option::None => panic!("invoke deserialize failed"),
+        Option::None => panic!("invoke deserialize failed")
     };
 
     result_data
@@ -470,7 +468,7 @@ pub enum FinalityStatus {
     Received,
     Rejected,
     AcceptedOnL2,
-    AcceptedOnL1,
+    AcceptedOnL1
 }
 
 pub impl DisplayFinalityStatus of Display<FinalityStatus> {
@@ -496,7 +494,7 @@ pub impl DisplayExecutionStatus of Display<ExecutionStatus> {
     fn fmt(self: @ExecutionStatus, ref f: Formatter) -> Result<(), Error> {
         let execution_status: ByteArray = match self {
             ExecutionStatus::Succeeded => "Succeeded",
-            ExecutionStatus::Reverted => "Reverted",
+            ExecutionStatus::Reverted => "Reverted"
         };
         write!(f, "{execution_status}")
     }
@@ -506,14 +504,14 @@ pub impl DisplayExecutionStatus of Display<ExecutionStatus> {
 #[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub struct TxStatusResult {
     pub finality_status: FinalityStatus,
-    pub execution_status: Option<ExecutionStatus>,
+    pub execution_status: Option<ExecutionStatus>
 }
 
 pub impl DisplayTxStatusResult of Display<TxStatusResult> {
     fn fmt(self: @TxStatusResult, ref f: Formatter) -> Result<(), Error> {
         match self.execution_status {
             Option::Some(status) => write!(
-                f, "finality_status: {}, execution_status: {}", self.finality_status, status,
+                f, "finality_status: {}, execution_status: {}", self.finality_status, status
             ),
             Option::None => write!(f, "finality_status: {}", self.finality_status),
         }
@@ -528,7 +526,7 @@ pub fn tx_status(transaction_hash: felt252) -> Result<TxStatusResult, ScriptComm
     let mut result_data: Result<TxStatusResult, ScriptCommandError> =
         match Serde::<Result<TxStatusResult>>::deserialize(ref buf) {
         Option::Some(result_data) => result_data,
-        Option::None => panic!("tx_status deserialize failed"),
+        Option::None => panic!("tx_status deserialize failed")
     };
 
     result_data

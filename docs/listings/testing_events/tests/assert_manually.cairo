@@ -6,7 +6,7 @@ use snforge_std::{
 };
 
 use testing_events::contract::{
-    SpyEventsChecker, ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait,
+    SpyEventsChecker, ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait
 };
 
 use starknet::ContractAddress;
@@ -26,13 +26,13 @@ fn test_complex_assertions() {
     assert(events.events.len() == 1, 'There should be one event');
 
     let expected_event = SpyEventsChecker::Event::FirstEvent(
-        SpyEventsChecker::FirstEvent { some_data: 123 },
+        SpyEventsChecker::FirstEvent { some_data: 123 }
     );
 
     assert!(events.is_emitted(contract_address, @expected_event)); // Ad 3.
 
     let expected_events: Array<(ContractAddress, Event)> = array![
-        (contract_address, expected_event.into()),
+        (contract_address, expected_event.into())
     ];
 
     assert!(events.events == expected_events); // Ad 4.

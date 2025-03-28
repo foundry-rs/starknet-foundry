@@ -1,7 +1,7 @@
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
 
 use testing_smart_contracts_writing_tests::{
-    ISimpleContractDispatcher, ISimpleContractDispatcherTrait,
+    ISimpleContractDispatcher, ISimpleContractDispatcherTrait
 };
 
 #[test]

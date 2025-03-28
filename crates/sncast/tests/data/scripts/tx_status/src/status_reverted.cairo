@@ -1,6 +1,6 @@
 use sncast_std::{
     tx_status, TxStatusResult, ExecutionStatus, FinalityStatus, ScriptCommandError, ProviderError,
-    StarknetError,
+    StarknetError
 };
 
 fn main() {
@@ -13,7 +13,7 @@ fn main() {
     assert!(
         TxStatusResult {
             finality_status: FinalityStatus::AcceptedOnL1,
-            execution_status: Option::Some(ExecutionStatus::Reverted),
-        } == status,
+            execution_status: Option::Some(ExecutionStatus::Reverted)
+        } == status
     )
 }

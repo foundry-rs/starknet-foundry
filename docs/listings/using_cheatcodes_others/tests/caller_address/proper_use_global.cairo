@@ -1,6 +1,6 @@
 use snforge_std::{
     declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address_global,
-    stop_cheat_caller_address_global,
+    stop_cheat_caller_address_global
 };
 use using_cheatcodes_others::{ICheatcodeCheckerDispatcher, ICheatcodeCheckerDispatcherTrait};
 

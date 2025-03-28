@@ -10,7 +10,7 @@ fn main() {
         100000, 10000000000000, 1000000000, 100000000000000000000, 100000, 10000000000000,
     );
     let invoke_result = invoke(
-        map_contract_address, selector!("put"), array![0x10, 0x1], fee_settings, Option::None,
+        map_contract_address, selector!("put"), array![0x10, 0x1], fee_settings, Option::None
     )
         .unwrap_err();
     println!("{:?}", invoke_result);

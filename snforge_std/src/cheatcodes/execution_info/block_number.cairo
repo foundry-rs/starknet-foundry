@@ -1,5 +1,5 @@
 use super::{
-    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress,
+    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress
 };
 
 /// Changes the block number for the given contract address and span.
@@ -14,7 +14,7 @@ pub fn cheat_block_number(contract_address: ContractAddress, block_number: u64, 
         .block_info
         .block_number =
             Operation::Start(
-                CheatArguments { value: block_number, span, target: contract_address },
+                CheatArguments { value: block_number, span, target: contract_address, }
             );
 
     cheat_execution_info(execution_info);

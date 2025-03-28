@@ -34,7 +34,7 @@ mod tests {
 
     // works for multiple messages
     #[test]
-    #[should_panic(expected: ('panic message', 'second message'))]
+    #[should_panic(expected: ('panic message', 'second message',))]
     fn should_panic_multiple_messages() {
         let mut arr = ArrayTrait::new();
         arr.append('panic message');

@@ -11,7 +11,7 @@ mod ConstructorSpyEventsChecker {
 
     #[derive(Drop, starknet::Event)]
     struct FirstEvent {
-        some_data: felt252,
+        some_data: felt252
     }
 
     #[constructor]

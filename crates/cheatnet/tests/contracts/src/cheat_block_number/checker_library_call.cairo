@@ -23,7 +23,7 @@ mod CheatBlockNumberCheckerLibCall {
     impl ICheatBlockNumberCheckerLibCall of super::ICheatBlockNumberCheckerLibCall<ContractState> {
         fn get_block_number_with_lib_call(ref self: ContractState, class_hash: ClassHash) -> u64 {
             let cheat_block_number_checker = ICheatBlockNumberCheckerLibraryDispatcher {
-                class_hash,
+                class_hash
             };
             cheat_block_number_checker.get_block_number()
         }

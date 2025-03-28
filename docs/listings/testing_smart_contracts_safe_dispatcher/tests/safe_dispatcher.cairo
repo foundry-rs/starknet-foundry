@@ -1,7 +1,7 @@
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
 
 use testing_smart_contracts_safe_dispatcher::{
-    IPanicContractSafeDispatcher, IPanicContractSafeDispatcherTrait,
+    IPanicContractSafeDispatcher, IPanicContractSafeDispatcherTrait
 };
 
 #[test]
@@ -16,6 +16,6 @@ fn handling_errors() {
         Result::Err(panic_data) => {
             assert(*panic_data.at(0) == 'PANIC', *panic_data.at(0));
             assert(*panic_data.at(1) == 'DAYTAH', *panic_data.at(1));
-        },
+        }
     };
 }

@@ -10,7 +10,7 @@ fn main() {
     assert!(
         TxStatusResult {
             finality_status: FinalityStatus::AcceptedOnL1,
-            execution_status: Option::Some(ExecutionStatus::Succeeded),
-        } == status,
+            execution_status: Option::Some(ExecutionStatus::Succeeded)
+        } == status
     )
 }

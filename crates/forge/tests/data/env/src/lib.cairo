@@ -14,7 +14,7 @@ mod tests {
         let byte_array = Serde::<ByteArray>::deserialize(ref byte_array_value).unwrap();
         assert(
             byte_array == "that is a very long environment variable that would normally not fit",
-            'Invalid ByteArray value',
+            'Invalid ByteArray value'
         )
     }
 }

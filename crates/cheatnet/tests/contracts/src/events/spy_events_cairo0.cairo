@@ -25,7 +25,7 @@ mod SpyEventsCairo0 {
     impl ISpyEventsCairo0 of super::ISpyEventsCairo0<ContractState> {
         fn test_cairo0_event_collection(ref self: ContractState, cairo0_address: ContractAddress) {
             let cairo0_contract = super::ICairo0ContractDispatcher {
-                contract_address: cairo0_address,
+                contract_address: cairo0_address
             };
 
             cairo0_contract.emit_one_cairo0_event(123456789);

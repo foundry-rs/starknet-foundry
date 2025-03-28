@@ -7,13 +7,13 @@ trait ITraceDummy<T> {
 mod TraceDummy {
     use starknet::{
         SyscallResultTrait, ClassHash, get_block_hash_syscall, get_execution_info_syscall,
-        emit_event_syscall, send_message_to_l1_syscall,
+        emit_event_syscall, send_message_to_l1_syscall
     };
     use super::super::use_builtins_and_syscalls;
 
     #[storage]
     struct Storage {
-        balance: u8,
+        balance: u8
     }
 
     #[abi(embed_v0)]

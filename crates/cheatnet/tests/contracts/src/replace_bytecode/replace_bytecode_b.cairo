@@ -11,7 +11,7 @@ mod ReplaceBytecodeB {
 
     #[storage]
     struct Storage {
-        value: felt252,
+        value: felt252
     }
 
     #[abi(embed_v0)]

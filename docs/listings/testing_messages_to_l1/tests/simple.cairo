@@ -27,9 +27,9 @@ fn test_spying_l1_messages() {
                 (
                     contract_address, // Message sender
                     MessageToL1 { // Message content (receiver and payload)
-                        to_address: receiver_l1_address, payload: expected_payload,
-                    },
-                ),
-            ],
+                        to_address: receiver_l1_address, payload: expected_payload
+                    }
+                )
+            ]
         );
 }

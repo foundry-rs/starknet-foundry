@@ -3,7 +3,7 @@ use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
 
 use trace_resources::{
     trace_info_checker::{ITraceInfoCheckerDispatcherTrait, ITraceInfoCheckerDispatcher},
-    trace_info_proxy::{ITraceInfoProxyDispatcherTrait, ITraceInfoProxyDispatcher},
+    trace_info_proxy::{ITraceInfoProxyDispatcherTrait, ITraceInfoProxyDispatcher}
 };
 
 #[test]

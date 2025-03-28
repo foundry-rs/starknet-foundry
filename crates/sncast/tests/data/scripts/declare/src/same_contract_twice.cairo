@@ -1,6 +1,6 @@
 use sncast_std::{
     get_nonce, declare, DeclareResult, DeclareResultTrait, ScriptCommandError, ProviderError,
-    StarknetError, FeeSettingsTrait,
+    StarknetError, FeeSettingsTrait
 };
 
 fn main() {
@@ -29,7 +29,7 @@ fn main() {
     match second_declare_result {
         DeclareResult::Success(_) => panic!("Should be already declared"),
         DeclareResult::AlreadyDeclared(already_declared_result) => assert!(
-            already_declared_result.class_hash == class_hash,
+            already_declared_result.class_hash == class_hash
         ),
     }
 

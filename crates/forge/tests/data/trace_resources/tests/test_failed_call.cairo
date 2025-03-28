@@ -4,7 +4,7 @@ use snforge_std::{declare, ContractClassTrait};
 
 use trace_resources::{
     trace_info_checker::{ITraceInfoCheckerSafeDispatcherTrait, ITraceInfoCheckerSafeDispatcher},
-    trace_info_proxy::{ITraceInfoProxySafeDispatcherTrait, ITraceInfoProxySafeDispatcher},
+    trace_info_proxy::{ITraceInfoProxySafeDispatcherTrait, ITraceInfoProxySafeDispatcher,}
 };
 
 #[test]
@@ -24,12 +24,12 @@ fn test_failed_call() {
     let proxy_dispatcher = ITraceInfoProxySafeDispatcher { contract_address: proxy_address };
     match proxy_dispatcher.with_panic(checker_address, empty_hash, 2) {
         Result::Ok(_) => panic_with_felt252('shouldve panicked'),
-        Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); },
+        Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }
     }
 
     let chcecker_dispatcher = ITraceInfoCheckerSafeDispatcher { contract_address: checker_address };
     match chcecker_dispatcher.panic(empty_hash, 3) {
         Result::Ok(_) => panic_with_felt252('shouldve panicked'),
-        Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); },
+        Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }
     };
 }

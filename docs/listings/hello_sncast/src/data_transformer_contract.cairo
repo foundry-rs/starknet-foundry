@@ -1,19 +1,19 @@
 #[derive(Serde, Drop)]
 pub struct SimpleStruct {
-    a: felt252,
+    a: felt252
 }
 
 #[derive(Serde, Drop)]
 pub struct NestedStructWithField {
     a: SimpleStruct,
-    b: felt252,
+    b: felt252
 }
 
 #[derive(Serde, Drop)]
 pub enum Enum {
     One: (),
     Two: u128,
-    Three: NestedStructWithField,
+    Three: NestedStructWithField
 }
 
 #[starknet::interface]
@@ -28,7 +28,7 @@ pub trait IDataTransformerContract<TContractState> {
         three: ByteArray,
         four: (felt252, u32),
         five: bool,
-        six: u256,
+        six: u256
     );
 }
 
@@ -54,7 +54,7 @@ pub mod DataTransformerContract {
             three: ByteArray,
             four: (felt252, u32),
             five: bool,
-            six: u256,
+            six: u256
         ) {}
     }
 }

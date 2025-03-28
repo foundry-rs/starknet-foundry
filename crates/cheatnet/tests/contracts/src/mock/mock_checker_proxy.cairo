@@ -10,7 +10,7 @@ trait IMockChecker<TContractState> {
 trait IMockCheckerProxy<TContractState> {
     fn get_thing_from_contract(ref self: TContractState, address: ContractAddress) -> felt252;
     fn get_thing_from_contract_and_emit_event(
-        ref self: TContractState, address: ContractAddress,
+        ref self: TContractState, address: ContractAddress
     ) -> felt252;
 }
 
@@ -26,12 +26,12 @@ mod MockCheckerProxy {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        ThingEmitted: ThingEmitted,
+        ThingEmitted: ThingEmitted
     }
 
     #[derive(Drop, starknet::Event)]
     struct ThingEmitted {
-        thing: felt252,
+        thing: felt252
     }
 
     #[abi(embed_v0)]
@@ -42,7 +42,7 @@ mod MockCheckerProxy {
         }
 
         fn get_thing_from_contract_and_emit_event(
-            ref self: ContractState, address: ContractAddress,
+            ref self: ContractState, address: ContractAddress
         ) -> felt252 {
             let dispatcher = IMockCheckerDispatcher { contract_address: address };
             let thing = dispatcher.get_thing();

@@ -14,7 +14,7 @@ fn second_contract() {
         Option::None,
         false,
         fee_settings,
-        Option::None,
+        Option::None
     )
         .expect('mapa deploy failed');
     assert(deploy_result.transaction_hash != 0, deploy_result.transaction_hash);
@@ -24,7 +24,7 @@ fn second_contract() {
         selector!("put"),
         array![0x1, 0x3],
         fee_settings,
-        Option::None,
+        Option::None
     )
         .expect('mapa2 invoke failed');
     assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);
@@ -52,7 +52,7 @@ fn main() {
         Option::Some(salt),
         true,
         fee_settings,
-        Option::Some(deploy_nonce),
+        Option::Some(deploy_nonce)
     )
         .expect('mapa deploy failed');
     assert(deploy_result.transaction_hash != 0, deploy_result.transaction_hash);
@@ -63,7 +63,7 @@ fn main() {
         selector!("put"),
         array![0x1, 0x2],
         fee_settings,
-        Option::Some(invoke_nonce),
+        Option::Some(invoke_nonce)
     )
         .expect('mapa invoke failed');
     assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);

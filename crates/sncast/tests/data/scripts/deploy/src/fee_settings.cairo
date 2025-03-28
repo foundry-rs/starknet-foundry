@@ -12,7 +12,7 @@ fn main() {
         .expect('Invalid class hash value');
 
     let deploy_result = deploy(
-        class_hash, array![0x2, 0x2, 0x0], Option::Some(salt), true, fee_settings, Option::None,
+        class_hash, array![0x2, 0x2, 0x0], Option::Some(salt), true, fee_settings, Option::None
     )
         .expect('deploy failed');
 

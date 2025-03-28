@@ -1,6 +1,6 @@
 use sncast_std::{
     get_nonce, declare, DeclareResult, ScriptCommandError, ProviderError, StarknetError,
-    FeeSettingsTrait,
+    FeeSettingsTrait
 };
 
 fn main() {
@@ -13,8 +13,8 @@ fn main() {
 
     assert(
         ScriptCommandError::ProviderError(
-            ProviderError::StarknetError(StarknetError::InvalidTransactionNonce),
+            ProviderError::StarknetError(StarknetError::InvalidTransactionNonce)
         ) == declare_result,
-        'ohno',
+        'ohno'
     )
 }

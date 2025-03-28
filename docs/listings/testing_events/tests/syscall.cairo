@@ -4,7 +4,7 @@ use snforge_std::{
 };
 
 use testing_events::syscall::{
-    ISpySyscallEventsCheckerDispatcher, ISpySyscallEventsCheckerDispatcherTrait,
+    ISpySyscallEventsCheckerDispatcher, ISpySyscallEventsCheckerDispatcherTrait
 };
 
 #[test]

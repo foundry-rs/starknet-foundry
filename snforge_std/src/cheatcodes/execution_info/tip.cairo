@@ -1,5 +1,5 @@
 use super::{
-    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress,
+    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress
 };
 
 /// Changes the transaction tip for the given contract address and span.
@@ -12,7 +12,7 @@ pub fn cheat_tip(contract_address: ContractAddress, tip: u128, span: CheatSpan) 
 
     execution_info
         .tx_info
-        .tip = Operation::Start(CheatArguments { value: tip, span, target: contract_address });
+        .tip = Operation::Start(CheatArguments { value: tip, span, target: contract_address, });
 
     cheat_execution_info(execution_info);
 }

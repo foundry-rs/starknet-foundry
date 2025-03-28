@@ -1,5 +1,5 @@
 use super::{
-    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress,
+    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress
 };
 
 /// Changes the transaction chain_id for the given contract address and span.
@@ -13,7 +13,7 @@ pub fn cheat_chain_id(contract_address: ContractAddress, chain_id: felt252, span
     execution_info
         .tx_info
         .chain_id =
-            Operation::Start(CheatArguments { value: chain_id, span, target: contract_address });
+            Operation::Start(CheatArguments { value: chain_id, span, target: contract_address, });
 
     cheat_execution_info(execution_info);
 }

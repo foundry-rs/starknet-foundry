@@ -3,14 +3,14 @@ pub struct Pokemon {
     pub name: ByteArray,
     pub element: Element,
     pub likes: felt252,
-    pub owner: starknet::ContractAddress,
+    pub owner: starknet::ContractAddress
 }
 
 #[derive(Copy, Debug, PartialEq, Drop, Serde, starknet::Store)]
 pub enum Element {
     Fire,
     Water,
-    Grass,
+    Grass
 }
 
 #[starknet::interface]

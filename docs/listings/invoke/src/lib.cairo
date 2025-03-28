@@ -9,7 +9,7 @@ fn main() {
     let fee_settings = FeeSettingsTrait::estimate();
 
     let result = invoke(
-        contract_address, selector!("put"), array![0x1, 0x2], fee_settings, Option::None,
+        contract_address, selector!("put"), array![0x1, 0x2], fee_settings, Option::None
     )
         .expect('invoke failed');
 

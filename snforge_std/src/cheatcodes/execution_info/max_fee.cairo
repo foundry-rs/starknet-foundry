@@ -1,5 +1,5 @@
 use super::{
-    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress,
+    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress
 };
 
 /// Changes the transaction max fee for the given contract address and span.
@@ -13,7 +13,7 @@ pub fn cheat_max_fee(contract_address: ContractAddress, max_fee: u128, span: Che
     execution_info
         .tx_info
         .max_fee =
-            Operation::Start(CheatArguments { value: max_fee, span, target: contract_address });
+            Operation::Start(CheatArguments { value: max_fee, span, target: contract_address, });
 
     cheat_execution_info(execution_info);
 }
