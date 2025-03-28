@@ -8,16 +8,21 @@ use forge::CAIRO_EDITION;
 use forge::Template;
 use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use indoc::{formatdoc, indoc};
+use regex::Regex;
+use shared::consts::FREE_RPC_PROVIDER_URL;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::assert_matches;
 use snapbox::cmd::Command as SnapboxCommand;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+use std::sync::LazyLock;
 use std::{env, fs, iter};
 use test_case::test_case;
 use test_utils::{get_local_snforge_std_absolute_path, tempdir_with_tool_versions};
 use toml_edit::{DocumentMut, Formatted, InlineTable, Item, Value};
+
+static RE_NEWLINES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\n{3,}").unwrap());
 
 #[test]
 fn init_new_project() {
@@ -43,6 +48,7 @@ fn init_new_project() {
 
 #[test_case(&Template::CairoProgram; "cairo-program")]
 #[test_case(&Template::BalanceContract; "balance-contract")]
+#[test_case(&Template::Erc20Contract; "erc20-contract")]
 fn create_new_project_dir_not_exist(template: &Template) {
     let temp = tempdir_with_tool_versions().unwrap();
     let project_path = temp.join("new").join("project");
@@ -172,15 +178,31 @@ fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool
         ""
     };
 
+    let target_contract_entry = "[[target.starknet-contract]]\nsierra = true";
+
+    let fork_config = if let Template::Erc20Contract = template {
+        &formatdoc!(
+            r#"
+            [[tool.snforge.fork]]
+            name = "SEPOLIA_LATEST"
+            url = "{FREE_RPC_PROVIDER_URL}"
+            block_id = {{ tag = "latest" }}
+        "#
+        )
+    } else {
+        ""
+    };
+
     let (dependencies, target_contract_entry) = match template {
-        Template::BalanceContract => (
-            "starknet = \"[..]\"\n",
-            "\n[[target.starknet-contract]]\nsierra = true\n",
+        Template::BalanceContract => ("starknet = \"[..]\"", target_contract_entry),
+        Template::Erc20Contract => (
+            "openzeppelin_token = \"[..]\"\nstarknet = \"[..]\"",
+            target_contract_entry,
         ),
         Template::CairoProgram => ("", ""),
     };
 
-    formatdoc!(
+    let expected_manifest = formatdoc!(
         r#"
             [package]
             name = "test_name"
@@ -191,18 +213,30 @@ fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool
 
             [dependencies]
             {dependencies}
+
             [dev-dependencies]{}
             assert_macros = "[..]"
+
             {target_contract_entry}
+
             [scripts]
             test = "snforge test"
 
             [tool.scarb]
             allow-prebuilt-plugins = ["snforge_std"]
-            {SCARB_MANIFEST_TEMPLATE_CONTENT}
+
+            {fork_config}
+
+            {}
         "#,
-        snforge_std_assert
-    ).trim_end().to_string() + "\n"
+        snforge_std_assert,
+        SCARB_MANIFEST_TEMPLATE_CONTENT.trim_end()
+    );
+
+    // Replace 3 or more consecutive newlines with exactly 2 newlines
+    RE_NEWLINES
+        .replace_all(&expected_manifest, "\n\n")
+        .to_string()
 }
 
 fn get_expected_output(template: &Template) -> &str {
@@ -232,6 +266,27 @@ fn get_expected_output(template: &Template) -> &str {
                 [PASS] test_name_integrationtest::test_contract::test_increase_balance [..]
                 [PASS] test_name_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value [..]
                 Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+                "
+            )
+        }
+        Template::Erc20Contract => {
+            indoc!(
+                r"
+                [..]Compiling[..]
+                [..]Finished[..]
+
+                Collected 8 test(s) from test_name package
+                Running 8 test(s) from tests/
+                [PASS] test_name_integrationtest::test_erc20::should_panic_transfer [..]
+                [PASS] test_name_integrationtest::test_erc20::test_get_balance [..]
+                [PASS] test_name_integrationtest::test_erc20::test_transfer [..]
+                [PASS] test_name_integrationtest::test_erc20::test_transfer_event [..]
+                [PASS] test_name_integrationtest::test_token_sender::test_multisend [..]
+                [PASS] test_name_integrationtest::test_token_sender::test_single_send_fuzz [..]
+                [PASS] test_name_integrationtest::test_token_sender::test_single_send [..]
+                [PASS] test_name_integrationtest::test_erc20::test_fork_transfer [..]
+                Running 0 test(s) from src/
+                Tests: 8 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
                 "
             )
         }
