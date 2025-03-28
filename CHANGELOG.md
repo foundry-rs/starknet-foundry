@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Changed
+
+- `verify` command now supports the `--class-hash` for Walnut verification
+
 ## [0.40.0] - 2025-03-26
 
 ### Cast
@@ -56,8 +62,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sncast completion` command - used to generate autocompletion script
 
 #### Changed
-
-- `verify` command now supports the `--class-hash` for Walnut verification
 
 - `sncast script init` command now initializes project with the `sncast_std` dependency from the [registry](https://scarbs.xyz/packages/sncast_std)
 
