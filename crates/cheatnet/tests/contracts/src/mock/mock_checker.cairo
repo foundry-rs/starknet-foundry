@@ -19,7 +19,7 @@ mod MockChecker {
     use super::IMockChecker;
     use super::StructThing;
     use core::array::ArrayTrait;
-    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use super::IMockCheckerDispatcher;
     use super::IMockCheckerDispatcherTrait;
 

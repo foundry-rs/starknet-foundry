@@ -8,7 +8,7 @@ trait ITimestamper<TContractState> {
 mod Timestamper {
     use core::array::ArrayTrait;
     use starknet::get_block_timestamp;
-    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     #[storage]
     struct Storage {

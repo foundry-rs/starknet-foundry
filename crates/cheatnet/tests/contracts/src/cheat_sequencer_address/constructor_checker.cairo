@@ -10,7 +10,7 @@ trait IConstructorCheatSequencerAddressChecker<TContractState> {
 mod ConstructorCheatSequencerAddressChecker {
     use core::box::BoxTrait;
     use starknet::ContractAddress;
-    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     #[storage]
     struct Storage {

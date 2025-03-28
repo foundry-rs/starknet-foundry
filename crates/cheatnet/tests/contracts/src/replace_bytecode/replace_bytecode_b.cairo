@@ -7,7 +7,7 @@ trait IReplaceBytecodeB<TContractState> {
 
 #[starknet::contract]
 mod ReplaceBytecodeB {
-    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     #[storage]
     struct Storage {
