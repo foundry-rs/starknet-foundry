@@ -15,12 +15,12 @@ mod CheatTxInfoChecker {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        TxHashEmitted: TxHashEmitted
+        TxHashEmitted: TxHashEmitted,
     }
 
     #[derive(Drop, starknet::Event)]
     struct TxHashEmitted {
-        tx_hash: felt252
+        tx_hash: felt252,
     }
 
     #[abi(embed_v0)]
