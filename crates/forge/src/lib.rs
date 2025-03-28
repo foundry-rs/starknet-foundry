@@ -36,7 +36,7 @@ pub const CAIRO_EDITION: &str = "2024_07";
 
 const MINIMAL_RUST_VERSION: Version = Version::new(1, 80, 1);
 const MINIMAL_SCARB_VERSION: Version = Version::new(2, 7, 0);
-const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 8, 5);
+const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 9, 4);
 const MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN: Version = Version::new(2, 10, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 const MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS: Version = Version::new(2, 10, 0);

@@ -394,7 +394,7 @@ mod tests {
                 sierra = true
 
                 [dependencies]
-                starknet = "2.8.5"
+                starknet = "2.9.4"
                 "#,
             ))
             .unwrap();
@@ -409,7 +409,7 @@ mod tests {
             package_matches_version_requirement(
                 &scarb_metadata,
                 "starknet",
-                &VersionReq::parse("2.8").unwrap(),
+                &VersionReq::parse("2.9").unwrap(),
             )
             .unwrap()
         );
@@ -427,7 +427,7 @@ mod tests {
             !package_matches_version_requirement(
                 &scarb_metadata,
                 "starknet",
-                &VersionReq::parse("2.9").unwrap(),
+                &VersionReq::parse("2.10").unwrap(),
             )
             .unwrap()
         );
