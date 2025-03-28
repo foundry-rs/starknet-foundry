@@ -65,6 +65,7 @@ test-case.workspace = true
 fs_extra.workspace = true
 wiremock.workspace = true
 docs = { workspace = true, features = ["testing"] }
+shared = { path = "../shared", features = ["testing"] }
 
 [[bin]]
 name = "sncast"

@@ -21,7 +21,7 @@ static CLASS: OnceCell<ContractClass> = OnceCell::const_new();
 
 async fn init_class() -> ContractClass {
     let client = JsonRpcClient::new(HttpTransport::new(
-        Url::parse("http://188.34.188.184:7070/rpc/v0_7").unwrap(),
+        Url::parse("http://188.34.188.184:7070/rpc/v0_8").unwrap(),
     ));
 
     client

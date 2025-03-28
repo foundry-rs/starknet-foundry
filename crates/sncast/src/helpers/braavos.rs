@@ -1,15 +1,15 @@
+use anyhow::{Error, bail};
 use async_trait::async_trait;
 use starknet::{
-    accounts::{
-        AccountFactory, PreparedAccountDeploymentV1, PreparedAccountDeploymentV3,
-        RawAccountDeploymentV1, RawAccountDeploymentV3,
-    },
+    accounts::{AccountFactory, PreparedAccountDeploymentV3, RawAccountDeploymentV3},
     core::types::{BlockId, BlockTag},
     providers::Provider,
     signers::{Signer, SignerInteractivityContext},
 };
 use starknet_crypto::poseidon_hash_many;
 use starknet_types_core::felt::Felt;
+
+use crate::AccountType;
 
 // Adapted from strakli as there is currently no implementation of braavos account factory in starknet-rs
 pub struct BraavosAccountFactory<S, P> {
@@ -128,16 +128,6 @@ where
         self.block_id
     }
 
-    async fn sign_deployment_v1(
-        &self,
-        deployment: &RawAccountDeploymentV1,
-        query_only: bool,
-    ) -> Result<Vec<Felt>, Self::SignError> {
-        let tx_hash = PreparedAccountDeploymentV1::from_raw(deployment.clone(), self)
-            .transaction_hash(query_only);
-        self.sign_deployment(tx_hash).await
-    }
-
     async fn sign_deployment_v3(
         &self,
         deployment: &RawAccountDeploymentV3,
@@ -152,4 +142,13 @@ where
         self.signer
             .is_interactive(SignerInteractivityContext::Other)
     }
+}
+
+pub fn assert_non_braavos_account_type(account_type: AccountType) -> Result<(), Error> {
+    if let AccountType::Braavos = account_type {
+        bail!(
+            "Using Braavos accounts is temporarily disabled because they don't yet work with the RPC version supported by `sncast`"
+        )
+    }
+    Ok(())
 }
