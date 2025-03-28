@@ -1,6 +1,5 @@
 use sncast_std::{deploy, DeployResult, FeeSettingsTrait};
-use starknet::{ClassHash, Felt252TryIntoClassHash};
-use traits::Into;
+use starknet::{ClassHash};
 
 fn main() {
     let fee_settings = FeeSettingsTrait::resource_bounds(

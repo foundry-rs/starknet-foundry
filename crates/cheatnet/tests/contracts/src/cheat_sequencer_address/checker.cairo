@@ -16,12 +16,12 @@ mod CheatSequencerAddressChecker {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        SequencerAddressEmitted: SequencerAddressEmitted
+        SequencerAddressEmitted: SequencerAddressEmitted,
     }
 
     #[derive(Drop, starknet::Event)]
     struct SequencerAddressEmitted {
-        sequencer_address: ContractAddress
+        sequencer_address: ContractAddress,
     }
 
     #[abi(embed_v0)]
@@ -34,7 +34,7 @@ mod CheatSequencerAddressChecker {
             let sequencer_address = starknet::get_block_info().unbox().sequencer_address;
             self
                 .emit(
-                    Event::SequencerAddressEmitted(SequencerAddressEmitted { sequencer_address })
+                    Event::SequencerAddressEmitted(SequencerAddressEmitted { sequencer_address }),
                 );
             sequencer_address
         }

@@ -6,7 +6,7 @@ trait ICheatBlockNumberChecker<TContractState> {
 
 #[starknet::contract]
 mod CheatBlockNumberChecker {
-    use box::BoxTrait;
+    use core::box::BoxTrait;
     #[storage]
     struct Storage {
         balance: felt252,
@@ -15,12 +15,12 @@ mod CheatBlockNumberChecker {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        BlockNumberEmitted: BlockNumberEmitted
+        BlockNumberEmitted: BlockNumberEmitted,
     }
 
     #[derive(Drop, starknet::Event)]
     struct BlockNumberEmitted {
-        block_number: u64
+        block_number: u64,
     }
 
     #[abi(embed_v0)]

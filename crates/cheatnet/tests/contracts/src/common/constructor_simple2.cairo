@@ -6,9 +6,11 @@ trait IConstructorSimple2<TContractState> {
 
 #[starknet::contract]
 mod ConstructorSimple2 {
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+
     #[storage]
     struct Storage {
-        number: felt252
+        number: felt252,
     }
 
     #[constructor]

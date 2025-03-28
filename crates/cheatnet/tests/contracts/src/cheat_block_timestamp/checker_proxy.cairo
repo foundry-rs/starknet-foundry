@@ -26,11 +26,11 @@ mod CheatBlockTimestampCheckerProxy {
 
     #[abi(embed_v0)]
     impl ICheatBlockTimestampCheckerProxy of super::ICheatBlockTimestampCheckerProxy<
-        ContractState
+        ContractState,
     > {
         fn get_cheated_block_timestamp(self: @ContractState, address: ContractAddress) -> u64 {
             let cheat_block_timestamp_checker = ICheatBlockTimestampCheckerDispatcher {
-                contract_address: address
+                contract_address: address,
             };
             cheat_block_timestamp_checker.get_block_timestamp()
         }
@@ -41,7 +41,7 @@ mod CheatBlockTimestampCheckerProxy {
 
         fn call_proxy(self: @ContractState, address: ContractAddress) -> (u64, u64) {
             let dispatcher = ICheatBlockTimestampCheckerProxyDispatcher {
-                contract_address: address
+                contract_address: address,
             };
             let timestamp = self.get_block_timestamp();
             let res = dispatcher.get_cheated_block_timestamp(get_contract_address());

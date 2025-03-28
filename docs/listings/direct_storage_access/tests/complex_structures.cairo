@@ -19,7 +19,7 @@ fn store_in_complex_mapping() {
             selector!("mapping"), // storage variable name
              k.into() // map key
         ),
-        v.into()
+        v.into(),
     );
 
     // complex_mapping = {
@@ -28,7 +28,7 @@ fn store_in_complex_mapping() {
     //     ...
     // }
 
-    let loaded = load(contract_address, map_entry_address(selector!("mapping"), k.into()), 2,);
+    let loaded = load(contract_address, map_entry_address(selector!("mapping"), k.into()), 2);
 
     assert_eq!(loaded, array![123, 456]);
 }

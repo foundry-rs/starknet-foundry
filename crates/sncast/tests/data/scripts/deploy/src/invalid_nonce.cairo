@@ -3,8 +3,7 @@ use sncast_std::{
     FeeSettingsTrait, TransactionExecutionErrorData
 };
 
-use starknet::{ClassHash, Felt252TryIntoClassHash};
-use traits::Into;
+use starknet::{ClassHash};
 
 fn main() {
     let fee_settings = FeeSettingsTrait::resource_bounds(
@@ -31,8 +30,8 @@ fn main() {
 
     assert(
         ScriptCommandError::ProviderError(
-            ProviderError::StarknetError(StarknetError::InvalidTransactionNonce)
+            ProviderError::StarknetError(StarknetError::InvalidTransactionNonce),
         ) == deploy_result,
-        'ohno'
+        'ohno',
     )
 }

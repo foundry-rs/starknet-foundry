@@ -18,13 +18,14 @@ trait IMockChecker<TContractState> {
 mod MockChecker {
     use super::IMockChecker;
     use super::StructThing;
-    use array::ArrayTrait;
+    use core::array::ArrayTrait;
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use super::IMockCheckerDispatcher;
     use super::IMockCheckerDispatcherTrait;
 
     #[storage]
     struct Storage {
-        stored_thing: felt252
+        stored_thing: felt252,
     }
 
     #[constructor]

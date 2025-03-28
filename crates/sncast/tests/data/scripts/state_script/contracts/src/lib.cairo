@@ -9,7 +9,7 @@ trait IState<TState> {
 #[starknet::contract]
 mod State {
     use starknet::{
-        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map}
+        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map},
     };
 
     #[storage]
@@ -24,7 +24,7 @@ mod State {
         }
 
         fn get(self: @ContractState, key: felt252) -> felt252 {
-            self.storage.entry(key).read()
+            self.storage.read(key)
         }
 
         fn dummy(self: @ContractState) -> felt252 {
