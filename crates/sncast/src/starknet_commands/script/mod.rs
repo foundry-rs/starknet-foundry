@@ -7,7 +7,7 @@ pub mod run;
 
 #[derive(Args)]
 pub struct Script {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     pub command: Commands,
 }
 

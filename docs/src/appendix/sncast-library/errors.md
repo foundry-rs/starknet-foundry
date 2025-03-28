@@ -7,9 +7,28 @@ pub struct ErrorData {
 }
 
 #[derive(Drop, PartialEq, Serde, Debug)]
+pub struct ContractErrorData {
+    revert_error: ContractExecutionError
+}
+
+#[derive(Drop, PartialEq, Debug)]
 pub struct TransactionExecutionErrorData {
     transaction_index: felt252,
-    execution_error: ByteArray,
+    execution_error: ContractExecutionError,
+}
+
+#[derive(Drop, PartialEq, Debug)]
+pub enum ContractExecutionError {
+    Nested: Box<ContractExecutionErrorInner>,
+    Message: ByteArray
+}
+
+#[derive(Drop, Serde, Debug)]
+pub struct ContractExecutionErrorInner {
+    contract_address: ContractAddress,
+    class_hash: felt252,
+    selector: felt252,
+    error: ContractExecutionError,
 }
 
 #[derive(Drop, Serde, PartialEq, Debug)]
@@ -18,6 +37,8 @@ pub enum StarknetError {
     FailedToReceiveTransaction,
     /// Contract not found
     ContractNotFound,
+    /// Requested entrypoint does not exist in the contract
+    EntryPointNotFound,
     /// Block not found
     BlockNotFound,
     /// Invalid transaction index in a block
@@ -27,15 +48,15 @@ pub enum StarknetError {
     /// Transaction hash not found
     TransactionHashNotFound,
     /// Contract error
-    ContractError: ErrorData,
+    ContractError: ContractErrorData,
     /// Transaction execution error
     TransactionExecutionError: TransactionExecutionErrorData,
     /// Class already declared
     ClassAlreadyDeclared,
     /// Invalid transaction nonce
     InvalidTransactionNonce,
-    /// Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
-    InsufficientMaxFee,
+    /// The transaction's resources don't cover validation or the minimal transaction fee
+    InsufficientResourcesForValidate,
     /// Account balance is smaller than the transaction's max_fee
     InsufficientAccountBalance,
     /// Account validation failed
