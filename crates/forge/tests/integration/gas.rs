@@ -709,7 +709,7 @@ fn multiple_storage_writes_cost_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-    // (3598 + 9 memory holes) * 0.0025 = 9.0175 ~ 10 = gas cost of steps
+    // (3573 + 9 memory holes) * 0.0025 = 8,955 ~ 9 = gas cost of steps
     // l = number of class hash updates
     // n = unique contracts updated
     // m = unique(!) values updated
@@ -718,14 +718,14 @@ fn multiple_storage_writes_cost_cairo_steps() {
     // m(1) * 2 * 32 = 64
     // l(1) * 32 = 32
     // storage updates from zero value(1) * 32 = 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
-    // 0 l1_gas + (64 + 64 + 32 + 32) l1_data_gas + 10 * (100 / 0.0025) l2 gas
+    // 0 l1_gas + (64 + 64 + 32 + 32) l1_data_gas + 9 * (100 / 0.0025) l2 gas
     assert_gas(
         &result,
         "multiple_storage_writes_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(400_000),
+            l2_gas: GasAmount(360_000),
         },
     );
 }
@@ -849,21 +849,21 @@ fn l1_message_cost_for_proxy_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-    // 5205 * 0.0025 = 13.0125 ~ 14 = gas cost of steps
+    // 5160 * 0.0025 = 12.9 ~ 13 = gas cost of steps
     // l = number of class hash updates
     // n = unique contracts updated
     // So, as per formula:
     // n(2) * 2 * 32 = 128
     // l(2) * 32 = 64
     // 29524 = gas cost of message
-    // 29524 l1_gas + (128 + 64) l1_data_gas + 14 * (100 / 0.0025) l2 gas
+    // 29524 l1_gas + (128 + 64) l1_data_gas + 13 * (100 / 0.0025) l2 gas
     assert_gas(
         &result,
         "l1_message_cost_for_proxy",
         GasVector {
             l1_gas: GasAmount(29524),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(560_000),
+            l2_gas: GasAmount(520_000),
         },
     );
 }
