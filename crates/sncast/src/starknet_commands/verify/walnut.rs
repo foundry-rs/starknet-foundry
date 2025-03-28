@@ -89,7 +89,7 @@ impl VerificationInterface for WalnutVerificationInterface {
 
     fn gen_explorer_url(&self) -> String {
         let api_base_url =
-            env::var("WALNUT_API_URL").unwrap_or_else(|_| "https://api.walnut.dev".to_string());
+            env::var("VERIFIER_API_URL").unwrap_or_else(|_| "https://api.walnut.dev".to_string());
         let path = match self.network {
             Network::Mainnet => "/v1/sn_main/verify",
             Network::Sepolia => "/v1/sn_sepolia/verify",

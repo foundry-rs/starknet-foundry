@@ -71,7 +71,7 @@ async fn test_happy_case() {
     ];
 
     let snapbox = runner(&args)
-        .env("VOYAGER_API_URL", mock_server.uri())
+        .env("VERIFIER_API_URL", mock_server.uri())
         .env("STARKNET_RPC_URL", mock_rpc.uri())
         .current_dir(contract_path.path())
         .stdin("Y");
@@ -152,7 +152,7 @@ async fn test_happy_case_with_confirm_verification_flag() {
     ];
 
     let snapbox = runner(&args)
-        .env("VOYAGER_API_URL", mock_server.uri())
+        .env("VERIFIER_API_URL", mock_server.uri())
         .env("STARKNET_RPC_URL", mock_rpc.uri())
         .current_dir(contract_path.path());
 
@@ -231,7 +231,7 @@ async fn test_failed_verification() {
     ];
 
     let snapbox = runner(&args)
-        .env("VOYAGER_API_URL", mock_server.uri())
+        .env("VERIFIER_API_URL", mock_server.uri())
         .env("STARKNET_RPC_URL", mock_rpc.uri())
         .current_dir(contract_path.path())
         .stdin("Y");
@@ -312,7 +312,7 @@ async fn test_failed_class_hash_lookup() {
     ];
 
     let snapbox = runner(&args)
-        .env("VOYAGER_API_URL", mock_server.uri())
+        .env("VERIFIER_API_URL", mock_server.uri())
         .env("STARKNET_RPC_URL", mock_rpc.uri())
         .current_dir(contract_path.path())
         .stdin("Y");
@@ -392,7 +392,7 @@ async fn test_virtual_workspaces() {
     ];
 
     let snapbox = runner(&args)
-        .env("VOYAGER_API_URL", mock_server.uri())
+        .env("VERIFIER_API_URL", mock_server.uri())
         .env("STARKNET_RPC_URL", mock_rpc.uri())
         .current_dir(contract_path.path())
         .stdin("Y");
@@ -474,7 +474,7 @@ async fn test_contract_name_not_found() {
     ];
 
     let snapbox = runner(&args)
-        .env("VOYAGER_API_URL", mock_server.uri())
+        .env("VERIFIER_API_URL", mock_server.uri())
         .env("STARKNET_RPC_URL", mock_rpc.uri())
         .current_dir(contract_path.path())
         .stdin("Y");
