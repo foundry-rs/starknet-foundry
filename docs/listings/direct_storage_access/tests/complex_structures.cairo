@@ -17,7 +17,7 @@ fn store_in_complex_mapping() {
         contract_address,
         map_entry_address( // uses Pedersen hashing under the hood for address calculation
             selector!("mapping"), // storage variable name
-            k.into() // map key
+             k.into() // map key
         ),
         v.into(),
     );

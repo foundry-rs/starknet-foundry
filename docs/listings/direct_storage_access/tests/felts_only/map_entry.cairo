@@ -25,7 +25,7 @@ fn test_store_and_load_map_entries() {
         contract_address,
         map_entry_address(
             selector!("mapping"), // storage variable name
-            array!['some_key'].span() // map key
+             array!['some_key'].span() // map key
         ),
         array!['some_other_value'].span(),
     );
