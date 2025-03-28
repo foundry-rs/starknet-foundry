@@ -6,4 +6,4 @@
 mod trace;
 mod tree;
 
-pub use trace::Trace;
+pub use trace::types::Trace;
