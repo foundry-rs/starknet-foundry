@@ -344,7 +344,7 @@ impl VerificationInterface for Voyager {
     }
 
     fn gen_explorer_url(&self) -> String {
-        match env::var("VOYAGER_API_URL") {
+        match env::var("VERIFIER_API_URL") {
             Ok(addr) => addr,
             Err(_) => match self.network {
                 Network::Mainnet => "https://api.voyager.online/beta".to_string(),

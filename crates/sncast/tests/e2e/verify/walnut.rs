@@ -41,7 +41,7 @@ async fn test_happy_case_contract_address() {
     ];
 
     let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
+        .env("VERIFIER_API_URL", mock_server.uri())
         .current_dir(contract_path.path())
         .stdin("Y");
 
@@ -92,7 +92,7 @@ async fn test_happy_case_class_hash() {
     ];
 
     let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
+        .env("VERIFIER_API_URL", mock_server.uri())
         .current_dir(contract_path.path())
         .stdin("Y");
 
@@ -143,7 +143,7 @@ async fn test_failed_verification_contract_address() {
     ];
 
     let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
+        .env("VERIFIER_API_URL", mock_server.uri())
         .current_dir(contract_path.path())
         .stdin("Y");
 
@@ -194,7 +194,7 @@ async fn test_failed_verification_class_hash() {
     ];
 
     let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
+        .env("VERIFIER_API_URL", mock_server.uri())
         .current_dir(contract_path.path())
         .stdin("Y");
 
@@ -312,7 +312,7 @@ async fn test_happy_case_with_confirm_verification_flag() {
     ];
 
     let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
+        .env("VERIFIER_API_URL", mock_server.uri())
         .current_dir(contract_path.path());
 
     let output = snapbox.assert().success();
@@ -364,7 +364,7 @@ async fn test_happy_case_specify_package() {
     ];
 
     let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
+        .env("VERIFIER_API_URL", mock_server.uri())
         .current_dir(tempdir.path())
         .stdin("Y");
 
@@ -417,7 +417,7 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
     ];
 
     let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
+        .env("VERIFIER_API_URL", mock_server.uri())
         .current_dir(tempdir.path())
         .stdin("Y");
 
