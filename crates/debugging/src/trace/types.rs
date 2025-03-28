@@ -52,11 +52,7 @@ pub struct CallerAddress(pub ContractAddress);
 impl Trace {
     /// Creates a new [`Trace`] from a given `cheatnet` [`CallTrace`], [`ContractsData`] and a test name.
     #[must_use]
-    pub fn from_call_trace(
-        call_trace: &CallTrace,
-        contracts_data: &ContractsData,
-        test_name: String,
-    ) -> Self {
+    pub fn new(call_trace: &CallTrace, contracts_data: &ContractsData, test_name: String) -> Self {
         collect::trace(call_trace, contracts_data, test_name)
     }
 }

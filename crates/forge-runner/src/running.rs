@@ -422,7 +422,7 @@ fn extract_test_case_summary(
                         fuzzer_args: result_with_info.fuzzer_args,
                         test_statistics: (),
                         debugging_trace: cfg!(feature = "debugging").then(|| {
-                            debugging::Trace::from_call_trace(
+                            debugging::Trace::new(
                                 &result_with_info.call_trace.borrow(),
                                 contracts_data,
                                 case.name.clone(),
