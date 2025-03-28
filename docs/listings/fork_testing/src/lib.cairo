@@ -6,6 +6,7 @@ pub struct Pokemon {
     pub owner: starknet::ContractAddress
 }
 
+#[allow(starknet::store_no_default_variant)]
 #[derive(Copy, Debug, PartialEq, Drop, Serde, starknet::Store)]
 pub enum Element {
     Fire,

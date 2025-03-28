@@ -73,7 +73,7 @@ pub impl FuzzableByteArray1000ASCII of Fuzzable<ByteArray> {
         let mut ba_len: u32 = generate_arg(0, 1000);
 
         let mut ba = "";
-        while ba_len > 0 {
+        while ba_len != 0 {
             // Limit only to printable characters with ASCII codes 32-126
             let letter = Fuzzable::<u8>::generate() % 95;
             ba.append_byte(letter + 32);
