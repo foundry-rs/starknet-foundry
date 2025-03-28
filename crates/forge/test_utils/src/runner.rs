@@ -16,7 +16,6 @@ use scarb_api::{
     ScarbCommand, StarknetContractArtifacts, get_contracts_artifacts_and_source_sierra_paths,
     metadata::MetadataCommandExt, target_dir_for_workspace,
 };
-use semver::Version;
 use shared::command::CommandExt;
 use starknet_api::execution_resources::{GasAmount, GasVector};
 use std::{
