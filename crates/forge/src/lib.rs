@@ -101,6 +101,7 @@ enum ForgeSubcommand {
         args: CleanArgs,
     },
     /// Clean Forge cache directory
+    #[command(name = "clean cache")]
     CleanCache {},
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
