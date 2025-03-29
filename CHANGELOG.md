@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- `sncast verify` now supports verifying against [voyager](https://voyager.online/) block explorer.
+
+#### Changed
+
+- `sncast verify` no longer defaults to using walnut.
+
 ## [0.41.0] - 2025-04-08
 
 ### Forge
@@ -71,7 +81,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 - gas is now reported using resource bounds triplet (l1_gas, l1_data_gas and l2_gas)
 - `available_gas` now accepts named arguments denoting resource bounds (eg #[available_gas(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)])
-- `sncast verify` no longer defaults to using walnut.
 
 #### Fixed
 
@@ -82,7 +91,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `sncast completion` command - used to generate autocompletion script
-- `sncast verify` now supports verifying against [voyager](https://voyager.online/) block explorer.
 
 ## [0.38.3] - 2025-03-07
 
