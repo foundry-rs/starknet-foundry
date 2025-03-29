@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - wrapped error for `ContractError` is now of type `ContractErrorData` (in `sncast_std`)
 - field `execution_error` in `TransactionExecutionErrorData` is now of type `ContractExecutionError` (in `sncast_std`)
 - Using Braavos accounts is temporarily disabled because they don't yet work with the RPC version supported by `sncast`
+- `sncast script init` command now initializes project with the `sncast_std` dependency from the [registry](https://scarbs.xyz/packages/sncast_std)
 
 #### Removed
 
@@ -66,10 +67,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `sncast completion` command - used to generate autocompletion script
-
-#### Changed
-
-- `sncast script init` command now initializes project with the `sncast_std` dependency from the [registry](https://scarbs.xyz/packages/sncast_std)
 
 ## [0.38.3] - 2025-03-07
 
