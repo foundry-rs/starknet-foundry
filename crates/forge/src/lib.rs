@@ -41,7 +41,7 @@ const MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN: Version = Version::new(2, 10, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 const MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS: Version = Version::new(2, 10, 0);
 
-#[derive(Parser, Debug)]
+#[derive(clap::Parser, Debug)]
 #[command(
     version,
     help_template = "\
@@ -50,8 +50,10 @@ const MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS: Version = Version::new(2, 10, 0);
 Use -h for short descriptions and --help for more details.
 
 {before-help}{usage-heading} {usage}
+{subcommands}
+  \x1b[1mclean cache\x1b[0m         Clean Forge cache directory 
 
-{all-args}{after-help}
+{after-help}
 ",
     after_help = "Read the docs: https://foundry-rs.github.io/starknet-foundry/",
     after_long_help = "\
@@ -72,7 +74,6 @@ Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
 "
 )]
 #[command(about = "snforge - a testing tool for Starknet contracts", long_about = None)]
-#[command(name = "snforge")]
 pub struct Cli {
     #[command(subcommand)]
     subcommand: ForgeSubcommand,
@@ -101,6 +102,7 @@ enum ForgeSubcommand {
         args: CleanArgs,
     },
     /// Clean Forge cache directory
+    #[command(name = "clean-cache", hide = true)]
     CleanCache {},
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
