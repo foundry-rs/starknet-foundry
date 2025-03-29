@@ -5,11 +5,12 @@ use crate::runtime_extensions::{
     },
     common::create_execute_calldata,
 };
+use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::{
     call_info::CallInfo,
-    entry_point::{CallEntryPoint, CallType, EntryPointExecutionResult},
+    entry_point::{CallType, EntryPointExecutionResult},
     errors::{EntryPointExecutionError, PreExecutionError},
-    syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor},
+    syscalls::hint_processor::{SyscallHintProcessor, SyscallUsageMap},
 };
 use blockifier::state::errors::StateError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
@@ -27,7 +28,7 @@ use starknet_types_core::felt::Felt;
 
 #[derive(Clone, Debug, Default)]
 pub struct UsedResources {
-    pub syscall_counter: SyscallCounter,
+    pub syscall_usage: SyscallUsageMap,
     pub execution_resources: ExecutionResources,
     pub gas_consumed: GasAmount,
     pub l2_to_l1_payload_lengths: Vec<usize>,

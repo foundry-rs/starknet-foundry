@@ -4,7 +4,7 @@ use crate::{WaitForTx, get_account};
 use anyhow::{Context, Result, anyhow};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::entry_point::CallEntryPoint;
+use blockifier::execution::entry_point::ExecutableCallEntryPoint;
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
@@ -349,7 +349,7 @@ pub fn run(
                 .expect("Failed to convert index to isize"),
             offset: 0,
         },
-        CallEntryPoint::default(),
+        ExecutableCallEntryPoint::default(),
         &string_to_hint,
         ReadOnlySegments::default(),
     );

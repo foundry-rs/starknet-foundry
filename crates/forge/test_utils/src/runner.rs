@@ -5,6 +5,7 @@ use assert_fs::{
     fixture::{FileTouch, FileWriteStr, PathChild},
 };
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
+use blockifier::execution::syscalls::hint_processor::SyscallUsage;
 use cairo_vm::types::builtin_name::BuiltinName;
 use camino::Utf8PathBuf;
 use forge_runner::{
@@ -338,7 +339,12 @@ pub fn assert_syscall(
             }
             AnyTestCaseSummary::Single(case) => match case {
                 TestCaseSummary::Passed { used_resources, .. } => {
-                    used_resources.syscall_counter.get(&syscall).unwrap_or(&0) == &expected_count
+                    used_resources
+                        .syscall_usage
+                        .get(&syscall)
+                        .unwrap_or(&SyscallUsage::new(0, 0))
+                        .call_count
+                        == expected_count
                         && any_case
                             .name()
                             .unwrap()

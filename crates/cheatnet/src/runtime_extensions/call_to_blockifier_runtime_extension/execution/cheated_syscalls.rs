@@ -64,6 +64,13 @@ pub fn deploy_syscall(
     cheatnet_state: &mut CheatnetState,
     remaining_gas: &mut u64,
 ) -> SyscallResult<DeployResponse> {
+    // Increment the Deploy syscall's linear cost counter by the number of elements in the
+    // constructor calldata
+    syscall_handler.increment_linear_factor_by(
+        &SyscallSelector::Deploy,
+        request.constructor_calldata.0.len(),
+    );
+
     // region: Modified blockifier code
     let deployer_address = syscall_handler.storage_address();
     // endregion
