@@ -15,9 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Added
+
+- `sncast verify` now supports verifying against [voyager](https://voyager.online/) block explorer.
+
 #### Changed
 
-- `verify` command now supports the `--class-hash` for Walnut verification
+- `verify` command now supports the `--class-hash` as possible contract identifier
 
 ## [0.40.0] - 2025-03-26
 
@@ -67,7 +71,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `sncast completion` command - used to generate autocompletion script
-- `sncast verify` now supports verifying against [voyager](https://voyager.online/) block explorer.
 
 #### Changed
 
