@@ -51,4 +51,4 @@ Please follow these rules when creating outputs for `sncast`:
 - Keep your message concise and to the point
 - When displaying config, use `key: value` format
 - If the executed command has a natural successor-command, display it as hint in the output. For example, the output of `declare` command should include a hint to use `deploy` command next.
-<!-- TODO(#2859): Add bullet point about colors used for text when displaying fees, addresses and hashes -->
+- When displaying fees, addresses and hashes, use the following colors: green for fees, blue for addresses, and yellow for transaction hashes
