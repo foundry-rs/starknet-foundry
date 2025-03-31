@@ -2,8 +2,8 @@ use cairo_lang_formatter::{CairoFormatter, FormatterConfig};
 use cairo_lang_macro::{Diagnostic, ProcMacroResult};
 use std::collections::HashSet;
 
-pub const EMPTY_FN: &str = "fn empty_fn(){}";
-pub const FN_WITH_SINGLE_FELT252_PARAM: &str = "fn empty_fn(f: felt252){}";
+// pub const EMPTY_FN: &str = "fn empty_fn(){}";
+// pub const FN_WITH_SINGLE_FELT252_PARAM: &str = "fn empty_fn(f: felt252){}";
 
 pub fn assert_diagnostics(result: &ProcMacroResult, expected: &[Diagnostic]) {
     let diagnostics: HashSet<_> = result.diagnostics.iter().collect();
@@ -41,7 +41,7 @@ pub fn assert_output(result: &ProcMacroResult, expected: &str) {
     let fmt = CairoFormatter::new(FormatterConfig::default());
     let format_and_normalize_code = |code: String| -> String {
         fmt.format_to_string(&code)
-            .unwrap()
+            .unwrap_or_else(|_| panic!("Failed to format provided code: {code}"))
             .into_output_text()
             .replace('\n', "")
             .trim()

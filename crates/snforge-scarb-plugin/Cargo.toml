@@ -9,14 +9,15 @@ rust-version = "1.80.1"
 crate-type = ["rlib", "cdylib"]
 
 [dependencies]
-cairo-lang-macro = "=0.1.0"
-cairo-lang-parser = "=2.10.1"
-cairo-lang-utils = "=2.10.1"
-cairo-lang-syntax = "=2.10.1"
+cairo-lang-macro = { git = "https://github.com/software-mansion/scarb.git", rev = "565475ff218385ef904412a2262a3fe5a4c149fd" }
+cairo-lang-parser = { git = "https://github.com/starkware-libs/cairo", rev = "76e8c943895c904da121fb0f6e48551d367e64d8" }
+cairo-lang-utils = { git = "https://github.com/starkware-libs/cairo", rev = "76e8c943895c904da121fb0f6e48551d367e64d8" }
+cairo-lang-syntax = { git = "https://github.com/starkware-libs/cairo", rev = "76e8c943895c904da121fb0f6e48551d367e64d8" }
+cairo-lang-primitive-token = "1"
 url = "=2.5.4"
 indoc = "=2.0.5"
-smol_str = "=0.2.2"
+smol_str = "=0.3.2"
 num-bigint = "=0.4.6"
 
 [dev-dependencies]
-cairo-lang-formatter = "=2.10.0"
+cairo-lang-formatter = { git = "https://github.com/starkware-libs/cairo", rev = "76e8c943895c904da121fb0f6e48551d367e64d8" }
