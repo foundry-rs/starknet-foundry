@@ -47,6 +47,7 @@ pub trait IDataTransformer<TContractState> {
     fn enum_fn(ref self: TContractState, a: Enum);
     fn complex_struct_fn(ref self: TContractState, a: ComplexStruct);
     fn external_struct_fn(ref self: TContractState, a: BitArray, b: alexandria_data_structures::bit_array::BitArray);
+    fn span_fn(ref self: TContractState, a: Span<felt252>);
 }
 
 #[starknet::contract]
@@ -76,5 +77,6 @@ mod DataTransformer {
         fn enum_fn(ref self: ContractState, a: Enum) {}
         fn complex_struct_fn(ref self: ContractState, a: ComplexStruct) {}
         fn external_struct_fn(ref self: ContractState, a: BitArray, b: alexandria_data_structures::bit_array::BitArray) {}
+        fn span_fn(ref self: ContractState, a: Span<felt252>) {}
     }
 }

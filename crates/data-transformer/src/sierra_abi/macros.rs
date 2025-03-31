@@ -66,7 +66,7 @@ impl SupportedCalldataKind for ExprInlineMacro {
             .with_context(|| format!(r#"Invalid argument type, expected "{expected_type}", got array"#))?;
 
         // Check by string; A proper array type in ABI looks exactly like this
-        if !expected_type.contains("core::array::Array") {
+        if !expected_type.contains("core::array::Array") && !expected_type.contains("core::array::Span") {
             bail!(r#"Expected "{}", got array"#, expected_type);
         }
 
