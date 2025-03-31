@@ -1,4 +1,4 @@
-use crate::trace::{CallerAddress, ContractName, Selector, StorageAddress};
+use crate::trace::types::{CallerAddress, ContractName, Selector, StorageAddress, TestName};
 use blockifier::execution::entry_point::CallType;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
@@ -22,6 +22,13 @@ pub trait NodeDisplay {
     }
 }
 
+impl NodeDisplay for TestName {
+    const TAG: &'static str = "test name";
+    fn string_pretty(&self) -> String {
+        self.0.clone()
+    }
+}
+
 impl NodeDisplay for ContractName {
     const TAG: &'static str = "contract name";
     fn string_pretty(&self) -> String {
@@ -32,9 +39,7 @@ impl NodeDisplay for ContractName {
 impl NodeDisplay for Selector {
     const TAG: &'static str = "selector";
     fn string_pretty(&self) -> String {
-        self.function_name
-            .as_ref()
-            .map_or_else(|| string_hex(self.selector.0), ToString::to_string)
+        self.0.to_string()
     }
 }
 
