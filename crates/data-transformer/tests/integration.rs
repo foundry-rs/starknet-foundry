@@ -13,7 +13,7 @@ use test_case::test_case;
 use tokio::sync::OnceCell;
 use url::Url;
 
-// https://sepolia.starkscan.co/class/0x02a9b456118a86070a8c116c41b02e490f3dcc9db3cad945b4e9a7fd7cec9168#code
+// Deployment of contract from /tests/data/data_transformer
 const TEST_CLASS_HASH: Felt =
     Felt::from_hex_unchecked("0x032e6763d5e778f153e5b6ea44200d94ec89aac7b42a0aef0e4e0caac8dafdab");
 
