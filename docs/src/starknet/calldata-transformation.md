@@ -73,6 +73,7 @@ Cast supports most important Cairo corelib types:
 * `EthAddress`
 * `bytes31`
 * `Array` - using `array![]` macro
+* `Span` - using `array![]` macro (data is implicitly converted to span)
 
 Numeric types (primitives and `felt252`) can be paseed with type suffix specified for example `--arguments 420_u64`.
 
