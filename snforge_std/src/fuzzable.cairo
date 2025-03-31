@@ -23,7 +23,7 @@ mod nums {
     use core::num::traits::{Bounded, Zero};
 
     pub impl FuzzableNum<
-        T, +Zero<T>, +Bounded<T>, +Drop<T>, +Serde<T>, +Into<T, felt252>, +Debug<T>
+        T, +Zero<T>, +Bounded<T>, +Drop<T>, +Serde<T>, +Into<T, felt252>, +Debug<T>,
     > of Fuzzable<T> {
         fn blank() -> T {
             Zero::<T>::zero()
@@ -55,7 +55,7 @@ pub impl FuzzableU256 of Fuzzable<u256> {
 
     fn generate() -> u256 {
         let mut serialized: Span<felt252> = array![
-            Fuzzable::<u128>::generate().into(), Fuzzable::<u128>::generate().into()
+            Fuzzable::<u128>::generate().into(), Fuzzable::<u128>::generate().into(),
         ]
             .span();
         Serde::deserialize(ref serialized).unwrap()

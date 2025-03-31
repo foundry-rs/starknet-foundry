@@ -1,5 +1,5 @@
 use super::{
-    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress
+    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress,
 };
 
 /// Changes the transaction hash for the given contract address and span.
@@ -8,7 +8,7 @@ use super::{
 /// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
 /// applied
 pub fn cheat_transaction_hash(
-    contract_address: ContractAddress, transaction_hash: felt252, span: CheatSpan
+    contract_address: ContractAddress, transaction_hash: felt252, span: CheatSpan,
 ) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
@@ -16,7 +16,7 @@ pub fn cheat_transaction_hash(
         .tx_info
         .transaction_hash =
             Operation::Start(
-                CheatArguments { value: transaction_hash, span, target: contract_address, }
+                CheatArguments { value: transaction_hash, span, target: contract_address },
             );
 
     cheat_execution_info(execution_info);

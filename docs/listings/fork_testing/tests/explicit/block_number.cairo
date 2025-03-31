@@ -10,7 +10,7 @@ const CONTRACT_ADDRESS: felt252 =
 fn test_using_forked_state() {
     // instantiate the dispatcher
     let dispatcher = IPokemonGalleryDispatcher {
-        contract_address: CONTRACT_ADDRESS.try_into().unwrap()
+        contract_address: CONTRACT_ADDRESS.try_into().unwrap(),
     };
 
     // call the mutating method
