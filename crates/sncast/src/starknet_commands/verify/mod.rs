@@ -4,6 +4,8 @@ use clap::{ArgGroup, Args, ValueEnum};
 use promptly::prompt;
 use scarb_api::StarknetContractArtifacts;
 use sncast::{Network, response::structs::VerifyResponse};
+use starknet::providers::JsonRpcClient;
+use starknet::providers::jsonrpc::HttpTransport;
 use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, fmt};
 
@@ -51,6 +53,10 @@ pub struct Verify {
     /// Specifies scarb package to be used
     #[arg(long)]
     pub package: Option<String>,
+
+    /// RPC provider url address; overrides url from snfoundry.toml. Will use public provider if not set.
+    #[arg(long)]
+    pub rpc: Option<String>,
 }
 
 #[derive(ValueEnum, Clone, Debug)]
@@ -72,6 +78,7 @@ pub async fn verify(
     args: Verify,
     manifest_path: &Utf8PathBuf,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
+    provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<VerifyResponse> {
     let Verify {
         contract_address,
@@ -81,6 +88,7 @@ pub async fn verify(
         network,
         confirm_verification,
         package,
+        rpc: _,
     } = args;
 
     // Let's ask confirmation
@@ -120,13 +128,14 @@ pub async fn verify(
 
     match verifier {
         Verifier::Walnut => {
-            let walnut = WalnutVerificationInterface::new(network, workspace_dir.to_path_buf())?;
+            let walnut =
+                WalnutVerificationInterface::new(network, workspace_dir.to_path_buf(), provider)?;
             walnut
                 .verify(contract_identifier, contract_name, package)
                 .await
         }
         Verifier::Voyager => {
-            let voyager = Voyager::new(network, workspace_dir.to_path_buf())?;
+            let voyager = Voyager::new(network, workspace_dir.to_path_buf(), provider)?;
             voyager
                 .verify(contract_identifier, contract_name, package)
                 .await

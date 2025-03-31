@@ -5,6 +5,7 @@ use crate::starknet_commands::{
 use anyhow::{Context, Result};
 use data_transformer::Calldata;
 use sncast::helpers::account::generate_account_name;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{OutputFormat, print_command_result};
 use std::io;
@@ -624,6 +625,19 @@ async fn run_async_command(
         }
 
         Commands::Verify(verify) => {
+            let rpc = if verify.rpc.is_some() {
+                RpcArgs {
+                    url: verify.rpc.clone(),
+                    network: None,
+                }
+            } else {
+                RpcArgs {
+                    url: None,
+                    network: Some(verify.network),
+                }
+            };
+            let provider = rpc.get_provider(&config).await?;
+
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &verify.package)?;
             let artifacts = build_and_load_artifacts(
@@ -640,6 +654,7 @@ async fn run_async_command(
                 verify,
                 &package_metadata.manifest_path,
                 &artifacts,
+                &provider,
             )
             .await;
 
