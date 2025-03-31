@@ -3,6 +3,7 @@ use camino::Utf8PathBuf;
 use reqwest::StatusCode;
 use sncast::Network;
 use sncast::response::structs::VerifyResponse;
+use starknet::providers::{JsonRpcClient, jsonrpc::HttpTransport};
 use std::env;
 use std::ffi::OsStr;
 use walkdir::WalkDir;
@@ -15,8 +16,12 @@ pub struct WalnutVerificationInterface {
 }
 
 #[async_trait::async_trait]
-impl VerificationInterface for WalnutVerificationInterface {
-    fn new(network: Network, workspace_dir: Utf8PathBuf) -> Result<Self> {
+impl VerificationInterface<'_> for WalnutVerificationInterface {
+    fn new(
+        network: Network,
+        workspace_dir: Utf8PathBuf,
+        _provider: &JsonRpcClient<HttpTransport>,
+    ) -> Result<Self> {
         Ok(WalnutVerificationInterface {
             network,
             workspace_dir,

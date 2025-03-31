@@ -24,10 +24,10 @@ use super::explorer::{ContractIdentifier, VerificationInterface};
 
 const CAIRO_EXT: &str = "cairo";
 
-pub struct Voyager {
+pub struct Voyager<'a> {
     network: Network,
     metadata: Metadata,
-    provider: JsonRpcClient<HttpTransport>,
+    provider: &'a JsonRpcClient<HttpTransport>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -175,7 +175,7 @@ fn biggest_common_prefix<P: AsRef<Utf8Path> + Clone>(
     biggest_prefix.to_path_buf()
 }
 
-impl Voyager {
+impl Voyager<'_> {
     fn gather_files(&self) -> Result<(Utf8PathBuf, HashMap<String, Utf8PathBuf>)> {
         let mut packages = vec![];
         gather_packages(&self.metadata, &mut packages)?;
@@ -211,19 +211,14 @@ impl Voyager {
 }
 
 #[async_trait::async_trait]
-impl VerificationInterface for Voyager {
-    fn new(network: Network, workspace_dir: Utf8PathBuf) -> Result<Self> {
+impl<'a> VerificationInterface<'a> for Voyager<'a> {
+    fn new(
+        network: Network,
+        workspace_dir: Utf8PathBuf,
+        provider: &'a JsonRpcClient<HttpTransport>,
+    ) -> Result<Self> {
         let manifest_path = scarb_utils::get_scarb_manifest_for(workspace_dir.as_ref())?;
         let metadata = scarb_utils::get_scarb_metadata_with_deps(&manifest_path)?;
-        let url_str = match env::var("STARKNET_RPC_URL") {
-            Ok(addr) => addr,
-            Err(_) => match network {
-                Network::Mainnet => "https://free-rpc.nethermind.io/mainnet-juno/v0_7".to_string(),
-                Network::Sepolia => "https://free-rpc.nethermind.io/sepolia-juno/v0_7".to_string(),
-            },
-        };
-        let url = Url::parse(&url_str)?;
-        let provider = JsonRpcClient::new(HttpTransport::new(url));
         Ok(Voyager {
             network,
             metadata,
