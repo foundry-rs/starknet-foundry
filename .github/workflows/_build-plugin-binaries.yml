@@ -3,12 +3,12 @@ name: Build snforge_scarb_plugin
 on:
   workflow_call:
     inputs:
-      override_plugin_version:
+      overridden_plugin_version:
         required: false
         type: string
   workflow_dispatch:
     inputs:
-      override_plugin_version:
+      overridden_plugin_version:
         required: false
         type: string
 
@@ -25,10 +25,10 @@ jobs:
         run: |
           set -exo pipefail
 
-          if [ -z "${{ inputs.override_plugin_version }}" ]; then
+          if [ -z "${{ inputs.overridden_plugin_version }}" ]; then
             snforge_scarb_plugin_version=$(grep version crates/snforge-scarb-plugin/Scarb.toml | cut -d '"' -f 2)
           else
-            snforge_scarb_plugin_version="${{ inputs.override_plugin_version }}"
+            snforge_scarb_plugin_version="${{ inputs.overridden_plugin_version }}"
           fi
           
           plugin_uploaded=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version "$snforge_scarb_plugin_version" '[.[] | select(.v == $version)] | length > 0')
@@ -118,10 +118,10 @@ jobs:
           set -euxo pipefail
 
           PACKAGE_NAME="snforge_scarb_plugin"
-          if [ -z "${{ inputs.override_plugin_version }}" ]; then
+          if [ -z "${{ inputs.overridden_plugin_version }}" ]; then
             PACKAGE_VERSION=$(grep version crates/snforge-scarb-plugin/Scarb.toml | cut -d '"' -f 2)
           else
-            PACKAGE_VERSION="${{ inputs.override_plugin_version }}"
+            PACKAGE_VERSION="${{ inputs.overridden_plugin_version }}"
           fi
 
           TARGET="${{ matrix.target }}"
