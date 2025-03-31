@@ -139,10 +139,9 @@ jobs:
           scarb-version: "2.10.1"
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
-      - run: |
-          cargo test --package forge --features scarb_since_2_10 sierra_gas
-          cargo test --package forge --features scarb_since_2_10 validate_forge_templates
-          cargo test --package forge --features scarb_since_2_10 validate_libs
+      - run: cargo test --package forge --features scarb_since_2_10 sierra_gas
+      - run: cargo test --package forge --features scarb_since_2_10 validate_templates
+      - run: cargo test --package packages_validation --features scarb_since_2_10 validate_cairo_libs
 
   test-forge-runner:
     name: Test Forge Runner
@@ -269,6 +268,23 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: cargo test --release -p scarb-api
+
+  scarbfmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+      - name: Check cairo files format
+        run: |
+          output=$(find . -type f -name "Scarb.toml" -execdir sh -c '
+              echo "Running \"scarb fmt\" in directory: $PWD"
+              scarb fmt --check
+          ' \;)
+          echo "$output"
+          if grep -iq "Diff" <<< "$output"; then
+              exit 1
+          fi
+          exit 0
 
   rustfmt:
     runs-on: ubuntu-latest

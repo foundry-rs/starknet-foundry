@@ -68,3 +68,4 @@ walkdir.workspace = true
 test-case.workspace = true
 docs = { workspace = true, features = ["testing"] }
 project-root.workspace = true
+packages_validation = { path = "../packages_validation" }

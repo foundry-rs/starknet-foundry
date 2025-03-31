@@ -14,7 +14,8 @@ members = [
     "crates/configuration",
     "crates/universal-sierra-compiler-api",
     "crates/docs",
-    "crates/debugging"
+    "crates/debugging",
+    "crates/packages_validation"
 ]
 
 exclude = ["crates/snforge-scarb-plugin"]

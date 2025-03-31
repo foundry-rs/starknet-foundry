@@ -1,100 +1,14 @@
-use std::{fs, process::Stdio};
+use std::fs;
 
 use super::common::runner::runner;
 use assert_fs::prelude::PathChild;
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use forge::Template;
-use project_root::get_project_root;
-use scarb_api::ScarbCommand;
-use test_case::test_case;
-use walkdir::WalkDir;
-
-fn find_files_recursively(dir_path: &Utf8PathBuf, file_name: &str) -> Vec<Utf8PathBuf> {
-    WalkDir::new(dir_path)
-        .into_iter()
-        .filter_map(std::result::Result::ok)
-        .filter(|entry| {
-            entry.file_type().is_file() && entry.file_name().to_string_lossy().contains(file_name)
-        })
-        .map(|entry| Utf8PathBuf::from(entry.path().to_string_lossy().to_string()))
-        .collect()
-}
-
-fn find_all_cairo_packages_paths() -> Vec<Utf8PathBuf> {
-    let project_root = get_project_root().expect("Failed to get project root");
-    let project_root =
-        Utf8PathBuf::from_path_buf(project_root).expect("Failed to convert to Utf8PathBuf");
-    let manifests_paths = find_files_recursively(&project_root, "Scarb.toml");
-    let cairo_packages_paths = manifests_paths
-        .iter()
-        .map(|manifest_path| {
-            let manifest_path = Utf8PathBuf::from(manifest_path);
-            manifest_path
-                .parent()
-                .map_or_else(|| manifest_path.clone(), camino::Utf8Path::to_path_buf)
-        })
-        .collect::<Vec<_>>();
-
-    cairo_packages_paths
-}
+use packages_validation::check_and_lint;
 
 #[test]
-fn check_all_packages_formatting() {
-    let cairo_packages_paths = find_all_cairo_packages_paths();
-
-    for path in cairo_packages_paths {
-        println!("Running `scarb fmt --check` in directory: {path}");
-        let output = ScarbCommand::new()
-            .current_dir(path)
-            .arg("fmt")
-            .arg("--check")
-            .command()
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .output()
-            .expect("Failed to run `scarb fmt --check`");
-
-        assert!(output.status.success(), "`scarb fmt --check` failed");
-    }
-}
-
-fn check_and_lint(package_path: Utf8PathBuf) {
-    println!("Running `scarb check` in directory {package_path}");
-    let check_output = ScarbCommand::new()
-        .current_dir(&package_path)
-        .arg("check")
-        .command()
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .output()
-        .expect("Failed to run `scarb check`");
-    assert!(check_output.status.success(), "`scarb check` failed");
-
-    // TODO(#3149)
-    if cfg!(feature = "scarb_since_2_10") {
-        println!("Running `scarb lint` in directory {package_path}");
-        let lint_output = ScarbCommand::new()
-            .current_dir(package_path)
-            .arg("lint")
-            .command()
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .output()
-            .expect("Failed to run `scarb lint`");
-        assert!(lint_output.status.success(), "`scarb lint` failed");
-
-        // TODO(#3148): Once `scarb lint` can change warning to error, we should check status instead of checking if stdout is not empty
-        // ATM `scarb lint` returns 0 even if there are warnings
-        assert!(
-            lint_output.stdout.is_empty(),
-            "`scarb lint` output should be empty"
-        );
-    }
-}
-
-#[test]
-fn validate_forge_templates() {
+fn validate_templates() {
     let temp_dir = assert_fs::TempDir::new().expect("Unable to create a temporary directory");
 
     let templates = Template::value_variants();
@@ -124,19 +38,4 @@ fn validate_forge_templates() {
 
         check_and_lint(package_path);
     }
-}
-
-#[test_case("snforge_std")]
-#[test_case("sncast_std")]
-fn validate_libs(package_name: &str) {
-    let package_path = get_project_root()
-        .expect("Failed to get project root")
-        .join(package_name);
-    let package_path = package_path
-        .canonicalize()
-        .expect("Failed to canonicalize path");
-    let package_path =
-        Utf8PathBuf::from_path_buf(package_path).expect("Failed to convert to Utf8PathBuf");
-
-    check_and_lint(package_path);
 }
