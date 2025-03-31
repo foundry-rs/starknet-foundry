@@ -8,11 +8,11 @@ trait ICheatBlockHashChecker<TContractState> {
 #[starknet::interface]
 trait ICheatBlockHashCheckerProxy<TContractState> {
     fn get_cheated_block_hash(
-        self: @TContractState, address: ContractAddress, block_number: u64
+        self: @TContractState, address: ContractAddress, block_number: u64,
     ) -> felt252;
     fn get_block_hash(self: @TContractState, block_number: u64) -> felt252;
     fn call_proxy(
-        self: @TContractState, address: ContractAddress, block_number: u64
+        self: @TContractState, address: ContractAddress, block_number: u64,
     ) -> (felt252, felt252);
 }
 
@@ -33,10 +33,10 @@ mod CheatBlockHashCheckerProxy {
     #[abi(embed_v0)]
     impl ICheatBlockHashCheckerProxy of super::ICheatBlockHashCheckerProxy<ContractState> {
         fn get_cheated_block_hash(
-            self: @ContractState, address: ContractAddress, block_number: u64
+            self: @ContractState, address: ContractAddress, block_number: u64,
         ) -> felt252 {
             let cheat_block_hash_checker = ICheatBlockHashCheckerDispatcher {
-                contract_address: address
+                contract_address: address,
             };
             cheat_block_hash_checker.get_block_hash(block_number)
         }
@@ -48,7 +48,7 @@ mod CheatBlockHashCheckerProxy {
         }
 
         fn call_proxy(
-            self: @ContractState, address: ContractAddress, block_number: u64
+            self: @ContractState, address: ContractAddress, block_number: u64,
         ) -> (felt252, felt252) {
             let dispatcher = ICheatBlockHashCheckerProxyDispatcher { contract_address: address };
             let hash = self.get_block_hash(block_number);

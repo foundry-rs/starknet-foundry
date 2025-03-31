@@ -23,7 +23,7 @@ pub mod Contract {
 #[cfg(test)]
 mod tests {
     use core::starknet::storage::{
-        StoragePointerReadAccess, StoragePointerWriteAccess
+        StoragePointerReadAccess, StoragePointerWriteAccess,
     }; // <--- Ad. 1
     use super::Contract;
     use super::Contract::{InternalTrait, other_internal_function}; // <--- Ad. 2

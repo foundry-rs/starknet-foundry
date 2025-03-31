@@ -15,7 +15,7 @@ trait ICheatTxInfoCheckerLibCall<TContractState> {
 mod CheatTxInfoCheckerLibCall {
     use super::{ICheatTxInfoCheckerDispatcherTrait, ICheatTxInfoCheckerLibraryDispatcher};
     use starknet::{
-        ClassHash, SyscallResultTrait, SyscallResult, syscalls::get_execution_info_v2_syscall
+        ClassHash, SyscallResultTrait, SyscallResult, syscalls::get_execution_info_v2_syscall,
     };
 
     #[storage]
