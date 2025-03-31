@@ -95,7 +95,6 @@ pub async fn verify(
         }
     }
 
-    let contract_name = contract_name;
     if !artifacts.contains_key(&contract_name) {
         return Err(anyhow!("Contract named '{contract_name}' was not found"));
     }
