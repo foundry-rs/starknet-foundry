@@ -1568,7 +1568,7 @@ fn events_contract_cost_sierra_gas() {
     // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
     // 87650 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
     // 230550 = reported consumed sierra gas
-    // 0 l1_gas + 0 l1_data_gas + (512000 + 256000 + 10000 + 142810 + 87650 + 230550) l2 gas
+    // 0 l1_gas + 96 l1_data_gas + (512000 + 256000 + 10000 + 142810 + 87650 + 230550) l2 gas
     assert_gas(
         &result,
         "event_emission_cost",
