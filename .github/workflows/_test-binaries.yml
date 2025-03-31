@@ -44,7 +44,7 @@ jobs:
         with:
           path: artifacts-dl
 
-      - name: Move artifacts to staging director
+      - name: Move artifacts to staging directory
         shell: bash
         run: |
           mkdir -p artifacts
