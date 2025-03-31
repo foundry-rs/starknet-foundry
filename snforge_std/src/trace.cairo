@@ -177,7 +177,7 @@ impl DisplayIndentedCallTraceArray of Display<Indented<Array<CallTrace>>> {
     fn fmt(self: @Indented<Array<CallTrace>>, ref f: Formatter) -> Result<(), Error> {
         let mut i: u32 = 0;
         let trace_len = (*self.struct_ref).len();
-        while i < trace_len {
+        while i != trace_len {
             write_indents_to_formatter(*self.base_indents, ref f);
             write!(f, "(\n").unwrap();
 
@@ -250,7 +250,7 @@ impl DisplayIndentedCallResult of Display<Indented<CallResult>> {
 
 fn write_indents_to_formatter(indents: u8, ref f: Formatter) {
     let mut i: u8 = 0;
-    while i < indents {
+    while i != indents {
         write!(f, "    ").unwrap();
         i = i + 1;
     }
