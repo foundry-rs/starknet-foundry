@@ -2,7 +2,7 @@ use crate::test_case_summary::{Single, TestCaseSummary};
 use anyhow::anyhow;
 use blockifier::abi::constants;
 use blockifier::context::TransactionContext;
-use blockifier::execution::call_info::{ChargedResources, EventSummary, ExecutionSummary};
+use blockifier::execution::call_info::EventSummary;
 use blockifier::fee::resources::{
     ArchivalDataResources, ComputationResources, MessageResources, StarknetResources,
     StateResources, TransactionResources,
@@ -18,7 +18,6 @@ use shared::print::print_as_warning;
 use starknet_api::execution_resources::{GasAmount, GasVector};
 use starknet_api::transaction::EventContent;
 use starknet_api::transaction::fields::GasVectorComputationMode;
-use std::collections::HashSet;
 
 pub fn calculate_used_gas(
     transaction_context: &TransactionContext,
@@ -72,29 +71,15 @@ fn get_archival_data_resources(events: Vec<EventContent>) -> ArchivalDataResourc
         event_summary.total_event_keys += u64_from_usize(event.keys.len());
     }
 
-    // TODO(#2978) this is a workaround because we cannot create `ArchivalDataResources` directly yet
-    //  because of private fields
-    let dummy_execution_summary = ExecutionSummary {
-        charged_resources: ChargedResources::default(),
-        executed_class_hashes: HashSet::default(),
-        visited_storage_entries: HashSet::default(),
-        l2_to_l1_payload_lengths: vec![],
+    // calldata length, signature length and code size are set to 0, because
+    // we don't include them in estimations
+    // ref: https://github.com/foundry-rs/starknet-foundry/blob/5ce15b029135545452588c00aae580c05eb11ca8/docs/src/testing/gas-and-resource-estimation.md?plain=1#L73
+    ArchivalDataResources {
         event_summary,
-    };
-
-    let dummy_starknet_resources = StarknetResources::new(
-        // calldata length, signature length and code size are set to 0, because
-        // we don't include them in estimations
-        // ref: https://github.com/foundry-rs/starknet-foundry/blob/5ce15b029135545452588c00aae580c05eb11ca8/docs/src/testing/gas-and-resource-estimation.md?plain=1#L73
-        0,
-        0,
-        0,
-        StateResources::default(),
-        None,
-        dummy_execution_summary,
-    );
-
-    dummy_starknet_resources.archival_data
+        calldata_length: 0,
+        signature_length: 0,
+        code_size: 0,
+    }
 }
 
 // Put together from a few blockifier functions
