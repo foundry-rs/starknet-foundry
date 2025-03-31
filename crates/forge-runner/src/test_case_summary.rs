@@ -296,7 +296,7 @@ impl TestCaseSummary<Single> {
             .map(|msg| add_backtrace_footer(msg, contracts_data, encountered_errors));
 
         let debugging_trace = cfg!(feature = "debugging")
-            .then(|| debugging::Trace::from_call_trace(call_trace, contracts_data));
+            .then(|| debugging::Trace::new(&call_trace.borrow(), contracts_data, name.clone()));
 
         match run_result.value {
             RunResultValue::Success(_) => match &test_case.config.expected_result {

@@ -11,6 +11,7 @@ mod TraceInfoChecker {
     use super::ITraceInfoChecker;
     use trace_resources::trace_info_proxy::{
         ITraceInfoProxyDispatcher, ITraceInfoProxyDispatcherTrait,
+        ITraceInfoProxyDispatcher, ITraceInfoProxyDispatcherTrait,
     };
     use starknet::{ContractAddress, ClassHash};
     use core::panic_with_felt252;

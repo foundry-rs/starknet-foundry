@@ -21,7 +21,7 @@ fn main() {
         Option::Some(salt),
         true,
         fee_settings,
-        Option::Some(deploy_nonce)
+        Option::Some(deploy_nonce),
     )
         .expect('1st deploy failed');
 
@@ -36,7 +36,7 @@ fn main() {
         Option::Some(salt),
         true,
         fee_settings,
-        Option::Some(deploy_nonce)
+        Option::Some(deploy_nonce),
     )
         .unwrap_err();
 

@@ -3,6 +3,7 @@ use anyhow::Result;
 use anyhow::anyhow;
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
+use derive_more::Display;
 use forge_runner::CACHE_DIR;
 use forge_runner::forge_config::ForgeTrackedResource;
 use run_tests::workspace::run_for_workspace;
@@ -35,7 +36,7 @@ pub const CAIRO_EDITION: &str = "2024_07";
 
 const MINIMAL_RUST_VERSION: Version = Version::new(1, 80, 1);
 const MINIMAL_SCARB_VERSION: Version = Version::new(2, 7, 0);
-const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 8, 5);
+const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 9, 4);
 const MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN: Version = Version::new(2, 10, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 const MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS: Version = Version::new(2, 10, 0);
@@ -209,6 +210,19 @@ pub struct TestArgs {
     additional_args: Vec<OsString>,
 }
 
+#[derive(ValueEnum, Display, Debug, Clone)]
+pub enum Template {
+    /// Simple Cairo program with unit tests
+    #[display("cairo-program")]
+    CairoProgram,
+    /// Basic contract with example tests
+    #[display("balance-contract")]
+    BalanceContract,
+    /// ERC20 contract for mock token
+    #[display("erc20-contract")]
+    Erc20Contract,
+}
+
 #[derive(Parser, Debug)]
 pub struct NewArgs {
     /// Path to a location where the new project will be created
@@ -222,6 +236,9 @@ pub struct NewArgs {
     /// Try to create the project even if the specified directory at <PATH> is not empty, which can result in overwriting existing files
     #[arg(long)]
     overwrite: bool,
+    /// Template to use for the new project
+    #[arg(short, long, default_value_t = Template::BalanceContract)]
+    template: Template,
 }
 
 pub enum ExitStatus {

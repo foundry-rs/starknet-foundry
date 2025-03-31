@@ -1,6 +1,6 @@
 use sncast_std::{
     get_nonce, deploy, DeployResult, ScriptCommandError, ProviderError, StarknetError,
-    FeeSettingsTrait, TransactionExecutionErrorData
+    FeeSettingsTrait, TransactionExecutionErrorData,
 };
 
 use starknet::{ClassHash};
@@ -22,7 +22,7 @@ fn main() {
         Option::Some(salt),
         true,
         fee_settings,
-        Option::Some(deploy_nonce)
+        Option::Some(deploy_nonce),
     )
         .unwrap_err();
 

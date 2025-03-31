@@ -46,6 +46,7 @@ mod tests {
     #[fork(
         url: "{{ NODE_RPC_URL }}",
         block_hash: 0x06ae121e46f5375f93b00475fb130348ae38148e121f84b0865e17542e9485de,
+        block_hash: 0x06ae121e46f5375f93b00475fb130348ae38148e121f84b0865e17542e9485de,
     )]
     fn test_fork_simple_hash_hex() {
         let dispatcher = IHelloStarknetDispatcher {

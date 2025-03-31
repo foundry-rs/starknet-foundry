@@ -21,7 +21,7 @@ pub mod SimpleContract {
     use core::array::ArrayTrait;
     use super::{
         RecursiveCaller, RecursiveCallerDispatcher, RecursiveCallerDispatcherTrait, RecursiveCall,
-        Failing
+        Failing,
     };
 
 
@@ -36,7 +36,7 @@ pub mod SimpleContract {
             while i < calls.len() {
                 let serviced_call = calls.at(i);
                 RecursiveCallerDispatcher {
-                    contract_address: serviced_call.contract_address.clone()
+                    contract_address: serviced_call.contract_address.clone(),
                 }
                     .execute_calls(serviced_call.payload.clone());
                 i = i + 1;

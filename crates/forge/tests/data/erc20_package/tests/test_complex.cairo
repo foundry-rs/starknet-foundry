@@ -2,7 +2,8 @@ use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 use starknet::ContractAddress;
 
 use snforge_std::{
-    declare, ContractClassTrait, test_address, start_cheat_caller_address, stop_cheat_caller_address
+    declare, ContractClassTrait, test_address, start_cheat_caller_address,
+    stop_cheat_caller_address,
 };
 
 use erc20_package::erc20::IERC20Dispatcher;
@@ -14,7 +15,7 @@ const DECIMALS: u8 = 2;
 const INITIAL_SUPPLY: u256 = 10;
 
 fn deploy_erc20(
-    name: felt252, symbol: felt252, decimals: u8, initial_supply: u256, recipient: ContractAddress
+    name: felt252, symbol: felt252, decimals: u8, initial_supply: u256, recipient: ContractAddress,
 ) -> ContractAddress {
     let contract = declare("ERC20").unwrap().contract_class();
 
