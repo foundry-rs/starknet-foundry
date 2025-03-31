@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Added
+
+- Support for `Span` in `--arguments` command: `array!` result is implicitly converted to `Span` depending on contract's ABI.
+
 #### Changed
 
 - `verify` command now supports the `--class-hash` for Walnut verification
