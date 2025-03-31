@@ -439,7 +439,7 @@ async fn test_happy_case_nested_struct_function_cairo_expression_input() -> anyh
 async fn test_happy_case_span_function_cairo_expression_input() -> anyhow::Result<()> {
     let contract_class = CLASS.get_or_init(init_class).await.to_owned();
 
-    let input = String::from("array![1, 2, 3]");
+    let input = String::from("array![1, 2, 3].span()");
 
     let result = Calldata::new(input)
         .serialized(contract_class, &get_selector_from_name("span_fn").unwrap())?;
@@ -460,7 +460,7 @@ async fn test_happy_case_span_function_cairo_expression_input() -> anyhow::Resul
 async fn test_happy_case_empty_span_function_cairo_expression_input() -> anyhow::Result<()> {
     let contract_class = CLASS.get_or_init(init_class).await.to_owned();
 
-    let input = String::from("array![]");
+    let input = String::from("array![].span()");
 
     let result = Calldata::new(input)
         .serialized(contract_class, &get_selector_from_name("span_fn").unwrap())?;
@@ -470,6 +470,76 @@ async fn test_happy_case_empty_span_function_cairo_expression_input() -> anyhow:
     assert_eq!(result, expected_output);
 
     Ok(())
+}
+
+#[tokio::test]
+async fn test_span_function_array_input() {
+    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
+
+    let input = String::from("array![1, 2, 3]");
+
+    let result = Calldata::new(input)
+        .serialized(contract_class, &get_selector_from_name("span_fn").unwrap());
+
+    result
+        .unwrap_err()
+        .assert_contains(r#"Expected "core::array::Span::<core::felt252>", got array"#);
+}
+
+#[tokio::test]
+async fn test_span_function_unsupported_method() {
+    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
+
+    let input = String::from("array![1, 2, 3].into()");
+
+    let result = Calldata::new(input)
+        .serialized(contract_class, &get_selector_from_name("span_fn").unwrap());
+
+    result
+        .unwrap_err()
+        .assert_contains(r#"Invalid function name, expected "span", got "into""#);
+}
+
+#[tokio::test]
+async fn test_span_function_unsupported_operator() {
+    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
+
+    let input = String::from("array![1, 2, 3]*span()");
+
+    let result = Calldata::new(input)
+        .serialized(contract_class, &get_selector_from_name("span_fn").unwrap());
+
+    result
+        .unwrap_err()
+        .assert_contains(r#"Invalid operator, expected ".", got "*""#);
+}
+
+#[tokio::test]
+async fn test_span_function_unsupported_right_hand_side() {
+    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
+
+    let input = String::from("array![1, 2, 3].span");
+
+    let result = Calldata::new(input)
+        .serialized(contract_class, &get_selector_from_name("span_fn").unwrap());
+
+    result
+        .unwrap_err()
+        .assert_contains(r#"Only calling ".span()" on "array![]" is supported, got "span""#);
+}
+
+#[tokio::test]
+async fn test_span_function_unsupported_left_hand_side() {
+    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
+
+    let input = String::from("(1, 2, 3).span");
+
+    let result = Calldata::new(input)
+        .serialized(contract_class, &get_selector_from_name("span_fn").unwrap());
+
+    result.unwrap_err().assert_contains(
+        r#"Only "array![]" is supported as left-hand side of "." operator, got "(1, 2, 3)""#,
+    );
 }
 
 #[tokio::test]
