@@ -78,7 +78,6 @@ jobs:
           PKG_FULL_NAME="starknet-foundry-${{ inputs.version }}-${{ matrix.target }}"
           echo "PKG_FULL_NAME=$PKG_FULL_NAME" >> $GITHUB_ENV
 
-          chmod +x ./scripts/package.sh
           ./scripts/package.sh "${{ matrix.target }}" "$PKG_FULL_NAME"
 
       - name: Upload artifact
