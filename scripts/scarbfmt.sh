@@ -8,4 +8,3 @@ echo "$output"
 if grep -iq "Diff" <<< "$output"; then
     exit 1
 fi
-exit 0
