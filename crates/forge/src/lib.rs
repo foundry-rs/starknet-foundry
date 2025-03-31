@@ -218,6 +218,9 @@ pub enum Template {
     /// Basic contract with example tests
     #[display("balance-contract")]
     BalanceContract,
+    /// ERC20 contract for mock token
+    #[display("erc20-contract")]
+    Erc20Contract,
 }
 
 #[derive(Parser, Debug)]
