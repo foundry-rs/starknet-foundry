@@ -57,14 +57,13 @@ fn deploy_syscall_cost_cairo_steps() {
     let test = test_case!(
         indoc!(
             r#"
-            use core::clone::Clone;
             use snforge_std::{declare, DeclareResultTrait};
-            use starknet::{SyscallResult, deploy_syscall};
+            use starknet::syscalls::deploy_syscall;
 
             #[test]
             fn deploy_syscall_cost() {
                 let contract = declare("GasConstructorChecker").unwrap().contract_class().clone();
-                let (address, _) = deploy_syscall(contract.class_hash, 0, array![].span(), false).unwrap();
+                let (address, _) = deploy_syscall(contract.class_hash, 0, array![1].span(), false).unwrap();
                 assert(address != 0.try_into().unwrap(), 'wrong deployed addr');
             }
         "#
@@ -105,7 +104,7 @@ fn snforge_std_deploy_cost_cairo_steps() {
             #[test]
             fn deploy_cost() {
                 let contract = declare("GasConstructorChecker").unwrap().contract_class();
-                let (address, _) = contract.deploy(@array![]).unwrap();
+                let (address, _) = contract.deploy(@array![1]).unwrap();
                 assert(address != 0.try_into().unwrap(), 'wrong deployed addr');
             }
         "#
@@ -1050,13 +1049,12 @@ fn deploy_syscall_cost_sierra_gas() {
     let test = test_case!(
         indoc!(
             r#"
-            use core::clone::Clone;
             use snforge_std::{declare, DeclareResultTrait};
-            use starknet::{SyscallResult, deploy_syscall};
+            use starknet::syscalls::deploy_syscall;
             #[test]
             fn deploy_syscall_cost() {
                 let contract = declare("GasConstructorChecker").unwrap().contract_class().clone();
-                let (address, _) = deploy_syscall(contract.class_hash, 0, array![].span(), false).unwrap();
+                let (address, _) = deploy_syscall(contract.class_hash, 0, array![1].span(), false).unwrap();
                 assert(address != 0.try_into().unwrap(), 'wrong deployed addr');
             }
         "#
@@ -1077,18 +1075,19 @@ fn deploy_syscall_cost_sierra_gas() {
     //
     // 20000 = cost of 2 keccak syscall (because 2 * 100 * 100) (from constructor)
     //      -> 1 keccak syscall costs 100 cairo steps
-    // 142810 = cost of 1 deploy syscall (because 1 * 1132 * 100 + 7 * 4050 + 18 * 70)
+    // 147660 = cost of 1 deploy syscall (because 1 * (1132 + 8) * 100 + (7 + 1) * 4050 + (18 + 1) * 70)
     //      -> 1 deploy syscall costs 1132 cairo steps, 7 pedersen and 18 range check builtins
+    //      -> 1 calldata element costs 8 cairo steps and 1 pedersen
     //      -> 1 pedersen costs 4050, 1 range check costs 70
-    // 468864 = reported consumed sierra gas
-    // 0 l1_gas + 96 l1_data_gas + (20000 + 142810 + 468864) l2 gas
+    // 469964 = reported consumed sierra gas
+    // 0 l1_gas + 96 l1_data_gas + (20000 + 147660 + 469964) l2 gas
     assert_gas(
         &result,
         "deploy_syscall_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(631_674),
+            l2_gas: GasAmount(637_624),
         },
     );
 }
@@ -1103,7 +1102,7 @@ fn snforge_std_deploy_cost_sierra_gas() {
             #[test]
             fn deploy_cost() {
                 let contract = declare("GasConstructorChecker").unwrap().contract_class();
-                let (address, _) = contract.deploy(@array![]).unwrap();
+                let (address, _) = contract.deploy(@array![1]).unwrap();
                 assert(address != 0.try_into().unwrap(), 'wrong deployed addr');
             }
         "#
@@ -1120,16 +1119,16 @@ fn snforge_std_deploy_cost_sierra_gas() {
     assert_passed(&result);
     // 96 = gas cost of onchain data (see `deploy_syscall_cost_sierra_gas` test)
     // 20000 = cost of 2 keccak syscall (see `deploy_syscall_cost_sierra_gas` test)
-    // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
-    // 487334 = reported consumed sierra gas
-    // 0 l1_gas + 96 l1_data_gas + (20000 + 142810 + 487334) l2 gas
+    // 147660 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 490004 = reported consumed sierra gas
+    // 0 l1_gas + 96 l1_data_gas + (20000 + 147660 + 487334) l2 gas
     assert_gas(
         &result,
         "deploy_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(650_144),
+            l2_gas: GasAmount(657_664),
         },
     );
 }

@@ -2,7 +2,7 @@ use starknet_api::contract_class::{ContractClass, SierraVersion};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use blockifier::execution::entry_point::{CallEntryPoint, CallType};
+use blockifier::execution::entry_point::{CallType, ExecutableCallEntryPoint};
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use conversions::IntoConv;
 use conversions::string::TryFromHexStr;
@@ -14,6 +14,7 @@ use runtime::starknet::context::ERC20_CONTRACT_ADDRESS;
 use runtime::starknet::state::DictStateReader;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::contract_class::EntryPointType;
+use starknet_api::core::ClassHash;
 use starknet_api::{core::ContractAddress, transaction::fields::Calldata};
 
 // Mocked class hashes, those are not checked anywhere
@@ -69,11 +70,11 @@ pub fn build_testing_state() -> DictStateReader {
 }
 
 #[must_use]
-pub fn build_test_entry_point() -> CallEntryPoint {
+pub fn build_test_entry_point() -> ExecutableCallEntryPoint {
     let test_selector = get_selector_from_name(TEST_ENTRY_POINT_SELECTOR).unwrap();
     let entry_point_selector = test_selector.into_();
-    CallEntryPoint {
-        class_hash: None,
+    ExecutableCallEntryPoint {
+        class_hash: ClassHash(TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap()),
         code_address: Some(TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap()),
         entry_point_type: EntryPointType::External,
         entry_point_selector,
