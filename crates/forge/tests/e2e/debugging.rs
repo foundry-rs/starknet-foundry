@@ -17,7 +17,6 @@ fn debugging_trace() {
         Collected 2 test(s) from trace_info package
         Running 2 test(s) from tests/
         [FAIL] trace_info_integrationtest::test_trace::test_debugging_trace_fail
-
         Failure data:
             (0x1, 0x2, 0x3, 0x4, 0x5)
 
@@ -25,7 +24,6 @@ fn debugging_trace() {
         {debugging_trace_fail}
 
         [PASS] trace_info_integrationtest::test_trace::test_debugging_trace_success (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~1440000)
-
         Success data:
             (0x1, 0x2, 0x3, 0x4, 0x5)
 
