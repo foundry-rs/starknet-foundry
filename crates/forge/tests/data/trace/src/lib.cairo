@@ -3,7 +3,7 @@ use starknet::ContractAddress;
 #[derive(Drop, Serde, Clone)]
 pub struct RecursiveCall {
     pub contract_address: ContractAddress,
-    pub payload: Array<RecursiveCall>
+    pub payload: Array<RecursiveCall>,
 }
 
 #[starknet::interface]
