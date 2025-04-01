@@ -2,8 +2,8 @@ use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
-use crate::runtime_extensions::common::{get_relocated_vm_trace, get_syscalls_gas_consumed, sum_syscall_usage};
-use crate::state::{CallTrace, CallTraceNode, CheatStatus, EncounteredError};
+use crate::runtime_extensions::common::{get_syscalls_gas_consumed, sum_syscall_usage};
+use crate::state::{CallTrace, CallTraceNode, CheatStatus};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
 use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
@@ -19,7 +19,7 @@ use blockifier::{
     },
     state::state_api::State,
 };
-use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
+use cairo_vm::vm::runners::cairo_runner::{ ExecutionResources};
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use conversions::string::TryFromHexStr;
 use starknet_api::{
@@ -29,7 +29,7 @@ use starknet_api::{
 };
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
-use std::collections::{HashMap, HashSet};
+use std::collections::{ HashMap, HashSet};
 use std::rc::Rc;
 use blockifier::execution::entry_point::ExecutableCallEntryPoint;
 use thiserror::Error;
@@ -173,15 +173,6 @@ pub fn execute_call_entry_point(
             Ok(call_info)
         }
         Err(EntryPointExecutionErrorWithTrace { source: err, trace }) => {
-            if let Some(pc) = trace
-                .as_ref()
-                .and_then(|trace| trace.last())
-                .map(|entry| entry.pc)
-            {
-                cheatnet_state
-                    .encountered_errors
-                    .push(EncounteredError { pc, class_hash });
-            }
             exit_error_call(&err, cheatnet_state, &entry_point, trace);
             Err(err)
         }
@@ -366,29 +357,6 @@ where
         Self {
             source: value.into(),
             trace: None,
-        }
-    }
-}
-
-pub(crate) trait OnErrorLastPc<T>: Sized {
-    fn on_error_get_last_pc(
-        self,
-        runner: &mut CairoRunner,
-    ) -> Result<T, EntryPointExecutionErrorWithTrace>;
-}
-
-impl<T> OnErrorLastPc<T> for Result<T, EntryPointExecutionError> {
-    fn on_error_get_last_pc(
-        self,
-        runner: &mut CairoRunner,
-    ) -> Result<T, EntryPointExecutionErrorWithTrace> {
-        match self {
-            Err(source) => {
-                let trace = get_relocated_vm_trace(runner);
-
-                Err(EntryPointExecutionErrorWithTrace { source, trace })
-            }
-            Ok(value) => Ok(value),
         }
     }
 }

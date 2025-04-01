@@ -9,13 +9,15 @@ use cairo_lang_runner::{RunResult, RunResultValue};
 use camino::Utf8Path;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use cheatnet::state::{CallTrace as InternalCallTrace, EncounteredError};
+use cheatnet::state::CallTrace as InternalCallTrace;
 use conversions::byte_array::ByteArray;
 use num_traits::Pow;
 use shared::utils::build_readable_text;
+use starknet_api::core::ClassHash;
 use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
+use std::collections::BTreeMap;
 use std::fmt;
 use std::option::Option;
 use std::rc::Rc;
@@ -287,7 +289,7 @@ impl TestCaseSummary<Single> {
         gas: GasVector,
         used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
-        encountered_errors: &[EncounteredError],
+        encountered_errors: &BTreeMap<ClassHash, Vec<usize>>,
         contracts_data: &ContractsData,
         versioned_program_path: &Utf8Path,
     ) -> Self {

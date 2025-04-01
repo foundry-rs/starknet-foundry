@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `--template` flag to `snforge new` command that allows selecting a template for the new project. Possible values are `balance-contract` (default), `cairo-program` and `erc20-contract`
 
+#### Changed
+
+- forge backtrace now shows if function was inlined or not
+- forge backtrace now works regardless if the function was inlined or not
+- improved display of backtrace in contract that panicked, when `panic-backtrace` is set to `true` in `Scarb.toml`. For
+  now, this feature in only in `scarb nightly-2025-03-27`
+
 ### Cast
 
 #### Changed

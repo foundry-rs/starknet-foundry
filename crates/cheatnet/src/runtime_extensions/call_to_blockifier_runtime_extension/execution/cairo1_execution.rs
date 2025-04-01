@@ -1,6 +1,6 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
-    ContractClassEntryPointExecutionResult, EntryPointExecutionErrorWithTrace, OnErrorLastPc,
+    ContractClassEntryPointExecutionResult, EntryPointExecutionErrorWithTrace,
 };
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use crate::runtime_extensions::common::get_relocated_vm_trace;
@@ -26,6 +26,7 @@ use cairo_vm::{
     vm::runners::cairo_runner::{CairoArg, CairoRunner},
 };
 use runtime::{ExtendedRuntime, StarknetRuntime};
+use shared::vm::VirtualMachineExt;
 
 // blockifier/src/execution/cairo1_execution.rs:48 (execute_entry_point_call)
 pub fn execute_entry_point_call_cairo1(
@@ -40,6 +41,8 @@ pub fn execute_entry_point_call_cairo1(
         .last()
         .expect("Unexpected empty tracked resource.");
     let entry_point_initial_budget = context.gas_costs().base.entry_point_initial_budget;
+
+    let class_hash = call.class_hash;
 
     let VmExecutionContext {
         mut runner,
@@ -72,6 +75,7 @@ pub fn execute_entry_point_call_cairo1(
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
             user_args: vec![],
+            panic_traceback: None,
         },
     };
 
@@ -83,7 +87,16 @@ pub fn execute_entry_point_call_cairo1(
         &args,
         program_extra_data_length,
     )
-    .on_error_get_last_pc(&mut runner)?;
+    .map_err(|source| {
+        let trace = get_relocated_vm_trace(&mut runner);
+        let pcs = runner.vm.get_reversed_pc_traceback();
+        cheatable_runtime
+            .extension
+            .cheatnet_state
+            .register_error(class_hash, pcs);
+
+        EntryPointExecutionErrorWithTrace { source, trace }
+    })?;
 
     let trace = get_relocated_vm_trace(&mut runner);
     let syscall_usage_map = cheatable_runtime
@@ -99,7 +112,24 @@ pub fn execute_entry_point_call_cairo1(
         program_extra_data_length,
         tracked_resource,
     )?;
+
     if call_info.execution.failed {
+        // fallback to the last pc in the trace if user did not set `panic-backtrace = true` in `Scarb.toml`
+        let pcs = if let Some(panic_traceback) = cheatable_runtime.extended_runtime.panic_traceback
+        {
+            panic_traceback
+        } else {
+            trace
+                .as_ref()
+                .and_then(|trace| trace.last())
+                .map(|last| vec![last.pc])
+                .unwrap_or_default()
+        };
+        cheatable_runtime
+            .extension
+            .cheatnet_state
+            .register_error(class_hash, pcs);
+
         return Err(EntryPointExecutionErrorWithTrace {
             source: EntryPointExecutionError::ExecutionFailed {
                 error_trace: extract_trailing_cairo1_revert_trace(
