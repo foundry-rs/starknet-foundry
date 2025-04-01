@@ -26,7 +26,7 @@ jobs:
           set -exo pipefail
 
           if [ -z "${{ inputs.overridden_plugin_version }}" ]; then
-            snforge_scarb_plugin_version=$(grep version crates/snforge-scarb-plugin/Scarb.toml | cut -d '"' -f 2)
+            snforge_scarb_plugin_version=$(grep "^version =" crates/snforge-scarb-plugin/Scarb.toml | cut -d '"' -f 2)
           else
             snforge_scarb_plugin_version="${{ inputs.overridden_plugin_version }}"
           fi
@@ -119,7 +119,7 @@ jobs:
 
           PACKAGE_NAME="snforge_scarb_plugin"
           if [ -z "${{ inputs.overridden_plugin_version }}" ]; then
-            PACKAGE_VERSION=$(grep version crates/snforge-scarb-plugin/Scarb.toml | cut -d '"' -f 2)
+            PACKAGE_VERSION=$(grep "^version =" crates/snforge-scarb-plugin/Scarb.toml | cut -d '"' -f 2)
           else
             PACKAGE_VERSION="${{ inputs.overridden_plugin_version }}"
           fi
