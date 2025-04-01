@@ -75,7 +75,7 @@ jobs:
     uses: ./.github/workflows/publish_plugin.yml
     secrets: inherit
     with:
-      overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
+      overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
       dev_registry: true
 
   dev-publish-std:
@@ -84,8 +84,8 @@ jobs:
     uses: ./.github/workflows/publish_std.yml
     secrets: inherit
     with:
-      plugin_dep_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
-      override_std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
+      plugin_dep_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
+      override_std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
       dev_registry: true
 
   test-binary:

@@ -140,7 +140,7 @@ jobs:
     needs: verify-version
     uses: ./.github/workflows/_build-plugin-binaries.yml
     with:
-      overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
+      overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
           
   publish-plugin:
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
@@ -148,7 +148,7 @@ jobs:
     uses: ./.github/workflows/publish_plugin.yml
     secrets: inherit
     with:
-      overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
+      overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
       dev_registry: true
 
   publish-std:
@@ -157,23 +157,23 @@ jobs:
     uses: ./.github/workflows/publish_std.yml
     secrets: inherit
     with:
-      plugin_dep_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
-      override_std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
+      plugin_dep_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
+      override_std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
       dev_registry: true
 
   build-binaries:
     needs: [verify-version]
     uses: ./.github/workflows/_build-binaries.yml
     with:
-      version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
+      version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
 
   test-binary:
     name: Test binary
     needs: [ build-binaries, verify-version, publish-std ]
     uses: ./.github/workflows/_test-binaries.yml
     with:
-      bin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
-      std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.sha }}${{ github.run_id }}
+      bin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
+      std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
 
 
   notify_if_failed:
