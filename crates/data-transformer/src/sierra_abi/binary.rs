@@ -44,7 +44,6 @@ fn assert_is_span(expr: &ExprFunctionCall, db: &SimpleParserDatabase) -> Result<
     match expr
         .path(db)
         .elements(db)
-        .iter()
         .last()
         .expect("Function call must have a name")
     {
