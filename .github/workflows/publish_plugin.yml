@@ -3,20 +3,18 @@ name: Publish snforge_scarb_plugin
 on:
   workflow_call:
     inputs:
-      dev_registry:
+      prod_registry:
         required: false
         type: boolean
-        default: false
       overridden_plugin_version:
         required: false
         type: string
 
   workflow_dispatch:
     inputs:
-      dev_registry:
+      prod_registry:
         required: false
         type: boolean
-        default: false
       overridden_plugin_version:
         required: false
         type: string
@@ -63,7 +61,7 @@ jobs:
       (inputs.build_plugin_binaries == false || needs.build-binaries.result == 'success')
     needs: [check-version, build-binaries]
     env:
-      SCARB_REGISTRY_AUTH_TOKEN: ${{ inputs.dev_registry == true && secrets.DEV_SCARB_REGISTRY_AUTH_TOKEN || secrets.SCARB_REGISTRY_AUTH_TOKEN }}
+      SCARB_REGISTRY_AUTH_TOKEN: ${{ inputs.prod_registry == true && secrets.SCARB_REGISTRY_AUTH_TOKEN || secrets.DEV_SCARB_REGISTRY_AUTH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -99,4 +97,4 @@ jobs:
             rm Cargo.toml.bak 2> /dev/null
           fi
 
-          scarb publish --allow-dirty ${{ inputs.dev_registry == true && '--index https://scarbs.dev/' || '' }}
+          scarb publish --allow-dirty ${{ inputs.prod_registry == true && '' || '--index https://scarbs.dev/' }}

@@ -76,7 +76,6 @@ jobs:
     secrets: inherit
     with:
       overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
-      dev_registry: true
 
   dev-publish-std:
     needs: [verify-version, dev-publish-plugin]
@@ -86,7 +85,6 @@ jobs:
     with:
       plugin_dep_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
       override_std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
-      dev_registry: true
 
   test-binary:
     name: Test binary
@@ -136,6 +134,8 @@ jobs:
     needs: [test-binary]
     uses: ./.github/workflows/publish_plugin.yml
     secrets: inherit
+    with:
+      prod_registry: true
 
   publish-to-registry:
     name: Publish packages to the registry
@@ -144,3 +144,4 @@ jobs:
     secrets: inherit
     with:
       plugin_dep_version: ${{ needs.verify-version.outputs.version }}
+      prod_registry: true
