@@ -111,10 +111,10 @@ impl SignalPropagator for StarknetRuntime<'_> {
 }
 
 fn parse_selector(selector: &BigIntAsHex) -> Result<String, HintError> {
-    let selector = &selector.value.to_bytes_be().1;
-    let selector = std::str::from_utf8(selector)
-        .map_err(|_| CustomHint(Box::from("Failed to parse the cheatcode selector")))?;
-    Ok(String::from(selector))
+    let selector_bytes = &selector.value.to_bytes_be().1;
+    std::str::from_utf8(selector_bytes)
+        .map(String::from)
+        .map_err(|_| CustomHint(Box::from("Failed to parse the cheatcode selector")))
 }
 
 fn fetch_cheatcode_input(
@@ -124,9 +124,8 @@ fn fetch_cheatcode_input(
 ) -> Result<Vec<Felt>, HintError> {
     let input_start = extract_relocatable(vm, input_start)?;
     let input_end = extract_relocatable(vm, input_end)?;
-    let inputs = vm_get_range(vm, input_start, input_end)
-        .map_err(|_| CustomHint(Box::from("Failed to read input data")))?;
-    Ok(inputs)
+    vm_get_range(vm, input_start, input_end)
+        .map_err(|_| CustomHint(Box::from("Failed to read input data")))
 }
 
 fn args_size(args: &[Arg]) -> usize {
