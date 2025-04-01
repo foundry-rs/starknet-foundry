@@ -24,19 +24,19 @@ impl SupportedCalldataKind for ExprBinary {
             bail!(r#"Invalid operator, expected ".", got "{op}""#)
         }
 
-        if let Expr::InlineMacro(lhs) = lhs {
-            if let Expr::FunctionCall(rhs) = rhs {
-                assert_is_span(&rhs, db)?;
-                let expected_type = expected_type.replace("Span", "Array");
-                lhs.transform(&expected_type, abi, db)
-            } else {
-                let rhs = rhs.as_syntax_node().get_text_without_trivia(db);
-                bail!(r#"Only calling ".span()" on "array![]" is supported, got "{rhs}""#);
-            }
-        } else {
+        let Expr::InlineMacro(lhs) = lhs else {
             let lhs = lhs.as_syntax_node().get_text_without_trivia(db);
             bail!(r#"Only "array![]" is supported as left-hand side of "." operator, got "{lhs}""#);
-        }
+        };
+
+        let Expr::FunctionCall(rhs) = rhs else {
+            let rhs = rhs.as_syntax_node().get_text_without_trivia(db);
+            bail!(r#"Only calling ".span()" on "array![]" is supported, got "{rhs}""#);
+        };
+
+        assert_is_span(&rhs, db)?;
+        let expected_type = expected_type.replace("Span", "Array");
+        lhs.transform(&expected_type, abi, db)
     }
 }
 
