@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use starknet::contract_address_const;
     const CONTRACT_ADDRESS: felt252 =
         0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9;
 
@@ -45,7 +44,6 @@ mod tests {
     #[test]
     #[fork(
         url: "{{ NODE_RPC_URL }}",
-        block_hash: 0x06ae121e46f5375f93b00475fb130348ae38148e121f84b0865e17542e9485de,
         block_hash: 0x06ae121e46f5375f93b00475fb130348ae38148e121f84b0865e17542e9485de,
     )]
     fn test_fork_simple_hash_hex() {
