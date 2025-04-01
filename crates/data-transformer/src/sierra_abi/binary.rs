@@ -49,12 +49,10 @@ fn assert_is_span(expr: &ExprFunctionCall, db: &SimpleParserDatabase) -> Result<
     {
         PathSegment::Simple(simple) => {
             let function_name = simple.ident(db).text(db);
-            if function_name != "span" {
-                bail!(
-                    r#"Invalid function name, expected "span", got "{}""#,
-                    function_name
-                )
-            };
+            ensure!(
+                function_name == "span",
+                r#"Invalid function name, expected "span", got "{function_name}""#
+            );
             Ok(())
         }
         PathSegment::WithGenericArgs(_) => {
