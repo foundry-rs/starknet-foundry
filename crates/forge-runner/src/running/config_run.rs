@@ -111,6 +111,7 @@ pub fn run_config_pass(
             // TODO(#2966) we should subtract initial cost of the function from this value to be more exact.
             //  But as a workaround it should be good enough.
             user_args: vec![vec![Arg::Value(Felt::from(i64::MAX))]],
+            panic_traceback: None,
         },
     };
 

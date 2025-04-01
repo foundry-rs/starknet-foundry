@@ -16,6 +16,8 @@ snapbox.workspace = true
 indicatif.workspace = true
 clap.workspace = true
 clap_complete.workspace = true
+cairo-vm.workspace = true
+num-traits.workspace = true
 
 [features]
 testing = []
