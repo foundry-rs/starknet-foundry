@@ -20,9 +20,6 @@ on:
       overridden_plugin_version:
         required: false
         type: string
-      build_plugin_binaries:
-        type: boolean
-        default: false
 
 jobs:
   check-version:
@@ -48,7 +45,7 @@ jobs:
   build-binaries:
     name: Build Plugin Binaries
     needs: check-version
-    if: inputs.build_plugin_binaries == true
+    if: github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/_build-plugin-binaries.yml
     with:
       overridden_plugin_version: ${{ inputs.overridden_plugin_version != '' && inputs.overridden_plugin_version || '' }}
@@ -60,7 +57,7 @@ jobs:
     if: |
       always() && 
       (needs.check-version.result == 'success') && 
-      (inputs.build_plugin_binaries == false || needs.build-binaries.result == 'success')
+      (github.event_name != 'workflow_dispatch' || needs.build-binaries.result == 'success')
     needs: [check-version, build-binaries]
     env:
       SCARB_REGISTRY_AUTH_TOKEN: ${{ inputs.dev_registry == true && secrets.DEV_SCARB_REGISTRY_AUTH_TOKEN || secrets.SCARB_REGISTRY_AUTH_TOKEN }}
