@@ -66,13 +66,14 @@ fn installation_constant_seed() -> Result<u64> {
     Ok(duration.as_secs())
 }
 
-enum FreeProvider {
+pub enum FreeProvider {
     Blast,
     Voyager,
 }
 
 impl FreeProvider {
-    fn semi_random() -> Self {
+    #[must_use]
+    pub fn semi_random() -> Self {
         let seed = installation_constant_seed().unwrap_or(2);
         if seed % 2 == 0 {
             return Self::Blast;
@@ -82,7 +83,8 @@ impl FreeProvider {
 }
 
 impl Network {
-    fn url(self, provider: &FreeProvider) -> String {
+    #[must_use]
+    pub fn url(self, provider: &FreeProvider) -> String {
         match self {
             Network::Mainnet => Self::free_mainnet_rpc(provider),
             Network::Sepolia => Self::free_sepolia_rpc(provider),

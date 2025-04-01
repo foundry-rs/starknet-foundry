@@ -3,11 +3,15 @@ use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args, ValueEnum};
 use promptly::prompt;
 use scarb_api::StarknetContractArtifacts;
+use shared::verify_and_warn_if_incompatible_rpc_version;
+use sncast::helpers::configuration::CastConfig;
+use sncast::helpers::rpc::FreeProvider;
 use sncast::{Network, response::structs::VerifyResponse};
 use starknet::providers::JsonRpcClient;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, fmt};
+use url::Url;
 
 pub mod explorer;
 pub mod voyager;
@@ -56,7 +60,7 @@ pub struct Verify {
 
     /// RPC provider url address; overrides url from snfoundry.toml. Will use public provider if not set.
     #[arg(long)]
-    pub rpc: Option<String>,
+    pub rpc: Option<Url>,
 }
 
 #[derive(ValueEnum, Clone, Debug)]
@@ -78,7 +82,7 @@ pub async fn verify(
     args: Verify,
     manifest_path: &Utf8PathBuf,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
-    provider: &JsonRpcClient<HttpTransport>,
+    config: &CastConfig,
 ) -> Result<VerifyResponse> {
     let Verify {
         contract_address,
@@ -88,8 +92,23 @@ pub async fn verify(
         network,
         confirm_verification,
         package,
-        rpc: _,
+        rpc,
     } = args;
+
+    let free = network.url(&FreeProvider::semi_random());
+    let rpc_url = rpc.map_or_else(
+        || {
+            let url: &String = if config.url.is_empty() {
+                &free
+            } else {
+                &config.url
+            };
+            Url::parse(url)
+        },
+        Ok,
+    )?;
+    let provider = JsonRpcClient::new(HttpTransport::new(rpc_url.clone()));
+    verify_and_warn_if_incompatible_rpc_version(&provider, rpc_url).await?;
 
     // Let's ask confirmation
     if !confirm_verification {
@@ -129,13 +148,13 @@ pub async fn verify(
     match verifier {
         Verifier::Walnut => {
             let walnut =
-                WalnutVerificationInterface::new(network, workspace_dir.to_path_buf(), provider)?;
+                WalnutVerificationInterface::new(network, workspace_dir.to_path_buf(), &provider)?;
             walnut
                 .verify(contract_identifier, contract_name, package)
                 .await
         }
         Verifier::Voyager => {
-            let voyager = Voyager::new(network, workspace_dir.to_path_buf(), provider)?;
+            let voyager = Voyager::new(network, workspace_dir.to_path_buf(), &provider)?;
             voyager
                 .verify(contract_identifier, contract_name, package)
                 .await
