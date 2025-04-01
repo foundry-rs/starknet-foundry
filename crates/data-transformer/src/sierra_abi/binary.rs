@@ -1,6 +1,6 @@
 use crate::sierra_abi::SupportedCalldataKind;
 use crate::sierra_abi::data_representation::AllowedCalldataArgument;
-use anyhow::{Result, bail};
+use anyhow::{Result, bail, ensure};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{
     BinaryOperator, Expr, ExprBinary, ExprFunctionCall, PathSegment,
