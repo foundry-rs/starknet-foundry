@@ -1,6 +1,6 @@
 use sncast_std::{
     get_nonce, declare, DeclareResult, ScriptCommandError, ProviderError, StarknetError,
-    FeeSettingsTrait
+    FeeSettingsTrait,
 };
 
 fn main() {

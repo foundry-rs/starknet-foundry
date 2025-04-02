@@ -1,6 +1,5 @@
 use sncast_std::{deploy, DeployResult, FeeSettingsTrait};
-use starknet::{ClassHash, Felt252TryIntoClassHash};
-use traits::Into;
+use starknet::{ClassHash};
 
 fn main() {
     let fee_settings = FeeSettingsTrait::resource_bounds(
@@ -12,7 +11,7 @@ fn main() {
         .expect('Invalid class hash value');
 
     let deploy_result = deploy(
-        class_hash, array![0x2, 0x2, 0x0], Option::Some(salt), true, fee_settings, Option::None
+        class_hash, array![0x2, 0x2, 0x0], Option::Some(salt), true, fee_settings, Option::None,
     )
         .expect('deploy failed');
 
