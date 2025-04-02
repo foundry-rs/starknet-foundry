@@ -272,12 +272,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: software-mansion/setup-scarb@v1
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
       - name: Check cairo files format
-        run: |
-          ./scripts/scarbfmt.sh
-          cargo test --release -p packages_validation
-          cargo test --package packages_validation --features scarb_since_2_10
-          cargo test --package forge --features scarb_since_2_10 validate_templates
+        run: ./scripts/scarbfmt.sh
+      # TODO(#3096): Remove running tests with `scarb_since_2_10`
+      - name: Check and lint forge templates
+        run: cargo test --release -p forge --features scarb_since_2_10 validate_templates
+      - name: Run packages validation tests
+        run: cargo test --release -p packages_validation
+        run: cargo test --release -p packages_validation --features scarb_since_2_10
+          
 
 
   rustfmt:
