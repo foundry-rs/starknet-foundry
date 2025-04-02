@@ -147,13 +147,8 @@ fn result_header(any_test_result: &AnyTestCaseSummary) -> String {
 }
 
 fn result_debug_trace(any_test_result: &AnyTestCaseSummary) -> String {
-    let trace = any_test_result
+    any_test_result
         .debugging_trace()
-        .map(ToString::to_string)
-        .unwrap_or_default();
-    if trace.is_empty() {
-        trace
-    } else {
-        format!("\n{trace}")
-    }
+        .map(|trace| format!("\n{trace}"))
+        .unwrap_or_default()
 }
