@@ -140,8 +140,6 @@ jobs:
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
       - run: cargo test --package forge --features scarb_since_2_10 sierra_gas
-      - run: cargo test --package forge --features scarb_since_2_10 validate_templates
-      - run: cargo test --package packages_validation --features scarb_since_2_10 validate_cairo_libs
 
   test-forge-runner:
     name: Test Forge Runner
@@ -269,13 +267,18 @@ jobs:
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: cargo test --release -p scarb-api
 
-  scarbfmt:
+  scarb-fmt-and-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: software-mansion/setup-scarb@v1
       - name: Check cairo files format
-        run: ./scripts/scarbfmt.sh
+        run: |
+          ./scripts/scarbfmt.sh
+          cargo test --release -p packages_validation
+          cargo test --package packages_validation --features scarb_since_2_10
+          cargo test --package forge --features scarb_since_2_10 validate_templates
+
 
   rustfmt:
     runs-on: ubuntu-latest
