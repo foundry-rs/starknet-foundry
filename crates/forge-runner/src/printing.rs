@@ -61,8 +61,15 @@ fn format_detailed_resources(
     used_resources: &UsedResources,
     tracked_resource: ForgeTrackedResource,
 ) -> String {
-    let sorted_syscalls = sort_by_value(&used_resources.syscall_counter);
-    let syscalls = format_items(&sorted_syscalls);
+    // Sort syscalls by call count
+    let mut syscall_usage: Vec<_> = used_resources
+        .syscall_usage
+        .iter()
+        .map(|(selector, usage)| (selector, usage.call_count))
+        .collect();
+    syscall_usage.sort_by(|a, b| b.1.cmp(&a.1));
+
+    let syscalls = format_items(&syscall_usage);
 
     match tracked_resource {
         ForgeTrackedResource::CairoSteps => {
