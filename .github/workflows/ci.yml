@@ -276,13 +276,16 @@ jobs:
       - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
       - name: Check cairo files format
         run: ./scripts/scarbfmt.sh
+      - name: Run packages validation tests
+        run: cargo test --release -p packages_validation
       # TODO(#3096): Remove running tests with `scarb_since_2_10`
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: "2.10.1"
       - name: Check and lint forge templates
         run: cargo test --release -p forge --features scarb_since_2_10 validate_templates
-      - name: Run packages validation tests
-        run: |
-          cargo test --release -p packages_validation
-          cargo test --release -p packages_validation --features scarb_since_2_10
+      - name: Run packages validation tests (with scarb 2.10.1)
+        run: cargo test --release -p packages_validation --features scarb_since_2_10
           
 
   rustfmt:
