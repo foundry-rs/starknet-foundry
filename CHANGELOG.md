@@ -15,9 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Added
+
+- `sncast verify` now supports verifying against [voyager](https://voyager.online/) block explorer.
+
 #### Changed
 
-- `verify` command now supports the `--class-hash` for Walnut verification
+- `verify` command now supports the `--class-hash` as possible contract identifier
 
 ## [0.40.0] - 2025-03-26
 
@@ -57,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 - gas is now reported using resource bounds triplet (l1_gas, l1_data_gas and l2_gas)
 - `available_gas` now accepts named arguments denoting resource bounds (eg #[available_gas(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)])
+- `sncast verify` no longer defaults to using walnut.
 
 #### Fixed
 
