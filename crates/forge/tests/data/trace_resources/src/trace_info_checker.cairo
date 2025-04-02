@@ -1,7 +1,7 @@
 use starknet::ClassHash;
 
 #[starknet::interface]
-trait ITraceInfoChecker<T> {
+pub trait ITraceInfoChecker<T> {
     fn from_proxy(ref self: T, data: felt252, empty_hash: ClassHash, salt: felt252) -> felt252;
     fn panic(ref self: T, empty_hash: ClassHash, salt: felt252);
 }
@@ -12,11 +12,8 @@ mod TraceInfoChecker {
     use trace_resources::trace_info_proxy::{
         ITraceInfoProxyDispatcher, ITraceInfoProxyDispatcherTrait,
     };
-    use starknet::{
-        ContractAddress, get_contract_address, ClassHash, get_block_hash_syscall,
-        get_execution_info_syscall, emit_event_syscall, send_message_to_l1_syscall,
-        SyscallResultTrait,
-    };
+    use starknet::{ContractAddress, ClassHash};
+    use core::panic_with_felt252;
     use super::super::use_builtins_and_syscalls;
 
     #[storage]

@@ -8,6 +8,7 @@ trait IConstructorMockChecker<TContractState> {
 #[starknet::contract]
 mod ConstructorMockChecker {
     use starknet::ContractAddress;
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     #[starknet::interface]
     trait IHelloStarknet<TContractState> {

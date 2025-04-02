@@ -1,7 +1,7 @@
 use starknet::{ContractAddress, ClassHash};
 
 #[starknet::interface]
-trait ITraceInfoProxy<T> {
+pub trait ITraceInfoProxy<T> {
     fn with_libcall(
         ref self: T, class_hash: ClassHash, empty_hash: ClassHash, salt: felt252,
     ) -> felt252;
@@ -28,11 +28,7 @@ mod TraceInfoProxy {
         ITraceInfoCheckerLibraryDispatcher,
     };
     use trace_resources::trace_dummy::{ITraceDummyDispatcher, ITraceDummyDispatcherTrait};
-    use starknet::{
-        ContractAddress, get_contract_address, ClassHash, get_block_hash_syscall,
-        get_execution_info_syscall, emit_event_syscall, send_message_to_l1_syscall,
-        SyscallResultTrait,
-    };
+    use starknet::{ContractAddress, ClassHash};
     use super::super::use_builtins_and_syscalls;
 
     #[storage]

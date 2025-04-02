@@ -9,6 +9,7 @@ trait IConstructorCheatCallerAddressChecker<TContractState> {
 #[starknet::contract]
 mod ConstructorCheatCallerAddressChecker {
     use starknet::ContractAddress;
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     #[storage]
     struct Storage {

@@ -24,7 +24,7 @@ mod State {
         }
 
         fn get(self: @ContractState, key: felt252) -> felt252 {
-            self.storage.entry(key).read()
+            self.storage.read(key)
         }
 
         fn dummy(self: @ContractState) -> felt252 {

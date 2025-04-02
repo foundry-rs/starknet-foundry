@@ -23,6 +23,7 @@ mod Cairo1Contract_v1 {
     use core::traits::Into;
     use starknet::{get_contract_address, get_caller_address, ContractAddress};
     use super::ICairo0ContractDispatcherTrait;
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     #[storage]
     struct Storage {

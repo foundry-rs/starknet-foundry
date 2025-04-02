@@ -1,6 +1,5 @@
 use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 use starknet::ContractAddress;
-use starknet::Felt252TryIntoContractAddress;
 
 use snforge_std::{
     declare, ContractClassTrait, test_address, start_cheat_caller_address,
