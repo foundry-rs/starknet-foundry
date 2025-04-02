@@ -5,6 +5,6 @@ output=$(find . -type f -name "Scarb.toml" -execdir sh -c '
     scarb fmt --check
 ' \;)
 echo "$output"
-if grep -iq "Diff" <<< "$output"; then
-    exit 1
+if grep -iq "Diff" <<<"$output"; then
+  exit 1
 fi
