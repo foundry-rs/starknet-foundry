@@ -280,10 +280,11 @@ jobs:
       - name: Check and lint forge templates
         run: cargo test --release -p forge --features scarb_since_2_10 validate_templates
       - name: Run packages validation tests
-        run: cargo test --release -p packages_validation
-        run: cargo test --release -p packages_validation --features scarb_since_2_10
+        run: |
+          cargo test --release -p packages_validation
+          cargo test --release -p packages_validation --features scarb_since_2_10
           
-          
+
   rustfmt:
     runs-on: ubuntu-latest
     steps:
