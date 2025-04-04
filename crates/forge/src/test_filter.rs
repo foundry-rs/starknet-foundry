@@ -115,13 +115,6 @@ impl TestsFilter {
 
         Ok(())
     }
-
-    pub(crate) fn is_excluded(&self, test_case: &TestCaseWithResolvedConfig) -> bool {
-        if let Some(NameFilter::Exclude(filter)) = &self.exclude_filter {
-            return test_case.name.contains(filter);
-        }
-        false
-    }
 }
 
 impl TestCaseFilter for TestsFilter {
@@ -133,6 +126,13 @@ impl TestCaseFilter for TestsFilter {
             IgnoredFilter::Ignored => ignored,
             IgnoredFilter::NotIgnored => !ignored,
         }
+    }
+
+    fn is_excluded(&self, test_case: &TestCaseWithResolvedConfig) -> bool {
+        if let Some(NameFilter::Exclude(filter)) = &self.exclude_filter {
+            return test_case.name.contains(filter);
+        }
+        false
     }
 }
 

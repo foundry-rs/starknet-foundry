@@ -1,4 +1,3 @@
-use crate::test_filter::TestsFilter;
 use anyhow::Result;
 use forge_runner::{
     TestCaseFilter,
@@ -23,8 +22,7 @@ pub enum TestTargetRunResult {
 pub async fn run_for_test_target(
     tests: TestTargetWithResolvedConfig,
     forge_config: Arc<ForgeConfig>,
-    tests_filter: &TestsFilter,
-    _package_name: &str,
+    tests_filter: &impl TestCaseFilter,
 ) -> Result<TestTargetRunResult> {
     let casm_program = tests.casm_program.clone();
 

@@ -1,20 +1,11 @@
-use super::common::runner::{
-    get_current_branch, get_remote_url, runner, setup_package, snforge_test_bin_path, test_runner,
-};
-use assert_fs::TempDir;
-use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy};
+use super::common::runner::{get_current_branch, get_remote_url, setup_package, test_runner};
+use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
-use forge::CAIRO_EDITION;
-use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stdout_contains;
-use snapbox::assert_matches;
-use snapbox::cmd::Command as SnapboxCommand;
-use std::ffi::OsString;
-use std::path::PathBuf;
-use std::{env, fs, iter, path::Path, str::FromStr};
-use test_utils::{get_local_snforge_std_absolute_path, tempdir_with_tool_versions};
-use toml_edit::{DocumentMut, Formatted, InlineTable, Item, Value, value};
+use std::{fs, str::FromStr};
+use test_utils::tempdir_with_tool_versions;
+use toml_edit::{DocumentMut, value};
 
 #[test]
 fn simple_package() {
