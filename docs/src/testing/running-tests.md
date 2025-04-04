@@ -104,7 +104,6 @@ The excluded tests are still counted in the test summary but are not executed.
 To stop the test execution after first failed test, you can pass an `--exit-first` flag along with `snforge test` command.
 
 <!-- { "ignored": true } -->
-
 ```shell
 $ snforge test --exit-first
 ```
