@@ -3,22 +3,19 @@ use crate::build_trace_data::build_profiler_call_trace;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
 use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
+use crate::running::{RunCompleted, RunStatus};
 use cairo_annotations::trace_data::VersionedCallTrace as VersionedProfilerCallTrace;
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_runner::{RunResult, RunResultValue};
 use camino::Utf8Path;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use cheatnet::state::{CallTrace as InternalCallTrace, EncounteredErrors};
 use conversions::byte_array::ByteArray;
 use num_traits::Pow;
 use shared::utils::build_readable_text;
 use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
-use std::cell::RefCell;
 use std::fmt;
 use std::option::Option;
-use std::rc::Rc;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasStatistics {
@@ -105,9 +102,9 @@ pub struct FuzzingStatistics {
 }
 
 pub trait TestType {
-    type GasInfo: std::fmt::Debug + Clone;
-    type TestStatistics: std::fmt::Debug + Clone;
-    type TraceData: std::fmt::Debug + Clone;
+    type GasInfo: fmt::Debug + Clone;
+    type TestStatistics: fmt::Debug + Clone;
+    type TraceData: fmt::Debug + Clone;
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -135,8 +132,6 @@ pub enum TestCaseSummary<T: TestType> {
         name: String,
         /// Message to be printed after the test case run
         msg: Option<String>,
-        /// Arguments used in the test case run
-        arguments: Vec<Felt>,
         /// Trace of the test case run
         debugging_trace: Option<debugging::Trace>,
         /// Information on used gas
@@ -156,8 +151,6 @@ pub enum TestCaseSummary<T: TestType> {
         msg: Option<String>,
         /// Trace of the test case run
         debugging_trace: Option<debugging::Trace>,
-        /// Arguments used in the test case run
-        arguments: Vec<Felt>,
         /// Random arguments used in the fuzz test case run
         fuzzer_args: Vec<String>,
         /// Statistics of the test run
@@ -226,7 +219,6 @@ impl TestCaseSummary<Fuzzing> {
             TestCaseSummary::Passed {
                 name,
                 msg,
-                arguments,
                 gas_info: _,
                 used_resources: _,
                 test_statistics: (),
@@ -245,7 +237,6 @@ impl TestCaseSummary<Fuzzing> {
                 TestCaseSummary::Passed {
                     name,
                     msg,
-                    arguments,
                     gas_info: GasStatistics::new(gas_usages.as_ref()),
                     used_resources: UsedResources::default(),
                     test_statistics: FuzzingStatistics { runs },
@@ -256,14 +247,12 @@ impl TestCaseSummary<Fuzzing> {
             TestCaseSummary::Failed {
                 name,
                 msg,
-                arguments,
                 fuzzer_args,
                 debugging_trace,
                 test_statistics: (),
             } => TestCaseSummary::Failed {
                 name,
                 msg,
-                arguments,
                 fuzzer_args,
                 test_statistics: FuzzingStatistics {
                     runs: results.len(),
@@ -276,40 +265,78 @@ impl TestCaseSummary<Fuzzing> {
     }
 }
 
+fn build_expected_panic_message(expected_panic_value: &ExpectedPanicValue) -> String {
+    match expected_panic_value {
+        ExpectedPanicValue::Any => "\n    Expected to panic, but no panic occurred\n".into(),
+        ExpectedPanicValue::Exact(panic_data) => {
+            let panic_string = join_short_strings(panic_data);
+
+            format!(
+                "\n    Expected to panic, but no panic occurred\n    Expected panic data:  {panic_data:?} ({panic_string})\n"
+            )
+        }
+    }
+}
+
+fn check_if_matching_and_get_message(
+    actual_panic_value: &[Felt],
+    expected_panic_value: &ExpectedPanicValue,
+) -> (bool, Option<String>) {
+    let expected_data = match expected_panic_value {
+        ExpectedPanicValue::Exact(data) => Some(data),
+        ExpectedPanicValue::Any => None,
+    };
+
+    match expected_data {
+        Some(expected) if is_matching(actual_panic_value, expected) => (true, None),
+        Some(expected) => {
+            let panic_string = convert_felts_to_byte_array_string(actual_panic_value)
+                .unwrap_or_else(|| join_short_strings(actual_panic_value));
+            let expected_string = convert_felts_to_byte_array_string(expected)
+                .unwrap_or_else(|| join_short_strings(expected));
+
+            let message = Some(format!(
+                "\n    Incorrect panic data\n    {}\n    {}\n",
+                format_args!("Actual:    {actual_panic_value:?} ({panic_string})"),
+                format_args!("Expected:  {expected:?} ({expected_string})")
+            ));
+            (false, message)
+        }
+        None => (true, build_readable_text(actual_panic_value)),
+    }
+}
+
 impl TestCaseSummary<Single> {
     #[must_use]
-    #[expect(clippy::too_many_arguments)]
-    pub(crate) fn from_run_result_and_info(
-        run_result: RunResult,
+    pub(crate) fn from_run_completed(
+        RunCompleted {
+            status,
+            call_trace,
+            gas_used: gas_info,
+            used_resources,
+            encountered_errors,
+            fuzzer_args,
+        }: RunCompleted,
         test_case: &TestCaseWithResolvedConfig,
-        arguments: Vec<Felt>,
-        fuzzer_args: Vec<String>,
-        gas: GasVector,
-        used_resources: UsedResources,
-        call_trace: &Rc<RefCell<InternalCallTrace>>,
-        encountered_errors: &EncounteredErrors,
         contracts_data: &ContractsData,
         versioned_program_path: &Utf8Path,
     ) -> Self {
         let name = test_case.name.clone();
-        let msg = extract_result_data(&run_result, &test_case.config.expected_result)
-            .map(|msg| add_backtrace_footer(msg, contracts_data, encountered_errors));
 
         let debugging_trace = cfg!(feature = "debugging")
             .then(|| debugging::Trace::new(&call_trace.borrow(), contracts_data, name.clone()));
 
-        match run_result.value {
-            RunResultValue::Success(_) => match &test_case.config.expected_result {
+        match status {
+            RunStatus::Success(data) => match &test_case.config.expected_result {
                 ExpectedTestResult::Success => {
                     let summary = TestCaseSummary::Passed {
                         name,
-                        msg,
-                        arguments,
+                        msg: build_readable_text(&data),
                         test_statistics: (),
-                        gas_info: gas,
+                        gas_info,
                         used_resources,
                         trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
-                            call_trace,
+                            &call_trace,
                             contracts_data,
                             versioned_program_path,
                         )),
@@ -317,50 +344,54 @@ impl TestCaseSummary<Single> {
                     };
                     check_available_gas(test_case.config.available_gas, summary)
                 }
-                ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
+                ExpectedTestResult::Panics(expected_panic_value) => TestCaseSummary::Failed {
                     name,
-                    msg,
-                    arguments,
+                    msg: Some(build_expected_panic_message(expected_panic_value)),
                     fuzzer_args,
                     test_statistics: (),
                     debugging_trace,
                 },
             },
-            RunResultValue::Panic(value) => match &test_case.config.expected_result {
+            RunStatus::Panic(value) => match &test_case.config.expected_result {
                 ExpectedTestResult::Success => TestCaseSummary::Failed {
                     name,
-                    msg,
-                    arguments,
+                    msg: build_readable_text(&value)
+                        .map(|msg| add_backtrace_footer(msg, contracts_data, &encountered_errors)),
                     fuzzer_args,
                     test_statistics: (),
                     debugging_trace,
                 },
-                ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
-                    ExpectedPanicValue::Exact(expected) if !is_matching(&value, expected) => {
+                ExpectedTestResult::Panics(expected_panic_value) => {
+                    let (matching, msg) =
+                        check_if_matching_and_get_message(&value, expected_panic_value);
+                    if matching {
+                        TestCaseSummary::Passed {
+                            name,
+                            msg: msg.map(|msg| {
+                                add_backtrace_footer(msg, contracts_data, &encountered_errors)
+                            }),
+                            test_statistics: (),
+                            gas_info,
+                            used_resources,
+                            trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
+                                &call_trace,
+                                contracts_data,
+                                versioned_program_path,
+                            )),
+                            debugging_trace,
+                        }
+                    } else {
                         TestCaseSummary::Failed {
                             name,
-                            msg,
-                            arguments,
+                            msg: msg.map(|msg| {
+                                add_backtrace_footer(msg, contracts_data, &encountered_errors)
+                            }),
                             fuzzer_args,
                             test_statistics: (),
                             debugging_trace,
                         }
                     }
-                    _ => TestCaseSummary::Passed {
-                        name,
-                        msg,
-                        arguments,
-                        test_statistics: (),
-                        gas_info: gas,
-                        used_resources,
-                        trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
-                            call_trace,
-                            contracts_data,
-                            versioned_program_path,
-                        )),
-                        debugging_trace,
-                    },
-                },
+                }
             },
         }
     }
@@ -387,54 +418,6 @@ fn convert_felts_to_byte_array_string(data: &[Felt]) -> Option<String> {
     ByteArray::deserialize_with_magic(data)
         .map(|byte_array| byte_array.to_string())
         .ok()
-}
-
-/// Returns a string with the data that was produced by the test case.
-/// If the test was expected to fail with specific data e.g. `#[should_panic(expected: ('data',))]`
-/// and failed to do so, it returns a string comparing the panic data and the expected data.
-#[must_use]
-fn extract_result_data(run_result: &RunResult, expectation: &ExpectedTestResult) -> Option<String> {
-    match &run_result.value {
-        RunResultValue::Success(data) => match expectation {
-            ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
-                ExpectedPanicValue::Exact(panic_data) => {
-                    let panic_string = join_short_strings(panic_data);
-
-                    Some(format!(
-                        "\n    Expected to panic but didn't\n    Expected panic data:  {panic_data:?} ({panic_string})\n"
-                    ))
-                }
-                ExpectedPanicValue::Any => Some("\n    Expected to panic but didn't\n".into()),
-            },
-            ExpectedTestResult::Success => build_readable_text(data),
-        },
-        RunResultValue::Panic(panic_data) => {
-            let expected_data = match expectation {
-                ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
-                    ExpectedPanicValue::Exact(data) => Some(data),
-                    ExpectedPanicValue::Any => None,
-                },
-                ExpectedTestResult::Success => None,
-            };
-
-            match expected_data {
-                Some(expected) if is_matching(panic_data, expected) => None,
-                Some(expected) => {
-                    let panic_string = convert_felts_to_byte_array_string(panic_data)
-                        .unwrap_or_else(|| join_short_strings(panic_data));
-                    let expected_string = convert_felts_to_byte_array_string(expected)
-                        .unwrap_or_else(|| join_short_strings(expected));
-
-                    Some(format!(
-                        "\n    Incorrect panic data\n    {}\n    {}\n",
-                        format_args!("Actual:    {panic_data:?} ({panic_string})"),
-                        format_args!("Expected:  {expected:?} ({expected_string})")
-                    ))
-                }
-                None => build_readable_text(panic_data),
-            }
-        }
-    }
 }
 
 impl AnyTestCaseSummary {
