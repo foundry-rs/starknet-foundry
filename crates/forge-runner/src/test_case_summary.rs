@@ -168,6 +168,8 @@ pub enum TestCaseSummary<T: TestType> {
         /// Name of the test case
         name: String,
     },
+    /// Test case excluded due to matching the `--exclude` filter pattern
+    Excluded { name: String },
     /// Test case skipped due to exit first or execution interrupted, test result is ignored.
     Skipped {},
 }
@@ -185,7 +187,8 @@ impl<T: TestType> TestCaseSummary<T> {
         match self {
             TestCaseSummary::Failed { name, .. }
             | TestCaseSummary::Passed { name, .. }
-            | TestCaseSummary::Ignored { name, .. } => Some(name),
+            | TestCaseSummary::Ignored { name, .. }
+            | TestCaseSummary::Excluded { name } => Some(name),
             TestCaseSummary::Skipped { .. } => None,
         }
     }
@@ -272,6 +275,7 @@ impl TestCaseSummary<Fuzzing> {
             },
             TestCaseSummary::Ignored { name } => TestCaseSummary::Ignored { name: name.clone() },
             TestCaseSummary::Skipped {} => TestCaseSummary::Skipped {},
+            TestCaseSummary::Excluded { name } => TestCaseSummary::Excluded { name: name.clone() },
         }
     }
 }
@@ -495,6 +499,15 @@ impl AnyTestCaseSummary {
             self,
             AnyTestCaseSummary::Single(TestCaseSummary::Ignored { .. })
                 | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Ignored { .. })
+        )
+    }
+
+    #[must_use]
+    pub fn is_excluded(&self) -> bool {
+        matches!(
+            self,
+            AnyTestCaseSummary::Single(TestCaseSummary::Excluded { .. })
+                | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Excluded { .. })
         )
     }
 }

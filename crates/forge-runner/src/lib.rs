@@ -55,6 +55,10 @@ const BUILTINS: [&str; 11] = [
 
 pub trait TestCaseFilter {
     fn should_be_run(&self, test_case: &TestCaseWithResolvedConfig) -> bool;
+    /// Default implementation returns false (no tests are excluded by default).
+    fn is_excluded(&self, _test_case: &TestCaseWithResolvedConfig) -> bool {
+        false
+    }
 }
 
 pub fn maybe_save_trace_and_profile(
