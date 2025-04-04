@@ -6,8 +6,10 @@ use scarb_api::StarknetContractArtifacts;
 use sncast::{Network, response::structs::VerifyResponse};
 use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, fmt};
+
 pub mod explorer;
 pub mod walnut;
+
 use explorer::VerificationInterface;
 use walnut::WalnutVerificationInterface;
 
@@ -67,6 +69,7 @@ pub async fn verify(
             "\n\tYou are about to submit the entire workspace code to the third-party verifier at {verifier}.\n\n\tImportant: Make sure your project does not include sensitive information like private keys. The snfoundry.toml file will be uploaded. Keep the keystore outside the project to prevent it from being uploaded.\n\n\tAre you sure you want to proceed? (Y/n)"
         );
         let input: String = prompt(prompt_text)?;
+
         if !input.starts_with('Y') {
             bail!("Verification aborted");
         }
