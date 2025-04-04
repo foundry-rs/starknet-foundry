@@ -2507,7 +2507,6 @@ dependencies = [
  "futures",
  "include_dir",
  "indoc",
- "lazy_static 1.5.0",
  "num-bigint",
  "openssl",
  "rand 0.8.5",

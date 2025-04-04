@@ -13,7 +13,7 @@ pub fn build_readable_text(data: &[Felt]) -> Option<String> {
 
     if items.is_empty() {
         return None;
-    };
+    }
 
     let string = if let [item] = &items[..] {
         item.clone()

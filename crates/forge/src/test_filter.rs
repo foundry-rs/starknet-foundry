@@ -86,7 +86,7 @@ impl TestsFilter {
             NameFilter::ExactMatch(name) => {
                 test_cases.retain(|tc| tc.name == *name);
             }
-        };
+        }
 
         if self.last_failed_filter {
             match self.failed_tests_cache.load()?.as_slice() {
@@ -103,7 +103,7 @@ impl TestsFilter {
             IgnoredFilter::Ignored => {
                 test_cases.retain(|tc| tc.config.ignored);
             }
-        };
+        }
 
         Ok(())
     }

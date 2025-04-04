@@ -22,7 +22,7 @@ pub fn generate_account_name(accounts_file: &Utf8PathBuf) -> Result<String> {
                 .and_then(|id| id.parse::<u32>().ok())
             {
                 result.insert(id);
-            };
+            }
         }
     }
 

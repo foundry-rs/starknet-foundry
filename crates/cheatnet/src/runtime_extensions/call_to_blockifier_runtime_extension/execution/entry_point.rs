@@ -212,7 +212,7 @@ fn remove_syscall_resources_and_exit_success_call(
         TrackedResource::SierraGas => {
             gas_consumed -= get_syscalls_gas_consumed(syscall_usage, versioned_constants);
         }
-    };
+    }
 
     let nested_syscall_usage_sum =
         aggregate_nested_syscall_usage(&cheatnet_state.trace_data.current_call_stack.top());

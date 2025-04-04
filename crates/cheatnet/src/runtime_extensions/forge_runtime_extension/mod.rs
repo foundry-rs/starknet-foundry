@@ -599,7 +599,7 @@ pub fn add_resources_to_top_call(
         TrackedResource::SierraGas => {
             top_call.gas_consumed += vm_resources_to_sierra_gas(resources, versioned_constants).0;
         }
-    };
+    }
 }
 
 pub fn update_top_call_resources(runtime: &mut ForgeRuntime, tracked_resource: &TrackedResource) {

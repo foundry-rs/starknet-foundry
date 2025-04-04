@@ -1,5 +1,6 @@
 use regex::Regex;
 use snapbox::cmd::OutputAssert;
+use std::fmt::Write as _;
 
 pub trait AsOutput {
     fn as_stdout(&self) -> &str;
@@ -51,17 +52,17 @@ fn assert_output_contains(output: &str, lines: &str) {
 
     for line in asserted_lines {
         if is_present(line, &mut actual_lines) {
-            out.push_str(&format!("| {line}\n"));
+            writeln!(out, "| {line}").unwrap();
         } else {
             contains = false;
-            out.push_str(&format!("- {line}\n"));
+            writeln!(out, "- {line}").unwrap();
         }
     }
 
     if !contains {
-        actual_lines
-            .iter()
-            .for_each(|line| out.push_str(&format!("+ {line}\n")));
+        for line in &actual_lines {
+            writeln!(out, "+ {line}").unwrap();
+        }
     }
 
     assert!(contains, "Output does not match:\n\n{out}");

@@ -201,7 +201,7 @@ impl HintProcessorLogic for StarknetRuntime<'_> {
                 }
                 _ => {}
             }
-        };
+        }
 
         self.hint_handler
             .execute_hint(vm, exec_scopes, hint_data, constants)

@@ -2,10 +2,10 @@ use super::common::runner::{setup_package, test_runner};
 use assert_fs::fixture::{FileWriteStr, PathChild};
 use axum::{Router, extract::Query, response::Redirect, routing::any};
 use indoc::formatdoc;
-use lazy_static::lazy_static;
 use shared::consts::EXPECTED_RPC_VERSION;
 use shared::test_utils::node_url::node_url;
 use shared::test_utils::output_assert::assert_stdout_contains;
+use std::sync::LazyLock;
 use std::{thread::sleep, time::Duration};
 use tokio::{
     net::TcpListener,
@@ -19,9 +19,8 @@ struct Params {
 
 // to make one url look like different ones
 fn setup_redirect_server() {
-    lazy_static! {
-        static ref RT: Runtime = Builder::new_multi_thread().enable_all().build().unwrap();
-    };
+    static RT: LazyLock<Runtime> =
+        LazyLock::new(|| Builder::new_multi_thread().enable_all().build().unwrap());
 
     RT.spawn(async {
         let app = Router::new().route(
