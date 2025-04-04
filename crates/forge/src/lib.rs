@@ -3,6 +3,7 @@ use anyhow::Result;
 use anyhow::anyhow;
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
+use derive_more::Display;
 use forge_runner::CACHE_DIR;
 use forge_runner::forge_config::ForgeTrackedResource;
 use run_tests::workspace::run_for_workspace;
@@ -35,7 +36,7 @@ pub const CAIRO_EDITION: &str = "2024_07";
 
 const MINIMAL_RUST_VERSION: Version = Version::new(1, 80, 1);
 const MINIMAL_SCARB_VERSION: Version = Version::new(2, 7, 0);
-const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 8, 5);
+const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 9, 4);
 const MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN: Version = Version::new(2, 10, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 const MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS: Version = Version::new(2, 10, 0);
@@ -71,7 +72,7 @@ Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
 "
 )]
 #[command(about = "snforge - a testing tool for Starknet contracts", long_about = None)]
-#[clap(name = "snforge")]
+#[command(name = "snforge")]
 pub struct Cli {
     #[command(subcommand)]
     subcommand: ForgeSubcommand,
@@ -209,8 +210,21 @@ pub struct TestArgs {
     tracked_resource: ForgeTrackedResource,
 
     /// Additional arguments for cairo-coverage or cairo-profiler
-    #[clap(last = true)]
+    #[arg(last = true)]
     additional_args: Vec<OsString>,
+}
+
+#[derive(ValueEnum, Display, Debug, Clone)]
+pub enum Template {
+    /// Simple Cairo program with unit tests
+    #[display("cairo-program")]
+    CairoProgram,
+    /// Basic contract with example tests
+    #[display("balance-contract")]
+    BalanceContract,
+    /// ERC20 contract for mock token
+    #[display("erc20-contract")]
+    Erc20Contract,
 }
 
 #[derive(Parser, Debug)]
@@ -226,6 +240,9 @@ pub struct NewArgs {
     /// Try to create the project even if the specified directory at <PATH> is not empty, which can result in overwriting existing files
     #[arg(long)]
     overwrite: bool,
+    /// Template to use for the new project
+    #[arg(short, long, default_value_t = Template::BalanceContract)]
+    template: Template,
 }
 
 pub enum ExitStatus {
@@ -316,10 +333,9 @@ fn check_requirements(
                 command: RefCell::new(ScarbCommand::new().arg("--version").command()),
                 minimal_version: MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS,
                 minimal_recommended_version: None,
-                helper_text: "This version of scarb is the minimum required in order to support sierra gas tracking \
+                helper_text: format!("To track sierra gas, minimal required scarb version is {MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS} \
                 (it comes with sierra >= 1.7.0 support)\n\
-                Follow instructions from https://docs.swmansion.com/scarb/download.html"
-                    .to_string(),
+                Follow instructions from https://docs.swmansion.com/scarb/download.html"),
                 version_parser: create_version_parser("Scarb", r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)"),
             });
         }

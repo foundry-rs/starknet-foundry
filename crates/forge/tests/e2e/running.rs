@@ -990,7 +990,7 @@ fn sierra_gas_with_older_scarb() {
         indoc! {r"
         Checking requirements
         [..]Scarb Version [..] doesn't satisfy minimal 2.10.0[..]
-        [..]This version of scarb is the minimum required in order to support sierra gas tracking (it comes with sierra >= 1.7.0 support)[..]
+        [..]To track sierra gas, minimal required scarb version is 2.10.0 (it comes with sierra >= 1.7.0 support)[..]
         [..]Follow instructions from https://docs.swmansion.com/scarb/download.html[..]
         [..]
         [ERROR] Requirements not satisfied

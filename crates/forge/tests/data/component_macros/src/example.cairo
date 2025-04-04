@@ -1,7 +1,7 @@
 const MINTER_ROLE: felt252 = selector!("MINTER_ROLE");
 
 #[starknet::interface]
-trait IMyContract<TContractState> {
+pub trait IMyContract<TContractState> {
     fn mint(ref self: TContractState);
 }
 

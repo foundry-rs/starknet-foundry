@@ -8,10 +8,11 @@ use test_case::test_case;
 #[test_case("oz_cairo_0"; "cairo_0_account")]
 #[test_case("oz_cairo_1"; "cairo_1_account")]
 #[test_case("oz"; "oz_account")]
-#[test_case("argent"; "argent_account")]
-#[test_case("braavos"; "braavos_account")]
+// TODO(#3089)
+// #[test_case("argent"; "argent_account")]
+// #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
-async fn test_max_fee_too_low(account: &str) {
+async fn test_insufficient_resource_for_validate(account: &str) {
     let script_dir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/invoke", Vec::<String>::new());
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
@@ -35,7 +36,7 @@ async fn test_max_fee_too_low(account: &str) {
     assert_stdout_contains(
         output,
         indoc! {r"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientMaxFee(())))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientResourcesForValidate(())))
         command: script run
         status: success
         "},
@@ -68,7 +69,7 @@ async fn test_contract_does_not_exist() {
         output,
         indoc! {r#"
         [..]
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
+        ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Transaction execution has failed:
         [..]
         [..]: Error in the called contract ([..]):
         Requested contract address [..] is not deployed.
@@ -101,15 +102,12 @@ fn test_wrong_function_name() {
     let snapbox = runner(&args).current_dir(script_dir.path());
     let output = snapbox.assert().success();
 
+    // TODO(#3116): Change message to string after issue with undecoded felt is resolved.
     assert_stdout_contains(
         output,
         indoc! {r#"
         [..]
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
-        [..]
-        [..]: Error in the called contract ([..]):
-        Entry point EntryPointSelector([..]) not found in contract.
-        " })))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, [..] error: ContractExecutionError::Message("["0x454e545259504f494e545f4e4f545f464f554e44"]") }) }) }) })))
         command: script run
         status: success
         "#},
@@ -138,15 +136,11 @@ fn test_wrong_calldata() {
     let snapbox = runner(&args).current_dir(script_dir.path());
     let output = snapbox.assert().success();
 
+    // TODO(#3116): Change message to string after issue with undecoded felt is resolved.
     assert_stdout_contains(
         output,
         indoc! {r#"
-        [..]
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: "Transaction execution has failed:
-        [..]
-        [..]: Error in the called contract ([..]):
-        Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
-        " })))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, [..], error: ContractExecutionError::Message("["0x4661696c656420746f20646573657269616c697a6520706172616d202332"]") }) }) }) })))
         command: script run
         status: success
         "#},

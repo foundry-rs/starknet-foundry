@@ -1,5 +1,5 @@
 use testing_contract_internals::using_library_calls::{
-    ILibraryContractSafeLibraryDispatcher, ILibraryContractSafeDispatcherTrait
+    ILibraryContractSafeLibraryDispatcher, ILibraryContractSafeDispatcherTrait,
 };
 use starknet::{ClassHash, ContractAddress, syscalls::library_call_syscall};
 use snforge_std::{declare, DeclareResultTrait};

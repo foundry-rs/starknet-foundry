@@ -10,7 +10,7 @@ use blockifier::execution::contract_class::CompiledClassV0;
 use blockifier::execution::deprecated_entry_point_execution::{
     VmExecutionContext, finalize_execution, initialize_execution_context, prepare_call_arguments,
 };
-use blockifier::execution::entry_point::{CallEntryPoint, EntryPointExecutionContext};
+use blockifier::execution::entry_point::{EntryPointExecutionContext, ExecutableCallEntryPoint};
 use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::execution::execution_utils::Args;
 use blockifier::state::state_api::State;
@@ -19,7 +19,7 @@ use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner};
 
 // blockifier/src/execution/deprecated_execution.rs:36 (execute_entry_point_call)
 pub fn execute_entry_point_call_cairo0(
-    call: CallEntryPoint,
+    call: ExecutableCallEntryPoint,
     compiled_class_v0: CompiledClassV0,
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
@@ -58,10 +58,10 @@ pub fn execute_entry_point_call_cairo0(
     )
     .on_error_get_last_pc(&mut runner)?;
 
-    let syscall_counter = cheatable_syscall_handler
+    let syscall_usage = cheatable_syscall_handler
         .extended_runtime
         .hint_handler
-        .syscall_counter
+        .syscalls_usage
         .clone();
 
     let execution_result = finalize_execution(
@@ -72,7 +72,7 @@ pub fn execute_entry_point_call_cairo0(
         n_total_args,
     )?;
 
-    Ok((execution_result, syscall_counter, None))
+    Ok((execution_result, syscall_usage, None))
     // endregion
 }
 
