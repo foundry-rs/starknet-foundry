@@ -212,7 +212,7 @@ pub fn call_entry_point(
 
     if let Ok(call_info) = exec_result {
         syscall_handler.base.inner_calls.push(call_info);
-    };
+    }
 
     result
 }
