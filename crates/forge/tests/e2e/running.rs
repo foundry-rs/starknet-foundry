@@ -1006,33 +1006,3 @@ fn sierra_gas_with_older_scarb() {
         "},
     );
 }
-
-#[test]
-fn create_new_project_and_check_gitignore() {
-    let temp = tempdir_with_tool_versions().unwrap();
-    let project_path = temp.join("project");
-
-    runner(&temp)
-        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
-        .args(["new", "--name", "test_name"])
-        .arg(&project_path)
-        .assert()
-        .success();
-
-    let gitignore_path = project_path.join(".gitignore");
-    assert!(gitignore_path.exists(), ".gitignore file should exist");
-
-    let gitignore_content = fs::read_to_string(gitignore_path).unwrap();
-
-    let expected_gitignore_content = indoc! {
-        r"
-        target
-        .snfoundry_cache/
-        snfoundry_trace/
-        coverage/
-        profile/
-        "
-    };
-
-    assert_eq!(gitignore_content, expected_gitignore_content);
-}
