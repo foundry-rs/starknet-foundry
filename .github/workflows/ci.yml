@@ -13,12 +13,27 @@ on:
   workflow_dispatch:
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix_os: ${{ steps.set-matrix.outputs.matrix_os }}
+    steps:
+      - name: Set OS matrix based on event
+        id: set-matrix
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo 'matrix_os=["ubuntu-latest"]' >> $GITHUB_OUTPUT
+          else
+            echo 'matrix_os=["ubuntu-latest","windows-latest"]' >> $GITHUB_OUTPUT
+          fi
+
   test-forge-unit-and-integration:
+    needs: setup
     name: Test Forge / Unit and Integration Tests
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -29,11 +44,12 @@ jobs:
       - run: cargo test --release integration -p forge
 
   build-test-forge-e2e-nextest-archive:
+    needs: setup
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -51,12 +67,12 @@ jobs:
   test-forge-e2e:
     name: Test Forge / E2E Tests
     runs-on: ${{ matrix.os }}
-    needs: build-test-forge-e2e-nextest-archive
+    needs: [build-test-forge-e2e-nextest-archive, "setup"]
     strategy:
       fail-fast: false
       matrix:
         partition: [ 1, 2, 3, 4, 5, 6, 7, 8 ]
-        os: [ ubuntu-latest, windows-latest ]
+        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
     steps:
       - name: Extract branch name
         if: github.event_name != 'pull_request'
@@ -253,11 +269,12 @@ jobs:
       - run: cargo test --release -p shared
 
   test-scarb-api:
+    needs: setup
     name: Test Scarb Api
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
