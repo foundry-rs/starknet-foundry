@@ -7,7 +7,7 @@ use anyhow::{Result, ensure};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::state::cached_state::CachedState;
-use cairo_lang_runner::{Arg, RunResult, SierraCasmRunner};
+use cairo_lang_runner::{Arg, RunResultValue, SierraCasmRunner};
 use cairo_lang_sierra::extensions::NamedType;
 use cairo_lang_sierra::extensions::bitwise::BitwiseType;
 use cairo_lang_sierra::extensions::circuit::{AddModType, MulModType};
@@ -145,6 +145,11 @@ pub(crate) fn run_fuzz_test(
     })
 }
 
+pub enum RunResult {
+    Success(Vec<Felt252>),
+    Panic(Vec<Felt252>),
+}
+
 pub struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, Box<CairoRunError>>,
     pub(crate) call_trace: Rc<RefCell<CallTrace>>,
@@ -254,7 +259,7 @@ pub fn run_test_case(
 
                 let ap = runner.relocated_trace.as_ref().unwrap().last().unwrap().ap;
 
-                let (results_data, gas_counter) = get_results_data(
+                let results_data = get_results_data(
                     &case.test_details.return_types,
                     &runner.relocated_memory,
                     ap,
@@ -273,7 +278,7 @@ pub fn run_test_case(
 
                 update_top_call_vm_trace(&mut forge_runtime, &mut runner);
 
-                Ok((gas_counter, runner.relocated_memory, value))
+                Ok(value)
             }
             Err(err) => Err(err),
         };
@@ -309,12 +314,9 @@ pub fn run_test_case(
     )?;
 
     Ok(RunResultWithInfo {
-        run_result: run_result.map(|(gas_counter, memory, value)| RunResult {
-            used_resources: used_resources.execution_resources.clone(),
-            gas_counter,
-            memory,
-            value,
-            profiling_info: None,
+        run_result: run_result.map(|result| match result {
+            RunResultValue::Success(value) => RunResult::Success(value),
+            RunResultValue::Panic(value) => RunResult::Panic(value),
         }),
         gas_used: gas,
         used_resources,
@@ -332,7 +334,7 @@ pub fn get_results_data(
     return_types: &[(GenericTypeId, i16)],
     cells: &[Option<Felt252>],
     mut ap: usize,
-) -> (Vec<(GenericTypeId, Vec<Felt252>)>, Option<Felt252>) {
+) -> Vec<(GenericTypeId, Vec<Felt252>)> {
     let mut results_data = vec![];
     for (ty, ty_size) in return_types.iter().rev() {
         let size = *ty_size as usize;
@@ -344,11 +346,10 @@ pub fn get_results_data(
     }
 
     // Handling implicits.
-    let mut gas_counter = None;
     results_data.retain_mut(|(ty, values)| {
         let generic_ty = ty;
         if *generic_ty == GasBuiltinType::ID {
-            gas_counter = Some(values.remove(0));
+            values.remove(0);
             assert!(values.is_empty());
             false
         } else {
@@ -371,7 +372,7 @@ pub fn get_results_data(
         }
     });
 
-    (results_data, gas_counter)
+    results_data
 }
 
 fn extract_test_case_summary(

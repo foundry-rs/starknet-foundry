@@ -3,9 +3,9 @@ use crate::build_trace_data::build_profiler_call_trace;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
 use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
+use crate::running::RunResult;
 use cairo_annotations::trace_data::VersionedCallTrace as VersionedProfilerCallTrace;
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_runner::{RunResult, RunResultValue};
 use camino::Utf8Path;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
@@ -105,9 +105,9 @@ pub struct FuzzingStatistics {
 }
 
 pub trait TestType {
-    type GasInfo: std::fmt::Debug + Clone;
-    type TestStatistics: std::fmt::Debug + Clone;
-    type TraceData: std::fmt::Debug + Clone;
+    type GasInfo: fmt::Debug + Clone;
+    type TestStatistics: fmt::Debug + Clone;
+    type TraceData: fmt::Debug + Clone;
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -298,8 +298,8 @@ impl TestCaseSummary<Single> {
         let debugging_trace = cfg!(feature = "debugging")
             .then(|| debugging::Trace::new(&call_trace.borrow(), contracts_data, name.clone()));
 
-        match run_result.value {
-            RunResultValue::Success(_) => match &test_case.config.expected_result {
+        match run_result {
+            RunResult::Success(_) => match &test_case.config.expected_result {
                 ExpectedTestResult::Success => {
                     let summary = TestCaseSummary::Passed {
                         name,
@@ -326,7 +326,7 @@ impl TestCaseSummary<Single> {
                     debugging_trace,
                 },
             },
-            RunResultValue::Panic(value) => match &test_case.config.expected_result {
+            RunResult::Panic(value) => match &test_case.config.expected_result {
                 ExpectedTestResult::Success => TestCaseSummary::Failed {
                     name,
                     msg,
@@ -394,8 +394,8 @@ fn convert_felts_to_byte_array_string(data: &[Felt]) -> Option<String> {
 /// and failed to do so, it returns a string comparing the panic data and the expected data.
 #[must_use]
 fn extract_result_data(run_result: &RunResult, expectation: &ExpectedTestResult) -> Option<String> {
-    match &run_result.value {
-        RunResultValue::Success(data) => match expectation {
+    match &run_result {
+        RunResult::Success(data) => match expectation {
             ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
                 ExpectedPanicValue::Exact(panic_data) => {
                     let panic_string = join_short_strings(panic_data);
@@ -408,7 +408,7 @@ fn extract_result_data(run_result: &RunResult, expectation: &ExpectedTestResult)
             },
             ExpectedTestResult::Success => build_readable_text(data),
         },
-        RunResultValue::Panic(panic_data) => {
+        RunResult::Panic(panic_data) => {
             let expected_data = match expectation {
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
                     ExpectedPanicValue::Exact(data) => Some(data),
