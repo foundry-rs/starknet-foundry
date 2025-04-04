@@ -97,7 +97,6 @@ pub fn run_test(
         extract_test_case_summary(
             run_result,
             &case,
-            vec![],
             &test_runner_config.contracts_data,
             &versioned_program_path,
         )
@@ -138,7 +137,6 @@ pub(crate) fn run_fuzz_test(
         extract_test_case_summary(
             run_result,
             &case,
-            vec![],
             &test_runner_config.contracts_data,
             &versioned_program_path,
         )
@@ -378,7 +376,6 @@ pub fn get_results_data(
 fn extract_test_case_summary(
     run_result: Result<RunResultWithInfo>,
     case: &TestCaseWithResolvedConfig,
-    args: Vec<Felt>,
     contracts_data: &ContractsData,
     versioned_program_path: &Utf8Path,
 ) -> TestCaseSummary<Single> {
@@ -388,7 +385,6 @@ fn extract_test_case_summary(
                 Ok(run_result) => TestCaseSummary::from_run_result_and_info(
                     run_result,
                     case,
-                    args,
                     result_with_info.fuzzer_args,
                     result_with_info.gas_used,
                     result_with_info.used_resources,
@@ -419,7 +415,6 @@ fn extract_test_case_summary(
                                 &result_with_info.encountered_errors,
                             )
                         }),
-                        arguments: args,
                         fuzzer_args: result_with_info.fuzzer_args,
                         test_statistics: (),
                         debugging_trace: cfg!(feature = "debugging").then(|| {
@@ -438,7 +433,6 @@ fn extract_test_case_summary(
         Err(error) => TestCaseSummary::Failed {
             name: case.name.clone(),
             msg: Some(error.to_string()),
-            arguments: args,
             fuzzer_args: Vec::default(),
             test_statistics: (),
             debugging_trace: None,

@@ -135,8 +135,6 @@ pub enum TestCaseSummary<T: TestType> {
         name: String,
         /// Message to be printed after the test case run
         msg: Option<String>,
-        /// Arguments used in the test case run
-        arguments: Vec<Felt>,
         /// Trace of the test case run
         debugging_trace: Option<debugging::Trace>,
         /// Information on used gas
@@ -156,8 +154,6 @@ pub enum TestCaseSummary<T: TestType> {
         msg: Option<String>,
         /// Trace of the test case run
         debugging_trace: Option<debugging::Trace>,
-        /// Arguments used in the test case run
-        arguments: Vec<Felt>,
         /// Random arguments used in the fuzz test case run
         fuzzer_args: Vec<String>,
         /// Statistics of the test run
@@ -226,7 +222,6 @@ impl TestCaseSummary<Fuzzing> {
             TestCaseSummary::Passed {
                 name,
                 msg,
-                arguments,
                 gas_info: _,
                 used_resources: _,
                 test_statistics: (),
@@ -245,7 +240,6 @@ impl TestCaseSummary<Fuzzing> {
                 TestCaseSummary::Passed {
                     name,
                     msg,
-                    arguments,
                     gas_info: GasStatistics::new(gas_usages.as_ref()),
                     used_resources: UsedResources::default(),
                     test_statistics: FuzzingStatistics { runs },
@@ -256,14 +250,12 @@ impl TestCaseSummary<Fuzzing> {
             TestCaseSummary::Failed {
                 name,
                 msg,
-                arguments,
                 fuzzer_args,
                 debugging_trace,
                 test_statistics: (),
             } => TestCaseSummary::Failed {
                 name,
                 msg,
-                arguments,
                 fuzzer_args,
                 test_statistics: FuzzingStatistics {
                     runs: results.len(),
@@ -282,7 +274,6 @@ impl TestCaseSummary<Single> {
     pub(crate) fn from_run_result_and_info(
         run_result: RunResult,
         test_case: &TestCaseWithResolvedConfig,
-        arguments: Vec<Felt>,
         fuzzer_args: Vec<String>,
         gas: GasVector,
         used_resources: UsedResources,
@@ -304,7 +295,6 @@ impl TestCaseSummary<Single> {
                     let summary = TestCaseSummary::Passed {
                         name,
                         msg,
-                        arguments,
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
@@ -320,7 +310,6 @@ impl TestCaseSummary<Single> {
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
-                    arguments,
                     fuzzer_args,
                     test_statistics: (),
                     debugging_trace,
@@ -330,7 +319,6 @@ impl TestCaseSummary<Single> {
                 ExpectedTestResult::Success => TestCaseSummary::Failed {
                     name,
                     msg,
-                    arguments,
                     fuzzer_args,
                     test_statistics: (),
                     debugging_trace,
@@ -340,7 +328,6 @@ impl TestCaseSummary<Single> {
                         TestCaseSummary::Failed {
                             name,
                             msg,
-                            arguments,
                             fuzzer_args,
                             test_statistics: (),
                             debugging_trace,
@@ -349,7 +336,6 @@ impl TestCaseSummary<Single> {
                     _ => TestCaseSummary::Passed {
                         name,
                         msg,
-                        arguments,
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
