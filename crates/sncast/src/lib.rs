@@ -280,9 +280,7 @@ pub async fn get_account<'a>(
     };
 
     // TODO(#3118): Remove this check once braavos integration is restored
-    if let Some(account_type) = account_data.account_type {
-        assert_non_braavos_account_type(account_type)?;
-    }
+    assert_non_braavos_account_type(account_data.account_type, account_data.class_hash)?;
 
     let account = build_account(account_data, chain_id, provider).await?;
 
