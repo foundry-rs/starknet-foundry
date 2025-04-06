@@ -146,7 +146,7 @@ where
     }
 }
 
-pub fn assert_non_braavos_account_type(
+pub fn assert_non_braavos_account(
     account_type: Option<AccountType>,
     class_hash: Option<Felt>,
 ) -> Result<(), Error> {

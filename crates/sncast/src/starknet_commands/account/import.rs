@@ -10,7 +10,7 @@ use clap::Args;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
-use sncast::helpers::braavos::assert_non_braavos_account_type;
+use sncast::helpers::braavos::assert_non_braavos_account;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
@@ -71,7 +71,7 @@ pub async fn import(
     import: &Import,
 ) -> Result<AccountImportResponse> {
     // TODO(#3118): Remove this check once braavos integration is restored
-    assert_non_braavos_account_type(Some(import.account_type), import.class_hash)?;
+    assert_non_braavos_account(Some(import.account_type), import.class_hash)?;
 
     let private_key = if let Some(passed_private_key) = &import.private_key {
         passed_private_key
