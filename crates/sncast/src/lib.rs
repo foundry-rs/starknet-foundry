@@ -623,7 +623,7 @@ pub async fn wait_for_tx(
                 sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
             }
             Err(err) => return Err(WaitForTransactionError::ProviderError(err.into())),
-        };
+        }
 
         sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
     }

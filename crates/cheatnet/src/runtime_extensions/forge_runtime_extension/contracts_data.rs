@@ -117,7 +117,7 @@ fn build_name_selector_map(abi: Vec<AbiEntry>) -> HashMap<EntryPointSelector, Fu
                 }
             }
             _ => add_simple_abi_entry_to_mapping(abi_entry, &mut selector_map),
-        };
+        }
     }
     selector_map
 }
