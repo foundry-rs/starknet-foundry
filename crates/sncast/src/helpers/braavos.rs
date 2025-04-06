@@ -160,6 +160,5 @@ pub fn assert_non_braavos_account_type(
             bail!(msg)
         }
     }
-
     Ok(())
 }
