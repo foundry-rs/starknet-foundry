@@ -12,7 +12,7 @@ mod test {
 
     #[test]
     fn second_test_pass_x() {
-        fib(0, 1, 800000);
+        fib(0, 1, 750000);
         assert(2 == 2, 'simple check');
     }
 
@@ -24,7 +24,7 @@ mod test {
 
     #[test]
     fn second_test_fail_y() {
-        fib(0, 1, 800000);
+        fib(0, 1, 750000);
         assert(1 == 2, 'simple check');
     }
 
