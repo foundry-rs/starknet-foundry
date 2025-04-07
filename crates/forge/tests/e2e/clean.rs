@@ -216,7 +216,7 @@ fn generate_clean_components(state: CleanComponentsState, temp_dir: &TempDir) {
         state => {
             panic!("Invalid state: {state:?}");
         }
-    };
+    }
 
     assert_eq!(check_clean_components_state(temp_dir.path()), state);
 }

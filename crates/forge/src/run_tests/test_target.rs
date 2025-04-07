@@ -55,7 +55,7 @@ pub async fn run_for_test_target(
                 }))
             }));
             continue;
-        };
+        }
 
         let case = Arc::new(case);
 
