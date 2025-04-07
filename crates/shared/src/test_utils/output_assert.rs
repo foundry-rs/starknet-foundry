@@ -72,8 +72,7 @@ fn assert_output_contains_exact(output: &str, lines: &str) {
     let re = Regex::new(&converted_pattern).unwrap();
     assert!(
         re.is_match(output),
-        "Pattern not found in output. Expected pattern:\n{}",
-        lines
+        "Pattern not found in output. Expected pattern:\n{lines}",
     );
 }
 
