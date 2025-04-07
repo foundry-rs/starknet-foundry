@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Removed
 
-- `NftScan` is not longer supported as `block-explorer` option
+- `NftScan` is no longer supported as `block-explorer` option
 
 ## [0.40.0] - 2025-03-26
 
