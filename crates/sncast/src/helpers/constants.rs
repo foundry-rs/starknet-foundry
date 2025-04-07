@@ -28,6 +28,12 @@ pub const BRAAVOS_CLASS_HASH: Felt =
 pub const BRAAVOS_BASE_ACCOUNT_CLASS_HASH: Felt =
     felt!("0x013bfe114fb1cf405bfc3a7f8dbe2d91db146c17521d40dcf57e16d6b59fa8e6");
 
+pub const BRAAVOS_CLASS_HASHES: &[Felt] = &[
+    felt!("0x02c8c7e6fbcfb3e8e15a46648e8914c6aa1fc506fc1e7fb3d1e19630716174bc"),
+    BRAAVOS_CLASS_HASH,
+    felt!("0x041bf1e71792aecb9df3e9d04e1540091c5e13122a731e02bec588f71dc1a5c3"),
+];
+
 // used in wait_for_tx. Txs will be fetched every 5s with timeout of 300s - so 60 attempts
 pub const WAIT_TIMEOUT: u16 = 300;
 pub const WAIT_RETRY_INTERVAL: u8 = 5;
