@@ -2,7 +2,7 @@ use super::common::runner::{get_current_branch, get_remote_url, setup_package, t
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
-use shared::test_utils::output_assert::assert_stdout_contains;
+use shared::test_utils::output_assert::{assert_stdout_contains, assert_stdout_contains_exact};
 use std::{fs, str::FromStr};
 use test_utils::tempdir_with_tool_versions;
 use toml_edit::{DocumentMut, value};
@@ -950,6 +950,79 @@ fn sierra_gas_with_older_scarb() {
         [..]Follow instructions from https://docs.swmansion.com/scarb/download.html[..]
         [..]
         [ERROR] Requirements not satisfied
+        "},
+    );
+}
+
+#[test]
+fn exact_printing_pass() {
+    let temp = setup_package("deterministic_output");
+
+    let output = test_runner(&temp).arg("pass").assert().code(0);
+
+    assert_stdout_contains_exact(
+        output,
+        indoc! {r"
+        Collected 2 test(s) from deterministic_output package
+        Running 2 test(s) from src/
+        [PASS] deterministic_output::test::first_test_pass_y [..]
+        [PASS] deterministic_output::test::second_test_pass_x [..]
+        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 2 filtered out
+        "},
+    );
+}
+
+#[test]
+fn exact_printing_fail() {
+    let temp = setup_package("deterministic_output");
+
+    let output = test_runner(&temp).arg("fail").assert().code(1);
+
+    assert_stdout_contains_exact(
+        output,
+        indoc! {r"
+        Collected 2 test(s) from deterministic_output package
+        Running 2 test(s) from src/
+        [FAIL] deterministic_output::test::first_test_fail_x
+
+        Failure data:
+            0x73696d706c6520636865636b ('simple check')
+
+        [FAIL] deterministic_output::test::second_test_fail_y
+
+        Failure data:
+            0x73696d706c6520636865636b ('simple check')
+
+        Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 2 filtered out
+
+        Failures:
+            deterministic_output::test::first_test_fail_x
+            deterministic_output::test::second_test_fail_y
+        "},
+    );
+}
+
+#[test]
+fn exact_printing_mixed() {
+    let temp = setup_package("deterministic_output");
+
+    let output = test_runner(&temp).arg("x").assert().code(1);
+
+    assert_stdout_contains_exact(
+        output,
+        indoc! {r"
+        Collected 2 test(s) from deterministic_output package
+        Running 2 test(s) from src/
+        [FAIL] deterministic_output::test::first_test_fail_x
+
+        Failure data:
+            0x73696d706c6520636865636b ('simple check')
+
+        [PASS] deterministic_output::test::second_test_pass_x (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~1280040000)
+        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 2 filtered out
+
+        Failures:
+            deterministic_output::test::first_test_fail_x
         "},
     );
 }
