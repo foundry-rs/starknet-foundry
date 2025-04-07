@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- removed additional newlines in test summary
+- fixed incorrect extra newlines in test summary
 
 ### Cast
 
