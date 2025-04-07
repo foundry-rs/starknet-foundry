@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Support for `array![...].span()` in `--arguments` command
+- Support for `array![].span()` in `--arguments` command
 
 #### Changed
 
