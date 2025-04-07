@@ -13,9 +13,9 @@ fn test_store_and_load_map_entries() {
         contract_address,
         map_entry_address(
             selector!("mapping"), // start of the read memory chunk
-            array!['some_key'].span(), // map key
+            array!['some_key'].span() // map key
         ),
-        1, // length of the read memory chunk
+        1 // length of the read memory chunk
     );
 
     assert_eq!(loaded, array!['some_value']);
@@ -25,18 +25,18 @@ fn test_store_and_load_map_entries() {
         contract_address,
         map_entry_address(
             selector!("mapping"), // storage variable name
-             array!['some_key'].span(), // map key
+            array!['some_key'].span() // map key
         ),
-        array!['some_other_value'].span()
+        array!['some_other_value'].span(),
     );
 
     let loaded = load(
         contract_address,
         map_entry_address(
             selector!("mapping"), // start of the read memory chunk
-            array!['some_key'].span(), // map key
+            array!['some_key'].span() // map key
         ),
-        1, // length of the read memory chunk
+        1 // length of the read memory chunk
     );
 
     assert_eq!(loaded, array!['some_other_value']);
@@ -44,7 +44,7 @@ fn test_store_and_load_map_entries() {
     // load value written under non-existing key
     let loaded = load(
         contract_address,
-        map_entry_address(selector!("mapping"), array!['non_existing_field'].span(),),
+        map_entry_address(selector!("mapping"), array!['non_existing_field'].span()),
         1,
     );
 

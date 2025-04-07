@@ -1,11 +1,11 @@
 #[starknet::interface]
-trait IContract<TContractState> {
+pub trait IContract<TContractState> {
     fn response(ref self: TContractState) -> felt252;
 }
 
 #[cfg(feature: 'snforge_test_only')]
 #[starknet::contract]
-mod MockContract {
+pub mod MockContract {
     #[storage]
     struct Storage {}
 

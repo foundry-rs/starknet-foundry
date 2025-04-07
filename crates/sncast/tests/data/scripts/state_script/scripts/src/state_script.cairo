@@ -18,7 +18,7 @@ fn main() {
         Option::Some(salt),
         true,
         fee_settings,
-        Option::Some(deploy_nonce)
+        Option::Some(deploy_nonce),
     )
         .expect('state deploy failed');
     assert(deploy_result.transaction_hash != 0, deploy_result.transaction_hash);
@@ -29,7 +29,7 @@ fn main() {
         selector!("put"),
         array![0x1, 0x2],
         fee_settings,
-        Option::Some(invoke_nonce)
+        Option::Some(invoke_nonce),
     )
         .expect('state invoke failed');
     assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);

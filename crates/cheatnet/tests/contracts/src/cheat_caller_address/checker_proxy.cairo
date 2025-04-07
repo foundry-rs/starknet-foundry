@@ -29,7 +29,7 @@ mod CheatCallerAddressCheckerProxy {
     impl ICheatCallerAddressCheckerProxy of super::ICheatCallerAddressCheckerProxy<ContractState> {
         fn get_cheated_caller_address(self: @ContractState, address: ContractAddress) -> felt252 {
             let cheat_caller_address_checker = ICheatCallerAddressCheckerDispatcher {
-                contract_address: address
+                contract_address: address,
             };
             cheat_caller_address_checker.get_caller_address()
         }
@@ -40,7 +40,7 @@ mod CheatCallerAddressCheckerProxy {
 
         fn call_proxy(self: @ContractState, address: ContractAddress) -> (felt252, felt252) {
             let dispatcher = ICheatCallerAddressCheckerProxyDispatcher {
-                contract_address: address
+                contract_address: address,
             };
             let caller_address: felt252 = get_caller_address().into();
             let res = dispatcher.get_cheated_caller_address(get_contract_address());
