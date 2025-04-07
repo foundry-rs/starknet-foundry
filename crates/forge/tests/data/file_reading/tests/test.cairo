@@ -1,7 +1,7 @@
 use snforge_std::fs::{FileTrait, read_txt, read_json, FileParser};
-use array::ArrayTrait;
-use option::OptionTrait;
-use serde::Serde;
+use core::array::ArrayTrait;
+use core::option::OptionTrait;
+use core::serde::Serde;
 
 fn compare_with_expected_content(content: Array<felt252>) {
     let expected = array![
@@ -60,7 +60,7 @@ struct A {
     a: u32,
     nested_b: B,
     nested_d: D,
-    f: felt252
+    f: felt252,
 }
 
 #[derive(Serde, Drop, PartialEq)]
@@ -73,24 +73,24 @@ struct B {
 
 #[derive(Serde, Drop, PartialEq)]
 struct C {
-    c: u256
+    c: u256,
 }
 
 #[derive(Serde, Drop, PartialEq)]
 struct D {
     d: u64,
-    e: u8
+    e: u8,
 }
 #[derive(Serde, Drop, PartialEq)]
 struct E {
     a: felt252,
-    b: F
+    b: F,
 }
 #[derive(Serde, Drop, PartialEq)]
 struct F {
     c: ByteArray,
     d: u8,
-    e: G
+    e: G,
 }
 #[derive(Serde, Drop, PartialEq)]
 struct G {
@@ -160,7 +160,7 @@ fn valid_content_and_same_content_no_matter_newlines() {
             nested_c: C { c: u256 { low: 'hello', high: 3 } },
             hex: 0x678,
             spaces: '      ',
-            multiline: 'hello\nworld'
+            multiline: 'hello\nworld',
         },
         nested_d: D { d: 'world', e: 0 },
         f: 3618502788666131213697322783095070105623107215331596699973092056135872020480,

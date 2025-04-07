@@ -8,7 +8,7 @@ use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 pub impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
     fn generate() -> KeyPair<felt252, felt252> {
         let (secret_key, public_key) = execute_cheatcode_and_deserialize::<
-            'generate_stark_keys', (felt252, felt252)
+            'generate_stark_keys', (felt252, felt252),
         >(array![].span());
 
         KeyPair { secret_key, public_key }
@@ -30,22 +30,22 @@ pub impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
 }
 
 pub impl StarkCurveSignerImpl of SignerTrait<
-    KeyPair<felt252, felt252>, felt252, (felt252, felt252)
+    KeyPair<felt252, felt252>, felt252, (felt252, felt252),
 > {
     fn sign(
-        self: KeyPair<felt252, felt252>, message_hash: felt252
+        self: KeyPair<felt252, felt252>, message_hash: felt252,
     ) -> Result<(felt252, felt252), SignError> {
         execute_cheatcode_and_deserialize::<
-            'stark_sign_message'
+            'stark_sign_message',
         >(array![self.secret_key, message_hash].span())
     }
 }
 
 pub impl StarkCurveVerifierImpl of VerifierTrait<
-    KeyPair<felt252, felt252>, felt252, (felt252, felt252)
+    KeyPair<felt252, felt252>, felt252, (felt252, felt252),
 > {
     fn verify(
-        self: KeyPair<felt252, felt252>, message_hash: felt252, signature: (felt252, felt252)
+        self: KeyPair<felt252, felt252>, message_hash: felt252, signature: (felt252, felt252),
     ) -> bool {
         let (r, s) = signature;
         check_ecdsa_signature(message_hash, self.public_key, r, s)

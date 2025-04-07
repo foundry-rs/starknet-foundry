@@ -6,6 +6,7 @@ pub trait ISimpleStorageContract<TState> {
 #[starknet::contract]
 pub mod SimpleStorageContract {
     use starknet::storage::Map;
+    use starknet::storage::{StoragePointerWriteAccess, StorageMapReadAccess, StorageMapWriteAccess};
 
     #[storage]
     struct Storage {
