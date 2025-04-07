@@ -67,15 +67,6 @@ fn assert_output_contains(output: &str, lines: &str) {
 
     assert!(contains, "Output does not match:\n\n{out}");
 }
-fn assert_output_contains_exact(output: &str, lines: &str) {
-    let converted_pattern = regex::escape(lines).replace(r"\[\.\.\]", ".*");
-    let re = Regex::new(&converted_pattern).unwrap();
-    assert!(
-        re.is_match(output),
-        "Pattern not found in output. Expected pattern:\n{lines}",
-    );
-}
-
 #[expect(clippy::needless_pass_by_value)]
 pub fn assert_stdout_contains(output: impl AsOutput, lines: impl AsRef<str>) {
     let stdout = output.as_stdout();
@@ -90,9 +81,18 @@ pub fn assert_stderr_contains(output: impl AsOutput, lines: impl AsRef<str>) {
     assert_output_contains(stderr, lines.as_ref());
 }
 
+fn assert_output(output: &str, lines: &str) {
+    let converted_pattern = regex::escape(lines).replace(r"\[\.\.\]", ".*");
+    let re = Regex::new(&converted_pattern).unwrap();
+    assert!(
+        re.is_match(output),
+        "Pattern not found in output. Expected pattern:\n{lines}",
+    );
+}
+
 #[expect(clippy::needless_pass_by_value)]
-pub fn assert_stdout_contains_exact(output: impl AsOutput, lines: impl AsRef<str>) {
+pub fn assert_stdout(output: impl AsOutput, lines: impl AsRef<str>) {
     let stdout = output.as_stdout();
 
-    assert_output_contains_exact(stdout, lines.as_ref());
+    assert_output(stdout, lines.as_ref());
 }

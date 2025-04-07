@@ -2,7 +2,7 @@ use super::common::runner::{get_current_branch, get_remote_url, setup_package, t
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
-use shared::test_utils::output_assert::{assert_stdout_contains, assert_stdout_contains_exact};
+use shared::test_utils::output_assert::{assert_stdout, assert_stdout_contains};
 use std::{fs, str::FromStr};
 use test_utils::tempdir_with_tool_versions;
 use toml_edit::{DocumentMut, value};
@@ -960,7 +960,7 @@ fn exact_printing_pass() {
 
     let output = test_runner(&temp).arg("pass").assert().code(0);
 
-    assert_stdout_contains_exact(
+    assert_stdout(
         output,
         indoc! {r"
         Collected 2 test(s) from deterministic_output package
@@ -978,7 +978,7 @@ fn exact_printing_fail() {
 
     let output = test_runner(&temp).arg("fail").assert().code(1);
 
-    assert_stdout_contains_exact(
+    assert_stdout(
         output,
         indoc! {r"
         Collected 2 test(s) from deterministic_output package
@@ -1008,7 +1008,7 @@ fn exact_printing_mixed() {
 
     let output = test_runner(&temp).arg("x").assert().code(1);
 
-    assert_stdout_contains_exact(
+    assert_stdout(
         output,
         indoc! {r"
         Collected 2 test(s) from deterministic_output package
