@@ -143,7 +143,7 @@ impl CairoSerialize for CalldataPrimitive {
             CalldataPrimitive::I128(value) => value.serialize(output),
             CalldataPrimitive::Felt(value) => value.serialize(output),
             CalldataPrimitive::ByteArray(value) => value.serialize(output),
-        };
+        }
     }
 }
 

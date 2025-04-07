@@ -96,7 +96,6 @@ fs_extra = "1.3.0"
 openssl = { version = "0.10", features = ["vendored"] }
 toml_edit = "0.22.24"
 axum = "0.8.1"
-lazy_static = "1.5.0"
 fs2 = "0.4.3"
 flate2 = "1.1.0"
 k256 = { version = "0.13.4", features = ["sha256", "ecdsa", "serde"] }
