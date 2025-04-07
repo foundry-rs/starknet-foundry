@@ -86,7 +86,7 @@ fn assert_output(output: &str, lines: &str) {
     let re = Regex::new(&converted_pattern).unwrap();
     assert!(
         re.is_match(output),
-        "Pattern not found in output. Expected pattern:\n{lines}",
+        "Pattern not found in output. Expected pattern:\n{lines}\n\nGot:\n{output}",
     );
 }
 

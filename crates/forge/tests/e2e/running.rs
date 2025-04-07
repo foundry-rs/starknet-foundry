@@ -1018,7 +1018,7 @@ fn exact_printing_mixed() {
         Failure data:
             0x73696d706c6520636865636b ('simple check')
 
-        [PASS] deterministic_output::test::second_test_pass_x (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~1280040000)
+        [PASS] deterministic_output::test::second_test_pass_x [..]
         Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 2 filtered out
 
         Failures:
