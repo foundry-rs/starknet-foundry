@@ -847,6 +847,8 @@ pub async fn test_braavos_disabled() {
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: account import
-        error: Using Braavos accounts is temporarily disabled because they don't yet work with the RPC version supported by `sncast`
-    "});
+        error: Using Braavos accounts is temporarily disabled because they don't yet work with starknet 0.13.5.
+            Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
+        "},
+    );
 }

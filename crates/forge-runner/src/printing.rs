@@ -53,7 +53,7 @@ pub fn print_test_result(
     };
 
     println!(
-        "{result_header} {result_name}{fuzzer_report}{gas_usage}{used_resources}{result_msg}\n\n{result_debug_trace}"
+        "{result_header} {result_name}{fuzzer_report}{gas_usage}{used_resources}{result_msg}{result_debug_trace}"
     );
 }
 
@@ -149,6 +149,6 @@ fn result_header(any_test_result: &AnyTestCaseSummary) -> String {
 fn result_debug_trace(any_test_result: &AnyTestCaseSummary) -> String {
     any_test_result
         .debugging_trace()
-        .map(ToString::to_string)
+        .map(|trace| format!("\n{trace}"))
         .unwrap_or_default()
 }

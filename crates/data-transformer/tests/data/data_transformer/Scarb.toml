@@ -1,0 +1,23 @@
+[package]
+name = "data_transformer_contract"
+version = "0.1.0"
+edition = "2024_07"
+
+# See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
+
+[dependencies]
+starknet = "2.10.0"
+alexandria_data_structures = "0.4.0"
+
+[dev-dependencies]
+snforge_std = "0.39.0"
+assert_macros = "2.10.0"
+
+[[target.starknet-contract]]
+sierra = true
+
+[scripts]
+test = "snforge test"
+
+[tool.scarb]
+allow-prebuilt-plugins = ["snforge_std"]
