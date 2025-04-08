@@ -59,6 +59,7 @@ pub trait IDataTransformer<TContractState> {
         ref self: TContractState, a: BitArray, b: alexandria_data_structures::bit_array::BitArray,
     );
     fn span_fn(ref self: TContractState, a: Span<felt252>);
+    fn signed_fn_multiple(ref self: TContractState, a: i32, b: i8);
 }
 
 #[starknet::contract]
@@ -101,5 +102,6 @@ mod DataTransformer {
             b: alexandria_data_structures::bit_array::BitArray,
         ) {}
         fn span_fn(ref self: ContractState, a: Span<felt252>) {}
+        fn signed_fn_multiple(ref self: ContractState, a: i32, b: i8) {}
     }
 }
