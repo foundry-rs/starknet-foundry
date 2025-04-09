@@ -123,10 +123,8 @@ fn package_sources(package_metadata: &PackageMetadata) -> Result<Vec<Utf8PathBuf
         .filter(|f| f.file_type().is_file())
         .filter(|f| {
             if let Some(ext) = f.path().extension() {
-                if ext == OsStr::new(CAIRO_EXT) {
-                    return true;
-                }
-            };
+                return ext == OsStr::new(CAIRO_EXT);
+            }
 
             false
         })
