@@ -98,7 +98,7 @@ pub async fn verify(
     let free = network.url(&FreeProvider::semi_random());
     let rpc_url = rpc.map_or_else(
         || {
-            let url: &String = if config.url.is_empty() {
+            let url = if config.url.is_empty() {
                 &free
             } else {
                 &config.url
