@@ -3,18 +3,18 @@ use super::{
 };
 
 /// Changes the block number for the given contract address and span.
-/// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
+/// - `target` - instance of `ContractAddress` specifying which contract to cheat
 /// - `block_number` - block number to be set
 /// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
 /// applied
-pub fn cheat_block_number(contract_address: ContractAddress, block_number: u64, span: CheatSpan) {
+pub fn cheat_block_number(target: ContractAddress, block_number: u64, span: CheatSpan) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
         .block_info
         .block_number =
             Operation::Start(
-                CheatArguments { value: block_number, span, target: contract_address },
+                CheatArguments { value: block_number, span, target },
             );
 
     cheat_execution_info(execution_info);
@@ -39,19 +39,19 @@ pub fn stop_cheat_block_number_global() {
     cheat_execution_info(execution_info);
 }
 
-/// Changes the block number for the given contract_address.
-/// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
+/// Changes the block number for the given target contract address.
+/// - `target contract address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `block_number` - block number to be set
-pub fn start_cheat_block_number(contract_address: ContractAddress, block_number: u64) {
-    cheat_block_number(contract_address, block_number, CheatSpan::Indefinite);
+pub fn start_cheat_block_number(target: ContractAddress, block_number: u64) {
+    cheat_block_number(target, block_number, CheatSpan::Indefinite);
 }
 
-/// Cancels the `cheat_block_number` / `start_cheat_block_number` for the given contract_address.
-/// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
-pub fn stop_cheat_block_number(contract_address: ContractAddress) {
+/// Cancels the `cheat_block_number` / `start_cheat_block_number` for the given target.
+/// - `target` - instance of `ContractAddress` specifying which contract to stop cheating
+pub fn stop_cheat_block_number(target: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
-    execution_info.block_info.block_number = Operation::Stop(contract_address);
+    execution_info.block_info.block_number = Operation::Stop(target);
 
     cheat_execution_info(execution_info);
 }

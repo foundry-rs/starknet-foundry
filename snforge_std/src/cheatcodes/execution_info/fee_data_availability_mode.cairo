@@ -3,12 +3,12 @@ use super::{
 };
 
 /// Changes the transaction fee data availability mode for the given contract address and span.
-/// - `contract_address` - instance of `ContractAddress` specifying which contracts to cheat
+/// - `target` - instance of `ContractAddress` specifying which contracts to cheat
 /// - `fee_data_availability_mode` - transaction fee data availability mode to be set
 /// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
 /// applied
 pub fn cheat_fee_data_availability_mode(
-    contract_address: ContractAddress, fee_data_availability_mode: u32, span: CheatSpan,
+    target: ContractAddress, fee_data_availability_mode: u32, span: CheatSpan,
 ) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
@@ -17,7 +17,7 @@ pub fn cheat_fee_data_availability_mode(
         .fee_data_availability_mode =
             Operation::Start(
                 CheatArguments {
-                    value: fee_data_availability_mode, span, target: contract_address,
+                    value: fee_data_availability_mode, span, target,
                 },
             );
 
@@ -45,24 +45,24 @@ pub fn stop_cheat_fee_data_availability_mode_global() {
     cheat_execution_info(execution_info);
 }
 
-/// Changes the transaction fee data availability mode for the given contract_address.
-/// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
+/// Changes the transaction fee data availability mode for the given target contract address.
+/// - `target` - instance of `ContractAddress` specifying which contract to cheat
 /// - `fee_data_availability_mode` - transaction fee data availability mode to be set
 pub fn start_cheat_fee_data_availability_mode(
-    contract_address: ContractAddress, fee_data_availability_mode: u32,
+    target: ContractAddress, fee_data_availability_mode: u32,
 ) {
     cheat_fee_data_availability_mode(
-        contract_address, fee_data_availability_mode, CheatSpan::Indefinite,
+        target, fee_data_availability_mode, CheatSpan::Indefinite,
     );
 }
 
 /// Cancels the `cheat_fee_data_availability_mode` / `start_cheat_fee_data_availability_mode` for
-/// the given contract_address.
-/// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
-pub fn stop_cheat_fee_data_availability_mode(contract_address: ContractAddress) {
+/// the given target contract address.
+/// - `target` - instance of `ContractAddress` specifying which contract to stop cheating
+pub fn stop_cheat_fee_data_availability_mode(target: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
-    execution_info.tx_info.fee_data_availability_mode = Operation::Stop(contract_address);
+    execution_info.tx_info.fee_data_availability_mode = Operation::Stop(target);
 
     cheat_execution_info(execution_info);
 }

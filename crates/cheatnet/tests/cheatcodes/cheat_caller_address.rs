@@ -14,38 +14,29 @@ use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::TEST_ADDRESS;
 
 trait CheatCallerAddressTrait {
-    fn cheat_caller_address(
-        &mut self,
-        contract_address: ContractAddress,
-        new_address: u128,
-        span: CheatSpan,
-    );
-    fn start_cheat_caller_address(&mut self, contract_address: ContractAddress, new_address: u128);
-    fn stop_cheat_caller_address(&mut self, contract_address: ContractAddress);
+    fn cheat_caller_address(&mut self, target: ContractAddress, new_address: u128, span: CheatSpan);
+    fn start_cheat_caller_address(&mut self, target: ContractAddress, new_address: u128);
+    fn stop_cheat_caller_address(&mut self, target: ContractAddress);
 }
 
 impl CheatCallerAddressTrait for TestEnvironment {
     fn cheat_caller_address(
         &mut self,
-        contract_address: ContractAddress,
+        target: ContractAddress,
         new_address: u128,
         span: CheatSpan,
     ) {
-        self.cheatnet_state.cheat_caller_address(
-            contract_address,
-            ContractAddress::from(new_address),
-            span,
-        );
+        self.cheatnet_state
+            .cheat_caller_address(target, ContractAddress::from(new_address), span);
     }
 
-    fn start_cheat_caller_address(&mut self, contract_address: ContractAddress, new_address: u128) {
+    fn start_cheat_caller_address(&mut self, target: ContractAddress, new_address: u128) {
         self.cheatnet_state
-            .start_cheat_caller_address(contract_address, ContractAddress::from(new_address));
+            .start_cheat_caller_address(target, ContractAddress::from(new_address));
     }
 
-    fn stop_cheat_caller_address(&mut self, contract_address: ContractAddress) {
-        self.cheatnet_state
-            .stop_cheat_caller_address(contract_address);
+    fn stop_cheat_caller_address(&mut self, target: ContractAddress) {
+        self.cheatnet_state.stop_cheat_caller_address(target);
     }
 }
 

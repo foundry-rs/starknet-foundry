@@ -3,12 +3,12 @@ use super::{
 };
 
 /// Changes the block timestamp for the given contract address and span.
-/// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
+/// - `target` - instance of `ContractAddress` specifying which contract to cheat
 /// - `block_timestamp` - block timestamp to be set
 /// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
 /// applied
 pub fn cheat_block_timestamp(
-    contract_address: ContractAddress, block_timestamp: u64, span: CheatSpan,
+    target: ContractAddress, block_timestamp: u64, span: CheatSpan,
 ) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
@@ -16,7 +16,7 @@ pub fn cheat_block_timestamp(
         .block_info
         .block_timestamp =
             Operation::Start(
-                CheatArguments { value: block_timestamp, span, target: contract_address },
+                CheatArguments { value: block_timestamp, span, target },
             );
 
     cheat_execution_info(execution_info);
@@ -41,20 +41,20 @@ pub fn stop_cheat_block_timestamp_global() {
     cheat_execution_info(execution_info);
 }
 
-/// Changes the block timestamp for the given contract_address.
-/// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
+/// Changes the block timestamp for the given target contract address.
+/// - `target` - instance of `ContractAddress` specifying which contract to cheat
 /// - `block_timestamp` - block timestamp to be set
-pub fn start_cheat_block_timestamp(contract_address: ContractAddress, block_timestamp: u64) {
-    cheat_block_timestamp(contract_address, block_timestamp, CheatSpan::Indefinite);
+pub fn start_cheat_block_timestamp(target: ContractAddress, block_timestamp: u64) {
+    cheat_block_timestamp(target, block_timestamp, CheatSpan::Indefinite);
 }
 
 /// Cancels the `cheat_block_timestamp` / `start_cheat_block_timestamp` for the given
-/// contract_address.
-/// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
-pub fn stop_cheat_block_timestamp(contract_address: ContractAddress) {
+/// target contract address.
+/// - `target` - instance of `ContractAddress` specifying which contract to stop cheating
+pub fn stop_cheat_block_timestamp(target: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
-    execution_info.block_info.block_timestamp = Operation::Stop(contract_address);
+    execution_info.block_info.block_timestamp = Operation::Stop(target);
 
     cheat_execution_info(execution_info);
 }

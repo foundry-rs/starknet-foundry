@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.0] - 2025-04-09
+
+### Forge
+
+#### Changed
+
+- Updated function signatures across snforge_std cheatcodes to use `target: ContractAddress` instead of the incorrect `contract_address: ContractAddress` for consistency and clarity.
+
+- Updated Related Rust test definitions under crates/cheatnet/tests/cheatcodes
+
 ## [0.41.0] - 2025-04-08
 
 ### Forge

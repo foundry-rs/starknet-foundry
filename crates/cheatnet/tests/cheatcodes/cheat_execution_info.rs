@@ -13,23 +13,19 @@ use starknet_types_core::felt::Felt;
 trait CheatTransactionHashTrait {
     fn cheat_transaction_hash(
         &mut self,
-        contract_address: ContractAddress,
+        target: ContractAddress,
         transaction_hash: Felt,
         span: CheatSpan,
     );
-    fn start_cheat_transaction_hash(
-        &mut self,
-        contract_address: ContractAddress,
-        transaction_hash: Felt,
-    );
-    fn stop_cheat_transaction_hash(&mut self, contract_address: ContractAddress);
+    fn start_cheat_transaction_hash(&mut self, target: ContractAddress, transaction_hash: Felt);
+    fn stop_cheat_transaction_hash(&mut self, target: ContractAddress);
     fn start_cheat_transaction_hash_global(&mut self, transaction_hash: Felt);
     fn stop_cheat_transaction_hash_global(&mut self);
 }
 impl CheatTransactionHashTrait for TestEnvironment {
     fn cheat_transaction_hash(
         &mut self,
-        contract_address: ContractAddress,
+        target: ContractAddress,
         transaction_hash: Felt,
         span: CheatSpan,
     ) {
@@ -38,34 +34,30 @@ impl CheatTransactionHashTrait for TestEnvironment {
         execution_info_mock.tx_info.transaction_hash = Operation::Start(CheatArguments {
             value: transaction_hash,
             span,
-            target: contract_address,
+            target,
         });
 
         self.cheatnet_state
             .cheat_execution_info(execution_info_mock);
     }
 
-    fn start_cheat_transaction_hash(
-        &mut self,
-        contract_address: ContractAddress,
-        transaction_hash: Felt,
-    ) {
+    fn start_cheat_transaction_hash(&mut self, target: ContractAddress, transaction_hash: Felt) {
         let mut execution_info_mock = ExecutionInfoMockOperations::default();
 
         execution_info_mock.tx_info.transaction_hash = Operation::Start(CheatArguments {
             value: transaction_hash,
             span: CheatSpan::Indefinite,
-            target: contract_address,
+            target,
         });
 
         self.cheatnet_state
             .cheat_execution_info(execution_info_mock);
     }
 
-    fn stop_cheat_transaction_hash(&mut self, contract_address: ContractAddress) {
+    fn stop_cheat_transaction_hash(&mut self, target: ContractAddress) {
         let mut execution_info_mock = ExecutionInfoMockOperations::default();
 
-        execution_info_mock.tx_info.transaction_hash = Operation::Stop(contract_address);
+        execution_info_mock.tx_info.transaction_hash = Operation::Stop(target);
 
         self.cheatnet_state
             .cheat_execution_info(execution_info_mock);
@@ -199,11 +191,11 @@ fn cheat_transaction_hash_simple() {
 
 #[test]
 fn start_cheat_execution_info_multiple_times() {
-    fn operation_start<T>(contract_address: ContractAddress, value: T) -> Operation<T> {
+    fn operation_start<T>(target: ContractAddress, value: T) -> Operation<T> {
         Operation::Start(CheatArguments {
             value,
             span: CheatSpan::Indefinite,
-            target: contract_address,
+            target,
         })
     }
 

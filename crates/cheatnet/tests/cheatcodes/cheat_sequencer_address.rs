@@ -10,46 +10,35 @@ use starknet_types_core::felt::Felt;
 trait CheatSequencerAddressTrait {
     fn cheat_sequencer_address(
         &mut self,
-        contract_address: ContractAddress,
+        target: ContractAddress,
         sequencer_address: u128,
         span: CheatSpan,
     );
-    fn start_cheat_sequencer_address(
-        &mut self,
-        contract_address: ContractAddress,
-        sequencer_address: u128,
-    );
-    fn stop_cheat_sequencer_address(&mut self, contract_address: ContractAddress);
+    fn start_cheat_sequencer_address(&mut self, target: ContractAddress, sequencer_address: u128);
+    fn stop_cheat_sequencer_address(&mut self, target: ContractAddress);
 }
 
 impl CheatSequencerAddressTrait for TestEnvironment {
     fn cheat_sequencer_address(
         &mut self,
-        contract_address: ContractAddress,
+        target: ContractAddress,
         sequencer_address: u128,
         span: CheatSpan,
     ) {
         self.cheatnet_state.cheat_sequencer_address(
-            contract_address,
+            target,
             ContractAddress::from(sequencer_address),
             span,
         );
     }
 
-    fn start_cheat_sequencer_address(
-        &mut self,
-        contract_address: ContractAddress,
-        sequencer_address: u128,
-    ) {
-        self.cheatnet_state.start_cheat_sequencer_address(
-            contract_address,
-            ContractAddress::from(sequencer_address),
-        );
+    fn start_cheat_sequencer_address(&mut self, target: ContractAddress, sequencer_address: u128) {
+        self.cheatnet_state
+            .start_cheat_sequencer_address(target, ContractAddress::from(sequencer_address));
     }
 
-    fn stop_cheat_sequencer_address(&mut self, contract_address: ContractAddress) {
-        self.cheatnet_state
-            .stop_cheat_sequencer_address(contract_address);
+    fn stop_cheat_sequencer_address(&mut self, target: ContractAddress) {
+        self.cheatnet_state.stop_cheat_sequencer_address(target);
     }
 }
 
