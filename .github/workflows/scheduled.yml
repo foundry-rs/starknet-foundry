@@ -145,7 +145,7 @@ jobs:
   publish-plugin:
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     needs: [verify-version, build-plugin-binaries]
-    uses: ./.github/workflows/publish_plugin.yml
+    uses: ./.github/workflows/_publish_plugin.yml
     secrets: inherit
     with:
       overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}

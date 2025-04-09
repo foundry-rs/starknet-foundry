@@ -72,7 +72,7 @@ jobs:
   dev-publish-plugin:
     needs: [verify-version, build-binaries]
     if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
-    uses: ./.github/workflows/publish_plugin.yml
+    uses: ./.github/workflows/_publish_plugin.yml
     secrets: inherit
     with:
       overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
@@ -132,7 +132,7 @@ jobs:
   publish-snforge-scarb-plugin:
     name: Publish snforge_scarb_plugin
     needs: [test-binary]
-    uses: ./.github/workflows/publish_plugin.yml
+    uses: ./.github/workflows/_publish_plugin.yml
     secrets: inherit
     with:
       prod_registry: true
