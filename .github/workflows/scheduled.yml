@@ -149,7 +149,6 @@ jobs:
     secrets: inherit
     with:
       overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
-      dev_registry: true
 
   publish-std:
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
@@ -159,7 +158,6 @@ jobs:
     with:
       plugin_dep_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
       override_std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
-      dev_registry: true
 
   build-binaries:
     needs: [verify-version]
