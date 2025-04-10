@@ -831,6 +831,19 @@ pub fn run_test_case(
                 program_extra_data_length,
                 tracked_resource,
             )?;
+
+            // TODO this can be done better, we can take gas directly from call info
+            let vm_resources_without_inner_calls = runner
+                .get_execution_resources()
+                .expect("Execution resources missing")
+                .filter_unused_builtins();
+
+            add_resources_to_top_call(
+                &mut forge_runtime,
+                &vm_resources_without_inner_calls,
+                &tracked_resource,
+            );
+
             Ok(call_info)
         }
         Err(error) => {
