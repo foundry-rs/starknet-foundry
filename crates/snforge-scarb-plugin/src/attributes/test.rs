@@ -1,6 +1,7 @@
 use super::{internal_config_statement::InternalConfigStatementCollector, AttributeInfo, ErrorExt};
 use crate::attributes::fuzzer::wrapper::FuzzerWrapperCollector;
 use crate::attributes::fuzzer::{FuzzerCollector, FuzzerConfigCollector};
+use crate::utils::TypedSyntaxNodeAsText;
 use crate::{
     args::Arguments,
     common::{into_proc_macro_result, with_parsed_values},
@@ -48,14 +49,29 @@ fn test_internal(
         None => true,
     };
 
+    let name = func.declaration(db).name(db).as_text(db);
+
     if should_run_test {
-        Ok(formatdoc!(
+        let string = formatdoc!(
             "
             #[snforge_internal_test_executable]
+            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+            fn {name}_return_wrapper() -> Span::<felt252> {{
+                core::internal::require_implicit::<System>();
+                core::internal::revoke_ap_tracking();
+
+                {name}();
+
+                let mut arr = ArrayTrait::new();
+                core::array::ArrayTrait::span(@arr)
+            }}
+
             #[{config}]
             {func_item}
         "
-        ))
+        );
+        // println!("====TEST===={string}====");
+        Ok(string)
     } else {
         Ok(formatdoc!(
             "

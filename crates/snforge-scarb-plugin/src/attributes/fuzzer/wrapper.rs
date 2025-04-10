@@ -40,7 +40,7 @@ fn fuzzer_wrapper_internal(
             vec![test_attr]
         } else {
             [
-                attr_list.query_attr(db, "snforge_internal_test_executable"),
+                // attr_list.query_attr(db, "snforge_internal_test_executable"),
                 attr_list.query_attr(db, InternalConfigStatementCollector::ATTR_NAME),
             ]
             .concat()
@@ -97,7 +97,7 @@ fn fuzzer_wrapper_internal(
 
     let (statements, if_content) = get_statements(db, func);
 
-    Ok(formatdoc!(
+    let string = formatdoc!(
         "
             {test_or_executable_attrs}
             {vis} fn {name}() {{
@@ -118,7 +118,9 @@ fn fuzzer_wrapper_internal(
                 {statements}
             }}
         "
-    ))
+    );
+    // println!("====FUZZER===={string}====");
+    Ok(string)
 }
 
 fn extract_and_transform_params<F>(
