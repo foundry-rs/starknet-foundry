@@ -67,7 +67,7 @@ jobs:
   test-forge-e2e:
     name: Test Forge / E2E Tests
     runs-on: ${{ matrix.os }}
-    needs: [build-test-forge-e2e-nextest-archive, "setup"]
+    needs: [ build-test-forge-e2e-nextest-archive, setup ]
     strategy:
       fail-fast: false
       matrix:
