@@ -19,7 +19,9 @@ mod ForkingChecker {
     use super::{
         IHelloStarknetDispatcherTrait, IHelloStarknetDispatcher, IHelloStarknetLibraryDispatcher,
     };
-    use starknet::{ClassHash, ContractAddress, OptionTrait};
+    use starknet::{ClassHash, ContractAddress};
+    use core::option::OptionTrait;
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     #[storage]
     struct Storage {

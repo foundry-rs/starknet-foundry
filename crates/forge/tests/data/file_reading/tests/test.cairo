@@ -1,7 +1,7 @@
 use snforge_std::fs::{FileTrait, read_txt, read_json, FileParser};
-use array::ArrayTrait;
-use option::OptionTrait;
-use serde::Serde;
+use core::array::ArrayTrait;
+use core::option::OptionTrait;
+use core::serde::Serde;
 
 fn compare_with_expected_content(content: Array<felt252>) {
     let expected = array![

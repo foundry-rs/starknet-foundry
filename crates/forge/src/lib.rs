@@ -335,7 +335,7 @@ fn check_requirements(
                 version_parser: create_version_parser("Scarb", r"scarb (?<version>[0-9]+.[0-9]+.[0-9]+)"),
             });
         }
-    };
+    }
     requirements_checker.add_requirement(Requirement {
         name: "Universal Sierra Compiler".to_string(),
         command: RefCell::new(UniversalSierraCompilerCommand::new().arg("--version").command()),

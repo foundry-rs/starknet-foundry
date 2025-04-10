@@ -81,7 +81,6 @@ The `block-explorer` field specifies the block explorer service used to display 
 | Voyager   | `https://voyager.online`               |
 | ViewBlock | `https://viewblock.io/starknet`        |
 | OkLink    | `https://www.oklink.com/starknet`      |
-| NftScan   | `https://starknet.nftscan.com`         |
 
 ```toml
 [sncast.myprofile]

@@ -6,6 +6,7 @@ pub trait ILibraryContract<TContractState> {
 
 #[starknet::contract]
 pub mod LibraryContract {
+    use starknet::storage::{StoragePointerWriteAccess, StoragePointerReadAccess};
     #[storage]
     struct Storage {
         value: felt252,

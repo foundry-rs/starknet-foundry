@@ -1,6 +1,6 @@
-mod fib;
-mod fob;
-mod fab;
+pub mod fib;
+pub mod fob;
+pub mod fab;
 
 use fob::fob_impl::fob_fn;
 use fib::fib_fn;

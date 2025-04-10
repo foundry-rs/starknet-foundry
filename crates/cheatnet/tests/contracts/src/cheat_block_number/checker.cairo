@@ -6,7 +6,7 @@ trait ICheatBlockNumberChecker<TContractState> {
 
 #[starknet::contract]
 mod CheatBlockNumberChecker {
-    use box::BoxTrait;
+    use core::box::BoxTrait;
     #[storage]
     struct Storage {
         balance: felt252,

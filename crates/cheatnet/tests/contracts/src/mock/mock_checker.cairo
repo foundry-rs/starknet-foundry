@@ -18,7 +18,8 @@ trait IMockChecker<TContractState> {
 mod MockChecker {
     use super::IMockChecker;
     use super::StructThing;
-    use array::ArrayTrait;
+    use core::array::ArrayTrait;
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use super::IMockCheckerDispatcher;
     use super::IMockCheckerDispatcherTrait;
 

@@ -427,7 +427,7 @@ fn using_specified_block_nb_is_cached() {
         {
             Value::Object(_) => {}
             _ => panic!("The compiled_contract_class entry is not an object"),
-        };
+        }
 
         assert_eq!(
             cache["block_info"].as_object().unwrap()["block_number"]

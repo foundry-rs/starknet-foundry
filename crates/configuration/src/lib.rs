@@ -160,7 +160,7 @@ pub fn copy_config_to_tempdir(src_path: &str, additional_path: Option<&str>) -> 
     if let Some(dir) = additional_path {
         let path = temp_dir.path().join(dir);
         fs::create_dir_all(path).context("Failed to create directories in temp dir")?;
-    };
+    }
     let temp_dir_file_path = temp_dir.path().join(CONFIG_FILENAME);
     fs::copy(src_path, temp_dir_file_path).context("Failed to copy config file to temp dir")?;
 
