@@ -647,7 +647,7 @@ dependencies = [
 [[package]]
 name = "blockifier"
 version = "0.14.0-rc.3"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#8c07d70034de58494a8ba72ac7c2660ae049dd77"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#823cba4d0e94638fb1f91607f7047428f7e8131f"
 dependencies = [
  "anyhow",
  "ark-ec 0.4.2",
@@ -680,8 +680,8 @@ dependencies = [
  "sha2",
  "starknet-types-core",
  "starknet_api",
+ "starknet_compile_to_native",
  "starknet_infra_utils",
- "starknet_sierra_multicompile",
  "strum 0.25.0",
  "strum_macros 0.25.3",
  "tempfile",
@@ -1551,7 +1551,7 @@ version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fde0e0ec90c9dfb3b4b1a0891a7dcd0e2bffde2f7efed5fe7c9bb00e5bfb915e"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -4079,7 +4079,7 @@ dependencies = [
 [[package]]
 name = "papyrus_config"
 version = "0.14.0-rc.3"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#8c07d70034de58494a8ba72ac7c2660ae049dd77"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#823cba4d0e94638fb1f91607f7047428f7e8131f"
 dependencies = [
  "clap",
  "itertools 0.12.1",
@@ -4828,15 +4828,6 @@ dependencies = [
  "libc",
  "untrusted",
  "windows-sys 0.52.0",
-]
-
-[[package]]
-name = "rlimit"
-version = "0.10.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7043b63bd0cd1aaa628e476b80e6d4023a3b50eb32789f2728908107bd0c793a"
-dependencies = [
- "libc",
 ]
 
 [[package]]
@@ -5969,7 +5960,7 @@ dependencies = [
 [[package]]
 name = "starknet_api"
 version = "0.14.0-rc.3"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#8c07d70034de58494a8ba72ac7c2660ae049dd77"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#823cba4d0e94638fb1f91607f7047428f7e8131f"
 dependencies = [
  "bitvec",
  "cairo-lang-runner",
@@ -5995,32 +5986,22 @@ dependencies = [
 ]
 
 [[package]]
-name = "starknet_infra_utils"
+name = "starknet_compile_to_native"
 version = "0.14.0-rc.3"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#8c07d70034de58494a8ba72ac7c2660ae049dd77"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#823cba4d0e94638fb1f91607f7047428f7e8131f"
 dependencies = [
- "tokio",
- "tracing",
+ "papyrus_config",
+ "serde",
+ "validator",
 ]
 
 [[package]]
-name = "starknet_sierra_multicompile"
+name = "starknet_infra_utils"
 version = "0.14.0-rc.3"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#8c07d70034de58494a8ba72ac7c2660ae049dd77"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#823cba4d0e94638fb1f91607f7047428f7e8131f"
 dependencies = [
- "cairo-lang-sierra",
- "cairo-lang-starknet-classes",
- "cairo-lang-utils",
- "papyrus_config",
- "rlimit",
- "serde",
- "serde_json",
- "starknet-types-core",
- "starknet_api",
- "starknet_infra_utils",
- "tempfile",
- "thiserror 1.0.69",
- "validator",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -6986,7 +6967,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
