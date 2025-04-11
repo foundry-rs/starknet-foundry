@@ -15,6 +15,7 @@ pub fn hints_by_representation(
         .collect()
 }
 
+#[must_use]
 pub fn hints_to_params(
     assembled_program: &AssembledCairoProgramWithSerde,
 ) -> HashMap<usize, Vec<HintParams>> {

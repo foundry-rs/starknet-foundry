@@ -14,23 +14,11 @@ use blockifier::state::cached_state::CachedState;
 use blockifier::state::state_api::State;
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_runner::{Arg, RunResultValue};
-use cairo_lang_sierra::extensions::NamedType;
-use cairo_lang_sierra::extensions::bitwise::BitwiseType;
-use cairo_lang_sierra::extensions::circuit::{AddModType, MulModType};
-use cairo_lang_sierra::extensions::ec::EcOpType;
-use cairo_lang_sierra::extensions::gas::GasBuiltinType;
-use cairo_lang_sierra::extensions::pedersen::PedersenType;
-use cairo_lang_sierra::extensions::poseidon::PoseidonType;
-use cairo_lang_sierra::extensions::range_check::{RangeCheck96Type, RangeCheckType};
-use cairo_lang_sierra::extensions::segment_arena::SegmentArenaType;
-use cairo_lang_sierra::extensions::starknet::syscalls::SystemType;
-use cairo_lang_sierra::ids::GenericTypeId;
-use cairo_lang_utils::unordered_hash_set::UnorderedHashSet;
 use cairo_vm::Felt252;
-use cairo_vm::serde::deserialize_program::ReferenceManager;
+use cairo_vm::types::builtin_name::BuiltinName;
 use cairo_vm::types::layout_name::LayoutName;
 use cairo_vm::types::program::Program;
-use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
+use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
@@ -49,7 +37,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredError, ExtendedStateReader,
 };
-use hints::{hints_by_representation, hints_to_params};
+use hints::hints_by_representation;
 use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
@@ -78,6 +66,7 @@ use crate::running::copied_code::{
     finalize_execution, prepare_call_arguments, prepare_program_extra_data, run_entry_point,
 };
 use crate::running::syscall_handler::build_syscall_handler;
+pub use hints::hints_to_params;
 pub use syscall_handler::has_segment_arena;
 pub use syscall_handler::syscall_handler_offset;
 
@@ -186,34 +175,23 @@ pub struct VmExecutionContext<'a> {
     pub runner: CairoRunner,
     pub syscall_handler: SyscallHintProcessor<'a>,
     pub initial_syscall_ptr: Relocatable,
-    pub entry_point: EntryPointV1,
     // Additional data required for execution is appended after the program bytecode.
     pub program_extra_data_length: usize,
 }
 
 fn initialize_execution_context<'a>(
     call: ExecutableCallEntryPoint,
-    // compiled_class: &'a CompiledClassV1,
     hints: &'a HashMap<String, Hint>,
     program: &Program,
-    entry_point: EntryPointV1,
     state: &'a mut dyn State,
     context: &'a mut EntryPointExecutionContext,
 ) -> std::result::Result<VmExecutionContext<'a>, PreExecutionError> {
-    // let entry_point = compiled_class.get_entry_point(&call)?;
-
     // Instantiate Cairo runner.
     let proof_mode = false;
     let trace_enabled = true;
-    let mut runner = CairoRunner::new(
-        // &compiled_class.0.program,
-        program,
-        LayoutName::all_cairo,
-        proof_mode,
-        trace_enabled,
-    )?;
+    let mut runner = CairoRunner::new(program, LayoutName::all_cairo, proof_mode, trace_enabled)?;
 
-    runner.initialize_function_runner_cairo_1(&entry_point.builtins)?;
+    runner.initialize_function_runner_cairo_1(&builtins_from_program(program))?;
     let mut read_only_segments = ReadOnlySegments::default();
     let program_extra_data_length = prepare_program_extra_data(
         &mut runner,
@@ -237,7 +215,6 @@ fn initialize_execution_context<'a>(
         runner,
         syscall_handler,
         initial_syscall_ptr,
-        entry_point,
         program_extra_data_length,
     })
 }
@@ -255,6 +232,28 @@ pub enum RunResult {
     Error(RunError),
 }
 
+// Builtins is private in program, so we need this workaround
+fn builtins_from_program(program: &Program) -> Vec<BuiltinName> {
+    program.iter_builtins().copied().collect::<Vec<_>>()
+}
+
+fn build_test_call_and_entry_point(
+    case: &TestCaseWithResolvedConfig,
+    casm_program: &AssembledProgramWithDebugInfo,
+    program: &Program,
+) -> (ExecutableCallEntryPoint, EntryPointV1) {
+    let sierra_instruction_idx = case.test_details.sierra_entry_point_statement_idx;
+    let casm_entry_point_offset = casm_program.debug_info[sierra_instruction_idx].0;
+
+    let call = build_test_entry_point();
+    let entry_point = EntryPointV1 {
+        selector: call.entry_point_selector,
+        offset: EntryPointOffset(casm_entry_point_offset),
+        builtins: builtins_from_program(program),
+    };
+    (call, entry_point)
+}
+
 #[expect(clippy::too_many_lines)]
 pub fn run_test_case(
     case: &TestCaseWithResolvedConfig,
@@ -262,31 +261,8 @@ pub fn run_test_case(
     runtime_config: &RuntimeConfig,
     fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
 ) -> Result<RunResult> {
-    let sierra_instruction_idx = case.test_details.sierra_entry_point_statement_idx;
-    let casm_entry_point_offset = casm_program.debug_info[sierra_instruction_idx].0;
-
-    let builtins = case.test_details.builtins();
-
-    let assembled_program = &casm_program.assembled_cairo_program;
-    let hints_dict = hints_to_params(assembled_program);
-    let data: Vec<MaybeRelocatable> = assembled_program
-        .bytecode
-        .iter()
-        .map(Felt::from)
-        .map(MaybeRelocatable::from)
-        .collect();
-    let program = Program::new(
-        builtins.clone(),
-        data,
-        Some(0),
-        hints_dict,
-        ReferenceManager {
-            references: Vec::new(),
-        },
-        HashMap::new(),
-        vec![],
-        None,
-    )?;
+    let program = case.try_into_program(casm_program)?;
+    let (call, entry_point) = build_test_call_and_entry_point(case, casm_program, &program);
 
     let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(),
@@ -305,26 +281,16 @@ pub fn run_test_case(
     }
     let mut cached_state = CachedState::new(state_reader);
 
-    let call = build_test_entry_point();
-    let entry_point = EntryPointV1 {
-        selector: call.entry_point_selector,
-        offset: EntryPointOffset(casm_entry_point_offset),
-        builtins: builtins.clone(),
-    };
-
-    let string_to_hint = hints_by_representation(assembled_program);
-
+    let hints = hints_by_representation(&casm_program.assembled_cairo_program);
     let VmExecutionContext {
         mut runner,
         syscall_handler,
         initial_syscall_ptr,
-        entry_point,
         program_extra_data_length,
     } = initialize_execution_context(
         call.clone(),
-        &string_to_hint,
+        &hints,
         &program,
-        entry_point,
         &mut cached_state,
         &mut context,
     )?;
@@ -390,7 +356,6 @@ pub fn run_test_case(
             .into(),
         &mut runner,
         initial_syscall_ptr,
-        // &mut syscall_handler.read_only_segments,
         &mut forge_runtime
             .extended_runtime
             .extended_runtime
