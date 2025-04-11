@@ -694,6 +694,9 @@ pub fn run_test_case(
     let tracked_resource = TrackedResource::from(runtime_config.tracked_resource);
     let mut context = build_context(&block_info, chain_id, &tracked_resource);
 
+    if let Some(max_n_steps) = runtime_config.max_n_steps {
+        set_max_steps(&mut context, max_n_steps);
+    }
     let mut cached_state = CachedState::new(state_reader);
 
     let call = build_test_entry_point();
