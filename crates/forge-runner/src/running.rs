@@ -3,7 +3,7 @@ use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
 use crate::test_case_summary::{Single, TestCaseSummary};
-use anyhow::{Result, bail, ensure};
+use anyhow::{Error, Result, bail, ensure};
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::contract_class::{EntryPointV1, TrackedResource};
 use blockifier::execution::entry_point::{
@@ -812,7 +812,7 @@ pub fn run_test_case(
     // Execute.
     let bytecode_length = program.data_len();
     let program_segment_size = bytecode_length + program_extra_data_length;
-    let result = match run_entry_point(
+    let result: Result<CallInfo, CairoRunError> = match run_entry_point(
         &mut runner,
         &mut forge_runtime,
         entry_point,
@@ -848,14 +848,14 @@ pub fn run_test_case(
 
             Ok(call_info)
         }
-        Err(error) => {
-            if let EntryPointExecutionError::CairoRunError(error) = error {
-                Err(error)
-            } else {
-                // TODO is this right?
-                bail!(error)
+        Err(error) => Err(match error {
+            // TODO verify this mapping
+            EntryPointExecutionError::CairoRunError(CairoRunError::VmException(err)) => {
+                CairoRunError::VirtualMachine(err.inner_exc)
             }
-        }
+            EntryPointExecutionError::CairoRunError(err) => err,
+            err => bail!(err),
+        }),
     };
 
     // dbg!(&result);
