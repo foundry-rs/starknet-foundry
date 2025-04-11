@@ -262,9 +262,6 @@ pub fn run_test_case(
     runtime_config: &RuntimeConfig,
     fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
 ) -> Result<RunResult> {
-    // dbg!(&case.test_details.parameter_types);
-    // dbg!(&case.test_details.return_types);
-
     let sierra_instruction_idx = case.test_details.sierra_entry_point_statement_idx;
     let casm_entry_point_offset = casm_program.debug_info[sierra_instruction_idx].0;
 
@@ -278,7 +275,6 @@ pub fn run_test_case(
         .map(Felt::from)
         .map(MaybeRelocatable::from)
         .collect();
-    // let data_len = data.len();
     let program = Program::new(
         builtins.clone(),
         data,
@@ -291,8 +287,6 @@ pub fn run_test_case(
         vec![],
         None,
     )?;
-
-    // println!("Program\n{program}");
 
     let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(),
@@ -334,17 +328,6 @@ pub fn run_test_case(
         &mut cached_state,
         &mut context,
     )?;
-
-    // let mut cached_state = CachedState::new(state_reader);
-    // let string_to_hint = hints_by_representation(&assembled_program);
-    //
-    // let syscall_handler = build_syscall_handler(
-    //     &mut cached_state,
-    //     &string_to_hint,
-    //     &mut context,
-    //     &case.test_details.parameter_types,
-    //     builtins.len(),
-    // );
 
     let mut cheatnet_state = CheatnetState {
         block_info,
@@ -417,10 +400,6 @@ pub fn run_test_case(
         &entry_point,
         entry_point_initial_budget,
     )?;
-    // dbg!(&entry_point.builtins);
-    // dbg!(&call.initial_gas);
-    // dbg!(&entry_point_initial_budget);
-    // dbg!(&args);
 
     let n_total_args = args.len();
 
@@ -473,8 +452,6 @@ pub fn run_test_case(
         }),
     };
 
-    // dbg!(&result);
-
     let encountered_errors = forge_runtime
         .extended_runtime
         .extended_runtime
@@ -525,246 +502,6 @@ pub fn run_test_case(
             fuzzer_args,
         }),
     })
-
-    // Ok(RunResultWithInfo {
-    //     run_result: Ok(RunResult {
-    //         gas_counter: None,
-    //         memory: vec![],
-    //         value: if result.execution.failed {
-    //             RunResultValue::Panic(result.execution.retdata.0)
-    //         } else {
-    //             RunResultValue::Success(result.execution.retdata.0)
-    //         },
-    //         used_resources: used_resources.execution_resources.clone(),
-    //         profiling_info: None,
-    //     }),
-    //     gas_used: gas,
-    //     used_resources,
-    //     call_trace: call_trace_ref,
-    //     encountered_errors,
-    //     fuzzer_args,
-    // })
-}
-
-// #[expect(clippy::too_many_lines)]
-// pub fn run_test_case2(
-//     case: &TestCaseWithResolvedConfig,
-//     casm_program: &AssembledProgramWithDebugInfo,
-//     runtime_config: &RuntimeConfig,
-//     fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
-// ) -> Result<RunResultWithInfo> {
-//     ensure!(
-//         case.config
-//             .available_gas
-//             .as_ref()
-//             .is_none_or(|gas| !gas.is_zero()),
-//         "\n\t`available_gas` attribute was incorrectly configured. Make sure you use scarb >= 2.4.4\n"
-//     );
-//
-//     let (entry_code, builtins) = create_entry_code(&case.test_details, casm_program);
-//
-//     let assembled_program = get_assembled_program(casm_program, entry_code);
-//
-//     let string_to_hint = hints_by_representation(&assembled_program);
-//     let hints_dict = hints_to_params(&assembled_program);
-//
-//     let mut state_reader = ExtendedStateReader {
-//         dict_state_reader: cheatnet_constants::build_testing_state(),
-//         fork_state_reader: get_fork_state_reader(
-//             runtime_config.cache_dir,
-//             case.config.fork_config.as_ref(),
-//         )?,
-//     };
-//     let block_info = state_reader.get_block_info()?;
-//     let chain_id = state_reader.get_chain_id()?;
-//     let tracked_resource = TrackedResource::from(runtime_config.tracked_resource);
-//
-//     let mut context = build_context(&block_info, chain_id, &tracked_resource);
-//
-//     if let Some(max_n_steps) = runtime_config.max_n_steps {
-//         set_max_steps(&mut context, max_n_steps);
-//     }
-//     let mut cached_state = CachedState::new(state_reader);
-//     let syscall_handler = build_syscall_handler(
-//         &mut cached_state,
-//         &string_to_hint,
-//         &mut context,
-//         &case.test_details.parameter_types,
-//         builtins.len(),
-//     );
-//
-//     let mut cheatnet_state = CheatnetState {
-//         block_info,
-//         ..Default::default()
-//     };
-//     cheatnet_state.trace_data.is_vm_trace_needed = runtime_config.is_vm_trace_needed;
-//
-//     let cheatable_runtime = ExtendedRuntime {
-//         extension: CheatableStarknetRuntimeExtension {
-//             cheatnet_state: &mut cheatnet_state,
-//         },
-//         extended_runtime: StarknetRuntime {
-//             hint_handler: syscall_handler,
-//             // Max gas is no longer set by `create_entry_code_from_params`
-//             // Instead, call to `ExternalHint::WriteRunParam` is added by it, and we need to
-//             // store the gas value to be read by logic handling the hint
-//             // TODO(#2966) we should subtract initial cost of the function from this value to be more exact.
-//             //  But as a workaround it should be good enough.
-//             user_args: vec![vec![Arg::Value(Felt::from(i64::MAX as u64))]],
-//         },
-//     };
-//
-//     let call_to_blockifier_runtime = ExtendedRuntime {
-//         extension: CallToBlockifierExtension {
-//             lifetime: &PhantomData,
-//         },
-//         extended_runtime: cheatable_runtime,
-//     };
-//     let forge_extension = ForgeExtension {
-//         environment_variables: runtime_config.environment_variables,
-//         contracts_data: runtime_config.contracts_data,
-//         fuzzer_rng,
-//     };
-//
-//     let mut forge_runtime = ExtendedRuntime {
-//         extension: forge_extension,
-//         extended_runtime: call_to_blockifier_runtime,
-//     };
-//
-//     let run_result =
-//         match run_assembled_program(&assembled_program, builtins, hints_dict, &mut forge_runtime) {
-//             Ok(mut runner) => {
-//                 let vm_resources_without_inner_calls = runner
-//                     .get_execution_resources()
-//                     .expect("Execution resources missing")
-//                     .filter_unused_builtins();
-//                 add_resources_to_top_call(
-//                     &mut forge_runtime,
-//                     &vm_resources_without_inner_calls,
-//                     &tracked_resource,
-//                 );
-//
-//                 let ap = runner.relocated_trace.as_ref().unwrap().last().unwrap().ap;
-//
-//                 let results_data = get_results_data(
-//                     &case.test_details.return_types,
-//                     &runner.relocated_memory,
-//                     ap,
-//                 );
-//                 assert_eq!(results_data.len(), 1);
-//
-//                 let (_, values) = results_data[0].clone();
-//                 let value = SierraCasmRunner::handle_main_return_value(
-//                     // Here we assume that all test either panic or do not return any value
-//                     // This is true for all test right now, but in case it changes
-//                     // this logic will need to be updated
-//                     Some(0),
-//                     values,
-//                     &runner.relocated_memory,
-//                 );
-//
-//                 update_top_call_vm_trace(&mut forge_runtime, &mut runner);
-//
-//                 Ok(value)
-//             }
-//             Err(err) => Err(err),
-//         };
-//
-//     let encountered_errors = forge_runtime
-//         .extended_runtime
-//         .extended_runtime
-//         .extension
-//         .cheatnet_state
-//         .encountered_errors
-//         .clone();
-//
-//     let call_trace = get_call_trace_ref(&mut forge_runtime);
-//
-//     update_top_call_resources(&mut forge_runtime, &tracked_resource);
-//     update_top_call_l1_resources(&mut forge_runtime);
-//
-//     let fuzzer_args = forge_runtime
-//         .extended_runtime
-//         .extended_runtime
-//         .extension
-//         .cheatnet_state
-//         .fuzzer_args
-//         .clone();
-//
-//     let transaction_context = get_context(&forge_runtime).tx_context.clone();
-//     let used_resources =
-//         get_all_used_resources(forge_runtime, &transaction_context, tracked_resource);
-//     let gas_used = calculate_used_gas(
-//         &transaction_context,
-//         &mut cached_state,
-//         used_resources.clone(),
-//     )?;
-//
-//     Ok(match run_result {
-//         Ok(result) => RunResult::Completed(Box::from(RunCompleted {
-//             status: result.into(),
-//             call_trace,
-//             gas_used,
-//             used_resources,
-//             encountered_errors,
-//             fuzzer_args,
-//         })),
-//         Err(error) => RunResult::Error(RunError {
-//             error,
-//             call_trace,
-//             encountered_errors,
-//             fuzzer_args,
-//         }),
-//     })
-// }
-
-// TODO(#2958) Remove copied code
-// Copied and modified from https://github.com/starkware-libs/cairo/blob/a8da296d7d03f19af3bdb0e7ae17637e66192e4b/crates/cairo-lang-runner/src/lib.rs#L543
-#[allow(clippy::cast_sign_loss)]
-#[must_use]
-pub fn get_results_data(
-    return_types: &[(GenericTypeId, i16)],
-    cells: &[Option<Felt252>],
-    mut ap: usize,
-) -> Vec<(GenericTypeId, Vec<Felt252>)> {
-    let mut results_data = vec![];
-    for (ty, ty_size) in return_types.iter().rev() {
-        let size = *ty_size as usize;
-        let values: Vec<Felt252> = ((ap - size)..ap)
-            .map(|index| cells[index].unwrap())
-            .collect();
-        ap -= size;
-        results_data.push((ty.clone(), values));
-    }
-
-    // Handling implicits.
-    results_data.retain_mut(|(ty, values)| {
-        let generic_ty = ty;
-        if *generic_ty == GasBuiltinType::ID {
-            values.remove(0);
-            assert!(values.is_empty());
-            false
-        } else {
-            // region: Modified code
-            let non_user_types: UnorderedHashSet<GenericTypeId> = UnorderedHashSet::from_iter([
-                AddModType::ID,
-                BitwiseType::ID,
-                GasBuiltinType::ID,
-                EcOpType::ID,
-                MulModType::ID,
-                PedersenType::ID,
-                PoseidonType::ID,
-                RangeCheck96Type::ID,
-                RangeCheckType::ID,
-                SegmentArenaType::ID,
-                SystemType::ID,
-            ]);
-            !non_user_types.contains(generic_ty)
-            // endregion
-        }
-    });
-
-    results_data
 }
 
 fn extract_test_case_summary(
