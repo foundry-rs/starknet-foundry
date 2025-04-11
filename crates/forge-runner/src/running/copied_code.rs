@@ -1,7 +1,15 @@
-use blockifier::execution::contract_class::EntryPointV1;
+use blockifier::execution::call_info::{CallExecution, CallInfo};
+use blockifier::execution::contract_class::{EntryPointV1, TrackedResource};
 use blockifier::execution::entry_point::EntryPointExecutionResult;
-use blockifier::execution::errors::{EntryPointExecutionError, PreExecutionError};
-use blockifier::execution::execution_utils::{write_felt, write_maybe_relocatable, Args, ReadOnlySegments};
+use blockifier::execution::entry_point_execution::CallResult;
+use blockifier::execution::errors::{
+    EntryPointExecutionError, PostExecutionError, PreExecutionError,
+};
+use blockifier::execution::execution_utils::{
+    Args, ReadOnlySegments, SEGMENT_ARENA_BUILTIN_SIZE, read_execution_retdata, write_felt,
+    write_maybe_relocatable,
+};
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::versioned_constants::GasCosts;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
 use cairo_vm::types::builtin_name::BuiltinName;
@@ -10,9 +18,9 @@ use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::memory_errors::MemoryError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::builtin_runner::BuiltinRunner;
-use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner};
+use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner, ExecutionResources};
 use cairo_vm::vm::security::verify_secure_runner;
-use num_traits::Zero;
+use num_traits::{ToPrimitive, Zero};
 use starknet_types_core::felt::Felt;
 
 /// Module containing copied code to be upstreamed to blockifier
@@ -160,4 +168,142 @@ pub(crate) fn prepare_program_extra_data(
 
     let program_extra_data_length = 2;
     Ok(program_extra_data_length)
+}
+
+/// Reason copied: Signature change and modified code
+pub fn finalize_execution(
+    // Modified code
+    // mut runner: CairoRunner,
+    runner: &mut CairoRunner,
+    // Modified code
+    // mut syscall_handler: SyscallHintProcessor<'_>,
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    n_total_args: usize,
+    program_extra_data_length: usize,
+    tracked_resource: TrackedResource,
+) -> Result<CallInfo, PostExecutionError> {
+    // Close memory holes in segments (OS code touches those memory cells, we simulate it).
+    let program_start_ptr = runner
+        .program_base
+        .expect("The `program_base` field should be initialized after running the entry point.");
+    let program_end_ptr = (program_start_ptr + runner.get_program().data_len())?;
+    runner
+        .vm
+        .mark_address_range_as_accessed(program_end_ptr, program_extra_data_length)?;
+
+    let initial_fp = runner
+        .get_initial_fp()
+        .expect("The `initial_fp` field should be initialized after running the entry point.");
+    // When execution starts the stack holds the EP arguments + [ret_fp, ret_pc].
+    let args_ptr = (initial_fp - (n_total_args + 2))?;
+    runner
+        .vm
+        .mark_address_range_as_accessed(args_ptr, n_total_args)?;
+    syscall_handler
+        .read_only_segments
+        .mark_as_accessed(runner)?;
+
+    let call_result = get_call_result(runner, syscall_handler, &tracked_resource)?;
+
+    let vm_resources_without_inner_calls = match tracked_resource {
+        TrackedResource::CairoSteps => {
+            // Take into account the resources of the current call, without inner calls.
+            // Has to happen after marking holes in segments as accessed.
+            let mut vm_resources_without_inner_calls = runner
+                .get_execution_resources()
+                .map_err(VirtualMachineError::RunnerError)?
+                .filter_unused_builtins();
+            let versioned_constants = syscall_handler.base.context.versioned_constants();
+            if versioned_constants.segment_arena_cells {
+                vm_resources_without_inner_calls
+                    .builtin_instance_counter
+                    .get_mut(&BuiltinName::segment_arena)
+                    .map_or_else(|| {}, |val| *val *= SEGMENT_ARENA_BUILTIN_SIZE);
+            }
+            // Take into account the syscall resources of the current call.
+            vm_resources_without_inner_calls += &versioned_constants
+                .get_additional_os_syscall_resources(&syscall_handler.syscalls_usage);
+            vm_resources_without_inner_calls
+        }
+        TrackedResource::SierraGas => ExecutionResources::default(),
+    };
+
+    syscall_handler.finalize();
+
+    let vm_resources = &vm_resources_without_inner_calls
+        + &CallInfo::summarize_vm_resources(syscall_handler.base.inner_calls.iter());
+    let syscall_handler_base = &syscall_handler.base;
+    Ok(CallInfo {
+        call: syscall_handler_base.call.clone().into(),
+        execution: CallExecution {
+            retdata: call_result.retdata,
+            events: syscall_handler_base.events.clone(),
+            l2_to_l1_messages: syscall_handler_base.l2_to_l1_messages.clone(),
+            failed: call_result.failed,
+            gas_consumed: call_result.gas_consumed,
+        },
+        inner_calls: syscall_handler_base.inner_calls.clone(),
+        tracked_resource,
+        resources: vm_resources,
+        storage_read_values: syscall_handler_base.read_values.clone(),
+        accessed_storage_keys: syscall_handler_base.accessed_keys.clone(),
+        read_class_hash_values: syscall_handler_base.read_class_hash_values.clone(),
+        accessed_contract_addresses: syscall_handler_base.accessed_contract_addresses.clone(),
+    })
+}
+
+/// Reason copied: Required by `finalize_execution`
+fn get_call_result(
+    runner: &CairoRunner,
+    syscall_handler: &SyscallHintProcessor<'_>,
+    tracked_resource: &TrackedResource,
+) -> std::result::Result<CallResult, PostExecutionError> {
+    let return_result = runner.vm.get_return_values(5)?;
+    // Corresponds to the Cairo 1.0 enum:
+    // enum PanicResult<Array::<felt>> { Ok: Array::<felt>, Err: Array::<felt>, }.
+    let [failure_flag, retdata_start, retdata_end]: &[MaybeRelocatable; 3] = (&return_result[2..])
+        .try_into()
+        .expect("Return values must be of size 3.");
+
+    let failed = if *failure_flag == MaybeRelocatable::from(0) {
+        false
+    } else if *failure_flag == MaybeRelocatable::from(1) {
+        true
+    } else {
+        return Err(PostExecutionError::MalformedReturnData {
+            error_message: "Failure flag expected to be either 0 or 1.".to_string(),
+        });
+    };
+
+    let retdata_size = retdata_end.sub(retdata_start)?;
+    // TODO(spapini): Validate implicits.
+
+    let gas = &return_result[0];
+    let MaybeRelocatable::Int(gas) = gas else {
+        return Err(PostExecutionError::MalformedReturnData {
+            error_message: "Error extracting return data.".to_string(),
+        });
+    };
+    let gas = gas
+        .to_u64()
+        .ok_or(PostExecutionError::MalformedReturnData {
+            error_message: format!("Unexpected remaining gas: {gas}."),
+        })?;
+
+    if gas > syscall_handler.base.call.initial_gas {
+        return Err(PostExecutionError::MalformedReturnData {
+            error_message: format!("Unexpected remaining gas: {gas}."),
+        });
+    }
+
+    let gas_consumed = match tracked_resource {
+        // Do not count Sierra gas in CairoSteps mode.
+        TrackedResource::CairoSteps => 0,
+        TrackedResource::SierraGas => syscall_handler.base.call.initial_gas - gas,
+    };
+    Ok(CallResult {
+        failed,
+        retdata: read_execution_retdata(runner, retdata_size, retdata_start)?,
+        gas_consumed,
+    })
 }
