@@ -8,9 +8,7 @@ use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::{EntryPointV1, TrackedResource};
 use blockifier::execution::entry_point::{EntryPointExecutionContext, ExecutableCallEntryPoint};
 use blockifier::execution::errors::{EntryPointExecutionError, PreExecutionError};
-use blockifier::execution::execution_utils::{
-    ReadOnlySegments, write_felt, write_maybe_relocatable,
-};
+use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::state_api::State;
@@ -30,7 +28,6 @@ use cairo_lang_sierra::ids::GenericTypeId;
 use cairo_lang_utils::unordered_hash_set::UnorderedHashSet;
 use cairo_vm::Felt252;
 use cairo_vm::serde::deserialize_program::ReferenceManager;
-use cairo_vm::types::builtin_name::BuiltinName;
 use cairo_vm::types::layout_name::LayoutName;
 use cairo_vm::types::program::Program;
 use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
@@ -185,46 +182,6 @@ pub struct RunCompleted {
     pub(crate) fuzzer_args: Vec<String>,
 }
 
-fn process_builtins(param_types: &[(GenericTypeId, i16)]) -> Vec<BuiltinName> {
-    let mut builtins = vec![];
-
-    // let mut builtin_offset = 3;
-    // If modifying this, make sure that the order of builtins matches that from
-    // `#[implicit_precedence(...)` in generated test code.
-    //
-    // Note the .reverse() below
-    for (builtin_name, builtin_ty) in [
-        (BuiltinName::mul_mod, MulModType::ID),
-        (BuiltinName::add_mod, AddModType::ID),
-        (BuiltinName::range_check96, RangeCheck96Type::ID),
-        (BuiltinName::segment_arena, SegmentArenaType::ID),
-        (BuiltinName::poseidon, PoseidonType::ID),
-        (BuiltinName::ec_op, EcOpType::ID),
-        (BuiltinName::bitwise, BitwiseType::ID),
-        (BuiltinName::range_check, RangeCheckType::ID),
-        (BuiltinName::pedersen, PedersenType::ID),
-    ] {
-        if param_types.iter().any(|(ty, _)| ty == &builtin_ty) {
-            // self.input_builtin_vars.insert(
-            //     builtin_name,
-            //     self.ctx.add_var(CellExpression::Deref(cairo_lang_casm::deref!([fp - builtin_offset]))),
-            // );
-            // self.builtin_ty_to_vm_name.insert(builtin_ty, builtin_name);
-            // builtin_offset += 1;
-            builtins.push(builtin_name);
-        }
-    }
-    // TODO not sure if we need this
-    // if !self.config.testing {
-    //     let output_builtin_var =
-    //         self.ctx.add_var(CellExpression::Deref(cairo_lang_casm::deref!([fp - builtin_offset])));
-    //     self.input_builtin_vars.insert(BuiltinName::output, output_builtin_var);
-    //     self.builtins.push(BuiltinName::output);
-    // }
-    builtins.reverse();
-    builtins
-}
-
 pub struct VmExecutionContext<'a> {
     pub runner: CairoRunner,
     pub syscall_handler: SyscallHintProcessor<'a>,
@@ -311,7 +268,7 @@ pub fn run_test_case(
     let sierra_instruction_idx = case.test_details.sierra_entry_point_statement_idx;
     let casm_entry_point_offset = casm_program.debug_info[sierra_instruction_idx].0;
 
-    let builtins = process_builtins(&case.test_details.parameter_types);
+    let builtins = case.test_details.builtins();
 
     let assembled_program = &casm_program.assembled_cairo_program;
     let hints_dict = hints_to_params(assembled_program);
