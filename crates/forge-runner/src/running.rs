@@ -13,7 +13,6 @@ use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::state_api::State;
 use cairo_lang_casm::hints::Hint;
-use cairo_lang_runner::{Arg, RunResultValue};
 use cairo_vm::Felt252;
 use cairo_vm::types::builtin_name::BuiltinName;
 use cairo_vm::types::layout_name::LayoutName;
@@ -43,7 +42,6 @@ use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use starknet_api::deprecated_contract_class::EntryPointOffset;
 use starknet_api::execution_resources::GasVector;
-use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::default::Default;
@@ -151,15 +149,6 @@ pub(crate) fn run_fuzz_test(
 pub enum RunStatus {
     Success(Vec<Felt252>),
     Panic(Vec<Felt252>),
-}
-
-impl From<RunResultValue> for RunStatus {
-    fn from(value: RunResultValue) -> Self {
-        match value {
-            RunResultValue::Success(value) => Self::Success(value),
-            RunResultValue::Panic(value) => Self::Panic(value),
-        }
-    }
 }
 
 pub struct RunCompleted {
