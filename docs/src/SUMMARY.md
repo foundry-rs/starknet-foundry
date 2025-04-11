@@ -5,6 +5,7 @@
 # Getting Started
 
 * [Installation](getting-started/installation.md)
+* [Uninstallation](getting-started/uninstallation.md)
 * [First Steps with Starknet Foundry](getting-started/first-steps.md)
 * [Scarb](getting-started/scarb.md)
 * [Project Configuration](projects/configuration.md)
