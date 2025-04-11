@@ -3,7 +3,7 @@ use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
 use crate::test_case_summary::{Single, TestCaseSummary};
-use anyhow::{Error, Result, bail, ensure};
+use anyhow::{Result, bail};
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::contract_class::{EntryPointV1, TrackedResource};
 use blockifier::execution::entry_point::{
@@ -22,7 +22,7 @@ use blockifier::state::cached_state::CachedState;
 use blockifier::state::state_api::State;
 use blockifier::versioned_constants::GasCosts;
 use cairo_lang_casm::hints::Hint;
-use cairo_lang_runner::{Arg, RunResultValue, SierraCasmRunner};
+use cairo_lang_runner::{Arg, RunResultValue};
 use cairo_lang_sierra::extensions::NamedType;
 use cairo_lang_sierra::extensions::bitwise::BitwiseType;
 use cairo_lang_sierra::extensions::circuit::{AddModType, MulModType};
@@ -34,7 +34,6 @@ use cairo_lang_sierra::extensions::range_check::{RangeCheck96Type, RangeCheckTyp
 use cairo_lang_sierra::extensions::segment_arena::SegmentArenaType;
 use cairo_lang_sierra::extensions::starknet::syscalls::SystemType;
 use cairo_lang_sierra::ids::GenericTypeId;
-use cairo_lang_utils::Upcast;
 use cairo_lang_utils::unordered_hash_set::UnorderedHashSet;
 use cairo_vm::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
@@ -50,7 +49,6 @@ use cairo_vm::vm::runners::builtin_runner::BuiltinRunner;
 use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner, ExecutionResources};
 use cairo_vm::vm::security::verify_secure_runner;
 use camino::{Utf8Path, Utf8PathBuf};
-use casm::{get_assembled_program, run_assembled_program};
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::constants::build_test_entry_point;
 use cheatnet::forking::state::ForkStateReader;
@@ -65,7 +63,6 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredError, ExtendedStateReader,
 };
-use entry_code::create_entry_code;
 use hints::{hints_by_representation, hints_to_params};
 use num_traits::{ToPrimitive, Zero};
 use rand::prelude::StdRng;
@@ -78,7 +75,6 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::default::Default;
 use std::marker::PhantomData;
-use std::os::macos::raw::stat;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::Sender;
@@ -199,12 +195,11 @@ pub struct RunCompleted {
 
 fn process_builtins(param_types: &[(GenericTypeId, i16)]) -> Vec<BuiltinName> {
     let mut builtins = vec![];
-    println!("param_types: {:?}", param_types);
 
     // let mut builtin_offset = 3;
     // If modifying this, make sure that the order of builtins matches that from
     // `#[implicit_precedence(...)` in generated test code.
-    // 
+    //
     // Note the .reverse() below
     for (builtin_name, builtin_ty) in [
         (BuiltinName::mul_mod, MulModType::ID),
@@ -532,7 +527,7 @@ pub fn finalize_execution(
         .read_only_segments
         .mark_as_accessed(runner)?;
 
-    let call_result = get_call_result(&runner, &syscall_handler, &tracked_resource)?;
+    let call_result = get_call_result(runner, syscall_handler, &tracked_resource)?;
 
     let vm_resources_without_inner_calls = match tracked_resource {
         TrackedResource::CairoSteps => {
@@ -665,7 +660,7 @@ pub fn run_test_case(
     let builtins = process_builtins(&case.test_details.parameter_types);
 
     let assembled_program = &casm_program.assembled_cairo_program;
-    let hints_dict = hints_to_params(&assembled_program);
+    let hints_dict = hints_to_params(assembled_program);
     let data: Vec<MaybeRelocatable> = assembled_program
         .bytecode
         .iter()
@@ -684,8 +679,7 @@ pub fn run_test_case(
         HashMap::new(),
         vec![],
         None,
-    )
-    .unwrap();
+    )?;
 
     // println!("Program\n{program}");
 
@@ -713,7 +707,7 @@ pub fn run_test_case(
         builtins: builtins.clone(),
     };
 
-    let string_to_hint = hints_by_representation(&assembled_program);
+    let string_to_hint = hints_by_representation(assembled_program);
 
     let VmExecutionContext {
         mut runner,
@@ -899,12 +893,6 @@ pub fn run_test_case(
         &mut cached_state,
         used_resources.clone(),
     )?;
-
-    println!("Used resources: {:?}", used_resources);
-    println!("Gas used: {:?}", gas);
-
-    // TODO change this
-    // bail!("Failed")
 
     Ok(match result {
         Ok(result) => RunResult::Completed(Box::new(RunCompleted {

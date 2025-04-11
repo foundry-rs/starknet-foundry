@@ -6,29 +6,6 @@ use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
 #[test]
-fn simple() {
-    let test = test_case!(indoc!(
-        r#"
-        use core::clone::Clone;
-        use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
-        use result::ResultTrait;
-        use traits::Into;
-        use starknet::ClassHashIntoFelt252;
-        use snforge_std::declare;
-
-        #[test]
-        fn simple_declare() {
-            assert(1 == 1, 'simple check');
-        }
-        "#
-    ));
-
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
-
-    assert_passed(&result);
-}
-
-#[test]
 fn simple_declare() {
     let test = test_case!(
         indoc!(
