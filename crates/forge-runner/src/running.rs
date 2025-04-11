@@ -34,6 +34,7 @@ use cairo_lang_sierra::extensions::range_check::{RangeCheck96Type, RangeCheckTyp
 use cairo_lang_sierra::extensions::segment_arena::SegmentArenaType;
 use cairo_lang_sierra::extensions::starknet::syscalls::SystemType;
 use cairo_lang_sierra::ids::GenericTypeId;
+use cairo_lang_utils::Upcast;
 use cairo_lang_utils::unordered_hash_set::UnorderedHashSet;
 use cairo_vm::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
@@ -209,6 +210,7 @@ fn process_builtins(param_types: &[(GenericTypeId, i16)]) -> Vec<BuiltinName> {
         (BuiltinName::bitwise, BitwiseType::ID),
         (BuiltinName::range_check, RangeCheckType::ID),
         (BuiltinName::pedersen, PedersenType::ID),
+        (BuiltinName::segment_arena, SegmentArenaType::ID),
     ] {
         if param_types.iter().any(|(ty, _)| ty == &builtin_ty) {
             // self.input_builtin_vars.insert(
@@ -892,6 +894,9 @@ pub fn run_test_case(
         &mut cached_state,
         used_resources.clone(),
     )?;
+
+    println!("Used resources: {:?}", used_resources);
+    println!("Gas used: {:?}", gas);
 
     // TODO change this
     // bail!("Failed")
