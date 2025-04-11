@@ -361,13 +361,7 @@ pub fn assert_builtin(
     builtin: BuiltinName,
     expected_count: usize,
 ) {
-    // TODO(#2806)
-    let expected_count = if builtin == BuiltinName::range_check {
-        expected_count - 1
-    } else {
-        expected_count
-    };
-
+    // FIXME note the removed code
     let test_name_suffix = format!("::{test_case_name}");
     let result = TestCase::find_test_result(result);
 

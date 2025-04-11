@@ -1,6 +1,7 @@
 use super::{internal_config_statement::InternalConfigStatementCollector, AttributeInfo, ErrorExt};
 use crate::attributes::fuzzer::wrapper::FuzzerWrapperCollector;
 use crate::attributes::fuzzer::{FuzzerCollector, FuzzerConfigCollector};
+use crate::utils::TypedSyntaxNodeAsText;
 use crate::{
     args::Arguments,
     common::{into_proc_macro_result, with_parsed_values},
@@ -48,14 +49,36 @@ fn test_internal(
         None => true,
     };
 
+    let name = func.declaration(db).name(db).as_text(db);
+    let signature = func.declaration(db).signature(db).as_text(db);
+    let statements = func.body(db).statements(db).as_text(db);
+    // TODO verify if this logic is correct
+    let attributes = func.attributes(db).as_text(db);
+
     if should_run_test {
-        Ok(formatdoc!(
+        let string = formatdoc!(
             "
             #[snforge_internal_test_executable]
+            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+            fn {name}() -> Span::<felt252> {{
+                core::internal::require_implicit::<System>();
+                core::internal::revoke_ap_tracking();
+
+                {name}_return_wrapper();
+
+                let mut arr = ArrayTrait::new();
+                core::array::ArrayTrait::span(@arr)
+            }}
+
+            {attributes}
             #[{config}]
-            {func_item}
+            fn {name}_return_wrapper{signature} {{
+                {statements}
+            }}
         "
-        ))
+        );
+        // println!("====TEST===={string}====");
+        Ok(string)
     } else {
         Ok(formatdoc!(
             "

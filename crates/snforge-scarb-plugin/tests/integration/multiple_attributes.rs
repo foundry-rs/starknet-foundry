@@ -18,6 +18,17 @@ fn works_with_few_attributes() {
         &result,
         "
             #[snforge_internal_test_executable]
+            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+            fn empty_fn_return_wrapper() -> Span::<felt252> {
+                core::internal::require_implicit::<System>();
+                core::internal::revoke_ap_tracking();
+
+                empty_fn();
+
+                let mut arr = ArrayTrait::new();
+                core::array::ArrayTrait::span(@arr)
+            }
+    
             #[__internal_config_statement]
             fn empty_fn(){}
         ",

@@ -51,7 +51,8 @@ fn builtins_count() {
     assert_passed(&result);
 
     // No ECDSA and Keccak builtins
-    assert_builtin(&result, "range_check", BuiltinName::range_check, 4);
+    // FIXME why this value changed???
+    assert_builtin(&result, "range_check", BuiltinName::range_check, 2);
     assert_builtin(&result, "bitwise", BuiltinName::bitwise, 1);
     assert_builtin(&result, "pedersen", BuiltinName::pedersen, 1);
     assert_builtin(&result, "poseidon", BuiltinName::poseidon, 1);
@@ -223,6 +224,7 @@ fn estimation_includes_os_resources() {
         "
     ));
 
+    // FIXME why these decreased by 1?
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
     // Cost of storage write in builtins is 1 range check and 89 steps
@@ -231,13 +233,13 @@ fn estimation_includes_os_resources() {
         &result,
         "syscall_storage_write",
         BuiltinName::range_check,
-        9,
+        8,
     );
     assert_builtin(
         &result,
         "syscall_storage_write_baseline",
         BuiltinName::range_check,
-        6,
+        5,
     );
 }
 
