@@ -20,7 +20,6 @@ use blockifier::execution::execution_utils::{
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::state_api::State;
-use blockifier::versioned_constants::GasCosts;
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_runner::{Arg, RunResultValue};
 use cairo_lang_sierra::extensions::NamedType;
@@ -85,7 +84,7 @@ mod hints;
 mod syscall_handler;
 pub mod with_config;
 
-use crate::running::copied_code::run_entry_point;
+use crate::running::copied_code::{prepare_program_extra_data, run_entry_point};
 use crate::running::syscall_handler::build_syscall_handler;
 pub use syscall_handler::has_segment_arena;
 pub use syscall_handler::syscall_handler_offset;
@@ -238,46 +237,6 @@ pub struct VmExecutionContext<'a> {
     pub entry_point: EntryPointV1,
     // Additional data required for execution is appended after the program bytecode.
     pub program_extra_data_length: usize,
-}
-
-fn prepare_program_extra_data(
-    runner: &mut CairoRunner,
-    // contract_class: &CompiledClassV1,
-    bytecode_length: usize,
-    read_only_segments: &mut ReadOnlySegments,
-    gas_costs: &GasCosts,
-) -> std::result::Result<usize, PreExecutionError> {
-    // Create the builtin cost segment, the builtin order should be the same as the price builtin
-    // array in the os in compiled_class.cairo in load_compiled_class_facts.
-    let builtin_price_array = [
-        gas_costs.builtins.pedersen,
-        gas_costs.builtins.bitwise,
-        gas_costs.builtins.ecop,
-        gas_costs.builtins.poseidon,
-        gas_costs.builtins.add_mod,
-        gas_costs.builtins.mul_mod,
-    ];
-
-    let data = builtin_price_array
-        .iter()
-        .map(|&x| MaybeRelocatable::from(Felt::from(x)))
-        .collect::<Vec<_>>();
-    let builtin_cost_segment_start = read_only_segments.allocate(&mut runner.vm, &data)?;
-
-    // Put a pointer to the builtin cost segment at the end of the program (after the
-    // additional `ret` statement).
-    let mut ptr = (runner.vm.get_pc() + bytecode_length)?;
-    // Push a `ret` opcode.
-    write_felt(
-        &mut runner.vm,
-        &mut ptr,
-        Felt::from(0x208b_7fff_7fff_7ffe_u128),
-    )?;
-    // Push a pointer to the builtin cost segment.
-    write_maybe_relocatable(&mut runner.vm, &mut ptr, builtin_cost_segment_start)?;
-
-    let program_extra_data_length = 2;
-    Ok(program_extra_data_length)
 }
 
 fn initialize_execution_context<'a>(

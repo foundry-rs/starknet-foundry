@@ -1,10 +1,11 @@
 use blockifier::execution::contract_class::EntryPointV1;
 use blockifier::execution::entry_point::EntryPointExecutionResult;
-use blockifier::execution::errors::EntryPointExecutionError;
-use blockifier::execution::execution_utils::Args;
+use blockifier::execution::errors::{EntryPointExecutionError, PreExecutionError};
+use blockifier::execution::execution_utils::{write_felt, write_maybe_relocatable, Args, ReadOnlySegments};
+use blockifier::versioned_constants::GasCosts;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
 use cairo_vm::types::builtin_name::BuiltinName;
-use cairo_vm::types::relocatable::Relocatable;
+use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::memory_errors::MemoryError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
@@ -118,4 +119,45 @@ fn maybe_fill_holes(
     }
 
     Ok(())
+}
+
+// Reason copied: Private function
+pub(crate) fn prepare_program_extra_data(
+    runner: &mut CairoRunner,
+    // contract_class: &CompiledClassV1,
+    bytecode_length: usize,
+    read_only_segments: &mut ReadOnlySegments,
+    gas_costs: &GasCosts,
+) -> std::result::Result<usize, PreExecutionError> {
+    // Create the builtin cost segment, the builtin order should be the same as the price builtin
+    // array in the os in compiled_class.cairo in load_compiled_class_facts.
+    let builtin_price_array = [
+        gas_costs.builtins.pedersen,
+        gas_costs.builtins.bitwise,
+        gas_costs.builtins.ecop,
+        gas_costs.builtins.poseidon,
+        gas_costs.builtins.add_mod,
+        gas_costs.builtins.mul_mod,
+    ];
+
+    let data = builtin_price_array
+        .iter()
+        .map(|&x| MaybeRelocatable::from(Felt::from(x)))
+        .collect::<Vec<_>>();
+    let builtin_cost_segment_start = read_only_segments.allocate(&mut runner.vm, &data)?;
+
+    // Put a pointer to the builtin cost segment at the end of the program (after the
+    // additional `ret` statement).
+    let mut ptr = (runner.vm.get_pc() + bytecode_length)?;
+    // Push a `ret` opcode.
+    write_felt(
+        &mut runner.vm,
+        &mut ptr,
+        Felt::from(0x208b_7fff_7fff_7ffe_u128),
+    )?;
+    // Push a pointer to the builtin cost segment.
+    write_maybe_relocatable(&mut runner.vm, &mut ptr, builtin_cost_segment_start)?;
+
+    let program_extra_data_length = 2;
+    Ok(program_extra_data_length)
 }
