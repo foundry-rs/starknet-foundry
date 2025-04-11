@@ -199,18 +199,23 @@ pub struct RunCompleted {
 
 fn process_builtins(param_types: &[(GenericTypeId, i16)]) -> Vec<BuiltinName> {
     let mut builtins = vec![];
+    println!("param_types: {:?}", param_types);
 
     // let mut builtin_offset = 3;
+    // If modifying this, make sure that the order of builtins matches that from
+    // `#[implicit_precedence(...)` in generated test code.
+    // 
+    // Note the .reverse() below
     for (builtin_name, builtin_ty) in [
         (BuiltinName::mul_mod, MulModType::ID),
         (BuiltinName::add_mod, AddModType::ID),
         (BuiltinName::range_check96, RangeCheck96Type::ID),
+        (BuiltinName::segment_arena, SegmentArenaType::ID),
         (BuiltinName::poseidon, PoseidonType::ID),
         (BuiltinName::ec_op, EcOpType::ID),
         (BuiltinName::bitwise, BitwiseType::ID),
         (BuiltinName::range_check, RangeCheckType::ID),
         (BuiltinName::pedersen, PedersenType::ID),
-        (BuiltinName::segment_arena, SegmentArenaType::ID),
     ] {
         if param_types.iter().any(|(ty, _)| ty == &builtin_ty) {
             // self.input_builtin_vars.insert(
