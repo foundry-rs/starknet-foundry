@@ -844,6 +844,8 @@ pub fn run_test_case(
                 &tracked_resource,
             );
 
+            update_top_call_vm_trace(&mut forge_runtime, &mut runner);
+
             Ok(call_info)
         }
         Err(error) => {
