@@ -347,7 +347,8 @@ impl Default for CheatnetState {
             ClassHash(TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap());
         let test_call = Rc::new(RefCell::new(CallTrace {
             entry_point: test_code_entry_point.into(),
-            run_with_call_header: true,
+            // TODO this field could be removed entirely
+            run_with_call_header: false,
             ..CallTrace::default_successful_call()
         }));
         Self {
