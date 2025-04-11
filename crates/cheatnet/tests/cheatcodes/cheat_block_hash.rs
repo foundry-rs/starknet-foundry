@@ -15,24 +15,24 @@ const BLOCK_NUMBER: u64 = 123;
 trait CheatBlockHashTrait {
     fn cheat_block_hash(
         &mut self,
-        contract_address: ContractAddress,
+        target: ContractAddress,
         block_number: u64,
         block_hash: Felt,
         span: CheatSpan,
     );
     fn start_cheat_block_hash(
         &mut self,
-        contract_address: ContractAddress,
+        target: ContractAddress,
         block_number: u64,
         block_hash: Felt,
     );
-    fn stop_cheat_block_hash(&mut self, contract_address: ContractAddress, block_number: u64);
+    fn stop_cheat_block_hash(&mut self, target: ContractAddress, block_number: u64);
 }
 
 impl CheatBlockHashTrait for TestEnvironment {
     fn cheat_block_hash(
         &mut self,
-        contract_address: ContractAddress,
+        target: ContractAddress,
         block_number: u64,
         block_hash: Felt,
         span: CheatSpan,
@@ -42,24 +42,24 @@ impl CheatBlockHashTrait for TestEnvironment {
             Operation::Start(CheatArguments {
                 value: block_hash,
                 span,
-                target: contract_address,
+                target,
             }),
         );
     }
 
     fn start_cheat_block_hash(
         &mut self,
-        contract_address: ContractAddress,
+        target: ContractAddress,
         block_number: u64,
         block_hash: Felt,
     ) {
         self.cheatnet_state
-            .start_cheat_block_hash(contract_address, block_number, block_hash);
+            .start_cheat_block_hash(target, block_number, block_hash);
     }
 
-    fn stop_cheat_block_hash(&mut self, contract_address: ContractAddress, block_number: u64) {
+    fn stop_cheat_block_hash(&mut self, target: ContractAddress, block_number: u64) {
         self.cheatnet_state
-            .stop_cheat_block_hash(contract_address, block_number);
+            .stop_cheat_block_hash(target, block_number);
     }
 }
 

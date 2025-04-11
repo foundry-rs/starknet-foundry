@@ -3,12 +3,12 @@ use super::{
 };
 
 /// Changes the transaction hash for the given contract address and span.
-/// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
+/// - `target` - instance of `ContractAddress` specifying which contract to cheat
 /// - `transaction_hash` - transaction hash to be set
 /// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
 /// applied
 pub fn cheat_transaction_hash(
-    contract_address: ContractAddress, transaction_hash: felt252, span: CheatSpan,
+    target: ContractAddress, transaction_hash: felt252, span: CheatSpan,
 ) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
@@ -41,20 +41,20 @@ pub fn stop_cheat_transaction_hash_global() {
     cheat_execution_info(execution_info);
 }
 
-/// Changes the transaction hash for the given contract_address.
-/// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
+/// Changes the transaction hash for the given target contract address.
+/// - `target` - instance of `ContractAddress` specifying which contract to cheat
 /// - `transaction_hash` - transaction hash to be set
-pub fn start_cheat_transaction_hash(contract_address: ContractAddress, transaction_hash: felt252) {
-    cheat_transaction_hash(contract_address, transaction_hash, CheatSpan::Indefinite);
+pub fn start_cheat_transaction_hash(target: ContractAddress, transaction_hash: felt252) {
+    cheat_transaction_hash(target, transaction_hash, CheatSpan::Indefinite);
 }
 
 /// Cancels the `cheat_transaction_hash` / `start_cheat_transaction_hash` for the given
-/// contract_address.
-/// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
-pub fn stop_cheat_transaction_hash(contract_address: ContractAddress) {
+/// target contract address.
+/// - `target` - instance of `ContractAddress` specifying which contract to stop cheating
+pub fn stop_cheat_transaction_hash(target: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
-    execution_info.tx_info.transaction_hash = Operation::Stop(contract_address);
+    execution_info.tx_info.transaction_hash = Operation::Stop(target);
 
     cheat_execution_info(execution_info);
 }
