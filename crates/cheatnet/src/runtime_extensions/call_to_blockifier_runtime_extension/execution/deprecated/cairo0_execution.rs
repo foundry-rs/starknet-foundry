@@ -1,6 +1,6 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
-    ContractClassEntryPointExecutionResult, OnErrorLastPc,
+    ContractClassEntryPointExecutionResult, extract_trace_and_register_errors,
 };
 use crate::runtime_extensions::deprecated_cheatable_starknet_extension::DeprecatedCheatableStarknetRuntimeExtension;
 use crate::runtime_extensions::deprecated_cheatable_starknet_extension::runtime::{
@@ -56,7 +56,14 @@ pub fn execute_entry_point_call_cairo0(
         entry_point_pc,
         &args,
     )
-    .on_error_get_last_pc(&mut runner)?;
+    .map_err(|source| {
+        extract_trace_and_register_errors(
+            source,
+            call.class_hash,
+            &mut runner,
+            cheatable_syscall_handler.extension.cheatnet_state,
+        )
+    })?;
 
     let syscall_usage = cheatable_syscall_handler
         .extended_runtime

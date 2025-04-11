@@ -25,6 +25,7 @@ use conversions::serde::serialize::raw::RawFeltVec;
 use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
 use indoc::indoc;
 use num_traits::cast::ToPrimitive;
+use shared::vm::VirtualMachineExt;
 use starknet_api::StarknetApiError;
 use starknet_types_core::felt::Felt;
 use std::any::Any;
@@ -61,6 +62,7 @@ pub struct StarknetRuntime<'a> {
     //
     // See https://github.com/starkware-libs/cairo/blob/dfb5d3fdcf80bff30c205c14163f99c890dbdc10/crates/cairo-lang-runner/src/casm_run/mod.rs#L94
     pub user_args: Vec<Vec<Arg>>,
+    pub panic_traceback: Option<Vec<usize>>,
 }
 
 impl SyscallPtrAccess for StarknetRuntime<'_> {
@@ -196,6 +198,15 @@ impl HintProcessorLogic for StarknetRuntime<'_> {
                                 }
                             }
                         }
+                    }
+                    return Ok(());
+                }
+                Hint::External(ExternalHint::AddTrace { flag }) => {
+                    const PANIC_IN_NUMERIC: Felt = Felt::from_hex_unchecked("0x70616e6963");
+                    let flag = get_val(vm, flag)?;
+                    // Setting the panic backtrace if the given flag is panic.
+                    if flag == PANIC_IN_NUMERIC {
+                        self.panic_traceback = Some(vm.get_reversed_pc_traceback());
                     }
                     return Ok(());
                 }

@@ -36,7 +36,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
     update_top_call_l1_resources, update_top_call_resources, update_top_call_vm_trace,
 };
 use cheatnet::state::{
-    BlockInfoReader, CallTrace, CheatnetState, EncounteredError, ExtendedStateReader,
+    BlockInfoReader, CallTrace, CheatnetState, EncounteredErrors, ExtendedStateReader,
 };
 use entry_code::create_entry_code;
 use hints::{hints_by_representation, hints_to_params};
@@ -150,7 +150,7 @@ pub struct RunResultWithInfo {
     pub(crate) call_trace: Rc<RefCell<CallTrace>>,
     pub(crate) gas_used: GasVector,
     pub(crate) used_resources: UsedResources,
-    pub(crate) encountered_errors: Vec<EncounteredError>,
+    pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
 }
 
@@ -219,6 +219,7 @@ pub fn run_test_case(
             // TODO(#2966) we should subtract initial cost of the function from this value to be more exact.
             //  But as a workaround it should be good enough.
             user_args: vec![vec![Arg::Value(Felt::from(i64::MAX as u64))]],
+            panic_traceback: None,
         },
     };
 

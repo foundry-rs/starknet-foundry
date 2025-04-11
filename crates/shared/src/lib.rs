@@ -14,6 +14,7 @@ pub mod rpc;
 pub mod spinner;
 pub mod test_utils;
 pub mod utils;
+pub mod vm;
 
 pub async fn verify_and_warn_if_incompatible_rpc_version(
     client: &JsonRpcClient<HttpTransport>,
