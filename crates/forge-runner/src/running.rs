@@ -307,12 +307,7 @@ pub fn run_test_case(
         },
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
-            // Max gas is no longer set by `create_entry_code_from_params`
-            // Instead, call to `ExternalHint::WriteRunParam` is added by it, and we need to
-            // store the gas value to be read by logic handling the hint
-            // TODO(#2966) we should subtract initial cost of the function from this value to be more exact.
-            //  But as a workaround it should be good enough.
-            user_args: vec![vec![Arg::Value(Felt::from(i64::MAX as u64))]],
+            user_args: vec![],
         },
     };
 
@@ -333,7 +328,6 @@ pub fn run_test_case(
         extended_runtime: call_to_blockifier_runtime,
     };
 
-    // let entry_point_initial_budget = context.gas_costs().base.entry_point_initial_budget;
     let entry_point_initial_budget = forge_runtime
         .extended_runtime
         .extended_runtime
