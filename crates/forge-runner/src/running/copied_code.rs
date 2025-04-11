@@ -1,6 +1,6 @@
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::contract_class::{EntryPointV1, TrackedResource};
-use blockifier::execution::entry_point::EntryPointExecutionResult;
+use blockifier::execution::entry_point::{CallEntryPoint, EntryPointExecutionResult};
 use blockifier::execution::entry_point_execution::CallResult;
 use blockifier::execution::errors::{
     EntryPointExecutionError, PostExecutionError, PreExecutionError,
@@ -136,7 +136,7 @@ pub(crate) fn prepare_program_extra_data(
     bytecode_length: usize,
     read_only_segments: &mut ReadOnlySegments,
     gas_costs: &GasCosts,
-) -> std::result::Result<usize, PreExecutionError> {
+) -> Result<usize, PreExecutionError> {
     // Create the builtin cost segment, the builtin order should be the same as the price builtin
     // array in the os in compiled_class.cairo in load_compiled_class_facts.
     let builtin_price_array = [
@@ -257,7 +257,7 @@ fn get_call_result(
     runner: &CairoRunner,
     syscall_handler: &SyscallHintProcessor<'_>,
     tracked_resource: &TrackedResource,
-) -> std::result::Result<CallResult, PostExecutionError> {
+) -> Result<CallResult, PostExecutionError> {
     let return_result = runner.vm.get_return_values(5)?;
     // Corresponds to the Cairo 1.0 enum:
     // enum PanicResult<Array::<felt>> { Ok: Array::<felt>, Err: Array::<felt>, }.
@@ -306,4 +306,75 @@ fn get_call_result(
         retdata: read_execution_retdata(runner, retdata_size, retdata_start)?,
         gas_consumed,
     })
+}
+
+/// Reason copied: Removed code for test function arguments
+pub(crate) fn prepare_call_arguments(
+    call: &CallEntryPoint,
+    runner: &mut CairoRunner,
+    initial_syscall_ptr: Relocatable,
+    read_only_segments: &mut ReadOnlySegments,
+    entrypoint: &EntryPointV1,
+    entry_point_initial_budget: u64,
+) -> Result<Args, PreExecutionError> {
+    let mut args: Args = vec![];
+
+    // Push builtins.
+    for builtin_name in &entrypoint.builtins {
+        if let Some(builtin) = runner
+            .vm
+            .get_builtin_runners()
+            .iter()
+            .find(|builtin| builtin.name() == *builtin_name)
+        {
+            args.extend(builtin.initial_stack().into_iter().map(CairoArg::Single));
+            continue;
+        }
+        if builtin_name == &BuiltinName::segment_arena {
+            let segment_arena = runner.vm.add_memory_segment();
+
+            // Write into segment_arena.
+            let mut ptr = segment_arena;
+            let info_segment = runner.vm.add_memory_segment();
+            let n_constructed = Felt::default();
+            let n_destructed = Felt::default();
+            write_maybe_relocatable(&mut runner.vm, &mut ptr, info_segment)?;
+            write_felt(&mut runner.vm, &mut ptr, n_constructed)?;
+            write_felt(&mut runner.vm, &mut ptr, n_destructed)?;
+
+            args.push(CairoArg::Single(MaybeRelocatable::from(ptr)));
+            continue;
+        }
+        return Err(PreExecutionError::InvalidBuiltin(*builtin_name));
+    }
+    // Pre-charge entry point's initial budget to ensure sufficient gas for executing a minimal
+    // entry point code. When redepositing is used, the entry point is aware of this pre-charge
+    // and adjusts the gas counter accordingly if a smaller amount of gas is required.
+    let call_initial_gas = call
+        .initial_gas
+        .checked_sub(entry_point_initial_budget)
+        .ok_or(PreExecutionError::InsufficientEntryPointGas)?;
+    // Push gas counter.
+    // dbg!(&call_initial_gas);
+    args.push(CairoArg::Single(MaybeRelocatable::from(Felt::from(
+        call_initial_gas,
+    ))));
+    // Push syscall ptr.
+    args.push(CairoArg::Single(MaybeRelocatable::from(
+        initial_syscall_ptr,
+    )));
+
+    // TODO support arguments in test functions wrappers
+    // Modified code
+    // Prepare calldata arguments.
+    // let calldata = &call.calldata.0;
+    // let calldata: Vec<MaybeRelocatable> =
+    //     calldata.iter().map(|&arg| MaybeRelocatable::from(arg)).collect();
+    //
+    // let calldata_start_ptr = read_only_segments.allocate(&mut runner.vm, &calldata)?;
+    // let calldata_end_ptr = MaybeRelocatable::from((calldata_start_ptr + calldata.len())?);
+    // args.push(CairoArg::Single(MaybeRelocatable::from(calldata_start_ptr)));
+    // args.push(CairoArg::Single(calldata_end_ptr));
+
+    Ok(args)
 }
