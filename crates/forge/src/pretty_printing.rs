@@ -32,25 +32,31 @@ pub(crate) fn print_test_summary(summaries: &[TestTargetSummary], filtered: Opti
     let failed: usize = summaries.iter().map(TestTargetSummary::count_failed).sum();
     let skipped: usize = summaries.iter().map(TestTargetSummary::count_skipped).sum();
     let ignored: usize = summaries.iter().map(TestTargetSummary::count_ignored).sum();
+    let excluded: usize = summaries
+        .iter()
+        .map(TestTargetSummary::count_excluded)
+        .sum();
 
     if let Some(filtered) = filtered {
         println!(
-            "{}: {} passed, {} failed, {} skipped, {} ignored, {} filtered out",
+            "{}: {} passed, {} failed, {} skipped, {} ignored, {} excluded, {} filtered out",
             style("Tests").bold(),
             passed,
             failed,
             skipped,
             ignored,
+            excluded,
             filtered
         );
     } else {
         println!(
-            "{}: {} passed, {} failed, {} skipped, {} ignored, other filtered out",
+            "{}: {} passed, {} failed, {} skipped, {} ignored, {} excluded, other filtered out",
             style("Tests").bold(),
             passed,
             failed,
             skipped,
-            ignored
+            ignored,
+            excluded
         );
     }
 }
