@@ -17,7 +17,7 @@ fn simple() {
         use snforge_std::declare;
 
         #[test]
-        fn simple_declare() implicits(GasBuiltin) {
+        fn simple_declare() {
             assert(1 == 1, 'simple check');
         }
         "#
