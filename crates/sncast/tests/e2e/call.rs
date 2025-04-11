@@ -264,3 +264,28 @@ fn test_happy_case_shell() {
         .arg(DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA);
     snapbox.assert().success();
 }
+
+#[test]
+fn test_leading_negative_values() {
+    let script_extension = if cfg!(windows) { ".ps1" } else { ".sh" };
+    let test_path = PathBuf::from(format!("tests/shell/call_unsigned{script_extension}"))
+        .canonicalize()
+        .unwrap();
+    let binary_path = cargo_bin!("sncast");
+
+    let command = if cfg!(windows) {
+        Command::new("powershell")
+            .arg("-ExecutionPolicy")
+            .arg("Bypass")
+            .arg("-File")
+            .arg(test_path)
+    } else {
+        Command::new(test_path)
+    };
+
+    let snapbox = command
+        .arg(binary_path)
+        .arg(URL)
+        .arg(DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA);
+    snapbox.assert().success();
+}
