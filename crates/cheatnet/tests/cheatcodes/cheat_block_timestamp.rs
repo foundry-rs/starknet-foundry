@@ -9,35 +9,24 @@ use super::test_environment::TestEnvironment;
 const DEFAULT_BLOCK_TIMESTAMP: u64 = 0;
 
 trait CheatBlockTimestampTrait {
-    fn cheat_block_timestamp(
-        &mut self,
-        contract_address: ContractAddress,
-        timestamp: u64,
-        span: CheatSpan,
-    );
-    fn start_cheat_block_timestamp(&mut self, contract_address: ContractAddress, timestamp: u64);
-    fn stop_cheat_block_timestamp(&mut self, contract_address: ContractAddress);
+    fn cheat_block_timestamp(&mut self, target: ContractAddress, timestamp: u64, span: CheatSpan);
+    fn start_cheat_block_timestamp(&mut self, target: ContractAddress, timestamp: u64);
+    fn stop_cheat_block_timestamp(&mut self, target: ContractAddress);
 }
 
 impl CheatBlockTimestampTrait for TestEnvironment {
-    fn cheat_block_timestamp(
-        &mut self,
-        contract_address: ContractAddress,
-        timestamp: u64,
-        span: CheatSpan,
-    ) {
+    fn cheat_block_timestamp(&mut self, target: ContractAddress, timestamp: u64, span: CheatSpan) {
         self.cheatnet_state
-            .cheat_block_timestamp(contract_address, timestamp, span);
+            .cheat_block_timestamp(target, timestamp, span);
     }
 
-    fn start_cheat_block_timestamp(&mut self, contract_address: ContractAddress, timestamp: u64) {
+    fn start_cheat_block_timestamp(&mut self, target: ContractAddress, timestamp: u64) {
         self.cheatnet_state
-            .start_cheat_block_timestamp(contract_address, timestamp);
+            .start_cheat_block_timestamp(target, timestamp);
     }
 
-    fn stop_cheat_block_timestamp(&mut self, contract_address: ContractAddress) {
-        self.cheatnet_state
-            .stop_cheat_block_timestamp(contract_address);
+    fn stop_cheat_block_timestamp(&mut self, target: ContractAddress) {
+        self.cheatnet_state.stop_cheat_block_timestamp(target);
     }
 }
 

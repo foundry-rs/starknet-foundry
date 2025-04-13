@@ -3,17 +3,17 @@ use super::{
 };
 
 /// Changes the transaction chain_id for the given contract address and span.
-/// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
+/// - `target` - instance of `ContractAddress` specifying which contract to cheat
 /// - `chain_id` - transaction chain_id to be set
 /// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
 /// applied
-pub fn cheat_chain_id(contract_address: ContractAddress, chain_id: felt252, span: CheatSpan) {
+pub fn cheat_chain_id(target: ContractAddress, chain_id: felt252, span: CheatSpan) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
         .tx_info
         .chain_id =
-            Operation::Start(CheatArguments { value: chain_id, span, target: contract_address });
+            Operation::Start(CheatArguments { value: chain_id, span, target });
 
     cheat_execution_info(execution_info);
 }
@@ -37,19 +37,19 @@ pub fn stop_cheat_chain_id_global() {
     cheat_execution_info(execution_info);
 }
 
-/// Changes the transaction chain_id for the given contract_address.
-/// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
+/// Changes the transaction chain_id for the given target contract address.
+/// - `target` - instance of `ContractAddress` specifying which contract to cheat
 /// - `chain_id` - transaction chain_id to be set
-pub fn start_cheat_chain_id(contract_address: ContractAddress, chain_id: felt252) {
-    cheat_chain_id(contract_address, chain_id, CheatSpan::Indefinite);
+pub fn start_cheat_chain_id(target: ContractAddress, chain_id: felt252) {
+    cheat_chain_id(target, chain_id, CheatSpan::Indefinite);
 }
 
-/// Cancels the `cheat_chain_id` / `start_cheat_chain_id` for the given contract_address.
-/// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
-pub fn stop_cheat_chain_id(contract_address: ContractAddress) {
+/// Cancels the `cheat_chain_id` / `start_cheat_chain_id` for the given target contract address.
+/// - `target` - instance of `ContractAddress` specifying which contract to stop cheating
+pub fn stop_cheat_chain_id(target: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
-    execution_info.tx_info.chain_id = Operation::Stop(contract_address);
+    execution_info.tx_info.chain_id = Operation::Stop(target);
 
     cheat_execution_info(execution_info);
 }

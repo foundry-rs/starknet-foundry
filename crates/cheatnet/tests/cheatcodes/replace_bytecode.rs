@@ -10,21 +10,13 @@ use starknet_types_core::felt::Felt;
 use tempfile::TempDir;
 
 trait ReplaceBytecodeTrait {
-    fn replace_class_for_contract(
-        &mut self,
-        contract_address: ContractAddress,
-        class_hash: ClassHash,
-    );
+    fn replace_class_for_contract(&mut self, target: ContractAddress, class_hash: ClassHash);
 }
 
 impl ReplaceBytecodeTrait for TestEnvironment {
-    fn replace_class_for_contract(
-        &mut self,
-        contract_address: ContractAddress,
-        class_hash: ClassHash,
-    ) {
+    fn replace_class_for_contract(&mut self, target: ContractAddress, class_hash: ClassHash) {
         self.cheatnet_state
-            .replace_class_for_contract(contract_address, class_hash);
+            .replace_class_for_contract(target, class_hash);
     }
 }
 

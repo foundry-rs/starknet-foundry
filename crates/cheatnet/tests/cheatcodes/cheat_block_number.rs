@@ -8,35 +8,24 @@ use starknet_types_core::felt::Felt;
 use super::test_environment::TestEnvironment;
 
 trait CheatBlockNumberTrait {
-    fn cheat_block_number(
-        &mut self,
-        contract_address: ContractAddress,
-        block_number: u64,
-        span: CheatSpan,
-    );
-    fn start_cheat_block_number(&mut self, contract_address: ContractAddress, block_number: u64);
-    fn stop_cheat_block_number(&mut self, contract_address: ContractAddress);
+    fn cheat_block_number(&mut self, target: ContractAddress, block_number: u64, span: CheatSpan);
+    fn start_cheat_block_number(&mut self, target: ContractAddress, block_number: u64);
+    fn stop_cheat_block_number(&mut self, target: ContractAddress);
 }
 
 impl CheatBlockNumberTrait for TestEnvironment {
-    fn cheat_block_number(
-        &mut self,
-        contract_address: ContractAddress,
-        block_number: u64,
-        span: CheatSpan,
-    ) {
+    fn cheat_block_number(&mut self, target: ContractAddress, block_number: u64, span: CheatSpan) {
         self.cheatnet_state
-            .cheat_block_number(contract_address, block_number, span);
+            .cheat_block_number(target, block_number, span);
     }
 
-    fn start_cheat_block_number(&mut self, contract_address: ContractAddress, block_number: u64) {
+    fn start_cheat_block_number(&mut self, target: ContractAddress, block_number: u64) {
         self.cheatnet_state
-            .start_cheat_block_number(contract_address, block_number);
+            .start_cheat_block_number(target, block_number);
     }
 
-    fn stop_cheat_block_number(&mut self, contract_address: ContractAddress) {
-        self.cheatnet_state
-            .stop_cheat_block_number(contract_address);
+    fn stop_cheat_block_number(&mut self, target: ContractAddress) {
+        self.cheatnet_state.stop_cheat_block_number(target);
     }
 }
 
