@@ -1,6 +1,6 @@
 use starknet::{ContractAddress, ClassHash, SyscallResult};
 use super::super::byte_array::byte_array_as_felt_array;
-use super::super::_cheatcode::execute_cheatcode_and_deserialize;
+use super::super::cheatcode::execute_cheatcode_and_deserialize;
 
 #[derive(Drop, Serde, Copy)]
 pub struct ContractClass {

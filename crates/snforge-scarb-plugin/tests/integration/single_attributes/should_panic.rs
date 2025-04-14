@@ -16,11 +16,11 @@ fn work_with_empty() {
         &result,
         r"
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_internals::_config_types::ShouldPanicConfig {
-                        expected: snforge_std::_internals::_config_types::Expected::Any
+                    snforge_std::_internals::config_types::ShouldPanicConfig {
+                        expected: snforge_std::_internals::config_types::Expected::Any
                     }
                     .serialize(ref data);
 
@@ -45,11 +45,11 @@ fn work_with_expected_string() {
         &result,
         r#"
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_internals::_config_types::ShouldPanicConfig {
-                        expected: snforge_std::_internals::_config_types::Expected::ByteArray("panic data")
+                    snforge_std::_internals::config_types::ShouldPanicConfig {
+                        expected: snforge_std::_internals::config_types::Expected::ByteArray("panic data")
                     }
                     .serialize(ref data);
 
@@ -74,11 +74,11 @@ fn work_with_expected_string_escaped() {
         &result,
         r#"
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_internals::_config_types::ShouldPanicConfig {
-                        expected: snforge_std::_internals::_config_types::Expected::ByteArray("can\"t \0 null byte")
+                    snforge_std::_internals::config_types::ShouldPanicConfig {
+                        expected: snforge_std::_internals::config_types::Expected::ByteArray("can\"t \0 null byte")
                     }
                     .serialize(ref data);
 
@@ -103,11 +103,11 @@ fn work_with_expected_short_string() {
         &result,
         r"
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_internals::_config_types::ShouldPanicConfig {
-                        expected: snforge_std::_internals::_config_types::Expected::ShortString('panic data')
+                    snforge_std::_internals::config_types::ShouldPanicConfig {
+                        expected: snforge_std::_internals::config_types::Expected::ShortString('panic data')
                     }
                     .serialize(ref data);
 
@@ -132,11 +132,11 @@ fn work_with_expected_short_string_escaped() {
         &result,
         r"
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_internals::_config_types::ShouldPanicConfig {
-                        expected: snforge_std::_internals::_config_types::Expected::ShortString('can\'t')
+                    snforge_std::_internals::config_types::ShouldPanicConfig {
+                        expected: snforge_std::_internals::config_types::Expected::ShortString('can\'t')
                     }
                     .serialize(ref data);
 
@@ -161,11 +161,11 @@ fn work_with_expected_tuple() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_internals::_config_types::ShouldPanicConfig {
-                        expected: snforge_std::_internals::_config_types::Expected::Array(array!['panic data',' or not',])
+                    snforge_std::_internals::config_types::ShouldPanicConfig {
+                        expected: snforge_std::_internals::config_types::Expected::Array(array!['panic data',' or not',])
                     }
                     .serialize(ref data);
 

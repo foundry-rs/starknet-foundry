@@ -1,7 +1,7 @@
 use starknet::secp256r1::Secp256r1Point;
 use starknet::secp256_trait::{is_valid_signature, Secp256Trait, Secp256PointTrait};
 use starknet::SyscallResultTrait;
-use super::super::_cheatcode::execute_cheatcode_and_deserialize;
+use super::super::cheatcode::execute_cheatcode_and_deserialize;
 use super::SignError;
 use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 

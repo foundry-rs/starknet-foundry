@@ -67,7 +67,7 @@ fn cheatcode_invalid_args() {
     let test = test_utils::test_case!(indoc!(
         r"
             use starknet::testing::cheatcode;
-            use snforge_std::_cheatcode::handle_cheatcode;
+            use snforge_std::cheatcode::handle_cheatcode;
 
             #[test]
             fn cheatcode_invalid_args() {

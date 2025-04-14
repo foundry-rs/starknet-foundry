@@ -58,8 +58,8 @@ fn inline_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnos
 
     Ok(formatdoc!(
         "
-            snforge_std::_internals::_config_types::ForkConfig::Inline(
-                snforge_std::_internals::_config_types::InlineForkConfig {{
+            snforge_std::_internals::config_types::ForkConfig::Inline(
+                snforge_std::_internals::config_types::InlineForkConfig {{
                     url: {url},
                     block: {block_id}
                 }}
@@ -78,7 +78,7 @@ fn from_file_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diag
     let name = name.as_cairo_expression();
 
     Ok(format!(
-        r"snforge_std::_internals::_config_types::ForkConfig::Named({name})"
+        r"snforge_std::_internals::config_types::ForkConfig::Named({name})"
     ))
 }
 
@@ -99,8 +99,8 @@ fn overridden_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Dia
 
     Ok(formatdoc!(
         "
-            snforge_std::_internals::_config_types::ForkConfig::Overridden(
-                snforge_std::_internals::_config_types::OverriddenForkConfig {{
+            snforge_std::_internals::config_types::ForkConfig::Overridden(
+                snforge_std::_internals::config_types::OverriddenForkConfig {{
                     block: {block_id},
                     name: {name}
                 }}

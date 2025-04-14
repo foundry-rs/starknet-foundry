@@ -60,7 +60,7 @@ impl AttributeCollector for FuzzerCollector {
         let runs = runs.as_cairo_expression();
 
         Ok(format!(
-            "snforge_std::_internals::_config_types::FuzzerConfig {{ seed: {seed}, runs: {runs} }}"
+            "snforge_std::_internals::config_types::FuzzerConfig {{ seed: {seed}, runs: {runs} }}"
         ))
     }
 }

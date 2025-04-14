@@ -29,10 +29,10 @@ fn works_without_args() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_internals::_config_types::IgnoreConfig {
+                    snforge_std::_internals::config_types::IgnoreConfig {
                         is_ignored: true
                     }
                     .serialize(ref data);

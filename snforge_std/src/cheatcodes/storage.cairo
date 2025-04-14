@@ -1,5 +1,5 @@
 use starknet::{ContractAddress, StorageAddress};
-use super::super::_cheatcode::execute_cheatcode_and_deserialize;
+use super::super::cheatcode::execute_cheatcode_and_deserialize;
 
 fn validate_storage_address_felt(storage_address_felt: felt252) {
     let result: Option<StorageAddress> = storage_address_felt.try_into();

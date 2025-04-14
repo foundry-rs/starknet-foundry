@@ -14,10 +14,10 @@ fn works_with_empty() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
-                    snforge_std::_internals::_config_types::AvailableGasConfig::MaxResourceBounds(
-                        snforge_std::_internals::_config_types::AvailableResourceBoundsConfig {
+                    snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
+                        snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
                         l1_gas: 0xffffffffffffffff,
                         l1_data_gas: 0xffffffffffffffff,
                         l2_gas: 0xffffffffffffffff
@@ -72,11 +72,11 @@ fn work_with_number_some_set() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_internals::_config_types::AvailableGasConfig::MaxResourceBounds(
-                        snforge_std::_internals::_config_types::AvailableResourceBoundsConfig {
+                    snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
+                        snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
                         l1_gas: 0x7b,
                         l1_data_gas: 0xffffffffffffffff,
                         l2_gas: 0xffffffffffffffff
@@ -106,11 +106,11 @@ fn work_with_number_all_set() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_internals::_config_types::AvailableGasConfig::MaxResourceBounds(
-                        snforge_std::_internals::_config_types::AvailableResourceBoundsConfig {
+                    snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
+                        snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
                         l1_gas: 0x1,
                         l1_data_gas: 0x2,
                         l2_gas: 0x3
@@ -158,9 +158,9 @@ fn works_with_unnamed_number() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
-                    snforge_std::_internals::_config_types::AvailableGasConfig::MaxGas(0x3)
+                    snforge_std::_internals::config_types::AvailableGasConfig::MaxGas(0x3)
                     .serialize(ref data);
                     starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
                     return;
@@ -265,11 +265,11 @@ fn max_permissible_value() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_internals::_config_types::AvailableGasConfig::MaxResourceBounds(
-                        snforge_std::_internals::_config_types::AvailableResourceBoundsConfig {
+                    snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
+                        snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
                         l1_gas: 0xffffffffffffffff,
                         l1_data_gas: 0xffffffffffffffff,
                         l2_gas: 0xffffffffffffffff

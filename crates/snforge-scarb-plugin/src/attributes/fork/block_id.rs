@@ -35,14 +35,14 @@ impl CairoExpression for BlockId {
     fn as_cairo_expression(&self) -> String {
         match self {
             Self::Hash(hash) => format!(
-                "snforge_std::_internals::_config_types::BlockId::BlockHash({})",
+                "snforge_std::_internals::config_types::BlockId::BlockHash({})",
                 hash.as_cairo_expression()
             ),
             Self::Number(number) => format!(
-                "snforge_std::_internals::_config_types::BlockId::BlockNumber({})",
+                "snforge_std::_internals::config_types::BlockId::BlockNumber({})",
                 number.as_cairo_expression()
             ),
-            Self::Tag => "snforge_std::_internals::_config_types::BlockId::BlockTag".to_string(),
+            Self::Tag => "snforge_std::_internals::config_types::BlockId::BlockTag".to_string(),
         }
     }
 }
