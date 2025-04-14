@@ -63,7 +63,11 @@ fn test_internal(
             fn {name}() -> Span::<felt252> {{
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
+                core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
 
+                core::option::OptionTraitImpl::expect(
+                    core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
+                );
                 {name}_return_wrapper();
 
                 let mut arr = ArrayTrait::new();
