@@ -22,19 +22,19 @@ impl CairoExpression for Expected {
             Self::Felt(felt) => {
                 let string = felt.as_cairo_expression();
 
-                format!("snforge_std::_config_types::Expected::ShortString({string})")
+                format!("snforge_std::_internals::_config_types::Expected::ShortString({string})")
             }
             Self::ByteArray(string) => {
                 let string = string.as_cairo_expression();
 
-                format!(r"snforge_std::_config_types::Expected::ByteArray({string})")
+                format!(r"snforge_std::_internals::_config_types::Expected::ByteArray({string})")
             }
             Self::Array(strings) => {
                 let arr = strings.as_cairo_expression();
 
-                format!("snforge_std::_config_types::Expected::Array({arr})")
+                format!("snforge_std::_internals::_config_types::Expected::Array({arr})")
             }
-            Self::Any => "snforge_std::_config_types::Expected::Any".to_string(),
+            Self::Any => "snforge_std::_internals::_config_types::Expected::Any".to_string(),
         }
     }
 }

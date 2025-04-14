@@ -142,7 +142,7 @@ pub mod trace;
 
 pub mod byte_array;
 
-pub mod _config_types;
+mod _config_types;
 
 mod _cheatcode;
 
@@ -151,4 +151,6 @@ pub mod _internals {
 
     pub use _cheatcode::_is_config_run;
     pub use _cheatcode::_save_fuzzer_arg;
+
+    pub use super::_config_types;
 }

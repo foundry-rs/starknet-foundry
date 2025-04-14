@@ -24,7 +24,7 @@ impl AttributeCollector for IgnoreCollector {
     ) -> Result<String, Diagnostics> {
         args.assert_is_empty::<Self>()?;
 
-        Ok("snforge_std::_config_types::IgnoreConfig { is_ignored: true }".to_string())
+        Ok("snforge_std::_internals::_config_types::IgnoreConfig { is_ignored: true }".to_string())
     }
 }
 

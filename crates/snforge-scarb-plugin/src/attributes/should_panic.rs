@@ -39,7 +39,7 @@ impl AttributeCollector for ShouldPanicCollector {
         let expected = expected.as_cairo_expression();
 
         Ok(format!(
-            "snforge_std::_config_types::ShouldPanicConfig {{ expected: {expected} }}"
+            "snforge_std::_internals::_config_types::ShouldPanicConfig {{ expected: {expected} }}"
         ))
     }
 }
