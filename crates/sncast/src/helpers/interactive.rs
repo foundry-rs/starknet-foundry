@@ -76,11 +76,11 @@ fn edit_config(config_path: &Utf8PathBuf, profile: &str, key: &str, value: &str)
 }
 
 fn update_config(toml_doc: &mut DocumentMut, profile: &str, key: &str, value: &str) {
-    let sncast_secetion = toml_doc
+    let sncast_section = toml_doc
         .entry("sncast")
         .or_insert(Item::Table(Table::new()));
 
-    let sncast_table = sncast_secetion
+    let sncast_table = sncast_section
         .as_table_mut()
         .expect("Failed to create or access 'sncast' table");
     sncast_table.set_implicit(true);
