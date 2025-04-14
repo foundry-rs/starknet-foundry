@@ -76,22 +76,19 @@ fn edit_config(config_path: &Utf8PathBuf, profile: &str, key: &str, value: &str)
 }
 
 fn update_config(toml_doc: &mut DocumentMut, profile: &str, key: &str, value: &str) {
-    if !toml_doc.contains_key("sncast") {
-        toml_doc["sncast"] = Item::Table(Table::new());
-    }
+    let sncast_secetion = toml_doc
+        .entry("sncast")
+        .or_insert(Item::Table(Table::new()));
 
-    let sncast_table = toml_doc
-        .get_mut("sncast")
-        .and_then(|item| item.as_table_mut())
+    let sncast_table = sncast_secetion
+        .as_table_mut()
         .expect("Failed to create or access 'sncast' table");
-
-    if !sncast_table.contains_key(profile) {
-        sncast_table[profile] = Item::Table(Table::new());
-    }
+    sncast_table.set_implicit(true);
 
     let profile_table = sncast_table
-        .get_mut(profile)
-        .and_then(|item| item.as_table_mut())
+        .entry(profile)
+        .or_insert(Item::Table(Table::new()))
+        .as_table_mut()
         .expect("Failed to create or access profile table");
 
     profile_table[key] = Value::from(value).into();
@@ -232,8 +229,6 @@ mod tests {
             [snfoundry]
             key = 2137
 
-            [sncast]
-
             [sncast.default]
             account = "testnet"
         "#};
@@ -251,8 +246,6 @@ mod tests {
 
         let expected = formatdoc! {
             r#"
-            [sncast]
-
             [sncast.default]
             account = "testnet"
         "#};
