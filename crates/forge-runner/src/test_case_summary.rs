@@ -9,7 +9,7 @@ use cairo_lang_runner::{RunResult, RunResultValue};
 use camino::Utf8Path;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use cheatnet::state::{CallTrace as InternalCallTrace, EncounteredError};
+use cheatnet::state::{CallTrace as InternalCallTrace, EncounteredErrors};
 use conversions::byte_array::ByteArray;
 use num_traits::Pow;
 use shared::utils::build_readable_text;
@@ -287,7 +287,7 @@ impl TestCaseSummary<Single> {
         gas: GasVector,
         used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
-        encountered_errors: &[EncounteredError],
+        encountered_errors: &EncounteredErrors,
         contracts_data: &ContractsData,
         versioned_program_path: &Utf8Path,
     ) -> Self {

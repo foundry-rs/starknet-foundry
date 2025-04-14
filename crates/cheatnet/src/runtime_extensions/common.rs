@@ -52,10 +52,15 @@ pub fn get_syscalls_gas_consumed(
 }
 
 #[must_use]
-pub fn get_relocated_vm_trace(cairo_runner: &mut CairoRunner) -> Option<Vec<RelocatedTraceEntry>> {
+pub fn get_relocated_vm_trace(cairo_runner: &mut CairoRunner) -> Vec<RelocatedTraceEntry> {
     // if vm execution failed, the trace is not relocated so we need to relocate it
     if cairo_runner.relocated_trace.is_none() {
-        cairo_runner.relocate(true).ok()?;
+        cairo_runner
+            .relocate(true)
+            .expect("relocation should not fail");
     }
-    cairo_runner.relocated_trace.clone()
+    cairo_runner
+        .relocated_trace
+        .clone()
+        .expect("relocated trace should be present")
 }
