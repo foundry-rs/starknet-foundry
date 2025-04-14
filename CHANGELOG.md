@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.0] - 2025-04-08
+
+### Forge
+
+#### Added
+
+- `--template` flag to `snforge new` command that allows selecting a template for the new project. Possible values are `balance-contract` (default), `cairo-program` and `erc20-contract`
+
+#### Fixed
+
+- fixed incorrect extra newlines in test summary
+
+### Cast
+
+#### Added
+
+- Support for `array![].span()` in `--arguments` command
+
+#### Changed
+
+- `verify` command now supports the `--class-hash` for Walnut verification
+
+#### Removed
+
+- `NftScan` is no longer supported as `block-explorer` option
+
 ## [0.40.0] - 2025-03-26
 
 ### Cast
@@ -22,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - wrapped error for `ContractError` is now of type `ContractErrorData` (in `sncast_std`)
 - field `execution_error` in `TransactionExecutionErrorData` is now of type `ContractExecutionError` (in `sncast_std`)
 - Using Braavos accounts is temporarily disabled because they don't yet work with the RPC version supported by `sncast`
+- `sncast script init` command now initializes project with the `sncast_std` dependency from the [registry](https://scarbs.xyz/packages/sncast_std)
 
 #### Removed
 
@@ -43,7 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 - gas is now reported using resource bounds triplet (l1_gas, l1_data_gas and l2_gas)
-- `available_gas` now accepts named arguments denoting resource bounds (eg #[available_gas(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)])
+- `available_gas` now accepts named arguments denoting resource bounds (eg `#[available_gas(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)]`)
 
 #### Fixed
 
@@ -54,10 +81,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `sncast completion` command - used to generate autocompletion script
-
-#### Changed
-
-- `sncast script init` command now initializes project with the `sncast_std` dependency from the [registry](https://scarbs.xyz/packages/sncast_std)
 
 ## [0.38.3] - 2025-03-07
 

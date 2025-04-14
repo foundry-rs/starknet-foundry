@@ -6,7 +6,7 @@ const CONTRACT_ADDRESS: felt252 = 0x2137;
 fn main() {
     // This call fails
     let call_result = call(
-        CONTRACT_ADDRESS.try_into().unwrap(), selector!("get_greeting"), array![]
+        CONTRACT_ADDRESS.try_into().unwrap(), selector!("get_greeting"), array![],
     );
 
     // Make some assertion

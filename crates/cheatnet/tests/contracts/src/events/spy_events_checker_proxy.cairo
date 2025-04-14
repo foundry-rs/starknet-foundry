@@ -5,13 +5,13 @@ trait ISpyEventsChecker<TContractState> {
     fn do_not_emit(ref self: TContractState);
     fn emit_one_event(ref self: TContractState, some_data: felt252);
     fn emit_two_events(
-        ref self: TContractState, some_data: felt252, some_more_data: ContractAddress
+        ref self: TContractState, some_data: felt252, some_more_data: ContractAddress,
     );
     fn emit_three_events(
         ref self: TContractState,
         some_data: felt252,
         some_more_data: ContractAddress,
-        even_more_data: u256
+        even_more_data: u256,
     );
 }
 
@@ -20,6 +20,7 @@ mod SpyEventsCheckerProxy {
     use starknet::ContractAddress;
     use super::ISpyEventsCheckerDispatcherTrait;
     use super::ISpyEventsCheckerDispatcher;
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     #[storage]
     struct Storage {
@@ -36,21 +37,21 @@ mod SpyEventsCheckerProxy {
 
     #[derive(Drop, starknet::Event)]
     struct FirstEvent {
-        some_data: felt252
+        some_data: felt252,
     }
 
     #[derive(Drop, starknet::Event)]
     struct SecondEvent {
         some_data: felt252,
         #[key]
-        some_more_data: ContractAddress
+        some_more_data: ContractAddress,
     }
 
     #[derive(Drop, starknet::Event)]
     struct ThirdEvent {
         some_data: felt252,
         some_more_data: ContractAddress,
-        even_more_data: u256
+        even_more_data: u256,
     }
 
     #[constructor]
@@ -62,7 +63,7 @@ mod SpyEventsCheckerProxy {
     impl ISpyEventsChecker of super::ISpyEventsChecker<ContractState> {
         fn do_not_emit(ref self: ContractState) {
             let spy_events_checker = ISpyEventsCheckerDispatcher {
-                contract_address: self.proxied_address.read()
+                contract_address: self.proxied_address.read(),
             };
             spy_events_checker.do_not_emit();
         }
@@ -71,19 +72,19 @@ mod SpyEventsCheckerProxy {
             self.emit(Event::FirstEvent(FirstEvent { some_data }));
 
             let spy_events_checker = ISpyEventsCheckerDispatcher {
-                contract_address: self.proxied_address.read()
+                contract_address: self.proxied_address.read(),
             };
             spy_events_checker.emit_one_event(some_data);
         }
 
         fn emit_two_events(
-            ref self: ContractState, some_data: felt252, some_more_data: ContractAddress
+            ref self: ContractState, some_data: felt252, some_more_data: ContractAddress,
         ) {
             self.emit(Event::FirstEvent(FirstEvent { some_data }));
             self.emit(Event::SecondEvent(SecondEvent { some_data, some_more_data }));
 
             let spy_events_checker = ISpyEventsCheckerDispatcher {
-                contract_address: self.proxied_address.read()
+                contract_address: self.proxied_address.read(),
             };
             spy_events_checker.emit_two_events(some_data, some_more_data);
         }
@@ -92,14 +93,14 @@ mod SpyEventsCheckerProxy {
             ref self: ContractState,
             some_data: felt252,
             some_more_data: ContractAddress,
-            even_more_data: u256
+            even_more_data: u256,
         ) {
             self.emit(Event::FirstEvent(FirstEvent { some_data }));
             self.emit(Event::SecondEvent(SecondEvent { some_data, some_more_data }));
             self.emit(Event::ThirdEvent(ThirdEvent { some_data, some_more_data, even_more_data }));
 
             let spy_events_checker = ISpyEventsCheckerDispatcher {
-                contract_address: self.proxied_address.read()
+                contract_address: self.proxied_address.read(),
             };
             spy_events_checker.emit_three_events(some_data, some_more_data, even_more_data);
         }

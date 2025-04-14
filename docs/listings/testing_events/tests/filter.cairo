@@ -1,11 +1,11 @@
 use snforge_std::{
     declare, ContractClassTrait, DeclareResultTrait, spy_events, EventSpyAssertionsTrait,
     EventSpyTrait, Event,
-    EventsFilterTrait, // Add for filtering the Events object (result of `get_events`)
+    EventsFilterTrait // Add for filtering the Events object (result of `get_events`)
 };
 
 use testing_events::contract::{
-    SpyEventsChecker, ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait
+    SpyEventsChecker, ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait,
 };
 
 #[test]

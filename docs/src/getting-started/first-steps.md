@@ -9,6 +9,11 @@ To start a new project with Starknet Foundry, run `snforge new`
 $ snforge new hello_starknet
 ```
 
+> 📝 **Note**
+>
+> By default, `snforge new` creates a project with a simple `HelloStarknet` contract. You can create a different project using the `--template` flag. 
+> To see the list of available templates, refer to the [snforge new documentation](../appendix/snforge/new.md#-t---template)
+
 Let's check out the project structure
 
 ```shell

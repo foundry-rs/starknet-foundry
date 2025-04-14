@@ -4,6 +4,7 @@ use cairo_lang_syntax::node::ast::Expr;
 use data_representation::AllowedCalldataArgument;
 use starknet::core::types::contract::AbiEntry;
 
+mod binary;
 mod complex_types;
 pub(super) mod data_representation;
 mod literals;
@@ -21,7 +22,7 @@ trait SupportedCalldataKind {
 }
 
 /// A main function that transforms expressions supported by the transformer
-/// to their correspondning serializable struct representations
+/// to their corresponding serializable struct representations
 pub(super) fn build_representation(
     expression: Expr,
     expected_type: &str,
@@ -40,8 +41,8 @@ pub(super) fn build_representation(
         Expr::FunctionCall(item) => item.transform(expected_type, abi, db),
         Expr::InlineMacro(item) => item.transform(expected_type, abi, db),
         Expr::Tuple(item) => item.transform(expected_type, abi, db),
+        Expr::Binary(item) => item.transform(expected_type, abi, db),
         Expr::Parenthesized(_)
-        | Expr::Binary(_)
         | Expr::Block(_)
         | Expr::Match(_)
         | Expr::If(_)

@@ -7,11 +7,11 @@ trait IReplaceBytecodeB<TContractState> {
 
 #[starknet::contract]
 mod ReplaceBytecodeB {
-    use starknet::{SyscallResultTrait, SyscallResult, syscalls::get_execution_info_v2_syscall};
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     #[storage]
     struct Storage {
-        value: felt252
+        value: felt252,
     }
 
     #[abi(embed_v0)]

@@ -6,11 +6,7 @@ trait ICheatCallerAddressChecker<TContractState> {
 
 #[starknet::contract]
 mod CheatCallerAddressChecker {
-    use box::BoxTrait;
-    use starknet::ContractAddressIntoFelt252;
-    use starknet::ContractAddress;
-    use option::Option;
-    use traits::Into;
+    use core::{option::Option, traits::Into};
 
     #[storage]
     struct Storage {
@@ -20,12 +16,12 @@ mod CheatCallerAddressChecker {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        CallerAddressEmitted: CallerAddressEmitted
+        CallerAddressEmitted: CallerAddressEmitted,
     }
 
     #[derive(Drop, starknet::Event)]
     struct CallerAddressEmitted {
-        caller_address: felt252
+        caller_address: felt252,
     }
 
     #[abi(embed_v0)]

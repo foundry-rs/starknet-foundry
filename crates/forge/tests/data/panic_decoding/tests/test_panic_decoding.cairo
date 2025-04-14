@@ -1,4 +1,4 @@
-use array::ArrayTrait;
+use core::array::ArrayTrait;
 
 #[test]
 fn test_simple() {
@@ -16,7 +16,6 @@ fn test_panic_decoding() {
     arr.append(152);
     arr.append(124);
     arr.append(149);
-
     panic(arr);
 }
 

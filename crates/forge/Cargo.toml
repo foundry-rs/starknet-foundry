@@ -50,6 +50,7 @@ tokio.workspace = true
 futures.workspace = true
 url.workspace = true
 indoc.workspace = true
+derive_more.workspace = true
 
 [[bin]]
 name = "snforge"
@@ -60,7 +61,6 @@ assert_fs.workspace = true
 snapbox.workspace = true
 test_utils = { path = "test_utils" }
 axum.workspace = true
-lazy_static.workspace = true
 tempfile.workspace = true
 cairo-lang-starknet-classes.workspace = true
 walkdir.workspace = true

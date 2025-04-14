@@ -7,6 +7,7 @@ pub trait IHelloSncast<TContractState> {
 
 #[starknet::contract]
 mod HelloSncast {
+    use starknet::storage::{StoragePointerWriteAccess, StoragePointerReadAccess};
     #[storage]
     struct Storage {
         balance: felt252,
