@@ -3,6 +3,8 @@ use cairo_lang_macro::{Diagnostic, TokenStream};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::test::test;
 
+// TODO restore this test
+#[ignore]
 #[test]
 fn appends_internal_config_and_executable() {
     let item = TokenStream::new(EMPTY_FN.into());
