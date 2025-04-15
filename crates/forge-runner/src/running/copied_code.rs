@@ -1,3 +1,5 @@
+//! Module containing copied code to be upstreamed to blockifier
+
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::contract_class::{EntryPointV1, TrackedResource};
 use blockifier::execution::entry_point::{CallEntryPoint, EntryPointExecutionResult};
@@ -23,8 +25,7 @@ use cairo_vm::vm::security::verify_secure_runner;
 use num_traits::{ToPrimitive, Zero};
 use starknet_types_core::felt::Felt;
 
-/// Module containing copied code to be upstreamed to blockifier
-
+#[allow(clippy::needless_pass_by_value)]
 /// Why copied: Signature change
 /// Runs the runner from the given PC.
 pub(crate) fn run_entry_point(
@@ -55,6 +56,7 @@ pub(crate) fn run_entry_point(
     Ok(())
 }
 
+#[allow(clippy::items_after_statements, clippy::needless_pass_by_value)]
 /// Why copied: Required by `run_entry_point`
 ///
 /// Fills the holes after running the entry point.
@@ -252,6 +254,7 @@ pub fn finalize_execution(
     })
 }
 
+#[allow(clippy::trivially_copy_pass_by_ref)]
 /// Reason copied: Required by `finalize_execution`
 fn get_call_result(
     runner: &CairoRunner,
@@ -308,6 +311,7 @@ fn get_call_result(
     })
 }
 
+#[allow(unused_variables)]
 /// Reason copied: Removed code for test function arguments
 pub(crate) fn prepare_call_arguments(
     call: &CallEntryPoint,
