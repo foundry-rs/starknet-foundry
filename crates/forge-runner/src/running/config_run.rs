@@ -106,7 +106,6 @@ pub fn run_config_pass(
         },
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
-            user_args: vec![],
             panic_traceback: None,
         },
     };

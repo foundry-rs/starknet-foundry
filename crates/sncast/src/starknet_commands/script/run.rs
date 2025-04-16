@@ -1,3 +1,4 @@
+#![allow(unused_imports, dead_code)]
 use crate::starknet_commands::declare::Declare;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{WaitForTx, get_account};
@@ -274,138 +275,134 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
 
 #[expect(clippy::too_many_arguments)]
 pub fn run(
-    module_name: &str,
-    metadata: &Metadata,
-    package_metadata: &PackageMetadata,
-    artifacts: &mut HashMap<String, StarknetContractArtifacts>,
-    provider: &JsonRpcClient<HttpTransport>,
-    tokio_runtime: Runtime,
-    config: &CastConfig,
-    state_file_path: Option<Utf8PathBuf>,
+    _module_name: &str,
+    _metadata: &Metadata,
+    _package_metadata: &PackageMetadata,
+    _artifacts: &mut HashMap<String, StarknetContractArtifacts>,
+    _provider: &JsonRpcClient<HttpTransport>,
+    _tokio_runtime: Runtime,
+    _config: &CastConfig,
+    _state_file_path: Option<Utf8PathBuf>,
 ) -> Result<ScriptRunResponse> {
-    warn_if_sncast_std_not_compatible(metadata)?;
-    let artifacts = inject_lib_artifact(metadata, package_metadata, artifacts)?;
-
-    let artifact = artifacts
-        .get(SCRIPT_LIB_ARTIFACT_NAME)
-        .ok_or(anyhow!("Failed to find script artifact"))?;
-
-    let sierra_program = serde_json::from_str::<VersionedProgram>(&artifact.sierra)
-        .with_context(|| "Failed to deserialize Sierra program")?
-        .into_v1()
-        .with_context(|| "Failed to load Sierra program")?
-        .program;
-
-    let runner = SierraCasmRunner::new(
-        sierra_program.clone(),
-        Some(MetadataComputationConfig::default()),
-        OrderedHashMap::default(),
-        None,
-    )
-    .with_context(|| "Failed to set up runner")?;
-
-    // `builder` field in `SierraCasmRunner` is private, hence the need to create a new `RunnableBuilder`
-    // https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L184
-    let builder = RunnableBuilder::new(sierra_program, Some(MetadataComputationConfig::default()))
-        .with_context(|| "Failed to create builder")?;
-
-    let name_suffix = module_name.to_string() + "::main";
-    let func = runner.find_function(name_suffix.as_str())
-        .context("Failed to find main function in script - please make sure `sierra-replace-ids` is not set to `false` for `dev` profile in script's Scarb.toml")?;
-
-    let entry_code_config = EntryCodeConfig::testing();
-    let casm_program_wrapper_info = builder.create_wrapper_info(func, entry_code_config)?;
-    let entry_code = casm_program_wrapper_info.header;
-    let builtins = casm_program_wrapper_info.builtins;
-    let footer = create_code_footer();
-
-    // import from cairo-lang-runner
-    let assembled_program = builder
-        .casm_program()
-        .clone()
-        .assemble_ex(&entry_code, &footer);
-    let (hints_dict, string_to_hint) = hints_to_params(assembled_program.hints);
-
-    // hint processor
-    let mut context = build_context(
-        &SerializableBlockInfo::default().into(),
-        None,
-        &TrackedResource::CairoSteps,
-    );
-
-    let mut blockifier_state = CachedState::new(DictStateReader::default());
-
-    // TODO(#2954)
-    let param_types = builder.generic_id_and_size_from_concrete(&func.signature.param_types);
-
-    let segment_index = syscall_handler_offset(builtins.len(), has_segment_arena(&param_types));
-    let syscall_handler = SyscallHintProcessor::new(
-        &mut blockifier_state,
-        &mut context,
-        // This segment is created by SierraCasmRunner
-        Relocatable {
-            segment_index: segment_index
-                .try_into()
-                .expect("Failed to convert index to isize"),
-            offset: 0,
-        },
-        ExecutableCallEntryPoint::default(),
-        &string_to_hint,
-        ReadOnlySegments::default(),
-    );
-
-    let account = if config.account.is_empty() {
-        None
-    } else {
-        Some(tokio_runtime.block_on(get_account(
-            &config.account,
-            &config.accounts_file,
-            provider,
-            config.keystore.clone(),
-        ))?)
-    };
-    let state = StateManager::from(state_file_path)?;
-
-    let cast_extension = CastScriptExtension {
-        provider,
-        tokio_runtime,
-        config,
-        artifacts: &artifacts,
-        account: account.as_ref(),
-        state,
-    };
-
-    let mut cast_runtime = ExtendedRuntime {
-        extension: cast_extension,
-        extended_runtime: StarknetRuntime {
-            hint_handler: syscall_handler,
-            // If for some reason we need to calculate `user_args`, here
-            // is the function to do it: https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L464
-            // See TODO(#2966)
-            user_args: vec![vec![Arg::Value(Felt::from(i64::MAX))]],
-            panic_traceback: None,
-        },
-    };
-
-    match runner.run_function(
-        func,
-        &mut cast_runtime,
-        hints_dict,
-        assembled_program.bytecode.iter(),
-        builtins,
-    ) {
-        Ok(result) => match result.value {
-            RunResultValue::Success(data) => Ok(ScriptRunResponse {
-                status: "success".to_string(),
-                message: build_readable_text(&data),
-            }),
-            RunResultValue::Panic(panic_data) => Ok(ScriptRunResponse {
-                status: "script panicked".to_string(),
-                message: build_readable_text(&panic_data),
-            }),
-        },
-        Err(err) => Err(err.into()),
-    }
+    todo!("Use blockifier to run");
+    // warn_if_sncast_std_not_compatible(metadata)?;
+    // let artifacts = inject_lib_artifact(metadata, package_metadata, artifacts)?;
+    //
+    // let artifact = artifacts
+    //     .get(SCRIPT_LIB_ARTIFACT_NAME)
+    //     .ok_or(anyhow!("Failed to find script artifact"))?;
+    //
+    // let sierra_program = serde_json::from_str::<VersionedProgram>(&artifact.sierra)
+    //     .with_context(|| "Failed to deserialize Sierra program")?
+    //     .into_v1()
+    //     .with_context(|| "Failed to load Sierra program")?
+    //     .program;
+    //
+    // let runner = SierraCasmRunner::new(
+    //     sierra_program.clone(),
+    //     Some(MetadataComputationConfig::default()),
+    //     OrderedHashMap::default(),
+    //     None,
+    // )
+    // .with_context(|| "Failed to set up runner")?;
+    //
+    // // `builder` field in `SierraCasmRunner` is private, hence the need to create a new `RunnableBuilder`
+    // // https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L184
+    // let builder = RunnableBuilder::new(sierra_program, Some(MetadataComputationConfig::default()))
+    //     .with_context(|| "Failed to create builder")?;
+    //
+    // let name_suffix = module_name.to_string() + "::main";
+    // let func = runner.find_function(name_suffix.as_str())
+    //     .context("Failed to find main function in script - please make sure `sierra-replace-ids` is not set to `false` for `dev` profile in script's Scarb.toml")?;
+    //
+    // let entry_code_config = EntryCodeConfig::testing();
+    // let casm_program_wrapper_info = builder.create_wrapper_info(func, entry_code_config)?;
+    // let entry_code = casm_program_wrapper_info.header;
+    // let builtins = casm_program_wrapper_info.builtins;
+    // let footer = create_code_footer();
+    //
+    // // import from cairo-lang-runner
+    // let assembled_program = builder
+    //     .casm_program()
+    //     .clone()
+    //     .assemble_ex(&entry_code, &footer);
+    // let (hints_dict, string_to_hint) = hints_to_params(assembled_program.hints);
+    //
+    // // hint processor
+    // let mut context = build_context(
+    //     &SerializableBlockInfo::default().into(),
+    //     None,
+    //     &TrackedResource::CairoSteps,
+    // );
+    //
+    // let mut blockifier_state = CachedState::new(DictStateReader::default());
+    //
+    // // TODO(#2954)
+    // let param_types = builder.generic_id_and_size_from_concrete(&func.signature.param_types);
+    //
+    // let segment_index = syscall_handler_offset(builtins.len(), has_segment_arena(&param_types));
+    // let syscall_handler = SyscallHintProcessor::new(
+    //     &mut blockifier_state,
+    //     &mut context,
+    //     // This segment is created by SierraCasmRunner
+    //     Relocatable {
+    //         segment_index: segment_index
+    //             .try_into()
+    //             .expect("Failed to convert index to isize"),
+    //         offset: 0,
+    //     },
+    //     ExecutableCallEntryPoint::default(),
+    //     &string_to_hint,
+    //     ReadOnlySegments::default(),
+    // );
+    //
+    // let account = if config.account.is_empty() {
+    //     None
+    // } else {
+    //     Some(tokio_runtime.block_on(get_account(
+    //         &config.account,
+    //         &config.accounts_file,
+    //         provider,
+    //         config.keystore.clone(),
+    //     ))?)
+    // };
+    // let state = StateManager::from(_state_file_path)?;
+    //
+    // let cast_extension = CastScriptExtension {
+    //     provider,
+    //     tokio_runtime,
+    //     config,
+    //     artifacts: &artifacts,
+    //     account: account.as_ref(),
+    //     state,
+    // };
+    //
+    // let mut cast_runtime = ExtendedRuntime {
+    //     extension: cast_extension,
+    //     extended_runtime: StarknetRuntime {
+    //         hint_handler: syscall_handler,
+    //     },
+    // };
+    //
+    // match runner.run_function(
+    //     func,
+    //     &mut cast_runtime,
+    //     hints_dict,
+    //     assembled_program.bytecode.iter(),
+    //     builtins,
+    // ) {
+    //     Ok(result) => match result.value {
+    //         RunResultValue::Success(data) => Ok(ScriptRunResponse {
+    //             status: "success".to_string(),
+    //             message: build_readable_text(&data),
+    //         }),
+    //         RunResultValue::Panic(panic_data) => Ok(ScriptRunResponse {
+    //             status: "script panicked".to_string(),
+    //             message: build_readable_text(&panic_data),
+    //         }),
+    //     },
+    //     Err(err) => Err(err.into()),
+    // }
 }
 
 fn sncast_std_version_requirement() -> VersionReq {
