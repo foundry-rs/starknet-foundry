@@ -1419,7 +1419,6 @@ dependencies = [
  "blockifier",
  "cairo-annotations",
  "cairo-lang-casm",
- "cairo-lang-runner",
  "cairo-lang-starknet",
  "cairo-lang-starknet-classes",
  "cairo-lang-utils",
