@@ -8,7 +8,6 @@ use crate::{forge_config::ForgeTrackedResource, package_tests::TestDetails};
 use anyhow::Result;
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::state::{cached_state::CachedState, state_api::StateReader};
-use cairo_lang_runner::Arg;
 use cheatnet::runtime_extensions::forge_config_extension::{
     ForgeConfigExtension, config::RawForgeConfig,
 };
@@ -107,12 +106,7 @@ pub fn run_config_pass(
         },
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
-            // Max gas is no longer set by `create_entry_code_from_params`
-            // Instead, call to `ExternalHint::WriteRunParam` is added by it, and we need to
-            // store the gas value to be read by logic handling the hint
-            // TODO(#2966) we should subtract initial cost of the function from this value to be more exact.
-            //  But as a workaround it should be good enough.
-            user_args: vec![vec![Arg::Value(Felt::from(i64::MAX))]],
+            user_args: vec![],
             panic_traceback: None,
         },
     };

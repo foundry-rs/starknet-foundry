@@ -2540,8 +2540,6 @@ dependencies = [
  "blockifier",
  "cairo-annotations",
  "cairo-lang-casm",
- "cairo-lang-runnable-utils",
- "cairo-lang-runner",
  "cairo-lang-sierra",
  "cairo-lang-sierra-type-size",
  "cairo-lang-starknet",
