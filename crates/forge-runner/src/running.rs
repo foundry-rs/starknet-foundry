@@ -224,7 +224,6 @@ pub fn run_test_case(
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
             panic_traceback: None,
-            user_args: vec![],
         },
     };
 
