@@ -40,10 +40,8 @@ use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
-mod casm;
 pub mod config_run;
 mod copied_code;
-mod entry_code;
 mod hints;
 mod setup;
 mod syscall_handler;
@@ -247,7 +245,13 @@ pub fn run_test_case(
         extended_runtime: call_to_blockifier_runtime,
     };
 
-    let entry_point_initial_budget = setup::entry_point_initial_budget(&forge_runtime);
+    let entry_point_initial_budget = setup::entry_point_initial_budget(
+        &forge_runtime
+            .extended_runtime
+            .extended_runtime
+            .extended_runtime
+            .hint_handler,
+    );
     let args = prepare_call_arguments(
         &forge_runtime
             .extended_runtime

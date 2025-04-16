@@ -13,7 +13,6 @@ use cairo_vm::types::program::Program;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cheatnet::constants::build_test_entry_point;
-use cheatnet::runtime_extensions::forge_runtime_extension::ForgeRuntime;
 use starknet_api::deprecated_contract_class::EntryPointOffset;
 use std::collections::HashMap;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
@@ -76,12 +75,8 @@ fn builtins_from_program(program: &Program) -> Vec<BuiltinName> {
     program.iter_builtins().copied().collect::<Vec<_>>()
 }
 
-pub fn entry_point_initial_budget(forge_runtime: &ForgeRuntime) -> u64 {
-    forge_runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
+pub fn entry_point_initial_budget(syscall_hint_processor: &SyscallHintProcessor) -> u64 {
+    syscall_hint_processor
         .base
         .context
         .gas_costs()
