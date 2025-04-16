@@ -68,7 +68,7 @@ impl CallFailure {
             EntryPointExecutionError::ExecutionFailed { error_trace } => {
                 let err_data = error_trace.last_retdata.clone().0;
 
-                let err_data_str = build_readable_text(err_data.as_slice()).unwrap_or_default();
+                let err_data_str = build_readable_text(err_data.as_slice());
 
                 if err_data_str.contains("Failed to deserialize param #")
                     || err_data_str.contains("Input too long for arguments")

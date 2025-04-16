@@ -5503,7 +5503,6 @@ name = "shared"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "cairo-lang-runner",
  "clap",
  "clap_complete",
  "console",
@@ -5513,6 +5512,7 @@ dependencies = [
  "snapbox",
  "starknet",
  "starknet-types-core",
+ "starknet_api",
  "url",
 ]
 

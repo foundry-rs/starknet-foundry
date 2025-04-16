@@ -304,7 +304,7 @@ fn is_matching_with_msg(
                 )),
             )
         }
-        None => (true, build_readable_text(actual_panic_value)),
+        None => (true, Some(build_readable_text(actual_panic_value))),
     }
 }
 
@@ -333,7 +333,7 @@ impl TestCaseSummary<Single> {
                 ExpectedTestResult::Success => {
                     let summary = TestCaseSummary::Passed {
                         name,
-                        msg: build_readable_text(&data),
+                        msg: Some(build_readable_text(&data)),
                         test_statistics: (),
                         gas_info,
                         used_resources,
@@ -357,8 +357,11 @@ impl TestCaseSummary<Single> {
             RunStatus::Panic(value) => match &test_case.config.expected_result {
                 ExpectedTestResult::Success => TestCaseSummary::Failed {
                     name,
-                    msg: build_readable_text(&value)
-                        .map(|msg| add_backtrace_footer(msg, contracts_data, &encountered_errors)),
+                    msg: Some(add_backtrace_footer(
+                        build_readable_text(&value),
+                        contracts_data,
+                        &encountered_errors,
+                    )),
                     fuzzer_args,
                     test_statistics: (),
                     debugging_trace,
