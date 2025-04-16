@@ -1675,7 +1675,6 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "blockifier",
- "cairo-lang-runner",
  "cairo-lang-utils",
  "cairo-serde-macros",
  "cairo-vm",

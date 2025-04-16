@@ -105,6 +105,51 @@ impl ToShortString<Felt> for Felt {
     }
 }
 
+pub trait ToFixedLengthShortString<T>: Sized {
+    fn to_fixed_length_short_string(&self, length: usize) -> Result<String, ToStrErr>;
+}
+
+impl ToFixedLengthShortString<Felt> for Felt {
+    fn to_fixed_length_short_string(&self, length: usize) -> Result<String, ToStrErr> {
+        if length == 0 {
+            return if *self == Felt::ZERO {
+                Ok(String::new())
+            } else {
+                Err(ToStrErr)
+            };
+        }
+        if length > 31 {
+            // A short string can't be longer than 31 bytes.
+            return Err(ToStrErr);
+        }
+
+        // We pass through biguint as felt252.to_bytes_be() does not trim leading zeros.
+        let bytes = self.to_biguint().to_bytes_be();
+        let bytes_len = bytes.len();
+        if bytes_len > length {
+            // `value` has more bytes than expected.
+            return Err(ToStrErr);
+        }
+
+        let mut as_string = String::new();
+        for byte in bytes {
+            if byte == 0 {
+                as_string.push_str(r"\0");
+            } else if byte.is_ascii_graphic() || byte.is_ascii_whitespace() {
+                as_string.push(byte as char);
+            } else {
+                as_string.push_str(format!(r"\x{byte:02x}").as_str());
+            }
+        }
+
+        // `to_bytes_be` misses starting nulls. Prepend them as needed.
+        let missing_nulls = length - bytes_len;
+        as_string.insert_str(0, &r"\0".repeat(missing_nulls));
+
+        Ok(as_string)
+    }
+}
+
 pub trait TryInferFormat: Sized {
     /// Parses value from `hex string`, `dec string`, `quotted cairo shortstring `and `quotted cairo string`
     fn infer_format_and_parse(value: &str) -> Result<Vec<Self>, FromStrError>;
