@@ -1,4 +1,4 @@
-use crate::vm::{MemBuffer, cell_ref_to_relocatable, extract_relocatable, vm_get_range};
+use crate::vm::{cell_ref_to_relocatable, extract_relocatable, vm_get_range};
 use anyhow::Result;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
@@ -280,12 +280,10 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
         }
         .serialize_to_vec();
 
-        let mut buffer = MemBuffer::new_segment(vm);
-        let result_start = buffer.ptr;
-        buffer
-            .write_data(res.iter())
-            .expect("Failed to insert cheatcode result to memory");
-        let result_end = buffer.ptr;
+        let WrittenData {
+            start: result_start,
+            end: result_end,
+        } = write_data(res, vm)?;
         let output_start = vm_io_ptrs.output_start;
         let output_end = vm_io_ptrs.output_end;
 
@@ -476,4 +474,19 @@ impl From<BufferReadError> for EnhancedHintError {
                     )
             )
     }
+}
+
+struct WrittenData {
+    start: Relocatable,
+    end: Relocatable,
+}
+
+fn write_data(data: Vec<Felt>, vm: &mut VirtualMachine) -> Result<WrittenData, HintError> {
+    let mut ptr = vm.add_memory_segment();
+    let start = ptr;
+    for data in data {
+        vm.insert_value(ptr, data)?;
+        ptr += 1;
+    }
+    Ok(WrittenData { start, end: ptr })
 }
