@@ -4923,7 +4923,6 @@ dependencies = [
  "anyhow",
  "blockifier",
  "cairo-lang-casm",
- "cairo-lang-runner",
  "cairo-lang-utils",
  "cairo-vm",
  "conversions",

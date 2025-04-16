@@ -2,19 +2,22 @@ use anyhow::Result;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::errors::StateError;
-use cairo_lang_casm::hints::{ExternalHint, Hint, StarknetHint};
-use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::{MemBuffer, extract_relocatable, get_val, vm_get_range};
-use cairo_lang_runner::{Arg, casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
+use cairo_lang_casm::hints::{Hint, StarknetHint};
+use cairo_lang_casm::operand::{
+    BinOpOperand, CellRef, DerefOrImmediate, Operation, Register, ResOperand,
+};
 use cairo_lang_utils::bigint::BigIntAsHex;
+use cairo_lang_utils::extract_matches;
+use cairo_vm::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::{
     HintProcessor, HintProcessorLogic, HintReference,
 };
 use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
-use cairo_vm::types::relocatable::Relocatable;
+use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
+use cairo_vm::vm::errors::memory_errors::MemoryError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
@@ -24,7 +27,6 @@ use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::raw::RawFeltVec;
 use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
 use indoc::indoc;
-use num_traits::cast::ToPrimitive;
 use starknet_api::StarknetApiError;
 use starknet_types_core::felt::Felt;
 use std::any::Any;
@@ -57,10 +59,6 @@ pub trait SyscallPtrAccess {
 
 pub struct StarknetRuntime<'a> {
     pub hint_handler: SyscallHintProcessor<'a>,
-    // Required for handling `External` hints
-    //
-    // See https://github.com/starkware-libs/cairo/blob/dfb5d3fdcf80bff30c205c14163f99c890dbdc10/crates/cairo-lang-runner/src/casm_run/mod.rs#L94
-    pub user_args: Vec<Vec<Arg>>,
 }
 
 impl SyscallPtrAccess for StarknetRuntime<'_> {
@@ -117,6 +115,133 @@ fn parse_selector(selector: &BigIntAsHex) -> Result<String, HintError> {
     Ok(String::from(selector))
 }
 
+// TODO copied code
+fn cell_ref_to_relocatable(cell_ref: &CellRef, vm: &VirtualMachine) -> Relocatable {
+    let base = match cell_ref.register {
+        Register::AP => vm.get_ap(),
+        Register::FP => vm.get_fp(),
+    };
+    (base + (cell_ref.offset as i32)).unwrap()
+}
+
+// TODO copied code
+/// Extracts a parameter assumed to be a buffer.
+fn extract_buffer(buffer: &ResOperand) -> (&CellRef, Felt252) {
+    let (cell, base_offset) = match buffer {
+        ResOperand::Deref(cell) => (cell, 0.into()),
+        ResOperand::BinOp(BinOpOperand {
+            op: Operation::Add,
+            a,
+            b,
+        }) => (
+            a,
+            extract_matches!(b, DerefOrImmediate::Immediate)
+                .clone()
+                .value
+                .into(),
+        ),
+        _ => panic!("Illegal argument for a buffer."),
+    };
+    (cell, base_offset)
+}
+
+// TODO copied code
+/// Fetches the value of a cell plus an offset from the vm, useful for pointers.
+fn get_ptr(
+    vm: &VirtualMachine,
+    cell: &CellRef,
+    offset: &Felt252,
+) -> std::result::Result<Relocatable, VirtualMachineError> {
+    Ok((vm.get_relocatable(cell_ref_to_relocatable(cell, vm))? + offset)?)
+}
+
+// TODO copied code
+/// Extracts a parameter assumed to be a buffer, and converts it into a relocatable.
+fn extract_relocatable(
+    vm: &VirtualMachine,
+    buffer: &ResOperand,
+) -> std::result::Result<Relocatable, VirtualMachineError> {
+    let (base, offset) = extract_buffer(buffer);
+    get_ptr(vm, base, &offset)
+}
+
+// TODO copied code
+fn vm_get_range(
+    vm: &mut VirtualMachine,
+    mut calldata_start_ptr: Relocatable,
+    calldata_end_ptr: Relocatable,
+) -> std::result::Result<Vec<Felt252>, HintError> {
+    let mut values = vec![];
+    while calldata_start_ptr != calldata_end_ptr {
+        let val = *vm.get_integer(calldata_start_ptr)?;
+        values.push(val);
+        calldata_start_ptr.offset += 1;
+    }
+    Ok(values)
+}
+
+// TODO copied code
+/// Wrapper trait for a VM owner.
+pub trait VMWrapper {
+    fn vm(&mut self) -> &mut VirtualMachine;
+}
+impl VMWrapper for VirtualMachine {
+    fn vm(&mut self) -> &mut VirtualMachine {
+        self
+    }
+}
+
+// TODO copied code
+/// A helper struct to continuously write and read from a buffer in the VM memory.
+pub struct MemBuffer<'a> {
+    /// The VM to write to.
+    /// This is a trait so that we would borrow the actual VM only once.
+    vm: &'a mut dyn VMWrapper,
+    /// The current location of the buffer.
+    pub ptr: Relocatable,
+}
+
+// TODO copied code
+impl<'a> MemBuffer<'a> {
+    /// Creates a new buffer.
+    pub fn new(vm: &'a mut dyn VMWrapper, ptr: Relocatable) -> Self {
+        Self { vm, ptr }
+    }
+
+    /// Creates a new segment and returns a buffer wrapping it.
+    pub fn new_segment(vm: &'a mut dyn VMWrapper) -> Self {
+        let ptr = vm.vm().add_memory_segment();
+        Self::new(vm, ptr)
+    }
+
+    /// Returns the current position of the buffer and advances it by one.
+    fn next(&mut self) -> Relocatable {
+        let ptr = self.ptr;
+        self.ptr += 1;
+        ptr
+    }
+
+    /// Writes a value to the current position of the buffer and advances it by one.
+    pub fn write<T: Into<MaybeRelocatable>>(
+        &mut self,
+        value: T,
+    ) -> std::result::Result<(), MemoryError> {
+        let ptr = self.next();
+        self.vm.vm().insert_value(ptr, value)
+    }
+    /// Writes an iterator of values starting from the current position of the buffer and advances
+    /// it to after the end of the written value.
+    pub fn write_data<T: Into<MaybeRelocatable>, Data: Iterator<Item = T>>(
+        &mut self,
+        data: Data,
+    ) -> std::result::Result<(), MemoryError> {
+        for value in data {
+            self.write(value)?;
+        }
+        Ok(())
+    }
+}
+
 fn fetch_cheatcode_input(
     vm: &mut VirtualMachine,
     input_start: &ResOperand,
@@ -127,10 +252,6 @@ fn fetch_cheatcode_input(
     let inputs = vm_get_range(vm, input_start, input_end)
         .map_err(|_| CustomHint(Box::from("Failed to read input data")))?;
     Ok(inputs)
-}
-
-fn args_size(args: &[Arg]) -> usize {
-    args.iter().map(Arg::size).sum()
 }
 
 impl HintProcessorLogic for StarknetRuntime<'_> {
@@ -166,38 +287,6 @@ impl HintProcessorLogic for StarknetRuntime<'_> {
                     );
 
                     return Err(CustomHint(error.into()));
-                }
-                // Copied from https://github.com/starkware-libs/cairo/blob/3d5631d3f6563b5f97c11c816f530be99095a843/crates/cairo-lang-runner/src/casm_run/mod.rs#L1316
-                Hint::External(ExternalHint::AddRelocationRule { src, dst }) => {
-                    return Ok(vm.add_relocation_rule(
-                        extract_relocatable(vm, src)?,
-                        extract_relocatable(vm, dst)?,
-                    )?);
-                }
-                // Copied from https://github.com/starkware-libs/cairo/blob/3d5631d3f6563b5f97c11c816f530be99095a843/crates/cairo-lang-runner/src/casm_run/mod.rs#L1320
-                Hint::External(ExternalHint::WriteRunParam { index, dst }) => {
-                    let index = get_val(vm, index)?.to_usize().expect("Got a bad index.");
-                    let mut stack =
-                        vec![(cell_ref_to_relocatable(dst, vm), &self.user_args[index])];
-                    while let Some((mut buffer, values)) = stack.pop() {
-                        for value in values {
-                            match value {
-                                Arg::Value(v) => {
-                                    vm.insert_value(buffer, v)?;
-                                    buffer += 1;
-                                }
-                                Arg::Array(arr) => {
-                                    let arr_buffer = vm.add_memory_segment();
-                                    stack.push((arr_buffer, arr));
-                                    vm.insert_value(buffer, arr_buffer)?;
-                                    buffer += 1;
-                                    vm.insert_value(buffer, (arr_buffer + args_size(arr))?)?;
-                                    buffer += 1;
-                                }
-                            }
-                        }
-                    }
-                    return Ok(());
                 }
                 _ => {}
             }
@@ -330,8 +419,8 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
         let output_start = vm_io_ptrs.output_start;
         let output_end = vm_io_ptrs.output_end;
 
-        insert_value_to_cellref!(vm, output_start, result_start)?;
-        insert_value_to_cellref!(vm, output_end, result_end)?;
+        vm.insert_value(cell_ref_to_relocatable(output_start, vm), result_start)?;
+        vm.insert_value(cell_ref_to_relocatable(output_end, vm), result_end)?;
 
         self.propagate_cheatcode_signal(&selector, &inputs);
 

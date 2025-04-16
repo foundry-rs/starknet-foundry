@@ -295,7 +295,6 @@ pub fn run_test_case(
         },
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
-            user_args: vec![],
         },
     };
 
