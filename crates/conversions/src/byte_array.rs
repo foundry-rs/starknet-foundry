@@ -1,9 +1,9 @@
 use crate as conversions; // trick for CairoDeserialize macro
 use crate::serde::deserialize::{BufferReadError, BufferReadResult, BufferReader};
 use crate::{serde::serialize::SerializeToFeltVec, string::TryFromHexStr};
-use cairo_lang_runner::short_string::as_cairo_short_string_ex;
 use cairo_lang_utils::byte_array::{BYTE_ARRAY_MAGIC, BYTES_IN_WORD};
 use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
+use conversions::felt::ToFixedLengthShortString;
 use starknet_types_core::felt::Felt;
 use std::fmt;
 
@@ -59,11 +59,13 @@ impl fmt::Display for ByteArray {
         let full_words_string = self
             .words
             .iter()
-            .map(|word| as_cairo_short_string_ex(word, BYTES_IN_WORD).unwrap())
+            .map(|word| word.to_fixed_length_short_string(BYTES_IN_WORD).unwrap())
             .collect::<String>();
 
-        let pending_word_string =
-            as_cairo_short_string_ex(&self.pending_word, self.pending_word_len).unwrap();
+        let pending_word_string = &self
+            .pending_word
+            .to_fixed_length_short_string(self.pending_word_len)
+            .unwrap();
 
         write!(f, "{full_words_string}{pending_word_string}")
     }
