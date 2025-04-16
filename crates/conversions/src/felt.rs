@@ -79,6 +79,32 @@ impl FromShortString<Felt> for Felt {
     }
 }
 
+#[derive(Debug)]
+pub struct ToStrErr;
+
+pub trait ToShortString<T>: Sized {
+    fn to_short_string(&self) -> Result<String, ToStrErr>;
+}
+
+impl ToShortString<Felt> for Felt {
+    fn to_short_string(&self) -> Result<String, ToStrErr> {
+        let mut as_string = String::default();
+        let mut is_end = false;
+        for byte in self.to_biguint().to_bytes_be() {
+            if byte == 0 {
+                is_end = true;
+            } else if is_end {
+                return Err(ToStrErr);
+            } else if byte.is_ascii_graphic() || byte.is_ascii_whitespace() {
+                as_string.push(byte as char);
+            } else {
+                return Err(ToStrErr);
+            }
+        }
+        Ok(as_string)
+    }
+}
+
 pub trait TryInferFormat: Sized {
     /// Parses value from `hex string`, `dec string`, `quotted cairo shortstring `and `quotted cairo string`
     fn infer_format_and_parse(value: &str) -> Result<Vec<Self>, FromStrError>;
