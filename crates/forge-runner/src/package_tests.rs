@@ -1,3 +1,5 @@
+use crate::running::hints_to_params;
+use anyhow::Result;
 use cairo_lang_sierra::extensions::NamedType;
 use cairo_lang_sierra::extensions::bitwise::BitwiseType;
 use cairo_lang_sierra::extensions::circuit::{AddModType, MulModType};
@@ -8,8 +10,13 @@ use cairo_lang_sierra::extensions::range_check::{RangeCheck96Type, RangeCheckTyp
 use cairo_lang_sierra::extensions::segment_arena::SegmentArenaType;
 use cairo_lang_sierra::ids::GenericTypeId;
 use cairo_lang_sierra::program::ProgramArtifact;
+use cairo_vm::serde::deserialize_program::ReferenceManager;
 use cairo_vm::types::builtin_name::BuiltinName;
+use cairo_vm::types::program::Program;
+use cairo_vm::types::relocatable::MaybeRelocatable;
 use camino::Utf8PathBuf;
+use starknet_types_core::felt::Felt;
+use std::collections::HashMap;
 use std::sync::Arc;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
@@ -57,6 +64,36 @@ impl TestDetails {
         }
         builtins.reverse();
         builtins
+    }
+
+    pub fn try_into_program(
+        &self,
+        casm_program: &AssembledProgramWithDebugInfo,
+    ) -> Result<Program> {
+        let builtins = self.builtins();
+
+        let assembled_program = &casm_program.assembled_cairo_program;
+        let hints_dict = hints_to_params(assembled_program);
+        let data: Vec<MaybeRelocatable> = assembled_program
+            .bytecode
+            .iter()
+            .map(Felt::from)
+            .map(MaybeRelocatable::from)
+            .collect();
+
+        Program::new(
+            builtins.clone(),
+            data,
+            Some(0),
+            hints_dict,
+            ReferenceManager {
+                references: Vec::new(),
+            },
+            HashMap::new(),
+            vec![],
+            None,
+        )
+        .map_err(std::convert::Into::into)
     }
 }
 

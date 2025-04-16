@@ -52,18 +52,16 @@ use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
-mod casm;
 pub mod config_run;
 mod copied_code;
-mod entry_code;
 mod hints;
 mod syscall_handler;
 pub mod with_config;
 
+use crate::package_tests::TestDetails;
 use crate::running::copied_code::{
     finalize_execution, prepare_call_arguments, prepare_program_extra_data, run_entry_point,
 };
-use crate::running::syscall_handler::build_syscall_handler;
 pub use hints::hints_to_params;
 pub use syscall_handler::has_segment_arena;
 pub use syscall_handler::syscall_handler_offset;
@@ -227,11 +225,11 @@ fn builtins_from_program(program: &Program) -> Vec<BuiltinName> {
 }
 
 fn build_test_call_and_entry_point(
-    case: &TestCaseWithResolvedConfig,
+    test_details: &TestDetails,
     casm_program: &AssembledProgramWithDebugInfo,
     program: &Program,
 ) -> (ExecutableCallEntryPoint, EntryPointV1) {
-    let sierra_instruction_idx = case.test_details.sierra_entry_point_statement_idx;
+    let sierra_instruction_idx = test_details.sierra_entry_point_statement_idx;
     let casm_entry_point_offset = casm_program.debug_info[sierra_instruction_idx].0;
 
     let call = build_test_entry_point();
@@ -251,7 +249,8 @@ pub fn run_test_case(
     fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
 ) -> Result<RunResult> {
     let program = case.try_into_program(casm_program)?;
-    let (call, entry_point) = build_test_call_and_entry_point(case, casm_program, &program);
+    let (call, entry_point) =
+        build_test_call_and_entry_point(&case.test_details, casm_program, &program);
 
     let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(),
