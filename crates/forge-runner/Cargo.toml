@@ -7,8 +7,6 @@ edition.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-cairo-lang-runner.workspace = true
-cairo-lang-runnable-utils.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-sierra.workspace = true
 cairo-lang-utils.workspace = true
