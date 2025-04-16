@@ -244,7 +244,13 @@ pub fn run_test_case(
         extended_runtime: call_to_blockifier_runtime,
     };
 
-    let entry_point_initial_budget = setup::entry_point_initial_budget(&forge_runtime);
+    let entry_point_initial_budget = setup::entry_point_initial_budget(
+        &forge_runtime
+            .extended_runtime
+            .extended_runtime
+            .extended_runtime
+            .hint_handler,
+    );
     let args = prepare_call_arguments(
         &forge_runtime
             .extended_runtime
