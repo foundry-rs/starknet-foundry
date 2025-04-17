@@ -149,8 +149,13 @@ impl CallResult {
     #[must_use]
     pub fn from_success(call_info: &CallInfo) -> Self {
         let raw_return_data = &call_info.execution.retdata.0;
-
         let return_data = raw_return_data.iter().map(|data| (*data).into_()).collect();
+
+        if call_info.execution.failed {
+            return CallResult::Failure(CallFailure::Panic {
+                panic_data: return_data,
+            });
+        }
 
         CallResult::Success {
             ret_data: return_data,
@@ -206,6 +211,7 @@ pub fn call_entry_point(
         syscall_handler.base.state,
         cheatnet_state,
         syscall_handler.base.context,
+        false,
     );
 
     let result = CallResult::from_execution_result(&exec_result, starknet_identifier);
