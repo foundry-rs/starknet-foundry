@@ -90,6 +90,7 @@ jobs:
     name: Test binary
     needs: [ build-binaries, verify-version, dev-publish-std]
     uses: ./.github/workflows/_test-binaries.yml
+    secrets: inherit
     with:
       bin_version: ${{ needs.verify-version.outputs.version }}
       std_version: ${{ needs.verify-version.outputs.version }}
