@@ -6,7 +6,7 @@ use crate::runtime_extensions::common::{get_relocated_vm_trace, get_syscalls_gas
 use crate::state::{CallTrace, CallTraceNode, CheatStatus};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
-use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
+use blockifier::execution::syscalls::hint_processor::{SyscallUsageMap, ENTRYPOINT_NOT_FOUND_ERROR, OUT_OF_GAS_ERROR};
 use blockifier::{
     execution::{
         call_info::CallInfo,
@@ -31,7 +31,7 @@ use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::collections::{ HashMap, HashSet};
 use std::rc::Rc;
-use blockifier::execution::entry_point::ExecutableCallEntryPoint;
+use blockifier::execution::entry_point::{EntryPointRevertInfo, ExecutableCallEntryPoint};
 use blockifier::execution::stack_trace::{extract_trailing_cairo1_revert_trace, Cairo1RevertHeader};
 use thiserror::Error;
 use conversions::FromConv;
@@ -56,6 +56,7 @@ pub fn execute_call_entry_point(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
     context: &mut EntryPointExecutionContext,
+    is_revertable: bool,
 ) -> EntryPointExecutionResult<CallInfo> {
     let cheated_data = if let CallType::Delegate = entry_point.call_type {
         cheatnet_state
@@ -151,6 +152,18 @@ pub fn execute_call_entry_point(
 
     let contract_class = state.get_compiled_class(class_hash)?;
 
+    context.revert_infos.0.push(EntryPointRevertInfo::new(
+        entry_point.storage_address,
+        class_hash,
+        context.n_emitted_events,
+        context.n_sent_messages_to_l1,
+    ));
+
+    let tracked_resource = *context
+        .tracked_resource_stack
+        .last()
+        .expect("Unexpected empty tracked resource.");
+
     // Region: Modified blockifier code
     let result = match contract_class {
         RunnableCompiledClass::V0(compiled_class_v0) => execute_entry_point_call_cairo0(
@@ -170,14 +183,14 @@ pub fn execute_call_entry_point(
     };
 
     // region: Modified blockifier code
-    match convert_failed_execution_to_error(result) {
+    match evaluate_execution_result(result, entry_point.clone(), tracked_resource, is_revertable) {
         Ok(CallInfoWithExecutionData {
             call_info,
             syscall_usage,
             vm_trace,
             ..
         }) => {
-            remove_syscall_resources_and_exit_success_call(
+            remove_syscall_resources_and_exit_non_error_call(
                 &call_info,
                 &syscall_usage,
                 context,
@@ -199,28 +212,79 @@ pub fn execute_call_entry_point(
     // endregion
 }
 
-fn convert_failed_execution_to_error(
+fn evaluate_execution_result(
     result: ContractClassEntryPointExecutionResult,
+    call: ExecutableCallEntryPoint,
+    current_tracked_resource: TrackedResource,
+    is_revertable: bool,
 ) -> ContractClassEntryPointExecutionResult {
-    result.and_then(|res| {
-        if res.call_info.execution.failed {
-            Err(EntryPointExecutionErrorWithTrace {
-                source: EntryPointExecutionError::ExecutionFailed {
-                    error_trace: extract_trailing_cairo1_revert_trace(
-                        &res.call_info,
-                        Cairo1RevertHeader::Execution,
-                    ),
-                },
-                trace: res.vm_trace,
-                pcs: res.pcs,
-            })
-        } else {
+    match result {
+        Ok(res) => {
+            // TODO: It should check `context.versioned_constants().enable_reverts` instead of `is_revertable`
+            if res.call_info.execution.failed && !is_revertable {
+                return Err(EntryPointExecutionErrorWithTrace {
+                    source: EntryPointExecutionError::ExecutionFailed {
+                        error_trace: extract_trailing_cairo1_revert_trace(
+                            &res.call_info,
+                            Cairo1RevertHeader::Execution,
+                        ),
+                    },
+                    trace: res.vm_trace,
+                    pcs: res.pcs,
+                });
+            }
             Ok(res)
         }
-    })
+        Err(err) => {
+            handle_entry_point_execution_error(err, call, current_tracked_resource, is_revertable)
+        }
+    }
 }
 
-fn remove_syscall_resources_and_exit_success_call(
+fn handle_entry_point_execution_error(
+    err: EntryPointExecutionErrorWithTrace,
+    call: ExecutableCallEntryPoint,
+    current_tracked_resource: TrackedResource,
+    is_revertable: bool,
+) -> ContractClassEntryPointExecutionResult {
+    if let EntryPointExecutionError::PreExecutionError(pre_err) = &err.source {
+        // TODO: It should check `context.versioned_constants().enable_reverts` instead of `is_revertable`
+        if matches!(
+            pre_err,
+            PreExecutionError::EntryPointNotFound(_)
+                | PreExecutionError::NoEntryPointOfTypeFound(_)
+                | PreExecutionError::InsufficientEntryPointGas
+        ) && is_revertable
+        {
+            let error_code = match pre_err {
+                PreExecutionError::EntryPointNotFound(_)
+                | PreExecutionError::NoEntryPointOfTypeFound(_) => ENTRYPOINT_NOT_FOUND_ERROR,
+                PreExecutionError::InsufficientEntryPointGas => OUT_OF_GAS_ERROR,
+                _ => unreachable!(),
+            };
+
+            return Ok(CallInfoWithExecutionData {
+                call_info: CallInfo {
+                    call: call.into(),
+                    execution: CallExecution {
+                        retdata: Retdata(vec![Felt::from_hex(error_code).unwrap()]),
+                        failed: true,
+                        gas_consumed: 0,
+                        ..Default::default()
+                    },
+                    tracked_resource: current_tracked_resource,
+                    ..Default::default()
+                },
+                syscall_usage: SyscallUsageMap::default(),
+                vm_trace: None,
+                pcs: None,
+            });
+        }
+    }
+    Err(err)
+}
+
+fn remove_syscall_resources_and_exit_non_error_call(
     call_info: &CallInfo,
     syscall_usage: &SyscallUsageMap,
     context: &mut EntryPointExecutionContext,
@@ -315,7 +379,7 @@ pub fn execute_constructor_entry_point(
         initial_gas: remaining_gas,
     };
     // region: Modified blockifier code
-    execute_call_entry_point(&mut constructor_call, state, cheatnet_state, context)
+    execute_call_entry_point(&mut constructor_call, state, cheatnet_state, context, false)
     // endregion
 }
 

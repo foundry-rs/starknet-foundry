@@ -399,7 +399,6 @@ fn cant_call_test_contract() {
 
     assert_failed(&result);
     assert_case_output_contains(&result, "cant_call_test_contract", "ENTRYPOINT_NOT_FOUND");
-    assert_case_output_contains(&result, "cant_call_test_contract", "ENTRYPOINT_FAILED");
 }
 
 #[test]
