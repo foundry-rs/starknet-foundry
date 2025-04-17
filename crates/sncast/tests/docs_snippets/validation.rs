@@ -11,7 +11,6 @@ use docs::utils::{
 use docs::validation::{extract_snippets_from_directory, extract_snippets_from_file};
 use shared::test_utils::output_assert::assert_stdout_contains;
 
-#[ignore = "TODO cast scripts"]
 #[test]
 fn test_docs_snippets() {
     let root_dir_path = get_nth_ancestor(2);
