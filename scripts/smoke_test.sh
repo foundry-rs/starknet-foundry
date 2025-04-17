@@ -10,7 +10,7 @@ REPO_URL="$4"
 REVISION="$5"
 VERSION="$6"
 
-# Check forge std from github
+# Check snforge_std from github repository
 
 $SNFORGE_PATH new my_project_0
 pushd my_project_0 || exit
@@ -19,7 +19,7 @@ $SNFORGE_PATH test || exit
 popd || exit
 scarb cache clean
 
-# Check forge std from registry prebuild
+# Check snforge_std from registry with prebuild plugin
 
 $SNFORGE_PATH new my_project_1
 pushd my_project_1 || exit
@@ -37,7 +37,7 @@ fi
 popd || exit
 scarb cache clean
 
-# Check forge std from registry build
+# Check snforge_std from registry without prebuild plugin
 
 $SNFORGE_PATH new my_project_2
 pushd my_project_2 || exit
