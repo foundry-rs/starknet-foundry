@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
 
+#### Updated
+
+- OpenZeppelin account clash hash updated to the 1.0.0 preset
 
 ## [0.41.0] - 2025-04-08
 
