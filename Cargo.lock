@@ -2488,7 +2488,6 @@ dependencies = [
  "axum",
  "blockifier",
  "cairo-annotations",
- "cairo-lang-runnable-utils",
  "cairo-lang-sierra",
  "cairo-lang-starknet-classes",
  "cairo-vm",
