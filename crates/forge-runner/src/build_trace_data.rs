@@ -50,7 +50,7 @@ pub fn build_profiler_call_trace(
         vm_trace,
         contracts_data,
         versioned_program_path,
-        value.run_with_call_header,
+        false,
     );
 
     ProfilerCallTrace {
