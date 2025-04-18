@@ -88,7 +88,7 @@ pub fn get_statements(db: &dyn SyntaxGroup, func: &FunctionWithBody) -> (String,
             return None;
         };
 
-        // this function is named "snforge_std::_internals::_is_config_run"
+        // this function is named "snforge_std::_internals::is_config_run"
         let segments = expr.path(db).elements(db);
 
         let [snforge_std, cheatcode, is_config_run] = segments.as_slice() else {
@@ -97,7 +97,7 @@ pub fn get_statements(db: &dyn SyntaxGroup, func: &FunctionWithBody) -> (String,
 
         if snforge_std.identifier(db) != "snforge_std"
             || cheatcode.identifier(db) != "_internals"
-            || is_config_run.identifier(db) != "_is_config_run"
+            || is_config_run.identifier(db) != "is_config_run"
         {
             return None;
         }

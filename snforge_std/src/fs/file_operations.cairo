@@ -1,5 +1,5 @@
 use super::super::byte_array::byte_array_as_felt_array;
-use super::super::_cheatcode::execute_cheatcode;
+use super::super::cheatcode::execute_cheatcode;
 
 #[derive(Drop, Clone)]
 pub struct File {

@@ -1,4 +1,4 @@
-use super::super::_cheatcode::execute_cheatcode_and_deserialize;
+use super::super::cheatcode::execute_cheatcode_and_deserialize;
 
 
 /// Generates a random felt value

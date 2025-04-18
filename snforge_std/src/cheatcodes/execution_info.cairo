@@ -1,7 +1,7 @@
 use starknet::ContractAddress;
 use starknet::ResourcesBounds;
 use snforge_std::cheatcodes::CheatSpan;
-use super::super::_cheatcode::execute_cheatcode_and_deserialize;
+use super::super::cheatcode::execute_cheatcode_and_deserialize;
 
 pub mod caller_address;
 pub mod block_number;

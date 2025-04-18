@@ -103,11 +103,11 @@ fn accepts_string() {
         &result,
         r#"
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
 
                     let mut data = array![];
 
-                    snforge_std::_config_types::ForkConfig::Named("test")
+                    snforge_std::_internals::config_types::ForkConfig::Named("test")
                         .serialize(ref data);
 
                     starknet::testing::cheatcode::<'set_config_fork'>(data.span());
@@ -132,14 +132,14 @@ fn accepts_inline_config() {
         &result,
         r#"
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
 
                     let mut data = array![];
 
-                    snforge_std::_config_types::ForkConfig::Inline(
-                        snforge_std::_config_types::InlineForkConfig {
+                    snforge_std::_internals::config_types::ForkConfig::Inline(
+                        snforge_std::_internals::config_types::InlineForkConfig {
                             url: "http://example.com/",
-                            block: snforge_std::_config_types::BlockId::BlockNumber(0x17)
+                            block: snforge_std::_internals::config_types::BlockId::BlockNumber(0x17)
                         }
                     )
                     .serialize(ref data);
@@ -166,13 +166,13 @@ fn overriding_config_name_first() {
         &result,
         r#"
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
 
                     let mut data = array![];
 
-                    snforge_std::_config_types::ForkConfig::Overridden(
-                        snforge_std::_config_types::OverriddenForkConfig {
-                            block: snforge_std::_config_types::BlockId::BlockNumber(0x17),
+                    snforge_std::_internals::config_types::ForkConfig::Overridden(
+                        snforge_std::_internals::config_types::OverriddenForkConfig {
+                            block: snforge_std::_internals::config_types::BlockId::BlockNumber(0x17),
                             name: "MAINNET"
                         }
                      )
@@ -200,13 +200,13 @@ fn overriding_config_name_second() {
         &result,
         r#"
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
 
                     let mut data = array![];
 
-                    snforge_std::_config_types::ForkConfig::Overridden(
-                        snforge_std::_config_types::OverriddenForkConfig {
-                            block: snforge_std::_config_types::BlockId::BlockNumber(0x17),
+                    snforge_std::_internals::config_types::ForkConfig::Overridden(
+                        snforge_std::_internals::config_types::OverriddenForkConfig {
+                            block: snforge_std::_internals::config_types::BlockId::BlockNumber(0x17),
                             name: "MAINNET"
                         }
                     )

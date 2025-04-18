@@ -1,5 +1,5 @@
 use core::starknet::ContractAddress;
-use super::_cheatcode::execute_cheatcode_and_deserialize;
+use super::cheatcode::execute_cheatcode_and_deserialize;
 
 /// Tree-like structure which contains all of the starknet calls and sub-calls along with the
 /// results

@@ -63,8 +63,8 @@ fn from_resource_bounds(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String
 
     Ok(formatdoc!(
         "
-            snforge_std::_config_types::AvailableGasConfig::MaxResourceBounds(
-                 snforge_std::_config_types::AvailableResourceBoundsConfig {{
+            snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
+                 snforge_std::_internals::config_types::AvailableResourceBoundsConfig {{
                      l1_gas: {l1_gas_expr},
                      l1_data_gas: {l1_data_gas_expr},
                      l2_gas: {l2_gas_expr}
@@ -87,7 +87,7 @@ fn from_max_gas(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagno
     let gas = gas.as_cairo_expression();
 
     Ok(format!(
-        "snforge_std::_config_types::AvailableGasConfig::MaxGas({gas})"
+        "snforge_std::_internals::config_types::AvailableGasConfig::MaxGas({gas})"
     ))
 }
 

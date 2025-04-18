@@ -1,5 +1,5 @@
 use starknet::{ContractAddress, ClassHash, contract_address_const};
-use super::_cheatcode::execute_cheatcode_and_deserialize;
+use super::cheatcode::execute_cheatcode_and_deserialize;
 
 pub mod events;
 pub mod l1_handler;
