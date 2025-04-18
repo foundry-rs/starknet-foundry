@@ -57,6 +57,7 @@ pub fn run_test_case(
                 false,
                 false,
                 FailedTestsCache::default(),
+                None,
             ),
             forge_config: Arc::new(ForgeConfig {
                 test_runner_config: Arc::new(TestRunnerConfig {
