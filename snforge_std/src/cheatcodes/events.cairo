@@ -1,5 +1,5 @@
 use starknet::ContractAddress;
-use super::super::cheatcode::execute_cheatcode_and_deserialize;
+use crate::cheatcode::execute_cheatcode_and_deserialize;
 
 
 /// Creates `EventSpy` instance that spies on all events emitted after its creation.

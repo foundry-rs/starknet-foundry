@@ -1,5 +1,5 @@
 use starknet::{ContractAddress, EthAddress};
-use super::super::cheatcode::execute_cheatcode_and_deserialize;
+use crate::cheatcode::execute_cheatcode_and_deserialize;
 
 /// Creates `MessageToL1Spy` instance that spies on all messages sent to L1
 pub fn spy_messages_to_l1() -> MessageToL1Spy {

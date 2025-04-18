@@ -1,5 +1,5 @@
-use super::super::byte_array::byte_array_as_felt_array;
-use super::super::cheatcode::execute_cheatcode;
+use crate::byte_array::byte_array_as_felt_array;
+use crate::cheatcode::execute_cheatcode;
 
 /// Reads an environment variable, without parsing it
 /// `name` - name of an environment variable
