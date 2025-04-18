@@ -2509,6 +2509,8 @@ dependencies = [
  "indoc",
  "num-bigint",
  "openssl",
+ "packages_validation",
+ "project-root",
  "rand 0.8.5",
  "regex",
  "scarb-api",
@@ -4074,6 +4076,16 @@ dependencies = [
  "primeorder",
  "serdect",
  "sha2",
+]
+
+[[package]]
+name = "packages_validation"
+version = "1.0.0"
+dependencies = [
+ "camino",
+ "project-root",
+ "scarb-api",
+ "test-case",
 ]
 
 [[package]]
