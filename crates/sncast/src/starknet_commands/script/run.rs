@@ -383,6 +383,7 @@ pub fn run(
             // is the function to do it: https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L464
             // See TODO(#2966)
             user_args: vec![vec![Arg::Value(Felt::from(i64::MAX))]],
+            panic_traceback: None,
         },
     };
 
