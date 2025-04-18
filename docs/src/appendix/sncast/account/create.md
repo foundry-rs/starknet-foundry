@@ -38,7 +38,7 @@ Versions of the account contracts:
 
 | Account Contract | Version | Class Hash                                                                                                                                                          |
 |------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `oz`             | v0.14.0 | [0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6](https://starkscan.co/class/0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6) |
+| `oz`             | v1.0.0  | [0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564](https://starkscan.co/class/0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564) |
 | `argent`         | v0.3.1  | [0x029927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b](https://starkscan.co/class/0x029927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b) |
 <!-- TODO(#3118): Uncomment once braavos integration is restored -->
 <!-- | `braavos`        | v1.0.0  | [0x00816dd0297efc55dc1e7559020a3a825e81ef734b558f03c83325d4da7e6253](https://starkscan.co/class/0x00816dd0297efc55dc1e7559020a3a825e81ef734b558f03c83325d4da7e6253) | -->
