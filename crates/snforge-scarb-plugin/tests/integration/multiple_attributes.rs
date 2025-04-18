@@ -1,9 +1,18 @@
 use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN, FN_WITH_SINGLE_FELT252_PARAM};
-use cairo_lang_macro::TokenStream;
+use cairo_lang_macro::{ProcMacroResult, TokenStream};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::fuzzer::wrapper::fuzzer_wrapper;
 use snforge_scarb_plugin::attributes::fuzzer::{fuzzer, fuzzer_config};
 use snforge_scarb_plugin::attributes::{available_gas::available_gas, fork::fork, test::test};
+
+fn last_n_lines(result: &ProcMacroResult, n_lines: usize) -> TokenStream {
+    let lines = result.token_stream.to_string();
+    let lines = lines
+        .lines()
+        .skip(lines.lines().count() - n_lines)
+        .collect::<String>();
+    TokenStream::new(lines)
+}
 
 #[test]
 fn works_with_few_attributes() {
@@ -18,12 +27,29 @@ fn works_with_few_attributes() {
         &result,
         "
             #[snforge_internal_test_executable]
+            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+            fn empty_fn() -> Span::<felt252> {
+                core::internal::require_implicit::<System>();
+                core::internal::revoke_ap_tracking();
+                core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
+
+                core::option::OptionTraitImpl::expect(
+                    core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
+                );
+                empty_fn_return_wrapper();
+
+                let mut arr = ArrayTrait::new();
+                core::array::ArrayTrait::span(@arr)
+            }
+
             #[__internal_config_statement]
-            fn empty_fn(){}
+            fn empty_fn_return_wrapper() {
+            
+            }
         ",
     );
 
-    let item = result.token_stream;
+    let item = last_n_lines(&result, 4);
     let args = TokenStream::new("(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)".into());
 
     let result = available_gas(args, item);
@@ -33,9 +59,8 @@ fn works_with_few_attributes() {
     assert_output(
         &result,
         "
-            #[snforge_internal_test_executable]
             #[__internal_config_statement]
-            fn empty_fn() {
+            fn empty_fn_return_wrapper() {
                 if snforge_std::_internals::_is_config_run() {
                     let mut data = array![];
 
@@ -66,9 +91,8 @@ fn works_with_few_attributes() {
     assert_output(
         &result,
         r#"
-            #[snforge_internal_test_executable]
             #[__internal_config_statement]
-            fn empty_fn() {
+            fn empty_fn_return_wrapper() {
                 if snforge_std::_internals::_is_config_run() {
                     let mut data = array![];
 
@@ -109,13 +133,30 @@ fn works_with_fuzzer() {
     assert_output(
         &result,
         "
-            #[snforge_internal_test_executable]
+           #[snforge_internal_test_executable]
+            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+            fn empty_fn() -> Span::<felt252> {
+                core::internal::require_implicit::<System>();
+                core::internal::revoke_ap_tracking();
+                core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
+
+                core::option::OptionTraitImpl::expect(
+                    core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
+                );
+                empty_fn_return_wrapper();
+
+                let mut arr = ArrayTrait::new();
+                core::array::ArrayTrait::span(@arr)
+            }
+
             #[__internal_config_statement]
-            fn empty_fn(){}
+            fn empty_fn_return_wrapper() {
+
+            }
         ",
     );
 
-    let item = result.token_stream;
+    let item = last_n_lines(&result, 4);
     let args = TokenStream::new("(runs: 123, seed: 321)".into());
 
     let result = fuzzer(args, item);
@@ -125,11 +166,10 @@ fn works_with_fuzzer() {
     assert_output(
         &result,
         r"
-            #[snforge_internal_test_executable]
             #[__internal_config_statement]
             #[__fuzzer_config(runs: 123, seed: 321)]
             #[__fuzzer_wrapper]
-            fn empty_fn() {}
+            fn empty_fn_return_wrapper() {}
         ",
     );
 }
@@ -172,7 +212,6 @@ fn works_with_fuzzer_config_wrapper() {
     // due to the function having a parameter
     let item = TokenStream::new(formatdoc!(
         r"
-        #[snforge_internal_test_executable]
         #[__internal_config_statement]
         {}
         ",
@@ -187,7 +226,6 @@ fn works_with_fuzzer_config_wrapper() {
     assert_output(
         &result,
         r"
-            #[snforge_internal_test_executable]
             #[__internal_config_statement]
             fn empty_fn(f: felt252) {
                 if snforge_std::_internals::_is_config_run() {
@@ -230,7 +268,6 @@ fn works_with_fuzzer_config_wrapper() {
     assert_output(
         &result,
         r"
-            #[snforge_internal_test_executable]
             #[__internal_config_statement]
             fn empty_fn() {
                 if snforge_std::_internals::_is_config_run() {
