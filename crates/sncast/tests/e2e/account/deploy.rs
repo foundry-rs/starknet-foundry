@@ -179,7 +179,6 @@ pub async fn test_valid_class_hash() {
 }
 
 #[tokio::test]
-#[ignore = "TODO(#3100)"]
 pub async fn test_valid_no_max_fee() {
     let tempdir = create_account(true, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
     let accounts_file = "accounts.json";
