@@ -32,14 +32,22 @@ use std::cell::RefCell;
 use std::collections::{ HashMap, HashSet};
 use std::rc::Rc;
 use blockifier::execution::entry_point::ExecutableCallEntryPoint;
+use blockifier::execution::stack_trace::{extract_trailing_cairo1_revert_trace, Cairo1RevertHeader};
 use thiserror::Error;
 use conversions::FromConv;
 use shared::vm::VirtualMachineExt;
 
-pub(crate) type ContractClassEntryPointExecutionResult = Result<
-    (CallInfo, SyscallUsageMap, Option<Vec<RelocatedTraceEntry>>),
-    EntryPointExecutionErrorWithTrace,
->;
+pub(crate) type ContractClassEntryPointExecutionResult =
+    Result<CallInfoWithExecutionData, EntryPointExecutionErrorWithTrace>;
+
+pub(crate) struct CallInfoWithExecutionData {
+    pub call_info: CallInfo,
+    pub syscall_usage: SyscallUsageMap,
+    pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
+    // In case of a failed execution it saves the panic backtrace
+    // or the last pc in the trace if `panic-backtrace` is not enabled
+    pub pcs: Option<Vec<usize>>,
+}
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
 #[expect(clippy::too_many_lines)]
@@ -162,8 +170,13 @@ pub fn execute_call_entry_point(
     };
 
     // region: Modified blockifier code
-    match result {
-        Ok((call_info, syscall_usage, vm_trace)) => {
+    match convert_failed_execution_to_error(result) {
+        Ok(CallInfoWithExecutionData {
+            call_info,
+            syscall_usage,
+            vm_trace,
+            ..
+        }) => {
             remove_syscall_resources_and_exit_success_call(
                 &call_info,
                 &syscall_usage,
@@ -173,12 +186,38 @@ pub fn execute_call_entry_point(
             );
             Ok(call_info)
         }
-        Err(EntryPointExecutionErrorWithTrace { source: err, trace }) => {
+        Err(EntryPointExecutionErrorWithTrace {
+            source: err,
+            trace,
+            pcs,
+        }) => {
+            cheatnet_state.register_error(class_hash, pcs.unwrap_or_default());
             exit_error_call(&err, cheatnet_state, &entry_point, trace);
             Err(err)
         }
     }
     // endregion
+}
+
+fn convert_failed_execution_to_error(
+    result: ContractClassEntryPointExecutionResult,
+) -> ContractClassEntryPointExecutionResult {
+    result.and_then(|res| {
+        if res.call_info.execution.failed {
+            Err(EntryPointExecutionErrorWithTrace {
+                source: EntryPointExecutionError::ExecutionFailed {
+                    error_trace: extract_trailing_cairo1_revert_trace(
+                        &res.call_info,
+                        Cairo1RevertHeader::Execution,
+                    ),
+                },
+                trace: res.vm_trace,
+                pcs: res.pcs,
+            })
+        } else {
+            Ok(res)
+        }
+    })
 }
 
 fn remove_syscall_resources_and_exit_success_call(
@@ -348,6 +387,7 @@ fn aggregate_syscall_usage(trace: &Rc<RefCell<CallTrace>>) -> SyscallUsageMap {
 pub struct EntryPointExecutionErrorWithTrace {
     pub source: EntryPointExecutionError,
     pub trace: Option<Vec<RelocatedTraceEntry>>,
+    pub pcs: Option<Vec<usize>>,
 }
 
 impl<T> From<T> for EntryPointExecutionErrorWithTrace
@@ -358,22 +398,21 @@ where
         Self {
             source: value.into(),
             trace: None,
+            pcs: None,
         }
     }
 }
 
-pub(crate) fn extract_trace_and_register_errors(
+pub(crate) fn extract_trace_and_reversed_traceback(
     source: EntryPointExecutionError,
-    class_hash: ClassHash,
     runner: &mut CairoRunner,
-    cheatnet_state: &mut CheatnetState,
 ) -> EntryPointExecutionErrorWithTrace {
     let trace = get_relocated_vm_trace(runner);
     let pcs = runner.vm.get_reversed_pc_traceback();
-    cheatnet_state.register_error(class_hash, pcs);
 
     EntryPointExecutionErrorWithTrace {
         source,
         trace: Some(trace),
+        pcs: Some(pcs),
     }
 }
