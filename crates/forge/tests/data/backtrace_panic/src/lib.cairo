@@ -37,7 +37,7 @@ pub mod InnerContract {
     }
 
     fn inner_call() {
-        assert(1 != 1, 'aaaa');
+        assert(1 != 1, 'Assert failed');
     }
 }
 
@@ -48,8 +48,21 @@ mod Test {
     use super::{IOuterContractDispatcher, IOuterContractDispatcherTrait};
 
     #[test]
-    #[should_panic]
     fn test_contract_panics() {
+        let contract_inner = declare("InnerContract").unwrap().contract_class();
+        let (contract_address_inner, _) = contract_inner.deploy(@array![]).unwrap();
+
+        let contract_outer = declare("OuterContract").unwrap().contract_class();
+        let (contract_address_outer, _) = contract_outer.deploy(@array![]).unwrap();
+
+        let dispatcher = IOuterContractDispatcher { contract_address: contract_address_outer };
+        dispatcher.outer(contract_address_inner);
+    }
+
+    #[ignore]
+    #[should_panic]
+    #[test]
+    fn test_contract_panics_with_should_panic() {
         let contract_inner = declare("InnerContract").unwrap().contract_class();
         let (contract_address_inner, _) = contract_inner.deploy(@array![]).unwrap();
 
