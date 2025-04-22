@@ -113,7 +113,7 @@ jobs:
 
       - run: cargo test --release -p sncast
 
-  verify-version:
+  get-version:
     name: Get current foundry version
     runs-on: ubuntu-latest
     outputs:
@@ -137,42 +137,42 @@ jobs:
   build-plugin-binaries:
     name: Build plugin binaries
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
-    needs: verify-version
+    needs: get-version
     uses: ./.github/workflows/_build-plugin-binaries.yml
     with:
-      overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
+      overridden_plugin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
           
   publish-plugin:
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
-    needs: [verify-version, build-plugin-binaries]
+    needs: [get-version, build-plugin-binaries]
     uses: ./.github/workflows/_publish_plugin.yml
     secrets: inherit
     with:
-      overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
+      overridden_plugin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
 
   publish-std:
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
-    needs: [verify-version, publish-plugin]
+    needs: [get-version, publish-plugin]
     uses: ./.github/workflows/publish_std.yml
     secrets: inherit
     with:
-      plugin_dep_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
-      override_std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
+      plugin_dep_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
+      override_std_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
 
   build-binaries:
-    needs: [verify-version]
+    needs: [get-version]
     uses: ./.github/workflows/_build-binaries.yml
     with:
-      version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
+      version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
 
   test-binary:
     name: Test binary
-    needs: [ build-binaries, verify-version, publish-std ]
+    needs: [ build-binaries, get-version, publish-std ]
     uses: ./.github/workflows/_test-binaries.yml
     secrets: inherit
     with:
-      bin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
-      std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
+      bin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
+      std_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
 
 
   notify_if_failed:
