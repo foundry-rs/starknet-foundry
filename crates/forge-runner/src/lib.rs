@@ -25,6 +25,7 @@ use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
 pub mod build_trace_data;
 pub mod coverage_api;
+pub mod data;
 pub mod expected_result;
 pub mod forge_config;
 pub mod package_tests;

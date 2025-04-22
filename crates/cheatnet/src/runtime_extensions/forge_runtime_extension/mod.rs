@@ -42,6 +42,7 @@ use cairo_vm::vm::{
     errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
     vm_core::VirtualMachine,
 };
+use cheatcodes::erc20::set_balance;
 use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
 use conversions::felt::TryInferFormat;
@@ -211,6 +212,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     &class_hash,
                     &calldata,
                     contract_address,
+                    false,
                 ))
             }
             "precalculate_address" => {
@@ -489,6 +491,20 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let loaded = load(*state, target, storage_address).context("Failed to load")?;
 
                 Ok(CheatcodeHandlingResult::from_serializable(loaded))
+            }
+            "set_balance" => {
+                let state = &mut extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .base
+                    .state;
+                let target = input_reader.read()?;
+                let new_balance = input_reader.read()?;
+                let token = input_reader.read()?;
+                set_balance(*state, target, new_balance, token).context("Failed to set balance")?;
+
+                Ok(CheatcodeHandlingResult::from_serializable(()))
             }
             "map_entry_address" => {
                 let map_selector = input_reader.read()?;

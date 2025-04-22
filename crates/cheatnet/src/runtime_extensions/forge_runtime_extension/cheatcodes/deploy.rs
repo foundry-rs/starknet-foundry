@@ -25,6 +25,7 @@ pub fn deploy_at(
     class_hash: &ClassHash,
     calldata: &[Felt],
     contract_address: ContractAddress,
+    ignore_used_resources: bool,
 ) -> Result<(ContractAddress, Vec<Felt>), CheatcodeError> {
     if let Ok(class_hash) = syscall_handler
         .base
@@ -55,12 +56,17 @@ pub fn deploy_at(
         calldata,
         i64::MAX as u64,
     );
-    cheatnet_state.increment_deploy_salt_base();
+
+    if !ignore_used_resources {
+        cheatnet_state.increment_deploy_salt_base();
+    }
 
     match exec_result {
         Ok(call_info) => {
             let retdata = call_info.execution.retdata.0.clone();
-            syscall_handler.base.inner_calls.push(call_info);
+            if !ignore_used_resources {
+                syscall_handler.base.inner_calls.push(call_info);
+            }
             Ok((contract_address, retdata))
         }
         Err(err) => {
@@ -87,5 +93,6 @@ pub fn deploy(
         class_hash,
         calldata,
         contract_address,
+        false,
     )
 }

@@ -36,6 +36,14 @@ pub fn declare(
         .get_class_hash(contract_name)
         .expect("Failed to get class hash");
 
+    declare_with_contract_class(state, contract_class, class_hash)
+}
+
+pub fn declare_with_contract_class(
+    state: &mut dyn State,
+    contract_class: RunnableCompiledClass,
+    class_hash: ClassHash,
+) -> Result<DeclareResult, CheatcodeError> {
     match state.get_compiled_class(class_hash) {
         Err(StateError::UndeclaredClassHash(_)) => {
             // Class is undeclared; declare it.

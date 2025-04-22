@@ -17,6 +17,11 @@ use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::ClassHash;
 use starknet_api::{core::ContractAddress, transaction::fields::Calldata};
 
+pub const STRK_CONTRACT_ADDRESS: &str =
+    "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
+pub const STRK_CLASS_HASH: &str =
+    "0x04ad3c1dc8413453db314497945b6903e1c766495a1e60492d44da9c2a986e4b";
+
 // Mocked class hashes, those are not checked anywhere
 pub const TEST_ERC20_CONTRACT_CLASS_HASH: &str = "0x1010";
 

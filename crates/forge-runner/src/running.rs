@@ -1,11 +1,16 @@
 use crate::backtrace::add_backtrace_footer;
+use crate::data::STRK_ERC20_CASM;
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
 use crate::test_case_summary::{Single, TestCaseSummary};
 use anyhow::{Result, ensure};
-use blockifier::execution::contract_class::TrackedResource;
+use blockifier::execution::contract_class::{
+    CompiledClassV1, RunnableCompiledClass, TrackedResource,
+};
 use blockifier::execution::entry_point::EntryPointExecutionContext;
+use blockifier::execution::syscalls::SyscallSelector;
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
 use cairo_lang_runner::{Arg, RunResult, SierraCasmRunner};
 use cairo_lang_sierra::extensions::NamedType;
@@ -21,15 +26,20 @@ use cairo_lang_sierra::extensions::starknet::syscalls::SystemType;
 use cairo_lang_sierra::ids::GenericTypeId;
 use cairo_lang_utils::unordered_hash_set::UnorderedHashSet;
 use cairo_vm::Felt252;
+use cairo_vm::types::builtin_name::BuiltinName;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use camino::{Utf8Path, Utf8PathBuf};
 use casm::{get_assembled_program, run_assembled_program};
-use cheatnet::constants as cheatnet_constants;
+use cheatnet::constants::{self as cheatnet_constants, STRK_CLASS_HASH, STRK_CONTRACT_ADDRESS};
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::{
+    DeclareResult, declare_with_contract_class,
+};
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy_at;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
     ForgeExtension, ForgeRuntime, add_resources_to_top_call, get_all_used_resources,
@@ -38,15 +48,22 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredErrors, ExtendedStateReader,
 };
+
+use conversions::FromConv;
+use conversions::felt::FromShortString;
+use conversions::string::TryFromHexStr;
 use entry_code::create_entry_code;
 use hints::{hints_by_representation, hints_to_params};
 use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
-use starknet_api::execution_resources::GasVector;
+use starknet_api::contract_class::SierraVersion;
+use starknet_api::core::{ClassHash, ContractAddress};
+use starknet_api::execution_resources::{GasAmount, GasVector};
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::default::Default;
+use std::env;
 use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
@@ -193,7 +210,11 @@ pub fn run_test_case(
         set_max_steps(&mut context, max_n_steps);
     }
     let mut cached_state = CachedState::new(state_reader);
-    let syscall_handler = build_syscall_handler(
+
+    let class_hash_strk = ClassHash::from_(Felt::try_from_hex_str(STRK_CLASS_HASH).unwrap());
+    predeclare_token(&mut cached_state, class_hash_strk);
+
+    let mut syscall_handler = build_syscall_handler(
         &mut cached_state,
         &string_to_hint,
         &mut context,
@@ -206,6 +227,8 @@ pub fn run_test_case(
         ..Default::default()
     };
     cheatnet_state.trace_data.is_vm_trace_needed = runtime_config.is_vm_trace_needed;
+
+    predeploy_token(&mut syscall_handler, &mut cheatnet_state, class_hash_strk);
 
     let cheatable_runtime = ExtendedRuntime {
         extension: CheatableStarknetRuntimeExtension {
@@ -303,11 +326,14 @@ pub fn run_test_case(
     let transaction_context = get_context(&forge_runtime).tx_context.clone();
     let used_resources =
         get_all_used_resources(forge_runtime, &transaction_context, tracked_resource);
+    let used_resources = reduce_used_resources_after_predeployment(used_resources);
+
     let gas = calculate_used_gas(
         &transaction_context,
         &mut cached_state,
         used_resources.clone(),
     )?;
+    let gas = reduce_gas_after_predeployment(gas);
 
     Ok(RunResultWithInfo {
         run_result: run_result.map(|(gas_counter, memory, value)| RunResult {
@@ -323,6 +349,144 @@ pub fn run_test_case(
         encountered_errors,
         fuzzer_args,
     })
+}
+
+fn predeclare_token(cached_state: &mut CachedState<ExtendedStateReader>, class_hash: ClassHash) {
+    let erc20_class = RunnableCompiledClass::V1(
+        CompiledClassV1::try_from_json_string(&STRK_ERC20_CASM, SierraVersion::LATEST).unwrap(),
+    );
+    let result = declare_with_contract_class(cached_state, erc20_class, class_hash)
+        .expect("Failed to declare class");
+
+    match result {
+        DeclareResult::Success(_) => {}
+        DeclareResult::AlreadyDeclared(_) => {
+            unreachable!("STRK token should not be already declared")
+        }
+    }
+}
+
+fn predeploy_token(
+    syscall_handler: &mut SyscallHintProcessor,
+    cheatnet_state: &mut CheatnetState,
+    class_hash_strk: ClassHash,
+) {
+    let contract_address: ContractAddress = Felt::try_from_hex_str(STRK_CONTRACT_ADDRESS)
+        .unwrap()
+        .try_into()
+        .unwrap();
+
+    let calldata = vec![
+        // name
+        Felt::from_short_string("STRK").unwrap(),
+        // symbol
+        Felt::from_short_string("STRK").unwrap(),
+        // decimals
+        18.into(),
+        // initial_supply low
+        100_000_000.into(),
+        // initial_supply high
+        0.into(),
+        // recipient
+        123.into(),
+        // permitted_minter
+        123.into(),
+        // provisional_governance_admin
+        123.into(),
+        // upgrade_delay
+        0.into(),
+    ];
+
+    deploy_at(
+        syscall_handler,
+        cheatnet_state,
+        &class_hash_strk,
+        &calldata,
+        contract_address,
+        true,
+    )
+    .expect("Failed to deploy contract");
+}
+
+fn reduce_used_resources_after_predeployment(used_resources: UsedResources) -> UsedResources {
+    let mut used_resources = used_resources;
+
+    if let Some(range_check_mut) = used_resources
+        .execution_resources
+        .builtin_instance_counter
+        .get_mut(&BuiltinName::range_check)
+    {
+        if *range_check_mut >= 20 {
+            *range_check_mut -= 20;
+        }
+    }
+
+    if let Some(pedersen) = used_resources
+        .execution_resources
+        .builtin_instance_counter
+        .get(&BuiltinName::pedersen)
+        .copied()
+    {
+        if pedersen == 1 {
+            used_resources
+                .execution_resources
+                .builtin_instance_counter
+                .remove(&BuiltinName::pedersen);
+        } else if let Some(pedersen_mut) = used_resources
+            .execution_resources
+            .builtin_instance_counter
+            .get_mut(&BuiltinName::pedersen)
+        {
+            *pedersen_mut = pedersen - 1;
+        }
+    }
+
+    // subtract steps
+    if used_resources.execution_resources.n_steps >= 976 {
+        used_resources.execution_resources.n_steps -= 976;
+    }
+
+    // remove torage write if call count is 7 and linear factor is 0
+    if let Some(syscall_usage) = used_resources
+        .syscall_usage
+        .get_mut(&SyscallSelector::StorageWrite)
+    {
+        if syscall_usage.call_count == 7 && syscall_usage.linear_factor == 0 {
+            used_resources
+                .syscall_usage
+                .remove(&SyscallSelector::StorageWrite);
+        }
+    }
+
+    if let Some(syscall_usage) = used_resources
+        .syscall_usage
+        .get_mut(&SyscallSelector::EmitEvent)
+    {
+        if syscall_usage.call_count == 1 && syscall_usage.linear_factor == 0 {
+            used_resources
+                .syscall_usage
+                .remove(&SyscallSelector::EmitEvent);
+        }
+    }
+
+    used_resources
+}
+
+fn reduce_gas_after_predeployment(gas: GasVector) -> GasVector {
+    let mut gas = gas;
+
+    // We need to subtract gas used for state changes
+    // n_storage_updates: 5
+    // n_class_hash_updates: 1
+    // n_compiled_class_hash_updates: 0
+    // n_modified_contracts: 1
+    // n_allocated_keys: 5
+    gas.l1_data_gas = gas
+        .l1_data_gas
+        .checked_sub(GasAmount(576))
+        .expect("L1 data gas underflow");
+
+    gas
 }
 
 // TODO(#2958) Remove copied code
