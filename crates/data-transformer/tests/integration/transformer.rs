@@ -1,34 +1,16 @@
+use crate::integration::{CLASS, init_class};
 use core::fmt;
 use data_transformer::Calldata;
 use indoc::indoc;
 use itertools::Itertools;
 use primitive_types::U256;
-use starknet::core::types::{BlockId, BlockTag, ContractClass};
+use starknet::core::types::{BlockId, BlockTag};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet_types_core::felt::Felt;
 use std::ops::Not;
 use test_case::test_case;
-use tokio::sync::OnceCell;
-use url::Url;
-
-// Deployment of contract from /tests/data/data_transformer
-const TEST_CLASS_HASH: Felt =
-    Felt::from_hex_unchecked("0x0786d1f010d66f838837290e472415186ba6a789fb446e7f92e444bed7b5d9c0");
-
-static CLASS: OnceCell<ContractClass> = OnceCell::const_new();
-
-async fn init_class() -> ContractClass {
-    let client = JsonRpcClient::new(HttpTransport::new(
-        Url::parse("http://188.34.188.184:7070/rpc/v0_8").unwrap(),
-    ));
-
-    client
-        .get_class(BlockId::Tag(BlockTag::Latest), TEST_CLASS_HASH)
-        .await
-        .unwrap()
-}
 
 trait Contains<T: fmt::Debug + Eq> {
     fn assert_contains(&self, value: T);
@@ -48,7 +30,7 @@ async fn run_transformer(input: &str, selector: &str) -> anyhow::Result<Vec<Felt
 
     Calldata::new(input.to_string()).serialized(
         contract_class,
-        &get_selector_from_name(selector).expect("valid selector"),
+        &get_selector_from_name(selector).expect("should be valid selector"),
     )
 }
 
