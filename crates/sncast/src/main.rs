@@ -2,8 +2,8 @@ use crate::starknet_commands::{
     account, account::Account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke,
     multicall::Multicall, script::Script, show_config::ShowConfig, tx_status::TxStatus,
 };
-use anyhow::{Context, Result};
-use data_transformer::{Calldata, reverse_transform_output};
+use anyhow::{Context, Result, bail};
+use data_transformer::{reverse_transform_output, transform};
 use sncast::helpers::account::generate_account_name;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{OutputFormat, print_command_result};
@@ -176,7 +176,14 @@ impl Arguments {
         selector: &Felt,
     ) -> Result<Vec<Felt>> {
         if let Some(arguments) = self.arguments {
-            Calldata::new(arguments).serialized(contract_class, selector)
+            let ContractClass::Sierra(sierra_class) = contract_class else {
+                bail!("Transformation of arguments is not available for Cairo Zero contracts")
+            };
+
+            let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str())
+                .context("Couldn't deserialize ABI received from network")?;
+
+            transform(&arguments, &abi, selector)
         } else if let Some(calldata) = self.calldata {
             calldata
                 .iter()

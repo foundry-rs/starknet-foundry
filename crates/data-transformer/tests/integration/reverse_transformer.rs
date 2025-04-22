@@ -1,9 +1,7 @@
-use crate::integration::{CLASS, init_class};
+use crate::integration::get_abi;
 use data_transformer::{reverse_transform_input, reverse_transform_output};
 use itertools::Itertools;
 use primitive_types::U256;
-use starknet::core::types::ContractClass;
-use starknet::core::types::contract::AbiEntry;
 use starknet::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
 
@@ -13,13 +11,7 @@ async fn assert_reverse_transformation(
     expected_input: &str,
     expected_output: Option<&str>,
 ) {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let ContractClass::Sierra(sierra_class) = contract_class else {
-        panic!("Expected Sierra class, but legacy got Sierra class")
-    };
-
-    let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str()).unwrap();
+    let abi = get_abi().await;
     let selector = get_selector_from_name(selector).unwrap();
     let result = reverse_transform_input(input, &abi, &selector).unwrap();
     assert_eq!(result, expected_input);

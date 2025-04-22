@@ -1,3 +1,4 @@
+use starknet::core::types::contract::AbiEntry;
 use starknet::core::types::{BlockId, BlockTag, ContractClass};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
@@ -24,4 +25,13 @@ async fn init_class() -> ContractClass {
         .get_class(BlockId::Tag(BlockTag::Latest), TEST_CLASS_HASH)
         .await
         .unwrap()
+}
+
+async fn get_abi() -> Vec<AbiEntry> {
+    let class = CLASS.get_or_init(init_class).await;
+    let ContractClass::Sierra(sierra_class) = class else {
+        panic!("Expected Sierra class, but got legacy Sierra class")
+    };
+
+    serde_json::from_str(sierra_class.abi.as_str()).unwrap()
 }

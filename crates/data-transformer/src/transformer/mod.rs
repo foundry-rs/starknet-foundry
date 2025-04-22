@@ -8,26 +8,12 @@ use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::Expr;
 use conversions::serde::serialize::SerializeToFeltVec;
 use itertools::Itertools;
+use starknet::core::types::Felt;
 use starknet::core::types::contract::{AbiEntry, AbiFunction};
-use starknet::core::types::{ContractClass, Felt};
 
 /// Interpret `calldata` as a comma-separated series of expressions in Cairo syntax and serialize it
-pub fn transform(
-    calldata: &str,
-    class_definition: ContractClass,
-    function_selector: &Felt,
-) -> Result<Vec<Felt>> {
-    let sierra_class = match class_definition {
-        ContractClass::Sierra(class) => class,
-        ContractClass::Legacy(_) => {
-            bail!("Transformation of arguments is not available for Cairo Zero contracts")
-        }
-    };
-
-    let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str())
-        .context("Couldn't deserialize ABI received from chain")?;
-
-    let function = extract_function_from_selector(&abi, *function_selector).with_context(|| {
+pub fn transform(calldata: &str, abi: &[AbiEntry], function_selector: &Felt) -> Result<Vec<Felt>> {
+    let function = extract_function_from_selector(abi, *function_selector).with_context(|| {
         format!(r#"Function with selector "{function_selector}" not found in ABI of the contract"#)
     })?;
 
@@ -35,7 +21,7 @@ pub fn transform(
 
     let calldata = split_expressions(calldata, &db)?;
 
-    process(calldata, &function, &abi, &db).context("Error while processing Cairo-like calldata")
+    process(calldata, &function, abi, &db).context("Error while processing Cairo-like calldata")
 }
 
 fn split_expressions(input: &str, db: &SimpleParserDatabase) -> Result<Vec<Expr>> {
