@@ -63,7 +63,6 @@ use starknet_api::execution_resources::{GasAmount, GasVector};
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::default::Default;
-use std::env;
 use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
@@ -353,7 +352,7 @@ pub fn run_test_case(
 
 fn predeclare_token(cached_state: &mut CachedState<ExtendedStateReader>, class_hash: ClassHash) {
     let erc20_class = RunnableCompiledClass::V1(
-        CompiledClassV1::try_from_json_string(&STRK_ERC20_CASM, SierraVersion::LATEST).unwrap(),
+        CompiledClassV1::try_from_json_string(STRK_ERC20_CASM, SierraVersion::LATEST).unwrap(),
     );
     let result = declare_with_contract_class(cached_state, erc20_class, class_hash)
         .expect("Failed to declare class");
