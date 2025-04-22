@@ -25,6 +25,7 @@ mod pure_cairo;
 mod replace_bytecode;
 mod resources;
 mod runtime;
+mod set_balance;
 mod setup_fork;
 mod should_panic;
 mod signing;
