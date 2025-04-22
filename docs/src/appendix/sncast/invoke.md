@@ -21,6 +21,12 @@ Optional.
 Inputs to the function, represented by a list of space-delimited values `0x1 2 0x3`.
 Calldata arguments may be either 0x hex or decimal felts.
 
+## `--arguments`
+Optional.
+
+Function arguments provided as a comma-separated string of Cairo expressions. This provides a more human-readable way to pass arguments compared to raw calldata.
+For example: `--arguments '1, 2, MyStruct { x: 1, y: 2 }, MyEnum::Variant'`
+
 ## `--url, -u <RPC_URL>`
 Optional.
 

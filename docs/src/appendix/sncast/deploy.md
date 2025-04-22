@@ -29,6 +29,12 @@ Optional.
 
 Calldata for the contract constructor.
 
+## `--arguments`
+Optional.
+
+Constructor arguments provided as a comma-separated string of Cairo expressions. This provides a more human-readable way to pass constructor arguments compared to raw calldata.
+For example: `--arguments '1, 2, MyStruct { x: 1, y: 2 }, MyEnum::Variant'`
+
 ## `--salt, -s <SALT>`
 Optional.
 
