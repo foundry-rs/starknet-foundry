@@ -695,7 +695,7 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &mut C
 
     if trace_data.is_vm_trace_needed {
         trace_data.current_call_stack.top().borrow_mut().vm_trace =
-            get_relocated_vm_trace(cairo_runner);
+            Some(get_relocated_vm_trace(cairo_runner));
     }
 }
 fn add_syscall_execution_resources(

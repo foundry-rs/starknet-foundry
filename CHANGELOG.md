@@ -21,6 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Changed
+
+- forge backtrace now displays the full backtrace and marks whether a function was inlined or not
+- improved display of backtrace in contract that panicked, when `panic-backtrace` is set to `true` in `Scarb.toml`.
+  As of this release, this feature is only in `scarb nightly-2025-03-27`
+
+### Forge
+
 #### Added
 
 - `--template` flag to `snforge new` command that allows selecting a template for the new project. Possible values are `balance-contract` (default), `cairo-program` and `erc20-contract`
@@ -80,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 - gas is now reported using resource bounds triplet (l1_gas, l1_data_gas and l2_gas)
-- `available_gas` now accepts named arguments denoting resource bounds (eg #[available_gas(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)])
+- `available_gas` now accepts named arguments denoting resource bounds (eg `#[available_gas(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)]`)
 
 #### Fixed
 
