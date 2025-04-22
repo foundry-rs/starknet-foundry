@@ -1,15 +1,15 @@
 mod sierra_abi;
 
-use crate::transformer::sierra_abi::{build_representation, parsing::parse_expression};
+use crate::shared::extraction::extract_function_from_selector;
+use crate::shared::parsing::parse_expression;
+use crate::transformer::sierra_abi::build_representation;
 use anyhow::{Context, Result, bail, ensure};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::Expr;
 use conversions::serde::serialize::SerializeToFeltVec;
 use itertools::Itertools;
-use starknet::core::types::contract::{AbiEntry, AbiFunction, StateMutability};
+use starknet::core::types::contract::{AbiEntry, AbiFunction};
 use starknet::core::types::{ContractClass, Felt};
-use starknet::core::utils::get_selector_from_name;
-use std::collections::HashMap;
 
 /// Interpret `calldata` as a comma-separated series of expressions in Cairo syntax and serialize it
 pub fn transform(
@@ -27,21 +27,15 @@ pub fn transform(
     let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str())
         .context("Couldn't deserialize ABI received from chain")?;
 
-    let selector_function_map = map_selectors_to_functions(&abi);
-
-    let function = selector_function_map
-        .get(function_selector)
-        .with_context(|| {
-            format!(
-                r#"Function with selector "{function_selector}" not found in ABI of the contract"#
-            )
-        })?;
+    let function = extract_function_from_selector(&abi, *function_selector).with_context(|| {
+        format!(r#"Function with selector "{function_selector}" not found in ABI of the contract"#)
+    })?;
 
     let db = SimpleParserDatabase::default();
 
     let calldata = split_expressions(calldata, &db)?;
 
-    process(calldata, function, &abi, &db).context("Error while processing Cairo-like calldata")
+    process(calldata, &function, &abi, &db).context("Error while processing Cairo-like calldata")
 }
 
 fn split_expressions(input: &str, db: &SimpleParserDatabase) -> Result<Vec<Expr>> {
@@ -85,40 +79,4 @@ fn process(
         })
         .flatten_ok()
         .collect::<Result<_>>()
-}
-
-fn map_selectors_to_functions(abi: &[AbiEntry]) -> HashMap<Felt, AbiFunction> {
-    let mut map = HashMap::new();
-
-    for abi_entry in abi {
-        match abi_entry {
-            AbiEntry::Function(func) => {
-                map.insert(
-                    get_selector_from_name(func.name.as_str()).unwrap(),
-                    func.clone(),
-                );
-            }
-            AbiEntry::Constructor(constructor) => {
-                // We treat constructor like a regular function
-                // because it's searched for using Felt entrypoint selector, identically as functions.
-                // Also, we don't need any constructor-specific properties, just argument types.
-                map.insert(
-                    get_selector_from_name(constructor.name.as_str()).unwrap(),
-                    AbiFunction {
-                        name: constructor.name.clone(),
-                        inputs: constructor.inputs.clone(),
-                        outputs: vec![],
-                        state_mutability: StateMutability::View,
-                    },
-                );
-            }
-            AbiEntry::Interface(interface) => {
-                map.extend(map_selectors_to_functions(&interface.items));
-            }
-            // We don't need any other items at this point
-            _ => {}
-        }
-    }
-
-    map
 }
