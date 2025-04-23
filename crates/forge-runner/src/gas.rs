@@ -23,7 +23,7 @@ pub fn calculate_used_gas(
     transaction_context: &TransactionContext,
     state: &mut CachedState<ExtendedStateReader>,
     resources: UsedResources,
-    token_predeployed: bool,
+    is_strk_token_predeployed: bool,
 ) -> Result<GasVector, StateError> {
     let versioned_constants = transaction_context.block_context.versioned_constants();
 
@@ -33,8 +33,9 @@ pub fn calculate_used_gas(
     );
 
     let mut state_resources = get_state_resources(transaction_context, state)?;
-    if token_predeployed {
-        state_resources = reduce_state_resources_after_token_predeployment(&mut state_resources);
+    if is_strk_token_predeployed {
+        state_resources =
+            reduce_state_resources_after_strk_token_predeployment(&mut state_resources);
     }
 
     let archival_data_resources = get_archival_data_resources(resources.events);
@@ -142,12 +143,12 @@ fn get_state_resources(
     })
 }
 
-fn reduce_state_resources_after_token_predeployment(
+fn reduce_state_resources_after_strk_token_predeployment(
     state_resources: &mut StateResources,
 ) -> StateResources {
-    // We don't want to include the cost of predeploying tokens in gas cost
-    // so we need to reduce the state resources by the number of storage updates
-    // and allocated keys that were used for that.
+    // STRK predeployment results in state changes. To avoid including them in gas cost
+    // we need to reduce the state changes count. These calculations could be slightly inaccurate only if
+    // someone would modify storage cells which are changed in the STRK constructor.
 
     state_resources
         .state_changes_for_fee
