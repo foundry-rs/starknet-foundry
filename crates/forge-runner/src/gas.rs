@@ -146,8 +146,9 @@ fn get_state_resources(
 fn reduce_state_resources_after_strk_token_predeployment(
     state_resources: &mut StateResources,
 ) -> StateResources {
-    // We don't want to include the cost of predeploying tokens in gas cost
-    // so we need to reduce the state resources
+    // STRK predeployment results in state changes. To avoid including them in gas cost
+    // we need to reduce the state changes count. These calculations could be slightly inaccurate only if
+    // someone would modify storage cells which are changed in the STRK constructor.
 
     state_resources
         .state_changes_for_fee
