@@ -9,11 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- Safe dispatchers can now be used inside contracts
+
 #### Changed
 
 - Minimal supported Scarb version is now `2.9.1`
 - Improved display of backtrace for contracts that panicked, when `panic-backtrace = true` in `Scarb.toml`. Without using this feature, the backtrace may be less accurate than before.
   As of this release, this feature is available only in `scarb nightly-2025-03-27`.
+
+#### Fixed
+
+- The state correctly reverts after failed internal calls
 
 ## [0.41.0] - 2025-04-08
 
