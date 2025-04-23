@@ -135,6 +135,7 @@ pub fn create_version_parser<'a>(name: &'a str, pattern: &'a str) -> Box<Version
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::MINIMAL_SCARB_VERSION;
     use assert_fs::{
         TempDir,
         fixture::{FileWriteStr, PathChild},
@@ -164,7 +165,7 @@ mod tests {
         requirements_checker.add_requirement(Requirement {
             name: "Scarb".to_string(),
             command: RefCell::new(ScarbCommand::new().arg("--version").command()),
-            minimal_version: Version::new(2, 7, 0),
+            minimal_version: MINIMAL_SCARB_VERSION,
             minimal_recommended_version: Some(Version::new(2, 9, 4)),
             helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
                 .to_string(),
@@ -220,13 +221,13 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(feature = "scarb_2_7_1"), ignore)]
+    #[cfg_attr(not(feature = "scarb_2_9_1"), ignore)]
     fn warning_requirements() {
         let mut requirements_checker = RequirementsChecker::new(true);
         requirements_checker.add_requirement(Requirement {
             name: "Scarb".to_string(),
             command: RefCell::new(ScarbCommand::new().arg("--version").command()),
-            minimal_version: Version::new(2, 7, 0),
+            minimal_version: MINIMAL_SCARB_VERSION,
             minimal_recommended_version: Some(Version::new(999, 0, 0)),
             helper_text: "Follow instructions from https://docs.swmansion.com/scarb/download.html"
                 .to_string(),
