@@ -1,15 +1,12 @@
 use crate::backtrace::add_backtrace_footer;
-use crate::data::STRK_ERC20_CASM;
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
+use crate::test_case_setup::{declare_token_strk, deploy_token_strk};
 use crate::test_case_summary::{Single, TestCaseSummary};
 use anyhow::{Result, ensure};
-use blockifier::execution::contract_class::{
-    CompiledClassV1, RunnableCompiledClass, TrackedResource,
-};
+use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
-use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
 use cairo_lang_runner::{Arg, RunResult, SierraCasmRunner};
 use cairo_lang_sierra::extensions::NamedType;
@@ -29,13 +26,11 @@ use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use camino::{Utf8Path, Utf8PathBuf};
 use casm::{get_assembled_program, run_assembled_program};
-use cheatnet::constants::{self as cheatnet_constants, STRK_CLASS_HASH, STRK_CONTRACT_ADDRESS};
+use cheatnet::constants::{self as cheatnet_constants};
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare_with_contract_class;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy_at;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
     ForgeExtension, ForgeRuntime, add_resources_to_top_call, get_all_used_resources,
@@ -45,16 +40,11 @@ use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredErrors, ExtendedStateReader,
 };
 
-use conversions::FromConv;
-use conversions::felt::FromShortString;
-use conversions::string::TryFromHexStr;
 use entry_code::create_entry_code;
 use hints::{hints_by_representation, hints_to_params};
 use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
-use starknet_api::contract_class::SierraVersion;
-use starknet_api::core::{ClassHash, ContractAddress};
 use starknet_api::execution_resources::GasVector;
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
@@ -206,8 +196,7 @@ pub fn run_test_case(
     }
     let mut cached_state = CachedState::new(state_reader);
 
-    let class_hash_strk = ClassHash::from_(Felt::try_from_hex_str(STRK_CLASS_HASH).unwrap());
-    predeclare_token(&mut cached_state, class_hash_strk);
+    declare_token_strk(&mut cached_state);
 
     let mut syscall_handler = build_syscall_handler(
         &mut cached_state,
@@ -223,8 +212,7 @@ pub fn run_test_case(
     };
     cheatnet_state.trace_data.is_vm_trace_needed = runtime_config.is_vm_trace_needed;
 
-    let is_strk_token_predeployed =
-        predeploy_token(&mut syscall_handler, &mut cheatnet_state, class_hash_strk);
+    let is_strk_token_predeployed = deploy_token_strk(&mut syscall_handler, &mut cheatnet_state);
 
     let cheatable_runtime = ExtendedRuntime {
         extension: CheatableStarknetRuntimeExtension {
@@ -343,69 +331,6 @@ pub fn run_test_case(
         encountered_errors,
         fuzzer_args,
     })
-}
-
-fn predeclare_token(cached_state: &mut CachedState<ExtendedStateReader>, class_hash: ClassHash) {
-    let erc20_class = RunnableCompiledClass::V1(
-        CompiledClassV1::try_from_json_string(STRK_ERC20_CASM, SierraVersion::LATEST).unwrap(),
-    );
-    declare_with_contract_class(cached_state, erc20_class, class_hash)
-        .expect("Failed to declare class");
-}
-
-fn predeploy_token(
-    syscall_handler: &mut SyscallHintProcessor,
-    cheatnet_state: &mut CheatnetState,
-    class_hash_strk: ClassHash,
-) -> bool {
-    let contract_address: ContractAddress = Felt::try_from_hex_str(STRK_CONTRACT_ADDRESS)
-        .unwrap()
-        .try_into()
-        .unwrap();
-
-    let calldata = vec![
-        // name
-        Felt::from_short_string("STRK").unwrap(),
-        // symbol
-        Felt::from_short_string("STRK").unwrap(),
-        // decimals
-        18.into(),
-        // initial_supply low
-        100_000_000.into(),
-        // initial_supply high
-        0.into(),
-        // recipient
-        123.into(),
-        // permitted_minter
-        123.into(),
-        // provisional_governance_admin
-        123.into(),
-        // upgrade_delay
-        0.into(),
-    ];
-
-    let deploy_result = deploy_at(
-        syscall_handler,
-        cheatnet_state,
-        &class_hash_strk,
-        &calldata,
-        contract_address,
-        true,
-    );
-
-    // It's possible that token can be already deployed (forking)
-    let deployed = deploy_result.is_ok();
-
-    if deployed {
-        cheatnet_state
-            .trace_data
-            .current_call_stack
-            .top()
-            .borrow_mut()
-            .nested_calls = vec![];
-    }
-
-    deployed
 }
 
 // TODO(#2958) Remove copied code
