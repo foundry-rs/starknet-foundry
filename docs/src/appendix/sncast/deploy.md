@@ -29,11 +29,17 @@ Optional.
 
 Calldata for the contract constructor.
 
+Conflicts with: [`--arguments`](#--arguments)
+
 ## `--arguments`
 Optional.
 
-Constructor arguments provided as a comma-separated string of Cairo expressions. This provides a more human-readable way to pass constructor arguments compared to raw calldata.
+Constructor arguments provided as a comma-separated string of Cairo expressions.
 For example: `--arguments '1, 2, MyStruct { x: 1, y: 2 }, MyEnum::Variant'`
+
+For more information on supported expressions and syntax, see [Calldata Transformation](../../starknet/calldata-transformation.md).
+
+Conflicts with: [`--constructor-calldata`](#--constructor-calldata--c-constructor_calldata)
 
 ## `--salt, -s <SALT>`
 Optional.
