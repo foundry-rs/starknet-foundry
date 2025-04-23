@@ -107,7 +107,13 @@ fn test_wrong_function_name() {
         output,
         indoc! {r#"
         [..]
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, [..] error: ContractExecutionError::Message("["0x454e545259504f494e545f4e4f545f464f554e44"]") }) }) }) })))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: ContractExecutionError::Nested(&ContractExecutionErrorInner { contract_address: [..], class_hash: [..], selector: [..], error: ContractExecutionError::Nested(&ContractExecutionErrorInner { contract_address: [..], class_hash: [..], selector: [..], error: ContractExecutionError::Nested(&ContractExecutionErrorInner { contract_address: [..], class_hash: [..], selector: [..], error: ContractExecutionError::Message("Transaction execution has failed:
+        0: Error in the called contract (contract address: 0x03ffc270312cbefaf2fb4a88e97cc186797bada41a291331186ec5ca316e32fa, class hash: 0x02b31e19e45c06f29234e06e2ee98a9966479ba3067f8785ed972794fdb0065c, selector: [..]):
+        Execution failed. Failure reason:
+        Error in contract (contract address: [..], class hash: [..], selector: [..]):
+        Error in contract (contract address: [..], class hash: [..], selector: [..]):
+        [..] ('ENTRYPOINT_NOT_FOUND').
+         ["0x454e545259504f494e545f4e4f545f464f554e44"]") }) }) }) })))
         command: script run
         status: success
         "#},
@@ -140,7 +146,13 @@ fn test_wrong_calldata() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, [..], error: ContractExecutionError::Message("["0x4661696c656420746f20646573657269616c697a6520706172616d202332"]") }) }) }) })))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: ContractExecutionError::Nested(&ContractExecutionErrorInner { contract_address: [..], class_hash: [..], selector: [..], error: ContractExecutionError::Nested(&ContractExecutionErrorInner { contract_address: [..], class_hash: [..], selector: [..], error: ContractExecutionError::Nested(&ContractExecutionErrorInner { contract_address: [..], class_hash: [..], selector: [..], error: ContractExecutionError::Message("Transaction execution has failed:
+        0: Error in the called contract (contract address: [..], class hash: [..], selector: [..]):
+        Execution failed. Failure reason:
+        Error in contract (contract address: [..], class hash: [..], selector: [..]):
+        Error in contract (contract address: [..], class hash: [..], selector: [..]):
+        [..] ('Failed to deserialize param #2').
+         ["0x4661696c656420746f20646573657269616c697a6520706172616d202332"]") }) }) }) })))
         command: script run
         status: success
         "#},

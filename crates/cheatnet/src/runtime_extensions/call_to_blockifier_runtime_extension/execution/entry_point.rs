@@ -3,7 +3,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::common::{get_relocated_vm_trace, get_syscalls_gas_consumed, sum_syscall_usage};
-use crate::state::{CallTrace, CallTraceNode, CheatStatus, EncounteredError};
+use crate::state::{CallTrace, CallTraceNode, CheatStatus};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
 use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
@@ -29,11 +29,12 @@ use starknet_api::{
 };
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
-use std::collections::{HashMap, HashSet};
+use std::collections::{ HashMap, HashSet};
 use std::rc::Rc;
 use blockifier::execution::entry_point::ExecutableCallEntryPoint;
 use thiserror::Error;
 use conversions::FromConv;
+use shared::vm::VirtualMachineExt;
 
 pub(crate) type ContractClassEntryPointExecutionResult = Result<
     (CallInfo, SyscallUsageMap, Option<Vec<RelocatedTraceEntry>>),
@@ -173,15 +174,6 @@ pub fn execute_call_entry_point(
             Ok(call_info)
         }
         Err(EntryPointExecutionErrorWithTrace { source: err, trace }) => {
-            if let Some(pc) = trace
-                .as_ref()
-                .and_then(|trace| trace.last())
-                .map(|entry| entry.pc)
-            {
-                cheatnet_state
-                    .encountered_errors
-                    .push(EncounteredError { pc, class_hash });
-            }
             exit_error_call(&err, cheatnet_state, &entry_point, trace);
             Err(err)
         }
@@ -370,25 +362,18 @@ where
     }
 }
 
-pub(crate) trait OnErrorLastPc<T>: Sized {
-    fn on_error_get_last_pc(
-        self,
-        runner: &mut CairoRunner,
-    ) -> Result<T, EntryPointExecutionErrorWithTrace>;
-}
+pub(crate) fn extract_trace_and_register_errors(
+    source: EntryPointExecutionError,
+    class_hash: ClassHash,
+    runner: &mut CairoRunner,
+    cheatnet_state: &mut CheatnetState,
+) -> EntryPointExecutionErrorWithTrace {
+    let trace = get_relocated_vm_trace(runner);
+    let pcs = runner.vm.get_reversed_pc_traceback();
+    cheatnet_state.register_error(class_hash, pcs);
 
-impl<T> OnErrorLastPc<T> for Result<T, EntryPointExecutionError> {
-    fn on_error_get_last_pc(
-        self,
-        runner: &mut CairoRunner,
-    ) -> Result<T, EntryPointExecutionErrorWithTrace> {
-        match self {
-            Err(source) => {
-                let trace = get_relocated_vm_trace(runner);
-
-                Err(EntryPointExecutionErrorWithTrace { source, trace })
-            }
-            Ok(value) => Ok(value),
-        }
+    EntryPointExecutionErrorWithTrace {
+        source,
+        trace: Some(trace),
     }
 }

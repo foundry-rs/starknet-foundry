@@ -8,10 +8,15 @@ to have:
 1. [Scarb](https://github.com/software-mansion/scarb) version `2.8.0` or higher
 2. `Scarb.toml` file with the following Cairo compiler configuration:
 
+> 📝 **Note**
+> 
+> If you are using `scarb nightly-2025-03-27` there is a way to improve backtrace for panic in contracts if you set `panic-backtrace` to true in Scarb.toml
+
 ```toml
 [profile.dev.cairo]
 unstable-add-statements-code-locations-debug-info = true
 unstable-add-statements-functions-debug-info = true
+panic-backtrace = true # only for scarb nightly-2025-03-27
 ```
 
 > 📝 **Note**
@@ -23,22 +28,12 @@ unstable-add-statements-functions-debug-info = true
 
 ## Usage
 
-> 📝 **Note**  
-> Currently, only the last line of failure in each contract is guaranteed to appear in the backtrace. The complete call
-> tree is not fully supported yet; however, in most cases, it will be available. It internally relies on the inlining
-> behavior of the compiler, and a full backtrace is available if all functions are inlined. To obtain a more detailed
-> backtrace, ensure that
-> your [inlining strategy](https://docs.swmansion.com/scarb/docs/reference/manifest.html#inlining-strategy) in
-`Scarb.toml` is set to `default`.
-
 When a contract call fails, the error message alone may not always provide enough information to identify the root cause
 of the issue. To aid in debugging, `snforge` offers a feature that can generate a backtrace of the execution.
 
 If your contract fails and a backtrace can be generated, `snforge` will prompt you to run the operation again with the
 `SNFORGE_BACKTRACE=1` environment variable (if it’s not already configured). For example, you may see failure data like
 this:
-
-
 
 
 <!-- { "package_name": "backtrace_vm_error" } -->
