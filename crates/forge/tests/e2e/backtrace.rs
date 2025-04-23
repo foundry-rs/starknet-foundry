@@ -34,7 +34,9 @@ fn test_backtrace() {
     assert_stdout_contains(
         output,
         indoc! {
-           "Failure data:
+           "
+            [WARNING] To get accurate backtrace results, it is required to use the configuration available in the latest Cairo version. For more details, please visit https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/backtrace.html
+            Failure data:
             Got an exception while executing a hint: Requested contract address 0x0000000000000000000000000000000000000000000000000000000000000123 is not deployed.
             error occurred in contract 'InnerContract'
             stack backtrace:
