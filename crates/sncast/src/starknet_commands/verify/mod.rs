@@ -3,15 +3,23 @@ use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args, ValueEnum};
 use promptly::prompt;
 use scarb_api::StarknetContractArtifacts;
+use shared::verify_and_warn_if_incompatible_rpc_version;
+use sncast::helpers::configuration::CastConfig;
+use sncast::helpers::rpc::FreeProvider;
 use sncast::{Network, response::structs::VerifyResponse};
+use starknet::providers::JsonRpcClient;
+use starknet::providers::jsonrpc::HttpTransport;
 use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, fmt};
+use url::Url;
 
 pub mod explorer;
+pub mod voyager;
 pub mod walnut;
 
 use explorer::ContractIdentifier;
 use explorer::VerificationInterface;
+use voyager::Voyager;
 use walnut::WalnutVerificationInterface;
 
 #[derive(Args)]
@@ -35,7 +43,7 @@ pub struct Verify {
     pub contract_name: String,
 
     /// Block explorer to use for the verification
-    #[arg(short, long, value_enum, default_value_t = Verifier::Walnut)]
+    #[arg(short, long, value_enum)]
     pub verifier: Verifier,
 
     /// The network on which block explorer will do the verification
@@ -49,30 +57,61 @@ pub struct Verify {
     /// Specifies scarb package to be used
     #[arg(long)]
     pub package: Option<String>,
+
+    /// RPC provider url address; overrides url from snfoundry.toml. Will use public provider if not set.
+    #[arg(long)]
+    pub rpc: Option<Url>,
 }
 
 #[derive(ValueEnum, Clone, Debug)]
 pub enum Verifier {
     Walnut,
+    Voyager,
 }
 
 impl fmt::Display for Verifier {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Verifier::Walnut => write!(f, "walnut"),
+            Verifier::Voyager => write!(f, "voyager"),
         }
     }
 }
 
 pub async fn verify(
-    verify: Verify,
+    args: Verify,
     manifest_path: &Utf8PathBuf,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
+    config: &CastConfig,
 ) -> Result<VerifyResponse> {
-    let verifier = verify.verifier;
+    let Verify {
+        contract_address,
+        class_hash,
+        contract_name,
+        verifier,
+        network,
+        confirm_verification,
+        package,
+        rpc,
+    } = args;
+
+    let free = network.url(&FreeProvider::semi_random());
+    let rpc_url = rpc.map_or_else(
+        || {
+            let url = if config.url.is_empty() {
+                &free
+            } else {
+                &config.url
+            };
+            Url::parse(url)
+        },
+        Ok,
+    )?;
+    let provider = JsonRpcClient::new(HttpTransport::new(rpc_url.clone()));
+    verify_and_warn_if_incompatible_rpc_version(&provider, rpc_url).await?;
 
     // Let's ask confirmation
-    if !verify.confirm_verification {
+    if !confirm_verification {
         let prompt_text = format!(
             "\n\tYou are about to submit the entire workspace code to the third-party verifier at {verifier}.\n\n\tImportant: Make sure your project does not include sensitive information like private keys. The snfoundry.toml file will be uploaded. Keep the keystore outside the project to prevent it from being uploaded.\n\n\tAre you sure you want to proceed? (Y/n)"
         );
@@ -83,7 +122,6 @@ pub async fn verify(
         }
     }
 
-    let contract_name = verify.contract_name;
     if !artifacts.contains_key(&contract_name) {
         return Err(anyhow!("Contract named '{contract_name}' was not found"));
     }
@@ -94,7 +132,7 @@ pub async fn verify(
         .parent()
         .ok_or(anyhow!("Failed to obtain workspace dir"))?;
 
-    let contract_identifier = match (verify.class_hash, verify.contract_address) {
+    let contract_identifier = match (class_hash, contract_address) {
         (Some(class_hash), None) => ContractIdentifier::ClassHash {
             class_hash: class_hash.to_fixed_hex_string(),
         },
@@ -110,8 +148,16 @@ pub async fn verify(
     match verifier {
         Verifier::Walnut => {
             let walnut =
-                WalnutVerificationInterface::new(verify.network, workspace_dir.to_path_buf());
-            walnut.verify(contract_identifier, contract_name).await
+                WalnutVerificationInterface::new(network, workspace_dir.to_path_buf(), &provider)?;
+            walnut
+                .verify(contract_identifier, contract_name, package)
+                .await
+        }
+        Verifier::Voyager => {
+            let voyager = Voyager::new(network, workspace_dir.to_path_buf(), &provider)?;
+            voyager
+                .verify(contract_identifier, contract_name, package)
+                .await
         }
     }
 }
