@@ -23,6 +23,7 @@ pub fn calculate_used_gas(
     transaction_context: &TransactionContext,
     state: &mut CachedState<ExtendedStateReader>,
     resources: UsedResources,
+    token_predeployed: bool,
 ) -> Result<GasVector, StateError> {
     let versioned_constants = transaction_context.block_context.versioned_constants();
 
@@ -31,7 +32,10 @@ pub fn calculate_used_gas(
         &resources.l1_handler_payload_lengths,
     );
 
-    let state_resources = get_state_resources(transaction_context, state)?;
+    let mut state_resources = get_state_resources(transaction_context, state)?;
+    if token_predeployed {
+        state_resources = reduce_state_resources_after_token_predeployment(&mut state_resources);
+    }
 
     let archival_data_resources = get_archival_data_resources(resources.events);
 
@@ -136,6 +140,30 @@ fn get_state_resources(
     Ok(StateResources {
         state_changes_for_fee: state_changes_count,
     })
+}
+
+fn reduce_state_resources_after_token_predeployment(
+    state_resources: &mut StateResources,
+) -> StateResources {
+    // We don't want to include the cost of predeploying tokens in gas cost
+    // so we need to reduce the state resources by the number of storage updates
+    // and allocated keys that were used for that.
+
+    state_resources
+        .state_changes_for_fee
+        .state_changes_count
+        .n_storage_updates -= 10;
+    state_resources
+        .state_changes_for_fee
+        .state_changes_count
+        .n_class_hash_updates -= 1;
+    state_resources
+        .state_changes_for_fee
+        .state_changes_count
+        .n_modified_contracts -= 1;
+    state_resources.state_changes_for_fee.n_allocated_keys -= 10;
+
+    state_resources.clone()
 }
 
 pub fn check_available_gas(
