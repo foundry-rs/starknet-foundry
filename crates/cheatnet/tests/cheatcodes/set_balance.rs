@@ -5,7 +5,7 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::Cal
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::erc20::Token;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::erc20::set_balance;
 use conversions::felt::FromShortString;
-// use conversions::string::TryFromHexStr;
+use conversions::string::TryFromHexStr;
 use starknet::core::types::U256;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::ContractAddress;
@@ -35,10 +35,7 @@ fn get_balance(
 //     let token = Token::STRK;
 //     let mut test_env = TestEnvironment::new();
 
-//     let contracts_data = get_contracts();
-
-//     let class_hash = test_env.declare("HelloStarknet", &contracts_data);
-//     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
+//     let contract_address = ContractAddress::try_from_hex_str("0x123").unwrap();
 
 //     let balance = get_balance(&mut test_env, contract_address, token);
 //     assert_success(balance, &[0.into(), 0.into()]);
@@ -58,8 +55,7 @@ fn test_set_balance_custom_token() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("HelloStarknet", &contracts_data);
-    let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
+    let contract_address = ContractAddress::try_from_hex_str("0x123").unwrap();
 
     let custom_token_class_hash = test_env.declare("ERC20", &contracts_data);
     let custom_token_address = test_env.deploy_wrapper(
@@ -86,6 +82,7 @@ fn test_set_balance_custom_token() {
     let balance = get_balance(&mut test_env, contract_address, token);
     assert_success(balance, &[1_000_000.into(), 0.into()]);
 
+    // set amount which is on both low and high
     test_env.set_balance(contract_address, U256::from_words(u128::MAX, 100), token);
     let balance = get_balance(&mut test_env, contract_address, token);
     assert_success(balance, &[u128::MAX.into(), 100.into()]);
