@@ -1,13 +1,23 @@
 use super::test_environment::TestEnvironment;
 use crate::common::assertions::assert_success;
+use crate::common::deploy_at_wrapper;
 use crate::common::get_contracts;
+use blockifier::execution::contract_class::CompiledClassV1;
+use blockifier::execution::contract_class::RunnableCompiledClass;
+use cheatnet::constants::STRK_CLASS_HASH;
+use cheatnet::constants::STRK_CONTRACT_ADDRESS;
+use cheatnet::constants::strk_constructor_calldata;
+use cheatnet::data::STRK_ERC20_CASM;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare_with_contract_class;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::erc20::Token;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::erc20::set_balance;
 use conversions::felt::FromShortString;
 use conversions::string::TryFromHexStr;
 use starknet::core::types::U256;
 use starknet::core::utils::get_selector_from_name;
+use starknet_api::contract_class::SierraVersion;
+use starknet_api::core::ClassHash;
 use starknet_api::core::ContractAddress;
 use starknet_types_core::felt::Felt;
 
@@ -29,25 +39,51 @@ fn get_balance(
     test_env.call_contract(&token.contract_address(), "balance_of", &[target.into()])
 }
 
-// TODO: Uncomment
-// #[test]
-// fn test_set_balance_strk() {
-//     let token = Token::STRK;
-//     let mut test_env = TestEnvironment::new();
+fn declare_and_deploy_strk_token(test_env: &mut TestEnvironment) {
+    let class_hash = ClassHash::try_from_hex_str(STRK_CLASS_HASH).unwrap();
+    let contract_class = RunnableCompiledClass::V1(
+        CompiledClassV1::try_from_json_string(STRK_ERC20_CASM, SierraVersion::LATEST).unwrap(),
+    );
+    declare_with_contract_class(&mut test_env.cached_state, contract_class, class_hash)
+        .expect("Failed to declare STRK token");
 
-//     let contract_address = ContractAddress::try_from_hex_str("0x123").unwrap();
+    deploy_token_strk(test_env);
+}
 
-//     let balance = get_balance(&mut test_env, contract_address, token);
-//     assert_success(balance, &[0.into(), 0.into()]);
+fn deploy_token_strk(test_env: &mut TestEnvironment) {
+    let class_hash = ClassHash::try_from_hex_str(STRK_CLASS_HASH).unwrap();
+    let contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
+    let constructor_calldata = strk_constructor_calldata();
+    deploy_at_wrapper(
+        &mut test_env.cached_state,
+        &mut test_env.cheatnet_state,
+        &class_hash,
+        &constructor_calldata,
+        contract_address,
+    )
+    .expect("Failed to deploy STRK token");
+}
 
-//     test_env.set_balance(contract_address, U256::from(1_000_000_u32), token);
-//     let balance = get_balance(&mut test_env, contract_address, token);
-//     assert_success(balance, &[1_000_000.into(), 0.into()]);
+#[test]
+fn test_set_balance_strk() {
+    let mut test_env = TestEnvironment::new();
 
-//     test_env.set_balance(contract_address, U256::from_words(u128::MAX, 100), token);
-//     let balance = get_balance(&mut test_env, contract_address, token);
-//     assert_success(balance, &[u128::MAX.into(), 100.into()]);
-// }
+    declare_and_deploy_strk_token(&mut test_env);
+
+    let contract_address = ContractAddress::try_from_hex_str("0x123").unwrap();
+
+    let token = Token::STRK;
+    let balance = get_balance(&mut test_env, contract_address, token);
+    assert_success(balance, &[0.into(), 0.into()]);
+
+    test_env.set_balance(contract_address, U256::from(1_000_000_u32), token);
+    let balance = get_balance(&mut test_env, contract_address, token);
+    assert_success(balance, &[1_000_000.into(), 0.into()]);
+
+    test_env.set_balance(contract_address, U256::from_words(u128::MAX, 100), token);
+    let balance = get_balance(&mut test_env, contract_address, token);
+    assert_success(balance, &[u128::MAX.into(), 100.into()]);
+}
 
 #[test]
 fn test_set_balance_custom_token() {
