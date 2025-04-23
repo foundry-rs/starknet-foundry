@@ -214,6 +214,8 @@ pub fn run_test_case(
 
     let is_strk_token_predeployed = deploy_token_strk(&mut syscall_handler, &mut cheatnet_state);
 
+    update_context_after_strk_token_predeployment(&mut syscall_handler.base.context);
+
     let cheatable_runtime = ExtendedRuntime {
         extension: CheatableStarknetRuntimeExtension {
             cheatnet_state: &mut cheatnet_state,
@@ -331,6 +333,10 @@ pub fn run_test_case(
         encountered_errors,
         fuzzer_args,
     })
+}
+
+fn update_context_after_strk_token_predeployment(context: &mut EntryPointExecutionContext) {
+    context.n_emitted_events = 0;
 }
 
 // TODO(#2958) Remove copied code
