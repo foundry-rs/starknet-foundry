@@ -34,7 +34,8 @@ pub fn calculate_used_gas(
 
     let mut state_resources = get_state_resources(transaction_context, state)?;
     if is_strk_token_predeployed {
-        state_resources = reduce_state_resources_after_token_predeployment(&mut state_resources);
+        state_resources =
+            reduce_state_resources_after_strk_token_predeployment(&mut state_resources);
     }
 
     let archival_data_resources = get_archival_data_resources(resources.events);
@@ -142,12 +143,11 @@ fn get_state_resources(
     })
 }
 
-fn reduce_state_resources_after_token_predeployment(
+fn reduce_state_resources_after_strk_token_predeployment(
     state_resources: &mut StateResources,
 ) -> StateResources {
     // We don't want to include the cost of predeploying tokens in gas cost
-    // so we need to reduce the state resources by the number of storage updates
-    // and allocated keys that were used for that.
+    // so we need to reduce the state resources
 
     state_resources
         .state_changes_for_fee
