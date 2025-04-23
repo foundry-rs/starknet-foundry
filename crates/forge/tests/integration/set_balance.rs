@@ -34,7 +34,7 @@ fn test_set_balance_strk() {
                 set_balance(contract_address, 10, Token::STRK);
 
                 let balance_after = get_balance(contract_address, Token::STRK);
-                assert_eq!(balance_after, array![0, 10].span(), "Balance should be 10");
+                assert_eq!(balance_after, array![10, 0].span(), "Balance should be 10");
             }
         "#
         ),
@@ -97,7 +97,7 @@ fn test_set_balance_custom_token() {
                 set_balance(contract_address, 10, custom_token);
 
                 let balance_after = get_balance(contract_address, custom_token);
-                assert_eq!(balance_after, array![0, 10].span(), "Balance should be 10");
+                assert_eq!(balance_after, array![10, 0].span(), "Balance should be 10");
             }
         "#
         ),
@@ -145,7 +145,7 @@ fn test_set_balance_big_amount() {
                 let balance_after = get_balance(contract_address, Token::STRK);
                 assert_eq!(
                     balance_after,
-                    array![293873587705, 194599656488044247630319707454198251520].span(),
+                    array![194599656488044247630319707454198251520, 293873587705].span(),
                     "Balance should should be 10^50",
                 );
             }
