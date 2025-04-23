@@ -7,11 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Cast
-
-#### Added
-- Added documentation for `--arguments` flag in `invoke`, `call` and `deploy` commands
-
 ## [0.41.0] - 2025-04-08
 
 ### Forge
