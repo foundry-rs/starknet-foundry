@@ -36,9 +36,7 @@ use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::{
-    DeclareResult, declare_with_contract_class,
-};
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare_with_contract_class;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy_at;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
@@ -227,7 +225,8 @@ pub fn run_test_case(
     };
     cheatnet_state.trace_data.is_vm_trace_needed = runtime_config.is_vm_trace_needed;
 
-    predeploy_token(&mut syscall_handler, &mut cheatnet_state, class_hash_strk);
+    let was_token_predeployed =
+        predeploy_token(&mut syscall_handler, &mut cheatnet_state, class_hash_strk);
 
     let cheatable_runtime = ExtendedRuntime {
         extension: CheatableStarknetRuntimeExtension {
@@ -325,14 +324,22 @@ pub fn run_test_case(
     let transaction_context = get_context(&forge_runtime).tx_context.clone();
     let used_resources =
         get_all_used_resources(forge_runtime, &transaction_context, tracked_resource);
-    let used_resources = reduce_used_resources_after_predeployment(used_resources);
+    let used_resources = if was_token_predeployed {
+        reduce_used_resources_after_predeployment(used_resources)
+    } else {
+        used_resources
+    };
 
     let gas = calculate_used_gas(
         &transaction_context,
         &mut cached_state,
         used_resources.clone(),
     )?;
-    let gas = reduce_gas_after_predeployment(gas);
+    let gas = if was_token_predeployed {
+        reduce_gas_after_predeployment(gas)
+    } else {
+        gas
+    };
 
     Ok(RunResultWithInfo {
         run_result: run_result.map(|(gas_counter, memory, value)| RunResult {
@@ -354,22 +361,15 @@ fn predeclare_token(cached_state: &mut CachedState<ExtendedStateReader>, class_h
     let erc20_class = RunnableCompiledClass::V1(
         CompiledClassV1::try_from_json_string(STRK_ERC20_CASM, SierraVersion::LATEST).unwrap(),
     );
-    let result = declare_with_contract_class(cached_state, erc20_class, class_hash)
+    declare_with_contract_class(cached_state, erc20_class, class_hash)
         .expect("Failed to declare class");
-
-    match result {
-        DeclareResult::Success(_) => {}
-        DeclareResult::AlreadyDeclared(_) => {
-            unreachable!("STRK token should not be already declared")
-        }
-    }
 }
 
 fn predeploy_token(
     syscall_handler: &mut SyscallHintProcessor,
     cheatnet_state: &mut CheatnetState,
     class_hash_strk: ClassHash,
-) {
+) -> bool {
     let contract_address: ContractAddress = Felt::try_from_hex_str(STRK_CONTRACT_ADDRESS)
         .unwrap()
         .try_into()
@@ -396,15 +396,17 @@ fn predeploy_token(
         0.into(),
     ];
 
-    deploy_at(
+    let deploy_result = deploy_at(
         syscall_handler,
         cheatnet_state,
         &class_hash_strk,
         &calldata,
         contract_address,
         true,
-    )
-    .expect("Failed to deploy contract");
+    );
+
+    // It's possible that token can be already deployed (forking)
+    deploy_result.is_ok()
 }
 
 fn reduce_used_resources_after_predeployment(used_resources: UsedResources) -> UsedResources {

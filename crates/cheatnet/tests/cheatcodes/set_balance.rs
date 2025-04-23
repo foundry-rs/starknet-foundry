@@ -86,6 +86,7 @@ fn test_set_balance_custom_token() {
     let balance = get_balance(&mut test_env, contract_address, token);
     assert_success(balance, &[1_000_000.into(), 0.into()]);
 
+    // set amount which is on both low and high
     test_env.set_balance(contract_address, U256::from_words(u128::MAX, 100), token);
     let balance = get_balance(&mut test_env, contract_address, token);
     assert_success(balance, &[u128::MAX.into(), 100.into()]);
