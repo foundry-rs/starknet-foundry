@@ -35,9 +35,6 @@ fn get_balance(
 //     let token = Token::STRK;
 //     let mut test_env = TestEnvironment::new();
 
-//     let contracts_data = get_contracts();
-
-//     let class_hash = test_env.declare("HelloStarknet", &contracts_data);
 //     let contract_address = ContractAddress::try_from_hex_str("0x123").unwrap();
 
 //     let balance = get_balance(&mut test_env, contract_address, token);
