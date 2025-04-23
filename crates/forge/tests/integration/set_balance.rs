@@ -162,3 +162,52 @@ fn test_set_balance_big_amount() {
 
     assert_passed(&result);
 }
+
+#[test]
+fn test_set_balance_strk_with_fork() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use snforge_std::TokenTrait;
+            use starknet::{ContractAddress, syscalls, SyscallResultTrait};
+
+            use snforge_std::{set_balance, Token};
+
+            fn get_balance(contract_address: ContractAddress, token: Token) -> Span<felt252> {
+                let mut calldata: Array<felt252> = array![contract_address.into()];
+                let balance = syscalls::call_contract_syscall(
+                    token.contract_address(), selector!("balance_of"), calldata.span(),
+                )
+                    .unwrap_syscall();
+                balance
+            }
+
+            #[fork(url: "http://188.34.188.184:7070/rpc/v0_8", block_number: 715_593)]
+            #[test]
+            fn test_set_balance_strk_with_fork() {
+                let contract_address: ContractAddress =
+                    0x0585dd8cab667ca8415fac8bead99c78947079aa72d9120140549a6f2edc4128
+                    .try_into()
+                    .unwrap();
+
+                let balance_before = get_balance(contract_address, Token::STRK);
+                assert_eq!(balance_before, array![109394843313476728397, 0].span());
+
+                set_balance(contract_address, 10, Token::STRK);
+
+                let balance_after = get_balance(contract_address, Token::STRK);
+                assert_eq!(balance_after, array![10, 0].span(), "Balance should should be 10");
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "HelloStarknet".to_string(),
+            Path::new("tests/data/simple_package/src/hello_starknet.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+
+    assert_passed(&result);
+}
