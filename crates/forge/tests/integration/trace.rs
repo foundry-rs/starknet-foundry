@@ -357,7 +357,7 @@ fn trace_call() {
                     result: CallResult::Success(array![])
                 };
 
-                assert(expected == trace, '');
+                assert(expected == trace, 'traces are not equal');
             }
         "#
         ),
@@ -510,7 +510,7 @@ fn trace_failed_call() {
                     result: CallResult::Success(array![])
                 };
 
-                assert(expected == trace, '');
+                assert(expected == trace, 'traces are not equal');
             }
         "#
         ),
@@ -705,7 +705,7 @@ fn trace_library_call_from_test() {
                     result: CallResult::Success(array![])
                 };
 
-                assert(expected == trace, '');
+                assert(expected == trace, 'traces are not equal');
             }
         "#
         ),
@@ -858,7 +858,7 @@ fn trace_failed_library_call_from_test() {
                     result: CallResult::Success(array![])
                 };
 
-                assert(expected == trace, '');
+                assert(expected == trace, 'traces are not equal');
             }
         "#
         ),

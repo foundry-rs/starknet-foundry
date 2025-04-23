@@ -180,11 +180,7 @@ fn test_backtrace_panic() {
 
                 error occurred in contract 'OuterContract'
                 stack backtrace:
-                   0: (inlined) backtrace_panic::IInnerContractDispatcherImpl::inner
-                       at [..]lib.cairo:22:1
-                   1: (inlined) backtrace_panic::OuterContract::OuterContract::outer
-                       at [..]lib.cairo:17:13
-                   2: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+                   0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
                        at [..]lib.cairo:15:9"
             },
         );
@@ -222,11 +218,13 @@ fn test_backtrace_panic_without_inlines() {
 
                 error occurred in contract 'OuterContract'
                 stack backtrace:
-                   0: backtrace_panic::IInnerContractDispatcherImpl::inner
+                   0: core::starknet::SyscallResultTraitImpl::unwrap_syscall
+                       at [..]starknet.cairo:135:52
+                   1: backtrace_panic::IInnerContractDispatcherImpl::inner
                        at [..]lib.cairo:22:1
-                   1: backtrace_panic::OuterContract::OuterContract::outer
+                   2: backtrace_panic::OuterContract::OuterContract::outer
                        at [..]lib.cairo:17:13
-                   2: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+                   3: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
                        at [..]lib.cairo:15:9"
             },
         );
@@ -243,11 +241,7 @@ fn test_backtrace_panic_without_inlines() {
 
                 error occurred in contract 'OuterContract'
                 stack backtrace:
-                   0: backtrace_panic::IInnerContractDispatcherImpl::inner
-                       at [..]lib.cairo:22:1
-                   1: backtrace_panic::OuterContract::OuterContract::outer
-                       at [..]lib.cairo:17:13
-                   2: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+                   0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
                        at [..]lib.cairo:15:9"
             },
         );
