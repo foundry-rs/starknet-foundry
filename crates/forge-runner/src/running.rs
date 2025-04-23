@@ -223,7 +223,7 @@ pub fn run_test_case(
     };
     cheatnet_state.trace_data.is_vm_trace_needed = runtime_config.is_vm_trace_needed;
 
-    let token_predeployed =
+    let is_strk_token_predeployed =
         predeploy_token(&mut syscall_handler, &mut cheatnet_state, class_hash_strk);
 
     let cheatable_runtime = ExtendedRuntime {
@@ -326,7 +326,7 @@ pub fn run_test_case(
         &transaction_context,
         &mut cached_state,
         used_resources.clone(),
-        token_predeployed,
+        is_strk_token_predeployed,
     )?;
 
     Ok(RunResultWithInfo {

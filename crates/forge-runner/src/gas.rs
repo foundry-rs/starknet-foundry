@@ -23,7 +23,7 @@ pub fn calculate_used_gas(
     transaction_context: &TransactionContext,
     state: &mut CachedState<ExtendedStateReader>,
     resources: UsedResources,
-    token_predeployed: bool,
+    is_strk_token_predeployed: bool,
 ) -> Result<GasVector, StateError> {
     let versioned_constants = transaction_context.block_context.versioned_constants();
 
@@ -33,7 +33,7 @@ pub fn calculate_used_gas(
     );
 
     let mut state_resources = get_state_resources(transaction_context, state)?;
-    if token_predeployed {
+    if is_strk_token_predeployed {
         state_resources = reduce_state_resources_after_token_predeployment(&mut state_resources);
     }
 
