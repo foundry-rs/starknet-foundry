@@ -1,8 +1,7 @@
 name: CI
 
 env:
-  # TODO(#3087): Update SHA once devnet release is available
-  DEVNET_REV: ef789b700770fa27a2fc057b3d1c610771be27d9
+  DEVNET_REV: fc5a2753a2eedcc27eed7a4fae3ecac08c2ca1b4 # v0.3.0
 
 on:
   pull_request:
@@ -136,11 +135,11 @@ jobs:
 
       - uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "2.7.1"
+          scarb-version: "2.9.1"
 
-      - run: cargo test --package forge --features scarb_2_7_1 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
-      - run: cargo test --package forge --features scarb_2_7_1 --lib compatibility_check::tests::warning_requirements
-      - run: cargo test --package forge --features scarb_2_7_1 --test main e2e::running::sierra_gas_with_older_scarb
+      - run: cargo test --package forge --features scarb_2_9_1 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
+      - run: cargo test --package forge --features scarb_2_9_1 --lib compatibility_check::tests::warning_requirements
+      - run: cargo test --package forge --features scarb_2_9_1 --test main e2e::running::sierra_gas_with_older_scarb
 
   # todo(3096): Remove this and the feature as soon as scarb 2.10 is the oldest officially supported version
   test-scarb-since-2-10:
