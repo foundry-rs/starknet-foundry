@@ -1,5 +1,7 @@
 use indoc::indoc;
 
+// Source: https://github.com/starknet-io/starkgate-contracts/blob/2c2729d47b9b5c7421c16fd258b2fa7e3ad6ddfc/src/cairo/strk/erc20_lockable.cairo
+
 pub const STRK_ERC20_CASM: &str = indoc!(
     r#"
     {
