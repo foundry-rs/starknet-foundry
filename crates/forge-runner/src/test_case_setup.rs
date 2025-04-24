@@ -1,8 +1,8 @@
 use blockifier::execution::contract_class::{CompiledClassV1, RunnableCompiledClass};
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
+use cheatnet::constants::STRK_ERC20_CASM;
 use cheatnet::constants::{STRK_CLASS_HASH, STRK_CONTRACT_ADDRESS, strk_constructor_calldata};
-use cheatnet::data::STRK_ERC20_CASM;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare_with_contract_class;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy_at;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
