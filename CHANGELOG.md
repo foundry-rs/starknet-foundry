@@ -23,8 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - improved display of backtrace in contract that panicked, when `panic-backtrace` is set to `true` in `Scarb.toml`.
   As of this release, this feature is only in `scarb nightly-2025-03-27`
 
-### Forge
-
 #### Added
 
 - `--template` flag to `snforge new` command that allows selecting a template for the new project. Possible values are `balance-contract` (default), `cairo-program` and `erc20-contract`
