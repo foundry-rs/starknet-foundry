@@ -10,4 +10,4 @@ re-export-cairo-plugins = ["snforge_scarb_plugin"]
 
 [dependencies]
 snforge_scarb_plugin = { path = "../crates/snforge-scarb-plugin" }
-starknet = "2"
+starknet = "*"
