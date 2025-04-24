@@ -24,7 +24,10 @@ impl AttributeCollector for StrkPredeploymentCollector {
     ) -> Result<String, Diagnostics> {
         args.assert_is_empty::<Self>()?;
 
-        Ok("snforge_std::_config_types::StrkPredeploymentConfig { is_disabled: true }".to_string())
+        Ok(
+            "snforge_std::_internals::config_types::StrkPredeploymentConfig { is_disabled: true }"
+                .to_string(),
+        )
     }
 }
 
