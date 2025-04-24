@@ -1,8 +1,8 @@
-use crate::data::STRK_ERC20_CASM;
 use blockifier::execution::contract_class::{CompiledClassV1, RunnableCompiledClass};
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
 use cheatnet::constants::{STRK_CLASS_HASH, STRK_CONTRACT_ADDRESS, strk_constructor_calldata};
+use cheatnet::data::STRK_ERC20_CASM;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare_with_contract_class;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy_at;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
@@ -40,18 +40,7 @@ fn deploy_token(
     );
 
     // It's possible that token can be already deployed (forking)
-    let deployed = deploy_result.is_ok();
-
-    if deployed {
-        cheatnet_state
-            .trace_data
-            .current_call_stack
-            .top()
-            .borrow_mut()
-            .nested_calls = vec![];
-    }
-
-    deployed
+    deploy_result.is_ok()
 }
 
 pub fn declare_token_strk(cached_state: &mut CachedState<ExtendedStateReader>) {
