@@ -23,6 +23,7 @@ pub const STRK_CONTRACT_ADDRESS: &str =
     "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
 pub const STRK_CLASS_HASH: &str =
     "0x04ad3c1dc8413453db314497945b6903e1c766495a1e60492d44da9c2a986e4b";
+pub const STRK_ERC20_CASM: &str = include_str!("./data/strk_erc20_casm.json");
 
 #[must_use]
 pub fn strk_constructor_calldata() -> [Felt; 9] {

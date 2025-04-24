@@ -63,7 +63,7 @@ pub fn append_config_statements(
         "
             {attrs}
             {vis} {declaration} {{
-                if snforge_std::_internals::_is_config_run() {{
+                if snforge_std::_internals::is_config_run() {{
                     {if_content}
 
                     {config_statements}

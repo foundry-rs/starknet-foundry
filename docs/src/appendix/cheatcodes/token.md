@@ -16,7 +16,7 @@ pub struct CustomToken {
 ```
 
 `Token` is an enum used to specify ERC20 token for which the balance should be cheated. It can be either `STRK` or a custom token.
-- `STRK` is the default STRK token.
+- `STRK` is the default STRK token (predeployed in every test case).
 - `Custom` allows to specify a custom token by providing its contract address and balances variable selector.
 
 ```rust

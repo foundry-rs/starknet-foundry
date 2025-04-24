@@ -217,7 +217,12 @@ pub fn run_test_case(
     let is_strk_token_predeployed = !case.config.disable_strk_predeployment
         && deploy_token_strk(&mut syscall_handler, &mut cheatnet_state);
 
-    update_context_after_strk_token_predeployment(syscall_handler.base.context);
+    if is_strk_token_predeployed {
+        remove_changes_after_strk_token_predeployment(
+            syscall_handler.base.context,
+            &mut cheatnet_state,
+        );
+    }
 
     let cheatable_runtime = ExtendedRuntime {
         extension: CheatableStarknetRuntimeExtension {
@@ -338,8 +343,18 @@ pub fn run_test_case(
     })
 }
 
-fn update_context_after_strk_token_predeployment(context: &mut EntryPointExecutionContext) {
+fn remove_changes_after_strk_token_predeployment(
+    context: &mut EntryPointExecutionContext,
+    cheatnet_state: &mut CheatnetState,
+) {
     context.n_emitted_events = 0;
+
+    cheatnet_state
+        .trace_data
+        .current_call_stack
+        .top()
+        .borrow_mut()
+        .nested_calls = vec![];
 }
 
 // TODO(#2958) Remove copied code

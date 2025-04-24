@@ -6,8 +6,8 @@ use blockifier::execution::contract_class::CompiledClassV1;
 use blockifier::execution::contract_class::RunnableCompiledClass;
 use cheatnet::constants::STRK_CLASS_HASH;
 use cheatnet::constants::STRK_CONTRACT_ADDRESS;
+use cheatnet::constants::STRK_ERC20_CASM;
 use cheatnet::constants::strk_constructor_calldata;
-use cheatnet::data::STRK_ERC20_CASM;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare_with_contract_class;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::erc20::Token;
@@ -39,7 +39,7 @@ fn get_balance(
     test_env.call_contract(&token.contract_address(), "balance_of", &[target.into()])
 }
 
-fn declare_and_deploy_strk_token(test_env: &mut TestEnvironment) {
+fn declare_and_deploy_token_strk(test_env: &mut TestEnvironment) {
     let class_hash = ClassHash::try_from_hex_str(STRK_CLASS_HASH).unwrap();
     let contract_class = RunnableCompiledClass::V1(
         CompiledClassV1::try_from_json_string(STRK_ERC20_CASM, SierraVersion::LATEST).unwrap(),
@@ -68,7 +68,7 @@ fn deploy_token_strk(test_env: &mut TestEnvironment) {
 fn test_set_balance_strk() {
     let mut test_env = TestEnvironment::new();
 
-    declare_and_deploy_strk_token(&mut test_env);
+    declare_and_deploy_token_strk(&mut test_env);
 
     let contract_address = ContractAddress::try_from_hex_str("0x123").unwrap();
 
