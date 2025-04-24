@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `set_balance` chatcode for setting balance of ERC20 token for specified contract address. STRK token is now predeployed in every test by default.
+- `set_balance` cheatcode for setting an ERC20 token balance for specified contract address. The STRK token is now pre-deployed in every test by default.
 
 ## [0.41.0] - 2025-04-08
 
