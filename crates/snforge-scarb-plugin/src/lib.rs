@@ -1,7 +1,8 @@
 #![warn(rust_2024_compatibility)]
 use attributes::fuzzer;
 use attributes::{
-    available_gas::available_gas, fork::fork, fuzzer::fuzzer, ignore::ignore,
+    available_gas::available_gas, disable_strk_predeployment::disable_strk_predeployment,
+    fork::fork, fuzzer::fuzzer, ignore::ignore,
     internal_config_statement::internal_config_statement, should_panic::should_panic, test::test,
 };
 use cairo_lang_macro::{attribute_macro, executable_attribute, ProcMacroResult, TokenStream};
@@ -61,4 +62,9 @@ fn available_gas(args: TokenStream, item: TokenStream) -> ProcMacroResult {
 #[attribute_macro]
 fn should_panic(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     should_panic(args, item)
+}
+
+#[attribute_macro]
+fn disable_strk_predeployment(args: TokenStream, item: TokenStream) -> ProcMacroResult {
+    disable_strk_predeployment(args, item)
 }

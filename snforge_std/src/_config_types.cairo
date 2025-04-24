@@ -60,3 +60,8 @@ pub struct ShouldPanicConfig {
 pub struct IgnoreConfig {
     pub is_ignored: bool,
 }
+
+#[derive(Drop, Serde)]
+pub struct StrkPredeploymentConfig {
+    pub is_disabled: bool,
+}

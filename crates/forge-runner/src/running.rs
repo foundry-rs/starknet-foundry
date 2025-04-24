@@ -196,7 +196,9 @@ pub fn run_test_case(
     }
     let mut cached_state = CachedState::new(state_reader);
 
-    declare_token_strk(&mut cached_state);
+    if !case.config.disable_strk_predeployment {
+        declare_token_strk(&mut cached_state);
+    }
 
     let mut syscall_handler = build_syscall_handler(
         &mut cached_state,
@@ -212,7 +214,8 @@ pub fn run_test_case(
     };
     cheatnet_state.trace_data.is_vm_trace_needed = runtime_config.is_vm_trace_needed;
 
-    let is_strk_token_predeployed = deploy_token_strk(&mut syscall_handler, &mut cheatnet_state);
+    let is_strk_token_predeployed = !case.config.disable_strk_predeployment
+        && deploy_token_strk(&mut syscall_handler, &mut cheatnet_state);
 
     update_context_after_strk_token_predeployment(syscall_handler.base.context);
 

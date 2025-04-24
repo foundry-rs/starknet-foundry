@@ -26,4 +26,5 @@ pub struct TestCaseResolvedConfig {
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<ResolvedForkConfig>,
     pub fuzzer_config: Option<RawFuzzerConfig>,
+    pub disable_strk_predeployment: bool,
 }
