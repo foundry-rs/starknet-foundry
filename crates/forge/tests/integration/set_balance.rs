@@ -1,7 +1,8 @@
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
+use starknet_api::execution_resources::{GasAmount, GasVector};
 use std::path::Path;
-use test_utils::runner::{Contract, assert_passed};
+use test_utils::runner::{Contract, assert_gas, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
@@ -210,4 +211,34 @@ fn test_set_balance_strk_with_fork() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
+}
+
+#[test]
+fn test_check_gas_in_empty_test_case() {
+    let test = test_case!(
+        indoc!(
+            "
+            #[test]
+            fn test_empty() {}
+        "
+        ),
+        Contract::from_code_path(
+            "HelloStarknet".to_string(),
+            Path::new("tests/data/simple_package/src/hello_starknet.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+
+    assert_passed(&result);
+    assert_gas(
+        &result,
+        "test_empty",
+        GasVector {
+            l1_gas: GasAmount(0),
+            l1_data_gas: GasAmount(0),
+            l2_gas: GasAmount(40000),
+        },
+    );
 }
