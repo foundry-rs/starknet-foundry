@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `set_balance` cheatcode for setting an ERC20 token balance for specified contract address. The STRK token is now pre-deployed in every test by default.
 
+#### Changed
+
+- Minimal supported Scarb version is now `2.9.1`
+
 ## [0.41.0] - 2025-04-08
 
 ### Forge
