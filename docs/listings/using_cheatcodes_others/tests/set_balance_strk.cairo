@@ -21,6 +21,6 @@ fn set_balance_strk() {
     )
         .unwrap_syscall();
 
-    assert(balance == array![0, 1_000_000].span(), 'Invalid balance');
+    assert(balance == array![1_000_000, 0].span(), 'Invalid balance');
 }
 
