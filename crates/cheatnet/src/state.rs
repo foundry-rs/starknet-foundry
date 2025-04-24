@@ -41,6 +41,17 @@ pub enum CheatSpan {
     TargetCalls(usize),
 }
 
+impl CheatSpan {
+    /// Smart constructor for TargetCalls variant. Prevents zero value.
+    pub fn target_calls(n: usize) -> Result<Self, String> {
+        if n == 0 {
+            Err("CheatSpan::TargetCalls(0) is not allowed".to_string())
+        } else {
+            Ok(CheatSpan::TargetCalls(n))
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct ExtendedStateReader {
     pub dict_state_reader: DictStateReader,
