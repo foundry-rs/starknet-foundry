@@ -269,9 +269,8 @@ pub fn default_cli_args() -> Vec<&'static str> {
 fn parse_output<T: DeserializeOwned>(output: &[u8]) -> T {
     for line in BufRead::split(output, b'\n') {
         let line = line.expect("Failed to read line from stdout");
-        match serde_json::de::from_slice::<T>(&line) {
-            Ok(t) => return t,
-            Err(_) => continue,
+        if let Ok(t) = serde_json::de::from_slice::<T>(&line) {
+            return t;
         }
     }
 

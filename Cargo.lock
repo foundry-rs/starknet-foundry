@@ -1412,7 +1412,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "cheatnet"
-version = "0.40.0"
+version = "0.41.0"
 dependencies = [
  "anyhow",
  "bimap",
@@ -2165,7 +2165,7 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
 name = "docs"
-version = "0.40.0"
+version = "0.41.0"
 dependencies = [
  "anyhow",
  "camino",
@@ -2483,7 +2483,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.40.0"
+version = "0.41.0"
 dependencies = [
  "anyhow",
  "assert_fs",
@@ -2507,7 +2507,6 @@ dependencies = [
  "futures",
  "include_dir",
  "indoc",
- "lazy_static 1.5.0",
  "num-bigint",
  "openssl",
  "packages_validation",
@@ -2537,7 +2536,7 @@ dependencies = [
 
 [[package]]
 name = "forge_runner"
-version = "0.40.0"
+version = "0.41.0"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -4777,9 +4776,9 @@ dependencies = [
 
 [[package]]
 name = "reqwest"
-version = "0.12.15"
+version = "0.12.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d19c46a6fdd48bc4dab94b6103fccc55d34c67cc0ad04653aad4ea2a07cd7bbb"
+checksum = "989e327e510263980e231de548a33e63d34962d29ae61b467389a1a09627a254"
 dependencies = [
  "base64 0.22.1",
  "bytes",
@@ -5634,7 +5633,7 @@ dependencies = [
 
 [[package]]
 name = "sncast"
-version = "0.40.0"
+version = "0.41.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5667,7 +5666,7 @@ dependencies = [
  "promptly",
  "rand 0.8.5",
  "regex",
- "reqwest 0.12.15",
+ "reqwest 0.12.14",
  "rpassword",
  "runtime",
  "scarb-api",
