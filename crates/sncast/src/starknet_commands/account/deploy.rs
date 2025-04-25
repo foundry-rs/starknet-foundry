@@ -29,20 +29,24 @@ use starknet_types_core::felt::Felt;
 pub struct Deploy {
     /// Name of the account to be deployed
     #[arg(short, long)]
-    pub name: Option<String>,
+    pub name: String,
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
 
     #[command(flatten)]
     pub rpc: RpcArgs,
+
+    /// If passed, the command will not trigger an interactive prompt to add an account as a default
+    #[arg(long)]
+    pub silent: bool,
 }
 
 #[expect(clippy::too_many_arguments)]
 pub async fn deploy(
     provider: &JsonRpcClient<HttpTransport>,
     accounts_file: Utf8PathBuf,
-    deploy_args: Deploy,
+    deploy_args: &Deploy,
     chain_id: Felt,
     wait_config: WaitForTx,
     account: &str,
@@ -60,9 +64,7 @@ pub async fn deploy(
         )
         .await
     } else {
-        let account_name = deploy_args
-            .name
-            .ok_or_else(|| anyhow!("Required argument `--name` not provided"))?;
+        let account_name = deploy_args.name.clone();
         check_account_file_exists(&accounts_file)?;
         deploy_from_accounts_file(
             provider,
