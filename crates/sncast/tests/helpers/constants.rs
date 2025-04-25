@@ -11,7 +11,7 @@ pub const NETWORK: &str = "testnet";
 pub const SEED: u32 = 1_053_545_548;
 
 // Block number used by devnet to fork the Sepolia testnet network in the tests
-pub const FORK_BLOCK_NUMBER: u32 = 721_713;
+pub const FORK_BLOCK_NUMBER: u32 = 721_720;
 
 pub const CONTRACTS_DIR: &str = "tests/data/contracts";
 pub const SCRIPTS_DIR: &str = "tests/data/scripts";
@@ -38,4 +38,4 @@ pub const CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA: &str =
     "0x59426c817fb8103edebdbf1712fa084c6744b2829db9c62d1ea4dce14ee6ded";
 
 pub const DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA: &str =
-    "0x0786d1f010d66f838837290e472415186ba6a789fb446e7f92e444bed7b5d9c0";
+    "0x00351c816183324878714973f3da1a43c1a40d661b8dac5cb69294cc333342ed";
