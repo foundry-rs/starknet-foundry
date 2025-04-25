@@ -1,6 +1,6 @@
 use crate::helpers::constants::{
     ACCOUNT, ACCOUNT_FILE_PATH, DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA,
-    MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
+    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
 };
 use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
@@ -14,7 +14,7 @@ use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use snapbox::cmd::cargo_bin;
 use sncast::AccountType;
-use sncast::helpers::constants::OZ_CLASS_HASH;
+use sncast::helpers::constants::{ARGENT_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Invoke;
 use starknet_types_core::felt::Felt;

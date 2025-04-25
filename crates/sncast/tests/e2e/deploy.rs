@@ -1,6 +1,6 @@
 use crate::helpers::constants::{
     ACCOUNT, ACCOUNT_FILE_PATH, CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
-    MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
+    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
 };
 use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
