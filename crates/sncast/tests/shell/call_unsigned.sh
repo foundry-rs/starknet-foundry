@@ -13,5 +13,5 @@ $CAST_BINARY \
   --contract-address \
   "$DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA" \
   --function \
-  signed_fn_multiple \
+  multiple_signed_fn \
   --arguments '-3_i32, -4'
