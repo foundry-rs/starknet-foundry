@@ -778,7 +778,7 @@ fn nonexistent_libcall_function() {
     assert_case_output_contains(
         &result,
         "nonexistent_libcall_function",
-        "(0x454e545259504f494e545f4e4f545f464f554e44 ('ENTRYPOINT_NOT_FOUND'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))",
+        "0x454e545259504f494e545f4e4f545f464f554e44 ('ENTRYPOINT_NOT_FOUND')",
     );
 }
 
@@ -902,4 +902,56 @@ fn nonexistent_class_libcall() {
     assert_failed(&result);
     assert_case_output_contains(&result, "test_nonexistent_libcall", "Class with hash");
     assert_case_output_contains(&result, "test_nonexistent_libcall", "is not declared.");
+}
+
+#[test]
+fn dispatcher_in_nested_call() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
+        use starknet::ContractAddress;
+
+        #[starknet::interface]
+        pub trait ITop<TContractState> {
+            fn call_panic_contract(
+                self: @TContractState, panic_contract_address: starknet::ContractAddress,
+            );
+        }
+
+        fn deploy_contracts() -> (ContractAddress, ContractAddress) {
+            let contract = declare("Top").unwrap().contract_class();
+            let (top_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+
+            let contract = declare("Nested").unwrap().contract_class();
+            let (nested_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+
+            (top_address, nested_address)
+        }
+
+        #[test]
+        fn test_error_handled_inside_contract() {
+            let (top_address, nested_address) = deploy_contracts();
+
+            let dispatcher = ITopDispatcher { contract_address: top_address };
+
+            dispatcher.call_panic_contract(nested_address);
+        }
+        "#
+        ),
+        Contract::from_code_path(
+            "Top".to_string(),
+            Path::new("tests/data/contracts/catching_error.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "Nested".to_string(),
+            Path::new("tests/data/contracts/catching_error.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+
+    assert_passed(&result);
 }
