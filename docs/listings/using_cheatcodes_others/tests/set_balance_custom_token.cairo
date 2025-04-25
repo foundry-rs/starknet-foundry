@@ -32,7 +32,7 @@ fn set_balance_custom_token() {
     // Example user address, whose balance we want to set
     let user_address: ContractAddress = 0x123.try_into().unwrap();
 
-    // Create custom token
+    // Define custom token
     let token = Token::Custom(
         CustomToken {
             contract_address: token_contract_address,

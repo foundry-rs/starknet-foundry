@@ -186,7 +186,7 @@ To better understand the functionality of `CheatSpan`, here's a full example:
 {{#include ../../listings/using_cheatcodes_others/tests/caller_address/span.cairo}}
 ```
 
-### Cheating ERC-20 token balance
+### Cheating ERC-20 Token balance
 
 If you want to cheat the balance of an ERC-20 token (STRK, or custom one), you can use the [`set_balance`](../appendix/cheatcodes/set_balance.md) cheatcode.
 
