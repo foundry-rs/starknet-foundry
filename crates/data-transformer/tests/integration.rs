@@ -15,7 +15,7 @@ use url::Url;
 
 // Deployment of contract from /tests/data/data_transformer
 const TEST_CLASS_HASH: Felt =
-    Felt::from_hex_unchecked("0x02ca366cf431b9a051eba17d6018a0cf19f85905d9e67e392656eb6ec47b90af");
+    Felt::from_hex_unchecked("0x0786d1f010d66f838837290e472415186ba6a789fb446e7f92e444bed7b5d9c0");
 
 static CLASS: OnceCell<ContractClass> = OnceCell::const_new();
 
