@@ -4,13 +4,13 @@ use snforge_std::cheatcodes::storage::{map_entry_address, store};
 const STRK_CONTRACT_ADDRESS: felt252 =
     0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d;
 
-#[derive(Drop, Serde, Copy)]
+#[derive(Drop, Serde, Copy, Debug)]
 pub struct CustomToken {
     pub contract_address: ContractAddress,
     pub balances_variable_selector: felt252,
 }
 
-#[derive(Drop, Copy, Clone)]
+#[derive(Drop, Copy, Clone, Debug)]
 pub enum Token {
     STRK,
     Custom: CustomToken,
