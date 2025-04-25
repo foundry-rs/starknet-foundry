@@ -418,7 +418,9 @@ fn extract_result_data(run_result: &RunResult, expectation: &ExpectedTestResult)
             };
 
             match expected_data {
-                Some(expected) if is_matching(panic_data, expected) => None,
+                Some(expected) if is_matching(panic_data, expected) => {
+                    build_readable_text(panic_data)
+                }
                 Some(expected) => {
                     let panic_string = convert_felts_to_byte_array_string(panic_data)
                         .unwrap_or_else(|| join_short_strings(panic_data));
