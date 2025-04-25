@@ -21,6 +21,7 @@ use std::{env, fmt};
 
 const BACKTRACE_ENV: &str = "SNFORGE_BACKTRACE";
 
+#[must_use]
 pub fn add_backtrace_footer(
     message: String,
     contracts_data: &ContractsData,
@@ -30,8 +31,7 @@ pub fn add_backtrace_footer(
         return message;
     }
 
-    let is_backtrace_enabled = env::var(BACKTRACE_ENV).is_ok_and(|value| value == "1");
-    if !is_backtrace_enabled {
+    if !is_backtrace_enabled() {
         return format!(
             "{message}\nnote: run with `{BACKTRACE_ENV}=1` environment variable to display a backtrace",
         );
@@ -52,6 +52,11 @@ pub fn add_backtrace_footer(
             |err| format!("{message}\nfailed to create backtrace: {err}"),
             |backtraces| format!("{message}\n{backtraces}"),
         )
+}
+
+#[must_use]
+pub fn is_backtrace_enabled() -> bool {
+    env::var(BACKTRACE_ENV).is_ok_and(|value| value == "1")
 }
 
 struct ContractBacktraceData {

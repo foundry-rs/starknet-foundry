@@ -12,16 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Minimal supported Scarb version is now `2.9.1`
+- Improved display of backtrace for contracts that panicked, when `panic-backtrace = true` in `Scarb.toml`. Without using this feature, the backtrace may be less accurate than before.
+  As of this release, this feature is available only in `scarb nightly-2025-03-27`.
 
 ## [0.41.0] - 2025-04-08
 
 ### Forge
-
-#### Changed
-
-- forge backtrace now displays the full backtrace and marks whether a function was inlined or not
-- improved display of backtrace in contract that panicked, when `panic-backtrace` is set to `true` in `Scarb.toml`.
-  As of this release, this feature is only in `scarb nightly-2025-03-27`
 
 #### Added
 
