@@ -1,4 +1,6 @@
-use super::sierra_abi::{build_representation, parsing::parse_expression};
+mod sierra_abi;
+
+use crate::transformer::sierra_abi::{build_representation, parsing::parse_expression};
 use anyhow::{Context, Result, bail, ensure};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::Expr;

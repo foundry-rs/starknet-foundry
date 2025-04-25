@@ -1,6 +1,6 @@
 use core::ecdsa::check_ecdsa_signature;
 use core::ec::{EcPointImpl, EcPoint, stark_curve};
-use super::super::_cheatcode::execute_cheatcode_and_deserialize;
+use crate::cheatcode::execute_cheatcode_and_deserialize;
 use super::SignError;
 
 use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};

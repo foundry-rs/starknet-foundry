@@ -43,48 +43,41 @@ impl Contains<&str> for anyhow::Error {
     }
 }
 
+async fn run_transformer(input: &str, selector: &str) -> anyhow::Result<Vec<Felt>> {
+    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
+
+    Calldata::new(input.to_string()).serialized(
+        contract_class,
+        &get_selector_from_name(selector).expect("valid selector"),
+    )
+}
+
 #[tokio::test]
 async fn test_function_not_found() {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-    let selector = get_selector_from_name("nonexistent_fn").unwrap();
-
-    let input = String::from("('some_felt',)");
-
-    let result = Calldata::new(input).serialized(contract_class, &selector);
+    let selector = "nonexistent_fn";
+    let result = run_transformer("('some_felt',)", selector).await;
 
     result.unwrap_err().assert_contains(
-        format!(r#"Function with selector "{selector}" not found in ABI of the contract"#).as_str(),
+        format!(
+            r#"Function with selector "{}" not found in ABI of the contract"#,
+            get_selector_from_name(selector).unwrap()
+        )
+        .as_str(),
     );
 }
 
 #[tokio::test]
-async fn test_happy_case_numeric_type_suffix() -> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("1010101_u32");
-
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("unsigned_fn").unwrap(),
-    )?;
+async fn test_happy_case_numeric_type_suffix() {
+    let result = run_transformer("1010101_u32", "unsigned_fn").await.unwrap();
 
     let expected_output = [Felt::from(1_010_101_u32)];
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 #[tokio::test]
 async fn test_invalid_numeric_type_suffix() {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("1_u10");
-
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("simple_fn").unwrap(),
-    );
+    let result = run_transformer("1_u10", "simple_fn").await;
 
     result
         .unwrap_err()
@@ -93,14 +86,7 @@ async fn test_invalid_numeric_type_suffix() {
 
 #[tokio::test]
 async fn test_invalid_cairo_expression() {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("(some_invalid_expression:,)");
-
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("simple_fn").unwrap(),
-    );
+    let result = run_transformer("(some_invalid_expression:,)", "simple_fn").await;
 
     result
         .unwrap_err()
@@ -109,13 +95,7 @@ async fn test_invalid_cairo_expression() {
 
 #[tokio::test]
 async fn test_invalid_argument_number() {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("0x123, 'some_obsolete_argument', 10");
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("simple_fn").unwrap(),
-    );
+    let result = run_transformer("0x123, 'some_obsolete_argument', 10", "simple_fn").await;
 
     result
         .unwrap_err()
@@ -123,31 +103,19 @@ async fn test_invalid_argument_number() {
 }
 
 #[tokio::test]
-async fn test_happy_case_simple_cairo_expressions_input() -> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("100");
-
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("simple_fn").unwrap(),
-    )?;
+async fn test_happy_case_simple_cairo_expressions_input() {
+    let result = run_transformer("100", "simple_fn").await.unwrap();
 
     let expected_output = [Felt::from_hex_unchecked("0x64")];
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 #[tokio::test]
-async fn test_happy_case_u256_function_cairo_expressions_input_decimal() -> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = format!("{}_u256", U256::MAX);
-
-    let result = Calldata::new(input)
-        .serialized(contract_class, &get_selector_from_name("u256_fn").unwrap())?;
+async fn test_happy_case_u256_function_cairo_expressions_input_decimal() {
+    let result = run_transformer(&format!("{}_u256", U256::MAX), "u256_fn")
+        .await
+        .unwrap();
 
     let expected_output = [
         Felt::from_hex_unchecked("0xffffffffffffffffffffffffffffffff"),
@@ -155,18 +123,11 @@ async fn test_happy_case_u256_function_cairo_expressions_input_decimal() -> anyh
     ];
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 #[tokio::test]
-async fn test_happy_case_u256_function_cairo_expressions_input_hex() -> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("0x2137_u256");
-
-    let result = Calldata::new(input)
-        .serialized(contract_class, &get_selector_from_name("u256_fn").unwrap())?;
+async fn test_happy_case_u256_function_cairo_expressions_input_hex() {
+    let result = run_transformer("0x2137_u256", "u256_fn").await.unwrap();
 
     let expected_output = [
         Felt::from_hex_unchecked("0x2137"),
@@ -174,26 +135,15 @@ async fn test_happy_case_u256_function_cairo_expressions_input_hex() -> anyhow::
     ];
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 #[tokio::test]
-async fn test_happy_case_signed_function_cairo_expressions_input() -> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("-273");
-
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("signed_fn").unwrap(),
-    )?;
+async fn test_happy_case_signed_function_cairo_expressions_input() {
+    let result = run_transformer("-273", "signed_fn").await.unwrap();
 
     let expected_output = [Felt::from(-273i16)];
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 // Problem: Although transformer fails to process the given input as `i32`, it then succeeds to interpret it as `felt252`
@@ -203,14 +153,7 @@ async fn test_happy_case_signed_function_cairo_expressions_input() -> anyhow::Re
 #[ignore = "Impossible to pass with the current solution"]
 #[tokio::test]
 async fn test_signed_fn_overflow() {
-    let input = format!("({},)", i32::MAX as u64 + 1);
-
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("signed_fn").unwrap(),
-    );
+    let result = run_transformer(&format!("({},)", i32::MAX as u64 + 1), "signed_fn").await;
 
     result
         .unwrap_err()
@@ -219,14 +162,7 @@ async fn test_signed_fn_overflow() {
 
 #[tokio::test]
 async fn test_signed_fn_overflow_with_type_suffix() {
-    let input = format!("{}_i32", i32::MAX as u64 + 1);
-
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("signed_fn").unwrap(),
-    );
+    let result = run_transformer(&format!("{}_i32", i32::MAX as u64 + 1), "signed_fn").await;
 
     result
         .unwrap_err()
@@ -234,31 +170,21 @@ async fn test_signed_fn_overflow_with_type_suffix() {
 }
 
 #[tokio::test]
-async fn test_happy_case_unsigned_function_cairo_expressions_input() -> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = format!("{}", u32::MAX);
-
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("unsigned_fn").unwrap(),
-    )?;
+async fn test_happy_case_unsigned_function_cairo_expressions_input() {
+    let result = run_transformer(&format!("{}", u32::MAX), "unsigned_fn")
+        .await
+        .unwrap();
 
     let expected_output = [Felt::from(u32::MAX)];
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 #[tokio::test]
-async fn test_happy_case_tuple_function_cairo_expression_input() -> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("(2137_felt252, 1_u8, Enum::One)");
-
-    let result = Calldata::new(input)
-        .serialized(contract_class, &get_selector_from_name("tuple_fn").unwrap())?;
+async fn test_happy_case_tuple_function_cairo_expression_input() {
+    let result = run_transformer("(2137_felt252, 1_u8, Enum::One)", "tuple_fn")
+        .await
+        .unwrap();
 
     let expected_output = [
         Felt::from_hex_unchecked("0x859"),
@@ -267,21 +193,16 @@ async fn test_happy_case_tuple_function_cairo_expression_input() -> anyhow::Resu
     ];
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 #[tokio::test]
-async fn test_happy_case_tuple_function_with_nested_struct_cairo_expression_input()
--> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from(
+async fn test_happy_case_tuple_function_with_nested_struct_cairo_expression_input() {
+    let result = run_transformer(
         "(123, 234, Enum::Three(NestedStructWithField {a: SimpleStruct {a: 345}, b: 456 }))",
-    );
-
-    let result = Calldata::new(input)
-        .serialized(contract_class, &get_selector_from_name("tuple_fn").unwrap())?;
+        "tuple_fn",
+    )
+    .await
+    .unwrap();
 
     let expected_output = [123, 234, 2, 345, 456]
         .into_iter()
@@ -289,14 +210,10 @@ async fn test_happy_case_tuple_function_with_nested_struct_cairo_expression_inpu
         .collect_vec();
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 #[tokio::test]
-async fn test_happy_case_complex_function_cairo_expressions_input() -> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
+async fn test_happy_case_complex_function_cairo_expressions_input() {
     let max_u256 = U256::max_value().to_string();
 
     let input = format!(
@@ -308,10 +225,8 @@ async fn test_happy_case_complex_function_cairo_expressions_input() -> anyhow::R
         true,
         {max_u256}",
     );
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("complex_fn").unwrap(),
-    )?;
+
+    let result = run_transformer(&input, "complex_fn").await.unwrap();
 
     // Manually serialized in Cairo
     let expected_output = [
@@ -338,38 +253,22 @@ async fn test_happy_case_complex_function_cairo_expressions_input() -> anyhow::R
     .collect_vec();
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 #[tokio::test]
-async fn test_happy_case_simple_struct_function_cairo_expression_input() -> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("SimpleStruct {a: 0x12}");
-
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("simple_struct_fn").unwrap(),
-    )?;
+async fn test_happy_case_simple_struct_function_cairo_expression_input() {
+    let result = run_transformer("SimpleStruct {a: 0x12}", "simple_struct_fn")
+        .await
+        .unwrap();
 
     let expected_output = [Felt::from_hex_unchecked("0x12")];
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 #[tokio::test]
 async fn test_simple_struct_function_invalid_struct_argument() {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from(r#"SimpleStruct {a: "string"}"#);
-
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("simple_struct_fn").unwrap(),
-    );
+    let result = run_transformer(r#"SimpleStruct {a: "string"}"#, "simple_struct_fn").await;
 
     result
         .unwrap_err()
@@ -378,14 +277,7 @@ async fn test_simple_struct_function_invalid_struct_argument() {
 
 #[tokio::test]
 async fn test_simple_struct_function_invalid_struct_name() {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("InvalidStructName {a: 0x10}");
-
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("simple_struct_fn").unwrap(),
-    );
+    let result = run_transformer("InvalidStructName {a: 0x10}", "simple_struct_fn").await;
 
     result
         .unwrap_err()
@@ -404,26 +296,19 @@ async fn test_simple_struct_function_cairo_expression_input_invalid_argument_typ
     input: &str,
     error_message: &str,
 ) {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let result = Calldata::new(input.to_string()).serialized(
-        contract_class,
-        &get_selector_from_name("simple_struct_fn").unwrap(),
-    );
+    let result = run_transformer(input, "simple_struct_fn").await;
 
     result.unwrap_err().assert_contains(error_message);
 }
 
 #[tokio::test]
-async fn test_happy_case_nested_struct_function_cairo_expression_input() -> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }");
-
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("nested_struct_fn").unwrap(),
-    )?;
+async fn test_happy_case_nested_struct_function_cairo_expression_input() {
+    let result = run_transformer(
+        "NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }",
+        "nested_struct_fn",
+    )
+    .await
+    .unwrap();
 
     let expected_output = [
         Felt::from_hex_unchecked("0x24"),
@@ -431,18 +316,13 @@ async fn test_happy_case_nested_struct_function_cairo_expression_input() -> anyh
     ];
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 #[tokio::test]
-async fn test_happy_case_span_function_cairo_expression_input() -> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("array![1, 2, 3].span()");
-
-    let result = Calldata::new(input)
-        .serialized(contract_class, &get_selector_from_name("span_fn").unwrap())?;
+async fn test_happy_case_span_function_cairo_expression_input() {
+    let result = run_transformer("array![1, 2, 3].span()", "span_fn")
+        .await
+        .unwrap();
 
     let expected_output = [
         Felt::from_hex_unchecked("0x3"),
@@ -452,34 +332,20 @@ async fn test_happy_case_span_function_cairo_expression_input() -> anyhow::Resul
     ];
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 #[tokio::test]
-async fn test_happy_case_empty_span_function_cairo_expression_input() -> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("array![].span()");
-
-    let result = Calldata::new(input)
-        .serialized(contract_class, &get_selector_from_name("span_fn").unwrap())?;
+async fn test_happy_case_empty_span_function_cairo_expression_input() {
+    let result = run_transformer("array![].span()", "span_fn").await.unwrap();
 
     let expected_output = [Felt::from_hex_unchecked("0x0")];
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 #[tokio::test]
 async fn test_span_function_array_input() {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("array![1, 2, 3]");
-
-    let result = Calldata::new(input)
-        .serialized(contract_class, &get_selector_from_name("span_fn").unwrap());
+    let result = run_transformer("array![1, 2, 3]", "span_fn").await;
 
     result
         .unwrap_err()
@@ -488,12 +354,7 @@ async fn test_span_function_array_input() {
 
 #[tokio::test]
 async fn test_span_function_unsupported_method() {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("array![1, 2, 3].into()");
-
-    let result = Calldata::new(input)
-        .serialized(contract_class, &get_selector_from_name("span_fn").unwrap());
+    let result = run_transformer("array![1, 2, 3].into()", "span_fn").await;
 
     result
         .unwrap_err()
@@ -502,12 +363,7 @@ async fn test_span_function_unsupported_method() {
 
 #[tokio::test]
 async fn test_span_function_unsupported_operator() {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("array![1, 2, 3]*span()");
-
-    let result = Calldata::new(input)
-        .serialized(contract_class, &get_selector_from_name("span_fn").unwrap());
+    let result = run_transformer("array![1, 2, 3]*span()", "span_fn").await;
 
     result
         .unwrap_err()
@@ -516,12 +372,7 @@ async fn test_span_function_unsupported_operator() {
 
 #[tokio::test]
 async fn test_span_function_unsupported_right_hand_side() {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("array![1, 2, 3].span");
-
-    let result = Calldata::new(input)
-        .serialized(contract_class, &get_selector_from_name("span_fn").unwrap());
+    let result = run_transformer("array![1, 2, 3].span", "span_fn").await;
 
     result
         .unwrap_err()
@@ -530,12 +381,7 @@ async fn test_span_function_unsupported_right_hand_side() {
 
 #[tokio::test]
 async fn test_span_function_unsupported_left_hand_side() {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("(1, 2, 3).span");
-
-    let result = Calldata::new(input)
-        .serialized(contract_class, &get_selector_from_name("span_fn").unwrap());
+    let result = run_transformer("(1, 2, 3).span", "span_fn").await;
 
     result.unwrap_err().assert_contains(
         r#"Only "array![]" is supported as left-hand side of "." operator, got "(1, 2, 3)""#,
@@ -543,20 +389,12 @@ async fn test_span_function_unsupported_left_hand_side() {
 }
 
 #[tokio::test]
-async fn test_happy_case_enum_function_empty_variant_cairo_expression_input() -> anyhow::Result<()>
-{
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("Enum::One");
-
-    let result = Calldata::new(input)
-        .serialized(contract_class, &get_selector_from_name("enum_fn").unwrap())?;
+async fn test_happy_case_enum_function_empty_variant_cairo_expression_input() {
+    let result = run_transformer("Enum::One", "enum_fn").await.unwrap();
 
     let expected_output = [Felt::ZERO];
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 #[tokio::test]
@@ -580,15 +418,13 @@ async fn test_happy_case_enum_function_one_argument_variant_cairo_expression_inp
 }
 
 #[tokio::test]
-async fn test_happy_case_enum_function_nested_struct_variant_cairo_expression_input()
--> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input =
-        String::from("Enum::Three(NestedStructWithField { a: SimpleStruct { a: 123 }, b: 234 })");
-
-    let result = Calldata::new(input)
-        .serialized(contract_class, &get_selector_from_name("enum_fn").unwrap())?;
+async fn test_happy_case_enum_function_nested_struct_variant_cairo_expression_input() {
+    let result = run_transformer(
+        "Enum::Three(NestedStructWithField { a: SimpleStruct { a: 123 }, b: 234 })",
+        "enum_fn",
+    )
+    .await
+    .unwrap();
 
     let expected_output = [
         Felt::from_hex_unchecked("0x2"),
@@ -597,18 +433,11 @@ async fn test_happy_case_enum_function_nested_struct_variant_cairo_expression_in
     ];
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 #[tokio::test]
 async fn test_enum_function_invalid_variant_cairo_expression_input() {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("Enum::InvalidVariant");
-
-    let result = Calldata::new(input)
-        .serialized(contract_class, &get_selector_from_name("enum_fn").unwrap());
+    let result = run_transformer("Enum::InvalidVariant", "enum_fn").await;
 
     result
         .unwrap_err()
@@ -616,9 +445,7 @@ async fn test_enum_function_invalid_variant_cairo_expression_input() {
 }
 
 #[tokio::test]
-async fn test_happy_case_complex_struct_function_cairo_expression_input() -> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
+async fn test_happy_case_complex_struct_function_cairo_expression_input() {
     let data = indoc!(
         r#"
         ComplexStruct {
@@ -636,12 +463,7 @@ async fn test_happy_case_complex_struct_function_cairo_expression_input() -> any
         "#
     );
 
-    let input = String::from(data);
-
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("complex_struct_fn").unwrap(),
-    )?;
+    let result = run_transformer(data, "complex_struct_fn").await.unwrap();
 
     let expected_output = [
         // a: NestedStruct
@@ -673,25 +495,16 @@ async fn test_happy_case_complex_struct_function_cairo_expression_input() -> any
     ];
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 #[tokio::test]
 async fn test_external_struct_function_ambiguous_struct_name_cairo_expression_input() {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from(
-        "
+    let input = "
         BitArray { bit: 23 }, \
         BitArray { data: array![0], current: 1, read_pos: 2, write_pos: 3 }
-        ",
-    );
+        ";
 
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("external_struct_fn").unwrap(),
-    );
+    let result = run_transformer(input, "external_struct_fn").await;
 
     result.unwrap_err().assert_contains(
         r#"Found more than one struct "BitArray" in ABI, please specify a full path to the item"#,
@@ -699,20 +512,15 @@ async fn test_external_struct_function_ambiguous_struct_name_cairo_expression_in
 }
 
 #[tokio::test]
-async fn test_happy_case_external_struct_function_cairo_expression_input() -> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from(indoc!(
+async fn test_happy_case_external_struct_function_cairo_expression_input() {
+    let input = indoc!(
             "
             data_transformer_contract::BitArray { bit: 23 }, \
             alexandria_data_structures::bit_array::BitArray { data: array![0], current: 1, read_pos: 2, write_pos: 3 }
             "
-        ));
+        );
 
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("external_struct_fn").unwrap(),
-    )?;
+    let result = run_transformer(input, "external_struct_fn").await.unwrap();
 
     let expected_output = [
         Felt::from_hex_unchecked("0x17"),
@@ -724,25 +532,18 @@ async fn test_happy_case_external_struct_function_cairo_expression_input() -> an
     ];
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 #[tokio::test]
 async fn test_external_struct_function_invalid_path_to_external_struct() {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from(indoc!(
+    let input = indoc!(
         "
         something::BitArray { bit: 23 }, \
         BitArray { data: array![0], current: 1, read_pos: 2, write_pos: 3 }
         "
-    ));
-
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("external_struct_fn").unwrap(),
     );
+
+    let result = run_transformer(input, "external_struct_fn").await;
 
     result
         .unwrap_err()
@@ -750,21 +551,12 @@ async fn test_external_struct_function_invalid_path_to_external_struct() {
 }
 
 #[tokio::test]
-async fn test_happy_case_contract_constructor() -> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    let input = String::from("0x123");
-
-    let result = Calldata::new(input).serialized(
-        contract_class,
-        &get_selector_from_name("constructor").unwrap(),
-    )?;
+async fn test_happy_case_contract_constructor() {
+    let result = run_transformer("0x123", "constructor").await.unwrap();
 
     let expected_output = [Felt::from_hex_unchecked("0x123")];
 
     assert_eq!(result, expected_output);
-
-    Ok(())
 }
 
 #[tokio::test]
