@@ -3,13 +3,15 @@ name = "packages_validation"
 version = "1.0.0"
 edition.workspace = true
 
-[features]
-scarb_since_2_10 = []
+[lib]
 
 [dependencies]
 camino.workspace = true
-scarb-api = { path = "../scarb-api" }
+scarb-api = { path = "../../scarb-api" }
+project-root.workspace = true
 
 [dev-dependencies]
 test-case.workspace = true
-project-root.workspace = true
+
+[features]
+scarb_since_2_10 = []

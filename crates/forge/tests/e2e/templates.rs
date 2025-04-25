@@ -1,11 +1,12 @@
 use std::fs;
 
-use super::common::runner::runner;
 use assert_fs::prelude::PathChild;
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use forge::Template;
 use packages_validation::check_and_lint;
+
+use super::common::runner::runner;
 
 #[test]
 fn validate_templates() {
@@ -36,6 +37,6 @@ fn validate_templates() {
         scarb_toml.push_str("\n[cairo]\nallow-warnings = false\n");
         fs::write(&scarb_toml_path, &scarb_toml).expect("Failed to write to Scarb.toml");
 
-        check_and_lint(package_path);
+        check_and_lint(&package_path);
     }
 }

@@ -1,0 +1,12 @@
+[package]
+name = "testing"
+version = "1.0.0"
+edition.workspace = true
+
+[dependencies]
+camino.workspace = true
+scarb-api = { path = "../scarb-api" }
+
+[dev-dependencies]
+test-case.workspace = true
+project-root.workspace = true

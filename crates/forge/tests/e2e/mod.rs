@@ -25,7 +25,7 @@ mod new;
 mod requirements;
 mod running;
 mod steps;
-mod templates_validation;
+mod templates;
 mod trace_print;
 mod trace_resources;
 mod workspaces;
