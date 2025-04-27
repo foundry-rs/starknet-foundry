@@ -7,7 +7,7 @@ edition.workspace = true
 
 [features]
 smoke = []
-scarb_2_7_1 = []
+scarb_2_9_1 = []
 scarb_since_2_10 = []
 no_scarb_installed = []
 debugging = ["forge_runner/debugging"]

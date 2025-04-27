@@ -32,7 +32,7 @@ pub mod profiler_api;
 pub mod test_case_summary;
 pub mod test_target_summary;
 
-mod backtrace;
+pub mod backtrace;
 mod gas;
 pub mod printing;
 pub mod running;

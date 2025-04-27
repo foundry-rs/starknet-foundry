@@ -55,10 +55,10 @@ fn config_works_with_runs_only() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_config_types::FuzzerConfig {
+                    snforge_std::_internals::config_types::FuzzerConfig {
                         seed: Option::None,
                         runs: Option::Some(0x28f)
                     }
@@ -86,10 +86,10 @@ fn config_works_with_seed_only() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_config_types::FuzzerConfig {
+                    snforge_std::_internals::config_types::FuzzerConfig {
                         seed: Option::Some(0x28f),
                         runs: Option::None
                     }
@@ -117,10 +117,10 @@ fn config_works_with_both_args() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_config_types::FuzzerConfig {
+                    snforge_std::_internals::config_types::FuzzerConfig {
                         seed: Option::Some(0x1f597a5),
                         runs: Option::Some(0x28f)
                     }
@@ -148,10 +148,10 @@ fn config_wrapper_work_without_args() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_config_types::FuzzerConfig {
+                    snforge_std::_internals::config_types::FuzzerConfig {
                         seed: Option::None,
                         runs: Option::None
                     }
@@ -176,10 +176,10 @@ fn config_wrapper_work_without_args() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_config_types::FuzzerConfig {
+                    snforge_std::_internals::config_types::FuzzerConfig {
                         seed: Option::None,
                         runs: Option::None
                     }
@@ -214,10 +214,10 @@ fn config_wrapper_work_with_both_args() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_config_types::FuzzerConfig {
+                    snforge_std::_internals::config_types::FuzzerConfig {
                         seed: Option::Some(0x1f597a5),
                         runs: Option::Some(0x28f)
                     }
@@ -242,10 +242,10 @@ fn config_wrapper_work_with_both_args() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_config_types::FuzzerConfig {
+                    snforge_std::_internals::config_types::FuzzerConfig {
                         seed: Option::Some(0x1f597a5),
                         runs: Option::Some(0x28f)
                     }
@@ -280,10 +280,10 @@ fn config_wrapper_work_with_fn_with_param() {
         &result,
         "
             fn empty_fn(f: felt252) {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_config_types::FuzzerConfig {
+                    snforge_std::_internals::config_types::FuzzerConfig {
                         seed: Option::None,
                         runs: Option::None
                     }
@@ -308,10 +308,10 @@ fn config_wrapper_work_with_fn_with_param() {
         &result,
         "
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_config_types::FuzzerConfig {
+                    snforge_std::_internals::config_types::FuzzerConfig {
                         seed: Option::None,
                         runs: Option::None
                     }
@@ -324,7 +324,7 @@ fn config_wrapper_work_with_fn_with_param() {
                     return;
                 }
                 let f: felt252 = snforge_std::fuzzable::Fuzzable::generate();
-                snforge_std::_internals::_save_fuzzer_arg(@f);
+                snforge_std::_internals::save_fuzzer_arg(@f);
                 empty_fn_actual_body(f);
             }
             #[__internal_config_statement]
@@ -352,7 +352,7 @@ fn wrapper_handle_attributes() {
         "
             #[test]
             fn empty_fn() { 
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     empty_fn_actual_body();
 
                     return; 

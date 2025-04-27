@@ -931,7 +931,7 @@ fn call_nonexistent_selector() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_7_1"), ignore)]
+#[cfg_attr(not(feature = "scarb_2_9_1"), ignore)]
 fn sierra_gas_with_older_scarb() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)
@@ -1023,6 +1023,33 @@ fn exact_printing_mixed() {
 
         Failures:
             deterministic_output::test::first_test_fail_x
+        "},
+    );
+}
+
+#[test]
+fn dispatchers() {
+    let temp = setup_package("dispatchers");
+
+    let output = test_runner(&temp).assert().code(1);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        Collected 4 test(s) from dispatchers package
+        Running 0 test(s) from src/
+        Running 4 test(s) from tests/
+        [FAIL] dispatchers_integrationtest::test::test_unrecoverable_not_possible_to_handle
+        Failure data:
+        Got an exception while executing a hint: Requested contract address [..] is not deployed.
+
+        [PASS] dispatchers_integrationtest::test::test_error_handled_in_contract [..]
+        [PASS] dispatchers_integrationtest::test::test_handle_and_panic [..]
+        [PASS] dispatchers_integrationtest::test::test_handle_recoverable_in_test [..]
+        Tests: 3 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+
+        Failures:
+            dispatchers_integrationtest::test::test_unrecoverable_not_possible_to_handle
         "},
     );
 }

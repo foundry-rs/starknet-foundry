@@ -1,6 +1,8 @@
 use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
 use starknet_types_core::felt::Felt;
+use std::fmt::Display;
 use std::{
+    fmt,
     num::{IntErrorKind, ParseIntError},
     str::FromStr,
 };
@@ -8,6 +10,12 @@ use std::{
 #[derive(CairoSerialize, CairoDeserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CairoU96 {
     inner: u128,
+}
+
+impl Display for CairoU96 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.inner)
+    }
 }
 
 const MAX_VALUE: u128 = (2 << 96) - 1;
