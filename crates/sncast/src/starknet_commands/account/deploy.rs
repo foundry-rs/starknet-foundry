@@ -29,7 +29,7 @@ use starknet_types_core::felt::Felt;
 pub struct Deploy {
     /// Name of the account to be deployed
     #[arg(short, long)]
-    pub name: String,
+    pub name: Option<String>,
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
@@ -64,7 +64,10 @@ pub async fn deploy(
         )
         .await
     } else {
-        let account_name = deploy_args.name.clone();
+        let account_name = deploy_args
+            .name
+            .clone()
+            .ok_or_else(|| anyhow!("Required argument `--name` not provided"))?;
         check_account_file_exists(&accounts_file)?;
         deploy_from_accounts_file(
             provider,

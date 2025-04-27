@@ -553,8 +553,12 @@ async fn run_async_command(
                 let run_interactive_prompt =
                     !deploy.silent && result.is_ok() && io::stdout().is_terminal();
 
-                if run_interactive_prompt {
-                    if let Err(err) = prompt_to_add_account_as_default(&deploy.name) {
+                if config.keystore.is_none() && run_interactive_prompt {
+                    if let Err(err) = prompt_to_add_account_as_default(
+                        &deploy
+                            .name
+                            .expect("Must be provided if not using a keystore"),
+                    ) {
                         eprintln!("Error: Failed to launch interactive prompt: {err}");
                     }
                 }
