@@ -6,7 +6,6 @@ use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::Contr
 use cheatnet::state::CallTrace;
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::ContractAddress;
-use starknet_api::transaction::fields::Calldata;
 use std::fmt;
 use std::fmt::Display;
 
@@ -26,13 +25,16 @@ pub struct ContractTrace {
 pub struct TraceInfo {
     pub contract_name: ContractName,
     pub entry_point_type: EntryPointType,
-    pub calldata: Calldata,
+    pub calldata: TransformedCalldata,
     pub storage_address: StorageAddress,
     pub caller_address: CallerAddress,
     pub call_type: CallType,
     pub nested_calls: Vec<ContractTrace>,
     pub call_result: CallResult,
 }
+
+#[derive(Debug, Clone)]
+pub struct TransformedCalldata(pub String);
 
 #[derive(Debug, Clone)]
 pub struct Selector(pub String);
