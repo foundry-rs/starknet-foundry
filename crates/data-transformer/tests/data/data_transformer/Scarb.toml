@@ -6,12 +6,12 @@ edition = "2024_07"
 # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
 [dependencies]
-starknet = "2.10.0"
+starknet = "2.9.4"
 alexandria_data_structures = "0.4.0"
 
 [dev-dependencies]
 snforge_std = "0.39.0"
-assert_macros = "2.10.0"
+assert_macros = "2.9.4"
 
 [[target.starknet-contract]]
 sierra = true

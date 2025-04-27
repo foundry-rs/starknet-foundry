@@ -23,6 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The state correctly reverts after failed internal calls
 
+### Cast
+
+#### Fixed
+
+- Bug that prevented from passing values to `--arguments` that started with a leading minus `-` sign.
+
 ## [0.41.0] - 2025-04-08
 
 ### Forge

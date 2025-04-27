@@ -164,7 +164,7 @@ pub struct Arguments {
     pub calldata: Option<Vec<String>>,
 
     // Arguments of the called function as a comma-separated string of Cairo expressions
-    #[arg(long)]
+    #[arg(long, allow_hyphen_values = true)]
     pub arguments: Option<String>,
 }
 
