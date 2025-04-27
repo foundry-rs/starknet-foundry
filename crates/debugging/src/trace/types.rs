@@ -1,4 +1,4 @@
-use crate::trace::collect;
+use crate::trace::collect::collect_trace;
 use crate::tree::TreeSerialize;
 use blockifier::execution::entry_point::CallType;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
@@ -53,7 +53,7 @@ impl Trace {
     /// Creates a new [`Trace`] from a given `cheatnet` [`CallTrace`], [`ContractsData`] and a test name.
     #[must_use]
     pub fn new(call_trace: &CallTrace, contracts_data: &ContractsData, test_name: String) -> Self {
-        collect::trace(call_trace, contracts_data, test_name)
+        collect_trace(call_trace, contracts_data, test_name)
     }
 }
 
