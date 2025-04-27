@@ -1,7 +1,6 @@
 use crate::trace::collect::collect_trace;
 use crate::tree::TreeSerialize;
 use blockifier::execution::entry_point::CallType;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::CallTrace;
 use starknet_api::contract_class::EntryPointType;
@@ -30,8 +29,11 @@ pub struct TraceInfo {
     pub caller_address: CallerAddress,
     pub call_type: CallType,
     pub nested_calls: Vec<ContractTrace>,
-    pub call_result: CallResult,
+    pub call_result: TransformedCallResult,
 }
+
+#[derive(Debug, Clone)]
+pub struct TransformedCallResult(pub String);
 
 #[derive(Debug, Clone)]
 pub struct TransformedCalldata(pub String);
