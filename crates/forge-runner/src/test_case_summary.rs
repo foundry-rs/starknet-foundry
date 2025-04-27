@@ -323,8 +323,14 @@ impl TestCaseSummary<Single> {
     ) -> Self {
         let name = test_case.name.clone();
 
-        let debugging_trace = cfg!(feature = "debugging")
-            .then(|| debugging::Trace::new(&call_trace.borrow(), contracts_data, name.clone()));
+        let debugging_trace = cfg!(feature = "debugging").then(|| {
+            debugging::Trace::new(
+                &call_trace.borrow(),
+                contracts_data,
+                debugging::Verbosity::Detailed,
+                name.clone(),
+            )
+        });
 
         match status {
             RunStatus::Success(data) => match &test_case.config.expected_result {
