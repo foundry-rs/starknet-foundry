@@ -2,7 +2,9 @@ use super::calls::{execute_inner_call, execute_library_call};
 use super::execution_info::get_cheated_exec_info_ptr;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_constructor_entry_point;
-use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::execution::syscalls::hint_processor::{
+    SyscallExecutionError, SyscallHintProcessor,
+};
 use blockifier::execution::syscalls::{
     DeployRequest, DeployResponse, GetBlockHashRequest, GetBlockHashResponse, LibraryCallRequest,
     SyscallResponse, syscall_base::SyscallResult,
@@ -163,7 +165,15 @@ pub fn library_call_syscall(
         request.function_selector,
         request.calldata,
         remaining_gas,
-    )?;
+    )
+    .map_err(|error| match error {
+        SyscallExecutionError::Revert { .. } => error,
+        _ => error.as_lib_call_execution_error(
+            request.class_hash,
+            syscall_handler.storage_address(),
+            request.function_selector,
+        ),
+    })?;
 
     Ok(SingleSegmentResponse {
         segment: retdata_segment,
@@ -179,11 +189,17 @@ pub fn call_contract_syscall(
     remaining_gas: &mut u64,
 ) -> SyscallResult<SingleSegmentResponse> {
     let storage_address = request.contract_address;
+    let class_hash = syscall_handler
+        .base
+        .state
+        .get_class_hash_at(storage_address)?;
+    let selector = request.function_selector;
+
     let mut entry_point = CallEntryPoint {
         class_hash: None,
         code_address: Some(storage_address),
         entry_point_type: EntryPointType::External,
-        entry_point_selector: request.function_selector,
+        entry_point_selector: selector,
         calldata: request.calldata,
         storage_address,
         caller_address: syscall_handler.storage_address(),
@@ -196,7 +212,11 @@ pub fn call_contract_syscall(
         syscall_handler,
         cheatnet_state,
         remaining_gas,
-    )?;
+    )
+    .map_err(|error| match error {
+        SyscallExecutionError::Revert { .. } => error,
+        _ => error.as_call_contract_execution_error(class_hash, storage_address, selector),
+    })?;
 
     // region: Modified blockifier code
     Ok(SingleSegmentResponse {
