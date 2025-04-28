@@ -55,7 +55,6 @@ pub fn deploy_at(
         calldata,
         i64::MAX as u64,
     );
-
     cheatnet_state.increment_deploy_salt_base();
 
     match exec_result {
