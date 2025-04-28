@@ -2,7 +2,7 @@ use crate::backtrace::add_backtrace_footer;
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
-use crate::test_case_setup::{add_strk_to_dict_state_reader, is_strk_deployed};
+use crate::test_case_setup::{deploy_strk_token, is_strk_deployed};
 use crate::test_case_summary::{Single, TestCaseSummary};
 use anyhow::{Result, ensure};
 use blockifier::execution::contract_class::TrackedResource;
@@ -200,7 +200,7 @@ pub fn run_test_case(
     let mut cached_state = CachedState::new(state_reader);
 
     if !is_strk_deployed {
-        add_strk_to_dict_state_reader(&mut cached_state);
+        deploy_strk_token(&mut cached_state);
     }
 
     let syscall_handler = build_syscall_handler(

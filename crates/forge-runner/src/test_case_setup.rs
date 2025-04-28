@@ -32,7 +32,7 @@ pub fn is_strk_deployed(state_reader: &mut ExtendedStateReader) -> bool {
     false
 }
 
-pub fn add_strk_to_dict_state_reader(cached_state: &mut CachedState<ExtendedStateReader>) {
+pub fn deploy_strk_token(cached_state: &mut CachedState<ExtendedStateReader>) {
     let strk_contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
     let strk_class_hash = TryFromHexStr::try_from_hex_str(STRK_CLASS_HASH).unwrap();
 
