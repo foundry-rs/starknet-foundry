@@ -26,9 +26,9 @@ jobs:
             echo 'matrix_os=["ubuntu-latest","windows-latest"]' >> $GITHUB_OUTPUT
           fi
 
-  test-forge-unit-and-integration:
+  test-forge-unit:
     needs: setup
-    name: Test Forge / Unit and Integration Tests
+    name: Test Forge / Unit Tests
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -40,9 +40,8 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: cargo test --release --lib -p forge
-      - run: cargo test --release integration -p forge
 
-  build-test-forge-e2e-nextest-archive:
+  build-test-forge-nextest-archive:
     needs: setup
     runs-on: ${{ matrix.os }}
     strategy:
@@ -63,14 +62,36 @@ jobs:
           name: nextest-archive-${{ matrix.os }}
           path: nextest-archive-${{ matrix.os }}.tar.zst
 
-  test-forge-e2e:
-    name: Test Forge / E2E Tests
+  test-forge-integration:
+    name: Test Forge / Integration Tests
     runs-on: ${{ matrix.os }}
-    needs: [ build-test-forge-e2e-nextest-archive, setup ]
+    needs: [ build-test-forge-nextest-archive, setup ]
     strategy:
       fail-fast: false
       matrix:
-        partition: [ 1, 2, 3, 4, 5, 6, 7, 8 ]
+        partition: [ 1, 2, 3 ]
+        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+      - uses: software-mansion/setup-scarb@v1
+      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: taiki-e/install-action@nextest
+      - uses: actions/download-artifact@v4
+        with:
+          name: nextest-archive-${{ matrix.os }}
+      - name: nextest partition ${{ matrix.partition }}/3
+        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ matrix.os }}.tar.zst' integration
+
+  test-forge-e2e:
+    name: Test Forge / E2E Tests
+    runs-on: ${{ matrix.os }}
+    needs: [ build-test-forge-nextest-archive, setup ]
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: [ 1, 2, 3 ]
         os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
     steps:
       - name: Extract branch name
@@ -93,14 +114,6 @@ jobs:
         run: echo "REPO_NAME=$(echo ${{ github.event.pull_request.head.repo.full_name }}.git)" >> $GITHUB_ENV
         shell: bash
 
-      - name: Print repo name
-        run: echo 'The repo name is' $REPO_NAME
-        shell: bash
-
-      - name: Get branch name
-        run: echo 'The branch name is' $BRANCH_NAME
-        shell: bash
-
       - name: Install cairo-profiler
         if: runner.os != 'Windows'
         run: |
@@ -119,8 +132,8 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: nextest-archive-${{ matrix.os }}
-      - name: nextest partition ${{ matrix.partition }}/8
-        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/8' --archive-file 'nextest-archive-${{ matrix.os }}.tar.zst' e2e
+      - name: nextest partition ${{ matrix.partition }}/3
+        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ matrix.os }}.tar.zst' e2e
 
   test-requirements-check-special-conditions:
     name: Test requirements check special conditions
