@@ -2,7 +2,7 @@ use crate::backtrace::add_backtrace_footer;
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
-use crate::test_case_setup::{declare_token_strk, deploy_token_strk};
+use crate::test_case_setup::{add_strk_to_dict_state_reader, is_strk_deployed};
 use crate::test_case_summary::{Single, TestCaseSummary};
 use anyhow::{Result, ensure};
 use blockifier::execution::contract_class::TrackedResource;
@@ -31,6 +31,7 @@ use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
+
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
     ForgeExtension, ForgeRuntime, add_resources_to_top_call, get_all_used_resources,
@@ -39,7 +40,6 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredErrors, ExtendedStateReader,
 };
-
 use entry_code::create_entry_code;
 use hints::{hints_by_representation, hints_to_params};
 use rand::prelude::StdRng;
@@ -194,11 +194,27 @@ pub fn run_test_case(
     if let Some(max_n_steps) = runtime_config.max_n_steps {
         set_max_steps(&mut context, max_n_steps);
     }
+
+    // let strk_contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
+
+    // let class_hash_at = state_reader
+    //     .fork_state_reader
+    //     .as_mut()
+    //     .unwrap()
+    //     .cache
+    //     .borrow_mut()
+    //     .get_class_hash_at(&strk_contract_address);
+
+    // println!("class_hash_at: {class_hash_at:?}");
+    let is_strk_deployed = is_strk_deployed(&mut state_reader);
+
     let mut cached_state = CachedState::new(state_reader);
 
-    declare_token_strk(&mut cached_state);
+    if !is_strk_deployed {
+        add_strk_to_dict_state_reader(&mut cached_state);
+    }
 
-    let mut syscall_handler = build_syscall_handler(
+    let syscall_handler = build_syscall_handler(
         &mut cached_state,
         &string_to_hint,
         &mut context,
@@ -210,16 +226,8 @@ pub fn run_test_case(
         block_info,
         ..Default::default()
     };
+
     cheatnet_state.trace_data.is_vm_trace_needed = runtime_config.is_vm_trace_needed;
-
-    let is_strk_token_predeployed = deploy_token_strk(&mut syscall_handler, &mut cheatnet_state);
-
-    if is_strk_token_predeployed {
-        remove_changes_after_strk_token_predeployment(
-            syscall_handler.base.context,
-            &mut cheatnet_state,
-        );
-    }
 
     let cheatable_runtime = ExtendedRuntime {
         extension: CheatableStarknetRuntimeExtension {
@@ -321,7 +329,6 @@ pub fn run_test_case(
         &transaction_context,
         &mut cached_state,
         used_resources.clone(),
-        is_strk_token_predeployed,
     )?;
 
     Ok(RunResultWithInfo {
@@ -338,20 +345,6 @@ pub fn run_test_case(
         encountered_errors,
         fuzzer_args,
     })
-}
-
-fn remove_changes_after_strk_token_predeployment(
-    context: &mut EntryPointExecutionContext,
-    cheatnet_state: &mut CheatnetState,
-) {
-    context.n_emitted_events = 0;
-
-    cheatnet_state
-        .trace_data
-        .current_call_stack
-        .top()
-        .borrow_mut()
-        .nested_calls = vec![];
 }
 
 // TODO(#2958) Remove copied code

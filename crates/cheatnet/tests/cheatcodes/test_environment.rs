@@ -1,9 +1,10 @@
 use crate::common::assertions::ClassHashAssert;
 use crate::common::{call_contract, deploy_wrapper};
-use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
+use crate::common::{deploy_contract, state::create_cached_state};
 use blockifier::state::cached_state::CachedState;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::felt_selector_from_name;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use starknet_api::core::ClassHash;

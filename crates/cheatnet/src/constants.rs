@@ -66,8 +66,16 @@ fn contract_class_no_entrypoints() -> ContractClass {
           }
         }"#,
     );
+    let casm_contract_class: CasmContractClass = serde_json::from_str(raw_contract_class)
+        .expect("Could not get casm_contract class from raw");
+
+    ContractClass::V1((casm_contract_class, SierraVersion::LATEST))
+}
+
+#[must_use]
+pub fn contract_class_strk() -> ContractClass {
     let casm_contract_class: CasmContractClass =
-        serde_json::from_str(raw_contract_class).expect("Could not casm_contract_class from raw");
+        serde_json::from_str(STRK_ERC20_CASM).expect("Could not get casm_contract class from raw");
 
     ContractClass::V1((casm_contract_class, SierraVersion::LATEST))
 }
@@ -98,6 +106,7 @@ pub fn build_testing_state() -> DictStateReader {
     DictStateReader {
         address_to_class_hash,
         class_hash_to_class,
+        ..Default::default()
     }
 }
 

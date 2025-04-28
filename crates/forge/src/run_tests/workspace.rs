@@ -1,4 +1,5 @@
 use super::package::RunForPackageArgs;
+use crate::warn::warn_if_backtrace_without_panic_hint;
 use crate::{
     ColorOption, ExitStatus, TestArgs, block_number_map::BlockNumberMap, pretty_printing,
     run_tests::package::run_for_package, scarb::build_artifacts_with_scarb,
@@ -35,6 +36,7 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
     }
 
     warn_if_snforge_std_not_compatible(&scarb_metadata)?;
+    warn_if_backtrace_without_panic_hint(&scarb_metadata);
 
     let artifacts_dir_path =
         target_dir_for_workspace(&scarb_metadata).join(&scarb_metadata.current_profile);

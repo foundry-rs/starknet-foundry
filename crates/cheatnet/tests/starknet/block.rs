@@ -1,9 +1,9 @@
 use crate::common::call_contract;
 use crate::common::{
-    assertions::assert_success, deploy_contract, felt_selector_from_name, recover_data,
-    state::create_cached_state,
+    assertions::assert_success, deploy_contract, recover_data, state::create_cached_state,
 };
 use blockifier::state::state_api::State;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::felt_selector_from_name;
 use cheatnet::state::CheatnetState;
 use starknet_api::core::ContractAddress;
 use starknet_types_core::felt::Felt;

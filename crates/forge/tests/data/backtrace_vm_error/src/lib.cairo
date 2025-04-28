@@ -26,7 +26,7 @@ pub trait IInnerContract<TState> {
 
 #[starknet::contract]
 pub mod InnerContract {
-    use starknet::SyscallResultTrait;
+    use starknet::{SyscallResultTrait, ContractAddress};
     use starknet::syscalls::call_contract_syscall;
 
     #[storage]
@@ -40,11 +40,12 @@ pub mod InnerContract {
     }
 
     fn inner_call() {
-        let this = starknet::get_contract_address();
-        let selector = selector!("nonexistent");
+        let address: ContractAddress = 0x123.try_into().unwrap();
+        let selector = selector!("dummy");
         let calldata = array![].span();
 
-        call_contract_syscall(this, selector, calldata).unwrap_syscall();
+        // This fails immediately due to nonexistent address
+        call_contract_syscall(address, selector, calldata).unwrap_syscall();
     }
 }
 

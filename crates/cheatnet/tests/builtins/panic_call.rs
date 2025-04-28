@@ -1,7 +1,8 @@
 use crate::common::assertions::{assert_error, assert_panic};
 use crate::common::call_contract;
-use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
+use crate::common::{deploy_contract, state::create_cached_state};
 use cairo_lang_utils::byte_array::BYTE_ARRAY_MAGIC;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::felt_selector_from_name;
 use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
 use conversions::felt::FromShortString;
