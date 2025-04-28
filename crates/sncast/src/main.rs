@@ -520,15 +520,6 @@ async fn run_async_command(
                 )
                 .await;
 
-                let run_interactive_prompt =
-                    !create.silent && result.is_ok() && io::stdout().is_terminal();
-
-                if run_interactive_prompt {
-                    if let Err(err) = prompt_to_add_account_as_default(&account) {
-                        eprintln!("Error: Failed to launch interactive prompt: {err}");
-                    }
-                }
-
                 print_command_result("account create", &result, numbers_format, output_format)?;
                 print_block_explorer_link_if_allowed(
                     &result,
@@ -550,7 +541,7 @@ async fn run_async_command(
                 let result = starknet_commands::account::deploy::deploy(
                     &provider,
                     config.accounts_file,
-                    deploy,
+                    &deploy,
                     chain_id,
                     wait_config,
                     &config.account,
@@ -558,6 +549,19 @@ async fn run_async_command(
                     fee_args,
                 )
                 .await;
+
+                let run_interactive_prompt =
+                    !deploy.silent && result.is_ok() && io::stdout().is_terminal();
+
+                if config.keystore.is_none() && run_interactive_prompt {
+                    if let Err(err) = prompt_to_add_account_as_default(
+                        &deploy
+                            .name
+                            .expect("Must be provided if not using a keystore"),
+                    ) {
+                        eprintln!("Error: Failed to launch interactive prompt: {err}");
+                    }
+                }
 
                 print_command_result("account deploy", &result, numbers_format, output_format)?;
                 print_block_explorer_link_if_allowed(
