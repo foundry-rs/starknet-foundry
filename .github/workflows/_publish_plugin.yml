@@ -44,7 +44,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           # TODO(#3144) Remove
-          scarb-version: "2.11.0"
+          scarb-version: "2.11.4"
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
