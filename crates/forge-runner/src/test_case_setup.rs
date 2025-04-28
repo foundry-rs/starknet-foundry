@@ -11,6 +11,14 @@ use conversions::{felt::FromShortString, string::TryFromHexStr};
 use starknet_api::{core::ContractAddress, state::StorageKey};
 use starknet_types_core::felt::Felt;
 
+// All values are taked from https://starkscan.co/contract/0x0594c1582459ea03f77deaf9eb7e3917d6994a03c13405ba42867f83d85f085d#contract-storage
+// result of `variable_address("permitted_minter")` in the search bar for the key
+const STRK_PERMITTED_MINTER: &str =
+    "0x594c1582459ea03f77deaf9eb7e3917d6994a03c13405ba42867f83d85f085d";
+
+// result of `variable_address("upgrade_delay")` in the search bar for the key
+const STRK_UPGRADE_DELAY: u64 = 0;
+
 pub fn is_strk_deployed(state_reader: &mut ExtendedStateReader) -> bool {
     let strk_contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
     if let Some(ref fork_state_reader) = state_reader.fork_state_reader {
@@ -24,7 +32,7 @@ pub fn is_strk_deployed(state_reader: &mut ExtendedStateReader) -> bool {
     false
 }
 
-pub fn add_strk_to_dict_state_reader(cached_state: &mut CachedState<ExtendedStateReader>) {
+pub fn deploy_strk_token(cached_state: &mut CachedState<ExtendedStateReader>) {
     let strk_contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
     let strk_class_hash = TryFromHexStr::try_from_hex_str(STRK_CLASS_HASH).unwrap();
 
@@ -86,7 +94,10 @@ pub fn add_strk_to_dict_state_reader(cached_state: &mut CachedState<ExtendedStat
         (
             (
                 strk_contract_address,
-                storage_key(map_entry_address("ERC20_total_supply", &[Felt::ONE])).unwrap(),
+                storage_key(variable_address("ERC20_total_supply"))
+                    .unwrap()
+                    .next_storage_key()
+                    .unwrap(),
             ),
             Felt::ZERO,
         ),
@@ -112,7 +123,7 @@ pub fn add_strk_to_dict_state_reader(cached_state: &mut CachedState<ExtendedStat
                 strk_contract_address,
                 storage_key(variable_address("permitted_minter")).unwrap(),
             ),
-            generate_random_felt(),
+            Felt::try_from_hex_str(STRK_PERMITTED_MINTER).unwrap(),
         ),
         // skip initializing roles
         // upgrade_delay
@@ -121,7 +132,7 @@ pub fn add_strk_to_dict_state_reader(cached_state: &mut CachedState<ExtendedStat
                 strk_contract_address,
                 storage_key(variable_address("upgrade_delay")).unwrap(),
             ),
-            Felt::ZERO,
+            STRK_UPGRADE_DELAY.into(),
         ),
         // TODO: Decide if we want to write `domain_hash` to storage
         // it enforces us to read chain_id if the test uses forking, hence
