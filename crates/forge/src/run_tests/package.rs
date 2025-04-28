@@ -22,6 +22,7 @@ use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use configuration::load_package_config;
+use forge_runner::debugging::TraceVerbosity;
 use forge_runner::{
     forge_config::ForgeConfig,
     package_tests::{raw::TestTargetRaw, with_config_resolved::TestTargetWithResolvedConfig},
@@ -133,6 +134,7 @@ pub async fn run_for_package(
         package_name,
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
+    trace_verbosity: Option<TraceVerbosity>,
 ) -> Result<Vec<TestTargetSummary>> {
     let mut test_targets = test_package_with_config_resolved(
         test_targets,
@@ -163,7 +165,8 @@ pub async fn run_for_package(
 
         let forge_config = forge_config.clone();
 
-        let summary = run_for_test_target(test_target, forge_config, &tests_filter).await?;
+        let summary =
+            run_for_test_target(test_target, forge_config, &tests_filter, trace_verbosity).await?;
 
         match summary {
             TestTargetRunResult::Ok(summary) => {
