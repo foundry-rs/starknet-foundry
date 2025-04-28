@@ -1,4 +1,4 @@
-name: Publish snforge_scarb_plugin
+name: Upload plugin to registry
 
 on:
   workflow_call:

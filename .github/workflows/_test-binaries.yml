@@ -75,7 +75,7 @@ jobs:
       - name: Smoke test
         shell: bash
         env:
-          RPC_URL: secrets.NODE_URL
+          RPC_URL: ${{ secrets.NODE_URL }}
         run: |
           BINARY_PATH="${{ env.BINARY_PATH }}"
           BINARY_PATH="${BINARY_PATH%.tar.gz}"
