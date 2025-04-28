@@ -22,7 +22,6 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
 };
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::CheatnetState;
-use conversions::IntoConv;
 use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::TEST_ADDRESS;
 use runtime::starknet::context::build_context;
@@ -30,7 +29,6 @@ use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::{
     ScarbCommand, get_contracts_artifacts_and_source_sierra_paths, target_dir_for_workspace,
 };
-use starknet::core::utils::get_selector_from_name;
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_types_core::felt::Felt;
@@ -238,10 +236,4 @@ pub fn call_contract(
         entry_point,
         &AddressOrClassHash::ContractAddress(*contract_address),
     )
-}
-
-#[must_use]
-pub fn felt_selector_from_name(name: &str) -> EntryPointSelector {
-    let selector = get_selector_from_name(name).unwrap();
-    selector.into_()
 }

@@ -1,6 +1,7 @@
 use crate::common::assertions::assert_success;
 use crate::common::call_contract;
-use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
+use crate::common::{deploy_contract, state::create_cached_state};
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::felt_selector_from_name;
 use cheatnet::state::CheatnetState;
 
 #[test]

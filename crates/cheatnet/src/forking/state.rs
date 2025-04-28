@@ -36,7 +36,7 @@ pub struct ForkStateReader {
     client: JsonRpcClient<HttpTransport>,
     block_number: BlockNumber,
     runtime: Runtime,
-    cache: RefCell<ForkCache>,
+    pub cache: RefCell<ForkCache>,
 }
 
 impl ForkStateReader {
