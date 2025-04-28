@@ -11,7 +11,7 @@ use conversions::{felt::FromShortString, string::TryFromHexStr};
 use starknet_api::{core::ContractAddress, state::StorageKey};
 use starknet_types_core::felt::Felt;
 
-// All values are taked from https://starkscan.co/contract/0x0594c1582459ea03f77deaf9eb7e3917d6994a03c13405ba42867f83d85f085d#contract-storage
+// All values are taken from https://starkscan.co/contract/0x0594c1582459ea03f77deaf9eb7e3917d6994a03c13405ba42867f83d85f085d#contract-storage
 // result of `variable_address("permitted_minter")` in the search bar for the key
 const STRK_PERMITTED_MINTER: &str =
     "0x594c1582459ea03f77deaf9eb7e3917d6994a03c13405ba42867f83d85f085d";
