@@ -53,7 +53,7 @@ pub fn print_test_result(
     };
 
     println!(
-        "{result_header} {result_name}{fuzzer_report}{gas_usage}{used_resources}{result_msg}\n\n{result_debug_trace}"
+        "{result_header} {result_name}{fuzzer_report}{gas_usage}{used_resources}{result_msg}{result_debug_trace}"
     );
 }
 
@@ -61,8 +61,15 @@ fn format_detailed_resources(
     used_resources: &UsedResources,
     tracked_resource: ForgeTrackedResource,
 ) -> String {
-    let sorted_syscalls = sort_by_value(&used_resources.syscall_counter);
-    let syscalls = format_items(&sorted_syscalls);
+    // Sort syscalls by call count
+    let mut syscall_usage: Vec<_> = used_resources
+        .syscall_usage
+        .iter()
+        .map(|(selector, usage)| (selector, usage.call_count))
+        .collect();
+    syscall_usage.sort_by(|a, b| b.1.cmp(&a.1));
+
+    let syscalls = format_items(&syscall_usage);
 
     match tracked_resource {
         ForgeTrackedResource::CairoSteps => {
@@ -142,6 +149,6 @@ fn result_header(any_test_result: &AnyTestCaseSummary) -> String {
 fn result_debug_trace(any_test_result: &AnyTestCaseSummary) -> String {
     any_test_result
         .debugging_trace()
-        .map(ToString::to_string)
+        .map(|trace| format!("\n{trace}"))
         .unwrap_or_default()
 }

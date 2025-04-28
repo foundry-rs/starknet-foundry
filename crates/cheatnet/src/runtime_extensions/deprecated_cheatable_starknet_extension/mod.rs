@@ -233,8 +233,11 @@ fn increment_syscall_count(
     syscall_handler: &mut DeprecatedSyscallHintProcessor,
     selector: DeprecatedSyscallSelector,
 ) {
-    let syscall_count = syscall_handler.syscall_counter.entry(selector).or_default();
-    *syscall_count += 1;
+    syscall_handler
+        .syscalls_usage
+        .entry(selector)
+        .or_default()
+        .increment_call_count();
 }
 
 //blockifier/src/execution/deprecated_syscalls/mod.rs:303 (deploy)
@@ -256,6 +259,14 @@ fn deploy(
         &request.constructor_calldata,
         deployer_address_for_calculation,
     )?;
+
+    // Increment the Deploy syscall's linear cost counter by the number of elements in the
+    // constructor calldata.
+    let syscall_usage = syscall_handler
+        .syscalls_usage
+        .get_mut(&DeprecatedSyscallSelector::Deploy)
+        .expect("syscalls_usage entry for Deploy must be initialized");
+    syscall_usage.linear_factor += request.constructor_calldata.0.len();
 
     let ctor_context = ConstructorContext {
         class_hash: request.class_hash,
@@ -385,6 +396,7 @@ fn execute_inner_call(
         syscall_handler.state,
         cheatnet_state,
         syscall_handler.context,
+        false,
     )?;
     // endregion
 

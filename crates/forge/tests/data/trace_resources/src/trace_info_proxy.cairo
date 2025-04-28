@@ -1,22 +1,22 @@
 use starknet::{ContractAddress, ClassHash};
 
 #[starknet::interface]
-trait ITraceInfoProxy<T> {
+pub trait ITraceInfoProxy<T> {
     fn with_libcall(
-        ref self: T, class_hash: ClassHash, empty_hash: ClassHash, salt: felt252
+        ref self: T, class_hash: ClassHash, empty_hash: ClassHash, salt: felt252,
     ) -> felt252;
     fn regular_call(
-        ref self: T, contract_address: ContractAddress, empty_hash: ClassHash, salt: felt252
+        ref self: T, contract_address: ContractAddress, empty_hash: ClassHash, salt: felt252,
     ) -> felt252;
     fn with_panic(
-        ref self: T, contract_address: ContractAddress, empty_hash: ClassHash, salt: felt252
+        ref self: T, contract_address: ContractAddress, empty_hash: ClassHash, salt: felt252,
     );
     fn call_two(
         ref self: T,
         checker_address: ContractAddress,
         dummy_address: ContractAddress,
         empty_hash: ClassHash,
-        salt: felt252
+        salt: felt252,
     );
 }
 
@@ -28,16 +28,12 @@ mod TraceInfoProxy {
         ITraceInfoCheckerLibraryDispatcher,
     };
     use trace_resources::trace_dummy::{ITraceDummyDispatcher, ITraceDummyDispatcherTrait};
-    use starknet::{
-        ContractAddress, get_contract_address, ClassHash, get_block_hash_syscall,
-        get_execution_info_syscall, emit_event_syscall, send_message_to_l1_syscall,
-        SyscallResultTrait
-    };
+    use starknet::{ContractAddress, ClassHash};
     use super::super::use_builtins_and_syscalls;
 
     #[storage]
     struct Storage {
-        balance: u8
+        balance: u8,
     }
 
     #[constructor]
@@ -45,7 +41,7 @@ mod TraceInfoProxy {
         ref self: ContractState,
         contract_address: ContractAddress,
         empty_hash: ClassHash,
-        salt: felt252
+        salt: felt252,
     ) {
         use_builtins_and_syscalls(empty_hash, salt);
 
@@ -58,7 +54,7 @@ mod TraceInfoProxy {
             ref self: ContractState,
             contract_address: ContractAddress,
             empty_hash: ClassHash,
-            salt: felt252
+            salt: felt252,
         ) -> felt252 {
             use_builtins_and_syscalls(empty_hash, salt);
 
@@ -66,7 +62,7 @@ mod TraceInfoProxy {
         }
 
         fn with_libcall(
-            ref self: ContractState, class_hash: ClassHash, empty_hash: ClassHash, salt: felt252
+            ref self: ContractState, class_hash: ClassHash, empty_hash: ClassHash, salt: felt252,
         ) -> felt252 {
             use_builtins_and_syscalls(empty_hash, salt);
 
@@ -77,7 +73,7 @@ mod TraceInfoProxy {
             ref self: ContractState,
             contract_address: ContractAddress,
             empty_hash: ClassHash,
-            salt: felt252
+            salt: felt252,
         ) {
             use_builtins_and_syscalls(empty_hash, salt);
 
@@ -91,7 +87,7 @@ mod TraceInfoProxy {
             checker_address: ContractAddress,
             dummy_address: ContractAddress,
             empty_hash: ClassHash,
-            salt: felt252
+            salt: felt252,
         ) {
             ITraceInfoCheckerDispatcher { contract_address: checker_address }
                 .from_proxy(42, empty_hash, 10 * salt);

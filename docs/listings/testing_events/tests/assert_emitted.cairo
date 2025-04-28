@@ -1,10 +1,10 @@
 use snforge_std::{
     declare, ContractClassTrait, DeclareResultTrait, spy_events,
-    EventSpyAssertionsTrait, // Add for assertions on the EventSpy
+    EventSpyAssertionsTrait // Add for assertions on the EventSpy
 };
 
 use testing_events::contract::{
-    SpyEventsChecker, ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait
+    SpyEventsChecker, ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait,
 };
 
 #[test]
@@ -23,9 +23,9 @@ fn test_simple_assertions() {
                 (
                     contract_address,
                     SpyEventsChecker::Event::FirstEvent(
-                        SpyEventsChecker::FirstEvent { some_data: 123 }
-                    )
-                )
-            ]
+                        SpyEventsChecker::FirstEvent { some_data: 123 },
+                    ),
+                ),
+            ],
         );
 }

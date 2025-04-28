@@ -1,8 +1,7 @@
 name: CI
 
 env:
-  # TODO(#3087): Update SHA once devnet release is available
-  DEVNET_REV: ef789b700770fa27a2fc057b3d1c610771be27d9
+  DEVNET_REV: fc5a2753a2eedcc27eed7a4fae3ecac08c2ca1b4 # v0.3.0
 
 on:
   pull_request:
@@ -13,12 +12,27 @@ on:
   workflow_dispatch:
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix_os: ${{ steps.set-matrix.outputs.matrix_os }}
+    steps:
+      - name: Set OS matrix based on event
+        id: set-matrix
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo 'matrix_os=["ubuntu-latest"]' >> $GITHUB_OUTPUT
+          else
+            echo 'matrix_os=["ubuntu-latest","windows-latest"]' >> $GITHUB_OUTPUT
+          fi
+
   test-forge-unit-and-integration:
+    needs: setup
     name: Test Forge / Unit and Integration Tests
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -29,11 +43,12 @@ jobs:
       - run: cargo test --release integration -p forge
 
   build-test-forge-e2e-nextest-archive:
+    needs: setup
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -51,12 +66,12 @@ jobs:
   test-forge-e2e:
     name: Test Forge / E2E Tests
     runs-on: ${{ matrix.os }}
-    needs: build-test-forge-e2e-nextest-archive
+    needs: [ build-test-forge-e2e-nextest-archive, setup ]
     strategy:
       fail-fast: false
       matrix:
         partition: [ 1, 2, 3, 4, 5, 6, 7, 8 ]
-        os: [ ubuntu-latest, windows-latest ]
+        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
     steps:
       - name: Extract branch name
         if: github.event_name != 'pull_request'
@@ -120,11 +135,11 @@ jobs:
 
       - uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "2.7.1"
+          scarb-version: "2.9.1"
 
-      - run: cargo test --package forge --features scarb_2_7_1 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
-      - run: cargo test --package forge --features scarb_2_7_1 --lib compatibility_check::tests::warning_requirements
-      - run: cargo test --package forge --features scarb_2_7_1 --test main e2e::running::sierra_gas_with_older_scarb
+      - run: cargo test --package forge --features scarb_2_9_1 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
+      - run: cargo test --package forge --features scarb_2_9_1 --lib compatibility_check::tests::warning_requirements
+      - run: cargo test --package forge --features scarb_2_9_1 --test main e2e::running::sierra_gas_with_older_scarb
 
   # todo(3096): Remove this and the feature as soon as scarb 2.10 is the oldest officially supported version
   test-scarb-since-2-10:
@@ -183,6 +198,20 @@ jobs:
       - uses: software-mansion/setup-universal-sierra-compiler@58146c4184fa6ec5e8aaf02309ab85e35f782ed0 # v1.0.0
       - name: Run Forge Debugging tests
         run: cargo test --release -p forge --features debugging --test main e2e::debugging
+
+  test-forge-backtrace:
+    name: Test Forge Backtrace - support for `panic-backtrace` in Scarb.toml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
+      - uses: software-mansion/setup-scarb@22f50f68eb6ffacfc173786dab19aa7d49b43441 # v1.5.0
+        with:
+          scarb-version: "nightly-2025-03-27"
+      - uses: software-mansion/setup-universal-sierra-compiler@58146c4184fa6ec5e8aaf02309ab85e35f782ed0 # v1.0.0
+      - name: Run Forge Debugging tests
+        run: cargo test --release -p forge --features supports-panic-backtrace --test main e2e::backtrace
 
   test-forge-scarb-plugin:
     name: Test Forge Scarb Plugin
@@ -253,11 +282,12 @@ jobs:
       - run: cargo test --release -p shared
 
   test-scarb-api:
+    needs: setup
     name: Test Scarb Api
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable

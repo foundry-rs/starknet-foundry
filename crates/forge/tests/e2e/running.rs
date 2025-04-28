@@ -2,7 +2,7 @@ use super::common::runner::{get_current_branch, get_remote_url, setup_package, t
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
-use shared::test_utils::output_assert::assert_stdout_contains;
+use shared::test_utils::output_assert::{assert_stdout, assert_stdout_contains};
 use std::{fs, str::FromStr};
 use test_utils::tempdir_with_tool_versions;
 use toml_edit::{DocumentMut, value};
@@ -931,7 +931,7 @@ fn call_nonexistent_selector() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_7_1"), ignore)]
+#[cfg_attr(not(feature = "scarb_2_9_1"), ignore)]
 fn sierra_gas_with_older_scarb() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)
@@ -950,6 +950,106 @@ fn sierra_gas_with_older_scarb() {
         [..]Follow instructions from https://docs.swmansion.com/scarb/download.html[..]
         [..]
         [ERROR] Requirements not satisfied
+        "},
+    );
+}
+
+#[test]
+fn exact_printing_pass() {
+    let temp = setup_package("deterministic_output");
+
+    let output = test_runner(&temp).arg("pass").assert().code(0);
+
+    assert_stdout(
+        output,
+        indoc! {r"
+        Collected 2 test(s) from deterministic_output package
+        Running 2 test(s) from src/
+        [PASS] deterministic_output::test::first_test_pass_y [..]
+        [PASS] deterministic_output::test::second_test_pass_x [..]
+        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 2 filtered out
+        "},
+    );
+}
+
+#[test]
+fn exact_printing_fail() {
+    let temp = setup_package("deterministic_output");
+
+    let output = test_runner(&temp).arg("fail").assert().code(1);
+
+    assert_stdout(
+        output,
+        indoc! {r"
+        Collected 2 test(s) from deterministic_output package
+        Running 2 test(s) from src/
+        [FAIL] deterministic_output::test::first_test_fail_x
+
+        Failure data:
+            0x73696d706c6520636865636b ('simple check')
+
+        [FAIL] deterministic_output::test::second_test_fail_y
+
+        Failure data:
+            0x73696d706c6520636865636b ('simple check')
+
+        Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 2 filtered out
+
+        Failures:
+            deterministic_output::test::first_test_fail_x
+            deterministic_output::test::second_test_fail_y
+        "},
+    );
+}
+
+#[test]
+fn exact_printing_mixed() {
+    let temp = setup_package("deterministic_output");
+
+    let output = test_runner(&temp).arg("x").assert().code(1);
+
+    assert_stdout(
+        output,
+        indoc! {r"
+        Collected 2 test(s) from deterministic_output package
+        Running 2 test(s) from src/
+        [FAIL] deterministic_output::test::first_test_fail_x
+
+        Failure data:
+            0x73696d706c6520636865636b ('simple check')
+
+        [PASS] deterministic_output::test::second_test_pass_x [..]
+        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 2 filtered out
+
+        Failures:
+            deterministic_output::test::first_test_fail_x
+        "},
+    );
+}
+
+#[test]
+fn dispatchers() {
+    let temp = setup_package("dispatchers");
+
+    let output = test_runner(&temp).assert().code(1);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        Collected 4 test(s) from dispatchers package
+        Running 0 test(s) from src/
+        Running 4 test(s) from tests/
+        [FAIL] dispatchers_integrationtest::test::test_unrecoverable_not_possible_to_handle
+        Failure data:
+        Got an exception while executing a hint: Requested contract address [..] is not deployed.
+
+        [PASS] dispatchers_integrationtest::test::test_error_handled_in_contract [..]
+        [PASS] dispatchers_integrationtest::test::test_handle_and_panic [..]
+        [PASS] dispatchers_integrationtest::test::test_handle_recoverable_in_test [..]
+        Tests: 3 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+
+        Failures:
+            dispatchers_integrationtest::test::test_unrecoverable_not_possible_to_handle
         "},
     );
 }

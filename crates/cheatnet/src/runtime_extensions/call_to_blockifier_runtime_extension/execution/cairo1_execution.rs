@@ -1,136 +1,33 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
-    ContractClassEntryPointExecutionResult, EntryPointExecutionErrorWithTrace, OnErrorLastPc,
+    CallInfoWithExecutionData, ContractClassEntryPointExecutionResult,
+    extract_trace_and_register_errors,
 };
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use crate::runtime_extensions::common::get_relocated_vm_trace;
 use blockifier::execution::contract_class::CompiledClassV1;
+use blockifier::execution::entry_point::ExecutableCallEntryPoint;
 use blockifier::execution::entry_point_execution::{
-    VmExecutionContext, finalize_execution, prepare_call_arguments,
+    ExecutionRunnerMode, VmExecutionContext, finalize_execution,
+    initialize_execution_context_with_runner_mode, prepare_call_arguments,
 };
-use blockifier::execution::errors::PreExecutionError;
-use blockifier::execution::execution_utils::{
-    ReadOnlySegments, write_felt, write_maybe_relocatable,
-};
-use blockifier::execution::stack_trace::{
-    Cairo1RevertHeader, extract_trailing_cairo1_revert_trace,
-};
-use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::versioned_constants::GasCosts;
 use blockifier::{
     execution::{
-        contract_class::EntryPointV1,
-        entry_point::{CallEntryPoint, EntryPointExecutionContext},
-        errors::EntryPointExecutionError,
-        execution_utils::Args,
+        contract_class::EntryPointV1, entry_point::EntryPointExecutionContext,
+        errors::EntryPointExecutionError, execution_utils::Args,
     },
     state::state_api::State,
 };
-use cairo_vm::types::layout_name::LayoutName;
-use cairo_vm::types::relocatable::MaybeRelocatable;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::{
     hint_processor::hint_processor_definition::HintProcessor,
     vm::runners::cairo_runner::{CairoArg, CairoRunner},
 };
 use runtime::{ExtendedRuntime, StarknetRuntime};
-use starknet_types_core::felt::Felt;
-
-// TODO(#2957) remove copied code
-// Copied from https://github.com/starkware-libs/sequencer/blob/545761f29b859d06f125bd6c332b6182845734f0/crates/blockifier/src/execution/entry_point_execution.rs#L145
-fn prepare_program_extra_data(
-    runner: &mut CairoRunner,
-    contract_class: &CompiledClassV1,
-    read_only_segments: &mut ReadOnlySegments,
-    gas_costs: &GasCosts,
-) -> Result<usize, PreExecutionError> {
-    // Create the builtin cost segment, the builtin order should be the same as the price builtin
-    // array in the os in compiled_class.cairo in load_compiled_class_facts.
-    let builtin_price_array = [
-        gas_costs.builtins.pedersen,
-        gas_costs.builtins.bitwise,
-        gas_costs.builtins.ecop,
-        gas_costs.builtins.poseidon,
-        gas_costs.builtins.add_mod,
-        gas_costs.builtins.mul_mod,
-    ];
-
-    let data = builtin_price_array
-        .iter()
-        .map(|&x| MaybeRelocatable::from(Felt::from(x)))
-        .collect::<Vec<_>>();
-    let builtin_cost_segment_start = read_only_segments.allocate(&mut runner.vm, &data)?;
-
-    // Put a pointer to the builtin cost segment at the end of the program (after the
-    // additional `ret` statement).
-    let mut ptr = (runner.vm.get_pc() + contract_class.bytecode_length())?;
-    // Push a `ret` opcode.
-    write_felt(
-        &mut runner.vm,
-        &mut ptr,
-        Felt::from(0x208b_7fff_7fff_7ffe_u128),
-    )?;
-    // Push a pointer to the builtin cost segment.
-    write_maybe_relocatable(&mut runner.vm, &mut ptr, builtin_cost_segment_start)?;
-
-    let program_extra_data_length = 2;
-    Ok(program_extra_data_length)
-}
-
-// TODO(#2957) remove copied code
-// Copied from https://github.com/starkware-libs/sequencer/blob/0e1e92e0b90790e4bec20721c069c312d6a60a13/crates/blockifier/src/execution/entry_point_execution.rs#L98
-fn initialize_execution_context<'a>(
-    call: CallEntryPoint,
-    compiled_class: &'a CompiledClassV1,
-    state: &'a mut dyn State,
-    context: &'a mut EntryPointExecutionContext,
-) -> Result<VmExecutionContext<'a>, PreExecutionError> {
-    let entry_point = compiled_class.get_entry_point(&call)?;
-
-    // Instantiate Cairo runner.
-    let proof_mode = false;
-    // region: Modified blockifier code
-    let trace_enabled = true;
-    let mut runner = CairoRunner::new(
-        &compiled_class.0.program,
-        LayoutName::starknet,
-        proof_mode,
-        trace_enabled,
-    )?;
-    // endregion
-
-    runner.initialize_function_runner_cairo_1(&entry_point.builtins)?;
-    let mut read_only_segments = ReadOnlySegments::default();
-    let program_extra_data_length = prepare_program_extra_data(
-        &mut runner,
-        compiled_class,
-        &mut read_only_segments,
-        &context.versioned_constants().os_constants.gas_costs,
-    )?;
-
-    // Instantiate syscall handler.
-    let initial_syscall_ptr = runner.vm.add_memory_segment();
-    let syscall_handler = SyscallHintProcessor::new(
-        state,
-        context,
-        initial_syscall_ptr,
-        call,
-        &compiled_class.hints,
-        read_only_segments,
-    );
-
-    Ok(VmExecutionContext {
-        runner,
-        syscall_handler,
-        initial_syscall_ptr,
-        entry_point,
-        program_extra_data_length,
-    })
-}
 
 // blockifier/src/execution/cairo1_execution.rs:48 (execute_entry_point_call)
-pub fn execute_entry_point_call_cairo1(
-    call: CallEntryPoint,
+pub(crate) fn execute_entry_point_call_cairo1(
+    call: ExecutableCallEntryPoint,
     compiled_class_v1: &CompiledClassV1,
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState, // Added parameter
@@ -142,13 +39,21 @@ pub fn execute_entry_point_call_cairo1(
         .expect("Unexpected empty tracked resource.");
     let entry_point_initial_budget = context.gas_costs().base.entry_point_initial_budget;
 
+    let class_hash = call.class_hash;
+
     let VmExecutionContext {
         mut runner,
         mut syscall_handler,
         initial_syscall_ptr,
         entry_point,
         program_extra_data_length,
-    } = initialize_execution_context(call, compiled_class_v1, state, context)?;
+    } = initialize_execution_context_with_runner_mode(
+        call,
+        compiled_class_v1,
+        state,
+        context,
+        ExecutionRunnerMode::Tracing,
+    )?;
 
     let args = prepare_call_arguments(
         &syscall_handler.base.call,
@@ -167,6 +72,7 @@ pub fn execute_entry_point_call_cairo1(
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
             user_args: vec![],
+            panic_traceback: None,
         },
     };
 
@@ -178,13 +84,20 @@ pub fn execute_entry_point_call_cairo1(
         &args,
         program_extra_data_length,
     )
-    .on_error_get_last_pc(&mut runner)?;
+    .map_err(|source| {
+        extract_trace_and_register_errors(
+            source,
+            class_hash,
+            &mut runner,
+            cheatable_runtime.extension.cheatnet_state,
+        )
+    })?;
 
     let trace = get_relocated_vm_trace(&mut runner);
-    let syscall_counter = cheatable_runtime
+    let syscall_usage = cheatable_runtime
         .extended_runtime
         .hint_handler
-        .syscall_counter
+        .syscalls_usage
         .clone();
 
     let call_info = finalize_execution(
@@ -194,19 +107,29 @@ pub fn execute_entry_point_call_cairo1(
         program_extra_data_length,
         tracked_resource,
     )?;
+
     if call_info.execution.failed {
-        return Err(EntryPointExecutionErrorWithTrace {
-            source: EntryPointExecutionError::ExecutionFailed {
-                error_trace: extract_trailing_cairo1_revert_trace(
-                    &call_info,
-                    Cairo1RevertHeader::Execution,
-                ),
-            },
-            trace,
-        });
+        // fallback to the last pc in the trace if user did not set `panic-backtrace = true` in `Scarb.toml`
+        let pcs = if let Some(panic_traceback) = cheatable_runtime.extended_runtime.panic_traceback
+        {
+            panic_traceback
+        } else {
+            trace
+                .last()
+                .map(|last| vec![last.pc])
+                .expect("trace should have at least one entry")
+        };
+        cheatable_runtime
+            .extension
+            .cheatnet_state
+            .register_error(class_hash, pcs);
     }
 
-    Ok((call_info, syscall_counter, trace))
+    Ok(CallInfoWithExecutionData {
+        call_info,
+        syscall_usage,
+        vm_trace: Some(trace),
+    })
     // endregion
 }
 

@@ -646,8 +646,8 @@ dependencies = [
 
 [[package]]
 name = "blockifier"
-version = "0.14.0-rc.1"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.13.4#575dc705433641e521bf61a04edf06a7f487de97"
+version = "0.14.0-rc.3"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#823cba4d0e94638fb1f91607f7047428f7e8131f"
 dependencies = [
  "anyhow",
  "ark-ec 0.4.2",
@@ -680,6 +680,7 @@ dependencies = [
  "sha2",
  "starknet-types-core",
  "starknet_api",
+ "starknet_compile_to_native",
  "starknet_infra_utils",
  "strum 0.25.0",
  "strum_macros 0.25.3",
@@ -1411,7 +1412,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "cheatnet"
-version = "0.39.0"
+version = "0.41.0"
 dependencies = [
  "anyhow",
  "bimap",
@@ -1550,7 +1551,7 @@ version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fde0e0ec90c9dfb3b4b1a0891a7dcd0e2bffde2f7efed5fe7c9bb00e5bfb915e"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -2164,7 +2165,7 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
 name = "docs"
-version = "0.39.0"
+version = "0.41.0"
 dependencies = [
  "anyhow",
  "camino",
@@ -2482,7 +2483,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.39.0"
+version = "0.41.0"
 dependencies = [
  "anyhow",
  "assert_fs",
@@ -2500,12 +2501,12 @@ dependencies = [
  "configuration",
  "console",
  "conversions",
+ "derive_more 2.0.1",
  "docs",
  "forge_runner",
  "futures",
  "include_dir",
  "indoc",
- "lazy_static 1.5.0",
  "num-bigint",
  "openssl",
  "rand 0.8.5",
@@ -2533,7 +2534,7 @@ dependencies = [
 
 [[package]]
 name = "forge_runner"
-version = "0.39.0"
+version = "0.41.0"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -4077,8 +4078,8 @@ dependencies = [
 
 [[package]]
 name = "papyrus_config"
-version = "0.14.0-rc.1"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.13.4#575dc705433641e521bf61a04edf06a7f487de97"
+version = "0.14.0-rc.3"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#823cba4d0e94638fb1f91607f7047428f7e8131f"
 dependencies = [
  "clap",
  "itertools 0.12.1",
@@ -4924,6 +4925,7 @@ dependencies = [
  "num-traits",
  "serde",
  "serde_json",
+ "shared",
  "starknet",
  "starknet-types-core",
  "starknet_api",
@@ -5499,10 +5501,12 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "cairo-lang-runner",
+ "cairo-vm",
  "clap",
  "clap_complete",
  "console",
  "indicatif",
+ "num-traits",
  "regex",
  "semver",
  "snapbox",
@@ -5611,7 +5615,7 @@ dependencies = [
 
 [[package]]
 name = "sncast"
-version = "0.39.0"
+version = "0.41.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5958,8 +5962,8 @@ dependencies = [
 
 [[package]]
 name = "starknet_api"
-version = "0.14.0-rc.1"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.13.4#575dc705433641e521bf61a04edf06a7f487de97"
+version = "0.14.0-rc.3"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#823cba4d0e94638fb1f91607f7047428f7e8131f"
 dependencies = [
  "bitvec",
  "cairo-lang-runner",
@@ -5985,9 +5989,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "starknet_compile_to_native"
+version = "0.14.0-rc.3"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#823cba4d0e94638fb1f91607f7047428f7e8131f"
+dependencies = [
+ "papyrus_config",
+ "serde",
+ "validator",
+]
+
+[[package]]
 name = "starknet_infra_utils"
-version = "0.14.0-rc.1"
-source = "git+https://github.com/cptartur/sequencer.git?branch=main-v0.13.4#575dc705433641e521bf61a04edf06a7f487de97"
+version = "0.14.0-rc.3"
+source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#823cba4d0e94638fb1f91607f7047428f7e8131f"
 dependencies = [
  "tokio",
  "tracing",
@@ -6956,7 +6970,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]

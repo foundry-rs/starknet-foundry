@@ -7,7 +7,7 @@ trait ICheatBlockTimestampChecker<TContractState> {
 
 #[starknet::contract]
 mod CheatBlockTimestampChecker {
-    use box::BoxTrait;
+    use core::box::BoxTrait;
 
     #[storage]
     struct Storage {}
@@ -15,12 +15,12 @@ mod CheatBlockTimestampChecker {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        BlockTimestampEmitted: BlockTimestampEmitted
+        BlockTimestampEmitted: BlockTimestampEmitted,
     }
 
     #[derive(Drop, starknet::Event)]
     struct BlockTimestampEmitted {
-        block_timestamp: u64
+        block_timestamp: u64,
     }
 
 

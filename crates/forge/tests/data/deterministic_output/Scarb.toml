@@ -1,0 +1,12 @@
+[package]
+name = "deterministic_output"
+version = "0.1.0"
+edition = "2024_07"
+
+[dependencies]
+
+[dev-dependencies]
+snforge_std = { path = "../../../../../snforge_std" }
+
+[[target.starknet-contract]]
+sierra = true

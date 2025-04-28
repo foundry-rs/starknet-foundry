@@ -7,14 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- Safe dispatchers can now be used inside contracts
+
+#### Changed
+
+- Minimal supported Scarb version is now `2.9.1`
+- Improved display of backtrace for contracts that panicked, when `panic-backtrace = true` in `Scarb.toml`. Without using this feature, the backtrace may be less accurate than before.
+  As of this release, this feature is available only in `scarb nightly-2025-03-27`.
+
+#### Fixed
+
+- The state correctly reverts after failed internal calls
+
+### Cast
+
+#### Fixed
+
+- Bug that prevented from passing values to `--arguments` that started with a leading minus `-` sign.
+
+### Cast
+
+### Fixed
+
+- User is now prompted to save an imported or deployed account in `sncast` config even when using `--network` flag
+
+## [0.41.0] - 2025-04-08
+
+### Forge
+
+#### Added
+
+- `--template` flag to `snforge new` command that allows selecting a template for the new project. Possible values are `balance-contract` (default), `cairo-program` and `erc20-contract`
+
+#### Fixed
+
+- fixed incorrect extra newlines in test summary
+
+### Cast
+
+#### Added
+
+- Support for `array![].span()` in `--arguments` command
+
+#### Changed
+
+- `verify` command now supports the `--class-hash` for Walnut verification
+
+#### Removed
+
+- `NftScan` is no longer supported as `block-explorer` option
+
+## [0.40.0] - 2025-03-26
+
 ### Cast
 
 #### Added
 
 - `--l1-gas`, `--l1-gas-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price` flags
 - methods for fee settings creation, in `FeeSettingsTrait`: `max_fee()`, `resource_bounds()` and `estimate()` (in `sncast_std`)
-- `ContractExecutionError` and `ContractExecutionErrorInner` structs (in `sncast_std`)
-- `ContractErrorData` (in `sncast_std`)
 
 #### Changed
 
@@ -22,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - wrapped error for `ContractError` is now of type `ContractErrorData` (in `sncast_std`)
 - field `execution_error` in `TransactionExecutionErrorData` is now of type `ContractExecutionError` (in `sncast_std`)
 - Using Braavos accounts is temporarily disabled because they don't yet work with the RPC version supported by `sncast`
+- `sncast script init` command now initializes project with the `sncast_std` dependency from the [registry](https://scarbs.xyz/packages/sncast_std)
 
 #### Removed
 
@@ -43,7 +98,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 - gas is now reported using resource bounds triplet (l1_gas, l1_data_gas and l2_gas)
-- `available_gas` now accepts named arguments denoting resource bounds (eg #[available_gas(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)])
+- `available_gas` now accepts named arguments denoting resource bounds (eg `#[available_gas(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)]`)
 
 #### Fixed
 
@@ -54,10 +109,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `sncast completion` command - used to generate autocompletion script
-
-#### Changed
-
-- `sncast script init` command now initializes project with the `sncast_std` dependency from the [registry](https://scarbs.xyz/packages/sncast_std)
 
 ## [0.38.3] - 2025-03-07
 

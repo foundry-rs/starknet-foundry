@@ -69,7 +69,7 @@ pub enum CalldataPrimitive {
 }
 
 impl CalldataPrimitive {
-    pub(super) fn try_from_str_with_type(
+    pub(crate) fn try_from_str_with_type(
         value: &str,
         type_with_path: &str,
     ) -> anyhow::Result<Self> {
@@ -143,7 +143,7 @@ impl CairoSerialize for CalldataPrimitive {
             CalldataPrimitive::I128(value) => value.serialize(output),
             CalldataPrimitive::Felt(value) => value.serialize(output),
             CalldataPrimitive::ByteArray(value) => value.serialize(output),
-        };
+        }
     }
 }
 

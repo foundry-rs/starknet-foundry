@@ -8,7 +8,7 @@ trait IMap<TMapState> {
 #[starknet::contract]
 mod Map {
     use starknet::{
-        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map}
+        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map},
     };
     #[storage]
     struct Storage {
@@ -22,7 +22,7 @@ mod Map {
         }
 
         fn get(self: @ContractState, key: felt252) -> felt252 {
-            self.storage.entry(key).read()
+            self.storage.read(key)
         }
     }
 }

@@ -15,25 +15,25 @@ pub(crate) fn execute_cheatcode<const selector: felt252>(input: Span<felt252>) -
 }
 
 pub(crate) fn execute_cheatcode_and_deserialize<const selector: felt252, T, +Serde<T>>(
-    input: Span<felt252>
+    input: Span<felt252>,
 ) -> T {
     let mut serialized_output = execute_cheatcode::<selector>(input);
 
     match Serde::deserialize(ref serialized_output) {
         Option::Some(output) => output,
-        Option::None => panic!("snforge_std version mismatch: check the warning above")
+        Option::None => panic!("snforge_std version mismatch: check the warning above"),
     }
 }
 
 // Do not use this function directly.
 // It is an internal part of the snforge architecture used by macros.
-pub fn _is_config_run() -> bool {
+pub fn is_config_run() -> bool {
     execute_cheatcode_and_deserialize::<'is_config_mode'>(array![].span())
 }
 
 // Do not use this function directly.
 // It is an internal part of the snforge fuzzer logic used by macros.
-pub fn _save_fuzzer_arg<T, +core::fmt::Debug<T>>(input: @T) {
+pub fn save_fuzzer_arg<T, +core::fmt::Debug<T>>(input: @T) {
     let input = format!("{input:?}");
     let mut serialized = array![];
     input.serialize(ref serialized);

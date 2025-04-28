@@ -1,11 +1,16 @@
 use assertions::ClassHashAssert;
+use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::TrackedResource;
-use blockifier::execution::entry_point::{CallEntryPoint, CallType, EntryPointExecutionContext};
+use blockifier::execution::entry_point::{
+    CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
+    ExecutableCallEntryPoint,
+};
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::state_api::State;
 use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::relocatable::Relocatable;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     AddressOrClassHash, call_entry_point,
 };
@@ -44,6 +49,18 @@ fn build_syscall_hint_processor<'a>(
     entry_point_execution_context: &'a mut EntryPointExecutionContext,
     hints: &'a HashMap<String, Hint>,
 ) -> SyscallHintProcessor<'a> {
+    let call_entry_point = ExecutableCallEntryPoint {
+        class_hash: call_entry_point.class_hash.unwrap_or_default(),
+        code_address: call_entry_point.code_address,
+        entry_point_type: call_entry_point.entry_point_type,
+        entry_point_selector: call_entry_point.entry_point_selector,
+        calldata: call_entry_point.calldata,
+        storage_address: call_entry_point.storage_address,
+        caller_address: call_entry_point.caller_address,
+        call_type: call_entry_point.call_type,
+        initial_gas: call_entry_point.initial_gas,
+    };
+
     SyscallHintProcessor::new(
         state,
         entry_point_execution_context,
@@ -222,6 +239,50 @@ pub fn call_contract(
         cheatnet_state,
         entry_point,
         &AddressOrClassHash::ContractAddress(*contract_address),
+    )
+}
+
+pub fn call_contract_raw(
+    state: &mut dyn State,
+    cheatnet_state: &mut CheatnetState,
+    contract_address: &ContractAddress,
+    entry_point_selector: EntryPointSelector,
+    calldata: &[Felt],
+) -> EntryPointExecutionResult<CallInfo> {
+    let calldata = create_execute_calldata(calldata);
+
+    let mut entry_point = CallEntryPoint {
+        class_hash: None,
+        code_address: Some(*contract_address),
+        entry_point_type: EntryPointType::External,
+        entry_point_selector,
+        calldata,
+        storage_address: *contract_address,
+        caller_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
+        call_type: CallType::Call,
+        initial_gas: i64::MAX as u64,
+    };
+
+    let mut entry_point_execution_context = build_context(
+        &cheatnet_state.block_info,
+        None,
+        &TrackedResource::CairoSteps,
+    );
+    let hints = HashMap::new();
+
+    let syscall_hint_processor = build_syscall_hint_processor(
+        entry_point.clone(),
+        state,
+        &mut entry_point_execution_context,
+        &hints,
+    );
+
+    execute_call_entry_point(
+        &mut entry_point,
+        syscall_hint_processor.base.state,
+        cheatnet_state,
+        syscall_hint_processor.base.context,
+        false,
     )
 }
 

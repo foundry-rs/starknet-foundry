@@ -2,47 +2,46 @@
 ///
 /// The SRC5 component allows contracts to expose the interfaces they implement.
 #[starknet::component]
-mod SRC5Component {
+pub mod SRC5Component {
     use starknet::{
         storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map},
-        ContractAddress
     };
 
     const ISRC5_ID: felt252 = 0x3f918d17e5ee77373b56385708f855659a07f75997f365cf87748628532a055;
 
     #[starknet::interface]
-    trait ISRC5<TState> {
+    pub trait ISRC5<TState> {
         fn supports_interface(self: @TState, interface_id: felt252) -> bool;
     }
 
 
     #[storage]
-    struct Storage {
-        SRC5_supported_interfaces: Map<felt252, bool>
+    pub struct Storage {
+        SRC5_supported_interfaces: Map<felt252, bool>,
     }
 
-    mod Errors {
-        const INVALID_ID: felt252 = 'SRC5: invalid id';
+    pub mod Errors {
+        pub const INVALID_ID: felt252 = 'SRC5: invalid id';
     }
 
     #[embeddable_as(SRC5Impl)]
-    impl SRC5<
-        TContractState, +HasComponent<TContractState>
+    pub impl SRC5<
+        TContractState, +HasComponent<TContractState>,
     > of ISRC5<ComponentState<TContractState>> {
         /// Returns whether the contract implements the given interface.
         fn supports_interface(
-            self: @ComponentState<TContractState>, interface_id: felt252
+            self: @ComponentState<TContractState>, interface_id: felt252,
         ) -> bool {
             if interface_id == ISRC5_ID {
                 return true;
             }
-            self.SRC5_supported_interfaces.entry(interface_id).read()
+            self.SRC5_supported_interfaces.read(interface_id)
         }
     }
 
     #[generate_trait]
-    impl InternalImpl<
-        TContractState, +HasComponent<TContractState>
+    pub impl InternalImpl<
+        TContractState, +HasComponent<TContractState>,
     > of InternalTrait<TContractState> {
         /// Registers the given interface as supported by the contract.
         fn register_interface(ref self: ComponentState<TContractState>, interface_id: felt252) {
@@ -59,7 +58,8 @@ mod SRC5Component {
 
 
 #[starknet::component]
-mod AccessControlComponent {
+pub mod AccessControlComponent {
+    use starknet::storage::StorageMapReadAccess;
     use starknet::{storage::{StoragePointerWriteAccess, StoragePathEntry, Map}, ContractAddress};
     use starknet::get_caller_address;
     use super::SRC5Component;
@@ -67,7 +67,7 @@ mod AccessControlComponent {
 
 
     #[starknet::interface]
-    trait IAccessControl<TState> {
+    pub trait IAccessControl<TState> {
         fn has_role(self: @TState, role: felt252, account: ContractAddress) -> bool;
         fn get_role_admin(self: @TState, role: felt252) -> felt252;
         fn grant_role(ref self: TState, role: felt252, account: ContractAddress);
@@ -76,14 +76,14 @@ mod AccessControlComponent {
     }
 
     #[storage]
-    struct Storage {
+    pub struct Storage {
         AccessControl_role_admin: Map<felt252, felt252>,
         AccessControl_role_member: Map<(felt252, ContractAddress), bool>,
     }
 
     #[event]
     #[derive(Drop, starknet::Event)]
-    enum Event {
+    pub enum Event {
         RoleGranted: RoleGranted,
         RoleRevoked: RoleRevoked,
         RoleAdminChanged: RoleAdminChanged,
@@ -97,7 +97,7 @@ mod AccessControlComponent {
     struct RoleGranted {
         role: felt252,
         account: ContractAddress,
-        sender: ContractAddress
+        sender: ContractAddress,
     }
 
     /// Emitted when `account` is revoked `role`.
@@ -109,7 +109,7 @@ mod AccessControlComponent {
     struct RoleRevoked {
         role: felt252,
         account: ContractAddress,
-        sender: ContractAddress
+        sender: ContractAddress,
     }
 
     /// Emitted when `new_admin_role` is set as `role`'s admin role, replacing `previous_admin_role`
@@ -120,31 +120,31 @@ mod AccessControlComponent {
     struct RoleAdminChanged {
         role: felt252,
         previous_admin_role: felt252,
-        new_admin_role: felt252
+        new_admin_role: felt252,
     }
 
-    mod Errors {
-        const INVALID_CALLER: felt252 = 'Can only renounce role for self';
-        const MISSING_ROLE: felt252 = 'Caller is missing role';
+    pub mod Errors {
+        pub const INVALID_CALLER: felt252 = 'Can only renounce role for self';
+        pub const MISSING_ROLE: felt252 = 'Caller is missing role';
     }
 
     #[embeddable_as(AccessControlImpl)]
-    impl AccessControl<
+    pub impl AccessControl<
         TContractState,
         +HasComponent<TContractState>,
         +SRC5Component::HasComponent<TContractState>,
-        +Drop<TContractState>
+        +Drop<TContractState>,
     > of IAccessControl<ComponentState<TContractState>> {
         /// Returns whether `account` has been granted `role`.
         fn has_role(
-            self: @ComponentState<TContractState>, role: felt252, account: ContractAddress
+            self: @ComponentState<TContractState>, role: felt252, account: ContractAddress,
         ) -> bool {
-            self.AccessControl_role_member.entry((role, account)).read()
+            self.AccessControl_role_member.read((role, account))
         }
 
         /// Returns the admin role that controls `role`.
         fn get_role_admin(self: @ComponentState<TContractState>, role: felt252) -> felt252 {
-            self.AccessControl_role_admin.entry(role).read()
+            self.AccessControl_role_admin.read(role)
         }
 
         /// Grants `role` to `account`.
@@ -155,7 +155,7 @@ mod AccessControlComponent {
         ///
         /// - the caller must have `role`'s admin role.
         fn grant_role(
-            ref self: ComponentState<TContractState>, role: felt252, account: ContractAddress
+            ref self: ComponentState<TContractState>, role: felt252, account: ContractAddress,
         ) {
             let admin = self.get_role_admin(role);
             self.assert_only_role(admin);
@@ -170,7 +170,7 @@ mod AccessControlComponent {
         ///
         /// - the caller must have `role`'s admin role.
         fn revoke_role(
-            ref self: ComponentState<TContractState>, role: felt252, account: ContractAddress
+            ref self: ComponentState<TContractState>, role: felt252, account: ContractAddress,
         ) {
             let admin = self.get_role_admin(role);
             self.assert_only_role(admin);
@@ -190,7 +190,7 @@ mod AccessControlComponent {
         ///
         /// - the caller must be `account`.
         fn renounce_role(
-            ref self: ComponentState<TContractState>, role: felt252, account: ContractAddress
+            ref self: ComponentState<TContractState>, role: felt252, account: ContractAddress,
         ) {
             let caller: ContractAddress = get_caller_address();
             assert(caller == account, Errors::INVALID_CALLER);
@@ -202,11 +202,11 @@ mod AccessControlComponent {
         0x23700be02858dbe2ac4dc9c9f66d0b6b0ed81ec7f970ca6844500a56ff61751;
 
     #[generate_trait]
-    impl InternalImpl<
+    pub impl InternalImpl<
         TContractState,
         +HasComponent<TContractState>,
         impl SRC5: SRC5Component::HasComponent<TContractState>,
-        +Drop<TContractState>
+        +Drop<TContractState>,
     > of InternalTrait<TContractState> {
         /// Initializes the contract by registering the IAccessControl interface Id.
         fn initializer(ref self: ComponentState<TContractState>) {
@@ -227,7 +227,7 @@ mod AccessControlComponent {
         ///
         /// May emit a `RoleGranted` event.
         fn _grant_role(
-            ref self: ComponentState<TContractState>, role: felt252, account: ContractAddress
+            ref self: ComponentState<TContractState>, role: felt252, account: ContractAddress,
         ) {
             if !self.has_role(role, account) {
                 let caller: ContractAddress = get_caller_address();
@@ -242,7 +242,7 @@ mod AccessControlComponent {
         ///
         /// May emit a `RoleRevoked` event.
         fn _revoke_role(
-            ref self: ComponentState<TContractState>, role: felt252, account: ContractAddress
+            ref self: ComponentState<TContractState>, role: felt252, account: ContractAddress,
         ) {
             if self.has_role(role, account) {
                 let caller: ContractAddress = get_caller_address();
@@ -255,7 +255,7 @@ mod AccessControlComponent {
         ///
         /// Emits a `RoleAdminChanged` event.
         fn _set_role_admin(
-            ref self: ComponentState<TContractState>, role: felt252, admin_role: felt252
+            ref self: ComponentState<TContractState>, role: felt252, admin_role: felt252,
         ) {
             let previous_admin_role: felt252 = self.get_role_admin(role);
             self.AccessControl_role_admin.entry(role).write(admin_role);

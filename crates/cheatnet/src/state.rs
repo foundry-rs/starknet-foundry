@@ -9,7 +9,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages
 use blockifier::execution::call_info::OrderedL2ToL1Message;
 use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::execution::entry_point::CallEntryPoint;
-use blockifier::execution::syscalls::hint_processor::SyscallCounter;
+use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_annotations::trace_data::L1Resources;
@@ -31,7 +31,7 @@ use starknet_api::{
 };
 use starknet_types_core::felt::Felt;
 use std::cell::{Ref, RefCell};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
 
 // Specifies the duration of the cheat
@@ -172,7 +172,7 @@ pub struct CallTrace {
     // These also include resources used by internal calls
     pub used_execution_resources: ExecutionResources,
     pub used_l1_resources: L1Resources,
-    pub used_syscalls: SyscallCounter,
+    pub used_syscalls: SyscallUsageMap,
     pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
     pub gas_consumed: u64,
 }
@@ -200,7 +200,7 @@ impl CallTrace {
             entry_point: CallEntryPoint::default(),
             used_execution_resources: ExecutionResources::default(),
             used_l1_resources: L1Resources::default(),
-            used_syscalls: SyscallCounter::default(),
+            used_syscalls: SyscallUsageMap::default(),
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
             vm_trace: None,
@@ -316,12 +316,6 @@ pub struct TraceData {
     pub is_vm_trace_needed: bool,
 }
 
-#[derive(Clone)]
-pub struct EncounteredError {
-    pub pc: usize,
-    pub class_hash: ClassHash,
-}
-
 pub struct CheatnetState {
     pub cheated_execution_info_contracts: HashMap<ContractAddress, ExecutionInfoMock>,
     pub global_cheated_execution_info: ExecutionInfoMock,
@@ -334,19 +328,21 @@ pub struct CheatnetState {
     pub deploy_salt_base: u32,
     pub block_info: BlockInfo,
     pub trace_data: TraceData,
-    pub encountered_errors: Vec<EncounteredError>,
+    pub encountered_errors: EncounteredErrors,
     pub fuzzer_args: Vec<String>,
     pub block_hash_contracts: HashMap<(ContractAddress, u64), (CheatSpan, Felt)>,
     pub global_block_hash: HashMap<u64, (Felt, Vec<ContractAddress>)>,
 }
 
+pub type EncounteredErrors = BTreeMap<ClassHash, Vec<usize>>;
+
 impl Default for CheatnetState {
     fn default() -> Self {
         let mut test_code_entry_point = build_test_entry_point();
         test_code_entry_point.class_hash =
-            Some(TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap());
+            ClassHash(TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap());
         let test_call = Rc::new(RefCell::new(CallTrace {
-            entry_point: test_code_entry_point,
+            entry_point: test_code_entry_point.into(),
             run_with_call_header: true,
             ..CallTrace::default_successful_call()
         }));
@@ -363,7 +359,7 @@ impl Default for CheatnetState {
                 current_call_stack: NotEmptyCallStack::from(test_call),
                 is_vm_trace_needed: false,
             },
-            encountered_errors: vec![],
+            encountered_errors: BTreeMap::default(),
             fuzzer_args: Vec::default(),
             block_hash_contracts: HashMap::default(),
             global_block_hash: HashMap::default(),
@@ -473,6 +469,10 @@ impl CheatnetState {
     pub fn update_fuzzer_args(&mut self, arg: String) {
         self.fuzzer_args.push(arg);
     }
+
+    pub fn register_error(&mut self, class_hash: ClassHash, pcs: Vec<usize>) {
+        self.encountered_errors.insert(class_hash, pcs);
+    }
 }
 
 impl TraceData {
@@ -501,7 +501,7 @@ impl TraceData {
         &mut self,
         execution_resources: ExecutionResources,
         gas_consumed: u64,
-        used_syscalls: SyscallCounter,
+        used_syscalls: SyscallUsageMap,
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
         vm_trace: Option<Vec<RelocatedTraceEntry>>,

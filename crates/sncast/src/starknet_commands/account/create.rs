@@ -6,7 +6,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
 use serde_json::json;
-use sncast::helpers::braavos::{BraavosAccountFactory, assert_non_braavos_account_type};
+use sncast::helpers::braavos::{BraavosAccountFactory, assert_non_braavos_account};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
@@ -53,10 +53,6 @@ pub struct Create {
 
     #[command(flatten)]
     pub rpc: RpcArgs,
-
-    /// If passed, the command will not trigger an interactive prompt to add an account as a default
-    #[arg(long)]
-    pub silent: bool,
 }
 
 pub async fn create(
@@ -68,7 +64,7 @@ pub async fn create(
     create: &Create,
 ) -> Result<AccountCreateResponse> {
     // TODO(#3118): Remove this check once braavos integration is restored
-    assert_non_braavos_account_type(create.account_type)?;
+    assert_non_braavos_account(Some(create.account_type), create.class_hash)?;
 
     let add_profile = create.add_profile.clone();
     let salt = extract_or_generate_salt(create.salt);

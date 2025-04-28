@@ -1,9 +1,9 @@
-use super::super::byte_array::byte_array_as_felt_array;
-use super::super::_cheatcode::execute_cheatcode;
+use crate::byte_array::byte_array_as_felt_array;
+use crate::cheatcode::execute_cheatcode;
 
 #[derive(Drop, Clone)]
 pub struct File {
-    path: ByteArray
+    path: ByteArray,
 }
 
 pub trait FileTrait {
@@ -45,14 +45,14 @@ pub trait FileParser<T, impl TSerde: Serde<T>> {
 impl FileParserImpl<T, impl TSerde: Serde<T>> of FileParser<T> {
     fn parse_txt(file: @File) -> Option<T> {
         let mut content = execute_cheatcode::<
-            'read_txt'
+            'read_txt',
         >(byte_array_as_felt_array(file.path).span());
         Serde::<T>::deserialize(ref content)
     }
 
     fn parse_json(file: @File) -> Option<T> {
         let mut content = execute_cheatcode::<
-            'read_json'
+            'read_json',
         >(byte_array_as_felt_array(file.path).span());
         Serde::<T>::deserialize(ref content)
     }

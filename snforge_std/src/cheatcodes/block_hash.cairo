@@ -1,4 +1,4 @@
-use super::super::_cheatcode::execute_cheatcode_and_deserialize;
+use crate::cheatcode::execute_cheatcode_and_deserialize;
 use super::execution_info::Operation;
 use super::execution_info::CheatArguments;
 use super::CheatSpan;
@@ -10,11 +10,11 @@ use starknet::ContractAddress;
 /// - `block_hash` - `felt252` representing the new block hash.
 /// - `span` - instance of `CheatSpan` specifying the number of syscalls with the cheat
 pub fn cheat_block_hash(
-    contract_address: ContractAddress, block_number: u64, block_hash: felt252, span: CheatSpan
+    contract_address: ContractAddress, block_number: u64, block_hash: felt252, span: CheatSpan,
 ) {
     _cheat_block_hash(
         block_number,
-        Operation::Start(CheatArguments { value: block_hash, span, target: contract_address })
+        Operation::Start(CheatArguments { value: block_hash, span, target: contract_address }),
     );
 }
 
@@ -36,15 +36,15 @@ pub fn stop_cheat_block_hash_global(block_number: u64) {
 /// - `block_number` - Block number to be modified.
 /// - `block_hash` - The block hash to set.
 pub fn start_cheat_block_hash(
-    contract_address: ContractAddress, block_number: u64, block_hash: felt252
+    contract_address: ContractAddress, block_number: u64, block_hash: felt252,
 ) {
     _cheat_block_hash(
         block_number,
         Operation::Start(
             CheatArguments {
-                value: block_hash, span: CheatSpan::Indefinite, target: contract_address
-            }
-        )
+                value: block_hash, span: CheatSpan::Indefinite, target: contract_address,
+            },
+        ),
     );
 }
 

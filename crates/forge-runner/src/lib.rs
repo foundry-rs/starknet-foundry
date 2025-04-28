@@ -32,7 +32,7 @@ pub mod profiler_api;
 pub mod test_case_summary;
 pub mod test_target_summary;
 
-mod backtrace;
+pub mod backtrace;
 mod gas;
 pub mod printing;
 pub mod running;
@@ -204,8 +204,8 @@ fn run_with_fuzzing(
             // we have to ensure that all fuzzing subtests Passed
             if runs != fuzzer_runs.get() {
                 return Ok(TestCaseSummary::Skipped {});
-            };
-        };
+            }
+        }
 
         Ok(fuzzing_run_summary)
     })

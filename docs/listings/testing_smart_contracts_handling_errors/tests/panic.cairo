@@ -2,7 +2,7 @@
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
 
 use testing_smart_contracts_handling_errors::{
-    IPanicContractDispatcher, IPanicContractDispatcherTrait
+    IPanicContractDispatcher, IPanicContractDispatcherTrait,
 };
 
 #[test]
