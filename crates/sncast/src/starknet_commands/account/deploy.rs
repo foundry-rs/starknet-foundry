@@ -36,13 +36,17 @@ pub struct Deploy {
 
     #[command(flatten)]
     pub rpc: RpcArgs,
+
+    /// If passed, the command will not trigger an interactive prompt to add an account as a default
+    #[arg(long)]
+    pub silent: bool,
 }
 
 #[expect(clippy::too_many_arguments)]
 pub async fn deploy(
     provider: &JsonRpcClient<HttpTransport>,
     accounts_file: Utf8PathBuf,
-    deploy_args: Deploy,
+    deploy_args: &Deploy,
     chain_id: Felt,
     wait_config: WaitForTx,
     account: &str,
@@ -62,6 +66,7 @@ pub async fn deploy(
     } else {
         let account_name = deploy_args
             .name
+            .clone()
             .ok_or_else(|| anyhow!("Required argument `--name` not provided"))?;
         check_account_file_exists(&accounts_file)?;
         deploy_from_accounts_file(
