@@ -2,6 +2,8 @@ use super::helpers::{ParseRadixError, RadixInput};
 use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
 use conversions;
 use num_bigint::BigUint;
+use std::fmt;
+use std::fmt::Display;
 use std::str::FromStr;
 use thiserror;
 
@@ -29,6 +31,13 @@ impl CairoU256 {
         result[..16].copy_from_slice(&self.high.to_be_bytes());
 
         result
+    }
+}
+
+impl Display for CairoU256 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let number = BigUint::from_bytes_be(&self.to_be_bytes());
+        write!(f, "{number}")
     }
 }
 
@@ -120,5 +129,16 @@ mod tests {
         assert_eq!([result.low, result.high], expected_limbs);
 
         Ok(())
+    }
+
+    #[test_case([0, 0], "0"; "zero")]
+    #[test_case([2_325_180, 0], "2325180"; "small")]
+    #[test_case(BIG_NUMBER_LIMBS, BIG_NUMBER_DEC; "big")]
+    fn test_display(limbs: [u128; 2], expected: &str) {
+        let result = CairoU256 {
+            low: limbs[0],
+            high: limbs[1],
+        };
+        assert_eq!(result.to_string(), expected);
     }
 }

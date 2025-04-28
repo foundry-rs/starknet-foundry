@@ -6,10 +6,10 @@ use starknet::core::types::contract::AbiEntry;
 
 mod binary;
 mod complex_types;
-pub(super) mod data_representation;
+pub(crate) mod data_representation;
 mod literals;
 mod macros;
-pub(super) mod parsing;
+pub(crate) mod parsing;
 
 /// A main trait that allows particular calldata types to be recognized and transformed
 trait SupportedCalldataKind {
@@ -23,7 +23,7 @@ trait SupportedCalldataKind {
 
 /// A main function that transforms expressions supported by the transformer
 /// to their corresponding serializable struct representations
-pub(super) fn build_representation(
+pub(crate) fn build_representation(
     expression: Expr,
     expected_type: &str,
     abi: &[AbiEntry],

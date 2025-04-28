@@ -1,7 +1,7 @@
 use crate::common::assertions::{assert_error, assert_panic, assert_success};
 use crate::common::cache::{purge_cache, read_cache};
 use crate::common::state::{create_fork_cached_state, create_fork_cached_state_at};
-use crate::common::{call_contract, deploy_contract, deploy_wrapper, felt_selector_from_name};
+use crate::common::{call_contract, deploy_contract, deploy_wrapper};
 use blockifier::state::cached_state::CachedState;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use camino::Utf8Path;
@@ -9,6 +9,7 @@ use cheatnet::constants::build_testing_state;
 use cheatnet::forking::cache::cache_version;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::felt_selector_from_name;
 use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader};
 use conversions::IntoConv;
 use conversions::byte_array::ByteArray;

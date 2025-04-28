@@ -1,4 +1,5 @@
 use anyhow::{Result, anyhow};
+use forge_runner::backtrace::is_backtrace_enabled;
 use forge_runner::package_tests::with_config_resolved::TestTargetWithResolvedConfig;
 use scarb_api::{ScarbCommand, package_matches_version_requirement};
 use scarb_metadata::Metadata;
@@ -7,6 +8,7 @@ use shared::print::print_as_warning;
 use shared::rpc::create_rpc_client;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use std::collections::HashSet;
+use std::env;
 use url::Url;
 
 pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
@@ -90,4 +92,30 @@ pub fn warn_if_snforge_std_not_compatible(scarb_metadata: &Metadata) -> Result<(
         ));
     }
     Ok(())
+}
+
+// TODO(#3272)
+pub(crate) fn warn_if_backtrace_without_panic_hint(scarb_metadata: &Metadata) {
+    if is_backtrace_enabled() {
+        let is_panic_backtrace_set = scarb_metadata
+            .compilation_units
+            .iter()
+            .filter(|unit| {
+                unit.target.name.contains("unittest")
+                    || unit.target.name.contains("integrationtest")
+            })
+            .all(|unit| match &unit.compiler_config {
+                serde_json::Value::Object(map) => map
+                    .get("panic_backtrace")
+                    .is_some_and(|v| v == &serde_json::Value::Bool(true)),
+                _ => false,
+            });
+
+        if !is_panic_backtrace_set {
+            print_as_warning(&anyhow!(
+                "To get accurate backtrace results, it is required to use the configuration available in the latest Cairo version. \
+                For more details, please visit https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/backtrace.html"
+            ));
+        }
+    }
 }

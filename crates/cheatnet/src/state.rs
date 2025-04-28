@@ -471,10 +471,7 @@ impl CheatnetState {
     }
 
     pub fn register_error(&mut self, class_hash: ClassHash, pcs: Vec<usize>) {
-        self.encountered_errors
-            .entry(class_hash)
-            .or_default()
-            .extend(pcs);
+        self.encountered_errors.insert(class_hash, pcs);
     }
 }
 

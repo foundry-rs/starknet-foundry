@@ -38,13 +38,13 @@ pub fn strk_constructor_calldata() -> [Felt; 9] {
         100_000_000.into(),
         // initial_supply high
         0.into(),
-        // recipient
-        123.into(),
-        // permitted_minter
-        123.into(),
-        // provisional_governance_admin
-        123.into(),
-        // upgrade_delay
+        // recipient (dummy)
+        111.into(),
+        // permitted_minter (dummy)
+        222.into(),
+        // provisional_governance_admin (dummy)
+        333.into(),
+        // upgrade_delay (dummy)
         0.into(),
     ]
 }
@@ -66,8 +66,16 @@ fn contract_class_no_entrypoints() -> ContractClass {
           }
         }"#,
     );
+    let casm_contract_class: CasmContractClass = serde_json::from_str(raw_contract_class)
+        .expect("Could not get casm_contract class from raw");
+
+    ContractClass::V1((casm_contract_class, SierraVersion::LATEST))
+}
+
+#[must_use]
+pub fn contract_class_strk() -> ContractClass {
     let casm_contract_class: CasmContractClass =
-        serde_json::from_str(raw_contract_class).expect("Could not casm_contract_class from raw");
+        serde_json::from_str(STRK_ERC20_CASM).expect("Could not get casm_contract class from raw");
 
     ContractClass::V1((casm_contract_class, SierraVersion::LATEST))
 }
@@ -98,6 +106,7 @@ pub fn build_testing_state() -> DictStateReader {
     DictStateReader {
         address_to_class_hash,
         class_hash_to_class,
+        ..Default::default()
     }
 }
 

@@ -69,7 +69,7 @@ pub enum CalldataPrimitive {
 }
 
 impl CalldataPrimitive {
-    pub(super) fn try_from_str_with_type(
+    pub(crate) fn try_from_str_with_type(
         value: &str,
         type_with_path: &str,
     ) -> anyhow::Result<Self> {

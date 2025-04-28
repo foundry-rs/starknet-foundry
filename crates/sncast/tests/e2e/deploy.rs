@@ -8,15 +8,16 @@ use crate::helpers::fixtures::{
     get_transaction_hash, get_transaction_receipt,
 };
 use crate::helpers::runner::runner;
+use crate::helpers::shell::os_specific_shell;
+use camino::Utf8PathBuf;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
-use snapbox::cmd::{Command, cargo_bin};
+use snapbox::cmd::cargo_bin;
 use sncast::AccountType;
 use sncast::helpers::constants::OZ_CLASS_HASH;
 use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Deploy;
 use starknet_types_core::felt::Felt;
-use std::path::PathBuf;
 use tempfile::tempdir;
 use test_case::test_case;
 
@@ -351,22 +352,8 @@ fn test_too_low_gas() {
 #[tokio::test]
 async fn test_happy_case_shell() {
     let tempdir = create_and_deploy_oz_account().await;
-
-    let script_extension = if cfg!(windows) { ".ps1" } else { ".sh" };
-    let test_path = PathBuf::from(format!("tests/shell/deploy{script_extension}"))
-        .canonicalize()
-        .unwrap();
     let binary_path = cargo_bin!("sncast");
-
-    let command = if cfg!(windows) {
-        Command::new("powershell")
-            .arg("-ExecutionPolicy")
-            .arg("Bypass")
-            .arg("-File")
-            .arg(test_path)
-    } else {
-        Command::new(test_path)
-    };
+    let command = os_specific_shell(&Utf8PathBuf::from("tests/shell/deploy"));
 
     let snapbox = command
         .current_dir(tempdir.path())

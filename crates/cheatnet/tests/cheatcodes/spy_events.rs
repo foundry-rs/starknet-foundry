@@ -1,9 +1,10 @@
 use crate::cheatcodes::test_environment::TestEnvironment;
 use crate::common::get_contracts;
 use crate::common::state::create_fork_cached_state_at;
-use crate::common::{call_contract, deploy_contract, felt_selector_from_name};
+use crate::common::{call_contract, deploy_contract};
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::felt_selector_from_name;
 use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
 use conversions::string::TryFromHexStr;

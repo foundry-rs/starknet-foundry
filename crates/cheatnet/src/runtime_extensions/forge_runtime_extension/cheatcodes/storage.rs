@@ -1,7 +1,8 @@
 use blockifier::state::state_api::State;
 use conversions::{FromConv, IntoConv};
 use starknet::core::crypto::pedersen_hash;
-use starknet_api::core::{ContractAddress, PatriciaKey};
+use starknet::core::utils::get_selector_from_name;
+use starknet_api::core::{ContractAddress, EntryPointSelector, PatriciaKey};
 use starknet_api::hash::StarkHash;
 use starknet_api::state::StorageKey;
 use starknet_types_core::felt::Felt;
@@ -69,8 +70,24 @@ pub fn calculate_variable_address(selector: Felt, key: Option<&[Felt]>) -> Felt 
     }
 }
 
-fn storage_key(storage_address: Felt) -> Result<StorageKey, anyhow::Error> {
+#[must_use]
+pub fn variable_address(var_name: &str) -> Felt {
+    calculate_variable_address(felt_selector_from_name(var_name).into_(), None)
+}
+
+#[must_use]
+pub fn felt_selector_from_name(name: &str) -> EntryPointSelector {
+    let selector = get_selector_from_name(name).unwrap();
+    selector.into_()
+}
+
+pub fn storage_key(storage_address: Felt) -> Result<StorageKey, anyhow::Error> {
     Ok(StorageKey(PatriciaKey::try_from(StarkHash::from_(
         storage_address,
     ))?))
+}
+
+#[must_use]
+pub fn map_entry_address(var_name: &str, key: &[Felt]) -> Felt {
+    calculate_variable_address(felt_selector_from_name(var_name).into_(), Some(key))
 }

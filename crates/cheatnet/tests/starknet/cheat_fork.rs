@@ -1,6 +1,7 @@
+use crate::common::call_contract;
 use crate::common::state::create_fork_cached_state;
-use crate::common::{call_contract, felt_selector_from_name};
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::felt_selector_from_name;
 use cheatnet::state::CheatnetState;
 use conversions::string::TryFromHexStr;
 use starknet_api::core::ContractAddress;
