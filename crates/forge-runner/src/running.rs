@@ -195,17 +195,6 @@ pub fn run_test_case(
         set_max_steps(&mut context, max_n_steps);
     }
 
-    // let strk_contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
-
-    // let class_hash_at = state_reader
-    //     .fork_state_reader
-    //     .as_mut()
-    //     .unwrap()
-    //     .cache
-    //     .borrow_mut()
-    //     .get_class_hash_at(&strk_contract_address);
-
-    // println!("class_hash_at: {class_hash_at:?}");
     let is_strk_deployed = is_strk_deployed(&mut state_reader);
 
     let mut cached_state = CachedState::new(state_reader);
@@ -226,7 +215,6 @@ pub fn run_test_case(
         block_info,
         ..Default::default()
     };
-
     cheatnet_state.trace_data.is_vm_trace_needed = runtime_config.is_vm_trace_needed;
 
     let cheatable_runtime = ExtendedRuntime {
