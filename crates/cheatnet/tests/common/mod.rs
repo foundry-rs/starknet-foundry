@@ -25,6 +25,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
 };
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::CheatnetState;
+use conversions::IntoConv;
 use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::TEST_ADDRESS;
 use runtime::starknet::context::build_context;

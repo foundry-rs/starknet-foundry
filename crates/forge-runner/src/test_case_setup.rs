@@ -201,7 +201,7 @@ pub fn add_strk_to_dict_state_reader(cached_state: &mut CachedState<ExtendedStat
         // this is a potential performance issue
     ];
 
-    for (entry, value) in storage_entries_and_values_to_update.iter() {
+    for (entry, value) in &storage_entries_and_values_to_update {
         cached_state
             .state
             .dict_state_reader
