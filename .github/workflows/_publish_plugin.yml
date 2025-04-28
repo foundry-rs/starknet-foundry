@@ -22,12 +22,11 @@ jobs:
         id: check-version
         run: |
           set -exo pipefail
-
-          if [ -z "${{ inputs.overridden_plugin_version }}" ]; then
-            snforge_scarb_plugin_version=$(grep "^version =" crates/snforge-scarb-plugin/Scarb.toml | cut -d '"' -f 2)
-          else
-            snforge_scarb_plugin_version="${{ inputs.overridden_plugin_version }}"
-          fi
+        
+          source scripts/handle-version.sh
+          
+          snforge_scarb_plugin_version=$(get_version "${{ inputs.overridden_plugin_version }}")
+          
           plugin_uploaded=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version "$snforge_scarb_plugin_version" '[.[] | select(.v == $version)] | length > 0')
           echo "plugin_uploaded=$plugin_uploaded" >> $GITHUB_OUTPUT
 
@@ -65,13 +64,9 @@ jobs:
         working-directory: crates/snforge-scarb-plugin
         run: |
           set -exo pipefail
+          source ../../scripts/handle-version.sh
           
-          if [ -n "${{ inputs.overridden_plugin_version }}" ]; then
-            sed -i.bak "/\[package\]/,/version =/ s/version = \".*/version = \"${{ inputs.overridden_plugin_version }}\"/" Scarb.toml
-            rm Scarb.toml.bak 2> /dev/null
-
-            sed -i.bak "/\[package\]/,/version =/ s/version = \".*/version = \"${{ inputs.overridden_plugin_version }}\"/" Cargo.toml
-            rm Cargo.toml.bak 2> /dev/null
-          fi
+          update_version_in_file "Scarb.toml" "${{ inputs.overridden_plugin_version }}"
+          update_version_in_file "Cargo.toml" "${{ inputs.overridden_plugin_version }}"
 
           scarb publish --allow-dirty ${{ inputs.prod_registry == true && '' || '--index https://scarbs.dev/' }}
