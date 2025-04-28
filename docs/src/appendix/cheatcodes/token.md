@@ -5,7 +5,7 @@ pub enum Token {
     STRK,
     Custom {
         contract_address: ContractAddress,
-        balances_variable_selector: Felt,
+        balances_variable_selector: felt252,
     },
 }
 

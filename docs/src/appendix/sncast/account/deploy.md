@@ -54,3 +54,8 @@ Maximum L1 data gas for the `deploy_account` transaction. When not used, default
 Optional.
 
 Maximum L1 data gas unit price for the `deploy_account` transaction. When not used, defaults to auto-estimation.
+
+## `--silent`
+Optional.
+
+If passed, the command will not trigger an interactive prompt to add an account as a default

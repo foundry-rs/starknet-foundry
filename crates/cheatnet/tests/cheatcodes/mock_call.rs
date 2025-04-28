@@ -1,13 +1,14 @@
 use super::test_environment::TestEnvironment;
 use crate::common::assertions::ClassHashAssert;
+use crate::common::recover_data;
 use crate::common::state::create_cached_state;
 use crate::common::{call_contract, deploy_wrapper};
-use crate::common::{felt_selector_from_name, recover_data};
 use crate::{
     common::assertions::assert_success,
     common::{deploy_contract, get_contracts},
 };
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::felt_selector_from_name;
 use cheatnet::state::{CheatSpan, CheatnetState};
 use conversions::IntoConv;
 use starknet::core::utils::get_selector_from_name;
