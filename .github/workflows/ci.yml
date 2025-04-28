@@ -41,7 +41,7 @@ jobs:
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: cargo test --release --lib -p forge
 
-  build-test-forge-e2e-nextest-archive:
+  build-test-forge-nextest-archive:
     needs: setup
     runs-on: ${{ matrix.os }}
     strategy:
@@ -65,7 +65,7 @@ jobs:
   test-forge-integration:
     name: Test Forge / Integration Tests
     runs-on: ${{ matrix.os }}
-    needs: [ build-test-forge-e2e-nextest-archive, setup ]
+    needs: [ build-test-forge-nextest-archive, setup ]
     strategy:
       fail-fast: false
       matrix:
@@ -87,7 +87,7 @@ jobs:
   test-forge-e2e:
     name: Test Forge / E2E Tests
     runs-on: ${{ matrix.os }}
-    needs: [ build-test-forge-e2e-nextest-archive, setup ]
+    needs: [ build-test-forge-nextest-archive, setup ]
     strategy:
       fail-fast: false
       matrix:
