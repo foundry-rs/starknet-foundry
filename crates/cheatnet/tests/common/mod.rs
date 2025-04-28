@@ -192,7 +192,6 @@ pub fn deploy_at_wrapper(
         class_hash,
         calldata,
         contract_address,
-        false,
     )?;
 
     Ok(contract_address)

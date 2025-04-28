@@ -211,7 +211,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     &class_hash,
                     &calldata,
                     contract_address,
-                    false,
                 ))
             }
             "precalculate_address" => {
