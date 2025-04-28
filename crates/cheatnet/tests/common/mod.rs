@@ -1,13 +1,16 @@
 use assertions::ClassHashAssert;
+use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::{
-    CallEntryPoint, CallType, EntryPointExecutionContext, ExecutableCallEntryPoint,
+    CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
+    ExecutableCallEntryPoint,
 };
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::state_api::State;
 use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::relocatable::Relocatable;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     AddressOrClassHash, call_entry_point,
 };
@@ -29,6 +32,7 @@ use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::{
     ScarbCommand, get_contracts_artifacts_and_source_sierra_paths, target_dir_for_workspace,
 };
+use starknet::core::utils::get_selector_from_name;
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_types_core::felt::Felt;
@@ -236,4 +240,54 @@ pub fn call_contract(
         entry_point,
         &AddressOrClassHash::ContractAddress(*contract_address),
     )
+}
+
+pub fn call_contract_raw(
+    state: &mut dyn State,
+    cheatnet_state: &mut CheatnetState,
+    contract_address: &ContractAddress,
+    entry_point_selector: EntryPointSelector,
+    calldata: &[Felt],
+) -> EntryPointExecutionResult<CallInfo> {
+    let calldata = create_execute_calldata(calldata);
+
+    let mut entry_point = CallEntryPoint {
+        class_hash: None,
+        code_address: Some(*contract_address),
+        entry_point_type: EntryPointType::External,
+        entry_point_selector,
+        calldata,
+        storage_address: *contract_address,
+        caller_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
+        call_type: CallType::Call,
+        initial_gas: i64::MAX as u64,
+    };
+
+    let mut entry_point_execution_context = build_context(
+        &cheatnet_state.block_info,
+        None,
+        &TrackedResource::CairoSteps,
+    );
+    let hints = HashMap::new();
+
+    let syscall_hint_processor = build_syscall_hint_processor(
+        entry_point.clone(),
+        state,
+        &mut entry_point_execution_context,
+        &hints,
+    );
+
+    execute_call_entry_point(
+        &mut entry_point,
+        syscall_hint_processor.base.state,
+        cheatnet_state,
+        syscall_hint_processor.base.context,
+        false,
+    )
+}
+
+#[must_use]
+pub fn felt_selector_from_name(name: &str) -> EntryPointSelector {
+    let selector = get_selector_from_name(name).unwrap();
+    selector.into_()
 }

@@ -120,3 +120,9 @@ impl_deserialize_for_num_type!(u64);
 impl_deserialize_for_num_type!(u128);
 impl_deserialize_for_num_type!(U256);
 impl_deserialize_for_num_type!(usize);
+
+impl_deserialize_for_num_type!(i8);
+impl_deserialize_for_num_type!(i16);
+impl_deserialize_for_num_type!(i32);
+impl_deserialize_for_num_type!(i64);
+impl_deserialize_for_num_type!(i128);

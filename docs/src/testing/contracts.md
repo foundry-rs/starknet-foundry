@@ -110,10 +110,7 @@ Failures:
 ### `SafeDispatcher`
 
 Using `SafeDispatcher` we can test that the function in fact panics with an expected message.
-Safe dispatcher is a special kind of dispatcher, which are not allowed in contracts themselves,
-but are available for testing purposes.
-
-They allow using the contract without automatically unwrapping the result, which allows to catch the error like shown below.
+Safe dispatcher is a special kind of dispatcher that allows using the contract without automatically unwrapping the result, thereby making possible to catch the error like shown below.
 
 ```rust
 {{#include ../../listings/testing_smart_contracts_safe_dispatcher/tests/safe_dispatcher.cairo}}
@@ -137,6 +134,11 @@ Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 </details>
 <br>
+
+> 📝 **Note**
+>
+> It is not possible to catch errors that cause immediate termination of execution, e.g. calling a contract with a nonexistent address.
+> A full list of such errors can be found [here](https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-catching-errors-12).
 
 Similarly, you can handle the panics which use `ByteArray` as an argument (like an `assert!` or `panic!` macro)
 

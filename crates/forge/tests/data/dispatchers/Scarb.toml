@@ -1,5 +1,5 @@
 [package]
-name = "data_transformer_contract"
+name = "dispatchers"
 version = "0.1.0"
 edition = "2024_07"
 
@@ -7,11 +7,10 @@ edition = "2024_07"
 
 [dependencies]
 starknet = "2.9.4"
-alexandria_data_structures = "0.4.0"
+assert_macros = "2.9.4"
 
 [dev-dependencies]
-snforge_std = "0.39.0"
-assert_macros = "2.9.4"
+snforge_std = { path = "../../../../../snforge_std" }
 
 [[target.starknet-contract]]
 sierra = true
@@ -19,5 +18,6 @@ sierra = true
 [scripts]
 test = "snforge test"
 
-[tool.scarb]
-allow-prebuilt-plugins = ["snforge_std"]
+[profile.dev.cairo]
+unstable-add-statements-functions-debug-info = true
+unstable-add-statements-code-locations-debug-info = true
