@@ -39,6 +39,13 @@ Name of the package that should be used.
 
 If supplied, a contract from this package will be used. Required if more than one package exists in a workspace.
 
+## `--rpc`
+Optional.
+
+Starknet RPC node url address.
+
+Overrides url from `snfoundry.toml`.
+
 ## `--confirm-verification`
 Optional.
 
