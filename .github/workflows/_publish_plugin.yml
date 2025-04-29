@@ -52,7 +52,6 @@ jobs:
           path: artifacts-dl
 
       - name: Unpack artifacts to target directory
-        shell: bash
         run: |
           set -euxo pipefail
           mkdir -p crates/snforge-scarb-plugin/target/scarb/cairo-plugin
