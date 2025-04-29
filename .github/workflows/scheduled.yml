@@ -128,7 +128,7 @@ jobs:
         with:
           cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
           
-      - name: Compare versions
+      - name: Return version
         id: validVersion
         run: |
           COMMIT_VERSION=${{ steps.lookupVersion.outputs.result }}
