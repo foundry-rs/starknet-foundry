@@ -20,7 +20,7 @@ jobs:
   publish-plugin:
     name: Publish Plugin
     needs: build-binaries
-    uses: ./.github/workflows/_publish_plugin.yml
+    uses: _publish-plugin.yml
     with:
       prod_registry: ${{ inputs.prod_registry }}
       overridden_plugin_version: ${{ inputs.overridden_plugin_version != '' && inputs.overridden_plugin_version || '' }}

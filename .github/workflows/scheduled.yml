@@ -144,14 +144,14 @@ jobs:
           
   publish-plugin:
     needs: [get-version, build-plugin-binaries]
-    uses: ./.github/workflows/_publish_plugin.yml
+    uses: _publish-plugin.yml
     secrets: inherit
     with:
       overridden_plugin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
 
   publish-std:
     needs: [get-version, publish-plugin]
-    uses: ./.github/workflows/publish_std.yml
+    uses: publish-std.yml
     secrets: inherit
     with:
       plugin_dep_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
