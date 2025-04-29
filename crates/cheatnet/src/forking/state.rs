@@ -36,7 +36,7 @@ pub struct ForkStateReader {
     client: JsonRpcClient<HttpTransport>,
     block_number: BlockNumber,
     runtime: Runtime,
-    pub cache: RefCell<ForkCache>,
+    cache: RefCell<ForkCache>,
 }
 
 impl ForkStateReader {
@@ -60,6 +60,10 @@ impl ForkStateReader {
 
     fn block_id(&self) -> BlockId {
         BlockId::Number(self.block_number.0)
+    }
+
+    pub fn get_cache(&self) -> std::cell::Ref<ForkCache> {
+        self.cache.borrow()
     }
 }
 

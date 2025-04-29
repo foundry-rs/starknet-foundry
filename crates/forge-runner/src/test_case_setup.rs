@@ -23,8 +23,7 @@ pub fn is_strk_deployed(state_reader: &mut ExtendedStateReader) -> bool {
     let strk_contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
     if let Some(ref fork_state_reader) = state_reader.fork_state_reader {
         let class_hash = fork_state_reader
-            .cache
-            .borrow()
+            .get_cache()
             .get_class_hash_at(&strk_contract_address);
         return class_hash.is_some();
     }
