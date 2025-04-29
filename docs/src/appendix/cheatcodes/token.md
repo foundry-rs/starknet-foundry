@@ -3,10 +3,7 @@
 ```rust
 pub enum Token {
     STRK,
-    Custom {
-        contract_address: ContractAddress,
-        balances_variable_selector: felt252,
-    },
+    Custom: CustomToken,
 }
 
 pub struct CustomToken {
@@ -36,4 +33,30 @@ pub impl TokenImpl of TokenTrait {
         }
     }
 }
+```
+
+## Balances variable selector
+
+`balances_variable_selector` is simply a selector of the storage variable, which holds the mapping of balances -> amounts. The name of variable isn't specified by ERC20 standard (it can have any name), hence we allow to specify it. Let's have a part of example ERC20 contract storage:
+
+```rust
+    ...
+    #[storage]
+    struct Storage {
+        ...
+        balances: Map<ContractAddress, u256>,
+        ...
+    }
+    ...
+```
+
+In the above example, `balances_variable_selector` would have following value:
+
+```rust
+let token = Token::Custom(
+        CustomToken {
+            contract_address: ...,
+            balances_variable_selector: selector!("balances"),
+        },
+    );
 ```

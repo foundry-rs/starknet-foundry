@@ -1,13 +1,9 @@
-use starknet::SyscallResultTrait;
-use starknet::ContractAddress;
-
 use snforge_std::{
-    Token, CustomToken, declare, ContractClassTrait, set_balance, DeclareResultTrait, TokenTrait,
-    TokenImpl,
+    ContractClassTrait, CustomToken, DeclareResultTrait, Token, TokenImpl, TokenTrait, declare,
+    set_balance,
 };
-
-
-use starknet::syscalls::{call_contract_syscall};
+use starknet::syscalls::call_contract_syscall;
+use starknet::{ContractAddress, SyscallResultTrait};
 
 fn deploy_contract(name: ByteArray, constructor_calldata: Array<felt252>) -> ContractAddress {
     let contract = declare(name).unwrap().contract_class();
