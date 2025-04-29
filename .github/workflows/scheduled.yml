@@ -115,6 +115,7 @@ jobs:
 
   get-version:
     name: Get current foundry version
+    if: github.event.repository.fork == false
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.validVersion.outputs.version }}
@@ -136,14 +137,12 @@ jobs:
 
   build-plugin-binaries:
     name: Build plugin binaries
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     needs: get-version
     uses: ./.github/workflows/_build-plugin-binaries.yml
     with:
       overridden_plugin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
           
   publish-plugin:
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     needs: [get-version, build-plugin-binaries]
     uses: ./.github/workflows/_publish_plugin.yml
     secrets: inherit
@@ -151,7 +150,6 @@ jobs:
       overridden_plugin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
 
   publish-std:
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     needs: [get-version, publish-plugin]
     uses: ./.github/workflows/publish_std.yml
     secrets: inherit
