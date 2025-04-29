@@ -16,6 +16,27 @@ pub struct CustomToken {
 - `STRK` is the default STRK token (predeployed in every test case).
 - `Custom` allows to specify a custom token by providing its contract address and balances variable selector.
 
+```rust
+pub impl TokenImpl of TokenTrait {
+    fn contract_address(self: Token) -> ContractAddress {
+        match self {
+            Token::STRK => STRK_CONTRACT_ADDRESS.try_into().unwrap(),
+            Token::Custom(CustomToken { contract_address, .. }) => contract_address,
+        }
+    }
+
+    fn balances_variable_selector(self: Token) -> felt252 {
+        match self {
+            Token::STRK => selector!("ERC20_balances"),
+            Token::Custom(CustomToken { balances_variable_selector,
+            .., }) => balances_variable_selector,
+        }
+    }
+}
+```
+
+## Balances variable selector
+
 `balances_variable_selector` is simply a selector of the storage variable, which holds the mapping of balances -> amounts. The name of variable isn't specified by ERC20 standard (it can have any name), hence we allow to specify it. Let's have a part of example ERC20 contract storage:
 
 ```rust
@@ -38,24 +59,4 @@ let token = Token::Custom(
             balances_variable_selector: selector!("balances"),
         },
     );
-```
-
-
-```rust
-pub impl TokenImpl of TokenTrait {
-    fn contract_address(self: Token) -> ContractAddress {
-        match self {
-            Token::STRK => STRK_CONTRACT_ADDRESS.try_into().unwrap(),
-            Token::Custom(CustomToken { contract_address, .. }) => contract_address,
-        }
-    }
-
-    fn balances_variable_selector(self: Token) -> felt252 {
-        match self {
-            Token::STRK => selector!("ERC20_balances"),
-            Token::Custom(CustomToken { balances_variable_selector,
-            .., }) => balances_variable_selector,
-        }
-    }
-}
 ```
