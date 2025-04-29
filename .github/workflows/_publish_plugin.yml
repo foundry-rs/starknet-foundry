@@ -23,7 +23,7 @@ jobs:
         run: |
           set -exo pipefail
         
-          source scripts/handle-version.sh
+          source scripts/handle_version.sh
           
           snforge_scarb_plugin_version=$(get_version "${{ inputs.overridden_plugin_version }}")
           
@@ -64,7 +64,7 @@ jobs:
         working-directory: crates/snforge-scarb-plugin
         run: |
           set -exo pipefail
-          source ../../scripts/handle-version.sh
+          source ../../scripts/handle_version.sh
           
           update_version_in_file "Scarb.toml" "${{ inputs.overridden_plugin_version }}"
           update_version_in_file "Cargo.toml" "${{ inputs.overridden_plugin_version }}"
