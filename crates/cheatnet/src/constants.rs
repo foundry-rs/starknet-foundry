@@ -41,15 +41,15 @@ fn contract_class_no_entrypoints() -> ContractClass {
         }"#,
     );
     let casm_contract_class: CasmContractClass = serde_json::from_str(raw_contract_class)
-        .expect("Could not get casm_contract class from raw");
+        .expect("`raw_contract_class` should be valid casm contract class");
 
     ContractClass::V1((casm_contract_class, SierraVersion::LATEST))
 }
 
 #[must_use]
 pub fn contract_class_strk() -> ContractClass {
-    let casm_contract_class: CasmContractClass =
-        serde_json::from_str(STRK_ERC20_CASM).expect("Could not get casm_contract class from raw");
+    let casm_contract_class: CasmContractClass = serde_json::from_str(STRK_ERC20_CASM)
+        .expect("`STRK_ERC20_CASM` should be valid casm contract class");
 
     ContractClass::V1((casm_contract_class, SierraVersion::LATEST))
 }
