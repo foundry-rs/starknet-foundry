@@ -1,10 +1,6 @@
-use starknet::SyscallResultTrait;
-use starknet::ContractAddress;
-
-use snforge_std::{Token, set_balance, TokenTrait, TokenImpl};
-
-
-use starknet::syscalls::{call_contract_syscall};
+use snforge_std::{Token, TokenImpl, TokenTrait, set_balance};
+use starknet::syscalls::call_contract_syscall;
+use starknet::{ContractAddress, SyscallResultTrait};
 
 #[test]
 fn set_balance_strk() {
