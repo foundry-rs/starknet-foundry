@@ -13,7 +13,7 @@ on:
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
-  cancel-in-progress: ${{ github.head_ref != 'main' }}
+  cancel-in-progress: ${{ github.head_ref != 'master' }}
 
 jobs:
   setup:
