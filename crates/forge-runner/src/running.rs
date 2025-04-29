@@ -2,7 +2,7 @@ use crate::backtrace::add_backtrace_footer;
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
-use crate::test_case_setup::{add_strk_to_dict_state_reader, is_strk_deployed};
+use crate::test_case_setup::{deploy_strk_token, is_strk_deployed};
 use crate::test_case_summary::{Single, TestCaseSummary};
 use anyhow::{Result, ensure};
 use blockifier::execution::contract_class::TrackedResource;
@@ -195,23 +195,12 @@ pub fn run_test_case(
         set_max_steps(&mut context, max_n_steps);
     }
 
-    // let strk_contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
-
-    // let class_hash_at = state_reader
-    //     .fork_state_reader
-    //     .as_mut()
-    //     .unwrap()
-    //     .cache
-    //     .borrow_mut()
-    //     .get_class_hash_at(&strk_contract_address);
-
-    // println!("class_hash_at: {class_hash_at:?}");
     let is_strk_deployed = is_strk_deployed(&mut state_reader);
 
     let mut cached_state = CachedState::new(state_reader);
 
     if !is_strk_deployed {
-        add_strk_to_dict_state_reader(&mut cached_state);
+        deploy_strk_token(&mut cached_state);
     }
 
     let syscall_handler = build_syscall_handler(
@@ -226,7 +215,6 @@ pub fn run_test_case(
         block_info,
         ..Default::default()
     };
-
     cheatnet_state.trace_data.is_vm_trace_needed = runtime_config.is_vm_trace_needed;
 
     let cheatable_runtime = ExtendedRuntime {

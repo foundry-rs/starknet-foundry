@@ -1,4 +1,3 @@
-use conversions::felt::FromShortString;
 use starknet_api::contract_class::{ContractClass, SierraVersion};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -17,37 +16,12 @@ use starknet::core::utils::get_selector_from_name;
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::ClassHash;
 use starknet_api::{core::ContractAddress, transaction::fields::Calldata};
-use starknet_types_core::felt::Felt;
 
 pub const STRK_CONTRACT_ADDRESS: &str =
     "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
 pub const STRK_CLASS_HASH: &str =
     "0x04ad3c1dc8413453db314497945b6903e1c766495a1e60492d44da9c2a986e4b";
 pub const STRK_ERC20_CASM: &str = include_str!("./data/strk_erc20_casm.json");
-
-#[must_use]
-pub fn strk_constructor_calldata() -> [Felt; 9] {
-    [
-        // name
-        Felt::from_short_string("STRK").unwrap(),
-        // symbol
-        Felt::from_short_string("STRK").unwrap(),
-        // decimals
-        18.into(),
-        // initial_supply low
-        100_000_000.into(),
-        // initial_supply high
-        0.into(),
-        // recipient (dummy)
-        111.into(),
-        // permitted_minter (dummy)
-        222.into(),
-        // provisional_governance_admin (dummy)
-        333.into(),
-        // upgrade_delay (dummy)
-        0.into(),
-    ]
-}
 
 // Mocked class hashes, those are not checked anywhere
 pub const TEST_ERC20_CONTRACT_CLASS_HASH: &str = "0x1010";

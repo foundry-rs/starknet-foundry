@@ -11,78 +11,13 @@ use conversions::{felt::FromShortString, string::TryFromHexStr};
 use starknet_api::{core::ContractAddress, state::StorageKey};
 use starknet_types_core::felt::Felt;
 
-// fn declare_token(
-//     cached_state: &mut CachedState<ExtendedStateReader>,
-//     class_hash: ClassHash,
-//     casm: &str,
-// ) {
-//     let contract_class = RunnableCompiledClass::V1(
-//         CompiledClassV1::try_from_json_string(casm, SierraVersion::LATEST).unwrap(),
-//     );
-//     declare_with_contract_class(cached_state, contract_class, class_hash)
-//         .expect("Failed to declare class");
-// }
+// All values are taken from https://starkscan.co/contract/0x0594c1582459ea03f77deaf9eb7e3917d6994a03c13405ba42867f83d85f085d#contract-storage
+// result of `variable_address("permitted_minter")` in the search bar for the key
+const STRK_PERMITTED_MINTER: &str =
+    "0x594c1582459ea03f77deaf9eb7e3917d6994a03c13405ba42867f83d85f085d";
 
-// fn deploy_token(
-//     syscall_handler: &mut SyscallHintProcessor,
-//     cheatnet_state: &mut CheatnetState,
-//     class_hash: ClassHash,
-//     contract_address: ContractAddress,
-//     constructor_calldata: &[Felt],
-// ) -> bool {
-//     let deploy_result = deploy_at(
-//         syscall_handler,
-//         cheatnet_state,
-//         &class_hash,
-//         constructor_calldata,
-//         contract_address,
-//         true,
-//     );
-
-//     // It's possible that token can be already deployed (forking)
-//     deploy_result.is_ok()
-// }
-
-// pub fn declare_token_strk(cached_state: &mut CachedState<ExtendedStateReader>) {
-//     let class_hash = ClassHash::try_from_hex_str(STRK_CLASS_HASH).unwrap();
-//     declare_token(cached_state, class_hash, STRK_ERC20_CASM);
-// }
-
-// pub fn deploy_token_strk(
-//     syscall_handler: &mut SyscallHintProcessor,
-//     cheatnet_state: &mut CheatnetState,
-// ) -> bool {
-//     let class_hash = ClassHash::try_from_hex_str(STRK_CLASS_HASH).unwrap();
-//     let contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
-//     let constructor_calldata = strk_constructor_calldata();
-//     deploy_token(
-//         syscall_handler,
-//         cheatnet_state,
-//         class_hash,
-//         contract_address,
-//         &constructor_calldata,
-//     )
-// }
-
-// const STARKNET_DOMAIN_TYPE_HASH = Felt::from_hex_str(
-//         "0x0c4f2a1b3d5e7f8e9b6a2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8g9h0i1j2k3l",
-//     )
-//     .unwrap();
-
-//     const DAPP_NAME = Felt::from_hex_str(
-//         "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-//     )
-//     .unwrap();
-
-//     const DAPP_VERSION = Felt::from_hex_str(
-//         "0x
-//         1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-//     )
-//     .unwrap();
-// pub const STARKNET_DOMAIN_TYPE_HASH: &str =
-//     "0x0c4f2a1b3d5e7f8e9b6a2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8g9h0i1j2k3l";
-// pub const DAPP_NAME: &str = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
-// pub const DAPP_VERSION: &str = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
+// result of `variable_address("upgrade_delay")` in the search bar for the key
+const STRK_UPGRADE_DELAY: u64 = 0;
 
 pub fn is_strk_deployed(state_reader: &mut ExtendedStateReader) -> bool {
     let strk_contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
@@ -97,7 +32,7 @@ pub fn is_strk_deployed(state_reader: &mut ExtendedStateReader) -> bool {
     false
 }
 
-pub fn add_strk_to_dict_state_reader(cached_state: &mut CachedState<ExtendedStateReader>) {
+pub fn deploy_strk_token(cached_state: &mut CachedState<ExtendedStateReader>) {
     let strk_contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
     let strk_class_hash = TryFromHexStr::try_from_hex_str(STRK_CLASS_HASH).unwrap();
 
@@ -159,7 +94,10 @@ pub fn add_strk_to_dict_state_reader(cached_state: &mut CachedState<ExtendedStat
         (
             (
                 strk_contract_address,
-                storage_key(map_entry_address("ERC20_total_supply", &[Felt::ONE])).unwrap(),
+                storage_key(variable_address("ERC20_total_supply"))
+                    .unwrap()
+                    .next_storage_key()
+                    .unwrap(),
             ),
             Felt::ZERO,
         ),
@@ -185,7 +123,7 @@ pub fn add_strk_to_dict_state_reader(cached_state: &mut CachedState<ExtendedStat
                 strk_contract_address,
                 storage_key(variable_address("permitted_minter")).unwrap(),
             ),
-            generate_random_felt(),
+            Felt::try_from_hex_str(STRK_PERMITTED_MINTER).unwrap(),
         ),
         // skip initializing roles
         // upgrade_delay
@@ -194,7 +132,7 @@ pub fn add_strk_to_dict_state_reader(cached_state: &mut CachedState<ExtendedStat
                 strk_contract_address,
                 storage_key(variable_address("upgrade_delay")).unwrap(),
             ),
-            Felt::ZERO,
+            STRK_UPGRADE_DELAY.into(),
         ),
         // TODO: Decide if we want to write `domain_hash` to storage
         // it enforces us to read chain_id if the test uses forking, hence
