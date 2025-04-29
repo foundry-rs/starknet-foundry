@@ -31,6 +31,8 @@ rm Scarb.toml.bak 2>/dev/null
 test_output=$($SNFORGE_PATH test)
 test_exit=$?
 
+echo $test_output
+
 if [[ $test_exit -ne 0 ]] || echo "$test_output" | grep -q 'Compiling snforge_scarb_plugin'; then
     exit 1
 fi
