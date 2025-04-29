@@ -19,7 +19,7 @@ $SNFORGE_PATH test || exit
 popd || exit
 scarb cache clean
 
-# Check snforge_std from registry with prebuild plugin
+# Check snforge_std from registry with prebuilt plugin
 
 $SNFORGE_PATH new my_project_1
 pushd my_project_1 || exit
@@ -37,7 +37,7 @@ fi
 popd || exit
 scarb cache clean
 
-# Check snforge_std from registry without prebuild plugin
+# Check snforge_std from registry without prebuilt plugin
 
 $SNFORGE_PATH new my_project_2
 pushd my_project_2 || exit
