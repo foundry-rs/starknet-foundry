@@ -31,7 +31,7 @@ jobs:
         id: lookupVersion
         uses: mikefarah/yq@bbdd97482f2d439126582a59689eb1c855944955
         with:
-          cmd: yq -oy '"v" + .workspace.package.version' 'Cargo.toml'
+          cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
 
       - name: Get version from the latest releases
         id: lookupVersionRelease
@@ -121,14 +121,14 @@ jobs:
           changelog: CHANGELOG.md
           allow-missing-changelog: false
           title: $version
-          ref: refs/tags/${{ needs.verify-version.outputs.version }}
+          ref: refs/tags/v${{ needs.verify-version.outputs.version }}
 
       - name: Upload artifacts to the release
         working-directory: artifacts
         run: gh release upload "$TAG" *
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ steps.create-release.outputs.computed-prefix }}${{ steps.create-release.outputs.version }}
+          TAG: ${{ steps.create-release.outputs.computed-prefix }}v${{ steps.create-release.outputs.version }}
 
   publish-snforge-scarb-plugin:
     name: Publish snforge_scarb_plugin
