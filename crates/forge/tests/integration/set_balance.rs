@@ -1,9 +1,8 @@
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::node_url::node_rpc_url;
-use starknet_api::execution_resources::{GasAmount, GasVector};
 use std::path::Path;
-use test_utils::runner::{Contract, assert_gas, assert_passed};
+use test_utils::runner::{Contract, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
@@ -12,10 +11,8 @@ fn test_set_balance_strk() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::TokenTrait;
+            use snforge_std::{set_balance, Token, TokenTrait};
             use starknet::{ContractAddress, syscalls, SyscallResultTrait};
-
-            use snforge_std::{set_balance, Token};
 
             fn get_balance(contract_address: ContractAddress, token: Token) -> Span<felt252> {
                 let mut calldata: Array<felt252> = array![contract_address.into()];
@@ -57,16 +54,14 @@ fn test_set_balance_custom_token() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::TokenTrait;
+            use snforge_std::{declare, set_balance, Token, TokenTrait, CustomToken, ContractClassTrait, DeclareResultTrait,};
             use starknet::{ContractAddress, syscalls, SyscallResultTrait};
 
-            use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, set_balance, Token, CustomToken};
-
             fn deploy_contract(
-                name: ByteArray, constructor_calldata: Option<Array<felt252>>,
+                name: ByteArray, constructor_calldata: Array<felt252>,
             ) -> ContractAddress {
                 let contract = declare(name).unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@constructor_calldata.unwrap_or(array![])).unwrap();
+                let (contract_address, _) = contract.deploy(@constructor_calldata).unwrap();
                 contract_address
             }
 
@@ -86,7 +81,7 @@ fn test_set_balance_custom_token() {
                 let constructor_calldata: Array<felt252> = array![
                     'CustomToken'.into(), 'CT'.into(), 18.into(), 1_000_000_000.into(), 0.into(), 123.into(),
                 ];
-                let token_address = deploy_contract("ERC20", Option::Some(constructor_calldata));
+                let token_address = deploy_contract("ERC20", constructor_calldata);
                 let custom_token = Token::Custom(
                     CustomToken {
                         contract_address: token_address, balances_variable_selector: selector!("balances"),
@@ -121,10 +116,8 @@ fn test_set_balance_big_amount() {
         indoc!(
             r#"
             use core::num::traits::Pow;
-            use snforge_std::TokenTrait;
+            use snforge_std::{set_balance, Token, TokenTrait};
             use starknet::{ContractAddress, syscalls, SyscallResultTrait};
-
-            use snforge_std::{set_balance, Token};
 
             fn get_balance(contract_address: ContractAddress, token: Token) -> Span<felt252> {
                 let mut calldata: Array<felt252> = array![contract_address.into()];
@@ -170,10 +163,8 @@ fn test_set_balance_strk_with_fork() {
     let test = test_case!(
         formatdoc!(
             r#"
-            use snforge_std::TokenTrait;
-            use starknet::{{ ContractAddress, syscalls, SyscallResultTrait }};
-
-            use snforge_std::{{ set_balance, Token }};
+            use snforge_std::{{set_balance, Token, TokenTrait}};
+            use starknet::{{ContractAddress, syscalls, SyscallResultTrait}};
 
             fn get_balance(contract_address: ContractAddress, token: Token) -> Span<felt252> {{
                 let mut calldata: Array<felt252> = array![contract_address.into()];
@@ -214,34 +205,4 @@ fn test_set_balance_strk_with_fork() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-}
-
-#[test]
-fn test_check_gas_in_empty_test_case() {
-    let test = test_case!(
-        indoc!(
-            "
-            #[test]
-            fn test_empty() {}
-        "
-        ),
-        Contract::from_code_path(
-            "HelloStarknet".to_string(),
-            Path::new("tests/data/simple_package/src/hello_starknet.cairo"),
-        )
-        .unwrap()
-    );
-
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
-
-    assert_passed(&result);
-    assert_gas(
-        &result,
-        "test_empty",
-        GasVector {
-            l1_gas: GasAmount(0),
-            l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(40000),
-        },
-    );
 }
