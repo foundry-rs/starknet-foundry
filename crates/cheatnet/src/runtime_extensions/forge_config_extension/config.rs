@@ -170,7 +170,7 @@ pub struct RawIgnoreConfig {
 // disable strk predeployment
 
 #[derive(Debug, Clone, CairoDeserialize)]
-pub struct RawStrkPredeploymentConfig {
+pub struct RawContractsPredeploymentConfig {
     pub is_disabled: bool,
 }
 
@@ -183,5 +183,5 @@ pub struct RawForgeConfig {
     pub ignore: Option<RawIgnoreConfig>,
     pub should_panic: Option<RawShouldPanicConfig>,
     pub fuzzer: Option<RawFuzzerConfig>,
-    pub disable_strk_predeployment: Option<RawStrkPredeploymentConfig>,
+    pub disable_predeployed_contracts: Option<RawContractsPredeploymentConfig>,
 }

@@ -3,7 +3,7 @@ use cairo_lang_macro::{Diagnostic, Diagnostics};
 use cairo_lang_syntax::node::db::SyntaxGroup;
 
 pub mod available_gas;
-pub mod disable_strk_predeployment;
+pub mod disable_predeployed_contracts;
 pub mod fork;
 pub mod fuzzer;
 pub mod ignore;

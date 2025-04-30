@@ -19,7 +19,7 @@ pub struct TestCaseConfig {
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<RawForkConfig>,
     pub fuzzer_config: Option<RawFuzzerConfig>,
-    pub disable_strk_predeployment: bool,
+    pub disable_predeployed_contracts: bool,
 }
 
 impl From<RawForgeConfig> for TestCaseConfig {
@@ -30,8 +30,8 @@ impl From<RawForgeConfig> for TestCaseConfig {
             expected_result: value.should_panic.into(),
             fork_config: value.fork,
             fuzzer_config: value.fuzzer,
-            disable_strk_predeployment: value
-                .disable_strk_predeployment
+            disable_predeployed_contracts: value
+                .disable_predeployed_contracts
                 .is_some_and(|v| v.is_disabled),
         }
     }

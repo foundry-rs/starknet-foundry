@@ -199,7 +199,7 @@ pub fn run_test_case(
 
     let mut cached_state = CachedState::new(state_reader);
 
-    if !case.config.disable_strk_predeployment && !is_strk_deployed {
+    if !case.config.disable_predeployed_contracts && !is_strk_deployed {
         deploy_strk_token(&mut cached_state);
     }
 

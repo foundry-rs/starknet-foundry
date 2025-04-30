@@ -1,7 +1,7 @@
 #![warn(rust_2024_compatibility)]
 use attributes::fuzzer;
 use attributes::{
-    available_gas::available_gas, disable_strk_predeployment::disable_strk_predeployment,
+    available_gas::available_gas, disable_predeployed_contracts::disable_predeployed_contracts,
     fork::fork, fuzzer::fuzzer, ignore::ignore,
     internal_config_statement::internal_config_statement, should_panic::should_panic, test::test,
 };
@@ -65,6 +65,6 @@ fn should_panic(args: TokenStream, item: TokenStream) -> ProcMacroResult {
 }
 
 #[attribute_macro]
-fn disable_strk_predeployment(args: TokenStream, item: TokenStream) -> ProcMacroResult {
-    disable_strk_predeployment(args, item)
+fn disable_predeployed_contracts(args: TokenStream, item: TokenStream) -> ProcMacroResult {
+    disable_predeployed_contracts(args, item)
 }

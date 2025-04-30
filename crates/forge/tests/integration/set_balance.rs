@@ -2,7 +2,7 @@ use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::node_url::node_rpc_url;
 use std::path::Path;
-use test_utils::runner::{Contract, assert_passed};
+use test_utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
@@ -227,7 +227,7 @@ fn test_set_balance_strk_with_disabled_predeployment() {
             }
 
             #[test]
-            #[disable_strk_predeployment]
+            #[disable_predeployed_contracts]
             fn test_set_balance_strk_with_disabled_predeployment() {
                 let contract_address: ContractAddress = 0x123.try_into().unwrap();
                 get_balance(contract_address, Token::STRK);

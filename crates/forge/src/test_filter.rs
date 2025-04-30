@@ -185,7 +185,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -198,7 +198,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -211,7 +211,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -224,7 +224,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
             ],
@@ -256,7 +256,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
-                    disable_strk_predeployment: false,
+                    disable_predeployed_contracts: false,
                 },
             },]
         );
@@ -285,7 +285,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
-                    disable_strk_predeployment: false,
+                    disable_predeployed_contracts: false,
                 },
             },]
         );
@@ -315,7 +315,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -328,7 +328,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -341,7 +341,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -354,7 +354,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
             ]
@@ -399,7 +399,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -412,7 +412,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -425,7 +425,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -438,7 +438,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
             ]
@@ -514,7 +514,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -527,7 +527,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -540,7 +540,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -553,7 +553,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
             ],
@@ -612,7 +612,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
-                    disable_strk_predeployment: false,
+                    disable_predeployed_contracts: false,
                 },
             },]
         );
@@ -641,7 +641,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
-                    disable_strk_predeployment: false,
+                    disable_predeployed_contracts: false,
                 },
             },]
         );
@@ -684,7 +684,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
-                    disable_strk_predeployment: false,
+                    disable_predeployed_contracts: false,
                 },
             },]
         );
@@ -713,7 +713,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -726,7 +726,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -739,7 +739,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -752,7 +752,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
             ],
@@ -777,7 +777,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -790,7 +790,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
             ]
@@ -821,7 +821,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -834,7 +834,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -847,7 +847,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -860,7 +860,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
             ],
@@ -885,7 +885,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -898,7 +898,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -911,7 +911,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
                 TestCaseWithResolvedConfig {
@@ -924,7 +924,7 @@ mod tests {
                         expected_result: ExpectedTestResult::Success,
                         fork_config: None,
                         fuzzer_config: None,
-                        disable_strk_predeployment: false,
+                        disable_predeployed_contracts: false,
                     },
                 },
             ]
