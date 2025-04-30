@@ -24,10 +24,6 @@ fn debugging_trace() {
         {debugging_trace_fail}
 
         [PASS] trace_info_integrationtest::test_trace::test_debugging_trace_success (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~1440000)
-        Success data:
-            (0x1, 0x2, 0x3, 0x4, 0x5)
-
-        note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
         {debugging_trace_pass}
 
         Running 0 test(s) from src/
