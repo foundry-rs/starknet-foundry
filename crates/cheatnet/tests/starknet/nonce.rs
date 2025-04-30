@@ -6,7 +6,7 @@ use crate::{
 };
 use blockifier::state::state_api::State;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::felt_selector_from_name;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::selector_from_name;
 use cheatnet::state::CheatnetState;
 use starknet_api::core::ContractAddress;
 use starknet_types_core::felt::Felt;
@@ -18,8 +18,8 @@ fn check_nonce(
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
 ) -> Felt {
-    let write_nonce = felt_selector_from_name("write_nonce");
-    let read_nonce = felt_selector_from_name("read_nonce");
+    let write_nonce = selector_from_name("write_nonce");
+    let read_nonce = selector_from_name("read_nonce");
 
     let output = call_contract(state, cheatnet_state, contract_address, write_nonce, &[]);
 

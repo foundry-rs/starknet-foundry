@@ -36,7 +36,6 @@ pub mod backtrace;
 mod gas;
 pub mod printing;
 pub mod running;
-pub mod test_case_setup;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
