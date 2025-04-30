@@ -56,6 +56,20 @@ jobs:
           mkdir -p crates/snforge-scarb-plugin/target/scarb/cairo-plugin
           
           mv artifacts-dl/build-plugin-*/snforge_scarb_plugin_* crates/snforge-scarb-plugin/target/scarb/cairo-plugin/
+          
+          # Required for testing prebuild plugin while creating release.
+          if [[ -n "${{ inputs.overridden_plugin_version }}" ]]; then
+            cd crates/snforge-scarb-plugin/target/scarb/cairo-plugin/
+            overridden_version="${{ inputs.overridden_plugin_version }}"
+
+            for file in snforge_scarb_plugin_v*; do
+              if [[ -f "$file" && ! "$file" =~ "snforge_scarb_plugin_v${overridden_version}" ]]; then
+                platform=$(echo "$file" | sed -E 's/snforge_scarb_plugin_v[0-9]+\.[0-9]+\.[0-9]+([-.].*)?_(.+)/\2/')
+                new_file="snforge_scarb_plugin_v${overridden_version}_${platform}"
+                mv "$file" "$new_file"
+              fi
+            done
+          fi
 
       - name: Publish snforge_scarb_plugin
         if: needs.check-uploaded.outputs.plugin_uploaded == 'false' || github.event_name == 'workflow_dispatch'
@@ -67,4 +81,4 @@ jobs:
           update_version_in_file "Scarb.toml" "${{ inputs.overridden_plugin_version }}"
           update_version_in_file "Cargo.toml" "${{ inputs.overridden_plugin_version }}"
 
-          scarb publish --allow-dirty ${{ inputs.prod_registry == true && '' || '--index https://scarbs.dev/' }}
+          scarb publish --allow-dirty ${{ inputs.prod_registry == true && ' ' || '--index https://scarbs.dev/' }}

@@ -66,6 +66,7 @@ jobs:
 
   build-plugin-binaries:
     name: Build plugin binaries
+    if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
     needs: verify-version
     uses: ./.github/workflows/_build-plugin-binaries.yml
 
@@ -93,7 +94,7 @@ jobs:
     secrets: inherit
     with:
       bin_version: ${{ needs.verify-version.outputs.version }}
-      std_version: ${{ needs.verify-version.outputs.version }}
+      std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
 
   create-release:
     name: Create release
@@ -128,11 +129,11 @@ jobs:
         run: gh release upload "$TAG" *
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ steps.create-release.outputs.computed-prefix }}v${{ steps.create-release.outputs.version }}
+          TAG: ${{ steps.create-release.outputs.computed-prefix }}${{ steps.create-release.outputs.version }}
 
   publish-snforge-scarb-plugin:
     name: Publish snforge_scarb_plugin
-    needs: [test-binary]
+    needs: [test-binary, create-release]
     uses: ./.github/workflows/_publish-plugin.yml
     secrets: inherit
     with:
@@ -140,7 +141,7 @@ jobs:
 
   publish-to-registry:
     name: Publish packages to the registry
-    needs: [ verify-version, create-release, publish-snforge-scarb-plugin ]
+    needs: [ verify-version, publish-snforge-scarb-plugin ]
     uses: ./.github/workflows/publish-std.yml
     secrets: inherit
     with:
