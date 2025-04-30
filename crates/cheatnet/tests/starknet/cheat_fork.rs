@@ -1,7 +1,7 @@
 use crate::common::call_contract;
 use crate::common::state::create_fork_cached_state;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::felt_selector_from_name;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::selector_from_name;
 use cheatnet::state::CheatnetState;
 use conversions::string::TryFromHexStr;
 use starknet_api::core::ContractAddress;
@@ -21,7 +21,7 @@ fn cheat_caller_address_cairo0_contract(selector: &str) {
 
     let contract_address = ContractAddress::try_from_hex_str(CAIRO0_TESTER_ADDRESS).unwrap();
 
-    let selector = felt_selector_from_name(selector);
+    let selector = selector_from_name(selector);
     let output = call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
@@ -76,7 +76,7 @@ fn cheat_block_number_cairo0_contract(selector: &str) {
 
     let contract_address = ContractAddress::try_from_hex_str(CAIRO0_TESTER_ADDRESS).unwrap();
 
-    let selector = felt_selector_from_name(selector);
+    let selector = selector_from_name(selector);
     let output = call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
@@ -130,7 +130,7 @@ fn cheat_block_timestamp_cairo0_contract(selector: &str) {
 
     let contract_address = ContractAddress::try_from_hex_str(CAIRO0_TESTER_ADDRESS).unwrap();
 
-    let selector = felt_selector_from_name(selector);
+    let selector = selector_from_name(selector);
     let output = call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
