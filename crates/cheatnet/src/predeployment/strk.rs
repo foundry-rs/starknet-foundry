@@ -1,5 +1,4 @@
-use blockifier::state::cached_state::CachedState;
-use cheatnet::{
+use crate::{
     constants::{STRK_CLASS_HASH, STRK_CONTRACT_ADDRESS, contract_class_strk},
     runtime_extensions::forge_runtime_extension::cheatcodes::{
         generate_random_felt::generate_random_felt,
@@ -19,31 +18,16 @@ const STRK_PERMITTED_MINTER: &str =
 // result of `variable_address("upgrade_delay")` in the search bar for the key
 const STRK_UPGRADE_DELAY: u64 = 0;
 
-pub fn is_strk_deployed(state_reader: &mut ExtendedStateReader) -> bool {
-    let strk_contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
-    if let Some(ref fork_state_reader) = state_reader.fork_state_reader {
-        let class_hash = fork_state_reader
-            .cache
-            .borrow()
-            .get_class_hash_at(&strk_contract_address);
-        return class_hash.is_some();
-    }
-
-    false
-}
-
-pub fn deploy_strk_token(cached_state: &mut CachedState<ExtendedStateReader>) {
+pub fn deploy_strk_token(state_reader: &mut ExtendedStateReader) {
     let strk_contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
     let strk_class_hash = TryFromHexStr::try_from_hex_str(STRK_CLASS_HASH).unwrap();
 
-    cached_state
-        .state
+    state_reader
         .dict_state_reader
         .address_to_class_hash
         .insert(strk_contract_address, strk_class_hash);
 
-    cached_state
-        .state
+    state_reader
         .dict_state_reader
         .class_hash_to_class
         .insert(strk_class_hash, contract_class_strk());
@@ -54,8 +38,7 @@ pub fn deploy_strk_token(cached_state: &mut CachedState<ExtendedStateReader>) {
         StorageKey(recipient_balance_low_address.try_into().unwrap())
             .next_storage_key()
             .unwrap();
-    let total_supply_low = 55_401_946_922_417_748_965_830_181_u128;
-
+    let total_supply_low = 60_000_000_000_000_000_000_000_000_u128;
     // Update STRK storage to mimic constructor behavior
     let storage_entries_and_values_to_update = [
         // name
@@ -140,8 +123,7 @@ pub fn deploy_strk_token(cached_state: &mut CachedState<ExtendedStateReader>) {
     ];
 
     for (entry, value) in &storage_entries_and_values_to_update {
-        cached_state
-            .state
+        state_reader
             .dict_state_reader
             .storage_view
             .insert(*entry, *value);

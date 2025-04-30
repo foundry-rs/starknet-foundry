@@ -3,7 +3,7 @@ use crate::common::{
     assertions::assert_success, deploy_contract, recover_data, state::create_cached_state,
 };
 use blockifier::state::state_api::State;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::felt_selector_from_name;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::selector_from_name;
 use cheatnet::state::CheatnetState;
 use starknet_api::core::ContractAddress;
 use starknet_types_core::felt::Felt;
@@ -13,11 +13,11 @@ fn check_block(
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
 ) -> (Felt, Felt, Felt, Felt) {
-    let write_block = felt_selector_from_name("write_block");
-    let read_block_number = felt_selector_from_name("read_block_number");
-    let read_block_timestamp = felt_selector_from_name("read_block_timestamp");
-    let read_sequencer_address = felt_selector_from_name("read_sequencer_address");
-    let read_block_hash = felt_selector_from_name("read_block_hash");
+    let write_block = selector_from_name("write_block");
+    let read_block_number = selector_from_name("read_block_number");
+    let read_block_timestamp = selector_from_name("read_block_timestamp");
+    let read_sequencer_address = selector_from_name("read_sequencer_address");
+    let read_block_hash = selector_from_name("read_block_hash");
 
     let output = call_contract(state, cheatnet_state, contract_address, write_block, &[]);
 
