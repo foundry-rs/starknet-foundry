@@ -2,9 +2,6 @@
 
 VERSION=$1
 
-cargo update
-cargo update --manifest-path crates/snforge-scarb-plugin/Cargo.toml
-
 sed -i.bak "s/## \[Unreleased\]/## \[Unreleased\]\n\n## \[${VERSION}\] - $(TZ=Europe/Krakow date '+%Y-%m-%d')/" CHANGELOG.md
 rm CHANGELOG.md.bak 2> /dev/null
 
@@ -39,3 +36,6 @@ rm "$NEW_FILE_PATH.bak" 2> /dev/null
 # end
 
 scarb --manifest-path snforge_std/Scarb.toml build
+
+cargo update
+cargo update --manifest-path crates/snforge-scarb-plugin/Cargo.toml
