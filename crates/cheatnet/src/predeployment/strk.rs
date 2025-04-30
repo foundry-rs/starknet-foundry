@@ -18,18 +18,6 @@ const STRK_PERMITTED_MINTER: &str =
 // result of `variable_address("upgrade_delay")` in the search bar for the key
 const STRK_UPGRADE_DELAY: u64 = 0;
 
-pub fn is_strk_deployed(state_reader: &mut ExtendedStateReader) -> bool {
-    let strk_contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
-    if let Some(ref fork_state_reader) = state_reader.fork_state_reader {
-        let class_hash = fork_state_reader
-            .get_cache()
-            .get_class_hash_at(&strk_contract_address);
-        return class_hash.is_some();
-    }
-
-    false
-}
-
 pub fn deploy_strk_token(state_reader: &mut ExtendedStateReader) {
     let strk_contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
     let strk_class_hash = TryFromHexStr::try_from_hex_str(STRK_CLASS_HASH).unwrap();
@@ -50,8 +38,7 @@ pub fn deploy_strk_token(state_reader: &mut ExtendedStateReader) {
         StorageKey(recipient_balance_low_address.try_into().unwrap())
             .next_storage_key()
             .unwrap();
-    let total_supply_low = 55_401_946_922_417_748_965_830_181_u128;
-
+    let total_supply_low = 60_000_000_000_000_000_000_000_000_u128;
     // Update STRK storage to mimic constructor behavior
     let storage_entries_and_values_to_update = [
         // name

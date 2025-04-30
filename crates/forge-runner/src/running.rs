@@ -27,7 +27,6 @@ use camino::{Utf8Path, Utf8PathBuf};
 use casm::{get_assembled_program, run_assembled_program};
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::predeployment::{deploy_strk_token, is_strk_deployed};
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
@@ -195,10 +194,8 @@ pub fn run_test_case(
         set_max_steps(&mut context, max_n_steps);
     }
 
-    let is_strk_deployed = is_strk_deployed(&mut state_reader);
-    if !is_strk_deployed {
-        deploy_strk_token(&mut state_reader);
-    }
+    state_reader.predeploy_contracts();
+
     let mut cached_state = CachedState::new(state_reader);
 
     let syscall_handler = build_syscall_handler(
