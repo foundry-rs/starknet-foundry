@@ -1,9 +1,9 @@
+use cairo_lang_formatter::{CairoFormatter, FormatterConfig};
 use cairo_lang_macro::{Diagnostic, ProcMacroResult};
-use lazy_static::lazy_static;
-use regex::Regex;
 use std::collections::HashSet;
 
 pub const EMPTY_FN: &str = "fn empty_fn(){}";
+pub const FN_WITH_SINGLE_FELT252_PARAM: &str = "fn empty_fn(f: felt252){}";
 
 pub fn assert_diagnostics(result: &ProcMacroResult, expected: &[Diagnostic]) {
     let diagnostics: HashSet<_> = result.diagnostics.iter().collect();
@@ -36,18 +36,21 @@ pub fn assert_diagnostics(result: &ProcMacroResult, expected: &[Diagnostic]) {
     );
 }
 
-// generated code is terribly formatted so replace all whitespace sequences with single one
-// this wont work if we emit string literals with whitespaces
-// but we don't others than user provided ones and it's faster and easier than scarb fmt
+// Before asserting output token, format both strings with `CairoFormatter` and normalize by removing newlines
 pub fn assert_output(result: &ProcMacroResult, expected: &str) {
-    lazy_static! {
-        static ref WHITESPACES: Regex = Regex::new(r"\s+").unwrap();
-    }
+    let fmt = CairoFormatter::new(FormatterConfig::default());
+    let format_and_normalize_code = |code: String| -> String {
+        fmt.format_to_string(&code)
+            .unwrap()
+            .into_output_text()
+            .replace('\n', "")
+            .trim()
+            .to_string()
+    };
+
     assert_eq!(
-        WHITESPACES
-            .replace_all(&result.token_stream.to_string(), " ")
-            .trim(),
-        WHITESPACES.replace_all(expected, " ").trim(),
-        "invalid code generated"
+        format_and_normalize_code(result.token_stream.to_string()),
+        format_and_normalize_code(expected.to_string()),
+        "Invalid code generated"
     );
 }

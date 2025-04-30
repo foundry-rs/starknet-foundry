@@ -1,6 +1,7 @@
+use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::{assert_passed, Contract};
+use test_utils::runner::{Contract, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
@@ -59,7 +60,7 @@ fn simple_declare() {
         )
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -93,7 +94,7 @@ fn declare_simple() {
         contract
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -134,7 +135,7 @@ fn redeclare() {
         contract
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }

@@ -1,12 +1,13 @@
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::response::errors::SNCastProviderError;
-use anyhow::{anyhow, bail, Context, Error, Result};
+use anyhow::{Context, Error, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use conversions::serde::serialize::CairoSerialize;
+use helpers::braavos::assert_non_braavos_account;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
-use rand::rngs::OsRng;
 use rand::RngCore;
+use rand::rngs::OsRng;
 use response::errors::SNCastStarknetError;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -19,14 +20,15 @@ use starknet::core::types::{
     ContractClass, ContractErrorData,
     StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
 };
+use starknet::core::types::{ContractExecutionError, ExecutionResult};
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
 use starknet::{
     accounts::{ExecutionEncoding, SingleOwnerAccount},
     providers::{
-        jsonrpc::{HttpTransport, JsonRpcClient},
         Provider, ProviderError,
         ProviderError::StarknetError,
+        jsonrpc::{HttpTransport, JsonRpcClient},
     },
     signers::{LocalWallet, SigningKey},
 };
@@ -45,7 +47,9 @@ pub mod state;
 
 use conversions::byte_array::ByteArray;
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+pub type NestedMap<T> = HashMap<String, HashMap<String, T>>;
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 #[serde(rename_all = "lowercase")]
 pub enum AccountType {
     #[serde(rename = "open_zeppelin")]
@@ -59,7 +63,7 @@ impl FromStr for AccountType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "open_zeppelin" | "oz" => Ok(AccountType::OpenZeppelin),
+            "open_zeppelin" | "open-zeppelin" | "oz" => Ok(AccountType::OpenZeppelin),
             "argent" => Ok(AccountType::Argent),
             "braavos" => Ok(AccountType::Braavos),
             account_type => Err(anyhow!("Invalid account type = {account_type}")),
@@ -275,6 +279,9 @@ pub async fn get_account<'a>(
         get_account_data_from_accounts_file(account, chain_id, accounts_file)?
     };
 
+    // TODO(#3118): Remove this check once braavos integration is restored
+    assert_non_braavos_account(account_data.account_type, account_data.class_hash)?;
+
     let account = build_account(account_data, chain_id, provider).await?;
 
     Ok(account)
@@ -292,7 +299,9 @@ pub async fn get_contract_class(
         // Imitate error thrown on chain to achieve particular error message (Issue #2554)
         let artificial_transaction_revert_error = SNCastProviderError::StarknetError(
             SNCastStarknetError::ContractError(ContractErrorData {
-                revert_error: format!("Class with hash {class_hash:#x} is not declared"),
+                revert_error: ContractExecutionError::Message(format!(
+                    "Class with hash {class_hash:#x} is not declared"
+                )),
             }),
         );
 
@@ -351,12 +360,17 @@ pub async fn check_class_hash_exists(
     provider: &JsonRpcClient<HttpTransport>,
     class_hash: Felt,
 ) -> Result<()> {
-    match provider.get_class(BlockId::Tag(BlockTag::Latest), class_hash).await {
+    match provider
+        .get_class(BlockId::Tag(BlockTag::Latest), class_hash)
+        .await
+    {
         Ok(_) => Ok(()),
         Err(err) => match err {
-            StarknetError(ClassHashNotFound) => Err(anyhow!("Class with hash {class_hash:#x} is not declared, try using --class-hash with a hash of the declared class")),
-            _ => Err(handle_rpc_error(err))
-        }
+            StarknetError(ClassHashNotFound) => Err(anyhow!(
+                "Class with hash {class_hash:#x} is not declared, try using --class-hash with a hash of the declared class"
+            )),
+            _ => Err(handle_rpc_error(err)),
+        },
     }
 }
 
@@ -500,7 +514,9 @@ pub async fn get_class_hash_by_address(
         // Imitate error thrown on chain to achieve particular error message (Issue #2554)
         let artificial_transaction_revert_error = SNCastProviderError::StarknetError(
             SNCastStarknetError::ContractError(ContractErrorData {
-                revert_error: format!("Requested contract address {address:#x} is not deployed",),
+                revert_error: ContractExecutionError::Message(format!(
+                    "Requested contract address {address:#x} is not deployed",
+                )),
             }),
         );
 
@@ -569,7 +585,7 @@ pub async fn wait_for_tx(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: Felt,
     wait_params: ValidatedWaitParams,
-) -> Result<&str, WaitForTransactionError> {
+) -> Result<String, WaitForTransactionError> {
     println!("Transaction hash: {tx_hash:#x}");
 
     let retries = wait_params.get_retries();
@@ -583,52 +599,36 @@ pub async fn wait_for_tx(
             Ok(
                 starknet::core::types::TransactionStatus::AcceptedOnL2(execution_status)
                 | starknet::core::types::TransactionStatus::AcceptedOnL1(execution_status),
-            ) => match execution_status {
-                starknet::core::types::TransactionExecutionStatus::Succeeded => {
-                    return Ok("Transaction accepted")
-                }
-                starknet::core::types::TransactionExecutionStatus::Reverted => {
-                    return get_revert_reason(provider, tx_hash).await
-                }
-            },
+            ) => {
+                return match execution_status {
+                    ExecutionResult::Succeeded => Ok("Transaction accepted".to_string()),
+                    ExecutionResult::Reverted { reason } => {
+                        Err(WaitForTransactionError::TransactionError(
+                            TransactionError::Reverted(ErrorData {
+                                data: ByteArray::from(reason.as_str()),
+                            }),
+                        ))
+                    }
+                };
+            }
             Ok(starknet::core::types::TransactionStatus::Received)
             | Err(StarknetError(TransactionHashNotFound)) => {
                 let remaining_time = wait_params.remaining_time(i);
-                println!("Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)");
+                println!(
+                    "Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)"
+                );
             }
             Err(ProviderError::RateLimited) => {
                 println!("Request rate limited while waiting for transaction to be accepted");
                 sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
             }
             Err(err) => return Err(WaitForTransactionError::ProviderError(err.into())),
-        };
+        }
 
         sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
     }
 
     Err(WaitForTransactionError::TimedOut)
-}
-
-async fn get_revert_reason(
-    provider: &JsonRpcClient<HttpTransport>,
-    tx_hash: Felt,
-) -> Result<&str, WaitForTransactionError> {
-    let receipt_with_block_info = provider
-        .get_transaction_receipt(tx_hash)
-        .await
-        .map_err(SNCastProviderError::from)?;
-
-    if let starknet::core::types::ExecutionResult::Reverted { reason } =
-        receipt_with_block_info.receipt.execution_result()
-    {
-        Err(WaitForTransactionError::TransactionError(
-            TransactionError::Reverted(ErrorData {
-                data: ByteArray::from(reason.as_str()),
-            }),
-        ))
-    } else {
-        unreachable!();
-    }
 }
 
 #[must_use]
@@ -691,7 +691,9 @@ pub fn check_keystore_and_account_files_exist(
     }
     let path_to_account = Utf8PathBuf::from(account);
     if !path_to_account.exists() {
-        bail!("File containing the account does not exist: When using `--keystore` argument, the `--account` argument should be a path to the starkli JSON account file");
+        bail!(
+            "File containing the account does not exist: When using `--keystore` argument, the `--account` argument should be a path to the starkli JSON account file"
+        );
     }
     Ok(())
 }
@@ -720,6 +722,19 @@ pub fn apply_optional<T, R, F: FnOnce(T, R) -> T>(initial: T, option: Option<R>,
     }
 }
 
+#[macro_export]
+macro_rules! apply_optional_fields {
+    ($initial:expr, $( $option:expr => $setter:expr ),* ) => {
+        {
+            let mut value = $initial;
+            $(
+                value = ::sncast::apply_optional(value, $option, $setter);
+            )*
+            value
+        }
+    };
+}
+
 #[must_use]
 pub fn get_default_state_file_name(script_name: &str, chain_id: &str) -> String {
     format!("{script_name}_{chain_id}_{DEFAULT_STATE_FILE_SUFFIX}")
@@ -729,8 +744,9 @@ pub fn get_default_state_file_name(script_name: &str, chain_id: &str) -> String 
 mod tests {
     use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
     use crate::{
-        chain_id_to_network_name, extract_or_generate_salt, get_account_data_from_accounts_file,
-        get_account_data_from_keystore, get_block_id, udc_uniqueness, AccountType,
+        AccountType, chain_id_to_network_name, extract_or_generate_salt,
+        get_account_data_from_accounts_file, get_account_data_from_keystore, get_block_id,
+        udc_uniqueness,
     };
     use camino::Utf8PathBuf;
     use conversions::string::IntoHexStr;
@@ -852,7 +868,7 @@ mod tests {
 
     #[test]
     fn test_get_account_data_from_keystore() {
-        env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+        set_keystore_password_env();
         let account = get_account_data_from_keystore(
             "tests/data/keystore/my_account.json",
             &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
@@ -878,30 +894,32 @@ mod tests {
 
     #[test]
     fn test_get_braavos_account_from_keystore_with_multisig_on() {
-        env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+        set_keystore_password_env();
         let err = get_account_data_from_keystore(
             "tests/data/keystore/my_account_braavos_invalid_multisig.json",
             &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
         )
         .unwrap_err();
 
-        assert!(err
-            .to_string()
-            .contains("Braavos accounts cannot be deployed with multisig on"));
+        assert!(
+            err.to_string()
+                .contains("Braavos accounts cannot be deployed with multisig on")
+        );
     }
 
     #[test]
     fn test_get_braavos_account_from_keystore_multiple_signers() {
-        env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+        set_keystore_password_env();
         let err = get_account_data_from_keystore(
             "tests/data/keystore/my_account_braavos_multiple_signers.json",
             &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
         )
         .unwrap_err();
 
-        assert!(err
-            .to_string()
-            .contains("Braavos accounts can only be deployed with one seed signer"));
+        assert!(
+            err.to_string()
+                .contains("Braavos accounts can only be deployed with one seed signer")
+        );
     }
 
     #[test]
@@ -913,8 +931,19 @@ mod tests {
             &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         );
         let err = account.unwrap_err();
-        assert!(err
-            .to_string()
-            .contains("Account = user1 not found under network = CUSTOM_CHAIN_ID"));
+        assert!(
+            err.to_string()
+                .contains("Account = user1 not found under network = CUSTOM_CHAIN_ID")
+        );
+    }
+
+    fn set_keystore_password_env() {
+        // SAFETY: Tests run in parallel and share the same environment variables.
+        // However, we only set this variable once to a fixed value and never modify or unset it.
+        // The only potential issue would be if a test explicitly required this variable to be unset,
+        // but to the best of our knowledge, no such test exists.
+        unsafe {
+            env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+        };
     }
 }

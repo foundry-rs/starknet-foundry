@@ -1,19 +1,20 @@
 use super::{BufferWriter, CairoSerialize};
-use crate::{byte_array::ByteArray, IntoConv};
+use crate::{IntoConv, byte_array::ByteArray};
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use starknet::core::types::{ContractErrorData, TransactionExecutionErrorData};
-use starknet_api::core::EthAddress;
-use starknet_api::{
-    core::{ClassHash, ContractAddress, EntryPointSelector, Nonce},
-    deprecated_contract_class::EntryPointType,
-    transaction::Calldata,
+use starknet::core::types::{
+    ContractErrorData, ContractExecutionError, TransactionExecutionErrorData,
 };
+use starknet_api::core::EthAddress;
+use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
+use starknet_api::transaction::fields::Calldata;
 use starknet_types_core::felt::Felt;
 use std::{
     cell::{Ref, RefCell},
     rc::Rc,
     sync::Arc,
 };
+
+use starknet_api::contract_class::EntryPointType;
 
 impl CairoSerialize for CallEntryPoint {
     fn serialize(&self, output: &mut BufferWriter) {
@@ -28,14 +29,34 @@ impl CairoSerialize for CallEntryPoint {
 
 impl CairoSerialize for ContractErrorData {
     fn serialize(&self, output: &mut BufferWriter) {
-        ByteArray::from(self.revert_error.as_str()).serialize(output);
+        self.revert_error.serialize(output);
+    }
+}
+
+// TODO(#3129)
+impl CairoSerialize for ContractExecutionError {
+    fn serialize(&self, output: &mut BufferWriter) {
+        match &self {
+            // We need to add 0 and 1 because of enum variants serialization
+            ContractExecutionError::Nested(inner) => {
+                0.serialize(output);
+                inner.class_hash.serialize(output);
+                inner.contract_address.serialize(output);
+                inner.selector.serialize(output);
+                inner.error.serialize(output);
+            }
+            ContractExecutionError::Message(msg) => {
+                1.serialize(output);
+                ByteArray::from(msg.as_str()).serialize(output);
+            }
+        }
     }
 }
 
 impl CairoSerialize for TransactionExecutionErrorData {
     fn serialize(&self, output: &mut BufferWriter) {
         self.transaction_index.serialize(output);
-        ByteArray::from(self.execution_error.as_str()).serialize(output);
+        self.execution_error.serialize(output);
     }
 }
 

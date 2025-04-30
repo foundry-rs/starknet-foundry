@@ -1,7 +1,7 @@
 [package]
 name = "subtraction"
 version.workspace = true
-edition = "2023_10"
+edition = "2024_07"
 
 [dependencies]
 starknet.workspace = true

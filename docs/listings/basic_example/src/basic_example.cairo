@@ -1,5 +1,4 @@
-use starknet::ContractAddress;
-use sncast_std::{call, CallResult};
+use sncast_std::call;
 
 // A real contract deployed on Sepolia network
 const CONTRACT_ADDRESS: felt252 =
@@ -7,7 +6,7 @@ const CONTRACT_ADDRESS: felt252 =
 
 fn main() {
     let call_result = call(
-        CONTRACT_ADDRESS.try_into().unwrap(), selector!("get_greeting"), array![]
+        CONTRACT_ADDRESS.try_into().unwrap(), selector!("get_greeting"), array![],
     )
         .expect('call failed');
 

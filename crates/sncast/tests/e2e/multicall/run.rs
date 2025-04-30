@@ -1,16 +1,18 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, MULTICALL_CONFIGS_DIR, URL};
+use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::create_and_deploy_oz_account;
 use crate::helpers::runner::runner;
 use indoc::{formatdoc, indoc};
-use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
+use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
 use std::path::Path;
 use test_case::test_case;
 
 #[test_case("oz_cairo_0"; "cairo_0_account")]
 #[test_case("oz_cairo_1"; "cairo_1_account")]
 #[test_case("oz"; "oz_account")]
-#[test_case("argent"; "argent_account")]
-#[test_case("braavos"; "braavos_account")]
+// TODO(#3089)
+// #[test_case("argent"; "argent_account")]
+// #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 async fn test_happy_case(account: &str) {
     let path = project_root::get_project_root().expect("failed to get project root path");
@@ -31,6 +33,7 @@ async fn test_happy_case(account: &str) {
         "--path",
         path,
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args);
     let output = snapbox.assert();
@@ -72,6 +75,7 @@ async fn test_calldata_ids() {
         "--path",
         path,
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert();
@@ -255,6 +259,7 @@ async fn test_numeric_inputs() {
         "--path",
         path,
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert();

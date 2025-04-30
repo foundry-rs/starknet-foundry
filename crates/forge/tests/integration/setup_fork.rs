@@ -15,14 +15,16 @@ use tokio::runtime::Runtime;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::run_tests::package::RunForPackageArgs;
 use forge::scarb::load_test_artifacts;
+use forge::shared_cache::FailedTestsCache;
+use forge_runner::CACHE_DIR;
+use forge_runner::forge_config::ForgeTrackedResource;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
-use forge_runner::CACHE_DIR;
-use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::ScarbCommand;
+use scarb_api::metadata::MetadataCommandExt;
 use shared::test_utils::node_url::node_rpc_url;
-use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
+use test_utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
@@ -63,7 +65,7 @@ fn fork_simple_decorator() {
         node_rpc_url()
     ).as_str());
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -138,7 +140,7 @@ fn fork_aliased_decorator() {
                     false,
                     false,
                     false,
-                    Default::default(),
+                    FailedTestsCache::default(),
                 ),
                 forge_config: Arc::new(ForgeConfig {
                     test_runner_config: Arc::new(TestRunnerConfig {
@@ -151,6 +153,7 @@ fn fork_aliased_decorator() {
                             .unwrap()
                             .join(CACHE_DIR),
                         contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
+                        tracked_resource: ForgeTrackedResource::CairoSteps,
                         environment_variables: test.env().clone(),
                     }),
                     output_config: Arc::new(OutputConfig {
@@ -223,7 +226,7 @@ fn fork_aliased_decorator_overrding() {
                     false,
                     false,
                     false,
-                    Default::default(),
+                    FailedTestsCache::default(),
                 ),
                 forge_config: Arc::new(ForgeConfig {
                     test_runner_config: Arc::new(TestRunnerConfig {
@@ -236,6 +239,7 @@ fn fork_aliased_decorator_overrding() {
                             .unwrap()
                             .join(CACHE_DIR),
                         contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
+                        tracked_resource: ForgeTrackedResource::CairoSteps,
                         environment_variables: test.env().clone(),
                     }),
                     output_config: Arc::new(OutputConfig {
@@ -281,7 +285,7 @@ fn fork_cairo0_contract() {
         node_rpc_url()
     ).as_str());
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -381,26 +385,28 @@ fn get_block_info_in_forked_block() {
         Path::new("tests/data/contracts/block_info_checker.cairo"),
     ).unwrap());
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
 
 #[test]
 fn fork_get_block_info_fails() {
-    let test = test_case!(formatdoc!(
-        r#"
+    let test = test_case!(
+        formatdoc!(
+            r#"
             #[test]
             #[fork(url: "{}", block_number: 999999999999)]
             fn fork_get_block_info_fails() {{
                 starknet::get_block_info();
             }}
         "#,
-        node_rpc_url()
-    )
-    .as_str());
+            node_rpc_url()
+        )
+        .as_str()
+    );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
     assert_case_output_contains(
@@ -439,7 +445,7 @@ fn incompatible_abi() {
     )
     .as_str());
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }

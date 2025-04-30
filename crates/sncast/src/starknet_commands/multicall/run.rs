@@ -8,12 +8,12 @@ use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::structs::InvokeResponse;
-use sncast::{extract_or_generate_salt, udc_uniqueness, WaitForTx};
+use sncast::{WaitForTx, extract_or_generate_salt, udc_uniqueness};
 use starknet::accounts::{Account, SingleOwnerAccount};
 use starknet::core::types::Call;
 use starknet::core::utils::{get_selector_from_name, get_udc_deployed_address};
-use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
+use starknet::providers::jsonrpc::HttpTransport;
 use starknet::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
@@ -22,13 +22,13 @@ use std::collections::HashMap;
 #[command(about = "Execute a multicall from a .toml file", long_about = None)]
 pub struct Run {
     /// Path to the toml file with declared operations
-    #[clap(short = 'p', long = "path")]
+    #[arg(short = 'p', long = "path")]
     pub path: Utf8PathBuf,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub fee_args: FeeArgs,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 
@@ -56,7 +56,7 @@ struct InvokeCall {
 }
 
 pub async fn run(
-    run: Run,
+    run: Box<Run>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {

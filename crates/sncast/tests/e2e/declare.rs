@@ -1,4 +1,5 @@
 use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
+use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
     copy_directory_to_tempdir, create_and_deploy_account, create_and_deploy_oz_account,
     duplicate_contract_directory_with_salt, get_accounts_path, get_transaction_hash,
@@ -8,11 +9,14 @@ use crate::helpers::runner::runner;
 use configuration::CONFIG_FILENAME;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
-use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::AccountType;
+use sncast::helpers::constants::ARGENT_CLASS_HASH;
+use sncast::helpers::constants::OZ_CLASS_HASH;
+use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Declare;
 use starknet_types_core::felt::Felt;
 use std::fs;
+use tempfile::tempdir;
 use test_case::test_case;
 
 #[tokio::test]
@@ -35,9 +39,8 @@ async fn test_happy_case_human_readable() {
         URL,
         "--contract-name",
         "Map",
-        "--max-fee",
-        "99999999999999999",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -60,7 +63,8 @@ async fn test_happy_case_human_readable() {
 )]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
 #[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
-#[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
+// TODO(#3118)
+// #[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
 async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let contract_path = duplicate_contract_directory_with_salt(
@@ -82,9 +86,8 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         URL,
         "--contract-name",
         "Map",
-        "--max-fee",
-        "99999999999999999",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success().get_output().stdout.clone();
@@ -95,28 +98,39 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     assert!(matches!(receipt, Declare(_)));
 }
 
-#[test_case(Some("100000000000000000"), None, None; "max_fee")]
-#[test_case(None, Some("100000"), None; "max_gas")]
-#[test_case(None, None, Some("100000000000000"); "max_gas_unit_price")]
-#[test_case(None, None, None; "none")]
-#[test_case(Some("10000000000000000000"), None, Some("100000000000000"); "max_fee_max_gas_unit_price"
-)]
-#[test_case(None, Some("100000"), Some("100000000000000"); "max_gas_max_gas_unit_price")]
-#[test_case(Some("100000000000000000"), Some("100000"), None; "max_fee_max_gas")]
+// TODO(#3100)
+// #[test_case(FeeArgs{
+//     max_fee: Some(NonZeroFelt::try_from(Felt::from(1000000000000000000000000)).unwrap()),
+//     l1_data_gas: None,
+//     l1_data_gas_price:  None,
+//     l1_gas:  None,
+//     l1_gas_price:  None,
+//     l2_gas:  None,
+//     l2_gas_price:  None,
+// }; "max_fee")]
+#[test_case(FeeArgs{
+    max_fee: None,
+    l1_data_gas: Some(100_000),
+    l1_data_gas_price: Some(10_000_000_000_000),
+    l1_gas: Some(100_000),
+    l1_gas_price: Some(10_000_000_000_000),
+    l2_gas: Some(1_000_000_000),
+    l2_gas_price: Some(100_000_000_000_000_000_000),
+}; "resource_bounds")]
 #[tokio::test]
-async fn test_happy_case_different_fees(
-    max_fee: Option<&str>,
-    max_gas: Option<&str>,
-    max_gas_unit_price: Option<&str>,
-) {
+async fn test_happy_case_different_fees(fee_args: FeeArgs) {
     let contract_path = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "put",
         &format!(
-            "{}{}{}",
-            max_fee.unwrap_or("0"),
-            max_gas.unwrap_or("1"),
-            max_gas_unit_price.unwrap_or("2")
+            "{}{}{}{}{}{}{}",
+            fee_args.max_fee.map_or(Felt::from(0), Felt::from),
+            fee_args.l1_data_gas.unwrap_or(1),
+            fee_args.l1_data_gas_price.unwrap_or(2),
+            fee_args.l1_gas.unwrap_or(3),
+            fee_args.l1_gas_price.unwrap_or(4),
+            fee_args.l2_gas.unwrap_or(5),
+            fee_args.l2_gas_price.unwrap_or(6)
         ),
     );
     let tempdir = create_and_deploy_oz_account().await;
@@ -136,14 +150,31 @@ async fn test_happy_case_different_fees(
     ];
 
     let options = [
-        ("--max-fee", max_fee),
-        ("--max-gas", max_gas),
-        ("--max-gas-unit-price", max_gas_unit_price),
+        (
+            "--max-fee",
+            fee_args.max_fee.map(Felt::from).map(|x| x.to_string()),
+        ),
+        ("--l1-data-gas", fee_args.l1_data_gas.map(|x| x.to_string())),
+        (
+            "--l1-data-gas-price",
+            fee_args.l1_data_gas_price.map(|x| x.to_string()),
+        ),
+        ("--l1-gas", fee_args.l1_gas.map(|x| x.to_string())),
+        (
+            "--l1-gas-price",
+            fee_args.l1_gas_price.map(|x| x.to_string()),
+        ),
+        ("--l2-gas", fee_args.l2_gas.map(|x| x.to_string())),
+        (
+            "--l2-gas-price",
+            fee_args.l2_gas_price.map(|x| x.to_string()),
+        ),
     ];
 
-    for &(key, value) in &options {
-        if let Some(val) = value {
-            args.append(&mut vec![key, val]);
+    for &(key, ref value) in &options {
+        if let Some(val) = value.as_ref() {
+            args.push(key);
+            args.push(val);
         }
     }
 
@@ -176,9 +207,8 @@ async fn test_happy_case_specify_package() {
         "supercomplexcode",
         "--package",
         "main_workspace",
-        "--max-fee",
-        "99999999999999999",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
@@ -210,6 +240,7 @@ async fn test_contract_already_declared() {
         "--contract-name",
         "Map",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     runner(&args).current_dir(tempdir.path()).assert().success();
 
@@ -220,7 +251,7 @@ async fn test_contract_already_declared() {
         output,
         indoc! {r"
         command: declare
-        error: [..]Class with hash[..]is already declared[..]
+        error: Contract with the same class hash is already declared
         "},
     );
 }
@@ -241,11 +272,10 @@ async fn test_invalid_nonce() {
         URL,
         "--contract-name",
         "Map",
-        "--max-fee",
-        "99999999999999999",
         "--nonce",
         "12345",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(contract_path.path());
     let output = snapbox.assert().success();
@@ -385,9 +415,11 @@ fn test_too_low_gas() {
         URL,
         "--contract-name",
         "Map",
-        "--max-gas-unit-price",
+        "--l1-gas",
         "1",
-        "--max-gas",
+        "--l2-gas",
+        "1",
+        "--l1-data-gas",
         "1",
     ];
 
@@ -398,7 +430,7 @@ fn test_too_low_gas() {
         output,
         indoc! {r"
         command: declare
-        error: Max fee is smaller than the minimal transaction cost
+        error: The transaction's resources don't cover validation or the minimal transaction fee
         "},
     );
 }
@@ -440,6 +472,7 @@ fn test_scarb_no_casm_artifact() {
         "--contract-name",
         "minimal_contract",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -470,9 +503,8 @@ async fn test_many_packages_default() {
         URL,
         "--contract-name",
         "supercomplexcode2",
-        "--max-fee",
-        "99999999999999999",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().failure();
@@ -501,9 +533,8 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         "cast_fibonacci",
         "--contract-name",
         "FibonacciContract",
-        "--max-fee",
-        "99999999999999999",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
@@ -531,9 +562,8 @@ async fn test_worskpaces_package_no_contract() {
         "cast_addition",
         "--contract-name",
         "whatever",
-        "--max-fee",
-        "99999999999999999",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -567,9 +597,8 @@ async fn test_no_scarb_profile() {
         URL,
         "--contract-name",
         "Map",
-        "--max-fee",
-        "99999999999999999",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(contract_path.path());
     let output = snapbox.assert().success();
@@ -586,6 +615,43 @@ async fn test_no_scarb_profile() {
             To see declaration details, visit:
             class: [..]
             transaction: [..]
+        "},
+    );
+}
+
+// TODO(#3118: Remove this test, once integration with braavos is restored
+#[tokio::test]
+async fn test_braavos_disabled() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "human_readable",
+    );
+    let tempdir = tempdir().expect("Failed to create a temporary directory");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        &accounts_json_path,
+        "--account",
+        "braavos",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+    ];
+    let args = apply_test_resource_bounds_flags(args);
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Error: Using Braavos accounts is temporarily disabled because they don't yet work with starknet 0.13.5.
+            Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
         "},
     );
 }

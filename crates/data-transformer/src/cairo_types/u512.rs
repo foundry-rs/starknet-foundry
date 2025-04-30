@@ -1,6 +1,8 @@
 use super::helpers::{ParseRadixError, RadixInput};
 use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
 use num_bigint::BigUint;
+use std::fmt;
+use std::fmt::Display;
 use std::str::FromStr;
 
 #[derive(CairoDeserialize, CairoSerialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -32,6 +34,13 @@ impl CairoU512 {
         result[00..16].copy_from_slice(&self.limb_3.to_be_bytes());
 
         result
+    }
+}
+
+impl Display for CairoU512 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let number = BigUint::from_bytes_be(&self.to_be_bytes());
+        write!(f, "{number}")
     }
 }
 
@@ -68,10 +77,8 @@ mod tests {
     use super::CairoU512;
     use test_case::test_case;
 
-    const BIG_NUMBER_HEX: &str =
-        "0xec6710e3f6607d8528d37b2b7110c1a65d6482a9bd5cf8d6fe0620ce8972c857960c53c1c06a94c104957f378fa4a3a080b84117d9d093466849643204da84e7";
-    const BIG_NUMBER_DEC: &str =
-        "12381408885777547607539348003833063591238452153837122447405738741626823601474822019420743833187140657614799860086984246159941269173037600465935986717263079";
+    const BIG_NUMBER_HEX: &str = "0xec6710e3f6607d8528d37b2b7110c1a65d6482a9bd5cf8d6fe0620ce8972c857960c53c1c06a94c104957f378fa4a3a080b84117d9d093466849643204da84e7";
+    const BIG_NUMBER_DEC: &str = "12381408885777547607539348003833063591238452153837122447405738741626823601474822019420743833187140657614799860086984246159941269173037600465935986717263079";
 
     const BIG_NUMBER_BYTES: [u8; 64] = [
         236, 103, 16, 227, 246, 96, 125, 133, 40, 211, 123, 43, 113, 16, 193, 166, 93, 100, 130,
@@ -114,5 +121,19 @@ mod tests {
         );
 
         Ok(())
+    }
+
+    #[test_case([0, 0, 0, 0], "0"; "zero")]
+    #[test_case([2_325_180, 0, 0, 0], "2325180"; "small")]
+    #[test_case(BIG_NUMBER_LIMBS, BIG_NUMBER_DEC; "big")]
+    fn test_display(limbs: [u128; 4], expected: &str) {
+        let number = CairoU512 {
+            limb_0: limbs[0],
+            limb_1: limbs[1],
+            limb_2: limbs[2],
+            limb_3: limbs[3],
+        };
+
+        assert_eq!(number.to_string(), expected);
     }
 }

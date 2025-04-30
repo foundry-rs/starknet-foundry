@@ -1,116 +1,86 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Result, ensure};
 use clap::Args;
-use conversions::{serde::deserialize::CairoDeserialize, FromConv, TryFromConv};
-use starknet::core::types::BlockId;
-use starknet::providers::Provider;
+use conversions::serde::deserialize::CairoDeserialize;
+use starknet::core::types::FeeEstimate;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
-use std::num::{NonZeroU128, NonZeroU64};
 
 #[derive(Args, Debug, Clone)]
 pub struct FeeArgs {
     /// Max fee for the transaction. If not provided, will be automatically estimated.
-    #[clap(value_parser = parse_non_zero_felt, short, long)]
+    #[arg(value_parser = parse_non_zero_felt, short, long, conflicts_with_all = ["l1_gas", "l1_gas_price", "l2_gas", "l2_gas_price", "l1_data_gas", "l1_data_gas_price"])]
     pub max_fee: Option<NonZeroFelt>,
 
-    /// Max gas amount. If not provided, will be automatically estimated.
-    #[clap(value_parser = parse_non_zero_felt, long)]
-    pub max_gas: Option<NonZeroFelt>,
+    /// Max L1 gas amount. If not provided, will be automatically estimated.
+    #[arg(long)]
+    pub l1_gas: Option<u64>,
 
-    /// Max gas price in Fri. If not provided, will be automatically estimated.
-    #[clap(value_parser = parse_non_zero_felt, long)]
-    pub max_gas_unit_price: Option<NonZeroFelt>,
+    /// Max L1 gas price in Fri. If not provided, will be automatically estimated.
+    #[arg(long)]
+    pub l1_gas_price: Option<u128>,
+
+    /// Max L2 gas amount. If not provided, will be automatically estimated.
+    #[arg(long)]
+    pub l2_gas: Option<u64>,
+
+    /// Max L2 gas price in Fri. If not provided, will be automatically estimated.
+    #[arg(long)]
+    pub l2_gas_price: Option<u128>,
+
+    /// Max L1 data gas amount. If not provided, will be automatically estimated.
+    #[arg(long)]
+    pub l1_data_gas: Option<u64>,
+
+    /// Max L1 data gas price in Fri. If not provided, will be automatically estimated.
+    #[arg(long)]
+    pub l1_data_gas_price: Option<u128>,
 }
 
 impl From<ScriptFeeSettings> for FeeArgs {
     fn from(script_fee_settings: ScriptFeeSettings) -> Self {
         let ScriptFeeSettings {
             max_fee,
-            max_gas,
-            max_gas_unit_price,
+            l1_gas,
+            l1_gas_price,
+            l2_gas,
+            l2_gas_price,
+            l1_data_gas,
+            l1_data_gas_price,
         } = script_fee_settings;
         Self {
             max_fee,
-            max_gas: max_gas.map(NonZeroFelt::from_),
-            max_gas_unit_price: max_gas_unit_price.map(NonZeroFelt::from_),
+            l1_gas,
+            l1_gas_price,
+            l2_gas,
+            l2_gas_price,
+            l1_data_gas,
+            l1_data_gas_price,
         }
     }
 }
 
 impl FeeArgs {
-    #[allow(clippy::too_many_lines)]
-    pub async fn try_into_fee_settings<P: Provider>(
-        &self,
-        provider: P,
-        block_id: BlockId,
-    ) -> Result<FeeSettings> {
-        let settings = match (self.max_fee, self.max_gas, self.max_gas_unit_price) {
-            (Some(_), Some(_), Some(_)) => {
-                bail!("Passing all --max-fee, --max-gas and --max-gas-unit-price is conflicting. Please pass only two of them or less")
-            }
-            (None, _, _) => FeeSettings {
-                max_gas: self
-                    .max_gas
-                    .map(NonZeroU64::try_from_)
-                    .transpose()
-                    .map_err(anyhow::Error::msg)?,
-                max_gas_unit_price: self
-                    .max_gas_unit_price
-                    .map(NonZeroU128::try_from_)
-                    .transpose()
-                    .map_err(anyhow::Error::msg)?,
-            },
-            (Some(max_fee), None, Some(max_gas_unit_price)) => {
-                if max_fee < max_gas_unit_price {
-                    bail!("--max-fee should be greater than or equal to --max-gas-unit-price");
-                }
+    pub fn try_into_fee_settings(&self, fee_estimate: Option<&FeeEstimate>) -> Result<FeeSettings> {
+        // If some resource bounds values are lacking, starknet-rs will estimate them automatically
+        // but in case someone passes --max-fee flag, we need to make estimation on our own
+        // to check if the fee estimate isn't higher than provided max fee
+        if let Some(max_fee) = self.max_fee {
+            let fee_estimate =
+                fee_estimate.expect("Fee estimate must be passed when max_fee is provided");
 
-                let max_gas = NonZeroFelt::try_from(Felt::from(max_fee).floor_div(&max_gas_unit_price))
-                        .unwrap_or_else(|_| unreachable!("Calculated max gas must be >= 1 because max_fee >= max_gas_unit_price ensures a positive result"));
-                print_max_fee_conversion_info(max_fee, max_gas, max_gas_unit_price);
-                FeeSettings {
-                    max_gas: Some(NonZeroU64::try_from_(max_gas).map_err(anyhow::Error::msg)?),
-                    max_gas_unit_price: Some(
-                        NonZeroU128::try_from_(max_gas_unit_price).map_err(anyhow::Error::msg)?,
-                    ),
-                }
-            }
-            (Some(max_fee), Some(max_gas), None) => {
-                if max_fee < max_gas {
-                    bail!("--max-fee should be greater than or equal to --max-gas amount");
-                }
+            ensure!(
+                Felt::from(max_fee) >= fee_estimate.overall_fee,
+                "Estimated fee ({}) is higher than provided max fee ({})",
+                fee_estimate.overall_fee,
+                Felt::from(max_fee)
+            );
 
-                let max_gas_unit_price = NonZeroFelt::try_from(Felt::from(max_fee).floor_div(&max_gas))
-                        .unwrap_or_else(|_| unreachable!("Calculated max gas unit price must be >= 1 because max_fee >= max_gas ensures a positive result"));
-                print_max_fee_conversion_info(max_fee, max_gas, max_gas_unit_price);
-                FeeSettings {
-                    max_gas: Some(NonZeroU64::try_from_(max_gas).map_err(anyhow::Error::msg)?),
-                    max_gas_unit_price: Some(
-                        NonZeroU128::try_from_(max_gas_unit_price).map_err(anyhow::Error::msg)?,
-                    ),
-                }
-            }
-            (Some(max_fee), None, None) => {
-                let max_gas_unit_price = NonZeroFelt::try_from(
-                    provider
-                        .get_block_with_tx_hashes(block_id)
-                        .await?
-                        .l1_gas_price()
-                        .price_in_fri,
-                )?;
-                // TODO(#2852)
-                let max_gas = NonZeroFelt::try_from(Felt::from(max_fee)
-                            .floor_div(&max_gas_unit_price)).context("Calculated max-gas from provided --max-fee and the current network gas price is 0. Please increase --max-fee to obtain a positive gas amount")?;
-                print_max_fee_conversion_info(max_fee, max_gas, max_gas_unit_price);
-                FeeSettings {
-                    max_gas: Some(NonZeroU64::try_from_(max_gas).map_err(anyhow::Error::msg)?),
-                    max_gas_unit_price: Some(
-                        NonZeroU128::try_from_(max_gas_unit_price).map_err(anyhow::Error::msg)?,
-                    ),
-                }
-            }
-        };
-
-        Ok(settings)
+            let fee_settings = FeeSettings::try_from(fee_estimate.clone())
+                .expect("Failed to convert FeeEstimate to FeeSettings");
+            Ok(fee_settings)
+        } else {
+            let fee_settings = FeeSettings::from(self.clone());
+            Ok(fee_settings)
+        }
     }
 }
 
@@ -119,31 +89,102 @@ impl FeeArgs {
 #[derive(Debug, PartialEq, CairoDeserialize)]
 pub struct ScriptFeeSettings {
     max_fee: Option<NonZeroFelt>,
-    max_gas: Option<NonZeroU64>,
-    max_gas_unit_price: Option<NonZeroU128>,
+    l1_gas: Option<u64>,
+    l1_gas_price: Option<u128>,
+    l2_gas: Option<u64>,
+    l2_gas_price: Option<u128>,
+    l1_data_gas: Option<u64>,
+    l1_data_gas_price: Option<u128>,
 }
 
 #[derive(Debug, PartialEq)]
 pub struct FeeSettings {
-    pub max_gas: Option<NonZeroU64>,
-    pub max_gas_unit_price: Option<NonZeroU128>,
+    pub l1_gas: Option<u64>,
+    pub l1_gas_price: Option<u128>,
+    pub l2_gas: Option<u64>,
+    pub l2_gas_price: Option<u128>,
+    pub l1_data_gas: Option<u64>,
+    pub l1_data_gas_price: Option<u128>,
 }
 
-fn print_max_fee_conversion_info(
-    max_fee: impl Into<Felt>,
-    max_gas: impl Into<Felt>,
-    max_gas_unit_price: impl Into<Felt>,
-) {
-    let max_fee: Felt = max_fee.into();
-    let max_gas: Felt = max_gas.into();
-    let max_gas_unit_price: Felt = max_gas_unit_price.into();
-    println!(
-        "Specifying '--max-fee' flag results in conversion to '--max-gas' and '--max-gas-unit-price' flags\nConverted {max_fee} max fee to {max_gas} max gas and {max_gas_unit_price} max gas unit price\n",
-    );
+impl TryFrom<FeeEstimate> for FeeSettings {
+    type Error = anyhow::Error;
+    fn try_from(fee_estimate: FeeEstimate) -> Result<FeeSettings, anyhow::Error> {
+        Ok(FeeSettings {
+            l1_gas: Some(
+                u64::try_from(fee_estimate.l1_gas_consumed).expect("Failed to convert l1_gas"),
+            ),
+            l1_gas_price: Some(
+                u128::try_from(fee_estimate.l1_gas_price).expect("Failed to convert l1_gas_price"),
+            ),
+            l2_gas: Some(
+                u64::try_from(fee_estimate.l2_gas_consumed).expect("Failed to convert l2_gas"),
+            ),
+            l2_gas_price: Some(
+                u128::try_from(fee_estimate.l2_gas_price).expect("Failed to convert l2_gas_price"),
+            ),
+            l1_data_gas: Some(
+                u64::try_from(fee_estimate.l1_data_gas_consumed)
+                    .expect("Failed to convert l1_data_gas"),
+            ),
+            l1_data_gas_price: Some(
+                u128::try_from(fee_estimate.l1_data_gas_price)
+                    .expect("Failed to convert l1_data_gas_price"),
+            ),
+        })
+    }
+}
+
+impl From<FeeArgs> for FeeSettings {
+    fn from(fee_args: FeeArgs) -> FeeSettings {
+        FeeSettings {
+            l1_gas: fee_args.l1_gas,
+            l1_gas_price: fee_args.l1_gas_price,
+            l2_gas: fee_args.l2_gas,
+            l2_gas_price: fee_args.l2_gas_price,
+            l1_data_gas: fee_args.l1_data_gas,
+            l1_data_gas_price: fee_args.l1_data_gas_price,
+        }
+    }
 }
 
 fn parse_non_zero_felt(s: &str) -> Result<NonZeroFelt, String> {
     let felt: Felt = s.parse().map_err(|_| "Failed to parse value")?;
     felt.try_into()
         .map_err(|_| "Value should be greater than 0".to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::FeeSettings;
+    use starknet::core::types::{FeeEstimate, PriceUnit};
+    use starknet_types_core::felt::Felt;
+    use std::convert::TryFrom;
+
+    #[tokio::test]
+    async fn test_from_fee_estimate() {
+        let mock_fee_estimate = FeeEstimate {
+            l1_gas_consumed: Felt::from(1),
+            l1_gas_price: Felt::from(2),
+            l2_gas_consumed: Felt::from(3),
+            l2_gas_price: Felt::from(4),
+            l1_data_gas_consumed: Felt::from(5),
+            l1_data_gas_price: Felt::from(6),
+            unit: PriceUnit::Fri,
+            overall_fee: Felt::from(44),
+        };
+        let settings = FeeSettings::try_from(mock_fee_estimate).unwrap();
+
+        assert_eq!(
+            settings,
+            FeeSettings {
+                l1_gas: Some(1),
+                l1_gas_price: Some(2),
+                l2_gas: Some(3),
+                l2_gas_price: Some(4),
+                l1_data_gas: Some(5),
+                l1_data_gas_price: Some(6),
+            }
+        );
+    }
 }

@@ -1,10 +1,11 @@
 use crate::{get_assert_macros_version, tempdir_with_tool_versions};
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use assert_fs::{
-    fixture::{FileTouch, FileWriteStr, PathChild},
     TempDir,
+    fixture::{FileTouch, FileWriteStr, PathChild},
 };
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
+use blockifier::execution::syscalls::hint_processor::SyscallUsage;
 use cairo_vm::types::builtin_name::BuiltinName;
 use camino::Utf8PathBuf;
 use forge_runner::{
@@ -13,11 +14,11 @@ use forge_runner::{
 };
 use indoc::formatdoc;
 use scarb_api::{
-    get_contracts_artifacts_and_source_sierra_paths, metadata::MetadataCommandExt,
-    target_dir_for_workspace, ScarbCommand, StarknetContractArtifacts,
+    ScarbCommand, StarknetContractArtifacts, get_contracts_artifacts_and_source_sierra_paths,
+    metadata::MetadataCommandExt, target_dir_for_workspace,
 };
-use semver::Version;
 use shared::command::CommandExt;
+use starknet_api::execution_resources::{GasAmount, GasVector};
 use std::{
     collections::HashMap,
     fs,
@@ -205,7 +206,7 @@ impl<'a> TestCase {
                     name,
                     (
                         StarknetContractArtifacts { sierra, casm },
-                        Default::default(),
+                        Utf8PathBuf::default(),
                     ),
                 ))
             })
@@ -276,7 +277,7 @@ pub fn assert_case_output_contains(
     }));
 }
 
-pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_gas: u128) {
+pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_gas: GasVector) {
     let test_name_suffix = format!("::{test_case_name}");
 
     let result = TestCase::find_test_result(result);
@@ -288,7 +289,7 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
             }
             AnyTestCaseSummary::Single(case) => match case {
                 TestCaseSummary::Passed { gas_info: gas, .. } => {
-                    *gas == asserted_gas
+                    assert_gas_with_margin(*gas, asserted_gas)
                         && any_case
                             .name()
                             .unwrap()
@@ -298,6 +299,26 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
             },
         }
     }));
+}
+
+// This logic is used to assert exact gas values in CI for the minimal supported Scarb version
+// and to assert gas values with a margin in scheduled tests, as values can vary for different Scarb versions
+// FOR LOCAL DEVELOPMENT ALWAYS USE EXACT CALCULATIONS
+fn assert_gas_with_margin(gas: GasVector, asserted_gas: GasVector) -> bool {
+    if cfg!(feature = "assert_non_exact_gas") {
+        let diff = gas_vector_abs_diff(&gas, &asserted_gas);
+        diff.l1_gas.0 <= 10 && diff.l1_data_gas.0 <= 10 && diff.l2_gas.0 <= 200_000
+    } else {
+        gas == asserted_gas
+    }
+}
+
+fn gas_vector_abs_diff(a: &GasVector, b: &GasVector) -> GasVector {
+    GasVector {
+        l1_gas: GasAmount(a.l1_gas.0.abs_diff(b.l1_gas.0)),
+        l1_data_gas: GasAmount(a.l1_data_gas.0.abs_diff(b.l1_data_gas.0)),
+        l2_gas: GasAmount(a.l2_gas.0.abs_diff(b.l2_gas.0)),
+    }
 }
 
 pub fn assert_syscall(
@@ -317,7 +338,12 @@ pub fn assert_syscall(
             }
             AnyTestCaseSummary::Single(case) => match case {
                 TestCaseSummary::Passed { used_resources, .. } => {
-                    used_resources.syscall_counter.get(&syscall).unwrap_or(&0) == &expected_count
+                    used_resources
+                        .syscall_usage
+                        .get(&syscall)
+                        .unwrap_or(&SyscallUsage::new(0, 0))
+                        .call_count
+                        == expected_count
                         && any_case
                             .name()
                             .unwrap()
@@ -336,13 +362,11 @@ pub fn assert_builtin(
     expected_count: usize,
 ) {
     // TODO(#2806)
-    let scarb_version = ScarbCommand::version().run().unwrap();
-    let expected_count =
-        if builtin == BuiltinName::range_check && scarb_version.scarb >= Version::new(2, 9, 2) {
-            expected_count - 1
-        } else {
-            expected_count
-        };
+    let expected_count = if builtin == BuiltinName::range_check {
+        expected_count - 1
+    } else {
+        expected_count
+    };
 
     let test_name_suffix = format!("::{test_case_name}");
     let result = TestCase::find_test_result(result);

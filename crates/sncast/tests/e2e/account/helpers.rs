@@ -1,6 +1,6 @@
 use indoc::indoc;
 use std::{fs::File, io::Write};
-use tempfile::{tempdir, TempDir};
+use tempfile::{TempDir, tempdir};
 
 #[must_use]
 pub fn create_tempdir_with_accounts_file(file_name: &str, with_sample_data: bool) -> TempDir {

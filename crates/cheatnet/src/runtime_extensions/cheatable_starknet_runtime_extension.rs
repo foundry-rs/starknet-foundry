@@ -6,13 +6,16 @@ use anyhow::Result;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::execution::syscalls::hint_processor::OUT_OF_GAS_ERROR;
 use blockifier::execution::syscalls::{
-    SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper, SyscallResult,
+    SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper,
+    syscall_base::SyscallResult,
 };
 use blockifier::execution::{
     common_hints::HintExecutionResult,
     deprecated_syscalls::DeprecatedSyscallSelector,
     syscalls::hint_processor::{SyscallExecutionError, SyscallHintProcessor},
 };
+use blockifier::utils::u64_from_usize;
+use blockifier::versioned_constants::SyscallGasCost;
 use cairo_vm::{
     types::relocatable::Relocatable,
     vm::{
@@ -77,6 +80,14 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                     SyscallSelector::Deploy,
                 )
                 .map(|()| SyscallHandlingResult::Handled),
+            SyscallSelector::GetBlockHash => self
+                .execute_syscall(
+                    syscall_handler,
+                    vm,
+                    cheated_syscalls::get_block_hash_syscall,
+                    SyscallSelector::GetBlockHash,
+                )
+                .map(|()| SyscallHandlingResult::Handled),
             _ => Ok(SyscallHandlingResult::Forwarded),
         }
     }
@@ -114,13 +125,14 @@ pub fn felt_from_ptr_immutable(
 fn get_syscall_cost(
     syscall_selector: SyscallSelector,
     context: &EntryPointExecutionContext,
-) -> u64 {
+) -> SyscallGasCost {
     let gas_costs = context.gas_costs();
     match syscall_selector {
-        SyscallSelector::LibraryCall => gas_costs.library_call_gas_cost,
-        SyscallSelector::CallContract => gas_costs.call_contract_gas_cost,
-        SyscallSelector::Deploy => gas_costs.deploy_gas_cost,
-        SyscallSelector::GetExecutionInfo => gas_costs.get_execution_info_gas_cost,
+        SyscallSelector::LibraryCall => gas_costs.syscalls.library_call,
+        SyscallSelector::CallContract => gas_costs.syscalls.call_contract,
+        SyscallSelector::Deploy => gas_costs.syscalls.deploy,
+        SyscallSelector::GetExecutionInfo => gas_costs.syscalls.get_execution_info,
+        SyscallSelector::GetBlockHash => gas_costs.syscalls.get_block_hash,
         _ => unreachable!("Syscall has no associated cost"),
     }
 }
@@ -148,14 +160,30 @@ impl CheatableStarknetRuntimeExtension<'_> {
         // Increment, since the selector was peeked into before
         syscall_handler.syscall_ptr += 1;
         syscall_handler.increment_syscall_count_by(&selector, 1);
-        let syscall_gas_cost = get_syscall_cost(selector, syscall_handler.context);
-        let required_gas =
-            syscall_gas_cost - syscall_handler.context.gas_costs().syscall_base_gas_cost;
 
         let SyscallRequestWrapper {
             gas_counter,
             request,
         } = SyscallRequestWrapper::<Request>::read(vm, &mut syscall_handler.syscall_ptr)?;
+
+        let syscall_gas_cost = get_syscall_cost(selector, syscall_handler.base.context);
+        let syscall_gas_cost =
+            syscall_gas_cost.get_syscall_cost(u64_from_usize(request.get_linear_factor_length()));
+        let syscall_base_cost = syscall_handler
+            .base
+            .context
+            .gas_costs()
+            .base
+            .syscall_base_gas_cost;
+
+        // Sanity check for preventing underflow.
+        assert!(
+            syscall_gas_cost >= syscall_base_cost,
+            "Syscall gas cost must be greater than base syscall gas cost"
+        );
+
+        // Refund `SYSCALL_BASE_GAS_COST` as it was pre-charged.
+        let required_gas = syscall_gas_cost - syscall_base_cost;
 
         if gas_counter < required_gas {
             //  Out of gas failure.
@@ -184,7 +212,7 @@ impl CheatableStarknetRuntimeExtension<'_> {
                 gas_counter: remaining_gas,
                 response,
             },
-            Err(SyscallExecutionError::SyscallError { error_data: data }) => {
+            Err(SyscallExecutionError::Revert { error_data: data }) => {
                 SyscallResponseWrapper::Failure {
                     gas_counter: remaining_gas,
                     error_data: data,

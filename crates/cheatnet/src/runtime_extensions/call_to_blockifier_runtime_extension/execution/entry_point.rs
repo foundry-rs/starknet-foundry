@@ -1,13 +1,15 @@
-use std::cell::RefCell;
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
-use crate::state::{CallTrace, CallTraceNode, CheatSpan, CheatStatus, EncounteredError};
+use crate::runtime_extensions::common::{get_relocated_vm_trace, get_syscalls_gas_consumed, sum_syscall_usage};
+use crate::state::{CallTrace, CallTraceNode, CheatSpan, CheatStatus};
 use blockifier::execution::call_info::{CallExecution, Retdata};
+use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
+use blockifier::execution::syscalls::hint_processor::{SyscallUsageMap, ENTRYPOINT_NOT_FOUND_ERROR, OUT_OF_GAS_ERROR};
 use blockifier::{
     execution::{
         call_info::CallInfo,
-        contract_class::ContractClass,
         entry_point::{
             handle_empty_constructor, CallEntryPoint, CallType, ConstructorContext,
             EntryPointExecutionContext, EntryPointExecutionResult,
@@ -19,36 +21,41 @@ use blockifier::{
 };
 use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
 use num_traits::Zero;
+use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
+use conversions::string::TryFromHexStr;
 use starknet_api::{
+    contract_class::EntryPointType,
     core::ClassHash,
-    deprecated_contract_class::EntryPointType,
-    transaction::{Calldata, TransactionVersion},
+    transaction::{fields::Calldata, TransactionVersion},
 };
 use starknet_crypto::poseidon_hash_many;
-use std::collections::HashSet;
-use std::rc::Rc;
-use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use starknet_types_core::felt::Felt;
-use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
+use std::cell::RefCell;
+use std::collections::{ HashMap, HashSet};
+use std::rc::Rc;
+use blockifier::execution::entry_point::{EntryPointRevertInfo, ExecutableCallEntryPoint};
+use blockifier::execution::stack_trace::{extract_trailing_cairo1_revert_trace, Cairo1RevertHeader};
 use thiserror::Error;
 use conversions::FromConv;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
-use crate::runtime_extensions::common::{get_relocated_vm_trace, sum_syscall_counters};
-use conversions::string::TryFromHexStr;
+use shared::vm::VirtualMachineExt;
 
-pub(crate) type ContractClassEntryPointExecutionResult = Result<
-    (CallInfo, SyscallCounter, Option<Vec<RelocatedTraceEntry>>),
-    EntryPointExecutionErrorWithTrace,
->;
+pub(crate) type ContractClassEntryPointExecutionResult =
+    Result<CallInfoWithExecutionData, EntryPointExecutionErrorWithTrace>;
+
+pub(crate) struct CallInfoWithExecutionData {
+    pub call_info: CallInfo,
+    pub syscall_usage: SyscallUsageMap,
+    pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
+}
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 pub fn execute_call_entry_point(
     entry_point: &mut CallEntryPoint, // Instead of 'self'
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
-    resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
+    is_revertable: bool,
 ) -> EntryPointExecutionResult<CallInfo> {
     let cheated_data = if let CallType::Delegate = entry_point.call_type {
         cheatnet_state
@@ -65,11 +72,9 @@ pub fn execute_call_entry_point(
 
     // region: Modified blockifier code
     // We skip recursion depth validation here.
-    cheatnet_state.trace_data.enter_nested_call(
-        entry_point.clone(),
-        resources.clone(),
-        cheated_data,
-    );
+    cheatnet_state
+        .trace_data
+        .enter_nested_call(entry_point.clone(), cheated_data);
 
     if let Some(cheat_status) = get_mocked_function_cheat_status(entry_point, cheatnet_state) {
         if let CheatStatus::Cheated(ret_data, _) = (*cheat_status).clone() {
@@ -77,15 +82,24 @@ pub fn execute_call_entry_point(
             let ret_data_f252: Vec<Felt> =
                 ret_data.iter().map(|datum| Felt::from_(*datum)).collect();
             cheatnet_state.trace_data.exit_nested_call(
-                resources,
-                Default::default(),
+                ExecutionResources::default(),
+                u64::default(),
+                HashMap::default(),
                 CallResult::Success {
                     ret_data: ret_data_f252,
                 },
                 &[],
                 None,
             );
-            return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
+            let tracked_resource = *context
+                .tracked_resource_stack
+                .last()
+                .expect("Unexpected empty tracked resource.");
+            return Ok(mocked_call_info(
+                entry_point.clone(),
+                ret_data.clone(),
+                tracked_resource,
+            ));
         }
     }
     // endregion
@@ -122,80 +136,188 @@ pub fn execute_call_entry_point(
     {
         return Err(PreExecutionError::FraudAttempt.into());
     }
-    // Add class hash to the call, that will appear in the output (call info).
-    entry_point.class_hash = Some(class_hash);
-    let contract_class = state.get_compiled_contract_class(class_hash)?;
+
+    let entry_point = ExecutableCallEntryPoint {
+        class_hash,
+        code_address: entry_point.code_address,
+        entry_point_type: entry_point.entry_point_type,
+        entry_point_selector: entry_point.entry_point_selector,
+        calldata: entry_point.calldata.clone(),
+        storage_address: entry_point.storage_address,
+        caller_address: entry_point.caller_address,
+        call_type: entry_point.call_type,
+        initial_gas: entry_point.initial_gas,
+    };
+
+    let contract_class = state.get_compiled_class(class_hash)?;
+
+    context.revert_infos.0.push(EntryPointRevertInfo::new(
+        entry_point.storage_address,
+        class_hash,
+        context.n_emitted_events,
+        context.n_sent_messages_to_l1,
+    ));
+
+    let tracked_resource = *context
+        .tracked_resource_stack
+        .last()
+        .expect("Unexpected empty tracked resource.");
 
     // Region: Modified blockifier code
     let result = match contract_class {
-        ContractClass::V0(deprecated_class) => execute_entry_point_call_cairo0(
+        RunnableCompiledClass::V0(compiled_class_v0) => execute_entry_point_call_cairo0(
             entry_point.clone(),
-            deprecated_class,
+            compiled_class_v0,
             state,
             cheatnet_state,
-            resources,
             context,
         ),
-        ContractClass::V1(contract_class) => execute_entry_point_call_cairo1(
+        RunnableCompiledClass::V1(compiled_class_v1) => execute_entry_point_call_cairo1(
             entry_point.clone(),
-            &contract_class,
+            &compiled_class_v1,
             state,
             cheatnet_state,
-            resources,
             context,
         ),
     };
 
     // region: Modified blockifier code
-    match result {
-        Ok((call_info, syscall_counter, vm_trace)) => {
-            remove_syscall_resources_and_exit_success_call(
+    match evaluate_execution_result(result, entry_point.clone(), tracked_resource, is_revertable) {
+        Ok(CallInfoWithExecutionData {
+            call_info,
+            syscall_usage,
+            vm_trace,
+        }) => {
+            remove_syscall_resources_and_exit_non_error_call(
                 &call_info,
-                &syscall_counter,
+                &syscall_usage,
                 context,
-                resources,
                 cheatnet_state,
                 vm_trace,
             );
             Ok(call_info)
         }
         Err(EntryPointExecutionErrorWithTrace { source: err, trace }) => {
-            if let Some(pc) = trace
-                .as_ref()
-                .and_then(|trace| trace.last())
-                .map(|entry| entry.pc)
-            {
-                cheatnet_state
-                    .encountered_errors
-                    .push(EncounteredError { pc, class_hash });
-            }
-            exit_error_call(&err, cheatnet_state, resources, entry_point, trace);
+            exit_error_call(&err, cheatnet_state, &entry_point, trace);
             Err(err)
         }
     }
     // endregion
 }
 
-fn remove_syscall_resources_and_exit_success_call(
+fn evaluate_execution_result(
+    result: ContractClassEntryPointExecutionResult,
+    call: ExecutableCallEntryPoint,
+    current_tracked_resource: TrackedResource,
+    is_revertable: bool,
+) -> ContractClassEntryPointExecutionResult {
+    match result {
+        Ok(res) => {
+            if res.call_info.execution.failed && !is_revertable {
+                return Err(EntryPointExecutionErrorWithTrace {
+                    source: EntryPointExecutionError::ExecutionFailed {
+                        error_trace: extract_trailing_cairo1_revert_trace(
+                            &res.call_info,
+                            Cairo1RevertHeader::Execution,
+                        ),
+                    },
+                    trace: res.vm_trace,
+                });
+            }
+            Ok(res)
+        }
+        Err(err) => {
+            handle_entry_point_execution_error(err, call, current_tracked_resource, is_revertable)
+        }
+    }
+}
+
+fn handle_entry_point_execution_error(
+    err: EntryPointExecutionErrorWithTrace,
+    call: ExecutableCallEntryPoint,
+    current_tracked_resource: TrackedResource,
+    is_revertable: bool,
+) -> ContractClassEntryPointExecutionResult {
+    if let EntryPointExecutionError::PreExecutionError(pre_err) = &err.source {
+        match pre_err {
+            PreExecutionError::EntryPointNotFound(_)
+            | PreExecutionError::NoEntryPointOfTypeFound(_)
+                if is_revertable =>
+            {
+                return Ok(call_info_from_pre_execution_error(
+                    call,
+                    current_tracked_resource,
+                    ENTRYPOINT_NOT_FOUND_ERROR,
+                ));
+            }
+            PreExecutionError::InsufficientEntryPointGas if is_revertable => {
+                return Ok(call_info_from_pre_execution_error(
+                    call,
+                    current_tracked_resource,
+                    OUT_OF_GAS_ERROR,
+                ));
+            }
+            _ => {}
+        }
+    }
+    Err(err)
+}
+
+fn call_info_from_pre_execution_error(
+    call: ExecutableCallEntryPoint,
+    current_tracked_resource: TrackedResource,
+    error_code: &str,
+) -> CallInfoWithExecutionData {
+    CallInfoWithExecutionData {
+        call_info: CallInfo {
+            call: call.into(),
+            execution: CallExecution {
+                retdata: Retdata(vec![Felt::from_hex(error_code).unwrap()]),
+                failed: true,
+                gas_consumed: 0,
+                ..Default::default()
+            },
+            tracked_resource: current_tracked_resource,
+            ..Default::default()
+        },
+        syscall_usage: SyscallUsageMap::default(),
+        vm_trace: None,
+    }
+}
+
+fn remove_syscall_resources_and_exit_non_error_call(
     call_info: &CallInfo,
-    syscall_counter: &SyscallCounter,
+    syscall_usage: &SyscallUsageMap,
     context: &mut EntryPointExecutionContext,
-    resources: &mut ExecutionResources,
     cheatnet_state: &mut CheatnetState,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
 ) {
     let versioned_constants = context.tx_context.block_context.versioned_constants();
     // We don't want the syscall resources to pollute the results
-    *resources -= &versioned_constants
-        .get_additional_os_syscall_resources(syscall_counter)
-        .expect("Could not get additional resources");
-    let nested_syscall_counter_sum =
-        aggregate_nested_syscall_counters(&cheatnet_state.trace_data.current_call_stack.top());
-    let syscall_counter = sum_syscall_counters(nested_syscall_counter_sum, syscall_counter);
+    let mut resources = call_info.resources.clone();
+    let mut gas_consumed = call_info.execution.gas_consumed;
+
+    match &context
+        .tracked_resource_stack
+        .last()
+        .expect("Unexpected empty tracked resource.")
+    {
+        TrackedResource::CairoSteps => {
+            resources -= &versioned_constants.get_additional_os_syscall_resources(syscall_usage);
+        }
+        TrackedResource::SierraGas => {
+            gas_consumed -= get_syscalls_gas_consumed(syscall_usage, versioned_constants);
+        }
+    }
+
+    let nested_syscall_usage_sum =
+        aggregate_nested_syscall_usage(&cheatnet_state.trace_data.current_call_stack.top());
+    let syscall_usage = sum_syscall_usage(nested_syscall_usage_sum, syscall_usage);
     cheatnet_state.trace_data.exit_nested_call(
         resources,
-        syscall_counter,
-        CallResult::from_success(call_info),
+        gas_consumed,
+        syscall_usage,
+        CallResult::from_non_error(call_info),
         &call_info.execution.l2_to_l1_messages,
         vm_trace,
     );
@@ -204,17 +326,17 @@ fn remove_syscall_resources_and_exit_success_call(
 fn exit_error_call(
     error: &EntryPointExecutionError,
     cheatnet_state: &mut CheatnetState,
-    resources: &mut ExecutionResources,
-    entry_point: &CallEntryPoint,
+    entry_point: &ExecutableCallEntryPoint,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
 ) {
     let identifier = match entry_point.call_type {
         CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
-        CallType::Delegate => AddressOrClassHash::ClassHash(entry_point.class_hash.unwrap()),
+        CallType::Delegate => AddressOrClassHash::ClassHash(entry_point.class_hash),
     };
     cheatnet_state.trace_data.exit_nested_call(
-        resources,
-        Default::default(),
+        ExecutionResources::default(),
+        u64::default(),
+        HashMap::default(),
         CallResult::from_err(error, &identifier),
         &[],
         vm_trace,
@@ -225,20 +347,25 @@ fn exit_error_call(
 pub fn execute_constructor_entry_point(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
-    resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
     ctor_context: &ConstructorContext,
     calldata: Calldata,
     remaining_gas: u64,
 ) -> EntryPointExecutionResult<CallInfo> {
     // Ensure the class is declared (by reading it).
-    let contract_class = state.get_compiled_contract_class(ctor_context.class_hash)?;
+    let contract_class = state.get_compiled_class(ctor_context.class_hash)?;
     let Some(constructor_selector) = contract_class.constructor_selector() else {
         // Contract has no constructor.
         cheatnet_state
             .trace_data
             .add_deploy_without_constructor_node();
-        return handle_empty_constructor(ctor_context, calldata, remaining_gas);
+        return handle_empty_constructor(
+            contract_class,
+            context,
+            ctor_context,
+            calldata,
+            remaining_gas,
+        );
     };
 
     let mut constructor_call = CallEntryPoint {
@@ -253,13 +380,7 @@ pub fn execute_constructor_entry_point(
         initial_gas: remaining_gas,
     };
     // region: Modified blockifier code
-    execute_call_entry_point(
-        &mut constructor_call,
-        state,
-        cheatnet_state,
-        resources,
-        context,
-    )
+    execute_call_entry_point(&mut constructor_call, state, cheatnet_state, context, false)
     // endregion
 }
 
@@ -291,9 +412,16 @@ fn get_mocked_function_cheat_status<'a>(
     }
 }
 
-fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {
+fn mocked_call_info(
+    call: CallEntryPoint,
+    ret_data: Vec<Felt>,
+    tracked_resource: TrackedResource,
+) -> CallInfo {
     CallInfo {
-        call,
+        call: CallEntryPoint {
+            class_hash: Some(call.class_hash.unwrap_or_default()),
+            ..call
+        },
         execution: CallExecution {
             retdata: Retdata(ret_data),
             events: vec![],
@@ -305,26 +433,29 @@ fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt>) -> CallInfo {
         inner_calls: vec![],
         storage_read_values: vec![],
         accessed_storage_keys: HashSet::new(),
+        read_class_hash_values: vec![],
+        tracked_resource,
+        accessed_contract_addresses: HashSet::default(),
     }
 }
 
-fn aggregate_nested_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter {
-    let mut result = SyscallCounter::new();
+fn aggregate_nested_syscall_usage(trace: &Rc<RefCell<CallTrace>>) -> SyscallUsageMap {
+    let mut result = SyscallUsageMap::new();
     for nested_call_node in &trace.borrow().nested_calls {
         if let CallTraceNode::EntryPointCall(nested_call) = nested_call_node {
-            let sub_trace_counter = aggregate_syscall_counters(nested_call);
-            result = sum_syscall_counters(result, &sub_trace_counter);
+            let sub_trace_counter = aggregate_syscall_usage(nested_call);
+            result = sum_syscall_usage(result, &sub_trace_counter);
         }
     }
     result
 }
 
-fn aggregate_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter {
+fn aggregate_syscall_usage(trace: &Rc<RefCell<CallTrace>>) -> SyscallUsageMap {
     let mut result = trace.borrow().used_syscalls.clone();
     for nested_call_node in &trace.borrow().nested_calls {
         if let CallTraceNode::EntryPointCall(nested_call) = nested_call_node {
-            let sub_trace_counter = aggregate_nested_syscall_counters(nested_call);
-            result = sum_syscall_counters(result, &sub_trace_counter);
+            let sub_trace_counter = aggregate_nested_syscall_usage(nested_call);
+            result = sum_syscall_usage(result, &sub_trace_counter);
         }
     }
     result
@@ -349,25 +480,18 @@ where
     }
 }
 
-pub(crate) trait OnErrorLastPc<T>: Sized {
-    fn on_error_get_last_pc(
-        self,
-        runner: &mut CairoRunner,
-    ) -> Result<T, EntryPointExecutionErrorWithTrace>;
-}
+pub(crate) fn extract_trace_and_register_errors(
+    source: EntryPointExecutionError,
+    class_hash: ClassHash,
+    runner: &mut CairoRunner,
+    cheatnet_state: &mut CheatnetState,
+) -> EntryPointExecutionErrorWithTrace {
+    let trace = get_relocated_vm_trace(runner);
+    let pcs = runner.vm.get_reversed_pc_traceback();
+    cheatnet_state.register_error(class_hash, pcs);
 
-impl<T> OnErrorLastPc<T> for Result<T, EntryPointExecutionError> {
-    fn on_error_get_last_pc(
-        self,
-        runner: &mut CairoRunner,
-    ) -> Result<T, EntryPointExecutionErrorWithTrace> {
-        match self {
-            Err(source) => {
-                let trace = get_relocated_vm_trace(runner);
-
-                Err(EntryPointExecutionErrorWithTrace { source, trace })
-            }
-            Ok(value) => Ok(value),
-        }
+    EntryPointExecutionErrorWithTrace {
+        source,
+        trace: Some(trace),
     }
 }

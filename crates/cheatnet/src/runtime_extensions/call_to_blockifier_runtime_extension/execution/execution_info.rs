@@ -4,8 +4,8 @@ use cairo_vm::{
     vm::vm_core::VirtualMachine,
 };
 use conversions::{
-    serde::serialize::{raw::RawFeltVec, SerializeToFeltVec},
     IntoConv,
+    serde::serialize::{SerializeToFeltVec, raw::RawFeltVec},
 };
 use starknet_types_core::felt::Felt;
 
@@ -21,7 +21,7 @@ fn get_cheated_block_info_ptr(
 
     if let Some(block_number) = cheated_data.block_number {
         new_block_info[0] = MaybeRelocatable::Int(block_number.into());
-    };
+    }
 
     if let Some(block_timestamp) = cheated_data.block_timestamp {
         new_block_info[1] = MaybeRelocatable::Int(block_timestamp.into());
@@ -29,7 +29,7 @@ fn get_cheated_block_info_ptr(
 
     if let Some(sequencer_address) = cheated_data.sequencer_address {
         new_block_info[2] = MaybeRelocatable::Int(sequencer_address.into_());
-    };
+    }
 
     vm.load_data(ptr_cheated_block_info, &new_block_info)
         .unwrap();
@@ -66,13 +66,13 @@ fn get_cheated_tx_info_ptr(
 
     if let Some(version) = version {
         new_tx_info[0] = MaybeRelocatable::Int(version);
-    };
+    }
     if let Some(account_contract_address) = account_contract_address {
         new_tx_info[1] = MaybeRelocatable::Int(account_contract_address);
-    };
+    }
     if let Some(max_fee) = max_fee {
         new_tx_info[2] = MaybeRelocatable::Int(max_fee);
-    };
+    }
 
     if let Some(signature) = signature {
         let (signature_start_ptr, signature_end_ptr) = add_vec_memory_segment(&signature, vm);
@@ -82,13 +82,13 @@ fn get_cheated_tx_info_ptr(
 
     if let Some(transaction_hash) = transaction_hash {
         new_tx_info[5] = MaybeRelocatable::Int(transaction_hash);
-    };
+    }
     if let Some(chain_id) = chain_id {
         new_tx_info[6] = MaybeRelocatable::Int(chain_id);
-    };
+    }
     if let Some(nonce) = nonce {
         new_tx_info[7] = MaybeRelocatable::Int(nonce);
-    };
+    }
     if let Some(resource_bounds) = resource_bounds {
         let (resource_bounds_start_ptr, resource_bounds_end_ptr) =
             add_vec_memory_segment(&RawFeltVec::new(resource_bounds).serialize_to_vec(), vm);
@@ -97,25 +97,25 @@ fn get_cheated_tx_info_ptr(
     }
     if let Some(tip) = tip {
         new_tx_info[10] = MaybeRelocatable::Int(tip);
-    };
+    }
     if let Some(paymaster_data) = paymaster_data {
         let (paymaster_data_start_ptr, paymaster_data_end_ptr) =
             add_vec_memory_segment(&paymaster_data, vm);
         new_tx_info[11] = paymaster_data_start_ptr.into();
         new_tx_info[12] = paymaster_data_end_ptr.into();
-    };
+    }
     if let Some(nonce_data_availability_mode) = nonce_data_availability_mode {
         new_tx_info[13] = MaybeRelocatable::Int(nonce_data_availability_mode);
-    };
+    }
     if let Some(fee_data_availability_mode) = fee_data_availability_mode {
         new_tx_info[14] = MaybeRelocatable::Int(fee_data_availability_mode);
-    };
+    }
     if let Some(account_deployment_data) = account_deployment_data {
         let (account_deployment_data_start_ptr, account_deployment_data_end_ptr) =
             add_vec_memory_segment(&account_deployment_data, vm);
         new_tx_info[15] = account_deployment_data_start_ptr.into();
         new_tx_info[16] = account_deployment_data_end_ptr.into();
-    };
+    }
 
     vm.load_data(ptr_cheated_tx_info, &new_tx_info).unwrap();
     ptr_cheated_tx_info

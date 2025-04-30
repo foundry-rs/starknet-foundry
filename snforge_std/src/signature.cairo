@@ -38,5 +38,5 @@ pub trait VerifierTrait<T, H, U> {
 #[derive(Copy, Drop, Serde, PartialEq)]
 pub enum SignError {
     InvalidSecretKey,
-    HashOutOfRange
+    HashOutOfRange,
 }

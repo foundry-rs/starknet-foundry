@@ -1,5 +1,5 @@
 use super::{BufferReadError, BufferReadResult, BufferReader, CairoDeserialize};
-use crate::{byte_array::ByteArray, IntoConv};
+use crate::{IntoConv, byte_array::ByteArray};
 use num_traits::cast::ToPrimitive;
 use starknet::providers::Url;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
@@ -119,3 +119,9 @@ impl_deserialize_for_num_type!(u32);
 impl_deserialize_for_num_type!(u64);
 impl_deserialize_for_num_type!(u128);
 impl_deserialize_for_num_type!(usize);
+
+impl_deserialize_for_num_type!(i8);
+impl_deserialize_for_num_type!(i16);
+impl_deserialize_for_num_type!(i32);
+impl_deserialize_for_num_type!(i64);
+impl_deserialize_for_num_type!(i128);

@@ -1,10 +1,9 @@
-use crate::helpers::configuration::{show_explorer_links_default, CastConfig};
-use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use crate::ValidatedWaitParams;
+use crate::helpers::configuration::{CastConfig, show_explorer_links_default};
+use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use indoc::formatdoc;
-use shared::consts::FREE_RPC_PROVIDER_URL;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
@@ -44,22 +43,19 @@ fn build_default_manifest() -> String {
         # and https://foundry-rs.github.io/starknet-foundry/projects/configuration.html for more information
 
         # [sncast.default]
-        # url = "{default_url}"
+        # url = ""
         # block-explorer = "{default_block_explorer}"
         # wait-params = {{ timeout = {default_wait_timeout}, retry-interval = {default_wait_retry_interval} }}
         # show-explorer-links = {default_show_explorer_links}
         # accounts-file = "{default_accounts_file}"
-        # account = "{default_account}"
-        # keystore = "{default_keystore}"
+        # account = ""
+        # keystore = ""
         "#,
-        default_url = FREE_RPC_PROVIDER_URL,
         default_accounts_file = DEFAULT_ACCOUNTS_FILE,
         default_wait_timeout = default_wait_params.timeout,
         default_wait_retry_interval = default_wait_params.retry_interval,
         default_block_explorer = "StarkScan",
         default_show_explorer_links = show_explorer_links_default(),
-        default_account = "default",
-        default_keystore = ""
     }
 }
 

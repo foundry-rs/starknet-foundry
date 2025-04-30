@@ -1,11 +1,11 @@
 [package]
 name = "using_cheatcodes_others"
 version = "0.1.0"
-edition = "2023_11"
+edition = "2024_07"
 
 [dependencies]
-starknet = "2.7.0"
-assert_macros = "0.1.0"
+starknet = "2.8.5"
+assert_macros = "2.8.5"
 
 [dev-dependencies]
 snforge_std = { path = "../../../snforge_std" }

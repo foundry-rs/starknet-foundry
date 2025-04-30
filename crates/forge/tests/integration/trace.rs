@@ -1,11 +1,12 @@
+use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::{assert_passed, Contract};
+use test_utils::runner::{Contract, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
 #[test]
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 fn trace_deploy() {
     let test = test_case!(
         indoc!(
@@ -151,13 +152,13 @@ fn trace_deploy() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
 
 #[test]
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 fn trace_call() {
     let test = test_case!(
         indoc!(
@@ -356,7 +357,7 @@ fn trace_call() {
                     result: CallResult::Success(array![])
                 };
 
-                assert(expected == trace, '');
+                assert(expected == trace, 'traces are not equal');
             }
         "#
         ),
@@ -377,13 +378,13 @@ fn trace_call() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
 
 #[test]
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 fn trace_failed_call() {
     let test = test_case!(
         indoc!(
@@ -509,7 +510,7 @@ fn trace_failed_call() {
                     result: CallResult::Success(array![])
                 };
 
-                assert(expected == trace, '');
+                assert(expected == trace, 'traces are not equal');
             }
         "#
         ),
@@ -525,13 +526,13 @@ fn trace_failed_call() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
 
 #[test]
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 fn trace_library_call_from_test() {
     let test = test_case!(
         indoc!(
@@ -704,7 +705,7 @@ fn trace_library_call_from_test() {
                     result: CallResult::Success(array![])
                 };
 
-                assert(expected == trace, '');
+                assert(expected == trace, 'traces are not equal');
             }
         "#
         ),
@@ -725,13 +726,13 @@ fn trace_library_call_from_test() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
 
 #[test]
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 fn trace_failed_library_call_from_test() {
     let test = test_case!(
         indoc!(
@@ -857,7 +858,7 @@ fn trace_failed_library_call_from_test() {
                     result: CallResult::Success(array![])
                 };
 
-                assert(expected == trace, '');
+                assert(expected == trace, 'traces are not equal');
             }
         "#
         ),
@@ -873,13 +874,13 @@ fn trace_failed_library_call_from_test() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
 
 #[test]
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 fn trace_l1_handler() {
     let test = test_case!(
         indoc!(
@@ -999,7 +1000,7 @@ fn trace_l1_handler() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }

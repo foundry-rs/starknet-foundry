@@ -1,6 +1,8 @@
 use crate::helpers::constants::{FORK_BLOCK_NUMBER, SEED, SEPOLIA_RPC_URL, URL};
 use crate::helpers::fixtures::{
-    deploy_argent_account, deploy_braavos_account, deploy_cairo_0_account, deploy_keystore_account,
+    // deploy_argent_account, deploy_braavos_account,
+    deploy_cairo_0_account,
+    deploy_keystore_account,
     deploy_latest_oz_account,
 };
 use ctor::{ctor, dtor};
@@ -11,7 +13,7 @@ use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 use url::Url;
 
-#[allow(clippy::zombie_processes)]
+#[expect(clippy::zombie_processes)]
 #[cfg(test)]
 #[ctor]
 fn start_devnet() {
@@ -53,7 +55,7 @@ fn start_devnet() {
             "--fork-block",
             &FORK_BLOCK_NUMBER.to_string(),
             "--initial-balance",
-            "9999999999999999999",
+            "9999999999999999999999999999999",
             "--accounts",
             "20",
         ])
@@ -78,11 +80,11 @@ fn start_devnet() {
     rt.block_on(deploy_keystore_account());
     rt.block_on(deploy_cairo_0_account());
     rt.block_on(deploy_latest_oz_account());
-    rt.block_on(deploy_argent_account());
-    rt.block_on(deploy_braavos_account());
+    // TODO(#3089): Devnet returns error that balance is 0, even though we prefund these accounts
+    // rt.block_on(deploy_argent_account());
+    // rt.block_on(deploy_braavos_account());
 }
 
-#[allow(clippy::zombie_processes)]
 #[cfg(test)]
 #[dtor]
 fn stop_devnet() {

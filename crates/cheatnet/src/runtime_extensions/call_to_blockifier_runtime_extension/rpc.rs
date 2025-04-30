@@ -5,29 +5,30 @@ use crate::runtime_extensions::{
     },
     common::create_execute_calldata,
 };
+use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::{
     call_info::CallInfo,
-    entry_point::{CallEntryPoint, CallType, EntryPointExecutionResult},
+    entry_point::{CallType, EntryPointExecutionResult},
     errors::{EntryPointExecutionError, PreExecutionError},
-    syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor},
+    syscalls::hint_processor::{SyscallHintProcessor, SyscallUsageMap},
 };
 use blockifier::state::errors::StateError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use conversions::{
-    byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr, FromConv, IntoConv,
-};
+use conversions::{byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr};
 use shared::utils::build_readable_text;
-use starknet_api::{core::EntryPointSelector, transaction::EventContent};
+use starknet_api::execution_resources::GasAmount;
 use starknet_api::{
+    contract_class::EntryPointType,
     core::{ClassHash, ContractAddress},
-    deprecated_contract_class::EntryPointType,
 };
+use starknet_api::{core::EntryPointSelector, transaction::EventContent};
 use starknet_types_core::felt::Felt;
 
 #[derive(Clone, Debug, Default)]
 pub struct UsedResources {
-    pub syscall_counter: SyscallCounter,
+    pub syscall_usage: SyscallUsageMap,
     pub execution_resources: ExecutionResources,
+    pub gas_consumed: GasAmount,
     pub l2_to_l1_payload_lengths: Vec<usize>,
     pub l1_handler_payload_lengths: Vec<usize>,
     pub events: Vec<EventContent>,
@@ -62,10 +63,10 @@ impl CallFailure {
         starknet_identifier: &AddressOrClassHash,
     ) -> Self {
         match err {
-            EntryPointExecutionError::ExecutionFailed { error_data } => {
-                let err_data: Vec<_> = error_data.iter().map(|data| Felt::from_(*data)).collect();
+            EntryPointExecutionError::ExecutionFailed { error_trace } => {
+                let err_data = error_trace.last_retdata.clone().0;
 
-                let err_data_str = build_readable_text(&err_data).unwrap_or_default();
+                let err_data_str = build_readable_text(err_data.as_slice()).unwrap_or_default();
 
                 if err_data_str.contains("Failed to deserialize param #")
                     || err_data_str.contains("Input too long for arguments")
@@ -138,19 +139,23 @@ impl CallResult {
         starknet_identifier: &AddressOrClassHash,
     ) -> Self {
         match result {
-            Ok(call_info) => Self::from_success(call_info),
+            Ok(call_info) => Self::from_non_error(call_info),
             Err(err) => Self::from_err(err, starknet_identifier),
         }
     }
 
     #[must_use]
-    pub fn from_success(call_info: &CallInfo) -> Self {
-        let raw_return_data = &call_info.execution.retdata.0;
+    pub fn from_non_error(call_info: &CallInfo) -> Self {
+        let return_data = &call_info.execution.retdata.0;
 
-        let return_data = raw_return_data.iter().map(|data| (*data).into_()).collect();
+        if call_info.execution.failed {
+            return CallResult::Failure(CallFailure::Panic {
+                panic_data: return_data.clone(),
+            });
+        }
 
         CallResult::Success {
-            ret_data: return_data,
+            ret_data: return_data.clone(),
         }
     }
 
@@ -181,7 +186,7 @@ pub fn call_l1_handler(
         storage_address: *contract_address,
         caller_address: ContractAddress::default(),
         call_type: CallType::Call,
-        initial_gas: u64::MAX,
+        initial_gas: i64::MAX as u64,
     };
 
     call_entry_point(
@@ -200,17 +205,17 @@ pub fn call_entry_point(
 ) -> CallResult {
     let exec_result = execute_call_entry_point(
         &mut entry_point,
-        syscall_handler.state,
+        syscall_handler.base.state,
         cheatnet_state,
-        syscall_handler.resources,
-        syscall_handler.context,
+        syscall_handler.base.context,
+        false,
     );
 
     let result = CallResult::from_execution_result(&exec_result, starknet_identifier);
 
     if let Ok(call_info) = exec_result {
-        syscall_handler.inner_calls.push(call_info);
-    };
+        syscall_handler.base.inner_calls.push(call_info);
+    }
 
     result
 }

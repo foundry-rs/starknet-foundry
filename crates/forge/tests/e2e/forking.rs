@@ -1,5 +1,5 @@
 use super::common::runner::{
-    runner, setup_package_with_file_patterns, test_runner, BASE_FILE_PATTERNS,
+    BASE_FILE_PATTERNS, runner, setup_package_with_file_patterns, test_runner,
 };
 use forge_runner::CACHE_DIR;
 use indoc::{formatdoc, indoc};

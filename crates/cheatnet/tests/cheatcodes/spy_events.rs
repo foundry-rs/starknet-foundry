@@ -5,8 +5,8 @@ use crate::common::{call_contract, deploy_contract, felt_selector_from_name};
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use cheatnet::state::CheatnetState;
-use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
+use conversions::string::TryFromHexStr;
 use starknet_types_core::felt::Felt;
 use std::vec;
 use tempfile::TempDir;
@@ -318,8 +318,8 @@ fn test_emitted_by_emit_events_syscall() {
     );
 }
 
-#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn capture_cairo0_event() {
+#[test]
+fn capture_cairo0_event() {
     let temp_dir = TempDir::new().unwrap();
     let mut cached_state = create_fork_cached_state_at(53_626, temp_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();

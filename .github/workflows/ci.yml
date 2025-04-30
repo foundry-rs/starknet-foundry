@@ -1,7 +1,7 @@
 name: CI
 
 env:
-  DEVNET_REV: ef789b700770fa27a2fc057b3d1c610771be27d9
+  DEVNET_REV: fc5a2753a2eedcc27eed7a4fae3ecac08c2ca1b4 # v0.3.0
 
 on:
   pull_request:
@@ -11,13 +11,32 @@ on:
       - master
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
-  test-forge-unit-and-integration:
-    name: Test Forge / Unit and Integration Tests
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix_os: ${{ steps.set-matrix.outputs.matrix_os }}
+    steps:
+      - name: Set OS matrix based on event
+        id: set-matrix
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo 'matrix_os=["ubuntu-latest"]' >> $GITHUB_OUTPUT
+          else
+            echo 'matrix_os=["ubuntu-latest","windows-latest"]' >> $GITHUB_OUTPUT
+          fi
+
+  test-forge-unit:
+    needs: setup
+    name: Test Forge / Unit Tests
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -25,14 +44,14 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: cargo test --release --lib -p forge
-      - run: cargo test --release integration -p forge
 
-  build-test-forge-e2e-nextest-archive:
+  build-test-forge-nextest-archive:
+    needs: setup
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -47,15 +66,37 @@ jobs:
           name: nextest-archive-${{ matrix.os }}
           path: nextest-archive-${{ matrix.os }}.tar.zst
 
-  test-forge-e2e:
-    name: Test Forge / E2E Tests
+  test-forge-integration:
+    name: Test Forge / Integration Tests
     runs-on: ${{ matrix.os }}
-    needs: build-test-forge-e2e-nextest-archive
+    needs: [ build-test-forge-nextest-archive, setup ]
     strategy:
       fail-fast: false
       matrix:
-        partition: [ 1, 2, 3, 4, 5, 6, 7, 8 ]
-        os: [ ubuntu-latest, windows-latest ]
+        partition: [ 1, 2, 3 ]
+        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+      - uses: software-mansion/setup-scarb@v1
+      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: taiki-e/install-action@nextest
+      - uses: actions/download-artifact@v4
+        with:
+          name: nextest-archive-${{ matrix.os }}
+      - name: nextest partition ${{ matrix.partition }}/3
+        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ matrix.os }}.tar.zst' integration
+
+  test-forge-e2e:
+    name: Test Forge / E2E Tests
+    runs-on: ${{ matrix.os }}
+    needs: [ build-test-forge-nextest-archive, setup ]
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: [ 1, 2, 3 ]
+        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
     steps:
       - name: Extract branch name
         if: github.event_name != 'pull_request'
@@ -77,14 +118,6 @@ jobs:
         run: echo "REPO_NAME=$(echo ${{ github.event.pull_request.head.repo.full_name }}.git)" >> $GITHUB_ENV
         shell: bash
 
-      - name: Print repo name
-        run: echo 'The repo name is' $REPO_NAME
-        shell: bash
-
-      - name: Get branch name
-        run: echo 'The branch name is' $BRANCH_NAME
-        shell: bash
-
       - name: Install cairo-profiler
         if: runner.os != 'Windows'
         run: |
@@ -103,11 +136,31 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: nextest-archive-${{ matrix.os }}
-      - name: nextest partition ${{ matrix.partition }}/8
-        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/8' --archive-file 'nextest-archive-${{ matrix.os }}.tar.zst' e2e
+      - name: nextest partition ${{ matrix.partition }}/3
+        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ matrix.os }}.tar.zst' e2e
 
-  test-scarb-2-8-3:
-    name: Test scarb 2.8.3
+  test-requirements-check-special-conditions:
+    name: Test requirements check special conditions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+      - uses: software-mansion/setup-universal-sierra-compiler@v1
+
+      - run: cargo test --package forge --features no_scarb_installed --lib compatibility_check::tests::failing_tool_not_installed
+
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: "2.9.1"
+
+      - run: cargo test --package forge --features scarb_2_9_1 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
+      - run: cargo test --package forge --features scarb_2_9_1 --lib compatibility_check::tests::warning_requirements
+      - run: cargo test --package forge --features scarb_2_9_1 --test main e2e::running::sierra_gas_with_older_scarb
+
+  # todo(3096): Remove this and the feature as soon as scarb 2.10 is the oldest officially supported version
+  test-scarb-since-2-10:
+    name: Test scarb 2.10
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -115,53 +168,10 @@ jobs:
       - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
       - uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "2.8.3"
+          scarb-version: "2.10.1"
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
-      - name: Install cairo-coverage
-        run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
-
-      - run: cargo test --package forge --features scarb_2_8_3 --test main e2e::coverage
-      - run: cargo test --package forge --features scarb_2_8_3 --test main e2e::backtrace
-
-  test-coverage-error:
-    name: Test coverage error
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
-      - uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: "2.7.1"
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
-
-      - name: Install cairo-coverage
-        run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
-
-      - run: cargo test --package forge --features scarb_2_7_1 --test main e2e::coverage::test_fail_on_scarb_version_lt_2_8_0
-
-  test-contracts-artifacts:
-    name: Test contracts artifacts
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
-      - uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: "2.8.3"
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
-      - run: |
-          cargo test --package forge --features scarb_2_8_3 e2e::contract_artifacts
-      - run: |
-          cargo test --package forge --features scarb_2_8_3 e2e::features
-      - run: |
-          cargo test --package scarb-api --features scarb_2_8_3 get_starknet_artifacts_path
-      - run: |
-          cargo test --package scarb-api --features scarb_2_8_3 test_load_contracts_artifacts
+      - run: cargo test --package forge --features scarb_since_2_10 sierra_gas
 
   test-forge-runner:
     name: Test Forge Runner
@@ -194,6 +204,32 @@ jobs:
       - name: Run Data Transformer tests
         run: cargo test --release -p data-transformer
 
+  test-forge-debugging:
+    name: Test Forge Debugging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
+      - uses: software-mansion/setup-scarb@22f50f68eb6ffacfc173786dab19aa7d49b43441 # v1.5.0
+      - uses: software-mansion/setup-universal-sierra-compiler@58146c4184fa6ec5e8aaf02309ab85e35f782ed0 # v1.0.0
+      - name: Run Forge Debugging tests
+        run: cargo test --release -p forge --features debugging --test main e2e::debugging
+
+  test-forge-backtrace:
+    name: Test Forge Backtrace - support for `panic-backtrace` in Scarb.toml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
+      - uses: software-mansion/setup-scarb@22f50f68eb6ffacfc173786dab19aa7d49b43441 # v1.5.0
+        with:
+          scarb-version: "nightly-2025-03-27"
+      - uses: software-mansion/setup-universal-sierra-compiler@58146c4184fa6ec5e8aaf02309ab85e35f782ed0 # v1.0.0
+      - name: Run Forge Debugging tests
+        run: cargo test --release -p forge --features supports-panic-backtrace --test main e2e::backtrace
+
   test-forge-scarb-plugin:
     name: Test Forge Scarb Plugin
     runs-on: ubuntu-latest
@@ -204,14 +240,16 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run Forge Scarb Plugin tests
-        run: cargo test --release -p snforge_scarb_plugin
+        working-directory: crates/snforge-scarb-plugin
+        run: cargo test --release
 
   test-cast:
     name: Test Cast
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        # TODO(#3083): Restore running sncast tests on Windows
+        os: [ ubuntu-latest ]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
@@ -235,8 +273,6 @@ jobs:
           $DEVNET_INSTALL_DIR = "${{ github.workspace }}\crates\sncast\tests\utils\devnet"
           cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev ${{ env.DEVNET_REV }} --root $DEVNET_INSTALL_DIR
       - uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: "2.7.0"
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests
         run: cargo test --release -p sncast
@@ -263,11 +299,12 @@ jobs:
       - run: cargo test --release -p shared
 
   test-scarb-api:
+    needs: setup
     name: Test Scarb Api
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable

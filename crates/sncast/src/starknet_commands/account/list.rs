@@ -8,13 +8,11 @@ use serde::Deserialize;
 use serde::Serialize;
 use sncast::AccountType;
 use sncast::{
-    check_account_file_exists, read_and_parse_json_file, response::print::OutputFormat,
-    AccountData, NumbersFormat,
+    AccountData, NestedMap, NumbersFormat, check_account_file_exists, read_and_parse_json_file,
+    response::print::OutputFormat,
 };
 use std::collections::HashMap;
 use std::fmt::Display;
-
-use super::NestedMap;
 
 #[derive(Args, Debug)]
 #[command(

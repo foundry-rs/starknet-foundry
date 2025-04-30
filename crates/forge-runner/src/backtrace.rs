@@ -1,55 +1,62 @@
 use anyhow::{Context, Result};
+use cairo_annotations::annotations::TryFromDebugInfo;
 use cairo_annotations::annotations::coverage::{
     CodeLocation, ColumnNumber, CoverageAnnotationsV1, LineNumber, VersionedCoverageAnnotations,
 };
 use cairo_annotations::annotations::profiler::{
     FunctionName, ProfilerAnnotationsV1, VersionedProfilerAnnotations,
 };
-use cairo_annotations::annotations::TryFromDebugInfo;
 use cairo_lang_sierra::program::StatementIdx;
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet_classes::contract_class::ContractClass;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use cheatnet::state::EncounteredError;
+use cheatnet::state::EncounteredErrors;
 use indoc::indoc;
 use itertools::Itertools;
 use rayon::prelude::*;
 use starknet_api::core::ClassHash;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use std::{env, fmt};
 
 const BACKTRACE_ENV: &str = "SNFORGE_BACKTRACE";
 
+#[must_use]
 pub fn add_backtrace_footer(
     message: String,
     contracts_data: &ContractsData,
-    encountered_errors: &[EncounteredError],
+    encountered_errors: &EncounteredErrors,
 ) -> String {
     if encountered_errors.is_empty() {
         return message;
     }
 
-    let is_backtrace_enabled = env::var(BACKTRACE_ENV).is_ok_and(|value| value == "1");
-    if !is_backtrace_enabled {
+    if !is_backtrace_enabled() {
         return format!(
             "{message}\nnote: run with `{BACKTRACE_ENV}=1` environment variable to display a backtrace",
         );
     }
 
-    BacktraceContractRepository::new(contracts_data, encountered_errors)
-        .map(|repository| {
+    let class_hashes = encountered_errors.keys().copied().collect();
+
+    ContractBacktraceDataMapping::new(contracts_data, class_hashes)
+        .and_then(|data_mapping| {
             encountered_errors
                 .iter()
-                .filter_map(|error| repository.get_backtrace(error.pc, error.class_hash))
-                .map(|backtrace| backtrace.to_string())
-                .collect::<Vec<_>>()
-                .join("\n")
+                .map(|(class_hash, pcs)| data_mapping.get_backtrace(pcs, class_hash))
+                .map(|backtrace| backtrace.map(|backtrace| backtrace.to_string()))
+                .collect::<Result<Vec<_>>>()
+                .map(|backtrace| backtrace.join("\n"))
         })
         .map_or_else(
             |err| format!("{message}\nfailed to create backtrace: {err}"),
             |backtraces| format!("{message}\n{backtraces}"),
         )
+}
+
+#[must_use]
+pub fn is_backtrace_enabled() -> bool {
+    env::var(BACKTRACE_ENV).is_ok_and(|value| value == "1")
 }
 
 struct ContractBacktraceData {
@@ -120,7 +127,7 @@ impl ContractBacktraceData {
         })
     }
 
-    fn backtrace_from(&self, pc: usize) -> Option<BacktraceStack> {
+    fn backtrace_from(&self, pc: usize) -> Result<Vec<Backtrace>> {
         let sierra_statement_idx = StatementIdx(
             self.casm_debug_info_start_offsets
                 .partition_point(|start_offset| *start_offset < pc - 1)
@@ -130,64 +137,88 @@ impl ContractBacktraceData {
         let code_locations = self
             .coverage_annotations
             .statements_code_locations
-            .get(&sierra_statement_idx)?;
+            .get(&sierra_statement_idx)
+            .with_context(|| {
+                format!("failed to get code locations for statement idx: {sierra_statement_idx}")
+            })?;
 
         let function_names = self
             .profiler_annotations
             .statements_functions
-            .get(&sierra_statement_idx)?;
+            .get(&sierra_statement_idx)
+            .with_context(|| {
+                format!("failed to get function names for statement idx: {sierra_statement_idx}")
+            })?;
 
         let stack = code_locations
             .iter()
             .zip(function_names)
-            .map(|(code_location, function_name)| Backtrace {
-                code_location,
-                function_name,
+            .enumerate()
+            .map(|(index, (code_location, function_name))| {
+                let is_not_last = index != function_names.len() - 1;
+                // `function_names is the stack of:
+                // "functions that were inlined or generated along the way up
+                // to the first non-inlined function from the original code.
+                // The vector represents the stack from the least meaningful elements."
+                // ~ from doc of `ProfilerAnnotationsV1`
+                // So we need to check if the function name is not the last one then it is inlined
+                Backtrace {
+                    inlined: is_not_last,
+                    code_location,
+                    function_name,
+                }
             })
             .collect();
 
-        Some(BacktraceStack {
-            pc,
-            contract_name: &self.contract_name,
+        Ok(stack)
+    }
+
+    fn backtrace_stack_from(&self, pcs: &[usize]) -> Result<BacktraceStack> {
+        let stack = pcs
+            .iter()
+            .map(|pc| self.backtrace_from(*pc))
+            .flatten_ok()
+            .collect::<Result<Vec<_>>>()?;
+
+        let contract_name = &self.contract_name;
+
+        Ok(BacktraceStack {
+            contract_name,
             stack,
         })
     }
 }
 
-struct BacktraceContractRepository(HashMap<ClassHash, ContractBacktraceData>);
+struct ContractBacktraceDataMapping(HashMap<ClassHash, ContractBacktraceData>);
 
-impl BacktraceContractRepository {
-    fn new(
-        contracts_data: &ContractsData,
-        encountered_errors: &[EncounteredError],
-    ) -> Result<Self> {
+impl ContractBacktraceDataMapping {
+    fn new(contracts_data: &ContractsData, class_hashes: HashSet<ClassHash>) -> Result<Self> {
         Ok(Self(
-            encountered_errors
-                .iter()
-                .map(|error| error.class_hash)
-                .unique()
-                .collect::<Vec<_>>()
-                .par_iter()
+            class_hashes
+                .into_par_iter()
                 .map(|class_hash| {
-                    ContractBacktraceData::new(class_hash, contracts_data)
-                        .map(|contract_data| (*class_hash, contract_data))
+                    ContractBacktraceData::new(&class_hash, contracts_data)
+                        .map(|contract_data| (class_hash, contract_data))
                 })
                 .collect::<Result<_>>()?,
         ))
     }
 
-    fn get_backtrace(&self, pc: usize, class_hash: ClassHash) -> Option<BacktraceStack> {
-        self.0.get(&class_hash)?.backtrace_from(pc)
+    fn get_backtrace(&self, pc: &[usize], class_hash: &ClassHash) -> Result<BacktraceStack> {
+        self.0
+            .get(class_hash)
+            .expect("class hash should be present in the data mapping")
+            .backtrace_stack_from(pc)
     }
 }
 
 struct Backtrace<'a> {
     code_location: &'a CodeLocation,
     function_name: &'a FunctionName,
+    inlined: bool,
 }
 
 struct BacktraceStack<'a> {
-    pc: usize,
     contract_name: &'a str,
     stack: Vec<Backtrace<'a>>,
 }
@@ -195,32 +226,25 @@ struct BacktraceStack<'a> {
 impl Display for Backtrace<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let function_name = &self.function_name.0;
-        let path = truncate_at_char(&self.code_location.0 .0, '[');
+        let path = &self.code_location.0;
         let line = self.code_location.1.start.line + LineNumber(1); // most editors start line numbers from 1
         let col = self.code_location.1.start.col + ColumnNumber(1); // most editors start column numbers from 1
 
-        write!(f, "{function_name}\n       at {path}:{line}:{col}",)
+        if self.inlined {
+            write!(f, "(inlined) ")?;
+        }
+
+        write!(f, "{function_name}\n       at {path}:{line}:{col}")
     }
 }
 
 impl Display for BacktraceStack<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(
-            f,
-            "error occurred in contract '{}' at pc: '{}'",
-            self.contract_name, self.pc
-        )?;
+        writeln!(f, "error occurred in contract '{}'", self.contract_name,)?;
         writeln!(f, "stack backtrace:")?;
         for (i, backtrace) in self.stack.iter().enumerate() {
             writeln!(f, "   {i}: {backtrace}")?;
         }
         Ok(())
-    }
-}
-
-fn truncate_at_char(input: &str, delimiter: char) -> &str {
-    match input.find(delimiter) {
-        Some(index) => &input[..index],
-        None => input,
     }
 }

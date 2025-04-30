@@ -1,7 +1,8 @@
+use forge_runner::forge_config::ForgeTrackedResource;
 use std::path::Path;
 
 use indoc::indoc;
-use test_utils::runner::{assert_passed, Contract};
+use test_utils::runner::{Contract, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
@@ -34,7 +35,7 @@ fn should_panic() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -74,7 +75,7 @@ fn should_panic_unknown_entry_point() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }

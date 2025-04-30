@@ -7,7 +7,7 @@ fn main() {
 
     assert!(
         ScriptCommandError::ProviderError(
-            ProviderError::StarknetError(StarknetError::TransactionHashNotFound(()))
-        ) == status
+            ProviderError::StarknetError(StarknetError::TransactionHashNotFound(())),
+        ) == status,
     )
 }

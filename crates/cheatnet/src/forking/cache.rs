@@ -1,26 +1,29 @@
 use anyhow::{Context, Result};
-use blockifier::blockifier::block::BlockInfo;
 use camino::{Utf8Path, Utf8PathBuf};
 use fs2::FileExt;
 use regex::Regex;
 use runtime::starknet::context::SerializableBlockInfo;
 use serde::{Deserialize, Serialize};
 use starknet::core::types::ContractClass;
-use starknet_api::block::BlockNumber;
+use starknet_api::block::{BlockInfo, BlockNumber};
 use starknet_api::core::{ClassHash, ContractAddress, Nonce};
 use starknet_api::state::StorageKey;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::fs;
-use std::fs::OpenOptions;
-use std::io::{Read, Write};
+use std::fs::{File, OpenOptions};
+use std::io::{Read, Seek, Write};
+use std::string::ToString;
 use url::Url;
 
-pub const CACHE_VERSION: usize = 3;
+#[must_use]
+pub fn cache_version() -> String {
+    env!("CARGO_PKG_VERSION").replace('.', "_")
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 struct ForkCacheContent {
-    cache_version: usize,
+    cache_version: String,
     storage_at: HashMap<ContractAddress, HashMap<StorageKey, Felt>>,
     nonce_at: HashMap<ContractAddress, Nonce>,
     class_hash_at: HashMap<ContractAddress, ClassHash>,
@@ -31,12 +34,12 @@ struct ForkCacheContent {
 impl Default for ForkCacheContent {
     fn default() -> Self {
         Self {
-            cache_version: CACHE_VERSION,
-            storage_at: Default::default(),
-            nonce_at: Default::default(),
-            class_hash_at: Default::default(),
-            compiled_contract_class: Default::default(),
-            block_info: Default::default(),
+            cache_version: cache_version(),
+            storage_at: HashMap::default(),
+            nonce_at: HashMap::default(),
+            class_hash_at: HashMap::default(),
+            compiled_contract_class: HashMap::default(),
+            block_info: Option::default(),
         }
     }
 }
@@ -46,9 +49,11 @@ impl ForkCacheContent {
         let cache: Self =
             serde_json::from_str(serialized).expect("Could not deserialize cache from json");
 
-        assert!(
-            cache.cache_version == CACHE_VERSION,
-            "Expected the Version {CACHE_VERSION}"
+        assert_eq!(
+            cache.cache_version,
+            cache_version(),
+            "Expected the Version {}",
+            cache_version()
         );
 
         cache
@@ -75,7 +80,7 @@ impl ForkCacheContent {
     }
 }
 
-#[allow(clippy::to_string_trait_impl)]
+#[expect(clippy::to_string_trait_impl)]
 impl ToString for ForkCacheContent {
     fn to_string(&self) -> String {
         serde_json::to_string(self).expect("Could not serialize json cache")
@@ -91,6 +96,18 @@ pub struct ForkCache {
 impl Drop for ForkCache {
     fn drop(&mut self) {
         self.save();
+    }
+}
+
+trait FileTruncateExtension {
+    fn clear(&mut self) -> Result<()>;
+}
+
+impl FileTruncateExtension for File {
+    fn clear(&mut self) -> Result<()> {
+        self.set_len(0).context("Failed to truncate file")?;
+        self.rewind().context("Failed to rewind file")?;
+        Ok(())
     }
 }
 
@@ -129,6 +146,7 @@ impl ForkCache {
     fn save(&self) {
         let mut file = OpenOptions::new()
             .write(true)
+            .read(true)
             .create(true)
             .truncate(false)
             .open(&self.cache_file)
@@ -136,8 +154,9 @@ impl ForkCache {
 
         file.lock_exclusive().expect("Could not lock on cache file");
 
-        let cache_file_content =
-            fs::read_to_string(&self.cache_file).expect("Should have been able to read the cache");
+        let mut cache_file_content = String::new();
+        file.read_to_string(&mut cache_file_content)
+            .expect("Should have been able to read the cache");
 
         let output = if cache_file_content.is_empty() {
             self.fork_cache_content.to_string()
@@ -147,6 +166,7 @@ impl ForkCache {
             fs_fork_cache_content.to_string()
         };
 
+        file.clear().expect("Failed to clear file");
         file.write_all(output.as_bytes())
             .expect("Could not write cache to file");
 
@@ -248,7 +268,8 @@ fn cache_file_path_from_fork_config(
     let sanitized_path = re.replace_all(url.as_str(), "_");
 
     let cache_file_path = cache_dir.join(format!(
-        "{sanitized_path}_{block_number}_v{CACHE_VERSION}.json"
+        "{sanitized_path}_{block_number}_v{}.json",
+        cache_version()
     ));
 
     fs::create_dir_all(cache_file_path.parent().unwrap())

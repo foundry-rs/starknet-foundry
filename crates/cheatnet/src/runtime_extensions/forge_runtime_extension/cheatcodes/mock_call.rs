@@ -1,5 +1,5 @@
-use crate::state::{CheatSpan, CheatStatus, MockCalldata};
 use crate::CheatnetState;
+use crate::state::{CheatSpan, CheatStatus, MockCalldata};
 use num_traits::Zero;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
 use starknet_crypto::poseidon_hash_many;

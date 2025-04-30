@@ -204,7 +204,7 @@ pub fn print_command_result<T: CommandResponse>(
 #[cfg(test)]
 mod tests {
     use super::{OutputData, OutputValue};
-    use crate::{response::print::Format, NumbersFormat};
+    use crate::{NumbersFormat, response::print::Format};
     use serde_json::{Map, Value};
 
     #[test]

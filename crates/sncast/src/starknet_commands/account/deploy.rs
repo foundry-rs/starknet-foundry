@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
@@ -9,17 +9,17 @@ use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::InvokeResponse;
 use sncast::{
-    apply_optional, chain_id_to_network_name, check_account_file_exists,
-    get_account_data_from_accounts_file, get_account_data_from_keystore, get_keystore_password,
-    handle_rpc_error, handle_wait_for_tx, AccountType, WaitForTx,
+    AccountType, WaitForTx, apply_optional_fields, chain_id_to_network_name,
+    check_account_file_exists, get_account_data_from_accounts_file, get_account_data_from_keystore,
+    get_keystore_password, handle_rpc_error, handle_wait_for_tx,
 };
 use starknet::accounts::{AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory};
 use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
 use starknet::core::types::BlockTag::Pending;
 use starknet::core::types::{BlockId, StarknetError::ClassHashNotFound};
 use starknet::core::utils::get_contract_address;
-use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::ProviderError::StarknetError;
+use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
@@ -28,21 +28,25 @@ use starknet_types_core::felt::Felt;
 #[command(about = "Deploy an account to the Starknet")]
 pub struct Deploy {
     /// Name of the account to be deployed
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub name: Option<String>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub fee_args: FeeArgs,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
+
+    /// If passed, the command will not trigger an interactive prompt to add an account as a default
+    #[arg(long)]
+    pub silent: bool,
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 pub async fn deploy(
     provider: &JsonRpcClient<HttpTransport>,
     accounts_file: Utf8PathBuf,
-    deploy_args: Deploy,
+    deploy_args: &Deploy,
     chain_id: Felt,
     wait_config: WaitForTx,
     account: &str,
@@ -62,6 +66,7 @@ pub async fn deploy(
     } else {
         let account_name = deploy_args
             .name
+            .clone()
             .ok_or_else(|| anyhow!("Required argument `--name` not provided"))?;
         check_account_file_exists(&accounts_file)?;
         deploy_from_accounts_file(
@@ -178,7 +183,7 @@ async fn deploy_from_accounts_file(
     Ok(result)
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 async fn get_deployment_result(
     provider: &JsonRpcClient<HttpTransport>,
     account_type: AccountType,
@@ -194,7 +199,7 @@ async fn get_deployment_result(
             let factory = ArgentAccountFactory::new(
                 class_hash,
                 chain_id,
-                Felt::ZERO,
+                None,
                 LocalWallet::from_signing_key(private_key),
                 provider,
             )
@@ -239,24 +244,35 @@ async fn deploy_account<T>(
 where
     T: AccountFactory + Sync,
 {
-    let fee_settings = fee_args
-        .try_into_fee_settings(account_factory.provider(), account_factory.block_id())
-        .await?;
+    let deployment = account_factory.deploy_v3(salt);
+
+    let fee_settings = if fee_args.max_fee.is_some() {
+        let fee_estimate = deployment
+            .estimate_fee()
+            .await
+            .expect("Failed to estimate fee");
+        fee_args.try_into_fee_settings(Some(&fee_estimate))
+    } else {
+        fee_args.try_into_fee_settings(None)
+    };
 
     let FeeSettings {
-        max_gas,
-        max_gas_unit_price,
-    } = fee_settings;
-    let deployment = account_factory.deploy_v3(salt);
-    let deployment = apply_optional(
+        l1_gas,
+        l1_gas_price,
+        l2_gas,
+        l2_gas_price,
+        l1_data_gas,
+        l1_data_gas_price,
+    } = fee_settings.expect("Failed to convert to fee settings");
+
+    let deployment = apply_optional_fields!(
         deployment,
-        max_gas.map(std::num::NonZero::get),
-        AccountDeploymentV3::gas,
-    );
-    let deployment = apply_optional(
-        deployment,
-        max_gas_unit_price.map(std::num::NonZero::get),
-        AccountDeploymentV3::gas_price,
+        l1_gas => AccountDeploymentV3::l1_gas,
+        l1_gas_price => AccountDeploymentV3::l1_gas_price,
+        l2_gas => AccountDeploymentV3::l2_gas,
+        l2_gas_price => AccountDeploymentV3::l2_gas_price,
+        l1_data_gas => AccountDeploymentV3::l1_data_gas,
+        l1_data_gas_price => AccountDeploymentV3::l1_data_gas_price
     );
     let result = deployment.send().await;
 

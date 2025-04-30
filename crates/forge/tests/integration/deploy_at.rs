@@ -1,6 +1,7 @@
+use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
+use test_utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
@@ -73,7 +74,7 @@ fn deploy_at_correct_address() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -104,7 +105,7 @@ fn deploy_two_at_the_same_address() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
     assert_case_output_contains(
@@ -145,7 +146,7 @@ fn deploy_at_error_handling() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }

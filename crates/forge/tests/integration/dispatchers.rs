@@ -1,6 +1,7 @@
+use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
+use test_utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
@@ -48,7 +49,7 @@ fn simple_call_and_invoke() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -121,7 +122,7 @@ fn advanced_types() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -205,7 +206,7 @@ fn handling_errors() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -257,7 +258,7 @@ fn handling_bytearray_based_errors() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -329,13 +330,13 @@ fn serding() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
 
 #[test]
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 fn proxy_storage() {
     let test = test_case!(
         indoc!(
@@ -504,30 +505,24 @@ fn proxy_storage() {
         )
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
 
 #[test]
-#[allow(clippy::too_many_lines)]
-#[ignore] // Not doable right now in production
 fn proxy_dispatcher_panic() {
     let test = test_case!(
         indoc!(
             r#"
-        use array::ArrayTrait;
-        use result::ResultTrait;
-        use option::OptionTrait;
-        use traits::TryInto;
-        use traits::Into;
+        use snforge_std::DeclareResultTrait;
         use starknet::ContractAddress;
-        use starknet::Felt252TryIntoContractAddress;
         use snforge_std::{ declare, ContractClassTrait };
+        use core::panic_with_felt252;
 
         fn deploy_contract(name: ByteArray, constructor_calldata: @Array<felt252>) -> ContractAddress {
-            let contract = declare(name).unwrap();
-            let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+            let contract = declare(name).unwrap().contract_class();
+            let (contract_address, _) = contract.deploy(constructor_calldata).unwrap();
             contract_address
         }
 
@@ -564,7 +559,6 @@ fn proxy_dispatcher_panic() {
 
             #[starknet::contract]
             mod Caller {
-                use result::ResultTrait;
                 use starknet::ContractAddress;
 
                 #[starknet::interface]
@@ -606,6 +600,8 @@ fn proxy_dispatcher_panic() {
 
             #[starknet::contract]
             mod Executor {
+                use core::panic_with_felt252;
+
                 #[storage]
                 struct Storage {}
 
@@ -621,7 +617,7 @@ fn proxy_dispatcher_panic() {
         )
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -676,13 +672,13 @@ fn nonexistent_method_call() {
         )
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
     assert_case_output_contains(
-       & result,
+        &result,
         "nonexistent_method_call",
-        "Entry point selector 0x1fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485 not found in contract"
+        "Entry point selector 0x1fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485 not found in contract",
     );
 }
 
@@ -775,14 +771,14 @@ fn nonexistent_libcall_function() {
         )
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
 
     assert_case_output_contains(
         &result,
         "nonexistent_libcall_function",
-        "(0x454e545259504f494e545f4e4f545f464f554e44 ('ENTRYPOINT_NOT_FOUND'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))"
+        "0x454e545259504f494e545f4e4f545f464f554e44 ('ENTRYPOINT_NOT_FOUND')",
     );
 }
 
@@ -807,7 +803,7 @@ fn undeclared_class_call() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
     assert_case_output_contains(
@@ -901,9 +897,61 @@ fn nonexistent_class_libcall() {
         )
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
     assert_case_output_contains(&result, "test_nonexistent_libcall", "Class with hash");
     assert_case_output_contains(&result, "test_nonexistent_libcall", "is not declared.");
+}
+
+#[test]
+fn dispatcher_in_nested_call() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
+        use starknet::ContractAddress;
+
+        #[starknet::interface]
+        pub trait ITop<TContractState> {
+            fn call_panic_contract(
+                self: @TContractState, panic_contract_address: starknet::ContractAddress,
+            );
+        }
+
+        fn deploy_contracts() -> (ContractAddress, ContractAddress) {
+            let contract = declare("Top").unwrap().contract_class();
+            let (top_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+
+            let contract = declare("Nested").unwrap().contract_class();
+            let (nested_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+
+            (top_address, nested_address)
+        }
+
+        #[test]
+        fn test_error_handled_inside_contract() {
+            let (top_address, nested_address) = deploy_contracts();
+
+            let dispatcher = ITopDispatcher { contract_address: top_address };
+
+            dispatcher.call_panic_contract(nested_address);
+        }
+        "#
+        ),
+        Contract::from_code_path(
+            "Top".to_string(),
+            Path::new("tests/data/contracts/catching_error.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "Nested".to_string(),
+            Path::new("tests/data/contracts/catching_error.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+
+    assert_passed(&result);
 }

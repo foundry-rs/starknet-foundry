@@ -4,28 +4,31 @@ use crate::starknet_commands::{
 };
 use anyhow::{Context, Result};
 use data_transformer::Calldata;
+use sncast::helpers::account::generate_account_name;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
-use sncast::response::print::{print_command_result, OutputFormat};
+use sncast::response::print::{OutputFormat, print_command_result};
 use std::io;
 use std::io::IsTerminal;
 
 use crate::starknet_commands::deploy::DeployArguments;
 use camino::Utf8PathBuf;
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
 use configuration::load_config;
+use shared::auto_completions::{Completion, generate_completions};
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::interactive::prompt_to_add_account_as_default;
 use sncast::helpers::scarb_utils::{
-    assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
-    get_scarb_metadata_with_deps, BuildConfig,
+    BuildConfig, assert_manifest_path_exists, build, build_and_load_artifacts,
+    get_package_metadata, get_scarb_metadata_with_deps,
 };
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::structs::DeclareResponse;
 use sncast::{
-    chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_class_hash_by_address,
-    get_contract_class, get_default_state_file_name, NumbersFormat, ValidatedWaitParams, WaitForTx,
+    NumbersFormat, ValidatedWaitParams, WaitForTx, chain_id_to_network_name, get_account,
+    get_block_id, get_chain_id, get_class_hash_by_address, get_contract_class,
+    get_default_state_file_name,
 };
 use starknet::core::types::ContractClass;
 use starknet::core::utils::get_selector_from_name;
@@ -68,49 +71,49 @@ Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
 "
 )]
 #[command(about = "sncast - All-in-one tool for interacting with Starknet smart contracts", long_about = None)]
-#[clap(name = "sncast")]
-#[allow(clippy::struct_excessive_bools)]
+#[command(name = "sncast")]
+#[expect(clippy::struct_excessive_bools)]
 struct Cli {
     /// Profile name in snfoundry.toml config file
-    #[clap(short, long)]
+    #[arg(short, long)]
     profile: Option<String>,
 
     /// Account to be used for contract declaration;
     /// When using keystore (`--keystore`), this should be a path to account file
     /// When using accounts file, this should be an account name
-    #[clap(short = 'a', long)]
+    #[arg(short = 'a', long)]
     account: Option<String>,
 
     /// Path to the file holding accounts info
-    #[clap(long = "accounts-file")]
+    #[arg(long = "accounts-file")]
     accounts_file_path: Option<Utf8PathBuf>,
 
     /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
-    #[clap(short, long)]
+    #[arg(short, long)]
     keystore: Option<Utf8PathBuf>,
 
     /// If passed, values will be displayed as integers
-    #[clap(long, conflicts_with = "hex_format")]
+    #[arg(long, conflicts_with = "hex_format")]
     int_format: bool,
 
     /// If passed, values will be displayed as hex
-    #[clap(long, conflicts_with = "int_format")]
+    #[arg(long, conflicts_with = "int_format")]
     hex_format: bool,
 
     /// If passed, output will be displayed in json format
-    #[clap(short, long)]
+    #[arg(short, long)]
     json: bool,
 
     /// If passed, command will wait until transaction is accepted or rejected
-    #[clap(short = 'w', long)]
+    #[arg(short = 'w', long)]
     wait: bool,
 
     /// Adjusts the time after which --wait assumes transaction was not received or rejected
-    #[clap(long)]
+    #[arg(long)]
     wait_timeout: Option<u16>,
 
     /// Adjusts the time between consecutive attempts to fetch transaction by --wait flag
-    #[clap(long)]
+    #[arg(long)]
     wait_retry_interval: Option<u8>,
 
     #[command(subcommand)]
@@ -148,17 +151,20 @@ enum Commands {
 
     /// Verify a contract
     Verify(Verify),
+
+    /// Generate completion script
+    Completion(Completion),
 }
 
 #[derive(Debug, Clone, clap::Args)]
 #[group(multiple = false)]
 pub struct Arguments {
     /// Arguments of the called function serialized as a series of felts
-    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
+    #[arg(short, long, value_delimiter = ' ', num_args = 1..)]
     pub calldata: Option<Vec<String>>,
 
     // Arguments of the called function as a comma-separated string of Cairo expressions
-    #[clap(long)]
+    #[arg(long, allow_hyphen_values = true)]
     pub arguments: Option<String>,
 }
 
@@ -220,7 +226,7 @@ fn main() -> Result<()> {
     }
 }
 
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 async fn run_async_command(
     cli: Cli,
     config: CastConfig,
@@ -475,11 +481,10 @@ async fn run_async_command(
                 )
                 .await;
 
-                if !import.silent
-                    && result.is_ok()
-                    && io::stdout().is_terminal()
-                    && import.rpc.network.is_none()
-                {
+                let run_interactive_prompt =
+                    !import.silent && result.is_ok() && io::stdout().is_terminal();
+
+                if run_interactive_prompt {
                     if let Some(account_name) =
                         result.as_ref().ok().and_then(|r| r.account_name.clone())
                     {
@@ -501,7 +506,7 @@ async fn run_async_command(
                     create
                         .name
                         .clone()
-                        .context("Required argument `--name` not provided")?
+                        .unwrap_or_else(|| generate_account_name(&config.accounts_file).unwrap())
                 } else {
                     config.account.clone()
                 };
@@ -514,16 +519,6 @@ async fn run_async_command(
                     &create,
                 )
                 .await;
-
-                if !create.silent
-                    && result.is_ok()
-                    && io::stdout().is_terminal()
-                    && create.rpc.network.is_none()
-                {
-                    if let Err(err) = prompt_to_add_account_as_default(&account) {
-                        eprintln!("Error: Failed to launch interactive prompt: {err}");
-                    }
-                }
 
                 print_command_result("account create", &result, numbers_format, output_format)?;
                 print_block_explorer_link_if_allowed(
@@ -546,7 +541,7 @@ async fn run_async_command(
                 let result = starknet_commands::account::deploy::deploy(
                     &provider,
                     config.accounts_file,
-                    deploy,
+                    &deploy,
                     chain_id,
                     wait_config,
                     &config.account,
@@ -554,6 +549,19 @@ async fn run_async_command(
                     fee_args,
                 )
                 .await;
+
+                let run_interactive_prompt =
+                    !deploy.silent && result.is_ok() && io::stdout().is_terminal();
+
+                if config.keystore.is_none() && run_interactive_prompt {
+                    if let Err(err) = prompt_to_add_account_as_default(
+                        &deploy
+                            .name
+                            .expect("Must be provided if not using a keystore"),
+                    ) {
+                        eprintln!("Error: Failed to launch interactive prompt: {err}");
+                    }
+                }
 
                 print_command_result("account deploy", &result, numbers_format, output_format)?;
                 print_block_explorer_link_if_allowed(
@@ -631,17 +639,18 @@ async fn run_async_command(
             )
             .expect("Failed to build contract");
             let result = starknet_commands::verify::verify(
-                verify.contract_address,
-                verify.contract_name,
-                verify.verifier,
-                verify.network,
-                verify.confirm_verification,
+                verify,
                 &package_metadata.manifest_path,
                 &artifacts,
             )
             .await;
 
             print_command_result("verify", &result, numbers_format, output_format)?;
+            Ok(())
+        }
+
+        Commands::Completion(completion) => {
+            generate_completions(completion.shell, &mut Cli::command())?;
             Ok(())
         }
 

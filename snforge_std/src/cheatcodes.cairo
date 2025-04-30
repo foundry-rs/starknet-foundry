@@ -1,5 +1,5 @@
 use starknet::{ContractAddress, ClassHash, contract_address_const};
-use super::_cheatcode::execute_cheatcode_and_deserialize;
+use super::cheatcode::execute_cheatcode_and_deserialize;
 
 pub mod events;
 pub mod l1_handler;
@@ -8,6 +8,8 @@ pub mod storage;
 pub mod execution_info;
 pub mod message_to_l1;
 pub mod generate_random_felt;
+pub mod generate_arg;
+pub mod block_hash;
 
 /// Enum used to specify how long the target should be cheated for.
 #[derive(Copy, Drop, Serde, PartialEq, Clone, Debug)]
@@ -54,7 +56,7 @@ pub fn test_address() -> ContractAddress {
 /// - `ret_data` - data to return by the function `function_selector`
 /// - `n_times` - number of calls to mock the function for
 pub fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
-    contract_address: ContractAddress, function_selector: felt252, ret_data: T, n_times: u32
+    contract_address: ContractAddress, function_selector: felt252, ret_data: T, n_times: u32,
 ) {
     mock_call_when(contract_address, function_selector, MockCalldata::Any, ret_data, n_times)
 }
@@ -127,7 +129,7 @@ pub fn start_mock_call_when<T, impl TSerde: core::serde::Serde<T>, impl TDestruc
     contract_address: ContractAddress,
     function_selector: felt252,
     calldata: MockCalldata,
-    ret_data: T
+    ret_data: T,
 ) {
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
@@ -174,9 +176,9 @@ pub enum ReplaceBytecodeError {
 /// Returns `Result::Ok` if the replacement succeeded, and a `ReplaceBytecodeError` with appropriate
 /// error type otherwise
 pub fn replace_bytecode(
-    contract: ContractAddress, new_class: ClassHash
+    contract: ContractAddress, new_class: ClassHash,
 ) -> Result<(), ReplaceBytecodeError> {
     execute_cheatcode_and_deserialize::<
-        'replace_bytecode'
+        'replace_bytecode',
     >(array![contract.into(), new_class.into()].span())
 }

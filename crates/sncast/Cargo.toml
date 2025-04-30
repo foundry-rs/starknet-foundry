@@ -8,6 +8,7 @@ edition.workspace = true
 anyhow.workspace = true
 camino.workspace = true
 clap.workspace = true
+clap_complete.workspace = true
 serde_json.workspace = true
 serde.workspace = true
 starknet.workspace = true
@@ -30,10 +31,13 @@ conversions = { path = "../conversions" }
 data-transformer = { path = "../data-transformer" }
 configuration = { path = "../configuration" }
 shared = { path = "../shared" }
+forge_runner = { path = "../forge-runner" }
 cairo-lang-runner.workspace = true
 cairo-lang-sierra-to-casm.workspace = true
+cairo-lang-runnable-utils.workspace = true
 cairo-lang-utils.workspace = true
 cairo-lang-sierra.workspace = true
+cairo-lang-casm.workspace = true
 itertools.workspace = true
 starknet-types-core.workspace = true
 cairo-vm.workspace = true
@@ -61,6 +65,7 @@ test-case.workspace = true
 fs_extra.workspace = true
 wiremock.workspace = true
 docs = { workspace = true, features = ["testing"] }
+shared = { path = "../shared", features = ["testing"] }
 
 [[bin]]
 name = "sncast"

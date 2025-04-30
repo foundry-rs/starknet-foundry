@@ -1,33 +1,37 @@
 use crate::starknet_commands::declare::Declare;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
-use crate::{get_account, WaitForTx};
-use anyhow::{anyhow, Context, Result};
+use crate::{WaitForTx, get_account};
+use anyhow::{Context, Result, anyhow};
+use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::entry_point::CallEntryPoint;
+use blockifier::execution::entry_point::ExecutableCallEntryPoint;
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
+use cairo_lang_casm::hints::Hint;
+use cairo_lang_runnable_utils::builder::{EntryCodeConfig, RunnableBuilder, create_code_footer};
+use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_runner::{build_hints_dict, RunResultValue, SierraCasmRunner};
+use cairo_lang_runner::{Arg, RunResultValue, SierraCasmRunner};
 use cairo_lang_sierra::program::VersionedProgram;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
+use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::byte_array::ByteArray;
 use conversions::serde::deserialize::BufferReader;
-use itertools::chain;
-use runtime::starknet::context::{build_context, SerializableBlockInfo};
+use forge_runner::running::{has_segment_arena, syscall_handler_offset};
+use runtime::starknet::context::{SerializableBlockInfo, build_context};
 use runtime::starknet::state::DictStateReader;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic, StarknetRuntime,
     SyscallHandlingResult,
 };
-use scarb_api::{package_matches_version_requirement, StarknetContractArtifacts};
+use scarb_api::{StarknetContractArtifacts, package_matches_version_requirement};
 use scarb_metadata::{Metadata, PackageMetadata};
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::print::print_as_warning;
@@ -44,8 +48,8 @@ use sncast::state::hashing::{
 use sncast::state::state_file::StateManager;
 use starknet::accounts::{Account, SingleOwnerAccount};
 use starknet::core::types::{BlockId, BlockTag::Pending};
-use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
+use starknet::providers::jsonrpc::HttpTransport;
 use starknet::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
@@ -61,14 +65,14 @@ pub struct Run {
     pub script_name: String,
 
     /// Specifies scarb package to be used
-    #[clap(long)]
+    #[arg(long)]
     pub package: Option<String>,
 
     /// Do not use the state file
-    #[clap(long)]
+    #[arg(long)]
     pub no_state_file: bool,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 
@@ -92,7 +96,7 @@ impl CastScriptExtension<'_> {
 impl<'a> ExtensionLogic for CastScriptExtension<'a> {
     type Runtime = StarknetRuntime<'a>;
 
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines)]
     fn handle_cheatcode(
         &mut self,
         selector: &str,
@@ -268,7 +272,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
     }
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 pub fn run(
     module_name: &str,
     metadata: &Metadata,
@@ -293,47 +297,59 @@ pub fn run(
         .program;
 
     let runner = SierraCasmRunner::new(
-        sierra_program,
+        sierra_program.clone(),
         Some(MetadataComputationConfig::default()),
         OrderedHashMap::default(),
         None,
     )
     .with_context(|| "Failed to set up runner")?;
 
+    // `builder` field in `SierraCasmRunner` is private, hence the need to create a new `RunnableBuilder`
+    // https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L184
+    let builder = RunnableBuilder::new(sierra_program, Some(MetadataComputationConfig::default()))
+        .with_context(|| "Failed to create builder")?;
+
     let name_suffix = module_name.to_string() + "::main";
     let func = runner.find_function(name_suffix.as_str())
         .context("Failed to find main function in script - please make sure `sierra-replace-ids` is not set to `false` for `dev` profile in script's Scarb.toml")?;
 
-    let (entry_code, builtins) = runner.create_entry_code(func, &Vec::new(), usize::MAX)?;
-    let footer = SierraCasmRunner::create_code_footer();
-    let instructions = chain!(
-        entry_code.iter(),
-        runner.get_casm_program().instructions.iter(),
-    );
+    let entry_code_config = EntryCodeConfig::testing();
+    let casm_program_wrapper_info = builder.create_wrapper_info(func, entry_code_config)?;
+    let entry_code = casm_program_wrapper_info.header;
+    let builtins = casm_program_wrapper_info.builtins;
+    let footer = create_code_footer();
 
     // import from cairo-lang-runner
-    let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
-    let assembled_program = runner
-        .get_casm_program()
+    let assembled_program = builder
+        .casm_program()
         .clone()
         .assemble_ex(&entry_code, &footer);
+    let (hints_dict, string_to_hint) = hints_to_params(assembled_program.hints);
 
     // hint processor
-    let mut context = build_context(&SerializableBlockInfo::default().into(), None);
+    let mut context = build_context(
+        &SerializableBlockInfo::default().into(),
+        None,
+        &TrackedResource::CairoSteps,
+    );
 
     let mut blockifier_state = CachedState::new(DictStateReader::default());
-    let mut execution_resources = ExecutionResources::default();
 
+    // TODO(#2954)
+    let param_types = builder.generic_id_and_size_from_concrete(&func.signature.param_types);
+
+    let segment_index = syscall_handler_offset(builtins.len(), has_segment_arena(&param_types));
     let syscall_handler = SyscallHintProcessor::new(
         &mut blockifier_state,
-        &mut execution_resources,
         &mut context,
         // This segment is created by SierraCasmRunner
         Relocatable {
-            segment_index: 10,
+            segment_index: segment_index
+                .try_into()
+                .expect("Failed to convert index to isize"),
             offset: 0,
         },
-        CallEntryPoint::default(),
+        ExecutableCallEntryPoint::default(),
         &string_to_hint,
         ReadOnlySegments::default(),
     );
@@ -363,6 +379,11 @@ pub fn run(
         extension: cast_extension,
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
+            // If for some reason we need to calculate `user_args`, here
+            // is the function to do it: https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L464
+            // See TODO(#2966)
+            user_args: vec![vec![Arg::Value(Felt::from(i64::MAX))]],
+            panic_traceback: None,
         },
     };
 
@@ -408,7 +429,9 @@ fn warn_if_sncast_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
         "sncast_std",
         &sncast_std_version_requirement,
     )? {
-        print_as_warning(&anyhow!("Package sncast_std version does not meet the recommended version requirement {sncast_std_version_requirement}, it might result in unexpected behaviour"));
+        print_as_warning(&anyhow!(
+            "Package sncast_std version does not meet the recommended version requirement {sncast_std_version_requirement}, it might result in unexpected behaviour"
+        ));
     }
     Ok(())
 }
@@ -434,4 +457,27 @@ fn inject_lib_artifact(
 
     artifacts.insert(SCRIPT_LIB_ARTIFACT_NAME.to_string(), lib_artifacts);
     Ok(artifacts.clone())
+}
+
+fn hints_to_params(
+    hints: Vec<(usize, Vec<Hint>)>,
+) -> (HashMap<usize, Vec<HintParams>>, HashMap<String, Hint>) {
+    let mut hints_dict: HashMap<usize, Vec<HintParams>> = HashMap::new();
+    let mut string_to_hint: HashMap<String, Hint> = HashMap::new();
+
+    for (offset, offset_hints) in hints {
+        for hint in offset_hints.clone() {
+            string_to_hint.insert(hint.representing_string(), hint.clone());
+        }
+        hints_dict.insert(
+            offset,
+            offset_hints
+                .clone()
+                .iter()
+                .map(hint_to_hint_params)
+                .collect(),
+        );
+    }
+
+    (hints_dict, string_to_hint)
 }

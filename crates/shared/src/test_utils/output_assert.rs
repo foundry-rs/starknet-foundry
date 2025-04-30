@@ -1,5 +1,6 @@
 use regex::Regex;
 use snapbox::cmd::OutputAssert;
+use std::fmt::Write as _;
 
 pub trait AsOutput {
     fn as_stdout(&self) -> &str;
@@ -51,32 +52,47 @@ fn assert_output_contains(output: &str, lines: &str) {
 
     for line in asserted_lines {
         if is_present(line, &mut actual_lines) {
-            out.push_str(&format!("| {line}\n"));
+            writeln!(out, "| {line}").unwrap();
         } else {
             contains = false;
-            out.push_str(&format!("- {line}\n"));
+            writeln!(out, "- {line}").unwrap();
         }
     }
 
     if !contains {
-        actual_lines
-            .iter()
-            .for_each(|line| out.push_str(&format!("+ {line}\n")));
+        for line in &actual_lines {
+            writeln!(out, "+ {line}").unwrap();
+        }
     }
 
     assert!(contains, "Output does not match:\n\n{out}");
 }
-
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub fn assert_stdout_contains(output: impl AsOutput, lines: impl AsRef<str>) {
     let stdout = output.as_stdout();
 
     assert_output_contains(stdout, lines.as_ref());
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub fn assert_stderr_contains(output: impl AsOutput, lines: impl AsRef<str>) {
     let stderr = output.as_stderr();
 
     assert_output_contains(stderr, lines.as_ref());
+}
+
+fn assert_output(output: &str, lines: &str) {
+    let converted_pattern = regex::escape(lines).replace(r"\[\.\.\]", ".*");
+    let re = Regex::new(&converted_pattern).unwrap();
+    assert!(
+        re.is_match(output),
+        "Pattern not found in output. Expected pattern:\n{lines}\n\nGot:\n{output}",
+    );
+}
+
+#[expect(clippy::needless_pass_by_value)]
+pub fn assert_stdout(output: impl AsOutput, lines: impl AsRef<str>) {
+    let stdout = output.as_stdout();
+
+    assert_output(stdout, lines.as_ref());
 }

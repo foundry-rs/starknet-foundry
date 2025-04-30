@@ -1,4 +1,4 @@
-use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
+use crate::constants::build_test_entry_point;
 use crate::forking::state::ForkStateReader;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::{
@@ -6,32 +6,32 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execut
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
-use blockifier::blockifier::block::BlockInfo;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
+use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::execution::entry_point::CallEntryPoint;
-use blockifier::execution::syscalls::hint_processor::SyscallCounter;
+use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
-use blockifier::{
-    execution::contract_class::ContractClass,
-    state::state_api::{StateReader, StateResult},
-};
+use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_annotations::trace_data::L1Resources;
+use cairo_vm::Felt252;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use conversions::serde::deserialize::CairoDeserialize;
 use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use conversions::string::TryFromHexStr;
+use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::starknet::context::SerializableBlockInfo;
 use runtime::starknet::state::DictStateReader;
+use starknet_api::block::BlockInfo;
 use starknet_api::core::{ChainId, EntryPointSelector};
-use starknet_api::transaction::ContractAddressSalt;
+use starknet_api::transaction::fields::ContractAddressSalt;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
     state::StorageKey,
 };
 use starknet_types_core::felt::Felt;
 use std::cell::{Ref, RefCell};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
 
 // Specifies the duration of the cheat
@@ -78,7 +78,7 @@ impl StateReader for ExtendedStateReader {
             .or_else(|_| {
                 self.fork_state_reader
                     .as_ref()
-                    .map_or(Ok(Default::default()), {
+                    .map_or(Ok(Felt252::default()), {
                         |reader| reader.get_storage_at(contract_address, key)
                     })
             })
@@ -90,7 +90,7 @@ impl StateReader for ExtendedStateReader {
             .or_else(|_| {
                 self.fork_state_reader
                     .as_ref()
-                    .map_or(Ok(Default::default()), {
+                    .map_or(Ok(Nonce::default()), {
                         |reader| reader.get_nonce_at(contract_address)
                     })
             })
@@ -102,20 +102,20 @@ impl StateReader for ExtendedStateReader {
             .or_else(|_| {
                 self.fork_state_reader
                     .as_ref()
-                    .map_or(Ok(Default::default()), {
+                    .map_or(Ok(ClassHash::default()), {
                         |reader| reader.get_class_hash_at(contract_address)
                     })
             })
     }
 
-    fn get_compiled_contract_class(&self, class_hash: ClassHash) -> StateResult<ContractClass> {
+    fn get_compiled_class(&self, class_hash: ClassHash) -> StateResult<RunnableCompiledClass> {
         self.dict_state_reader
-            .get_compiled_contract_class(class_hash)
+            .get_compiled_class(class_hash)
             .or_else(|_| {
                 self.fork_state_reader
                     .as_ref()
                     .map_or(Err(UndeclaredClassHash(class_hash)), |reader| {
-                        reader.get_compiled_contract_class(class_hash)
+                        reader.get_compiled_class(class_hash)
                     })
             })
     }
@@ -166,6 +166,7 @@ impl<T> CheatStatus<T> {
 }
 
 /// Tree structure representing trace of a call.
+#[derive(Debug)]
 pub struct CallTrace {
     pub run_with_call_header: bool,
     // only these are serialized
@@ -177,8 +178,9 @@ pub struct CallTrace {
     // These also include resources used by internal calls
     pub used_execution_resources: ExecutionResources,
     pub used_l1_resources: L1Resources,
-    pub used_syscalls: SyscallCounter,
+    pub used_syscalls: SyscallUsageMap,
     pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
+    pub gas_consumed: u64,
 }
 
 impl CairoSerialize for CallTrace {
@@ -200,20 +202,21 @@ impl CairoSerialize for CallTrace {
 impl CallTrace {
     fn default_successful_call() -> Self {
         Self {
-            run_with_call_header: Default::default(),
-            entry_point: Default::default(),
-            used_execution_resources: Default::default(),
-            used_l1_resources: Default::default(),
-            used_syscalls: Default::default(),
+            run_with_call_header: false,
+            entry_point: CallEntryPoint::default(),
+            used_execution_resources: ExecutionResources::default(),
+            used_l1_resources: L1Resources::default(),
+            used_syscalls: SyscallUsageMap::default(),
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
             vm_trace: None,
+            gas_consumed: u64::default(),
         }
     }
 }
 
 /// Enum representing node of a trace of a call.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum CallTraceNode {
     EntryPointCall(Rc<RefCell<CallTrace>>),
     DeployWithoutConstructor,
@@ -230,33 +233,25 @@ impl CallTraceNode {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct CallStackElement {
-    // when we exit the call we use it to calculate resources used by the call
-    resources_used_before_call: ExecutionResources,
     call_trace: Rc<RefCell<CallTrace>>,
     cheated_data: CheatedData,
 }
 
+#[derive(Debug)]
 pub struct NotEmptyCallStack(Vec<CallStackElement>);
 
 impl NotEmptyCallStack {
     pub fn from(elem: Rc<RefCell<CallTrace>>) -> Self {
         NotEmptyCallStack(vec![CallStackElement {
-            resources_used_before_call: ExecutionResources::default(),
             call_trace: elem,
-            cheated_data: Default::default(),
+            cheated_data: CheatedData::default(),
         }])
     }
 
-    pub fn push(
-        &mut self,
-        elem: Rc<RefCell<CallTrace>>,
-        resources_used_before_call: ExecutionResources,
-        cheated_data: CheatedData,
-    ) {
+    pub fn push(&mut self, elem: Rc<RefCell<CallTrace>>, cheated_data: CheatedData) {
         self.0.push(CallStackElement {
-            resources_used_before_call,
             call_trace: elem,
             cheated_data,
         });
@@ -308,7 +303,7 @@ pub struct CheatedTxInfo {
 impl CheatedTxInfo {
     #[must_use]
     pub fn is_mocked(&self) -> bool {
-        self != &Default::default()
+        self != &CheatedTxInfo::default()
     }
 }
 
@@ -321,15 +316,10 @@ pub struct CheatedData {
     pub tx_info: CheatedTxInfo,
 }
 
+#[derive(Debug)]
 pub struct TraceData {
     pub current_call_stack: NotEmptyCallStack,
     pub is_vm_trace_needed: bool,
-}
-
-#[derive(Clone)]
-pub struct EncounteredError {
-    pub pc: usize,
-    pub class_hash: ClassHash,
 }
 
 type MockedFunctionKey = (EntryPointSelector, Felt);
@@ -345,24 +335,29 @@ pub struct CheatnetState {
     pub deploy_salt_base: u32,
     pub block_info: BlockInfo,
     pub trace_data: TraceData,
-    pub encountered_errors: Vec<EncounteredError>,
+    pub encountered_errors: EncounteredErrors,
+    pub fuzzer_args: Vec<String>,
+    pub block_hash_contracts: HashMap<(ContractAddress, u64), (CheatSpan, Felt)>,
+    pub global_block_hash: HashMap<u64, (Felt, Vec<ContractAddress>)>,
 }
+
+pub type EncounteredErrors = BTreeMap<ClassHash, Vec<usize>>;
 
 impl Default for CheatnetState {
     fn default() -> Self {
         let mut test_code_entry_point = build_test_entry_point();
         test_code_entry_point.class_hash =
-            Some(TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap());
+            ClassHash(TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap());
         let test_call = Rc::new(RefCell::new(CallTrace {
-            entry_point: test_code_entry_point,
+            entry_point: test_code_entry_point.into(),
             run_with_call_header: true,
             ..CallTrace::default_successful_call()
         }));
         Self {
-            cheated_execution_info_contracts: Default::default(),
-            global_cheated_execution_info: Default::default(),
-            mocked_functions: Default::default(),
-            replaced_bytecode_contracts: Default::default(),
+            cheated_execution_info_contracts: HashMap::default(),
+            global_cheated_execution_info: ExecutionInfoMock::default(),
+            mocked_functions: HashMap::default(),
+            replaced_bytecode_contracts: HashMap::default(),
             detected_events: vec![],
             detected_messages_to_l1: vec![],
             deploy_salt_base: 0,
@@ -371,7 +366,10 @@ impl Default for CheatnetState {
                 current_call_stack: NotEmptyCallStack::from(test_call),
                 is_vm_trace_needed: false,
             },
-            encountered_errors: vec![],
+            encountered_errors: BTreeMap::default(),
+            fuzzer_args: Vec::default(),
+            block_hash_contracts: HashMap::default(),
+            global_block_hash: HashMap::default(),
         }
     }
 }
@@ -474,15 +472,18 @@ impl CheatnetState {
     pub fn update_cheats(&mut self, address: &ContractAddress) {
         self.progress_cheated_execution_info(*address);
     }
+
+    pub fn update_fuzzer_args(&mut self, arg: String) {
+        self.fuzzer_args.push(arg);
+    }
+
+    pub fn register_error(&mut self, class_hash: ClassHash, pcs: Vec<usize>) {
+        self.encountered_errors.insert(class_hash, pcs);
+    }
 }
 
 impl TraceData {
-    pub fn enter_nested_call(
-        &mut self,
-        entry_point: CallEntryPoint,
-        resources_used_before_call: ExecutionResources,
-        cheated_data: CheatedData,
-    ) {
+    pub fn enter_nested_call(&mut self, entry_point: CallEntryPoint, cheated_data: CheatedData) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
             run_with_call_header: false,
@@ -495,8 +496,7 @@ impl TraceData {
             .nested_calls
             .push(CallTraceNode::EntryPointCall(new_call.clone()));
 
-        self.current_call_stack
-            .push(new_call, resources_used_before_call, cheated_data);
+        self.current_call_stack.push(new_call, cheated_data);
     }
 
     pub fn set_class_hash_for_current_call(&mut self, class_hash: ClassHash) {
@@ -506,21 +506,22 @@ impl TraceData {
 
     pub fn exit_nested_call(
         &mut self,
-        resources_used_after_call: &ExecutionResources,
-        used_syscalls: SyscallCounter,
+        execution_resources: ExecutionResources,
+        gas_consumed: u64,
+        used_syscalls: SyscallUsageMap,
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
         vm_trace: Option<Vec<RelocatedTraceEntry>>,
     ) {
         let CallStackElement {
-            resources_used_before_call,
             call_trace: last_call,
             ..
         } = self.current_call_stack.pop();
 
         let mut last_call = last_call.borrow_mut();
-        last_call.used_execution_resources =
-            resources_used_after_call - &resources_used_before_call;
+        last_call.used_execution_resources = execution_resources;
+        last_call.gas_consumed = gas_consumed;
+
         last_call.used_syscalls = used_syscalls;
 
         last_call.used_l1_resources.l2_l1_message_sizes = l2_to_l1_messages

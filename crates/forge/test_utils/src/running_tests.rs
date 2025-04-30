@@ -1,25 +1,29 @@
 use crate::runner::TestCase;
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
+use forge::shared_cache::FailedTestsCache;
 use forge::{
     block_number_map::BlockNumberMap,
-    run_tests::package::{run_for_package, RunForPackageArgs},
+    run_tests::package::{RunForPackageArgs, run_for_package},
     scarb::load_test_artifacts,
     test_filter::TestsFilter,
 };
+use forge_runner::CACHE_DIR;
 use forge_runner::forge_config::{
-    ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
+    ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
 };
 use forge_runner::test_target_summary::TestTargetSummary;
-use forge_runner::CACHE_DIR;
-use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
+use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use std::num::NonZeroU32;
 use std::sync::Arc;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
 #[must_use]
-pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
+pub fn run_test_case(
+    test: &TestCase,
+    tracked_resource: ForgeTrackedResource,
+) -> Vec<TestTargetSummary> {
     ScarbCommand::new_with_stdio()
         .current_dir(test.path().unwrap())
         .arg("build")
@@ -52,7 +56,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
                 false,
                 false,
                 false,
-                Default::default(),
+                FailedTestsCache::default(),
             ),
             forge_config: Arc::new(ForgeConfig {
                 test_runner_config: Arc::new(TestRunnerConfig {
@@ -65,6 +69,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
                         .unwrap()
                         .join(CACHE_DIR),
                     contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
+                    tracked_resource,
                     environment_variables: test.env().clone(),
                 }),
                 output_config: Arc::new(OutputConfig {

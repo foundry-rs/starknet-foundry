@@ -3,9 +3,10 @@ use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector::{
     StorageWrite,
 };
 use cairo_vm::types::builtin_name::BuiltinName;
+use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::{assert_builtin, assert_passed, assert_syscall, Contract};
+use test_utils::runner::{Contract, assert_builtin, assert_passed, assert_syscall};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
@@ -45,7 +46,7 @@ fn builtins_count() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 
@@ -135,7 +136,7 @@ fn syscalls_count() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 
@@ -189,7 +190,7 @@ fn accumulate_syscalls() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     assert_syscall(&result, "single_write", StorageWrite, 1);
@@ -222,7 +223,7 @@ fn estimation_includes_os_resources() {
         "
     ));
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
     // Cost of storage write in builtins is 1 range check and 89 steps
     // Steps are pretty hard to verify so this test is based on range check diff
@@ -238,4 +239,36 @@ fn estimation_includes_os_resources() {
         BuiltinName::range_check,
         6,
     );
+}
+
+#[test]
+fn deploy_with_constructor_calldata() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
+            use starknet::syscalls::deploy_syscall;
+
+            #[test]
+            fn deploy_with_syscall() {
+                let contract = declare("DeployChecker").unwrap().contract_class().clone();
+                let (address, _) = deploy_syscall(contract.class_hash, 0, array![100].span(), false).unwrap();
+                assert(address != 0.try_into().unwrap(), 'Incorrect deployed address');
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "DeployChecker".to_string(),
+            Path::new("tests/data/contracts/deploy_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    assert_passed(&result);
+
+    assert_syscall(&result, "deploy_with_syscall", Deploy, 1);
+    // As of Starknet v0.13.5, deploy syscall uses constant 7 pedersen builtins + 1 additional as calldata factor in this case
+    // https://github.com/starkware-libs/sequencer/blob/b9d99e118ad23664cda984505414d49c3cb6b19f/crates/blockifier/resources/blockifier_versioned_constants_0_13_5.json#L166
+    assert_builtin(&result, "deploy_with_syscall", BuiltinName::pedersen, 8);
 }

@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use sha3::Digest;
 use sha3::Sha3_256;
 use starknet_types_core::felt::Felt;

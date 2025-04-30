@@ -4,22 +4,23 @@ use crate::helpers::runner::runner;
 use configuration::copy_config_to_tempdir;
 use indoc::{formatdoc, indoc};
 
+use crate::helpers::env::set_create_keystore_password_env;
 use conversions::string::IntoHexStr;
 use serde_json::{json, to_string_pretty};
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use snapbox::assert_matches;
-use sncast::helpers::constants::{
-    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
-    CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
-};
 use sncast::AccountType;
-use std::{env, fs};
+use sncast::helpers::constants::{
+    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH,
+};
+use std::fs;
 use tempfile::tempdir;
 use test_case::test_case;
 
 #[test_case("oz"; "oz_account_type")]
 #[test_case("argent"; "argent_account_type")]
-#[test_case("braavos"; "braavos_account_type")]
+// TODO(#3118): Re-enable this test once braavos integration is restored
+// #[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
@@ -331,13 +332,14 @@ pub async fn test_account_already_exists() {
 
 #[test_case("oz"; "oz_account_type")]
 #[test_case("argent"; "argent_account_type")]
-#[test_case("braavos"; "braavos_account_type")]
+// TODO(#3118)
+// #[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case_keystore(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let keystore_file = "my_key.json";
     let account_file = "my_account.json";
-    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_create_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -385,7 +387,7 @@ pub async fn test_happy_case_keystore_add_profile() {
     let keystore_file = "my_key.json";
     let account_file = "my_account.json";
     let accounts_json_file = "accounts.json";
-    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_create_keystore_password_env();
 
     let args = vec![
         "--accounts-file",
@@ -430,7 +432,7 @@ pub async fn test_keystore_without_account() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let keystore_file = "my_key.json";
 
-    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_create_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -464,7 +466,7 @@ pub async fn test_keystore_file_already_exists() {
         "tests/data/keystore/my_key.json",
         temp_dir.path().join(keystore_file),
     );
-    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_create_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -501,7 +503,7 @@ pub async fn test_keystore_account_file_already_exists() {
         temp_dir.path().join(account_file),
     );
 
-    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_create_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -532,7 +534,7 @@ pub async fn test_happy_case_keystore_int_format() {
     let keystore_file = "my_key_int.json";
     let account_file = "my_account_int.json";
 
-    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_create_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -580,7 +582,7 @@ pub async fn test_happy_case_keystore_hex_format() {
     let keystore_file = "my_key_hex.json";
     let account_file = "my_account_hex.json";
 
-    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
+    set_create_keystore_password_env();
 
     let args = vec![
         "--keystore",
@@ -616,6 +618,129 @@ pub async fn test_happy_case_keystore_hex_format() {
     assert!(contents.contains("\"variant\": {"));
     assert!(contents.contains("\"version\": 1"));
     assert!(contents.contains("\"legacy\": false"));
+}
+
+#[tokio::test]
+#[expect(clippy::too_many_lines)]
+pub async fn test_happy_case_default_name_generation() {
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let create_args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--salt",
+        "0x1",
+    ];
+
+    let delete_args = vec![
+        "--accounts-file",
+        &accounts_file,
+        "account",
+        "delete",
+        "--name",
+        "account-2",
+        "--network",
+        "sepolia",
+    ];
+
+    for i in 0..3 {
+        let snapbox = runner(&create_args).current_dir(tempdir.path());
+        snapbox.assert().stdout_matches(formatdoc! {r"
+        command: account create
+        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        address: 0x0[..]
+        max_fee: [..]
+        message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.
+
+        After prefunding the address, run:
+        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name account-{id}
+
+        To see account creation details, visit:
+        account: [..]
+    ", id = i + 1});
+    }
+
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file))
+        .expect("Unable to read created file");
+
+    assert!(contents.contains("account-1"));
+    assert!(contents.contains("account-2"));
+    assert!(contents.contains("account-3"));
+
+    let snapbox = runner(&delete_args).current_dir(tempdir.path()).stdin("Y");
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        command: account delete
+        result: Account successfully removed
+    "});
+
+    let contents_after_delete = fs::read_to_string(tempdir.path().join(accounts_file))
+        .expect("Unable to read created file");
+
+    assert!(!contents_after_delete.contains("account-2"));
+
+    let snapbox = runner(&create_args).current_dir(tempdir.path());
+    snapbox.assert().stdout_matches(indoc! {r"
+        command: account create
+        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        address: 0x0[..]
+        max_fee: [..]
+        message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.
+
+        After prefunding the address, run:
+        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name account-2
+
+        To see account creation details, visit:
+        account: [..]
+    "});
+
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file))
+        .expect("Unable to read created file");
+
+    assert!(contents.contains("account-2"));
+
+    let expected = json!(
+        {
+            "alpha-sepolia": {
+                "account-1": {
+                    "address": "0x[..]",
+                    "class_hash": "0x[..]",
+                    "deployed": false,
+                    "legacy": false,
+                    "private_key": "0x[..]",
+                    "public_key": "0x[..]",
+                    "salt": "0x1",
+                    "type": "open_zeppelin"
+                },
+                "account-2": {
+                    "address": "0x[..]",
+                    "class_hash": "0x[..]",
+                    "deployed": false,
+                    "legacy": false,
+                    "private_key": "0x[..]",
+                    "public_key": "0x[..]",
+                    "salt": "0x1",
+                    "type": "open_zeppelin"
+                },
+                "account-3": {
+                    "address": "0x[..]",
+                    "class_hash": "0x[..]",
+                    "deployed": false,
+                    "legacy": false,
+                    "private_key": "0x[..]",
+                    "public_key": "0x[..]",
+                    "salt": "0x1",
+                    "type": "open_zeppelin"
+                },
+            }
+        }
+    );
+
+    assert_matches(to_string_pretty(&expected).unwrap(), contents);
 }
 
 fn get_formatted_account_type(account_type: &str) -> &str {
@@ -695,4 +820,37 @@ fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&s
     };
 
     to_string_pretty(&account_json).unwrap()
+}
+
+#[test]
+fn test_braavos_disabled() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--salt",
+        "0x1",
+        "--type",
+        "braavos",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: account create
+        error: Using Braavos accounts is temporarily disabled because they don't yet work with starknet 0.13.5.
+            Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
+        "},
+    );
 }
