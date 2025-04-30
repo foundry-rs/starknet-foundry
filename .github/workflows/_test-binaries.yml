@@ -50,23 +50,23 @@ jobs:
           mkdir -p artifacts
           mv artifacts-dl/build-*/starknet-foundry-* artifacts/
 
-      - name: Get binary path
+      - name: Get artifacts path
         shell: bash
         run: |
           if [[ ${{ matrix.target }} == *windows* ]]; then
-            BINARY_PATH="artifacts/starknet-foundry-${{ inputs.bin_version }}-${{ matrix.target }}.zip"
+            ARTIFACTS_PATH="artifacts/starknet-foundry-${{ inputs.bin_version }}-${{ matrix.target }}.zip"
           else
-            BINARY_PATH="artifacts/starknet-foundry-${{ inputs.bin_version }}-${{ matrix.target }}.tar.gz"
+            ARTIFACTS_PATH="artifacts/starknet-foundry-${{ inputs.bin_version }}-${{ matrix.target }}.tar.gz"
           fi
-          echo "BINARY_PATH=$BINARY_PATH" >> $GITHUB_ENV
+          echo "ARTIFACTS_PATH=$ARTIFACTS_PATH" >> $GITHUB_ENV
 
       - name: Unpack artifact
         shell: bash
         run: |
           if [[ ${{ matrix.target }} == *windows* ]]; then
-            unzip ${{ env.BINARY_PATH }}
+            unzip ${{ env.ARTIFACTS_PATH }}
           else
-            tar xzvf ${{ env.BINARY_PATH }}
+            tar xzvf ${{ env.ARTIFACTS_PATH }}
           fi
 
       - name: Install universal-sierra-compiler
@@ -77,17 +77,17 @@ jobs:
         env:
           RPC_URL: ${{ secrets.NODE_URL }}
         run: |
-          BINARY_PATH="${{ env.BINARY_PATH }}"
-          BINARY_PATH="${BINARY_PATH%.tar.gz}"
-          BINARY_PATH="${BINARY_PATH%.zip}"
-          BINARY_PATH="${BINARY_PATH#artifacts/}"
+          ARTIFACTS_PATH="${{ env.ARTIFACTS_PATH }}"
+          ARTIFACTS_PATH="${ARTIFACTS_PATH%.tar.gz}"
+          ARTIFACTS_PATH="${ARTIFACTS_PATH%.zip}"
+          ARTIFACTS_PATH="${ARTIFACTS_PATH#artifacts/}"
           
           if [[ ${{ matrix.target }} == *windows* ]]; then
-            SNFORGE_PATH=$(readlink -f $BINARY_PATH/bin/snforge.exe)
-            SNCAST_PATH=$(readlink -f $BINARY_PATH/bin/sncast.exe)
+            SNFORGE_PATH=$(readlink -f $ARTIFACTS_PATH/bin/snforge.exe)
+            SNCAST_PATH=$(readlink -f $ARTIFACTS_PATH/bin/sncast.exe)
           else
-            SNFORGE_PATH=$(readlink -f $BINARY_PATH/bin/snforge)
-            SNCAST_PATH=$(readlink -f $BINARY_PATH/bin/sncast)
+            SNFORGE_PATH=$(readlink -f $ARTIFACTS_PATH/bin/snforge)
+            SNCAST_PATH=$(readlink -f $ARTIFACTS_PATH/bin/sncast)
           fi
           
           REPO_URL=${{ github.repositoryUrl }}

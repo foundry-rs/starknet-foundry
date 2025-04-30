@@ -11,15 +11,15 @@ on:
         type: string
 
 jobs:
-  check-version:
+  check-uploaded:
     name: Check snforge_scarb_plugin Version
     runs-on: ubuntu-latest
     outputs:
-      plugin_uploaded: ${{ steps.check-version.outputs.plugin_uploaded }}
+      plugin_uploaded: ${{ steps.check-uploaded.outputs.plugin_uploaded }}
     steps:
       - uses: actions/checkout@v4
       - name: Check version
-        id: check-version
+        id: check-uploaded
         run: |
           set -exo pipefail
         
@@ -34,7 +34,7 @@ jobs:
   upload-to-registry:
     name: Upload snforge_scarb_plugin to the registry
     runs-on: ubuntu-latest
-    needs: [check-version]
+    needs: [check-uploaded]
     env:
       SCARB_REGISTRY_AUTH_TOKEN: ${{ inputs.prod_registry == true && secrets.SCARB_REGISTRY_AUTH_TOKEN || secrets.DEV_SCARB_REGISTRY_AUTH_TOKEN }}
     steps:
@@ -58,7 +58,7 @@ jobs:
           mv artifacts-dl/build-plugin-*/snforge_scarb_plugin_* crates/snforge-scarb-plugin/target/scarb/cairo-plugin/
 
       - name: Publish snforge_scarb_plugin
-        if: needs.check-version.outputs.plugin_uploaded == 'false' || github.event_name == 'workflow_dispatch'
+        if: needs.check-uploaded.outputs.plugin_uploaded == 'false' || github.event_name == 'workflow_dispatch'
         working-directory: crates/snforge-scarb-plugin
         run: |
           set -exo pipefail

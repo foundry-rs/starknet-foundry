@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 export DEV_DISABLE_SNFORGE_STD_DEPENDENCY=true
 
