@@ -1,5 +1,4 @@
-use blockifier::state::cached_state::CachedState;
-use cheatnet::{
+use crate::{
     constants::{STRK_CLASS_HASH, STRK_CONTRACT_ADDRESS, contract_class_strk},
     runtime_extensions::forge_runtime_extension::cheatcodes::{
         generate_random_felt::generate_random_felt,
@@ -31,18 +30,16 @@ pub fn is_strk_deployed(state_reader: &mut ExtendedStateReader) -> bool {
     false
 }
 
-pub fn deploy_strk_token(cached_state: &mut CachedState<ExtendedStateReader>) {
+pub fn deploy_strk_token(state_reader: &mut ExtendedStateReader) {
     let strk_contract_address = ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
     let strk_class_hash = TryFromHexStr::try_from_hex_str(STRK_CLASS_HASH).unwrap();
 
-    cached_state
-        .state
+    state_reader
         .dict_state_reader
         .address_to_class_hash
         .insert(strk_contract_address, strk_class_hash);
 
-    cached_state
-        .state
+    state_reader
         .dict_state_reader
         .class_hash_to_class
         .insert(strk_class_hash, contract_class_strk());
@@ -139,8 +136,7 @@ pub fn deploy_strk_token(cached_state: &mut CachedState<ExtendedStateReader>) {
     ];
 
     for (entry, value) in &storage_entries_and_values_to_update {
-        cached_state
-            .state
+        state_reader
             .dict_state_reader
             .storage_view
             .insert(*entry, *value);

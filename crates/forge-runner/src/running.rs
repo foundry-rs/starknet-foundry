@@ -2,7 +2,6 @@ use crate::backtrace::add_backtrace_footer;
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
-use crate::test_case_setup::{deploy_strk_token, is_strk_deployed};
 use crate::test_case_summary::{Single, TestCaseSummary};
 use anyhow::{Result, ensure};
 use blockifier::execution::contract_class::TrackedResource;
@@ -28,6 +27,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use casm::{get_assembled_program, run_assembled_program};
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
+use cheatnet::predeployment::{deploy_strk_token, is_strk_deployed};
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
@@ -196,12 +196,10 @@ pub fn run_test_case(
     }
 
     let is_strk_deployed = is_strk_deployed(&mut state_reader);
-
-    let mut cached_state = CachedState::new(state_reader);
-
     if !is_strk_deployed {
-        deploy_strk_token(&mut cached_state);
+        deploy_strk_token(&mut state_reader);
     }
+    let mut cached_state = CachedState::new(state_reader);
 
     let syscall_handler = build_syscall_handler(
         &mut cached_state,
