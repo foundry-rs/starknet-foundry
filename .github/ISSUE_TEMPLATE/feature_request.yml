@@ -1,22 +1,23 @@
-name: Feature request
-description: Suggest a feature
+name: Feature Request
+description: Request a feature to be added to a tool
+type: "Feature"
 body:
   - type: dropdown
     id: tool-name
     attributes:
-      label: Which component is your feature related to?
-      multiple: true
+      label: Select Tool
+      description: Select for which tool you would like to request a feature.
+      multiple: false
       options:
-        - Forge
-        - Cast
-        - Other (Please describe below)
+        - snforge
+        - sncast
     validations:
       required: true
 
   - type: textarea
     id: Suggestion
     attributes:
-      label: Feature Request
-      description: Describe the feature(s) you would like to be added.
+      label: Requested Feature
+      description: Describe the feature you would like to be added to the tool selected above.
     validations:
       required: true
