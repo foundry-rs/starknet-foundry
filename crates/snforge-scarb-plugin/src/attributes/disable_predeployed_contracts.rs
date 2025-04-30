@@ -32,6 +32,6 @@ impl AttributeCollector for ContractsPredeploymentCollector {
 }
 
 #[must_use]
-pub fn disable_contracts_predeployment(args: TokenStream, item: TokenStream) -> ProcMacroResult {
+pub fn disable_predeployed_contracts(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     extend_with_config_cheatcodes::<ContractsPredeploymentCollector>(args, item)
 }
