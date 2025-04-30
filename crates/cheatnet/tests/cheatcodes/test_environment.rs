@@ -4,7 +4,7 @@ use crate::common::{deploy_contract, state::create_cached_state};
 use blockifier::state::cached_state::CachedState;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::felt_selector_from_name;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::selector_from_name;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use starknet_api::core::ClassHash;
@@ -61,7 +61,7 @@ impl TestEnvironment {
             &mut self.cached_state,
             &mut self.cheatnet_state,
             contract_address,
-            felt_selector_from_name(selector),
+            selector_from_name(selector),
             calldata,
         )
     }

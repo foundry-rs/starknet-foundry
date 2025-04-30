@@ -72,11 +72,11 @@ pub fn calculate_variable_address(selector: Felt, key: Option<&[Felt]>) -> Felt 
 
 #[must_use]
 pub fn variable_address(var_name: &str) -> Felt {
-    calculate_variable_address(felt_selector_from_name(var_name).into_(), None)
+    calculate_variable_address(selector_from_name(var_name).into_(), None)
 }
 
 #[must_use]
-pub fn felt_selector_from_name(name: &str) -> EntryPointSelector {
+pub fn selector_from_name(name: &str) -> EntryPointSelector {
     let selector = get_selector_from_name(name).unwrap();
     selector.into_()
 }
@@ -89,5 +89,5 @@ pub fn storage_key(storage_address: Felt) -> Result<StorageKey, anyhow::Error> {
 
 #[must_use]
 pub fn map_entry_address(var_name: &str, key: &[Felt]) -> Felt {
-    calculate_variable_address(felt_selector_from_name(var_name).into_(), Some(key))
+    calculate_variable_address(selector_from_name(var_name).into_(), Some(key))
 }
