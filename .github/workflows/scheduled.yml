@@ -38,7 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
@@ -75,7 +75,7 @@ jobs:
 
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
@@ -102,7 +102,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
@@ -124,7 +124,7 @@ jobs:
 
       - name: Get version from Cargo.toml
         id: lookupVersion
-        uses: mikefarah/yq@bbdd97482f2d439126582a59689eb1c855944955
+        uses: mikefarah/yq@8bf425b4d1344db7cd469a8d10a390876e0c77fd
         with:
           cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
           
@@ -179,7 +179,7 @@ jobs:
     needs: [ test-forge-unit-and-integration, test-forge-e2e, test-cast , build-plugin-binaries, build-binaries, publish-plugin, publish-std, test-binary ]
     steps:
       - name: Notify that the workflow has failed
-        uses: slackapi/slack-github-action@v1.27.0
+        uses: slackapi/slack-github-action@v2.0.0
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_SCHEDULED_TESTS_FAILURE_WEBHOOK_URL }}
         with:
