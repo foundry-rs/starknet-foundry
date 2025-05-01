@@ -477,9 +477,9 @@ checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 
 [[package]]
 name = "axum"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de45108900e1f9b9242f7f2e254aa3e2c029c921c258fe9e6b4217eeebd54288"
+checksum = "021e862c184ae977658b36c4500f7feac3221ca5da43e3f25bd04ab6c79a29b5"
 dependencies = [
  "axum-core",
  "bytes",
@@ -1437,7 +1437,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "p256",
- "rand 0.8.5",
+ "rand 0.9.1",
  "rayon",
  "regex",
  "runtime",
@@ -1503,9 +1503,9 @@ dependencies = [
 
 [[package]]
 name = "clap_complete"
-version = "4.5.47"
+version = "4.5.48"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c06f5378ea264ad4f82bbc826628b5aad714a75abf6ece087e923010eb937fb6"
+checksum = "be8c97f3a6f02b9e24cadc12aaba75201d18754b53ea0a9d99642f806ccdb4c9"
 dependencies = [
  "clap",
 ]
@@ -2500,7 +2500,7 @@ dependencies = [
  "indoc",
  "num-bigint",
  "openssl",
- "rand 0.8.5",
+ "rand 0.9.1",
  "regex",
  "scarb-api",
  "scarb-metadata",
@@ -2550,7 +2550,7 @@ dependencies = [
  "indoc",
  "itertools 0.14.0",
  "num-traits",
- "rand 0.8.5",
+ "rand 0.9.1",
  "rayon",
  "runtime",
  "sanitize-filename",
@@ -5650,7 +5650,7 @@ dependencies = [
  "itertools 0.14.0",
  "project-root",
  "promptly",
- "rand 0.8.5",
+ "rand 0.9.1",
  "regex",
  "reqwest 0.12.15",
  "rpassword",
@@ -6503,9 +6503,9 @@ dependencies = [
 
 [[package]]
 name = "toml_edit"
-version = "0.22.25"
+version = "0.22.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10558ed0bd2a1562e630926a2d1f0b98c827da99fabd3fe20920a59642504485"
+checksum = "310068873db2c5b3e7659d2cc35d21855dbafa50d1ce336397c666e3cb08137e"
 dependencies = [
  "indexmap 2.9.0",
  "serde",
@@ -6517,9 +6517,9 @@ dependencies = [
 
 [[package]]
 name = "toml_write"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28391a4201ba7eb1984cfeb6862c0b3ea2cfe23332298967c749dddc0d6cd976"
+checksum = "bfb942dfe1d8e29a7ee7fcbde5bd2b9a25fb89aa70caea2eba3bee836ff41076"
 
 [[package]]
 name = "tower"
