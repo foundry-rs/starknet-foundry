@@ -68,7 +68,7 @@ pub fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct
 /// macro)
 /// - `ret_data` - data to be returned by the function
 pub fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
-    contract_address: ContractAddress, function_selector: felt252, ret_data: T
+    contract_address: ContractAddress, function_selector: felt252, ret_data: T,
 ) {
     start_mock_call_when(contract_address, function_selector, MockCalldata::Any, ret_data)
 }
@@ -78,7 +78,7 @@ pub fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: De
 /// - `contract_address` - targeted contracts' address
 /// - `function_selector` - hashed name of the target function (can be obtained with `selector!`
 /// macro)
-pub fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252,) {
+pub fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252) {
     stop_mock_call_when(contract_address, function_selector, MockCalldata::Any)
 }
 
@@ -100,7 +100,7 @@ pub fn mock_call_when<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Des
     function_selector: felt252,
     calldata: MockCalldata,
     ret_data: T,
-    n_times: u32
+    n_times: u32,
 ) {
     assert!(n_times > 0, "cannot mock_call 0 times, n_times argument must be greater than 0");
 
@@ -151,7 +151,7 @@ pub fn start_mock_call_when<T, impl TSerde: core::serde::Serde<T>, impl TDestruc
 /// - `calldata` - matching calldata
 /// macro)
 pub fn stop_mock_call_when(
-    contract_address: ContractAddress, function_selector: felt252, calldata: MockCalldata
+    contract_address: ContractAddress, function_selector: felt252, calldata: MockCalldata,
 ) {
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
