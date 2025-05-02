@@ -284,7 +284,7 @@ fn mock_call_when_simple() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
 }
 
@@ -386,7 +386,7 @@ fn mock_call_when_complex_types() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
 }
 
@@ -496,7 +496,7 @@ fn mock_calls_when() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
 }
 
@@ -578,6 +578,6 @@ fn mock_calls_when_mixed() {
         .unwrap()
     );
 
-    let result = run_test_case(&test);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
 }
