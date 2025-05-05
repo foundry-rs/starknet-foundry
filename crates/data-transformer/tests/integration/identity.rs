@@ -1,8 +1,6 @@
-use crate::integration::{CLASS, init_class};
+use crate::integration::get_abi;
 use data_transformer::{reverse_transform_input, transform};
 use primitive_types::U256;
-use starknet::core::types::ContractClass;
-use starknet::core::types::contract::AbiEntry;
 use starknet::core::utils::get_selector_from_name;
 use test_case::test_case;
 
@@ -26,15 +24,10 @@ use test_case::test_case;
 #[test_case(r#"ComplexStruct { a: NestedStructWithField { a: SimpleStruct { a: 1_felt252 }, b: 2_felt252 }, b: 3_felt252, c: 4_u8, d: 5_i32, e: Enum::Two(6_u128), f: "seven", g: array![8_felt252, 9_felt252], h: 10_u256, i: (11_i128, 12_u128) }"#, "complex_struct_fn"; "complex_struct")]
 #[tokio::test]
 async fn test_check_for_identity(calldata: &str, selector: &str) {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-    let ContractClass::Sierra(sierra_class) = contract_class.clone() else {
-        panic!("Expected Sierra class, but got legacy Sierra class")
-    };
-
-    let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str()).unwrap();
+    let abi = get_abi().await;
     let selector = get_selector_from_name(selector).unwrap();
 
-    let felts = transform(calldata, contract_class, &selector).unwrap();
+    let felts = transform(calldata, &abi, &selector).unwrap();
 
     let result = reverse_transform_input(&felts, &abi, &selector).unwrap();
 
