@@ -7,22 +7,26 @@ use cheatnet::state::{CallTrace, CallTraceNode};
 use std::cell::RefCell;
 use std::rc::Rc;
 
-pub fn trace(call_trace: &CallTrace, contracts_data: &ContractsData, test_name: String) -> Trace {
+pub fn collect_trace(
+    call_trace: &CallTrace,
+    contracts_data: &ContractsData,
+    test_name: String,
+) -> Trace {
     Trace {
         test_name: TestName(test_name),
-        nested_calls: nested_calls(call_trace, contracts_data),
+        nested_calls: collect_nested_calls(call_trace, contracts_data),
     }
 }
 
-fn contract_trace(
+fn collect_contract_trace(
     call_trace: &Rc<RefCell<CallTrace>>,
     contracts_data: &ContractsData,
 ) -> ContractTrace {
     let call_trace = call_trace.borrow();
-    let nested_calls = nested_calls(&call_trace, contracts_data);
+    let nested_calls = collect_nested_calls(&call_trace, contracts_data);
 
     let trace_info = TraceInfo {
-        contract_name: contract_name(&call_trace, contracts_data),
+        contract_name: collect_contract_name(&call_trace, contracts_data),
         entry_point_type: call_trace.entry_point.entry_point_type,
         calldata: call_trace.entry_point.calldata.clone(),
         storage_address: StorageAddress(call_trace.entry_point.storage_address),
@@ -33,21 +37,24 @@ fn contract_trace(
     };
 
     ContractTrace {
-        selector: selector(&call_trace, contracts_data),
+        selector: collect_selector(&call_trace, contracts_data),
         trace_info,
     }
 }
 
-fn nested_calls(call_trace: &CallTrace, contracts_data: &ContractsData) -> Vec<ContractTrace> {
+fn collect_nested_calls(
+    call_trace: &CallTrace,
+    contracts_data: &ContractsData,
+) -> Vec<ContractTrace> {
     call_trace
         .nested_calls
         .iter()
         .filter_map(CallTraceNode::extract_entry_point_call)
-        .map(|call_trace| contract_trace(call_trace, contracts_data))
+        .map(|call_trace| collect_contract_trace(call_trace, contracts_data))
         .collect()
 }
 
-fn contract_name(call_trace: &CallTrace, contracts_data: &ContractsData) -> ContractName {
+fn collect_contract_name(call_trace: &CallTrace, contracts_data: &ContractsData) -> ContractName {
     contracts_data
         .get_contract_name(
             &call_trace
@@ -60,7 +67,7 @@ fn contract_name(call_trace: &CallTrace, contracts_data: &ContractsData) -> Cont
         .expect("contract name should be present in `ContractsData`")
 }
 
-fn selector(call_trace: &CallTrace, contracts_data: &ContractsData) -> Selector {
+fn collect_selector(call_trace: &CallTrace, contracts_data: &ContractsData) -> Selector {
     contracts_data
         .get_function_name(&call_trace.entry_point.entry_point_selector)
         .cloned()
