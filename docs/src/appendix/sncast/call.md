@@ -27,21 +27,19 @@ Possible values: `mainnet`, `sepolia`.
 
 ## `--calldata, -c <CALLDATA>`
 Optional.
+Conflicts with: [`--arguments`](#--arguments)
 
 Inputs to the function, represented by a list of space-delimited values, e.g. `0x1 2 0x3`.
 Calldata arguments may be either 0x hex or decimal felts.
 
-Conflicts with: [`--arguments`](#--arguments)
-
 ## `--arguments`
 Optional.
+Conflicts with: [`--calldata`](#--calldata--c-calldata)
 
 Function arguments provided as a comma-separated string of Cairo expressions.
 For example: `--arguments '1, 2, MyStruct { x: 1, y: 2 }, MyEnum::Variant'`
 
 For more information on supported expressions and syntax, see [Calldata Transformation](../../starknet/calldata-transformation.md).
-
-Conflicts with: [`--calldata`](#--calldata--c-calldata)
 
 ## `--block-id, -b <BLOCK_ID>`
 Optional.
