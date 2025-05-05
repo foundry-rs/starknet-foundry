@@ -22,7 +22,11 @@ use std::fmt::Display;
 )]
 pub struct List {
     /// Display private keys
-    #[arg(short = 'p', long = "display-private-keys")]
+    #[arg(
+        short = 'p',
+        long = "display-private-keys",
+        env = "SNCAST_ACCOUNT_LIST_DISPLAY_PRIVATE_KEYS"
+    )]
     pub display_private_keys: bool,
 }
 

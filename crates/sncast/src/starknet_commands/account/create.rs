@@ -32,23 +32,32 @@ use std::str::FromStr;
 #[command(about = "Create an account with all important secrets")]
 pub struct Create {
     /// Type of the account
-    #[arg(value_enum, short = 't', long = "type", value_parser = AccountType::from_str, default_value_t = AccountType::OpenZeppelin)]
+    #[arg(value_enum, short = 't', long = "type", value_parser = AccountType::from_str, default_value_t = AccountType::OpenZeppelin, env = "SNCAST_ACCOUNT_CREATE_TYPE")]
     pub account_type: AccountType,
 
     /// Account name under which account information is going to be saved
-    #[arg(short, long)]
+    #[arg(short, long, env = "SNCAST_ACCOUNT_CREATE_NAME")]
     pub name: Option<String>,
 
     /// Salt for the address
-    #[arg(short, long)]
+    #[arg(short, long, env = "SNCAST_ACCOUNT_CREATE_SALT")]
     pub salt: Option<Felt>,
 
     /// If passed, a profile with provided name and corresponding data will be created in snfoundry.toml
-    #[arg(long, conflicts_with = "network")]
+    #[arg(
+        long,
+        conflicts_with = "network",
+        env = "SNCAST_ACCOUNT_CREATE_ADD_PROFILE"
+    )]
     pub add_profile: Option<String>,
 
     /// Custom contract class hash of declared contract
-    #[arg(short, long, requires = "account_type")]
+    #[arg(
+        short,
+        long,
+        requires = "account_type",
+        env = "SNCAST_ACCOUNT_CREATE_CLASS_HASH"
+    )]
     pub class_hash: Option<Felt>,
 
     #[command(flatten)]

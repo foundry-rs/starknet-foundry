@@ -12,11 +12,11 @@ use std::time::UNIX_EPOCH;
 #[group(required = false, multiple = false)]
 pub struct RpcArgs {
     /// RPC provider url address; overrides url from snfoundry.toml
-    #[arg(short, long)]
+    #[arg(short, long, env = "SNCAST_URL")]
     pub url: Option<String>,
 
     /// Use predefined network with a public provider. Note that this option may result in rate limits or other unexpected behavior
-    #[arg(long)]
+    #[arg(long, env = "SNCAST_NETWORK")]
     pub network: Option<Network>,
 }
 

@@ -13,6 +13,7 @@ use sncast::response::structs::ScriptInitResponse;
 #[derive(Args, Debug)]
 pub struct Init {
     /// Name of a script to create
+    #[arg(env = "SNCAST_SCRIPT_INIT_SCRIPT_NAME")]
     pub script_name: String,
 }
 

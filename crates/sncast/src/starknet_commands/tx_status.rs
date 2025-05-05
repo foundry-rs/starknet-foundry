@@ -11,6 +11,7 @@ use starknet_types_core::felt::Felt;
 #[command(about = "Get the status of a transaction")]
 pub struct TxStatus {
     /// Hash of the transaction
+    #[arg(env = "SNCAST_TX_STATUS_HASH")]
     pub transaction_hash: Felt,
 
     #[command(flatten)]

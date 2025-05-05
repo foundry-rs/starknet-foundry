@@ -81,39 +81,39 @@ struct Cli {
     /// Account to be used for contract declaration;
     /// When using keystore (`--keystore`), this should be a path to account file
     /// When using accounts file, this should be an account name
-    #[arg(short = 'a', long)]
+    #[arg(short = 'a', long, env = "SNCAST_ACCOUNT")]
     account: Option<String>,
 
     /// Path to the file holding accounts info
-    #[arg(long = "accounts-file")]
+    #[arg(long = "accounts-file", env = "SNCAST_ACCOUNTS_FILE")]
     accounts_file_path: Option<Utf8PathBuf>,
 
     /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
-    #[arg(short, long)]
+    #[arg(short, long, env = "SNCAST_KEYSTORE")]
     keystore: Option<Utf8PathBuf>,
 
     /// If passed, values will be displayed as integers
-    #[arg(long, conflicts_with = "hex_format")]
+    #[arg(long, conflicts_with = "hex_format", env = "SNCAST_INT_FORMAT")]
     int_format: bool,
 
     /// If passed, values will be displayed as hex
-    #[arg(long, conflicts_with = "int_format")]
+    #[arg(long, conflicts_with = "int_format", env = "SNCAST_HEX_FORMAT")]
     hex_format: bool,
 
     /// If passed, output will be displayed in json format
-    #[arg(short, long)]
+    #[arg(short, long, env = "SNCAST_JSON")]
     json: bool,
 
     /// If passed, command will wait until transaction is accepted or rejected
-    #[arg(short = 'w', long)]
+    #[arg(short = 'w', long, env = "SNCAST_WAIT")]
     wait: bool,
 
     /// Adjusts the time after which --wait assumes transaction was not received or rejected
-    #[arg(long)]
+    #[arg(long, env = "SNCAST_WAIT_TIMEOUT")]
     wait_timeout: Option<u16>,
 
     /// Adjusts the time between consecutive attempts to fetch transaction by --wait flag
-    #[arg(long)]
+    #[arg(long, env = "SNCAST_WAIT_RETRY_INTERVAL")]
     wait_retry_interval: Option<u8>,
 
     #[command(subcommand)]
@@ -356,7 +356,8 @@ async fn run_async_command(
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
+            let calldata =
+                Arguments::from(arguments).try_into_calldata(contract_class, &selector)?;
 
             let result = starknet_commands::call::call(
                 contract_address,
@@ -399,7 +400,8 @@ async fn run_async_command(
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
-            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
+            let calldata =
+                Arguments::from(arguments).try_into_calldata(contract_class, &selector)?;
 
             let result = starknet_commands::invoke::invoke(
                 contract_address,

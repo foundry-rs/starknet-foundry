@@ -1,4 +1,3 @@
-use crate::Arguments;
 use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
@@ -15,25 +14,52 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::signers::LocalWallet;
 use starknet_types_core::felt::Felt;
 
+use crate::Arguments;
+
+#[derive(Debug, Clone, clap::Args)]
+#[group(multiple = false)]
+pub struct InvokeArguments {
+    /// Arguments of the called function serialized as a series of felts
+    #[arg(short, long, value_delimiter = ' ', num_args = 1.., env = "SNCAST_INVOKE_CALLDATA")]
+    pub calldata: Option<Vec<String>>,
+
+    // Arguments of the called function as a comma-separated string of Cairo expressions
+    #[arg(long, allow_hyphen_values = true, env = "SNCAST_INVOKE_ARGUMENTS")]
+    pub arguments: Option<String>,
+}
+
+impl From<InvokeArguments> for Arguments {
+    fn from(value: InvokeArguments) -> Self {
+        let InvokeArguments {
+            calldata,
+            arguments,
+        } = value;
+        Self {
+            calldata,
+            arguments,
+        }
+    }
+}
+
 #[derive(Args, Clone, Debug)]
 #[command(about = "Invoke a contract on Starknet")]
 pub struct Invoke {
     /// Address of contract to invoke
-    #[arg(short = 'd', long)]
+    #[arg(short = 'd', long, env = "SNCAST_INVOKE_CONTRACT_ADDRESS")]
     pub contract_address: Felt,
 
     /// Name of the function to invoke
-    #[arg(short, long)]
+    #[arg(short, long, env = "SNCAST_INVOKE_FUNCTION")]
     pub function: String,
 
     #[command(flatten)]
-    pub arguments: Arguments,
+    pub arguments: InvokeArguments,
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
-    #[arg(short, long)]
+    #[arg(short, long, env = "SNCAST_INVOKE_NONCE")]
     pub nonce: Option<Felt>,
 
     #[command(flatten)]

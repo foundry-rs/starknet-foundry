@@ -9,11 +9,11 @@ use sncast::{
 #[command(about = "Generate a template for the multicall .toml file", long_about = None)]
 pub struct New {
     /// Output path to the file where the template is going to be saved
-    #[arg(required = true, num_args = 1)]
+    #[arg(required = true, num_args = 1, env = "SNCAST_MULTICALL_OUTPUT_PATH")]
     pub output_path: Option<Utf8PathBuf>,
 
     /// If the file specified in output-path exists, this flag decides if it is going to be overwritten
-    #[arg(short = 'o', long = "overwrite")]
+    #[arg(short = 'o', long = "overwrite", env = "SNCAST_MULTICALL_OVERWRITE")]
     pub overwrite: bool,
 }
 

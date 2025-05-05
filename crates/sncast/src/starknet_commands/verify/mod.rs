@@ -23,31 +23,35 @@ use walnut::WalnutVerificationInterface;
 ))]
 pub struct Verify {
     /// Class hash of a contract to be verified
-    #[arg(short = 'g', long)]
+    #[arg(short = 'g', long, env = "SNCAST_VERIFY_CLASS_HASH")]
     pub class_hash: Option<Felt>,
 
     /// Address of a contract to be verified
-    #[arg(short = 'd', long)]
+    #[arg(short = 'd', long, env = "SNCAST_VERIFY_CONTRACT_ADDRESS")]
     pub contract_address: Option<Felt>,
 
     /// Name of the contract that is being verified
-    #[arg(short, long)]
+    #[arg(short, long, env = "SNCAST_VERIFY_CONTRACT_NAME")]
     pub contract_name: String,
 
     /// Block explorer to use for the verification
-    #[arg(short, long, value_enum, default_value_t = Verifier::Walnut)]
+    #[arg(short, long, value_enum, default_value_t = Verifier::Walnut, env = "SNCAST_VERIFY_VERIFIER")]
     pub verifier: Verifier,
 
     /// The network on which block explorer will do the verification
-    #[arg(short, long, value_enum)]
+    #[arg(short, long, value_enum, env = "SNCAST_VERIFY_NETWORK")]
     pub network: Network,
 
     /// Assume "yes" as answer to confirmation prompt and run non-interactively
-    #[arg(long, default_value = "false")]
+    #[arg(
+        long,
+        default_value = "false",
+        env = "SNCAST_VERIFY_CONFIRM_VERIFICATION"
+    )]
     pub confirm_verification: bool,
 
     /// Specifies scarb package to be used
-    #[arg(long)]
+    #[arg(long, env = "SNCAST_VERIFY_PACKAGE")]
     pub package: Option<String>,
 }
 

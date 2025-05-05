@@ -28,7 +28,7 @@ use starknet_types_core::felt::Felt;
 #[command(about = "Deploy an account to the Starknet")]
 pub struct Deploy {
     /// Name of the account to be deployed
-    #[arg(short, long)]
+    #[arg(short, long, env = "SNCAST_ACCOUNT_DEPLOY_NAME")]
     pub name: Option<String>,
 
     #[command(flatten)]
@@ -38,7 +38,7 @@ pub struct Deploy {
     pub rpc: RpcArgs,
 
     /// If passed, the command will not trigger an interactive prompt to add an account as a default
-    #[arg(long)]
+    #[arg(long, env = "SNCAST_ACCOUNT_DEPLOY_SILENT")]
     pub silent: bool,
 }
 

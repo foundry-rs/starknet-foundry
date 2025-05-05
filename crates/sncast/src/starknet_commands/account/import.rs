@@ -25,42 +25,54 @@ use starknet_types_core::felt::Felt;
 #[command(about = "Add an account to the accounts file")]
 pub struct Import {
     /// Name of the account to be imported
-    #[arg(short, long)]
+    #[arg(short, long, env = "SNCAST_ACCOUNT_IMPORT_NAME")]
     pub name: Option<String>,
 
     /// Address of the account
-    #[arg(short, long)]
+    #[arg(short, long, env = "SNCAST_ACCOUNT_IMPORT_ADDRESS")]
     pub address: Felt,
 
     /// Type of the account
-    #[arg(short = 't', long = "type", value_parser = AccountType::from_str)]
+    #[arg(short = 't', long = "type", value_parser = AccountType::from_str, env = "SNCAST_ACCOUNT_IMPORT_ACCOUNT_TYPE")]
     pub account_type: AccountType,
 
     /// Class hash of the account
-    #[arg(short, long)]
+    #[arg(short, long, env = "SNCAST_ACCOUNT_IMPORT_CLASS_HASH")]
     pub class_hash: Option<Felt>,
 
     /// Account private key
-    #[arg(long, group = "private_key_input")]
+    #[arg(
+        long,
+        group = "private_key_input",
+        env = "SNCAST_ACCOUNT_IMPORT_PRIVATE_KEY"
+    )]
     pub private_key: Option<Felt>,
 
     /// Path to the file holding account private key
-    #[arg(long = "private-key-file", group = "private_key_input")]
+    #[arg(
+        long = "private-key-file",
+        group = "private_key_input",
+        env = "SNCAST_ACCOUNT_IMPORT_PRIVATE_KEY_FILE"
+    )]
     pub private_key_file_path: Option<Utf8PathBuf>,
 
     /// Salt for the address
-    #[arg(short, long)]
+    #[arg(short, long, env = "SNCAST_ACCOUNT_IMPORT_SALT")]
     pub salt: Option<Felt>,
 
     /// If passed, a profile with the provided name and corresponding data will be created in snfoundry.toml
-    #[arg(long, conflicts_with = "network")]
+    #[arg(
+        long,
+        conflicts_with = "network",
+        env = "SNCAST_ACCOUNT_IMPORT_ADD_PROFILE"
+    )]
     pub add_profile: Option<String>,
 
     #[command(flatten)]
     pub rpc: RpcArgs,
 
     /// If passed, the command will not trigger an interactive prompt to add an account as a default
-    #[arg(long)]
+    #[arg(long, env = "SNCAST_ACCOUNT_IMPORT_SILENT")]
     pub silent: bool,
 }
 
