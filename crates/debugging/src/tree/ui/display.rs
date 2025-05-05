@@ -1,10 +1,11 @@
-use crate::trace::types::{CallerAddress, ContractName, Selector, StorageAddress, TestName};
+use crate::trace::types::{
+    CallerAddress, ContractName, Selector, StorageAddress, TestName, TransformedCalldata,
+};
 use blockifier::execution::entry_point::CallType;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
 };
 use starknet_api::contract_class::EntryPointType;
-use starknet_api::transaction::fields::Calldata;
 use starknet_types_core::felt::Felt;
 use std::fmt::Debug;
 
@@ -50,10 +51,10 @@ impl NodeDisplay for EntryPointType {
     }
 }
 
-impl NodeDisplay for Calldata {
+impl NodeDisplay for TransformedCalldata {
     const TAG: &'static str = "calldata";
     fn string_pretty(&self) -> String {
-        string_debug(&self.0)
+        self.0.clone()
     }
 }
 

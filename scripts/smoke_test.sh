@@ -56,6 +56,6 @@ scarb cache clean
 if ! $SNCAST_PATH call \
     --url "$RPC_URL" \
     --contract-address 0x06b248bde9ce00d69099304a527640bc9515a08f0b49e5168e2096656f207e1d \
-    --function "get" --calldata 0x1 | grep -q $'command: call\nresponse: [0x0]'; then
+    --function "get" --calldata 0x1 | grep -q $'command: call\nresponse: 0_felt252\nresponse_raw: [0x0]'; then
   exit 1
 fi

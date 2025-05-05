@@ -62,7 +62,8 @@ $ sncast --profile myprofile \
 
 ```shell
 command: call
-response: [0x0]
+response: 0_felt252
+response_raw: [0x0]
 ```
 </details>
 <br>
@@ -98,7 +99,8 @@ $ sncast call \
 
 ```shell
 command: call
-response: [0x0]
+response: 0_felt252
+response_raw: [0x0]
 ```
 </details>
 <br>
