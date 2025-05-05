@@ -1948,7 +1948,10 @@ dependencies = [
  "blockifier",
  "cheatnet",
  "console",
+ "data-transformer",
  "ptree",
+ "serde_json",
+ "starknet",
  "starknet-types-core",
  "starknet_api",
 ]
