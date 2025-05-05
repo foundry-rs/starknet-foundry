@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- `snforge` arguments can be now read from corresponding env variables
+
+### Cast
+
+#### Added
+
+- `sncast` arguments can be now read from corresponding env variables
+
 ## [0.42.0] - 2025-04-28
 
 ### Forge
