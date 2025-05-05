@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Changed
+
+- when using `sncast call` the response will be printed as a Cairo-like string representation of the return values
+
 #### Fixed
 
 - Bug that prevented from passing values to `--arguments` that started with a leading minus `-` sign.
