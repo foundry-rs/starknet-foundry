@@ -10,7 +10,7 @@ use conversions::{felt::FromShortString, string::TryFromHexStr};
 use starknet_api::{core::ContractAddress, state::StorageKey};
 use starknet_types_core::felt::Felt;
 
-// All values are taken from https://starkscan.co/contract/0x0594c1582459ea03f77deaf9eb7e3917d6994a03c13405ba42867f83d85f085d#contract-storage
+// All values are taken from https://starkscan.co/contract/0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d#contract-storage
 // result of `variable_address("permitted_minter")` in the search bar for the key
 const STRK_PERMITTED_MINTER: &str =
     "0x594c1582459ea03f77deaf9eb7e3917d6994a03c13405ba42867f83d85f085d";
@@ -128,4 +128,13 @@ pub fn deploy_strk_token(state_reader: &mut ExtendedStateReader) {
             .storage_view
             .insert(*entry, *value);
     }
+}
+
+#[test]
+fn xyz() {
+    let permitted_minter = variable_address("permitted_minter");
+
+    println!("permitted_minter: {permitted_minter}");
+    let upgrade_delay = variable_address("upgrade_delay");
+    println!("upgrade_delay: {upgrade_delay}");
 }
