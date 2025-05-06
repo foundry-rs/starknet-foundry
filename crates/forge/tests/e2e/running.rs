@@ -722,9 +722,6 @@ fn should_panic() {
 
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_no_data (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
 
-        Success data:
-            0x0 ('')
-
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_check_data (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_not_matching_suffix
 

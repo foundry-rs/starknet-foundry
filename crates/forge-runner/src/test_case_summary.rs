@@ -1,4 +1,4 @@
-use crate::backtrace::add_backtrace_footer;
+use crate::backtrace::{add_backtrace_footer, get_backtrace, is_backtrace_enabled};
 use crate::build_trace_data::build_profiler_call_trace;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
@@ -302,7 +302,7 @@ fn check_if_matching_and_get_message(
             ));
             (false, message)
         }
-        None => (true, build_readable_text(actual_panic_value)),
+        None => (true, None),
     }
 }
 
@@ -367,9 +367,8 @@ impl TestCaseSummary<Single> {
                     if matching {
                         TestCaseSummary::Passed {
                             name,
-                            msg: msg.map(|msg| {
-                                add_backtrace_footer(msg, contracts_data, &encountered_errors)
-                            }),
+                            msg: is_backtrace_enabled()
+                                .then(|| get_backtrace(contracts_data, &encountered_errors)),
                             test_statistics: (),
                             gas_info,
                             used_resources,
