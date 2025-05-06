@@ -26,6 +26,10 @@ pub const STRK_CLASS_HASH: &str =
 // See: https://github.com/starknet-io/starkgate-contracts/blob/c787ec8e727c45499700d01e4eacd4cbc23a36ea/src/cairo/strk/erc20_lockable.cairo
 pub const STRK_ERC20_CASM: &str = include_str!("./data/strk_erc20_casm.json");
 
+// Compiled with starknet-compile, compiler version: 2.10.0
+// Fetched using `starknet_getCompiledCasm` with 0x076791ef97c042f81fbf352ad95f39a22554ee8d7927b2ce3c681f3418b5206a class hash
+pub const ETH_ERC20_CASM: &str = include_str!("./data/eth_erc20_casm.json");
+
 // Mocked class hashes, those are not checked anywhere
 pub const TEST_ERC20_CONTRACT_CLASS_HASH: &str = "0x1010";
 
@@ -50,9 +54,9 @@ fn contract_class_no_entrypoints() -> ContractClass {
 }
 
 #[must_use]
-pub fn contract_class_strk() -> ContractClass {
-    let casm_contract_class: CasmContractClass = serde_json::from_str(STRK_ERC20_CASM)
-        .expect("`STRK_ERC20_CASM` should be valid casm contract class");
+pub fn contract_class(raw_casm: &str) -> ContractClass {
+    let casm_contract_class: CasmContractClass =
+        serde_json::from_str(raw_casm).expect("`raw_casm` should be valid casm contract class");
 
     ContractClass::V1((casm_contract_class, SierraVersion::LATEST))
 }

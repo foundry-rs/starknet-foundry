@@ -1,4 +1,4 @@
-use crate::constants::build_test_entry_point;
+use crate::constants::{STRK_CONTRACT_ADDRESS, build_test_entry_point};
 use crate::forking::state::ForkStateReader;
 use crate::predeployment::strk::deploy_strk_token;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
@@ -7,6 +7,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execut
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
+use blockifier::concurrency::test_utils::class_hash;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
 use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::execution::entry_point::CallEntryPoint;
@@ -55,6 +56,28 @@ impl ExtendedStateReader {
         if !is_fork {
             deploy_strk_token(self);
         }
+    }
+
+    fn is_contract_deployed(&self, contract_address: ContractAddress) -> bool {
+        self.fork_state_reader
+            .as_ref()
+            .and_then(|reader| reader.get_cache().get_class_hash_at(&contract_address))
+            .is_some()
+    }
+
+    fn deploy_erc20_token(
+        &mut self,
+        contract_address: ContractAddress,
+        class_hash: ClassHash,
+        raw_casm: &str,
+        storage_kv_updates: Vec<
+    ) {
+        self.dict_state_reader
+            .address_to_class_hash
+            .insert(contract_address, class_hash);
+        self.dict_state_reader
+            .class_hash_to_class
+            .insert(class_hash, class_hash(raw_casm));
     }
 }
 
