@@ -130,3 +130,40 @@ fn printing_latest_block_number() {
         "},
     );
 }
+
+#[test]
+fn with_skip_fork_tests_env() {
+    let old_value = std::env::var("SNFORGE_SKIP_FORK_TESTS").ok();
+    unsafe { std::env::set_var("SNFORGE_SKIP_FORK_TESTS", "1") };
+
+    let temp = setup_package_with_file_patterns("forking", BASE_FILE_PATTERNS);
+
+    let output = test_runner(&temp)
+        .arg("forking::tests::test_fork_simple")
+        .assert()
+        .code(0);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 4 test(s) from forking package
+        Running 4 test(s) from src/
+        [IGNORE] forking::tests::test_fork_simple
+        [IGNORE] forking::tests::test_fork_simple_number_hex
+        [IGNORE] forking::tests::test_fork_simple_hash_hex
+        [IGNORE] forking::tests::test_fork_simple_hash_number
+        Tests: 0 passed, 0 failed, 0 skipped, 4 ignored, 1 filtered out
+        "},
+    );
+
+    unsafe {
+        match old_value {
+            Some(value) => std::env::set_var("SNFORGE_SKIP_FORK_TESTS", value),
+            None => std::env::remove_var("SNFORGE_SKIP_FORK_TESTS"),
+        }
+    }
+}

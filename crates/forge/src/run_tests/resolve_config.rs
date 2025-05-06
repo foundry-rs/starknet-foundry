@@ -5,7 +5,7 @@ use cheatnet::runtime_extensions::forge_config_extension::config::{
 };
 use conversions::byte_array::ByteArray;
 use forge_runner::package_tests::{
-    with_config::TestTargetWithConfig,
+    with_config::{TestCaseConfig, TestTargetWithConfig},
     with_config_resolved::{
         ResolvedForkConfig, TestCaseResolvedConfig, TestCaseWithResolvedConfig,
         TestTargetWithResolvedConfig,
@@ -13,12 +13,19 @@ use forge_runner::package_tests::{
 };
 use starknet_api::block::BlockNumber;
 
+use super::helpers::skip_fork_tests;
+
+fn is_test_case_ignored(case_config: &TestCaseConfig, skip_fork_tests_from_env: bool) -> bool {
+    case_config.ignored || (skip_fork_tests_from_env && case_config.fork_config.is_some())
+}
+
 pub async fn resolve_config(
     test_target: TestTargetWithConfig,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
 ) -> Result<TestTargetWithResolvedConfig> {
     let mut test_cases = Vec::with_capacity(test_target.test_cases.len());
+    let skip_fork_tests_from_env = skip_fork_tests();
 
     for case in test_target.test_cases {
         test_cases.push(TestCaseWithResolvedConfig {
@@ -26,7 +33,7 @@ pub async fn resolve_config(
             test_details: case.test_details,
             config: TestCaseResolvedConfig {
                 available_gas: case.config.available_gas,
-                ignored: case.config.ignored,
+                ignored: is_test_case_ignored(&case.config, skip_fork_tests_from_env),
                 expected_result: case.config.expected_result,
                 fork_config: resolve_fork_config(
                     case.config.fork_config,
