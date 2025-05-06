@@ -50,7 +50,6 @@ pub struct ExtendedStateReader {
 
 impl ExtendedStateReader {
     pub fn predeploy_contracts(&mut self) {
-        // STRK
         let strk_contract_address =
             ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
         if !self.is_contract_deployed(strk_contract_address) {
