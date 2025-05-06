@@ -1,4 +1,4 @@
-use crate::trace::collect;
+use crate::trace::collect::collect_trace;
 use crate::tree::TreeSerialize;
 use blockifier::execution::entry_point::CallType;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
@@ -6,7 +6,6 @@ use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::Contr
 use cheatnet::state::CallTrace;
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::ContractAddress;
-use starknet_api::transaction::fields::Calldata;
 use std::fmt;
 use std::fmt::Display;
 
@@ -26,13 +25,16 @@ pub struct ContractTrace {
 pub struct TraceInfo {
     pub contract_name: ContractName,
     pub entry_point_type: EntryPointType,
-    pub calldata: Calldata,
+    pub calldata: TransformedCalldata,
     pub storage_address: StorageAddress,
     pub caller_address: CallerAddress,
     pub call_type: CallType,
     pub nested_calls: Vec<ContractTrace>,
     pub call_result: CallResult,
 }
+
+#[derive(Debug, Clone)]
+pub struct TransformedCalldata(pub String);
 
 #[derive(Debug, Clone)]
 pub struct Selector(pub String);
@@ -53,7 +55,7 @@ impl Trace {
     /// Creates a new [`Trace`] from a given `cheatnet` [`CallTrace`], [`ContractsData`] and a test name.
     #[must_use]
     pub fn new(call_trace: &CallTrace, contracts_data: &ContractsData, test_name: String) -> Self {
-        collect::trace(call_trace, contracts_data, test_name)
+        collect_trace(call_trace, contracts_data, test_name)
     }
 }
 

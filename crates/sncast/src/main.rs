@@ -2,8 +2,8 @@ use crate::starknet_commands::{
     account, account::Account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke,
     multicall::Multicall, script::Script, show_config::ShowConfig, tx_status::TxStatus,
 };
-use anyhow::{Context, Result};
-use data_transformer::Calldata;
+use anyhow::{Context, Result, bail};
+use data_transformer::{reverse_transform_output, transform};
 use sncast::helpers::account::generate_account_name;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{OutputFormat, print_command_result};
@@ -24,13 +24,14 @@ use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_metadata_with_deps,
 };
 use sncast::response::errors::handle_starknet_command_error;
-use sncast::response::structs::DeclareResponse;
+use sncast::response::structs::{CallResponse, DeclareResponse, TransformedCallResponse};
 use sncast::{
     NumbersFormat, ValidatedWaitParams, WaitForTx, chain_id_to_network_name, get_account,
     get_block_id, get_chain_id, get_class_hash_by_address, get_contract_class,
     get_default_state_file_name,
 };
 use starknet::core::types::ContractClass;
+use starknet::core::types::contract::AbiEntry;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
 use starknet_commands::account::list::print_account_list;
@@ -175,7 +176,14 @@ impl Arguments {
         selector: &Felt,
     ) -> Result<Vec<Felt>> {
         if let Some(arguments) = self.arguments {
-            Calldata::new(arguments).serialized(contract_class, selector)
+            let ContractClass::Sierra(sierra_class) = contract_class else {
+                bail!("Transformation of arguments is not available for Cairo Zero contracts")
+            };
+
+            let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str())
+                .context("Couldn't deserialize ABI received from network")?;
+
+            transform(&arguments, &abi, selector)
         } else if let Some(calldata) = self.calldata {
             calldata
                 .iter()
@@ -356,7 +364,7 @@ async fn run_async_command(
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
+            let calldata = arguments.try_into_calldata(contract_class.clone(), &selector)?;
 
             let result = starknet_commands::call::call(
                 contract_address,
@@ -368,7 +376,19 @@ async fn run_async_command(
             .await
             .map_err(handle_starknet_command_error);
 
-            print_command_result("call", &result, numbers_format, output_format)?;
+            if let Some(transformed_result) =
+                transform_response(&result, &contract_class, &selector)
+            {
+                print_command_result(
+                    "call",
+                    &Ok(transformed_result),
+                    numbers_format,
+                    output_format,
+                )?;
+            } else {
+                print_command_result("call", &result, numbers_format, output_format)?;
+            }
+
             Ok(())
         }
 
@@ -520,15 +540,6 @@ async fn run_async_command(
                 )
                 .await;
 
-                let run_interactive_prompt =
-                    !create.silent && result.is_ok() && io::stdout().is_terminal();
-
-                if run_interactive_prompt {
-                    if let Err(err) = prompt_to_add_account_as_default(&account) {
-                        eprintln!("Error: Failed to launch interactive prompt: {err}");
-                    }
-                }
-
                 print_command_result("account create", &result, numbers_format, output_format)?;
                 print_block_explorer_link_if_allowed(
                     &result,
@@ -550,7 +561,7 @@ async fn run_async_command(
                 let result = starknet_commands::account::deploy::deploy(
                     &provider,
                     config.accounts_file,
-                    deploy,
+                    &deploy,
                     chain_id,
                     wait_config,
                     &config.account,
@@ -558,6 +569,19 @@ async fn run_async_command(
                     fee_args,
                 )
                 .await;
+
+                let run_interactive_prompt =
+                    !deploy.silent && result.is_ok() && io::stdout().is_terminal();
+
+                if config.keystore.is_none() && run_interactive_prompt {
+                    if let Err(err) = prompt_to_add_account_as_default(
+                        &deploy
+                            .name
+                            .expect("Must be provided if not using a keystore"),
+                    ) {
+                        eprintln!("Error: Failed to launch interactive prompt: {err}");
+                    }
+                }
 
                 print_command_result("account deploy", &result, numbers_format, output_format)?;
                 print_block_explorer_link_if_allowed(
@@ -769,4 +793,31 @@ fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
 
     config_with_cli(&mut combined_config, cli);
     Ok(combined_config)
+}
+
+fn transform_response(
+    result: &Result<CallResponse>,
+    contract_class: &ContractClass,
+    selector: &Felt,
+) -> Option<TransformedCallResponse> {
+    let Ok(CallResponse { response }) = result else {
+        return None;
+    };
+
+    if response.is_empty() {
+        return None;
+    }
+
+    let ContractClass::Sierra(sierra_class) = contract_class else {
+        return None;
+    };
+
+    let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str()).ok()?;
+
+    let transformed_response = reverse_transform_output(response, &abi, selector).ok()?;
+
+    Some(TransformedCallResponse {
+        response_raw: response.clone(),
+        response: transformed_response,
+    })
 }

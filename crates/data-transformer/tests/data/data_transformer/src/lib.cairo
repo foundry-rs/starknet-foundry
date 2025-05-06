@@ -36,11 +36,11 @@ pub struct BitArray {
 
 #[starknet::interface]
 pub trait IDataTransformer<TContractState> {
-    fn simple_fn(ref self: TContractState, a: felt252);
-    fn u256_fn(ref self: TContractState, a: u256);
-    fn signed_fn(ref self: TContractState, a: i32);
-    fn unsigned_fn(ref self: TContractState, a: u32);
-    fn tuple_fn(ref self: TContractState, a: (felt252, u8, Enum));
+    fn simple_fn(ref self: TContractState, a: felt252) -> felt252;
+    fn u256_fn(ref self: TContractState, a: u256) -> u256;
+    fn signed_fn(ref self: TContractState, a: i32) -> i32;
+    fn unsigned_fn(ref self: TContractState, a: u32) -> u32;
+    fn tuple_fn(ref self: TContractState, a: (felt252, u8, Enum)) -> (felt252, u8, Enum);
     fn complex_fn(
         ref self: TContractState,
         arr: Array<Array<felt252>>,
@@ -51,14 +51,16 @@ pub trait IDataTransformer<TContractState> {
         five: bool,
         six: u256,
     );
-    fn simple_struct_fn(ref self: TContractState, a: SimpleStruct);
-    fn nested_struct_fn(ref self: TContractState, a: NestedStructWithField);
-    fn enum_fn(ref self: TContractState, a: Enum);
-    fn complex_struct_fn(ref self: TContractState, a: ComplexStruct);
+    fn simple_struct_fn(ref self: TContractState, a: SimpleStruct) -> SimpleStruct;
+    fn nested_struct_fn(
+        ref self: TContractState, a: NestedStructWithField,
+    ) -> NestedStructWithField;
+    fn enum_fn(ref self: TContractState, a: Enum) -> Enum;
+    fn complex_struct_fn(ref self: TContractState, a: ComplexStruct) -> ComplexStruct;
     fn external_struct_fn(
         ref self: TContractState, a: BitArray, b: alexandria_data_structures::bit_array::BitArray,
-    );
-    fn span_fn(ref self: TContractState, a: Span<felt252>);
+    ) -> (BitArray, alexandria_data_structures::bit_array::BitArray);
+    fn span_fn(ref self: TContractState, a: Span<felt252>) -> Span<felt252>;
     fn multiple_signed_fn(ref self: TContractState, a: i32, b: i8);
 }
 
@@ -77,11 +79,21 @@ mod DataTransformer {
 
     #[abi(embed_v0)]
     impl DataTransformerImpl of super::IDataTransformer<ContractState> {
-        fn simple_fn(ref self: ContractState, a: felt252) {}
-        fn u256_fn(ref self: ContractState, a: u256) {}
-        fn signed_fn(ref self: ContractState, a: i32) {}
-        fn unsigned_fn(ref self: ContractState, a: u32) {}
-        fn tuple_fn(ref self: ContractState, a: (felt252, u8, Enum)) {}
+        fn simple_fn(ref self: ContractState, a: felt252) -> felt252 {
+            a
+        }
+        fn u256_fn(ref self: ContractState, a: u256) -> u256 {
+            a
+        }
+        fn signed_fn(ref self: ContractState, a: i32) -> i32 {
+            a
+        }
+        fn unsigned_fn(ref self: ContractState, a: u32) -> u32 {
+            a
+        }
+        fn tuple_fn(ref self: ContractState, a: (felt252, u8, Enum)) -> (felt252, u8, Enum) {
+            a
+        }
         fn complex_fn(
             ref self: ContractState,
             arr: Array<Array<felt252>>,
@@ -92,16 +104,30 @@ mod DataTransformer {
             five: bool,
             six: u256,
         ) {}
-        fn simple_struct_fn(ref self: ContractState, a: SimpleStruct) {}
-        fn nested_struct_fn(ref self: ContractState, a: NestedStructWithField) {}
-        fn enum_fn(ref self: ContractState, a: Enum) {}
-        fn complex_struct_fn(ref self: ContractState, a: ComplexStruct) {}
+        fn simple_struct_fn(ref self: ContractState, a: SimpleStruct) -> SimpleStruct {
+            a
+        }
+        fn nested_struct_fn(
+            ref self: ContractState, a: NestedStructWithField,
+        ) -> NestedStructWithField {
+            a
+        }
+        fn enum_fn(ref self: ContractState, a: Enum) -> Enum {
+            a
+        }
+        fn complex_struct_fn(ref self: ContractState, a: ComplexStruct) -> ComplexStruct {
+            a
+        }
         fn external_struct_fn(
             ref self: ContractState,
             a: BitArray,
             b: alexandria_data_structures::bit_array::BitArray,
-        ) {}
-        fn span_fn(ref self: ContractState, a: Span<felt252>) {}
+        ) -> (BitArray, alexandria_data_structures::bit_array::BitArray) {
+            (a, b)
+        }
+        fn span_fn(ref self: ContractState, a: Span<felt252>) -> Span<felt252> {
+            a
+        }
         fn multiple_signed_fn(ref self: ContractState, a: i32, b: i8) {}
     }
 }

@@ -53,10 +53,6 @@ pub struct Create {
 
     #[command(flatten)]
     pub rpc: RpcArgs,
-
-    /// If passed, the command will not trigger an interactive prompt to add an account as a default
-    #[arg(long)]
-    pub silent: bool,
 }
 
 pub async fn create(

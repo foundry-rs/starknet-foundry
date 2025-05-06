@@ -1,6 +1,7 @@
 use crate::helpers::constants::{FORK_BLOCK_NUMBER, SEED, SEPOLIA_RPC_URL, URL};
 use crate::helpers::fixtures::{
-    // deploy_argent_account, deploy_braavos_account,
+    // deploy_braavos_account,
+    deploy_argent_account,
     deploy_cairo_0_account,
     deploy_keystore_account,
     deploy_latest_oz_account,
@@ -80,8 +81,8 @@ fn start_devnet() {
     rt.block_on(deploy_keystore_account());
     rt.block_on(deploy_cairo_0_account());
     rt.block_on(deploy_latest_oz_account());
-    // TODO(#3089): Devnet returns error that balance is 0, even though we prefund these accounts
-    // rt.block_on(deploy_argent_account());
+    rt.block_on(deploy_argent_account());
+    // TODO(#3118)
     // rt.block_on(deploy_braavos_account());
 }
 

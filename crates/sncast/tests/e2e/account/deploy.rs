@@ -247,8 +247,7 @@ pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &
 }
 
 #[test_case("oz"; "open_zeppelin_account")]
-// TODO(#3089): Fails because of insufficient balance
-// #[test_case("argent"; "argent_account")]
+#[test_case("argent"; "argent_account")]
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 pub async fn test_happy_case_keystore(account_type: &str) {
