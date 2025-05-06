@@ -62,15 +62,14 @@ type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
 #[command(about = "Execute a deployment script")]
 pub struct Run {
     /// Module name that contains the `main` function, which will be executed
-    #[arg(env = "SNCAST_SCRIPT_RUN_SCRIPT_NAME")]
     pub script_name: String,
 
     /// Specifies scarb package to be used
-    #[arg(long, env = "SNCAST_SCRIPT_RUN_PACKAGE")]
+    #[arg(long)]
     pub package: Option<String>,
 
     /// Do not use the state file
-    #[arg(long, env = "SNCAST_SCRIPT_RUN_NO_STATE_FILE")]
+    #[arg(long)]
     pub no_state_file: bool,
 
     #[command(flatten)]

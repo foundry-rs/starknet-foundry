@@ -20,25 +20,25 @@ use starknet_types_core::felt::Felt;
 #[command(about = "Deploy a contract on Starknet")]
 pub struct Deploy {
     /// Class hash of contract to deploy
-    #[arg(short = 'g', long, env = "SNCAST_DEPLOY_CLASS_HASH")]
+    #[arg(short = 'g', long)]
     pub class_hash: Felt,
 
     #[command(flatten)]
     pub arguments: DeployArguments,
 
     /// Salt for the address
-    #[arg(short, long, env = "SNCAST_DEPLOY_SALT")]
+    #[arg(short, long)]
     pub salt: Option<Felt>,
 
     /// If true, salt will be modified with an account address
-    #[arg(long, env = "SNCAST_DEPLOY_UNIQUE")]
+    #[arg(long)]
     pub unique: bool,
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
-    #[arg(short, long, env = "SNCAST_DEPLOY_NONCE")]
+    #[arg(short, long)]
     pub nonce: Option<Felt>,
 
     #[command(flatten)]
@@ -49,11 +49,11 @@ pub struct Deploy {
 #[group(multiple = false)]
 pub struct DeployArguments {
     /// Arguments of the called function serialized as a series of felts
-    #[arg(short, long, value_delimiter = ' ', num_args = 1.., env = "SNCAST_DEPLOY_CONSTRUCTOR_CALLDATA")]
+    #[arg(short, long, value_delimiter = ' ', num_args = 1..)]
     pub constructor_calldata: Option<Vec<String>>,
 
     // Arguments of the called function as a comma-separated string of Cairo expressions
-    #[arg(long, env = "SNCAST_DEPLOY_ARGUMENTS")]
+    #[arg(long)]
     pub arguments: Option<String>,
 }
 

@@ -7,31 +7,31 @@ use starknet_types_core::felt::{Felt, NonZeroFelt};
 #[derive(Args, Debug, Clone)]
 pub struct FeeArgs {
     /// Max fee for the transaction. If not provided, will be automatically estimated.
-    #[arg(value_parser = parse_non_zero_felt, short, long, conflicts_with_all = ["l1_gas", "l1_gas_price", "l2_gas", "l2_gas_price", "l1_data_gas", "l1_data_gas_price"], env = "SNCAST_MAX_FEE")]
+    #[arg(value_parser = parse_non_zero_felt, short, long, conflicts_with_all = ["l1_gas", "l1_gas_price", "l2_gas", "l2_gas_price", "l1_data_gas", "l1_data_gas_price"])]
     pub max_fee: Option<NonZeroFelt>,
 
     /// Max L1 gas amount. If not provided, will be automatically estimated.
-    #[arg(long, env = "SNCAST_L1_GAS")]
+    #[arg(long)]
     pub l1_gas: Option<u64>,
 
     /// Max L1 gas price in Fri. If not provided, will be automatically estimated.
-    #[arg(long, env = "SNCAST_L1_GAS_PRICE")]
+    #[arg(long)]
     pub l1_gas_price: Option<u128>,
 
     /// Max L2 gas amount. If not provided, will be automatically estimated.
-    #[arg(long, env = "SNCAST_L2_GAS")]
+    #[arg(long)]
     pub l2_gas: Option<u64>,
 
     /// Max L2 gas price in Fri. If not provided, will be automatically estimated.
-    #[arg(long, env = "SNCAST_L2_GAS_PRICE")]
+    #[arg(long)]
     pub l2_gas_price: Option<u128>,
 
     /// Max L1 data gas amount. If not provided, will be automatically estimated.
-    #[arg(long, env = "SNCAST_L1_DATA_GAS")]
+    #[arg(long)]
     pub l1_data_gas: Option<u64>,
 
     /// Max L1 data gas price in Fri. If not provided, will be automatically estimated.
-    #[arg(long, env = "SNCAST_L1_DATA_GAS_PRICE")]
+    #[arg(long)]
     pub l1_data_gas_price: Option<u128>,
 }
 
