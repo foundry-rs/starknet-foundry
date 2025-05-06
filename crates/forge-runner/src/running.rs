@@ -184,6 +184,11 @@ pub fn run_test_case(
             case.config.fork_config.as_ref(),
         )?,
     };
+
+    if !case.config.disable_predeployed_contracts {
+        state_reader.predeploy_contracts();
+    }
+
     let block_info = state_reader.get_block_info()?;
     let chain_id = state_reader.get_chain_id()?;
     let tracked_resource = TrackedResource::from(runtime_config.tracked_resource);
@@ -192,10 +197,6 @@ pub fn run_test_case(
 
     if let Some(max_n_steps) = runtime_config.max_n_steps {
         set_max_steps(&mut context, max_n_steps);
-    }
-
-    if !case.config.disable_predeployed_contracts {
-        state_reader.predeploy_contracts();
     }
 
     let mut cached_state = CachedState::new(state_reader);
