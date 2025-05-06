@@ -53,8 +53,7 @@ impl ExtendedStateReader {
         // STRK
         let strk_contract_address =
             ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
-        let is_strk_deployed = self.is_contract_deployed(strk_contract_address);
-        if !is_strk_deployed {
+        if !self.is_contract_deployed(strk_contract_address) {
             deploy_strk_token(self);
         }
     }

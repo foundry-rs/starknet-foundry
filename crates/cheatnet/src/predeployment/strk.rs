@@ -38,7 +38,7 @@ pub fn deploy_strk_token(state_reader: &mut ExtendedStateReader) {
         StorageKey(recipient_balance_low_address.try_into().unwrap())
             .next_storage_key()
             .unwrap();
-    let total_supply_low = 60_000_000_000_000_000_000_000_000_u128;
+    let total_supply_low: u128 = 60_000_000_000_000_000_000_000_000;
     // Update STRK storage to mimic constructor behavior
     let storage_entries_and_values_to_update = [
         // name
