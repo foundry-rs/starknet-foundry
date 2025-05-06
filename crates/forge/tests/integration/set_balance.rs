@@ -212,10 +212,8 @@ fn test_set_balance_strk_with_disabled_predeployment() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::TokenTrait;
+            use snforge_std::{Token, TokenTrait};
             use starknet::{ContractAddress, syscalls, SyscallResultTrait};
-
-            use snforge_std::{Token};
 
             fn get_balance(contract_address: ContractAddress, token: Token) -> Span<felt252> {
                 let mut calldata: Array<felt252> = array![contract_address.into()];

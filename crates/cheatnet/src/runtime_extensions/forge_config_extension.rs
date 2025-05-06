@@ -30,7 +30,7 @@ impl<'a> ExtensionLogic for ForgeConfigExtension<'a> {
             "set_config_fork" => config_cheatcode!(fork),
             "set_config_available_gas" => config_cheatcode!(available_gas),
             "set_config_ignore" => config_cheatcode!(ignore),
-            "set_config_contracts_predeploy" => {
+            "set_config_disable_contracts" => {
                 config_cheatcode!(disable_predeployed_contracts)
             }
             "set_config_should_panic" => config_cheatcode!(should_panic),

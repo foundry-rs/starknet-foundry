@@ -39,7 +39,7 @@ fn works_without_args() {
                     }
                     .serialize(ref data);
 
-                    starknet::testing::cheatcode::<'set_config_contracts_predeploy'>(data.span());
+                    starknet::testing::cheatcode::<'set_config_disable_contracts'>(data.span());
 
                     return;
                 }
