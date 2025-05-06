@@ -104,7 +104,7 @@ pub fn add_created_profile_to_configuration(
     cast_config: &CastConfig,
     path: &Utf8PathBuf,
 ) -> Result<()> {
-    if !load_config::<CastConfig>(path.into(), profile)
+    if !load_config::<CastConfig>(Some(path), profile)
         .unwrap_or_default()
         .account
         .is_empty()
