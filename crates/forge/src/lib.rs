@@ -155,7 +155,7 @@ pub struct TestArgs {
     #[arg(short = 'r', long)]
     fuzzer_runs: Option<NonZeroU32>,
     /// Seed for the fuzzer
-    #[arg(short = 's', long)]
+    #[arg(short = 's', long, env = "FORGE_FUZZER_SEED")]
     fuzzer_seed: Option<u64>,
 
     /// Run only tests marked with `#[ignore]` attribute
