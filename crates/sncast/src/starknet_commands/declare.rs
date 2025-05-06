@@ -28,22 +28,18 @@ use std::sync::Arc;
 #[command(about = "Declare a contract to starknet", long_about = None)]
 pub struct Declare {
     /// Contract name
-    #[arg(
-        short = 'c',
-        long = "contract-name",
-        env = "SNCAST_DECLARE_CONTRACT_NAME"
-    )]
+    #[arg(short = 'c', long = "contract-name")]
     pub contract: String,
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
-    #[arg(short, long, env = "SNCAST_DECLARE_NONCE")]
+    #[arg(short, long)]
     pub nonce: Option<Felt>,
 
     /// Specifies scarb package to be used
-    #[arg(long, env = "SNCAST_DECLARE_PACKAGE")]
+    #[arg(long)]
     pub package: Option<String>,
 
     #[command(flatten)]

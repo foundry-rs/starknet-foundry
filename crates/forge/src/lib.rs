@@ -88,7 +88,6 @@ enum ForgeSubcommand {
     /// Create a new directory with a Forge project
     Init {
         /// Name of a new project
-        #[arg(env = "SNFORGE_NAME")]
         name: String,
     },
     /// Create a new Forge project at <PATH>
@@ -111,7 +110,7 @@ enum ForgeSubcommand {
 
 #[derive(Parser, Debug)]
 pub struct CleanArgs {
-    #[arg(num_args = 1.., required = true, env = "SNFORGE_CLEAN_COMPONENTS")]
+    #[arg(num_args = 1.., required = true)]
     pub clean_components: Vec<CleanComponent>,
 }
 
@@ -142,57 +141,56 @@ pub struct TestArgs {
     /// Name used to filter tests
     test_filter: Option<String>,
     /// Use exact matches for `test_filter`
-    #[arg(short, long, env = "SNFORGE_EXACT")]
+    #[arg(short, long)]
     exact: bool,
 
     /// Stop executing tests after the first failed test
-    #[arg(short = 'x', long, env = "SNFORGE_EXIT_FIRST")]
+    #[arg(short = 'x', long)]
     exit_first: bool,
 
     #[command(flatten)]
     packages_filter: PackagesFilter,
 
     /// Number of fuzzer runs
-    #[arg(short = 'r', long, env = "SNFORGE_FUZZER_RUNS")]
+    #[arg(short = 'r', long)]
     fuzzer_runs: Option<NonZeroU32>,
     /// Seed for the fuzzer
-    #[arg(short = 's', long, env = "SNFORGE_FUZZER_SEED")]
+    #[arg(short = 's', long)]
     fuzzer_seed: Option<u64>,
 
     /// Run only tests marked with `#[ignore]` attribute
-    #[arg(long = "ignored", env = "SNFORGE_ONLY_IGNORED")]
+    #[arg(long = "ignored")]
     only_ignored: bool,
-
     /// Run all tests regardless of `#[ignore]` attribute
-    #[arg(long, conflicts_with = "only_ignored", env = "SNFORGE_INCLUDE_IGNORED")]
+    #[arg(long, conflicts_with = "only_ignored")]
     include_ignored: bool,
 
     /// Display more detailed info about used resources
-    #[arg(long, env = "SNFORGE_DETAILED_RESOURCES")]
+    #[arg(long)]
     detailed_resources: bool,
 
     /// Control when colored output is used
-    #[arg(value_enum, long, default_value_t = ColorOption::Auto, value_name="WHEN", env = "SNFORGE_COLOR")]
+    #[arg(value_enum, long, default_value_t = ColorOption::Auto, value_name="WHEN")]
     color: ColorOption,
 
     /// Run tests that failed during the last run
-    #[arg(long, env = "SNFORGE_RERUN_FAILED")]
+    #[arg(long)]
     rerun_failed: bool,
 
     /// Save execution traces of all test which have passed and are not fuzz tests
-    #[arg(long, env = "SNFORGE_SAVE_TRACE_DATA")]
+    #[arg(long)]
     save_trace_data: bool,
 
     /// Build profiles of all tests which have passed and are not fuzz tests using the cairo-profiler
-    #[arg(long, conflicts_with = "coverage", env = "SNFORGE_BUILD_PROFILE")]
+    #[arg(long, conflicts_with = "coverage")]
     build_profile: bool,
 
     /// Generate a coverage report for the executed tests which have passed and are not fuzz tests using the cairo-coverage
-    #[arg(long, conflicts_with = "build_profile", env = "SNFORGE_COVERAGE")]
+    #[arg(long, conflicts_with = "build_profile")]
     coverage: bool,
 
     /// Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
-    #[arg(long, env = "SNFORGE_MAX_N_STEPS")]
+    #[arg(long)]
     max_n_steps: Option<u32>,
 
     /// Specify features to enable
@@ -200,15 +198,15 @@ pub struct TestArgs {
     pub features: FeaturesSpec,
 
     /// Build contracts separately in the scarb starknet contract target
-    #[arg(long, env = "SNFORGE_BUILD_CONTRACTS_SEPARATELY")]
+    #[arg(long)]
     no_optimization: bool,
 
     /// Specify tracked resource type
-    #[arg(long, value_enum, default_value_t, env = "SNFORGE_TRACKED_RESOURCE")]
+    #[arg(long, value_enum, default_value_t)]
     tracked_resource: ForgeTrackedResource,
 
     /// Additional arguments for cairo-coverage or cairo-profiler
-    #[arg(last = true, env = "SNFORGE_ADDITIONAL_ARGS")]
+    #[arg(last = true)]
     additional_args: Vec<OsString>,
 }
 
@@ -228,19 +226,18 @@ pub enum Template {
 #[derive(Parser, Debug)]
 pub struct NewArgs {
     /// Path to a location where the new project will be created
-    #[arg(env = "SNFORGE_PATH")]
     path: Utf8PathBuf,
     /// Name of a new project, defaults to the directory name
-    #[arg(short, long, env = "SNFORGE_NAME")]
+    #[arg(short, long)]
     name: Option<String>,
     /// Do not initialize a new Git repository
-    #[arg(long, env = "SNFORGE_NO_VCS")]
+    #[arg(long)]
     no_vcs: bool,
     /// Try to create the project even if the specified directory at <PATH> is not empty, which can result in overwriting existing files
-    #[arg(long, env = "SNFORGE_OVERWRITE")]
+    #[arg(long)]
     overwrite: bool,
     /// Template to use for the new project
-    #[arg(short, long, default_value_t = Template::BalanceContract, env = "SNFORGE_TEMPLATE")]
+    #[arg(short, long, default_value_t = Template::BalanceContract)]
     template: Template,
 }
 
