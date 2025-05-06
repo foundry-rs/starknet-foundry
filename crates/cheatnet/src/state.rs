@@ -1,4 +1,4 @@
-use crate::constants::{STRK_CONTRACT_ADDRESS, build_test_entry_point};
+use crate::constants::build_test_entry_point;
 use crate::forking::state::ForkStateReader;
 use crate::predeployment::strk::deploy_strk_token;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
@@ -50,20 +50,11 @@ pub struct ExtendedStateReader {
 
 impl ExtendedStateReader {
     pub fn predeploy_contracts(&mut self) {
-        // STRK
-        let strk_contract_address =
-            ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS).unwrap();
-        let is_strk_deployed = self.is_contract_deployed(strk_contract_address);
-        if !is_strk_deployed {
+        // We consider contract as deployed solely based on the fact that the test used forking
+        let is_fork = self.fork_state_reader.is_some();
+        if !is_fork {
             deploy_strk_token(self);
         }
-    }
-
-    fn is_contract_deployed(&self, contract_address: ContractAddress) -> bool {
-        self.fork_state_reader
-            .as_ref()
-            .and_then(|reader| reader.get_cache().get_class_hash_at(&contract_address))
-            .is_some()
     }
 }
 
