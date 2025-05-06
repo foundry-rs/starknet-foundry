@@ -39,82 +39,56 @@ pub fn deploy_strk_token(state_reader: &mut ExtendedStateReader) {
             .next_storage_key()
             .unwrap();
     let total_supply_low: u128 = 60_000_000_000_000_000_000_000_000;
+
     // Update STRK storage to mimic constructor behavior
     let storage_entries_and_values_to_update = [
         // name
         (
-            (
-                strk_contract_address,
-                storage_key(variable_address("ERC20_name")).unwrap(),
-            ),
+            storage_key(variable_address("ERC20_name")).unwrap(),
             Felt::from_short_string("STRK").unwrap(),
         ),
         // symbol
         (
-            (
-                strk_contract_address,
-                storage_key(variable_address("ERC20_symbol")).unwrap(),
-            ),
+            storage_key(variable_address("ERC20_symbol")).unwrap(),
             Felt::from_short_string("STRK").unwrap(),
         ),
         // decimals
         (
-            (
-                strk_contract_address,
-                storage_key(variable_address("ERC20_decimals")).unwrap(),
-            ),
+            storage_key(variable_address("ERC20_decimals")).unwrap(),
             Felt::from(18),
         ),
         // total_supply low
         (
-            (
-                strk_contract_address,
-                storage_key(variable_address("ERC20_total_supply")).unwrap(),
-            ),
+            storage_key(variable_address("ERC20_total_supply")).unwrap(),
             Felt::from(total_supply_low),
         ),
         // total_supply high
         (
-            (
-                strk_contract_address,
-                storage_key(variable_address("ERC20_total_supply"))
-                    .unwrap()
-                    .next_storage_key()
-                    .unwrap(),
-            ),
+            storage_key(variable_address("ERC20_total_supply"))
+                .unwrap()
+                .next_storage_key()
+                .unwrap(),
             Felt::ZERO,
         ),
         // recipient balance low
         (
-            (
-                strk_contract_address,
-                storage_key(recipient_balance_low_address).unwrap(),
-            ),
+            storage_key(recipient_balance_low_address).unwrap(),
             Felt::from(total_supply_low),
         ),
         // recipient balance high
         (
-            (
-                strk_contract_address,
-                storage_key(**recipient_balance_high_address).unwrap(),
-            ),
+            storage_key(**recipient_balance_high_address).unwrap(),
             Felt::ZERO,
         ),
         // permitted_minter
         (
-            (
-                strk_contract_address,
-                storage_key(variable_address("permitted_minter")).unwrap(),
-            ),
+            storage_key(variable_address("permitted_minter")).unwrap(),
             Felt::try_from_hex_str(STRK_PERMITTED_MINTER).unwrap(),
         ),
         // skip initializing roles
         // upgrade_delay
         (
-            (
-                strk_contract_address,
-                storage_key(variable_address("upgrade_delay")).unwrap(),
-            ),
+            storage_key(variable_address("upgrade_delay")).unwrap(),
             STRK_UPGRADE_DELAY.into(),
         ),
         // TODO: Decide if we want to write `domain_hash` to storage
@@ -122,11 +96,12 @@ pub fn deploy_strk_token(state_reader: &mut ExtendedStateReader) {
         // this is a potential performance issue
     ];
 
-    for (entry, value) in &storage_entries_and_values_to_update {
+    for (key, value) in &storage_entries_and_values_to_update {
+        let entry = (strk_contract_address, *key);
         state_reader
             .dict_state_reader
             .storage_view
-            .insert(*entry, *value);
+            .insert(entry, *value);
     }
 }
 

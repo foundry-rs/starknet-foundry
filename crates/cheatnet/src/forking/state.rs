@@ -24,7 +24,6 @@ use starknet_api::contract_class::SierraVersion;
 use starknet_api::core::{ChainId, ClassHash, CompiledClassHash, ContractAddress, Nonce};
 use starknet_api::state::StorageKey;
 use starknet_types_core::felt::Felt;
-use std::cell::Ref;
 use std::cell::RefCell;
 use std::io::Read;
 use std::sync::Arc;
@@ -61,10 +60,6 @@ impl ForkStateReader {
 
     fn block_id(&self) -> BlockId {
         BlockId::Number(self.block_number.0)
-    }
-
-    pub fn get_cache(&self) -> Ref<ForkCache> {
-        self.cache.borrow()
     }
 }
 
