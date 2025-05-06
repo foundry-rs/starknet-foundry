@@ -13,7 +13,6 @@ impl AttributeInfo for ContractsPredeploymentCollector {
 }
 
 impl AttributeTypeData for ContractsPredeploymentCollector {
-    // Suffix is `..._predeploy` instead of `..._predeployment` because it's too big for felt
     const CHEATCODE_NAME: &'static str = "set_config_disable_contracts";
 }
 
