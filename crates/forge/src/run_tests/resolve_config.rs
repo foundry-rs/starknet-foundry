@@ -5,7 +5,7 @@ use cheatnet::runtime_extensions::forge_config_extension::config::{
 };
 use conversions::byte_array::ByteArray;
 use forge_runner::package_tests::{
-    with_config::{TestCaseConfig, TestTargetWithConfig},
+    with_config::TestTargetWithConfig,
     with_config_resolved::{
         ResolvedForkConfig, TestCaseResolvedConfig, TestCaseWithResolvedConfig,
         TestTargetWithResolvedConfig,
@@ -13,11 +13,7 @@ use forge_runner::package_tests::{
 };
 use starknet_api::block::BlockNumber;
 
-use super::helpers::skip_fork_tests;
-
-fn is_test_case_ignored(case_config: &TestCaseConfig, skip_fork_tests_from_env: bool) -> bool {
-    case_config.ignored || (skip_fork_tests_from_env && case_config.fork_config.is_some())
-}
+use super::helpers::{is_test_case_ignored, skip_fork_tests};
 
 pub async fn resolve_config(
     test_target: TestTargetWithConfig,

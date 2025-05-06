@@ -134,6 +134,9 @@ fn printing_latest_block_number() {
 #[test]
 fn with_skip_fork_tests_env() {
     let old_value = std::env::var("SNFORGE_SKIP_FORK_TESTS").ok();
+
+    // SAFETY: Tests run in parallel and share the same environment variables.
+    // However, this modification applies only to this one test.
     unsafe { std::env::set_var("SNFORGE_SKIP_FORK_TESTS", "1") };
 
     let temp = setup_package_with_file_patterns("forking", BASE_FILE_PATTERNS);
@@ -160,6 +163,8 @@ fn with_skip_fork_tests_env() {
         "},
     );
 
+    // SAFETY: Tests run in parallel and share the same environment variables.
+    // However, this modification applies only to this one test.
     unsafe {
         match old_value {
             Some(value) => std::env::set_var("SNFORGE_SKIP_FORK_TESTS", value),
