@@ -192,7 +192,7 @@ If you want to cheat the balance of an ERC-20 token (STRK, ETH or custom one), y
 
 > ℹ️ **Info**
 >
-> Standard tokens are predeployed in every test case by default, so you can use them without any additional setup.
+> STRK and ETH are predeployed in every test case by default, so you can use them without any additional setup.
 > The predeployment can be disabled by the `#[disable_predeployed_contracts]` attribute.
 
 Below is a basic example of setting and reading STRK balance:
