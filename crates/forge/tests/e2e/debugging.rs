@@ -24,10 +24,6 @@ fn debugging_trace() {
         {debugging_trace_fail}
 
         [PASS] trace_info_integrationtest::test_trace::test_debugging_trace_success (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~1440000)
-        Success data:
-            (0x1, 0x2, 0x3, 0x4, 0x5)
-
-        note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
         {debugging_trace_pass}
 
         Running 0 test(s) from src/
@@ -87,7 +83,7 @@ fn debugging_trace_message(test_name: &str) -> String {
         └─ [selector] fail
            ├─ [contract name] SimpleContract
            ├─ [entry point type] External
-           ├─ [calldata] array![1_felt252, 2_felt252, 3_felt252, 4_felt252, 5_felt252]
+           ├─ [calldata] array![0x1, 0x2, 0x3, 0x4, 0x5]
            ├─ [storage address] 0x5ab84515ea91a99261961ba72888d663606612958a363e8538302a27398bc29
            ├─ [caller address] 0x1724987234973219347210837402
            ├─ [call type] Call
