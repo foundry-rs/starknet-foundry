@@ -2,9 +2,7 @@ use forge_runner::package_tests::with_config::TestCaseConfig;
 
 #[must_use]
 pub fn skip_fork_tests() -> bool {
-    std::env::var("SNFORGE_SKIP_FORK_TESTS")
-        .map(|v| v == "1")
-        .unwrap_or(false)
+    std::env::var("SNFORGE_SKIP_FORK_TESTS").is_ok_and(|v| v == "1")
 }
 
 #[must_use]
