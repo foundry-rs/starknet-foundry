@@ -3,7 +3,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::common::{get_relocated_vm_trace, get_syscalls_gas_consumed, sum_syscall_usage};
-use crate::state::{CallTrace, CallTraceNode, CheatStatus};
+use crate::state::{CallTrace, CallTraceNode, CheatSpan, CheatStatus};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
 use blockifier::execution::syscalls::hint_processor::{SyscallUsageMap, ENTRYPOINT_NOT_FOUND_ERROR, OUT_OF_GAS_ERROR};
@@ -20,6 +20,7 @@ use blockifier::{
     state::state_api::State,
 };
 use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
+use num_traits::Zero;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use conversions::string::TryFromHexStr;
 use starknet_api::{
@@ -27,6 +28,7 @@ use starknet_api::{
     core::ClassHash,
     transaction::{fields::Calldata, TransactionVersion},
 };
+use starknet_crypto::poseidon_hash_many;
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -397,11 +399,25 @@ fn get_mocked_function_cheat_status<'a>(
     if call.call_type == CallType::Delegate {
         return None;
     }
-
-    cheatnet_state
+    match cheatnet_state
         .mocked_functions
         .get_mut(&call.storage_address)
-        .and_then(|contract_functions| contract_functions.get_mut(&call.entry_point_selector))
+    {
+        None => None,
+        Some(contract_functions) => {
+            let calldata_hash = poseidon_hash_many(call.calldata.0.iter());
+            let key = (call.entry_point_selector, calldata_hash);
+            let key_zero = (call.entry_point_selector, Felt::zero());
+
+            match contract_functions.get(&key) {
+                Some(CheatStatus::Cheated(_, CheatSpan::TargetCalls(0))) => {
+                    contract_functions.get_mut(&key_zero)
+                }
+                Some(CheatStatus::Cheated(_, _)) => contract_functions.get_mut(&key),
+                _ => contract_functions.get_mut(&key_zero),
+            }
+        }
+    }
 }
 
 fn mocked_call_info(
