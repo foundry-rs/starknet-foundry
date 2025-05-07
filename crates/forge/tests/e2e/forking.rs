@@ -136,7 +136,7 @@ fn with_skip_fork_tests_env() {
     let temp = setup_package_with_file_patterns("forking", BASE_FILE_PATTERNS);
 
     let output = test_runner(&temp)
-        .env("SNFORGE_SKIP_FORK_TESTS", "1")
+        .env("SNFORGE_IGNORE_FORK_TESTS", "1")
         .arg("forking::tests::test_fork_simple")
         .assert()
         .code(0);
