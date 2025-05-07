@@ -43,7 +43,7 @@ async fn test_felt() {
     assert_reverse_transformation(
         &[Felt::from_hex_unchecked("0x64")],
         "simple_fn",
-        "100_felt252",
+        "0x64",
         None,
     )
     .await;
@@ -102,7 +102,7 @@ async fn test_tuple_enum() {
             Felt::from_hex_unchecked("0x0"),
         ],
         "tuple_fn",
-        "(2137_felt252, 1_u8, Enum::One)",
+        "(0x859, 1_u8, Enum::One)",
         None,
     )
     .await;
@@ -119,7 +119,7 @@ async fn test_tuple_enum_nested_struct() {
             Felt::from(456),
         ],
         "tuple_fn",
-        "(123_felt252, 234_u8, Enum::Three(NestedStructWithField { a: SimpleStruct { a: 345_felt252 }, b: 456_felt252 }))",
+        "(0x7b, 234_u8, Enum::Three(NestedStructWithField { a: SimpleStruct { a: 0x159 }, b: 0x1c8 }))",
         None
     )
     .await;
@@ -129,7 +129,7 @@ async fn test_tuple_enum_nested_struct() {
 async fn test_happy_case_complex_function_cairo_expressions_input() {
     let max_u256 = U256::max_value().to_string();
     let expected = format!(
-        "array![array![8503_felt252, 1056_felt252], array![1056_felt252, 8503_felt252]], 8_u8, -270_i16, \"some_string\", (35717030708670842322654162535_felt252, 100_u32), true, {max_u256}_u256"
+        "array![array![0x2137, 0x420], array![0x420, 0x2137]], 8_u8, -270_i16, \"some_string\", (0x73686f727420737472696e67, 100_u32), true, {max_u256}_u256"
     );
 
     let input = [
@@ -163,7 +163,7 @@ async fn test_simple_struct() {
     assert_reverse_transformation(
         &[Felt::from_hex_unchecked("0x12")],
         "simple_struct_fn",
-        "SimpleStruct { a: 18_felt252 }",
+        "SimpleStruct { a: 0x12 }",
         None,
     )
     .await;
@@ -177,7 +177,7 @@ async fn test_nested_struct() {
             Felt::from_hex_unchecked("0x60"),
         ],
         "nested_struct_fn",
-        "NestedStructWithField { a: SimpleStruct { a: 36_felt252 }, b: 96_felt252 }",
+        "NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 0x60 }",
         None,
     )
     .await;
@@ -193,7 +193,7 @@ async fn test_span() {
             Felt::from_hex_unchecked("0x3"),
         ],
         "span_fn",
-        "array![1_felt252, 2_felt252, 3_felt252].span()",
+        "array![0x1, 0x2, 0x3].span()",
         None,
     )
     .await;
@@ -232,7 +232,7 @@ async fn test_enum_nested_struct() {
             Felt::from_hex_unchecked("0xea"),
         ],
         "enum_fn",
-        "Enum::Three(NestedStructWithField { a: SimpleStruct { a: 123_felt252 }, b: 234_felt252 })",
+        "Enum::Three(NestedStructWithField { a: SimpleStruct { a: 0x7b }, b: 0xea })",
         None,
     )
     .await;
@@ -240,7 +240,7 @@ async fn test_enum_nested_struct() {
 
 #[tokio::test]
 async fn test_complex_struct() {
-    let expected = r#"ComplexStruct { a: NestedStructWithField { a: SimpleStruct { a: 1_felt252 }, b: 2_felt252 }, b: 3_felt252, c: 4_u8, d: 5_i32, e: Enum::Two(6_u128), f: "seven", g: array![8_felt252, 9_felt252], h: 10_u256, i: (11_i128, 12_u128) }"#;
+    let expected = r#"ComplexStruct { a: NestedStructWithField { a: SimpleStruct { a: 0x1 }, b: 0x2 }, b: 0x3, c: 4_u8, d: 5_i32, e: Enum::Two(6_u128), f: "seven", g: array![0x8, 0x9], h: 10_u256, i: (11_i128, 12_u128) }"#;
 
     let input = [
         // a: NestedStruct
@@ -285,7 +285,7 @@ async fn test_external_type() {
         Felt::from_hex_unchecked("0x3"),
     ];
 
-    let expected = "BitArray { bit: 23_felt252 }, BitArray { data: array![CairoBytes31(0x0)], current: 1_felt252, read_pos: 2_u32, write_pos: 3_u32 }";
+    let expected = "BitArray { bit: 0x17 }, BitArray { data: array![CairoBytes31(0x0)], current: 0x1, read_pos: 2_u32, write_pos: 3_u32 }";
 
     assert_reverse_transformation(
         &input,
