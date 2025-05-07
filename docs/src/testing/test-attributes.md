@@ -156,4 +156,7 @@ And will be filled in with default values in that case (default `runs` value is 
 
 ### `#[disable_predeployed_contracts]`
 
-Disables the default predeployment of default contracts (currently only STRK token) in the test case.
+Disables the default predeployment of default contracts in the test case.
+Currently predeployed contracts are:
+- `STRK`
+- `ETH`

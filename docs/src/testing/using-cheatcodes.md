@@ -188,11 +188,11 @@ To better understand the functionality of `CheatSpan`, here's a full example:
 
 ### Cheating ERC-20 Token balance
 
-If you want to cheat the balance of an ERC-20 token (STRK, or custom one), you can use the [`set_balance`](../appendix/cheatcodes/set_balance.md) cheatcode.
+If you want to cheat the balance of an ERC-20 token (STRK, ETH or custom one), you can use the [`set_balance`](../appendix/cheatcodes/set_balance.md) cheatcode.
 
 > ℹ️ **Info**
 >
-> STRK token is predeployed in every test case by default, so you can use it without any additional setup.
+> Standard tokens are predeployed in every test case by default, so you can use them without any additional setup.
 > The predeployment can be disabled by the `#[disable_predeployed_contracts]` attribute.
 
 Below is a basic example of setting and reading STRK balance:

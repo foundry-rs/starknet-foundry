@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `set_balance` cheatcode for setting an ERC20 token balance for specified contract address. The STRK token is now pre-deployed in every test by default. This can be disabled by adding `#[disable_predeployed_contracts]` attribute to test.
+- `set_balance` cheatcode for setting an ERC20 token balance for specified contract address. STRK and ETH tokens are now pre-deployed in every test by default. This can be disabled by adding `#[disable_predeployed_contracts]` attribute to test.
 
 ## [0.42.0] - 2025-04-28
 
