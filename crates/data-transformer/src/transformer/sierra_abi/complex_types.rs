@@ -1,19 +1,21 @@
 use super::data_representation::{
     AllowedCalldataArgument, CalldataEnum, CalldataStruct, CalldataStructField, CalldataTuple,
 };
+use super::parsing::parse_argument_list;
+use super::{SupportedCalldataKind, build_representation};
+use crate::shared;
+use crate::shared::parsing::parse_expression;
+use crate::shared::path::SplitResult;
 use anyhow::{Context, Result, bail, ensure};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{
     Expr, ExprFunctionCall, ExprListParenthesized, ExprPath, ExprStructCtorCall,
-    OptionStructArgExpr, PathSegment, StructArg,
+    OptionStructArgExpr, StructArg,
 };
-use cairo_lang_syntax::node::{Terminal, Token, TypedSyntaxNode};
+use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode};
 use itertools::Itertools;
 use starknet::core::types::contract::{AbiEntry, AbiEnum, AbiNamedMember, AbiStruct};
 use std::collections::HashSet;
-
-use super::parsing::{parse_argument_list, parse_expression};
-use super::{SupportedCalldataKind, build_representation};
 
 pub trait EnumOrStruct {
     const VARIANT: &'static str;
@@ -57,15 +59,12 @@ fn validate_path_argument(
 }
 
 fn split(path: &ExprPath, db: &SimpleParserDatabase) -> Result<Vec<String>> {
-    path.elements(db)
-        .iter()
-        .map(|p| match p {
-            PathSegment::Simple(segment) => Ok(segment.ident(db).token(db).text(db).to_string()),
-            PathSegment::WithGenericArgs(_) => {
-                bail!("Cannot use generic args when specifying struct/enum path")
-            }
-        })
-        .collect::<Result<_>>()
+    match shared::path::split(path, db)? {
+        SplitResult::Simple { splits } => Ok(splits),
+        SplitResult::WithGenericArgs { .. } => {
+            bail!("Cannot use generic args when specifying struct/enum path")
+        }
+    }
 }
 
 fn find_all_structs(abi: &[AbiEntry]) -> Vec<&AbiStruct> {

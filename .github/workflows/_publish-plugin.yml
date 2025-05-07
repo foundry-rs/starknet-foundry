@@ -1,0 +1,84 @@
+name: Upload plugin to registry
+
+on:
+  workflow_call:
+    inputs:
+      prod_registry:
+        required: false
+        type: boolean
+      overridden_plugin_version:
+        required: false
+        type: string
+
+jobs:
+  check-uploaded:
+    name: Check snforge_scarb_plugin Version
+    runs-on: ubuntu-latest
+    outputs:
+      plugin_uploaded: ${{ steps.check-uploaded.outputs.plugin_uploaded }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check version
+        id: check-uploaded
+        run: |
+          set -exo pipefail
+        
+          source scripts/handle_version.sh
+          
+          snforge_scarb_plugin_version=$(get_version "${{ inputs.overridden_plugin_version }}")
+          
+          plugin_uploaded=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version "$snforge_scarb_plugin_version" '[.[] | select(.v == $version)] | length > 0')
+          echo "plugin_uploaded=$plugin_uploaded" >> $GITHUB_OUTPUT
+
+
+  upload-to-registry:
+    name: Upload snforge_scarb_plugin to the registry
+    runs-on: ubuntu-latest
+    needs: [check-uploaded]
+    env:
+      SCARB_REGISTRY_AUTH_TOKEN: ${{ inputs.prod_registry == true && secrets.SCARB_REGISTRY_AUTH_TOKEN || secrets.DEV_SCARB_REGISTRY_AUTH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          # TODO(#3144) Remove
+          scarb-version: "2.11.4"
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts-dl
+
+      - name: Unpack artifacts to target directory
+        run: |
+          set -euxo pipefail
+          mkdir -p crates/snforge-scarb-plugin/target/scarb/cairo-plugin
+          
+          mv artifacts-dl/build-plugin-*/snforge_scarb_plugin_* crates/snforge-scarb-plugin/target/scarb/cairo-plugin/
+          
+          # Required for testing prebuild plugin while creating release.
+          if [[ -n "${{ inputs.overridden_plugin_version }}" ]]; then
+            cd crates/snforge-scarb-plugin/target/scarb/cairo-plugin/
+            overridden_version="${{ inputs.overridden_plugin_version }}"
+
+            for file in snforge_scarb_plugin_v*; do
+              if [[ -f "$file" && ! "$file" =~ "snforge_scarb_plugin_v${overridden_version}" ]]; then
+                platform=$(echo "$file" | sed -E 's/snforge_scarb_plugin_v[0-9]+\.[0-9]+\.[0-9]+([-.].*)?_(.+)/\2/')
+                new_file="snforge_scarb_plugin_v${overridden_version}_${platform}"
+                mv "$file" "$new_file"
+              fi
+            done
+          fi
+
+      - name: Publish snforge_scarb_plugin
+        if: needs.check-uploaded.outputs.plugin_uploaded == 'false' || github.event_name == 'workflow_dispatch'
+        working-directory: crates/snforge-scarb-plugin
+        run: |
+          set -exo pipefail
+          source ../../scripts/handle_version.sh
+          
+          update_version_in_file "Scarb.toml" "${{ inputs.overridden_plugin_version }}"
+          update_version_in_file "Cargo.toml" "${{ inputs.overridden_plugin_version }}"
+
+          scarb publish --allow-dirty ${{ inputs.prod_registry == true && ' ' || '--index https://scarbs.dev/' }}

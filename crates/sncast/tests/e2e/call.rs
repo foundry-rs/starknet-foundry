@@ -32,7 +32,8 @@ fn test_happy_case() {
 
     snapbox.assert().success().stdout_eq(indoc! {r"
         command: call
-        response: [0x0]
+        response: 0x0
+        response_raw: [0x0]
     "});
 }
 
@@ -97,7 +98,8 @@ async fn test_call_after_storage_changed() {
 
     snapbox.assert().success().stdout_eq(indoc! {r"
         command: call
-        response: [0x3]
+        response: 0x3
+        response_raw: [0x3]
     "});
 }
 

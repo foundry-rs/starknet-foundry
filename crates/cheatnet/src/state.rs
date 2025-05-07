@@ -484,6 +484,10 @@ impl CheatnetState {
     pub fn register_error(&mut self, class_hash: ClassHash, pcs: Vec<usize>) {
         self.encountered_errors.insert(class_hash, pcs);
     }
+
+    pub fn clear_error(&mut self, class_hash: ClassHash) {
+        self.encountered_errors.remove(&class_hash);
+    }
 }
 
 impl TraceData {
