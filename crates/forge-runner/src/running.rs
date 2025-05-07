@@ -30,6 +30,7 @@ use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
+
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
     ForgeExtension, ForgeRuntime, add_resources_to_top_call, get_all_used_resources,
@@ -207,6 +208,8 @@ pub fn run_test_case(
             case.config.fork_config.as_ref(),
         )?,
     };
+    state_reader.predeploy_contracts();
+
     let block_info = state_reader.get_block_info()?;
     let chain_id = state_reader.get_chain_id()?;
     let tracked_resource = TrackedResource::from(runtime_config.tracked_resource);
@@ -216,7 +219,9 @@ pub fn run_test_case(
     if let Some(max_n_steps) = runtime_config.max_n_steps {
         set_max_steps(&mut context, max_n_steps);
     }
+
     let mut cached_state = CachedState::new(state_reader);
+
     let syscall_handler = build_syscall_handler(
         &mut cached_state,
         &string_to_hint,
