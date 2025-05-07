@@ -91,9 +91,6 @@ pub fn deploy_strk_token(state_reader: &mut ExtendedStateReader) {
             storage_key(variable_address("upgrade_delay")).unwrap(),
             STRK_UPGRADE_DELAY.into(),
         ),
-        // TODO: Decide if we want to write `domain_hash` to storage
-        // it enforces us to read chain_id if the test uses forking, hence
-        // this is a potential performance issue
     ];
 
     for (key, value) in &storage_entries_and_values_to_update {
