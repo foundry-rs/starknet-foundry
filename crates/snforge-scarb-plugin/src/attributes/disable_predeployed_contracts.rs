@@ -25,7 +25,7 @@ impl AttributeCollector for ContractsPredeploymentCollector {
         args.assert_is_empty::<Self>()?;
 
         Ok(
-            "snforge_std::_internals::config_types::ContractsPredeploymentConfig { is_disabled: true }"
+            "snforge_std::_internals::config_types::PredeployedContractsConfig { is_disabled: true }"
                 .to_string(),
         )
     }

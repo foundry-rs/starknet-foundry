@@ -62,6 +62,6 @@ pub struct IgnoreConfig {
 }
 
 #[derive(Drop, Serde)]
-pub struct ContractsPredeploymentConfig {
+pub struct PredeployedContractsConfig {
     pub is_disabled: bool,
 }
