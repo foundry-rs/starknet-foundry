@@ -5,13 +5,15 @@ use cheatnet::runtime_extensions::forge_config_extension::config::{
 };
 use conversions::byte_array::ByteArray;
 use forge_runner::package_tests::{
-    with_config::{TestCaseConfig, TestTargetWithConfig},
+    with_config::TestTargetWithConfig,
     with_config_resolved::{
         ResolvedForkConfig, TestCaseResolvedConfig, TestCaseWithResolvedConfig,
         TestTargetWithResolvedConfig,
     },
 };
 use starknet_api::block::BlockNumber;
+
+use super::maat::{ignore_fork_tests, is_test_case_ignored};
 
 pub async fn resolve_config(
     test_target: TestTargetWithConfig,
@@ -118,14 +120,6 @@ fn replace_id_with_params(
             Ok(InlineForkConfig { url, block })
         }
     }
-}
-
-fn ignore_fork_tests() -> bool {
-    std::env::var("SNFORGE_IGNORE_FORK_TESTS").is_ok_and(|v| v == "1")
-}
-
-fn is_test_case_ignored(case_config: &TestCaseConfig, skip_fork_tests_from_env: bool) -> bool {
-    case_config.ignored || (skip_fork_tests_from_env && case_config.fork_config.is_some())
 }
 
 #[cfg(test)]
