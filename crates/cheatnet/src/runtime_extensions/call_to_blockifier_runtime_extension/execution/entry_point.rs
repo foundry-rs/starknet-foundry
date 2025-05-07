@@ -29,7 +29,7 @@ use starknet_api::{
 };
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
-use std::collections::{ HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use blockifier::execution::entry_point::{EntryPointRevertInfo, ExecutableCallEntryPoint};
 use blockifier::execution::stack_trace::{extract_trailing_cairo1_revert_trace, Cairo1RevertHeader};
@@ -180,7 +180,13 @@ pub fn execute_call_entry_point(
     };
 
     // region: Modified blockifier code
-    match evaluate_execution_result(result, entry_point.clone(), tracked_resource, is_revertable) {
+    match evaluate_execution_result(
+        result,
+        entry_point.clone(),
+        tracked_resource,
+        cheatnet_state,
+        is_revertable,
+    ) {
         Ok(CallInfoWithExecutionData {
             call_info,
             syscall_usage,
@@ -207,11 +213,13 @@ fn evaluate_execution_result(
     result: ContractClassEntryPointExecutionResult,
     call: ExecutableCallEntryPoint,
     current_tracked_resource: TrackedResource,
+    cheatnet_state: &mut CheatnetState,
     is_revertable: bool,
 ) -> ContractClassEntryPointExecutionResult {
     match result {
         Ok(res) => {
             if res.call_info.execution.failed && !is_revertable {
+                clear_handled_errors(&res.call_info, cheatnet_state);
                 return Err(EntryPointExecutionErrorWithTrace {
                     source: EntryPointExecutionError::ExecutionFailed {
                         error_trace: extract_trailing_cairo1_revert_trace(
@@ -478,4 +486,51 @@ pub(crate) fn extract_trace_and_register_errors(
         source,
         trace: Some(trace),
     }
+}
+
+/// This helper function is used for backtrace to avoid displaying errors that were already handled
+/// It clears the errors for all contracts that failed with a different panic data than the root call
+/// Note: This may not be accurate if a panic was initially handled and then the function panicked
+/// again with the identical panic data
+fn clear_handled_errors(root_call: &CallInfo, cheatnet_state: &mut CheatnetState) {
+    let contracts_matching_root_error = get_contracts_with_matching_error(root_call);
+
+    cheatnet_state
+        .encountered_errors
+        .clone()
+        .keys()
+        .for_each(|&class_hash| {
+            if !contracts_matching_root_error.contains(&class_hash) {
+                cheatnet_state.clear_error(class_hash);
+            }
+        });
+}
+
+/// Collects all contracts that have matching error with the root call
+fn get_contracts_with_matching_error(root_call: &CallInfo) -> HashSet<ClassHash> {
+    let mut contracts_matching_root_error = HashSet::new();
+    let mut failed_matching_calls: Vec<&CallInfo> = vec![root_call];
+
+    while let Some(call_info) = failed_matching_calls.pop() {
+        if let Some(class_hash) = call_info.call.class_hash {
+            contracts_matching_root_error.insert(class_hash);
+            failed_matching_calls.extend(get_inner_calls_with_matching_panic_data(
+                call_info,
+                &root_call.execution.retdata.0,
+            ));
+        }
+    }
+
+    contracts_matching_root_error
+}
+
+fn get_inner_calls_with_matching_panic_data<'a>(
+    call_info: &'a CallInfo,
+    root_retdata: &[Felt],
+) -> Vec<&'a CallInfo> {
+    call_info
+        .inner_calls
+        .iter()
+        .filter(|call| call.execution.failed && root_retdata.starts_with(&call.execution.retdata.0))
+        .collect()
 }
