@@ -104,12 +104,3 @@ pub fn deploy_strk_token(state_reader: &mut ExtendedStateReader) {
             .insert(entry, *value);
     }
 }
-
-#[test]
-fn xyz() {
-    let permitted_minter = variable_address("permitted_minter");
-
-    println!("permitted_minter: {permitted_minter}");
-    let upgrade_delay = variable_address("upgrade_delay");
-    println!("upgrade_delay: {upgrade_delay}");
-}
