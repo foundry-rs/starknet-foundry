@@ -7,12 +7,12 @@ use std::path::Path;
 use test_case::test_case;
 use test_utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
 use test_utils::running_tests::run_test_case;
-use test_utils::test_case as test_case_util;
+use test_utils::test_case as util_test_case;
 
 #[test_case("STRK";"strk")]
 #[test_case("ETH";"eth")]
 fn test_set_balance_predefined_token(token: &str) {
-    let test = test_case_util!(
+    let test = util_test_case!(
         formatdoc!(
             r#"
             use snforge_std::{{set_balance, Token, TokenTrait}};
@@ -59,7 +59,7 @@ fn test_set_balance_predefined_token(token: &str) {
 
 #[test]
 fn test_set_balance_custom_token() {
-    let test = test_case_util!(
+    let test = util_test_case!(
         indoc!(
             r#"
             use snforge_std::{declare, set_balance, Token, TokenTrait, CustomToken, ContractClassTrait, DeclareResultTrait,};
@@ -117,7 +117,7 @@ fn test_set_balance_custom_token() {
 #[test_case("STRK";"strk")]
 #[test_case("ETH";"eth")]
 fn test_set_balance_big_amount(token: &str) {
-    let test = test_case_util!(
+    let test = util_test_case!(
         format!(
             r#"
             use core::num::traits::Pow;
@@ -169,7 +169,7 @@ fn test_set_balance_big_amount(token: &str) {
 fn test_set_balance_with_fork(token: &str, balance_before: [u128; 2]) {
     let balance_before_low = balance_before[0];
     let balance_before_high = balance_before[1];
-    let test = test_case_util!(
+    let test = util_test_case!(
         formatdoc!(
             r#"
             use snforge_std::{{set_balance, Token, TokenTrait}};
@@ -219,7 +219,7 @@ fn test_set_balance_with_fork(token: &str, balance_before: [u128; 2]) {
 #[test_case("STRK", STRK_CONTRACT_ADDRESS; "strk")]
 #[test_case("ETH", ETH_CONTRACT_ADDRESS; "eth")]
 fn test_set_balance_with_disabled_predeployment(token: &str, contract_address: &str) {
-    let test = test_case_util!(
+    let test = util_test_case!(
         formatdoc!(
             r#"
             use snforge_std::{{Token, TokenTrait}};
