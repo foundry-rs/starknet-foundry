@@ -178,7 +178,8 @@ $ sncast \
 
 ```shell
 command: call
-response: [0x6]
+response: 0x6
+response_raw: [0x6]
 ```
 </details>
 <br>
@@ -199,7 +200,8 @@ $ sncast call \
 
 ```shell
 command: call
-response: [0x6]
+response: 0x6
+response_raw: [0x6]
 ```
 </details>
 <br>

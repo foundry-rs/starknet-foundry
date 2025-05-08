@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `set_balance` cheatcode for setting an ERC20 token balance for specified contract address. The STRK token is now pre-deployed in every test by default. This can be disabled by adding `#[disable_predeployed_contracts]` attribute to test.
 
+#### Changed
+
+- "Success data" message is no longer printed when a test using the `#[should_panic]` attribute passes
+
 ## [0.42.0] - 2025-04-28
 
 ### Forge
@@ -33,14 +37,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Changed
+
+- when using `sncast call` the response will be printed as a Cairo-like string representation of the return values
+
 #### Fixed
 
 - Bug that prevented from passing values to `--arguments` that started with a leading minus `-` sign.
-
-### Cast
-
-### Fixed
-
 - User is now prompted to save an imported or deployed account in `sncast` config even when using `--network` flag
 
 ## [0.41.0] - 2025-04-08

@@ -37,6 +37,5 @@ rm "$NEW_FILE_PATH.bak" 2> /dev/null
 
 scarb --manifest-path snforge_std/Scarb.toml build
 
-cargo update -p forge
-cargo update -p sncast
-cargo update -p snforge_scarb_plugin --manifest-path crates/snforge-scarb-plugin/Cargo.toml
+cargo update
+cargo update --manifest-path crates/snforge-scarb-plugin/Cargo.toml

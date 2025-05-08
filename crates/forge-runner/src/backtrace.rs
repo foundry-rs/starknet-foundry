@@ -37,6 +37,15 @@ pub fn add_backtrace_footer(
         );
     }
 
+    let backtrace = get_backtrace(contracts_data, encountered_errors);
+    format!("{message}\n{backtrace}")
+}
+
+#[must_use]
+pub fn get_backtrace(
+    contracts_data: &ContractsData,
+    encountered_errors: &EncounteredErrors,
+) -> String {
     let class_hashes = encountered_errors.keys().copied().collect();
 
     ContractBacktraceDataMapping::new(contracts_data, class_hashes)
@@ -48,10 +57,7 @@ pub fn add_backtrace_footer(
                 .collect::<Result<Vec<_>>>()
                 .map(|backtrace| backtrace.join("\n"))
         })
-        .map_or_else(
-            |err| format!("{message}\nfailed to create backtrace: {err}"),
-            |backtraces| format!("{message}\n{backtraces}"),
-        )
+        .unwrap_or_else(|err| format!("failed to create backtrace: {err}"))
 }
 
 #[must_use]
