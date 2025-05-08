@@ -1,5 +1,6 @@
 use crate::backtrace::{add_backtrace_footer, get_backtrace, is_backtrace_enabled};
 use crate::build_trace_data::build_profiler_call_trace;
+use crate::debugging::{TraceVerbosity, build_debugging_trace};
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
 use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
@@ -320,17 +321,16 @@ impl TestCaseSummary<Single> {
         test_case: &TestCaseWithResolvedConfig,
         contracts_data: &ContractsData,
         versioned_program_path: &Utf8Path,
+        trace_verbosity: Option<TraceVerbosity>,
     ) -> Self {
         let name = test_case.name.clone();
 
-        let debugging_trace = cfg!(feature = "debugging").then(|| {
-            debugging::Trace::new(
-                &call_trace.borrow(),
-                contracts_data,
-                debugging::Verbosity::Detailed,
-                name.clone(),
-            )
-        });
+        let debugging_trace = build_debugging_trace(
+            &call_trace.borrow(),
+            contracts_data,
+            trace_verbosity,
+            name.clone(),
+        );
 
         match status {
             RunStatus::Success(data) => match &test_case.config.expected_result {

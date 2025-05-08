@@ -168,6 +168,7 @@ fn fork_aliased_decorator() {
                 }],
             },
             &mut BlockNumberMap::default(),
+            Option::default(),
         ))
         .expect("Runner fail");
 
@@ -254,6 +255,7 @@ fn fork_aliased_decorator_overrding() {
                 }],
             },
             &mut BlockNumberMap::default(),
+            Option::default(),
         ))
         .expect("Runner fail");
 

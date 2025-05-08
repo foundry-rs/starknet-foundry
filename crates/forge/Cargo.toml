@@ -10,7 +10,7 @@ smoke = []
 scarb_2_9_1 = []
 scarb_since_2_10 = []
 no_scarb_installed = []
-debugging = ["forge_runner/debugging"]
+debugging = []
 assert_non_exact_gas = ["test_utils/assert_non_exact_gas"]
 supports-panic-backtrace = []
 
