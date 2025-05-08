@@ -1,3 +1,4 @@
+use super::maat::env_ignore_fork_tests;
 use crate::{block_number_map::BlockNumberMap, scarb::config::ForkTarget};
 use anyhow::{Result, anyhow};
 use cheatnet::runtime_extensions::forge_config_extension::config::{
@@ -19,6 +20,7 @@ pub async fn resolve_config(
     block_number_map: &mut BlockNumberMap,
 ) -> Result<TestTargetWithResolvedConfig> {
     let mut test_cases = Vec::with_capacity(test_target.test_cases.len());
+    let env_ignore_fork_tests = env_ignore_fork_tests();
 
     for case in test_target.test_cases {
         test_cases.push(TestCaseWithResolvedConfig {
@@ -26,7 +28,8 @@ pub async fn resolve_config(
             test_details: case.test_details,
             config: TestCaseResolvedConfig {
                 available_gas: case.config.available_gas,
-                ignored: case.config.ignored,
+                ignored: case.config.ignored
+                    || (env_ignore_fork_tests && case.config.fork_config.is_some()),
                 expected_result: case.config.expected_result,
                 fork_config: resolve_fork_config(
                     case.config.fork_config,
