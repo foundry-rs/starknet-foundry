@@ -11,6 +11,24 @@ pub mod generate_random_felt;
 pub mod generate_arg;
 pub mod block_hash;
 
+#[derive(Copy, Drop, Serde, PartialEq, Debug)]
+pub struct NonZeroUsize {
+    value: usize
+}
+
+impl NonZeroUsize {
+    pub fn decrement(self: NonZeroUsize) -> Option<NonZeroUsize> {
+        // Enforce at runtime that subtraction is safe
+        assert(self.value != 0, 'Invariant: NonZeroUsize never zero');
+        if self.value == 1 {
+            Option::None(())
+        } else {
+            // We know self.value > 1, so this subtraction cannot underflow
+            let new_val = self.value - 1;
+            Some(NonZeroUsize::new(new_val))
+        }
+    }
+}
 /// Enum used to specify how long the target should be cheated for.
 #[derive(Copy, Drop, Serde, PartialEq, Clone, Debug)]
 pub enum CheatSpan {
@@ -19,7 +37,7 @@ pub enum CheatSpan {
     Indefinite: (),
     /// Applies the cheatcode for a specified number of calls to the target,
     /// after which the cheat is canceled (or until the cheat is canceled manually).
-    TargetCalls: usize,
+    TargetCalls: NonZeroUsize,
 }
 
 pub fn test_selector() -> felt252 {
@@ -52,7 +70,7 @@ pub fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
 
-    CheatSpan::TargetCalls(n_times).serialize(ref inputs);
+    CheatSpan::TargetCalls(NonZeroUsize::new(n_times as usize)).serialize(ref inputs);
 
     let mut ret_data_arr = ArrayTrait::new();
     ret_data.serialize(ref ret_data_arr);
