@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Minimal supported Scarb version is now `2.9.1`
 
+### snforge_std
+
+#### Changed
+- Breaking: `CheatSpan::TargetCalls` now uses a `NonZeroUsize` type instead of `usize`. Zero is not allowed at the type level. Logic for decrementing and all usages updated accordingly.
+- Added: `NonZeroUsize` struct with serialization, deserialization, and decrement logic. Tests added to ensure correct behavior and panics on zero.
+
 ## [0.41.0] - 2025-04-08
 
 ### Forge
