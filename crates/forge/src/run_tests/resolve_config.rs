@@ -1,3 +1,4 @@
+use super::maat::env_ignore_fork_tests;
 use crate::{block_number_map::BlockNumberMap, scarb::config::ForkTarget};
 use anyhow::{Result, anyhow};
 use cheatnet::runtime_extensions::forge_config_extension::config::{
@@ -13,15 +14,13 @@ use forge_runner::package_tests::{
 };
 use starknet_api::block::BlockNumber;
 
-use super::maat::{ignore_fork_tests, is_test_case_ignored};
-
 pub async fn resolve_config(
     test_target: TestTargetWithConfig,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
 ) -> Result<TestTargetWithResolvedConfig> {
     let mut test_cases = Vec::with_capacity(test_target.test_cases.len());
-    let ignore_fork_tests_from_env = ignore_fork_tests();
+    let env_ignore_fork_tests = env_ignore_fork_tests();
 
     for case in test_target.test_cases {
         test_cases.push(TestCaseWithResolvedConfig {
@@ -29,7 +28,8 @@ pub async fn resolve_config(
             test_details: case.test_details,
             config: TestCaseResolvedConfig {
                 available_gas: case.config.available_gas,
-                ignored: is_test_case_ignored(&case.config, ignore_fork_tests_from_env),
+                ignored: case.config.ignored
+                    || (env_ignore_fork_tests && case.config.fork_config.is_some()),
                 expected_result: case.config.expected_result,
                 fork_config: resolve_fork_config(
                     case.config.fork_config,
