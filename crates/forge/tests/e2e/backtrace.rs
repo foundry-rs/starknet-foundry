@@ -2,7 +2,7 @@ use super::common::runner::{setup_package, test_runner};
 use assert_fs::TempDir;
 use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::indoc;
-use shared::test_utils::output_assert::assert_stdout_contains;
+use shared::test_utils::output_assert::{AsOutput, assert_stdout_contains};
 use std::fs;
 use toml_edit::{DocumentMut, value};
 
@@ -249,6 +249,42 @@ fn test_backtrace_panic_without_inlines() {
         );
     }
 }
+
+#[test]
+#[cfg_attr(not(feature = "supports-panic-backtrace"), ignore)]
+fn test_handled_error_not_display() {
+    let temp = setup_package("dispatchers");
+
+    let output = test_runner(&temp)
+        .arg("test_handle_and_panic")
+        .env("SNFORGE_BACKTRACE", "1")
+        .assert()
+        .success();
+
+    // Error from the `FailableContract` should not appear in the output
+    assert!(
+        !output
+            .as_stdout()
+            .contains("error occurred in contract 'FailableContract'")
+    );
+
+    assert_stdout_contains(
+        output,
+        indoc! {"
+            error occurred in contract 'ErrorHandler'
+            stack backtrace:
+               0: (inlined) core::array::ArrayImpl::append
+                   at [..]array.cairo:135:9
+               1: core::array_inline_macro
+                   at [..]lib.cairo:364:11
+               2: dispatchers::error_handler::ErrorHandler::ErrorHandler::catch_panic_and_fail
+                   at [..]error_handler.cairo:50:21
+               3: dispatchers::error_handler::ErrorHandler::__wrapper__ErrorHandler__catch_panic_and_fail
+                   at [..]error_handler.cairo:42:9
+        "},
+    );
+}
+
 fn without_inlines(temp_dir: &TempDir) {
     let manifest_path = temp_dir.child("Scarb.toml");
 

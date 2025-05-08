@@ -145,7 +145,6 @@ pub fn check_available_gas(
     match summary {
         TestCaseSummary::Passed {
             name,
-            arguments,
             gas_info,
             debugging_trace,
             ..
@@ -176,7 +175,6 @@ pub fn check_available_gas(
                     "\n\tTest cost exceeded the available gas. Consumed l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{}",
                     gas_info.l1_gas, gas_info.l1_data_gas, gas_info.l2_gas
                 )),
-                arguments,
                 fuzzer_args: Vec::default(),
                 test_statistics: (),
                 debugging_trace,
