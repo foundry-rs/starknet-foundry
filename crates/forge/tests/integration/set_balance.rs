@@ -2,7 +2,7 @@ use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::node_url::node_rpc_url;
 use std::path::Path;
-use test_utils::runner::{Contract, assert_passed};
+use test_utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
@@ -205,4 +205,46 @@ fn test_set_balance_strk_with_fork() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
+}
+
+#[test]
+fn test_set_balance_strk_with_disabled_predeployment() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use snforge_std::{Token, TokenTrait};
+            use starknet::{ContractAddress, syscalls, SyscallResultTrait};
+
+            fn get_balance(contract_address: ContractAddress, token: Token) -> Span<felt252> {
+                let mut calldata: Array<felt252> = array![contract_address.into()];
+                let balance = syscalls::call_contract_syscall(
+                    token.contract_address(), selector!("balance_of"), calldata.span(),
+                )
+                    .unwrap_syscall();
+                balance
+            }
+
+            #[test]
+            #[disable_predeployed_contracts]
+            fn test_set_balance_strk_with_disabled_predeployment() {
+                let contract_address: ContractAddress = 0x123.try_into().unwrap();
+                get_balance(contract_address, Token::STRK);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "HelloStarknet".to_string(),
+            Path::new("tests/data/simple_package/src/hello_starknet.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
+        "test_set_balance_strk_with_disabled_predeployment",
+        "Contract not deployed at address: 0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+    );
 }

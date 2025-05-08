@@ -1,5 +1,5 @@
 use crate::{
-    constants::{STRK_CLASS_HASH, STRK_CONTRACT_ADDRESS, contract_class_strk},
+    constants::{STRK_CLASS_HASH, STRK_CONTRACT_ADDRESS, STRK_ERC20_CASM, contract_class},
     runtime_extensions::forge_runtime_extension::cheatcodes::{
         generate_random_felt::generate_random_felt,
         storage::{map_entry_address, storage_key, variable_address},
@@ -30,7 +30,7 @@ pub fn deploy_strk_token(state_reader: &mut ExtendedStateReader) {
     state_reader
         .dict_state_reader
         .class_hash_to_class
-        .insert(strk_class_hash, contract_class_strk());
+        .insert(strk_class_hash, contract_class(STRK_ERC20_CASM));
 
     let recipient = generate_random_felt();
     let recipient_balance_low_address = map_entry_address("ERC20_balances", &[recipient]);

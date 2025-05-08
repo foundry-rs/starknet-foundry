@@ -38,6 +38,7 @@ pub async fn resolve_config(
                 )
                 .await?,
                 fuzzer_config: case.config.fuzzer_config,
+                disable_predeployed_contracts: case.config.disable_predeployed_contracts,
             },
         });
     }
@@ -166,6 +167,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: Some(RawForkConfig::Named("non_existent".into())),
                     fuzzer_config: None,
+                    disable_predeployed_contracts: false,
                 },
                 test_details: TestDetails {
                     sierra_entry_point_statement_idx: 100,
