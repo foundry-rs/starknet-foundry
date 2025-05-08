@@ -1,6 +1,8 @@
 use crate::constants::build_test_entry_point;
 use crate::forking::state::ForkStateReader;
-use crate::predeployment::strk::deploy_strk_token;
+use crate::predeployment::eth::eth_predeployed_contract;
+use crate::predeployment::predeployed_contract::PredeployedContract;
+use crate::predeployment::strk::strk_predeployed_contract;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::{
     ExecutionInfoMock, ResourceBounds,
@@ -53,7 +55,31 @@ impl ExtendedStateReader {
         // We consider contract as deployed solely based on the fact that the test used forking
         let is_fork = self.fork_state_reader.is_some();
         if !is_fork {
-            deploy_strk_token(self);
+            let contracts = vec![strk_predeployed_contract(), eth_predeployed_contract()];
+            for contract in contracts {
+                self.predeploy_contract(contract);
+            }
+        }
+    }
+
+    fn predeploy_contract(&mut self, contract: PredeployedContract) {
+        let PredeployedContract {
+            contract_address,
+            class_hash,
+            contract_class,
+            storage_kv_updates,
+        } = contract;
+        self.dict_state_reader
+            .address_to_class_hash
+            .insert(contract_address, class_hash);
+
+        self.dict_state_reader
+            .class_hash_to_class
+            .insert(class_hash, contract_class);
+
+        for (key, value) in &storage_kv_updates {
+            let entry = (contract_address, *key);
+            self.dict_state_reader.storage_view.insert(entry, *value);
         }
     }
 }
