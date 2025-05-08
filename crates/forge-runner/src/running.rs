@@ -448,6 +448,7 @@ fn extract_test_case_summary(
                         debugging::Trace::new(
                             &run_error.call_trace.borrow(),
                             contracts_data,
+                            debugging::Verbosity::Detailed,
                             case.name.clone(),
                         )
                     }),

@@ -1,5 +1,6 @@
-use crate::trace::collect::collect_trace;
+use crate::trace::collect::Collector;
 use crate::tree::TreeSerialize;
+use crate::verbosity::{Detailed, Standard, Verbosity};
 use blockifier::execution::entry_point::CallType;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::CallTrace;
@@ -23,13 +24,13 @@ pub struct ContractTrace {
 #[derive(Debug, Clone)]
 pub struct TraceInfo {
     pub contract_name: ContractName,
-    pub entry_point_type: EntryPointType,
-    pub calldata: TransformedCalldata,
-    pub storage_address: StorageAddress,
-    pub caller_address: CallerAddress,
-    pub call_type: CallType,
+    pub entry_point_type: Detailed<EntryPointType>,
+    pub calldata: Standard<TransformedCalldata>,
+    pub storage_address: Detailed<StorageAddress>,
+    pub caller_address: Detailed<CallerAddress>,
+    pub call_type: Detailed<CallType>,
     pub nested_calls: Vec<ContractTrace>,
-    pub call_result: TransformedCallResult,
+    pub call_result: Standard<TransformedCallResult>,
 }
 
 #[derive(Debug, Clone)]
@@ -54,10 +55,15 @@ pub struct StorageAddress(pub ContractAddress);
 pub struct CallerAddress(pub ContractAddress);
 
 impl Trace {
-    /// Creates a new [`Trace`] from a given `cheatnet` [`CallTrace`], [`ContractsData`] and a test name.
+    /// Creates a new [`Trace`] from a given `cheatnet` [`CallTrace`], [`ContractsData`], [`Verbosity`] and a test name.
     #[must_use]
-    pub fn new(call_trace: &CallTrace, contracts_data: &ContractsData, test_name: String) -> Self {
-        collect_trace(call_trace, contracts_data, test_name)
+    pub fn new(
+        call_trace: &CallTrace,
+        contracts_data: &ContractsData,
+        verbosity: Verbosity,
+        test_name: String,
+    ) -> Self {
+        Collector::new(call_trace, contracts_data, verbosity).collect_trace(test_name)
     }
 }
 
