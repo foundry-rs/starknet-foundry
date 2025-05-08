@@ -1,13 +1,17 @@
 use crate::Trace;
 use crate::trace::types::{
     CallerAddress, ContractName, ContractTrace, Selector, StorageAddress, TestName, TraceInfo,
-    TransformedCalldata,
+    TransformedCallResult, TransformedCalldata,
+};
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
+    CallFailure, CallResult as CheatnetCallResult,
 };
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::{CallTrace, CallTraceNode};
-use data_transformer::reverse_transform_input;
+use data_transformer::{reverse_transform_input, reverse_transform_output};
 use serde_json::Value;
 use starknet::core::types::contract::AbiEntry;
+use starknet_api::execution_utils::format_panic_data;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -39,7 +43,7 @@ fn collect_contract_trace(
         caller_address: CallerAddress(call_trace.entry_point.caller_address),
         call_type: call_trace.entry_point.call_type,
         nested_calls,
-        call_result: call_trace.result.clone(),
+        call_result: collect_transformed_call_result(&call_trace, &abi),
     };
 
     ContractTrace {
@@ -104,4 +108,35 @@ fn collect_transformed_calldata(call_trace: &CallTrace, abi: &[AbiEntry]) -> Tra
         )
         .expect("calldata should be successfully transformed"),
     )
+}
+
+fn collect_transformed_call_result(
+    call_trace: &CallTrace,
+    abi: &[AbiEntry],
+) -> TransformedCallResult {
+    TransformedCallResult(match &call_trace.result {
+        CheatnetCallResult::Success { ret_data } => {
+            let ret_data = reverse_transform_output(
+                ret_data,
+                abi,
+                &call_trace.entry_point.entry_point_selector.0,
+            )
+            .expect("call result should be successfully transformed");
+            format_result_message("success", &ret_data)
+        }
+        CheatnetCallResult::Failure(failure) => match failure {
+            CallFailure::Panic { panic_data } => {
+                format_result_message("panic", &format_panic_data(panic_data))
+            }
+            CallFailure::Error { msg } => format_result_message("error", &msg.to_string()),
+        },
+    })
+}
+
+fn format_result_message(tag: &str, message: &str) -> String {
+    if message.is_empty() {
+        tag.to_string()
+    } else {
+        format!("{tag}: {message}")
+    }
 }
