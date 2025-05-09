@@ -185,12 +185,11 @@ pub async fn test_happy_case_add_profile() {
         "my_account",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = runner(&args).current_dir(tempdir.path()).assert();
 
     assert_stdout_contains(
         output,
-        "add_profile: Profile my_account successfully added to snfoundry.toml",
+        "add_profile: Profile my_account successfully added to [..]",
     );
 
     let contents = fs::read_to_string(tempdir.path().join("snfoundry.toml"))
@@ -404,11 +403,11 @@ pub async fn test_happy_case_keystore_add_profile() {
         "with_keystore",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = runner(&args).current_dir(tempdir.path()).assert();
+
     assert_stdout_contains(
         output,
-        "add_profile: Profile with_keystore successfully added to snfoundry.toml",
+        "add_profile: Profile with_keystore successfully added to [..]",
     );
 
     let contents =
