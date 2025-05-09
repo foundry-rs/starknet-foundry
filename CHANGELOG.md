@@ -7,11 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- when using `sncast call` the response will be printed as a Cairo-like string representation of the return values
+
 ### Forge
 
 #### Added
 
 - `set_balance` cheatcode for setting an ERC20 token balance for specified contract address. The STRK token is now pre-deployed in every test by default. This can be disabled by adding `#[disable_predeployed_contracts]` attribute to test.
+- added option to display trace of contracts execution. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html)
 
 #### Changed
 
@@ -36,10 +43,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The state correctly reverts after failed internal calls
 
 ### Cast
-
-#### Changed
-
-- when using `sncast call` the response will be printed as a Cairo-like string representation of the return values
 
 #### Fixed
 
