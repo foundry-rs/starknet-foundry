@@ -1,11 +1,10 @@
-use super::{
-    casm::{get_assembled_program, run_assembled_program},
-    entry_code::create_entry_code,
-    hints::{hints_by_representation, hints_to_params},
+use super::hints::hints_by_representation;
+use crate::running::copied_code::{finalize_execution, prepare_call_arguments, run_entry_point};
+use crate::running::setup::{
+    VmExecutionContext, build_test_call_and_entry_point, entry_point_initial_budget,
+    initialize_execution_context,
 };
-use crate::{
-    forge_config::ForgeTrackedResource, package_tests::TestDetails, running::build_syscall_handler,
-};
+use crate::{forge_config::ForgeTrackedResource, package_tests::TestDetails};
 use anyhow::Result;
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::state::{cached_state::CachedState, state_api::StateReader};
@@ -20,6 +19,7 @@ use starknet_api::block::{
 use starknet_types_core::felt::Felt;
 use std::default::Default;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
+
 struct PhantomStateReader;
 
 impl StateReader for PhantomStateReader {
@@ -63,11 +63,14 @@ pub fn run_config_pass(
     casm_program: &AssembledProgramWithDebugInfo,
     tracked_resource: &ForgeTrackedResource,
 ) -> Result<RawForgeConfig> {
+    let program = test_details.try_into_program(casm_program)?;
+    let (call, entry_point) = build_test_call_and_entry_point(test_details, casm_program, &program);
+
     let mut cached_state = CachedState::new(PhantomStateReader);
     let gas_price_vector = GasPriceVector {
-        l1_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
-        l1_data_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
-        l2_gas_price: NonzeroGasPrice::new(GasPrice(2)).unwrap(),
+        l1_gas_price: NonzeroGasPrice::new(GasPrice(2))?,
+        l1_data_gas_price: NonzeroGasPrice::new(GasPrice(2))?,
+        l2_gas_price: NonzeroGasPrice::new(GasPrice(2))?,
     };
 
     let block_info = BlockInfo {
@@ -80,22 +83,21 @@ pub fn run_config_pass(
         sequencer_address: 0_u8.into(),
         use_kzg_da: true,
     };
-    let (entry_code, builtins) = create_entry_code(test_details, casm_program);
-
-    let assembled_program = get_assembled_program(casm_program, entry_code);
-
-    let string_to_hint = hints_by_representation(&assembled_program);
-    let hints_dict = hints_to_params(&assembled_program);
-
     let mut context = build_context(&block_info, None, &TrackedResource::from(tracked_resource));
 
-    let syscall_handler = build_syscall_handler(
+    let hints = hints_by_representation(&casm_program.assembled_cairo_program);
+    let VmExecutionContext {
+        mut runner,
+        syscall_handler,
+        initial_syscall_ptr,
+        program_extra_data_length,
+    } = initialize_execution_context(
+        call.clone(),
+        &hints,
+        &program,
         &mut cached_state,
-        &string_to_hint,
         &mut context,
-        &test_details.parameter_types,
-        builtins.len(),
-    );
+    )?;
 
     let mut config = RawForgeConfig::default();
 
@@ -115,11 +117,45 @@ pub fn run_config_pass(
         },
     };
 
-    run_assembled_program(
-        &assembled_program,
-        builtins,
-        hints_dict,
+    let tracked_resource = TrackedResource::from(tracked_resource);
+    let entry_point_initial_budget =
+        entry_point_initial_budget(&forge_config_runtime.extended_runtime.hint_handler);
+    let args = prepare_call_arguments(
+        &forge_config_runtime
+            .extended_runtime
+            .hint_handler
+            .base
+            .call
+            .clone()
+            .into(),
+        &mut runner,
+        initial_syscall_ptr,
+        &mut forge_config_runtime
+            .extended_runtime
+            .hint_handler
+            .read_only_segments,
+        &entry_point,
+        entry_point_initial_budget,
+    )?;
+    let n_total_args = args.len();
+
+    let bytecode_length = program.data_len();
+    let program_segment_size = bytecode_length + program_extra_data_length;
+
+    run_entry_point(
+        &mut runner,
         &mut forge_config_runtime,
+        entry_point,
+        args,
+        program_segment_size,
+    )?;
+
+    finalize_execution(
+        &mut runner,
+        &mut forge_config_runtime.extended_runtime.hint_handler,
+        n_total_args,
+        program_extra_data_length,
+        tracked_resource,
     )?;
 
     Ok(config)
