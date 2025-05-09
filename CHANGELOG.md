@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - when using `sncast call` the response will be printed as a Cairo-like string representation of the return values
 
+#### Changed
+
+- The supported RPC version is now 0.8.1
+
 ## [0.42.0] - 2025-04-28
 
 ### Forge
