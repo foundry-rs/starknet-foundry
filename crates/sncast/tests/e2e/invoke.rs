@@ -17,7 +17,7 @@ use sncast::AccountType;
 use sncast::helpers::constants::{ARGENT_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Invoke;
-use starknet_types_core::felt::Felt;
+use starknet_types_core::felt::{Felt, NonZeroFelt};
 use tempfile::tempdir;
 use test_case::test_case;
 
@@ -97,16 +97,15 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     assert!(matches!(receipt, Invoke(_)));
 }
 
-// TODO(#3100)
-// #[test_case(FeeArgs{
-//     max_fee: Some(NonZeroFelt::try_from(Felt::from(1000000000000000000000000)).unwrap()),
-//     l1_data_gas: None,
-//     l1_data_gas_price:  None,
-//     l1_gas:  None,
-//     l1_gas_price:  None,
-//     l2_gas:  None,
-//     l2_gas_price:  None,
-// }; "max_fee")]
+#[test_case(FeeArgs{
+    max_fee: Some(NonZeroFelt::try_from(Felt::from(1_000_000_000_000_000_000_000_000_u128)).unwrap()),
+    l1_data_gas: None,
+    l1_data_gas_price:  None,
+    l1_gas:  None,
+    l1_gas_price:  None,
+    l2_gas:  None,
+    l2_gas_price:  None,
+}; "max_fee")]
 #[test_case(FeeArgs{
     max_fee: None,
     l1_data_gas: Some(100_000),
