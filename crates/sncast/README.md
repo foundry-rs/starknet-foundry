@@ -178,7 +178,7 @@ $ sncast \
 
 ```shell
 command: call
-response: 6_felt252
+response: 0x6
 response_raw: [0x6]
 ```
 </details>
@@ -200,7 +200,7 @@ $ sncast call \
 
 ```shell
 command: call
-response: 6_felt252
+response: 0x6
 response_raw: [0x6]
 ```
 </details>

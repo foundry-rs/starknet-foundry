@@ -12,4 +12,4 @@ starknet-types-core.workspace = true
 starknet.workspace = true
 cheatnet = { path = "../cheatnet" }
 data-transformer = { path = "../data-transformer" }
-serde_json .workspace = true
+serde_json.workspace = true

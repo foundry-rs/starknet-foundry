@@ -30,6 +30,7 @@ use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
+
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
     ForgeExtension, ForgeRuntime, add_resources_to_top_call, get_all_used_resources,
@@ -61,6 +62,7 @@ mod hints;
 mod syscall_handler;
 pub mod with_config;
 
+use crate::debugging::{TraceVerbosity, build_debugging_trace};
 use crate::running::syscall_handler::build_syscall_handler;
 pub use syscall_handler::has_segment_arena;
 pub use syscall_handler::syscall_handler_offset;
@@ -72,6 +74,7 @@ pub fn run_test(
     test_runner_config: Arc<TestRunnerConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
+    trace_verbosity: Option<TraceVerbosity>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -99,10 +102,12 @@ pub fn run_test(
             &case,
             &test_runner_config.contracts_data,
             &versioned_program_path,
+            trace_verbosity,
         )
     })
 }
 
+#[expect(clippy::too_many_arguments)]
 pub(crate) fn run_fuzz_test(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
@@ -111,6 +116,7 @@ pub(crate) fn run_fuzz_test(
     send: Sender<()>,
     fuzzing_send: Sender<()>,
     rng: Arc<Mutex<StdRng>>,
+    trace_verbosity: Option<TraceVerbosity>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -139,6 +145,7 @@ pub(crate) fn run_fuzz_test(
             &case,
             &test_runner_config.contracts_data,
             &versioned_program_path,
+            trace_verbosity,
         )
     })
 }
@@ -207,6 +214,11 @@ pub fn run_test_case(
             case.config.fork_config.as_ref(),
         )?,
     };
+
+    if !case.config.disable_predeployed_contracts {
+        state_reader.predeploy_contracts();
+    }
+
     let block_info = state_reader.get_block_info()?;
     let chain_id = state_reader.get_chain_id()?;
     let tracked_resource = TrackedResource::from(runtime_config.tracked_resource);
@@ -216,7 +228,9 @@ pub fn run_test_case(
     if let Some(max_n_steps) = runtime_config.max_n_steps {
         set_max_steps(&mut context, max_n_steps);
     }
+
     let mut cached_state = CachedState::new(state_reader);
+
     let syscall_handler = build_syscall_handler(
         &mut cached_state,
         &string_to_hint,
@@ -405,6 +419,7 @@ fn extract_test_case_summary(
     case: &TestCaseWithResolvedConfig,
     contracts_data: &ContractsData,
     versioned_program_path: &Utf8Path,
+    trace_verbosity: Option<TraceVerbosity>,
 ) -> TestCaseSummary<Single> {
     match run_result {
         Ok(run_result) => match run_result {
@@ -413,6 +428,7 @@ fn extract_test_case_summary(
                 case,
                 contracts_data,
                 versioned_program_path,
+                trace_verbosity,
             ),
             RunResult::Error(run_error) => {
                 let mut message = format!(
@@ -436,13 +452,12 @@ fn extract_test_case_summary(
                     }),
                     fuzzer_args: run_error.fuzzer_args,
                     test_statistics: (),
-                    debugging_trace: cfg!(feature = "debugging").then(|| {
-                        debugging::Trace::new(
-                            &run_error.call_trace.borrow(),
-                            contracts_data,
-                            case.name.clone(),
-                        )
-                    }),
+                    debugging_trace: build_debugging_trace(
+                        &run_error.call_trace.borrow(),
+                        contracts_data,
+                        trace_verbosity,
+                        case.name.clone(),
+                    ),
                 }
             }
         },

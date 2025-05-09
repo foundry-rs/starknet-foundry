@@ -5,6 +5,7 @@ use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use derive_more::Display;
 use forge_runner::CACHE_DIR;
+use forge_runner::debugging::TraceVerbosity;
 use forge_runner::forge_config::ForgeTrackedResource;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
@@ -140,6 +141,11 @@ enum ColorOption {
 pub struct TestArgs {
     /// Name used to filter tests
     test_filter: Option<String>,
+
+    /// Trace verbosity level
+    #[arg(long)]
+    trace_verbosity: Option<TraceVerbosity>,
+
     /// Use exact matches for `test_filter`
     #[arg(short, long)]
     exact: bool,
@@ -155,7 +161,7 @@ pub struct TestArgs {
     #[arg(short = 'r', long)]
     fuzzer_runs: Option<NonZeroU32>,
     /// Seed for the fuzzer
-    #[arg(short = 's', long)]
+    #[arg(short = 's', long, env = "SNFORGE_FUZZER_SEED")]
     fuzzer_seed: Option<u64>,
 
     /// Run only tests marked with `#[ignore]` attribute

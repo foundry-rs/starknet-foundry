@@ -167,7 +167,7 @@ async fn test_happy_case_from_cli_with_sncast_config() {
 
     snapbox.assert().success().stdout_eq(indoc! {r"
         command: call
-        response: 0_felt252
+        response: 0x0
         response_raw: [0x0]
     "});
 }
@@ -195,7 +195,7 @@ async fn test_happy_case_mixed() {
 
     snapbox.assert().success().stdout_eq(indoc! {r"
         command: call
-        response: 0_felt252
+        response: 0x0
         response_raw: [0x0]
     "});
 }

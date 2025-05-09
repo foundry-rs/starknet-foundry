@@ -1,5 +1,5 @@
 use crate::common::state::create_cached_state;
-use crate::common::{call_contract_raw, deploy_contract, felt_selector_from_name};
+use crate::common::{call_contract_raw, deploy_contract, selector_from_name};
 use blockifier::state::state_api::StateReader;
 use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
@@ -26,10 +26,10 @@ fn test_state_reverted() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        felt_selector_from_name("call_contract_revert"),
+        selector_from_name("call_contract_revert"),
         &[
             contract_address.into_(),
-            felt_selector_from_name("change_state_and_panic").into_(),
+            selector_from_name("change_state_and_panic").into_(),
             mock_class_hash.into_(),
         ],
     )

@@ -71,7 +71,7 @@ impl Display for Primitive {
             Primitive::I32(value) => write!(f, "{value}_i32"),
             Primitive::I64(value) => write!(f, "{value}_i64"),
             Primitive::I128(value) => write!(f, "{value}_i128"),
-            Primitive::Felt(value) => write!(f, "{value}_felt252"),
+            Primitive::Felt(value) => write!(f, "{value:#x}"),
             Primitive::ByteArray(value) => write!(f, "\"{value}\""),
             Primitive::ContractAddress(value) => write!(f, "ContractAddress({value:#x})"),
             Primitive::ClassHash(value) => write!(f, "ClassHash({value:#x})"),
