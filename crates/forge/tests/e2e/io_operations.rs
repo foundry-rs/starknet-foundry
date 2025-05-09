@@ -58,7 +58,7 @@ fn file_reading() {
         
         [PASS] file_reading_integrationtest::test::json_serialization [..]
         [PASS] file_reading_integrationtest::test::json_deserialization [..]
-        Tests: 5 passed, 6 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 5 passed, 6 failed, 0 skipped, 0 ignored, 0 excluded, 0 filtered out
         
         Failures:
             file_reading_integrationtest::test::json_non_existent
