@@ -10,6 +10,11 @@ impl CheatnetState {
         caller_address: ContractAddress,
         span: CheatSpan,
     ) {
+        if let CheatSpan::TargetCalls(n) = span {
+            if n == 0 {
+                panic!("CheatSpan::TargetCalls(0) is not allowed");
+            }
+        }
         self.cheat_execution_info(ExecutionInfoMockOperations {
             caller_address: Operation::Start(CheatArguments {
                 value: caller_address,
