@@ -12,11 +12,7 @@ impl CheatnetState {
         ret_data: &[Felt],
         span: CheatSpan,
     ) {
-        if let CheatSpan::TargetCalls(n) = span {
-            if n == 0 {
-                panic!("CheatSpan::TargetCalls(0) is not allowed");
-            }
-        }
+        if let CheatSpan::TargetCalls(_nz) = span {}
         let contract_mocked_functions = self.mocked_functions.entry(contract_address).or_default();
 
         contract_mocked_functions.insert(

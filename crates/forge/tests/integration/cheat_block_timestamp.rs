@@ -258,7 +258,7 @@ fn cheat_block_timestamp_with_span() {
 
                 let target_block_timestamp = 123;
 
-                cheat_block_timestamp(dispatcher.contract_address, target_block_timestamp, CheatSpan::TargetCalls(1));
+                cheat_block_timestamp(dispatcher.contract_address, target_block_timestamp, CheatSpan::target_calls(1));
 
                 let block_timestamp = dispatcher.get_block_timestamp();
                 assert_eq!(block_timestamp, target_block_timestamp.into());
@@ -275,7 +275,7 @@ fn cheat_block_timestamp_with_span() {
 
                 let target_block_timestamp = 123;
 
-                cheat_block_timestamp(dispatcher.contract_address, target_block_timestamp, CheatSpan::TargetCalls(2));
+                cheat_block_timestamp(dispatcher.contract_address, target_block_timestamp, CheatSpan::target_calls(2));
 
                 let block_timestamp = dispatcher.get_block_timestamp();
                 assert_eq!(block_timestamp, target_block_timestamp.into());
@@ -293,7 +293,7 @@ fn cheat_block_timestamp_with_span() {
 
                 let target_block_timestamp = 123;
 
-                cheat_block_timestamp(test_address(), target_block_timestamp, CheatSpan::TargetCalls(1));
+                cheat_block_timestamp(test_address(), target_block_timestamp, CheatSpan::target_calls(1));
 
                 let block_timestamp = get_block_timestamp();
                 assert_eq!(block_timestamp, target_block_timestamp.into());

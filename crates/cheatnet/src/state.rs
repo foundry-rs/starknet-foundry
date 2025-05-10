@@ -13,15 +13,19 @@ use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_annotations::trace_data::L1Resources;
+use cairo_serde_macros::CairoDeserialize;
 use cairo_vm::Felt252;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
-use conversions::serde::deserialize::CairoDeserialize;
+use conversions::serde::deserialize::{
+    BufferReadError, BufferReadResult, BufferReader, CairoDeserialize as CairoDeserializeTrait,
+};
 use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::starknet::context::SerializableBlockInfo;
 use runtime::starknet::state::DictStateReader;
+use serde::{Deserialize, Serialize};
 use starknet_api::block::BlockInfo;
 use starknet_api::core::{ChainId, EntryPointSelector};
 use starknet_api::transaction::fields::ContractAddressSalt;
@@ -32,23 +36,39 @@ use starknet_api::{
 use starknet_types_core::felt::Felt;
 use std::cell::{Ref, RefCell};
 use std::collections::{BTreeMap, HashMap};
+use std::num::NonZeroU64;
 use std::rc::Rc;
 
-// Specifies the duration of the cheat
-#[derive(CairoDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NonZeroU64Serde(pub NonZeroU64);
+
+impl CairoDeserializeTrait for NonZeroU64Serde {
+    fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
+        let v = <u64 as CairoDeserializeTrait>::deserialize(reader)?;
+        Ok(NonZeroU64Serde(
+            NonZeroU64::new(v).ok_or(BufferReadError::ParseFailed)?,
+        ))
+    }
+}
+
+impl CairoSerialize for NonZeroU64Serde {
+    fn serialize(&self, writer: &mut BufferWriter) {
+        CairoSerialize::serialize(&self.0.get(), writer)
+    }
+}
+
+#[derive(CairoDeserialize, Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CheatSpan {
     Indefinite,
-    TargetCalls(usize),
+    TargetCalls(NonZeroU64Serde),
 }
 
 impl CheatSpan {
     /// Smart constructor for TargetCalls variant. Prevents zero value.
-    pub fn target_calls(n: usize) -> Result<Self, String> {
-        if n == 0 {
-            Err("CheatSpan::TargetCalls(0) is not allowed".to_string())
-        } else {
-            Ok(CheatSpan::TargetCalls(n))
-        }
+    pub fn target_calls(n: u64) -> Self {
+        CheatSpan::TargetCalls(NonZeroU64Serde(
+            NonZeroU64::new(n).expect("CheatSpan::TargetCalls(0) is not allowed"),
+        ))
     }
 }
 
@@ -151,10 +171,12 @@ pub enum CheatStatus<T> {
 
 impl<T> CheatStatus<T> {
     pub fn decrement_cheat_span(&mut self) {
-        if let CheatStatus::Cheated(_, CheatSpan::TargetCalls(n)) = self {
-            *n -= 1;
-            if *n == 0 {
+        if let CheatStatus::Cheated(_, CheatSpan::target_calls(n)) = self {
+            let current = n.0.get();
+            if current == 1 {
                 *self = CheatStatus::Uncheated;
+            } else {
+                *n = NonZeroU64Serde(NonZeroU64::new(current - 1).unwrap());
             }
         }
     }
@@ -190,7 +212,7 @@ pub struct CallTrace {
 
 impl CairoSerialize for CallTrace {
     fn serialize(&self, output: &mut BufferWriter) {
-        self.entry_point.serialize(output);
+        CairoSerialize::serialize(&self.entry_point, output);
 
         let visible_calls: Vec<_> = self
             .nested_calls
@@ -198,9 +220,9 @@ impl CairoSerialize for CallTrace {
             .filter_map(CallTraceNode::extract_entry_point_call)
             .collect();
 
-        visible_calls.serialize(output);
+        CairoSerialize::serialize(&visible_calls, output);
 
-        self.result.serialize(output);
+        CairoSerialize::serialize(&self.result, output);
     }
 }
 

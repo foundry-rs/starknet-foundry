@@ -656,7 +656,7 @@ fn cheat_transaction_hash_with_span() {
 
                 let tx_info_before = dispatcher.get_tx_info();
 
-                cheat_transaction_hash(dispatcher.contract_address, 421, CheatSpan::TargetCalls(1));
+                cheat_transaction_hash(dispatcher.contract_address, 421, CheatSpan::target_calls(1));
 
                 let mut expected_tx_info = tx_info_before;
                 expected_tx_info.transaction_hash = 421;
@@ -671,7 +671,7 @@ fn cheat_transaction_hash_with_span() {
 
                 let tx_info_before = dispatcher.get_tx_info();
 
-                cheat_transaction_hash(dispatcher.contract_address, 421, CheatSpan::TargetCalls(2));
+                cheat_transaction_hash(dispatcher.contract_address, 421, CheatSpan::target_calls(2));
 
                 let mut expected_tx_info = tx_info_before;
                 expected_tx_info.transaction_hash = 421;
@@ -685,7 +685,7 @@ fn cheat_transaction_hash_with_span() {
             fn test_cheat_transaction_hash_test_address() {
                 let tx_info_before = starknet::get_tx_info().unbox();
 
-                cheat_transaction_hash(test_address(), 421,CheatSpan::TargetCalls(1) );
+                cheat_transaction_hash(test_address(), 421,CheatSpan::target_calls(1) );
 
                 let mut expected_tx_info = tx_info_before;
                 expected_tx_info.transaction_hash = 421;

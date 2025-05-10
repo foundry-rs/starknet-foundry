@@ -43,6 +43,7 @@ k256.workspace = true
 p256.workspace = true
 shared.workspace = true
 rand.workspace = true
+cairo-serde-macros = { path = "../conversions/cairo-serde-macros" }
 
 [dev-dependencies]
 ctor.workspace = true

@@ -16,8 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### snforge_std
 
 #### Changed
-- Breaking: `CheatSpan::TargetCalls` now uses a `NonZeroUsize` type instead of `usize`. Zero is not allowed at the type level. Logic for decrementing and all usages updated accordingly.
+- Breaking: `CheatSpan::target_calls` now uses a `NonZeroUsize` type instead of `usize`. Zero is not allowed at the type level. Logic for decrementing and all usages updated accordingly.
 - Added: `NonZeroUsize` struct with serialization, deserialization, and decrement logic. Tests added to ensure correct behavior and panics on zero.
+- `CheatSpan::target_calls` now returns a `CheatSpan` directly and panics if called with zero, instead of returning a `Result`. This improves ergonomics and enforces type safety at the API level.
+- All usages of `CheatSpan::TargetCalls(N)` in the codebase have been migrated to `CheatSpan::target_calls(N)`, ensuring consistent and safe construction of nonzero spans.
 
 ## [0.41.0] - 2025-04-08
 

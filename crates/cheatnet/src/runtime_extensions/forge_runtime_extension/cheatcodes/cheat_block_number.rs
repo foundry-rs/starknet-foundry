@@ -12,10 +12,8 @@ impl CheatnetState {
         block_number: u64,
         span: CheatSpan,
     ) {
-        if let CheatSpan::TargetCalls(n) = span {
-            if n == 0 {
-                panic!("CheatSpan::TargetCalls(0) is not allowed");
-            }
+        if let CheatSpan::TargetCalls(_nz) = span {
+            // No need to check for zero, NonZeroUsizeSerde enforces nonzero
         }
         self.cheat_execution_info(ExecutionInfoMockOperations {
             block_info: BlockInfoMockOperations {

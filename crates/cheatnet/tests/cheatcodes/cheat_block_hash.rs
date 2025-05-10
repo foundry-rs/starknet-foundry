@@ -344,7 +344,7 @@ fn cheat_block_hash_simple_with_span() {
         contract_address,
         BLOCK_NUMBER,
         Felt::from(123),
-        CheatSpan::TargetCalls(2),
+        CheatSpan::target_calls(2),
     );
 
     assert_success(
@@ -374,7 +374,7 @@ fn cheat_block_hash_proxy_with_span() {
         contract_address_1,
         BLOCK_NUMBER,
         Felt::from(123),
-        CheatSpan::TargetCalls(1),
+        CheatSpan::target_calls(1),
     );
 
     let output = test_env.call_contract(
@@ -398,7 +398,7 @@ fn cheat_block_hash_in_constructor_with_span() {
         precalculated_address,
         BLOCK_NUMBER,
         Felt::from(123),
-        CheatSpan::TargetCalls(2),
+        CheatSpan::target_calls(2),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[BLOCK_NUMBER.into()]);
@@ -431,7 +431,7 @@ fn cheat_block_hash_no_constructor_with_span() {
         precalculated_address,
         BLOCK_NUMBER,
         Felt::from(123),
-        CheatSpan::TargetCalls(1),
+        CheatSpan::target_calls(1),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
@@ -457,7 +457,7 @@ fn cheat_block_hash_override_span() {
         contract_address,
         BLOCK_NUMBER,
         Felt::from(123),
-        CheatSpan::TargetCalls(2),
+        CheatSpan::target_calls(2),
     );
 
     assert_success(
@@ -501,7 +501,7 @@ fn cheat_block_hash_library_call_with_span() {
         contract_address,
         BLOCK_NUMBER,
         Felt::from(123),
-        CheatSpan::TargetCalls(1),
+        CheatSpan::target_calls(1),
     );
 
     let lib_call_selector = "get_block_hash_with_lib_call";

@@ -302,7 +302,7 @@ fn cheat_block_timestamp_simple_with_span() {
 
     let contract_address = test_env.deploy("CheatBlockTimestampChecker", &[]);
 
-    test_env.cheat_block_timestamp(contract_address, 123, CheatSpan::TargetCalls(2));
+    test_env.cheat_block_timestamp(contract_address, 123, CheatSpan::target_calls(2));
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
@@ -327,7 +327,7 @@ fn cheat_block_timestamp_proxy_with_span() {
     let contract_address_1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address_2 = test_env.deploy_wrapper(&class_hash, &[]);
 
-    test_env.cheat_block_timestamp(contract_address_1, 123, CheatSpan::TargetCalls(1));
+    test_env.cheat_block_timestamp(contract_address_1, 123, CheatSpan::target_calls(1));
 
     let output = test_env.call_contract(
         &contract_address_1,
@@ -346,7 +346,7 @@ fn cheat_block_timestamp_in_constructor_with_span() {
     let class_hash = test_env.declare("ConstructorCheatBlockTimestampChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
-    test_env.cheat_block_timestamp(precalculated_address, 123, CheatSpan::TargetCalls(2));
+    test_env.cheat_block_timestamp(precalculated_address, 123, CheatSpan::target_calls(2));
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
     assert_eq!(precalculated_address, contract_address);
@@ -374,7 +374,7 @@ fn cheat_block_timestamp_no_constructor_with_span() {
     let class_hash = test_env.declare("CheatBlockTimestampChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
-    test_env.cheat_block_timestamp(precalculated_address, 123, CheatSpan::TargetCalls(1));
+    test_env.cheat_block_timestamp(precalculated_address, 123, CheatSpan::target_calls(1));
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
     assert_eq!(precalculated_address, contract_address);
@@ -395,7 +395,7 @@ fn cheat_block_timestamp_override_span() {
 
     let contract_address = test_env.deploy("CheatBlockTimestampChecker", &[]);
 
-    test_env.cheat_block_timestamp(contract_address, 123, CheatSpan::TargetCalls(2));
+    test_env.cheat_block_timestamp(contract_address, 123, CheatSpan::target_calls(2));
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
@@ -429,7 +429,7 @@ fn cheat_block_timestamp_library_call_with_span() {
     let class_hash = test_env.declare("CheatBlockTimestampChecker", &contracts_data);
     let contract_address = test_env.deploy("CheatBlockTimestampCheckerLibCall", &[]);
 
-    test_env.cheat_block_timestamp(contract_address, 123, CheatSpan::TargetCalls(1));
+    test_env.cheat_block_timestamp(contract_address, 123, CheatSpan::target_calls(1));
 
     let lib_call_selector = "get_block_timestamp_with_lib_call";
 

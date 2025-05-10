@@ -166,7 +166,7 @@ fn cheat_caller_address_with_span() {
 
                 let target_caller_address: ContractAddress = 123.try_into().unwrap();
 
-                cheat_caller_address(dispatcher.contract_address, target_caller_address, CheatSpan::TargetCalls(1));
+                cheat_caller_address(dispatcher.contract_address, target_caller_address, CheatSpan::target_calls(1));
 
                 let caller_address = dispatcher.get_caller_address();
                 assert(caller_address == target_caller_address.into(), 'Wrong caller address');
@@ -181,7 +181,7 @@ fn cheat_caller_address_with_span() {
 
                 let target_caller_address: ContractAddress = 123.try_into().unwrap();
 
-                cheat_caller_address(dispatcher.contract_address, target_caller_address, CheatSpan::TargetCalls(2));
+                cheat_caller_address(dispatcher.contract_address, target_caller_address, CheatSpan::target_calls(2));
 
                 let caller_address = dispatcher.get_caller_address();
                 assert(caller_address == target_caller_address.into(), 'Wrong caller address');
@@ -199,7 +199,7 @@ fn cheat_caller_address_with_span() {
 
                 let target_caller_address: ContractAddress = 123.try_into().unwrap();
 
-                cheat_caller_address(test_address(), target_caller_address, CheatSpan::TargetCalls(1));
+                cheat_caller_address(test_address(), target_caller_address, CheatSpan::target_calls(1));
 
                 let caller_address = starknet::get_caller_address();
                 assert(caller_address == target_caller_address, 'Wrong caller address');

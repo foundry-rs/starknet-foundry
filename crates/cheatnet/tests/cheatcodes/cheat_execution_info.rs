@@ -536,7 +536,7 @@ fn cheat_transaction_hash_simple_with_span() {
     test_env.cheat_transaction_hash(
         contract_address,
         transaction_hash,
-        CheatSpan::TargetCalls(2),
+        CheatSpan::target_calls(2),
     );
 
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
@@ -556,7 +556,7 @@ fn cheat_transaction_hash_proxy_with_span() {
     test_env.cheat_transaction_hash(
         contract_address_1,
         Felt::from(123),
-        CheatSpan::TargetCalls(1),
+        CheatSpan::target_calls(1),
     );
 
     let output = test_env.call_contract(
@@ -579,7 +579,7 @@ fn cheat_transaction_hash_in_constructor_with_span() {
     test_env.cheat_transaction_hash(
         precalculated_address,
         Felt::from(123),
-        CheatSpan::TargetCalls(2),
+        CheatSpan::target_calls(2),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
@@ -611,7 +611,7 @@ fn cheat_transaction_hash_no_constructor_with_span() {
     test_env.cheat_transaction_hash(
         precalculated_address,
         Felt::from(123),
-        CheatSpan::TargetCalls(1),
+        CheatSpan::target_calls(1),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
@@ -650,7 +650,7 @@ fn cheat_transaction_hash_override_span() {
     test_env.cheat_transaction_hash(
         contract_address,
         transaction_hash,
-        CheatSpan::TargetCalls(1),
+        CheatSpan::target_calls(1),
     );
 
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
@@ -667,7 +667,11 @@ fn cheat_transaction_hash_library_call_with_span() {
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
-    test_env.cheat_transaction_hash(contract_address, Felt::from(123), CheatSpan::TargetCalls(1));
+    test_env.cheat_transaction_hash(
+        contract_address,
+        Felt::from(123),
+        CheatSpan::target_calls(1),
+    );
 
     let lib_call_selector = "get_tx_hash_with_lib_call";
 

@@ -12,11 +12,6 @@ impl CheatnetState {
         sequencer_address: ContractAddress,
         span: CheatSpan,
     ) {
-        if let CheatSpan::TargetCalls(n) = span {
-            if n == 0 {
-                panic!("CheatSpan::TargetCalls(0) is not allowed");
-            }
-        }
         self.cheat_execution_info(ExecutionInfoMockOperations {
             block_info: BlockInfoMockOperations {
                 sequencer_address: Operation::Start(CheatArguments {

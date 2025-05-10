@@ -89,15 +89,20 @@ impl CheatnetState {
             .copied()
         {
             match cheat_span {
-                CheatSpan::TargetCalls(1) => {
-                    self.block_hash_contracts
-                        .remove(&(contract_address, block_number));
-                }
-                CheatSpan::TargetCalls(num) => {
-                    self.block_hash_contracts.insert(
-                        (contract_address, block_number),
-                        (CheatSpan::TargetCalls(num - 1), block_hash),
-                    );
+                CheatSpan::TargetCalls(nz) => {
+                    let current = nz.0.get();
+                    if current == 1 {
+                        self.block_hash_contracts
+                            .remove(&(contract_address, block_number));
+                    } else {
+                        let new_nz = crate::state::NonZeroU64Serde(
+                            std::num::NonZeroU64::new(current - 1).unwrap(),
+                        );
+                        self.block_hash_contracts.insert(
+                            (contract_address, block_number),
+                            (CheatSpan::TargetCalls(new_nz), block_hash),
+                        );
+                    }
                 }
                 CheatSpan::Indefinite => {}
             }

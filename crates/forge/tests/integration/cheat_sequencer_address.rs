@@ -246,7 +246,7 @@ fn cheat_sequencer_address_with_span() {
 
                 let target_sequencer_address: ContractAddress = 123.try_into().unwrap();
 
-                cheat_sequencer_address(dispatcher.contract_address, target_sequencer_address, CheatSpan::TargetCalls(1));
+                cheat_sequencer_address(dispatcher.contract_address, target_sequencer_address, CheatSpan::target_calls(1));
 
                 let sequencer_address = dispatcher.get_sequencer_address();
                 assert(sequencer_address == target_sequencer_address.into(), 'Wrong sequencer address');
@@ -263,7 +263,7 @@ fn cheat_sequencer_address_with_span() {
 
                 let target_sequencer_address: ContractAddress = 123.try_into().unwrap();
 
-                cheat_sequencer_address(dispatcher.contract_address, target_sequencer_address, CheatSpan::TargetCalls(2));
+                cheat_sequencer_address(dispatcher.contract_address, target_sequencer_address, CheatSpan::target_calls(2));
 
                 let sequencer_address = dispatcher.get_sequencer_address();
                 assert(sequencer_address == target_sequencer_address.into(), 'Wrong sequencer address');
@@ -281,7 +281,7 @@ fn cheat_sequencer_address_with_span() {
 
                 let target_sequencer_address: ContractAddress = 123.try_into().unwrap();
 
-                cheat_sequencer_address(test_address(), target_sequencer_address, CheatSpan::TargetCalls(1));
+                cheat_sequencer_address(test_address(), target_sequencer_address, CheatSpan::target_calls(1));
 
                 let sequencer_address = get_sequencer_address();
                 assert(sequencer_address == target_sequencer_address, 'Wrong sequencer address');
