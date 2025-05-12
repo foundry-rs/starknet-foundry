@@ -7,6 +7,7 @@ use anyhow::{Result, bail};
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
+use blockifier::execution::entry_point_execution::prepare_call_arguments;
 use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::cached_state::CachedState;
 use cairo_vm::Felt252;
@@ -26,6 +27,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredErrors, ExtendedStateReader,
 };
+use execution::finalize_execution;
 use hints::hints_by_representation;
 use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
@@ -42,13 +44,14 @@ use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
 pub mod config_run;
 mod copied_code;
+mod execution;
 mod hints;
 mod setup;
 mod syscall_handler;
 pub mod with_config;
 
 use crate::debugging::{TraceVerbosity, build_debugging_trace};
-use crate::running::copied_code::{finalize_execution, prepare_call_arguments, run_entry_point};
+use crate::running::copied_code::run_entry_point;
 pub use hints::hints_to_params;
 use setup::VmExecutionContext;
 pub use syscall_handler::has_segment_arena;
@@ -259,8 +262,7 @@ pub fn run_test_case(
             .hint_handler
             .base
             .call
-            .clone()
-            .into(),
+            .clone(),
         &mut runner,
         initial_syscall_ptr,
         &mut forge_runtime
