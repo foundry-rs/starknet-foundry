@@ -4,7 +4,7 @@ use snforge_std::cheatcodes::storage::{map_entry_address, store};
 const STRK_CONTRACT_ADDRESS: felt252 =
     0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d;
 const STRK_BALANCES_VARIABLE_SELECTOR: felt252 =
-    1648309034483306940318020057553480881073352647889682838905012914068126451082; // selector!("ERC20_balances");
+    0x3a4e8ec16e258a799fe707996fd5d21d42b29adc1499a370edf7f809d8c458a; // selector!("ERC20_balances");
 
 #[derive(Drop, Serde, Copy, Debug)]
 pub struct CustomToken {
