@@ -62,6 +62,7 @@ pub trait IDataTransformer<TContractState> {
     ) -> (BitArray, alexandria_data_structures::bit_array::BitArray);
     fn span_fn(ref self: TContractState, a: Span<felt252>) -> Span<felt252>;
     fn multiple_signed_fn(ref self: TContractState, a: i32, b: i8);
+    fn no_args_fn(ref self: TContractState);
 }
 
 #[starknet::contract]
@@ -129,5 +130,12 @@ mod DataTransformer {
             a
         }
         fn multiple_signed_fn(ref self: ContractState, a: i32, b: i8) {}
+        fn no_args_fn(ref self: ContractState) {}
     }
+}
+
+#[starknet::contract]
+mod DataTransformerNoConstructor {
+    #[storage]
+    struct Storage {}
 }
