@@ -3,6 +3,8 @@ use snforge_std::cheatcodes::storage::{map_entry_address, store};
 
 const STRK_CONTRACT_ADDRESS: felt252 =
     0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d;
+const STRK_BALANCES_VARIABLE_SELECTOR: felt252 =
+    1648309034483306940318020057553480881073352647889682838905012914068126451082; // selector!("ERC20_balances");
 
 #[derive(Drop, Copy, Clone, Debug)]
 pub enum Token {
@@ -19,7 +21,7 @@ pub impl TokenImpl of TokenTrait {
 
     fn balances_variable_selector(self: Token) -> felt252 {
         match self {
-            Token::STRK => 1648309034483306940318020057553480881073352647889682838905012914068126451082 // selector!("ERC20_balances")
+            Token::STRK => STRK_BALANCES_VARIABLE_SELECTOR,
         }
     }
 }
