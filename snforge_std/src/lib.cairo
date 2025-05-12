@@ -31,7 +31,6 @@ pub use cheatcodes::erc20::set_balance;
 pub use cheatcodes::erc20::Token;
 pub use cheatcodes::erc20::TokenImpl;
 pub use cheatcodes::erc20::TokenTrait;
-pub use cheatcodes::erc20::CustomToken;
 
 pub use cheatcodes::CheatSpan;
 pub use cheatcodes::ReplaceBytecodeError;

@@ -4,16 +4,9 @@ use snforge_std::cheatcodes::storage::{map_entry_address, store};
 const STRK_CONTRACT_ADDRESS: felt252 =
     0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d;
 
-#[derive(Drop, Serde, Copy, Debug)]
-pub struct CustomToken {
-    pub contract_address: ContractAddress,
-    pub balances_variable_selector: felt252,
-}
-
 #[derive(Drop, Copy, Clone, Debug)]
 pub enum Token {
     STRK,
-    Custom: CustomToken,
 }
 
 #[generate_trait]
@@ -21,16 +14,12 @@ pub impl TokenImpl of TokenTrait {
     fn contract_address(self: Token) -> ContractAddress {
         match self {
             Token::STRK => STRK_CONTRACT_ADDRESS.try_into().unwrap(),
-            Token::Custom(CustomToken { contract_address, .. }) => contract_address,
         }
     }
 
     fn balances_variable_selector(self: Token) -> felt252 {
         match self {
-            Token::STRK => selector!("ERC20_balances"),
-            Token::Custom(CustomToken {
-                balances_variable_selector, ..,
-            }) => balances_variable_selector,
+            Token::STRK => 1648309034483306940318020057553480881073352647889682838905012914068126451082 // selector!("ERC20_balances")
         }
     }
 }
