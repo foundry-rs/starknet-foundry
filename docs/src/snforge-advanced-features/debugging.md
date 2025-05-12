@@ -39,12 +39,12 @@ $ snforge test --trace-verbosity standard
 [test name] trace_info_integrationtest::test_trace::test_debugging_trace_success
 ├─ [selector] execute_calls
 │  ├─ [contract name] SimpleContract
-│  ├─ [calldata] array![RecursiveCall { contract_address: ContractAddress(0x10a2fac439604ce4129fe7c205b711e8141e12e2e52e08f7f898fe7ac13f0a), payload: array![RecursiveCall { contract_address: ContractAddress(0x28f58bf524dc0adcf7468c67d7ffdac1e5d885d347c6a498978f538984dbda), payload: array![] }, RecursiveCall { contract_address: ContractAddress(0x28f58bf524dc0adcf7468c67d7ffdac1e5d885d347c6a498978f538984dbda), payload: array![] }] }, RecursiveCall { contract_address: ContractAddress(0x28f58bf524dc0adcf7468c67d7ffdac1e5d885d347c6a498978f538984dbda), payload: array![] }]
-│  ├─ [call result] success: array![RecursiveCall { contract_address: ContractAddress(0x10a2fac439604ce4129fe7c205b711e8141e12e2e52e08f7f898fe7ac13f0a), payload: array![RecursiveCall { contract_address: ContractAddress(0x28f58bf524dc0adcf7468c67d7ffdac1e5d885d347c6a498978f538984dbda), payload: array![] }, RecursiveCall { contract_address: ContractAddress(0x28f58bf524dc0adcf7468c67d7ffdac1e5d885d347c6a498978f538984dbda), payload: array![] }] }, RecursiveCall { contract_address: ContractAddress(0x28f58bf524dc0adcf7468c67d7ffdac1e5d885d347c6a498978f538984dbda), payload: array![] }]
+│  ├─ [calldata] array![RecursiveCall { contract_address: ContractAddress([..]), payload: array![RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }, RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }] }, RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }]
+│  ├─ [call result] success: array![RecursiveCall { contract_address: ContractAddress([..]), payload: array![RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }, RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }] }, RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }]
 │  ├─ [selector] execute_calls
 │  │  ├─ [contract name] SimpleContract
-│  │  ├─ [calldata] array![RecursiveCall { contract_address: ContractAddress(0x28f58bf524dc0adcf7468c67d7ffdac1e5d885d347c6a498978f538984dbda), payload: array![] }, RecursiveCall { contract_address: ContractAddress(0x28f58bf524dc0adcf7468c67d7ffdac1e5d885d347c6a498978f538984dbda), payload: array![] }]
-│  │  ├─ [call result] success: array![RecursiveCall { contract_address: ContractAddress(0x28f58bf524dc0adcf7468c67d7ffdac1e5d885d347c6a498978f538984dbda), payload: array![] }, RecursiveCall { contract_address: ContractAddress(0x28f58bf524dc0adcf7468c67d7ffdac1e5d885d347c6a498978f538984dbda), payload: array![] }]
+│  │  ├─ [calldata] array![RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }, RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }]
+│  │  ├─ [call result] success: array![RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }, RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }]
 │  │  ├─ [selector] execute_calls
 │  │  │  ├─ [contract name] SimpleContract
 │  │  │  ├─ [calldata] array![]
