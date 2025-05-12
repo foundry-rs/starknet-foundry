@@ -1,4 +1,5 @@
 use crate::coverage_api::run_coverage;
+use crate::debugging::TraceVerbosity;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
@@ -33,6 +34,7 @@ pub mod test_case_summary;
 pub mod test_target_summary;
 
 pub mod backtrace;
+pub mod debugging;
 mod gas;
 pub mod printing;
 pub mod running;
@@ -103,6 +105,7 @@ pub fn run_for_test_case(
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
+    trace_verbosity: Option<TraceVerbosity>,
 ) -> JoinHandle<Result<AnyTestCaseSummary>> {
     if case.config.fuzzer_config.is_none() {
         tokio::task::spawn(async move {
@@ -112,6 +115,7 @@ pub fn run_for_test_case(
                 forge_config.test_runner_config.clone(),
                 versioned_program_path,
                 send,
+                trace_verbosity,
             )
             .await?;
             Ok(AnyTestCaseSummary::Single(res))
@@ -124,6 +128,7 @@ pub fn run_for_test_case(
                 forge_config.test_runner_config.clone(),
                 versioned_program_path,
                 send,
+                trace_verbosity,
             )
             .await??;
             Ok(AnyTestCaseSummary::Fuzzing(res))
@@ -137,6 +142,7 @@ fn run_with_fuzzing(
     test_runner_config: Arc<TestRunnerConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
+    trace_verbosity: Option<TraceVerbosity>,
 ) -> JoinHandle<Result<TestCaseSummary<Fuzzing>>> {
     tokio::task::spawn(async move {
         if send.is_closed() {
@@ -169,6 +175,7 @@ fn run_with_fuzzing(
                 send.clone(),
                 fuzzing_send.clone(),
                 rng.clone(),
+                trace_verbosity,
             ));
         }
 

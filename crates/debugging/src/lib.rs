@@ -5,5 +5,7 @@
 //! which allows for pretty printing of traces.
 mod trace;
 mod tree;
+mod verbosity;
 
 pub use trace::types::Trace;
+pub use verbosity::Verbosity;

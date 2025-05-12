@@ -1,8 +1,10 @@
+use crate::integration::get_abi;
 use core::fmt;
-use data_transformer::Calldata;
+use data_transformer::transform;
 use indoc::indoc;
 use itertools::Itertools;
 use primitive_types::U256;
+use starknet::core::types::contract::AbiEntry;
 use starknet::core::types::{BlockId, BlockTag, ContractClass};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
@@ -10,25 +12,6 @@ use starknet::providers::{JsonRpcClient, Provider};
 use starknet_types_core::felt::Felt;
 use std::ops::Not;
 use test_case::test_case;
-use tokio::sync::OnceCell;
-use url::Url;
-
-// Deployment of contract from /tests/data/data_transformer
-const TEST_CLASS_HASH: Felt =
-    Felt::from_hex_unchecked("0x0786d1f010d66f838837290e472415186ba6a789fb446e7f92e444bed7b5d9c0");
-
-static CLASS: OnceCell<ContractClass> = OnceCell::const_new();
-
-async fn init_class() -> ContractClass {
-    let client = JsonRpcClient::new(HttpTransport::new(
-        Url::parse("http://188.34.188.184:7070/rpc/v0_8").unwrap(),
-    ));
-
-    client
-        .get_class(BlockId::Tag(BlockTag::Latest), TEST_CLASS_HASH)
-        .await
-        .unwrap()
-}
 
 trait Contains<T: fmt::Debug + Eq> {
     fn assert_contains(&self, value: T);
@@ -44,11 +27,12 @@ impl Contains<&str> for anyhow::Error {
 }
 
 async fn run_transformer(input: &str, selector: &str) -> anyhow::Result<Vec<Felt>> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
+    let abi = get_abi().await;
 
-    Calldata::new(input.to_string()).serialized(
-        contract_class,
-        &get_selector_from_name(selector).expect("valid selector"),
+    transform(
+        input,
+        &abi,
+        &get_selector_from_name(selector).expect("should be valid selector"),
     )
 }
 
@@ -400,12 +384,9 @@ async fn test_happy_case_enum_function_empty_variant_cairo_expression_input() {
 #[tokio::test]
 async fn test_happy_case_enum_function_one_argument_variant_cairo_expression_input()
 -> anyhow::Result<()> {
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
+    let abi = get_abi().await;
 
-    let input = String::from("Enum::Two(128)");
-
-    let result = Calldata::new(input)
-        .serialized(contract_class, &get_selector_from_name("enum_fn").unwrap())?;
+    let result = transform("Enum::Two(128)", &abi, &get_selector_from_name("enum_fn")?)?;
 
     let expected_output = [
         Felt::from_hex_unchecked("0x1"),
@@ -575,15 +556,20 @@ async fn test_external_enum_function_ambiguous_enum_name_cairo_expression_input(
         .await
         .unwrap();
 
-    let input = String::from(
-        "
+    let input = "
             TransactionState::Init() , \
             TransactionState::NotFound()
-            ",
-    );
+            ";
 
-    let result = Calldata::new(input).serialized(
-        contract_class,
+    let ContractClass::Sierra(sierra_class) = contract_class else {
+        panic!("Expected Sierra class, but got legacy Sierra class")
+    };
+
+    let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str()).unwrap();
+
+    let result = transform(
+        input,
+        &abi,
         &get_selector_from_name("external_enum_fn").unwrap(),
     );
 

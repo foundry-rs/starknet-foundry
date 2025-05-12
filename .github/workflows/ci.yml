@@ -1,7 +1,7 @@
 name: CI
 
 env:
-  DEVNET_REV: fc5a2753a2eedcc27eed7a4fae3ecac08c2ca1b4 # v0.3.0
+  DEVNET_REV: 26292d1f92807090776b470f43b321f150f55ffd # v0.4.1
 
 on:
   pull_request:

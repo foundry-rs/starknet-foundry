@@ -39,4 +39,11 @@ impl<'a> Node<'a> {
     pub fn leaf(&mut self, tree_item: &impl NodeDisplay) {
         self.builder.add_empty_child(tree_item.display());
     }
+
+    /// Creates a leaf node which parent is the current node if the item is not `None`.
+    pub fn leaf_optional(&mut self, tree_item: Option<&impl NodeDisplay>) {
+        if let Some(tree_item) = tree_item {
+            self.leaf(tree_item);
+        }
+    }
 }

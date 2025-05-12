@@ -59,14 +59,14 @@ async fn test_max_fee_none() {
 #[tokio::test]
 async fn test_max_fee_set() {
     let mock_fee_estimate = FeeEstimate {
-        l1_gas_consumed: Felt::from(1),
-        l1_gas_price: Felt::from(2),
-        l2_gas_consumed: Felt::from(3),
-        l2_gas_price: Felt::from(4),
-        l1_data_gas_consumed: Felt::from(5),
-        l1_data_gas_price: Felt::from(6),
+        l1_gas_consumed: 1,
+        l1_gas_price: 2,
+        l2_gas_consumed: 3,
+        l2_gas_price: 4,
+        l1_data_gas_consumed: 5,
+        l1_data_gas_price: 6,
         unit: PriceUnit::Fri,
-        overall_fee: Felt::from(44),
+        overall_fee: 44,
     };
 
     let args = FeeArgs {
@@ -99,14 +99,14 @@ async fn test_max_fee_set() {
 #[tokio::test]
 async fn test_max_fee_set_and_fee_estimate_higher() {
     let mock_fee_estimate = FeeEstimate {
-        l1_gas_consumed: Felt::from(10),
-        l1_data_gas_price: Felt::from(20),
-        l2_gas_consumed: Felt::from(30),
-        l2_gas_price: Felt::from(40),
-        l1_data_gas_consumed: Felt::from(50),
-        l1_gas_price: Felt::from(60),
+        l1_gas_consumed: 10,
+        l1_data_gas_price: 20,
+        l2_gas_consumed: 30,
+        l2_gas_price: 40,
+        l1_data_gas_consumed: 50,
+        l1_gas_price: 60,
         unit: PriceUnit::Fri,
-        overall_fee: Felt::from(4400),
+        overall_fee: 4400,
     };
 
     let args = FeeArgs {

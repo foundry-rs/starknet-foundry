@@ -1,4 +1,5 @@
 mod available_gas;
+mod disable_predeployed_contracts;
 mod fork;
 mod fuzzer;
 mod ignore;

@@ -522,7 +522,9 @@ pub fn get_address_from_keystore(
         AccountType::OpenZeppelin | AccountType::Braavos => {
             vec![private_key.verifying_key().scalar()]
         }
-        AccountType::Argent => vec![private_key.verifying_key().scalar(), Felt::ZERO],
+        // This is a serialization of `Signer` enum for the variant `StarknetSigner` from the Argent account code
+        // One stands for `None` for the guardian argument
+        AccountType::Argent => vec![Felt::ZERO, private_key.verifying_key().scalar(), Felt::ONE],
     };
 
     get_contract_address(salt, class_hash, &calldata, Felt::ZERO)

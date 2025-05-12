@@ -1,9 +1,10 @@
 use crate::common::assertions::ClassHashAssert;
+use crate::common::get_contracts;
 use crate::common::state::create_cached_state;
 use crate::common::{call_contract, deploy_wrapper};
-use crate::common::{felt_selector_from_name, get_contracts};
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::get_class_hash::get_class_hash;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::selector_from_name;
 use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
 
@@ -46,7 +47,7 @@ fn get_class_hash_upgrade() {
         .unwrap()
         .unwrap_success();
 
-    let selector = felt_selector_from_name("upgrade");
+    let selector = selector_from_name("upgrade");
     call_contract(
         &mut cached_state,
         &mut cheatnet_state,

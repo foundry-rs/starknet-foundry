@@ -6,6 +6,7 @@ pub mod l1_handler;
 pub mod contract_class;
 pub mod storage;
 pub mod execution_info;
+pub mod erc20;
 pub mod message_to_l1;
 pub mod generate_random_felt;
 pub mod generate_arg;

@@ -69,6 +69,7 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
 
     let workspace_root = &scarb_metadata.workspace.root;
     let cache_dir = workspace_root.join(CACHE_DIR);
+    let trace_verbosity = args.trace_verbosity;
 
     for package in packages {
         env::set_current_dir(&package.root)?;
@@ -81,7 +82,8 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
             &artifacts_dir_path,
         )?;
 
-        let tests_file_summaries = run_for_package(args, &mut block_number_map).await?;
+        let tests_file_summaries =
+            run_for_package(args, &mut block_number_map, trace_verbosity).await?;
 
         all_failed_tests.extend(extract_failed_tests(tests_file_summaries));
     }

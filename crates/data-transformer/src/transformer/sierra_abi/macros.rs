@@ -1,6 +1,7 @@
 use super::data_representation::{AllowedCalldataArgument, CalldataArrayMacro};
-use super::parsing::{parse_expression, parse_inline_macro};
+use super::parsing::parse_inline_macro;
 use super::{SupportedCalldataKind, build_representation};
+use crate::shared::parsing::parse_expression;
 use anyhow::{Context, Result, bail};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::TypedSyntaxNode;

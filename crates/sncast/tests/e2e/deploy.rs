@@ -17,7 +17,7 @@ use sncast::AccountType;
 use sncast::helpers::constants::OZ_CLASS_HASH;
 use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Deploy;
-use starknet_types_core::felt::Felt;
+use starknet_types_core::felt::{Felt, NonZeroFelt};
 use tempfile::tempdir;
 use test_case::test_case;
 
@@ -63,7 +63,7 @@ async fn test_happy_case_human_readable() {
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
 #[test_case(sncast::helpers::constants::ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
-// TODO(#3089)
+// TODO(#3118)
 // #[test_case(sncast::helpers::constants::BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
 async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
@@ -94,16 +94,15 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     assert!(matches!(receipt, Deploy(_)));
 }
 
-// TODO(#3100)
-// #[test_case(FeeArgs{
-//     max_fee: Some(NonZeroFelt::try_from(Felt::from(1000000000000000000000000)).unwrap()),
-//     l1_data_gas: None,
-//     l1_data_gas_price:  None,
-//     l1_gas:  None,
-//     l1_gas_price:  None,
-//     l2_gas:  None,
-//     l2_gas_price:  None,
-// }; "max_fee")]
+#[test_case(FeeArgs{
+    max_fee: Some(NonZeroFelt::try_from(Felt::from(1_000_000_000_000_000_000_000_000_u128)).unwrap()),
+    l1_data_gas: None,
+    l1_data_gas_price:  None,
+    l1_gas:  None,
+    l1_gas_price:  None,
+    l2_gas:  None,
+    l2_gas_price:  None,
+}; "max_fee")]
 #[test_case(FeeArgs{
     max_fee: None,
     l1_data_gas: Some(100_000),

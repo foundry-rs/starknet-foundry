@@ -124,7 +124,7 @@ where
 fn result_message(any_test_result: &AnyTestCaseSummary) -> String {
     if let Some(msg) = any_test_result.msg() {
         if any_test_result.is_passed() {
-            return format!("\n\nSuccess data:{msg}");
+            return format!("\n\n{msg}");
         }
         if any_test_result.is_failed() {
             return format!("\n\nFailure data:{msg}");

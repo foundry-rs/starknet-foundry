@@ -1,4 +1,5 @@
 use anyhow::Result;
+use forge_runner::debugging::TraceVerbosity;
 use forge_runner::{
     TestCaseFilter,
     forge_config::ForgeConfig,
@@ -23,6 +24,7 @@ pub async fn run_for_test_target(
     tests: TestTargetWithResolvedConfig,
     forge_config: Arc<ForgeConfig>,
     tests_filter: &impl TestCaseFilter,
+    trace_verbosity: Option<TraceVerbosity>,
 ) -> Result<TestTargetRunResult> {
     let casm_program = tests.casm_program.clone();
 
@@ -55,6 +57,7 @@ pub async fn run_for_test_target(
             forge_config.clone(),
             tests.sierra_program_path.clone(),
             send.clone(),
+            trace_verbosity,
         ));
     }
 

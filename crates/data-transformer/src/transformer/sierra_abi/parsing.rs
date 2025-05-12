@@ -1,40 +1,11 @@
 use anyhow::{Result, bail};
-use cairo_lang_diagnostics::DiagnosticsBuilder;
-use cairo_lang_filesystem::ids::{FileKind, FileLongId, VirtualFile};
-use cairo_lang_parser::parser::Parser;
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::Terminal;
 use cairo_lang_syntax::node::ast::{
     ArgClause, ArgList, Expr, ExprInlineMacro, Modifier, PathSegment, PathSegment::Simple,
     WrappedArgList,
 };
-use cairo_lang_utils::Intern;
 use itertools::Itertools;
-
-pub fn parse_expression(source: &str, db: &SimpleParserDatabase) -> Result<Expr> {
-    let file = FileLongId::Virtual(VirtualFile {
-        parent: None,
-        name: "parser_input".into(),
-        content: source.to_string().into(),
-        code_mappings: [].into(),
-        kind: FileKind::Expr,
-    })
-    .intern(db);
-
-    let mut diagnostics = DiagnosticsBuilder::default();
-    let expression = Parser::parse_file_expr(db, &mut diagnostics, file, source);
-    let diagnostics = diagnostics.build();
-
-    if diagnostics.check_error_free().is_err() {
-        bail!(
-            "Invalid Cairo expression found in input calldata \"{}\":\n{}",
-            source,
-            diagnostics.format(db)
-        )
-    }
-
-    Ok(expression)
-}
 
 fn modifier_syntax_token(item: &Modifier) -> &'static str {
     match item {

@@ -30,7 +30,8 @@ $ sncast \
 
 ```shell
 command: call
-response: [0x0, 0x0]
+response: 0_u256
+response_raw: [0x0, 0x0]
 ```
 </details>
 <br>
@@ -56,6 +57,7 @@ $ sncast call \
 
 ```shell
 command: call
-response: [0x0, 0x0]
+response: 0_u256
+response_raw: [0x0, 0x0]
 ```
 </details>

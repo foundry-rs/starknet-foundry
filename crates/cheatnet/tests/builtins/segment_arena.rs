@@ -1,6 +1,7 @@
 use crate::common::assertions::assert_success;
 use crate::common::call_contract;
-use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
+use crate::common::{deploy_contract, state::create_cached_state};
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::selector_from_name;
 use cheatnet::state::CheatnetState;
 
 #[test]
@@ -14,7 +15,7 @@ fn segment_arena_simple() {
         "SegmentArenaUser",
         &[],
     );
-    let selector = felt_selector_from_name("interface_function");
+    let selector = selector_from_name("interface_function");
     let output = call_contract(
         &mut cached_state,
         &mut cheatnet_state,

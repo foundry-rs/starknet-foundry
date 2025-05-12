@@ -8,7 +8,7 @@ struct RecursiveCall {
 
 #[starknet::interface]
 trait RecursiveCaller<T> {
-    fn execute_calls(self: @T, calls: Array<RecursiveCall>);
+    fn execute_calls(self: @T, calls: Array<RecursiveCall>) -> Array<RecursiveCall>;
 }
 
 #[starknet::interface]
@@ -34,7 +34,9 @@ mod SimpleContract {
 
     #[abi(embed_v0)]
     impl RecursiveCallerImpl of RecursiveCaller<ContractState> {
-        fn execute_calls(self: @ContractState, calls: Array<RecursiveCall>) {
+        fn execute_calls(
+            self: @ContractState, calls: Array<RecursiveCall>,
+        ) -> Array<RecursiveCall> {
             let mut i = 0;
             while i < calls.len() {
                 let serviced_call = calls.at(i);
@@ -43,7 +45,9 @@ mod SimpleContract {
                 }
                     .execute_calls(serviced_call.payload.clone());
                 i = i + 1;
-            }
+            };
+
+            calls
         }
     }
 

@@ -10,6 +10,7 @@ Currently, those attributes are supported:
 - `#[available_gas]`
 - `#[fork]`
 - `#[fuzzer]`
+- `#[disable_predeployed_contracts]`
 
 > 📝 **Note**
 >
@@ -152,3 +153,7 @@ And will be filled in with default values in that case (default `runs` value is 
 >
 > Please note, that the test function needs to have some parameters in order for fuzzer to have something to fuzz.
 > Otherwise it will fail to execute and crash the runner. 
+
+### `#[disable_predeployed_contracts]`
+
+Disables the default predeployment of default contracts (currently only STRK token) in the test case.

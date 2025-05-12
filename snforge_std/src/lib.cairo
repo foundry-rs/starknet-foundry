@@ -27,6 +27,12 @@ pub use cheatcodes::storage::store;
 pub use cheatcodes::storage::load;
 pub use cheatcodes::storage::map_entry_address;
 
+pub use cheatcodes::erc20::set_balance;
+pub use cheatcodes::erc20::Token;
+pub use cheatcodes::erc20::TokenImpl;
+pub use cheatcodes::erc20::TokenTrait;
+pub use cheatcodes::erc20::CustomToken;
+
 pub use cheatcodes::CheatSpan;
 pub use cheatcodes::ReplaceBytecodeError;
 pub use cheatcodes::test_address;

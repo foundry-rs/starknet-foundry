@@ -32,7 +32,16 @@ pub trait CommandResponse: Serialize {}
 pub struct CallResponse {
     pub response: Vec<Felt>,
 }
+
 impl CommandResponse for CallResponse {}
+
+#[derive(Serialize, Clone)]
+pub struct TransformedCallResponse {
+    pub response: String,
+    pub response_raw: Vec<Felt>,
+}
+
+impl CommandResponse for TransformedCallResponse {}
 
 #[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct InvokeResponse {

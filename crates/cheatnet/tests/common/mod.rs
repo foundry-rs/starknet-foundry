@@ -287,7 +287,7 @@ pub fn call_contract_raw(
 }
 
 #[must_use]
-pub fn felt_selector_from_name(name: &str) -> EntryPointSelector {
+pub fn selector_from_name(name: &str) -> EntryPointSelector {
     let selector = get_selector_from_name(name).unwrap();
     selector.into_()
 }
