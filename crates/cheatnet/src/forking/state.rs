@@ -248,11 +248,15 @@ impl StateReader for ForkStateReader {
                     "entry_points_by_type": flattened_class.entry_points_by_type
                 });
 
+                let sierra_version =
+                    SierraVersion::extract_from_program(&flattened_class.sierra_program)
+                        .expect("Unable to extract Sierra version from Sierra program");
+
                 match compile_sierra::<String>(&sierra_contract_class, &SierraType::Contract) {
                     Ok(casm_contract_class_raw) => Ok(RunnableCompiledClass::V1(
                         CompiledClassV1::try_from_json_string(
                             &casm_contract_class_raw,
-                            SierraVersion::LATEST,
+                            sierra_version,
                         )
                         .expect("Unable to create RunnableCompiledClass::V1"),
                     )),

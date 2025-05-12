@@ -7,6 +7,7 @@ use crate::{
     state::ExtendedStateReader,
 };
 use conversions::{felt::FromShortString, string::TryFromHexStr};
+use starknet_api::contract_class::SierraVersion;
 use starknet_api::{core::ContractAddress, state::StorageKey};
 use starknet_types_core::felt::Felt;
 
@@ -27,10 +28,10 @@ pub fn deploy_strk_token(state_reader: &mut ExtendedStateReader) {
         .address_to_class_hash
         .insert(strk_contract_address, strk_class_hash);
 
-    state_reader
-        .dict_state_reader
-        .class_hash_to_class
-        .insert(strk_class_hash, contract_class(STRK_ERC20_CASM));
+    state_reader.dict_state_reader.class_hash_to_class.insert(
+        strk_class_hash,
+        contract_class(STRK_ERC20_CASM, SierraVersion::new(1, 7, 0)),
+    );
 
     let recipient = generate_random_felt();
     let recipient_balance_low_address = map_entry_address("ERC20_balances", &[recipient]);
