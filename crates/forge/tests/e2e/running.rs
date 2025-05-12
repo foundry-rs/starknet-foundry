@@ -2,7 +2,7 @@ use super::common::runner::{get_current_branch, get_remote_url, setup_package, t
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
-use shared::test_utils::output_assert::{assert_stdout, assert_stdout_contains};
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout, assert_stdout_contains};
 use std::{fs, str::FromStr};
 use test_utils::tempdir_with_tool_versions;
 use toml_edit::{DocumentMut, value};
@@ -770,6 +770,7 @@ fn should_panic() {
 }
 
 #[test]
+#[ignore = "TODO(#3322) restore the asserted message to be proper test output and not `ERROR` after there exists a previous plugin version compatible with changes from #3027"]
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
@@ -779,21 +780,55 @@ fn incompatible_snforge_std_version_warning() {
         .parse::<DocumentMut>()
         .unwrap();
     scarb_toml["dev-dependencies"]["snforge_std"] = value("0.34.1");
-    // TODO(#3069)
     scarb_toml["dev-dependencies"]["snforge_scarb_plugin"] = value("0.34.1");
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
     let output = test_runner(&temp).assert().failure();
 
-    // TODO(#3322) restore the asserted message to be proper test output and not `ERROR`
-    //  after there exist a previous plugin version compatible with changes from #3027
     assert_stdout_contains(
         output,
         indoc! {r"
         [WARNING] Package snforge_std version does not meet the recommended version requirement ^0.[..], [..]
         [..]Compiling[..]
         [..]Finished[..]
-        [ERROR] Malformed return data : Error extracting return data..
+
+        Collected 2 test(s) from steps package
+        Running 2 test(s) from src/
+        [PASS] steps::tests::steps_less_than_10000000 [..]
+        [FAIL] steps::tests::steps_more_than_10000000
+
+        Failure data:
+            Could not reach the end of the program. RunResources has no remaining steps.
+            Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps
+
+        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+
+        Failures:
+            steps::tests::steps_more_than_10000000
+        "},
+    );
+}
+
+#[test]
+fn incompatible_snforge_std_version_error() {
+    let temp = setup_package("steps");
+    let manifest_path = temp.child("Scarb.toml");
+
+    let mut scarb_toml = fs::read_to_string(&manifest_path)
+        .unwrap()
+        .parse::<DocumentMut>()
+        .unwrap();
+    scarb_toml["dev-dependencies"]["snforge_std"] = value("0.42.0");
+    scarb_toml["dev-dependencies"]["snforge_scarb_plugin"] = value("0.42.0");
+    manifest_path.write_str(&scarb_toml.to_string()).unwrap();
+
+    let output = test_runner(&temp).assert().failure();
+
+    // TODO Update this to 0.44.0 after it has been released
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [ERROR] Package snforge_std version does not meet the minimum required version >=0.43.0. Please upgrade snforge_std in Scarb.toml
         "},
     );
 }
