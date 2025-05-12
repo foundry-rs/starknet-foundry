@@ -1,5 +1,6 @@
 use super::hints::hints_by_representation;
-use crate::running::copied_code::{finalize_execution, prepare_call_arguments, run_entry_point};
+use crate::running::copied_code::run_entry_point;
+use crate::running::execution::finalize_execution;
 use crate::running::setup::{
     VmExecutionContext, build_test_call_and_entry_point, entry_point_initial_budget,
     initialize_execution_context,
@@ -7,6 +8,7 @@ use crate::running::setup::{
 use crate::{forge_config::ForgeTrackedResource, package_tests::TestDetails};
 use anyhow::Result;
 use blockifier::execution::contract_class::TrackedResource;
+use blockifier::execution::entry_point_execution::prepare_call_arguments;
 use blockifier::state::{cached_state::CachedState, state_api::StateReader};
 use cheatnet::runtime_extensions::forge_config_extension::{
     ForgeConfigExtension, config::RawForgeConfig,
@@ -114,13 +116,7 @@ pub fn run_config_pass(
     let entry_point_initial_budget =
         entry_point_initial_budget(&forge_config_runtime.extended_runtime.hint_handler);
     let args = prepare_call_arguments(
-        &forge_config_runtime
-            .extended_runtime
-            .hint_handler
-            .base
-            .call
-            .clone()
-            .into(),
+        &forge_config_runtime.extended_runtime.hint_handler.base.call,
         &mut runner,
         initial_syscall_ptr,
         &mut forge_config_runtime

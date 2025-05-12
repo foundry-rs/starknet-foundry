@@ -1,9 +1,9 @@
 // TODO(#3293) Remove this file once the copied code is upstreamed to blockifier.
 //! Module containing copied code to be upstreamed to blockifier
 
-use blockifier::execution::call_info::{CallExecution, CallInfo};
+use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::{EntryPointV1, TrackedResource};
-use blockifier::execution::entry_point::{CallEntryPoint, EntryPointExecutionResult};
+use blockifier::execution::entry_point::EntryPointExecutionResult;
 use blockifier::execution::entry_point_execution::CallResult;
 use blockifier::execution::errors::{
     EntryPointExecutionError, PostExecutionError, PreExecutionError,
@@ -29,11 +29,11 @@ use starknet_types_core::felt::Felt;
 #[allow(clippy::needless_pass_by_value)]
 // Reason copied: Signature change
 /// Runs the runner from the given PC.
-pub(crate) fn run_entry_point(
+pub(crate) fn run_entry_point<HP: HintProcessor>(
     runner: &mut CairoRunner,
     // Modified code
     // hint_processor: &mut SyscallHintProcessor<'_>,
-    hint_processor: &mut dyn HintProcessor,
+    hint_processor: &mut HP,
     entry_point: EntryPointV1,
     args: Args,
     program_segment_size: usize,
@@ -172,18 +172,11 @@ pub(crate) fn prepare_program_extra_data(
     Ok(program_extra_data_length)
 }
 
-// Reason copied: Signature change and modified code
-pub fn finalize_execution(
-    // Modified code
-    // mut runner: CairoRunner,
+pub fn finalize_runner(
     runner: &mut CairoRunner,
-    // Modified code
-    // mut syscall_handler: SyscallHintProcessor<'_>,
-    syscall_handler: &mut SyscallHintProcessor<'_>,
     n_total_args: usize,
     program_extra_data_length: usize,
-    tracked_resource: TrackedResource,
-) -> Result<CallInfo, PostExecutionError> {
+) -> Result<(), PostExecutionError> {
     // Close memory holes in segments (OS code touches those memory cells, we simulate it).
     let program_start_ptr = runner
         .program_base
@@ -201,13 +194,15 @@ pub fn finalize_execution(
     runner
         .vm
         .mark_address_range_as_accessed(args_ptr, n_total_args)?;
-    syscall_handler
-        .read_only_segments
-        .mark_as_accessed(runner)?;
+    Ok(())
+}
 
-    let call_result = get_call_result(runner, syscall_handler, &tracked_resource)?;
-
-    let vm_resources_without_inner_calls = match tracked_resource {
+pub fn extract_vm_resources(
+    runner: &CairoRunner,
+    syscall_handler: &SyscallHintProcessor<'_>,
+    tracked_resource: TrackedResource,
+) -> Result<ExecutionResources, PostExecutionError> {
+    match tracked_resource {
         TrackedResource::CairoSteps => {
             // Take into account the resources of the current call, without inner calls.
             // Has to happen after marking holes in segments as accessed.
@@ -225,38 +220,22 @@ pub fn finalize_execution(
             // Take into account the syscall resources of the current call.
             vm_resources_without_inner_calls += &versioned_constants
                 .get_additional_os_syscall_resources(&syscall_handler.syscalls_usage);
-            vm_resources_without_inner_calls
+            Ok(vm_resources_without_inner_calls)
         }
-        TrackedResource::SierraGas => ExecutionResources::default(),
-    };
+        TrackedResource::SierraGas => Ok(ExecutionResources::default()),
+    }
+}
 
-    syscall_handler.finalize();
-
-    let vm_resources = &vm_resources_without_inner_calls
-        + &CallInfo::summarize_vm_resources(syscall_handler.base.inner_calls.iter());
-    let syscall_handler_base = &syscall_handler.base;
-    Ok(CallInfo {
-        call: syscall_handler_base.call.clone().into(),
-        execution: CallExecution {
-            retdata: call_result.retdata,
-            events: syscall_handler_base.events.clone(),
-            l2_to_l1_messages: syscall_handler_base.l2_to_l1_messages.clone(),
-            failed: call_result.failed,
-            gas_consumed: call_result.gas_consumed,
-        },
-        inner_calls: syscall_handler_base.inner_calls.clone(),
-        tracked_resource,
-        resources: vm_resources,
-        storage_read_values: syscall_handler_base.read_values.clone(),
-        accessed_storage_keys: syscall_handler_base.accessed_keys.clone(),
-        read_class_hash_values: syscall_handler_base.read_class_hash_values.clone(),
-        accessed_contract_addresses: syscall_handler_base.accessed_contract_addresses.clone(),
-    })
+pub fn total_vm_resources(
+    vm_resources_without_inner_calls: &ExecutionResources,
+    inner_calls: &[CallInfo],
+) -> ExecutionResources {
+    vm_resources_without_inner_calls + &CallInfo::summarize_vm_resources(inner_calls.iter())
 }
 
 #[allow(clippy::trivially_copy_pass_by_ref)]
 // Reason copied: Required by `finalize_execution`
-fn get_call_result(
+pub fn get_call_result(
     runner: &CairoRunner,
     syscall_handler: &SyscallHintProcessor<'_>,
     tracked_resource: &TrackedResource,
@@ -309,75 +288,4 @@ fn get_call_result(
         retdata: read_execution_retdata(runner, retdata_size, retdata_start)?,
         gas_consumed,
     })
-}
-
-#[allow(unused_variables)]
-// Reason copied: Removed code for test function arguments
-pub(crate) fn prepare_call_arguments(
-    call: &CallEntryPoint,
-    runner: &mut CairoRunner,
-    initial_syscall_ptr: Relocatable,
-    read_only_segments: &mut ReadOnlySegments,
-    entrypoint: &EntryPointV1,
-    entry_point_initial_budget: u64,
-) -> Result<Args, PreExecutionError> {
-    let mut args: Args = vec![];
-
-    // Push builtins.
-    for builtin_name in &entrypoint.builtins {
-        if let Some(builtin) = runner
-            .vm
-            .get_builtin_runners()
-            .iter()
-            .find(|builtin| builtin.name() == *builtin_name)
-        {
-            args.extend(builtin.initial_stack().into_iter().map(CairoArg::Single));
-            continue;
-        }
-        if builtin_name == &BuiltinName::segment_arena {
-            let segment_arena = runner.vm.add_memory_segment();
-
-            // Write into segment_arena.
-            let mut ptr = segment_arena;
-            let info_segment = runner.vm.add_memory_segment();
-            let n_constructed = Felt::default();
-            let n_destructed = Felt::default();
-            write_maybe_relocatable(&mut runner.vm, &mut ptr, info_segment)?;
-            write_felt(&mut runner.vm, &mut ptr, n_constructed)?;
-            write_felt(&mut runner.vm, &mut ptr, n_destructed)?;
-
-            args.push(CairoArg::Single(MaybeRelocatable::from(ptr)));
-            continue;
-        }
-        return Err(PreExecutionError::InvalidBuiltin(*builtin_name));
-    }
-    // Pre-charge entry point's initial budget to ensure sufficient gas for executing a minimal
-    // entry point code. When redepositing is used, the entry point is aware of this pre-charge
-    // and adjusts the gas counter accordingly if a smaller amount of gas is required.
-    let call_initial_gas = call
-        .initial_gas
-        .checked_sub(entry_point_initial_budget)
-        .ok_or(PreExecutionError::InsufficientEntryPointGas)?;
-    // Push gas counter.
-    args.push(CairoArg::Single(MaybeRelocatable::from(Felt::from(
-        call_initial_gas,
-    ))));
-    // Push syscall ptr.
-    args.push(CairoArg::Single(MaybeRelocatable::from(
-        initial_syscall_ptr,
-    )));
-
-    // Prepare calldata arguments.
-    let calldata = &call.calldata.0;
-    let calldata: Vec<MaybeRelocatable> = calldata
-        .iter()
-        .map(|&arg| MaybeRelocatable::from(arg))
-        .collect();
-
-    let calldata_start_ptr = read_only_segments.allocate(&mut runner.vm, &calldata)?;
-    let calldata_end_ptr = MaybeRelocatable::from((calldata_start_ptr + calldata.len())?);
-    args.push(CairoArg::Single(MaybeRelocatable::from(calldata_start_ptr)));
-    args.push(CairoArg::Single(calldata_end_ptr));
-
-    Ok(args)
 }
