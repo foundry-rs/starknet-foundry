@@ -634,7 +634,7 @@ async fn test_braavos_disabled() {
         "--accounts-file",
         &accounts_json_path,
         "--account",
-        "braavos",
+        "braavos_incompatible",
         "declare",
         "--url",
         URL,
@@ -649,7 +649,7 @@ async fn test_braavos_disabled() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        Error: Using Braavos accounts is temporarily disabled because they don't yet work with starknet 0.13.5.
+        Error: Using incompatible Braavos accounts is disabled because they don't work with starknet 0.13.5.
             Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
         "},
     );

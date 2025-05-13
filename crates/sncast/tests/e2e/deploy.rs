@@ -63,8 +63,7 @@ async fn test_happy_case_human_readable() {
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
 #[test_case(sncast::helpers::constants::ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
-// TODO(#3118)
-// #[test_case(sncast::helpers::constants::BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
+#[test_case(sncast::helpers::constants::BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
 async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let tempdir = create_and_deploy_account(class_hash, account_type).await;
@@ -372,7 +371,7 @@ async fn test_braavos_disabled() {
         "--accounts-file",
         &accounts_json_path,
         "--account",
-        "braavos",
+        "braavos_incompatible",
         "deploy",
         "--url",
         URL,
@@ -386,7 +385,7 @@ async fn test_braavos_disabled() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        Error: Using Braavos accounts is temporarily disabled because they don't yet work with starknet 0.13.5.
+        Error: Using incompatible Braavos accounts is disabled because they don't work with starknet 0.13.5.
             Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
         "},
     );

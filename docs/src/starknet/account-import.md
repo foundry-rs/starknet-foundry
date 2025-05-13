@@ -1,7 +1,6 @@
 # Importing Accounts
 
-<!-- TODO(#3118): Add Braavos integration once it is restored. -->
-You can export your private key from wallet (Argent) and import it into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default).
+You can export your private key from wallet (Argent, Braavos) and import it into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default).
 
 > ⚠️ **Warning**
 >
@@ -41,9 +40,7 @@ This section shows how to export your private key from specific wallets.
 <br/>
 <img src="./img/argent_export_5.png" width="300"/>
 
-
-<!-- TODO(#3118): Uncomment once integration is restored  -->
-<!-- #### Braavos
+#### Braavos
 
 1. Open the Braavos app > Wallet settings.
 <br/>
@@ -68,7 +65,7 @@ This section shows how to export your private key from specific wallets.
 5. Copy your private key.
 <br/>
 <br/>
-<img src="./img/braavos_export_5.png" width="300"/> -->
+<img src="./img/braavos_export_5.png" width="300"/>
 
 ## Importing an Account
 
@@ -127,8 +124,7 @@ $ sncast \
     --type argent
 ```
 
-<!-- TODO(#3118): Uncomment once integration is restored  -->
-<!-- #### Braavos
+#### Braavos
 
 To import Braavos account, set the `--type` flag to `braavos`.
 
@@ -140,7 +136,7 @@ $ sncast \
     --address 0x1 \
     --private-key 0x2 \
     --type braavos
-``` -->
+```
 
 > ⚠️ **Warning**
 > Importing braavos accounts is currently disabled.
