@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Fixed
+
+- Bug that caused incorrect gas tracking for contracts using Sierra version less than `1.7.0` when `sierra-gas` was passed as the `tracked-resource`
+
 ## [0.43.0] - 2025-05-09
 
 ### Forge
