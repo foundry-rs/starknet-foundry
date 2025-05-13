@@ -712,18 +712,15 @@ fn should_panic() {
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected_multiple
 
         Failure data:
-            Expected to panic but didn't
+            Expected to panic, but no panic occurred
             Expected panic data:  [0x70616e6963206d657373616765, 0x7365636f6e64206d657373616765] (panic message, second message)
 
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt
 
         Failure data:
-            Expected to panic but didn't
+            Expected to panic, but no panic occurred
 
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_no_data (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
-
-        Success data:
-            0x0 ('')
 
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_check_data (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_not_matching_suffix
@@ -746,7 +743,7 @@ fn should_panic() {
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
 
         Failure data:
-            Expected to panic but didn't
+            Expected to panic, but no panic occurred
             Expected panic data:  [0x70616e6963206d657373616765] (panic message)
 
         [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_with_non_matching_data
@@ -931,7 +928,7 @@ fn call_nonexistent_selector() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_7_1"), ignore)]
+#[cfg_attr(not(feature = "scarb_2_9_1"), ignore)]
 fn sierra_gas_with_older_scarb() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)
@@ -1023,6 +1020,33 @@ fn exact_printing_mixed() {
 
         Failures:
             deterministic_output::test::first_test_fail_x
+        "},
+    );
+}
+
+#[test]
+fn dispatchers() {
+    let temp = setup_package("dispatchers");
+
+    let output = test_runner(&temp).assert().code(1);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        Collected 4 test(s) from dispatchers package
+        Running 0 test(s) from src/
+        Running 4 test(s) from tests/
+        [FAIL] dispatchers_integrationtest::test::test_unrecoverable_not_possible_to_handle
+        Failure data:
+        Got an exception while executing a hint: Requested contract address [..] is not deployed.
+
+        [PASS] dispatchers_integrationtest::test::test_error_handled_in_contract [..]
+        [PASS] dispatchers_integrationtest::test::test_handle_and_panic [..]
+        [PASS] dispatchers_integrationtest::test::test_handle_recoverable_in_test [..]
+        Tests: 3 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+
+        Failures:
+            dispatchers_integrationtest::test::test_unrecoverable_not_possible_to_handle
         "},
     );
 }

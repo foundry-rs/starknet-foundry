@@ -1,0 +1,24 @@
+[package]
+name = "dispatchers"
+version = "0.1.0"
+edition = "2024_07"
+
+# See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
+
+[dependencies]
+starknet = "2.9.4"
+assert_macros = "2.9.4"
+
+[dev-dependencies]
+snforge_std = { path = "../../../../../snforge_std" }
+
+[[target.starknet-contract]]
+sierra = true
+
+[scripts]
+test = "snforge test"
+
+[profile.dev.cairo]
+unstable-add-statements-functions-debug-info = true
+unstable-add-statements-code-locations-debug-info = true
+panic-backtrace = true

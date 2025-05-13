@@ -20,7 +20,7 @@ pub const UDC_ADDRESS: Felt =
 pub const OZ_CLASS_HASH: Felt =
     felt!("0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564");
 pub const ARGENT_CLASS_HASH: Felt =
-    felt!("0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f");
+    felt!("0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f"); // v0.4.0
 
 pub const BRAAVOS_CLASS_HASH: Felt =
     felt!("0x00816dd0297efc55dc1e7559020a3a825e81ef734b558f03c83325d4da7e6253");

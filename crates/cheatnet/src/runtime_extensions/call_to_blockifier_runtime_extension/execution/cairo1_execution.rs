@@ -1,6 +1,6 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::{
-    ContractClassEntryPointExecutionResult, EntryPointExecutionErrorWithTrace,
+    CallInfoWithExecutionData, ContractClassEntryPointExecutionResult,
     extract_trace_and_register_errors,
 };
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
@@ -10,9 +10,6 @@ use blockifier::execution::entry_point::ExecutableCallEntryPoint;
 use blockifier::execution::entry_point_execution::{
     ExecutionRunnerMode, VmExecutionContext, finalize_execution,
     initialize_execution_context_with_runner_mode, prepare_call_arguments,
-};
-use blockifier::execution::stack_trace::{
-    Cairo1RevertHeader, extract_trailing_cairo1_revert_trace,
 };
 use blockifier::{
     execution::{
@@ -29,7 +26,7 @@ use cairo_vm::{
 use runtime::{ExtendedRuntime, StarknetRuntime};
 
 // blockifier/src/execution/cairo1_execution.rs:48 (execute_entry_point_call)
-pub fn execute_entry_point_call_cairo1(
+pub(crate) fn execute_entry_point_call_cairo1(
     call: ExecutableCallEntryPoint,
     compiled_class_v1: &CompiledClassV1,
     state: &mut dyn State,
@@ -97,7 +94,7 @@ pub fn execute_entry_point_call_cairo1(
     })?;
 
     let trace = get_relocated_vm_trace(&mut runner);
-    let syscall_usage_map = cheatable_runtime
+    let syscall_usage = cheatable_runtime
         .extended_runtime
         .hint_handler
         .syscalls_usage
@@ -126,19 +123,13 @@ pub fn execute_entry_point_call_cairo1(
             .extension
             .cheatnet_state
             .register_error(class_hash, pcs);
-
-        return Err(EntryPointExecutionErrorWithTrace {
-            source: EntryPointExecutionError::ExecutionFailed {
-                error_trace: extract_trailing_cairo1_revert_trace(
-                    &call_info,
-                    Cairo1RevertHeader::Execution,
-                ),
-            },
-            trace: Some(trace),
-        });
     }
 
-    Ok((call_info, syscall_usage_map, Some(trace)))
+    Ok(CallInfoWithExecutionData {
+        call_info,
+        syscall_usage,
+        vm_trace: Some(trace),
+    })
     // endregion
 }
 

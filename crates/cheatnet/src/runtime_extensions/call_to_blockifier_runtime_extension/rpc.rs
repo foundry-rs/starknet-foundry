@@ -14,9 +14,7 @@ use blockifier::execution::{
 };
 use blockifier::state::errors::StateError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use conversions::{
-    IntoConv, byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr,
-};
+use conversions::{byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr};
 use shared::utils::build_readable_text;
 use starknet_api::execution_resources::GasAmount;
 use starknet_api::{
@@ -141,19 +139,23 @@ impl CallResult {
         starknet_identifier: &AddressOrClassHash,
     ) -> Self {
         match result {
-            Ok(call_info) => Self::from_success(call_info),
+            Ok(call_info) => Self::from_non_error(call_info),
             Err(err) => Self::from_err(err, starknet_identifier),
         }
     }
 
     #[must_use]
-    pub fn from_success(call_info: &CallInfo) -> Self {
-        let raw_return_data = &call_info.execution.retdata.0;
+    pub fn from_non_error(call_info: &CallInfo) -> Self {
+        let return_data = &call_info.execution.retdata.0;
 
-        let return_data = raw_return_data.iter().map(|data| (*data).into_()).collect();
+        if call_info.execution.failed {
+            return CallResult::Failure(CallFailure::Panic {
+                panic_data: return_data.clone(),
+            });
+        }
 
         CallResult::Success {
-            ret_data: return_data,
+            ret_data: return_data.clone(),
         }
     }
 
@@ -206,6 +208,7 @@ pub fn call_entry_point(
         syscall_handler.base.state,
         cheatnet_state,
         syscall_handler.base.context,
+        false,
     );
 
     let result = CallResult::from_execution_result(&exec_result, starknet_identifier);
