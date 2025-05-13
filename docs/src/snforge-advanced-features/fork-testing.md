@@ -1,6 +1,8 @@
 # Fork Testing
 
-`snforge` supports testing in a forked environment. Each test can fork the state of a specified real
+`snforge` supports testing in a forked environment.
+Forking allows using state and contracts from a real instance Starknet network, including Sepolia and Mainnet.
+Each test can fork the state of a specified real
 network and perform actions on top of it.
 
 > 📝 **Note**
@@ -22,6 +24,13 @@ We first need to define the contract's interface along with all the structures u
 There are two ways of configuring a fork:
 - by specifying `url` and block-related parameters in the `#[fork(...)]` attribute
 - or by passing a fork name defined in your `Scarb.toml` to the `#[fork(...)]` attribute
+
+> 📝 **Note**
+> Using fork tests means `snforge` will make (often multiple) requests to the configured RPC URL.
+> These requests are relatively slow in comparison to standard tests.
+>
+> `snforge` can cache these requests automatically in `.snfoundry_cache` but only if `block_hash` or `block_number` is provided.
+> **Using `block_tag`, especially `"latest"` disables the caching functionality.**
 
 ### Configure a Fork in the Attribute
 
