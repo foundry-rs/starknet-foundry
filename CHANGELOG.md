@@ -7,17 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-
-
-## [0.41.0] - 2025-04-08
+## [0.43.0] - 2025-05-09
 
 ### Forge
 
+#### Added
+
+- `set_balance` cheatcode for setting an ERC20 token balance for specified contract address. The STRK token is now pre-deployed in every test by default. This can be disabled by adding `#[disable_predeployed_contracts]` attribute to test.
+- added option to display trace of contracts execution. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html)
+
 #### Changed
 
-- forge backtrace now displays the full backtrace and marks whether a function was inlined or not
-- improved display of backtrace in contract that panicked, when `panic-backtrace` is set to `true` in `Scarb.toml`.
-  As of this release, this feature is only in `scarb nightly-2025-03-27`
+- "Success data" message is no longer printed when a test using the `#[should_panic]` attribute passes
+
+### Cast
+
+#### Added
+
+- when using `sncast call` the response will be printed as a Cairo-like string representation of the return values
+
+#### Changed
+
+- The supported RPC version is now 0.8.1
+
+## [0.42.0] - 2025-04-28
+
+### Forge
+
+#### Added
+
+- Safe dispatchers can now be used inside contracts
+
+#### Changed
+
+- Minimal supported Scarb version is now `2.9.1`
+- Improved display of backtrace for contracts that panicked, when `panic-backtrace = true` in `Scarb.toml`. Without using this feature, the backtrace may be less accurate than before.
+  As of this release, this feature is available only in `scarb nightly-2025-03-27`.
+
+#### Fixed
+
+- The state correctly reverts after failed internal calls
+
+### Cast
+
+#### Fixed
+
+- Bug that prevented from passing values to `--arguments` that started with a leading minus `-` sign.
+- User is now prompted to save an imported or deployed account in `sncast` config even when using `--network` flag
+
+## [0.41.0] - 2025-04-08
 
 ### Forge
 

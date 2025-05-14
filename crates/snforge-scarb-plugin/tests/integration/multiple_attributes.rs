@@ -36,11 +36,11 @@ fn works_with_few_attributes() {
             #[snforge_internal_test_executable]
             #[__internal_config_statement]
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_config_types::AvailableGasConfig::MaxResourceBounds(
-                        snforge_std::_config_types::AvailableResourceBoundsConfig {
+                    snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
+                        snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
                             l1_gas: 0x1,
                             l1_data_gas: 0x2,
                             l2_gas: 0x3
@@ -69,11 +69,11 @@ fn works_with_few_attributes() {
             #[snforge_internal_test_executable]
             #[__internal_config_statement]
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_config_types::AvailableGasConfig::MaxResourceBounds(
-                        snforge_std::_config_types::AvailableResourceBoundsConfig {
+                    snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
+                        snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
                             l1_gas: 0x1,
                             l1_data_gas: 0x2,
                             l2_gas: 0x3
@@ -85,7 +85,7 @@ fn works_with_few_attributes() {
 
                     let mut data = array![];
 
-                    snforge_std::_config_types::ForkConfig::Named("test")
+                    snforge_std::_internals::config_types::ForkConfig::Named("test")
                         .serialize(ref data);
 
                     starknet::testing::cheatcode::<'set_config_fork'>(data.span());
@@ -148,11 +148,11 @@ fn works_with_fuzzer_config_wrapper() {
         &result,
         "
             fn empty_fn(f: felt252) {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_config_types::AvailableGasConfig::MaxResourceBounds(
-                        snforge_std::_config_types::AvailableResourceBoundsConfig {
+                    snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
+                        snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
                             l1_gas: 0xffffffffffffffff,
                             l1_data_gas: 0xffffffffffffffff,
                             l2_gas: 0x3e7
@@ -190,11 +190,11 @@ fn works_with_fuzzer_config_wrapper() {
             #[snforge_internal_test_executable]
             #[__internal_config_statement]
             fn empty_fn(f: felt252) {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_config_types::AvailableGasConfig::MaxResourceBounds(
-                        snforge_std::_config_types::AvailableResourceBoundsConfig {
+                    snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
+                        snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
                             l1_gas: 0xffffffffffffffff,
                             l1_data_gas: 0xffffffffffffffff,
                             l2_gas: 0x3e7
@@ -206,7 +206,7 @@ fn works_with_fuzzer_config_wrapper() {
 
                     let mut data = array![];
 
-                    snforge_std::_config_types::FuzzerConfig {
+                    snforge_std::_internals::config_types::FuzzerConfig {
                         seed: Option::Some(0x141),
                         runs: Option::Some(0x7b)
                     }
@@ -233,11 +233,11 @@ fn works_with_fuzzer_config_wrapper() {
             #[snforge_internal_test_executable]
             #[__internal_config_statement]
             fn empty_fn() {
-                if snforge_std::_internals::_is_config_run() {
+                if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-                    snforge_std::_config_types::AvailableGasConfig::MaxResourceBounds(
-                        snforge_std::_config_types::AvailableResourceBoundsConfig {
+                    snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
+                        snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
                             l1_gas: 0xffffffffffffffff,
                             l1_data_gas: 0xffffffffffffffff,
                             l2_gas: 0x3e7
@@ -249,7 +249,7 @@ fn works_with_fuzzer_config_wrapper() {
 
                     let mut data = array![];
 
-                    snforge_std::_config_types::FuzzerConfig {
+                    snforge_std::_internals::config_types::FuzzerConfig {
                         seed: Option::Some(0x141),
                         runs: Option::Some(0x7b)
                     }
@@ -262,7 +262,7 @@ fn works_with_fuzzer_config_wrapper() {
                     return;
                 }
                 let f: felt252 = snforge_std::fuzzable::Fuzzable::generate();
-                snforge_std::_internals::_save_fuzzer_arg(@f);
+                snforge_std::_internals::save_fuzzer_arg(@f);
                 empty_fn_actual_body(f);
             }
             #[__internal_config_statement]

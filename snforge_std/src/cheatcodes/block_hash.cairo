@@ -1,4 +1,4 @@
-use super::super::_cheatcode::execute_cheatcode_and_deserialize;
+use crate::cheatcode::execute_cheatcode_and_deserialize;
 use super::execution_info::Operation;
 use super::execution_info::CheatArguments;
 use super::CheatSpan;

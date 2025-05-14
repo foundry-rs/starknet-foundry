@@ -1,5 +1,5 @@
 use starknet::{ContractAddress, SyscallResult};
-use super::super::_cheatcode::execute_cheatcode_and_deserialize;
+use crate::cheatcode::execute_cheatcode_and_deserialize;
 
 #[derive(Drop, Clone)]
 pub struct L1Handler {

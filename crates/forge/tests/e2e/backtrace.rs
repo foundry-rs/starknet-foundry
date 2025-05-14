@@ -2,7 +2,7 @@ use super::common::runner::{setup_package, test_runner};
 use assert_fs::TempDir;
 use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::indoc;
-use shared::test_utils::output_assert::assert_stdout_contains;
+use shared::test_utils::output_assert::{AsOutput, assert_stdout_contains};
 use std::fs;
 use toml_edit::{DocumentMut, value};
 
@@ -16,7 +16,7 @@ fn test_backtrace_missing_env() {
         output,
         indoc! {
            "Failure data:
-                (0x454e545259504f494e545f4e4f545f464f554e44 ('ENTRYPOINT_NOT_FOUND'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
+            Got an exception while executing a hint: Requested contract address 0x0000000000000000000000000000000000000000000000000000000000000123 is not deployed.
             note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace"
         },
     );
@@ -34,12 +34,14 @@ fn test_backtrace() {
     assert_stdout_contains(
         output,
         indoc! {
-           "Failure data:
-                (0x454e545259504f494e545f4e4f545f464f554e44 ('ENTRYPOINT_NOT_FOUND'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
+           "
+            [WARNING] To get accurate backtrace results, it is required to use the configuration available in the latest Cairo version. For more details, please visit https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/backtrace.html
+            Failure data:
+            Got an exception while executing a hint: Requested contract address 0x0000000000000000000000000000000000000000000000000000000000000123 is not deployed.
             error occurred in contract 'InnerContract'
             stack backtrace:
                0: (inlined) backtrace_vm_error::InnerContract::inner_call
-                   at [..]lib.cairo:47:9
+                   at [..]lib.cairo:48:9
                1: (inlined) backtrace_vm_error::InnerContract::InnerContract::inner
                    at [..]lib.cairo:38:13
                2: backtrace_vm_error::InnerContract::__wrapper__InnerContract__inner
@@ -71,11 +73,11 @@ fn test_backtrace_without_inlines() {
         output,
         indoc! {
            "Failure data:
-                (0x454e545259504f494e545f4e4f545f464f554e44 ('ENTRYPOINT_NOT_FOUND'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
+            Got an exception while executing a hint: Requested contract address 0x0000000000000000000000000000000000000000000000000000000000000123 is not deployed.
             error occurred in contract 'InnerContract'
             stack backtrace:
                0: backtrace_vm_error::InnerContract::inner_call
-                   at [..]lib.cairo:47:9
+                   at [..]lib.cairo:48:9
                1: backtrace_vm_error::InnerContract::InnerContract::inner
                    at [..]lib.cairo:38:13
                2: backtrace_vm_error::InnerContract::__wrapper__InnerContract__inner
@@ -118,7 +120,7 @@ fn test_wrong_scarb_toml_configuration() {
         output,
         indoc! {
            "Failure data:
-                (0x454e545259504f494e545f4e4f545f464f554e44 ('ENTRYPOINT_NOT_FOUND'), 0x454e545259504f494e545f4641494c4544 ('ENTRYPOINT_FAILED'))
+            Got an exception while executing a hint: Requested contract address 0x0000000000000000000000000000000000000000000000000000000000000123 is not deployed.
             failed to create backtrace: perhaps the contract was compiled without the following entry in Scarb.toml under [profile.dev.cairo]:
             unstable-add-statements-code-locations-debug-info = true
 
@@ -134,14 +136,14 @@ fn test_backtrace_panic() {
     let output = test_runner(&temp)
         .env("SNFORGE_BACKTRACE", "1")
         .assert()
-        .success();
+        .failure();
 
     if cfg!(feature = "supports-panic-backtrace") {
         assert_stdout_contains(
             output,
             indoc! {
-               "Success data:
-                    0x61616161 ('aaaa')
+               "Failure data:
+                    0x417373657274206661696c6564 ('Assert failed')
                 error occurred in contract 'InnerContract'
                 stack backtrace:
                    0: (inlined) core::array::ArrayImpl::append
@@ -171,8 +173,8 @@ fn test_backtrace_panic() {
         assert_stdout_contains(
             output,
             indoc! {
-               "Success data:
-                    0x61616161 ('aaaa')
+               "Failure data:
+                    0x417373657274206661696c6564 ('Assert failed')
                 error occurred in contract 'InnerContract'
                 stack backtrace:
                    0: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
@@ -180,11 +182,7 @@ fn test_backtrace_panic() {
 
                 error occurred in contract 'OuterContract'
                 stack backtrace:
-                   0: (inlined) backtrace_panic::IInnerContractDispatcherImpl::inner
-                       at [..]lib.cairo:22:1
-                   1: (inlined) backtrace_panic::OuterContract::OuterContract::outer
-                       at [..]lib.cairo:17:13
-                   2: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+                   0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
                        at [..]lib.cairo:15:9"
             },
         );
@@ -199,14 +197,14 @@ fn test_backtrace_panic_without_inlines() {
     let output = test_runner(&temp)
         .env("SNFORGE_BACKTRACE", "1")
         .assert()
-        .success();
+        .failure();
 
     if cfg!(feature = "supports-panic-backtrace") {
         assert_stdout_contains(
             output,
             indoc! {
-               "Success data:
-                    0x61616161 ('aaaa')
+               "Failure data:
+                    0x417373657274206661696c6564 ('Assert failed')
                 error occurred in contract 'InnerContract'
                 stack backtrace:
                    0: core::array_inline_macro
@@ -222,11 +220,13 @@ fn test_backtrace_panic_without_inlines() {
 
                 error occurred in contract 'OuterContract'
                 stack backtrace:
-                   0: backtrace_panic::IInnerContractDispatcherImpl::inner
+                   0: core::starknet::SyscallResultTraitImpl::unwrap_syscall
+                       at [..]starknet.cairo:135:52
+                   1: backtrace_panic::IInnerContractDispatcherImpl::inner
                        at [..]lib.cairo:22:1
-                   1: backtrace_panic::OuterContract::OuterContract::outer
+                   2: backtrace_panic::OuterContract::OuterContract::outer
                        at [..]lib.cairo:17:13
-                   2: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+                   3: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
                        at [..]lib.cairo:15:9"
             },
         );
@@ -234,8 +234,8 @@ fn test_backtrace_panic_without_inlines() {
         assert_stdout_contains(
             output,
             indoc! {
-               "Success data:
-                    0x61616161 ('aaaa')
+               "Failure data:
+                    0x417373657274206661696c6564 ('Assert failed')
                 error occurred in contract 'InnerContract'
                 stack backtrace:
                    0: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
@@ -243,16 +243,48 @@ fn test_backtrace_panic_without_inlines() {
 
                 error occurred in contract 'OuterContract'
                 stack backtrace:
-                   0: backtrace_panic::IInnerContractDispatcherImpl::inner
-                       at [..]lib.cairo:22:1
-                   1: backtrace_panic::OuterContract::OuterContract::outer
-                       at [..]lib.cairo:17:13
-                   2: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+                   0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
                        at [..]lib.cairo:15:9"
             },
         );
     }
 }
+
+#[test]
+#[cfg_attr(not(feature = "supports-panic-backtrace"), ignore)]
+fn test_handled_error_not_display() {
+    let temp = setup_package("dispatchers");
+
+    let output = test_runner(&temp)
+        .arg("test_handle_and_panic")
+        .env("SNFORGE_BACKTRACE", "1")
+        .assert()
+        .success();
+
+    // Error from the `FailableContract` should not appear in the output
+    assert!(
+        !output
+            .as_stdout()
+            .contains("error occurred in contract 'FailableContract'")
+    );
+
+    assert_stdout_contains(
+        output,
+        indoc! {"
+            error occurred in contract 'ErrorHandler'
+            stack backtrace:
+               0: (inlined) core::array::ArrayImpl::append
+                   at [..]array.cairo:135:9
+               1: core::array_inline_macro
+                   at [..]lib.cairo:364:11
+               2: dispatchers::error_handler::ErrorHandler::ErrorHandler::catch_panic_and_fail
+                   at [..]error_handler.cairo:50:21
+               3: dispatchers::error_handler::ErrorHandler::__wrapper__ErrorHandler__catch_panic_and_fail
+                   at [..]error_handler.cairo:42:9
+        "},
+    );
+}
+
 fn without_inlines(temp_dir: &TempDir) {
     let manifest_path = temp_dir.child("Scarb.toml");
 

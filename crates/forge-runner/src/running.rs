@@ -7,7 +7,7 @@ use anyhow::{Result, ensure};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::state::cached_state::CachedState;
-use cairo_lang_runner::{Arg, RunResult, SierraCasmRunner};
+use cairo_lang_runner::{Arg, RunResultValue, SierraCasmRunner};
 use cairo_lang_sierra::extensions::NamedType;
 use cairo_lang_sierra::extensions::bitwise::BitwiseType;
 use cairo_lang_sierra::extensions::circuit::{AddModType, MulModType};
@@ -30,6 +30,7 @@ use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
+
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
     ForgeExtension, ForgeRuntime, add_resources_to_top_call, get_all_used_resources,
@@ -61,6 +62,7 @@ mod hints;
 mod syscall_handler;
 pub mod with_config;
 
+use crate::debugging::{TraceVerbosity, build_debugging_trace};
 use crate::running::syscall_handler::build_syscall_handler;
 pub use syscall_handler::has_segment_arena;
 pub use syscall_handler::syscall_handler_offset;
@@ -72,6 +74,7 @@ pub fn run_test(
     test_runner_config: Arc<TestRunnerConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
+    trace_verbosity: Option<TraceVerbosity>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -97,13 +100,14 @@ pub fn run_test(
         extract_test_case_summary(
             run_result,
             &case,
-            vec![],
             &test_runner_config.contracts_data,
             &versioned_program_path,
+            trace_verbosity,
         )
     })
 }
 
+#[expect(clippy::too_many_arguments)]
 pub(crate) fn run_fuzz_test(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
@@ -112,6 +116,7 @@ pub(crate) fn run_fuzz_test(
     send: Sender<()>,
     fuzzing_send: Sender<()>,
     rng: Arc<Mutex<StdRng>>,
+    trace_verbosity: Option<TraceVerbosity>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -138,20 +143,46 @@ pub(crate) fn run_fuzz_test(
         extract_test_case_summary(
             run_result,
             &case,
-            vec![],
             &test_runner_config.contracts_data,
             &versioned_program_path,
+            trace_verbosity,
         )
     })
 }
 
-pub struct RunResultWithInfo {
-    pub(crate) run_result: Result<RunResult, Box<CairoRunError>>,
+pub enum RunStatus {
+    Success(Vec<Felt252>),
+    Panic(Vec<Felt252>),
+}
+
+impl From<RunResultValue> for RunStatus {
+    fn from(value: RunResultValue) -> Self {
+        match value {
+            RunResultValue::Success(value) => Self::Success(value),
+            RunResultValue::Panic(value) => Self::Panic(value),
+        }
+    }
+}
+
+pub struct RunCompleted {
+    pub(crate) status: RunStatus,
     pub(crate) call_trace: Rc<RefCell<CallTrace>>,
     pub(crate) gas_used: GasVector,
     pub(crate) used_resources: UsedResources,
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
+}
+
+pub struct RunError {
+    pub(crate) error: Box<CairoRunError>,
+    pub(crate) call_trace: Rc<RefCell<CallTrace>>,
+    pub(crate) encountered_errors: EncounteredErrors,
+    pub(crate) fuzzer_args: Vec<String>,
+}
+
+pub enum RunResult {
+    Completed(Box<RunCompleted>),
+    Error(RunError),
 }
 
 #[expect(clippy::too_many_lines)]
@@ -160,7 +191,7 @@ pub fn run_test_case(
     casm_program: &AssembledProgramWithDebugInfo,
     runtime_config: &RuntimeConfig,
     fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
-) -> Result<RunResultWithInfo> {
+) -> Result<RunResult> {
     ensure!(
         case.config
             .available_gas
@@ -183,6 +214,11 @@ pub fn run_test_case(
             case.config.fork_config.as_ref(),
         )?,
     };
+
+    if !case.config.disable_predeployed_contracts {
+        state_reader.predeploy_contracts();
+    }
+
     let block_info = state_reader.get_block_info()?;
     let chain_id = state_reader.get_chain_id()?;
     let tracked_resource = TrackedResource::from(runtime_config.tracked_resource);
@@ -192,7 +228,9 @@ pub fn run_test_case(
     if let Some(max_n_steps) = runtime_config.max_n_steps {
         set_max_steps(&mut context, max_n_steps);
     }
+
     let mut cached_state = CachedState::new(state_reader);
+
     let syscall_handler = build_syscall_handler(
         &mut cached_state,
         &string_to_hint,
@@ -255,7 +293,7 @@ pub fn run_test_case(
 
                 let ap = runner.relocated_trace.as_ref().unwrap().last().unwrap().ap;
 
-                let (results_data, gas_counter) = get_results_data(
+                let results_data = get_results_data(
                     &case.test_details.return_types,
                     &runner.relocated_memory,
                     ap,
@@ -274,7 +312,7 @@ pub fn run_test_case(
 
                 update_top_call_vm_trace(&mut forge_runtime, &mut runner);
 
-                Ok((gas_counter, runner.relocated_memory, value))
+                Ok(value)
             }
             Err(err) => Err(err),
         };
@@ -287,7 +325,7 @@ pub fn run_test_case(
         .encountered_errors
         .clone();
 
-    let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
+    let call_trace = get_call_trace_ref(&mut forge_runtime);
 
     update_top_call_resources(&mut forge_runtime, &tracked_resource);
     update_top_call_l1_resources(&mut forge_runtime);
@@ -303,25 +341,27 @@ pub fn run_test_case(
     let transaction_context = get_context(&forge_runtime).tx_context.clone();
     let used_resources =
         get_all_used_resources(forge_runtime, &transaction_context, tracked_resource);
-    let gas = calculate_used_gas(
+    let gas_used = calculate_used_gas(
         &transaction_context,
         &mut cached_state,
         used_resources.clone(),
     )?;
 
-    Ok(RunResultWithInfo {
-        run_result: run_result.map(|(gas_counter, memory, value)| RunResult {
-            used_resources: used_resources.execution_resources.clone(),
-            gas_counter,
-            memory,
-            value,
-            profiling_info: None,
+    Ok(match run_result {
+        Ok(result) => RunResult::Completed(Box::from(RunCompleted {
+            status: result.into(),
+            call_trace,
+            gas_used,
+            used_resources,
+            encountered_errors,
+            fuzzer_args,
+        })),
+        Err(error) => RunResult::Error(RunError {
+            error,
+            call_trace,
+            encountered_errors,
+            fuzzer_args,
         }),
-        gas_used: gas,
-        used_resources,
-        call_trace: call_trace_ref,
-        encountered_errors,
-        fuzzer_args,
     })
 }
 
@@ -333,7 +373,7 @@ pub fn get_results_data(
     return_types: &[(GenericTypeId, i16)],
     cells: &[Option<Felt252>],
     mut ap: usize,
-) -> (Vec<(GenericTypeId, Vec<Felt252>)>, Option<Felt252>) {
+) -> Vec<(GenericTypeId, Vec<Felt252>)> {
     let mut results_data = vec![];
     for (ty, ty_size) in return_types.iter().rev() {
         let size = *ty_size as usize;
@@ -345,11 +385,10 @@ pub fn get_results_data(
     }
 
     // Handling implicits.
-    let mut gas_counter = None;
     results_data.retain_mut(|(ty, values)| {
         let generic_ty = ty;
         if *generic_ty == GasBuiltinType::ID {
-            gas_counter = Some(values.remove(0));
+            values.remove(0);
             assert!(values.is_empty());
             false
         } else {
@@ -372,73 +411,61 @@ pub fn get_results_data(
         }
     });
 
-    (results_data, gas_counter)
+    results_data
 }
 
 fn extract_test_case_summary(
-    run_result: Result<RunResultWithInfo>,
+    run_result: Result<RunResult>,
     case: &TestCaseWithResolvedConfig,
-    args: Vec<Felt>,
     contracts_data: &ContractsData,
     versioned_program_path: &Utf8Path,
+    trace_verbosity: Option<TraceVerbosity>,
 ) -> TestCaseSummary<Single> {
     match run_result {
-        Ok(result_with_info) => {
-            match result_with_info.run_result {
-                Ok(run_result) => TestCaseSummary::from_run_result_and_info(
-                    run_result,
-                    case,
-                    args,
-                    result_with_info.fuzzer_args,
-                    result_with_info.gas_used,
-                    result_with_info.used_resources,
-                    &result_with_info.call_trace,
-                    &result_with_info.encountered_errors,
-                    contracts_data,
-                    versioned_program_path,
-                ),
-                // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
-                Err(error) => {
-                    let mut message = format!(
-                        "\n    {}\n",
-                        error.to_string().replace(" Custom Hint Error: ", "\n    ")
-                    );
-                    if let CairoRunError::VirtualMachine(VirtualMachineError::UnfinishedExecution) =
-                        *error
-                    {
-                        message.push_str(
-                                "\n    Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps",
-                            );
-                    }
-                    TestCaseSummary::Failed {
-                        name: case.name.clone(),
-                        msg: Some(message).map(|msg| {
-                            add_backtrace_footer(
-                                msg,
-                                contracts_data,
-                                &result_with_info.encountered_errors,
-                            )
-                        }),
-                        arguments: args,
-                        fuzzer_args: result_with_info.fuzzer_args,
-                        test_statistics: (),
-                        debugging_trace: cfg!(feature = "debugging").then(|| {
-                            debugging::Trace::new(
-                                &result_with_info.call_trace.borrow(),
-                                contracts_data,
-                                case.name.clone(),
-                            )
-                        }),
-                    }
+        Ok(run_result) => match run_result {
+            RunResult::Completed(run_completed) => TestCaseSummary::from_run_completed(
+                *run_completed,
+                case,
+                contracts_data,
+                versioned_program_path,
+                trace_verbosity,
+            ),
+            RunResult::Error(run_error) => {
+                let mut message = format!(
+                    "\n    {}\n",
+                    run_error
+                        .error
+                        .to_string()
+                        .replace(" Custom Hint Error: ", "\n    ")
+                );
+                if let CairoRunError::VirtualMachine(VirtualMachineError::UnfinishedExecution) =
+                    *run_error.error
+                {
+                    message.push_str(
+                            "\n    Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps",
+                        );
+                }
+                TestCaseSummary::Failed {
+                    name: case.name.clone(),
+                    msg: Some(message).map(|msg| {
+                        add_backtrace_footer(msg, contracts_data, &run_error.encountered_errors)
+                    }),
+                    fuzzer_args: run_error.fuzzer_args,
+                    test_statistics: (),
+                    debugging_trace: build_debugging_trace(
+                        &run_error.call_trace.borrow(),
+                        contracts_data,
+                        trace_verbosity,
+                        case.name.clone(),
+                    ),
                 }
             }
-        }
+        },
         // `ForkStateReader.get_block_info`, `get_fork_state_reader, `calculate_used_gas` may return an error
         // `available_gas` may be specified with Scarb ~2.4
         Err(error) => TestCaseSummary::Failed {
             name: case.name.clone(),
             msg: Some(error.to_string()),
-            arguments: args,
             fuzzer_args: Vec::default(),
             test_statistics: (),
             debugging_trace: None,
