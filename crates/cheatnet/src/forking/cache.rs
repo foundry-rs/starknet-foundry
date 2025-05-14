@@ -208,10 +208,8 @@ impl ForkCache {
             .insert(contract_address, nonce);
     }
 
-    pub(crate) fn get_class_hash_at(
-        &self,
-        contract_address: &ContractAddress,
-    ) -> Option<ClassHash> {
+    #[must_use]
+    pub fn get_class_hash_at(&self, contract_address: &ContractAddress) -> Option<ClassHash> {
         self.fork_cache_content
             .class_hash_at
             .get(contract_address)

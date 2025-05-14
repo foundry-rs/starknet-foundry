@@ -712,18 +712,15 @@ fn should_panic() {
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected_multiple
 
         Failure data:
-            Expected to panic but didn't
+            Expected to panic, but no panic occurred
             Expected panic data:  [0x70616e6963206d657373616765, 0x7365636f6e64206d657373616765] (panic message, second message)
 
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt
 
         Failure data:
-            Expected to panic but didn't
+            Expected to panic, but no panic occurred
 
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_no_data (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
-
-        Success data:
-            0x0 ('')
 
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_check_data (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_not_matching_suffix
@@ -746,7 +743,7 @@ fn should_panic() {
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
 
         Failure data:
-            Expected to panic but didn't
+            Expected to panic, but no panic occurred
             Expected panic data:  [0x70616e6963206d657373616765] (panic message)
 
         [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_with_non_matching_data

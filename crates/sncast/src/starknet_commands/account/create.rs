@@ -209,7 +209,7 @@ async fn generate_account(
         Some(salt),
     );
 
-    Ok((account_json, fee_estimate.overall_fee))
+    Ok((account_json, Felt::from(fee_estimate.overall_fee)))
 }
 
 async fn get_address_and_deployment_fee<T>(

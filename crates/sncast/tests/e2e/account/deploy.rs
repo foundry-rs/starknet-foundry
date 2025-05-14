@@ -179,7 +179,6 @@ pub async fn test_valid_class_hash() {
 }
 
 #[tokio::test]
-#[ignore = "TODO(#3100)"]
 pub async fn test_valid_no_max_fee() {
     let tempdir = create_account(true, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
     let accounts_file = "accounts.json";
@@ -248,8 +247,7 @@ pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &
 }
 
 #[test_case("oz"; "open_zeppelin_account")]
-// TODO(#3089): Fails because of insufficient balance
-// #[test_case("argent"; "argent_account")]
+#[test_case("argent"; "argent_account")]
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 pub async fn test_happy_case_keystore(account_type: &str) {
