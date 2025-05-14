@@ -44,6 +44,14 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: cargo test --release --lib -p forge
+      # TODO(#3096): Remove running tests with `scarb_since_2_10`
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: "2.10.1"
+      - name: Check and lint forge templates
+        run: cargo test --release -p forge --features scarb_since_2_10 validate_templates
+      - name: Check and lint snforge_std
+        run: cargo test --release -p forge --features scarb_since_2_10 validate_snforge_std
 
   build-test-forge-nextest-archive:
     needs: setup
@@ -276,6 +284,12 @@ jobs:
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests
         run: cargo test --release -p sncast
+      # TODO(#3096): Remove running tests with `scarb_since_2_10`
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: "2.10.1"
+      - name: Check and lint sncast_std
+        run: cargo test --release -p sncast --features scarb_since_2_10 validate_sncast_std
 
   test-conversions:
     name: Test Conversions
@@ -319,23 +333,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: software-mansion/setup-scarb@v1
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
       - name: Check cairo files format
-        run: ./scripts/scarbfmt.sh
-      - name: Run packages validation tests
-        run: cargo test --release -p packages_validation
-      # TODO(#3096): Remove running tests with `scarb_since_2_10`
-      - uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: "2.10.1"
-      - name: Check and lint forge templates
-        run: cargo test --release -p forge --features scarb_since_2_10 validate_templates
-      - name: Check and lint snforge_std
-        run: cargo test --release -p forge --features scarb_since_2_10 validate_snforge_std
-      - name: Check and lint sncast_std
-        run: cargo test --release -p sncast --features scarb_since_2_10 validate_sncast_std
-          
+        run: |
+          ./scripts/scarbfmt.sh
 
   rustfmt:
     runs-on: ubuntu-latest
