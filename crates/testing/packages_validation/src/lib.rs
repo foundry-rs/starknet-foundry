@@ -31,8 +31,8 @@ pub fn check_and_lint(package_path: &Utf8PathBuf) {
             "`scarb lint` failed in {package_path}"
         );
 
-        // TODO(#3148): Once `scarb lint` can change warning to error, we should check status instead of checking if stdout is not empty
-        // ATM `scarb lint` returns 0 even if there are warnings
+        // TODO(#3212): Once out minimal supported scarb version is 2.12.0, we should
+        // check status instead of checking if stdout is not empty
         assert!(
             lint_output.stdout.is_empty(),
             "`scarb lint` output should be empty"

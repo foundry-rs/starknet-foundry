@@ -2510,7 +2510,6 @@ dependencies = [
  "num-bigint",
  "openssl",
  "packages_validation",
- "project-root",
  "rand 0.8.5",
  "regex",
  "scarb-api",
