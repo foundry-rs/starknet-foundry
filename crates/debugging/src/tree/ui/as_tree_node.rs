@@ -28,12 +28,12 @@ impl AsTreeNode for ContractTrace {
 impl AsTreeNode for TraceInfo {
     fn as_tree_node(&self, parent: &mut Node) {
         parent.leaf(&self.contract_name);
-        parent.leaf(&self.entry_point_type);
-        parent.leaf(&self.calldata);
-        parent.leaf(&self.storage_address);
-        parent.leaf(&self.caller_address);
-        parent.leaf(&self.call_type);
-        parent.leaf(&self.call_result);
+        parent.leaf_optional(self.entry_point_type.as_option());
+        parent.leaf_optional(self.calldata.as_option());
+        parent.leaf_optional(self.storage_address.as_option());
+        parent.leaf_optional(self.caller_address.as_option());
+        parent.leaf_optional(self.call_type.as_option());
+        parent.leaf_optional(self.call_result.as_option());
         for nested_call in &self.nested_calls {
             parent.as_tree_node(nested_call);
         }
