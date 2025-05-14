@@ -209,7 +209,7 @@ response_raw: [0x6]
 
 ## Development
 
-Refer to [documentation](https://foundry-rs.github.io/starknet-foundry/) to make sure you have all the pre-requisites, and to obtain an information on how to help to develop `sncast`.
+Refer to [documentation](https://foundry-rs.github.io/starknet-foundry/development/environment-setup.html) to make sure you have all the pre-requisites, and to obtain an information on how to help to develop `sncast`.
 
 Please make sure you're using scarb installed via asdf - otherwise some tests may fail.
 To verify, run:
