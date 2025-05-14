@@ -68,7 +68,7 @@ impl FeeArgs {
                 fee_estimate.expect("Fee estimate must be passed when max_fee is provided");
 
             ensure!(
-                Felt::from(max_fee) >= fee_estimate.overall_fee,
+                Felt::from(max_fee) >= Felt::from(fee_estimate.overall_fee),
                 "Estimated fee ({}) is higher than provided max fee ({})",
                 fee_estimate.overall_fee,
                 Felt::from(max_fee)
@@ -111,26 +111,12 @@ impl TryFrom<FeeEstimate> for FeeSettings {
     type Error = anyhow::Error;
     fn try_from(fee_estimate: FeeEstimate) -> Result<FeeSettings, anyhow::Error> {
         Ok(FeeSettings {
-            l1_gas: Some(
-                u64::try_from(fee_estimate.l1_gas_consumed).expect("Failed to convert l1_gas"),
-            ),
-            l1_gas_price: Some(
-                u128::try_from(fee_estimate.l1_gas_price).expect("Failed to convert l1_gas_price"),
-            ),
-            l2_gas: Some(
-                u64::try_from(fee_estimate.l2_gas_consumed).expect("Failed to convert l2_gas"),
-            ),
-            l2_gas_price: Some(
-                u128::try_from(fee_estimate.l2_gas_price).expect("Failed to convert l2_gas_price"),
-            ),
-            l1_data_gas: Some(
-                u64::try_from(fee_estimate.l1_data_gas_consumed)
-                    .expect("Failed to convert l1_data_gas"),
-            ),
-            l1_data_gas_price: Some(
-                u128::try_from(fee_estimate.l1_data_gas_price)
-                    .expect("Failed to convert l1_data_gas_price"),
-            ),
+            l1_gas: Some(fee_estimate.l1_gas_consumed),
+            l1_gas_price: Some(fee_estimate.l1_gas_price),
+            l2_gas: Some(fee_estimate.l2_gas_consumed),
+            l2_gas_price: Some(fee_estimate.l2_gas_price),
+            l1_data_gas: Some(fee_estimate.l1_data_gas_consumed),
+            l1_data_gas_price: Some(fee_estimate.l1_data_gas_price),
         })
     }
 }
@@ -158,20 +144,19 @@ fn parse_non_zero_felt(s: &str) -> Result<NonZeroFelt, String> {
 mod tests {
     use super::FeeSettings;
     use starknet::core::types::{FeeEstimate, PriceUnit};
-    use starknet_types_core::felt::Felt;
     use std::convert::TryFrom;
 
     #[tokio::test]
     async fn test_from_fee_estimate() {
         let mock_fee_estimate = FeeEstimate {
-            l1_gas_consumed: Felt::from(1),
-            l1_gas_price: Felt::from(2),
-            l2_gas_consumed: Felt::from(3),
-            l2_gas_price: Felt::from(4),
-            l1_data_gas_consumed: Felt::from(5),
-            l1_data_gas_price: Felt::from(6),
+            l1_gas_consumed: 1,
+            l1_gas_price: 2,
+            l2_gas_consumed: 3,
+            l2_gas_price: 4,
+            l1_data_gas_consumed: 5,
+            l1_data_gas_price: 6,
             unit: PriceUnit::Fri,
-            overall_fee: Felt::from(44),
+            overall_fee: 44,
         };
         let settings = FeeSettings::try_from(mock_fee_estimate).unwrap();
 

@@ -178,12 +178,13 @@ fn trace_is_produced_even_if_contract_panics() {
     let temp = setup_package("backtrace_panic");
     test_runner(&temp)
         .arg("--save-trace-data")
+        .arg("--ignored")
         .assert()
         .success();
 
     let trace_data = fs::read_to_string(
         temp.join(TRACE_DIR)
-            .join("backtrace_panic_Test_test_contract_panics.json"),
+            .join("backtrace_panic_Test_test_contract_panics_with_should_panic.json"),
     )
     .unwrap();
 

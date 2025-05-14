@@ -3,11 +3,12 @@ use crate::helpers::constants::{
 };
 use crate::helpers::fixtures::invoke_contract;
 use crate::helpers::runner::runner;
+use crate::helpers::shell::os_specific_shell;
+use camino::Utf8PathBuf;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
-use snapbox::cmd::{Command, cargo_bin};
+use snapbox::cmd::cargo_bin;
 use sncast::helpers::fee::FeeSettings;
-use std::path::PathBuf;
 
 #[test]
 fn test_happy_case() {
@@ -31,7 +32,8 @@ fn test_happy_case() {
 
     snapbox.assert().success().stdout_eq(indoc! {r"
         command: call
-        response: [0x0]
+        response: 0x0
+        response_raw: [0x0]
     "});
 }
 
@@ -96,7 +98,8 @@ async fn test_call_after_storage_changed() {
 
     snapbox.assert().success().stdout_eq(indoc! {r"
         command: call
-        response: [0x3]
+        response: 0x3
+        response_raw: [0x3]
     "});
 }
 
@@ -242,21 +245,20 @@ fn test_wrong_block_id() {
 
 #[test]
 fn test_happy_case_shell() {
-    let script_extension = if cfg!(windows) { ".ps1" } else { ".sh" };
-    let test_path = PathBuf::from(format!("tests/shell/call{script_extension}"))
-        .canonicalize()
-        .unwrap();
     let binary_path = cargo_bin!("sncast");
+    let command = os_specific_shell(&Utf8PathBuf::from("tests/shell/call"));
 
-    let command = if cfg!(windows) {
-        Command::new("powershell")
-            .arg("-ExecutionPolicy")
-            .arg("Bypass")
-            .arg("-File")
-            .arg(test_path)
-    } else {
-        Command::new(test_path)
-    };
+    let snapbox = command
+        .arg(binary_path)
+        .arg(URL)
+        .arg(DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA);
+    snapbox.assert().success();
+}
+
+#[test]
+fn test_leading_negative_values() {
+    let binary_path = cargo_bin!("sncast");
+    let command = os_specific_shell(&Utf8PathBuf::from("tests/shell/call_unsigned"));
 
     let snapbox = command
         .arg(binary_path)

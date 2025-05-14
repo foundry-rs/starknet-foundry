@@ -396,6 +396,7 @@ fn execute_inner_call(
         syscall_handler.state,
         cheatnet_state,
         syscall_handler.context,
+        false,
     )?;
     // endregion
 

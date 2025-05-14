@@ -1,5 +1,6 @@
 use crate::constants::build_test_entry_point;
 use crate::forking::state::ForkStateReader;
+use crate::predeployment::strk::deploy_strk_token;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::{
     ExecutionInfoMock, ResourceBounds,
@@ -31,7 +32,7 @@ use starknet_api::{
 };
 use starknet_types_core::felt::Felt;
 use std::cell::{Ref, RefCell};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
 
 // Specifies the duration of the cheat
@@ -45,6 +46,16 @@ pub enum CheatSpan {
 pub struct ExtendedStateReader {
     pub dict_state_reader: DictStateReader,
     pub fork_state_reader: Option<ForkStateReader>,
+}
+
+impl ExtendedStateReader {
+    pub fn predeploy_contracts(&mut self) {
+        // We consider contract as deployed solely based on the fact that the test used forking
+        let is_fork = self.fork_state_reader.is_some();
+        if !is_fork {
+            deploy_strk_token(self);
+        }
+    }
 }
 
 pub trait BlockInfoReader {
@@ -316,12 +327,6 @@ pub struct TraceData {
     pub is_vm_trace_needed: bool,
 }
 
-#[derive(Clone)]
-pub struct EncounteredError {
-    pub pc: usize,
-    pub class_hash: ClassHash,
-}
-
 pub struct CheatnetState {
     pub cheated_execution_info_contracts: HashMap<ContractAddress, ExecutionInfoMock>,
     pub global_cheated_execution_info: ExecutionInfoMock,
@@ -334,11 +339,13 @@ pub struct CheatnetState {
     pub deploy_salt_base: u32,
     pub block_info: BlockInfo,
     pub trace_data: TraceData,
-    pub encountered_errors: Vec<EncounteredError>,
+    pub encountered_errors: EncounteredErrors,
     pub fuzzer_args: Vec<String>,
     pub block_hash_contracts: HashMap<(ContractAddress, u64), (CheatSpan, Felt)>,
     pub global_block_hash: HashMap<u64, (Felt, Vec<ContractAddress>)>,
 }
+
+pub type EncounteredErrors = BTreeMap<ClassHash, Vec<usize>>;
 
 impl Default for CheatnetState {
     fn default() -> Self {
@@ -363,7 +370,7 @@ impl Default for CheatnetState {
                 current_call_stack: NotEmptyCallStack::from(test_call),
                 is_vm_trace_needed: false,
             },
-            encountered_errors: vec![],
+            encountered_errors: BTreeMap::default(),
             fuzzer_args: Vec::default(),
             block_hash_contracts: HashMap::default(),
             global_block_hash: HashMap::default(),
@@ -472,6 +479,14 @@ impl CheatnetState {
 
     pub fn update_fuzzer_args(&mut self, arg: String) {
         self.fuzzer_args.push(arg);
+    }
+
+    pub fn register_error(&mut self, class_hash: ClassHash, pcs: Vec<usize>) {
+        self.encountered_errors.insert(class_hash, pcs);
+    }
+
+    pub fn clear_error(&mut self, class_hash: ClassHash) {
+        self.encountered_errors.remove(&class_hash);
     }
 }
 
