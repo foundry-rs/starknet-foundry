@@ -1,4 +1,4 @@
-name: Child work item
+name: Child Item
 description: Child work item for tracking issues
 type: "Task"
 body:
