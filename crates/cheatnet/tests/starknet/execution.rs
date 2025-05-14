@@ -70,10 +70,8 @@ fn test_tracked_resources() {
         selector_from_name("call_contracts"),
         &[],
         TrackedResource::SierraGas,
-    );
-    dbg!(&main_call_info);
-
-    let main_call_info = main_call_info.unwrap();
+    )
+    .unwrap();
 
     assert!(!main_call_info.execution.failed);
     assert_eq!(main_call_info.inner_calls.len(), 2);
