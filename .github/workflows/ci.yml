@@ -314,7 +314,7 @@ jobs:
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: cargo test --release -p scarb-api
 
-  scarb-fmt:
+  scarbfmt:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
