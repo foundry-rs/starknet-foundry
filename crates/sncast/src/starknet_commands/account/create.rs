@@ -369,7 +369,7 @@ fn generate_deploy_command(
     let network_flag = generate_network_flag(rpc_url, network);
 
     format!(
-        "\n\nAfter prefunding the account address, run:\n\
+        "\n\nAfter prefunding the account, run:\n\
         sncast{accounts_flag} account deploy {network_flag} --name {account}"
     )
 }
@@ -383,7 +383,7 @@ fn generate_deploy_command_with_keystore(
     let network_flag = generate_network_flag(rpc_url, network);
 
     format!(
-        "\n\nAfter prefunding the account address, run:\n\
+        "\n\nAfter prefunding the account, run:\n\
         sncast --account {account} --keystore {keystore} account deploy {network_flag}"
     )
 }
