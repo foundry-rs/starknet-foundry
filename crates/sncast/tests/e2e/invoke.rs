@@ -14,7 +14,7 @@ use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use snapbox::cmd::cargo_bin;
 use sncast::AccountType;
-use sncast::helpers::constants::{ARGENT_CLASS_HASH, OZ_CLASS_HASH};
+use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Invoke;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
@@ -63,8 +63,7 @@ async fn test_happy_case_human_readable() {
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
 #[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
-// TODO(#3118)
-// #[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
+#[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
 async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let tempdir = create_and_deploy_account(class_hash, account_type).await;
@@ -360,7 +359,7 @@ async fn test_braavos_disabled() {
         "--accounts-file",
         &accounts_json_path,
         "--account",
-        "braavos",
+        "braavos_incompatible",
         "invoke",
         "--url",
         URL,
@@ -378,7 +377,7 @@ async fn test_braavos_disabled() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        Error: Using Braavos accounts is temporarily disabled because they don't yet work with starknet 0.13.5.
+        Error: Using incompatible Braavos accounts is disabled because they don't work with starknet 0.13.5.
             Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
         "},
     );

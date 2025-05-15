@@ -28,8 +28,7 @@ Possible values: `mainnet`, `sepolia`.
 ## `--type, -t <ACCOUNT_TYPE>`
 Optional. Required if `--class-hash` is passed.
 
-<!-- TODO(#3118): Include braavos in possible types once integration is restored  -->
-Type of the account. Possible values: oz, argent. Defaults to oz.
+Type of the account. Possible values: oz, argent, braavos. Defaults to oz.
 
 > ⚠️ **Warning**
 > Creating braavos accounts is currently disabled.
@@ -40,8 +39,7 @@ Versions of the account contracts:
 |------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `oz`             | v0.14.0 | [0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6](https://starkscan.co/class/0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6) |
 | `argent`         | v0.3.1  | [0x029927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b](https://starkscan.co/class/0x029927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b) |
-<!-- TODO(#3118): Uncomment once braavos integration is restored -->
-<!-- | `braavos`        | v1.0.0  | [0x00816dd0297efc55dc1e7559020a3a825e81ef734b558f03c83325d4da7e6253](https://starkscan.co/class/0x00816dd0297efc55dc1e7559020a3a825e81ef734b558f03c83325d4da7e6253) | -->
+| `braavos`        | v1.2.0  | [0x03957f9f5a1cbfe918cedc2015c85200ca51a5f7506ecb6de98a5207b759bf8a](https://starkscan.co/class/0x03957f9f5a1cbfe918cedc2015c85200ca51a5f7506ecb6de98a5207b759bf8a) |
 
 ## `--salt, -s <SALT>`
 Optional.

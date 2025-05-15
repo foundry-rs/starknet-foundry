@@ -23,14 +23,13 @@ pub const ARGENT_CLASS_HASH: Felt =
     felt!("0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f"); // v0.4.0
 
 pub const BRAAVOS_CLASS_HASH: Felt =
-    felt!("0x00816dd0297efc55dc1e7559020a3a825e81ef734b558f03c83325d4da7e6253");
+    felt!("0x03957f9f5a1cbfe918cedc2015c85200ca51a5f7506ecb6de98a5207b759bf8a");
 
 pub const BRAAVOS_BASE_ACCOUNT_CLASS_HASH: Felt =
-    felt!("0x013bfe114fb1cf405bfc3a7f8dbe2d91db146c17521d40dcf57e16d6b59fa8e6");
+    felt!("0x03d16c7a9a60b0593bd202f660a28c5d76e0403601d9ccc7e4fa253b6a70c201");
 
-pub const BRAAVOS_CLASS_HASHES: &[Felt] = &[
+pub const BRAAVOS_OLD_CLASS_HASHES: &[Felt] = &[
     felt!("0x02c8c7e6fbcfb3e8e15a46648e8914c6aa1fc506fc1e7fb3d1e19630716174bc"),
-    BRAAVOS_CLASS_HASH,
     felt!("0x041bf1e71792aecb9df3e9d04e1540091c5e13122a731e02bec588f71dc1a5c3"),
 ];
 

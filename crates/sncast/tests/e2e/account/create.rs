@@ -19,8 +19,7 @@ use test_case::test_case;
 
 #[test_case("oz"; "oz_account_type")]
 #[test_case("argent"; "argent_account_type")]
-// TODO(#3118): Re-enable this test once braavos integration is restored
-// #[test_case("braavos"; "braavos_account_type")]
+#[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
@@ -332,8 +331,7 @@ pub async fn test_account_already_exists() {
 
 #[test_case("oz"; "oz_account_type")]
 #[test_case("argent"; "argent_account_type")]
-// TODO(#3118)
-// #[test_case("braavos"; "braavos_account_type")]
+#[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case_keystore(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
@@ -839,7 +837,7 @@ fn test_braavos_disabled() {
         "--salt",
         "0x1",
         "--type",
-        "braavos",
+        "braavos_incompatible",
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -849,7 +847,7 @@ fn test_braavos_disabled() {
         output,
         indoc! {r"
         command: account create
-        error: Using Braavos accounts is temporarily disabled because they don't yet work with starknet 0.13.5.
+        Error: Using incompatible Braavos accounts is disabled because they don't work with starknet 0.13.5.
             Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
         "},
     );
