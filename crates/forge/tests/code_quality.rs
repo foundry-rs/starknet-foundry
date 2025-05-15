@@ -1,5 +1,5 @@
 use camino::Utf8PathBuf;
-use packages_validation::check_and_lint; // Ensure you have this at the top
+use packages_validation::check_and_lint;
 
 #[test]
 fn validate_snforge_std() {
