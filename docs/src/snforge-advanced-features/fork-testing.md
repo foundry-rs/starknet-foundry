@@ -1,7 +1,7 @@
 # Fork Testing
 
 `snforge` supports testing in a forked environment.
-Forking allows using state and contracts from a real instance Starknet network, including Sepolia and Mainnet.
+Forking allows using state and contracts from a real instance Starknet network, including Mainnet and Sepolia.
 Each test can fork the state of a specified real
 network and perform actions on top of it.
 
