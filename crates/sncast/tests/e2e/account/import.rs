@@ -240,9 +240,14 @@ pub async fn test_happy_case_add_profile() {
 
     let output = runner(&args).current_dir(tempdir.path()).assert();
 
+    let manifest_path = Utf8PathBuf::from_path_buf(tempdir.path().join("snfoundry.toml"))
+        .expect("creating manifest path should be possible")
+        .canonicalize_utf8()
+        .expect("canonicalize manifest path should be possible");
+
     assert_stdout_contains(
         output,
-        "add_profile: Profile my_account_import successfully added to [..]",
+        format!("add_profile: Profile my_account_import successfully added to {manifest_path}"),
     );
     let current_dir_utf8 = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
 
@@ -624,9 +629,14 @@ pub async fn test_empty_config_add_profile() {
 
     let output = runner(&args).current_dir(tempdir.path()).assert();
 
+    let manifest_path = Utf8PathBuf::from_path_buf(tempdir.path().join("snfoundry.toml"))
+        .expect("creating manifest path should be possible")
+        .canonicalize_utf8()
+        .expect("canonicalize manifest path should be possible");
+
     assert_stdout_contains(
         output,
-        "add_profile: Profile random successfully added to [..]",
+        format!("add_profile: Profile random successfully added to {manifest_path}"),
     );
     let current_dir_utf8 = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
 

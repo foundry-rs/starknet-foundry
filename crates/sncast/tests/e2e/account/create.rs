@@ -5,6 +5,7 @@ use configuration::copy_config_to_tempdir;
 use indoc::{formatdoc, indoc};
 
 use crate::helpers::env::set_create_keystore_password_env;
+use camino::Utf8PathBuf;
 use conversions::string::IntoHexStr;
 use serde_json::{json, to_string_pretty};
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
@@ -186,10 +187,14 @@ pub async fn test_happy_case_add_profile() {
     ];
 
     let output = runner(&args).current_dir(tempdir.path()).assert();
+    let manifest_path = Utf8PathBuf::from_path_buf(tempdir.path().join("snfoundry.toml"))
+        .expect("creating manifest path should be possible")
+        .canonicalize_utf8()
+        .expect("canonicalize manifest path should be possible");
 
     assert_stdout_contains(
         output,
-        "add_profile: Profile my_account successfully added to [..]",
+        format!("add_profile: Profile my_account successfully added to {manifest_path}"),
     );
 
     let contents = fs::read_to_string(tempdir.path().join("snfoundry.toml"))
@@ -405,9 +410,14 @@ pub async fn test_happy_case_keystore_add_profile() {
 
     let output = runner(&args).current_dir(tempdir.path()).assert();
 
+    let manifest_path = Utf8PathBuf::from_path_buf(tempdir.path().join("snfoundry.toml"))
+        .expect("creating manifest path should be possible")
+        .canonicalize_utf8()
+        .expect("canonicalize manifest path should be possible");
+
     assert_stdout_contains(
         output,
-        "add_profile: Profile with_keystore successfully added to [..]",
+        format!("add_profile: Profile with_keystore successfully added to {manifest_path}"),
     );
 
     let contents =
