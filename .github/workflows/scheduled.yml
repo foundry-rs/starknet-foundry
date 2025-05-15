@@ -180,10 +180,7 @@ jobs:
     steps:
       - name: Notify that the workflow has failed
         uses: slackapi/slack-github-action@v2.0.0
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_SCHEDULED_TESTS_FAILURE_WEBHOOK_URL }}
         with:
+          webhook: ${{ secrets.SLACK_SCHEDULED_TESTS_FAILURE_WEBHOOK_URL }}
           payload: |
-            {
-              "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            }
+            url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
