@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Updated
 
-- OpenZeppelin account updated to the newest v1.0.0 [preset](https://docs.openzeppelin.com/contracts-cairo/1.0.0/api/account#AccountUpgradeable)
+- OpenZeppelin account updated to v1.0.0 [preset](https://docs.openzeppelin.com/contracts-cairo/1.0.0/api/account#AccountUpgradeable)
 
 ## [0.43.0] - 2025-05-09
 
