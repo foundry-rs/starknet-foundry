@@ -86,7 +86,7 @@ pub async fn create(
         .parse()?;
 
     let mut message = format!(
-        "Account successfully created. The estimated deployment fee is {} STRK. Prefund the account to cover the deployment transaction fee",
+        "Account successfully created. The estimated deployment fee is {} STRK. Prefund the account to cover deployment transaction fee",
         felt_to_bigdecimal(estimated_fee, 18)
     );
 
