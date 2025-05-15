@@ -23,7 +23,7 @@ You can download latest version of `sncast` [here](https://github.com/foundry-rs
 
 ## Documentation
 
-For more details on Starknet Foundry `sncast`, please visit [our docs](https://foundry-rs.github.io/starknet-foundry/starknet/index.html) 
+For more details on Starknet Foundry `sncast`, please visit [our docs](https://foundry-rs.github.io/starknet-foundry/starknet/sncast-overview.html) 
 
 ## Example usages
 
