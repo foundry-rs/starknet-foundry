@@ -1425,7 +1425,6 @@ dependencies = [
  "blockifier",
  "cairo-annotations",
  "cairo-lang-casm",
- "cairo-lang-runner",
  "cairo-lang-starknet",
  "cairo-lang-starknet-classes",
  "cairo-lang-utils",
@@ -1682,7 +1681,6 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "blockifier",
- "cairo-lang-runner",
  "cairo-lang-utils",
  "cairo-serde-macros",
  "cairo-vm",
@@ -2490,7 +2488,6 @@ dependencies = [
  "axum",
  "blockifier",
  "cairo-annotations",
- "cairo-lang-runnable-utils",
  "cairo-lang-sierra",
  "cairo-lang-starknet-classes",
  "cairo-vm",
@@ -2540,8 +2537,6 @@ dependencies = [
  "blockifier",
  "cairo-annotations",
  "cairo-lang-casm",
- "cairo-lang-runnable-utils",
- "cairo-lang-runner",
  "cairo-lang-sierra",
  "cairo-lang-sierra-type-size",
  "cairo-lang-starknet",
@@ -4851,7 +4846,6 @@ dependencies = [
  "anyhow",
  "blockifier",
  "cairo-lang-casm",
- "cairo-lang-runner",
  "cairo-lang-utils",
  "cairo-vm",
  "conversions",
@@ -5404,7 +5398,6 @@ name = "shared"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "cairo-lang-runner",
  "cairo-vm",
  "clap",
  "clap_complete",
@@ -5416,6 +5409,7 @@ dependencies = [
  "snapbox",
  "starknet",
  "starknet-types-core",
+ "starknet_api",
  "url",
 ]
 
@@ -5535,7 +5529,6 @@ dependencies = [
  "cairo-lang-runnable-utils",
  "cairo-lang-runner",
  "cairo-lang-sierra",
- "cairo-lang-sierra-to-casm",
  "cairo-lang-utils",
  "cairo-vm",
  "camino",
@@ -5553,6 +5546,7 @@ dependencies = [
  "fs_extra",
  "indoc",
  "itertools 0.14.0",
+ "num-traits",
  "project-root",
  "promptly",
  "rand 0.8.5",
