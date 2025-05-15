@@ -39,16 +39,3 @@ pub fn check_and_lint(package_path: &Utf8PathBuf) {
         );
     }
 }
-
-pub fn validate_cairo_lib(package_name: &str) {
-    let package_path = project_root::get_project_root()
-        .expect("Failed to get project root")
-        .join(package_name);
-    let package_path = package_path
-        .canonicalize()
-        .expect("Failed to canonicalize path");
-    let package_path =
-        Utf8PathBuf::from_path_buf(package_path).expect("Failed to convert to Utf8PathBuf");
-
-    check_and_lint(&package_path);
-}
