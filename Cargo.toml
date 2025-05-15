@@ -32,12 +32,9 @@ license-file = "LICENSE"
 blockifier = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.13.5-modified-sierra-dep", default-features = false, features = ["testing", "tracing"] }
 starknet_api = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.13.5-modified-sierra-dep" }
 cairo-lang-casm = { version = "2.11.2", features = ["serde"] }
-cairo-lang-runner = "2.11.2"
-cairo-lang-sierra-to-casm = "2.11.2"
 cairo-lang-sierra = "2.11.2"
 cairo-lang-utils = "2.11.2"
 cairo-lang-starknet = "2.11.2"
-cairo-lang-runnable-utils = "2.11.2"
 cairo-lang-filesystem = "2.11.2"
 cairo-lang-diagnostics = "2.11.2"
 cairo-lang-sierra-type-size = "2.11.2"
