@@ -615,7 +615,6 @@ pub async fn test_happy_case_keystore_hex_format() {
 }
 
 #[tokio::test]
-#[expect(clippy::too_many_lines)]
 pub async fn test_happy_case_default_name_generation() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
