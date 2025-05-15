@@ -1,7 +1,8 @@
 use crate::common::assertions::{assert_error, assert_panic};
 use crate::common::call_contract;
-use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
+use crate::common::{deploy_contract, state::create_cached_state};
 use cairo_lang_utils::byte_array::BYTE_ARRAY_MAGIC;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::selector_from_name;
 use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
 use conversions::felt::FromShortString;
@@ -17,7 +18,7 @@ fn call_contract_error() {
     let contract_address =
         deploy_contract(&mut cached_state, &mut cheatnet_state, "PanicCall", &[]);
 
-    let selector = felt_selector_from_name("panic_call");
+    let selector = selector_from_name("panic_call");
 
     let output = call_contract(
         &mut cached_state,
@@ -41,7 +42,7 @@ fn call_contract_panic() {
     let contract_address =
         deploy_contract(&mut cached_state, &mut cheatnet_state, "PanicCall", &[]);
 
-    let selector = felt_selector_from_name("panic_call");
+    let selector = selector_from_name("panic_call");
 
     let output = call_contract(
         &mut cached_state,
@@ -80,7 +81,7 @@ fn call_proxied_contract_bytearray_panic() {
         &[],
     );
 
-    let selector = felt_selector_from_name("call_bytearray_panicking_contract");
+    let selector = selector_from_name("call_bytearray_panicking_contract");
 
     let output = call_contract(
         &mut cached_state,
@@ -124,7 +125,7 @@ fn call_proxied_contract_felts_panic(input: &[Felt], expected_panic: &[Felt]) {
         &[],
     );
 
-    let selector_felts = felt_selector_from_name("call_felts_panicking_contract");
+    let selector_felts = selector_from_name("call_felts_panicking_contract");
 
     let mut contract_call_args = vec![bytearray_panicking_contract.into_()];
     contract_call_args.extend_from_slice(input);

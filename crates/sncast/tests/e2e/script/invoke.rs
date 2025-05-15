@@ -8,8 +8,8 @@ use test_case::test_case;
 #[test_case("oz_cairo_0"; "cairo_0_account")]
 #[test_case("oz_cairo_1"; "cairo_1_account")]
 #[test_case("oz"; "oz_account")]
-// TODO(#3089)
-// #[test_case("argent"; "argent_account")]
+#[test_case("argent"; "argent_account")]
+// TODO(#3118)
 // #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 async fn test_insufficient_resource_for_validate(account: &str) {
@@ -108,7 +108,7 @@ fn test_wrong_function_name() {
         indoc! {r#"
         [..]
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionExecutionError(TransactionExecutionErrorData { transaction_index: 0, execution_error: ContractExecutionError::Nested(&ContractExecutionErrorInner { contract_address: [..], class_hash: [..], selector: [..], error: ContractExecutionError::Nested(&ContractExecutionErrorInner { contract_address: [..], class_hash: [..], selector: [..], error: ContractExecutionError::Nested(&ContractExecutionErrorInner { contract_address: [..], class_hash: [..], selector: [..], error: ContractExecutionError::Message("Transaction execution has failed:
-        0: Error in the called contract (contract address: 0x03ffc270312cbefaf2fb4a88e97cc186797bada41a291331186ec5ca316e32fa, class hash: 0x02b31e19e45c06f29234e06e2ee98a9966479ba3067f8785ed972794fdb0065c, selector: [..]):
+        0: Error in the called contract (contract address: 0x03ffc270312cbefaf2fb4a88e97cc186797bada41a291331186ec5ca316e32fa, class hash: 0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564, selector: [..]):
         Execution failed. Failure reason:
         Error in contract (contract address: [..], class hash: [..], selector: [..]):
         Error in contract (contract address: [..], class hash: [..], selector: [..]):

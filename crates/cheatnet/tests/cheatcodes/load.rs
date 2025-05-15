@@ -1,6 +1,7 @@
-use crate::cheatcodes::{map_entry_address, variable_address};
 use crate::common::get_contracts;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::load;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::{
+    load, map_entry_address, variable_address,
+};
 use starknet_api::core::ContractAddress;
 use starknet_types_core::felt::Felt;
 

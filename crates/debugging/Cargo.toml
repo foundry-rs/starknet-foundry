@@ -9,4 +9,7 @@ blockifier.workspace = true
 ptree.workspace = true
 console.workspace = true
 starknet-types-core.workspace = true
+starknet.workspace = true
 cheatnet = { path = "../cheatnet" }
+data-transformer = { path = "../data-transformer" }
+serde_json.workspace = true

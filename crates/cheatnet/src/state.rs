@@ -1,5 +1,6 @@
 use crate::constants::build_test_entry_point;
 use crate::forking::state::ForkStateReader;
+use crate::predeployment::strk::deploy_strk_token;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::{
     ExecutionInfoMock, ResourceBounds,
@@ -45,6 +46,16 @@ pub enum CheatSpan {
 pub struct ExtendedStateReader {
     pub dict_state_reader: DictStateReader,
     pub fork_state_reader: Option<ForkStateReader>,
+}
+
+impl ExtendedStateReader {
+    pub fn predeploy_contracts(&mut self) {
+        // We consider contract as deployed solely based on the fact that the test used forking
+        let is_fork = self.fork_state_reader.is_some();
+        if !is_fork {
+            deploy_strk_token(self);
+        }
+    }
 }
 
 pub trait BlockInfoReader {
@@ -162,7 +173,6 @@ impl<T> CheatStatus<T> {
 /// Tree structure representing trace of a call.
 #[derive(Debug)]
 pub struct CallTrace {
-    pub run_with_call_header: bool,
     // only these are serialized
     pub entry_point: CallEntryPoint,
     pub nested_calls: Vec<CallTraceNode>,
@@ -196,7 +206,6 @@ impl CairoSerialize for CallTrace {
 impl CallTrace {
     fn default_successful_call() -> Self {
         Self {
-            run_with_call_header: false,
             entry_point: CallEntryPoint::default(),
             used_execution_resources: ExecutionResources::default(),
             used_l1_resources: L1Resources::default(),
@@ -343,7 +352,6 @@ impl Default for CheatnetState {
             ClassHash(TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap());
         let test_call = Rc::new(RefCell::new(CallTrace {
             entry_point: test_code_entry_point.into(),
-            run_with_call_header: true,
             ..CallTrace::default_successful_call()
         }));
         Self {
@@ -473,13 +481,16 @@ impl CheatnetState {
     pub fn register_error(&mut self, class_hash: ClassHash, pcs: Vec<usize>) {
         self.encountered_errors.insert(class_hash, pcs);
     }
+
+    pub fn clear_error(&mut self, class_hash: ClassHash) {
+        self.encountered_errors.remove(&class_hash);
+    }
 }
 
 impl TraceData {
     pub fn enter_nested_call(&mut self, entry_point: CallEntryPoint, cheated_data: CheatedData) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
-            run_with_call_header: false,
             ..CallTrace::default_successful_call()
         }));
         let current_call = self.current_call_stack.top();

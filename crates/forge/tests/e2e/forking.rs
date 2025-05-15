@@ -130,3 +130,31 @@ fn printing_latest_block_number() {
         "},
     );
 }
+
+#[test]
+fn with_skip_fork_tests_env() {
+    let temp = setup_package_with_file_patterns("forking", BASE_FILE_PATTERNS);
+
+    let output = test_runner(&temp)
+        .env("SNFORGE_IGNORE_FORK_TESTS", "1")
+        .arg("forking::tests::test_fork_simple")
+        .assert()
+        .code(0);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 4 test(s) from forking package
+        Running 4 test(s) from src/
+        [IGNORE] forking::tests::test_fork_simple
+        [IGNORE] forking::tests::test_fork_simple_number_hex
+        [IGNORE] forking::tests::test_fork_simple_hash_hex
+        [IGNORE] forking::tests::test_fork_simple_hash_number
+        Tests: 0 passed, 0 failed, 0 skipped, 4 ignored, 1 filtered out
+        "},
+    );
+}
