@@ -1,6 +1,5 @@
 use cairo_lang_casm::hints::Hint;
-use cairo_lang_runner::casm_run::hint_to_hint_params;
-use cairo_vm::serde::deserialize_program::HintParams;
+use cairo_vm::serde::deserialize_program::{ApTracking, FlowTrackingData, HintParams};
 use std::collections::HashMap;
 use universal_sierra_compiler_api::AssembledCairoProgramWithSerde;
 
@@ -15,6 +14,7 @@ pub fn hints_by_representation(
         .collect()
 }
 
+#[must_use]
 pub fn hints_to_params(
     assembled_program: &AssembledCairoProgramWithSerde,
 ) -> HashMap<usize, Vec<HintParams>> {
@@ -26,7 +26,14 @@ pub fn hints_to_params(
                 *offset,
                 hints
                     .iter()
-                    .map(hint_to_hint_params)
+                    .map(|hint| HintParams {
+                        code: hint.representing_string(),
+                        accessible_scopes: vec![],
+                        flow_tracking_data: FlowTrackingData {
+                            ap_tracking: ApTracking::new(),
+                            reference_ids: HashMap::new(),
+                        },
+                    })
                     .collect::<Vec<HintParams>>(),
             )
         })

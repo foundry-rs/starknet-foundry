@@ -1,3 +1,4 @@
+use crate::constants::get_current_sierra_version;
 use crate::runtime_extensions::forge_runtime_extension::{
     cheatcodes::{CheatcodeError, EnhancedHintError},
     contracts_data::ContractsData,
@@ -8,7 +9,6 @@ use blockifier::state::{errors::StateError, state_api::State};
 use conversions::IntoConv;
 use conversions::serde::serialize::CairoSerialize;
 use starknet::core::types::contract::SierraClass;
-use starknet_api::contract_class::SierraVersion;
 use starknet_api::core::{ClassHash, CompiledClassHash};
 
 #[derive(CairoSerialize)]
@@ -27,9 +27,11 @@ pub fn declare(
         .with_context(|| format!("Failed to get contract artifact for name = {contract_name}."))
         .map_err(EnhancedHintError::from)?;
 
-    let contract_class =
-        CompiledClassV1::try_from_json_string(&contract_artifact.casm, SierraVersion::LATEST)
-            .expect("Failed to read contract class from json");
+    let contract_class = CompiledClassV1::try_from_json_string(
+        &contract_artifact.casm,
+        get_current_sierra_version(),
+    )
+    .expect("Failed to read contract class from json");
     let contract_class = RunnableCompiledClass::V1(contract_class);
 
     let class_hash = *contracts_data
