@@ -2,6 +2,8 @@ use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
 };
 use anyhow::{Context, Result, anyhow, bail};
+use bigdecimal::BigDecimal;
+use bigdecimal::num_bigint::{BigInt, Sign};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
@@ -75,7 +77,7 @@ pub async fn create(
     });
     check_class_hash_exists(provider, class_hash).await?;
 
-    let (account_json, max_fee) =
+    let (account_json, estimated_fee) =
         generate_account(provider, salt, class_hash, create.account_type).await?;
 
     let address: Felt = account_json["address"]
@@ -83,7 +85,10 @@ pub async fn create(
         .context("Invalid address")?
         .parse()?;
 
-    let mut message = "Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.".to_string();
+    let mut message = format!(
+        "Account successfully created. The estimated deployment fee is {} STRK. Prefund the account to cover the deployment transaction fee",
+        felt_to_bigdecimal(estimated_fee, 18)
+    );
 
     if let Some(keystore) = keystore.clone() {
         let account_path = Utf8PathBuf::from(&account);
@@ -144,8 +149,7 @@ pub async fn create(
     }
 
     Ok(AccountCreateResponse {
-        address: address.into_(),
-        max_fee,
+        account_address: address.into_(),
         add_profile: if add_profile.is_some() {
             format!(
                 "Profile {} successfully added to snfoundry.toml",
@@ -365,7 +369,7 @@ fn generate_deploy_command(
     let network_flag = generate_network_flag(rpc_url, network);
 
     format!(
-        "\n\nAfter prefunding the address, run:\n\
+        "\n\nAfter prefunding the account address, run:\n\
         sncast{accounts_flag} account deploy {network_flag} --name {account}"
     )
 }
@@ -379,7 +383,18 @@ fn generate_deploy_command_with_keystore(
     let network_flag = generate_network_flag(rpc_url, network);
 
     format!(
-        "\n\nAfter prefunding the address, run:\n\
+        "\n\nAfter prefunding the account address, run:\n\
         sncast --account {account} --keystore {keystore} account deploy {network_flag}"
+    )
+}
+
+fn felt_to_bigdecimal<F, D>(felt: F, decimals: D) -> BigDecimal
+where
+    F: AsRef<Felt>,
+    D: Into<i64>,
+{
+    BigDecimal::new(
+        BigInt::from_bytes_be(Sign::Plus, &felt.as_ref().to_bytes_be()),
+        decimals.into(),
     )
 }
