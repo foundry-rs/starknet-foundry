@@ -27,7 +27,7 @@ There are two ways of configuring a fork:
 
 > 📝 **Note**
 > Using fork tests means `snforge` will make (often multiple) requests to the configured RPC URL.
-> These requests are relatively slow in comparison to standard tests.
+> These requests are relatively slow as they happen over the network.
 >
 > `snforge` can cache these requests automatically in `.snfoundry_cache` but only if `block_hash` or `block_number` is provided.
 > **Using `block_tag`, especially `"latest"` disables the caching functionality.**
@@ -35,10 +35,13 @@ There are two ways of configuring a fork:
 ### Configure a Fork in the Attribute
 
 It is possible to pass `url` and only one of `block_number`, `block_hash`, `block_tag` arguments to the `fork` attribute:
-- `url` (string literal) — RPC URL
-- `block_number` (hexadecimal number) — number of a block which fork will be pinned to
-- `block_hash` (hexadecimal number) — hash of block which fork will be pinned to
-- `block_tag` (identifier) — tag of block which fork will be pinned to. Currently only `latest` is supported
+- `url` — RPC URL
+- `block_number` — number of a block which fork will be pinned to
+- `block_hash` — hash of block which fork will be pinned to
+- `block_tag` — tag of block which fork will be pinned to. Currently only `latest` is supported
+
+> 📝 **Note**
+> `block_hash` and `block_number` can be provided as a decimal or hex number.
 
 Once such a configuration is passed, it is possible to use state and contracts defined on the specified network.
 
