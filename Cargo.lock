@@ -6159,16 +6159,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "testing"
-version = "1.0.0"
-dependencies = [
- "camino",
- "project-root",
- "scarb-api",
- "test-case",
-]
-
-[[package]]
 name = "thiserror"
 version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"

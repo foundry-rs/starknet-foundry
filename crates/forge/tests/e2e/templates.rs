@@ -6,6 +6,7 @@ use camino::Utf8PathBuf;
 use forge::Template;
 use packages_validation::check_and_lint;
 use test_case::test_case;
+use toml_edit::DocumentMut;
 
 #[test_case(&Template::CairoProgram; "cairo-program")]
 #[test_case(&Template::BalanceContract; "balance-contract")]
@@ -30,9 +31,12 @@ fn validate_templates(template: &Template) {
 
     // Overwrite Scarb.toml with `allow-warnings = false`
     let scarb_toml_path = package_path.join("Scarb.toml");
-    let mut scarb_toml = fs::read_to_string(&scarb_toml_path).unwrap();
-    scarb_toml.push_str("\n[cairo]\nallow-warnings = false\n");
-    fs::write(&scarb_toml_path, &scarb_toml).expect("Failed to write to Scarb.toml");
+    let mut scarb_toml = fs::read_to_string(&scarb_toml_path)
+        .unwrap()
+        .parse::<DocumentMut>()
+        .unwrap();
+    scarb_toml["cairo"]["allow-warnings"] = toml_edit::value(false);
+    fs::write(&scarb_toml_path, scarb_toml.to_string()).expect("Failed to write to Scarb.toml");
 
     check_and_lint(&package_path);
 }
