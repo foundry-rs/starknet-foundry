@@ -158,7 +158,7 @@ pub async fn import(
             .rpc
             .url
             .clone()
-            .expect("Conflicting arguments should be handled in clap");
+            .expect("the argument '--network' should not be used with '--add-profile' argument");
 
         let config = CastConfig {
             url,
