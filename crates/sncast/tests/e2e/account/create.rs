@@ -678,8 +678,8 @@ pub async fn test_happy_case_default_name_generation() {
     let snapbox = runner(&create_args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
         command: account create
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         account_address: 0x0[..]
+        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         message: Account successfully created. The estimated deployment fee is [..]
 
         After prefunding the account, run:
