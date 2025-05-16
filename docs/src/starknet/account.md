@@ -41,9 +41,8 @@ $ sncast \
 ```shell
 command: account create
 add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-address: [..]
-max_fee: [..]
-message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.
+account_address: 0x0[..]
+message: Account successfully created. The estimated deployment fee is [..]
 
 To see account creation details, visit:
 account: https://sepolia.starkscan.co/contract/[..]
