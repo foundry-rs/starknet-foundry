@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.1] - 2025-05-16
+
+### Cast
+
+#### Removed
+
+- Broken Voyager RPC provider
+
 ## [0.43.0] - 2025-05-09
 
 ### Forge
