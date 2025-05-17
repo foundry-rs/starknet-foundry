@@ -128,11 +128,17 @@ mod tests {
     async fn test_mainnet_url_happy_case(free_provider: FreeProvider) {
         let url = Network::free_mainnet_rpc(&free_provider);
         let provider = get_provider(&url).unwrap();
-        let spec_version = provider.spec_version().await.unwrap_or_else(|_| "0.0.0".to_string());
-        
+        let spec_version = provider
+            .spec_version()
+            .await
+            .unwrap_or_else(|_| "0.0.0".to_string());
+
         // Skip version check for Voyager as it may use a different version
         if matches!(free_provider, FreeProvider::Voyager) {
-            assert!(!spec_version.is_empty(), "Voyager RPC version should not be empty");
+            assert!(
+                !spec_version.is_empty(),
+                "Voyager RPC version should not be empty"
+            );
         } else {
             assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
         }
@@ -144,11 +150,17 @@ mod tests {
     async fn test_sepolia_url_happy_case(free_provider: FreeProvider) {
         let url = Network::free_sepolia_rpc(&free_provider);
         let provider = get_provider(&url).unwrap();
-        let spec_version = provider.spec_version().await.unwrap_or_else(|_| "0.0.0".to_string());
-        
+        let spec_version = provider
+            .spec_version()
+            .await
+            .unwrap_or_else(|_| "0.0.0".to_string());
+
         // Skip version check for Voyager as it may use a different version
         if matches!(free_provider, FreeProvider::Voyager) {
-            assert!(!spec_version.is_empty(), "Voyager RPC version should not be empty");
+            assert!(
+                !spec_version.is_empty(),
+                "Voyager RPC version should not be empty"
+            );
         } else {
             assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
         }
