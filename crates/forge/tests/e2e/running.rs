@@ -722,9 +722,6 @@ fn should_panic() {
 
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_no_data (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
 
-        Success data:
-            0x0 ('')
-
         [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_check_data (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
         [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_not_matching_suffix
 
@@ -773,6 +770,7 @@ fn should_panic() {
 }
 
 #[test]
+#[ignore = "TODO(#3322) restore the asserted message to be proper test output and not `ERROR` after there exists a previous plugin version compatible with changes from #3027"]
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
@@ -782,7 +780,6 @@ fn incompatible_snforge_std_version_warning() {
         .parse::<DocumentMut>()
         .unwrap();
     scarb_toml["dev-dependencies"]["snforge_std"] = value("0.34.1");
-    // TODO(#3069)
     scarb_toml["dev-dependencies"]["snforge_scarb_plugin"] = value("0.34.1");
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
@@ -808,6 +805,30 @@ fn incompatible_snforge_std_version_warning() {
 
         Failures:
             steps::tests::steps_more_than_10000000
+        "},
+    );
+}
+
+#[test]
+fn incompatible_snforge_std_version_error() {
+    let temp = setup_package("steps");
+    let manifest_path = temp.child("Scarb.toml");
+
+    let mut scarb_toml = fs::read_to_string(&manifest_path)
+        .unwrap()
+        .parse::<DocumentMut>()
+        .unwrap();
+    scarb_toml["dev-dependencies"]["snforge_std"] = value("0.42.0");
+    scarb_toml["dev-dependencies"]["snforge_scarb_plugin"] = value("0.42.0");
+    manifest_path.write_str(&scarb_toml.to_string()).unwrap();
+
+    let output = test_runner(&temp).assert().failure();
+
+    // TODO Update this to 0.44.0 after it has been released
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [ERROR] Package snforge_std version does not meet the minimum required version >=0.43.0. Please upgrade snforge_std in Scarb.toml
         "},
     );
 }

@@ -36,7 +36,7 @@
 * [Conditional Compilation](snforge-advanced-features/conditional-compilation.md)
 * [Direct Storage Access](snforge-advanced-features/storage-cheatcodes.md)
 * [Profiling](snforge-advanced-features/profiling.md)
-* [Backtrace](snforge-advanced-features/backtrace.md)
+* [Debugging](snforge-advanced-features/debugging.md)
 
 ---
 
@@ -107,6 +107,8 @@
     * [load](appendix/cheatcodes/load.md)
     * [generate_random_felt](appendix/cheatcodes/generate_random_felt.md)
     * [generate_arg](appendix/cheatcodes/generate_arg.md)
+    * [set_balance](appendix/cheatcodes/set_balance.md)
+    * [Token](appendix/cheatcodes/token.md)
 * [`snforge` Library Reference](appendix/snforge-library.md)
     * [byte_array](appendix/snforge-library/byte_array.md)
     * [declare](appendix/snforge-library/declare.md)

@@ -149,7 +149,7 @@ fn fork_aliased_decorator() {
                         fuzzer_seed: 12345,
                         max_n_steps: None,
                         is_vm_trace_needed: false,
-                        cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
+                        cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
                             .unwrap()
                             .join(CACHE_DIR),
                         contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
@@ -168,6 +168,7 @@ fn fork_aliased_decorator() {
                 }],
             },
             &mut BlockNumberMap::default(),
+            Option::default(),
         ))
         .expect("Runner fail");
 
@@ -235,7 +236,7 @@ fn fork_aliased_decorator_overrding() {
                         fuzzer_seed: 12345,
                         max_n_steps: None,
                         is_vm_trace_needed: false,
-                        cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
+                        cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
                             .unwrap()
                             .join(CACHE_DIR),
                         contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
@@ -254,6 +255,7 @@ fn fork_aliased_decorator_overrding() {
                 }],
             },
             &mut BlockNumberMap::default(),
+            Option::default(),
         ))
         .expect("Runner fail");
 

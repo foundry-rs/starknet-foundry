@@ -1,8 +1,7 @@
 use crate::common::assertions::{ClassHashAssert, assert_success};
 use crate::common::state::create_cached_state;
 use crate::common::{
-    call_contract, deploy_at_wrapper, deploy_contract, deploy_wrapper, felt_selector_from_name,
-    get_contracts,
+    call_contract, deploy_at_wrapper, deploy_contract, deploy_wrapper, get_contracts,
 };
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
@@ -10,6 +9,7 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
 };
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::selector_from_name;
 use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
 use conversions::felt::FromShortString;
@@ -38,7 +38,7 @@ fn deploy_at_predefined_address() {
 
     assert_eq!(contract_address, ContractAddress::from(1_u8));
 
-    let selector = felt_selector_from_name("get_balance");
+    let selector = selector_from_name("get_balance");
     let output = call_contract(
         &mut cached_state,
         &mut cheatnet_state,
@@ -118,7 +118,7 @@ fn call_predefined_contract_from_proxy_contract() {
         "CheatCallerAddressCheckerProxy",
         &[],
     );
-    let proxy_selector = felt_selector_from_name("get_cheated_caller_address");
+    let proxy_selector = selector_from_name("get_cheated_caller_address");
     let output = call_contract(
         &mut cached_state,
         &mut cheatnet_state,
@@ -142,7 +142,7 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
         &[Felt::from(121)],
     );
 
-    let proxy_selector = felt_selector_from_name("emit_one_event");
+    let proxy_selector = selector_from_name("emit_one_event");
     let output = call_contract(
         &mut cached_state,
         &mut cheatnet_state,
@@ -323,7 +323,7 @@ fn deploy_invokes_constructor() {
         &[Felt::from(123)],
     );
 
-    let selector = felt_selector_from_name("get_number");
+    let selector = selector_from_name("get_number");
 
     let output = call_contract(
         &mut cached_state,
@@ -356,7 +356,7 @@ fn deploy_at_invokes_constructor() {
     )
     .unwrap();
 
-    let selector = felt_selector_from_name("get_number");
+    let selector = selector_from_name("get_number");
 
     let output = call_contract(
         &mut cached_state,

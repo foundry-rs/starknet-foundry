@@ -243,22 +243,20 @@ pub async fn invoke_contract(
 
 pub async fn mint_token(recipient: &str, amount: u128) {
     let client = reqwest::Client::new();
-    for unit in ["FRI", "WEI"] {
-        let json = json!(
-            {
-                "address": recipient,
-                "amount": amount,
-                "unit": unit,
-            }
-        );
-        client
-            .post("http://127.0.0.1:5055/mint")
-            .header("Content-Type", "application/json")
-            .body(json.to_string())
-            .send()
-            .await
-            .expect("Error occurred while minting tokens");
-    }
+    let json = json!(
+        {
+            "address": recipient,
+            "amount": amount,
+            "unit": "FRI",
+        }
+    );
+    client
+        .post("http://127.0.0.1:5055/mint")
+        .header("Content-Type", "application/json")
+        .body(json.to_string())
+        .send()
+        .await
+        .expect("Error occurred while minting tokens");
 }
 
 #[must_use]
@@ -522,7 +520,9 @@ pub fn get_address_from_keystore(
         AccountType::OpenZeppelin | AccountType::Braavos => {
             vec![private_key.verifying_key().scalar()]
         }
-        AccountType::Argent => vec![private_key.verifying_key().scalar(), Felt::ZERO],
+        // This is a serialization of `Signer` enum for the variant `StarknetSigner` from the Argent account code
+        // One stands for `None` for the guardian argument
+        AccountType::Argent => vec![Felt::ZERO, private_key.verifying_key().scalar(), Felt::ONE],
     };
 
     get_contract_address(salt, class_hash, &calldata, Felt::ZERO)

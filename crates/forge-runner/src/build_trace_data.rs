@@ -50,7 +50,6 @@ pub fn build_profiler_call_trace(
         vm_trace,
         contracts_data,
         versioned_program_path,
-        value.run_with_call_header,
     );
 
     ProfilerCallTrace {
@@ -75,7 +74,6 @@ fn build_cairo_execution_info(
     vm_trace: Option<Vec<ProfilerTraceEntry>>,
     contracts_data: &ContractsData,
     versioned_program_path: &Utf8Path,
-    run_with_call_header: bool,
 ) -> Option<CairoExecutionInfo> {
     let contract_name = get_contract_name(entry_point.class_hash, contracts_data);
     let source_sierra_path = contract_name
@@ -83,7 +81,7 @@ fn build_cairo_execution_info(
 
     Some(CairoExecutionInfo {
         casm_level_info: CasmLevelInfo {
-            run_with_call_header,
+            run_with_call_header: false,
             vm_trace: vm_trace?,
         },
         source_sierra_path: source_sierra_path?,

@@ -1,7 +1,7 @@
 use crate::common::assertions::{assert_error, assert_panic, assert_success};
 use crate::common::cache::{purge_cache, read_cache};
 use crate::common::state::{create_fork_cached_state, create_fork_cached_state_at};
-use crate::common::{call_contract, deploy_contract, deploy_wrapper, felt_selector_from_name};
+use crate::common::{call_contract, deploy_contract, deploy_wrapper};
 use blockifier::state::cached_state::CachedState;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use camino::Utf8Path;
@@ -9,6 +9,7 @@ use cheatnet::constants::build_testing_state;
 use cheatnet::forking::cache::cache_version;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::selector_from_name;
 use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader};
 use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
@@ -32,7 +33,7 @@ fn fork_simple() {
     )
     .unwrap();
 
-    let selector = felt_selector_from_name("get_balance");
+    let selector = selector_from_name("get_balance");
     let output = call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
@@ -42,7 +43,7 @@ fn fork_simple() {
     );
     assert_success(output, &[Felt::from(0)]);
 
-    let selector = felt_selector_from_name("increase_balance");
+    let selector = selector_from_name("increase_balance");
     call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
@@ -51,7 +52,7 @@ fn fork_simple() {
         &[Felt::from(100)],
     );
 
-    let selector = felt_selector_from_name("get_balance");
+    let selector = selector_from_name("get_balance");
     let output = call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
@@ -69,7 +70,7 @@ fn try_calling_nonexistent_contract() {
     let mut cheatnet_state = CheatnetState::default();
 
     let contract_address = ContractAddress::from(1_u8);
-    let selector = felt_selector_from_name("get_balance");
+    let selector = selector_from_name("get_balance");
 
     let output = call_contract(
         &mut cached_fork_state,
@@ -121,7 +122,7 @@ fn test_forking_at_block_number() {
         )
         .unwrap();
 
-        let selector = felt_selector_from_name("get_balance");
+        let selector = selector_from_name("get_balance");
         let output = call_contract(
             &mut cached_state_before_delopy,
             &mut cheatnet_state,
@@ -134,7 +135,7 @@ fn test_forking_at_block_number() {
         let panic_data_felts: Vec<Felt> = ByteArray::from(msg).serialize_with_magic();
         assert_panic(output, &panic_data_felts);
 
-        let selector = felt_selector_from_name("get_balance");
+        let selector = selector_from_name("get_balance");
         let output = call_contract(
             &mut cached_state_after_deploy,
             &mut cheatnet_state,
@@ -166,7 +167,7 @@ fn call_forked_contract_from_other_contract() {
         &[Felt::from(1)],
     );
 
-    let selector = felt_selector_from_name("get_balance_call_contract");
+    let selector = selector_from_name("get_balance_call_contract");
     let output = call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
@@ -195,7 +196,7 @@ fn library_call_on_forked_class_hash() {
         &[Felt::from(1)],
     );
 
-    let selector = felt_selector_from_name("get_balance_library_call");
+    let selector = selector_from_name("get_balance_library_call");
     let output = call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
@@ -209,7 +210,7 @@ fn library_call_on_forked_class_hash() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        felt_selector_from_name("set_balance"),
+        selector_from_name("set_balance"),
         &[Felt::from(100)],
     );
 
@@ -245,7 +246,7 @@ fn call_forked_contract_from_constructor() {
         &[Felt::from(0), forked_contract_address],
     );
 
-    let selector = felt_selector_from_name("get_balance_library_call");
+    let selector = selector_from_name("get_balance_library_call");
     let output = call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
@@ -278,7 +279,7 @@ fn call_forked_contract_get_block_info_via_proxy() {
         &[],
     );
 
-    let selector = felt_selector_from_name("read_block_number");
+    let selector = selector_from_name("read_block_number");
     let output = call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
@@ -288,7 +289,7 @@ fn call_forked_contract_get_block_info_via_proxy() {
     );
     assert_success(output, &[Felt::from(53_655)]);
 
-    let selector = felt_selector_from_name("read_block_timestamp");
+    let selector = selector_from_name("read_block_timestamp");
     let output = call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
@@ -298,7 +299,7 @@ fn call_forked_contract_get_block_info_via_proxy() {
     );
     assert_success(output, &[Felt::from(1_711_548_115)]);
 
-    let selector = felt_selector_from_name("read_sequencer_address");
+    let selector = selector_from_name("read_sequencer_address");
     let output = call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
@@ -338,7 +339,7 @@ fn call_forked_contract_get_block_info_via_libcall() {
         &[],
     );
 
-    let selector = felt_selector_from_name("read_block_number_with_lib_call");
+    let selector = selector_from_name("read_block_number_with_lib_call");
     let output = call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
@@ -348,7 +349,7 @@ fn call_forked_contract_get_block_info_via_libcall() {
     );
     assert_success(output, &[Felt::from(53_669)]);
 
-    let selector = felt_selector_from_name("read_block_timestamp_with_lib_call");
+    let selector = selector_from_name("read_block_timestamp_with_lib_call");
     let output = call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
@@ -358,7 +359,7 @@ fn call_forked_contract_get_block_info_via_libcall() {
     );
     assert_success(output, &[Felt::from(1_711_551_518)]);
 
-    let selector = felt_selector_from_name("read_sequencer_address_with_lib_call");
+    let selector = selector_from_name("read_sequencer_address_with_lib_call");
     let output = call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
@@ -390,7 +391,7 @@ fn using_specified_block_nb_is_cached() {
         )
         .unwrap();
 
-        let selector = felt_selector_from_name("get_balance");
+        let selector = selector_from_name("get_balance");
         let output = call_contract(
             &mut cached_state,
             &mut cheatnet_state,
@@ -466,7 +467,7 @@ fn test_cache_merging() {
 
         let contract_address = ContractAddress::try_from_hex_str(contract_address).unwrap();
 
-        let selector = felt_selector_from_name("get_balance");
+        let selector = selector_from_name("get_balance");
         let output = call_contract(
             &mut cached_state,
             &mut cheatnet_state,
@@ -581,7 +582,7 @@ fn test_cached_block_info_merging() {
         )
         .unwrap();
 
-        let selector = felt_selector_from_name("get_balance");
+        let selector = selector_from_name("get_balance");
         let output = call_contract(
             &mut cached_state,
             &mut cheatnet_state,
@@ -658,7 +659,7 @@ fn test_calling_nonexistent_url() {
     )
     .unwrap();
 
-    let selector = felt_selector_from_name("get_balance");
+    let selector = selector_from_name("get_balance");
     let output = call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
