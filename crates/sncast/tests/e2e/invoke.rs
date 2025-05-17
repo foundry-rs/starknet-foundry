@@ -216,14 +216,11 @@ fn test_wrong_function_name() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
-        indoc! {"
-            command: invoke
-            error: Transaction execution error [..]0x454e545259504f494e545f4e4f545f464f554e44[..]
-        "},
+        r#"Error: Function with selector "0x2e0f845a8d0319c5c37d558023299beec2a0155d415f41cca140a09e6877c67" not found in ABI of the contract"#,
     );
 }
 
