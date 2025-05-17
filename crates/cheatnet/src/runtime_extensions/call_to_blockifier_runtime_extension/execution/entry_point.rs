@@ -3,7 +3,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::common::{get_relocated_vm_trace, get_syscalls_gas_consumed, sum_syscall_usage};
-use crate::state::{CallTrace, CallTraceNode, CheatSpan, CheatStatus};
+use crate::state::{CallTrace, CallTraceNode, CheatStatus};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
 use blockifier::execution::syscalls::hint_processor::{SyscallUsageMap, ENTRYPOINT_NOT_FOUND_ERROR, OUT_OF_GAS_ERROR};
@@ -410,9 +410,6 @@ fn get_mocked_function_cheat_status<'a>(
             let key_zero = (call.entry_point_selector, Felt::zero());
 
             match contract_functions.get(&key) {
-                Some(CheatStatus::Cheated(_, CheatSpan::TargetCalls(0))) => {
-                    contract_functions.get_mut(&key_zero)
-                }
                 Some(CheatStatus::Cheated(_, _)) => contract_functions.get_mut(&key),
                 _ => contract_functions.get_mut(&key_zero),
             }
