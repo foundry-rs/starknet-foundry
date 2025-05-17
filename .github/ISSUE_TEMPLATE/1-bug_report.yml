@@ -1,12 +1,13 @@
-name: Bug Report
-description: Report a bug
-labels: [ "bug" ]
+name: Problem Report
+description: Report a problem with a tool
+type: "Bug"
 body:
   - type: dropdown
     id: tool-name
     attributes:
-      label: Which component is your bug related to?
-      multiple: true
+      label: Select Tool
+      description: Select for which tool you would like to report a bug.
+      multiple: false
       options:
         - snforge
         - sncast
@@ -17,7 +18,7 @@ body:
     id: foundry-version
     attributes:
       label: Foundry Version
-      description: What Foundry version are you using?
+      description: What tool version are you using? This can be checked by running `snforge --version` and `sncast --version` accordingly.
     validations:
       required: true
 
@@ -27,9 +28,9 @@ body:
       label: What operating system are you using?
       multiple: false
       options:
-        - Windows
         - Linux
         - MacOS
+        - Windows
     validations:
       required: true
 
@@ -47,22 +48,16 @@ body:
   - type: textarea
     id: what-happened
     attributes:
-      label: What happened
-      description: Describe the issue here.
+      label: Issue Description
+      description: Describe the problem that happened to you. The more details you provide, the better.
+      placeholder: Running `snforge` doesn't produce tests
     validations:
       required: true
 
   - type: textarea
     id: logs
     attributes:
-      label: Trace
-      description: Please provide output of the error.
+      label: Command Line Output
+      description: If relevant, please provide the command output related to the problem described above.
     validations:
       required: false
-
-  - type: checkboxes
-    id: verified-not-exists
-    attributes:
-      label: Is there an existing issue for this?
-      options:
-        - label: I have searched the existing issues and verified no issue exits for this problem.

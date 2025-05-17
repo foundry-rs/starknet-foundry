@@ -131,13 +131,13 @@
             "type": "braavos"
         },
         "oz": {
-            "address": "0x1eae312dad53cf9d1c435891648cc48b14c901bec0e1bc87c332fcdca1a762f",
-            "class_hash": "0xe2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6",
+            "address": "0x1173129651d1853fe9a15f8e8ef29e4806c5a9469b0a6b9622ee90f392bc26d",
+            "class_hash": "0x5b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564",
             "deployed": false,
             "legacy": false,
-            "private_key": "0x6a3fff2b1333a4ed3dd6f9afc957c4ec9ac73af69590a6312ffeddb6caf0f20",
-            "public_key": "0x6aa82f4db6c740c27751885f47f2b73eed6c70d12d059965a563a04678c8405",
-            "salt": "0xc3990d6bbb890e77",
+            "private_key": "0x4a31141908e08ec6d82d324303d97405ad2196def8a13ea320e2117166809d2",
+            "public_key": "0x36a64f9d432cce317c3e50bc467d48f2797463babe8f29c83c2e6125ddd1947",
+            "salt": "0x25e7144fce03d200",
             "type": "open_zeppelin"
         }
     }

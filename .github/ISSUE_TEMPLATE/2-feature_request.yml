@@ -1,0 +1,23 @@
+name: Feature Request
+description: Request a feature to be added to a tool
+type: "Feature"
+body:
+  - type: dropdown
+    id: tool-name
+    attributes:
+      label: Select Tool
+      description: Select for which tool you would like to request a feature.
+      multiple: false
+      options:
+        - snforge
+        - sncast
+    validations:
+      required: true
+
+  - type: textarea
+    id: Suggestion
+    attributes:
+      label: Requested Feature
+      description: Describe the feature you would like to be added to the tool selected above.
+    validations:
+      required: true

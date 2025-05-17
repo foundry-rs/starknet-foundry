@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Support
-    url: https://github.com/foundry-rs/starknet-foundry#getting-help
-    about: This issue tracker is only for bugs and feature requests. Support is available through other communication channels.
+  - name: Telegram Support Channel
+    url: https://t.me/starknet_foundry_support
+    about: This issue tracker is only for bugs and feature requests. Support is available through Telegram channel.

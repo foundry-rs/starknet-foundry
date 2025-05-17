@@ -1,4 +1,4 @@
-name: Work item
+name: Work Item
 description: Submit an actionable task
 body:
   - type: textarea

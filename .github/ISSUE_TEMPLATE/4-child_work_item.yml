@@ -1,0 +1,21 @@
+name: Child Item
+description: Child work item for tracking issues
+type: "Task"
+body:
+  - type: input
+    id: objective
+    attributes:
+      label: Objective
+      description: Briefly describe the task
+      placeholder: Add unit tests for `print_a` cheatcode.
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Provide additional context on the task
+      placeholder: Make sure to include case where `print_a` cheatcode is called with an empty string.
+    validations:
+      required: false
