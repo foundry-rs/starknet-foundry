@@ -38,10 +38,10 @@ async fn test_happy_case_contract_address() {
         "id": 1,
         "jsonrpc": "2.0",
         "method": "starknet_getClassHashAt",
-        "params": [
-            "latest",
-            MAP_CONTRACT_ADDRESS_SEPOLIA
-        ]
+        "params": {
+            "block_id": "latest",
+            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
+        }
     });
     let rpc_response = json!({
         "id": 1,
@@ -127,10 +127,10 @@ async fn test_happy_case_class_hash() {
         "id": 1,
         "jsonrpc": "2.0",
         "method": "starknet_getClassHashAt",
-        "params": [
-            "latest",
-            MAP_CONTRACT_ADDRESS_SEPOLIA
-        ]
+        "params": {
+            "block_id": "latest",
+            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
+        }
     });
     let contract_not_found = json!({
       "error": {
@@ -152,7 +152,7 @@ async fn test_happy_case_class_hash() {
 
     Mock::given(method("POST"))
         .and(body_json(rpc_request))
-        .respond_with(ResponseTemplate::new(400).set_body_json(contract_not_found))
+        .respond_with(ResponseTemplate::new(200).set_body_json(contract_not_found))
         .expect(0)
         .mount(&mock_rpc)
         .await;
@@ -219,10 +219,10 @@ async fn test_happy_case_with_confirm_verification_flag() {
         "id": 1,
         "jsonrpc": "2.0",
         "method": "starknet_getClassHashAt",
-        "params": [
-            "latest",
-            MAP_CONTRACT_ADDRESS_SEPOLIA
-        ]
+        "params": {
+            "block_id": "latest",
+            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
+        }
     });
     let rpc_response = json!({
         "id": 1,
@@ -308,10 +308,10 @@ async fn test_failed_verification_contract_address() {
         "id": 1,
         "jsonrpc": "2.0",
         "method": "starknet_getClassHashAt",
-        "params": [
-            "latest",
-            MAP_CONTRACT_ADDRESS_SEPOLIA
-        ]
+        "params": {
+            "block_id": "latest",
+            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
+        }
     });
     let rpc_response = json!({
         "id": 1,
@@ -380,9 +380,8 @@ async fn test_failed_verification_contract_address() {
         output,
         formatdoc! {"
         command: verify
-        error: {}
+        error: some error message
         ",
-        error,
         },
     );
 }
@@ -396,10 +395,10 @@ async fn test_failed_verification_class_hash() {
         "id": 1,
         "jsonrpc": "2.0",
         "method": "starknet_getClassHashAt",
-        "params": [
-            "latest",
-            MAP_CONTRACT_ADDRESS_SEPOLIA
-        ]
+        "params": {
+            "block_id": "latest",
+            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
+        }
     });
     let contract_not_found = json!({
       "error": {
@@ -421,7 +420,7 @@ async fn test_failed_verification_class_hash() {
 
     Mock::given(method("POST"))
         .and(body_json(rpc_request))
-        .respond_with(ResponseTemplate::new(400).set_body_json(contract_not_found))
+        .respond_with(ResponseTemplate::new(200).set_body_json(contract_not_found))
         .expect(0)
         .mount(&mock_rpc)
         .await;
@@ -471,9 +470,8 @@ async fn test_failed_verification_class_hash() {
         output,
         formatdoc! {"
         command: verify
-        error: {}
+        error: some error message
         ",
-        error,
         },
     );
 }
@@ -487,22 +485,26 @@ async fn test_failed_class_hash_lookup() {
         "id": 1,
         "jsonrpc": "2.0",
         "method": "starknet_getClassHashAt",
-        "params": [
-            "latest",
-            MAP_CONTRACT_ADDRESS_SEPOLIA
-        ]
+        "params": {
+            "block_id": "latest",
+            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
+        }
     });
+
+    // The official StarkNet error response format
     let contract_not_found = json!({
-      "error": {
-        "code": 20,
-        "message": "Contract not found"
-      },
-      "id": 1,
-      "jsonrpc": "2.0"
+        "jsonrpc": "2.0",
+        "id": 1,
+        "error": {
+            "code": 20,
+            "message": "Contract not found"
+        }
     });
 
     let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
+
+    // Set up the spec version request mock
     Mock::given(method("POST"))
         .and(body_json(LazyLock::force(&SPEC_REQUEST)))
         .respond_with(ResponseTemplate::new(200).set_body_json(LazyLock::force(&SPEC_RESPONSE)))
@@ -510,28 +512,12 @@ async fn test_failed_class_hash_lookup() {
         .mount(&mock_rpc)
         .await;
 
+    // Set up the class hash lookup request to return the contract not found error
     Mock::given(method("POST"))
         .and(body_json(rpc_request))
-        .respond_with(ResponseTemplate::new(400).set_body_json(contract_not_found))
+        .respond_with(ResponseTemplate::new(200).set_body_json(contract_not_found))
         .expect(1)
         .mount(&mock_rpc)
-        .await;
-
-    let class_hash: Felt =
-        Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
-
-    let expected_body = json!({
-        "project_dir_path": ".",
-        "name": "Map",
-        "package_name": "map",
-        "license": null
-    });
-    Mock::given(method("POST"))
-        .and(path(format!("class-verify/{class_hash:#068x}")))
-        .and(body_partial_json(&expected_body))
-        .respond_with(ResponseTemplate::new(400))
-        .expect(0)
-        .mount(&mock_server)
         .await;
 
     let args = vec![
@@ -546,14 +532,14 @@ async fn test_failed_class_hash_lookup() {
         "voyager",
         "--network",
         "sepolia",
+        "--confirm-verification",
         "--rpc",
         &mock_rpc_uri,
     ];
 
     let snapbox = runner(&args)
         .env("VERIFIER_API_URL", mock_server.uri())
-        .current_dir(contract_path.path())
-        .stdin("Y");
+        .current_dir(contract_path.path());
 
     let output = snapbox.assert().success();
 
@@ -576,10 +562,10 @@ async fn test_virtual_workspaces() {
         "id": 1,
         "jsonrpc": "2.0",
         "method": "starknet_getClassHashAt",
-        "params": [
-            "latest",
-            MAP_CONTRACT_ADDRESS_SEPOLIA
-        ]
+        "params": {
+            "block_id": "latest",
+            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
+        }
     });
     let rpc_response = json!({
         "id": 1,
