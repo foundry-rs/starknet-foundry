@@ -32,9 +32,8 @@ data-transformer = { path = "../data-transformer" }
 configuration = { path = "../configuration" }
 shared = { path = "../shared" }
 forge_runner = { path = "../forge-runner" }
-cairo-lang-runner.workspace = true
-cairo-lang-sierra-to-casm.workspace = true
-cairo-lang-runnable-utils.workspace = true
+cairo-lang-runner = "2.11.2"
+cairo-lang-runnable-utils = "2.11.2"
 cairo-lang-utils.workspace = true
 cairo-lang-sierra.workspace = true
 cairo-lang-casm.workspace = true
@@ -54,6 +53,7 @@ regex.workspace = true
 dirs.workspace = true
 dialoguer.workspace = true
 toml_edit.workspace = true
+num-traits.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true
@@ -66,6 +66,11 @@ fs_extra.workspace = true
 wiremock.workspace = true
 docs = { workspace = true, features = ["testing"] }
 shared = { path = "../shared", features = ["testing"] }
+packages_validation = { path = "../testing/packages_validation" }
+
+[features]
+default = []
+scarb_since_2_10 = ["packages_validation/scarb_since_2_10"]
 
 [[bin]]
 name = "sncast"

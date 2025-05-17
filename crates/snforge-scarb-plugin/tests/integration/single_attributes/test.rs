@@ -16,8 +16,23 @@ fn appends_internal_config_and_executable() {
         &result,
         "
             #[snforge_internal_test_executable]
+            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+            fn empty_fn(mut _data: Span<felt252>) -> Span::<felt252> {
+                core::internal::require_implicit::<System>();
+                core::internal::revoke_ap_tracking();
+                core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
+
+                core::option::OptionTraitImpl::expect(
+                    core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
+                );
+                empty_fn_return_wrapper();
+
+                let mut arr = ArrayTrait::new();
+                core::array::ArrayTrait::span(@arr)
+            }
+
             #[__internal_config_statement]
-            fn empty_fn(){}
+            fn empty_fn_return_wrapper() {}
         ",
     );
 }

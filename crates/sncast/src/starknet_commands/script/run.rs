@@ -14,7 +14,6 @@ use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{Arg, RunResultValue, SierraCasmRunner};
 use cairo_lang_sierra::program::VersionedProgram;
-use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
@@ -33,6 +32,7 @@ use runtime::{
 };
 use scarb_api::{StarknetContractArtifacts, package_matches_version_requirement};
 use scarb_metadata::{Metadata, PackageMetadata};
+use script_runtime::CastScriptRuntime;
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::print::print_as_warning;
 use shared::utils::build_readable_text;
@@ -55,6 +55,8 @@ use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::fs;
 use tokio::runtime::Runtime;
+
+mod script_runtime;
 
 type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
 
@@ -94,7 +96,7 @@ impl CastScriptExtension<'_> {
 }
 
 impl<'a> ExtensionLogic for CastScriptExtension<'a> {
-    type Runtime = StarknetRuntime<'a>;
+    type Runtime = CastScriptRuntime<'a>;
 
     #[expect(clippy::too_many_lines)]
     fn handle_cheatcode(
@@ -272,7 +274,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
     }
 }
 
-#[expect(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments, clippy::too_many_lines)]
 pub fn run(
     module_name: &str,
     metadata: &Metadata,
@@ -298,7 +300,7 @@ pub fn run(
 
     let runner = SierraCasmRunner::new(
         sierra_program.clone(),
-        Some(MetadataComputationConfig::default()),
+        None,
         OrderedHashMap::default(),
         None,
     )
@@ -306,8 +308,8 @@ pub fn run(
 
     // `builder` field in `SierraCasmRunner` is private, hence the need to create a new `RunnableBuilder`
     // https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L184
-    let builder = RunnableBuilder::new(sierra_program, Some(MetadataComputationConfig::default()))
-        .with_context(|| "Failed to create builder")?;
+    let builder =
+        RunnableBuilder::new(sierra_program, None).with_context(|| "Failed to create builder")?;
 
     let name_suffix = module_name.to_string() + "::main";
     let func = runner.find_function(name_suffix.as_str())
@@ -377,13 +379,12 @@ pub fn run(
 
     let mut cast_runtime = ExtendedRuntime {
         extension: cast_extension,
-        extended_runtime: StarknetRuntime {
-            hint_handler: syscall_handler,
-            // If for some reason we need to calculate `user_args`, here
-            // is the function to do it: https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L464
-            // See TODO(#2966)
+        extended_runtime: CastScriptRuntime {
+            starknet_runtime: StarknetRuntime {
+                hint_handler: syscall_handler,
+                panic_traceback: None,
+            },
             user_args: vec![vec![Arg::Value(Felt::from(i64::MAX))]],
-            panic_traceback: None,
         },
     };
 
