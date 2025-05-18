@@ -1,4 +1,4 @@
-use crate::common::state::{create_cached_state, create_fork_cached_state};
+use crate::common::state::{create_cached_state, create_fork_cached_state_at};
 use crate::common::{call_contract_raw, deploy_contract, selector_from_name};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::state::state_api::StateReader;
@@ -53,7 +53,7 @@ fn test_state_reverted() {
 #[test]
 fn test_tracked_resources() {
     let cache_dir = TempDir::new().unwrap();
-    let mut cached_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
+    let mut cached_state = create_fork_cached_state_at(782_878, cache_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
 
     let contract_address = deploy_contract(
@@ -67,7 +67,7 @@ fn test_tracked_resources() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        selector_from_name("call_contracts"),
+        selector_from_name("call_twice"),
         &[],
         TrackedResource::SierraGas,
     )
@@ -85,6 +85,15 @@ fn test_tracked_resources() {
     );
     assert_eq!(first_inner_call.execution.gas_consumed, 0);
     assert_ne!(first_inner_call.resources.n_steps, 0);
+    assert_eq!(first_inner_call.inner_calls.len(), 1);
+
+    let inner_inner_call = first_inner_call.inner_calls.first().unwrap();
+    assert_eq!(
+        inner_inner_call.tracked_resource,
+        TrackedResource::CairoSteps
+    );
+    assert_eq!(inner_inner_call.execution.gas_consumed, 0);
+    assert_ne!(inner_inner_call.resources.n_steps, 0);
 
     let second_inner_call = main_call_info.inner_calls.last().unwrap();
     assert_eq!(

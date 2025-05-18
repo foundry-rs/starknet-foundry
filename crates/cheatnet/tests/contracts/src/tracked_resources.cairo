@@ -1,7 +1,7 @@
-// Address of a map contract deployed to the Sepolia network
-// Compiled with Sierra version 1.3.0
-const SEPOLIA_MAP_ADDRESS: felt252 =
-    0x06b248bde9ce00d69099304a527640bc9515a08f0b49e5168e2096656f207e1d;
+// Address of a simple proxy contract that works as a wrapper on the `call_contract_syscall`
+// Deployed to the Sepolia network and compiled with Sierra version 1.6.0
+const PROXY_CONTRACT_ADDRESS: felt252 =
+    0x004a053601baaed3231638627631caed753b6527484cde2ed2b5b7d57854a902;
 
 #[starknet::contract]
 mod TrackedResources {
@@ -11,14 +11,17 @@ mod TrackedResources {
     struct Storage {}
 
     #[external(v0)]
-    fn call_contracts(ref self: ContractState) {
+    fn call_twice(ref self: ContractState) {
+        // Call through proxy
         syscalls::call_contract_syscall(
-            super::SEPOLIA_MAP_ADDRESS.try_into().unwrap(),
-            selector!("put"),
-            array![0x100, 0x200].span(),
+            super::PROXY_CONTRACT_ADDRESS.try_into().unwrap(),
+            selector!("call_single"),
+            array![get_contract_address().try_into().unwrap(), selector!("call_internal"), 0]
+                .span(),
         )
             .unwrap_syscall();
 
+        // Call itself directly
         syscalls::call_contract_syscall(
             get_contract_address(), selector!("call_internal"), array![].span(),
         )
