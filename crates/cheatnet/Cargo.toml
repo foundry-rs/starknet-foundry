@@ -14,7 +14,6 @@ camino.workspace = true
 starknet_api.workspace = true
 starknet-types-core.workspace = true
 cairo-lang-casm.workspace = true
-cairo-lang-runner.workspace = true
 cairo-lang-utils.workspace = true
 cairo-lang-starknet.workspace = true
 cairo-lang-starknet-classes.workspace = true

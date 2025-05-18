@@ -71,7 +71,6 @@ pub(crate) fn execute_entry_point_call_cairo1(
         extension: CheatableStarknetRuntimeExtension { cheatnet_state },
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
-            user_args: vec![],
             panic_traceback: None,
         },
     };

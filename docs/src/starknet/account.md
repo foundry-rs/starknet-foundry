@@ -165,7 +165,7 @@ $ sncast account delete \
 #### Custom Account Contract
 
 By default, `sncast` creates/deploys an account
-using [OpenZeppelin's account contract class hash](https://starkscan.co/class/0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6).
+using [OpenZeppelin's account contract class hash](https://starkscan.co/class/0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564).
 It is possible to create an account using custom openzeppelin, argent or braavos contract declared to starknet. This can
 be achieved
 with `--class-hash` flag:
@@ -175,7 +175,7 @@ $ sncast \
     account create \
     --name new_account_2 \
     --network sepolia \
-    --class-hash 0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6
+    --class-hash 0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564
     --type oz
 ```
 
