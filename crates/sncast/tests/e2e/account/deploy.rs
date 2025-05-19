@@ -12,9 +12,7 @@ use indoc::indoc;
 use serde_json::Value;
 use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
 use sncast::AccountType;
-use sncast::helpers::constants::{
-    ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
-};
+use sncast::helpers::constants::{ARGENT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
 use starknet::core::types::TransactionReceipt::DeployAccount;
 use std::fs;
 use tempfile::{TempDir, tempdir};
