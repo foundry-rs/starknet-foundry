@@ -5,6 +5,7 @@ use configuration::copy_config_to_tempdir;
 use indoc::{formatdoc, indoc};
 
 use crate::helpers::env::set_create_keystore_password_env;
+use camino::Utf8PathBuf;
 use conversions::string::IntoHexStr;
 use serde_json::{json, to_string_pretty};
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
@@ -185,12 +186,15 @@ pub async fn test_happy_case_add_profile() {
         "my_account",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = runner(&args).current_dir(tempdir.path()).assert();
+    let config_path = Utf8PathBuf::from_path_buf(tempdir.path().join("snfoundry.toml"))
+        .unwrap()
+        .canonicalize_utf8()
+        .unwrap();
 
     assert_stdout_contains(
         output,
-        "add_profile: Profile my_account successfully added to snfoundry.toml",
+        format!("add_profile: Profile my_account successfully added to {config_path}"),
     );
 
     let contents = fs::read_to_string(tempdir.path().join("snfoundry.toml"))
@@ -404,11 +408,16 @@ pub async fn test_happy_case_keystore_add_profile() {
         "with_keystore",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = runner(&args).current_dir(tempdir.path()).assert();
+
+    let config_path = Utf8PathBuf::from_path_buf(tempdir.path().join("snfoundry.toml"))
+        .unwrap()
+        .canonicalize_utf8()
+        .unwrap();
+
     assert_stdout_contains(
         output,
-        "add_profile: Profile with_keystore successfully added to snfoundry.toml",
+        format!("add_profile: Profile with_keystore successfully added to {config_path}"),
     );
 
     let contents =
