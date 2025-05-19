@@ -819,35 +819,3 @@ pub async fn test_happy_case_default_name_generation() {
 
     assert_eq!(contents_json, all_accounts_content);
 }
-
-#[tokio::test]
-pub async fn test_braavos_disabled() {
-    let tempdir = tempdir().expect("Unable to create a temporary directory");
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "account",
-        "import",
-        "--url",
-        URL,
-        "--name",
-        "my_account_import",
-        "--address",
-        "0x123",
-        "--private-key",
-        "0x456",
-        "--type",
-        "braavos_incompatible",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-
-    snapbox.assert().stderr_matches(indoc! {r"
-        command: account import
-        Error: Using incompatible Braavos accounts is disabled because they don't work with starknet 0.13.5.
-            Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
-        "},
-    );
-}

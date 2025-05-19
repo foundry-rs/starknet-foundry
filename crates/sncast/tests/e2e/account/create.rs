@@ -19,7 +19,8 @@ use test_case::test_case;
 
 #[test_case("oz"; "oz_account_type")]
 #[test_case("argent"; "argent_account_type")]
-#[test_case("braavos"; "braavos_account_type")]
+// TODO(#3357)
+// #[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
@@ -331,7 +332,8 @@ pub async fn test_account_already_exists() {
 
 #[test_case("oz"; "oz_account_type")]
 #[test_case("argent"; "argent_account_type")]
-#[test_case("braavos"; "braavos_account_type")]
+// TODO(#3357)
+// #[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case_keystore(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
@@ -820,6 +822,7 @@ fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&s
     to_string_pretty(&account_json).unwrap()
 }
 
+// TODO(#3357): Remove this test when Braavos account creation is enabled
 #[test]
 fn test_braavos_disabled() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
@@ -837,7 +840,7 @@ fn test_braavos_disabled() {
         "--salt",
         "0x1",
         "--type",
-        "braavos_incompatible",
+        "braavos",
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -847,8 +850,7 @@ fn test_braavos_disabled() {
         output,
         indoc! {r"
         command: account create
-        Error: Using incompatible Braavos accounts is disabled because they don't work with starknet 0.13.5.
-            Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
+        error: Creating Braavos accounts is currently disabled. Please use the Braavos web wallet to create an account and later import it with sncast
         "},
     );
 }

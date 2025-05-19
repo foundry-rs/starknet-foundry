@@ -4,8 +4,8 @@ use crate::helpers::constants::{
 };
 use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
-    create_and_deploy_account, create_and_deploy_oz_account, get_accounts_path,
-    get_transaction_hash, get_transaction_receipt,
+    create_and_deploy_account, create_and_deploy_oz_account, get_transaction_hash,
+    get_transaction_receipt,
 };
 use crate::helpers::runner::runner;
 use crate::helpers::shell::os_specific_shell;
@@ -18,7 +18,6 @@ use sncast::helpers::constants::OZ_CLASS_HASH;
 use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Deploy;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
-use tempfile::tempdir;
 use test_case::test_case;
 
 #[tokio::test]
@@ -359,34 +358,4 @@ async fn test_happy_case_shell() {
         .arg(URL)
         .arg(CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA);
     snapbox.assert().success();
-}
-
-// TODO(#3118: Remove this test, once integration with braavos is restored
-#[tokio::test]
-async fn test_braavos_disabled() {
-    let tempdir = tempdir().expect("Failed to create a temporary directory");
-    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
-
-    let args = vec![
-        "--accounts-file",
-        &accounts_json_path,
-        "--account",
-        "braavos_incompatible",
-        "deploy",
-        "--url",
-        URL,
-        "--class-hash",
-        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().failure();
-
-    assert_stderr_contains(
-        output,
-        indoc! {r"
-        Error: Using incompatible Braavos accounts is disabled because they don't work with starknet 0.13.5.
-            Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
-        "},
-    );
 }

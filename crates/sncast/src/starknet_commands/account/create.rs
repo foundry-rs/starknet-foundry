@@ -63,6 +63,13 @@ pub async fn create(
     chain_id: Felt,
     create: &Create,
 ) -> Result<AccountCreateResponse> {
+    // TODO(#3357): Remove this check once Pathfinder is fixed
+    if create.account_type == AccountType::Braavos {
+        bail!(
+            "Creating Braavos accounts is currently disabled. Please use the Braavos web wallet to create an account and later import it with sncast"
+        );
+    }
+
     if let Some(class_hash) = create.class_hash {
         check_braavos_account_compatibility(class_hash)?;
     }
