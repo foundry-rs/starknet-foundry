@@ -92,7 +92,7 @@ async fn deploy_from_keystore(
     let account_data = get_account_data_from_keystore(account, &keystore_path)?;
 
     // TODO(#3357): Remove this check once Pathfinder is fixed
-    ensure_not_braavos_account(account_data.account_type)?;
+    let _ = ensure_not_braavos_account(account_data.account_type);
 
     let is_deployed = account_data
         .deployed
@@ -162,7 +162,7 @@ async fn deploy_from_accounts_file(
     let account_data = get_account_data_from_accounts_file(&name, chain_id, &accounts_file)?;
 
     // TODO(#3357): Remove this check once Pathfinder is fixed
-    ensure_not_braavos_account(account_data.account_type)?;
+    let _ = ensure_not_braavos_account(account_data.account_type);
 
     let private_key = SigningKey::from_secret_scalar(account_data.private_key);
 
