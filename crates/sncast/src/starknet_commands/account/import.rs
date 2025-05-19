@@ -20,6 +20,7 @@ use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::providers::{Provider, ProviderError};
 use starknet::signers::SigningKey;
 use starknet_types_core::felt::Felt;
+use configuration::resolve_config_file;
 
 #[derive(Args, Debug)]
 #[command(about = "Add an account to the accounts file")]
@@ -157,7 +158,8 @@ pub async fn import(
                 accounts_file: accounts_file.into(),
                 ..Default::default()
             };
-            add_created_profile_to_configuration(import.add_profile.as_deref(), &config, None)?;
+            let config_path = resolve_config_file();
+            add_created_profile_to_configuration(import.add_profile.as_deref(), &config, &config_path)?;
         } else {
             unreachable!("Conflicting arguments should be handled in clap");
         }

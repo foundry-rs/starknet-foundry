@@ -27,6 +27,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 use std::str::FromStr;
+use configuration::resolve_config_file;
 
 #[derive(Args, Debug)]
 #[command(about = "Create an account with all important secrets")]
@@ -137,7 +138,8 @@ pub async fn create(
                 keystore,
                 ..Default::default()
             };
-            add_created_profile_to_configuration(create.add_profile.as_deref(), &config, None)?;
+            let config_path = resolve_config_file();
+            add_created_profile_to_configuration(create.add_profile.as_deref(), &config, &config_path)?;
         } else {
             unreachable!("Conflicting arguments should be handled in clap");
         }
