@@ -14,7 +14,11 @@ account information stored locally - this will not remove the account from Stark
 > Accounts creation and deployment is supported for
 >  - OpenZeppelin
 >  - Argent (with guardian set to 0)
->  - Braavos
+<!-- >  - Braavos -->
+<!-- TODO(#3357): Remove this warning and uncomment braavos from possible account variants -->
+> ⚠️ **Warning**
+> Creating Braavos accounts is currently disabled.
+> Please use the Braavos web wallet to create an account and later import it with sncast
 
 ## Examples
 
