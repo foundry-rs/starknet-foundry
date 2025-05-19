@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - OpenZeppelin account updated to v1.0.0 [preset](https://docs.openzeppelin.com/contracts-cairo/1.0.0/api/account#AccountUpgradeable)
 - Using Braavos accounts is enabled
-- `account create` for Braavos is temporarily disabled. Please use Braavos web wallet to create an account and later import it with `sncast account import`.
+- `account create` for Braavos is temporarily disabled. Please use Braavos web wallet to create an account and later import it with `sncast`
 
 ## [0.43.0] - 2025-05-09
 
