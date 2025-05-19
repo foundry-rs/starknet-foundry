@@ -7,6 +7,7 @@ use crate::starknet_commands::account::{
 use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::Args;
+use configuration::resolve_config_file;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
@@ -20,7 +21,6 @@ use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::providers::{Provider, ProviderError};
 use starknet::signers::SigningKey;
 use starknet_types_core::felt::Felt;
-use configuration::resolve_config_file;
 
 #[derive(Args, Debug)]
 #[command(about = "Add an account to the accounts file")]
@@ -150,26 +150,33 @@ pub async fn import(
 
     write_account_to_accounts_file(&account_name, accounts_file, chain_id, account_json.clone())?;
 
+    let mut add_profile_message =
+        String::from("--add-profile flag was not set. No profile added to snfoundry.toml");
+
     if import.add_profile.is_some() {
-        if let Some(url) = &import.rpc.url {
-            let config = CastConfig {
-                url: url.clone(),
-                account: account_name.clone(),
-                accounts_file: accounts_file.into(),
-                ..Default::default()
-            };
-            let config_path = resolve_config_file();
-            add_created_profile_to_configuration(import.add_profile.as_deref(), &config, &config_path)?;
-        } else {
-            unreachable!("Conflicting arguments should be handled in clap");
-        }
+        let url =
+            import.rpc.url.clone().expect(
+                "the argument '--network' should not be used with '--add-profile' argument",
+            );
+
+        let config = CastConfig {
+            url,
+            account: account_name.clone(),
+            accounts_file: accounts_file.into(),
+            ..Default::default()
+        };
+        let config_path = resolve_config_file();
+        let profile_name = import
+            .add_profile
+            .clone()
+            .expect("add_profile should be Some");
+        add_profile_message =
+            format!("Profile {profile_name} successfully added to {config_path}",);
+        add_created_profile_to_configuration(import.add_profile.as_deref(), &config, &config_path)?;
     }
 
     Ok(AccountImportResponse {
-        add_profile: import.add_profile.as_ref().map_or_else(
-            || "--add-profile flag was not set. No profile added to snfoundry.toml".to_string(),
-            |profile_name| format!("Profile {profile_name} successfully added to snfoundry.toml"),
-        ),
+        add_profile: add_profile_message,
         account_name: account.map_or_else(|| Some(account_name), |_| None),
     })
 }

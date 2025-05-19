@@ -4,6 +4,7 @@ use crate::starknet_commands::account::{
 use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
+use configuration::resolve_config_file;
 use conversions::IntoConv;
 use serde_json::json;
 use sncast::helpers::braavos::{BraavosAccountFactory, assert_non_braavos_account};
@@ -27,7 +28,6 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::signers::{LocalWallet, SigningKey};
 use starknet_types_core::felt::Felt;
 use std::str::FromStr;
-use configuration::resolve_config_file;
 
 #[derive(Args, Debug)]
 #[command(about = "Create an account with all important secrets")]
@@ -128,34 +128,33 @@ pub async fn create(
         );
         message.push_str(&deploy_command);
     }
+    let mut add_profile_message =
+        String::from("--add-profile flag was not set. No profile added to snfoundry.toml");
 
-    if add_profile.is_some() {
-        if let Some(url) = &create.rpc.url {
-            let config = CastConfig {
-                url: url.clone(),
-                account: account.into(),
-                accounts_file: accounts_file.into(),
-                keystore,
-                ..Default::default()
-            };
-            let config_path = resolve_config_file();
-            add_created_profile_to_configuration(create.add_profile.as_deref(), &config, &config_path)?;
-        } else {
-            unreachable!("Conflicting arguments should be handled in clap");
-        }
+    if create.add_profile.is_some() {
+        let url =
+            create.rpc.url.clone().expect(
+                "the argument '--network' should not be used with '--add-profile' argument",
+            );
+
+        let config = CastConfig {
+            url,
+            account: account.into(),
+            accounts_file: accounts_file.into(),
+            keystore,
+            ..Default::default()
+        };
+        let config_path = resolve_config_file();
+        let profile_name = add_profile.expect("add_profile should be Some");
+        add_profile_message =
+            format!("Profile {profile_name} successfully added to {config_path}",);
+        add_created_profile_to_configuration(create.add_profile.as_deref(), &config, &config_path)?;
     }
 
     Ok(AccountCreateResponse {
         address: address.into_(),
         max_fee,
-        add_profile: if add_profile.is_some() {
-            format!(
-                "Profile {} successfully added to snfoundry.toml",
-                add_profile.clone().expect("Failed to get profile name")
-            )
-        } else {
-            "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
-        },
+        add_profile: add_profile_message,
         message: if account_json["deployed"] == json!(false) {
             message
         } else {
