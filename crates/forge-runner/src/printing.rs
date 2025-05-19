@@ -1,5 +1,6 @@
 use crate::forge_config::ForgeTrackedResource;
 use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary};
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use console::style;
 
@@ -69,32 +70,44 @@ fn format_detailed_resources(
         .collect();
     syscall_usage.sort_by(|a, b| b.1.cmp(&a.1));
 
+    let format_vm_resources = |vm_resources: &ExecutionResources| -> String {
+        let sorted_builtins = sort_by_value(&vm_resources.builtin_instance_counter);
+        let builtins = format_items(&sorted_builtins);
+
+        format!(
+            "
+        steps: {}
+        memory holes: {}
+        builtins: ({})",
+            vm_resources.n_steps, vm_resources.n_memory_holes, builtins
+        )
+    };
+
     let syscalls = format_items(&syscall_usage);
+    let vm_resources_output = format_vm_resources(&used_resources.execution_resources);
 
     match tracked_resource {
         ForgeTrackedResource::CairoSteps => {
-            let vm_resources = &used_resources.execution_resources;
-            let sorted_builtins = sort_by_value(&vm_resources.builtin_instance_counter);
-            let builtins = format_items(&sorted_builtins);
-
             format!(
-                "
-        steps: {}
-        memory holes: {}
-        builtins: ({})
-        syscalls: ({})
-            ",
-                vm_resources.n_steps, vm_resources.n_memory_holes, builtins, syscalls,
+                "{vm_resources_output}
+        syscalls: ({syscalls})
+        "
             )
         }
         ForgeTrackedResource::SierraGas => {
-            format!(
+            let mut output = format!(
                 "
-        sierra_gas_consumed: ({})
-        syscalls: ({})
-            ",
-                used_resources.gas_consumed.0, syscalls,
-            )
+        sierra_gas_consumed: {}
+        syscalls: ({syscalls})",
+                used_resources.gas_consumed.0
+            );
+
+            if used_resources.execution_resources != ExecutionResources::default() {
+                output.push_str(&vm_resources_output);
+            }
+            output.push('\n');
+
+            output
         }
     }
 }

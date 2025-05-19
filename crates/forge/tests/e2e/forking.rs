@@ -28,7 +28,7 @@ fn without_cache() {
         [PASS] forking::tests::test_fork_simple_number_hex [..]
         [PASS] forking::tests::test_fork_simple_hash_hex [..]
         [PASS] forking::tests::test_fork_simple_hash_number [..]
-        Tests: 4 passed, 0 failed, 0 skipped, 0 ignored, 1 filtered out
+        Tests: 4 passed, 0 failed, 0 skipped, 0 ignored, 2 filtered out
         "},
     );
 }
@@ -154,7 +154,7 @@ fn with_skip_fork_tests_env() {
         [IGNORE] forking::tests::test_fork_simple_number_hex
         [IGNORE] forking::tests::test_fork_simple_hash_hex
         [IGNORE] forking::tests::test_fork_simple_hash_number
-        Tests: 0 passed, 0 failed, 0 skipped, 4 ignored, 1 filtered out
+        Tests: 0 passed, 0 failed, 0 skipped, 4 ignored, 2 filtered out
         "},
     );
 }
