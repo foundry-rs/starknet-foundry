@@ -4,6 +4,7 @@ use crate::starknet_commands::account::{
 use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
+use configuration::resolve_config_file;
 use conversions::IntoConv;
 use serde_json::json;
 use sncast::helpers::braavos::{BraavosAccountFactory, assert_non_braavos_account};
@@ -137,7 +138,12 @@ pub async fn create(
                 keystore,
                 ..Default::default()
             };
-            add_created_profile_to_configuration(create.add_profile.as_deref(), &config, None)?;
+            let config_path = resolve_config_file();
+            add_created_profile_to_configuration(
+                create.add_profile.as_deref(),
+                &config,
+                &config_path,
+            )?;
         } else {
             unreachable!("Conflicting arguments should be handled in clap");
         }
