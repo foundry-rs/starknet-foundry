@@ -8,7 +8,7 @@ use starknet_types_core::felt::Felt;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ReverseTransformError {
-    #[error(r#"Function with selector "{0}" not found in ABI of the contract"#)]
+    #[error(r#"Function with selector "{0:#x}" not found in ABI of the contract"#)]
     FunctionNotFound(Felt),
     #[error(transparent)]
     TransformationError(#[from] TransformationError),
