@@ -68,7 +68,6 @@ fn installation_constant_seed() -> Result<u64> {
 
 pub enum FreeProvider {
     Blast,
-    Voyager,
 }
 
 impl FreeProvider {
@@ -78,7 +77,7 @@ impl FreeProvider {
         if seed % 2 == 0 {
             return Self::Blast;
         }
-        Self::Voyager
+        Self::Blast
     }
 }
 
@@ -96,9 +95,6 @@ impl Network {
             FreeProvider::Blast => {
                 format!("https://starknet-mainnet.public.blastapi.io/rpc/{RPC_URL_VERSION}")
             }
-            FreeProvider::Voyager => {
-                format!("https://free-rpc.nethermind.io/mainnet-juno/{RPC_URL_VERSION}")
-            }
         }
     }
 
@@ -106,9 +102,6 @@ impl Network {
         match provider {
             FreeProvider::Blast => {
                 format!("https://starknet-sepolia.public.blastapi.io/rpc/{RPC_URL_VERSION}")
-            }
-            FreeProvider::Voyager => {
-                format!("https://free-rpc.nethermind.io/sepolia-juno/{RPC_URL_VERSION}")
             }
         }
     }
@@ -122,47 +115,19 @@ mod tests {
     use starknet::providers::Provider;
     use test_case::test_case;
 
-    #[test_case(FreeProvider::Voyager)]
     #[test_case(FreeProvider::Blast)]
     #[tokio::test]
     async fn test_mainnet_url_happy_case(free_provider: FreeProvider) {
-        let url = Network::free_mainnet_rpc(&free_provider);
-        let provider = get_provider(&url).unwrap();
-        let spec_version = provider
-            .spec_version()
-            .await
-            .unwrap_or_else(|_| "0.0.0".to_string());
-
-        // Skip version check for Voyager as it may use a different version
-        if matches!(free_provider, FreeProvider::Voyager) {
-            assert!(
-                !spec_version.is_empty(),
-                "Voyager RPC version should not be empty"
-            );
-        } else {
-            assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
-        }
+        let provider = get_provider(&Network::free_sepolia_rpc(&free_provider)).unwrap();
+        let spec_version = provider.spec_version().await.unwrap();
+        assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
     }
 
-    #[test_case(FreeProvider::Voyager)]
     #[test_case(FreeProvider::Blast)]
     #[tokio::test]
     async fn test_sepolia_url_happy_case(free_provider: FreeProvider) {
-        let url = Network::free_sepolia_rpc(&free_provider);
-        let provider = get_provider(&url).unwrap();
-        let spec_version = provider
-            .spec_version()
-            .await
-            .unwrap_or_else(|_| "0.0.0".to_string());
-
-        // Skip version check for Voyager as it may use a different version
-        if matches!(free_provider, FreeProvider::Voyager) {
-            assert!(
-                !spec_version.is_empty(),
-                "Voyager RPC version should not be empty"
-            );
-        } else {
-            assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
-        }
+        let provider = get_provider(&Network::free_sepolia_rpc(&free_provider)).unwrap();
+        let spec_version = provider.spec_version().await.unwrap();
+        assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
     }
 }
