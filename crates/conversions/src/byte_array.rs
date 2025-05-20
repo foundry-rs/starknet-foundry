@@ -83,7 +83,6 @@ impl Serialize for ByteArray {
     where
         S: Serializer,
     {
-        println!("self: {:?}", self);
         serializer.serialize_str(&self.to_string())
     }
 }

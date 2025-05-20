@@ -4,7 +4,7 @@ use crate::starknet_commands::{
 };
 use anyhow::{Context, Result, bail};
 use data_transformer::{reverse_transform_output, transform};
-use foundry_ui::{NumbersFormat, OutputFormat, Ui};
+use foundry_ui::{Message, NumbersFormat, OutputFormat, Ui};
 use sncast::helpers::account::generate_account_name;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 // use sncast::response::print::print_command_result;
@@ -25,7 +25,9 @@ use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_metadata_with_deps,
 };
 use sncast::response::errors::handle_starknet_command_error;
-use sncast::response::structs::{CallResponse, DeclareResponse, TransformedCallResponse};
+use sncast::response::structs::{
+    CallResponse, DeclareResponse, ResponseError, TransformedCallResponse,
+};
 use sncast::{
     ValidatedWaitParams, WaitForTx, chain_id_to_network_name, get_account, get_block_id,
     get_chain_id, get_class_hash_by_address, get_contract_class, get_default_state_file_name,
@@ -294,11 +296,14 @@ async fn run_async_command(
                 config.show_explorer_links,
                 config.block_explorer,
             );
-            Ui::print(result?, output_format, numbers_format);
-            if let Some(link) = block_explorer_link {
-                Ui::print(link, output_format, numbers_format);
-            }
-            // print_command_result("declare", &result, numbers_format, output_format)?;
+
+            process_command_result(
+                "declare",
+                result,
+                output_format,
+                numbers_format,
+                block_explorer_link,
+            );
 
             Ok(())
         }
@@ -349,10 +354,13 @@ async fn run_async_command(
                 config.show_explorer_links,
                 config.block_explorer,
             );
-            Ui::print(result?, output_format, numbers_format);
-            if let Some(link) = block_explorer_link {
-                Ui::print(link, output_format, numbers_format);
-            }
+            process_command_result(
+                "deploy",
+                result,
+                output_format,
+                numbers_format,
+                block_explorer_link,
+            );
 
             Ok(())
         }
@@ -388,18 +396,15 @@ async fn run_async_command(
             if let Some(transformed_result) =
                 transform_response(&result, &contract_class, &selector)
             {
-                Ui::print(transformed_result, output_format, numbers_format);
-
-                // print_command_result(
-                //     "call",
-                //     &Ok(transformed_result),
-                //     numbers_format,
-                //     output_format,
-                // )?;
+                process_command_result(
+                    "call",
+                    Ok(transformed_result),
+                    output_format,
+                    numbers_format,
+                    None,
+                );
             } else {
-                Ui::print(result?, output_format, numbers_format);
-
-                // print_command_result("call", &result, numbers_format, output_format)?;
+                process_command_result("call", result, output_format, numbers_format, None);
             }
 
             Ok(())
@@ -453,11 +458,14 @@ async fn run_async_command(
                 config.show_explorer_links,
                 config.block_explorer,
             );
-            Ui::print(result?, output_format, numbers_format);
-            if let Some(link) = block_explorer_link {
-                Ui::print(link, output_format, numbers_format);
-            }
-            // print_command_result("invoke", &result, numbers_format, output_format)?;
+
+            process_command_result(
+                "invoke",
+                result,
+                output_format,
+                numbers_format,
+                block_explorer_link,
+            );
 
             Ok(())
         }
@@ -471,13 +479,13 @@ async fn run_async_command(
                             new.overwrite,
                         );
 
-                        Ui::print(result?, output_format, numbers_format);
-                        // print_command_result(
-                        //     "multicall new",
-                        //     &result,
-                        //     numbers_format,
-                        //     output_format,
-                        // )?;
+                        process_command_result(
+                            "multicall new",
+                            result,
+                            output_format,
+                            numbers_format,
+                            None,
+                        );
                     } else {
                         println!("{DEFAULT_MULTICALL_CONTENTS}");
                     }
@@ -503,12 +511,13 @@ async fn run_async_command(
                         config.show_explorer_links,
                         config.block_explorer,
                     );
-                    Ui::print(result?, output_format, numbers_format);
-                    if let Some(link) = block_explorer_link {
-                        Ui::print(link, output_format, numbers_format);
-                    }
-
-                    // print_command_result("multicall run", &result, numbers_format, output_format)?;
+                    process_command_result(
+                        "multicall run",
+                        result,
+                        output_format,
+                        numbers_format,
+                        block_explorer_link,
+                    );
                 }
             }
             Ok(())
@@ -538,9 +547,13 @@ async fn run_async_command(
                     }
                 }
 
-                Ui::print(result?, output_format, numbers_format);
-
-                // print_command_result("account import", &result, numbers_format, output_format)?;
+                process_command_result(
+                    "account import",
+                    result,
+                    output_format,
+                    numbers_format,
+                    None,
+                );
                 Ok(())
             }
 
@@ -573,11 +586,14 @@ async fn run_async_command(
                     config.show_explorer_links,
                     config.block_explorer,
                 );
-                Ui::print(result?, output_format, numbers_format);
-                if let Some(link) = block_explorer_link {
-                    Ui::print(link, output_format, numbers_format);
-                }
-                // print_command_result("account create", &result, numbers_format, output_format)?;
+
+                process_command_result(
+                    "account create",
+                    result,
+                    output_format,
+                    numbers_format,
+                    block_explorer_link,
+                );
 
                 Ok(())
             }
@@ -621,11 +637,13 @@ async fn run_async_command(
                     config.show_explorer_links,
                     config.block_explorer,
                 );
-                Ui::print(result?, output_format, numbers_format);
-                if let Some(link) = block_explorer_link {
-                    Ui::print(link, output_format, numbers_format);
-                }
-                // print_command_result("account deploy", &result, numbers_format, output_format)?;
+                process_command_result(
+                    "deploy",
+                    result,
+                    output_format,
+                    numbers_format,
+                    block_explorer_link,
+                );
 
                 Ok(())
             }
@@ -641,8 +659,13 @@ async fn run_async_command(
                     delete.yes,
                 );
 
-                Ui::print(result?, output_format, numbers_format);
-                // print_command_result("account delete", &result, numbers_format, output_format)?;
+                process_command_result(
+                    "account delete",
+                    result,
+                    output_format,
+                    numbers_format,
+                    None,
+                );
                 Ok(())
             }
 
@@ -665,8 +688,7 @@ async fn run_async_command(
             )
             .await;
 
-            Ui::print(result?, output_format, numbers_format);
-            // print_command_result("show-config", &result, numbers_format, output_format)?;
+            process_command_result("show-config", result, output_format, numbers_format, None);
 
             Ok(())
         }
@@ -679,8 +701,7 @@ async fn run_async_command(
                     .await
                     .context("Failed to get transaction status");
 
-            Ui::print(result?, output_format, numbers_format);
-            // print_command_result("tx-status", &result, numbers_format, output_format)?;
+            process_command_result("tx status", result, output_format, numbers_format, None);
             Ok(())
         }
 
@@ -704,8 +725,7 @@ async fn run_async_command(
             )
             .await;
 
-            Ui::print(result?, output_format, numbers_format);
-            // print_command_result("verify", &result, numbers_format, output_format)?;
+            process_command_result("verify", result, output_format, numbers_format, None);
             Ok(())
         }
 
@@ -728,9 +748,7 @@ fn run_script_command(
     match &script.command {
         starknet_commands::script::Commands::Init(init) => {
             let result = starknet_commands::script::init::init(init);
-            Ui::print(result?, output_format, numbers_format);
-
-            // print_command_result("script init", &result, numbers_format, output_format)?;
+            process_command_result("script init", result, output_format, numbers_format, None);
         }
         starknet_commands::script::Commands::Run(run) => {
             let manifest_path = assert_manifest_path_exists()?;
@@ -784,9 +802,7 @@ fn run_script_command(
                 state_file_path,
             );
 
-            Ui::print(result?, output_format, numbers_format);
-
-            // print_command_result("script run", &result, numbers_format, output_format)?;
+            process_command_result("script run", result, output_format, numbers_format, None);
         }
     }
 
@@ -865,4 +881,27 @@ fn transform_response(
         response_raw: response.clone(),
         response: transformed_response,
     })
+}
+
+fn process_command_result<T>(
+    command: &str,
+    result: Result<T>,
+    output_format: OutputFormat,
+    numbers_format: NumbersFormat,
+    block_explorer_link: Option<String>,
+) where
+    T: Message + serde::Serialize,
+{
+    match result {
+        Ok(response) => {
+            Ui::print(&response, output_format, numbers_format);
+            if let Some(link) = block_explorer_link {
+                Ui::print(&link, output_format, numbers_format);
+            }
+        }
+        Err(err) => {
+            let response_error = ResponseError::new(command.to_string(), err.to_string());
+            Ui::print_err(&response_error, output_format, numbers_format);
+        }
+    }
 }

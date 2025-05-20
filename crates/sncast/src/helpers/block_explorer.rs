@@ -132,11 +132,11 @@ mod tests {
     use crate::{
         Network,
         helpers::block_explorer::Service,
-        response::{explorer_link::OutputLink, structs::DeployResponse},
+        // response::{explorer_link::OutputLink, structs::DeployResponse},
     };
-    use conversions::{byte_array::ByteArray, padded_felt::PaddedFelt};
-    use regex::Regex;
-    use starknet::macros::felt;
+    // use conversions::{byte_array::ByteArray, padded_felt::PaddedFelt};
+    // use regex::Regex;
+    // use starknet::macros::felt;
     use test_case::test_case;
 
     // const BYTE_ARRAY_DEPLOY: ByteArray = ByteArray {
@@ -164,20 +164,20 @@ mod tests {
     //     )),
     // };
 
-    async fn assert_valid_links(input: &str) {
-        let pattern = Regex::new(r"transaction: |contract: |class: ").unwrap();
-        let links = pattern.replace_all(input, "");
-        let mut links = links.split('\n');
+    // async fn assert_valid_links(input: &str) {
+    //     let pattern = Regex::new(r"transaction: |contract: |class: ").unwrap();
+    //     let links = pattern.replace_all(input, "");
+    //     let mut links = links.split('\n');
 
-        let contract = links.next().unwrap();
-        let transaction = links.next().unwrap();
+    //     let contract = links.next().unwrap();
+    //     let transaction = links.next().unwrap();
 
-        let (contract_response, transaction_response) =
-            tokio::join!(reqwest::get(contract), reqwest::get(transaction));
+    //     let (contract_response, transaction_response) =
+    //         tokio::join!(reqwest::get(contract), reqwest::get(transaction));
 
-        assert!(contract_response.is_ok());
-        assert!(transaction_response.is_ok());
-    }
+    //     assert!(contract_response.is_ok());
+    //     assert!(transaction_response.is_ok());
+    // }
 
     // #[tokio::test]
     // #[test_case(Network::Mainnet, &MAINNET_RESPONSE; "mainnet")]

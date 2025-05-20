@@ -1,10 +1,11 @@
 use super::explorer_link::OutputLink;
 use crate::helpers::block_explorer;
 use crate::helpers::block_explorer::LinkProvider;
+use crate::response::print::{Format, OutputValue};
 use camino::Utf8PathBuf;
 use conversions::serde::serialize::CairoSerialize;
 use conversions::{byte_array::ByteArray, padded_felt::PaddedFelt};
-use foundry_ui::Message;
+use foundry_ui::{Message, NumbersFormat};
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet_types_core::felt::Felt;
@@ -55,9 +56,21 @@ pub struct InvokeResponse {
     pub command: ByteArray,
     pub transaction_hash: PaddedFelt,
 }
-// impl CommandResponse for InvokeResponse {}
 
-impl Message for InvokeResponse {}
+impl Message for InvokeResponse {
+    fn text(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized,
+    {
+        let transaction_hash = OutputValue::String(self.transaction_hash.0.to_string());
+        format!(
+            "command: {}
+transaction_hash: {}",
+            self.command,
+            transaction_hash.format_with(numbers_format)
+        )
+    }
+}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeployResponse {
@@ -65,9 +78,20 @@ pub struct DeployResponse {
     pub contract_address: PaddedFelt,
     pub transaction_hash: PaddedFelt,
 }
-// impl CommandResponse for DeployResponse {}
-
-impl Message for DeployResponse {}
+impl Message for DeployResponse {
+    fn text(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized,
+    {
+        let _ = numbers_format;
+        format!(
+            "command: {}
+contract_address: {:#x}
+transaction_hash: {:#x}",
+            self.command, self.contract_address, self.transaction_hash
+        )
+    }
+}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeclareTransactionResponse {
@@ -97,7 +121,7 @@ pub enum DeclareResponse {
 
 // impl CommandResponse for DeclareResponse {}
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct AccountCreateResponse {
     pub command: String,
     pub address: PaddedFelt,
@@ -110,30 +134,24 @@ pub struct AccountCreateResponse {
 // impl CommandResponse for AccountCreateResponse {}
 
 impl Message for AccountCreateResponse {
-    //     fn text(self) -> String
-    //     where
-    //         Self: Sized,
-    //     {
-    //         format!(
-    //             "
-    // ✅ Account succesfully created!
-    // ———————————————————————————————
-    // Address: {:#x}
-
-    // Prefund generated address with at least {} STRK ({} FRI) tokens. It is good to send
-    // more in thecase of higher demand.
-
-    // For testnet, visit faucet at https://starknet-faucet.vercel.app to redeem tokens.
-    // For mainnet, transfer funds from another account.
-
-    // 🌐 Details
-    // Account creation: https://sepolia.starkscan.co/contract/[..]",
-    //             self.address,
-    //             // TODO: Convert FRI to STRK
-    //             self.max_fee,
-    //             self.max_fee
-    //         )
-    //     }
+    fn text(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized,
+    {
+        let max_fee = OutputValue::String(self.max_fee.to_string());
+        format!(
+            "command: {}
+add_profile: {}
+address: {:#x}
+max_fee: {}
+message: {}",
+            self.command,
+            self.add_profile,
+            self.address,
+            max_fee.format_with(numbers_format),
+            self.message
+        )
+    }
 }
 
 #[derive(Serialize)]
@@ -153,9 +171,19 @@ pub struct AccountDeleteResponse {
     pub result: String,
 }
 
-// impl CommandResponse for AccountDeleteResponse {}
-
-impl Message for AccountDeleteResponse {}
+impl Message for AccountDeleteResponse {
+    fn text(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized,
+    {
+        let _ = numbers_format;
+        format!(
+            "command: {}
+result: {}",
+            self.command, self.result
+        )
+    }
+}
 
 #[derive(Serialize)]
 pub struct MulticallNewResponse {
@@ -179,7 +207,6 @@ pub struct ShowConfigResponse {
     pub show_explorer_links: bool,
     pub block_explorer: Option<block_explorer::Service>,
 }
-// impl CommandResponse for ShowConfigResponse {}
 
 impl Message for ShowConfigResponse {}
 
@@ -189,16 +216,12 @@ pub struct ScriptRunResponse {
     pub message: Option<String>,
 }
 
-// impl CommandResponse for ScriptRunResponse {}
-
 impl Message for ScriptRunResponse {}
 
 #[derive(Serialize)]
 pub struct ScriptInitResponse {
     pub message: String,
 }
-
-// impl CommandResponse for ScriptInitResponse {}
 
 impl Message for ScriptInitResponse {}
 
@@ -222,16 +245,12 @@ pub struct TransactionStatusResponse {
     pub execution_status: Option<ExecutionStatus>,
 }
 
-// impl CommandResponse for TransactionStatusResponse {}
-
 impl Message for TransactionStatusResponse {}
 
 #[derive(Serialize)]
 pub struct VerifyResponse {
     pub message: String,
 }
-
-// impl CommandResponse for VerifyResponse {}
 
 impl Message for VerifyResponse {}
 
@@ -281,5 +300,32 @@ impl OutputLink for AccountCreateResponse {
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
         format!("account: {}", provider.contract(self.address))
+    }
+}
+
+#[derive(Serialize, Debug)]
+pub struct ResponseError {
+    command: String,
+    error: String,
+}
+
+impl ResponseError {
+    #[must_use]
+    pub fn new(command: String, error: String) -> Self {
+        Self { command, error }
+    }
+}
+
+impl Message for ResponseError {
+    fn text(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized,
+    {
+        let _ = numbers_format;
+        format!(
+            "command: {}
+error: {}",
+            self.command, self.error
+        )
     }
 }

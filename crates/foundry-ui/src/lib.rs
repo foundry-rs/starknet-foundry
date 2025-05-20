@@ -52,13 +52,23 @@ impl NumbersFormat {
 pub struct Ui {}
 
 impl Ui {
-    pub fn print<T>(message: T, output_format: OutputFormat, _numbers_format: NumbersFormat)
+    pub fn print<T>(message: &T, output_format: OutputFormat, numbers_format: NumbersFormat)
     where
         T: Message + serde::Serialize,
     {
         match output_format {
-            OutputFormat::Human => message.print_human(),
-            OutputFormat::Json => message.print_json(),
+            OutputFormat::Human => message.print_human(numbers_format, false),
+            OutputFormat::Json => message.print_json(false),
+        }
+    }
+
+    pub fn print_err<T>(message: &T, output_format: OutputFormat, numbers_format: NumbersFormat)
+    where
+        T: Message + serde::Serialize,
+    {
+        match output_format {
+            OutputFormat::Human => message.print_human(numbers_format, true),
+            OutputFormat::Json => message.print_json(true),
         }
     }
 }
