@@ -10,6 +10,7 @@ use shared::verify_and_warn_if_incompatible_rpc_version;
 use std::collections::HashSet;
 use std::env;
 use url::Url;
+use crate::MINIMAL_SNFORGE_STD_VERSION;
 
 pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
     test_targets: &[TestTargetWithResolvedConfig],
@@ -78,6 +79,30 @@ fn snforge_std_recommended_version() -> VersionReq {
     VersionReq {
         comparators: vec![comparator],
     }
+}
+
+pub fn error_if_snforge_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
+    let snforge_std_version_requirement_comparator = Comparator {
+        op: Op::GreaterEq,
+        major: MINIMAL_SNFORGE_STD_VERSION.major,
+        minor: Some(MINIMAL_SNFORGE_STD_VERSION.minor),
+        patch: Some(MINIMAL_SNFORGE_STD_VERSION.patch),
+        pre: MINIMAL_SNFORGE_STD_VERSION.pre,
+    };
+    let snforge_std_version_requirement = VersionReq {
+        comparators: vec![snforge_std_version_requirement_comparator],
+    };
+
+    if !package_matches_version_requirement(
+        scarb_metadata,
+        "snforge_std",
+        &snforge_std_version_requirement,
+    )? {
+        return Err(anyhow!(
+            "Package snforge_std version does not meet the minimum required version {snforge_std_version_requirement}. Please upgrade snforge_std in Scarb.toml"
+        ));
+    }
+    Ok(())
 }
 
 pub fn warn_if_snforge_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
