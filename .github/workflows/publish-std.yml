@@ -6,10 +6,12 @@ on:
       prod_registry:
         required: false
         type: boolean
+      # Must start without 'v'
       override_std_version:
         required: false
         type: string
       # snforge_std in the repository has a plugin dependency specified as a relative path, which must be overridden each time before publishing.
+      # Must start without 'v'
       plugin_dep_version:
         required: true
         type: string
@@ -18,10 +20,12 @@ on:
       prod_registry:
         required: false
         type: boolean
+      # Must start without 'v'
       override_std_version:
         required: false
         type: string
       # snforge_std in the repository has a plugin dependency specified as a relative path, which must be overridden each time before publishing.
+      # Must start without 'v'
       plugin_dep_version:
         required: true
         type: string
@@ -47,19 +51,19 @@ jobs:
       - name: Publish sncast_std
         working-directory: sncast_std
         run: |
-          if [ -n "${{ inputs.override_std_version }}" ]; then
-            sed -i.bak "/\[package\]/,/version =/ s/version = \".*/version = \"${{ inputs.override_std_version }}\"/" Scarb.toml
-            rm Scarb.toml.bak 2> /dev/null
-          fi
+          source ../scripts/handle_version.sh
+          
+          update_version_in_file "Scarb.toml" "${{ inputs.override_std_version }}"
+          
           scarb publish --allow-dirty ${{ inputs.prod_registry == true && ' ' || '--index https://scarbs.dev/' }}
 
       - name: Publish snforge_std
         working-directory: snforge_std
         run: |
-          if [ -n "${{ inputs.override_std_version }}" ]; then
-            sed -i.bak "/\[package\]/,/version =/ s/version = \".*/version = \"${{ inputs.override_std_version }}\"/" Scarb.toml
-            rm Scarb.toml.bak 2> /dev/null
-          fi
+          source ../scripts/handle_version.sh
+          
+          update_version_in_file "Scarb.toml" "${{ inputs.override_std_version }}"
+          
           if ${{ inputs.prod_registry == true }}; then
             scarb add snforge_scarb_plugin@${{ inputs.plugin_dep_version }}
           else
