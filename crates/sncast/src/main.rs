@@ -4,7 +4,8 @@ use crate::starknet_commands::{
 };
 use anyhow::{Context, Result, bail};
 use data_transformer::{reverse_transform_output, transform};
-use foundry_ui::{Message, NumbersFormat, OutputFormat, Ui};
+use foundry_ui::formats::{NumbersFormat, OutputFormat};
+use foundry_ui::{Message, Ui};
 use sncast::helpers::account::generate_account_name;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 // use sncast::response::print::print_command_result;

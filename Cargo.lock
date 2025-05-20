@@ -2590,6 +2590,7 @@ dependencies = [
  "anyhow",
  "serde",
  "serde_json",
+ "starknet-types-core",
 ]
 
 [[package]]

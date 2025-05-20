@@ -1,5 +1,5 @@
 use crate::helpers::block_explorer::{LinkProvider, Service};
-use foundry_ui::OutputFormat;
+use foundry_ui::formats::OutputFormat;
 use starknet_types_core::felt::Felt;
 
 pub trait OutputLink {

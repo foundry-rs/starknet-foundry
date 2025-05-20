@@ -1,11 +1,12 @@
 use super::explorer_link::OutputLink;
 use crate::helpers::block_explorer;
 use crate::helpers::block_explorer::LinkProvider;
-use crate::response::print::{Format, OutputValue};
 use camino::Utf8PathBuf;
 use conversions::serde::serialize::CairoSerialize;
 use conversions::{byte_array::ByteArray, padded_felt::PaddedFelt};
-use foundry_ui::{Message, NumbersFormat};
+use foundry_ui::Message;
+use foundry_ui::formats::NumbersFormat;
+use foundry_ui::output_value::{Format, OutputValue};
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet_types_core::felt::Felt;

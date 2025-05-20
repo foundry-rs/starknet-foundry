@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::NumbersFormat;
+use crate::formats::NumbersFormat;
 
 pub trait Message {
     /// Return textual representation of this message.
