@@ -56,7 +56,7 @@ jobs:
           set -euxo pipefail
           mkdir -p crates/snforge-scarb-plugin/target/scarb/cairo-plugin
           
-          mv artifacts-dl/build-plugin-*/snforge_scarb_plugin_* crates/snforge-scarb-plugin/target/scarb/cairo-plugin/
+          mv artifacts-dl/build-plugin-*/snforge_scarb_plugin_v* crates/snforge-scarb-plugin/target/scarb/cairo-plugin/
           
           # Required for testing prebuild plugin while creating release.
           if [[ -n "${{ inputs.overridden_plugin_version }}" ]]; then
