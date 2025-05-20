@@ -1,4 +1,4 @@
-use crate::integration::get_abi;
+use crate::integration::{NO_CONSTRUCTOR_CLASS_HASH, get_abi, init_class};
 use core::fmt;
 use data_transformer::transform;
 use indoc::indoc;
@@ -43,7 +43,7 @@ async fn test_function_not_found() {
 
     result.unwrap_err().assert_contains(
         format!(
-            r#"Function with selector "{}" not found in ABI of the contract"#,
+            r#"Function with selector "{:#x}" not found in ABI of the contract"#,
             get_selector_from_name(selector).unwrap()
         )
         .as_str(),
@@ -536,6 +536,31 @@ async fn test_happy_case_contract_constructor() {
     let result = run_transformer("0x123", "constructor").await.unwrap();
 
     let expected_output = [Felt::from_hex_unchecked("0x123")];
+
+    assert_eq!(result, expected_output);
+}
+
+#[tokio::test]
+async fn test_happy_case_no_argument_function() {
+    let result = run_transformer("", "no_args_fn").await.unwrap();
+
+    let expected_output = [];
+
+    assert_eq!(result, expected_output);
+}
+
+#[tokio::test]
+async fn test_happy_case_implicit_contract_constructor() {
+    let class = init_class(NO_CONSTRUCTOR_CLASS_HASH).await;
+    let ContractClass::Sierra(sierra_class) = class else {
+        panic!("Expected Sierra class, but got legacy Sierra class")
+    };
+
+    let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str()).unwrap();
+
+    let result = transform("", &abi, &get_selector_from_name("constructor").unwrap()).unwrap();
+
+    let expected_output = [];
 
     assert_eq!(result, expected_output);
 }
