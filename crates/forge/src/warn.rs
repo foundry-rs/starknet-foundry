@@ -1,3 +1,4 @@
+use crate::MINIMAL_SNFORGE_STD_VERSION;
 use anyhow::{Result, anyhow};
 use forge_runner::backtrace::is_backtrace_enabled;
 use forge_runner::package_tests::with_config_resolved::TestTargetWithResolvedConfig;
@@ -10,7 +11,6 @@ use shared::verify_and_warn_if_incompatible_rpc_version;
 use std::collections::HashSet;
 use std::env;
 use url::Url;
-use crate::MINIMAL_SNFORGE_STD_VERSION;
 
 pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
     test_targets: &[TestTargetWithResolvedConfig],
