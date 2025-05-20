@@ -164,6 +164,7 @@ pub async fn import(
     }
 
     Ok(AccountImportResponse {
+        command: "account import".to_string(),
         add_profile: import.add_profile.as_ref().map_or_else(
             || "--add-profile flag was not set. No profile added to snfoundry.toml".to_string(),
             |profile_name| format!("Profile {profile_name} successfully added to snfoundry.toml"),

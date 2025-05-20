@@ -2,6 +2,7 @@ use crate::Arguments;
 use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
+use conversions::byte_array::ByteArray;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
@@ -103,6 +104,7 @@ pub async fn execute_calls(
             account.provider(),
             transaction_hash,
             InvokeResponse {
+                command: ByteArray::from("invoke"),
                 transaction_hash: transaction_hash.into_(),
             },
             wait_config,

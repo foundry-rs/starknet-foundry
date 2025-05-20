@@ -75,7 +75,10 @@ pub fn delete(
 
     std::fs::write(path.clone(), serde_json::to_string_pretty(&items).unwrap())?;
     let result = "Account successfully removed".to_string();
-    Ok(AccountDeleteResponse { result })
+    Ok(AccountDeleteResponse {
+        result,
+        command: "account delete".to_string(),
+    })
 }
 
 pub(crate) async fn get_network_name(delete: &Delete, config: &CastConfig) -> Result<String> {

@@ -16,6 +16,7 @@ members = [
     "crates/docs",
     "crates/debugging",
     "crates/testing/packages_validation",
+    "crates/foundry-ui",
 ]
 
 exclude = ["crates/snforge-scarb-plugin"]

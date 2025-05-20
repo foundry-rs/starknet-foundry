@@ -54,6 +54,7 @@ dirs.workspace = true
 dialoguer.workspace = true
 toml_edit.workspace = true
 num-traits.workspace = true
+foundry-ui = { path = "../foundry-ui" }
 
 [dev-dependencies]
 ctor.workspace = true

@@ -312,6 +312,7 @@ mod tests {
     use crate::state::state_file::ScriptTransactionOutput::ErrorResponse;
     use camino::Utf8PathBuf;
     use conversions::IntoConv;
+    use conversions::byte_array::ByteArray;
     use conversions::string::TryFromHexStr;
     use starknet_types_core::felt::Felt;
     use tempfile::TempDir;
@@ -418,6 +419,7 @@ mod tests {
             name: "declare".to_string(),
             output: ScriptTransactionOutput::DeclareResponse(DeclareResponse::Success(
                 DeclareTransactionResponse {
+                    command: ByteArray::from("declare"),
                     class_hash: Felt::try_from_hex_str("0x123").unwrap().into_(),
                     transaction_hash: Felt::try_from_hex_str("0x321").unwrap().into_(),
                 },
@@ -457,6 +459,7 @@ mod tests {
             name: "declare".to_string(),
             output: ScriptTransactionOutput::DeclareResponse(DeclareResponse::Success(
                 DeclareTransactionResponse {
+                    command: ByteArray::from("declare"),
                     class_hash: Felt::try_from_hex_str("0x1").unwrap().into_(),
                     transaction_hash: Felt::try_from_hex_str("0x2").unwrap().into_(),
                 },
@@ -473,6 +476,7 @@ mod tests {
         let transaction2 = ScriptTransactionEntry {
             name: "invoke".to_string(),
             output: ScriptTransactionOutput::InvokeResponse(InvokeResponse {
+                command: ByteArray::from("invoke"),
                 transaction_hash: Felt::try_from_hex_str("0x3").unwrap().into_(),
             }),
             status: ScriptTransactionStatus::Success,
@@ -530,6 +534,7 @@ mod tests {
             name: "declare".to_string(),
             output: ScriptTransactionOutput::DeclareResponse(DeclareResponse::Success(
                 DeclareTransactionResponse {
+                    command: ByteArray::from("declare"),
                     class_hash: Felt::try_from_hex_str("0x1").unwrap().into_(),
                     transaction_hash: Felt::try_from_hex_str("0x2").unwrap().into_(),
                 },
@@ -545,6 +550,7 @@ mod tests {
         let transaction2 = ScriptTransactionEntry {
             name: "invoke".to_string(),
             output: ScriptTransactionOutput::InvokeResponse(InvokeResponse {
+                command: ByteArray::from("invoke"),
                 transaction_hash: Felt::try_from_hex_str("0x3").unwrap().into_(),
             }),
             status: ScriptTransactionStatus::Success,
@@ -607,6 +613,7 @@ mod tests {
         let new_transaction = ScriptTransactionEntry {
             name: "deploy".to_string(),
             output: ScriptTransactionOutput::DeployResponse(DeployResponse {
+                command: ByteArray::from("deploy"),
                 transaction_hash: Felt::try_from_hex_str("0x3").unwrap().into_(),
                 contract_address: Felt::try_from_hex_str("0x333").unwrap().into_(),
             }),

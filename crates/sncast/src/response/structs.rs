@@ -2,8 +2,9 @@ use super::explorer_link::OutputLink;
 use crate::helpers::block_explorer;
 use crate::helpers::block_explorer::LinkProvider;
 use camino::Utf8PathBuf;
-use conversions::padded_felt::PaddedFelt;
 use conversions::serde::serialize::CairoSerialize;
+use conversions::{byte_array::ByteArray, padded_felt::PaddedFelt};
+use foundry_ui::Message;
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet_types_core::felt::Felt;
@@ -26,50 +27,65 @@ where
     serializer.serialize_str(&format!("{value:#}"))
 }
 
-pub trait CommandResponse: Serialize {}
+// pub trait CommandResponse: Serialize {}
 
 #[derive(Serialize, CairoSerialize, Clone)]
 pub struct CallResponse {
+    pub command: ByteArray,
     pub response: Vec<Felt>,
 }
 
-impl CommandResponse for CallResponse {}
+// impl CommandResponse for CallResponse {}
+
+impl Message for CallResponse {}
 
 #[derive(Serialize, Clone)]
 pub struct TransformedCallResponse {
+    pub command: String,
     pub response: String,
     pub response_raw: Vec<Felt>,
 }
 
-impl CommandResponse for TransformedCallResponse {}
+// impl CommandResponse for TransformedCallResponse {}
+
+impl Message for TransformedCallResponse {}
 
 #[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct InvokeResponse {
+    pub command: ByteArray,
     pub transaction_hash: PaddedFelt,
 }
-impl CommandResponse for InvokeResponse {}
+// impl CommandResponse for InvokeResponse {}
+
+impl Message for InvokeResponse {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeployResponse {
+    pub command: ByteArray,
     pub contract_address: PaddedFelt,
     pub transaction_hash: PaddedFelt,
 }
-impl CommandResponse for DeployResponse {}
+// impl CommandResponse for DeployResponse {}
+
+impl Message for DeployResponse {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeclareTransactionResponse {
+    pub command: ByteArray,
     pub class_hash: PaddedFelt,
     pub transaction_hash: PaddedFelt,
 }
 
-impl CommandResponse for DeclareTransactionResponse {}
+// impl CommandResponse for DeclareTransactionResponse {}
+
+impl Message for DeclareTransactionResponse {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct AlreadyDeclaredResponse {
     pub class_hash: PaddedFelt,
 }
 
-impl CommandResponse for AlreadyDeclaredResponse {}
+// impl CommandResponse for AlreadyDeclaredResponse {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 #[serde(tag = "status")]
@@ -79,10 +95,11 @@ pub enum DeclareResponse {
     Success(DeclareTransactionResponse),
 }
 
-impl CommandResponse for DeclareResponse {}
+// impl CommandResponse for DeclareResponse {}
 
 #[derive(Serialize)]
 pub struct AccountCreateResponse {
+    pub command: String,
     pub address: PaddedFelt,
     #[serde(serialize_with = "crate::response::structs::serialize_as_decimal")]
     pub max_fee: Felt,
@@ -90,29 +107,64 @@ pub struct AccountCreateResponse {
     pub message: String,
 }
 
-impl CommandResponse for AccountCreateResponse {}
+// impl CommandResponse for AccountCreateResponse {}
+
+impl Message for AccountCreateResponse {
+    //     fn text(self) -> String
+    //     where
+    //         Self: Sized,
+    //     {
+    //         format!(
+    //             "
+    // ✅ Account succesfully created!
+    // ———————————————————————————————
+    // Address: {:#x}
+
+    // Prefund generated address with at least {} STRK ({} FRI) tokens. It is good to send
+    // more in thecase of higher demand.
+
+    // For testnet, visit faucet at https://starknet-faucet.vercel.app to redeem tokens.
+    // For mainnet, transfer funds from another account.
+
+    // 🌐 Details
+    // Account creation: https://sepolia.starkscan.co/contract/[..]",
+    //             self.address,
+    //             // TODO: Convert FRI to STRK
+    //             self.max_fee,
+    //             self.max_fee
+    //         )
+    //     }
+}
 
 #[derive(Serialize)]
 pub struct AccountImportResponse {
+    pub command: String,
     pub add_profile: String,
     pub account_name: Option<String>,
 }
 
-impl CommandResponse for AccountImportResponse {}
+// impl CommandResponse for AccountImportResponse {}
+
+impl Message for AccountImportResponse {}
 
 #[derive(Serialize)]
 pub struct AccountDeleteResponse {
+    pub command: String,
     pub result: String,
 }
 
-impl CommandResponse for AccountDeleteResponse {}
+// impl CommandResponse for AccountDeleteResponse {}
+
+impl Message for AccountDeleteResponse {}
 
 #[derive(Serialize)]
 pub struct MulticallNewResponse {
     pub path: Utf8PathBuf,
     pub content: String,
 }
-impl CommandResponse for MulticallNewResponse {}
+// impl CommandResponse for MulticallNewResponse {}
+
+impl Message for MulticallNewResponse {}
 
 #[derive(Serialize)]
 pub struct ShowConfigResponse {
@@ -127,7 +179,9 @@ pub struct ShowConfigResponse {
     pub show_explorer_links: bool,
     pub block_explorer: Option<block_explorer::Service>,
 }
-impl CommandResponse for ShowConfigResponse {}
+// impl CommandResponse for ShowConfigResponse {}
+
+impl Message for ShowConfigResponse {}
 
 #[derive(Serialize, Debug)]
 pub struct ScriptRunResponse {
@@ -135,14 +189,18 @@ pub struct ScriptRunResponse {
     pub message: Option<String>,
 }
 
-impl CommandResponse for ScriptRunResponse {}
+// impl CommandResponse for ScriptRunResponse {}
+
+impl Message for ScriptRunResponse {}
 
 #[derive(Serialize)]
 pub struct ScriptInitResponse {
     pub message: String,
 }
 
-impl CommandResponse for ScriptInitResponse {}
+// impl CommandResponse for ScriptInitResponse {}
+
+impl Message for ScriptInitResponse {}
 
 #[derive(Serialize, CairoSerialize)]
 pub enum FinalityStatus {
@@ -164,14 +222,18 @@ pub struct TransactionStatusResponse {
     pub execution_status: Option<ExecutionStatus>,
 }
 
-impl CommandResponse for TransactionStatusResponse {}
+// impl CommandResponse for TransactionStatusResponse {}
+
+impl Message for TransactionStatusResponse {}
 
 #[derive(Serialize)]
 pub struct VerifyResponse {
     pub message: String,
 }
 
-impl CommandResponse for VerifyResponse {}
+// impl CommandResponse for VerifyResponse {}
+
+impl Message for VerifyResponse {}
 
 impl OutputLink for InvokeResponse {
     const TITLE: &'static str = "invocation";
