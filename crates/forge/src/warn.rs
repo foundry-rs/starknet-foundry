@@ -1,4 +1,3 @@
-use crate::MINIMAL_SNFORGE_STD_VERSION;
 use anyhow::{Result, anyhow};
 use forge_runner::backtrace::is_backtrace_enabled;
 use forge_runner::package_tests::with_config_resolved::TestTargetWithResolvedConfig;
@@ -79,30 +78,6 @@ fn snforge_std_recommended_version() -> VersionReq {
     VersionReq {
         comparators: vec![comparator],
     }
-}
-
-pub fn error_if_snforge_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
-    let snforge_std_version_requirement_comparator = Comparator {
-        op: Op::GreaterEq,
-        major: MINIMAL_SNFORGE_STD_VERSION.major,
-        minor: Some(MINIMAL_SNFORGE_STD_VERSION.minor),
-        patch: Some(MINIMAL_SNFORGE_STD_VERSION.patch),
-        pre: MINIMAL_SNFORGE_STD_VERSION.pre,
-    };
-    let snforge_std_version_requirement = VersionReq {
-        comparators: vec![snforge_std_version_requirement_comparator],
-    };
-
-    if !package_matches_version_requirement(
-        scarb_metadata,
-        "snforge_std",
-        &snforge_std_version_requirement,
-    )? {
-        return Err(anyhow!(
-            "Package snforge_std version does not meet the minimum required version {snforge_std_version_requirement}. Please upgrade snforge_std in Scarb.toml"
-        ));
-    }
-    Ok(())
 }
 
 pub fn warn_if_snforge_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
