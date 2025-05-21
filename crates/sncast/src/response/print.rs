@@ -148,18 +148,20 @@ impl<T: CommandResponse + Serialize> From<&T> for OutputData {
 }
 
 impl OutputData {
-    fn to_json(&self, command: &str) -> Result<String> {
-        let mut mapping: HashMap<_, _> = self.0.clone().into_iter().collect();
-        mapping.insert(
-            String::from("command"),
-            OutputValue::String(command.to_owned()),
-        );
+    fn to_json(&self) -> Result<String> {
+        let mapping: HashMap<_, _> = self.0.clone().into_iter().collect();
         serde_json::to_string(&mapping).map_err(anyhow::Error::from)
     }
 
-    fn to_lines(&self, command: &str) -> String {
-        let fields = self
-            .0
+    fn to_lines(&self) -> String {
+        let mut rest = self.0.clone();
+        let command = rest
+            .iter()
+            .position(|(k, _)| k == "command")
+            .map(|idx| rest.remove(idx).1)
+            .unwrap_or(OutputValue::String("<missing>".to_string())); // fallback jeśli brak
+
+        let fields = rest
             .iter()
             .map(|(key, val)| format!("{key}: {val}"))
             .join("\n");
@@ -167,10 +169,10 @@ impl OutputData {
         format!("command: {command}\n{fields}")
     }
 
-    pub fn to_string_pretty(&self, command: &str, output_format: OutputFormat) -> Result<String> {
+    pub fn to_string_pretty(&self, output_format: OutputFormat) -> Result<String> {
         match output_format {
-            OutputFormat::Json => self.to_json(command),
-            OutputFormat::Human => Ok(self.to_lines(command)),
+            OutputFormat::Json => self.to_json(),
+            OutputFormat::Human => Ok(self.to_lines()),
         }
     }
 }
