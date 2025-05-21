@@ -7,6 +7,7 @@ use crate::starknet_commands::account::{
 use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
 use clap::Args;
+use configuration::resolve_config_file;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
@@ -157,7 +158,12 @@ pub async fn import(
                 accounts_file: accounts_file.into(),
                 ..Default::default()
             };
-            add_created_profile_to_configuration(import.add_profile.as_deref(), &config, None)?;
+            let config_path = resolve_config_file();
+            add_created_profile_to_configuration(
+                import.add_profile.as_deref(),
+                &config,
+                &config_path,
+            )?;
         } else {
             unreachable!("Conflicting arguments should be handled in clap");
         }
