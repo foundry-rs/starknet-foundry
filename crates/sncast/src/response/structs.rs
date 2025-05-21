@@ -146,7 +146,20 @@ fn declare_transaction_response_command() -> ByteArray {
     ByteArray::from("declare")
 }
 
-impl Message for DeclareTransactionResponse {}
+impl Message for DeclareTransactionResponse {
+    fn text(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        let _ = numbers_format;
+        format!(
+            "command: {}
+class_hash: {:#x}
+transaction_hash: {:#x}",
+            self.command, self.class_hash, self.transaction_hash
+        )
+    }
+}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct AlreadyDeclaredResponse {
@@ -253,12 +266,25 @@ result: {}",
 
 #[derive(Serialize)]
 pub struct MulticallNewResponse {
+    pub command: String,
     pub path: Utf8PathBuf,
     pub content: String,
 }
-// impl CommandResponse for MulticallNewResponse {}
 
-impl Message for MulticallNewResponse {}
+impl Message for MulticallNewResponse {
+    fn text(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized,
+    {
+        let _ = numbers_format;
+        format!(
+            "command: {}
+path: {}
+content: {}",
+            self.command, self.path, self.content
+        )
+    }
+}
 
 #[derive(Serialize)]
 pub struct ShowConfigResponse {
@@ -278,18 +304,54 @@ impl Message for ShowConfigResponse {}
 
 #[derive(Serialize, Debug)]
 pub struct ScriptRunResponse {
+    pub command: String,
     pub status: String,
     pub message: Option<String>,
 }
 
-impl Message for ScriptRunResponse {}
+impl Message for ScriptRunResponse {
+    fn text(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized,
+    {
+        let _ = numbers_format;
+
+        if let Some(message) = self.message.as_ref() {
+            format!(
+                "command: {}
+status: {}
+message: {}",
+                self.command, self.status, message
+            )
+        } else {
+            format!(
+                "command: {}
+status: {}",
+                self.command, self.status,
+            )
+        }
+    }
+}
 
 #[derive(Serialize)]
 pub struct ScriptInitResponse {
+    pub command: String,
     pub message: String,
 }
 
-impl Message for ScriptInitResponse {}
+impl Message for ScriptInitResponse {
+    fn text(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized,
+    {
+        let _ = numbers_format;
+        format!(
+            "command: {}
+message: {}",
+            self.command, self.message
+        )
+    }
+}
 
 #[derive(Serialize, CairoSerialize)]
 pub enum FinalityStatus {
