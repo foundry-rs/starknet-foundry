@@ -4,7 +4,6 @@ use crate::{serde::serialize::SerializeToFeltVec, string::TryFromHexStr};
 use cairo_lang_utils::byte_array::{BYTE_ARRAY_MAGIC, BYTES_IN_WORD};
 use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
 use conversions::felt::ToShortString;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use starknet_types_core::felt::Felt;
 use std::fmt;
 
@@ -75,25 +74,6 @@ impl fmt::Display for ByteArray {
             .map_err(|_| fmt::Error)?;
 
         write!(f, "{words}{pending_word}")
-    }
-}
-
-impl Serialize for ByteArray {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_str(&self.to_string())
-    }
-}
-
-impl<'de> Deserialize<'de> for ByteArray {
-    fn deserialize<D>(deserializer: D) -> Result<ByteArray, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let s = String::deserialize(deserializer)?;
-        Ok(ByteArray::from(s.as_str()))
     }
 }
 

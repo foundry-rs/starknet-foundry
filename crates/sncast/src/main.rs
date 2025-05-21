@@ -701,7 +701,7 @@ async fn run_async_command(
                     .await
                     .context("Failed to get transaction status");
 
-            process_command_result("tx status", result, output_format, numbers_format, None);
+            process_command_result("tx-status", result, output_format, numbers_format, None);
             Ok(())
         }
 
@@ -877,7 +877,7 @@ fn transform_response(
     let transformed_response = reverse_transform_output(response, &abi, selector).ok()?;
 
     Some(TransformedCallResponse {
-        command: "call".to_string(),
+        // command: "call".to_string(),
         response_raw: response.clone(),
         response: transformed_response,
     })

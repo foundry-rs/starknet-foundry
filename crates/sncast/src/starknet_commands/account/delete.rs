@@ -77,7 +77,7 @@ pub fn delete(
     let result = "Account successfully removed".to_string();
     Ok(AccountDeleteResponse {
         result,
-        command: "account delete".to_string(),
+        // command: "account delete".to_string(),
     })
 }
 

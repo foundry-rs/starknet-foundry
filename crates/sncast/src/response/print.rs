@@ -1,9 +1,10 @@
 use foundry_ui::formats::{NumbersFormat, OutputFormat};
-use std::{fmt::Display, str::FromStr};
+use itertools::Itertools;
+use std::{collections::HashMap, fmt::Display, str::FromStr};
 
 use anyhow::Result;
 use serde::{Serialize, Serializer};
-use serde_json::{Map, Value};
+use serde_json::Value;
 use starknet_types_core::felt::Felt;
 
 use super::structs::CommandResponse;
@@ -147,47 +148,29 @@ impl<T: CommandResponse + Serialize> From<&T> for OutputData {
 }
 
 impl OutputData {
-    pub fn to_json(&self) -> Result<String> {
-        let mut map = Map::new();
-
-        let mut rest = self.0.clone();
-        let command_entry = rest
-            .iter()
-            .position(|(k, _)| k == "command")
-            .map(|idx| rest.remove(idx));
-
-        if let Some((_, command_val)) = command_entry {
-            map.insert("command".to_string(), serde_json::to_value(command_val)?);
-        }
-
-        for (k, v) in rest {
-            map.insert(k, serde_json::to_value(v)?);
-        }
-
-        serde_json::to_string(&Value::Object(map)).map_err(anyhow::Error::from)
+    fn to_json(&self, command: &str) -> Result<String> {
+        let mut mapping: HashMap<_, _> = self.0.clone().into_iter().collect();
+        mapping.insert(
+            String::from("command"),
+            OutputValue::String(command.to_owned()),
+        );
+        serde_json::to_string(&mapping).map_err(anyhow::Error::from)
     }
 
-    fn to_lines(&self) -> String {
-        let mut rest = self.0.clone();
-
-        // We need to move the command entry to the top of the list
-        let command_entry = rest
+    fn to_lines(&self, command: &str) -> String {
+        let fields = self
+            .0
             .iter()
-            .position(|(k, _)| k == "command")
-            .map(|idx| rest.remove(idx));
+            .map(|(key, val)| format!("{key}: {val}"))
+            .join("\n");
 
-        let mut fields = Vec::new();
-        if let Some((k, v)) = command_entry {
-            fields.push(format!("{k}: {v}"));
-        }
-        fields.extend(rest.iter().map(|(k, v)| format!("{k}: {v}")));
-        fields.join("\n")
+        format!("command: {command}\n{fields}")
     }
 
-    pub fn to_string_pretty(&self, output_format: OutputFormat) -> Result<String> {
+    pub fn to_string_pretty(&self, command: &str, output_format: OutputFormat) -> Result<String> {
         match output_format {
-            OutputFormat::Json => self.to_json(),
-            OutputFormat::Human => Ok(self.to_lines()),
+            OutputFormat::Json => self.to_json(command),
+            OutputFormat::Human => Ok(self.to_lines(command)),
         }
     }
 }
