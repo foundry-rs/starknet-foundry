@@ -48,10 +48,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
-        with:
-          toolchain: stable
-          target: ${{ matrix.target }}
+      - name: Setup rust
+        run: |
+          rustup target add ${{ matrix.target }} --toolchain 1.86.0
 
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
         with:
