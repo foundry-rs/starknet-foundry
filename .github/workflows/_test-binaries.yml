@@ -3,11 +3,11 @@ name: Test binaries
 on:
   workflow_call:
     inputs:
-      # Must start without 'v'
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       bin_version:
         required: true
         type: string
-      # Must start without 'v'
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       std_version:
         required: true
         type: string

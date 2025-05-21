@@ -3,13 +3,13 @@ name: Build snforge_scarb_plugin
 on:
   workflow_call:
     inputs:
-      # Must start without 'v'
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       overridden_plugin_version:
         required: false
         type: string
   workflow_dispatch:
     inputs:
-      # Must start without 'v'
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       overridden_plugin_version:
         required: false
         type: string

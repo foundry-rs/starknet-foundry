@@ -6,12 +6,12 @@ on:
       prod_registry:
         required: false
         type: boolean
-      # Must start without 'v'
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       override_std_version:
         required: false
         type: string
       # snforge_std in the repository has a plugin dependency specified as a relative path, which must be overridden each time before publishing.
-      # Must start without 'v'
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       plugin_dep_version:
         required: true
         type: string
@@ -20,12 +20,12 @@ on:
       prod_registry:
         required: false
         type: boolean
-      # Must start without 'v'
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       override_std_version:
         required: false
         type: string
       # snforge_std in the repository has a plugin dependency specified as a relative path, which must be overridden each time before publishing.
-      # Must start without 'v'
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       plugin_dep_version:
         required: true
         type: string
