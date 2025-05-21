@@ -7,7 +7,7 @@ use sncast::helpers::constants::UDC_ADDRESS;
 use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::handle_starknet_command_error;
-use sncast::response::structs::InvokeResponse;
+use sncast::response::structs::MulticallRunResponse;
 use sncast::{WaitForTx, extract_or_generate_salt, udc_uniqueness};
 use starknet::accounts::{Account, SingleOwnerAccount};
 use starknet::core::types::Call;
@@ -59,7 +59,7 @@ pub async fn run(
     run: Box<Run>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
-) -> Result<InvokeResponse> {
+) -> Result<MulticallRunResponse> {
     let fee_args = run.fee_args.clone();
 
     let contents = std::fs::read_to_string(&run.path)?;
@@ -139,6 +139,7 @@ pub async fn run(
         // "multicall run",
     )
     .await
+    .map(std::convert::Into::into)
     .map_err(handle_starknet_command_error)
 }
 

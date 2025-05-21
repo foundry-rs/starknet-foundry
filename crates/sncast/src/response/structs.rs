@@ -79,16 +79,36 @@ impl Message for TransformedCallResponse {
 }
 
 #[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
-pub struct InvokeResponse {
-    // #[serde(default = "invoke_response_command")]
-    // pub command: ByteArray,
+pub struct MulticallRunResponse {
     pub transaction_hash: PaddedFelt,
 }
 
-// fn invoke_response_command() -> ByteArray {
-//     ByteArray::from("invoke")
-// }
+impl CommandResponse for MulticallRunResponse {}
 
+impl Message for MulticallRunResponse {
+    fn text(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("multicall run", OutputFormat::Human)
+            .expect("Failed to format response")
+    }
+}
+
+#[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
+pub struct InvokeResponse {
+    pub transaction_hash: PaddedFelt,
+}
+
+impl From<InvokeResponse> for MulticallRunResponse {
+    fn from(value: InvokeResponse) -> Self {
+        Self {
+            transaction_hash: value.transaction_hash,
+        }
+    }
+}
 impl CommandResponse for InvokeResponse {}
 
 impl Message for InvokeResponse {
@@ -391,6 +411,17 @@ impl Message for VerifyResponse {
 }
 
 impl OutputLink for InvokeResponse {
+    const TITLE: &'static str = "invocation";
+
+    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+        format!(
+            "transaction: {}",
+            provider.transaction(self.transaction_hash)
+        )
+    }
+}
+
+impl OutputLink for MulticallRunResponse {
     const TITLE: &'static str = "invocation";
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
