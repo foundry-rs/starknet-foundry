@@ -118,7 +118,6 @@ pub async fn declare(
             account.provider(),
             transaction_hash,
             DeclareResponse::Success(DeclareTransactionResponse {
-                // command: ByteArray::from("declare"),
                 class_hash: class_hash.into_(),
                 transaction_hash: transaction_hash.into_(),
             }),

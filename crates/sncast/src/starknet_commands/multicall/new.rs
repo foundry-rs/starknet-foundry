@@ -36,7 +36,6 @@ pub fn write_empty_template(
     std::fs::write(output_path.clone(), DEFAULT_MULTICALL_CONTENTS)?;
 
     Ok(MulticallNewResponse {
-        // command: "multicall new".to_string(),
         path: output_path.clone(),
         content: DEFAULT_MULTICALL_CONTENTS.to_string(),
     })

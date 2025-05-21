@@ -48,10 +48,7 @@ pub async fn call(
     let res = provider.call(function_call, block_id).await;
 
     match res {
-        Ok(response) => Ok(CallResponse {
-            // command: ByteArray::from("call"),
-            response,
-        }),
+        Ok(response) => Ok(CallResponse { response }),
         Err(error) => Err(StarknetCommandError::ProviderError(error.into())),
     }
 }

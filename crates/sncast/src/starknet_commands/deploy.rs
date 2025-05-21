@@ -109,7 +109,6 @@ pub async fn deploy(
             account.provider(),
             result.transaction_hash,
             DeployResponse {
-                // command: ByteArray::from("deploy"),
                 contract_address: get_udc_deployed_address(
                     salt,
                     class_hash,

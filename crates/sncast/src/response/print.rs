@@ -174,3 +174,123 @@ impl OutputData {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{OutputData, OutputValue};
+    use crate::response::print::Format;
+    use foundry_ui::formats::NumbersFormat;
+    use serde_json::{Map, Value};
+
+    #[test]
+    fn test_format_json_value_force_decimal() {
+        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
+            "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        ))]);
+
+        let actual = json_value.format_with(NumbersFormat::Decimal);
+        let v = "2087021424722619777119509474943472645767659996348769578120564519014510906823";
+        let expected = OutputValue::Array(vec![OutputValue::String(String::from(v))]);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_format_json_value_leave_default_decimal() {
+        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
+            "2087021424722619777119509474943472645767659996348769578120564519014510906823",
+        ))]);
+
+        let actual = json_value.format_with(NumbersFormat::Default);
+        let expected = OutputValue::Array(vec![OutputValue::String(String::from(
+            "2087021424722619777119509474943472645767659996348769578120564519014510906823",
+        ))]);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_format_json_value_leave_default_hex() {
+        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
+            "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        ))]);
+
+        let actual = json_value.format_with(NumbersFormat::Default);
+        let expected = OutputValue::Array(vec![OutputValue::String(String::from(
+            "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        ))]);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_format_json_value_force_hex() {
+        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
+            "2087021424722619777119509474943472645767659996348769578120564519014510906823",
+        ))]);
+
+        let actual = json_value.format_with(NumbersFormat::Hex);
+        let expected = OutputValue::Array(vec![OutputValue::String(String::from(
+            "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        ))]);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn format_address_force_hex() {
+        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
+            "0x0163a86513df426f4fd7ad989b11062769b03d3fd75fb83fae6c0f416b33a3d5",
+        ))]);
+
+        let actual = json_value.format_with(NumbersFormat::Hex);
+        let expected = OutputValue::Array(vec![OutputValue::String(String::from(
+            "0x0163a86513df426f4fd7ad989b11062769b03d3fd75fb83fae6c0f416b33a3d5",
+        ))]);
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn format_address_force_decimal() {
+        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
+            "0x0163a86513df426f4fd7ad989b11062769b03d3fd75fb83fae6c0f416b33a3d5",
+        ))]);
+
+        let actual = json_value.format_with(NumbersFormat::Decimal);
+        let expected = OutputValue::Array(vec![OutputValue::String(String::from(
+            "628392926429977811333168641010360117621605580210734736624161546314682966997",
+        ))]);
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn format_address_leave_default() {
+        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
+            "0x0163a86513df426f4fd7ad989b11062769b03d3fd75fb83fae6c0f416b33a3d5",
+        ))]);
+
+        let actual = json_value.format_with(NumbersFormat::Default);
+        let expected = OutputValue::Array(vec![OutputValue::String(String::from(
+            "0x0163a86513df426f4fd7ad989b11062769b03d3fd75fb83fae6c0f416b33a3d5",
+        ))]);
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_struct_value_to_output_data() {
+        let mut json_value = Map::new();
+        json_value.insert(
+            String::from("K"),
+            Value::Array(vec![Value::String(String::from("V"))]),
+        );
+        json_value.insert(String::from("K2"), Value::Null);
+
+        let actual: OutputData = Value::Object(json_value).into();
+
+        let expected = OutputData(vec![(
+            String::from("K"),
+            OutputValue::Array(vec![OutputValue::String(String::from("V"))]),
+        )]);
+
+        assert_eq!(actual, expected);
+    }
+}

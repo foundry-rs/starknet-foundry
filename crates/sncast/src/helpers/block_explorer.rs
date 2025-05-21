@@ -197,6 +197,7 @@ mod tests {
         let result = MAINNET_RESPONSE.format_links(explorer.as_provider(Network::Mainnet).unwrap());
         assert_valid_links(&result).await;
     }
+
     #[tokio::test]
     #[test_case(Service::ViewBlock; "viewblock")]
     #[test_case(Service::OkLink; "oklink")]

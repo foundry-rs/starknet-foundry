@@ -30,7 +30,6 @@ pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
 
     match modify_files_result {
         Result::Ok(()) => Ok(ScriptInitResponse {
-            // command: "script init".to_string(),
             message: format!(
                 "Successfully initialized `{}` at {}",
                 init_args.script_name, script_root_dir_path
