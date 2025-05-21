@@ -428,7 +428,6 @@ impl Message for MulticallNewResponse {
 
 #[derive(Serialize)]
 pub struct ShowConfigResponse {
-    pub command: String,
     pub profile: Option<String>,
     pub chain_id: Option<String>,
     pub rpc_url: Option<String>,
