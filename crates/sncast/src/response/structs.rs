@@ -157,6 +157,18 @@ pub struct AlreadyDeclaredResponse {
 
 impl CommandResponse for AlreadyDeclaredResponse {}
 
+impl Message for AlreadyDeclaredResponse {
+    fn text(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty(OutputFormat::Human)
+            .expect("Failed to format response")
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 #[serde(tag = "status")]
 pub enum DeclareResponse {
@@ -255,6 +267,7 @@ impl Message for MulticallNewResponse {
 
 #[derive(Serialize)]
 pub struct ShowConfigResponse {
+    pub command: String,
     pub profile: Option<String>,
     pub chain_id: Option<String>,
     pub rpc_url: Option<String>,
