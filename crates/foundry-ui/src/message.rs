@@ -5,13 +5,13 @@ use crate::formats::NumbersFormat;
 pub trait Message {
     /// Return textual representation of this message.
     ///
-    /// Default implementation returns json string, making [`Ui`] skip printing this message.
+    /// Default implementation returns empty string, making [`Ui`] skip printing this message.
     fn text(&self, numbers_format: NumbersFormat) -> String
     where
         Self: Sized + Serialize,
     {
         let _ = numbers_format;
-        serde_json::to_string(&self).unwrap_or_else(|_| "Invalid JSON".to_string())
+        String::new()
     }
 
     fn print_human(&self, numbers_format: NumbersFormat, print_as_err: bool)

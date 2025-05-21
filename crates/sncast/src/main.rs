@@ -220,29 +220,21 @@ fn main() -> Result<()> {
     let numbers_format = NumbersFormat::from_flags(cli.hex_format, cli.int_format);
     let output_format = OutputFormat::from_flag(cli.json);
 
+    let ui = Ui::new(output_format, numbers_format);
+
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = &cli.command {
-        run_script_command(&cli, runtime, script, numbers_format, output_format)
+        run_script_command(&cli, runtime, script, &ui)
     } else {
         let config = get_cast_config(&cli)?;
 
-        runtime.block_on(run_async_command(
-            cli,
-            config,
-            numbers_format,
-            output_format,
-        ))
+        runtime.block_on(run_async_command(cli, config, &ui))
     }
 }
 
 #[expect(clippy::too_many_lines)]
-async fn run_async_command(
-    cli: Cli,
-    config: CastConfig,
-    numbers_format: NumbersFormat,
-    output_format: OutputFormat,
-) -> Result<()> {
+async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> {
     let wait_config = WaitForTx {
         wait: cli.wait,
         wait_params: config.wait_params,
@@ -291,19 +283,13 @@ async fn run_async_command(
 
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                output_format,
+                ui.output_format(),
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
             );
 
-            process_command_result(
-                "declare",
-                result,
-                output_format,
-                numbers_format,
-                block_explorer_link,
-            );
+            process_command_result("declare", result, ui, block_explorer_link);
 
             Ok(())
         }
@@ -349,18 +335,12 @@ async fn run_async_command(
 
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                output_format,
+                ui.output_format(),
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
             );
-            process_command_result(
-                "deploy",
-                result,
-                output_format,
-                numbers_format,
-                block_explorer_link,
-            );
+            process_command_result("deploy", result, ui, block_explorer_link);
 
             Ok(())
         }
@@ -396,15 +376,9 @@ async fn run_async_command(
             if let Some(transformed_result) =
                 transform_response(&result, &contract_class, &selector)
             {
-                process_command_result(
-                    "call",
-                    Ok(transformed_result),
-                    output_format,
-                    numbers_format,
-                    None,
-                );
+                process_command_result("call", Ok(transformed_result), ui, None);
             } else {
-                process_command_result("call", result, output_format, numbers_format, None);
+                process_command_result("call", result, ui, None);
             }
 
             Ok(())
@@ -453,19 +427,13 @@ async fn run_async_command(
 
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                output_format,
+                ui.output_format(),
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
             );
 
-            process_command_result(
-                "invoke",
-                result,
-                output_format,
-                numbers_format,
-                block_explorer_link,
-            );
+            process_command_result("invoke", result, ui, block_explorer_link);
 
             Ok(())
         }
@@ -479,13 +447,7 @@ async fn run_async_command(
                             new.overwrite,
                         );
 
-                        process_command_result(
-                            "multicall new",
-                            result,
-                            output_format,
-                            numbers_format,
-                            None,
-                        );
+                        process_command_result("multicall new", result, ui, None);
                     } else {
                         println!("{DEFAULT_MULTICALL_CONTENTS}");
                     }
@@ -506,18 +468,12 @@ async fn run_async_command(
 
                     let block_explorer_link = block_explorer_link_if_allowed(
                         &result,
-                        output_format,
+                        ui.output_format(),
                         provider.chain_id().await?,
                         config.show_explorer_links,
                         config.block_explorer,
                     );
-                    process_command_result(
-                        "multicall run",
-                        result,
-                        output_format,
-                        numbers_format,
-                        block_explorer_link,
-                    );
+                    process_command_result("multicall run", result, ui, block_explorer_link);
                 }
             }
             Ok(())
@@ -547,13 +503,7 @@ async fn run_async_command(
                     }
                 }
 
-                process_command_result(
-                    "account import",
-                    result,
-                    output_format,
-                    numbers_format,
-                    None,
-                );
+                process_command_result("account import", result, ui, None);
                 Ok(())
             }
 
@@ -581,19 +531,13 @@ async fn run_async_command(
 
                 let block_explorer_link = block_explorer_link_if_allowed(
                     &result,
-                    output_format,
+                    ui.output_format(),
                     provider.chain_id().await?,
                     config.show_explorer_links,
                     config.block_explorer,
                 );
 
-                process_command_result(
-                    "account create",
-                    result,
-                    output_format,
-                    numbers_format,
-                    block_explorer_link,
-                );
+                process_command_result("account create", result, ui, block_explorer_link);
 
                 Ok(())
             }
@@ -632,18 +576,12 @@ async fn run_async_command(
 
                 let block_explorer_link = block_explorer_link_if_allowed(
                     &result,
-                    output_format,
+                    ui.output_format(),
                     provider.chain_id().await?,
                     config.show_explorer_links,
                     config.block_explorer,
                 );
-                process_command_result(
-                    "account deploy",
-                    result,
-                    output_format,
-                    numbers_format,
-                    block_explorer_link,
-                );
+                process_command_result("account deploy", result, ui, block_explorer_link);
 
                 Ok(())
             }
@@ -659,21 +597,15 @@ async fn run_async_command(
                     delete.yes,
                 );
 
-                process_command_result(
-                    "account delete",
-                    result,
-                    output_format,
-                    numbers_format,
-                    None,
-                );
+                process_command_result("account delete", result, ui, None);
                 Ok(())
             }
 
             account::Commands::List(options) => print_account_list(
                 &config.accounts_file,
                 options.display_private_keys,
-                numbers_format,
-                output_format,
+                ui.numbers_format(),
+                ui.output_format(),
             ),
         },
 
@@ -688,7 +620,7 @@ async fn run_async_command(
             )
             .await;
 
-            process_command_result("show-config", result, output_format, numbers_format, None);
+            process_command_result("show-config", result, ui, None);
 
             Ok(())
         }
@@ -701,7 +633,7 @@ async fn run_async_command(
                     .await
                     .context("Failed to get transaction status");
 
-            process_command_result("tx-status", result, output_format, numbers_format, None);
+            process_command_result("tx-status", result, ui, None);
             Ok(())
         }
 
@@ -725,7 +657,7 @@ async fn run_async_command(
             )
             .await;
 
-            process_command_result("verify", result, output_format, numbers_format, None);
+            process_command_result("verify", result, ui, None);
             Ok(())
         }
 
@@ -738,17 +670,11 @@ async fn run_async_command(
     }
 }
 
-fn run_script_command(
-    cli: &Cli,
-    runtime: Runtime,
-    script: &Script,
-    numbers_format: NumbersFormat,
-    output_format: OutputFormat,
-) -> Result<()> {
+fn run_script_command(cli: &Cli, runtime: Runtime, script: &Script, ui: &Ui) -> Result<()> {
     match &script.command {
         starknet_commands::script::Commands::Init(init) => {
             let result = starknet_commands::script::init::init(init);
-            process_command_result("script init", result, output_format, numbers_format, None);
+            process_command_result("script init", result, ui, None);
         }
         starknet_commands::script::Commands::Run(run) => {
             let manifest_path = assert_manifest_path_exists()?;
@@ -802,7 +728,7 @@ fn run_script_command(
                 state_file_path,
             );
 
-            process_command_result("script run", result, output_format, numbers_format, None);
+            process_command_result("script run", result, ui, None);
         }
     }
 
@@ -877,7 +803,6 @@ fn transform_response(
     let transformed_response = reverse_transform_output(response, &abi, selector).ok()?;
 
     Some(TransformedCallResponse {
-        // command: "call".to_string(),
         response_raw: response.clone(),
         response: transformed_response,
     })
@@ -886,23 +811,22 @@ fn transform_response(
 fn process_command_result<T>(
     command: &str,
     result: Result<T>,
-    output_format: OutputFormat,
-    numbers_format: NumbersFormat,
+    ui: &Ui,
     block_explorer_link: Option<String>,
 ) where
     T: Message + serde::Serialize,
 {
     match result {
         Ok(response) => {
-            Ui::print(&response, output_format, numbers_format);
+            ui.print(&response);
             if let Some(link) = block_explorer_link {
-                Ui::print(&link, output_format, numbers_format);
+                ui.print(&link);
             }
         }
         Err(err) => {
             let err_str = format!("{err:?}");
             let response_error = ResponseError::new(command.to_string(), err_str);
-            Ui::print_err(&response_error, output_format, numbers_format);
+            ui.print_as_err(&response_error);
         }
     }
 }
