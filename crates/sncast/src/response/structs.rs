@@ -377,6 +377,7 @@ impl Message for TransactionStatusResponse {}
 
 #[derive(Serialize)]
 pub struct VerifyResponse {
+    pub command: String,
     pub message: String,
 }
 

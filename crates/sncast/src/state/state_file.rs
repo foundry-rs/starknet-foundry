@@ -235,7 +235,6 @@ pub enum ScriptTransactionStatus {
 
 pub fn load_state_file(path: &Utf8PathBuf) -> Result<ScriptTransactionsSchema> {
     let content = fs::read_to_string(path).context("Failed to load state file")?;
-    println!("Loaded state file: {content}");
     match serde_json::from_str::<ScriptTransactionsSchema>(&content) {
         Ok(state_file) => {
             verify_version(state_file.version)?;
