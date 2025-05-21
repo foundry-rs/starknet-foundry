@@ -182,5 +182,6 @@ jobs:
         uses: slackapi/slack-github-action@v2.0.0
         with:
           webhook: ${{ secrets.SLACK_SCHEDULED_TESTS_FAILURE_WEBHOOK_URL }}
+          webhook-type: webhook-trigger
           payload: |
             url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
