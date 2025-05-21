@@ -153,7 +153,7 @@ fn matches_version_with_special_rules(
             major: package_version.major,
             minor: package_version.minor,
             patch: package_version.patch,
-            // Clear pre-release and build metadata to enable exceptions in nightly builds and smoke tests
+            // Clear pre-release and build metadata to handle exceptions in nightly builds and smoke tests
             pre: Prerelease::EMPTY,
             build: BuildMetadata::EMPTY,
         };
