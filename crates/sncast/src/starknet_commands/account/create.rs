@@ -399,7 +399,6 @@ where
     )
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -444,7 +443,7 @@ mod tests {
 
     #[test]
     fn test_felt_to_bigdecimal_with_different_decimal_places() {
-        let felt = Felt::from(123456789);
+        let felt = Felt::from(123_456_789);
 
         assert_eq!(felt_to_bigdecimal(felt, 0).to_string(), "123456789");
         assert_eq!(felt_to_bigdecimal(felt, 3).to_string(), "123456.789");

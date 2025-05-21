@@ -845,3 +845,18 @@ fn test_braavos_disabled() {
         "},
     );
 }
+
+#[tokio::test]
+pub async fn test_happy_case_deployment_fee_message() {
+    let tempdir = tempdir().expect("Failed to create a temporary directory");
+
+    let args = vec!["account", "create", "--url", URL];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        "message: Account successfully created but it needs to be deployed. The estimated deployment fee is 0.000836288000000000 STRK. Prefund the account to cover deployment transaction fee",
+    );
+}
