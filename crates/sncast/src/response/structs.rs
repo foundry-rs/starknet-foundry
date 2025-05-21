@@ -34,16 +34,10 @@ pub trait CommandResponse: Serialize {}
 
 #[derive(Serialize, CairoSerialize, Clone)]
 pub struct CallResponse {
-    #[serde(default = "call_response_command")]
-    // pub command: ByteArray,
     pub response: Vec<Felt>,
 }
 
 impl CommandResponse for CallResponse {}
-
-// fn call_response_command() -> ByteArray {
-//     ByteArray::from("call")
-// }
 
 impl Message for CallResponse {
     fn text(&self, numbers_format: NumbersFormat) -> String
@@ -55,11 +49,20 @@ impl Message for CallResponse {
             .to_string_pretty("call", OutputFormat::Human)
             .expect("Failed to format response")
     }
+
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("call", OutputFormat::Json)
+            .expect("Failed to format response")
+    }
 }
 
 #[derive(Serialize, Clone)]
 pub struct TransformedCallResponse {
-    // pub command: String,
     pub response: String,
     pub response_raw: Vec<Felt>,
 }
@@ -74,6 +77,16 @@ impl Message for TransformedCallResponse {
         OutputData::from(self)
             .format_with(numbers_format)
             .to_string_pretty("call", OutputFormat::Human)
+            .expect("Failed to format response")
+    }
+
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("call", OutputFormat::Json)
             .expect("Failed to format response")
     }
 }
@@ -95,6 +108,16 @@ impl Message for MulticallRunResponse {
             .to_string_pretty("multicall run", OutputFormat::Human)
             .expect("Failed to format response")
     }
+
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("multicall run", OutputFormat::Json)
+            .expect("Failed to format response")
+    }
 }
 
 #[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
@@ -102,13 +125,6 @@ pub struct InvokeResponse {
     pub transaction_hash: PaddedFelt,
 }
 
-impl From<InvokeResponse> for MulticallRunResponse {
-    fn from(value: InvokeResponse) -> Self {
-        Self {
-            transaction_hash: value.transaction_hash,
-        }
-    }
-}
 impl CommandResponse for InvokeResponse {}
 
 impl Message for InvokeResponse {
@@ -121,7 +137,62 @@ impl Message for InvokeResponse {
             .to_string_pretty("invoke", OutputFormat::Human)
             .expect("Failed to format response")
     }
+
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("invoke", OutputFormat::Json)
+            .expect("Failed to format response")
+    }
 }
+
+#[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
+pub struct AccountDeployResponse {
+    pub transaction_hash: PaddedFelt,
+}
+
+impl Message for AccountDeployResponse {
+    fn text(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("account deploy", OutputFormat::Human)
+            .expect("Failed to format response")
+    }
+
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("account deploy", OutputFormat::Json)
+            .expect("Failed to format response")
+    }
+}
+
+impl From<InvokeResponse> for MulticallRunResponse {
+    fn from(value: InvokeResponse) -> Self {
+        Self {
+            transaction_hash: value.transaction_hash,
+        }
+    }
+}
+
+impl From<InvokeResponse> for AccountDeployResponse {
+    fn from(value: InvokeResponse) -> Self {
+        Self {
+            transaction_hash: value.transaction_hash,
+        }
+    }
+}
+
+impl CommandResponse for AccountDeployResponse {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeployResponse {
@@ -140,6 +211,16 @@ impl Message for DeployResponse {
         OutputData::from(self)
             .format_with(numbers_format)
             .to_string_pretty("deploy", OutputFormat::Human)
+            .expect("Failed to format response")
+    }
+
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("deploy", OutputFormat::Json)
             .expect("Failed to format response")
     }
 }
@@ -168,6 +249,16 @@ impl Message for DeclareTransactionResponse {
             .to_string_pretty("declare", OutputFormat::Human)
             .expect("Failed to format response")
     }
+
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("declare", OutputFormat::Json)
+            .expect("Failed to format response")
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
@@ -185,6 +276,16 @@ impl Message for AlreadyDeclaredResponse {
         OutputData::from(self)
             .format_with(numbers_format)
             .to_string_pretty("declare", OutputFormat::Human)
+            .expect("Failed to format response")
+    }
+
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("declare", OutputFormat::Json)
             .expect("Failed to format response")
     }
 }
@@ -221,6 +322,16 @@ impl Message for AccountCreateResponse {
             .to_string_pretty("account create", OutputFormat::Human)
             .expect("Failed to format response")
     }
+
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("account create", OutputFormat::Json)
+            .expect("Failed to format response")
+    }
 }
 
 #[derive(Serialize)]
@@ -240,6 +351,16 @@ impl Message for AccountImportResponse {
         OutputData::from(self)
             .format_with(numbers_format)
             .to_string_pretty("account import", OutputFormat::Human)
+            .expect("Failed to format response")
+    }
+
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("account import", OutputFormat::Json)
             .expect("Failed to format response")
     }
 }
@@ -262,6 +383,16 @@ impl Message for AccountDeleteResponse {
             .to_string_pretty("account delete", OutputFormat::Human)
             .expect("Failed to format response")
     }
+
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("account delete", OutputFormat::Json)
+            .expect("Failed to format response")
+    }
 }
 
 #[derive(Serialize)]
@@ -281,6 +412,16 @@ impl Message for MulticallNewResponse {
         OutputData::from(self)
             .format_with(numbers_format)
             .to_string_pretty("multicall new", OutputFormat::Human)
+            .expect("Failed to format response")
+    }
+
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("multicall new", OutputFormat::Json)
             .expect("Failed to format response")
     }
 }
@@ -312,6 +453,16 @@ impl Message for ShowConfigResponse {
             .to_string_pretty("show-config", OutputFormat::Human)
             .expect("Failed to format response")
     }
+
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("show-config", OutputFormat::Json)
+            .expect("Failed to format response")
+    }
 }
 
 #[derive(Serialize, Debug)]
@@ -333,6 +484,16 @@ impl Message for ScriptRunResponse {
             .to_string_pretty("script run", OutputFormat::Human)
             .expect("Failed to format response")
     }
+
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("script run", OutputFormat::Json)
+            .expect("Failed to format response")
+    }
 }
 
 #[derive(Serialize)]
@@ -351,6 +512,16 @@ impl Message for ScriptInitResponse {
         OutputData::from(self)
             .format_with(numbers_format)
             .to_string_pretty("script init", OutputFormat::Human)
+            .expect("Failed to format response")
+    }
+
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("script init", OutputFormat::Json)
             .expect("Failed to format response")
     }
 }
@@ -388,6 +559,16 @@ impl Message for TransactionStatusResponse {
             .to_string_pretty("tx-status", OutputFormat::Human)
             .expect("Failed to format response")
     }
+
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("tx-status", OutputFormat::Json)
+            .expect("Failed to format response")
+    }
 }
 
 #[derive(Serialize)]
@@ -408,6 +589,16 @@ impl Message for VerifyResponse {
             .to_string_pretty("verify", OutputFormat::Human)
             .expect("Failed to format response")
     }
+
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty("verify", OutputFormat::Json)
+            .expect("Failed to format response")
+    }
 }
 
 impl OutputLink for InvokeResponse {
@@ -422,6 +613,17 @@ impl OutputLink for InvokeResponse {
 }
 
 impl OutputLink for MulticallRunResponse {
+    const TITLE: &'static str = "invocation";
+
+    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+        format!(
+            "transaction: {}",
+            provider.transaction(self.transaction_hash)
+        )
+    }
+}
+
+impl OutputLink for AccountDeployResponse {
     const TITLE: &'static str = "invocation";
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {

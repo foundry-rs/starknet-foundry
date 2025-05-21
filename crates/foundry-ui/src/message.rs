@@ -34,11 +34,11 @@ pub trait Message {
         serde_json::to_string(self).unwrap_or_else(|_| "Invalid JSON".to_string())
     }
 
-    fn print_json(&self, print_as_err: bool)
+    fn print_json(&self, numbers_format: NumbersFormat, print_as_err: bool)
     where
-        Self: Serialize,
+        Self: Serialize + Sized,
     {
-        let json = serde_json::to_string(self).unwrap_or_else(|_| "Invalid JSON".to_string());
+        let json = self.json(numbers_format);
         if print_as_err {
             eprintln!("{json}");
         } else {

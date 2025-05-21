@@ -18,7 +18,7 @@ impl Ui {
     {
         match output_format {
             OutputFormat::Human => message.print_human(numbers_format, false),
-            OutputFormat::Json => message.print_json(false),
+            OutputFormat::Json => message.print_json(numbers_format, false),
         }
     }
 
@@ -28,7 +28,7 @@ impl Ui {
     {
         match output_format {
             OutputFormat::Human => message.print_human(numbers_format, true),
-            OutputFormat::Json => message.print_json(true),
+            OutputFormat::Json => message.print_json(numbers_format, true),
         }
     }
 }
