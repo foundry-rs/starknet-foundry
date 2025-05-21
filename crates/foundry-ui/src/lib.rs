@@ -3,7 +3,6 @@ pub use message::*;
 
 pub mod formats;
 pub mod message;
-pub mod output_value;
 
 /// An abstraction around console output which stores preferences for output format (human vs JSON),
 /// colour, etc.

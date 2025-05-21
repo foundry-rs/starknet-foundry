@@ -14,24 +14,32 @@ pub trait Message {
         serde_json::to_string(&self).unwrap_or_else(|_| "Invalid JSON".to_string())
     }
 
-    fn print_human(&self, numbers_format: NumbersFormat, is_err: bool)
+    fn print_human(&self, numbers_format: NumbersFormat, print_as_err: bool)
     where
         Self: Sized + Serialize,
     {
         let text = self.text(numbers_format);
-        if !text.is_empty() && is_err {
+        if !text.is_empty() && print_as_err {
             eprintln!("{text}");
-        } else if !text.is_empty() && !is_err {
+        } else if !text.is_empty() && !print_as_err {
             println!("{text}");
         }
     }
 
-    fn print_json(&self, is_err: bool)
+    fn json(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        let _ = numbers_format;
+        serde_json::to_string(self).unwrap_or_else(|_| "Invalid JSON".to_string())
+    }
+
+    fn print_json(&self, print_as_err: bool)
     where
         Self: Serialize,
     {
         let json = serde_json::to_string(self).unwrap_or_else(|_| "Invalid JSON".to_string());
-        if is_err {
+        if print_as_err {
             eprintln!("{json}");
         } else {
             println!("{json}");

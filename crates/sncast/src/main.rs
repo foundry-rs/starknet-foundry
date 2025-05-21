@@ -8,7 +8,6 @@ use foundry_ui::formats::{NumbersFormat, OutputFormat};
 use foundry_ui::{Message, Ui};
 use sncast::helpers::account::generate_account_name;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
-// use sncast::response::print::print_command_result;
 use std::io;
 use std::io::IsTerminal;
 

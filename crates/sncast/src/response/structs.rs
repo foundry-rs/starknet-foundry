@@ -1,12 +1,13 @@
 use super::explorer_link::OutputLink;
+use super::print::OutputData;
 use crate::helpers::block_explorer;
 use crate::helpers::block_explorer::LinkProvider;
+use crate::response::print::Format;
 use camino::Utf8PathBuf;
 use conversions::serde::serialize::CairoSerialize;
 use conversions::{byte_array::ByteArray, padded_felt::PaddedFelt};
 use foundry_ui::Message;
-use foundry_ui::formats::NumbersFormat;
-use foundry_ui::output_value::{Format, OutputValue};
+use foundry_ui::formats::{NumbersFormat, OutputFormat};
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet_types_core::felt::Felt;
@@ -29,7 +30,7 @@ where
     serializer.serialize_str(&format!("{value:#}"))
 }
 
-// pub trait CommandResponse: Serialize {}
+pub trait CommandResponse: Serialize {}
 
 #[derive(Serialize, CairoSerialize, Clone)]
 pub struct CallResponse {
@@ -37,6 +38,8 @@ pub struct CallResponse {
     pub command: ByteArray,
     pub response: Vec<Felt>,
 }
+
+impl CommandResponse for CallResponse {}
 
 fn call_response_command() -> ByteArray {
     ByteArray::from("call")
@@ -47,17 +50,10 @@ impl Message for CallResponse {
     where
         Self: Sized + Serialize,
     {
-        let response = OutputValue::Array(
-            self.response
-                .iter()
-                .map(|f| OutputValue::String(f.to_string()).format_with(numbers_format))
-                .collect(),
-        );
-        format!(
-            "command: {}
-response: {}",
-            self.command, response
-        )
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty(OutputFormat::Human)
+            .expect("Failed to format response")
     }
 }
 
@@ -68,23 +64,17 @@ pub struct TransformedCallResponse {
     pub response_raw: Vec<Felt>,
 }
 
+impl CommandResponse for TransformedCallResponse {}
+
 impl Message for TransformedCallResponse {
     fn text(&self, numbers_format: NumbersFormat) -> String
     where
-        Self: Sized,
+        Self: Sized + Serialize,
     {
-        let response = OutputValue::Array(
-            self.response_raw
-                .iter()
-                .map(|f| OutputValue::String(f.to_hex_string()).format_with(numbers_format))
-                .collect(),
-        );
-        format!(
-            "command: {}
-response: {}
-response_raw: {}",
-            self.command, self.response, response
-        )
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty(OutputFormat::Human)
+            .expect("Failed to format response")
     }
 }
 
@@ -99,17 +89,17 @@ fn invoke_response_command() -> ByteArray {
     ByteArray::from("invoke")
 }
 
+impl CommandResponse for InvokeResponse {}
+
 impl Message for InvokeResponse {
     fn text(&self, numbers_format: NumbersFormat) -> String
     where
-        Self: Sized,
+        Self: Sized + Serialize,
     {
-        let _ = numbers_format;
-        format!(
-            "command: {}
-transaction_hash: {}",
-            self.command, self.transaction_hash
-        )
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty(OutputFormat::Human)
+            .expect("Failed to format response")
     }
 }
 
@@ -119,18 +109,18 @@ pub struct DeployResponse {
     pub contract_address: PaddedFelt,
     pub transaction_hash: PaddedFelt,
 }
+
+impl CommandResponse for DeployResponse {}
+
 impl Message for DeployResponse {
     fn text(&self, numbers_format: NumbersFormat) -> String
     where
-        Self: Sized,
+        Self: Sized + Serialize,
     {
-        let _ = numbers_format;
-        format!(
-            "command: {}
-contract_address: {:#x}
-transaction_hash: {:#x}",
-            self.command, self.contract_address, self.transaction_hash
-        )
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty(OutputFormat::Human)
+            .expect("Failed to format response")
     }
 }
 
@@ -146,18 +136,17 @@ fn declare_transaction_response_command() -> ByteArray {
     ByteArray::from("declare")
 }
 
+impl CommandResponse for DeclareTransactionResponse {}
+
 impl Message for DeclareTransactionResponse {
     fn text(&self, numbers_format: NumbersFormat) -> String
     where
         Self: Sized + Serialize,
     {
-        let _ = numbers_format;
-        format!(
-            "command: {}
-class_hash: {:#x}
-transaction_hash: {:#x}",
-            self.command, self.class_hash, self.transaction_hash
-        )
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty(OutputFormat::Human)
+            .expect("Failed to format response")
     }
 }
 
@@ -166,7 +155,7 @@ pub struct AlreadyDeclaredResponse {
     pub class_hash: PaddedFelt,
 }
 
-// impl CommandResponse for AlreadyDeclaredResponse {}
+impl CommandResponse for AlreadyDeclaredResponse {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 #[serde(tag = "status")]
@@ -176,7 +165,7 @@ pub enum DeclareResponse {
     Success(DeclareTransactionResponse),
 }
 
-// impl CommandResponse for DeclareResponse {}
+impl CommandResponse for DeclareResponse {}
 
 #[derive(Serialize, Debug)]
 pub struct AccountCreateResponse {
@@ -188,26 +177,17 @@ pub struct AccountCreateResponse {
     pub message: String,
 }
 
-// impl CommandResponse for AccountCreateResponse {}
+impl CommandResponse for AccountCreateResponse {}
 
 impl Message for AccountCreateResponse {
     fn text(&self, numbers_format: NumbersFormat) -> String
     where
-        Self: Sized,
+        Self: Sized + Serialize,
     {
-        let max_fee = OutputValue::String(self.max_fee.to_string());
-        format!(
-            "command: {}
-add_profile: {}
-address: {:#x}
-max_fee: {}
-message: {}",
-            self.command,
-            self.add_profile,
-            self.address,
-            max_fee.format_with(numbers_format),
-            self.message
-        )
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty(OutputFormat::Human)
+            .expect("Failed to format response")
     }
 }
 
@@ -218,29 +198,17 @@ pub struct AccountImportResponse {
     pub account_name: Option<String>,
 }
 
-// impl CommandResponse for AccountImportResponse {}
+impl CommandResponse for AccountImportResponse {}
 
 impl Message for AccountImportResponse {
     fn text(&self, numbers_format: NumbersFormat) -> String
     where
-        Self: Sized,
+        Self: Sized + Serialize,
     {
-        let _ = numbers_format;
-
-        if let Some(account_name) = &self.account_name {
-            format!(
-                "command: {}
-account_name: {}
-add_profile: {}",
-                self.command, account_name, self.add_profile
-            )
-        } else {
-            format!(
-                "command: {}
-add_profile: {}",
-                self.command, self.add_profile
-            )
-        }
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty(OutputFormat::Human)
+            .expect("Failed to format response")
     }
 }
 
@@ -250,17 +218,17 @@ pub struct AccountDeleteResponse {
     pub result: String,
 }
 
+impl CommandResponse for AccountDeleteResponse {}
+
 impl Message for AccountDeleteResponse {
     fn text(&self, numbers_format: NumbersFormat) -> String
     where
-        Self: Sized,
+        Self: Sized + Serialize,
     {
-        let _ = numbers_format;
-        format!(
-            "command: {}
-result: {}",
-            self.command, self.result
-        )
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty(OutputFormat::Human)
+            .expect("Failed to format response")
     }
 }
 
@@ -271,18 +239,17 @@ pub struct MulticallNewResponse {
     pub content: String,
 }
 
+impl CommandResponse for MulticallNewResponse {}
+
 impl Message for MulticallNewResponse {
     fn text(&self, numbers_format: NumbersFormat) -> String
     where
-        Self: Sized,
+        Self: Sized + Serialize,
     {
-        let _ = numbers_format;
-        format!(
-            "command: {}
-path: {}
-content: {}",
-            self.command, self.path, self.content
-        )
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty(OutputFormat::Human)
+            .expect("Failed to format response")
     }
 }
 
@@ -300,7 +267,19 @@ pub struct ShowConfigResponse {
     pub block_explorer: Option<block_explorer::Service>,
 }
 
-impl Message for ShowConfigResponse {}
+impl CommandResponse for ShowConfigResponse {}
+
+impl Message for ShowConfigResponse {
+    fn text(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty(OutputFormat::Human)
+            .expect("Failed to format response")
+    }
+}
 
 #[derive(Serialize, Debug)]
 pub struct ScriptRunResponse {
@@ -309,27 +288,17 @@ pub struct ScriptRunResponse {
     pub message: Option<String>,
 }
 
+impl CommandResponse for ScriptRunResponse {}
+
 impl Message for ScriptRunResponse {
     fn text(&self, numbers_format: NumbersFormat) -> String
     where
-        Self: Sized,
+        Self: Sized + Serialize,
     {
-        let _ = numbers_format;
-
-        if let Some(message) = self.message.as_ref() {
-            format!(
-                "command: {}
-status: {}
-message: {}",
-                self.command, self.status, message
-            )
-        } else {
-            format!(
-                "command: {}
-status: {}",
-                self.command, self.status,
-            )
-        }
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty(OutputFormat::Human)
+            .expect("Failed to format response")
     }
 }
 
@@ -339,17 +308,17 @@ pub struct ScriptInitResponse {
     pub message: String,
 }
 
+impl CommandResponse for ScriptInitResponse {}
+
 impl Message for ScriptInitResponse {
     fn text(&self, numbers_format: NumbersFormat) -> String
     where
-        Self: Sized,
+        Self: Sized + Serialize,
     {
-        let _ = numbers_format;
-        format!(
-            "command: {}
-message: {}",
-            self.command, self.message
-        )
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty(OutputFormat::Human)
+            .expect("Failed to format response")
     }
 }
 
@@ -381,7 +350,19 @@ pub struct VerifyResponse {
     pub message: String,
 }
 
-impl Message for VerifyResponse {}
+impl CommandResponse for VerifyResponse {}
+
+impl Message for VerifyResponse {
+    fn text(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        OutputData::from(self)
+            .format_with(numbers_format)
+            .to_string_pretty(OutputFormat::Human)
+            .expect("Failed to format response")
+    }
+}
 
 impl OutputLink for InvokeResponse {
     const TITLE: &'static str = "invocation";
