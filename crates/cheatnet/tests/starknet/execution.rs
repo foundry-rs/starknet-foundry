@@ -73,11 +73,13 @@ fn test_tracked_resources() {
     )
     .unwrap();
 
+    // `call_twice` from the `TrackedResources` contract
     assert!(!main_call_info.execution.failed);
     assert_eq!(main_call_info.inner_calls.len(), 2);
     assert_eq!(main_call_info.tracked_resource, TrackedResource::SierraGas);
     assert_ne!(main_call_info.execution.gas_consumed, 0);
 
+    // `call_single` from the forked proxy contract
     let first_inner_call = main_call_info.inner_calls.first().unwrap();
     assert_eq!(
         first_inner_call.tracked_resource,
@@ -87,6 +89,7 @@ fn test_tracked_resources() {
     assert_ne!(first_inner_call.resources.n_steps, 0);
     assert_eq!(first_inner_call.inner_calls.len(), 1);
 
+    // `call_internal` from the `TrackedResources` contract
     let inner_inner_call = first_inner_call.inner_calls.first().unwrap();
     assert_eq!(
         inner_inner_call.tracked_resource,
@@ -95,6 +98,7 @@ fn test_tracked_resources() {
     assert_eq!(inner_inner_call.execution.gas_consumed, 0);
     assert_ne!(inner_inner_call.resources.n_steps, 0);
 
+    // `call_internal` from the `TrackedResources` contract
     let second_inner_call = main_call_info.inner_calls.last().unwrap();
     assert_eq!(
         second_inner_call.tracked_resource,
