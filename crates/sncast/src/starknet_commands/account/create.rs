@@ -398,3 +398,57 @@ where
         decimals.into(),
     )
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_felt_to_bigdecimal_with_zero() {
+        let felt = Felt::ZERO;
+        let result = felt_to_bigdecimal(felt, 18);
+        assert_eq!(result, BigDecimal::from(0));
+    }
+
+    #[test]
+    fn test_felt_to_bigdecimal_with_one() {
+        let felt = Felt::ONE;
+        let result = felt_to_bigdecimal(felt, 18);
+        assert_eq!(result, BigDecimal::new(BigInt::from(1), 18));
+    }
+
+    #[test]
+    fn test_felt_to_bigdecimal_with_large_number() {
+        let felt = Felt::from_hex("0x1234567890abcdef").unwrap();
+        let result = felt_to_bigdecimal(felt, 18);
+        let expected = BigDecimal::new(BigInt::from_bytes_be(Sign::Plus, &felt.to_bytes_be()), 18);
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_felt_to_bigdecimal_with_different_decimals() {
+        let felt = Felt::from_hex("0x64").unwrap();
+        let result_0 = felt_to_bigdecimal(felt, 0);
+        let result_2 = felt_to_bigdecimal(felt, 2);
+
+        assert_eq!(result_0, BigDecimal::from(100));
+        assert_eq!(result_2, BigDecimal::new(BigInt::from(100), 2));
+    }
+    #[test]
+    fn test_felt_to_bigdecimal_common_token_value() {
+        let felt = Felt::from(1_500_000_000_000_000_000u128);
+        let result = felt_to_bigdecimal(felt, 18);
+        assert_eq!(result.to_string(), "1.500000000000000000");
+    }
+
+    #[test]
+    fn test_felt_to_bigdecimal_with_different_decimal_places() {
+        let felt = Felt::from(123456789);
+
+        assert_eq!(felt_to_bigdecimal(felt, 0).to_string(), "123456789");
+        assert_eq!(felt_to_bigdecimal(felt, 3).to_string(), "123456.789");
+        assert_eq!(felt_to_bigdecimal(felt, 6).to_string(), "123.456789");
+        assert_eq!(felt_to_bigdecimal(felt, 9).to_string(), "0.123456789");
+    }
+}
