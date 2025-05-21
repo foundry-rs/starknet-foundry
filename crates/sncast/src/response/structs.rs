@@ -42,7 +42,24 @@ fn call_response_command() -> ByteArray {
     ByteArray::from("call")
 }
 
-impl Message for CallResponse {}
+impl Message for CallResponse {
+    fn text(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized + Serialize,
+    {
+        let response = OutputValue::Array(
+            self.response
+                .iter()
+                .map(|f| OutputValue::String(f.to_string()).format_with(numbers_format))
+                .collect(),
+        );
+        format!(
+            "command: {}
+response: {}",
+            self.command, response
+        )
+    }
+}
 
 #[derive(Serialize, Clone)]
 pub struct TransformedCallResponse {
@@ -51,9 +68,25 @@ pub struct TransformedCallResponse {
     pub response_raw: Vec<Felt>,
 }
 
-// impl CommandResponse for TransformedCallResponse {}
-
-impl Message for TransformedCallResponse {}
+impl Message for TransformedCallResponse {
+    fn text(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized,
+    {
+        let response = OutputValue::Array(
+            self.response_raw
+                .iter()
+                .map(|f| OutputValue::String(f.to_hex_string()).format_with(numbers_format))
+                .collect(),
+        );
+        format!(
+            "command: {}
+response: {}
+response_raw: {}",
+            self.command, self.response, response
+        )
+    }
+}
 
 #[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct InvokeResponse {
@@ -175,7 +208,29 @@ pub struct AccountImportResponse {
 
 // impl CommandResponse for AccountImportResponse {}
 
-impl Message for AccountImportResponse {}
+impl Message for AccountImportResponse {
+    fn text(&self, numbers_format: NumbersFormat) -> String
+    where
+        Self: Sized,
+    {
+        let _ = numbers_format;
+
+        if let Some(account_name) = &self.account_name {
+            format!(
+                "command: {}
+account_name: {}
+add_profile: {}",
+                self.command, account_name, self.add_profile
+            )
+        } else {
+            format!(
+                "command: {}
+add_profile: {}",
+                self.command, self.add_profile
+            )
+        }
+    }
+}
 
 #[derive(Serialize)]
 pub struct AccountDeleteResponse {
