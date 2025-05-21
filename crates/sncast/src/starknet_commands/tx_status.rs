@@ -1,4 +1,5 @@
 use clap::Args;
+use conversions::byte_array::ByteArray;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{ExecutionStatus, FinalityStatus, TransactionStatusResponse};
@@ -31,22 +32,22 @@ pub async fn tx_status(
 fn build_transaction_status_response(status: &TransactionStatus) -> TransactionStatusResponse {
     match status {
         TransactionStatus::Received => TransactionStatusResponse {
-            // command: ByteArray::from("tx-status"),
+            command: ByteArray::from("tx-status"),
             finality_status: FinalityStatus::Received,
             execution_status: None,
         },
         TransactionStatus::Rejected => TransactionStatusResponse {
-            // command: ByteArray::from("tx-status"),
+            command: ByteArray::from("tx-status"),
             finality_status: FinalityStatus::Rejected,
             execution_status: None,
         },
         TransactionStatus::AcceptedOnL2(tx_exec_result) => TransactionStatusResponse {
-            // command: ByteArray::from("tx-status"),
+            command: ByteArray::from("tx-status"),
             finality_status: FinalityStatus::AcceptedOnL2,
             execution_status: Some(build_execution_status(tx_exec_result.status())),
         },
         TransactionStatus::AcceptedOnL1(tx_exec_result) => TransactionStatusResponse {
-            // command: ByteArray::from("tx-status"),
+            command: ByteArray::from("tx-status"),
             finality_status: FinalityStatus::AcceptedOnL1,
             execution_status: Some(build_execution_status(tx_exec_result.status())),
         },

@@ -118,7 +118,7 @@ pub async fn declare(
             account.provider(),
             transaction_hash,
             DeclareResponse::Success(DeclareTransactionResponse {
-                // command: ByteArray::from("declare"),
+                command: ByteArray::from("declare"),
                 class_hash: class_hash.into_(),
                 transaction_hash: transaction_hash.into_(),
             }),
@@ -130,6 +130,7 @@ pub async fn declare(
             if skip_on_already_declared =>
         {
             Ok(DeclareResponse::AlreadyDeclared(AlreadyDeclaredResponse {
+                command: ByteArray::from("declare"),
                 class_hash: class_hash.into_(),
             }))
         }

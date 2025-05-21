@@ -397,12 +397,12 @@ pub fn run(
     ) {
         Ok(result) => match result.value {
             RunResultValue::Success(data) => Ok(ScriptRunResponse {
-                // command: "script run".to_string(),
+                command: "script run".to_string(),
                 status: "success".to_string(),
                 message: build_readable_text(&data),
             }),
             RunResultValue::Panic(panic_data) => Ok(ScriptRunResponse {
-                // command: "script run".to_string(),
+                command: "script run".to_string(),
                 status: "script panicked".to_string(),
                 message: build_readable_text(&panic_data),
             }),

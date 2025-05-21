@@ -1,6 +1,7 @@
 use crate::Arguments;
 use anyhow::Result;
 use clap::Args;
+use conversions::byte_array::ByteArray;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::CallResponse;
@@ -49,7 +50,7 @@ pub async fn call(
 
     match res {
         Ok(response) => Ok(CallResponse {
-            // command: ByteArray::from("call"),
+            command: ByteArray::from("call"),
             response,
         }),
         Err(error) => Err(StarknetCommandError::ProviderError(error.into())),

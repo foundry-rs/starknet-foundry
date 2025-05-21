@@ -877,7 +877,7 @@ fn transform_response(
     let transformed_response = reverse_transform_output(response, &abi, selector).ok()?;
 
     Some(TransformedCallResponse {
-        // command: "call".to_string(),
+        command: "call".to_string(),
         response_raw: response.clone(),
         response: transformed_response,
     })

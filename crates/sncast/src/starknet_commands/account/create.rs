@@ -144,7 +144,7 @@ pub async fn create(
     }
 
     Ok(AccountCreateResponse {
-        // command: "account create".to_string(),
+        command: "account create".to_string(),
         address: address.into_(),
         max_fee,
         add_profile: if add_profile.is_some() {
