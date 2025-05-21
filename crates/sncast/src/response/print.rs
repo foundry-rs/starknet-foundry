@@ -1,4 +1,5 @@
 use foundry_ui::formats::{NumbersFormat, OutputFormat};
+use itertools::Itertools;
 use std::{collections::HashMap, fmt::Display, str::FromStr};
 
 use anyhow::Result;
@@ -154,20 +155,18 @@ impl OutputData {
 
     fn to_lines(&self) -> String {
         let mut rest = self.0.clone();
-        let command_val = rest
+        let command = rest
             .iter()
             .position(|(k, _)| k == "command")
-            .map(|idx| rest.remove(idx).1);
+            .map(|idx| rest.remove(idx).1)
+            .unwrap_or(OutputValue::String("<missing>".to_string())); // fallback jeśli brak
 
         let fields = rest
             .iter()
             .map(|(key, val)| format!("{key}: {val}"))
-            .collect::<Vec<_>>();
+            .join("\n");
 
-        match command_val {
-            Some(command) => format!("command: {command}\n{}", fields.join("\n")),
-            None => fields.join("\n"),
-        }
+        format!("command: {command}\n{fields}")
     }
 
     pub fn to_string_pretty(&self, output_format: OutputFormat) -> Result<String> {
