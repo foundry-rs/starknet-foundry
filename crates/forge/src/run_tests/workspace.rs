@@ -35,7 +35,9 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
         can_coverage_be_generated(&scarb_metadata)?;
     }
 
-    error_if_snforge_std_not_compatible(&scarb_metadata)?;
+    if env::var("DEV_DISABLE_SNFORGE_STD_VERSION_CHECK").is_err() {
+        error_if_snforge_std_not_compatible(&scarb_metadata)?;
+    }
     warn_if_snforge_std_not_compatible(&scarb_metadata)?;
     warn_if_backtrace_without_panic_hint(&scarb_metadata);
 
