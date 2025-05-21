@@ -639,7 +639,7 @@ async fn run_async_command(
                     config.block_explorer,
                 );
                 process_command_result(
-                    "deploy",
+                    "account deploy",
                     result,
                     output_format,
                     numbers_format,

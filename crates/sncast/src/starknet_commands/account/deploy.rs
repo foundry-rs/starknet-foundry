@@ -128,7 +128,7 @@ async fn deploy_from_keystore(
         .is_ok()
     {
         InvokeResponse {
-            command: ByteArray::from("invoke"),
+            command: ByteArray::from("account deploy"),
             transaction_hash: Felt::ZERO.into_(),
         }
     } else {
@@ -289,7 +289,7 @@ where
         Err(_) => Err(anyhow!("Unknown AccountFactoryError")),
         Ok(result) => {
             let return_value = InvokeResponse {
-                command: ByteArray::from("invoke"),
+                command: ByteArray::from("account deploy"),
                 transaction_hash: result.transaction_hash.into_(),
             };
             if let Err(message) = handle_wait_for_tx(

@@ -104,12 +104,11 @@ impl Message for InvokeResponse {
     where
         Self: Sized,
     {
-        let transaction_hash = OutputValue::String(self.transaction_hash.0.to_string());
+        let _ = numbers_format;
         format!(
             "command: {}
 transaction_hash: {}",
-            self.command,
-            transaction_hash.format_with(numbers_format)
+            self.command, self.transaction_hash
         )
     }
 }
