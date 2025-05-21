@@ -16,7 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- "invalid syscall selector" error appearing when using arithmetic circuits 
+- "invalid syscall selector" error appearing when using arithmetic circuits
+- Bug that caused incorrect gas tracking for contracts using Sierra version less than `1.7.0` when `sierra-gas` was passed as the `tracked-resource`
 
 ### Cast
 
