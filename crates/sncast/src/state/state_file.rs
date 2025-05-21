@@ -235,6 +235,7 @@ pub enum ScriptTransactionStatus {
 
 pub fn load_state_file(path: &Utf8PathBuf) -> Result<ScriptTransactionsSchema> {
     let content = fs::read_to_string(path).context("Failed to load state file")?;
+    println!("Loaded state file: {content}");
     match serde_json::from_str::<ScriptTransactionsSchema>(&content) {
         Ok(state_file) => {
             verify_version(state_file.version)?;
@@ -626,6 +627,10 @@ mod tests {
             .insert(tx_id.clone(), new_transaction)
             .unwrap();
         write_txs_to_state_file(&temp_state_file, entries).unwrap();
+
+        // display written state file
+        let content = fs::read_to_string(&temp_state_file).unwrap();
+        println!("Written state file content: {content}");
 
         let result = read_txs_from_state_file(&temp_state_file).expect("Failed to read state file");
         let entries = result.unwrap();

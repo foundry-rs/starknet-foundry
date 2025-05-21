@@ -33,11 +33,14 @@ where
 
 #[derive(Serialize, CairoSerialize, Clone)]
 pub struct CallResponse {
+    #[serde(default = "call_response_command")]
     pub command: ByteArray,
     pub response: Vec<Felt>,
 }
 
-// impl CommandResponse for CallResponse {}
+fn call_response_command() -> ByteArray {
+    ByteArray::from("call")
+}
 
 impl Message for CallResponse {}
 
@@ -54,8 +57,13 @@ impl Message for TransformedCallResponse {}
 
 #[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct InvokeResponse {
+    #[serde(default = "invoke_response_command")]
     pub command: ByteArray,
     pub transaction_hash: PaddedFelt,
+}
+
+fn invoke_response_command() -> ByteArray {
+    ByteArray::from("invoke")
 }
 
 impl Message for InvokeResponse {
@@ -96,12 +104,15 @@ transaction_hash: {:#x}",
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeclareTransactionResponse {
+    #[serde(default = "declare_transaction_response_command")]
     pub command: ByteArray,
     pub class_hash: PaddedFelt,
     pub transaction_hash: PaddedFelt,
 }
 
-// impl CommandResponse for DeclareTransactionResponse {}
+fn declare_transaction_response_command() -> ByteArray {
+    ByteArray::from("declare")
+}
 
 impl Message for DeclareTransactionResponse {}
 
