@@ -76,7 +76,7 @@ impl CommandResponse for DeclareResponse {}
 
 #[derive(Serialize)]
 pub struct AccountCreateResponse {
-    pub account_address: PaddedFelt,
+    pub address: PaddedFelt,
     pub add_profile: String,
     pub message: String,
 }
@@ -209,6 +209,6 @@ impl OutputLink for AccountCreateResponse {
     const TITLE: &'static str = "account creation";
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
-        format!("account: {}", provider.contract(self.account_address))
+        format!("account: {}", provider.contract(self.address))
     }
 }

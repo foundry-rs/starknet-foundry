@@ -41,7 +41,7 @@ $ sncast \
 ```shell
 command: account create
 add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-account_address: 0x0[..]
+address: 0x0[..]
 message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
 
 To see account creation details, visit:

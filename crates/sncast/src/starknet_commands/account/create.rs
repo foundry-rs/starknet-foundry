@@ -149,7 +149,7 @@ pub async fn create(
     }
 
     Ok(AccountCreateResponse {
-        account_address: address.into_(),
+        address: address.into_(),
         add_profile: if add_profile.is_some() {
             format!(
                 "Profile {} successfully added to snfoundry.toml",
