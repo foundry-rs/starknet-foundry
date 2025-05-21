@@ -2,13 +2,12 @@ use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
-use conversions::byte_array::ByteArray;
 use serde_json::Map;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::InvokeResponse;
+use sncast::response::structs::{AccountDeployResponse, InvokeResponse};
 use sncast::{
     AccountType, WaitForTx, apply_optional_fields, chain_id_to_network_name,
     check_account_file_exists, get_account_data_from_accounts_file, get_account_data_from_keystore,
@@ -53,7 +52,7 @@ pub async fn deploy(
     account: &str,
     keystore_path: Option<Utf8PathBuf>,
     fee_args: FeeArgs,
-) -> Result<InvokeResponse> {
+) -> Result<AccountDeployResponse> {
     if let Some(keystore_path_) = keystore_path {
         deploy_from_keystore(
             provider,
@@ -64,7 +63,7 @@ pub async fn deploy(
             keystore_path_,
         )
         .await
-        // .map(Into::into)
+        .map(Into::into)
     } else {
         let account_name = deploy_args
             .name
@@ -80,7 +79,7 @@ pub async fn deploy(
             wait_config,
         )
         .await
-        // .map(Into::into)
+        .map(Into::into)
     }
 }
 
@@ -130,7 +129,7 @@ async fn deploy_from_keystore(
         .is_ok()
     {
         InvokeResponse {
-            command: ByteArray::from("account deploy"),
+            // command: ByteArray::from("account deploy"),
             transaction_hash: Felt::ZERO.into_(),
         }
     } else {
@@ -291,7 +290,7 @@ where
         Err(_) => Err(anyhow!("Unknown AccountFactoryError")),
         Ok(result) => {
             let return_value = InvokeResponse {
-                command: ByteArray::from("account deploy"),
+                // command: ByteArray::from("account deploy"),
                 transaction_hash: result.transaction_hash.into_(),
             };
             if let Err(message) = handle_wait_for_tx(

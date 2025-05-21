@@ -76,8 +76,8 @@ pub fn delete(
     std::fs::write(path.clone(), serde_json::to_string_pretty(&items).unwrap())?;
     let result = "Account successfully removed".to_string();
     Ok(AccountDeleteResponse {
-        command: "account delete".to_string(),
         result,
+        // command: "account delete".to_string(),
     })
 }
 

@@ -1,7 +1,6 @@
 use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
-use conversions::byte_array::ByteArray;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
@@ -110,7 +109,7 @@ pub async fn deploy(
             account.provider(),
             result.transaction_hash,
             DeployResponse {
-                command: ByteArray::from("deploy"),
+                // command: ByteArray::from("deploy"),
                 contract_address: get_udc_deployed_address(
                     salt,
                     class_hash,

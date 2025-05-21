@@ -79,10 +79,7 @@ impl VerificationInterface for WalnutVerificationInterface {
                 .text()
                 .await
                 .context("Failed to read verifier API response")?;
-            Ok(VerifyResponse {
-                command: "verify".to_string(),
-                message,
-            })
+            Ok(VerifyResponse { message })
         } else {
             let message = api_res.text().await.context("Failed to verify contract")?;
             Err(anyhow!(message))

@@ -1,4 +1,5 @@
 use foundry_ui::formats::{NumbersFormat, OutputFormat};
+use itertools::Itertools;
 use std::{collections::HashMap, fmt::Display, str::FromStr};
 
 use anyhow::Result;
@@ -147,35 +148,29 @@ impl<T: CommandResponse + Serialize> From<&T> for OutputData {
 }
 
 impl OutputData {
-    fn to_json(&self) -> Result<String> {
-        let mapping: HashMap<_, _> = self.0.clone().into_iter().collect();
+    fn to_json(&self, command: &str) -> Result<String> {
+        let mut mapping: HashMap<_, _> = self.0.clone().into_iter().collect();
+        mapping.insert(
+            String::from("command"),
+            OutputValue::String(command.to_owned()),
+        );
         serde_json::to_string(&mapping).map_err(anyhow::Error::from)
     }
 
-    fn to_lines(&self) -> String {
-        let command_val = self
-            .0
-            .iter()
-            .find(|(key, _)| key == "command")
-            .map(|(_, val)| val.to_string());
-
+    fn to_lines(&self, command: &str) -> String {
         let fields = self
             .0
             .iter()
-            .filter(|(key, _)| key != "command")
             .map(|(key, val)| format!("{key}: {val}"))
-            .collect::<Vec<_>>();
+            .join("\n");
 
-        match command_val {
-            Some(command) => format!("command: {command}\n{}", fields.join("\n")),
-            None => fields.join("\n"),
-        }
+        format!("command: {command}\n{fields}")
     }
 
-    pub fn to_string_pretty(&self, output_format: OutputFormat) -> Result<String> {
+    pub fn to_string_pretty(&self, command: &str, output_format: OutputFormat) -> Result<String> {
         match output_format {
-            OutputFormat::Json => self.to_json(),
-            OutputFormat::Human => Ok(self.to_lines()),
+            OutputFormat::Json => self.to_json(command),
+            OutputFormat::Human => Ok(self.to_lines(command)),
         }
     }
 }

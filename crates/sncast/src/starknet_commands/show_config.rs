@@ -41,7 +41,6 @@ pub async fn show_config(
     let block_explorer = cast_config.block_explorer;
 
     Ok(ShowConfigResponse {
-        command: "show-config".to_string(),
         profile,
         chain_id,
         rpc_url,
