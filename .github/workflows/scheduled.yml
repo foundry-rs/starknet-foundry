@@ -175,7 +175,7 @@ jobs:
 
   notify_if_failed:
     runs-on: ubuntu-latest
-    if: always() && contains(needs.*.result, 'failure') && github.event_name == 'schedule'
+    if: always() # && contains(needs.*.result, 'failure') && github.event_name == 'schedule'
     needs: [ test-forge-unit-and-integration, test-forge-e2e, test-cast , build-plugin-binaries, build-binaries, publish-plugin, publish-std, test-binary ]
     steps:
       - name: Notify that the workflow has failed
