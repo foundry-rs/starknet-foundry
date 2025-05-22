@@ -4,7 +4,7 @@ use super::{
     print::{Format, OutputData},
 };
 use conversions::serde::serialize::CairoSerialize;
-use foundry_ui::{Message, formats::OutputFormat};
+use foundry_ui::{Message, OutputFormat};
 use serde::Serialize;
 use starknet_types_core::felt::Felt;
 

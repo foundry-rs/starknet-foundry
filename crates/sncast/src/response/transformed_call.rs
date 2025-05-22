@@ -3,7 +3,7 @@ use super::{
     command::CommandResponse,
     print::{Format, OutputData},
 };
-use foundry_ui::{Message, formats::OutputFormat};
+use foundry_ui::{Message, OutputFormat};
 use serde::Serialize;
 use starknet_types_core::felt::Felt;
 

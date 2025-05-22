@@ -4,7 +4,7 @@ use crate::starknet_commands::{
 };
 use anyhow::{Context, Result, bail};
 use data_transformer::{reverse_transform_output, transform};
-use foundry_ui::formats::{NumbersFormat, OutputFormat};
+use foundry_ui::OutputFormat;
 use foundry_ui::{Message, Ui};
 use sncast::helpers::account::generate_account_name;
 use sncast::response::call::CallResponse;
@@ -31,8 +31,9 @@ use sncast::helpers::scarb_utils::{
 use sncast::response::errors::handle_starknet_command_error;
 
 use sncast::{
-    ValidatedWaitParams, WaitForTx, chain_id_to_network_name, get_account, get_block_id,
-    get_chain_id, get_class_hash_by_address, get_contract_class, get_default_state_file_name,
+    NumbersFormat, ValidatedWaitParams, WaitForTx, chain_id_to_network_name, get_account,
+    get_block_id, get_chain_id, get_class_hash_by_address, get_contract_class,
+    get_default_state_file_name,
 };
 use starknet::core::types::ContractClass;
 use starknet::core::types::contract::AbiEntry;
