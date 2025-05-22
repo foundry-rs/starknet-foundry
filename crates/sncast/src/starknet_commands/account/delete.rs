@@ -5,7 +5,7 @@ use promptly::prompt;
 use serde_json::Map;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::AccountDeleteResponse;
+use sncast::response::account::delete::AccountDeleteResponse;
 use sncast::{chain_id_to_network_name, get_chain_id};
 
 #[derive(Args, Debug)]

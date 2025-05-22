@@ -1,4 +1,4 @@
-use formats::{NumbersFormat, OutputFormat};
+use formats::OutputFormat;
 pub use message::*;
 
 pub mod formats;
@@ -11,45 +11,39 @@ pub mod message;
 #[derive(Debug)]
 pub struct Ui {
     output_format: OutputFormat,
-    numbers_format: NumbersFormat,
+    // TODO: Add state here, that can be used for e.g. spinner
 }
 
 impl Ui {
     /// Create a new [`Ui`] instance configured with the given output format and numbers format.
-    pub fn new(output_format: OutputFormat, numbers_format: NumbersFormat) -> Self {
-        Self {
-            output_format,
-            numbers_format,
-        }
+    #[must_use]
+    pub fn new(output_format: OutputFormat) -> Self {
+        Self { output_format }
     }
 
     /// Get the output format of this [`Ui`] instance.
+    #[must_use]
     pub fn output_format(&self) -> OutputFormat {
         self.output_format
     }
 
-    /// Get the numbers format of this [`Ui`] instance.
-    pub fn numbers_format(&self) -> NumbersFormat {
-        self.numbers_format
-    }
-
-    pub fn print<T: Message>(&self, message: &T)
+    pub fn print<T>(&self, message: &T)
     where
         T: Message + serde::Serialize,
     {
         match self.output_format {
-            OutputFormat::Human => message.print_human(self.numbers_format, false),
-            OutputFormat::Json => message.print_json(self.numbers_format, false),
+            OutputFormat::Human => message.print_human(false),
+            OutputFormat::Json => message.print_json(false),
         }
     }
 
-    pub fn print_as_err<T: Message>(&self, message: &T)
+    pub fn print_as_err<T>(&self, message: &T)
     where
         T: Message + serde::Serialize,
     {
         match self.output_format {
-            OutputFormat::Human => message.print_human(self.numbers_format, true),
-            OutputFormat::Json => message.print_json(self.numbers_format, true),
+            OutputFormat::Human => message.print_human(true),
+            OutputFormat::Json => message.print_json(true),
         }
     }
 }

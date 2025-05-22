@@ -7,7 +7,11 @@ use data_transformer::{reverse_transform_output, transform};
 use foundry_ui::formats::{NumbersFormat, OutputFormat};
 use foundry_ui::{Message, Ui};
 use sncast::helpers::account::generate_account_name;
+use sncast::response::call::CallResponse;
+use sncast::response::declare::DeclareResponse;
+use sncast::response::error::ResponseError;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
+use sncast::response::transformed_call::TransformedCallResponse;
 use std::io;
 use std::io::IsTerminal;
 
@@ -25,9 +29,7 @@ use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_metadata_with_deps,
 };
 use sncast::response::errors::handle_starknet_command_error;
-use sncast::response::structs::{
-    CallResponse, DeclareResponse, ResponseError, TransformedCallResponse,
-};
+
 use sncast::{
     ValidatedWaitParams, WaitForTx, chain_id_to_network_name, get_account, get_block_id,
     get_chain_id, get_class_hash_by_address, get_contract_class, get_default_state_file_name,
@@ -220,7 +222,7 @@ fn main() -> Result<()> {
     let numbers_format = NumbersFormat::from_flags(cli.hex_format, cli.int_format);
     let output_format = OutputFormat::from_flag(cli.json);
 
-    let ui = Ui::new(output_format, numbers_format);
+    let ui = Ui::new(output_format);
 
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
@@ -229,12 +231,17 @@ fn main() -> Result<()> {
     } else {
         let config = get_cast_config(&cli)?;
 
-        runtime.block_on(run_async_command(cli, config, &ui))
+        runtime.block_on(run_async_command(cli, config, numbers_format, &ui))
     }
 }
 
 #[expect(clippy::too_many_lines)]
-async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> {
+async fn run_async_command(
+    cli: Cli,
+    config: CastConfig,
+    numbers_format: NumbersFormat,
+    ui: &Ui,
+) -> Result<()> {
     let wait_config = WaitForTx {
         wait: cli.wait,
         wait_params: config.wait_params,
@@ -604,7 +611,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
             account::Commands::List(options) => print_account_list(
                 &config.accounts_file,
                 options.display_private_keys,
-                ui.numbers_format(),
+                numbers_format,
                 ui.output_format(),
             ),
         },
