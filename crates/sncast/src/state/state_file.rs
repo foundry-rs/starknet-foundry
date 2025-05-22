@@ -1,7 +1,9 @@
 use crate::WaitForTransactionError;
 use crate::helpers::constants::STATE_FILE_VERSION;
+use crate::response::declare::DeclareResponse;
+use crate::response::deploy::DeployResponse;
 use crate::response::errors::StarknetCommandError;
-use crate::response::structs::{DeclareResponse, DeployResponse, InvokeResponse};
+use crate::response::invoke::InvokeResponse;
 use crate::state::hashing::generate_id;
 use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
@@ -308,7 +310,7 @@ fn verify_version(version: u8) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::response::structs::DeclareTransactionResponse;
+    use crate::response::declare::DeclareTransactionResponse;
     use crate::state::state_file::ScriptTransactionOutput::ErrorResponse;
     use camino::Utf8PathBuf;
     use conversions::IntoConv;
@@ -619,10 +621,6 @@ mod tests {
             .insert(tx_id.clone(), new_transaction)
             .unwrap();
         write_txs_to_state_file(&temp_state_file, entries).unwrap();
-
-        // display written state file
-        let content = fs::read_to_string(&temp_state_file).unwrap();
-        println!("Written state file content: {content}");
 
         let result = read_txs_from_state_file(&temp_state_file).expect("Failed to read state file");
         let entries = result.unwrap();

@@ -7,7 +7,7 @@ use serde::{Serialize, Serializer};
 use serde_json::Value;
 use starknet_types_core::felt::Felt;
 
-use super::structs::CommandResponse;
+use super::command::CommandResponse;
 
 pub trait Format
 where

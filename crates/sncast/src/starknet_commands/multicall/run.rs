@@ -7,7 +7,7 @@ use sncast::helpers::constants::UDC_ADDRESS;
 use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::handle_starknet_command_error;
-use sncast::response::structs::MulticallRunResponse;
+use sncast::response::multicall::run::MulticallRunResponse;
 use sncast::{WaitForTx, extract_or_generate_salt, udc_uniqueness};
 use starknet::accounts::{Account, SingleOwnerAccount};
 use starknet::core::types::Call;
