@@ -1,4 +1,3 @@
-use crate::utils::create_single_token;
 use cairo_lang_macro::{quote, TokenStream};
 
 pub trait CairoExpression {
@@ -24,16 +23,13 @@ where
     T: CairoExpression,
 {
     fn as_cairo_expression(&self) -> TokenStream {
-        let mut result = TokenStream::new(vec![create_single_token("array![")]);
-
-        for e in self {
-            result.extend(e.as_cairo_expression().into_iter());
-
-            result.push_token(create_single_token(","));
+        let items = self.iter().fold(TokenStream::empty(), |mut acc, val| {
+            let val = val.as_cairo_expression();
+            acc.extend(quote! { #val, });
+            acc
+        });
+        quote! {
+            array![#items]
         }
-
-        result.push_token(create_single_token("]"));
-
-        result
     }
 }

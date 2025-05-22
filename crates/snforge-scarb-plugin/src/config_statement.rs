@@ -35,9 +35,10 @@ where
     let value = Collector::args_into_config_expression(args_db, args, warns)?;
 
     let cheatcode_name = Collector::CHEATCODE_NAME;
-    let cheatcode = create_single_token(format!(
-        "starknet::testing::cheatcode::<'{cheatcode_name}'>(data.span());"
-    ));
+    let cheatcode = create_single_token(format!("'{cheatcode_name}'"));
+    let cheatcode = quote! {
+        starknet::testing::cheatcode::<#cheatcode>(data.span());
+    };
 
     let config_cheatcode = quote!(
             let mut data = array![];

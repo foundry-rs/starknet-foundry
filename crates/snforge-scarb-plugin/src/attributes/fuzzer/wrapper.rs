@@ -75,29 +75,32 @@ fn fuzzer_wrapper_internal(
     let signature = SyntaxNodeWithDb::new(&signature, db);
 
     let fuzzer_assignments = extract_and_transform_params(db, func, |param| {
-        let code = format!(
-            r"
-                let {}{} = snforge_std::fuzzable::Fuzzable::generate();
-                snforge_std::_internals::save_fuzzer_arg(@{});
-                ",
-            param.name(db).as_text(db),
-            param.type_clause(db).as_text(db),
-            param.name(db).as_text(db),
-        );
-        TokenStream::new(vec![create_single_token(code)])
+        let name = param.name(db).as_syntax_node();
+        let name = SyntaxNodeWithDb::new(&name, db);
+
+        let name_type = param.type_clause(db).as_syntax_node();
+        let name_type = SyntaxNodeWithDb::new(&name_type, db);
+
+        quote! {
+            let #name #name_type = snforge_std::fuzzable::Fuzzable::generate();
+            snforge_std::_internals::save_fuzzer_arg(@#name);
+        }
     });
 
-    // TODO: Refactor the code below
     let blank_values_for_config_run = extract_and_transform_params(db, func, |_param| {
-        TokenStream::new(vec![create_single_token(
-            "snforge_std::fuzzable::Fuzzable::blank()",
-        )])
+        quote! {
+            snforge_std::fuzzable::Fuzzable::blank(),
+        }
     });
-    let blank_values_for_config_run = split_tokens_with_comma(blank_values_for_config_run);
 
-    let arguments =
-        extract_and_transform_params(db, func, |param| param.name(db).to_token_stream(db));
-    let arguments_list = split_tokens_with_comma(arguments);
+    let arguments_list = extract_and_transform_params(db, func, |param| {
+        let name = param.name(db).as_syntax_node();
+        let name = SyntaxNodeWithDb::new(&name, db);
+
+        quote! {
+            #name,
+        }
+    });
 
     let actual_body_fn_name = TokenStream::new(vec![create_single_token(format!(
         "{}_actual_body",
@@ -148,15 +151,4 @@ where
             acc.extend(token);
             acc
         })
-}
-
-fn split_tokens_with_comma(token: TokenStream) -> TokenStream {
-    let mut tokens = token.tokens;
-
-    if tokens.len() > 1 {
-        for i in 0..(tokens.len() - 1) {
-            tokens.insert(i + 1, create_single_token(","));
-        }
-    }
-    TokenStream::new(tokens)
 }
