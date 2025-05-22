@@ -65,11 +65,11 @@ impl Ui {
         }
     }
 
-    pub fn print_warning(&self, message: &str) {
-        self.print(&TaggedMessage::styled(
-            "WARNING",
-            message.as_ref(),
-            "yellow",
-        ))
+    pub fn print_warning(&self, text: &str) {
+        self.print(&TaggedMessage::styled("WARNING", text, "yellow"));
+    }
+
+    pub fn print_error(&self, text: &str) {
+        self.print(&TaggedMessage::styled("ERROR", text, "red"));
     }
 }

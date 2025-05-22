@@ -4,3 +4,4 @@
 pub use tagged::*;
 
 mod tagged;
+mod typed;
