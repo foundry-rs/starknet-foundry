@@ -4,7 +4,7 @@ use serde::Serialize;
 use crate::Message;
 
 /// Generic textual message with `ty` prefix.
-
+///
 /// The type prefix can be stylized in text mode.
 /// e.g. "Tests: 1 passed, 1 failed"
 #[derive(Serialize)]
