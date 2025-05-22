@@ -17,7 +17,7 @@ use sncast::AccountType;
 use sncast::helpers::constants::{ARGENT_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Invoke;
-use starknet_types_core::felt::Felt;
+use starknet_types_core::felt::{Felt, NonZeroFelt};
 use tempfile::tempdir;
 use test_case::test_case;
 
@@ -97,16 +97,15 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     assert!(matches!(receipt, Invoke(_)));
 }
 
-// TODO(#3100)
-// #[test_case(FeeArgs{
-//     max_fee: Some(NonZeroFelt::try_from(Felt::from(1000000000000000000000000)).unwrap()),
-//     l1_data_gas: None,
-//     l1_data_gas_price:  None,
-//     l1_gas:  None,
-//     l1_gas_price:  None,
-//     l2_gas:  None,
-//     l2_gas_price:  None,
-// }; "max_fee")]
+#[test_case(FeeArgs{
+    max_fee: Some(NonZeroFelt::try_from(Felt::from(1_000_000_000_000_000_000_000_000_u128)).unwrap()),
+    l1_data_gas: None,
+    l1_data_gas_price:  None,
+    l1_gas:  None,
+    l1_gas_price:  None,
+    l2_gas:  None,
+    l2_gas_price:  None,
+}; "max_fee")]
 #[test_case(FeeArgs{
     max_fee: None,
     l1_data_gas: Some(100_000),
@@ -199,7 +198,6 @@ async fn test_contract_does_not_exist() {
     );
 }
 
-// TODO(#3116): Before, the error message included 'ENTRYPOINT_NOT_FOUND', but now it's an undecoded felt.
 #[test]
 fn test_wrong_function_name() {
     let args = vec![
@@ -217,14 +215,11 @@ fn test_wrong_function_name() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
-        indoc! {"
-            command: invoke
-            error: Transaction execution error [..]0x454e545259504f494e545f4e4f545f464f554e44[..]
-        "},
+        r#"Error: Function with selector "0x2e0f845a8d0319c5c37d558023299beec2a0155d415f41cca140a09e6877c67" not found in ABI of the contract"#,
     );
 }
 

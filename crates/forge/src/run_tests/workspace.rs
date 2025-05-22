@@ -1,5 +1,5 @@
 use super::package::RunForPackageArgs;
-use crate::warn::warn_if_backtrace_without_panic_hint;
+use crate::warn::{error_if_snforge_std_not_compatible, warn_if_backtrace_without_panic_hint};
 use crate::{
     ColorOption, ExitStatus, TestArgs, block_number_map::BlockNumberMap, pretty_printing,
     run_tests::package::run_for_package, scarb::build_artifacts_with_scarb,
@@ -35,6 +35,7 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
         can_coverage_be_generated(&scarb_metadata)?;
     }
 
+    error_if_snforge_std_not_compatible(&scarb_metadata)?;
     warn_if_snforge_std_not_compatible(&scarb_metadata)?;
     warn_if_backtrace_without_panic_hint(&scarb_metadata);
 
@@ -69,6 +70,7 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
 
     let workspace_root = &scarb_metadata.workspace.root;
     let cache_dir = workspace_root.join(CACHE_DIR);
+    let trace_verbosity = args.trace_verbosity;
 
     for package in packages {
         env::set_current_dir(&package.root)?;
@@ -81,7 +83,8 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
             &artifacts_dir_path,
         )?;
 
-        let tests_file_summaries = run_for_package(args, &mut block_number_map).await?;
+        let tests_file_summaries =
+            run_for_package(args, &mut block_number_map, trace_verbosity).await?;
 
         all_failed_tests.extend(extract_failed_tests(tests_file_summaries));
     }

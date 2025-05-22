@@ -9,7 +9,7 @@ use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{FunctionWithBody, Param};
 use cairo_lang_syntax::node::helpers::QueryAttrs;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
-use cairo_lang_syntax::node::TypedSyntaxNode;
+use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode};
 
 pub struct FuzzerWrapperCollector;
 
@@ -40,11 +40,7 @@ fn fuzzer_wrapper_internal(
         if let Some(test_attr) = attr_list.find_attr(db, TestCollector::ATTR_NAME) {
             vec![test_attr]
         } else {
-            [
-                attr_list.query_attr(db, "snforge_internal_test_executable"),
-                attr_list.query_attr(db, InternalConfigStatementCollector::ATTR_NAME),
-            ]
-            .concat()
+            attr_list.query_attr(db, InternalConfigStatementCollector::ATTR_NAME)
         };
 
     let actual_body_fn_attrs = attr_list
@@ -104,7 +100,7 @@ fn fuzzer_wrapper_internal(
 
     let actual_body_fn_name = TokenStream::new(vec![create_single_token(format!(
         "{}_actual_body",
-        func.declaration(db).name(db).as_text(db)
+        func.declaration(db).name(db).text(db)
     ))]);
 
     let (statements, if_content) = get_statements(db, func);

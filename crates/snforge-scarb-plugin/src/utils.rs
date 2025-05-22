@@ -65,15 +65,10 @@ pub fn create_single_token(content: impl AsRef<str>) -> TokenTree {
 }
 
 pub trait SyntaxNodeUtils {
-    fn as_text(&self, db: &SimpleParserDatabase) -> String;
     fn to_token_stream(&self, db: &SimpleParserDatabase) -> TokenStream;
 }
 
 impl<T: TypedSyntaxNode> SyntaxNodeUtils for T {
-    fn as_text(&self, db: &SimpleParserDatabase) -> String {
-        self.as_syntax_node().get_text(db)
-    }
-
     fn to_token_stream(&self, db: &SimpleParserDatabase) -> TokenStream {
         let syntax = self.as_syntax_node();
         let syntax = SyntaxNodeWithDb::new(&syntax, db);

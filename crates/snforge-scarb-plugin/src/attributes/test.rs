@@ -52,24 +52,50 @@ fn test_internal(
         None => true,
     };
 
+    let name = func.declaration(db).name(db).as_syntax_node();
+    let name = SyntaxNodeWithDb::new(&name, db);
+
+    let signature = func.declaration(db).signature(db).as_syntax_node();
+    let signature = SyntaxNodeWithDb::new(&signature, db);
+    let signature = quote! { #signature };
+
     let body = func.body(db).as_syntax_node();
     let body = SyntaxNodeWithDb::new(&body, db);
 
-    let attrs = func.attributes(db).as_syntax_node();
-    let attrs = SyntaxNodeWithDb::new(&attrs, db);
+    let attributes = func.attributes(db).as_syntax_node();
+    let attributes = SyntaxNodeWithDb::new(&attributes, db);
 
-    let vis = func.visibility(db).as_syntax_node();
-    let vis = SyntaxNodeWithDb::new(&vis, db);
+    let name_return_wrapper = create_single_token(format!(
+        "{}_return_wrapper",
+        func.declaration(db).name(db).text(db)
+    ));
 
-    let declaration = func.declaration(db).as_syntax_node();
-    let declaration = SyntaxNodeWithDb::new(&declaration, db);
+    let mut return_wrapper = TokenStream::new(vec![name_return_wrapper.clone()]);
+    return_wrapper.extend(signature);
+
+    let out_of_gas = create_single_token("'Out of gas'");
 
     if should_run_test {
         Ok(quote!(
-            #[#internal_config]
-            #attrs
+            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
             #[snforge_internal_test_executable]
-            #vis #declaration
+            fn #name(mut _data: Span<felt252>) -> Span::<felt252> {
+                core::internal::require_implicit::<System>();
+                core::internal::revoke_ap_tracking();
+                core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), #out_of_gas);
+
+                core::option::OptionTraitImpl::expect(
+                    core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), #out_of_gas
+                );
+                #name_return_wrapper();
+
+                let mut arr = ArrayTrait::new();
+                core::array::ArrayTrait::span(@arr)
+            }
+
+            #attributes
+            #[#internal_config]
+            fn #return_wrapper
             #body
         ))
     } else {

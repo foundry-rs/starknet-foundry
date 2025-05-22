@@ -1,7 +1,8 @@
 #![warn(rust_2021_compatibility)]
 use attributes::fuzzer;
 use attributes::{
-    available_gas::available_gas, fork::fork, fuzzer::fuzzer, ignore::ignore,
+    available_gas::available_gas, disable_predeployed_contracts::disable_predeployed_contracts,
+    fork::fork, fuzzer::fuzzer, ignore::ignore,
     internal_config_statement::internal_config_statement, should_panic::should_panic, test::test,
 };
 use cairo_lang_macro::{attribute_macro, executable_attribute, ProcMacroResult, TokenStream};
@@ -15,6 +16,8 @@ mod config_statement;
 mod parse;
 mod types;
 mod utils;
+
+pub use utils::create_single_token;
 
 executable_attribute!("snforge_internal_test_executable");
 
@@ -61,4 +64,9 @@ fn available_gas(args: TokenStream, item: TokenStream) -> ProcMacroResult {
 #[attribute_macro]
 fn should_panic(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     should_panic(args, item)
+}
+
+#[attribute_macro]
+fn disable_predeployed_contracts(args: TokenStream, item: TokenStream) -> ProcMacroResult {
+    disable_predeployed_contracts(args, item)
 }

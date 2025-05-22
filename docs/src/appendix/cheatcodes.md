@@ -11,8 +11,10 @@
 - [`spy_messages_to_l1`](cheatcodes/spy_messages_to_l1.md) - creates `L1MessageSpy` instance which spies on messages to L1 sent by contracts
 - [`store`](cheatcodes/store.md) - stores values in targeted contact's storage
 - [`load`](cheatcodes/load.md) - loads values directly from targeted contact's storage
+- [`set_balance`](cheatcodes/set_balance.md) - sets new balance of ERC20 token for target contract
 
 - [`CheatSpan`](cheatcodes/cheat_span.md) - enum for specifying the number of target calls for a cheat
+- [`Token`](cheatcodes/token.md) - enum for specifying ERC20 token for a cheat
 
 ## Execution Info
 

@@ -248,6 +248,7 @@ pub fn call_contract_raw(
     contract_address: &ContractAddress,
     entry_point_selector: EntryPointSelector,
     calldata: &[Felt],
+    tracked_resource: TrackedResource,
 ) -> EntryPointExecutionResult<CallInfo> {
     let calldata = create_execute_calldata(calldata);
 
@@ -263,11 +264,8 @@ pub fn call_contract_raw(
         initial_gas: i64::MAX as u64,
     };
 
-    let mut entry_point_execution_context = build_context(
-        &cheatnet_state.block_info,
-        None,
-        &TrackedResource::CairoSteps,
-    );
+    let mut entry_point_execution_context =
+        build_context(&cheatnet_state.block_info, None, &tracked_resource);
     let hints = HashMap::new();
 
     let syscall_hint_processor = build_syscall_hint_processor(
@@ -287,7 +285,7 @@ pub fn call_contract_raw(
 }
 
 #[must_use]
-pub fn felt_selector_from_name(name: &str) -> EntryPointSelector {
+pub fn selector_from_name(name: &str) -> EntryPointSelector {
     let selector = get_selector_from_name(name).unwrap();
     selector.into_()
 }

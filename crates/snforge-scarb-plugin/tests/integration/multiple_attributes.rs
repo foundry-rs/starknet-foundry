@@ -1,8 +1,60 @@
 use crate::utils::{assert_diagnostics, assert_output};
 use cairo_lang_macro::{quote, TokenStream};
+use cairo_lang_parser::utils::SimpleParserDatabase;
+use cairo_lang_syntax::node::ast::{ModuleItem, SyntaxFile};
+use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
+use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode};
 use snforge_scarb_plugin::attributes::fuzzer::wrapper::fuzzer_wrapper;
 use snforge_scarb_plugin::attributes::fuzzer::{fuzzer, fuzzer_config};
 use snforge_scarb_plugin::attributes::{available_gas::available_gas, fork::fork, test::test};
+use snforge_scarb_plugin::create_single_token;
+
+fn get_function(token_stream: &TokenStream, function_name: &str, skip_args: bool) -> TokenStream {
+    let db = SimpleParserDatabase::default();
+    let (parsed_node, _diagnostics) = db.parse_token_stream(token_stream);
+    let syntax_file = SyntaxFile::from_syntax_node(&db, parsed_node);
+    let function = syntax_file
+        .items(&db)
+        .elements(&db)
+        .iter()
+        .find_map(|e| {
+            if let ModuleItem::FreeFunction(free_function) = e {
+                if free_function.declaration(&db).name(&db).text(&db) == function_name {
+                    Some(free_function.clone())
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        })
+        .unwrap();
+
+    let vis = function.visibility(&db).as_syntax_node();
+    let vis = SyntaxNodeWithDb::new(&vis, &db);
+
+    let signature = function.declaration(&db).as_syntax_node();
+    let signature = SyntaxNodeWithDb::new(&signature, &db);
+
+    let body = function.body(&db).as_syntax_node();
+    let body = SyntaxNodeWithDb::new(&body, &db);
+
+    let attrs = function.attributes(&db).as_syntax_node();
+    let attrs = SyntaxNodeWithDb::new(&attrs, &db);
+
+    if skip_args {
+        quote! {
+            #vis #signature
+            #body
+        }
+    } else {
+        quote! {
+            #attrs
+            #vis #signature
+            #body
+        }
+    }
+}
 
 #[test]
 fn works_with_few_attributes() {
@@ -18,13 +70,30 @@ fn works_with_few_attributes() {
     assert_output(
         &result,
         "
-            #[__internal_config_statement]
+            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
             #[snforge_internal_test_executable]
-            fn empty_fn(){}
+            fn empty_fn(mut _data: Span<felt252>) -> Span::<felt252> {
+                core::internal::require_implicit::<System>();
+                core::internal::revoke_ap_tracking();
+                core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
+
+                core::option::OptionTraitImpl::expect(
+                    core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
+                );
+                empty_fn_return_wrapper();
+
+                let mut arr = ArrayTrait::new();
+                core::array::ArrayTrait::span(@arr)
+            }
+
+            #[__internal_config_statement]
+            fn empty_fn_return_wrapper() {
+
+            }
         ",
     );
 
-    let item = result.token_stream;
+    let item = get_function(&result.token_stream, "empty_fn_return_wrapper", false);
     let args = quote!((l1_gas: 1, l1_data_gas: 2, l2_gas: 3));
 
     let result = available_gas(args, item);
@@ -35,8 +104,7 @@ fn works_with_few_attributes() {
         &result,
         "
             #[__internal_config_statement]
-            #[snforge_internal_test_executable]
-            fn empty_fn() {
+            fn empty_fn_return_wrapper() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
@@ -68,8 +136,7 @@ fn works_with_few_attributes() {
         &result,
         r#"
             #[__internal_config_statement]
-            #[snforge_internal_test_executable]
-            fn empty_fn() {
+            fn empty_fn_return_wrapper() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
@@ -112,13 +179,30 @@ fn works_with_fuzzer() {
     assert_output(
         &result,
         "
-            #[__internal_config_statement]
+            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
             #[snforge_internal_test_executable]
-            fn empty_fn(){}
+            fn empty_fn(mut _data: Span<felt252>) -> Span::<felt252> {
+                core::internal::require_implicit::<System>();
+                core::internal::revoke_ap_tracking();
+                core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
+
+                core::option::OptionTraitImpl::expect(
+                    core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
+                );
+                empty_fn_return_wrapper();
+
+                let mut arr = ArrayTrait::new();
+                core::array::ArrayTrait::span(@arr)
+            }
+
+            #[__internal_config_statement]
+            fn empty_fn_return_wrapper() {
+
+            }
         ",
     );
 
-    let item = result.token_stream;
+    let item = get_function(&result.token_stream, "empty_fn_return_wrapper", false);
     let args = quote!((runs: 123, seed: 321));
 
     let result = fuzzer(args, item);
@@ -131,8 +215,7 @@ fn works_with_fuzzer() {
             #[__fuzzer_config(runs: 123, seed: 321)]
             #[__fuzzer_wrapper]
             #[__internal_config_statement]
-            #[snforge_internal_test_executable]
-            fn empty_fn() {}
+            fn empty_fn_return_wrapper() {}
         ",
     );
 }
@@ -173,14 +256,62 @@ fn works_with_fuzzer_config_wrapper() {
         ",
     );
 
-    // Cannot apply `test` attribute here as it would cause an error
-    // due to the function having a parameter
-    let item = result.token_stream;
-    let item = quote!(
-        #[snforge_internal_test_executable]
-        #[__internal_config_statement]
-        #item
+    // Append `#[fuzzer]` so we can use `test()`
+    let mut item = TokenStream::new(vec![create_single_token("#[fuzzer]")]);
+    item.extend(result.token_stream);
+
+    let result = test(TokenStream::empty(), item);
+    assert_diagnostics(&result, &[]);
+    assert_output(
+        &result,
+        r"
+            #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+            #[snforge_internal_test_executable]
+            fn empty_fn(mut _data: Span<felt252>) -> Span::<felt252> {
+                core::internal::require_implicit::<System>();
+                core::internal::revoke_ap_tracking();
+                core::option::OptionTraitImpl::expect(core::gas::withdraw_gas(), 'Out of gas');
+
+                core::option::OptionTraitImpl::expect(
+                    core::gas::withdraw_gas_all(core::gas::get_builtin_costs()), 'Out of gas',
+                );
+                empty_fn_return_wrapper();
+
+                let mut arr = ArrayTrait::new();
+                core::array::ArrayTrait::span(@arr)
+            }
+
+            #[fuzzer]
+            #[__internal_config_statement]
+            fn empty_fn_return_wrapper(f: felt252) {
+                if snforge_std::_internals::is_config_run() {
+                    let mut data = array![];
+
+                    snforge_std::_internals::config_types::AvailableGasConfig::MaxResourceBounds(
+                        snforge_std::_internals::config_types::AvailableResourceBoundsConfig {
+                            l1_gas: 0xffffffffffffffff,
+                            l1_data_gas: 0xffffffffffffffff,
+                            l2_gas: 0x3e7
+                        }
+                    )
+                    .serialize(ref data);
+
+                    starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
+
+                    return;
+                }
+            }
+    ",
     );
+
+    // Skip all the lines including `#[fuzzer]` that was appended previously
+    let item = get_function(&result.token_stream, "empty_fn_return_wrapper", true);
+    let internal_config_statement =
+        TokenStream::new(vec![create_single_token("__internal_config_statement")]);
+    let item = quote! {
+        #[#internal_config_statement]
+        #item
+    };
     let args = quote!((runs: 123, seed: 321));
 
     let result = fuzzer_config(args, item);
@@ -189,9 +320,8 @@ fn works_with_fuzzer_config_wrapper() {
     assert_output(
         &result,
         r"
-            #[snforge_internal_test_executable]
             #[__internal_config_statement]
-            fn empty_fn(f: felt252) {
+            fn empty_fn_return_wrapper(f: felt252) {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
@@ -232,9 +362,8 @@ fn works_with_fuzzer_config_wrapper() {
     assert_output(
         &result,
         r"
-            #[snforge_internal_test_executable]
             #[__internal_config_statement]
-            fn empty_fn() {
+            fn empty_fn_return_wrapper() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
@@ -259,16 +388,16 @@ fn works_with_fuzzer_config_wrapper() {
 
                     starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
-                    empty_fn_actual_body(snforge_std::fuzzable::Fuzzable::blank());
+                    empty_fn_return_wrapper_actual_body(snforge_std::fuzzable::Fuzzable::blank());
 
                     return;
                 }
                 let f: felt252 = snforge_std::fuzzable::Fuzzable::generate();
                 snforge_std::_internals::save_fuzzer_arg(@f);
-                empty_fn_actual_body(f);
+                empty_fn_return_wrapper_actual_body(f);
             }
             #[__internal_config_statement]
-            fn empty_fn_actual_body(f: felt252) {
+            fn empty_fn_return_wrapper_actual_body(f: felt252) {
             }
         ",
     );
