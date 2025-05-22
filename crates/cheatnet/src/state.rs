@@ -20,6 +20,7 @@ use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use conversions::serde::deserialize::CairoDeserialize;
 use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use conversions::string::TryFromHexStr;
+use indexmap::IndexMap;
 use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::starknet::context::SerializableBlockInfo;
 use runtime::starknet::state::DictStateReader;
@@ -32,7 +33,7 @@ use starknet_api::{
 };
 use starknet_types_core::felt::Felt;
 use std::cell::{Ref, RefCell};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use std::rc::Rc;
 
 // Specifies the duration of the cheat
@@ -343,7 +344,7 @@ pub struct CheatnetState {
     pub global_block_hash: HashMap<u64, (Felt, Vec<ContractAddress>)>,
 }
 
-pub type EncounteredErrors = BTreeMap<ClassHash, Vec<usize>>;
+pub type EncounteredErrors = IndexMap<ClassHash, Vec<usize>>;
 
 impl Default for CheatnetState {
     fn default() -> Self {
@@ -367,7 +368,7 @@ impl Default for CheatnetState {
                 current_call_stack: NotEmptyCallStack::from(test_call),
                 is_vm_trace_needed: false,
             },
-            encountered_errors: BTreeMap::default(),
+            encountered_errors: IndexMap::default(),
             fuzzer_args: Vec::default(),
             block_hash_contracts: HashMap::default(),
             global_block_hash: HashMap::default(),
@@ -483,7 +484,7 @@ impl CheatnetState {
     }
 
     pub fn clear_error(&mut self, class_hash: ClassHash) {
-        self.encountered_errors.remove(&class_hash);
+        self.encountered_errors.shift_remove(&class_hash);
     }
 }
 
