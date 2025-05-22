@@ -3,9 +3,11 @@ name: Test binaries
 on:
   workflow_call:
     inputs:
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       bin_version:
         required: true
         type: string
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       std_version:
         required: true
         type: string
@@ -48,15 +50,15 @@ jobs:
         shell: bash
         run: |
           mkdir -p artifacts
-          mv artifacts-dl/build-*/starknet-foundry-* artifacts/
+          mv artifacts-dl/build-*/starknet-foundry-v* artifacts/
 
       - name: Get artifacts path
         shell: bash
         run: |
           if [[ ${{ matrix.target }} == *windows* ]]; then
-            ARTIFACTS_PATH="artifacts/starknet-foundry-${{ inputs.bin_version }}-${{ matrix.target }}.zip"
+            ARTIFACTS_PATH="artifacts/starknet-foundry-v${{ inputs.bin_version }}-${{ matrix.target }}.zip"
           else
-            ARTIFACTS_PATH="artifacts/starknet-foundry-${{ inputs.bin_version }}-${{ matrix.target }}.tar.gz"
+            ARTIFACTS_PATH="artifacts/starknet-foundry-v${{ inputs.bin_version }}-${{ matrix.target }}.tar.gz"
           fi
           echo "ARTIFACTS_PATH=$ARTIFACTS_PATH" >> $GITHUB_ENV
 
