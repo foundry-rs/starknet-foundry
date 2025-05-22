@@ -1,8 +1,24 @@
-use formats::OutputFormat;
 pub use message::*;
 
-pub mod formats;
 pub mod message;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum OutputFormat {
+    #[default]
+    Human,
+    Json,
+}
+
+impl OutputFormat {
+    #[must_use]
+    pub fn from_flag(json: bool) -> Self {
+        if json {
+            OutputFormat::Json
+        } else {
+            OutputFormat::Human
+        }
+    }
+}
 
 /// An abstraction around console output which stores preferences for output format (human vs JSON),
 /// colour, etc.

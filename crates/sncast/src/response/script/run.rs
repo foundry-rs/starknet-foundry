@@ -1,4 +1,4 @@
-use foundry_ui::{Message, formats::OutputFormat};
+use foundry_ui::{Message, OutputFormat};
 use serde::Serialize;
 
 use crate::response::{

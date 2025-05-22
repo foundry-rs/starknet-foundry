@@ -1,5 +1,5 @@
 use conversions::{padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
-use foundry_ui::{Message, formats::OutputFormat};
+use foundry_ui::{Message, OutputFormat};
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize};
 

@@ -7,7 +7,7 @@ use super::{
     print::{Format, OutputData},
 };
 use conversions::{padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
-use foundry_ui::{Message, formats::OutputFormat};
+use foundry_ui::{Message, OutputFormat};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
