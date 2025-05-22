@@ -8,7 +8,7 @@ use scarb_api::ScarbCommand;
 use shared::print::print_as_warning;
 use sncast::helpers::constants::INIT_SCRIPTS_DIR;
 use sncast::helpers::scarb_utils::get_cairo_version;
-use sncast::response::structs::ScriptInitResponse;
+use sncast::response::script::init::ScriptInitResponse;
 
 #[derive(Args, Debug)]
 pub struct Init {

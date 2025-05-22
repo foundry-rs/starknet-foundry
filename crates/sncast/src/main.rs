@@ -4,9 +4,17 @@ use crate::starknet_commands::{
 };
 use anyhow::{Context, Result, bail};
 use data_transformer::{reverse_transform_output, transform};
+use foundry_ui::OutputFormat;
+use foundry_ui::{Message, Ui};
+use serde::Serialize;
 use sncast::helpers::account::generate_account_name;
-use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
-use sncast::response::print::{OutputFormat, print_command_result};
+use sncast::response::call::CallResponse;
+use sncast::response::cast_message::SnastMessage;
+use sncast::response::command::CommandResponse;
+use sncast::response::declare::DeclareResponse;
+use sncast::response::errors::ResponseError;
+use sncast::response::explorer_link::block_explorer_link_if_allowed;
+use sncast::response::transformed_call::TransformedCallResponse;
 use std::io;
 use std::io::IsTerminal;
 
@@ -24,7 +32,7 @@ use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_metadata_with_deps,
 };
 use sncast::response::errors::handle_starknet_command_error;
-use sncast::response::structs::{CallResponse, DeclareResponse, TransformedCallResponse};
+
 use sncast::{
     NumbersFormat, ValidatedWaitParams, WaitForTx, chain_id_to_network_name, get_account,
     get_block_id, get_chain_id, get_class_hash_by_address, get_contract_class,
@@ -216,19 +224,16 @@ fn main() -> Result<()> {
     let numbers_format = NumbersFormat::from_flags(cli.hex_format, cli.int_format);
     let output_format = OutputFormat::from_flag(cli.json);
 
+    let ui = Ui::new(output_format);
+
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = &cli.command {
-        run_script_command(&cli, runtime, script, numbers_format, output_format)
+        run_script_command(&cli, runtime, script, numbers_format, &ui)
     } else {
         let config = get_cast_config(&cli)?;
 
-        runtime.block_on(run_async_command(
-            cli,
-            config,
-            numbers_format,
-            output_format,
-        ))
+        runtime.block_on(run_async_command(cli, config, numbers_format, &ui))
     }
 }
 
@@ -237,7 +242,7 @@ async fn run_async_command(
     cli: Cli,
     config: CastConfig,
     numbers_format: NumbersFormat,
-    output_format: OutputFormat,
+    ui: &Ui,
 ) -> Result<()> {
     let wait_config = WaitForTx {
         wait: cli.wait,
@@ -285,14 +290,16 @@ async fn run_async_command(
                 }
             });
 
-            print_command_result("declare", &result, numbers_format, output_format)?;
-            print_block_explorer_link_if_allowed(
+            let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                output_format,
+                ui.output_format(),
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
             );
+
+            process_command_result("declare", result, numbers_format, ui, block_explorer_link);
+
             Ok(())
         }
 
@@ -335,14 +342,15 @@ async fn run_async_command(
             .await
             .map_err(handle_starknet_command_error);
 
-            print_command_result("deploy", &result, numbers_format, output_format)?;
-            print_block_explorer_link_if_allowed(
+            let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                output_format,
+                ui.output_format(),
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
             );
+            process_command_result("deploy", result, numbers_format, ui, block_explorer_link);
+
             Ok(())
         }
 
@@ -377,14 +385,9 @@ async fn run_async_command(
             if let Some(transformed_result) =
                 transform_response(&result, &contract_class, &selector)
             {
-                print_command_result(
-                    "call",
-                    &Ok(transformed_result),
-                    numbers_format,
-                    output_format,
-                )?;
+                process_command_result("call", Ok(transformed_result), numbers_format, ui, None);
             } else {
-                print_command_result("call", &result, numbers_format, output_format)?;
+                process_command_result("call", result, numbers_format, ui, None);
             }
 
             Ok(())
@@ -431,14 +434,16 @@ async fn run_async_command(
             .await
             .map_err(handle_starknet_command_error);
 
-            print_command_result("invoke", &result, numbers_format, output_format)?;
-            print_block_explorer_link_if_allowed(
+            let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                output_format,
+                ui.output_format(),
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
             );
+
+            process_command_result("invoke", result, numbers_format, ui, block_explorer_link);
+
             Ok(())
         }
 
@@ -451,12 +456,7 @@ async fn run_async_command(
                             new.overwrite,
                         );
 
-                        print_command_result(
-                            "multicall new",
-                            &result,
-                            numbers_format,
-                            output_format,
-                        )?;
+                        process_command_result("multicall new", result, numbers_format, ui, None);
                     } else {
                         println!("{DEFAULT_MULTICALL_CONTENTS}");
                     }
@@ -475,13 +475,19 @@ async fn run_async_command(
                         starknet_commands::multicall::run::run(run.clone(), &account, wait_config)
                             .await;
 
-                    print_command_result("multicall run", &result, numbers_format, output_format)?;
-                    print_block_explorer_link_if_allowed(
+                    let block_explorer_link = block_explorer_link_if_allowed(
                         &result,
-                        output_format,
+                        ui.output_format(),
                         provider.chain_id().await?,
                         config.show_explorer_links,
                         config.block_explorer,
+                    );
+                    process_command_result(
+                        "multicall run",
+                        result,
+                        numbers_format,
+                        ui,
+                        block_explorer_link,
                     );
                 }
             }
@@ -512,7 +518,7 @@ async fn run_async_command(
                     }
                 }
 
-                print_command_result("account import", &result, numbers_format, output_format)?;
+                process_command_result("account import", result, numbers_format, ui, None);
                 Ok(())
             }
 
@@ -538,14 +544,22 @@ async fn run_async_command(
                 )
                 .await;
 
-                print_command_result("account create", &result, numbers_format, output_format)?;
-                print_block_explorer_link_if_allowed(
+                let block_explorer_link = block_explorer_link_if_allowed(
                     &result,
-                    output_format,
+                    ui.output_format(),
                     provider.chain_id().await?,
                     config.show_explorer_links,
                     config.block_explorer,
                 );
+
+                process_command_result(
+                    "account create",
+                    result,
+                    numbers_format,
+                    ui,
+                    block_explorer_link,
+                );
+
                 Ok(())
             }
 
@@ -581,14 +595,21 @@ async fn run_async_command(
                     }
                 }
 
-                print_command_result("account deploy", &result, numbers_format, output_format)?;
-                print_block_explorer_link_if_allowed(
+                let block_explorer_link = block_explorer_link_if_allowed(
                     &result,
-                    output_format,
+                    ui.output_format(),
                     provider.chain_id().await?,
                     config.show_explorer_links,
                     config.block_explorer,
                 );
+                process_command_result(
+                    "account deploy",
+                    result,
+                    numbers_format,
+                    ui,
+                    block_explorer_link,
+                );
+
                 Ok(())
             }
 
@@ -603,7 +624,7 @@ async fn run_async_command(
                     delete.yes,
                 );
 
-                print_command_result("account delete", &result, numbers_format, output_format)?;
+                process_command_result("account delete", result, numbers_format, ui, None);
                 Ok(())
             }
 
@@ -611,7 +632,7 @@ async fn run_async_command(
                 &config.accounts_file,
                 options.display_private_keys,
                 numbers_format,
-                output_format,
+                ui.output_format(),
             ),
         },
 
@@ -626,7 +647,7 @@ async fn run_async_command(
             )
             .await;
 
-            print_command_result("show-config", &result, numbers_format, output_format)?;
+            process_command_result("show-config", result, numbers_format, ui, None);
 
             Ok(())
         }
@@ -639,7 +660,7 @@ async fn run_async_command(
                     .await
                     .context("Failed to get transaction status");
 
-            print_command_result("tx-status", &result, numbers_format, output_format)?;
+            process_command_result("tx-status", result, numbers_format, ui, None);
             Ok(())
         }
 
@@ -663,7 +684,7 @@ async fn run_async_command(
             )
             .await;
 
-            print_command_result("verify", &result, numbers_format, output_format)?;
+            process_command_result("verify", result, numbers_format, ui, None);
             Ok(())
         }
 
@@ -681,12 +702,12 @@ fn run_script_command(
     runtime: Runtime,
     script: &Script,
     numbers_format: NumbersFormat,
-    output_format: OutputFormat,
+    ui: &Ui,
 ) -> Result<()> {
     match &script.command {
         starknet_commands::script::Commands::Init(init) => {
             let result = starknet_commands::script::init::init(init);
-            print_command_result("script init", &result, numbers_format, output_format)?;
+            process_command_result("script init", result, numbers_format, ui, None);
         }
         starknet_commands::script::Commands::Run(run) => {
             let manifest_path = assert_manifest_path_exists()?;
@@ -740,7 +761,7 @@ fn run_script_command(
                 state_file_path,
             );
 
-            print_command_result("script run", &result, numbers_format, output_format)?;
+            process_command_result("script run", result, numbers_format, ui, None);
         }
     }
 
@@ -798,7 +819,7 @@ fn transform_response(
     contract_class: &ContractClass,
     selector: &Felt,
 ) -> Option<TransformedCallResponse> {
-    let Ok(CallResponse { response }) = result else {
+    let Ok(CallResponse { response, .. }) = result else {
         return None;
     };
 
@@ -818,4 +839,34 @@ fn transform_response(
         response_raw: response.clone(),
         response: transformed_response,
     })
+}
+
+fn process_command_result<T>(
+    command: &str,
+    result: Result<T>,
+    numbers_format: NumbersFormat,
+    ui: &Ui,
+    block_explorer_link: Option<String>,
+) where
+    T: serde::Serialize + Clone + CommandResponse,
+    SnastMessage<T>: Message + Serialize,
+{
+    let cast_msg = result.map(|command_response| SnastMessage {
+        command: command.to_string(),
+        command_response,
+        numbers_format,
+    });
+
+    match cast_msg {
+        Ok(response) => {
+            ui.print(&response);
+            if let Some(link) = block_explorer_link {
+                ui.print(&link);
+            }
+        }
+        Err(err) => {
+            let err = ResponseError::new(command.to_string(), format!("{err:#}"));
+            ui.print_as_err(&err);
+        }
+    }
 }

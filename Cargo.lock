@@ -2584,6 +2584,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "foundry-ui"
+version = "0.43.0"
+dependencies = [
+ "anyhow",
+ "serde",
+ "serde_json",
+ "starknet-types-core",
+]
+
+[[package]]
 name = "fs2"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5554,6 +5564,7 @@ dependencies = [
  "dirs",
  "docs",
  "forge_runner",
+ "foundry-ui",
  "fs_extra",
  "indoc",
  "itertools 0.14.0",

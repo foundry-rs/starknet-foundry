@@ -41,7 +41,7 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::helpers::fee::{FeeArgs, ScriptFeeSettings};
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::ScriptRunResponse;
+use sncast::response::script::run::ScriptRunResponse;
 use sncast::state::hashing::{
     generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
 };
