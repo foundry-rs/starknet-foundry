@@ -1,17 +1,11 @@
 use camino::Utf8PathBuf;
-use foundry_ui::{Message, OutputFormat};
 use serde::Serialize;
 
 use crate::helpers::block_explorer;
 
-use super::{
-    account::create::Decimal,
-    cast_message::CastMessage,
-    command::CommandResponse,
-    print::{Format, OutputData},
-};
+use super::{account::create::Decimal, command::CommandResponse};
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct ShowConfigResponse {
     pub profile: Option<String>,
     pub chain_id: Option<String>,
@@ -27,23 +21,5 @@ pub struct ShowConfigResponse {
 
 impl CommandResponse for ShowConfigResponse {}
 
-impl Message for ShowConfigResponse {}
-
-impl CastMessage<ShowConfigResponse> {
-    // TODO(#3391): Update text output to be more user friendly
-    #[must_use]
-    pub fn text(&self) -> String {
-        OutputData::from(&self.message)
-            .format_with(self.numbers_format)
-            .to_string_pretty("show-config", OutputFormat::Human)
-            .expect("Failed to format response")
-    }
-
-    #[must_use]
-    pub fn json(&self) -> String {
-        OutputData::from(&self.message)
-            .format_with(self.numbers_format)
-            .to_string_pretty("show-config", OutputFormat::Json)
-            .expect("Failed to format response")
-    }
-}
+// TODO(#3391): Update text output to be more user friendly
+// impl Message for CastMessage<ShowConfigResponse> {}

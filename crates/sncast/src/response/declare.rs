@@ -1,16 +1,10 @@
 use conversions::{padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
-use foundry_ui::{Message, OutputFormat};
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize};
 
 use crate::helpers::block_explorer::LinkProvider;
 
-use super::{
-    cast_message::CastMessage,
-    command::CommandResponse,
-    explorer_link::OutputLink,
-    print::{Format, OutputData},
-};
+use super::{command::CommandResponse, explorer_link::OutputLink};
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeclareTransactionResponse {
@@ -20,26 +14,8 @@ pub struct DeclareTransactionResponse {
 
 impl CommandResponse for DeclareTransactionResponse {}
 
-impl Message for DeclareTransactionResponse {}
-
-impl CastMessage<DeclareTransactionResponse> {
-    // TODO(#3391): Update text output to be more user friendly
-    #[must_use]
-    pub fn text(&self) -> String {
-        OutputData::from(&self.message)
-            .format_with(self.numbers_format)
-            .to_string_pretty("declare", OutputFormat::Human)
-            .expect("Failed to format response")
-    }
-
-    #[must_use]
-    pub fn json(&self) -> String {
-        OutputData::from(&self.message)
-            .format_with(self.numbers_format)
-            .to_string_pretty("declare", OutputFormat::Json)
-            .expect("Failed to format response")
-    }
-}
+// TODO(#3391): Update text output to be more user friendly
+// impl Message for CastMessage<DeclareTransactionResponse> {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct AlreadyDeclaredResponse {
@@ -48,26 +24,8 @@ pub struct AlreadyDeclaredResponse {
 
 impl CommandResponse for AlreadyDeclaredResponse {}
 
-impl Message for AlreadyDeclaredResponse {}
-
-impl CastMessage<AlreadyDeclaredResponse> {
-    // TODO(#3391): Update text output to be more user friendly
-    #[must_use]
-    pub fn text(&self) -> String {
-        OutputData::from(&self.message)
-            .format_with(self.numbers_format)
-            .to_string_pretty("declare", OutputFormat::Human)
-            .expect("Failed to format response")
-    }
-
-    #[must_use]
-    pub fn json(&self) -> String {
-        OutputData::from(&self.message)
-            .format_with(self.numbers_format)
-            .to_string_pretty("declare", OutputFormat::Json)
-            .expect("Failed to format response")
-    }
-}
+// TODO(#3391): Update text output to be more user friendly
+// impl Message for CastMessage<AlreadyDeclaredResponse> {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 #[serde(tag = "status")]

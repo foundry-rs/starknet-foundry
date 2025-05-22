@@ -4,7 +4,6 @@ pub mod cast_message;
 pub mod command;
 pub mod declare;
 pub mod deploy;
-pub mod error;
 pub mod errors;
 pub mod explorer_link;
 pub mod invoke;
