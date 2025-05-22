@@ -4,7 +4,7 @@ use serde::Serialize;
 use crate::Message;
 
 /// Generic textual message with `tag` prefix.
-
+///
 /// The type prefix can be stylized in text mode.
 /// e.g. "[WARNING]: An example warning message"
 #[derive(Serialize)]
