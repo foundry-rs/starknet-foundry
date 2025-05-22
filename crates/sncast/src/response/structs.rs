@@ -19,13 +19,6 @@ impl Serialize for Decimal {
     }
 }
 
-fn serialize_as_decimal<S>(value: &Felt, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    serializer.serialize_str(&format!("{value:#}"))
-}
-
 pub trait CommandResponse: Serialize {}
 
 #[derive(Serialize, CairoSerialize, Clone)]
@@ -84,8 +77,6 @@ impl CommandResponse for DeclareResponse {}
 #[derive(Serialize)]
 pub struct AccountCreateResponse {
     pub address: PaddedFelt,
-    #[serde(serialize_with = "crate::response::structs::serialize_as_decimal")]
-    pub max_fee: Felt,
     pub add_profile: String,
     pub message: String,
 }

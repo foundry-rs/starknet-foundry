@@ -7,6 +7,7 @@ edition.workspace = true
 [dependencies]
 anyhow.workspace = true
 camino.workspace = true
+bigdecimal.workspace = true
 clap.workspace = true
 clap_complete.workspace = true
 serde_json.workspace = true
