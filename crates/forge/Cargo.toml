@@ -51,7 +51,7 @@ futures.workspace = true
 url.workspace = true
 indoc.workspace = true
 derive_more.workspace = true
-foundry-ui ={ path = "../foundry-ui" }
+foundry-ui = { path = "../foundry-ui" }
 
 [[bin]]
 name = "snforge"

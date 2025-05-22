@@ -1,7 +1,6 @@
 use crate::{CleanArgs, CleanComponent};
 use anyhow::{Context, Result, ensure};
 use camino::Utf8PathBuf;
-use foundry_ui::Ui;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use std::fs;
 
@@ -10,7 +9,7 @@ const PROFILE_DIR: &str = "profile";
 const CACHE_DIR: &str = ".snfoundry_cache";
 const TRACE_DIR: &str = "snfoundry_trace";
 
-pub fn clean(args: CleanArgs, ui: &Ui) -> Result<()> {
+pub fn clean(args: CleanArgs) -> Result<()> {
     let components = if args.clean_components.contains(&CleanComponent::All) {
         ensure!(
             args.clean_components.len() == 1,
@@ -37,10 +36,10 @@ pub fn clean(args: CleanArgs, ui: &Ui) -> Result<()> {
 
     for component in &components {
         match component {
-            CleanComponent::Coverage => clean_dirs(&packages_root, COVERAGE_DIR, ui)?,
-            CleanComponent::Profile => clean_dirs(&packages_root, PROFILE_DIR, ui)?,
-            CleanComponent::Cache => clean_dir(&workspace_root, CACHE_DIR, ui)?,
-            CleanComponent::Trace => clean_dir(&workspace_root, TRACE_DIR, ui)?,
+            CleanComponent::Coverage => clean_dirs(&packages_root, COVERAGE_DIR)?,
+            CleanComponent::Profile => clean_dirs(&packages_root, PROFILE_DIR)?,
+            CleanComponent::Cache => clean_dir(&workspace_root, CACHE_DIR)?,
+            CleanComponent::Trace => clean_dir(&workspace_root, TRACE_DIR)?,
             CleanComponent::All => unreachable!("All component should have been handled earlier"),
         }
     }
@@ -48,17 +47,17 @@ pub fn clean(args: CleanArgs, ui: &Ui) -> Result<()> {
     Ok(())
 }
 
-fn clean_dirs(root_dirs: &[Utf8PathBuf], dir_name: &str, ui: &Ui) -> Result<()> {
+fn clean_dirs(root_dirs: &[Utf8PathBuf], dir_name: &str) -> Result<()> {
     for root_dir in root_dirs {
-        clean_dir(root_dir, dir_name, ui)?;
+        clean_dir(root_dir, dir_name)?;
     }
     Ok(())
 }
-fn clean_dir(dir: &Utf8PathBuf, dir_name: &str, ui: &Ui) -> Result<()> {
+fn clean_dir(dir: &Utf8PathBuf, dir_name: &str) -> Result<()> {
     let dir = dir.join(dir_name);
     if dir.exists() {
         fs::remove_dir_all(&dir).with_context(|| format!("Failed to remove directory: {dir}"))?;
-        ui.print(&format!("Removed directory: {dir}"));
+        println!("Removed directory: {dir}");
     }
 
     Ok(())

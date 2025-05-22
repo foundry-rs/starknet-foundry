@@ -10,7 +10,6 @@ use forge_runner::{
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
     test_target_summary::TestTargetSummary,
 };
-use foundry_ui::Ui;
 use futures::{StreamExt, stream::FuturesUnordered};
 use std::sync::Arc;
 use tokio::sync::mpsc::channel;
@@ -26,7 +25,6 @@ pub async fn run_for_test_target(
     forge_config: Arc<ForgeConfig>,
     tests_filter: &impl TestCaseFilter,
     trace_verbosity: Option<TraceVerbosity>,
-    ui: &Ui,
 ) -> Result<TestTargetRunResult> {
     let casm_program = tests.casm_program.clone();
 
@@ -60,7 +58,6 @@ pub async fn run_for_test_target(
             tests.sierra_program_path.clone(),
             send.clone(),
             trace_verbosity,
-            ui.clone(),
         ));
     }
 
@@ -75,7 +72,6 @@ pub async fn run_for_test_target(
             &result,
             forge_config.output_config.detailed_resources,
             forge_config.test_runner_config.tracked_resource,
-            ui,
         );
 
         let trace_path = maybe_save_trace_and_profile(
@@ -97,7 +93,6 @@ pub async fn run_for_test_target(
     maybe_generate_coverage(
         &forge_config.output_config.execution_data_to_save,
         &saved_trace_data_paths,
-        ui,
     )?;
 
     let summary = TestTargetSummary {

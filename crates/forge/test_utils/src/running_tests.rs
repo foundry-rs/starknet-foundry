@@ -83,7 +83,6 @@ pub fn run_test_case(
         },
         &mut BlockNumberMap::default(),
         Option::default(),
-        ui,
     ))
     .expect("Runner fail")
 }

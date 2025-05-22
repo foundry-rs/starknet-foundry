@@ -30,7 +30,7 @@ use forge_runner::{
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
-use foundry_ui::{Ui, components::TaggedMessage};
+use foundry_ui::Ui;
 use scarb_api::get_contracts_artifacts_and_source_sierra_paths;
 use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
@@ -138,7 +138,6 @@ pub async fn run_for_package(
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
     trace_verbosity: Option<TraceVerbosity>,
-    ui: &Ui,
 ) -> Result<Vec<TestTargetSummary>> {
     let mut test_targets = test_package_with_config_resolved(
         test_targets,
@@ -153,8 +152,8 @@ pub async fn run_for_package(
         tests_filter.filter_tests(&mut test_target.test_cases)?;
     }
 
-    warn_if_available_gas_used_with_incompatible_scarb_version(&test_targets, ui)?;
-    warn_if_incompatible_rpc_version(&test_targets, ui.clone()).await?;
+    warn_if_available_gas_used_with_incompatible_scarb_version(&test_targets)?;
+    warn_if_incompatible_rpc_version(&test_targets).await?;
 
     let not_filtered = sum_test_cases(&test_targets);
     pretty_printing::print_collected_tests_count(not_filtered, &package_name);
@@ -169,14 +168,8 @@ pub async fn run_for_package(
 
         let forge_config = forge_config.clone();
 
-        let summary = run_for_test_target(
-            test_target,
-            forge_config,
-            &tests_filter,
-            trace_verbosity,
-            ui,
-        )
-        .await?;
+        let summary =
+            run_for_test_target(test_target, forge_config, &tests_filter, trace_verbosity).await?;
 
         match summary {
             TestTargetRunResult::Ok(summary) => {
@@ -194,10 +187,10 @@ pub async fn run_for_package(
 
     // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
     if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
-        pretty_printing::print_test_summary(&summaries, None, ui);
+        pretty_printing::print_test_summary(&summaries, None);
     } else {
         let filtered = all_tests - not_filtered;
-        pretty_printing::print_test_summary(&summaries, Some(filtered), ui);
+        pretty_printing::print_test_summary(&summaries, Some(filtered));
     }
 
     let any_fuzz_test_was_run = summaries.iter().any(|test_target_summary| {
@@ -209,11 +202,7 @@ pub async fn run_for_package(
     });
 
     if any_fuzz_test_was_run {
-        ui.print(&TaggedMessage::styled(
-            "Fuzzer seed",
-            &forge_config.test_runner_config.fuzzer_seed.to_string(),
-            "bold",
-        ));
+        pretty_printing::print_test_seed(forge_config.test_runner_config.fuzzer_seed);
     }
 
     Ok(summaries)

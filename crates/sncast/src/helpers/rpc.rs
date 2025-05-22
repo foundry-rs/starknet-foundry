@@ -2,7 +2,6 @@ use crate::helpers::configuration::CastConfig;
 use crate::{Network, get_provider};
 use anyhow::{Context, Result, bail};
 use clap::Args;
-use foundry_ui::Ui;
 use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet::providers::{JsonRpcClient, jsonrpc::HttpTransport};
@@ -20,11 +19,7 @@ pub struct RpcArgs {
 }
 
 impl RpcArgs {
-    pub async fn get_provider(
-        &self,
-        config: &CastConfig,
-        ui: &Ui,
-    ) -> Result<JsonRpcClient<HttpTransport>> {
+    pub async fn get_provider(&self, config: &CastConfig) -> Result<JsonRpcClient<HttpTransport>> {
         if self.network.is_some() && !config.url.is_empty() {
             bail!(
                 "The argument '--network' cannot be used when `url` is defined in `snfoundry.toml` for the active profile"
@@ -49,7 +44,7 @@ impl RpcArgs {
         assert!(!url.is_empty(), "url cannot be empty");
         let provider = get_provider(&url)?;
 
-        verify_and_warn_if_incompatible_rpc_version(&provider, url, ui).await?;
+        verify_and_warn_if_incompatible_rpc_version(&provider, url).await?;
 
         Ok(provider)
     }

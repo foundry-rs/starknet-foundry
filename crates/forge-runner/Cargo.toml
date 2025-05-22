@@ -44,4 +44,3 @@ universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 which.workspace = true
 sanitize-filename.workspace = true
 clap.workspace = true
-foundry-ui = { path = "../foundry-ui" }

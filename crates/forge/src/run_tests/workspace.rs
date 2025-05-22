@@ -37,8 +37,8 @@ pub async fn run_for_workspace(args: TestArgs, ui: &Ui) -> Result<ExitStatus> {
     }
 
     error_if_snforge_std_not_compatible(&scarb_metadata)?;
-    warn_if_snforge_std_not_compatible(&scarb_metadata, ui)?;
-    warn_if_backtrace_without_panic_hint(&scarb_metadata, ui);
+    warn_if_snforge_std_not_compatible(&scarb_metadata)?;
+    warn_if_backtrace_without_panic_hint(&scarb_metadata);
 
     let artifacts_dir_path =
         target_dir_for_workspace(&scarb_metadata).join(&scarb_metadata.current_profile);
@@ -86,18 +86,15 @@ pub async fn run_for_workspace(args: TestArgs, ui: &Ui) -> Result<ExitStatus> {
         )?;
 
         let tests_file_summaries =
-            run_for_package(args, &mut block_number_map, trace_verbosity, ui).await?;
+            run_for_package(args, &mut block_number_map, trace_verbosity).await?;
 
         all_failed_tests.extend(extract_failed_tests(tests_file_summaries));
     }
 
     FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
 
-    pretty_printing::print_latest_blocks_numbers(
-        block_number_map.get_url_to_latest_block_number(),
-        ui,
-    );
-    pretty_printing::print_failures(&all_failed_tests, ui);
+    pretty_printing::print_latest_blocks_numbers(block_number_map.get_url_to_latest_block_number());
+    pretty_printing::print_failures(&all_failed_tests);
 
     if args.exact {
         unset_forge_test_filter();

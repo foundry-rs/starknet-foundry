@@ -253,7 +253,7 @@ async fn run_async_command(
 
     match cli.command {
         Commands::Declare(declare) => {
-            let provider = declare.rpc.get_provider(&config, ui).await?;
+            let provider = declare.rpc.get_provider(&config).await?;
 
             let account = get_account(
                 &config.account,
@@ -315,7 +315,7 @@ async fn run_async_command(
                 ..
             } = deploy;
 
-            let provider = rpc.get_provider(&config, ui).await?;
+            let provider = rpc.get_provider(&config).await?;
 
             let account = get_account(
                 &config.account,
@@ -366,7 +366,7 @@ async fn run_async_command(
             block_id,
             rpc,
         }) => {
-            let provider = rpc.get_provider(&config, ui).await?;
+            let provider = rpc.get_provider(&config).await?;
 
             let block_id = get_block_id(&block_id)?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
@@ -409,7 +409,7 @@ async fn run_async_command(
                 ..
             } = invoke;
 
-            let provider = rpc.get_provider(&config, ui).await?;
+            let provider = rpc.get_provider(&config).await?;
 
             let account = get_account(
                 &config.account,
@@ -468,7 +468,7 @@ async fn run_async_command(
                     }
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
-                    let provider = run.rpc.get_provider(&config, ui).await?;
+                    let provider = run.rpc.get_provider(&config).await?;
 
                     let account = get_account(
                         &config.account,
@@ -506,7 +506,7 @@ async fn run_async_command(
 
         Commands::Account(account) => match account.command {
             account::Commands::Import(import) => {
-                let provider = import.rpc.get_provider(&config, ui).await?;
+                let provider = import.rpc.get_provider(&config).await?;
                 let result = account::import::import(
                     import.name.clone(),
                     &config.accounts_file,
@@ -535,7 +535,7 @@ async fn run_async_command(
             }
 
             account::Commands::Create(create) => {
-                let provider = create.rpc.get_provider(&config, ui).await?;
+                let provider = create.rpc.get_provider(&config).await?;
 
                 let chain_id = get_chain_id(&provider).await?;
                 let account = if config.keystore.is_none() {
@@ -576,7 +576,7 @@ async fn run_async_command(
             }
 
             account::Commands::Deploy(deploy) => {
-                let provider = deploy.rpc.get_provider(&config, ui).await?;
+                let provider = deploy.rpc.get_provider(&config).await?;
 
                 let fee_args = deploy.fee_args.clone();
 
@@ -630,8 +630,7 @@ async fn run_async_command(
 
             account::Commands::Delete(delete) => {
                 let network_name =
-                    starknet_commands::account::delete::get_network_name(&delete, &config, ui)
-                        .await?;
+                    starknet_commands::account::delete::get_network_name(&delete, &config).await?;
 
                 let result = starknet_commands::account::delete::delete(
                     &delete.name,
@@ -653,7 +652,7 @@ async fn run_async_command(
         },
 
         Commands::ShowConfig(show) => {
-            let provider = show.rpc.get_provider(&config, ui).await.ok();
+            let provider = show.rpc.get_provider(&config).await.ok();
 
             let result = starknet_commands::show_config::show_config(
                 &show,
@@ -669,7 +668,7 @@ async fn run_async_command(
         }
 
         Commands::TxStatus(tx_status) => {
-            let provider = tx_status.rpc.get_provider(&config, ui).await?;
+            let provider = tx_status.rpc.get_provider(&config).await?;
 
             let result =
                 starknet_commands::tx_status::tx_status(&provider, tx_status.transaction_hash)
@@ -732,7 +731,7 @@ fn run_script_command(
 
             let config = get_cast_config(cli, ui)?;
 
-            let provider = runtime.block_on(run.rpc.get_provider(&config, ui))?;
+            let provider = runtime.block_on(run.rpc.get_provider(&config))?;
 
             let mut artifacts = build_and_load_artifacts(
                 &package_metadata,
