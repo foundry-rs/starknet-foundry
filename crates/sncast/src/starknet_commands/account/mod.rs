@@ -6,8 +6,10 @@ use crate::starknet_commands::account::list::List;
 use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::{Args, Subcommand};
+use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
 use serde_json::json;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::{
     AccountType, chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig,
 };
@@ -155,6 +157,37 @@ pub fn add_created_profile_to_configuration(
         .context("Failed to write to the snfoundry.toml")?;
 
     Ok(())
+}
+
+fn generate_add_profile_message(
+    profile_name: Option<&String>,
+    rpc: &RpcArgs,
+    account_name: &str,
+    accounts_file: &Utf8PathBuf,
+    keystore: Option<Utf8PathBuf>,
+) -> Result<String> {
+    if let Some(profile_name) = profile_name {
+        let url = rpc
+            .url
+            .clone()
+            .expect("the argument '--network' should not be used with '--add-profile' argument");
+        let config = CastConfig {
+            url,
+            account: account_name.into(),
+            accounts_file: accounts_file.into(),
+            keystore,
+            ..Default::default()
+        };
+        let config_path = resolve_config_file();
+        add_created_profile_to_configuration(Some(profile_name), &config, &config_path)?;
+        Ok(format!(
+            "Profile {profile_name} successfully added to {config_path}",
+        ))
+    } else {
+        Ok(String::from(
+            "--add-profile flag was not set. No profile added to snfoundry.toml",
+        ))
+    }
 }
 
 #[cfg(test)]
