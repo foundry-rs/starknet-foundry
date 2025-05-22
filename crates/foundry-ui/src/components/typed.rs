@@ -13,7 +13,6 @@ pub struct TypedMessage<'a> {
 
 impl<'a> TypedMessage<'a> {
     #[must_use]
-
     pub fn styled(ty: &'a str, text: &'a str, type_style: &'a str) -> Self {
         Self {
             ty,
