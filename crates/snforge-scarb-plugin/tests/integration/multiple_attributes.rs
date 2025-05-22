@@ -18,8 +18,8 @@ fn works_with_few_attributes() {
     assert_output(
         &result,
         "
-            #[snforge_internal_test_executable]
             #[__internal_config_statement]
+            #[snforge_internal_test_executable]
             fn empty_fn(){}
         ",
     );
@@ -34,8 +34,8 @@ fn works_with_few_attributes() {
     assert_output(
         &result,
         "
-            #[snforge_internal_test_executable]
             #[__internal_config_statement]
+            #[snforge_internal_test_executable]
             fn empty_fn() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
@@ -67,8 +67,8 @@ fn works_with_few_attributes() {
     assert_output(
         &result,
         r#"
-            #[snforge_internal_test_executable]
             #[__internal_config_statement]
+            #[snforge_internal_test_executable]
             fn empty_fn() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
@@ -112,8 +112,8 @@ fn works_with_fuzzer() {
     assert_output(
         &result,
         "
-            #[snforge_internal_test_executable]
             #[__internal_config_statement]
+            #[snforge_internal_test_executable]
             fn empty_fn(){}
         ",
     );
@@ -128,10 +128,10 @@ fn works_with_fuzzer() {
     assert_output(
         &result,
         r"
-            #[snforge_internal_test_executable]
-            #[__internal_config_statement]
             #[__fuzzer_config(runs: 123, seed: 321)]
             #[__fuzzer_wrapper]
+            #[__internal_config_statement]
+            #[snforge_internal_test_executable]
             fn empty_fn() {}
         ",
     );

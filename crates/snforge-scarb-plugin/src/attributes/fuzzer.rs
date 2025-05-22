@@ -102,9 +102,9 @@ fn fuzzer_internal(
     let args = args.clone();
 
     Ok(quote!(
-        #attrs
         #[#fuzzer_config #args]
         #[#fuzzer_wrapper]
+        #attrs
         #declaration
             #body
     ))

@@ -16,8 +16,8 @@ fn appends_internal_config_and_executable() {
     assert_output(
         &result,
         "
-            #[snforge_internal_test_executable]
             #[__internal_config_statement]
+            #[snforge_internal_test_executable]
             fn empty_fn(){}
         ",
     );

@@ -52,11 +52,25 @@ fn test_internal(
         None => true,
     };
 
+    let body = func.body(db).as_syntax_node();
+    let body = SyntaxNodeWithDb::new(&body, db);
+
+    let attrs = func.attributes(db).as_syntax_node();
+    let attrs = SyntaxNodeWithDb::new(&attrs, db);
+
+    let vis = func.visibility(db).as_syntax_node();
+    let vis = SyntaxNodeWithDb::new(&vis, db);
+
+    let declaration = func.declaration(db).as_syntax_node();
+    let declaration = SyntaxNodeWithDb::new(&declaration, db);
+
     if should_run_test {
         Ok(quote!(
-            #[snforge_internal_test_executable]
             #[#internal_config]
-            #func_item
+            #attrs
+            #[snforge_internal_test_executable]
+            #vis #declaration
+            #body
         ))
     } else {
         Ok(quote!(
