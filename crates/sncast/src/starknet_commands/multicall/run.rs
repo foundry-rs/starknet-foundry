@@ -2,6 +2,7 @@ use crate::starknet_commands::invoke::execute_calls;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
+use foundry_ui::Ui;
 use serde::Deserialize;
 use sncast::helpers::constants::UDC_ADDRESS;
 use sncast::helpers::fee::FeeArgs;
@@ -59,6 +60,7 @@ pub async fn run(
     run: Box<Run>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
+    ui: &Ui,
 ) -> Result<MulticallRunResponse> {
     let fee_args = run.fee_args.clone();
 
@@ -130,17 +132,10 @@ pub async fn run(
         }
     }
 
-    execute_calls(
-        account,
-        parsed_calls,
-        fee_args,
-        None,
-        wait_config,
-        // "multicall run",
-    )
-    .await
-    .map(std::convert::Into::into)
-    .map_err(handle_starknet_command_error)
+    execute_calls(account, parsed_calls, fee_args, None, wait_config, ui)
+        .await
+        .map(std::convert::Into::into)
+        .map_err(handle_starknet_command_error)
 }
 
 fn parse_inputs(inputs: &Vec<Input>, contracts: &HashMap<String, String>) -> Result<Vec<Felt>> {

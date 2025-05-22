@@ -233,7 +233,7 @@ fn main() -> Result<()> {
     if let Commands::Script(script) = &cli.command {
         run_script_command(&cli, runtime, script, numbers_format, &ui)
     } else {
-        let config = get_cast_config(&cli)?;
+        let config = get_cast_config(&cli, &ui)?;
 
         runtime.block_on(run_async_command(cli, config, numbers_format, &ui))
     }
@@ -281,6 +281,7 @@ async fn run_async_command(
                 &artifacts,
                 wait_config,
                 false,
+                ui,
             )
             .await
             .map_err(handle_starknet_command_error)
@@ -341,6 +342,7 @@ async fn run_async_command(
                 deploy.nonce,
                 &account,
                 wait_config,
+                ui,
             )
             .await
             .map_err(handle_starknet_command_error);
@@ -433,6 +435,7 @@ async fn run_async_command(
                 selector,
                 &account,
                 wait_config,
+                ui,
             )
             .await
             .map_err(handle_starknet_command_error);
@@ -461,7 +464,7 @@ async fn run_async_command(
 
                         process_command_result("multicall new", result, numbers_format, ui, None);
                     } else {
-                        println!("{DEFAULT_MULTICALL_CONTENTS}");
+                        ui.print(&DEFAULT_MULTICALL_CONTENTS.to_string());
                     }
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
@@ -474,9 +477,13 @@ async fn run_async_command(
                         config.keystore,
                     )
                     .await?;
-                    let result =
-                        starknet_commands::multicall::run::run(run.clone(), &account, wait_config)
-                            .await;
+                    let result = starknet_commands::multicall::run::run(
+                        run.clone(),
+                        &account,
+                        wait_config,
+                        ui,
+                    )
+                    .await;
 
                     let block_explorer_link = block_explorer_link_if_allowed(
                         &result,
@@ -516,7 +523,9 @@ async fn run_async_command(
                         result.as_ref().ok().and_then(|r| r.account_name.clone())
                     {
                         if let Err(err) = prompt_to_add_account_as_default(account_name.as_str()) {
-                            eprintln!("Error: Failed to launch interactive prompt: {err}");
+                            ui.print_as_err(&format!(
+                                "Error: Failed to launch interactive prompt: {err}"
+                            ));
                         }
                     }
                 }
@@ -582,6 +591,7 @@ async fn run_async_command(
                     &config.account,
                     keystore_path,
                     fee_args,
+                    ui,
                 )
                 .await;
 
@@ -594,7 +604,9 @@ async fn run_async_command(
                             .name
                             .expect("Must be provided if not using a keystore"),
                     ) {
-                        eprintln!("Error: Failed to launch interactive prompt: {err}");
+                        ui.print_as_err(&format!(
+                            "Error: Failed to launch interactive prompt: {err}"
+                        ));
                     }
                 }
 
@@ -636,7 +648,7 @@ async fn run_async_command(
                 &config.accounts_file,
                 options.display_private_keys,
                 numbers_format,
-                ui.output_format(),
+                ui,
             ),
         },
 
@@ -711,14 +723,14 @@ fn run_script_command(
 ) -> Result<()> {
     match &script.command {
         starknet_commands::script::Commands::Init(init) => {
-            let result = starknet_commands::script::init::init(init);
+            let result = starknet_commands::script::init::init(init, ui);
             process_command_result("script init", result, numbers_format, ui, None);
         }
         starknet_commands::script::Commands::Run(run) => {
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &run.package)?;
 
-            let config = get_cast_config(cli)?;
+            let config = get_cast_config(cli, ui)?;
 
             let provider = runtime.block_on(run.rpc.get_provider(&config, ui))?;
 
@@ -801,9 +813,9 @@ fn config_with_cli(config: &mut CastConfig, cli: &Cli) {
     );
 }
 
-fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
+fn get_cast_config(cli: &Cli, ui: &Ui) -> Result<CastConfig> {
     let global_config_path = get_global_config_path().unwrap_or_else(|err| {
-        eprintln!("Error getting global config path: {err}");
+        ui.print_as_err(&format!("Error getting global config path: {err}"));
         Utf8PathBuf::new()
     });
 

@@ -36,7 +36,7 @@ pub fn init(init_args: &Init, ui: &Ui) -> Result<ScriptInitResponse> {
             ),
         }),
         Err(err) => {
-            clean_created_dir_and_files(&script_root_dir_path);
+            clean_created_dir_and_files(&script_root_dir_path, ui);
             Err(err)
         }
     }
@@ -157,8 +157,10 @@ fn overwrite_lib_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> Resul
     Ok(())
 }
 
-fn clean_created_dir_and_files(script_root_dir: &Utf8PathBuf) {
+fn clean_created_dir_and_files(script_root_dir: &Utf8PathBuf, ui: &Ui) {
     if fs::remove_dir_all(script_root_dir).is_err() {
-        eprintln!("Failed to clean created files by init command at {script_root_dir}");
+        ui.print_as_err(&format!(
+            "Failed to clean created files by init command at {script_root_dir}"
+        ));
     }
 }

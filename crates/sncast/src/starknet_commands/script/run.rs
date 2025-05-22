@@ -85,6 +85,7 @@ pub struct CastScriptExtension<'a> {
     pub config: &'a CastConfig,
     pub artifacts: &'a HashMap<String, StarknetContractArtifacts>,
     pub state: StateManager,
+    pub ui: &'a Ui,
 }
 
 impl CastScriptExtension<'_> {
@@ -150,6 +151,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait_params: self.config.wait_params,
                     },
                     true,
+                    self.ui,
                 ));
 
                 self.state.maybe_insert_tx_entry(
@@ -188,6 +190,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait: true,
                         wait_params: self.config.wait_params,
                     },
+                    self.ui,
                 ));
 
                 self.state.maybe_insert_tx_entry(
@@ -225,6 +228,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait: true,
                         wait_params: self.config.wait_params,
                     },
+                    self.ui,
                 ));
 
                 self.state.maybe_insert_tx_entry(
@@ -377,6 +381,7 @@ pub fn run(
         artifacts: &artifacts,
         account: account.as_ref(),
         state,
+        ui,
     };
 
     let mut cast_runtime = ExtendedRuntime {
