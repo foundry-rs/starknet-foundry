@@ -27,7 +27,7 @@ impl OutputFormat {
 #[derive(Debug)]
 pub struct Ui {
     output_format: OutputFormat,
-    // TODO: Add state here, that can be used for e.g. spinner
+    // TODO(3395): Add state here, that can be used for spinner
 }
 
 impl Ui {
