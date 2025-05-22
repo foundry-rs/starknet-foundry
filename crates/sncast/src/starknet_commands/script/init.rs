@@ -1,11 +1,11 @@
-use anyhow::{Context, Ok, Result, anyhow, ensure};
+use anyhow::{Context, Ok, Result, ensure};
 use camino::Utf8PathBuf;
+use foundry_ui::Ui;
 use std::fs;
 
 use clap::Args;
 use indoc::{formatdoc, indoc};
 use scarb_api::ScarbCommand;
-use shared::print::print_as_warning;
 use sncast::helpers::constants::INIT_SCRIPTS_DIR;
 use sncast::helpers::scarb_utils::get_cairo_version;
 use sncast::response::structs::ScriptInitResponse;
@@ -16,7 +16,7 @@ pub struct Init {
     pub script_name: String,
 }
 
-pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
+pub fn init(init_args: &Init, ui: &Ui) -> Result<ScriptInitResponse> {
     let script_root_dir_path = get_script_root_dir_path(&init_args.script_name)?;
 
     init_scarb_project(&init_args.script_name, &script_root_dir_path)?;
@@ -24,9 +24,9 @@ pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
     let modify_files_result = add_dependencies(&script_root_dir_path)
         .and_then(|()| modify_files_in_src_dir(&init_args.script_name, &script_root_dir_path));
 
-    print_as_warning(&anyhow!(
+    ui.print_warning(
         "The newly created script isn't auto-added to the workspace. For more details, please see https://foundry-rs.github.io/starknet-foundry/starknet/script.html#initialize-a-script"
-    ));
+    );
 
     match modify_files_result {
         Result::Ok(()) => Ok(ScriptInitResponse {

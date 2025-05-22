@@ -1,6 +1,8 @@
+use components::TaggedMessage;
 use formats::{NumbersFormat, OutputFormat};
 pub use message::*;
 
+pub mod components;
 pub mod formats;
 pub mod message;
 
@@ -51,5 +53,13 @@ impl Ui {
             OutputFormat::Human => message.print_human(self.numbers_format, true),
             OutputFormat::Json => message.print_json(self.numbers_format, true),
         }
+    }
+
+    pub fn print_warning(&self, message: &str) {
+        self.print(&TaggedMessage::styled(
+            "WARNING",
+            message.as_ref(),
+            "yellow",
+        ))
     }
 }

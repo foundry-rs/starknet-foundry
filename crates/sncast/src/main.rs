@@ -261,6 +261,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
                     profile: cli.profile.unwrap_or("release".to_string()),
                 },
                 false,
+                ui,
             )
             .expect("Failed to build contract");
             let result = starknet_commands::declare::declare(
@@ -640,16 +641,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
         Commands::Verify(verify) => {
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &verify.package)?;
-            let artifacts = build_and_load_artifacts(
-                &package_metadata,
-                &BuildConfig {
-                    scarb_toml_path: manifest_path.clone(),
-                    json: cli.json,
-                    profile: cli.profile.unwrap_or("release".to_string()),
-                },
-                false,
-            )
-            .expect("Failed to build contract");
+            let build_config = BuildConfig {
+                scarb_toml_path: manifest_path.clone(),
+                json: cli.json,
+                profile: cli.profile.unwrap_or("release".to_string()),
+            };
+            let artifacts = build_and_load_artifacts(&package_metadata, &build_config, false, ui)
+                .expect("Failed to build contract");
             let result = starknet_commands::verify::verify(
                 verify,
                 &package_metadata.manifest_path,
@@ -673,7 +671,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
 fn run_script_command(cli: &Cli, runtime: Runtime, script: &Script, ui: &Ui) -> Result<()> {
     match &script.command {
         starknet_commands::script::Commands::Init(init) => {
-            let result = starknet_commands::script::init::init(init);
+            let result = starknet_commands::script::init::init(init, ui);
             process_command_result("script init", result, ui, None);
         }
         starknet_commands::script::Commands::Run(run) => {
@@ -692,6 +690,7 @@ fn run_script_command(cli: &Cli, runtime: Runtime, script: &Script, ui: &Ui) -> 
                     profile: cli.profile.clone().unwrap_or("dev".to_string()),
                 },
                 true,
+                ui,
             )
             .expect("Failed to build artifacts");
             // TODO(#2042): remove duplicated compilation
@@ -726,6 +725,7 @@ fn run_script_command(cli: &Cli, runtime: Runtime, script: &Script, ui: &Ui) -> 
                 runtime,
                 &config,
                 state_file_path,
+                ui,
             );
 
             process_command_result("script run", result, ui, None);
