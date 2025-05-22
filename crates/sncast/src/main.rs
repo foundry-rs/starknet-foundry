@@ -867,10 +867,8 @@ fn process_command_result<T>(
             }
         }
         Err(err) => {
-            // let err_str = format!("{err}");
-            println!("AAA: {err}");
-            let response_error = ResponseError::new(command.to_string(), format!("{err:#}"));
-            ui.print_as_err(&response_error);
+            let err = ResponseError::new(command.to_string(), format!("{err:#}"));
+            ui.print_as_err(&err);
         }
     }
 }
