@@ -31,7 +31,7 @@ pub struct Ui {
 }
 
 impl Ui {
-    /// Create a new [`Ui`] instance configured with the given output format and numbers format.
+    /// Create a new [`Ui`] instance configured with the given output format.
     #[must_use]
     pub fn new(output_format: OutputFormat) -> Self {
         Self { output_format }
@@ -43,6 +43,7 @@ impl Ui {
         self.output_format
     }
 
+    /// Print the given message to stdout using the configured output format.
     pub fn print<T>(&self, message: &T)
     where
         T: Message + serde::Serialize,
@@ -53,6 +54,7 @@ impl Ui {
         }
     }
 
+    /// Print the given message to stderr using the configured output format.
     pub fn print_as_err<T>(&self, message: &T)
     where
         T: Message + serde::Serialize,
