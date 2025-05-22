@@ -9,21 +9,21 @@ use super::{
 };
 
 #[derive(Serialize)]
-pub struct CastMessage<T: Serialize> {
+pub struct SnastMessage<T: Serialize> {
     pub command: String,
+    pub command_response: T,
     pub numbers_format: NumbersFormat,
-    pub message: T,
 }
 
 // TODO(#3391): This impl should be remove and the `Message` trait should be implemented for each response type
 // individually. This is a temporary solution to avoid breaking changes in the UI.
-impl<T> Message for CastMessage<T>
+impl<T> Message for SnastMessage<T>
 where
     T: CommandResponse,
 {
     #[must_use]
     fn text(&self) -> String {
-        OutputData::from(&self.message)
+        OutputData::from(&self.command_response)
             .format_with(self.numbers_format)
             .to_string_pretty(&self.command, OutputFormat::Human)
             .expect("Failed to format response")
@@ -31,7 +31,7 @@ where
 
     #[must_use]
     fn json(&self) -> String {
-        OutputData::from(&self.message)
+        OutputData::from(&self.command_response)
             .format_with(self.numbers_format)
             .to_string_pretty(&self.command, OutputFormat::Json)
             .expect("Failed to format response")

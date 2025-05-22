@@ -15,7 +15,7 @@ pub struct DeployResponse {
 impl CommandResponse for DeployResponse {}
 
 // TODO(#3391): Update text output to be more user friendly
-// impl Message for CastMessage<DeployResponse> {}
+// impl Message for SnastMessage<DeployResponse> {}
 
 impl OutputLink for DeployResponse {
     const TITLE: &'static str = "deployment";

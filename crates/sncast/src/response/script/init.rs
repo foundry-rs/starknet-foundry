@@ -10,4 +10,4 @@ pub struct ScriptInitResponse {
 impl CommandResponse for ScriptInitResponse {}
 
 // TODO(#3391): Update text output to be more user friendly
-// impl Message for CastMessage<ScriptInitResponse> {}
+// impl Message for SnastMessage<ScriptInitResponse> {}

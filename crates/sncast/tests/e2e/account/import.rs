@@ -499,9 +499,7 @@ pub async fn test_invalid_private_key_file_path() {
         output,
         formatdoc! {r"
         command: account import
-        error: Failed to obtain private key from the file my_private_key
-        [..]
-        [..]{}
+        error: Failed to obtain private key from the file my_private_key: {}
         ", expected_file_error},
     );
 }
@@ -541,9 +539,7 @@ pub async fn test_invalid_private_key_in_file() {
         output,
         indoc! {r"
         command: account import
-        error: Failed to obtain private key from the file my_private_key
-        [..]
-        [..]Failed to create Felt from string
+        error: Failed to obtain private key from the file my_private_key: Failed to create Felt from string
         "},
     );
 }
