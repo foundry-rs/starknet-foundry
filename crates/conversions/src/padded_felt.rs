@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize, Serializer};
 use starknet_api::core::{ClassHash, ContractAddress};
 use starknet_types_core::felt::Felt;
 use std::fmt;
-use std::fmt::{Display, Formatter, LowerHex};
+use std::fmt::{Formatter, LowerHex};
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize, CairoSerialize)]
 pub struct PaddedFelt(pub Felt);
@@ -26,12 +26,6 @@ impl Serialize for PaddedFelt {
 }
 
 impl LowerHex for PaddedFelt {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{:#064x}", self.0)
-    }
-}
-
-impl Display for PaddedFelt {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{:#064x}", self.0)
     }

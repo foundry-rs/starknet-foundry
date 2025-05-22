@@ -68,20 +68,6 @@ impl From<Value> for OutputValue {
     }
 }
 
-impl<T: CommandResponse> From<&Result<T, anyhow::Error>> for OutputData {
-    fn from(value: &Result<T>) -> Self {
-        match value {
-            Ok(response) => serde_json::to_value(response)
-                .expect("Failed to serialize CommandResponse")
-                .into(),
-            Err(message) => Self(vec![(
-                String::from("error"),
-                OutputValue::String(format!("{message:#}")),
-            )]),
-        }
-    }
-}
-
 impl Format for OutputValue {
     fn format_with(self, numbers: NumbersFormat) -> Self {
         match self {
@@ -159,6 +145,8 @@ impl OutputData {
         serde_json::to_string(&mapping).map_err(anyhow::Error::from)
     }
 
+    // TODO(#3391): This should be removed once we don't use it anymore in default
+    // implementation of `text()` method in `SnastMessage`
     fn to_lines(&self, command: &str) -> String {
         let fields = self
             .0
@@ -169,6 +157,8 @@ impl OutputData {
         format!("command: {command}\n{fields}")
     }
 
+    // TODO(#3391): This should be removed once we don't use it anymore in default
+    // implementation of `text()` method in `SnastMessage`
     pub fn to_string_pretty(&self, command: &str, output_format: OutputFormat) -> Result<String> {
         match output_format {
             OutputFormat::Json => self.to_json(command),

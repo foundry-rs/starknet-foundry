@@ -10,4 +10,4 @@ pub struct VerifyResponse {
 impl CommandResponse for VerifyResponse {}
 
 // TODO(#3391): Update text output to be more user friendly
-// impl Message for CastMessage<VerifyResponse> {}
+// impl Message for SnastMessage<VerifyResponse> {}

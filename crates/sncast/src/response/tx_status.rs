@@ -26,4 +26,4 @@ pub struct TransactionStatusResponse {
 impl CommandResponse for TransactionStatusResponse {}
 
 // TODO(#3391): Update text output to be more user friendly
-// impl Message for CastMessage<TransactionStatusResponse> {}
+// impl Message for SnastMessage<TransactionStatusResponse> {}

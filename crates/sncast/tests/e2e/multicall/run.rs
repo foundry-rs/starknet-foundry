@@ -310,8 +310,7 @@ async fn test_numeric_overflow() {
         indoc! {r"
         command: multicall run
         error: Failed to parse [..]
-        [..]
-        [..]number too large to fit in target type
+        number too large to fit in target type
         "},
     );
 }

@@ -1,7 +1,11 @@
 use serde::Serialize;
 
+/// A typed object that can be either printed as a human-readable message or serialized as JSON.
+///
+/// The [`TypedMessage`][crate::components::TypedMessage] and [`TaggedMessage`][crate::components::TaggedMessage]
+/// structs are the most frequently used kinds of messages.
 pub trait Message {
-    /// Return textual representation of this message.
+    /// Return textual (human) representation of this message.
     ///
     /// Default implementation returns empty string, making [`Ui`] skip printing this message.
     fn text(&self) -> String
@@ -11,6 +15,7 @@ pub trait Message {
         String::new()
     }
 
+    /// Print textual (human) representation of this message.
     fn print_human(&self, print_as_err: bool)
     where
         Self: Sized + Serialize,
@@ -23,6 +28,7 @@ pub trait Message {
         }
     }
 
+    /// Return JSON representation of this message.
     fn json(&self) -> String
     where
         Self: Sized + Serialize,
@@ -30,6 +36,7 @@ pub trait Message {
         serde_json::to_string(self).unwrap_or_else(|_| "Invalid JSON".to_string())
     }
 
+    /// Print JSON representation of this message.
     fn print_json(&self, print_as_err: bool)
     where
         Self: Serialize + Sized,
