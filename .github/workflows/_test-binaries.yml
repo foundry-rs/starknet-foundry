@@ -91,7 +91,7 @@ jobs:
           fi
           
           REPO_URL=${{ github.repositoryUrl }}
-          REVISION=${{ github.sha }}
+          REVISION=${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           VERSION=${{ inputs.std_version }}
           
           ./scripts/smoke_test.sh "$RPC_URL" "$SNFORGE_PATH" "$SNCAST_PATH" "$REPO_URL" "$REVISION" "$VERSION"
