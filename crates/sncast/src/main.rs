@@ -853,10 +853,10 @@ fn process_command_result<T>(
     T: serde::Serialize + Clone + CommandResponse,
     SnastMessage<T>: Message + Serialize,
 {
-    let cast_msg = result.map(|message| SnastMessage {
+    let cast_msg = result.map(|command_response| SnastMessage {
         command: command.to_string(),
+        command_response,
         numbers_format,
-        message,
     });
 
     match cast_msg {

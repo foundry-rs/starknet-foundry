@@ -8,12 +8,11 @@ use super::{
     print::{Format, OutputData},
 };
 
-///
 #[derive(Serialize)]
 pub struct SnastMessage<T: Serialize> {
     pub command: String,
+    pub command_response: T,
     pub numbers_format: NumbersFormat,
-    pub message: T,
 }
 
 // TODO(#3391): This impl should be remove and the `Message` trait should be implemented for each response type
@@ -24,7 +23,7 @@ where
 {
     #[must_use]
     fn text(&self) -> String {
-        OutputData::from(&self.message)
+        OutputData::from(&self.command_response)
             .format_with(self.numbers_format)
             .to_string_pretty(&self.command, OutputFormat::Human)
             .expect("Failed to format response")
@@ -32,7 +31,7 @@ where
 
     #[must_use]
     fn json(&self) -> String {
-        OutputData::from(&self.message)
+        OutputData::from(&self.command_response)
             .format_with(self.numbers_format)
             .to_string_pretty(&self.command, OutputFormat::Json)
             .expect("Failed to format response")
