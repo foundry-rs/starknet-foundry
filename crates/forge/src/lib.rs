@@ -355,7 +355,7 @@ fn check_requirements(
             r"universal-sierra-compiler (?<version>[0-9]+.[0-9]+.[0-9]+)",
         ),
     });
-    requirements_checker.check(&ui)?;
+    requirements_checker.check(ui)?;
 
     let scarb_version = ScarbCommand::version().run()?.scarb;
     if scarb_version < MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN {
@@ -377,7 +377,7 @@ fn check_requirements(
                 .to_string(),
         });
 
-        requirements_checker.check(&ui)?;
+        requirements_checker.check(ui)?;
     }
 
     Ok(())

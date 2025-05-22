@@ -75,6 +75,7 @@ pub async fn run_for_test_target(
             &result,
             forge_config.output_config.detailed_resources,
             forge_config.test_runner_config.tracked_resource,
+            ui,
         );
 
         let trace_path = maybe_save_trace_and_profile(
