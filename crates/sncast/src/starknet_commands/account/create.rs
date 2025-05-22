@@ -7,7 +7,7 @@ use clap::Args;
 use configuration::resolve_config_file;
 use conversions::IntoConv;
 use serde_json::json;
-use sncast::helpers::braavos::{BraavosAccountFactory, assert_non_braavos_account};
+use sncast::helpers::braavos::{BraavosAccountFactory, check_braavos_account_compatibility};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
@@ -64,8 +64,16 @@ pub async fn create(
     chain_id: Felt,
     create: &Create,
 ) -> Result<AccountCreateResponse> {
-    // TODO(#3118): Remove this check once braavos integration is restored
-    assert_non_braavos_account(Some(create.account_type), create.class_hash)?;
+    // TODO(#3357): Remove this check once Pathfinder is fixed
+    if create.account_type == AccountType::Braavos {
+        bail!(
+            "Creating Braavos accounts is currently disabled. Please use the Braavos web wallet to create an account and later import it with sncast"
+        );
+    }
+
+    if let Some(class_hash) = create.class_hash {
+        check_braavos_account_compatibility(class_hash)?;
+    }
 
     let add_profile = create.add_profile.clone();
     let salt = extract_or_generate_salt(create.salt);

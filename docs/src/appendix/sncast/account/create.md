@@ -28,19 +28,20 @@ Possible values: `mainnet`, `sepolia`.
 ## `--type, -t <ACCOUNT_TYPE>`
 Optional. Required if `--class-hash` is passed.
 
-<!-- TODO(#3118): Include braavos in possible types once integration is restored  -->
+<!-- TODO(#3357): Include braavos type, once Braavos accounts creation is restored -->
 Type of the account. Possible values: oz, argent. Defaults to oz.
 
 > ⚠️ **Warning**
-> Creating braavos accounts is currently disabled.
+> Creating Braavos accounts is currently disabled.
+> Please use the Braavos web wallet to create an account and later import it with sncast
 
 Versions of the account contracts:
 
 | Account Contract | Version | Class Hash                                                                                                                                                          |
 |------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `oz`             | v1.0.0  | [0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564](https://starkscan.co/class/0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564) |
-| `argent`         | v0.4.0  | [0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f](https://starkscan.co/class/0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f) |
-<!-- TODO(#3118): Uncomment once braavos integration is restored -->
+| `oz`             | v1.0.0 | [0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564](https://starkscan.co/class/0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564) |
+| `argent`         | v0.3.1  | [0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f](https://starkscan.co/class/0x029927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b) |
+<!-- TODO(#3357): Bump this version to v1.2.0, once Braavos accounts creation is restored -->
 <!-- | `braavos`        | v1.0.0  | [0x00816dd0297efc55dc1e7559020a3a825e81ef734b558f03c83325d4da7e6253](https://starkscan.co/class/0x00816dd0297efc55dc1e7559020a3a825e81ef734b558f03c83325d4da7e6253) | -->
 
 ## `--salt, -s <SALT>`

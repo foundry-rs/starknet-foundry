@@ -15,10 +15,10 @@ account information stored locally - this will not remove the account from Stark
 >  - OpenZeppelin
 >  - Argent (with guardian set to 0)
 <!-- >  - Braavos -->
-
-<!-- TODO(#3118): Remove this warning and uncomment braavos from possible account variants -->
+<!-- TODO(#3357): Remove this warning and uncomment braavos from possible account variants -->
 > ⚠️ **Warning**
-> Using Braavos accounts is temporarily disabled because they don't yet work with the RPC version supported by `sncast`.
+> Creating Braavos accounts is currently disabled.
+> Please use the Braavos web wallet to create an account and later import it with sncast
 
 ## Examples
 

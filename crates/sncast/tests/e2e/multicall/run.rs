@@ -11,8 +11,7 @@ use test_case::test_case;
 #[test_case("oz_cairo_1"; "cairo_1_account")]
 #[test_case("oz"; "oz_account")]
 #[test_case("argent"; "argent_account")]
-// TODO(#3118)
-// #[test_case("braavos"; "braavos_account")]
+#[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 async fn test_happy_case(account: &str) {
     let path = project_root::get_project_root().expect("failed to get project root path");

@@ -21,9 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
-#### Updated
+#### Changed
 
 - OpenZeppelin account updated to v1.0.0 [preset](https://docs.openzeppelin.com/contracts-cairo/1.0.0/api/account#AccountUpgradeable)
+- Braavos account functionalities are active except for the `account create` and `account deploy` commands, which are temporarily disabled. To create and deploy an account, please use the Braavos web wallet. You can subsequently import this account with the `sncast import`.
 
 ## [0.43.1] - 2025-05-16
 
