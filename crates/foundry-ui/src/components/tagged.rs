@@ -1,7 +1,7 @@
 use console::Style;
 use serde::Serialize;
 
-use crate::{Message, formats::NumbersFormat};
+use crate::Message;
 
 #[derive(Serialize)]
 pub struct TaggedMessage<'a> {
@@ -23,10 +23,9 @@ impl<'a> TaggedMessage<'a> {
 }
 
 impl Message for TaggedMessage<'_> {
-    fn text(&self, numbers_format: NumbersFormat) -> String {
-        let _ = numbers_format;
+    fn text(&self) -> String {
         format!(
-            "[{}] {}",
+            "[{}]: {}",
             self.type_style
                 .map(Style::from_dotted_str)
                 .unwrap_or_default()

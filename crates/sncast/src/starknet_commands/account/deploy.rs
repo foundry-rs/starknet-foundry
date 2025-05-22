@@ -7,7 +7,8 @@ use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::{AccountDeployResponse, InvokeResponse};
+use sncast::response::account::deploy::AccountDeployResponse;
+use sncast::response::invoke::InvokeResponse;
 use sncast::{
     AccountType, WaitForTx, apply_optional_fields, chain_id_to_network_name,
     check_account_file_exists, get_account_data_from_accounts_file, get_account_data_from_keystore,

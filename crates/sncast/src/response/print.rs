@@ -1,4 +1,4 @@
-use foundry_ui::formats::{NumbersFormat, OutputFormat};
+use foundry_ui::OutputFormat;
 use itertools::Itertools;
 use std::{collections::HashMap, fmt::Display, str::FromStr};
 
@@ -7,7 +7,9 @@ use serde::{Serialize, Serializer};
 use serde_json::Value;
 use starknet_types_core::felt::Felt;
 
-use super::structs::CommandResponse;
+use crate::NumbersFormat;
+
+use super::command::CommandResponse;
 
 pub trait Format
 where
@@ -178,8 +180,7 @@ impl OutputData {
 #[cfg(test)]
 mod tests {
     use super::{OutputData, OutputValue};
-    use crate::response::print::Format;
-    use foundry_ui::formats::NumbersFormat;
+    use crate::{NumbersFormat, response::print::Format};
     use serde_json::{Map, Value};
 
     #[test]

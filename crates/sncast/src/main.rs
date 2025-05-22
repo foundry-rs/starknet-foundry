@@ -4,10 +4,17 @@ use crate::starknet_commands::{
 };
 use anyhow::{Context, Result, bail};
 use data_transformer::{reverse_transform_output, transform};
-use foundry_ui::formats::{NumbersFormat, OutputFormat};
+use foundry_ui::OutputFormat;
 use foundry_ui::{Message, Ui};
+use serde::Serialize;
 use sncast::helpers::account::generate_account_name;
+use sncast::response::call::CallResponse;
+use sncast::response::cast_message::CastMessage;
+use sncast::response::command::CommandResponse;
+use sncast::response::declare::DeclareResponse;
+use sncast::response::errors::ResponseError;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
+use sncast::response::transformed_call::TransformedCallResponse;
 use std::io;
 use std::io::IsTerminal;
 
@@ -25,12 +32,11 @@ use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_metadata_with_deps,
 };
 use sncast::response::errors::handle_starknet_command_error;
-use sncast::response::structs::{
-    CallResponse, DeclareResponse, ResponseError, TransformedCallResponse,
-};
+
 use sncast::{
-    ValidatedWaitParams, WaitForTx, chain_id_to_network_name, get_account, get_block_id,
-    get_chain_id, get_class_hash_by_address, get_contract_class, get_default_state_file_name,
+    NumbersFormat, ValidatedWaitParams, WaitForTx, chain_id_to_network_name, get_account,
+    get_block_id, get_chain_id, get_class_hash_by_address, get_contract_class,
+    get_default_state_file_name,
 };
 use starknet::core::types::ContractClass;
 use starknet::core::types::contract::AbiEntry;
@@ -220,21 +226,26 @@ fn main() -> Result<()> {
     let numbers_format = NumbersFormat::from_flags(cli.hex_format, cli.int_format);
     let output_format = OutputFormat::from_flag(cli.json);
 
-    let ui = Ui::new(output_format, numbers_format);
+    let ui = Ui::new(output_format);
 
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = &cli.command {
-        run_script_command(&cli, runtime, script, &ui)
+        run_script_command(&cli, runtime, script, numbers_format, &ui)
     } else {
         let config = get_cast_config(&cli)?;
 
-        runtime.block_on(run_async_command(cli, config, &ui))
+        runtime.block_on(run_async_command(cli, config, numbers_format, &ui))
     }
 }
 
 #[expect(clippy::too_many_lines)]
-async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> {
+async fn run_async_command(
+    cli: Cli,
+    config: CastConfig,
+    numbers_format: NumbersFormat,
+    ui: &Ui,
+) -> Result<()> {
     let wait_config = WaitForTx {
         wait: cli.wait,
         wait_params: config.wait_params,
@@ -290,7 +301,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
                 config.block_explorer,
             );
 
-            process_command_result("declare", result, ui, block_explorer_link);
+            process_command_result("declare", result, numbers_format, ui, block_explorer_link);
 
             Ok(())
         }
@@ -341,7 +352,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
                 config.show_explorer_links,
                 config.block_explorer,
             );
-            process_command_result("deploy", result, ui, block_explorer_link);
+            process_command_result("deploy", result, numbers_format, ui, block_explorer_link);
 
             Ok(())
         }
@@ -377,9 +388,9 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
             if let Some(transformed_result) =
                 transform_response(&result, &contract_class, &selector)
             {
-                process_command_result("call", Ok(transformed_result), ui, None);
+                process_command_result("call", Ok(transformed_result), numbers_format, ui, None);
             } else {
-                process_command_result("call", result, ui, None);
+                process_command_result("call", result, numbers_format, ui, None);
             }
 
             Ok(())
@@ -434,7 +445,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
                 config.block_explorer,
             );
 
-            process_command_result("invoke", result, ui, block_explorer_link);
+            process_command_result("invoke", result, numbers_format, ui, block_explorer_link);
 
             Ok(())
         }
@@ -448,7 +459,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
                             new.overwrite,
                         );
 
-                        process_command_result("multicall new", result, ui, None);
+                        process_command_result("multicall new", result, numbers_format, ui, None);
                     } else {
                         println!("{DEFAULT_MULTICALL_CONTENTS}");
                     }
@@ -474,7 +485,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
                         config.show_explorer_links,
                         config.block_explorer,
                     );
-                    process_command_result("multicall run", result, ui, block_explorer_link);
+                    process_command_result(
+                        "multicall run",
+                        result,
+                        numbers_format,
+                        ui,
+                        block_explorer_link,
+                    );
                 }
             }
             Ok(())
@@ -504,7 +521,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
                     }
                 }
 
-                process_command_result("account import", result, ui, None);
+                process_command_result("account import", result, numbers_format, ui, None);
                 Ok(())
             }
 
@@ -538,7 +555,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
                     config.block_explorer,
                 );
 
-                process_command_result("account create", result, ui, block_explorer_link);
+                process_command_result(
+                    "account create",
+                    result,
+                    numbers_format,
+                    ui,
+                    block_explorer_link,
+                );
 
                 Ok(())
             }
@@ -582,7 +605,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
                     config.show_explorer_links,
                     config.block_explorer,
                 );
-                process_command_result("account deploy", result, ui, block_explorer_link);
+                process_command_result(
+                    "account deploy",
+                    result,
+                    numbers_format,
+                    ui,
+                    block_explorer_link,
+                );
 
                 Ok(())
             }
@@ -599,14 +628,14 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
                     delete.yes,
                 );
 
-                process_command_result("account delete", result, ui, None);
+                process_command_result("account delete", result, numbers_format, ui, None);
                 Ok(())
             }
 
             account::Commands::List(options) => print_account_list(
                 &config.accounts_file,
                 options.display_private_keys,
-                ui.numbers_format(),
+                numbers_format,
                 ui.output_format(),
             ),
         },
@@ -622,7 +651,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
             )
             .await;
 
-            process_command_result("show-config", result, ui, None);
+            process_command_result("show-config", result, numbers_format, ui, None);
 
             Ok(())
         }
@@ -635,7 +664,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
                     .await
                     .context("Failed to get transaction status");
 
-            process_command_result("tx-status", result, ui, None);
+            process_command_result("tx-status", result, numbers_format, ui, None);
             Ok(())
         }
 
@@ -660,7 +689,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
             )
             .await;
 
-            process_command_result("verify", result, ui, None);
+            process_command_result("verify", result, numbers_format, ui, None);
             Ok(())
         }
 
@@ -673,11 +702,17 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
     }
 }
 
-fn run_script_command(cli: &Cli, runtime: Runtime, script: &Script, ui: &Ui) -> Result<()> {
+fn run_script_command(
+    cli: &Cli,
+    runtime: Runtime,
+    script: &Script,
+    numbers_format: NumbersFormat,
+    ui: &Ui,
+) -> Result<()> {
     match &script.command {
         starknet_commands::script::Commands::Init(init) => {
-            let result = starknet_commands::script::init::init(init, ui);
-            process_command_result("script init", result, ui, None);
+            let result = starknet_commands::script::init::init(init);
+            process_command_result("script init", result, numbers_format, ui, None);
         }
         starknet_commands::script::Commands::Run(run) => {
             let manifest_path = assert_manifest_path_exists()?;
@@ -733,7 +768,7 @@ fn run_script_command(cli: &Cli, runtime: Runtime, script: &Script, ui: &Ui) -> 
                 ui,
             );
 
-            process_command_result("script run", result, ui, None);
+            process_command_result("script run", result, numbers_format, ui, None);
         }
     }
 
@@ -816,12 +851,20 @@ fn transform_response(
 fn process_command_result<T>(
     command: &str,
     result: Result<T>,
+    numbers_format: NumbersFormat,
     ui: &Ui,
     block_explorer_link: Option<String>,
 ) where
-    T: Message + serde::Serialize,
+    T: serde::Serialize + Clone + CommandResponse,
+    CastMessage<T>: Message + Serialize,
 {
-    match result {
+    let cast_msg = result.map(|message| CastMessage {
+        command: command.to_string(),
+        numbers_format,
+        message,
+    });
+
+    match cast_msg {
         Ok(response) => {
             ui.print(&response);
             if let Some(link) = block_explorer_link {

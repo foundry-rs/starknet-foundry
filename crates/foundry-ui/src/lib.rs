@@ -1,10 +1,26 @@
 use components::TaggedMessage;
-use formats::{NumbersFormat, OutputFormat};
 pub use message::*;
 
 pub mod components;
-pub mod formats;
 pub mod message;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum OutputFormat {
+    #[default]
+    Human,
+    Json,
+}
+
+impl OutputFormat {
+    #[must_use]
+    pub fn from_flag(json: bool) -> Self {
+        if json {
+            OutputFormat::Json
+        } else {
+            OutputFormat::Human
+        }
+    }
+}
 
 /// An abstraction around console output which stores preferences for output format (human vs JSON),
 /// colour, etc.
@@ -13,17 +29,14 @@ pub mod message;
 #[derive(Debug, Default, Clone)]
 pub struct Ui {
     output_format: OutputFormat,
-    numbers_format: NumbersFormat,
+    // TODO: Add state here, that can be used for e.g. spinner
 }
 
 impl Ui {
     /// Create a new [`Ui`] instance configured with the given output format and numbers format.
     #[must_use]
-    pub fn new(output_format: OutputFormat, numbers_format: NumbersFormat) -> Self {
-        Self {
-            output_format,
-            numbers_format,
-        }
+    pub fn new(output_format: OutputFormat) -> Self {
+        Self { output_format }
     }
 
     /// Get the output format of this [`Ui`] instance.
@@ -32,19 +45,13 @@ impl Ui {
         self.output_format
     }
 
-    /// Get the numbers format of this [`Ui`] instance.
-    #[must_use]
-    pub fn numbers_format(&self) -> NumbersFormat {
-        self.numbers_format
-    }
-
     pub fn print<T>(&self, message: &T)
     where
         T: Message + serde::Serialize,
     {
         match self.output_format {
-            OutputFormat::Human => message.print_human(self.numbers_format, false),
-            OutputFormat::Json => message.print_json(self.numbers_format, false),
+            OutputFormat::Human => message.print_human(false),
+            OutputFormat::Json => message.print_json(false),
         }
     }
 
@@ -53,8 +60,8 @@ impl Ui {
         T: Message + serde::Serialize,
     {
         match self.output_format {
-            OutputFormat::Human => message.print_human(self.numbers_format, true),
-            OutputFormat::Json => message.print_json(self.numbers_format, true),
+            OutputFormat::Human => message.print_human(true),
+            OutputFormat::Json => message.print_json(true),
         }
     }
 
