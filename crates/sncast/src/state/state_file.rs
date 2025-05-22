@@ -622,10 +622,6 @@ mod tests {
             .unwrap();
         write_txs_to_state_file(&temp_state_file, entries).unwrap();
 
-        // display written state file
-        let content = fs::read_to_string(&temp_state_file).unwrap();
-        println!("Written state file content: {content}");
-
         let result = read_txs_from_state_file(&temp_state_file).expect("Failed to read state file");
         let entries = result.unwrap();
         let transaction_entry = entries.transactions.get(&tx_id).unwrap();

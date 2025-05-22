@@ -8,7 +8,7 @@ use configuration::CONFIG_FILENAME;
 use conversions::string::IntoHexStr;
 use indoc::{formatdoc, indoc};
 use serde_json::json;
-use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
+use shared::test_utils::output_assert::assert_stderr_contains;
 use std::fs::{self, File};
 use tempfile::tempdir;
 use test_case::test_case;
@@ -488,10 +488,7 @@ pub async fn test_invalid_private_key_file_path() {
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
-    let stdout = output.as_stdout();
-    let stderr = output.as_stderr();
-    println!("stdout: {stdout}");
-    println!("stderr: {stderr}");
+
     let expected_file_error = if cfg!(target_os = "windows") {
         "The system cannot find the file specified[..]"
     } else {
