@@ -11,4 +11,4 @@ pub struct TransformedCallResponse {
 impl CommandResponse for TransformedCallResponse {}
 
 // TODO(#3391): Update text output to be more user friendly
-// impl Message for CastMessage<TransformedCallResponse> {}
+// impl Message for SnastMessage<TransformedCallResponse> {}

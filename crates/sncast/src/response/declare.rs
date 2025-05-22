@@ -15,7 +15,7 @@ pub struct DeclareTransactionResponse {
 impl CommandResponse for DeclareTransactionResponse {}
 
 // TODO(#3391): Update text output to be more user friendly
-// impl Message for CastMessage<DeclareTransactionResponse> {}
+// impl Message for SnastMessage<DeclareTransactionResponse> {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct AlreadyDeclaredResponse {
@@ -25,7 +25,7 @@ pub struct AlreadyDeclaredResponse {
 impl CommandResponse for AlreadyDeclaredResponse {}
 
 // TODO(#3391): Update text output to be more user friendly
-// impl Message for CastMessage<AlreadyDeclaredResponse> {}
+// impl Message for SnastMessage<AlreadyDeclaredResponse> {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 #[serde(tag = "status")]

@@ -9,7 +9,7 @@ use foundry_ui::{Message, Ui};
 use serde::Serialize;
 use sncast::helpers::account::generate_account_name;
 use sncast::response::call::CallResponse;
-use sncast::response::cast_message::CastMessage;
+use sncast::response::cast_message::SnastMessage;
 use sncast::response::command::CommandResponse;
 use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::ResponseError;
@@ -851,9 +851,9 @@ fn process_command_result<T>(
     block_explorer_link: Option<String>,
 ) where
     T: serde::Serialize + Clone + CommandResponse,
-    CastMessage<T>: Message + Serialize,
+    SnastMessage<T>: Message + Serialize,
 {
-    let cast_msg = result.map(|message| CastMessage {
+    let cast_msg = result.map(|message| SnastMessage {
         command: command.to_string(),
         numbers_format,
         message,

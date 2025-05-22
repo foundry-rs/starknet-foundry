@@ -12,7 +12,7 @@ pub struct InvokeResponse {
 impl CommandResponse for InvokeResponse {}
 
 // TODO(#3391): Update text output to be more user friendly
-// impl Message for CastMessage<InvokeResponse> { }
+// impl Message for SnastMessage<InvokeResponse> { }
 
 impl OutputLink for InvokeResponse {
     const TITLE: &'static str = "invocation";
