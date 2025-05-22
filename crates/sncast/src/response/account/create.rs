@@ -1,17 +1,13 @@
 use conversions::padded_felt::PaddedFelt;
-use foundry_ui::{Message, OutputFormat};
 use serde::{Serialize, Serializer};
 use starknet_types_core::felt::Felt;
 
 use crate::{
     helpers::block_explorer::LinkProvider,
-    response::{
-        cast_message::CastMessage,
-        command::CommandResponse,
-        explorer_link::OutputLink,
-        print::{Format, OutputData},
-    },
+    response::{command::CommandResponse, explorer_link::OutputLink},
 };
+
+#[derive(Clone)]
 pub struct Decimal(pub u64);
 
 impl Serialize for Decimal {
@@ -30,7 +26,7 @@ where
     serializer.serialize_str(&format!("{value:#}"))
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct AccountCreateResponse {
     pub address: PaddedFelt,
     #[serde(serialize_with = "serialize_as_decimal")]
@@ -41,26 +37,8 @@ pub struct AccountCreateResponse {
 
 impl CommandResponse for AccountCreateResponse {}
 
-impl Message for AccountCreateResponse {}
-
-impl CastMessage<AccountCreateResponse> {
-    // TODO(#3391): Update text output to be more user friendly
-    #[must_use]
-    pub fn text(&self) -> String {
-        OutputData::from(&self.message)
-            .format_with(self.numbers_format)
-            .to_string_pretty("account create", OutputFormat::Human)
-            .expect("Failed to format response")
-    }
-
-    #[must_use]
-    pub fn json(&self) -> String {
-        OutputData::from(&self.message)
-            .format_with(self.numbers_format)
-            .to_string_pretty("account create", OutputFormat::Json)
-            .expect("Failed to format response")
-    }
-}
+// TODO(#3391): Update text output to be more user friendly
+// impl Message for CastMessage<AccountCreateResponse> {}
 
 impl OutputLink for AccountCreateResponse {
     const TITLE: &'static str = "account creation";

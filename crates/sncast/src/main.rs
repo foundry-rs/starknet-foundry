@@ -6,10 +6,13 @@ use anyhow::{Context, Result, bail};
 use data_transformer::{reverse_transform_output, transform};
 use foundry_ui::OutputFormat;
 use foundry_ui::{Message, Ui};
+use serde::Serialize;
 use sncast::helpers::account::generate_account_name;
 use sncast::response::call::CallResponse;
+use sncast::response::cast_message::CastMessage;
+use sncast::response::command::CommandResponse;
 use sncast::response::declare::DeclareResponse;
-use sncast::response::error::ResponseError;
+use sncast::response::errors::ResponseError;
 use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::response::transformed_call::TransformedCallResponse;
 use std::io;
@@ -228,7 +231,7 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = &cli.command {
-        run_script_command(&cli, runtime, script, &ui)
+        run_script_command(&cli, runtime, script, numbers_format, &ui)
     } else {
         let config = get_cast_config(&cli)?;
 
@@ -297,7 +300,7 @@ async fn run_async_command(
                 config.block_explorer,
             );
 
-            process_command_result("declare", result, ui, block_explorer_link);
+            process_command_result("declare", result, numbers_format, ui, block_explorer_link);
 
             Ok(())
         }
@@ -348,7 +351,7 @@ async fn run_async_command(
                 config.show_explorer_links,
                 config.block_explorer,
             );
-            process_command_result("deploy", result, ui, block_explorer_link);
+            process_command_result("deploy", result, numbers_format, ui, block_explorer_link);
 
             Ok(())
         }
@@ -384,9 +387,9 @@ async fn run_async_command(
             if let Some(transformed_result) =
                 transform_response(&result, &contract_class, &selector)
             {
-                process_command_result("call", Ok(transformed_result), ui, None);
+                process_command_result("call", Ok(transformed_result), numbers_format, ui, None);
             } else {
-                process_command_result("call", result, ui, None);
+                process_command_result("call", result, numbers_format, ui, None);
             }
 
             Ok(())
@@ -441,7 +444,7 @@ async fn run_async_command(
                 config.block_explorer,
             );
 
-            process_command_result("invoke", result, ui, block_explorer_link);
+            process_command_result("invoke", result, numbers_format, ui, block_explorer_link);
 
             Ok(())
         }
@@ -455,7 +458,7 @@ async fn run_async_command(
                             new.overwrite,
                         );
 
-                        process_command_result("multicall new", result, ui, None);
+                        process_command_result("multicall new", result, numbers_format, ui, None);
                     } else {
                         println!("{DEFAULT_MULTICALL_CONTENTS}");
                     }
@@ -481,7 +484,13 @@ async fn run_async_command(
                         config.show_explorer_links,
                         config.block_explorer,
                     );
-                    process_command_result("multicall run", result, ui, block_explorer_link);
+                    process_command_result(
+                        "multicall run",
+                        result,
+                        numbers_format,
+                        ui,
+                        block_explorer_link,
+                    );
                 }
             }
             Ok(())
@@ -511,7 +520,7 @@ async fn run_async_command(
                     }
                 }
 
-                process_command_result("account import", result, ui, None);
+                process_command_result("account import", result, numbers_format, ui, None);
                 Ok(())
             }
 
@@ -545,7 +554,13 @@ async fn run_async_command(
                     config.block_explorer,
                 );
 
-                process_command_result("account create", result, ui, block_explorer_link);
+                process_command_result(
+                    "account create",
+                    result,
+                    numbers_format,
+                    ui,
+                    block_explorer_link,
+                );
 
                 Ok(())
             }
@@ -589,7 +604,13 @@ async fn run_async_command(
                     config.show_explorer_links,
                     config.block_explorer,
                 );
-                process_command_result("account deploy", result, ui, block_explorer_link);
+                process_command_result(
+                    "account deploy",
+                    result,
+                    numbers_format,
+                    ui,
+                    block_explorer_link,
+                );
 
                 Ok(())
             }
@@ -605,7 +626,7 @@ async fn run_async_command(
                     delete.yes,
                 );
 
-                process_command_result("account delete", result, ui, None);
+                process_command_result("account delete", result, numbers_format, ui, None);
                 Ok(())
             }
 
@@ -628,7 +649,7 @@ async fn run_async_command(
             )
             .await;
 
-            process_command_result("show-config", result, ui, None);
+            process_command_result("show-config", result, numbers_format, ui, None);
 
             Ok(())
         }
@@ -641,7 +662,7 @@ async fn run_async_command(
                     .await
                     .context("Failed to get transaction status");
 
-            process_command_result("tx-status", result, ui, None);
+            process_command_result("tx-status", result, numbers_format, ui, None);
             Ok(())
         }
 
@@ -665,7 +686,7 @@ async fn run_async_command(
             )
             .await;
 
-            process_command_result("verify", result, ui, None);
+            process_command_result("verify", result, numbers_format, ui, None);
             Ok(())
         }
 
@@ -678,11 +699,17 @@ async fn run_async_command(
     }
 }
 
-fn run_script_command(cli: &Cli, runtime: Runtime, script: &Script, ui: &Ui) -> Result<()> {
+fn run_script_command(
+    cli: &Cli,
+    runtime: Runtime,
+    script: &Script,
+    numbers_format: NumbersFormat,
+    ui: &Ui,
+) -> Result<()> {
     match &script.command {
         starknet_commands::script::Commands::Init(init) => {
             let result = starknet_commands::script::init::init(init);
-            process_command_result("script init", result, ui, None);
+            process_command_result("script init", result, numbers_format, ui, None);
         }
         starknet_commands::script::Commands::Run(run) => {
             let manifest_path = assert_manifest_path_exists()?;
@@ -736,7 +763,7 @@ fn run_script_command(cli: &Cli, runtime: Runtime, script: &Script, ui: &Ui) -> 
                 state_file_path,
             );
 
-            process_command_result("script run", result, ui, None);
+            process_command_result("script run", result, numbers_format, ui, None);
         }
     }
 
@@ -819,12 +846,20 @@ fn transform_response(
 fn process_command_result<T>(
     command: &str,
     result: Result<T>,
+    numbers_format: NumbersFormat,
     ui: &Ui,
     block_explorer_link: Option<String>,
 ) where
-    T: Message + serde::Serialize,
+    T: serde::Serialize + Clone + CommandResponse,
+    CastMessage<T>: Message + Serialize,
 {
-    match result {
+    let cast_msg = result.map(|message| CastMessage {
+        command: command.to_string(),
+        numbers_format,
+        message,
+    });
+
+    match cast_msg {
         Ok(response) => {
             ui.print(&response);
             if let Some(link) = block_explorer_link {
