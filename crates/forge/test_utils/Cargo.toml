@@ -25,3 +25,4 @@ forge = { path = "../../forge" }
 scarb-api = { path = "../../scarb-api" }
 forge_runner = { path = "../../forge-runner" }
 cheatnet = { path = "../../cheatnet" }
+foundry-ui = { path = "../../foundry-ui" }

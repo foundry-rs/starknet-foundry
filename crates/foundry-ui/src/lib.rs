@@ -10,7 +10,7 @@ pub mod message;
 /// colour, etc.
 ///
 /// All human-oriented messaging (basically all writes to `stdout`) must go through this object.
-#[derive(Debug)]
+#[derive(Debug, Default, Clone)]
 pub struct Ui {
     output_format: OutputFormat,
     numbers_format: NumbersFormat,
@@ -18,6 +18,7 @@ pub struct Ui {
 
 impl Ui {
     /// Create a new [`Ui`] instance configured with the given output format and numbers format.
+    #[must_use]
     pub fn new(output_format: OutputFormat, numbers_format: NumbersFormat) -> Self {
         Self {
             output_format,
@@ -26,16 +27,18 @@ impl Ui {
     }
 
     /// Get the output format of this [`Ui`] instance.
+    #[must_use]
     pub fn output_format(&self) -> OutputFormat {
         self.output_format
     }
 
     /// Get the numbers format of this [`Ui`] instance.
+    #[must_use]
     pub fn numbers_format(&self) -> NumbersFormat {
         self.numbers_format
     }
 
-    pub fn print<T: Message>(&self, message: &T)
+    pub fn print<T>(&self, message: &T)
     where
         T: Message + serde::Serialize,
     {
@@ -45,7 +48,7 @@ impl Ui {
         }
     }
 
-    pub fn print_as_err<T: Message>(&self, message: &T)
+    pub fn print_as_err<T>(&self, message: &T)
     where
         T: Message + serde::Serialize,
     {
@@ -55,11 +58,11 @@ impl Ui {
         }
     }
 
-    pub fn print_warning(&self, message: &str) {
-        self.print(&TaggedMessage::styled(
-            "WARNING",
-            message.as_ref(),
-            "yellow",
-        ))
+    pub fn print_warning(&self, text: &str) {
+        self.print(&TaggedMessage::styled("WARNING", text, "yellow"));
+    }
+
+    pub fn print_error(&self, text: &str) {
+        self.print(&TaggedMessage::styled("ERROR", text, "red"));
     }
 }

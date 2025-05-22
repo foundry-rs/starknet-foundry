@@ -1,5 +1,6 @@
 use anyhow::{Context, Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
+use foundry_ui::Ui;
 use scarb_api::{
     ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
     get_contracts_artifacts_and_source_sierra_paths,
@@ -7,7 +8,7 @@ use scarb_api::{
     target_dir_for_workspace,
 };
 use scarb_ui::args::PackagesFilter;
-use shared::{command::CommandExt, print::print_as_warning};
+use shared::command::CommandExt;
 use std::collections::HashMap;
 use std::env;
 use std::str::FromStr;
@@ -155,6 +156,7 @@ pub fn build_and_load_artifacts(
     package: &PackageMetadata,
     config: &BuildConfig,
     build_for_script: bool,
+    ui: &Ui,
 ) -> Result<HashMap<String, StarknetContractArtifacts>> {
     // TODO (#2042): Remove this logic, always use release as default
     let default_profile = if build_for_script { "dev" } else { "release" };
@@ -169,19 +171,21 @@ pub fn build_and_load_artifacts(
             &target_dir.join(&config.profile),
             package,
             false,
+            ui
         ).context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
         .into_iter()
         .map(|(name, (artifacts, _))| (name, artifacts))
         .collect())
     } else {
         let profile = &config.profile;
-        print_as_warning(&anyhow!(
+        ui.print_warning(&format!(
             "Profile {profile} does not exist in scarb, using '{default_profile}' profile."
         ));
         Ok(get_contracts_artifacts_and_source_sierra_paths(
             &target_dir.join(default_profile),
             package,
             false,
+            ui
         ).context("Failed to load artifacts. Make sure you have enabled sierra code generation in Scarb.toml")?
         .into_iter()
         .map(|(name, (artifacts, _))| (name, artifacts))

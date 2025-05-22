@@ -1,4 +1,5 @@
 use forge_runner::forge_config::ForgeTrackedResource;
+use foundry_ui::Ui;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::node_url::node_rpc_url;
 use std::path::Path;
@@ -51,7 +52,8 @@ fn store_load_simple() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -101,7 +103,8 @@ fn store_load_wrong_selector() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -148,7 +151,8 @@ fn store_load_wrong_data_length() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -223,7 +227,8 @@ fn store_load_max_boundaries_input() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_failed(&result);
     assert_case_output_contains(
@@ -328,7 +333,8 @@ fn store_load_structure() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -417,7 +423,8 @@ fn store_load_felt_to_structure() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -497,7 +504,8 @@ fn store_load_structure_to_felt() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -556,7 +564,8 @@ fn store_load_felt_to_felt() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -595,7 +604,8 @@ fn fork_store_load() {
         node_rpc_url()
     ).as_str());
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }

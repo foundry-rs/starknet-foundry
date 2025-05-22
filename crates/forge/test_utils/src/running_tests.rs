@@ -13,6 +13,7 @@ use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
 };
 use forge_runner::test_target_summary::TestTargetSummary;
+use foundry_ui::Ui;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use std::num::NonZeroU32;
 use std::sync::Arc;
@@ -23,6 +24,7 @@ use tokio::runtime::Runtime;
 pub fn run_test_case(
     test: &TestCase,
     tracked_resource: ForgeTrackedResource,
+    ui: &Ui,
 ) -> Vec<TestTargetSummary> {
     ScarbCommand::new_with_stdio()
         .current_dir(test.path().unwrap())
@@ -68,7 +70,7 @@ pub fn run_test_case(
                     cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
                         .unwrap()
                         .join(CACHE_DIR),
-                    contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
+                    contracts_data: ContractsData::try_from(test.contracts(ui).unwrap()).unwrap(),
                     tracked_resource,
                     environment_variables: test.env().clone(),
                 }),
@@ -81,6 +83,7 @@ pub fn run_test_case(
         },
         &mut BlockNumberMap::default(),
         Option::default(),
+        ui,
     ))
     .expect("Runner fail")
 }

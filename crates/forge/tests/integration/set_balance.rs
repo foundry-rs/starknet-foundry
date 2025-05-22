@@ -1,4 +1,5 @@
 use forge_runner::forge_config::ForgeTrackedResource;
+use foundry_ui::Ui;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::node_url::node_rpc_url;
 use std::path::Path;
@@ -44,7 +45,8 @@ fn test_set_balance_strk() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -105,7 +107,8 @@ fn test_set_balance_custom_token() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -153,7 +156,8 @@ fn test_set_balance_big_amount() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -202,7 +206,8 @@ fn test_set_balance_strk_with_fork() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -239,7 +244,8 @@ fn test_set_balance_strk_with_disabled_predeployment() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_failed(&result);
     assert_case_output_contains(

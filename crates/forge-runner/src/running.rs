@@ -28,6 +28,7 @@ use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredErrors, ExtendedStateReader,
 };
 use execution::finalize_execution;
+use foundry_ui::Ui;
 use hints::hints_by_representation;
 use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
@@ -65,6 +66,7 @@ pub fn run_test(
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
     trace_verbosity: Option<TraceVerbosity>,
+    ui: Ui,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -93,6 +95,7 @@ pub fn run_test(
             &test_runner_config.contracts_data,
             &versioned_program_path,
             trace_verbosity,
+            &ui,
         )
     })
 }
@@ -107,6 +110,7 @@ pub(crate) fn run_fuzz_test(
     fuzzing_send: Sender<()>,
     rng: Arc<Mutex<StdRng>>,
     trace_verbosity: Option<TraceVerbosity>,
+    ui: Ui,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -136,6 +140,7 @@ pub(crate) fn run_fuzz_test(
             &test_runner_config.contracts_data,
             &versioned_program_path,
             trace_verbosity,
+            &ui,
         )
     })
 }
@@ -383,6 +388,7 @@ fn extract_test_case_summary(
     contracts_data: &ContractsData,
     versioned_program_path: &Utf8Path,
     trace_verbosity: Option<TraceVerbosity>,
+    ui: &Ui,
 ) -> TestCaseSummary<Single> {
     match run_result {
         Ok(run_result) => match run_result {
@@ -392,6 +398,7 @@ fn extract_test_case_summary(
                 contracts_data,
                 versioned_program_path,
                 trace_verbosity,
+                ui,
             ),
             RunResult::Error(run_error) => {
                 let mut message = format!(

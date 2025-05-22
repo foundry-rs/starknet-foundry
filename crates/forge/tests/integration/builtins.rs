@@ -1,4 +1,5 @@
 use forge_runner::forge_config::ForgeTrackedResource;
+use foundry_ui::Ui;
 use indoc::indoc;
 use test_utils::runner::assert_passed;
 use test_utils::running_tests::run_test_case;
@@ -30,7 +31,8 @@ fn builtin_test() {
         "
     ));
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }

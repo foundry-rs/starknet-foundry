@@ -1,4 +1,5 @@
 use forge_runner::forge_config::ForgeTrackedResource;
+use foundry_ui::Ui;
 use indoc::indoc;
 use std::path::Path;
 use test_utils::runner::{Contract, assert_passed};
@@ -96,7 +97,8 @@ fn start_and_stop_cheat_transaction_hash_single_attribute() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -269,7 +271,8 @@ fn start_cheat_execution_info_all_attributes_mocked() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -345,7 +348,8 @@ fn start_cheat_transaction_hash_cancel_mock_by_setting_attribute_to_none() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -398,7 +402,8 @@ fn start_cheat_transaction_hash_multiple() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -532,7 +537,8 @@ fn start_cheat_execution_info_all() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -597,7 +603,8 @@ fn start_cheat_transaction_hash_complex() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -707,7 +714,8 @@ fn cheat_transaction_hash_with_span() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }

@@ -4,6 +4,7 @@ use anyhow::{Context, Error, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use conversions::serde::serialize::CairoSerialize;
+use foundry_ui::Ui;
 use helpers::braavos::assert_non_braavos_account;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::RngCore;
@@ -561,8 +562,9 @@ pub async fn wait_for_tx(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: Felt,
     wait_params: ValidatedWaitParams,
+    ui: &Ui,
 ) -> Result<String, WaitForTransactionError> {
-    println!("Transaction hash: {tx_hash:#x}");
+    ui.print(&format!("Transaction hash: {tx_hash:#x}"));
 
     let retries = wait_params.get_retries();
     for i in (1..retries).rev() {
@@ -590,12 +592,12 @@ pub async fn wait_for_tx(
             Ok(starknet::core::types::TransactionStatus::Received)
             | Err(StarknetError(TransactionHashNotFound)) => {
                 let remaining_time = wait_params.remaining_time(i);
-                println!(
+                ui.print(&format!(
                     "Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)"
-                );
+                ));
             }
             Err(ProviderError::RateLimited) => {
-                println!("Request rate limited while waiting for transaction to be accepted");
+                ui.print(&"Request rate limited while waiting for transaction to be accepted");
                 sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
             }
             Err(err) => return Err(WaitForTransactionError::ProviderError(err.into())),
@@ -629,9 +631,10 @@ pub async fn handle_wait_for_tx<T>(
     transaction_hash: Felt,
     return_value: T,
     wait_config: WaitForTx,
+    ui: &Ui,
 ) -> Result<T, WaitForTransactionError> {
     if wait_config.wait {
-        return match wait_for_tx(provider, transaction_hash, wait_config.wait_params).await {
+        return match wait_for_tx(provider, transaction_hash, wait_config.wait_params, ui).await {
             Ok(_) => Ok(return_value),
             Err(error) => Err(error),
         };

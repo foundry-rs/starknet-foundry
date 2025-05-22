@@ -242,7 +242,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
 
     match cli.command {
         Commands::Declare(declare) => {
-            let provider = declare.rpc.get_provider(&config).await?;
+            let provider = declare.rpc.get_provider(&config, ui).await?;
 
             let account = get_account(
                 &config.account,
@@ -261,6 +261,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
                     profile: cli.profile.unwrap_or("release".to_string()),
                 },
                 false,
+                ui,
             )
             .expect("Failed to build contract");
             let result = starknet_commands::declare::declare(
@@ -302,7 +303,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
                 ..
             } = deploy;
 
-            let provider = rpc.get_provider(&config).await?;
+            let provider = rpc.get_provider(&config, ui).await?;
 
             let account = get_account(
                 &config.account,
@@ -352,7 +353,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
             block_id,
             rpc,
         }) => {
-            let provider = rpc.get_provider(&config).await?;
+            let provider = rpc.get_provider(&config, ui).await?;
 
             let block_id = get_block_id(&block_id)?;
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
@@ -395,7 +396,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
                 ..
             } = invoke;
 
-            let provider = rpc.get_provider(&config).await?;
+            let provider = rpc.get_provider(&config, ui).await?;
 
             let account = get_account(
                 &config.account,
@@ -453,7 +454,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
                     }
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
-                    let provider = run.rpc.get_provider(&config).await?;
+                    let provider = run.rpc.get_provider(&config, ui).await?;
 
                     let account = get_account(
                         &config.account,
@@ -481,7 +482,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
 
         Commands::Account(account) => match account.command {
             account::Commands::Import(import) => {
-                let provider = import.rpc.get_provider(&config).await?;
+                let provider = import.rpc.get_provider(&config, ui).await?;
                 let result = account::import::import(
                     import.name.clone(),
                     &config.accounts_file,
@@ -508,7 +509,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
             }
 
             account::Commands::Create(create) => {
-                let provider = create.rpc.get_provider(&config).await?;
+                let provider = create.rpc.get_provider(&config, ui).await?;
 
                 let chain_id = get_chain_id(&provider).await?;
                 let account = if config.keystore.is_none() {
@@ -543,7 +544,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
             }
 
             account::Commands::Deploy(deploy) => {
-                let provider = deploy.rpc.get_provider(&config).await?;
+                let provider = deploy.rpc.get_provider(&config, ui).await?;
 
                 let fee_args = deploy.fee_args.clone();
 
@@ -588,7 +589,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
 
             account::Commands::Delete(delete) => {
                 let network_name =
-                    starknet_commands::account::delete::get_network_name(&delete, &config).await?;
+                    starknet_commands::account::delete::get_network_name(&delete, &config, ui)
+                        .await?;
 
                 let result = starknet_commands::account::delete::delete(
                     &delete.name,
@@ -610,7 +612,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
         },
 
         Commands::ShowConfig(show) => {
-            let provider = show.rpc.get_provider(&config).await.ok();
+            let provider = show.rpc.get_provider(&config, ui).await.ok();
 
             let result = starknet_commands::show_config::show_config(
                 &show,
@@ -626,7 +628,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
         }
 
         Commands::TxStatus(tx_status) => {
-            let provider = tx_status.rpc.get_provider(&config).await?;
+            let provider = tx_status.rpc.get_provider(&config, ui).await?;
 
             let result =
                 starknet_commands::tx_status::tx_status(&provider, tx_status.transaction_hash)
@@ -648,6 +650,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
                     profile: cli.profile.unwrap_or("release".to_string()),
                 },
                 false,
+                ui,
             )
             .expect("Failed to build contract");
             let result = starknet_commands::verify::verify(
@@ -673,7 +676,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &Ui) -> Result<()> 
 fn run_script_command(cli: &Cli, runtime: Runtime, script: &Script, ui: &Ui) -> Result<()> {
     match &script.command {
         starknet_commands::script::Commands::Init(init) => {
-            let result = starknet_commands::script::init::init(init);
+            let result = starknet_commands::script::init::init(init, ui);
             process_command_result("script init", result, ui, None);
         }
         starknet_commands::script::Commands::Run(run) => {
@@ -682,7 +685,7 @@ fn run_script_command(cli: &Cli, runtime: Runtime, script: &Script, ui: &Ui) -> 
 
             let config = get_cast_config(cli)?;
 
-            let provider = runtime.block_on(run.rpc.get_provider(&config))?;
+            let provider = runtime.block_on(run.rpc.get_provider(&config, ui))?;
 
             let mut artifacts = build_and_load_artifacts(
                 &package_metadata,
@@ -692,6 +695,7 @@ fn run_script_command(cli: &Cli, runtime: Runtime, script: &Script, ui: &Ui) -> 
                     profile: cli.profile.clone().unwrap_or("dev".to_string()),
                 },
                 true,
+                ui,
             )
             .expect("Failed to build artifacts");
             // TODO(#2042): remove duplicated compilation
@@ -726,6 +730,7 @@ fn run_script_command(cli: &Cli, runtime: Runtime, script: &Script, ui: &Ui) -> 
                 runtime,
                 &config,
                 state_file_path,
+                ui,
             );
 
             process_command_result("script run", result, ui, None);

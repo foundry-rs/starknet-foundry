@@ -242,6 +242,7 @@ async fn deploy_account<T>(
     fee_args: FeeArgs,
     wait_config: WaitForTx,
     class_hash: Felt,
+    ui: &Ui,
 ) -> Result<InvokeResponse>
 where
     T: AccountFactory + Sync,
@@ -296,6 +297,7 @@ where
                 result.transaction_hash,
                 return_value.clone(),
                 wait_config,
+                ui,
             )
             .await
             {

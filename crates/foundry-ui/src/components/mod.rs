@@ -2,5 +2,7 @@
 //! a [`Ui`][crate::Ui].
 
 pub use tagged::*;
+pub use typed::*;
 
 mod tagged;
+mod typed;

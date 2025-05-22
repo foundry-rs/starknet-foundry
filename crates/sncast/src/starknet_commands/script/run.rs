@@ -24,6 +24,7 @@ use clap::Args;
 use conversions::byte_array::ByteArray;
 use conversions::serde::deserialize::BufferReader;
 use forge_runner::running::{has_segment_arena, syscall_handler_offset};
+use foundry_ui::Ui;
 use runtime::starknet::context::{SerializableBlockInfo, build_context};
 use runtime::starknet::state::DictStateReader;
 use runtime::{
@@ -34,7 +35,6 @@ use scarb_api::{StarknetContractArtifacts, package_matches_version_requirement};
 use scarb_metadata::{Metadata, PackageMetadata};
 use script_runtime::CastScriptRuntime;
 use semver::{Comparator, Op, Version, VersionReq};
-use shared::print::print_as_warning;
 use shared::utils::build_readable_text;
 use sncast::get_nonce;
 use sncast::helpers::configuration::CastConfig;
@@ -284,8 +284,10 @@ pub fn run(
     tokio_runtime: Runtime,
     config: &CastConfig,
     state_file_path: Option<Utf8PathBuf>,
+    ui: &Ui,
 ) -> Result<ScriptRunResponse> {
-    warn_if_sncast_std_not_compatible(metadata)?;
+    warn_if_sncast_std_not_compatible(metadata, ui)?;
+
     let artifacts = inject_lib_artifact(metadata, package_metadata, artifacts)?;
 
     let artifact = artifacts
@@ -423,16 +425,14 @@ fn sncast_std_version_requirement() -> VersionReq {
     }
 }
 
-fn warn_if_sncast_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
+fn warn_if_sncast_std_not_compatible(scarb_metadata: &Metadata, ui: &Ui) -> Result<()> {
     let sncast_std_version_requirement = sncast_std_version_requirement();
     if !package_matches_version_requirement(
         scarb_metadata,
         "sncast_std",
         &sncast_std_version_requirement,
     )? {
-        print_as_warning(&anyhow!(
-            "Package sncast_std version does not meet the recommended version requirement {sncast_std_version_requirement}, it might result in unexpected behaviour"
-        ));
+        ui.print_warning(&format!("Package sncast_std version does not meet the recommended version requirement {sncast_std_version_requirement}, it might result in unexpected behaviour"));
     }
     Ok(())
 }
