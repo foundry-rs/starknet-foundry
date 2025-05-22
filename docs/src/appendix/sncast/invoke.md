@@ -5,7 +5,7 @@ Send an invoke transaction to Starknet.
 
 * [`account`](./common.md#--account--a-account_name)
 
-## `--contract-address, -a <CONTRACT_ADDRESS>`
+## `--contract-address, -d <CONTRACT_ADDRESS>`
 Required.
 
 The address of the contract being called in hex (prefixed with '0x') or decimal representation.

@@ -86,7 +86,7 @@ struct Cli {
     account: Option<String>,
 
     /// Path to the file holding accounts info
-    #[arg(long = "accounts-file")]
+    #[arg(short = 'f', long = "accounts-file")]
     accounts_file_path: Option<Utf8PathBuf>,
 
     /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
