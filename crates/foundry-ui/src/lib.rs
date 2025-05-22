@@ -1,5 +1,7 @@
+use components::TaggedMessage;
 pub use message::*;
 
+pub mod components;
 pub mod message;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -63,5 +65,15 @@ impl Ui {
             OutputFormat::Human => message.print_human(true),
             OutputFormat::Json => message.print_json(true),
         }
+    }
+
+    /// Print a warning message to stdout using the configured output format.
+    pub fn print_warning(&self, text: &str) {
+        self.print(&TaggedMessage::styled("WARNING", text, "yellow"));
+    }
+
+    /// Print an error message to stdout using the configured output format.
+    pub fn print_error(&self, text: &str) {
+        self.print(&TaggedMessage::styled("ERROR", text, "red"));
     }
 }

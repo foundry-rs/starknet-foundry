@@ -2588,6 +2588,7 @@ name = "foundry-ui"
 version = "0.43.0"
 dependencies = [
  "anyhow",
+ "console",
  "serde",
  "serde_json",
  "starknet-types-core",
