@@ -3,6 +3,7 @@ use crate::attributes::internal_config_statement::InternalConfigStatementCollect
 use crate::attributes::test::TestCollector;
 use crate::attributes::AttributeInfo;
 use crate::common::{into_proc_macro_result, with_parsed_values};
+use crate::format_ident;
 use crate::utils::{create_single_token, get_statements, SyntaxNodeUtils};
 use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
@@ -98,10 +99,8 @@ fn fuzzer_wrapper_internal(
         }
     });
 
-    let actual_body_fn_name = TokenStream::new(vec![create_single_token(format!(
-        "{}_actual_body",
-        func.declaration(db).name(db).text(db)
-    ))]);
+    let actual_body_fn_name =
+        format_ident!("{}_actual_body", func.declaration(db).name(db).text(db));
 
     let (statements, if_content) = get_statements(db, func);
 

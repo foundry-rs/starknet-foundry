@@ -5,6 +5,7 @@ use crate::utils::create_single_token;
 use crate::{
     args::Arguments,
     common::{into_proc_macro_result, with_parsed_values},
+    format_ident,
 };
 use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
@@ -65,10 +66,8 @@ fn test_internal(
     let attributes = func.attributes(db).as_syntax_node();
     let attributes = SyntaxNodeWithDb::new(&attributes, db);
 
-    let name_return_wrapper = create_single_token(format!(
-        "{}_return_wrapper",
-        func.declaration(db).name(db).text(db)
-    ));
+    let name_return_wrapper =
+        format_ident!("{}_return_wrapper", func.declaration(db).name(db).text(db));
 
     let mut return_wrapper = TokenStream::new(vec![name_return_wrapper.clone()]);
     return_wrapper.extend(signature);

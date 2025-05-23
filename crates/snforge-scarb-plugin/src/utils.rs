@@ -142,3 +142,15 @@ pub fn get_statements(
 
     (statements, if_content.unwrap_or_else(TokenStream::empty))
 }
+
+#[macro_export]
+macro_rules! format_ident {
+    ($name:literal $(,$formats:expr),*) => {
+        {
+            use cairo_lang_macro::{TextSpan, Token, TokenTree};
+
+            let content = format!($name,$($formats),*);
+            TokenTree::Ident(Token::new(content, TextSpan::call_site()))
+        }
+    };
+}
