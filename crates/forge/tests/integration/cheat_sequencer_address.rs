@@ -1,4 +1,5 @@
 use forge_runner::forge_config::ForgeTrackedResource;
+use foundry_ui::Ui;
 use indoc::indoc;
 use std::path::Path;
 use test_utils::runner::{Contract, assert_passed};
@@ -133,7 +134,8 @@ fn cheat_sequencer_address_basic() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -210,7 +212,8 @@ fn cheat_sequencer_address_complex() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }
@@ -307,7 +310,8 @@ fn cheat_sequencer_address_with_span() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 }

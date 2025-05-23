@@ -3,7 +3,8 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::string::IntoDecStr;
 use conversions::string::IntoHexStr;
-use foundry_ui::OutputFormat;
+use foundry_ui::Message;
+use foundry_ui::Ui;
 use itertools::Itertools;
 use serde::Deserialize;
 use serde::Serialize;
@@ -11,7 +12,7 @@ use sncast::AccountType;
 use sncast::NumbersFormat;
 use sncast::{AccountData, NestedMap, check_account_file_exists, read_and_parse_json_file};
 use std::collections::HashMap;
-use std::fmt::Display;
+use std::fmt::Write;
 
 #[derive(Args, Debug)]
 #[command(
@@ -105,51 +106,34 @@ fn read_and_flatten(
     Ok(result)
 }
 
-fn print_as_json(networks: &HashMap<String, AccountDataRepresentation>) -> anyhow::Result<()> {
-    let json = serde_json::to_string_pretty(networks)?;
-    print!("{json}");
+impl Message for AccountDataRepresentation {
+    fn text(&self) -> String {
+        let mut result = String::new();
+        let _ = writeln!(result, "public key: {}", self.public_key);
 
-    Ok(())
-}
+        if let Some(ref private_key) = self.private_key {
+            let _ = writeln!(result, "private key: {private_key}");
+        }
+        if let Some(ref address) = self.address {
+            let _ = writeln!(result, "address: {address}");
+        }
+        if let Some(ref salt) = self.salt {
+            let _ = writeln!(result, "salt: {salt}");
+        }
+        if let Some(ref class_hash) = self.class_hash {
+            let _ = writeln!(result, "class hash: {class_hash}");
+        }
+        if let Some(ref deployed) = self.deployed {
+            let _ = writeln!(result, "deployed: {deployed}");
+        }
+        if let Some(ref legacy) = self.legacy {
+            let _ = writeln!(result, "legacy: {legacy}");
+        }
+        if let Some(ref account_type) = self.account_type {
+            let _ = writeln!(result, "type: {account_type}");
+        }
 
-fn print_if_some<T: Display>(title: &str, item: Option<&T>) {
-    if let Some(item) = item {
-        println!("  {title}: {item}");
-    }
-}
-
-fn print_pretty(data: &AccountDataRepresentation, name: &str) {
-    println!("- {name}:");
-    print_if_some("network", data.network.as_ref());
-    print_if_some("private key", data.private_key.as_ref());
-    println!("  public key: {}", data.public_key);
-    print_if_some("address", data.address.as_ref());
-    print_if_some("salt", data.salt.as_ref());
-    print_if_some("class hash", data.class_hash.as_ref());
-    print_if_some("deployed", data.deployed.as_ref());
-    print_if_some("legacy", data.legacy.as_ref());
-    print_if_some("type", data.account_type.as_ref());
-    println!();
-}
-
-fn print_as_human(
-    accounts: &HashMap<String, AccountDataRepresentation>,
-    accounts_file_path: &str,
-    display_private_keys: bool,
-) {
-    if accounts.is_empty() {
-        println!("No accounts available at {accounts_file_path}");
-        return;
-    }
-
-    println!("Available accounts (at {accounts_file_path}):");
-
-    for (name, data) in accounts.iter().sorted_by_key(|(name, _)| *name) {
-        print_pretty(data, name);
-    }
-
-    if !display_private_keys {
-        println!("\nTo show private keys too, run with --display-private-keys or -p");
+        result.trim_end().to_string()
     }
 }
 
@@ -157,7 +141,7 @@ pub fn print_account_list(
     accounts_file: &Utf8PathBuf,
     display_private_keys: bool,
     numbers_format: NumbersFormat,
-    output_format: OutputFormat,
+    ui: &Ui,
 ) -> anyhow::Result<()> {
     check_account_file_exists(accounts_file)?;
 
@@ -166,11 +150,23 @@ pub fn print_account_list(
         .to_str()
         .context("Failed to resolve an absolute path to the accounts file")?;
 
-    let networks = read_and_flatten(accounts_file, display_private_keys, numbers_format)?;
+    let accounts = read_and_flatten(accounts_file, display_private_keys, numbers_format)?;
 
-    match output_format {
-        OutputFormat::Json => print_as_json(&networks)?,
-        OutputFormat::Human => print_as_human(&networks, accounts_file_path, display_private_keys),
+    if accounts.is_empty() {
+        ui.print(&format!("No accounts available at {accounts_file_path}"));
+        return Ok(());
+    }
+
+    ui.print(&format!("Available accounts (at {accounts_file_path}):"));
+
+    for (name, data) in accounts.iter().sorted_by_key(|(name, _)| *name) {
+        ui.print(&format!("- {name}:"));
+        ui.print(data);
+        ui.print(&"");
+    }
+
+    if !display_private_keys {
+        ui.print(&"\nTo show private keys too, run with --display-private-keys or -p");
     }
 
     Ok(())

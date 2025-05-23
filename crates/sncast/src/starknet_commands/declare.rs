@@ -2,6 +2,7 @@ use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
+use foundry_ui::Ui;
 use scarb_api::StarknetContractArtifacts;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
@@ -52,6 +53,7 @@ pub async fn declare(
     artifacts: &HashMap<String, StarknetContractArtifacts>,
     wait_config: WaitForTx,
     skip_on_already_declared: bool,
+    ui: &Ui,
 ) -> Result<DeclareResponse, StarknetCommandError> {
     let contract_artifacts =
         artifacts
@@ -122,6 +124,7 @@ pub async fn declare(
                 transaction_hash: transaction_hash.into_(),
             }),
             wait_config,
+            ui,
         )
         .await
         .map_err(StarknetCommandError::from),

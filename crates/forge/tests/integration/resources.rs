@@ -4,6 +4,7 @@ use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector::{
 };
 use cairo_vm::types::builtin_name::BuiltinName;
 use forge_runner::forge_config::ForgeTrackedResource;
+use foundry_ui::Ui;
 use indoc::indoc;
 use std::path::Path;
 use test_utils::runner::{Contract, assert_builtin, assert_passed, assert_syscall};
@@ -49,7 +50,8 @@ fn builtins_count() {
         "
     ));
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 
@@ -140,7 +142,8 @@ fn syscalls_count() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
 
@@ -194,7 +197,8 @@ fn accumulate_syscalls() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
 
     assert_passed(&result);
     assert_syscall(&result, "single_write", StorageWrite, 1);
@@ -227,7 +231,8 @@ fn estimation_includes_os_resources() {
         "
     ));
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
     assert_passed(&result);
     // Cost of storage write in builtins is 1 range check and 89 steps
     // Steps are pretty hard to verify so this test is based on range check diff
@@ -268,7 +273,8 @@ fn deploy_with_constructor_calldata() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let ui = Ui::default();
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
     assert_passed(&result);
 
     assert_syscall(&result, "deploy_with_syscall", Deploy, 1);
