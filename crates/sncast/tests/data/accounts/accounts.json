@@ -120,7 +120,7 @@
             "public_key": "0x04d2c00e488819b43a09d720694fe97aa44054803f411bdc93d6b22d548f69a2",
             "salt": "0x50d1de0aa965925d611a0d52142f22f6fd0a664838b213da4621f8d70230b40"
         },
-        "braavos": {
+        "braavos_old": {
             "address": "0x2bcefefb391c0e87170c6200e762f3e6aa8610a2e27fc51cc30d4a403b30549",
             "class_hash": "0x816dd0297efc55dc1e7559020a3a825e81ef734b558f03c83325d4da7e6253",
             "deployed": false,
@@ -128,6 +128,16 @@
             "private_key": "0x6a14df4b659ec3bd2c00660878202b2527cd854af3d76cc03127e6f94505032",
             "public_key": "0x515f196ae6e5c062ed82d3182a6115faf9117450ac3f1b1daeb67bda0580c26",
             "salt": "0x5bb823302091cf89",
+            "type": "braavos"
+        },
+        "braavos": {
+            "address": "0x2235bf96ef3f88915e3537f9a692977f5caf10b728dd95b0a3ccca2282fbb9b",
+            "class_hash": "0x3957f9f5a1cbfe918cedc2015c85200ca51a5f7506ecb6de98a5207b759bf8a",
+            "deployed": false,
+            "legacy": false,
+            "private_key": "0x18201c12f4742c34655c5e41dba442afbe95fdeb018f8581d1b39b06824affe",
+            "public_key": "0x222c9fa27a71f007fc04da4dad684fa6a2b7328c002788089920b53c16ea374",
+            "salt": "0x76210f283afb4f88",
             "type": "braavos"
         },
         "oz": {

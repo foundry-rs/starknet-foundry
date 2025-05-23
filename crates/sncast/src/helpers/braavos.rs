@@ -9,9 +9,7 @@ use starknet::{
 use starknet_crypto::poseidon_hash_many;
 use starknet_types_core::felt::Felt;
 
-use crate::AccountType;
-
-use super::constants::BRAAVOS_CLASS_HASHES;
+use super::constants::BRAAVOS_OLD_CLASS_HASHES;
 
 // Adapted from strakli as there is currently no implementation of braavos account factory in starknet-rs
 pub struct BraavosAccountFactory<S, P> {
@@ -146,19 +144,12 @@ where
     }
 }
 
-pub fn assert_non_braavos_account(
-    account_type: Option<AccountType>,
-    class_hash: Option<Felt>,
-) -> Result<(), Error> {
-    let msg = "Using Braavos accounts is temporarily disabled because they don't yet work with starknet 0.13.5.
+pub fn check_braavos_account_compatibility(class_hash: Felt) -> Result<(), Error> {
+    let msg = "Using incompatible Braavos accounts is disabled because they don't work with starknet 0.13.5.
     Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3";
 
-    if let Some(AccountType::Braavos) = account_type {
+    if BRAAVOS_OLD_CLASS_HASHES.contains(&class_hash) {
         bail!(msg)
-    } else if let Some(class_hash) = class_hash {
-        if BRAAVOS_CLASS_HASHES.contains(&class_hash) {
-            bail!(msg)
-        }
     }
     Ok(())
 }
