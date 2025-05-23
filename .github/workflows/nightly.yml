@@ -1,0 +1,187 @@
+name: Nightly
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run"
+        type: boolean
+        default: true
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      nightly_tag: ${{ steps.version.outputs.nightly_tag }}
+      nightly_version: ${{ steps.version.outputs.nightly_version }}
+      nightly_branch: ${{ steps.version.outputs.nightly_branch }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure Git for committing
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+      - name: Determine nightly version
+        id: version
+        shell: bash
+
+        run: |
+          NIGHTLY_TAG="nightly-$(date -u +%Y-%m-%d)"
+          NIGHTLY_BRANCH="nightly/tmp/$NIGHTLY_TAG"
+          
+          CURR_VERSION=$(grep '^version' Cargo.toml | cut -d '"' -f2)
+          NIGHTLY_VERSION="${CURR_VERSION}+${NIGHTLY_TAG}"
+
+          echo "NIGHTLY_TAG=$NIGHTLY_TAG" >> $GITHUB_ENV
+          echo "NIGHTLY_VERSION=$NIGHTLY_VERSION" >> $GITHUB_ENV
+          echo "NIGHTLY_BRANCH=$NIGHTLY_BRANCH" >> $GITHUB_ENV
+
+          echo "nightly_tag=$NIGHTLY_TAG" >> $GITHUB_OUTPUT
+          echo "nightly_version=$NIGHTLY_VERSION" >> $GITHUB_OUTPUT
+          echo "nightly_branch=$NIGHTLY_BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Update metadata before release
+        run: ./scripts/release.sh ${{ env.NIGHTLY_VERSION }}
+
+      - name: Create release notes
+        run: |
+          repo="${{ github.repository }}"
+          hash="${{ github.sha }}"
+          echo "Source commit: [\`${hash:0:7}\`](https://github.com/$repo/commit/$hash)" > NIGHTLY_RELEASE_NOTES.md
+
+      - name: Commit patches
+        run: |
+          git checkout -b ${{ env.NIGHTLY_BRANCH }}
+          git add .
+          git commit -m ${{ env.NIGHTLY_TAG }}
+          echo $(git log -1)
+
+      # NOTE: This must be the last operation done in this job in order for cleanup job to work properly.
+      - name: Push patches to the repository
+        run: git push origin ${{ env.NIGHTLY_BRANCH }}
+
+  build-binaries:
+    needs: prepare
+    uses: ./.github/workflows/_build-binaries.yml
+    with:
+      version: ${{ needs.prepare.outputs.nightly_version }}
+      ref: ${{ needs.prepare.outputs.nightly_branch }}
+
+  build-plugin-binaries:
+    name: Build plugin binaries
+    needs: prepare
+    uses: ./.github/workflows/_build-plugin-binaries.yml
+    with:
+      overridden_plugin_version: ${{ needs.prepare.outputs.nightly_version }}
+      ref: ${{ needs.prepare.outputs.nightly_branch }}
+
+  publish-plugin:
+    needs: [ prepare, build-plugin-binaries ]
+    uses: ./.github/workflows/_publish-plugin.yml
+    secrets: inherit
+    with:
+      prod_registry: false
+      overridden_plugin_version: ${{ needs.prepare.outputs.nightly_version }}
+
+  publish-std:
+    needs: [ prepare, publish-plugin ]
+    uses: ./.github/workflows/publish-std.yml
+    secrets: inherit
+    with:
+      prod_registry: false
+      plugin_dep_version: ${{ needs.prepare.outputs.nightly_version }}
+      override_std_version: ${{ needs.prepare.outputs.nightly_version }}
+
+  test-binary:
+    name: Test binary
+    needs: [ prepare, build-binaries, build-plugin-binaries, publish-plugin, publish-std]
+    uses: ./.github/workflows/_test-binaries.yml
+    secrets: inherit
+    with:
+      bin_version: ${{ needs.prepare.outputs.nightly_version }}
+      std_version: ${{ needs.prepare.outputs.nightly_version }}
+
+  create-release:
+    runs-on: ubuntu-latest
+    needs: [ prepare, build-binaries, test-binary ]
+    # Do not run on dry_run
+    if: ${{ !(inputs.dry_run) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.nightly_branch }}
+
+      - name: Create source code archives
+        run: |
+          git archive "--prefix=starknet-foundry-${{ needs.prepare.outputs.nightly_tag }}/" -o "starknet-foundry-${{ needs.prepare.outputs.nightly_tag }}.zip" HEAD
+          git archive "--prefix=starknet-foundry-${{ needs.prepare.outputs.nightly_tag }}/" -o "starknet-foundry-${{ needs.prepare.outputs.nightly_tag }}.tar.gz" HEAD
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts-dl
+
+      - name: Unpack artifacts to staging directory
+        run: |
+          mkdir -p artifacts
+          mv artifacts-dl/build-*/starknet-foundry-* artifacts/
+          ls -lh artifacts/
+
+      - name: Create GitHub release
+        run: |
+          gh release create \
+            "${{ needs.prepare.outputs.nightly_tag }}" \
+            --repo foundry-rs/starknet-foundry-nightlies \
+            --latest \
+            --title "${{ needs.prepare.outputs.nightly_tag }}" \
+            --notes-file NIGHTLY_RELEASE_NOTES.md
+        env:
+          GH_TOKEN: ${{ secrets.SNFOUNDRY_NIGHTLIES_CONTENTS_WRITE }}
+
+      - name: Upload release assets
+        run: |
+          for file in \
+            ./artifacts/* \
+            "starknet-foundry-${{ needs.prepare.outputs.nightly_tag }}.zip#Starknet Foundry source code (zip)" \
+            "starknet-foundry-${{ needs.prepare.outputs.nightly_tag }}.tar.gz#Starknet Foundry source code (tar.gz)"
+          do
+            # We remove the version tag from the filename so it can
+            # be easily accessed in asdf and installation scripts.
+            #
+            # For example:
+            # starknet-foundry-v0.44.0+nightly-2025-05-22-aarch64-apple-darwin.tar.gz
+            # becomes:
+            # starknet-foundry-nightly-2025-05-22-aarch64-apple-darwin.tar.gz
+
+            if ! [[ $(grep "#" <<< $file) ]]; then
+              label=$(echo "$file" | sed -E "s/v[^+]*\+//" | sed -E "s|.*/||")
+              cp "$file" "$label"
+              file="$label"
+            fi
+
+            gh release upload \
+              "${{ needs.prepare.outputs.nightly_tag }}" \
+              "$file" \
+              --repo foundry-rs/starknet-foundry-nightlies
+          done
+        env:
+          GH_TOKEN: ${{ secrets.SNFOUNDRY_NIGHTLIES_CONTENTS_WRITE }}
+
+  cleanup:
+    runs-on: ubuntu-latest
+    if: always() && needs.prepare.result == 'success'
+    needs: [ prepare, create-release ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Delete nightly branch
+        run: |
+          git push origin -d ${{ needs.prepare.outputs.nightly_branch }}
