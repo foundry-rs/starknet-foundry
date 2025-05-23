@@ -2,7 +2,7 @@ use super::common::runner::{get_current_branch, get_remote_url, setup_package, t
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
-use shared::test_utils::output_assert::{assert_stdout, assert_stdout_contains};
+use shared::test_utils::output_assert::{AsOutput, assert_stdout, assert_stdout_contains};
 use std::{fs, str::FromStr};
 use test_utils::tempdir_with_tool_versions;
 use toml_edit::{DocumentMut, value};
@@ -872,6 +872,9 @@ fn detailed_resources_flag_sierra_gas() {
         .assert()
         .success();
 
+    // Extra check to ensure that the output does not contain VM resources
+    assert!(!output.as_stdout().contains("steps:"));
+
     assert_stdout_contains(
         output,
         indoc! {r"
@@ -881,9 +884,40 @@ fn detailed_resources_flag_sierra_gas() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] erc20_package_integrationtest::test_complex::complex[..]
-                sierra_gas_consumed: ([..])
+                sierra_gas_consumed: [..]
                 syscalls: ([..])
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        "},
+    );
+}
+
+#[test]
+#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
+fn detailed_resources_mixed_resources() {
+    let temp = setup_package("forking");
+    let output = test_runner(&temp)
+        .arg("test_track_resources")
+        .arg("--detailed-resources")
+        .arg("--tracked-resource")
+        .arg("sierra-gas")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 1 test(s) from forking package
+        Running 1 test(s) from src/
+        [PASS] forking::tests::test_track_resources [..]
+                sierra_gas_consumed: [..]
+                syscalls: ([..])
+                steps: [..]
+                memory holes: [..]
+                builtins: (range_check: [..])
+
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, [..] filtered out
         "},
     );
 }
