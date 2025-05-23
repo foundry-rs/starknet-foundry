@@ -1,9 +1,9 @@
 use anyhow::{Context, Result, anyhow};
+use camino::Utf8PathBuf;
 use scarb_metadata::{Metadata, PackageId};
 use serde_json::{Map, Number};
+use std::fs::File;
 use std::{env, fs};
-
-use camino::Utf8PathBuf;
 use tempfile::{TempDir, tempdir};
 use toml::Value;
 pub const CONFIG_FILENAME: &str = "snfoundry.toml";
@@ -51,6 +51,17 @@ pub fn get_profile(
         None if profile_name == "default" => Ok(serde_json::Value::Object(Map::default())),
         None => Err(anyhow!("Profile [{}] not found in config", profile_name)),
     }
+}
+
+#[must_use]
+pub fn resolve_config_file() -> Utf8PathBuf {
+    find_config_file().unwrap_or_else(|_| {
+        let path = Utf8PathBuf::from(CONFIG_FILENAME);
+        File::create(&path).expect("creating file in current directory should be possible");
+
+        path.canonicalize_utf8()
+            .expect("path canonicalize in current directory should be possible")
+    })
 }
 
 pub fn load_config<T: Config + Default>(

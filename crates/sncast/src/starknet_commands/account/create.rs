@@ -1,5 +1,5 @@
 use crate::starknet_commands::account::{
-    add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
+    generate_add_profile_message, prepare_account_json, write_account_to_accounts_file,
 };
 use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
@@ -7,7 +7,6 @@ use clap::Args;
 use conversions::IntoConv;
 use serde_json::json;
 use sncast::helpers::braavos::{BraavosAccountFactory, assert_non_braavos_account};
-use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
     CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
@@ -66,7 +65,6 @@ pub async fn create(
     // TODO(#3118): Remove this check once braavos integration is restored
     assert_non_braavos_account(Some(create.account_type), create.class_hash)?;
 
-    let add_profile = create.add_profile.clone();
     let salt = extract_or_generate_salt(create.salt);
     let class_hash = create.class_hash.unwrap_or(match create.account_type {
         AccountType::OpenZeppelin => OZ_CLASS_HASH,
@@ -128,32 +126,18 @@ pub async fn create(
         message.push_str(&deploy_command);
     }
 
-    if add_profile.is_some() {
-        if let Some(url) = &create.rpc.url {
-            let config = CastConfig {
-                url: url.clone(),
-                account: account.into(),
-                accounts_file: accounts_file.into(),
-                keystore,
-                ..Default::default()
-            };
-            add_created_profile_to_configuration(create.add_profile.as_deref(), &config, None)?;
-        } else {
-            unreachable!("Conflicting arguments should be handled in clap");
-        }
-    }
+    let add_profile_message = generate_add_profile_message(
+        create.add_profile.as_ref(),
+        &create.rpc,
+        account,
+        accounts_file,
+        keystore.clone(),
+    )?;
 
     Ok(AccountCreateResponse {
         address: address.into_(),
         max_fee,
-        add_profile: if add_profile.is_some() {
-            format!(
-                "Profile {} successfully added to snfoundry.toml",
-                add_profile.clone().expect("Failed to get profile name")
-            )
-        } else {
-            "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
-        },
+        add_profile: add_profile_message,
         message: if account_json["deployed"] == json!(false) {
             message
         } else {
