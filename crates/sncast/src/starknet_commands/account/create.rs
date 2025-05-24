@@ -6,7 +6,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
 use serde_json::json;
-use sncast::helpers::braavos::{BraavosAccountFactory, assert_non_braavos_account};
+use sncast::helpers::braavos::{BraavosAccountFactory, check_braavos_account_compatibility};
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
     CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
@@ -62,8 +62,11 @@ pub async fn create(
     chain_id: Felt,
     create: &Create,
 ) -> Result<AccountCreateResponse> {
-    // TODO(#3118): Remove this check once braavos integration is restored
-    assert_non_braavos_account(Some(create.account_type), create.class_hash)?;
+    // Braavos accounts before v1.2.0 are not compatible with starknet 0.13.5
+    // For more, read https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
+    if let Some(class_hash) = create.class_hash {
+        check_braavos_account_compatibility(class_hash)?;
+    }
 
     let salt = extract_or_generate_salt(create.salt);
     let class_hash = create.class_hash.unwrap_or(match create.account_type {

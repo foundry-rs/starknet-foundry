@@ -14,11 +14,7 @@ account information stored locally - this will not remove the account from Stark
 > Accounts creation and deployment is supported for
 >  - OpenZeppelin
 >  - Argent (with guardian set to 0)
-<!-- >  - Braavos -->
-
-<!-- TODO(#3118): Remove this warning and uncomment braavos from possible account variants -->
-> ⚠️ **Warning**
-> Using Braavos accounts is temporarily disabled because they don't yet work with the RPC version supported by `sncast`.
+>  - Braavos
 
 ## Examples
 
