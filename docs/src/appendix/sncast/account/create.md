@@ -26,7 +26,7 @@ Use predefined network with a public provider
 Possible values: `mainnet`, `sepolia`.
 
 ## `--type, -t <ACCOUNT_TYPE>`
-Optional. Required if `--class-hash` is not passed.
+Optional. Required if `--class-hash` is passed.
 
 Type of the account. Possible values: oz, argent, braavos. Defaults to oz.
 
