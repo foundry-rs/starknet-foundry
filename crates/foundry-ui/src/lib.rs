@@ -1,4 +1,4 @@
-use components::TaggedMessage;
+use components::tagged::TaggedMessage;
 pub use message::*;
 
 pub mod components;
