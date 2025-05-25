@@ -1,8 +1,5 @@
 //! This module provides various ready to use message types for use with
-//! a [`Ui`][crate::Ui].
+//! a [`UI`].
 
-pub use tagged::*;
-pub use typed::*;
-
-mod tagged;
-mod typed;
+pub mod tagged;
+pub mod typed;

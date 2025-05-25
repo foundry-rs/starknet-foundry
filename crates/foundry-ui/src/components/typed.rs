@@ -8,32 +8,41 @@ use crate::Message;
 /// The type prefix can be stylized in text mode.
 /// e.g. "Tests: 1 passed, 1 failed"
 #[derive(Serialize)]
-pub struct TypedMessage<'a> {
-    ty: &'a str,
+pub struct LabeledMessage<'a> {
+    label: &'a str,
     text: &'a str,
     #[serde(skip)]
-    type_style: Option<&'a str>,
+    label_style: Option<&'a str>,
 }
 
-impl<'a> TypedMessage<'a> {
+impl<'a> LabeledMessage<'a> {
     #[must_use]
-    pub fn styled(ty: &'a str, text: &'a str, type_style: &'a str) -> Self {
+    pub fn styled(label: &'a str, text: &'a str, label_style: &'a str) -> Self {
         Self {
-            ty,
+            label,
             text,
-            type_style: Some(type_style),
+            label_style: Some(label_style),
+        }
+    }
+
+    #[must_use]
+    pub fn raw(label: &'a str, text: &'a str) -> Self {
+        Self {
+            label,
+            text,
+            label_style: None,
         }
     }
 }
 
-impl Message for TypedMessage<'_> {
+impl Message for LabeledMessage<'_> {
     fn text(&self) -> String {
         format!(
             "{}: {}",
-            self.type_style
+            self.label_style
                 .map(Style::from_dotted_str)
                 .unwrap_or_default()
-                .apply_to(self.ty.to_string()),
+                .apply_to(self.label.to_string()),
             self.text
         )
     }

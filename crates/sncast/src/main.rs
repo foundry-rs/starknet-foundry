@@ -5,7 +5,7 @@ use crate::starknet_commands::{
 use anyhow::{Context, Result, bail};
 use data_transformer::{reverse_transform_output, transform};
 use foundry_ui::OutputFormat;
-use foundry_ui::{Message, Ui};
+use foundry_ui::{Message, UI};
 use serde::Serialize;
 use sncast::helpers::account::generate_account_name;
 use sncast::response::call::CallResponse;
@@ -226,7 +226,7 @@ fn main() -> Result<()> {
     let numbers_format = NumbersFormat::from_flags(cli.hex_format, cli.int_format);
     let output_format = OutputFormat::from_flag(cli.json);
 
-    let ui = Ui::new(output_format);
+    let ui = UI::new(output_format);
 
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
@@ -244,7 +244,7 @@ async fn run_async_command(
     cli: Cli,
     config: CastConfig,
     numbers_format: NumbersFormat,
-    ui: &Ui,
+    ui: &UI,
 ) -> Result<()> {
     let wait_config = WaitForTx {
         wait: cli.wait,
@@ -718,7 +718,7 @@ fn run_script_command(
     runtime: Runtime,
     script: &Script,
     numbers_format: NumbersFormat,
-    ui: &Ui,
+    ui: &UI,
 ) -> Result<()> {
     match &script.command {
         starknet_commands::script::Commands::Init(init) => {
@@ -863,7 +863,7 @@ fn process_command_result<T>(
     command: &str,
     result: Result<T>,
     numbers_format: NumbersFormat,
-    ui: &Ui,
+    ui: &UI,
     block_explorer_link: Option<String>,
 ) where
     T: serde::Serialize + Clone + CommandResponse,
@@ -883,10 +883,8 @@ fn process_command_result<T>(
             }
         }
         Err(err) => {
-            // let err_str = format!("{err}");
-            println!("AAA: {err}");
-            let response_error = ResponseError::new(command.to_string(), format!("{err:#}"));
-            ui.print_as_err(&response_error);
+            let err = ResponseError::new(command.to_string(), format!("{err:#}"));
+            ui.print_as_err(&err);
         }
     }
 }
