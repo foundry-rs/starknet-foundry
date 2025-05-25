@@ -42,7 +42,7 @@ use starknet::core::types::ContractClass;
 use starknet::core::types::contract::AbiEntry;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
-use starknet_commands::account::list::print_account_list;
+use starknet_commands::account::list::AccountsList;
 use starknet_commands::verify::Verify;
 use starknet_types_core::felt::Felt;
 use tokio::runtime::Runtime;
@@ -643,12 +643,14 @@ async fn run_async_command(
                 Ok(())
             }
 
-            account::Commands::List(options) => print_account_list(
-                &config.accounts_file,
-                options.display_private_keys,
-                numbers_format,
-                ui,
-            ),
+            account::Commands::List(options) => {
+                ui.print(&AccountsList::new(
+                    config.accounts_file,
+                    options.display_private_keys,
+                    numbers_format,
+                )?);
+                Ok(())
+            }
         },
 
         Commands::ShowConfig(show) => {
