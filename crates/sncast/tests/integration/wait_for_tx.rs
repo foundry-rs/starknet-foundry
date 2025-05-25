@@ -2,7 +2,7 @@ use crate::helpers::{
     constants::{ACCOUNT, ACCOUNT_FILE_PATH},
     fixtures::{create_test_provider, invoke_contract},
 };
-use foundry_ui::Ui;
+use foundry_ui::UI;
 use sncast::helpers::{constants::UDC_ADDRESS, fee::FeeSettings};
 
 use crate::helpers::constants::{
@@ -19,7 +19,7 @@ use starknet_types_core::felt::Felt;
 #[tokio::test]
 async fn test_happy_path() {
     let provider = create_test_provider();
-    let ui = Ui::default();
+    let ui = UI::default();
     let res = wait_for_tx(
         &provider,
         MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
@@ -93,7 +93,7 @@ async fn test_wait_for_reverted_transaction() {
     .await
     .transaction_hash;
 
-    let ui = Ui::default();
+    let ui = UI::default();
     wait_for_tx(
         &provider,
         transaction_hash,
@@ -109,7 +109,7 @@ async fn test_wait_for_reverted_transaction() {
 #[should_panic(expected = "sncast timed out while waiting for transaction to succeed")]
 async fn test_wait_for_nonexistent_tx() {
     let provider = create_test_provider();
-    let ui = Ui::default();
+    let ui = UI::default();
     wait_for_tx(
         &provider,
         "0x123456789".parse().expect("Could not parse a number"),
@@ -124,7 +124,7 @@ async fn test_wait_for_nonexistent_tx() {
 #[tokio::test]
 async fn test_happy_path_handle_wait_for_tx() {
     let provider = create_test_provider();
-    let ui = Ui::default();
+    let ui = UI::default();
     let res = handle_wait_for_tx(
         &provider,
         MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
@@ -144,7 +144,7 @@ async fn test_happy_path_handle_wait_for_tx() {
 #[should_panic(expected = "Invalid values for retry_interval and/or timeout!")]
 async fn test_wait_for_wrong_retry_values() {
     let provider = create_test_provider();
-    let ui = Ui::default();
+    let ui = UI::default();
     wait_for_tx(
         &provider,
         MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
@@ -159,7 +159,7 @@ async fn test_wait_for_wrong_retry_values() {
 #[should_panic(expected = "Invalid values for retry_interval and/or timeout!")]
 async fn test_wait_for_wrong_retry_values_timeout_zero() {
     let provider = create_test_provider();
-    let ui = Ui::default();
+    let ui = UI::default();
     wait_for_tx(
         &provider,
         MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
@@ -174,7 +174,7 @@ async fn test_wait_for_wrong_retry_values_timeout_zero() {
 #[should_panic(expected = "Invalid values for retry_interval and/or timeout!")]
 async fn test_wait_for_wrong_retry_values_interval_zero() {
     let provider = create_test_provider();
-    let ui = Ui::default();
+    let ui = UI::default();
     wait_for_tx(
         &provider,
         MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),

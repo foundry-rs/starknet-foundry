@@ -1,5 +1,4 @@
 use forge_runner::forge_config::ForgeTrackedResource;
-use foundry_ui::Ui;
 use indoc::indoc;
 use test_utils::running_tests::run_test_case;
 use test_utils::{runner::assert_passed, test_case};
@@ -36,8 +35,7 @@ fn test_stark_sign_msg_hash_range() {
         "
     ));
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -66,8 +64,7 @@ fn test_stark_curve() {
         "
     ));
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -98,8 +95,7 @@ fn test_secp256k1_curve() {
         "
     ));
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -130,8 +126,7 @@ fn test_secp256r1_curve() {
         "
     ));
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -173,8 +168,7 @@ fn test_secp256_curves() {
         "
     ));
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -218,8 +212,7 @@ fn test_stark_secp256k1_curves() {
         "
     ));
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -275,8 +268,7 @@ fn test_invalid_secret_key() {
         "
     ));
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }

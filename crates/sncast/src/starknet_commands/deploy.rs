@@ -1,7 +1,7 @@
 use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
-use foundry_ui::Ui;
+use foundry_ui::UI;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::deploy::DeployResponse;
@@ -68,7 +68,7 @@ pub async fn deploy(
     nonce: Option<Felt>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
-    ui: &Ui,
+    ui: &UI,
 ) -> Result<DeployResponse, StarknetCommandError> {
     let salt = extract_or_generate_salt(salt);
     let factory = ContractFactory::new(class_hash, account);

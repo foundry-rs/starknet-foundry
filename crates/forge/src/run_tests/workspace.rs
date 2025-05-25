@@ -11,7 +11,7 @@ use forge_runner::{
     coverage_api::can_coverage_be_generated,
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
 };
-use foundry_ui::Ui;
+use foundry_ui::UI;
 use scarb_api::{
     ScarbCommand,
     metadata::{Metadata, MetadataCommandExt, PackageMetadata},
@@ -21,7 +21,7 @@ use scarb_ui::args::PackagesFilter;
 use shared::consts::SNFORGE_TEST_FILTER;
 use std::env;
 
-pub async fn run_for_workspace(args: TestArgs, ui: &Ui) -> Result<ExitStatus> {
+pub async fn run_for_workspace(args: TestArgs, ui: &UI) -> Result<ExitStatus> {
     match args.color {
         // SAFETY: This runs in a single-threaded environment.
         ColorOption::Always => unsafe { env::set_var("CLICOLOR_FORCE", "1") },

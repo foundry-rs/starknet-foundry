@@ -1,5 +1,4 @@
 use forge_runner::forge_config::ForgeTrackedResource;
-use foundry_ui::Ui;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::node_url::node_rpc_url;
 use std::path::Path;
@@ -73,8 +72,7 @@ fn spy_events_simple() {
         .unwrap()
     );
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -143,8 +141,7 @@ fn assert_emitted_fails() {
         .unwrap()
     );
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
     assert_case_output_contains(
@@ -253,8 +250,7 @@ fn expect_three_events_while_two_emitted() {
         .unwrap()
     );
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
     assert_case_output_contains(
@@ -358,8 +354,7 @@ fn expect_two_events_while_three_emitted() {
         .unwrap()
     );
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -428,8 +423,7 @@ fn event_emitted_wrong_data_asserted() {
         .unwrap()
     );
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
     assert_case_output_contains(
@@ -489,8 +483,7 @@ fn emit_unnamed_event() {
         .unwrap()
     );
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -559,8 +552,7 @@ fn assert_not_emitted_pass() {
         .unwrap()
     );
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -629,8 +621,7 @@ fn assert_not_emitted_fails() {
         .unwrap()
     );
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
     assert_case_output_contains(
@@ -736,8 +727,7 @@ fn capture_cairo0_event() {
         .unwrap()
     );
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -818,8 +808,7 @@ fn test_filtering() {
         .unwrap()
     );
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }

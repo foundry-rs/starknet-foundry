@@ -812,7 +812,7 @@ fn config_with_cli(config: &mut CastConfig, cli: &Cli) {
     );
 }
 
-fn get_cast_config(cli: &Cli, ui: &Ui) -> Result<CastConfig> {
+fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
     let global_config_path = get_global_config_path().unwrap_or_else(|err| {
         ui.print_as_err(&format!("Error getting global config path: {err}"));
         Utf8PathBuf::new()

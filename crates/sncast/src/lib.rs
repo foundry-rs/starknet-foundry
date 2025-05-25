@@ -4,7 +4,7 @@ use anyhow::{Context, Error, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use conversions::serde::serialize::CairoSerialize;
-use foundry_ui::Ui;
+use foundry_ui::UI;
 use helpers::braavos::assert_non_braavos_account;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::RngCore;
@@ -586,7 +586,7 @@ pub async fn wait_for_tx(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: Felt,
     wait_params: ValidatedWaitParams,
-    ui: &Ui,
+    ui: &UI,
 ) -> Result<String, WaitForTransactionError> {
     ui.print(&format!("Transaction hash: {tx_hash:#x}"));
 
@@ -655,7 +655,7 @@ pub async fn handle_wait_for_tx<T>(
     transaction_hash: Felt,
     return_value: T,
     wait_config: WaitForTx,
-    ui: &Ui,
+    ui: &UI,
 ) -> Result<T, WaitForTransactionError> {
     if wait_config.wait {
         return match wait_for_tx(provider, transaction_hash, wait_config.wait_params, ui).await {

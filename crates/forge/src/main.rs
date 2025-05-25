@@ -1,8 +1,8 @@
 use forge::{ExitStatus, main_execution, pretty_printing};
-use foundry_ui::Ui;
+use foundry_ui::UI;
 
 fn main() {
-    let ui = Ui::default();
+    let ui = UI::default();
     match main_execution(&ui) {
         Ok(ExitStatus::Success) => std::process::exit(0),
         Ok(ExitStatus::Failure) => std::process::exit(1),

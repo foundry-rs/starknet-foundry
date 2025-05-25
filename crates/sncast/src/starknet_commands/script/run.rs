@@ -24,7 +24,7 @@ use clap::Args;
 use conversions::byte_array::ByteArray;
 use conversions::serde::deserialize::BufferReader;
 use forge_runner::running::{has_segment_arena, syscall_handler_offset};
-use foundry_ui::Ui;
+use foundry_ui::UI;
 use runtime::starknet::context::{SerializableBlockInfo, build_context};
 use runtime::starknet::state::DictStateReader;
 use runtime::{
@@ -85,7 +85,7 @@ pub struct CastScriptExtension<'a> {
     pub config: &'a CastConfig,
     pub artifacts: &'a HashMap<String, StarknetContractArtifacts>,
     pub state: StateManager,
-    pub ui: &'a Ui,
+    pub ui: &'a UI,
 }
 
 impl CastScriptExtension<'_> {
@@ -288,7 +288,7 @@ pub fn run(
     tokio_runtime: Runtime,
     config: &CastConfig,
     state_file_path: Option<Utf8PathBuf>,
-    ui: &Ui,
+    ui: &UI,
 ) -> Result<ScriptRunResponse> {
     warn_if_sncast_std_not_compatible(metadata, ui)?;
 
@@ -430,7 +430,7 @@ fn sncast_std_version_requirement() -> VersionReq {
     }
 }
 
-fn warn_if_sncast_std_not_compatible(scarb_metadata: &Metadata, ui: &Ui) -> Result<()> {
+fn warn_if_sncast_std_not_compatible(scarb_metadata: &Metadata, ui: &UI) -> Result<()> {
     let sncast_std_version_requirement = sncast_std_version_requirement();
     if !package_matches_version_requirement(
         scarb_metadata,

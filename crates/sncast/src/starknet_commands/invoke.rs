@@ -2,7 +2,7 @@ use crate::Arguments;
 use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
-use foundry_ui::Ui;
+use foundry_ui::UI;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
@@ -51,7 +51,7 @@ pub async fn invoke(
     function_selector: Felt,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
-    ui: &Ui,
+    ui: &UI,
 ) -> Result<InvokeResponse, StarknetCommandError> {
     let call = Call {
         to: contract_address,
@@ -68,7 +68,7 @@ pub async fn execute_calls(
     fee_args: FeeArgs,
     nonce: Option<Felt>,
     wait_config: WaitForTx,
-    ui: &Ui,
+    ui: &UI,
 ) -> Result<InvokeResponse, StarknetCommandError> {
     let execution_calls = account.execute_v3(calls);
 

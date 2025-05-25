@@ -2,7 +2,7 @@ use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
-use foundry_ui::Ui;
+use foundry_ui::UI;
 use serde_json::Map;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
@@ -54,7 +54,7 @@ pub async fn deploy(
     account: &str,
     keystore_path: Option<Utf8PathBuf>,
     fee_args: FeeArgs,
-    ui: &Ui,
+    ui: &UI,
 ) -> Result<AccountDeployResponse> {
     if let Some(keystore_path_) = keystore_path {
         deploy_from_keystore(
@@ -95,7 +95,7 @@ async fn deploy_from_keystore(
     wait_config: WaitForTx,
     account: &str,
     keystore_path: Utf8PathBuf,
-    ui: &Ui,
+    ui: &UI,
 ) -> Result<InvokeResponse> {
     let account_data = get_account_data_from_keystore(account, &keystore_path)?;
 
@@ -164,7 +164,7 @@ async fn deploy_from_accounts_file(
     chain_id: Felt,
     fee_args: FeeArgs,
     wait_config: WaitForTx,
-    ui: &Ui,
+    ui: &UI,
 ) -> Result<InvokeResponse> {
     let account_data = get_account_data_from_accounts_file(&name, chain_id, &accounts_file)?;
 
@@ -204,7 +204,7 @@ async fn get_deployment_result(
     chain_id: Felt,
     fee_args: FeeArgs,
     wait_config: WaitForTx,
-    ui: &Ui,
+    ui: &UI,
 ) -> Result<InvokeResponse> {
     match account_type {
         AccountType::Argent => {
@@ -279,7 +279,7 @@ async fn deploy_account<T>(
     fee_args: FeeArgs,
     wait_config: WaitForTx,
     class_hash: Felt,
-    ui: &Ui,
+    ui: &UI,
 ) -> Result<InvokeResponse>
 where
     T: AccountFactory + Sync,

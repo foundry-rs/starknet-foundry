@@ -2,7 +2,7 @@ use crate::starknet_commands::invoke::execute_calls;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use foundry_ui::Ui;
+use foundry_ui::UI;
 use serde::Deserialize;
 use sncast::helpers::constants::UDC_ADDRESS;
 use sncast::helpers::fee::FeeArgs;
@@ -60,7 +60,7 @@ pub async fn run(
     run: Box<Run>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
-    ui: &Ui,
+    ui: &UI,
 ) -> Result<MulticallRunResponse> {
     let fee_args = run.fee_args.clone();
 

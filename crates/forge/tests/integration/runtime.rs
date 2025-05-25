@@ -1,5 +1,4 @@
 use forge_runner::forge_config::ForgeTrackedResource;
-use foundry_ui::Ui;
 use indoc::indoc;
 use test_utils::running_tests::run_test_case;
 use test_utils::{
@@ -21,8 +20,7 @@ fn missing_cheatcode_error() {
             }
         "
     ));
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_failed(&result);
     assert_case_output_contains(
         &result,
@@ -49,8 +47,7 @@ fn cairo_test_cheatcode_error() {
             }
         "
     ));
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_failed(&result);
     assert_case_output_contains(
         &result,
@@ -80,8 +77,7 @@ fn cheatcode_invalid_args() {
         "
     ));
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_case_output_contains(
         &result,

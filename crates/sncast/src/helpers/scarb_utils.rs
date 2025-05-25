@@ -1,6 +1,6 @@
 use anyhow::{Context, Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
-use foundry_ui::Ui;
+use foundry_ui::UI;
 use scarb_api::{
     ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
     get_contracts_artifacts_and_source_sierra_paths,
@@ -156,7 +156,7 @@ pub fn build_and_load_artifacts(
     package: &PackageMetadata,
     config: &BuildConfig,
     build_for_script: bool,
-    ui: &Ui,
+    ui: &UI,
 ) -> Result<HashMap<String, StarknetContractArtifacts>> {
     // TODO (#2042): Remove this logic, always use release as default
     let default_profile = if build_for_script { "dev" } else { "release" };

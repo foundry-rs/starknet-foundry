@@ -1,6 +1,5 @@
 use blockifier::versioned_constants::{EventLimits, VersionedConstants};
 use forge_runner::forge_config::ForgeTrackedResource;
-use foundry_ui::Ui;
 use indoc::formatdoc;
 use std::path::Path;
 use test_utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
@@ -66,8 +65,7 @@ fn ok_events() {
         .unwrap()
     );
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -135,8 +133,7 @@ fn too_many_events() {
         .unwrap()
     );
 
-    let ui = foundry_ui::Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
     assert_case_output_contains(

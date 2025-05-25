@@ -1,5 +1,4 @@
 use forge_runner::forge_config::ForgeTrackedResource;
-use foundry_ui::Ui;
 use indoc::formatdoc;
 use shared::test_utils::node_url::node_rpc_url;
 use test_utils::runner::assert_passed;
@@ -49,8 +48,7 @@ fn cheat_caller_address_cairo0_contract() {
     )
     .as_str());
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -98,8 +96,7 @@ fn cheat_block_number_cairo0_contract() {
     )
     .as_str());
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -149,8 +146,7 @@ fn cheat_block_timestamp_cairo0_contract() {
     )
     .as_str());
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -193,8 +189,7 @@ fn mock_call_cairo0_contract() {
         .as_str()
     );
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -239,8 +234,7 @@ fn store_load_cairo0_contract() {
     )
     .as_str());
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }

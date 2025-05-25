@@ -1,5 +1,5 @@
 use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
-use foundry_ui::Ui;
+use foundry_ui::UI;
 use indoc::{formatdoc, indoc};
 use std::num::NonZeroU32;
 use std::path::Path;
@@ -66,8 +66,7 @@ fn fork_simple_decorator() {
         node_rpc_url()
     ).as_str());
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -131,7 +130,7 @@ fn fork_aliased_decorator() {
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
-    let ui = Ui::default();
+    let ui = UI::default();
     let result = rt
         .block_on(run_for_package(
             RunForPackageArgs {
@@ -220,7 +219,7 @@ fn fork_aliased_decorator_overrding() {
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
-    let ui = Ui::default();
+    let ui = UI::default();
     let result = rt
         .block_on(run_for_package(
             RunForPackageArgs {
@@ -293,8 +292,7 @@ fn fork_cairo0_contract() {
         node_rpc_url()
     ).as_str());
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -394,8 +392,7 @@ fn get_block_info_in_forked_block() {
         Path::new("tests/data/contracts/block_info_checker.cairo"),
     ).unwrap());
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }
@@ -416,8 +413,7 @@ fn fork_get_block_info_fails() {
         .as_str()
     );
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_failed(&result);
     assert_case_output_contains(
@@ -456,8 +452,7 @@ fn incompatible_abi() {
     )
     .as_str());
 
-    let ui = Ui::default();
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps, &ui);
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 }

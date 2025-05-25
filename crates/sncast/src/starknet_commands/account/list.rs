@@ -4,7 +4,7 @@ use clap::Args;
 use conversions::string::IntoDecStr;
 use conversions::string::IntoHexStr;
 use foundry_ui::Message;
-use foundry_ui::Ui;
+use foundry_ui::UI;
 use itertools::Itertools;
 use serde::Deserialize;
 use serde::Serialize;
@@ -141,7 +141,7 @@ pub fn print_account_list(
     accounts_file: &Utf8PathBuf,
     display_private_keys: bool,
     numbers_format: NumbersFormat,
-    ui: &Ui,
+    ui: &UI,
 ) -> anyhow::Result<()> {
     check_account_file_exists(accounts_file)?;
 

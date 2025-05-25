@@ -2,7 +2,7 @@ use crate::artifacts::StarknetArtifactsFiles;
 use anyhow::{Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
 pub use command::*;
-use foundry_ui::Ui;
+use foundry_ui::UI;
 use scarb_metadata::{Metadata, PackageId, PackageMetadata, TargetMetadata};
 use semver::VersionReq;
 use std::collections::HashMap;
@@ -25,7 +25,7 @@ const INTEGRATION_TEST_TYPE: &str = "integration";
 fn get_starknet_artifacts_paths_from_test_targets(
     target_dir: &Utf8Path,
     test_targets: &HashMap<String, &TargetMetadata>,
-    ui: &Ui,
+    ui: &UI,
 ) -> Option<StarknetArtifactsFiles> {
     let artifact =
         |name: &str, metadata: &TargetMetadata| -> Option<(Utf8PathBuf, Option<String>)> {
@@ -82,7 +82,7 @@ fn get_starknet_artifacts_paths_from_test_targets(
 fn get_starknet_artifacts_path(
     target_dir: &Utf8Path,
     target_name: &str,
-    ui: &Ui,
+    ui: &UI,
 ) -> Option<StarknetArtifactsFiles> {
     let path = format!("{target_name}.starknet_artifacts.json");
     let path = target_dir.join(&path);
@@ -105,7 +105,7 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
     artifacts_dir: &Utf8Path,
     package: &PackageMetadata,
     use_test_target_contracts: bool,
-    ui: &Ui,
+    ui: &UI,
 ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
     let starknet_artifact_files = if use_test_target_contracts {
         let test_targets = test_targets_by_name(package);
@@ -259,7 +259,7 @@ mod tests {
             .run()
             .unwrap();
 
-        let ui = Ui::default();
+        let ui = UI::default();
         let path = get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target").join("dev")).unwrap(),
             "basic_package",
@@ -302,7 +302,7 @@ mod tests {
             .find(|p| p.name == "basic_package")
             .unwrap();
 
-        let ui = Ui::default();
+        let ui = UI::default();
         let path = get_starknet_artifacts_paths_from_test_targets(
             &Utf8PathBuf::from_path_buf(temp.join("target").join("dev")).unwrap(),
             &test_targets_by_name(package),
@@ -358,7 +358,7 @@ mod tests {
             .find(|p| p.name == "basic_package")
             .unwrap();
 
-        let ui = Ui::default();
+        let ui = UI::default();
         let path = get_starknet_artifacts_paths_from_test_targets(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target").join("dev")).unwrap(),
             &test_targets_by_name(package),
@@ -478,7 +478,7 @@ mod tests {
             .run()
             .unwrap();
 
-        let ui = Ui::default();
+        let ui = UI::default();
         let path = get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target").join("dev")).unwrap(),
             "essa",
@@ -519,7 +519,7 @@ mod tests {
             .run()
             .unwrap();
 
-        let ui = Ui::default();
+        let ui = UI::default();
         let path = get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target").join("dev")).unwrap(),
             "empty_lib",
@@ -532,7 +532,7 @@ mod tests {
     fn get_starknet_artifacts_path_for_project_without_scarb_build() {
         let temp = setup_package("basic_package");
 
-        let ui = Ui::default();
+        let ui = UI::default();
         let path = get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target").join("dev")).unwrap(),
             "basic_package",
@@ -560,7 +560,7 @@ mod tests {
         let target_dir = target_dir_for_workspace(&metadata).join("dev");
         let package = metadata.packages.first().unwrap();
 
-        let ui = Ui::default();
+        let ui = UI::default();
         let contracts = get_contracts_artifacts_and_source_sierra_paths(
             target_dir.as_path(),
             package,

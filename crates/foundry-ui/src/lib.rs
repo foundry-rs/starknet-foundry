@@ -26,7 +26,7 @@ impl OutputFormat {
 /// colour, etc.
 ///
 /// All messaging (basically all writes to `stdout`) must go through this object.
-#[derive(Debug)]
+#[derive(Debug, Default, Clone)]
 pub struct UI {
     output_format: OutputFormat,
     // TODO(3395): Add state here, that can be used for spinner
