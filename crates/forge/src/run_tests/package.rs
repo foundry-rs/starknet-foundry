@@ -1,5 +1,6 @@
 use super::{
     resolve_config::resolve_config,
+    structs::{CollectedTestsCount, TestsRun, TestsSummary},
     test_target::{TestTargetRunResult, run_for_test_target},
 };
 use crate::{
@@ -138,6 +139,7 @@ pub async fn run_for_package(
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
     trace_verbosity: Option<TraceVerbosity>,
+    ui: &UI,
 ) -> Result<Vec<TestTargetSummary>> {
     let mut test_targets = test_package_with_config_resolved(
         test_targets,
@@ -156,15 +158,18 @@ pub async fn run_for_package(
     warn_if_incompatible_rpc_version(&test_targets).await?;
 
     let not_filtered = sum_test_cases(&test_targets);
-    pretty_printing::print_collected_tests_count(not_filtered, &package_name);
+    ui.print(&CollectedTestsCount {
+        tests_num: not_filtered,
+        package_name: package_name.clone(),
+    });
 
     let mut summaries = vec![];
 
     for test_target in test_targets {
-        pretty_printing::print_running_tests(
+        ui.print(&TestsRun::new(
             test_target.tests_location,
             test_target.test_cases.len(),
-        );
+        ));
 
         let forge_config = forge_config.clone();
 
@@ -186,12 +191,13 @@ pub async fn run_for_package(
     }
 
     // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
-    if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
-        pretty_printing::print_test_summary(&summaries, None);
+    let tests_summary = if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
+        TestsSummary::new(&summaries, None)
     } else {
         let filtered = all_tests - not_filtered;
-        pretty_printing::print_test_summary(&summaries, Some(filtered));
-    }
+        TestsSummary::new(&summaries, Some(filtered))
+    };
+    ui.print(&tests_summary);
 
     let any_fuzz_test_was_run = summaries.iter().any(|test_target_summary| {
         test_target_summary
@@ -202,7 +208,7 @@ pub async fn run_for_package(
     });
 
     if any_fuzz_test_was_run {
-        pretty_printing::print_test_seed(forge_config.test_runner_config.fuzzer_seed);
+        pretty_printing::print_test_seed(forge_config.test_runner_config.fuzzer_seed, ui);
     }
 
     Ok(summaries)

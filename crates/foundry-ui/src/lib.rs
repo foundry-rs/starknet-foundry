@@ -1,4 +1,4 @@
-use components::tagged::TaggedMessage;
+use components::{styled::StyledMessage, tagged::TaggedMessage};
 pub use message::*;
 
 pub mod components;
@@ -75,5 +75,9 @@ impl UI {
     /// Print an error message to stdout using the configured output format.
     pub fn print_error(&self, text: &str) {
         self.print(&TaggedMessage::styled("ERROR", text, "red"));
+    }
+
+    pub fn print_styled(&self, text: &str, style: &str) {
+        self.print(&StyledMessage::new(text, style));
     }
 }

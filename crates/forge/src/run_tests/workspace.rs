@@ -86,7 +86,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: &UI) -> Result<ExitStatus> {
         )?;
 
         let tests_file_summaries =
-            run_for_package(args, &mut block_number_map, trace_verbosity).await?;
+            run_for_package(args, &mut block_number_map, trace_verbosity, ui).await?;
 
         all_failed_tests.extend(extract_failed_tests(tests_file_summaries));
     }

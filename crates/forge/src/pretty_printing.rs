@@ -1,62 +1,15 @@
-use anyhow::Error;
-use console::style;
-use forge_runner::package_tests::TestTargetLocation;
-use forge_runner::{test_case_summary::AnyTestCaseSummary, test_target_summary::TestTargetSummary};
+use forge_runner::test_case_summary::AnyTestCaseSummary;
+use foundry_ui::{UI, components::typed::LabeledMessage};
 use starknet_api::block::BlockNumber;
 use std::collections::HashMap;
 use url::Url;
 
-pub fn print_error_message(error: &Error) {
-    let error_tag = style("ERROR").red();
-    println!("[{error_tag}] {error:#}");
-}
-
-pub(crate) fn print_collected_tests_count(tests_num: usize, package_name: &str) {
-    let plain_text = format!("\n\nCollected {tests_num} test(s) from {package_name} package");
-    println!("{}", style(plain_text).bold());
-}
-
-pub(crate) fn print_running_tests(test_target_location: TestTargetLocation, tests_num: usize) {
-    let dir_name = match test_target_location {
-        TestTargetLocation::Lib => "src",
-        TestTargetLocation::Tests => "tests",
-    };
-    let plain_text = format!("Running {tests_num} test(s) from {dir_name}/");
-
-    println!("{}", style(plain_text).bold());
-}
-
-// TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
-pub(crate) fn print_test_summary(summaries: &[TestTargetSummary], filtered: Option<usize>) {
-    let passed: usize = summaries.iter().map(TestTargetSummary::count_passed).sum();
-    let failed: usize = summaries.iter().map(TestTargetSummary::count_failed).sum();
-    let skipped: usize = summaries.iter().map(TestTargetSummary::count_skipped).sum();
-    let ignored: usize = summaries.iter().map(TestTargetSummary::count_ignored).sum();
-
-    if let Some(filtered) = filtered {
-        println!(
-            "{}: {} passed, {} failed, {} skipped, {} ignored, {} filtered out",
-            style("Tests").bold(),
-            passed,
-            failed,
-            skipped,
-            ignored,
-            filtered
-        );
-    } else {
-        println!(
-            "{}: {} passed, {} failed, {} skipped, {} ignored, other filtered out",
-            style("Tests").bold(),
-            passed,
-            failed,
-            skipped,
-            ignored
-        );
-    }
-}
-
-pub(crate) fn print_test_seed(seed: u64) {
-    println!("{}: {seed}", style("Fuzzer seed").bold());
+pub(crate) fn print_test_seed(seed: u64, ui: &UI) {
+    ui.print(&LabeledMessage::styled(
+        "Fuzzer seed",
+        &seed.to_string(),
+        "bold",
+    ));
 }
 
 pub fn print_failures(all_failed_tests: &[AnyTestCaseSummary]) {
