@@ -9,6 +9,7 @@ use docs::utils::{
     update_scarb_toml_dependencies,
 };
 use docs::validation::{extract_snippets_from_directory, extract_snippets_from_file};
+use foundry_ui::UI;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
@@ -16,6 +17,7 @@ fn test_docs_snippets() {
     let root_dir_path = get_nth_ancestor(2);
     let docs_dir_path = root_dir_path.join("docs/src");
     let sncast_readme_path = root_dir_path.join("crates/sncast/README.md");
+    let ui = UI::default();
 
     let snippet_type = SnippetType::sncast();
 
@@ -43,7 +45,7 @@ fn test_docs_snippets() {
 
     for snippet in &snippets {
         if snippet.config.ignored {
-            print_ignored_snippet_message(snippet);
+            print_ignored_snippet_message(snippet, &ui);
             continue;
         }
 
@@ -72,5 +74,5 @@ fn test_docs_snippets() {
         }
     }
 
-    print_snippets_validation_summary(&snippets, snippet_type.as_str());
+    print_snippets_validation_summary(&snippets, snippet_type.as_str(), &ui);
 }

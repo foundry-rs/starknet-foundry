@@ -15,6 +15,7 @@ toml_edit.workspace = true
 camino.workspace = true
 tempfile.workspace = true
 anyhow.workspace = true
+foundry-ui = { path = "../foundry-ui" }
 
 [features]
 testing = []

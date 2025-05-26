@@ -6,6 +6,7 @@ use docs::utils::{
 };
 use docs::validation::extract_snippets_from_directory;
 use forge::Cli;
+use foundry_ui::UI;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
 use super::common::runner::{runner, setup_package};
@@ -14,7 +15,7 @@ use super::common::runner::{runner, setup_package};
 fn test_docs_snippets() {
     let root_dir = get_nth_ancestor(2);
     let docs_dir = root_dir.join("docs/src");
-
+    let ui = UI::default();
     let snippet_type = SnippetType::forge();
 
     let snippets = extract_snippets_from_directory(&docs_dir, &snippet_type)
@@ -22,7 +23,7 @@ fn test_docs_snippets() {
 
     for snippet in &snippets {
         if snippet.config.ignored {
-            print_ignored_snippet_message(snippet);
+            print_ignored_snippet_message(snippet, &ui);
             continue;
         }
 
@@ -56,5 +57,5 @@ fn test_docs_snippets() {
         }
     }
 
-    print_snippets_validation_summary(&snippets, snippet_type.as_str());
+    print_snippets_validation_summary(&snippets, snippet_type.as_str(), &ui);
 }

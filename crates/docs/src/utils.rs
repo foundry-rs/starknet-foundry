@@ -1,6 +1,7 @@
 use crate::snippet::Snippet;
 use anyhow::{Result, anyhow};
 use camino::Utf8PathBuf;
+use foundry_ui::UI;
 use std::{env, fs, path::PathBuf, str::FromStr};
 use tempfile::TempDir;
 use toml_edit::{DocumentMut, value};
@@ -30,25 +31,25 @@ pub fn assert_valid_snippet(condition: bool, snippet: &Snippet, err_message: &st
     );
 }
 
-pub fn print_snippets_validation_summary(snippets: &[Snippet], tool_name: &str) {
+pub fn print_snippets_validation_summary(snippets: &[Snippet], tool_name: &str, ui: &UI) {
     let validated_snippets_count = snippets
         .iter()
         .filter(|snippet| !snippet.config.ignored)
         .count();
     let ignored_snippets_count = snippets.len() - validated_snippets_count;
 
-    println!(
-        "Finished validation of {tool_name} docs snippets\nValidated: {validated_snippets_count}, Ignored: {ignored_snippets_count}"
-    );
+    ui.print(&format!(
+        "Finished validation of {tool_name} docs snippets\nValidated: {validated_snippets_count}, Ignored: {ignored_snippets_count}",
+    ));
 }
 
-pub fn print_ignored_snippet_message(snippet: &Snippet) {
-    println!(
+pub fn print_ignored_snippet_message(snippet: &Snippet, ui: &UI) {
+    ui.print(&format!(
         "Ignoring {} docs snippet, file: {}:{}:1",
         snippet.snippet_type.as_str(),
         snippet.file_path,
-        snippet.line_start,
-    );
+        snippet.line_start
+    ));
 }
 
 fn get_canonical_path(relative_path: &str) -> Result<String> {
