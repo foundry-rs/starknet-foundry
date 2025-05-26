@@ -9,7 +9,7 @@ use super::{
 };
 
 #[derive(Serialize)]
-pub struct SnastMessage<T: Serialize> {
+pub struct SncastMessage<T: Serialize> {
     pub command: String,
     pub command_response: T,
     pub numbers_format: NumbersFormat,
@@ -17,7 +17,7 @@ pub struct SnastMessage<T: Serialize> {
 
 // TODO(#3391): This impl should be remove and the `Message` trait should be implemented for each response type
 // individually. This is a temporary solution to avoid breaking changes in the UI.
-impl<T> Message for SnastMessage<T>
+impl<T> Message for SncastMessage<T>
 where
     T: CommandResponse,
 {
