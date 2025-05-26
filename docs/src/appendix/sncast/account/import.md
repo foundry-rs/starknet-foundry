@@ -17,11 +17,7 @@ Address of the account.
 ## `--type, -t <ACCOUNT_TYPE>`
 Required.
 
-<!-- TODO(#3118): Include braavos in possible types once integration is restored -->
-Type of the account. Possible values: oz, argent.
-
-> ⚠️ **Warning**
-> Importing braavos accounts is currently disabled.
+Type of the account. Possible values: oz, argent, braavos.
 
 ## `--url, -u <RPC_URL>`
 Optional.
