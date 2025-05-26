@@ -51,6 +51,7 @@ pub async fn test_happy_case(account_type: &str) {
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
+        estimate_fee: [..]
         message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
 
         After prefunding the account, run:
@@ -144,6 +145,7 @@ pub async fn test_happy_case_generate_salt() {
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
+        estimate_fee: [..]
         message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
 
         After prefunding the account, run:
@@ -229,6 +231,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
+        estimate_fee: [..]
         message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
 
         After prefunding the account, run:
@@ -361,6 +364,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
+        estimate_fee: [..]
         message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
 
         After prefunding the account, run:
@@ -563,6 +567,7 @@ pub async fn test_happy_case_keystore_int_format() {
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: [..]
+        estimate_fee: [..]
         message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
 
         After prefunding the account, run:
@@ -606,6 +611,7 @@ pub async fn test_happy_case_keystore_hex_format() {
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
+        estimate_fee: [..]
         message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
 
         After prefunding the account, run:
@@ -624,6 +630,7 @@ pub async fn test_happy_case_keystore_hex_format() {
 }
 
 #[tokio::test]
+#[expect(clippy::too_many_lines)]
 pub async fn test_happy_case_default_name_generation() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
@@ -656,6 +663,7 @@ pub async fn test_happy_case_default_name_generation() {
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
+        estimate_fee: [..]
         message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
 
         After prefunding the account, run:
@@ -689,8 +697,9 @@ pub async fn test_happy_case_default_name_generation() {
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
+        estimate_fee: [..]
         message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
-
+        
         After prefunding the account, run:
         sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name account-2
 

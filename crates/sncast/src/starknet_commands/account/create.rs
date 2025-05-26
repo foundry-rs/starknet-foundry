@@ -141,6 +141,7 @@ pub async fn create(
 
     Ok(AccountCreateResponse {
         address: address.into_(),
+        estimate_fee: estimated_fee,
         add_profile: add_profile_message,
         message: if account_json["deployed"] == json!(false) {
             message
