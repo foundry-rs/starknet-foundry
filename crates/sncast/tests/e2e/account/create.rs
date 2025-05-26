@@ -50,10 +50,10 @@ pub async fn test_happy_case(account_type: &str) {
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
-        max_fee: [..]
-        message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.
+        estimated_fee: [..]
+        message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
 
-        After prefunding the address, run:
+        After prefunding the account, run:
         sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
 
         To see account creation details, visit:
@@ -144,10 +144,10 @@ pub async fn test_happy_case_generate_salt() {
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
-        max_fee: [..]
-        message: Account successfully created[..]
+        estimated_fee: [..]
+        message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
 
-        After prefunding the address, run:
+        After prefunding the account, run:
         sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
 
         To see account creation details, visit:
@@ -230,10 +230,10 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
-        max_fee: [..]
-        message: Account successfully created[..]
+        estimated_fee: [..]
+        message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
 
-        After prefunding the address, run:
+        After prefunding the account, run:
         sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
 
         To see account creation details, visit:
@@ -362,10 +362,10 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
-        max_fee: [..]
-        message: Account successfully created[..]
+        estimated_fee: [..]
+        message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
 
-        After prefunding the address, run:
+        After prefunding the account, run:
         sncast --account {} --keystore {} account deploy --url {}
 
         To see account creation details, visit:
@@ -565,10 +565,10 @@ pub async fn test_happy_case_keystore_int_format() {
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: [..]
-        max_fee: [..]
-        message: Account successfully created[..]
+        estimated_fee: [..]
+        message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
 
-        After prefunding the address, run:
+        After prefunding the account, run:
         sncast --account {} --keystore {} account deploy --url {}
 
         To see account creation details, visit:
@@ -609,10 +609,10 @@ pub async fn test_happy_case_keystore_hex_format() {
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
-        max_fee: 0x[..]
-        message: Account successfully created[..]
+        estimated_fee: [..]
+        message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
 
-        After prefunding the address, run:
+        After prefunding the account, run:
         sncast --account {} --keystore {} account deploy --url {}
 
         To see account creation details, visit:
@@ -661,10 +661,10 @@ pub async fn test_happy_case_default_name_generation() {
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
-        max_fee: [..]
-        message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.
+        estimated_fee: [..]
+        message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
 
-        After prefunding the address, run:
+        After prefunding the account, run:
         sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name account-{id}
 
         To see account creation details, visit:
@@ -695,10 +695,10 @@ pub async fn test_happy_case_default_name_generation() {
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
-        max_fee: [..]
-        message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.
-
-        After prefunding the address, run:
+        estimated_fee: [..]
+        message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
+        
+        After prefunding the account, run:
         sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name account-2
 
         To see account creation details, visit:
@@ -862,5 +862,20 @@ fn test_old_braavos_class_hashes_disabled(class_hash: &str) {
         error: Using incompatible Braavos accounts is disabled because they don't work with starknet >= 0.13.4.
             Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
         "},
+    );
+}
+
+#[tokio::test]
+pub async fn test_happy_case_deployment_fee_message() {
+    let tempdir = tempdir().expect("Failed to create a temporary directory");
+
+    let args = vec!["account", "create", "--url", URL];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        "message: Account successfully created but it needs to be deployed. The estimated deployment fee is 0.000836288000000000 STRK. Prefund the account to cover deployment transaction fee",
     );
 }
