@@ -77,16 +77,25 @@ impl TestsSummary {
 
 impl Message for TestsSummary {
     fn text(&self) -> String {
-        let mut details = format!(
-            "{} passed, {} failed, {} skipped, {} ignored",
-            self.passed, self.failed, self.skipped, self.ignored
-        );
-
         if let Some(filtered) = self.filtered {
-            details = format!("{details}, {filtered} filtered out");
+            format!(
+                "{}: {} passed, {} failed, {} skipped, {} ignored, {filtered} filtered out",
+                style("Tests").bold(),
+                self.passed,
+                self.failed,
+                self.skipped,
+                self.ignored
+            )
+        } else {
+            format!(
+                "{}: {} passed, {} failed, {} skipped, {} ignored, other filtered out",
+                style("Tests").bold(),
+                self.passed,
+                self.failed,
+                self.skipped,
+                self.ignored
+            )
         }
-
-        format!("{} {details}", style("Tests:").bold())
     }
 }
 
