@@ -30,7 +30,7 @@ where
 pub struct AccountCreateResponse {
     pub address: PaddedFelt,
     #[serde(serialize_with = "serialize_as_decimal")]
-    pub max_fee: Felt,
+    pub estimated_fee: Felt,
     pub add_profile: String,
     pub message: String,
 }
