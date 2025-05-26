@@ -1,11 +1,11 @@
 use anyhow::Result;
 use forge_runner::debugging::TraceVerbosity;
+use forge_runner::printing::TestResultMessage;
 use forge_runner::{
     TestCaseFilter,
     forge_config::ForgeConfig,
     maybe_generate_coverage, maybe_save_trace_and_profile,
     package_tests::with_config_resolved::TestTargetWithResolvedConfig,
-    printing::print_test_result,
     run_for_test_case,
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
     test_target_summary::TestTargetSummary,
@@ -71,11 +71,12 @@ pub async fn run_for_test_target(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        print_test_result(
+        let test_result_message = TestResultMessage::new(
             &result,
             forge_config.output_config.detailed_resources,
             forge_config.test_runner_config.tracked_resource,
         );
+        ui.print(&test_result_message);
 
         let trace_path = maybe_save_trace_and_profile(
             &result,
