@@ -7,7 +7,6 @@ use crate::{
     TestArgs,
     block_number_map::BlockNumberMap,
     combine_configs::combine_configs,
-    pretty_printing,
     scarb::{
         config::{ForgeConfigFromScarb, ForkTarget},
         load_test_artifacts, should_compile_starknet_contract_target,
@@ -31,7 +30,7 @@ use forge_runner::{
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
-use foundry_ui::UI;
+use foundry_ui::{UI, components::typed::LabeledMessage};
 use scarb_api::get_contracts_artifacts_and_source_sierra_paths;
 use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
@@ -208,7 +207,11 @@ pub async fn run_for_package(
     });
 
     if any_fuzz_test_was_run {
-        pretty_printing::print_test_seed(forge_config.test_runner_config.fuzzer_seed, ui);
+        ui.print(&LabeledMessage::styled(
+            "Fuzzer seed",
+            &forge_config.test_runner_config.fuzzer_seed.to_string(),
+            "bold",
+        ));
     }
 
     Ok(summaries)
