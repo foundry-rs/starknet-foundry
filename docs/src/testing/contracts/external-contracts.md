@@ -4,7 +4,7 @@ Contracts from external dependencies can be used in `snforge` tests.
 
 ## Add a Dependency
 
-First, add a dependency on the contract package, either in `Scarb.toml` directly or by usign `scarb add packageName`.
+First, add a dependency on the contract package, either in `Scarb.toml` directly or by using `scarb add packageName`.
 Read more about dependencies
 in [Scarb documentation](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#adding-a-dependency).
 
