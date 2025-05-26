@@ -38,7 +38,7 @@ pub struct AccountCreateResponse {
 impl CommandResponse for AccountCreateResponse {}
 
 // TODO(#3391): Update text output to be more user friendly
-// impl Message for SnastMessage<AccountCreateResponse> {}
+// impl Message for SncastMessage<AccountCreateResponse> {}
 
 impl OutputLink for AccountCreateResponse {
     const TITLE: &'static str = "account creation";

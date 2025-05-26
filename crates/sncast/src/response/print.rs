@@ -146,7 +146,7 @@ impl OutputData {
     }
 
     // TODO(#3391): This should be removed once we don't use it anymore in default
-    // implementation of `text()` method in `SnastMessage`
+    // implementation of `text()` method in `SncastMessage`
     fn to_lines(&self, command: &str) -> String {
         let fields = self
             .0
@@ -158,7 +158,7 @@ impl OutputData {
     }
 
     // TODO(#3391): This should be removed once we don't use it anymore in default
-    // implementation of `text()` method in `SnastMessage`
+    // implementation of `text()` method in `SncastMessage`
     pub fn to_string_pretty(&self, command: &str, output_format: OutputFormat) -> Result<String> {
         match output_format {
             OutputFormat::Json => self.to_json(command),

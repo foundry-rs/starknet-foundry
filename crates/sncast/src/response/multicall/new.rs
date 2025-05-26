@@ -12,4 +12,4 @@ pub struct MulticallNewResponse {
 impl CommandResponse for MulticallNewResponse {}
 
 // TODO(#3391): Update text output to be more user friendly
-// impl Message for SnastMessage<MulticallNewResponse> {}
+// impl Message for SncastMessage<MulticallNewResponse> {}
