@@ -7,10 +7,7 @@ pub trait Message {
     /// Default implementation returns empty string, making [`Ui`] skip printing this message.
     fn text(&self) -> String
     where
-        Self: Sized + Serialize,
-    {
-        String::new()
-    }
+        Self: Sized + Serialize;
 
     /// Return JSON representation of this message.
     fn json(&self) -> String
