@@ -25,7 +25,6 @@ mod combine_configs;
 mod compatibility_check;
 mod init;
 mod new;
-pub mod pretty_printing;
 pub mod run_tests;
 pub mod scarb;
 pub mod shared_cache;

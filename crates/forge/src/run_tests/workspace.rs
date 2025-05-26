@@ -1,8 +1,8 @@
 use super::package::RunForPackageArgs;
-use super::structs::TestsFailureSummary;
+use super::structs::{LatestBlocksNumbers, TestsFailureSummary};
 use crate::warn::{error_if_snforge_std_not_compatible, warn_if_backtrace_without_panic_hint};
 use crate::{
-    ColorOption, ExitStatus, TestArgs, block_number_map::BlockNumberMap, pretty_printing,
+    ColorOption, ExitStatus, TestArgs, block_number_map::BlockNumberMap,
     run_tests::package::run_for_package, scarb::build_artifacts_with_scarb,
     shared_cache::FailedTestsCache, warn::warn_if_snforge_std_not_compatible,
 };
@@ -94,10 +94,9 @@ pub async fn run_for_workspace(args: TestArgs, ui: &UI) -> Result<ExitStatus> {
 
     FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
 
-    pretty_printing::print_latest_blocks_numbers(
-        block_number_map.get_url_to_latest_block_number(),
-        ui,
-    );
+    ui.print(&LatestBlocksNumbers::new(
+        block_number_map.get_url_to_latest_block_number().clone(),
+    ));
     ui.print(&TestsFailureSummary::new(&all_failed_tests));
 
     if args.exact {

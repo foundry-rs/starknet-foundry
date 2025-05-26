@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use console::style;
 use forge_runner::{
     package_tests::TestTargetLocation, test_case_summary::AnyTestCaseSummary,
@@ -127,5 +129,36 @@ impl Message for TestsFailureSummary {
             failures = format!("{failures}\n    {name}");
         }
         style(failures).bold().to_string()
+    }
+}
+
+#[derive(Serialize)]
+pub struct LatestBlocksNumbers {
+    url_to_latest_block_number_map: HashMap<url::Url, starknet_api::block::BlockNumber>,
+}
+
+impl LatestBlocksNumbers {
+    #[must_use]
+    pub fn new(
+        url_to_latest_block_number_map: HashMap<url::Url, starknet_api::block::BlockNumber>,
+    ) -> Self {
+        Self {
+            url_to_latest_block_number_map,
+        }
+    }
+}
+
+impl Message for LatestBlocksNumbers {
+    fn text(&self) -> String {
+        if self.url_to_latest_block_number_map.is_empty() {
+            return String::new();
+        }
+
+        let mut output = String::new();
+        for (url, latest_block_number) in &self.url_to_latest_block_number_map {
+            output =
+                format!("{output}Latest block number = {latest_block_number} for url = {url}\n",);
+        }
+        style(output).bold().to_string()
     }
 }
