@@ -3,18 +3,18 @@ use crate::debugging::TraceVerbosity;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use build_trace_data::save_trace_data;
 use cairo_lang_sierra::program::{ConcreteTypeLongId, Function, TypeDeclaration};
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_config_extension::config::RawFuzzerConfig;
+use foundry_ui::UI;
 use futures::StreamExt;
 use futures::stream::FuturesUnordered;
 use package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use profiler_api::run_profiler;
 use rand::SeedableRng;
 use rand::prelude::StdRng;
-use shared::print::print_as_warning;
 use shared::spinner::Spinner;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -84,10 +84,11 @@ pub fn maybe_save_trace_and_profile(
 pub fn maybe_generate_coverage(
     execution_data_to_save: &ExecutionDataToSave,
     saved_trace_data_paths: &[PathBuf],
+    ui: &UI,
 ) -> Result<()> {
     if execution_data_to_save.coverage {
         if saved_trace_data_paths.is_empty() {
-            print_as_warning(&anyhow!("No trace data to generate coverage from"));
+            ui.print_warning("No trace data to generate coverage from");
         } else {
             // TODO(#3395): Use Ui spinner
             let _spinner = Spinner::create_with_message("Running cairo-coverage");
@@ -108,6 +109,7 @@ pub fn run_for_test_case(
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
     trace_verbosity: Option<TraceVerbosity>,
+    ui: UI,
 ) -> JoinHandle<Result<AnyTestCaseSummary>> {
     if case.config.fuzzer_config.is_none() {
         tokio::task::spawn(async move {
@@ -118,6 +120,7 @@ pub fn run_for_test_case(
                 versioned_program_path,
                 send,
                 trace_verbosity,
+                ui.clone(),
             )
             .await?;
             Ok(AnyTestCaseSummary::Single(res))
@@ -131,6 +134,7 @@ pub fn run_for_test_case(
                 versioned_program_path,
                 send,
                 trace_verbosity,
+                ui.clone(),
             )
             .await??;
             Ok(AnyTestCaseSummary::Fuzzing(res))
@@ -145,6 +149,7 @@ fn run_with_fuzzing(
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
     trace_verbosity: Option<TraceVerbosity>,
+    ui: UI,
 ) -> JoinHandle<Result<TestCaseSummary<Fuzzing>>> {
     tokio::task::spawn(async move {
         if send.is_closed() {
@@ -178,6 +183,7 @@ fn run_with_fuzzing(
                 fuzzing_send.clone(),
                 rng.clone(),
                 trace_verbosity,
+                ui.clone(),
             ));
         }
 

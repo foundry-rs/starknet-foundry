@@ -1,6 +1,5 @@
 use crate::compatibility_check::{Requirement, RequirementsChecker, create_version_parser};
 use anyhow::Result;
-use anyhow::anyhow;
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use derive_more::Display;
@@ -13,7 +12,6 @@ use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
 use shared::auto_completions::{Completion, generate_completions};
-use shared::print::print_as_warning;
 use std::cell::RefCell;
 use std::ffi::OsString;
 use std::process::Command;
@@ -260,7 +258,7 @@ pub fn main_execution(ui: &UI) -> Result<ExitStatus> {
 
     match cli.subcommand {
         ForgeSubcommand::Init { name } => {
-            init::init(name.as_str())?;
+            init::init(name.as_str(), ui)?;
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::New { args } => {
@@ -272,9 +270,7 @@ pub fn main_execution(ui: &UI) -> Result<ExitStatus> {
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::CleanCache {} => {
-            print_as_warning(&anyhow!(
-                "`snforge clean-cache` is deprecated and will be removed in the future. Use `snforge clean cache` instead"
-            ));
+            ui.print_warning("`snforge clean-cache` is deprecated and will be removed in the future. Use `snforge clean cache` instead");
             let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
             let cache_dir = scarb_metadata.workspace.root.join(CACHE_DIR);
 
