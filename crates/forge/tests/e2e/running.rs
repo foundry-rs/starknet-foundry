@@ -2,7 +2,7 @@ use super::common::runner::{get_current_branch, get_remote_url, setup_package, t
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
-use shared::test_utils::output_assert::{AsOutput, assert_stdout, assert_stdout_contains};
+use shared::test_utils::output_assert::{assert_stdout, assert_stdout_contains};
 use std::{fs, str::FromStr};
 use test_utils::tempdir_with_tool_versions;
 use toml_edit::{DocumentMut, value};
@@ -1028,11 +1028,6 @@ fn exact_printing_mixed() {
     let temp = setup_package("deterministic_output");
 
     let output = test_runner(&temp).arg("x").assert().code(1);
-
-    let stdout = output.as_stdout();
-    println!("----");
-    println!("{}", stdout);
-    println!("----");
 
     assert_stdout(
         output,
