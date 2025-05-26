@@ -172,8 +172,14 @@ pub async fn run_for_package(
 
         let forge_config = forge_config.clone();
 
-        let summary =
-            run_for_test_target(test_target, forge_config, &tests_filter, trace_verbosity).await?;
+        let summary = run_for_test_target(
+            test_target,
+            forge_config,
+            &tests_filter,
+            trace_verbosity,
+            ui,
+        )
+        .await?;
 
         match summary {
             TestTargetRunResult::Ok(summary) => {

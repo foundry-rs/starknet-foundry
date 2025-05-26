@@ -1,60 +1,130 @@
+// TODO(#3022): Rename `printing.rs` to `messages.rs``
 use crate::forge_config::ForgeTrackedResource;
 use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary};
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use console::style;
+use foundry_ui::Message;
+use serde::Serialize;
 
-pub fn print_test_result(
-    any_test_result: &AnyTestCaseSummary,
-    print_detailed_resources: bool,
-    tracked_resource: ForgeTrackedResource,
-) {
-    if any_test_result.is_skipped() {
-        return;
-    }
-    let result_header = result_header(any_test_result);
-    let result_name = any_test_result.name().unwrap();
+#[derive(Serialize)]
+pub struct TestResultMessage {
+    is_passed: bool,
+    is_failed: bool,
+    is_ignored: bool,
+    name: String,
+    msg: Option<String>,
+    debugging_trace: String,
+    fuzzer_report: String,
+    gas_usage: String,
+    used_resources: String,
+}
 
-    let result_msg = result_message(any_test_result);
-    let result_debug_trace = result_debug_trace(any_test_result);
+impl TestResultMessage {
+    pub fn new(
+        any_test_result: &AnyTestCaseSummary,
+        show_detailed_resources: bool,
+        tracked_resource: ForgeTrackedResource,
+    ) -> Self {
+        let name = any_test_result
+            .name()
+            .expect("Test result must have a name")
+            .to_string();
 
-    let mut fuzzer_report = None;
-    if let AnyTestCaseSummary::Fuzzing(test_result) = any_test_result {
-        fuzzer_report = match test_result {
-            TestCaseSummary::Passed {
-                test_statistics: FuzzingStatistics { runs },
-                gas_info,
-                ..
-            } => Some(format!(" (runs: {runs}, {gas_info})",)),
-            TestCaseSummary::Failed {
-                fuzzer_args,
-                test_statistics: FuzzingStatistics { runs },
-                ..
-            } => Some(format!(" (runs: {runs}, arguments: {fuzzer_args:?})")),
-            _ => None,
+        let debugging_trace = any_test_result
+            .debugging_trace()
+            .map(|trace| format!("\n{trace}"))
+            .unwrap_or_default();
+
+        let mut fuzzer_report = None;
+        if let AnyTestCaseSummary::Fuzzing(test_result) = &any_test_result {
+            fuzzer_report = match test_result {
+                TestCaseSummary::Passed {
+                    test_statistics: FuzzingStatistics { runs },
+                    gas_info,
+                    ..
+                } => Some(format!(" (runs: {runs}, {gas_info})",)),
+                TestCaseSummary::Failed {
+                    fuzzer_args,
+                    test_statistics: FuzzingStatistics { runs },
+                    ..
+                } => Some(format!(" (runs: {runs}, arguments: {fuzzer_args:?})")),
+                _ => None,
+            };
+        }
+        let fuzzer_report = fuzzer_report.unwrap_or_else(String::new);
+
+        let gas_usage = match any_test_result {
+            AnyTestCaseSummary::Single(TestCaseSummary::Passed { gas_info, .. }) => {
+                format!(
+                    " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
+                    gas_info.l1_gas, gas_info.l1_data_gas, gas_info.l2_gas
+                )
+            }
+            _ => String::new(),
         };
+
+        let used_resources = match (show_detailed_resources, &any_test_result) {
+            (true, AnyTestCaseSummary::Single(TestCaseSummary::Passed { used_resources, .. })) => {
+                format_detailed_resources(used_resources, tracked_resource)
+            }
+            _ => String::new(),
+        };
+
+        Self {
+            name,
+            is_passed: any_test_result.is_passed(),
+            is_failed: any_test_result.is_failed(),
+            is_ignored: any_test_result.is_ignored(),
+            msg: any_test_result.msg().map(std::string::ToString::to_string),
+            debugging_trace,
+            fuzzer_report,
+            gas_usage,
+            used_resources,
+        }
     }
-    let fuzzer_report = fuzzer_report.unwrap_or_else(String::new);
 
-    let gas_usage = match any_test_result {
-        AnyTestCaseSummary::Single(TestCaseSummary::Passed { gas_info, .. }) => {
-            format!(
-                " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
-                gas_info.l1_gas, gas_info.l1_data_gas, gas_info.l2_gas
-            )
+    fn result_message(&self) -> String {
+        if let Some(msg) = &self.msg {
+            if self.is_passed {
+                return format!("\n\n{msg}");
+            }
+            if self.is_failed {
+                return format!("\n\nFailure data:{msg}");
+            }
         }
-        _ => String::new(),
-    };
+        String::new()
+    }
 
-    let used_resources = match (print_detailed_resources, any_test_result) {
-        (true, AnyTestCaseSummary::Single(TestCaseSummary::Passed { used_resources, .. })) => {
-            format_detailed_resources(used_resources, tracked_resource)
+    fn result_header(&self) -> String {
+        if self.is_passed {
+            return format!("[{}]", style("PASS").green());
         }
-        _ => String::new(),
-    };
+        if self.is_failed {
+            return format!("[{}]", style("FAIL").red());
+        }
+        if self.is_ignored {
+            return format!("[{}]", style("IGNORE").yellow());
+        }
+        unreachable!()
+    }
+}
 
-    println!(
-        "{result_header} {result_name}{fuzzer_report}{gas_usage}{used_resources}{result_msg}{result_debug_trace}"
-    );
+impl Message for TestResultMessage {
+    fn text(&self) -> String {
+        let result_name = &self.name;
+        let result_header = self.result_header();
+
+        let result_msg = self.result_message();
+        let result_debug_trace = &self.debugging_trace;
+
+        let fuzzer_report = &self.fuzzer_report;
+        let gas_usage = &self.gas_usage;
+        let used_resources = &self.used_resources;
+
+        format!(
+            "{result_header} {result_name}{fuzzer_report}{gas_usage}{used_resources}{result_msg}{result_debug_trace}"
+        )
+    }
 }
 
 fn format_detailed_resources(
@@ -119,36 +189,4 @@ where
         .map(|(key, value)| format!("{key:?}: {value}"))
         .collect::<Vec<String>>()
         .join(", ")
-}
-
-fn result_message(any_test_result: &AnyTestCaseSummary) -> String {
-    if let Some(msg) = any_test_result.msg() {
-        if any_test_result.is_passed() {
-            return format!("\n\n{msg}");
-        }
-        if any_test_result.is_failed() {
-            return format!("\n\nFailure data:{msg}");
-        }
-    }
-    String::new()
-}
-
-fn result_header(any_test_result: &AnyTestCaseSummary) -> String {
-    if any_test_result.is_passed() {
-        return format!("[{}]", style("PASS").green());
-    }
-    if any_test_result.is_failed() {
-        return format!("[{}]", style("FAIL").red());
-    }
-    if any_test_result.is_ignored() {
-        return format!("[{}]", style("IGNORE").yellow());
-    }
-    unreachable!()
-}
-
-fn result_debug_trace(any_test_result: &AnyTestCaseSummary) -> String {
-    any_test_result
-        .debugging_trace()
-        .map(|trace| format!("\n{trace}"))
-        .unwrap_or_default()
 }
