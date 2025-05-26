@@ -18,6 +18,7 @@ pub struct Requirement<'a> {
 }
 
 impl Requirement<'_> {
+    // TODO(#3404)
     fn validate_and_get_output(&self) -> (bool, String) {
         let version = self.get_version();
         let mut is_valid;
