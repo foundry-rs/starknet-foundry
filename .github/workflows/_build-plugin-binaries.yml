@@ -3,11 +3,13 @@ name: Build snforge_scarb_plugin
 on:
   workflow_call:
     inputs:
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       overridden_plugin_version:
         required: false
         type: string
   workflow_dispatch:
     inputs:
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       overridden_plugin_version:
         required: false
         type: string
@@ -68,9 +70,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          target: ${{ matrix.target }}
+      - name: Setup rust
+        run: |
+          rustup target add ${{ matrix.target }} --toolchain 1.86.0
 
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
 

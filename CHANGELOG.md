@@ -16,13 +16,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- "invalid syscall selector" error appearing when using arithmetic circuits 
+- "invalid syscall selector" error appearing when using arithmetic circuits
+- Bug that caused incorrect gas tracking for contracts using Sierra version less than `1.7.0` when `sierra-gas` was passed as the `tracked-resource`
 
 ### Cast
 
 #### Updated
 
 - OpenZeppelin account updated to v1.0.0 [preset](https://docs.openzeppelin.com/contracts-cairo/1.0.0/api/account#AccountUpgradeable)
+
+## [0.43.1] - 2025-05-16
+
+### Cast
+
+#### Removed
+
+- Broken Voyager RPC provider
 
 ## [0.43.0] - 2025-05-09
 
