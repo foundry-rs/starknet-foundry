@@ -419,9 +419,9 @@ mod tests {
 
     #[test]
     fn test_felt_to_bigdecimal_with_large_number() {
-        let felt = Felt::from_hex("0x1234567890abcdef").unwrap();
+        let felt = Felt::from_dec_str("1311768467463790320").unwrap();
         let result = felt_to_bigdecimal(felt, 18);
-        let expected = BigDecimal::new(BigInt::from_bytes_be(Sign::Plus, &felt.to_bytes_be()), 18);
+        let expected = BigDecimal::from_str("1.311768467463790320").unwrap();
         assert_eq!(result, expected);
     }
 
