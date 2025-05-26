@@ -21,10 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
-#### Updated
+#### Changed
 
 - OpenZeppelin account updated to v1.0.0 [preset](https://docs.openzeppelin.com/contracts-cairo/1.0.0/api/account#AccountUpgradeable)
+- Restored support for Braavos accounts
+- Accounts created with `--type braavos` use updated v1.2.0 class hash
 - Output of `sncast account create` is now clearer; the estimated fee is displayed in both STRK and FRI.
+
 
 ## [0.43.1] - 2025-05-16
 

@@ -20,8 +20,7 @@ use test_case::test_case;
 
 #[test_case("oz"; "oz_account_type")]
 #[test_case("argent"; "argent_account_type")]
-// TODO(#3118): Re-enable this test once braavos integration is restored
-// #[test_case("braavos"; "braavos_account_type")]
+#[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
@@ -336,8 +335,7 @@ pub async fn test_account_already_exists() {
 
 #[test_case("oz"; "oz_account_type")]
 #[test_case("argent"; "argent_account_type")]
-// TODO(#3118)
-// #[test_case("braavos"; "braavos_account_type")]
+#[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case_keystore(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
@@ -831,8 +829,9 @@ fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&s
     to_string_pretty(&account_json).unwrap()
 }
 
-#[test]
-fn test_braavos_disabled() {
+#[test_case("0x02c8c7e6fbcfb3e8e15a46648e8914c6aa1fc506fc1e7fb3d1e19630716174bc"; "braavos_v1_1_0")]
+#[test_case("0x041bf1e71792aecb9df3e9d04e1540091c5e13122a731e02bec588f71dc1a5c3"; "braavos_v1_0_0")]
+fn test_old_braavos_class_hashes_disabled(class_hash: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
@@ -847,6 +846,8 @@ fn test_braavos_disabled() {
         "my_account",
         "--salt",
         "0x1",
+        "--class-hash",
+        class_hash,
         "--type",
         "braavos",
     ];
@@ -858,7 +859,7 @@ fn test_braavos_disabled() {
         output,
         indoc! {r"
         command: account create
-        error: Using Braavos accounts is temporarily disabled because they don't yet work with starknet 0.13.5.
+        error: Using incompatible Braavos accounts is disabled because they don't work with starknet >= 0.13.4.
             Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
         "},
     );
