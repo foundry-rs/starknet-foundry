@@ -1,4 +1,4 @@
-## Handling Errors
+# Handling Errors
 
 Sometimes we want to test contracts functions that can panic, like testing that function that verifies caller address
 panics on invalid address. For that purpose Starknet also provides a `SafeDispatcher`, that returns a `Result` instead of
@@ -42,7 +42,7 @@ Failures:
 </details>
 <br>
 
-### `SafeDispatcher`
+## `SafeDispatcher`
 
 Using `SafeDispatcher` we can test that the function in fact panics with an expected message.
 Safe dispatcher is a special kind of dispatcher that allows using the contract without automatically unwrapping the result, thereby making possible to catch the error like shown below.
@@ -103,7 +103,7 @@ You also could skip the de-serialization of the `panic_data`, and not use `try_d
 >   let result = safe_dispatcher.some_function();
 >   ```
 
-### Expecting Test Failure
+## Expecting Test Failure
 
 Sometimes the test code failing can be a desired behavior.
 Instead of manually handling it, you can simply mark your test as `#[should_panic(...)]`.
