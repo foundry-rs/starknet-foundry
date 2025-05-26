@@ -153,7 +153,7 @@ impl Message for LatestBlocksNumbersMessage {
         let mut output = String::new();
 
         if self.url_to_latest_block_number_map.is_empty() {
-            output = format!("{output}\n")
+            output = format!("{output}\n");
         }
 
         for (url, latest_block_number) in &self.url_to_latest_block_number_map {
