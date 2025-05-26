@@ -7,6 +7,7 @@ use crate::helpers::fixtures::{
     deploy_latest_oz_account,
 };
 use ctor::{ctor, dtor};
+use foundry_ui::UI;
 use std::net::TcpStream;
 use std::process::{Command, Stdio};
 use std::string::ToString;
@@ -71,7 +72,7 @@ fn start_devnet() {
         if verify_devnet_availability(&format!("{host}:{port}")) {
             break;
         } else if now.elapsed() >= timeout {
-            eprintln!("Timed out while waiting for devnet!");
+            UI::default().print_error("Timed out while waiting for devnet to start!");
             std::process::exit(1);
         }
     }
