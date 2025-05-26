@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Restored support for Braavos accounts
 - Accounts created with `--type braavos` use updated v1.2.0 class hash
 - Output of `sncast account create` is now clearer; the estimated fee is displayed in both STRK and FRI.
-
+- Renamed the field `max_fee` to `estimate_fee` in the `sncast account create` output.
 
 ## [0.43.1] - 2025-05-16
 
