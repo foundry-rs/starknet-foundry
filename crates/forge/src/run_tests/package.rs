@@ -1,6 +1,6 @@
 use super::{
     resolve_config::resolve_config,
-    structs::{CollectedTestsCount, TestsRun, TestsSummary},
+    structs::{CollectedTestsCountMessage, TestsRunMessage, TestsSummaryMessage},
     test_target::{TestTargetRunResult, run_for_test_target},
 };
 use crate::{
@@ -157,7 +157,7 @@ pub async fn run_for_package(
     warn_if_incompatible_rpc_version(&test_targets).await?;
 
     let not_filtered = sum_test_cases(&test_targets);
-    ui.print(&CollectedTestsCount {
+    ui.print(&CollectedTestsCountMessage {
         tests_num: not_filtered,
         package_name: package_name.clone(),
     });
@@ -165,7 +165,7 @@ pub async fn run_for_package(
     let mut summaries = vec![];
 
     for test_target in test_targets {
-        ui.print(&TestsRun::new(
+        ui.print(&TestsRunMessage::new(
             test_target.tests_location,
             test_target.test_cases.len(),
         ));
@@ -197,10 +197,10 @@ pub async fn run_for_package(
 
     // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
     let tests_summary = if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
-        TestsSummary::new(&summaries, None)
+        TestsSummaryMessage::new(&summaries, None)
     } else {
         let filtered = all_tests - not_filtered;
-        TestsSummary::new(&summaries, Some(filtered))
+        TestsSummaryMessage::new(&summaries, Some(filtered))
     };
     ui.print(&tests_summary);
 
