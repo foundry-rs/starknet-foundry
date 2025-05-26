@@ -1,4 +1,4 @@
-# Writing Tests
+# Writing Contracts Tests
 
 ## The Test Contract
 

@@ -17,7 +17,7 @@
 * [Writing Tests](testing/testing.md)
 * [Test Attributes](testing/test-attributes.md)
 * [Testing Smart Contracts](testing/contracts.md)
-    * [Writing Tests](testing/contracts/writing_tests.md)
+    * [Writing Contracts Tests](testing/contracts/writing_tests.md)
     * [Handling Errors](testing/contracts/handling-errors.md)
     * [Using External Contracts in Tests](testing/contracts/external-contracts.md)
 * [Testing Contracts' Internals](testing/testing-contract-internals.md)
