@@ -5,6 +5,8 @@ use clap::Args;
 use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet::providers::{JsonRpcClient, jsonrpc::HttpTransport};
+use std::env::current_exe;
+use std::time::UNIX_EPOCH;
 
 #[derive(Args, Clone, Debug, Default)]
 #[group(required = false, multiple = false)]
@@ -55,18 +57,33 @@ impl RpcArgs {
     }
 }
 
-enum FreeProvider {
+fn installation_constant_seed() -> Result<u64> {
+    let executable_path = current_exe()?;
+    let metadata = executable_path.metadata()?;
+    let modified_time = metadata.modified()?;
+    let duration = modified_time.duration_since(UNIX_EPOCH)?;
+
+    Ok(duration.as_secs())
+}
+
+pub enum FreeProvider {
     Blast,
 }
 
 impl FreeProvider {
-    fn semi_random() -> Self {
-        FreeProvider::Blast
+    #[must_use]
+    pub fn semi_random() -> Self {
+        let seed = installation_constant_seed().unwrap_or(2);
+        if seed % 2 == 0 {
+            return Self::Blast;
+        }
+        Self::Blast
     }
 }
 
 impl Network {
-    fn url(self, provider: &FreeProvider) -> String {
+    #[must_use]
+    pub fn url(self, provider: &FreeProvider) -> String {
         match self {
             Network::Mainnet => Self::free_mainnet_rpc(provider),
             Network::Sepolia => Self::free_sepolia_rpc(provider),
