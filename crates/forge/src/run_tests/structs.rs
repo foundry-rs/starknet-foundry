@@ -74,21 +74,19 @@ impl TestsSummary {
         }
     }
 }
+
 impl Message for TestsSummary {
     fn text(&self) -> String {
-        let mut summary = format!(
-            "\n\n{} passed, {} failed, {} skipped, {} ignored",
+        let mut details = format!(
+            "{} passed, {} failed, {} skipped, {} ignored",
             self.passed, self.failed, self.skipped, self.ignored
         );
 
         if let Some(filtered) = self.filtered {
-            // summary.push_str(&format!(", {filtered} filtered out"));
-
-            // use write! to avoid extra allocation
-            summary = format!("{summary}, {filtered} filtered out");
+            details = format!("{details}, {filtered} filtered out");
         }
 
-        style(summary).bold().to_string()
+        format!("{} {details}", style("Tests:").bold())
     }
 }
 
