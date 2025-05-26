@@ -11,4 +11,4 @@ pub struct ScriptRunResponse {
 impl CommandResponse for ScriptRunResponse {}
 
 // TODO(#3391): Update text output to be more user friendly
-// impl Message for SnastMessage<ScriptRunResponse> {}
+// impl Message for SncastMessage<ScriptRunResponse> {}

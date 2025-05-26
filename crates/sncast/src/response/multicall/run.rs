@@ -14,7 +14,7 @@ pub struct MulticallRunResponse {
 impl CommandResponse for MulticallRunResponse {}
 
 // TODO(#3391): Update text output to be more user friendly
-// impl Message for SnastMessage<MulticallRunResponse> {}
+// impl Message for SncastMessage<MulticallRunResponse> {}
 
 impl From<InvokeResponse> for MulticallRunResponse {
     fn from(value: InvokeResponse) -> Self {

@@ -10,4 +10,4 @@ pub struct AccountDeleteResponse {
 impl CommandResponse for AccountDeleteResponse {}
 
 // TODO(#3391): Update text output to be more user friendly
-// impl Message for SnastMessage<AccountDeleteResponse> {}
+// impl Message for SncastMessage<AccountDeleteResponse> {}
