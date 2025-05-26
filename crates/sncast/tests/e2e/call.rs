@@ -141,14 +141,11 @@ fn test_wrong_function_name() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
-        indoc! {r"
-        command: call
-        error: Requested entrypoint does not exist in the contract
-        "},
+        r#"Error: Function with selector "0x2924aec1f107eca35a5dc447cee68cc6985fe404841c9aad477adfcbe596d0a" not found in ABI of the contract"#,
     );
 }
 
