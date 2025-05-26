@@ -38,7 +38,7 @@ impl<'a> TaggedMessage<'a> {
 impl Message for TaggedMessage<'_> {
     fn text(&self) -> String {
         format!(
-            "[{}]: {}",
+            "[{}] {}",
             self.tag_style
                 .map(Style::from_dotted_str)
                 .unwrap_or_default()
