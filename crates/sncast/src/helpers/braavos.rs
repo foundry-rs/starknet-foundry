@@ -145,7 +145,7 @@ where
 }
 
 pub fn check_braavos_account_compatibility(class_hash: Felt) -> Result<(), Error> {
-    let msg = "Using incompatible Braavos accounts is disabled because they don't work with starknet 0.13.5.
+    let msg = "Using incompatible Braavos accounts is disabled because they don't work with starknet >= 0.13.4.
     Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3";
 
     if BRAAVOS_OLD_CLASS_HASHES.contains(&class_hash) {

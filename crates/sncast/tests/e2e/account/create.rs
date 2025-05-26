@@ -859,7 +859,7 @@ fn test_old_braavos_class_hashes_disabled(class_hash: &str) {
         output,
         indoc! {r"
         command: account create
-        error: Using incompatible Braavos accounts is disabled because they don't work with starknet 0.13.5.
+        error: Using incompatible Braavos accounts is disabled because they don't work with starknet >= 0.13.4.
             Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
         "},
     );
