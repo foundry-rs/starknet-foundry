@@ -124,7 +124,7 @@ impl Message for TestsFailureSummaryMessage {
             return String::new();
         }
 
-        let mut failures = "Failures:".to_string();
+        let mut failures = "\nFailures:".to_string();
         for name in &self.failed_test_names {
             failures = format!("{failures}\n    {name}");
         }
