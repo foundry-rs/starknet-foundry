@@ -1,4 +1,5 @@
 use anyhow::{Context, Result, anyhow};
+use foundry_ui::UI;
 use regex::Regex;
 use semver::Version;
 use shared::command::CommandExt;
@@ -88,11 +89,11 @@ impl<'a> RequirementsChecker<'a> {
         self.requirements.push(requirement);
     }
 
-    pub fn check(&self) -> Result<()> {
+    pub fn check(&self, ui: &UI) -> Result<()> {
         let (validation_output, all_requirements_valid) = self.check_and_prepare_output();
 
         if self.output_on_success || !all_requirements_valid {
-            println!("{validation_output}");
+            ui.print(&validation_output);
         }
 
         if all_requirements_valid {
@@ -239,7 +240,9 @@ mod tests {
 
         let (validation_output, is_valid) = requirements_checker.check_and_prepare_output();
 
-        println!("{validation_output}");
+        let ui = UI::default();
+        ui.print(&validation_output);
+
         assert!(is_valid);
         assert!(validation_output.contains("⚠️  Scarb Version"));
         assert!(validation_output.contains("doesn't satisfy minimal recommended 999.0.0"));

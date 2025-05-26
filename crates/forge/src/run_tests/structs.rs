@@ -1,8 +1,10 @@
 use console::style;
-use forge_runner::{package_tests::TestTargetLocation, test_target_summary::TestTargetSummary};
+use forge_runner::{
+    package_tests::TestTargetLocation, test_case_summary::AnyTestCaseSummary,
+    test_target_summary::TestTargetSummary,
+};
 use foundry_ui::Message;
 use serde::Serialize;
-
 #[derive(Serialize)]
 pub struct TestsRun {
     test_target_location: TestTargetLocation,
@@ -87,5 +89,36 @@ impl Message for TestsSummary {
         }
 
         style(summary).bold().to_string()
+    }
+}
+
+#[derive(Serialize)]
+pub struct TestsFailureSummary {
+    pub failed_test_names: Vec<String>,
+}
+
+impl TestsFailureSummary {
+    #[must_use]
+    pub fn new(all_failed_tests: &[AnyTestCaseSummary]) -> Self {
+        let failed_test_names = all_failed_tests
+            .iter()
+            .map(|any_test_case_summary| any_test_case_summary.name().unwrap().to_string())
+            .collect();
+
+        Self { failed_test_names }
+    }
+}
+
+impl Message for TestsFailureSummary {
+    fn text(&self) -> String {
+        if self.failed_test_names.is_empty() {
+            return String::new();
+        }
+
+        let mut failures = "\nFailures:".to_string();
+        for name in &self.failed_test_names {
+            failures = format!("{failures}\n    {name}");
+        }
+        style(failures).bold().to_string()
     }
 }
