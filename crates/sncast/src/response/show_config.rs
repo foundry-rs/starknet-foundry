@@ -22,4 +22,4 @@ pub struct ShowConfigResponse {
 impl CommandResponse for ShowConfigResponse {}
 
 // TODO(#3391): Update text output to be more user friendly
-// impl Message for SnastMessage<ShowConfigResponse> {}
+// impl Message for SncastMessage<ShowConfigResponse> {}

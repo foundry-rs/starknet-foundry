@@ -11,4 +11,4 @@ pub struct AccountImportResponse {
 impl CommandResponse for AccountImportResponse {}
 
 // TODO(#3391): Update text output to be more user friendly
-// impl Message for SnastMessage<AccountImportResponse> {}
+// impl Message for SncastMessage<AccountImportResponse> {}

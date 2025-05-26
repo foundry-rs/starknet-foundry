@@ -22,7 +22,7 @@ impl From<InvokeResponse> for AccountDeployResponse {
 }
 
 // TODO(#3391): Update text output to be more user friendly
-// impl Message for SnastMessage<AccountCreateResponse> {}
+// impl Message for SncastMessage<AccountCreateResponse> {}
 
 impl OutputLink for AccountDeployResponse {
     const TITLE: &'static str = "invocation";
