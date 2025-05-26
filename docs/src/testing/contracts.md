@@ -11,6 +11,6 @@
 > snforge_std = "0.44.0"
 > ```
 
-Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when
-writing smart contracts, you often want to test their interactions with the blockchain state and with other contracts.
+When writing smart contracts, you often want to test their interactions with the blockchain state and with other
+contracts.
 This chapter shows how to test smart contracts using Starknet Foundry.
