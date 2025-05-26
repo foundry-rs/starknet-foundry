@@ -9,7 +9,7 @@ use foundry_ui::{Message, UI};
 use serde::Serialize;
 use sncast::helpers::account::generate_account_name;
 use sncast::response::call::CallResponse;
-use sncast::response::cast_message::SnastMessage;
+use sncast::response::cast_message::SncastMessage;
 use sncast::response::command::CommandResponse;
 use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::ResponseError;
@@ -42,7 +42,7 @@ use starknet::core::types::ContractClass;
 use starknet::core::types::contract::AbiEntry;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
-use starknet_commands::account::list::AccountsList;
+use starknet_commands::account::list::AccountsListMessage;
 use starknet_commands::verify::Verify;
 use starknet_types_core::felt::Felt;
 use tokio::runtime::Runtime;
@@ -645,7 +645,7 @@ async fn run_async_command(
             }
 
             account::Commands::List(options) => {
-                ui.print(&AccountsList::new(
+                ui.print(&AccountsListMessage::new(
                     config.accounts_file,
                     options.display_private_keys,
                     numbers_format,
@@ -870,9 +870,9 @@ fn process_command_result<T>(
     block_explorer_link: Option<String>,
 ) where
     T: serde::Serialize + Clone + CommandResponse,
-    SnastMessage<T>: Message + Serialize,
+    SncastMessage<T>: Message + Serialize,
 {
-    let cast_msg = result.map(|command_response| SnastMessage {
+    let cast_msg = result.map(|command_response| SncastMessage {
         command: command.to_string(),
         command_response,
         numbers_format,

@@ -8,12 +8,12 @@ use forge_runner::{
 use foundry_ui::Message;
 use serde::Serialize;
 #[derive(Serialize)]
-pub struct TestsRun {
+pub struct TestsRunMessage {
     test_target_location: TestTargetLocation,
     tests_num: usize,
 }
 
-impl TestsRun {
+impl TestsRunMessage {
     #[must_use]
     pub fn new(test_target_location: TestTargetLocation, tests_num: usize) -> Self {
         Self {
@@ -23,7 +23,7 @@ impl TestsRun {
     }
 }
 
-impl Message for TestsRun {
+impl Message for TestsRunMessage {
     fn text(&self) -> String {
         let dir_name = match self.test_target_location {
             TestTargetLocation::Lib => "src",
@@ -35,12 +35,12 @@ impl Message for TestsRun {
 }
 
 #[derive(Serialize)]
-pub struct CollectedTestsCount {
+pub struct CollectedTestsCountMessage {
     pub tests_num: usize,
     pub package_name: String,
 }
 
-impl Message for CollectedTestsCount {
+impl Message for CollectedTestsCountMessage {
     fn text(&self) -> String {
         let full = format!(
             "\n\nCollected {} test(s) from {} package",
@@ -52,7 +52,7 @@ impl Message for CollectedTestsCount {
 
 // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
 #[derive(Serialize)]
-pub struct TestsSummary {
+pub struct TestsSummaryMessage {
     passed: usize,
     failed: usize,
     skipped: usize,
@@ -60,7 +60,7 @@ pub struct TestsSummary {
     filtered: Option<usize>,
 }
 
-impl TestsSummary {
+impl TestsSummaryMessage {
     pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
         let passed = summaries.iter().map(TestTargetSummary::count_passed).sum();
         let failed = summaries.iter().map(TestTargetSummary::count_failed).sum();
@@ -77,7 +77,7 @@ impl TestsSummary {
     }
 }
 
-impl Message for TestsSummary {
+impl Message for TestsSummaryMessage {
     fn text(&self) -> String {
         if let Some(filtered) = self.filtered {
             format!(
@@ -102,11 +102,11 @@ impl Message for TestsSummary {
 }
 
 #[derive(Serialize)]
-pub struct TestsFailureSummary {
+pub struct TestsFailureSummaryMessage {
     pub failed_test_names: Vec<String>,
 }
 
-impl TestsFailureSummary {
+impl TestsFailureSummaryMessage {
     #[must_use]
     pub fn new(all_failed_tests: &[AnyTestCaseSummary]) -> Self {
         let failed_test_names = all_failed_tests
@@ -118,7 +118,7 @@ impl TestsFailureSummary {
     }
 }
 
-impl Message for TestsFailureSummary {
+impl Message for TestsFailureSummaryMessage {
     fn text(&self) -> String {
         if self.failed_test_names.is_empty() {
             return String::new();
@@ -133,11 +133,11 @@ impl Message for TestsFailureSummary {
 }
 
 #[derive(Serialize)]
-pub struct LatestBlocksNumbers {
+pub struct LatestBlocksNumbersMessage {
     url_to_latest_block_number_map: HashMap<url::Url, starknet_api::block::BlockNumber>,
 }
 
-impl LatestBlocksNumbers {
+impl LatestBlocksNumbersMessage {
     #[must_use]
     pub fn new(
         url_to_latest_block_number_map: HashMap<url::Url, starknet_api::block::BlockNumber>,
@@ -148,7 +148,7 @@ impl LatestBlocksNumbers {
     }
 }
 
-impl Message for LatestBlocksNumbers {
+impl Message for LatestBlocksNumbersMessage {
     fn text(&self) -> String {
         if self.url_to_latest_block_number_map.is_empty() {
             return String::new();

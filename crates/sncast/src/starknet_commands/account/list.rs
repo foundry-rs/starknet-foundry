@@ -25,7 +25,7 @@ pub struct List {
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
-pub struct AccountDataRepresentation {
+pub struct AccountDataRepresentationMessage {
     pub public_key: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub private_key: Option<String>,
@@ -46,7 +46,7 @@ pub struct AccountDataRepresentation {
     pub account_type: Option<AccountType>,
 }
 
-impl AccountDataRepresentation {
+impl AccountDataRepresentationMessage {
     fn new(
         account: &AccountData,
         display_private_key: bool,
@@ -87,14 +87,14 @@ fn read_and_flatten(
     accounts_file: &Utf8PathBuf,
     display_private_keys: bool,
     numbers_format: NumbersFormat,
-) -> anyhow::Result<HashMap<String, AccountDataRepresentation>> {
+) -> anyhow::Result<HashMap<String, AccountDataRepresentationMessage>> {
     let networks: NestedMap<AccountData> = read_and_parse_json_file(accounts_file)?;
     let mut result = HashMap::new();
 
     for (network, accounts) in networks.iter().sorted_by_key(|(name, _)| *name) {
         for (name, data) in accounts.iter().sorted_by_key(|(name, _)| *name) {
             let mut data_repr =
-                AccountDataRepresentation::new(data, display_private_keys, numbers_format);
+                AccountDataRepresentationMessage::new(data, display_private_keys, numbers_format);
 
             data_repr.set_network(network);
             result.insert(name.to_owned(), data_repr);
@@ -104,7 +104,7 @@ fn read_and_flatten(
     Ok(result)
 }
 
-impl Message for AccountDataRepresentation {
+impl Message for AccountDataRepresentationMessage {
     fn text(&self) -> String {
         let mut result = String::new();
 
@@ -141,13 +141,13 @@ impl Message for AccountDataRepresentation {
 }
 
 #[derive(Serialize)]
-pub struct AccountsList {
+pub struct AccountsListMessage {
     accounts_file: Utf8PathBuf,
     display_private_keys: bool,
     numbers_format: NumbersFormat,
 }
 
-impl AccountsList {
+impl AccountsListMessage {
     pub fn new(
         accounts_file: Utf8PathBuf,
         display_private_keys: bool,
@@ -162,7 +162,7 @@ impl AccountsList {
     }
 }
 
-impl Message for AccountsList {
+impl Message for AccountsListMessage {
     fn text(&self) -> String {
         let accounts_file_path = self
             .accounts_file
@@ -205,7 +205,7 @@ impl Message for AccountsList {
         )
         .unwrap_or_default();
 
-        let mut accounts_map: HashMap<String, AccountDataRepresentation> = HashMap::new();
+        let mut accounts_map: HashMap<String, AccountDataRepresentationMessage> = HashMap::new();
         for (name, data) in &accounts {
             accounts_map.insert(name.clone(), data.clone());
         }
