@@ -8,7 +8,7 @@
 > using the appropriate version.
 >```toml
 > [dev-dependencies]
-> snforge_std = "0.37.0"
+> snforge_std = "0.44.0"
 > ```
 
 Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when
