@@ -66,4 +66,21 @@ mod Test {
         let dispatcher = IOuterContractDispatcher { contract_address: contract_address_outer };
         dispatcher.outer(contract_address_inner);
     }
+
+    #[test]
+    #[fork(url: "{{ NODE_RPC_URL }}", block_number: 806134)]
+    fn test_fork_unwrapped_call_contract_syscall() {
+        // NOTE: This is not exactly the same as InnerContract here, but will return the same error
+        // Class hash needs to be different otherwise it would be found locally in the state
+        let contract_address_inner =
+            0x01506c04bdb56f2cc9ea1f67fcb086c99df7cec2598ce90e56f1d36fffda1cf4
+            .try_into()
+            .unwrap();
+
+        let contract_outer = declare("OuterContract").unwrap().contract_class();
+        let (contract_address_outer, _) = contract_outer.deploy(@array![]).unwrap();
+
+        let dispatcher = IOuterContractDispatcher { contract_address: contract_address_outer };
+        dispatcher.outer(contract_address_inner);
+    }
 }
