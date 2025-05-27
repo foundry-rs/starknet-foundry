@@ -47,7 +47,7 @@ fn contract_class_no_entrypoints() -> ContractClass {
     let casm_contract_class: CasmContractClass = serde_json::from_str(raw_contract_class)
         .expect("`raw_contract_class` should be valid casm contract class");
 
-    ContractClass::V1((casm_contract_class, SierraVersion::LATEST))
+    ContractClass::V1((casm_contract_class, SierraVersion::default()))
 }
 
 #[must_use]

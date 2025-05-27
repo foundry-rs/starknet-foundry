@@ -34,11 +34,7 @@ fn works_without_args() {
                 if snforge_std::_internals::is_config_run() {
                     let mut data = array![];
 
-<<<<<<< HEAD
-                    snforge_std::_internals::config_types::ContractsPredeploymentConfig {
-=======
                     snforge_std::_internals::config_types::PredeployedContractsConfig {
->>>>>>> 437d128b4f54847666ea8021530d237f6bf47866
                         is_disabled: true
                     }
                     .serialize(ref data);

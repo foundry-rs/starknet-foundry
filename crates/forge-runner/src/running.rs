@@ -199,7 +199,6 @@ pub fn run_test_case(
     if let Some(max_n_steps) = runtime_config.max_n_steps {
         set_max_steps(&mut context, max_n_steps);
     }
-
     let mut cached_state = CachedState::new(state_reader);
 
     let hints = hints_by_representation(&casm_program.assembled_cairo_program);
