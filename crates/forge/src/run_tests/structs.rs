@@ -152,10 +152,6 @@ impl Message for LatestBlocksNumbersMessage {
     fn text(&self) -> String {
         let mut output = String::new();
 
-        if !self.url_to_latest_block_number_map.is_empty() {
-            output = format!("{output}\n");
-        }
-
         for (url, latest_block_number) in &self.url_to_latest_block_number_map {
             output =
                 format!("{output}Latest block number = {latest_block_number} for url = {url}\n",);
