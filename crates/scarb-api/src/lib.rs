@@ -3,6 +3,7 @@ use anyhow::{Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
 pub use command::*;
 use foundry_ui::UI;
+use foundry_ui::components::warning::WarningMessage;
 use scarb_metadata::{Metadata, PackageId, PackageMetadata, TargetMetadata};
 use semver::{BuildMetadata, Prerelease, Version, VersionReq};
 use std::collections::HashMap;
@@ -34,9 +35,9 @@ fn get_starknet_artifacts_paths_from_test_targets(
             let path = if path.exists() {
                 Some(path)
             } else {
-                ui.print_warning(&format!(
+                ui.println(&WarningMessage::new(&format!(
                 "File = {path} missing when it should be existing, perhaps due to Scarb problem."
-            ));
+            )));
                 None
             };
 
@@ -89,11 +90,11 @@ fn get_starknet_artifacts_path(
     let path = if path.exists() {
         Some(path)
     } else {
-        ui.print_warning(&format!(
+        ui.println(&WarningMessage::new(&format!(
             "File = {path} missing. \
             This is most likely caused by `[[target.starknet-contract]]` being undefined in Scarb.toml \
             No contracts will be available for deployment"
-        ));
+        )));
         None
     };
 

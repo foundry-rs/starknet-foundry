@@ -1,4 +1,3 @@
-use components::tagged::TaggedMessage;
 pub use message::*;
 
 pub mod components;
@@ -59,15 +58,5 @@ impl UI {
             OutputFormat::Human => eprintln!("{}", message.text()),
             OutputFormat::Json => eprintln!("{}", message.json()),
         }
-    }
-
-    /// Print a warning message to stdout using the configured output format.
-    pub fn print_warning(&self, text: &str) {
-        self.println(&TaggedMessage::styled("WARNING", text, "yellow"));
-    }
-
-    /// Print an error message to stdout using the configured output format.
-    pub fn print_error(&self, text: &str) {
-        self.println(&TaggedMessage::styled("ERROR", text, "red"));
     }
 }
