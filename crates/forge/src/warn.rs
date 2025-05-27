@@ -139,7 +139,7 @@ pub(crate) fn warn_if_backtrace_without_panic_hint(scarb_metadata: &Metadata, ui
             });
 
         if !is_panic_backtrace_set {
-            ui.print(&(
+            ui.print_warning(&(
                 "To get accurate backtrace results, it is required to use the configuration available in the latest Cairo version. \
                 For more details, please visit https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/backtrace.html"
             ));
