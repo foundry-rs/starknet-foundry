@@ -4,7 +4,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 pub use command::*;
 use foundry_ui::UI;
 use scarb_metadata::{Metadata, PackageId, PackageMetadata, TargetMetadata};
-use semver::VersionReq;
+use semver::{BuildMetadata, Prerelease, Version, VersionReq};
 use std::collections::HashMap;
 use std::str::FromStr;
 
@@ -145,6 +145,26 @@ pub fn name_for_package(metadata: &Metadata, package: &PackageId) -> Result<Stri
     Ok(package.name.clone())
 }
 
+fn matches_version_with_special_rules(
+    package_name: &str,
+    package_version: &Version,
+    version_req: &VersionReq,
+) -> bool {
+    if package_name == "snforge_std" {
+        let normalized_version = Version {
+            major: package_version.major,
+            minor: package_version.minor,
+            patch: package_version.patch,
+            // Clear pre-release and build metadata to handle exceptions in nightly builds and smoke tests
+            pre: Prerelease::EMPTY,
+            build: BuildMetadata::EMPTY,
+        };
+        version_req.matches(&normalized_version)
+    } else {
+        version_req.matches(package_version)
+    }
+}
+
 /// Checks if the specified package has version compatible with the specified requirement
 pub fn package_matches_version_requirement(
     metadata: &Metadata,
@@ -157,7 +177,11 @@ pub fn package_matches_version_requirement(
         .filter(|package| package.name == name);
 
     match (packages.next(), packages.next()) {
-        (Some(package), None) => Ok(version_req.matches(&package.version)),
+        (Some(package), None) => Ok(matches_version_with_special_rules(
+            name,
+            &package.version,
+            version_req,
+        )),
         (None, None) => Err(anyhow!("Package {name} is not present in dependencies.")),
         _ => Err(anyhow!("Package {name} is duplicated in dependencies")),
     }
