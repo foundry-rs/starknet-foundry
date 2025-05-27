@@ -591,7 +591,7 @@ pub async fn wait_for_tx(
     wait_params: ValidatedWaitParams,
     ui: &UI,
 ) -> Result<String, WaitForTransactionError> {
-    ui.print(&format!("Transaction hash: {tx_hash:#x}"));
+    ui.println(&format!("Transaction hash: {tx_hash:#x}"));
 
     let retries = wait_params.get_retries();
     for i in (1..retries).rev() {
@@ -619,12 +619,12 @@ pub async fn wait_for_tx(
             Ok(starknet::core::types::TransactionStatus::Received)
             | Err(StarknetError(TransactionHashNotFound)) => {
                 let remaining_time = wait_params.remaining_time(i);
-                ui.print(&format!(
+                ui.println(&format!(
                     "Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)"
                 ));
             }
             Err(ProviderError::RateLimited) => {
-                ui.print(&"Request rate limited while waiting for transaction to be accepted");
+                ui.println(&"Request rate limited while waiting for transaction to be accepted");
                 sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
             }
             Err(err) => return Err(WaitForTransactionError::ProviderError(err.into())),
