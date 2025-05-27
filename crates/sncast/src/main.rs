@@ -459,7 +459,7 @@ async fn run_async_command(
 
                         process_command_result("multicall new", result, numbers_format, ui, None);
                     } else {
-                        ui.print(&DEFAULT_MULTICALL_CONTENTS.to_string());
+                        ui.println(&DEFAULT_MULTICALL_CONTENTS.to_string());
                     }
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
@@ -517,7 +517,7 @@ async fn run_async_command(
                         result.as_ref().ok().and_then(|r| r.account_name.clone())
                     {
                         if let Err(err) = prompt_to_add_account_as_default(account_name.as_str()) {
-                            ui.print_as_err(&format!(
+                            ui.eprintln(&format!(
                                 "Error: Failed to launch interactive prompt: {err}"
                             ));
                         }
@@ -597,7 +597,7 @@ async fn run_async_command(
                             .name
                             .expect("Must be provided if not using a keystore"),
                     ) {
-                        ui.print_as_err(&format!(
+                        ui.eprintln(&format!(
                             "Error: Failed to launch interactive prompt: {err}"
                         ));
                     }
@@ -636,7 +636,7 @@ async fn run_async_command(
             }
 
             account::Commands::List(options) => {
-                ui.print(&AccountsListMessage::new(
+                ui.println(&AccountsListMessage::new(
                     config.accounts_file,
                     options.display_private_keys,
                     numbers_format,
@@ -808,7 +808,7 @@ fn config_with_cli(config: &mut CastConfig, cli: &Cli) {
 
 fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
     let global_config_path = get_global_config_path().unwrap_or_else(|err| {
-        ui.print_as_err(&format!("Error getting global config path: {err}"));
+        ui.eprintln(&format!("Error getting global config path: {err}"));
         Utf8PathBuf::new()
     });
 

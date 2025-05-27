@@ -63,11 +63,11 @@ impl UI {
 
     /// Print a warning message to stdout using the configured output format.
     pub fn print_warning(&self, text: &str) {
-        self.print(&TaggedMessage::styled("WARNING", text, "yellow"));
+        self.println(&TaggedMessage::styled("WARNING", text, "yellow"));
     }
 
     /// Print an error message to stdout using the configured output format.
     pub fn print_error(&self, text: &str) {
-        self.print(&TaggedMessage::styled("ERROR", text, "red"));
+        self.println(&TaggedMessage::styled("ERROR", text, "red"));
     }
 }
