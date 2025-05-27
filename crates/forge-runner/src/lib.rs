@@ -9,6 +9,7 @@ use cairo_lang_sierra::program::{ConcreteTypeLongId, Function, TypeDeclaration};
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_config_extension::config::RawFuzzerConfig;
 use foundry_ui::UI;
+use foundry_ui::components::warning::WarningMessage;
 use futures::StreamExt;
 use futures::stream::FuturesUnordered;
 use package_tests::with_config_resolved::TestCaseWithResolvedConfig;
@@ -88,7 +89,9 @@ pub fn maybe_generate_coverage(
 ) -> Result<()> {
     if execution_data_to_save.coverage {
         if saved_trace_data_paths.is_empty() {
-            ui.print_warning("No trace data to generate coverage from");
+            ui.println(&WarningMessage::new(
+                "No trace data to generate coverage from",
+            ));
         } else {
             // TODO(#3395): Use Ui spinner
             let _spinner = Spinner::create_with_message("Running cairo-coverage");

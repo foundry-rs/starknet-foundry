@@ -7,6 +7,7 @@ use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceVerbosity;
 use forge_runner::forge_config::ForgeTrackedResource;
 use foundry_ui::UI;
+use foundry_ui::components::warning::WarningMessage;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
@@ -269,7 +270,7 @@ pub fn main_execution(ui: &UI) -> Result<ExitStatus> {
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::CleanCache {} => {
-            ui.print_warning("`snforge clean-cache` is deprecated and will be removed in the future. Use `snforge clean cache` instead");
+            ui.println(&WarningMessage::new("`snforge clean-cache` is deprecated and will be removed in the future. Use `snforge clean cache` instead"));
             let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
             let cache_dir = scarb_metadata.workspace.root.join(CACHE_DIR);
 

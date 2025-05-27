@@ -1,7 +1,7 @@
 use crate::{NewArgs, Template, new};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
-use foundry_ui::UI;
+use foundry_ui::{UI, components::warning::WarningMessage};
 
 pub fn init(project_name: &str, ui: &UI) -> Result<()> {
     let current_dir = std::env::current_dir().context("Failed to get current directory")?;
@@ -11,7 +11,7 @@ pub fn init(project_name: &str, ui: &UI) -> Result<()> {
 
     // To prevent printing this warning when running scarb init/new with an older version of Scarb
     if !project_path.join("Scarb.toml").exists() {
-        ui.print_warning("Command `snforge init` is deprecated and will be removed in the future. Please use `snforge new` instead.");
+        ui.println(&WarningMessage::new("Command `snforge init` is deprecated and will be removed in the future. Please use `snforge new` instead."));
     }
 
     new::new(NewArgs {

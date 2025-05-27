@@ -7,7 +7,7 @@ fn main() {
         Ok(ExitStatus::Success) => std::process::exit(0),
         Ok(ExitStatus::Failure) => std::process::exit(1),
         Err(error) => {
-            ui.print_error(&format!("{error:#}"));
+            ui.eprintln(&format!("{error:#}"));
             std::process::exit(2);
         }
     };
