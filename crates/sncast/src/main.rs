@@ -13,7 +13,7 @@ use sncast::response::cast_message::SncastMessage;
 use sncast::response::command::CommandResponse;
 use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::ResponseError;
-use sncast::response::explorer_link::block_explorer_link_if_allowed;
+use sncast::response::explorer_link::{OutputLinkMessage, block_explorer_link_if_allowed};
 use sncast::response::transformed_call::TransformedCallResponse;
 use std::io;
 use std::io::IsTerminal;
@@ -294,7 +294,6 @@ async fn run_async_command(
 
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                ui.output_format(),
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
@@ -347,7 +346,6 @@ async fn run_async_command(
 
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                ui.output_format(),
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
@@ -440,7 +438,6 @@ async fn run_async_command(
 
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                ui.output_format(),
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
@@ -485,7 +482,6 @@ async fn run_async_command(
 
                     let block_explorer_link = block_explorer_link_if_allowed(
                         &result,
-                        ui.output_format(),
                         provider.chain_id().await?,
                         config.show_explorer_links,
                         config.block_explorer,
@@ -556,7 +552,6 @@ async fn run_async_command(
 
                 let block_explorer_link = block_explorer_link_if_allowed(
                     &result,
-                    ui.output_format(),
                     provider.chain_id().await?,
                     config.show_explorer_links,
                     config.block_explorer,
@@ -610,7 +605,6 @@ async fn run_async_command(
 
                 let block_explorer_link = block_explorer_link_if_allowed(
                     &result,
-                    ui.output_format(),
                     provider.chain_id().await?,
                     config.show_explorer_links,
                     config.block_explorer,
@@ -864,7 +858,7 @@ fn process_command_result<T>(
     result: Result<T>,
     numbers_format: NumbersFormat,
     ui: &UI,
-    block_explorer_link: Option<String>,
+    block_explorer_link: Option<OutputLinkMessage>,
 ) where
     T: serde::Serialize + Clone + CommandResponse,
     SncastMessage<T>: Message + Serialize,
@@ -877,14 +871,14 @@ fn process_command_result<T>(
 
     match cast_msg {
         Ok(response) => {
-            ui.print(&response);
+            ui.println(&response);
             if let Some(link) = block_explorer_link {
-                ui.print(&link);
+                ui.println(&link);
             }
         }
         Err(err) => {
             let err = ResponseError::new(command.to_string(), format!("{err:#}"));
-            ui.print_as_err(&err);
+            ui.eprintln(&err);
         }
     }
 }

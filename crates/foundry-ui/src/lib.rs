@@ -39,14 +39,8 @@ impl UI {
         Self { output_format }
     }
 
-    /// Get the output format of this [`UI`] instance.
-    #[must_use]
-    pub fn output_format(&self) -> OutputFormat {
-        self.output_format
-    }
-
     /// Print the given message to stdout using the configured output format.
-    pub fn print<T>(&self, message: &T)
+    pub fn println<T>(&self, message: &T)
     where
         T: Message + serde::Serialize,
     {
@@ -57,7 +51,7 @@ impl UI {
     }
 
     /// Print the given message to stderr using the configured output format.
-    pub fn print_as_err<T>(&self, message: &T)
+    pub fn eprintln<T>(&self, message: &T)
     where
         T: Message + serde::Serialize,
     {
