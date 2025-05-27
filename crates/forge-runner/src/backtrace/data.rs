@@ -1,4 +1,4 @@
-use crate::backtrace::display::{Backtrace, BacktraceStack};
+use crate::backtrace::display::{Backtrace, BacktraceStack, render_fork_backtrace};
 use anyhow::Context;
 use anyhow::Result;
 use cairo_annotations::annotations::TryFromDebugInfo;
@@ -19,7 +19,7 @@ use rayon::iter::ParallelIterator;
 use starknet_api::core::ClassHash;
 use std::collections::{HashMap, HashSet};
 
-pub struct ContractBacktraceDataMapping(HashMap<ClassHash, ContractBacktraceData>);
+pub struct ContractBacktraceDataMapping(HashMap<ClassHash, ContractOrigin>);
 
 impl ContractBacktraceDataMapping {
     pub fn new(contracts_data: &ContractsData, class_hashes: HashSet<ClassHash>) -> Result<Self> {
@@ -27,18 +27,42 @@ impl ContractBacktraceDataMapping {
             class_hashes
                 .into_par_iter()
                 .map(|class_hash| {
-                    ContractBacktraceData::new(&class_hash, contracts_data)
+                    ContractOrigin::new(&class_hash, contracts_data)
                         .map(|contract_data| (class_hash, contract_data))
                 })
                 .collect::<Result<_>>()?,
         ))
     }
 
-    pub fn get_backtrace(&self, pc: &[usize], class_hash: &ClassHash) -> Result<BacktraceStack> {
+    pub fn render_backtrace(&self, pcs: &[usize], class_hash: &ClassHash) -> Result<String> {
         self.0
             .get(class_hash)
             .expect("class hash should be present in the data mapping")
-            .backtrace_stack_from(pc)
+            .render_backtrace(pcs)
+    }
+}
+
+enum ContractOrigin {
+    Fork(ClassHash),
+    Local(ContractBacktraceData),
+}
+
+impl ContractOrigin {
+    fn new(class_hash: &ClassHash, contracts_data: &ContractsData) -> Result<Self> {
+        if contracts_data.is_fork_class_hash(class_hash) {
+            Ok(ContractOrigin::Fork(*class_hash))
+        } else {
+            Ok(ContractOrigin::Local(ContractBacktraceData::new(
+                class_hash,
+                contracts_data,
+            )?))
+        }
+    }
+    fn render_backtrace(&self, pcs: &[usize]) -> Result<String> {
+        match self {
+            ContractOrigin::Fork(class_hash) => Ok(render_fork_backtrace(class_hash)),
+            ContractOrigin::Local(data) => data.render_backtrace(pcs),
+        }
     }
 }
 
@@ -156,7 +180,7 @@ impl ContractBacktraceData {
         Ok(stack)
     }
 
-    fn backtrace_stack_from(&self, pcs: &[usize]) -> Result<BacktraceStack> {
+    fn render_backtrace(&self, pcs: &[usize]) -> Result<String> {
         let stack = pcs
             .iter()
             .map(|pc| self.backtrace_from(*pc))
@@ -165,9 +189,11 @@ impl ContractBacktraceData {
 
         let contract_name = &self.contract_name;
 
-        Ok(BacktraceStack {
+        let backtrace_stack = BacktraceStack {
             contract_name,
             stack,
-        })
+        };
+
+        Ok(backtrace_stack.to_string())
     }
 }
