@@ -157,7 +157,7 @@ pub async fn run_for_package(
     warn_if_incompatible_rpc_version(&test_targets).await?;
 
     let not_filtered = sum_test_cases(&test_targets);
-    ui.print(&CollectedTestsCountMessage {
+    ui.println(&CollectedTestsCountMessage {
         tests_num: not_filtered,
         package_name: package_name.clone(),
     });
@@ -165,7 +165,7 @@ pub async fn run_for_package(
     let mut summaries = vec![];
 
     for test_target in test_targets {
-        ui.print(&TestsRunMessage::new(
+        ui.println(&TestsRunMessage::new(
             test_target.tests_location,
             test_target.test_cases.len(),
         ));
@@ -202,7 +202,7 @@ pub async fn run_for_package(
         let filtered = all_tests - not_filtered;
         TestsSummaryMessage::new(&summaries, Some(filtered))
     };
-    ui.print(&tests_summary);
+    ui.println(&tests_summary);
 
     let any_fuzz_test_was_run = summaries.iter().any(|test_target_summary| {
         test_target_summary
@@ -213,7 +213,7 @@ pub async fn run_for_package(
     });
 
     if any_fuzz_test_was_run {
-        ui.print(&LabeledMessage::styled(
+        ui.println(&LabeledMessage::styled(
             "Fuzzer seed",
             &forge_config.test_runner_config.fuzzer_seed.to_string(),
             "bold",

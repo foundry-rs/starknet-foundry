@@ -288,7 +288,7 @@ pub fn main_execution(ui: &UI) -> Result<ExitStatus> {
             let cores = if let Ok(available_cores) = available_parallelism() {
                 available_cores.get()
             } else {
-                ui.print_as_err(&"Failed to get the number of available cores, defaulting to 1");
+                ui.eprintln(&"Failed to get the number of available cores, defaulting to 1");
                 1
             };
 

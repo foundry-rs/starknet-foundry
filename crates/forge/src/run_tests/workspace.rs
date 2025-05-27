@@ -96,11 +96,11 @@ pub async fn run_for_workspace(args: TestArgs, ui: &UI) -> Result<ExitStatus> {
 
     let should_print_latest_blocks = !block_number_map.get_url_to_latest_block_number().is_empty();
     if should_print_latest_blocks {
-        ui.print(&LatestBlocksNumbersMessage::new(
+        ui.println(&LatestBlocksNumbersMessage::new(
             block_number_map.get_url_to_latest_block_number().clone(),
         ));
     }
-    ui.print(&TestsFailureSummaryMessage::new(&all_failed_tests));
+    ui.println(&TestsFailureSummaryMessage::new(&all_failed_tests));
 
     if args.exact {
         unset_forge_test_filter();

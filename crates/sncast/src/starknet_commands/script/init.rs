@@ -159,7 +159,7 @@ fn overwrite_lib_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> Resul
 
 fn clean_created_dir_and_files(script_root_dir: &Utf8PathBuf, ui: &UI) {
     if fs::remove_dir_all(script_root_dir).is_err() {
-        ui.print_as_err(&format!(
+        ui.eprintln(&format!(
             "Failed to clean created files by init command at {script_root_dir}"
         ));
     }

@@ -58,7 +58,7 @@ fn clean_dir(dir: &Utf8PathBuf, dir_name: &str, ui: &UI) -> Result<()> {
     let dir = dir.join(dir_name);
     if dir.exists() {
         fs::remove_dir_all(&dir).with_context(|| format!("Failed to remove directory: {dir}"))?;
-        ui.print(&format!("Removed directory: {dir}"));
+        ui.println(&format!("Removed directory: {dir}"));
     }
 
     Ok(())
