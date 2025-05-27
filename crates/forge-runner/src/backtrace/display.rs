@@ -1,5 +1,6 @@
 use cairo_annotations::annotations::coverage::{CodeLocation, ColumnNumber, LineNumber};
 use cairo_annotations::annotations::profiler::FunctionName;
+use starknet_api::core::ClassHash;
 use std::fmt;
 use std::fmt::Display;
 
@@ -9,7 +10,7 @@ pub struct Backtrace<'a> {
     pub inlined: bool,
 }
 
-pub struct BacktraceStack<'a> {
+struct BacktraceStack<'a> {
     pub contract_name: &'a str,
     pub stack: Vec<Backtrace<'a>>,
 }
@@ -31,11 +32,26 @@ impl Display for Backtrace<'_> {
 
 impl Display for BacktraceStack<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "error occurred in contract '{}'", self.contract_name,)?;
+        writeln!(f, "error occurred in contract '{}'", self.contract_name)?;
         writeln!(f, "stack backtrace:")?;
         for (i, backtrace) in self.stack.iter().enumerate() {
             writeln!(f, "   {i}: {backtrace}")?;
         }
         Ok(())
     }
+}
+
+pub fn render_local_backtrace(contract_name: &str, stack: Vec<Backtrace>) -> String {
+    BacktraceStack {
+        contract_name,
+        stack,
+    }
+    .to_string()
+}
+
+pub fn render_fork_backtrace(contract_class_hash: &ClassHash) -> String {
+    format!(
+        "error occurred in contract fork with class hash: {:#x}\n",
+        contract_class_hash.0
+    )
 }
