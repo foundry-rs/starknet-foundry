@@ -7,7 +7,7 @@ use crate::{
 };
 use conversions::felt::FromShortString;
 use starknet_api::{
-    contract_class::ContractClass,
+    contract_class::{ContractClass, SierraVersion},
     core::{ClassHash, ContractAddress},
     state::StorageKey,
 };
@@ -37,7 +37,7 @@ impl PredeployedContract {
         raw_casm: &str,
         storage_kv_updates: Vec<(StorageKey, Felt)>,
     ) -> Self {
-        let contract_class = contract_class(raw_casm);
+        let contract_class = contract_class(raw_casm, SierraVersion::LATEST);
         Self {
             contract_address,
             class_hash,

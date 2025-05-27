@@ -1,5 +1,6 @@
-use crate::common::state::create_cached_state;
+use crate::common::state::{create_cached_state, create_fork_cached_state_at};
 use crate::common::{call_contract_raw, deploy_contract, selector_from_name};
+use blockifier::execution::contract_class::TrackedResource;
 use blockifier::state::state_api::StateReader;
 use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
