@@ -71,12 +71,14 @@ pub async fn run_for_test_target(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        let test_result_message = TestResultMessage::new(
-            &result,
-            forge_config.output_config.detailed_resources,
-            forge_config.test_runner_config.tracked_resource,
-        );
-        ui.print(&test_result_message);
+        if !result.is_skipped() {
+            let test_result_message = TestResultMessage::new(
+                &result,
+                forge_config.output_config.detailed_resources,
+                forge_config.test_runner_config.tracked_resource,
+            );
+            ui.print(&test_result_message);
+        }
 
         let trace_path = maybe_save_trace_and_profile(
             &result,
