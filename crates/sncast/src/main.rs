@@ -871,14 +871,14 @@ fn process_command_result<T>(
 
     match cast_msg {
         Ok(response) => {
-            ui.print(&response);
+            ui.println(&response);
             if let Some(link) = block_explorer_link {
-                ui.print(&link);
+                ui.println(&link);
             }
         }
         Err(err) => {
             let err = ResponseError::new(command.to_string(), format!("{err:#}"));
-            ui.print_as_err(&err);
+            ui.eprintln(&err);
         }
     }
 }

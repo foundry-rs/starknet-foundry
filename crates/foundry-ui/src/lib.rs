@@ -40,7 +40,7 @@ impl UI {
     }
 
     /// Print the given message to stdout using the configured output format.
-    pub fn print<T>(&self, message: &T)
+    pub fn println<T>(&self, message: &T)
     where
         T: Message + serde::Serialize,
     {
@@ -51,7 +51,7 @@ impl UI {
     }
 
     /// Print the given message to stderr using the configured output format.
-    pub fn print_as_err<T>(&self, message: &T)
+    pub fn eprintln<T>(&self, message: &T)
     where
         T: Message + serde::Serialize,
     {
