@@ -38,13 +38,13 @@ pub fn print_snippets_validation_summary(snippets: &[Snippet], tool_name: &str, 
         .count();
     let ignored_snippets_count = snippets.len() - validated_snippets_count;
 
-    ui.print(&format!(
+    ui.println(&format!(
         "Finished validation of {tool_name} docs snippets\nValidated: {validated_snippets_count}, Ignored: {ignored_snippets_count}",
     ));
 }
 
 pub fn print_ignored_snippet_message(snippet: &Snippet, ui: &UI) {
-    ui.print(&format!(
+    ui.println(&format!(
         "Ignoring {} docs snippet, file: {}:{}:1",
         snippet.snippet_type.as_str(),
         snippet.file_path,

@@ -39,14 +39,8 @@ impl UI {
         Self { output_format }
     }
 
-    /// Get the output format of this [`UI`] instance.
-    #[must_use]
-    pub fn output_format(&self) -> OutputFormat {
-        self.output_format
-    }
-
     /// Print the given message to stdout using the configured output format.
-    pub fn print<T>(&self, message: &T)
+    pub fn println<T>(&self, message: &T)
     where
         T: Message + serde::Serialize,
     {
@@ -57,7 +51,7 @@ impl UI {
     }
 
     /// Print the given message to stderr using the configured output format.
-    pub fn print_as_err<T>(&self, message: &T)
+    pub fn eprintln<T>(&self, message: &T)
     where
         T: Message + serde::Serialize,
     {
@@ -69,15 +63,15 @@ impl UI {
 
     /// Print a warning message to stdout using the configured output format.
     pub fn print_warning(&self, text: &str) {
-        self.print(&TaggedMessage::styled("WARNING", text, "yellow"));
+        self.println(&TaggedMessage::styled("WARNING", text, "yellow"));
     }
 
     /// Print an error message to stdout using the configured output format.
     pub fn print_error(&self, text: &str) {
-        self.print(&TaggedMessage::styled("ERROR", text, "red"));
+        self.println(&TaggedMessage::styled("ERROR", text, "red"));
     }
 
     pub fn print_styled(&self, text: &str, style: &str) {
-        self.print(&StyledMessage::new(text, style));
+        self.println(&StyledMessage::new(text, style));
     }
 }

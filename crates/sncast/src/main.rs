@@ -13,7 +13,7 @@ use sncast::response::cast_message::SncastMessage;
 use sncast::response::command::CommandResponse;
 use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::ResponseError;
-use sncast::response::explorer_link::block_explorer_link_if_allowed;
+use sncast::response::explorer_link::{OutputLinkMessage, block_explorer_link_if_allowed};
 use sncast::response::transformed_call::TransformedCallResponse;
 use std::io;
 use std::io::IsTerminal;
@@ -294,7 +294,6 @@ async fn run_async_command(
 
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                ui.output_format(),
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
@@ -347,7 +346,6 @@ async fn run_async_command(
 
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                ui.output_format(),
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
@@ -440,7 +438,6 @@ async fn run_async_command(
 
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                ui.output_format(),
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
@@ -462,7 +459,7 @@ async fn run_async_command(
 
                         process_command_result("multicall new", result, numbers_format, ui, None);
                     } else {
-                        ui.print(&DEFAULT_MULTICALL_CONTENTS.to_string());
+                        ui.println(&DEFAULT_MULTICALL_CONTENTS.to_string());
                     }
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
@@ -485,7 +482,6 @@ async fn run_async_command(
 
                     let block_explorer_link = block_explorer_link_if_allowed(
                         &result,
-                        ui.output_format(),
                         provider.chain_id().await?,
                         config.show_explorer_links,
                         config.block_explorer,
@@ -521,7 +517,7 @@ async fn run_async_command(
                         result.as_ref().ok().and_then(|r| r.account_name.clone())
                     {
                         if let Err(err) = prompt_to_add_account_as_default(account_name.as_str()) {
-                            ui.print_as_err(&format!(
+                            ui.eprintln(&format!(
                                 "Error: Failed to launch interactive prompt: {err}"
                             ));
                         }
@@ -556,7 +552,6 @@ async fn run_async_command(
 
                 let block_explorer_link = block_explorer_link_if_allowed(
                     &result,
-                    ui.output_format(),
                     provider.chain_id().await?,
                     config.show_explorer_links,
                     config.block_explorer,
@@ -602,7 +597,7 @@ async fn run_async_command(
                             .name
                             .expect("Must be provided if not using a keystore"),
                     ) {
-                        ui.print_as_err(&format!(
+                        ui.eprintln(&format!(
                             "Error: Failed to launch interactive prompt: {err}"
                         ));
                     }
@@ -610,7 +605,6 @@ async fn run_async_command(
 
                 let block_explorer_link = block_explorer_link_if_allowed(
                     &result,
-                    ui.output_format(),
                     provider.chain_id().await?,
                     config.show_explorer_links,
                     config.block_explorer,
@@ -643,7 +637,7 @@ async fn run_async_command(
             }
 
             account::Commands::List(options) => {
-                ui.print(&AccountsListMessage::new(
+                ui.println(&AccountsListMessage::new(
                     config.accounts_file,
                     options.display_private_keys,
                     numbers_format,
@@ -815,7 +809,7 @@ fn config_with_cli(config: &mut CastConfig, cli: &Cli) {
 
 fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
     let global_config_path = get_global_config_path().unwrap_or_else(|err| {
-        ui.print_as_err(&format!("Error getting global config path: {err}"));
+        ui.eprintln(&format!("Error getting global config path: {err}"));
         Utf8PathBuf::new()
     });
 
@@ -865,7 +859,7 @@ fn process_command_result<T>(
     result: Result<T>,
     numbers_format: NumbersFormat,
     ui: &UI,
-    block_explorer_link: Option<String>,
+    block_explorer_link: Option<OutputLinkMessage>,
 ) where
     T: serde::Serialize + Clone + CommandResponse,
     SncastMessage<T>: Message + Serialize,
@@ -878,14 +872,14 @@ fn process_command_result<T>(
 
     match cast_msg {
         Ok(response) => {
-            ui.print(&response);
+            ui.println(&response);
             if let Some(link) = block_explorer_link {
-                ui.print(&link);
+                ui.println(&link);
             }
         }
         Err(err) => {
             let err = ResponseError::new(command.to_string(), format!("{err:#}"));
-            ui.print_as_err(&err);
+            ui.eprintln(&err);
         }
     }
 }
