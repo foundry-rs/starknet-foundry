@@ -79,25 +79,18 @@ impl TestsSummaryMessage {
 
 impl Message for TestsSummaryMessage {
     fn text(&self) -> String {
-        if let Some(filtered) = self.filtered {
-            format!(
-                "{}: {} passed, {} failed, {} skipped, {} ignored, {filtered} filtered out",
-                style("Tests").bold(),
-                self.passed,
-                self.failed,
-                self.skipped,
-                self.ignored
-            )
-        } else {
-            format!(
-                "{}: {} passed, {} failed, {} skipped, {} ignored, other filtered out",
-                style("Tests").bold(),
-                self.passed,
-                self.failed,
-                self.skipped,
-                self.ignored
-            )
-        }
+        let filtered = self
+            .filtered
+            .map_or_else(|| "other".to_string(), |v| v.to_string());
+
+        format!(
+            "{}: {} passed, {} failed, {} skipped, {} ignored, {filtered} filtered out",
+            style("Tests").bold(),
+            self.passed,
+            self.failed,
+            self.skipped,
+            self.ignored
+        )
     }
 }
 

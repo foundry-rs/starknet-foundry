@@ -69,7 +69,7 @@ fn start_devnet() {
         if verify_devnet_availability(&format!("{host}:{port}")) {
             break;
         } else if now.elapsed() >= timeout {
-            UI::default().print_error("Timed out while waiting for devnet to start!");
+            UI::default().eprintln(&"Timed out while waiting for devnet to start!");
             std::process::exit(1);
         }
     }

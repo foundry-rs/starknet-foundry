@@ -3,6 +3,7 @@ use anyhow::{Result, anyhow};
 use forge_runner::backtrace::is_backtrace_enabled;
 use forge_runner::package_tests::with_config_resolved::TestTargetWithResolvedConfig;
 use foundry_ui::UI;
+use foundry_ui::components::warning::WarningMessage;
 use scarb_api::{ScarbCommand, package_matches_version_requirement};
 use scarb_metadata::Metadata;
 use semver::{Comparator, Op, Version, VersionReq};
@@ -24,9 +25,9 @@ pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
                 .as_ref().is_some_and(cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableGasConfig::is_zero)
                 && ScarbCommand::version().run()?.scarb <= Version::new(2, 4, 3)
             {
-                ui.print_warning("`available_gas` attribute was probably specified when using Scarb ~2.4.3 \
+                ui.println(&WarningMessage::new("`available_gas` attribute was probably specified when using Scarb ~2.4.3 \
                     Make sure to use Scarb >=2.4.4"
-                );
+                ));
             }
         }
     }
@@ -114,9 +115,9 @@ pub fn warn_if_snforge_std_not_compatible(scarb_metadata: &Metadata, ui: &UI) ->
         "snforge_std",
         &snforge_std_version_requirement,
     )? {
-        ui.print_warning(&format!(
+        ui.println(&WarningMessage::new(&format!(
             "Package snforge_std version does not meet the recommended version requirement {snforge_std_version_requirement}, it might result in unexpected behaviour"
-        ));
+        )));
     }
     Ok(())
 }
@@ -139,10 +140,10 @@ pub(crate) fn warn_if_backtrace_without_panic_hint(scarb_metadata: &Metadata, ui
             });
 
         if !is_panic_backtrace_set {
-            ui.print_warning(
-                "To get accurate backtrace results, it is required to use the configuration available in the latest Cairo version. \
+            ui.println(
+                &WarningMessage::new("To get accurate backtrace results, it is required to use the configuration available in the latest Cairo version. \
                 For more details, please visit https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/backtrace.html"
-            );
+            ));
         }
     }
 }
