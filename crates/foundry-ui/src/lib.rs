@@ -39,12 +39,6 @@ impl UI {
         Self { output_format }
     }
 
-    /// Get the output format of this [`UI`] instance.
-    #[must_use]
-    pub fn output_format(&self) -> OutputFormat {
-        self.output_format
-    }
-
     /// Print the given message to stdout using the configured output format.
     pub fn print<T>(&self, message: &T)
     where
