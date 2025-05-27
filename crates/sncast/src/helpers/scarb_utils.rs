@@ -1,6 +1,6 @@
 use anyhow::{Context, Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
-use foundry_ui::UI;
+use foundry_ui::{UI, components::warning::WarningMessage};
 use scarb_api::{
     ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
     get_contracts_artifacts_and_source_sierra_paths,
@@ -178,9 +178,9 @@ pub fn build_and_load_artifacts(
         .collect())
     } else {
         let profile = &config.profile;
-        ui.print_warning(&format!(
+        ui.println(&WarningMessage::new(&format!(
             "Profile {profile} does not exist in scarb, using '{default_profile}' profile."
-        ));
+        )));
         Ok(get_contracts_artifacts_and_source_sierra_paths(
             &target_dir.join(default_profile),
             package,
