@@ -32,7 +32,16 @@ pub trait CommandResponse: Serialize {}
 pub struct CallResponse {
     pub response: Vec<Felt>,
 }
+
 impl CommandResponse for CallResponse {}
+
+#[derive(Serialize, Clone)]
+pub struct TransformedCallResponse {
+    pub response: String,
+    pub response_raw: Vec<Felt>,
+}
+
+impl CommandResponse for TransformedCallResponse {}
 
 #[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct InvokeResponse {
@@ -76,7 +85,7 @@ impl CommandResponse for DeclareResponse {}
 pub struct AccountCreateResponse {
     pub address: PaddedFelt,
     #[serde(serialize_with = "crate::response::structs::serialize_as_decimal")]
-    pub max_fee: Felt,
+    pub estimated_fee: Felt,
     pub add_profile: String,
     pub message: String,
 }

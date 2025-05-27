@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests_felt {
-    use cairo_lang_runner::short_string::as_cairo_short_string;
     use cairo_vm::utils::PRIME_STR;
     use conversions::byte_array::ByteArray;
     use conversions::felt::FromShortString;
@@ -87,7 +86,7 @@ mod tests_felt {
     fn test_from_short_string() {
         let felt = Felt::from_short_string("abc").unwrap();
 
-        assert_eq!("abc", &as_cairo_short_string(&felt).unwrap());
+        assert_eq!(felt, Felt::from_hex("0x616263").unwrap());
     }
 
     #[test]

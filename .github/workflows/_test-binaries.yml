@@ -1,0 +1,100 @@
+name: Test binaries
+
+on:
+  workflow_call:
+    inputs:
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
+      bin_version:
+        required: true
+        type: string
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
+      std_version:
+        required: true
+        type: string
+
+jobs:
+  test-binary:
+    name: Test binary
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+
+          - target: x86_64-apple-darwin
+            os: macos-latest
+
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          # TODO(#3144) Remove
+          scarb-version: "2.11.0"
+
+      - name: Setup rust
+        run: |
+          rustup target add ${{ matrix.target }} --toolchain 1.86.0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts-dl
+
+      - name: Move artifacts to staging directory
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          mv artifacts-dl/build-*/starknet-foundry-v* artifacts/
+
+      - name: Get artifacts path
+        shell: bash
+        run: |
+          if [[ ${{ matrix.target }} == *windows* ]]; then
+            ARTIFACTS_PATH="artifacts/starknet-foundry-v${{ inputs.bin_version }}-${{ matrix.target }}.zip"
+          else
+            ARTIFACTS_PATH="artifacts/starknet-foundry-v${{ inputs.bin_version }}-${{ matrix.target }}.tar.gz"
+          fi
+          echo "ARTIFACTS_PATH=$ARTIFACTS_PATH" >> $GITHUB_ENV
+
+      - name: Unpack artifact
+        shell: bash
+        run: |
+          if [[ ${{ matrix.target }} == *windows* ]]; then
+            unzip ${{ env.ARTIFACTS_PATH }}
+          else
+            tar xzvf ${{ env.ARTIFACTS_PATH }}
+          fi
+
+      - name: Install universal-sierra-compiler
+        uses: software-mansion/setup-universal-sierra-compiler@v1
+
+      - name: Smoke test
+        shell: bash
+        env:
+          RPC_URL: ${{ secrets.NODE_URL }}
+        run: |
+          ARTIFACTS_PATH="${{ env.ARTIFACTS_PATH }}"
+          ARTIFACTS_PATH="${ARTIFACTS_PATH%.tar.gz}"
+          ARTIFACTS_PATH="${ARTIFACTS_PATH%.zip}"
+          ARTIFACTS_PATH="${ARTIFACTS_PATH#artifacts/}"
+          
+          if [[ ${{ matrix.target }} == *windows* ]]; then
+            SNFORGE_PATH=$(readlink -f $ARTIFACTS_PATH/bin/snforge.exe)
+            SNCAST_PATH=$(readlink -f $ARTIFACTS_PATH/bin/sncast.exe)
+          else
+            SNFORGE_PATH=$(readlink -f $ARTIFACTS_PATH/bin/snforge)
+            SNCAST_PATH=$(readlink -f $ARTIFACTS_PATH/bin/sncast)
+          fi
+          
+          REPO_URL=${{ github.repositoryUrl }}
+          REVISION=${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          VERSION=${{ inputs.std_version }}
+          
+          ./scripts/smoke_test.sh "$RPC_URL" "$SNFORGE_PATH" "$SNCAST_PATH" "$REPO_URL" "$REVISION" "$VERSION"
+          

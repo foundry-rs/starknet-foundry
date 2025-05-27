@@ -8,15 +8,14 @@ use configuration::CONFIG_FILENAME;
 use conversions::string::IntoHexStr;
 use indoc::{formatdoc, indoc};
 use serde_json::json;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use std::fs::{self, File};
 use tempfile::tempdir;
 use test_case::test_case;
 
 #[test_case("oz", "open_zeppelin"; "oz_account_type")]
 #[test_case("argent", "argent"; "argent_account_type")]
-// TODO(#3118)
-// #[test_case("braavos", "braavos"; "braavos_account_type")]
+#[test_case("braavos", "braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
@@ -238,12 +237,17 @@ pub async fn test_happy_case_add_profile() {
         "my_account_import",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = runner(&args).current_dir(tempdir.path()).assert();
 
-    snapbox.assert().stdout_matches(indoc! {r"
-        command: account import
-        add_profile: Profile my_account_import successfully added to snfoundry.toml
-    "});
+    let config_path = Utf8PathBuf::from_path_buf(tempdir.path().join("snfoundry.toml"))
+        .unwrap()
+        .canonicalize_utf8()
+        .unwrap();
+
+    assert_stdout_contains(
+        output,
+        format!("add_profile: Profile my_account_import successfully added to {config_path}"),
+    );
     let current_dir_utf8 = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
 
     let contents = fs::read_to_string(current_dir_utf8.join(accounts_file))
@@ -622,12 +626,17 @@ pub async fn test_empty_config_add_profile() {
         "random",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = runner(&args).current_dir(tempdir.path()).assert();
 
-    snapbox.assert().stdout_matches(indoc! {r"
-        command: account import
-        add_profile: Profile random successfully added to snfoundry.toml
-    "});
+    let config_path = Utf8PathBuf::from_path_buf(tempdir.path().join("snfoundry.toml"))
+        .unwrap()
+        .canonicalize_utf8()
+        .unwrap();
+
+    assert_stdout_contains(
+        output,
+        format!("add_profile: Profile random successfully added to {config_path}"),
+    );
     let current_dir_utf8 = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
 
     let contents = fs::read_to_string(current_dir_utf8.join("snfoundry.toml"))
@@ -819,36 +828,4 @@ pub async fn test_happy_case_default_name_generation() {
     let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
 
     assert_eq!(contents_json, all_accounts_content);
-}
-
-#[tokio::test]
-pub async fn test_braavos_disabled() {
-    let tempdir = tempdir().expect("Unable to create a temporary directory");
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "account",
-        "import",
-        "--url",
-        URL,
-        "--name",
-        "my_account_import",
-        "--address",
-        "0x123",
-        "--private-key",
-        "0x456",
-        "--type",
-        "braavos",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-
-    snapbox.assert().stderr_matches(indoc! {r"
-        command: account import
-        error: Using Braavos accounts is temporarily disabled because they don't yet work with starknet 0.13.5.
-            Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
-        "},
-    );
 }

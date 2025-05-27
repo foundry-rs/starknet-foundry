@@ -1,0 +1,74 @@
+name: Publish snforge_std and sncast_std
+
+on:
+  workflow_call:
+    inputs:
+      prod_registry:
+        required: false
+        type: boolean
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
+      override_std_version:
+        required: false
+        type: string
+      # snforge_std in the repository has a plugin dependency specified as a relative path, which must be overridden each time before publishing.
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
+      plugin_dep_version:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      prod_registry:
+        required: false
+        type: boolean
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
+      override_std_version:
+        required: false
+        type: string
+      # snforge_std in the repository has a plugin dependency specified as a relative path, which must be overridden each time before publishing.
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
+      plugin_dep_version:
+        required: true
+        type: string
+
+jobs:
+  publish-to-registry:
+    name: Publish packages to the registry
+    runs-on: ubuntu-latest
+    env:
+      SCARB_REGISTRY_AUTH_TOKEN: ${{ inputs.prod_registry == true && secrets.SCARB_REGISTRY_AUTH_TOKEN || secrets.DEV_SCARB_REGISTRY_AUTH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+        with:
+          toolchain: stable
+
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          # TODO(#3144) Remove
+          scarb-version: "2.11.0"
+
+      - name: Publish sncast_std
+        working-directory: sncast_std
+        run: |
+          source ../scripts/handle_version.sh
+          
+          update_version_in_file "Scarb.toml" "${{ inputs.override_std_version }}"
+          
+          scarb publish --allow-dirty ${{ inputs.prod_registry == true && ' ' || '--index https://scarbs.dev/' }}
+
+      - name: Publish snforge_std
+        working-directory: snforge_std
+        run: |
+          source ../scripts/handle_version.sh
+          
+          update_version_in_file "Scarb.toml" "${{ inputs.override_std_version }}"
+          
+          if ${{ inputs.prod_registry == true }}; then
+            scarb add snforge_scarb_plugin@${{ inputs.plugin_dep_version }}
+          else
+            sed -i.bak "/snforge_scarb_plugin/ s/\(snforge_scarb_plugin = \).*/\1{ version = \"=${{ inputs.plugin_dep_version }}\", registry = \"https:\/\/scarbs.dev\/\" }/" Scarb.toml
+            rm Scarb.toml.bak 2>/dev/null
+          fi
+          
+          scarb publish --allow-dirty ${{ inputs.prod_registry == true && ' ' || '--index https://scarbs.dev/' }}

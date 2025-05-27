@@ -4,8 +4,8 @@ use crate::helpers::constants::{
 };
 use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
-    create_and_deploy_account, create_and_deploy_oz_account, get_accounts_path,
-    get_transaction_hash, get_transaction_receipt,
+    create_and_deploy_account, create_and_deploy_oz_account, get_transaction_hash,
+    get_transaction_receipt,
 };
 use crate::helpers::runner::runner;
 use crate::helpers::shell::os_specific_shell;
@@ -14,11 +14,10 @@ use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use snapbox::cmd::cargo_bin;
 use sncast::AccountType;
-use sncast::helpers::constants::{ARGENT_CLASS_HASH, OZ_CLASS_HASH};
+use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Invoke;
-use starknet_types_core::felt::Felt;
-use tempfile::tempdir;
+use starknet_types_core::felt::{Felt, NonZeroFelt};
 use test_case::test_case;
 
 #[tokio::test]
@@ -63,8 +62,7 @@ async fn test_happy_case_human_readable() {
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
 #[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
-// TODO(#3089)
-// #[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
+#[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
 async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let tempdir = create_and_deploy_account(class_hash, account_type).await;
@@ -97,16 +95,15 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     assert!(matches!(receipt, Invoke(_)));
 }
 
-// TODO(#3100)
-// #[test_case(FeeArgs{
-//     max_fee: Some(NonZeroFelt::try_from(Felt::from(1000000000000000000000000)).unwrap()),
-//     l1_data_gas: None,
-//     l1_data_gas_price:  None,
-//     l1_gas:  None,
-//     l1_gas_price:  None,
-//     l2_gas:  None,
-//     l2_gas_price:  None,
-// }; "max_fee")]
+#[test_case(FeeArgs{
+    max_fee: Some(NonZeroFelt::try_from(Felt::from(1_000_000_000_000_000_000_000_000_u128)).unwrap()),
+    l1_data_gas: None,
+    l1_data_gas_price:  None,
+    l1_gas:  None,
+    l1_gas_price:  None,
+    l2_gas:  None,
+    l2_gas_price:  None,
+}; "max_fee")]
 #[test_case(FeeArgs{
     max_fee: None,
     l1_data_gas: Some(100_000),
@@ -199,7 +196,6 @@ async fn test_contract_does_not_exist() {
     );
 }
 
-// TODO(#3116): Before, the error message included 'ENTRYPOINT_NOT_FOUND', but now it's an undecoded felt.
 #[test]
 fn test_wrong_function_name() {
     let args = vec![
@@ -217,14 +213,11 @@ fn test_wrong_function_name() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
-        indoc! {"
-            command: invoke
-            error: Transaction execution error [..]0x454e545259504f494e545f4e4f545f464f554e44[..]
-        "},
+        r#"Error: Function with selector "0x2e0f845a8d0319c5c37d558023299beec2a0155d415f41cca140a09e6877c67" not found in ABI of the contract"#,
     );
 }
 
@@ -349,38 +342,4 @@ async fn test_happy_case_shell() {
         .arg(URL)
         .arg(DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA);
     snapbox.assert().success();
-}
-
-// TODO(#3118): Remove this test, once integration with braavos is restored
-#[tokio::test]
-async fn test_braavos_disabled() {
-    let tempdir = tempdir().expect("Failed to create a temporary directory");
-    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
-
-    let args = vec![
-        "--accounts-file",
-        &accounts_json_path,
-        "--account",
-        "braavos",
-        "invoke",
-        "--url",
-        URL,
-        "--contract-address",
-        MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--function",
-        "put",
-        "--calldata",
-        "0x1 0x2",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().failure();
-
-    assert_stderr_contains(
-        output,
-        indoc! {r"
-        Error: Using Braavos accounts is temporarily disabled because they don't yet work with starknet 0.13.5.
-            Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
-        "},
-    );
 }

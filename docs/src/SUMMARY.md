@@ -36,7 +36,7 @@
 * [Conditional Compilation](snforge-advanced-features/conditional-compilation.md)
 * [Direct Storage Access](snforge-advanced-features/storage-cheatcodes.md)
 * [Profiling](snforge-advanced-features/profiling.md)
-* [Backtrace](snforge-advanced-features/backtrace.md)
+* [Debugging](snforge-advanced-features/debugging.md)
 
 ---
 

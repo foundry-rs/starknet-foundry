@@ -10,13 +10,11 @@ use configuration::CONFIG_FILENAME;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::AccountType;
-use sncast::helpers::constants::ARGENT_CLASS_HASH;
-use sncast::helpers::constants::OZ_CLASS_HASH;
+use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Declare;
-use starknet_types_core::felt::Felt;
+use starknet_types_core::felt::{Felt, NonZeroFelt};
 use std::fs;
-use tempfile::tempdir;
 use test_case::test_case;
 
 #[tokio::test]
@@ -63,8 +61,7 @@ async fn test_happy_case_human_readable() {
 )]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
 #[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
-// TODO(#3118)
-// #[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
+#[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
 async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let contract_path = duplicate_contract_directory_with_salt(
@@ -98,16 +95,15 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     assert!(matches!(receipt, Declare(_)));
 }
 
-// TODO(#3100)
-// #[test_case(FeeArgs{
-//     max_fee: Some(NonZeroFelt::try_from(Felt::from(1000000000000000000000000)).unwrap()),
-//     l1_data_gas: None,
-//     l1_data_gas_price:  None,
-//     l1_gas:  None,
-//     l1_gas_price:  None,
-//     l2_gas:  None,
-//     l2_gas_price:  None,
-// }; "max_fee")]
+#[test_case(FeeArgs{
+    max_fee: Some(NonZeroFelt::try_from(Felt::from(1_000_000_000_000_000_000_000_000_u128)).unwrap()),
+    l1_data_gas: None,
+    l1_data_gas_price:  None,
+    l1_gas:  None,
+    l1_gas_price:  None,
+    l2_gas:  None,
+    l2_gas_price:  None,
+}; "max_fee")]
 #[test_case(FeeArgs{
     max_fee: None,
     l1_data_gas: Some(100_000),
@@ -615,43 +611,6 @@ async fn test_no_scarb_profile() {
             To see declaration details, visit:
             class: [..]
             transaction: [..]
-        "},
-    );
-}
-
-// TODO(#3118: Remove this test, once integration with braavos is restored
-#[tokio::test]
-async fn test_braavos_disabled() {
-    let contract_path = duplicate_contract_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/map",
-        "put",
-        "human_readable",
-    );
-    let tempdir = tempdir().expect("Failed to create a temporary directory");
-    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
-    join_tempdirs(&contract_path, &tempdir);
-
-    let args = vec![
-        "--accounts-file",
-        &accounts_json_path,
-        "--account",
-        "braavos",
-        "declare",
-        "--url",
-        URL,
-        "--contract-name",
-        "Map",
-    ];
-    let args = apply_test_resource_bounds_flags(args);
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().failure();
-
-    assert_stderr_contains(
-        output,
-        indoc! {r"
-        Error: Using Braavos accounts is temporarily disabled because they don't yet work with starknet 0.13.5.
-            Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
         "},
     );
 }

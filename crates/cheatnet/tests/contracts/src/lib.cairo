@@ -15,3 +15,4 @@ mod store_load;
 mod bytearray_string_panic_call;
 mod cheat_block_hash;
 mod revert;
+mod tracked_resources;
