@@ -37,6 +37,7 @@ impl UI {
         Self { output_format }
     }
 
+    // TODO: Will be removed in 3022-3-use-foundry-ui-in-sncast
     /// Get the output format of this [`UI`] instance.
     #[must_use]
     pub fn output_format(&self) -> OutputFormat {
