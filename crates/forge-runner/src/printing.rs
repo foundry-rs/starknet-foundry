@@ -25,7 +25,10 @@ impl TestResultMessage {
         show_detailed_resources: bool,
         tracked_resource: ForgeTrackedResource,
     ) -> Self {
-        let name = any_test_result.name().unwrap().to_string();
+        let name = any_test_result
+            .name()
+            .expect("Test result must have a name")
+            .to_string();
 
         let debugging_trace = any_test_result
             .debugging_trace()
