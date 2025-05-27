@@ -22,7 +22,7 @@ members = [
 exclude = ["crates/snforge-scarb-plugin"]
 
 [workspace.package]
-version = "0.43.0"
+version = "0.43.1"
 edition = "2024"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
@@ -30,6 +30,7 @@ license-file = "LICENSE"
 
 [workspace.dependencies]
 blockifier = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.13.5-modified-sierra-dep", default-features = false, features = ["testing", "tracing"] }
+bigdecimal = "0.4.8"
 starknet_api = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.13.5-modified-sierra-dep" }
 cairo-lang-casm = { version = "2.11.2", features = ["serde"] }
 cairo-lang-sierra = "2.11.2"
