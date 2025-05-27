@@ -11,7 +11,7 @@ pub fn init(project_name: &str, ui: &UI) -> Result<()> {
 
     // To prevent printing this warning when running scarb init/new with an older version of Scarb
     if !project_path.join("Scarb.toml").exists() {
-        ui.print(&"Command `snforge init` is deprecated and will be removed in the future. Please use `snforge new` instead.");
+        ui.print_warning("Command `snforge init` is deprecated and will be removed in the future. Please use `snforge new` instead.");
     }
 
     new::new(NewArgs {
