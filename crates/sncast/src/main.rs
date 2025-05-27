@@ -94,7 +94,7 @@ struct Cli {
     account: Option<String>,
 
     /// Path to the file holding accounts info
-    #[arg(long = "accounts-file")]
+    #[arg(short = 'f', long = "accounts-file")]
     accounts_file_path: Option<Utf8PathBuf>,
 
     /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
@@ -183,16 +183,7 @@ impl Arguments {
         contract_class: ContractClass,
         selector: &Felt,
     ) -> Result<Vec<Felt>> {
-        if let Some(arguments) = self.arguments {
-            let ContractClass::Sierra(sierra_class) = contract_class else {
-                bail!("Transformation of arguments is not available for Cairo Zero contracts")
-            };
-
-            let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str())
-                .context("Couldn't deserialize ABI received from network")?;
-
-            transform(&arguments, &abi, selector)
-        } else if let Some(calldata) = self.calldata {
+        if let Some(calldata) = self.calldata {
             calldata
                 .iter()
                 .map(|data| {
@@ -202,7 +193,14 @@ impl Arguments {
                 })
                 .collect()
         } else {
-            Ok(vec![])
+            let ContractClass::Sierra(sierra_class) = contract_class else {
+                bail!("Transformation of arguments is not available for Cairo Zero contracts")
+            };
+
+            let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str())
+                .context("Couldn't deserialize ABI received from network")?;
+
+            transform(&self.arguments.unwrap_or_default(), &abi, selector)
         }
     }
 }

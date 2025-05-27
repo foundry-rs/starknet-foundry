@@ -340,7 +340,7 @@ pub fn run_test_case(
 
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
-    update_top_call_resources(&mut forge_runtime, &tracked_resource);
+    update_top_call_resources(&mut forge_runtime);
     update_top_call_l1_resources(&mut forge_runtime);
 
     let fuzzer_args = forge_runtime
