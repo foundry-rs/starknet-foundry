@@ -6,6 +6,7 @@ on:
       prod_registry:
         required: false
         type: boolean
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       overridden_plugin_version:
         required: false
         type: string

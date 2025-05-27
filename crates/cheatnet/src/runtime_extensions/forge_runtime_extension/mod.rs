@@ -603,7 +603,7 @@ pub fn add_resources_to_top_call(
     }
 }
 
-pub fn update_top_call_resources(runtime: &mut ForgeRuntime, tracked_resource: &TrackedResource) {
+pub fn update_top_call_resources(runtime: &mut ForgeRuntime) {
     // call representing the test code
     let top_call = runtime
         .extended_runtime
@@ -614,20 +614,12 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime, tracked_resource: &
         .current_call_stack
         .top();
 
-    let mut top_call = match tracked_resource {
-        TrackedResource::CairoSteps => {
-            let all_execution_resources = add_execution_resources(top_call.clone());
-            let mut top_call = top_call.borrow_mut();
-            top_call.used_execution_resources = all_execution_resources;
-            top_call
-        }
-        TrackedResource::SierraGas => {
-            let all_sierra_gas_consumed = add_sierra_gas_resources(&top_call);
-            let mut top_call = top_call.borrow_mut();
-            top_call.gas_consumed = all_sierra_gas_consumed;
-            top_call
-        }
-    };
+    let all_execution_resources = add_execution_resources(top_call.clone());
+    let all_sierra_gas_consumed = add_sierra_gas_resources(&top_call);
+
+    let mut top_call = top_call.borrow_mut();
+    top_call.used_execution_resources = all_execution_resources;
+    top_call.gas_consumed = all_sierra_gas_consumed;
 
     let top_call_syscalls = runtime
         .extended_runtime
