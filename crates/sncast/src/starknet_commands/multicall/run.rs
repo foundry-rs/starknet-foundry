@@ -134,7 +134,7 @@ pub async fn run(
 
     execute_calls(account, parsed_calls, fee_args, None, wait_config, ui)
         .await
-        .map(std::convert::Into::into)
+        .map(Into::into)
         .map_err(handle_starknet_command_error)
 }
 
