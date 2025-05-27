@@ -11,6 +11,8 @@ use crate::Message;
 pub struct TaggedMessage<'a> {
     tag: &'a str,
     text: &'a str,
+
+    /// Field which dictates the style of the tag as a string that `console::Style` can interpret.
     #[serde(skip)]
     tag_style: Option<&'a str>,
 }

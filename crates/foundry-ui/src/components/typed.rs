@@ -11,6 +11,8 @@ use crate::Message;
 pub struct LabeledMessage<'a> {
     label: &'a str,
     text: &'a str,
+
+    /// Field which dictates the style of the label as a string that `console::Style` can interpret.
     #[serde(skip)]
     label_style: Option<&'a str>,
 }
