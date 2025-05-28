@@ -62,8 +62,8 @@ impl SupportedCalldataKind for ExprInlineMacro {
                                     })
                                     .collect::<Result<Vec<_>>>(),
                             ),
-                PathSegment::Missing(_path_segment_missing) => {
-                    // TODO: Handle path_segment_missing
+                PathSegment::Missing(_segment) => {
+                    // TODO: Handle that case
                     None
                 },
             })
