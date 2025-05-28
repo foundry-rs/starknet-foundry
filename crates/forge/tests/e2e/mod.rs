@@ -20,6 +20,7 @@ mod forking;
 mod fuzzing;
 mod io_operations;
 mod new;
+mod plugin_diagnostics;
 mod profiles;
 mod requirements;
 mod running;
