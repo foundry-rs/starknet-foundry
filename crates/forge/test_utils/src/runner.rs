@@ -315,37 +315,13 @@ fn assert_gas_with_margin(gas: GasVector, asserted_gas: GasVector) -> bool {
     } else {
         let equal = gas == asserted_gas;
         let l1_gas_equal = gas.l1_gas == asserted_gas.l1_gas;
-        println!("l1_gas == asserted_l1_gas: {l1_gas_equal}");
+        println!("{} == {}: {l1_gas_equal}", gas.l1_gas, asserted_gas.l1_gas);
         let l1_data_gas_equal = gas.l1_data_gas == asserted_gas.l1_data_gas;
         println!("l1_data_gas == asserted_l1_data_gas: {l1_data_gas_equal}");
         let l2_gas_equal = gas.l2_gas == asserted_gas.l2_gas;
         println!("l2_gas == asserted_l2_gas: {l2_gas_equal}");
         println!("gas == asserted_gas: {equal}");
         gas == asserted_gas
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use starknet_api::execution_resources::{GasAmount, GasVector};
-
-    #[test]
-    fn test_xyz() {
-        // Gas:          GasVector { l1_gas: GasAmount(0), l1_data_gas: GasAmount(96), l2_gas: GasAmount(1449655) }
-        // Asserted gas: GasVector { l1_gas: GasAmount(0), l1_data_gas: GasAmount(96), l2_gas: GasAmount(1449655) }
-        let a = GasVector {
-            l1_gas: GasAmount(0),
-            l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(1449655),
-        };
-
-        let b = GasVector {
-            l1_gas: GasAmount(0),
-            l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(1449655),
-        };
-
-        println!("a == b: {}", a == b);
     }
 }
 
