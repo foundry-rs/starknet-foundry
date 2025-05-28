@@ -55,9 +55,9 @@ impl MessageToL1FilterTraitImpl of MessageToL1FilterTrait {
             let (sent_by, msg) = self.messages.at(counter);
             if *sent_by == contract_address {
                 new_messages.append((*sent_by, msg.clone()));
-            };
+            }
             counter += 1;
-        };
+        }
         MessagesToL1 { messages: new_messages }
     }
     fn sent_to(self: @MessagesToL1, to_address: EthAddress) -> MessagesToL1 {
@@ -67,9 +67,9 @@ impl MessageToL1FilterTraitImpl of MessageToL1FilterTrait {
             let (sent_by, msg) = self.messages.at(counter);
             if *msg.to_address == to_address {
                 new_messages.append((*sent_by, msg.clone()));
-            };
+            }
             counter += 1;
-        };
+        }
         MessagesToL1 { messages: new_messages }
     }
 }
@@ -128,9 +128,9 @@ fn is_sent(
             && message.to_address == expected_message.to_address {
             is_emitted = true;
             break;
-        };
+        }
 
         i += 1;
-    };
+    }
     return is_emitted;
 }

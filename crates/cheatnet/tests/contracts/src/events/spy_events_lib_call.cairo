@@ -1,5 +1,4 @@
-use starknet::ContractAddress;
-use starknet::ClassHash;
+use starknet::{ClassHash, ContractAddress};
 
 #[starknet::interface]
 trait ISpyEventsLibCall<TContractState> {

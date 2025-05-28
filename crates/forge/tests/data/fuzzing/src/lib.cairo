@@ -16,8 +16,7 @@ pub fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
 
 #[cfg(test)]
 mod tests {
-    use super::adder;
-    use super::always_five;
+    use super::{adder, always_five};
 
     #[test]
     #[fuzzer]
@@ -133,7 +132,7 @@ mod tests {
         let mut i: u8 = 0;
         while i != a {
             i += 1;
-        };
+        }
 
         assert(1 == 1, '');
     }

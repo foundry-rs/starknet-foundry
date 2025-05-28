@@ -18,12 +18,12 @@ trait ICheatSequencerAddressCheckerProxy<TContractState> {
 
 #[starknet::contract]
 mod CheatSequencerAddressCheckerProxy {
-    use starknet::ContractAddress;
-    use super::ICheatSequencerAddressCheckerDispatcherTrait;
-    use super::ICheatSequencerAddressCheckerDispatcher;
-    use super::ICheatSequencerAddressCheckerProxyDispatcherTrait;
-    use super::ICheatSequencerAddressCheckerProxyDispatcher;
-    use starknet::get_contract_address;
+    use starknet::{ContractAddress, get_contract_address};
+    use super::{
+        ICheatSequencerAddressCheckerDispatcher, ICheatSequencerAddressCheckerDispatcherTrait,
+        ICheatSequencerAddressCheckerProxyDispatcher,
+        ICheatSequencerAddressCheckerProxyDispatcherTrait,
+    };
 
     #[storage]
     struct Storage {}
