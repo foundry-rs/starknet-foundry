@@ -1,2 +1,3 @@
 [alias]
 lint = "clippy --all-targets --all-features -- --no-deps -W clippy::pedantic -W clippy::undocumented_unsafe_blocks  -A clippy::module_name_repetitions -A clippy::missing_errors_doc -A clippy::missing_panics_doc"
+lint-fix = "clippy --fix --all-targets --all-features -- --no-deps -W clippy::pedantic -W clippy::undocumented_unsafe_blocks  -A clippy::module_name_repetitions -A clippy::missing_errors_doc -A clippy::missing_panics_doc"
