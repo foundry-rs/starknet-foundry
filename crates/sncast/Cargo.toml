@@ -71,7 +71,6 @@ packages_validation = { path = "../testing/packages_validation" }
 
 [features]
 default = []
-scarb_since_2_10 = ["packages_validation/scarb_since_2_10"]
 
 [[bin]]
 name = "sncast"
