@@ -1,7 +1,8 @@
-use cairo_lang_macro::{Diagnostic, Severity};
+use cairo_lang_macro::{quote, Diagnostic, Severity, TextSpan, Token, TokenStream, TokenTree};
+use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{Condition, Expr, FunctionWithBody, Statement};
-use cairo_lang_syntax::node::db::SyntaxGroup;
 use cairo_lang_syntax::node::helpers::GetIdentifier;
+use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use cairo_lang_syntax::node::TypedSyntaxNode;
 use indoc::formatdoc;
 
@@ -52,24 +53,34 @@ macro_rules! branch {
         } else {
             Err(Diagnostic {
                 message: $crate::utils::format_error_message(&messages),
-                severity: messages.into_iter().fold(Severity::Warning, |acc, diagnostic| $crate::utils::higher_severity(acc, diagnostic.severity))
+                severity: messages.into_iter().fold(Severity::Warning, |acc, diagnostic| $crate::utils::higher_severity(acc, diagnostic.severity)),
+                span: None,
             })
         }
     }};
 }
 
-pub trait TypedSyntaxNodeAsText {
-    fn as_text(&self, db: &dyn SyntaxGroup) -> String;
+pub fn create_single_token(content: impl AsRef<str>) -> TokenTree {
+    TokenTree::Ident(Token::new(content, TextSpan::call_site()))
 }
 
-impl<T: TypedSyntaxNode> TypedSyntaxNodeAsText for T {
-    fn as_text(&self, db: &dyn SyntaxGroup) -> String {
-        self.as_syntax_node().get_text(db)
+pub trait SyntaxNodeUtils {
+    fn to_token_stream(&self, db: &SimpleParserDatabase) -> TokenStream;
+}
+
+impl<T: TypedSyntaxNode> SyntaxNodeUtils for T {
+    fn to_token_stream(&self, db: &SimpleParserDatabase) -> TokenStream {
+        let syntax = self.as_syntax_node();
+        let syntax = SyntaxNodeWithDb::new(&syntax, db);
+        quote!(#syntax)
     }
 }
 
 // Gets test statements and content of `if` statement that checks if function is run in config mode
-pub fn get_statements(db: &dyn SyntaxGroup, func: &FunctionWithBody) -> (String, String) {
+pub fn get_statements(
+    db: &SimpleParserDatabase,
+    func: &FunctionWithBody,
+) -> (TokenStream, TokenStream) {
     let statements = func.body(db).statements(db).elements(db);
 
     let if_content = statements.first().and_then(|stmt| {
@@ -108,8 +119,10 @@ pub fn get_statements(db: &dyn SyntaxGroup, func: &FunctionWithBody) -> (String,
         Some(
             statements[..statements.len() - 1]
                 .iter()
-                .fold(String::new(), |acc, statement| {
-                    acc + "\n" + &statement.as_text(db)
+                .map(|stmt| stmt.to_token_stream(db))
+                .fold(TokenStream::empty(), |mut acc, token| {
+                    acc.extend(token);
+                    acc
                 }),
         )
     });
@@ -121,7 +134,23 @@ pub fn get_statements(db: &dyn SyntaxGroup, func: &FunctionWithBody) -> (String,
         &statements[..]
     }
     .iter()
-    .fold(String::new(), |acc, stmt| acc + &stmt.as_text(db));
+    .map(|stmt| stmt.to_token_stream(db))
+    .fold(TokenStream::empty(), |mut acc, token| {
+        acc.extend(token);
+        acc
+    });
 
-    (statements, if_content.unwrap_or_default())
+    (statements, if_content.unwrap_or_else(TokenStream::empty))
+}
+
+#[macro_export]
+macro_rules! format_ident {
+    ($name:literal $(,$formats:expr),*) => {
+        {
+            use cairo_lang_macro::{TextSpan, Token, TokenTree};
+
+            let content = format!($name,$($formats),*);
+            TokenTree::Ident(Token::new(content, TextSpan::call_site()))
+        }
+    };
 }
