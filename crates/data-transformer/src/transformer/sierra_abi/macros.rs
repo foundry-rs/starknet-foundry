@@ -36,36 +36,36 @@ impl SupportedCalldataKind for ExprInlineMacro {
                 // We expect exactly one PathSegment::WithGenericArgs. More means that ABI is broken, less means that type other than Array is expected
                 Simple(_) => None,
                 PathSegment::WithGenericArgs(segment) => Some(
-                                segment
-                                    .generic_args(db)
-                                    .generic_args(db)
-                                    .elements(db)
-                                    .into_iter()
-                                    .map(|arg| match arg {
-                                        // There shouldn't be expressions like `identifier<T: some-trait-bound>` in the ABI
-                                        arg @ cairo_lang_syntax::node::ast::GenericArg::Named(_) => bail!(
-                                            "Unexpected named generic found in ABI: {}. Contract ABI may be invalid",
-                                            arg.as_syntax_node().get_text(db)
-                                        ),
-                                        cairo_lang_syntax::node::ast::GenericArg::Unnamed(arg) => {
-                                            match arg.value(db) {
-                                                GenericArgValue::Expr(expr) => {
-                                                    Ok(expr.as_syntax_node().get_text(db))
-                                                }
-                                                // Placeholder parameters are not allowed in ABI too
-                                                value @ GenericArgValue::Underscore(_) => bail!(
-                                                    "Unexpected type with underscore generic placeholder found in ABI: {}. Contract ABI may be invalid",
-                                                    value.as_syntax_node().get_text(db)
-                                                ),
-                                            }
-                                        }
-                                    })
-                                    .collect::<Result<Vec<_>>>(),
+                    segment
+                        .generic_args(db)
+                        .generic_args(db)
+                        .elements(db)
+                        .into_iter()
+                        .map(|arg| match arg {
+                            // There shouldn't be expressions like `identifier<T: some-trait-bound>` in the ABI
+                            arg @ cairo_lang_syntax::node::ast::GenericArg::Named(_) => bail!(
+                                "Unexpected named generic found in ABI: {}. Contract ABI may be invalid",
+                                arg.as_syntax_node().get_text(db)
                             ),
+                            cairo_lang_syntax::node::ast::GenericArg::Unnamed(arg) => {
+                                match arg.value(db) {
+                                    GenericArgValue::Expr(expr) => {
+                                        Ok(expr.as_syntax_node().get_text(db))
+                                    }
+                                    // Placeholder parameters are not allowed in ABI too
+                                    value @ GenericArgValue::Underscore(_) => bail!(
+                                        "Unexpected type with underscore generic placeholder found in ABI: {}. Contract ABI may be invalid",
+                                        value.as_syntax_node().get_text(db)
+                                    ),
+                                }
+                            }
+                        })
+                        .collect::<Result<Vec<_>>>(),
+                ),
                 PathSegment::Missing(_segment) => {
                     // TODO: Handle that case
                     None
-                },
+                }
             })
             .transpose()?
             .with_context(|| format!(r#"Invalid argument type, expected "{expected_type}", got array"#))?;
