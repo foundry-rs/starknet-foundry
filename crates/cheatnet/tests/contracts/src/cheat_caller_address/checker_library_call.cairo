@@ -13,10 +13,10 @@ trait ICheatCallerAddressCheckerLibCall<TContractState> {
 
 #[starknet::contract]
 mod CheatCallerAddressCheckerLibCall {
+    use starknet::ClassHash;
     use super::{
         ICheatCallerAddressCheckerDispatcherTrait, ICheatCallerAddressCheckerLibraryDispatcher,
     };
-    use starknet::ClassHash;
 
     #[storage]
     struct Storage {}

@@ -1,5 +1,4 @@
-use starknet::ClassHash;
-use starknet::ContractAddress;
+use starknet::{ClassHash, ContractAddress};
 
 #[starknet::interface]
 trait IBlockInfoChecker<TContractState> {
@@ -19,9 +18,8 @@ trait IBlockInfoCheckerLibCall<TContractState> {
 
 #[starknet::contract]
 mod BlockInfoCheckerLibCall {
+    use starknet::{ClassHash, ContractAddress};
     use super::{IBlockInfoCheckerDispatcherTrait, IBlockInfoCheckerLibraryDispatcher};
-    use starknet::ClassHash;
-    use starknet::ContractAddress;
 
     #[storage]
     struct Storage {}

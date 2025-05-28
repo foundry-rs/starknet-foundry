@@ -1,5 +1,5 @@
+use sncast_std::{FeeSettingsTrait, invoke};
 use starknet::ContractAddress;
-use sncast_std::{invoke, FeeSettingsTrait};
 
 fn main() {
     let contract_address: ContractAddress =
