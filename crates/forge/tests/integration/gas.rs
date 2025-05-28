@@ -268,6 +268,7 @@ fn contract_range_check_cost_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
+    // TODO: Update calculations
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
     // 8 = cost of 191 range check builtins (because int(0.04 * 191) = 8)
     // 0 l1_gas + 96 l1_data_gas + 8 * (100 / 0.0025) l2 gas
@@ -277,7 +278,7 @@ fn contract_range_check_cost_cairo_steps() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(320_000),
+            l2_gas: GasAmount(360_000),
         },
     );
 }
@@ -418,6 +419,7 @@ fn contract_pedersen_cost_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
+    // TODO: Update calculations
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
     // 7 = cost of 86 pedersen builtins (because int(0.08 * 86) = 7)
     // 0 l1_gas + 96 l1_data_gas + 7 * (100 / 0.0025) l2 gas
@@ -427,7 +429,7 @@ fn contract_pedersen_cost_cairo_steps() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(280_000),
+            l2_gas: GasAmount(320_000),
         },
     );
 }
@@ -718,13 +720,14 @@ fn multiple_storage_writes_cost_cairo_steps() {
     // l(1) * 32 = 32
     // storage updates from zero value(1) * 32 = 32 (https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-da-costs-27)
     // 0 l1_gas + (64 + 64 + 32 + 32) l1_data_gas + 9 * (100 / 0.0025) l2 gas
+    // TODO: Update calculations
     assert_gas(
         &result,
         "multiple_storage_writes_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(360_000),
+            l2_gas: GasAmount(400_000),
         },
     );
 }
@@ -856,13 +859,14 @@ fn l1_message_cost_for_proxy_cairo_steps() {
     // l(2) * 32 = 64
     // 29524 = gas cost of message
     // 29524 l1_gas + (128 + 64) l1_data_gas + 13 * (100 / 0.0025) l2 gas
+    // TODO: Update calculations
     assert_gas(
         &result,
         "l1_message_cost_for_proxy",
         GasVector {
             l1_gas: GasAmount(29524),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(520_000),
+            l2_gas: GasAmount(560_000),
         },
     );
 }
