@@ -28,9 +28,9 @@ jobs:
           
           snforge_scarb_plugin_version=$(get_version "${{ inputs.overridden_plugin_version }}")
           
+          # TODO: It should check dev registry if prod_registry is false
           plugin_uploaded=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version "$snforge_scarb_plugin_version" '[.[] | select(.v == $version)] | length > 0')
           echo "plugin_uploaded=$plugin_uploaded" >> $GITHUB_OUTPUT
-
 
   upload-to-registry:
     name: Upload snforge_scarb_plugin to the registry
