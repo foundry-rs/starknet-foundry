@@ -9,7 +9,7 @@ pub trait IStorageNodeContract<TContractState> {
 #[starknet::contract]
 pub mod StorageNodeContract {
     use starknet::ContractAddress;
-    use starknet::storage::{StoragePointerReadAccess, StoragePathEntry, Map};
+    use starknet::storage::{Map, StoragePathEntry, StoragePointerReadAccess};
 
     #[starknet::storage_node]
     pub struct RandomData {

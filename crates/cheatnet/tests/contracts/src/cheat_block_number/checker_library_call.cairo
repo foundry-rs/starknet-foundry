@@ -13,8 +13,8 @@ trait ICheatBlockNumberCheckerLibCall<TContractState> {
 
 #[starknet::contract]
 mod CheatBlockNumberCheckerLibCall {
-    use super::{ICheatBlockNumberCheckerDispatcherTrait, ICheatBlockNumberCheckerLibraryDispatcher};
     use starknet::ClassHash;
+    use super::{ICheatBlockNumberCheckerDispatcherTrait, ICheatBlockNumberCheckerLibraryDispatcher};
 
     #[storage]
     struct Storage {}
