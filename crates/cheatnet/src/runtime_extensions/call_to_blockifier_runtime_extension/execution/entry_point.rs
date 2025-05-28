@@ -431,7 +431,6 @@ fn mocked_call_info(
         resources: ExecutionResources::default(),
         tracked_resource,
         inner_calls: vec![],
-        // TODO: Check if this is ok for mocked call
         storage_access_tracker: StorageAccessTracker::default(),
     }
 }
