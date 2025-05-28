@@ -8,10 +8,10 @@ pub trait IErrorHandler<TContractState> {
 #[feature("safe_dispatcher")]
 #[starknet::contract]
 pub mod ErrorHandler {
+    use core::panic_with_felt252;
     use starknet::ContractAddress;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use crate::failable::{IFailableContractSafeDispatcher, IFailableContractSafeDispatcherTrait};
-    use core::panic_with_felt252;
 
     #[storage]
     pub struct Storage {

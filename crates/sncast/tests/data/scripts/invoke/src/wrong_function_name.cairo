@@ -1,7 +1,7 @@
 use sncast_std::{
-    invoke, InvokeResult, ScriptCommandError, ProviderError, StarknetError, FeeSettingsTrait,
+    FeeSettingsTrait, InvokeResult, ProviderError, ScriptCommandError, StarknetError, invoke,
 };
-use starknet::{ContractAddress};
+use starknet::ContractAddress;
 
 fn main() {
     let map_contract_address = 0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008

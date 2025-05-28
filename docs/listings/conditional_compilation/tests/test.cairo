@@ -1,6 +1,5 @@
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
-
 use conditional_compilation::contract::{IMockContractDispatcher, IMockContractDispatcherTrait};
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 
 #[test]
 fn test_mock_contract() {
