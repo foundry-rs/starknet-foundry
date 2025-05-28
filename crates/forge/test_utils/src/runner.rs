@@ -290,6 +290,8 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
             }
             AnyTestCaseSummary::Single(case) => match case {
                 TestCaseSummary::Passed { gas_info: gas, .. } => {
+                    println!("Gas:          {gas:?}");
+                    println!("Asserted gas: {gas:?}");
                     assert_gas_with_margin(*gas, asserted_gas)
                         && any_case
                             .name()
