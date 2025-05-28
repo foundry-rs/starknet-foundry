@@ -4,7 +4,7 @@ use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
 use std::path::Path;
 use test_utils::runner::{Contract, assert_builtin, assert_passed, assert_syscall};
-use test_utils::running_tests::run_test_case;
+use test_utils::running_tests::run_test_case_with_release_profile;
 use test_utils::test_case;
 
 #[test]
@@ -46,7 +46,7 @@ fn builtins_count() {
         "
     ));
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let result = run_test_case_with_release_profile(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 
@@ -137,7 +137,7 @@ fn syscalls_count() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let result = run_test_case_with_release_profile(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
 
@@ -206,7 +206,7 @@ fn accumulate_syscalls() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let result = run_test_case_with_release_profile(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
     assert_syscall(&result, "single_write", SyscallSelector::StorageWrite, 1);
@@ -239,7 +239,7 @@ fn estimation_includes_os_resources() {
         "
     ));
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let result = run_test_case_with_release_profile(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
     // Cost of storage write in builtins is 1 range check and 89 steps
     // Steps are pretty hard to verify so this test is based on range check diff
@@ -280,7 +280,7 @@ fn deploy_with_constructor_calldata() {
         .unwrap()
     );
 
-    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    let result = run_test_case_with_release_profile(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
 
     assert_syscall(&result, "deploy_with_syscall", SyscallSelector::Deploy, 1);
