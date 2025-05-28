@@ -1,5 +1,4 @@
-use fuzzing::adder;
-use fuzzing::fib;
+use fuzzing::{adder, fib};
 
 #[available_gas(l2_gas: 40000000)]
 #[fuzzer(runs: 50, seed: 123)]

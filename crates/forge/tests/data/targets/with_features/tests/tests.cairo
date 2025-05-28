@@ -1,11 +1,8 @@
 use core::array::ArrayTrait;
 use core::result::ResultTrait;
-
-use snforge_std::{declare, ContractClassTrait};
 use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
-
-use with_features::IHelloStarknetDispatcher;
-use with_features::IHelloStarknetDispatcherTrait;
+use snforge_std::{ContractClassTrait, declare};
+use with_features::{IHelloStarknetDispatcher, IHelloStarknetDispatcherTrait};
 
 #[test]
 fn declare_and_call_contract_from_lib() {
