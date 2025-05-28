@@ -2633,6 +2633,7 @@ dependencies = [
  "futures",
  "include_dir",
  "indoc",
+ "itertools 0.14.0",
  "num-bigint",
  "openssl",
  "packages_validation",
