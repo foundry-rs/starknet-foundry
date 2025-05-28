@@ -21,39 +21,39 @@ pub struct TestResultMessage {
 
 impl TestResultMessage {
     pub fn new(
-        any_test_result: &AnyTestCaseSummary,
+        test_result: &AnyTestCaseSummary,
         show_detailed_resources: bool,
         tracked_resource: ForgeTrackedResource,
     ) -> Self {
-        let name = any_test_result
+        let name = test_result
             .name()
             .expect("Test result must have a name")
             .to_string();
 
-        let debugging_trace = any_test_result
+        let debugging_trace = test_result
             .debugging_trace()
             .map(|trace| format!("\n{trace}"))
             .unwrap_or_default();
 
-        let mut fuzzer_report = None;
-        if let AnyTestCaseSummary::Fuzzing(test_result) = &any_test_result {
-            fuzzer_report = match test_result {
+        let fuzzer_report = if let AnyTestCaseSummary::Fuzzing(test_result) = test_result {
+            match test_result {
                 TestCaseSummary::Passed {
                     test_statistics: FuzzingStatistics { runs },
                     gas_info,
                     ..
-                } => Some(format!(" (runs: {runs}, {gas_info})",)),
+                } => format!(" (runs: {runs}, {gas_info})"),
                 TestCaseSummary::Failed {
                     fuzzer_args,
                     test_statistics: FuzzingStatistics { runs },
                     ..
-                } => Some(format!(" (runs: {runs}, arguments: {fuzzer_args:?})")),
-                _ => None,
-            };
-        }
-        let fuzzer_report = fuzzer_report.unwrap_or_else(String::new);
+                } => format!(" (runs: {runs}, arguments: {fuzzer_args:?})"),
+                _ => String::new(),
+            }
+        } else {
+            String::new()
+        };
 
-        let gas_usage = match any_test_result {
+        let gas_usage = match test_result {
             AnyTestCaseSummary::Single(TestCaseSummary::Passed { gas_info, .. }) => {
                 format!(
                     " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
@@ -63,7 +63,7 @@ impl TestResultMessage {
             _ => String::new(),
         };
 
-        let used_resources = match (show_detailed_resources, &any_test_result) {
+        let used_resources = match (show_detailed_resources, &test_result) {
             (true, AnyTestCaseSummary::Single(TestCaseSummary::Passed { used_resources, .. })) => {
                 format_detailed_resources(used_resources, tracked_resource)
             }
@@ -72,10 +72,10 @@ impl TestResultMessage {
 
         Self {
             name,
-            is_passed: any_test_result.is_passed(),
-            is_failed: any_test_result.is_failed(),
-            is_ignored: any_test_result.is_ignored(),
-            msg: any_test_result.msg().map(std::string::ToString::to_string),
+            is_passed: test_result.is_passed(),
+            is_failed: test_result.is_failed(),
+            is_ignored: test_result.is_ignored(),
+            msg: test_result.msg().map(std::string::ToString::to_string),
             debugging_trace,
             fuzzer_report,
             gas_usage,
