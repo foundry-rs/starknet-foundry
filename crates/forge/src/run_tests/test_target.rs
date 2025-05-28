@@ -60,6 +60,7 @@ pub async fn run_for_test_target(
             tests.sierra_program_path.clone(),
             send.clone(),
             trace_verbosity,
+            ui.clone(),
         ));
     }
 
@@ -98,6 +99,7 @@ pub async fn run_for_test_target(
     maybe_generate_coverage(
         &forge_config.output_config.execution_data_to_save,
         &saved_trace_data_paths,
+        ui,
     )?;
 
     let summary = TestTargetSummary {

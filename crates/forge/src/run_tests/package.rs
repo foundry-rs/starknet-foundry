@@ -153,8 +153,8 @@ pub async fn run_for_package(
         tests_filter.filter_tests(&mut test_target.test_cases)?;
     }
 
-    warn_if_available_gas_used_with_incompatible_scarb_version(&test_targets)?;
-    warn_if_incompatible_rpc_version(&test_targets).await?;
+    warn_if_available_gas_used_with_incompatible_scarb_version(&test_targets, ui)?;
+    warn_if_incompatible_rpc_version(&test_targets, ui).await?;
 
     let not_filtered = sum_test_cases(&test_targets);
     ui.println(&CollectedTestsCountMessage {

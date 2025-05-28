@@ -38,8 +38,8 @@ pub async fn run_for_workspace(args: TestArgs, ui: &UI) -> Result<ExitStatus> {
     }
 
     error_if_snforge_std_not_compatible(&scarb_metadata)?;
-    warn_if_snforge_std_not_compatible(&scarb_metadata)?;
-    warn_if_backtrace_without_panic_hint(&scarb_metadata);
+    warn_if_snforge_std_not_compatible(&scarb_metadata, ui)?;
+    warn_if_backtrace_without_panic_hint(&scarb_metadata, ui);
 
     let artifacts_dir_path =
         target_dir_for_workspace(&scarb_metadata).join(&scarb_metadata.current_profile);
