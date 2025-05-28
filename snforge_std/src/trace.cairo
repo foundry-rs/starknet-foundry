@@ -68,8 +68,7 @@ pub enum CallFailure {
 pub fn get_call_trace() -> CallTrace {
     execute_cheatcode_and_deserialize::<'get_call_trace'>(array![].span())
 }
-
-use core::fmt::{Display, Formatter, Error, Debug};
+use core::fmt::{Debug, Display, Error, Formatter};
 
 impl DisplayCallResult of Display<CallResult> {
     fn fmt(self: @CallResult, ref f: Formatter) -> Result<(), Error> {
@@ -86,7 +85,7 @@ impl DisplayCallResult of Display<CallResult> {
                     CallFailure::Error(msg) => { Display::fmt(msg, ref f)?; },
                 };
             },
-        };
+        }
         Result::Ok(())
     }
 }
@@ -196,7 +195,7 @@ impl DisplayIndentedCallTraceArray of Display<Indented<Array<CallTrace>>> {
             if i != trace_len {
                 write!(f, ",\n").unwrap();
             }
-        };
+        }
 
         Result::Ok(())
     }

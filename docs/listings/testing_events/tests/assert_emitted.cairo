@@ -2,9 +2,8 @@ use snforge_std::{
     declare, ContractClassTrait, DeclareResultTrait, spy_events,
     EventSpyAssertionsTrait // Add for assertions on the EventSpy
 };
-
 use testing_events::contract::{
-    SpyEventsChecker, ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait,
+    ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait, SpyEventsChecker,
 };
 
 #[test]

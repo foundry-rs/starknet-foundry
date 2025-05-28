@@ -1,5 +1,4 @@
-use fuzzing::adder;
-use fuzzing::fib;
+use fuzzing::{adder, fib};
 
 
 #[test]
