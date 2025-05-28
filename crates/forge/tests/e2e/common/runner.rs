@@ -38,22 +38,30 @@ fn is_package_from_docs_listings(package: &str) -> bool {
     fs::canonicalize(&package_path).is_ok()
 }
 
+pub enum Package {
+    Name(String),
+    Path(Utf8PathBuf),
+}
+
 pub(crate) fn setup_package_with_file_patterns(
-    package_name: &str,
+    package: Package,
     file_patterns: &[&str],
 ) -> TempDir {
     let temp = tempdir_with_tool_versions().unwrap();
 
-    let is_from_docs_listings = is_package_from_docs_listings(package_name);
-
-    let package_path = if is_from_docs_listings {
-        format!("../../docs/listings/{package_name}",)
-    } else {
-        format!("tests/data/{package_name}",)
+    let package_path = match package {
+        Package::Name(name) => {
+            let is_from_docs_listings = is_package_from_docs_listings(&name);
+            if is_from_docs_listings {
+                Utf8PathBuf::from(format!("../../docs/listings/{name}"))
+            } else {
+                Utf8PathBuf::from(format!("tests/data/{name}"))
+            }
+        }
+        Package::Path(path) => Utf8PathBuf::from("tests/data").join(path),
     };
 
-    let package_path = Utf8PathBuf::from_str(&package_path)
-        .unwrap()
+    let package_path = package_path
         .canonicalize_utf8()
         .unwrap()
         .to_string()
@@ -97,7 +105,11 @@ pub(crate) fn setup_package_with_file_patterns(
 }
 
 pub(crate) fn setup_package(package_name: &str) -> TempDir {
-    setup_package_with_file_patterns(package_name, BASE_FILE_PATTERNS)
+    setup_package_with_file_patterns(Package::Name(package_name.to_string()), BASE_FILE_PATTERNS)
+}
+
+pub(crate) fn setup_package_at_path(package_path: Utf8PathBuf) -> TempDir {
+    setup_package_with_file_patterns(Package::Path(package_path), BASE_FILE_PATTERNS)
 }
 
 fn replace_node_rpc_url_placeholders(dir_path: &Path) {
