@@ -282,9 +282,6 @@ jobs:
       - name: Run tests
         run: cargo test --release -p sncast
       # TODO(#3096): Remove running tests with `scarb_since_2_10`
-      - uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: "2.10.1"
       - name: Check and lint sncast_std
         run: cargo test --release -p sncast --features scarb_since_2_10 validate_sncast_std
 
