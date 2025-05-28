@@ -1,4 +1,4 @@
-use sncast_std::{tx_status, ScriptCommandError, ProviderError, StarknetError};
+use sncast_std::{ProviderError, ScriptCommandError, StarknetError, tx_status};
 
 fn main() {
     let incorrect_tx_hash = 0x1;

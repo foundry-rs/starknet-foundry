@@ -12,8 +12,8 @@ trait IMockCheckerLibCall<TContractState> {
 
 #[starknet::contract]
 mod MockCheckerLibCall {
-    use super::{IMockCheckerDispatcherTrait, IMockCheckerLibraryDispatcher};
     use starknet::ClassHash;
+    use super::{IMockCheckerDispatcherTrait, IMockCheckerLibraryDispatcher};
 
     #[storage]
     struct Storage {}
