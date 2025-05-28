@@ -28,22 +28,22 @@ license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-blockifier = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.13.5-modified-sierra-dep", default-features = false, features = ["testing", "tracing"] }
+blockifier = { git = "https://github.com/starkware-libs/sequencer.git", branch = "main-v0.14.0", default-features = false, features = ["testing", "tracing"] }
 bigdecimal = "0.4.8"
-starknet_api = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.13.5-modified-sierra-dep" }
-cairo-lang-casm = { version = "2.11.2", features = ["serde"] }
-cairo-lang-sierra = "2.11.2"
-cairo-lang-utils = "2.11.2"
-cairo-lang-starknet = "2.11.2"
-cairo-lang-filesystem = "2.11.2"
-cairo-lang-diagnostics = "2.11.2"
-cairo-lang-sierra-type-size = "2.11.2"
-cairo-lang-syntax = "2.11.2"
-cairo-lang-test-plugin = "2.11.2"
-cairo-lang-starknet-classes = "2.11.2"
-cairo-lang-parser = "2.11.2"
+starknet_api = { git = "https://github.com/starkware-libs/sequencer.git", branch = "main-v0.14.0" }
+cairo-lang-casm = { version = "2.12.0-dev.1", features = ["serde"] }
+cairo-lang-sierra = "2.12.0-dev.1"
+cairo-lang-utils = "2.12.0-dev.1"
+cairo-lang-starknet = "2.12.0-dev.1"
+cairo-lang-filesystem = "2.12.0-dev.1"
+cairo-lang-diagnostics = "2.12.0-dev.1"
+cairo-lang-sierra-type-size = "2.12.0-dev.1"
+cairo-lang-syntax = "2.12.0-dev.1"
+cairo-lang-test-plugin = "2.12.0-dev.1"
+cairo-lang-starknet-classes = "2.12.0-dev.1"
+cairo-lang-parser = "2.12.0-dev.1"
 cairo-vm = "1.0.2"
-cairo-annotations = "0.3.1"
+cairo-annotations = { git = "https://github.com/software-mansion/cairo-annotations.git", branch = "blockifier-0.14.0" }
 dirs = "6.0.0"
 dialoguer = "0.11.0"
 starknet-types-core = { version = "0.1.7", features = ["hash", "prime-bigint"] }
