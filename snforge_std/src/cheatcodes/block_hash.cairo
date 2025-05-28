@@ -1,8 +1,7 @@
-use crate::cheatcode::execute_cheatcode_and_deserialize;
-use super::execution_info::Operation;
-use super::execution_info::CheatArguments;
-use super::CheatSpan;
 use starknet::ContractAddress;
+use crate::cheatcode::execute_cheatcode_and_deserialize;
+use super::CheatSpan;
+use super::execution_info::{CheatArguments, Operation};
 
 /// Changes the block hash for the given block number and contract address.
 /// - `contract_address` - The contract address to which the cheat applies.

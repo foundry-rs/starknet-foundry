@@ -5,7 +5,7 @@ const PROXY_CONTRACT_ADDRESS: felt252 =
 
 #[starknet::contract]
 mod TrackedResources {
-    use starknet::{syscalls, SyscallResultTrait, get_contract_address};
+    use starknet::{SyscallResultTrait, get_contract_address, syscalls};
 
     #[storage]
     struct Storage {}
