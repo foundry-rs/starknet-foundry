@@ -176,6 +176,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.SNFOUNDRY_NIGHTLIES_CONTENTS_WRITE }}
 
+  run-maat-experiments:
+    name: Run Ma'at experiments
+    runs-on: ubuntu-latest
+    needs: create-release
+    steps:
+      - run: gh workflow run Experiment --repo software-mansion/maat -f workspace=nightly
+        env:
+          GH_TOKEN: ${{ secrets.MAAT_CONTENTS_READ_ACTIONS_WRITE }}
+
   cleanup:
     runs-on: ubuntu-latest
     if: always() && needs.prepare.result == 'success'
