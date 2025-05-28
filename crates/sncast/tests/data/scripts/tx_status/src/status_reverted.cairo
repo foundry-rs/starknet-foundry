@@ -1,6 +1,6 @@
 use sncast_std::{
-    tx_status, TxStatusResult, ExecutionStatus, FinalityStatus, ScriptCommandError, ProviderError,
-    StarknetError,
+    ExecutionStatus, FinalityStatus, ProviderError, ScriptCommandError, StarknetError,
+    TxStatusResult, tx_status,
 };
 
 fn main() {

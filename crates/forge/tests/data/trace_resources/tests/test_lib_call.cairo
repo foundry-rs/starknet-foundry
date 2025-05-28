@@ -1,10 +1,11 @@
 use core::clone::Clone;
 use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
-use snforge_std::{declare, ContractClassTrait};
-
-use trace_resources::{
-    trace_info_checker::{ITraceInfoCheckerLibraryDispatcher, ITraceInfoCheckerDispatcherTrait},
-    trace_info_proxy::{ITraceInfoProxyLibraryDispatcher, ITraceInfoProxyDispatcherTrait},
+use snforge_std::{ContractClassTrait, declare};
+use trace_resources::trace_info_checker::{
+    ITraceInfoCheckerDispatcherTrait, ITraceInfoCheckerLibraryDispatcher,
+};
+use trace_resources::trace_info_proxy::{
+    ITraceInfoProxyDispatcherTrait, ITraceInfoProxyLibraryDispatcher,
 };
 
 #[test]

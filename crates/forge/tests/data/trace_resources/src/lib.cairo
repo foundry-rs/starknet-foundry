@@ -2,9 +2,8 @@ pub mod empty;
 pub mod trace_dummy;
 pub mod trace_info_checker;
 pub mod trace_info_proxy;
-
-use starknet::{ContractAddress, ClassHash, get_contract_address, SyscallResultTrait};
-use starknet::syscalls::{get_block_hash_syscall, emit_event_syscall, send_message_to_l1_syscall};
+use starknet::syscalls::{emit_event_syscall, get_block_hash_syscall, send_message_to_l1_syscall};
+use starknet::{ClassHash, ContractAddress, SyscallResultTrait, get_contract_address};
 
 pub fn use_builtins_and_syscalls(empty_hash: ClassHash, salt: felt252) -> ContractAddress {
     1_u8 >= 1_u8;

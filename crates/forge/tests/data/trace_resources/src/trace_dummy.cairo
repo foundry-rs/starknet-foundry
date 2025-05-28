@@ -5,7 +5,7 @@ pub trait ITraceDummy<T> {
 
 #[starknet::contract]
 mod TraceDummy {
-    use starknet::{ClassHash};
+    use starknet::ClassHash;
     use super::super::use_builtins_and_syscalls;
 
     #[storage]
