@@ -1,19 +1,12 @@
-use snforge_std::fs::{FileTrait, read_txt, read_json, FileParser};
 use core::array::ArrayTrait;
 use core::option::OptionTrait;
 use core::serde::Serde;
+use snforge_std::fs::{FileParser, FileTrait, read_json, read_txt};
 
 fn compare_with_expected_content(content: Array<felt252>) {
     let expected = array![
-        1,
-        'hello',
-        3,
-        0x678,
-        '      ',
-        'hello
-world',
-        'world',
-        0,
+        1, 'hello', 3, 0x678, '      ', 'hello
+world', 'world', 0,
         3618502788666131213697322783095070105623107215331596699973092056135872020480,
     ];
 
@@ -186,7 +179,7 @@ fn valid_content_different_folder() {
     while i != content.len() {
         assert(*content[i] == *expected[i], 'unexpected content');
         i += 1;
-    };
+    }
 
     assert(1 == 1, '');
 }
