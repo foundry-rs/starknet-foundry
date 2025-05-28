@@ -1,5 +1,5 @@
-use snforge_std::{declare, DeclareResultTrait, ContractClassTrait};
 use features::{IContractDispatcher, IContractDispatcherTrait};
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 
 #[cfg(feature: 'snforge_test_only')]
 fn mock_in_tests() -> felt252 {

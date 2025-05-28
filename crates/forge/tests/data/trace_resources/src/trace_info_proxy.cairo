@@ -1,4 +1,4 @@
-use starknet::{ContractAddress, ClassHash};
+use starknet::{ClassHash, ContractAddress};
 
 #[starknet::interface]
 pub trait ITraceInfoProxy<T> {
@@ -22,13 +22,13 @@ pub trait ITraceInfoProxy<T> {
 
 #[starknet::contract]
 mod TraceInfoProxy {
-    use super::ITraceInfoProxy;
+    use starknet::{ClassHash, ContractAddress};
+    use trace_resources::trace_dummy::{ITraceDummyDispatcher, ITraceDummyDispatcherTrait};
     use trace_resources::trace_info_checker::{
-        ITraceInfoCheckerDispatcherTrait, ITraceInfoCheckerDispatcher,
+        ITraceInfoCheckerDispatcher, ITraceInfoCheckerDispatcherTrait,
         ITraceInfoCheckerLibraryDispatcher,
     };
-    use trace_resources::trace_dummy::{ITraceDummyDispatcher, ITraceDummyDispatcherTrait};
-    use starknet::{ContractAddress, ClassHash};
+    use super::ITraceInfoProxy;
     use super::super::use_builtins_and_syscalls;
 
     #[storage]

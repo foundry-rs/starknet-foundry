@@ -20,11 +20,10 @@ trait Failing<TContractState> {
 mod SimpleContract {
     use core::array::ArrayTrait;
     use core::traits::Into;
-    use starknet::ContractAddress;
-    use starknet::get_contract_address;
+    use starknet::{ContractAddress, get_contract_address};
     use super::{
-        RecursiveCaller, RecursiveCallerDispatcher, RecursiveCallerDispatcherTrait, RecursiveCall,
-        Failing,
+        Failing, RecursiveCall, RecursiveCaller, RecursiveCallerDispatcher,
+        RecursiveCallerDispatcherTrait,
     };
 
 
@@ -45,7 +44,7 @@ mod SimpleContract {
                 }
                     .execute_calls(serviced_call.payload.clone());
                 i = i + 1;
-            };
+            }
 
             calls
         }

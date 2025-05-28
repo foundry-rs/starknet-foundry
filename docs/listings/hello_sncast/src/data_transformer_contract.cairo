@@ -35,7 +35,7 @@ pub trait IDataTransformerContract<TContractState> {
 
 #[starknet::contract]
 pub mod DataTransformerContract {
-    use super::{NestedStructWithField, Enum};
+    use super::{Enum, NestedStructWithField};
 
     #[storage]
     struct Storage {}

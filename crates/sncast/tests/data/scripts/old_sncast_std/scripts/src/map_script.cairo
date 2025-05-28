@@ -1,5 +1,5 @@
 use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce,
+    CallResult, DeclareResult, DeployResult, InvokeResult, call, declare, deploy, get_nonce, invoke,
 };
 
 fn main() {}

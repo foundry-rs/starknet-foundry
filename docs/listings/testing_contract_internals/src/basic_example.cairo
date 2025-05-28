@@ -3,7 +3,7 @@ trait IContract<TContractState> {}
 
 #[starknet::contract]
 pub mod Contract {
-    use starknet::storage::{StoragePointerReadAccess};
+    use starknet::storage::StoragePointerReadAccess;
     #[storage]
     pub struct Storage {
         pub balance: felt252,
