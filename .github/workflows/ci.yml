@@ -175,10 +175,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       - uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: "2.10.1"
       - uses: software-mansion/setup-universal-sierra-compiler@v1
-
       - run: cargo test --package forge --features scarb_since_2_10 sierra_gas
 
   test-forge-runner:
