@@ -65,5 +65,6 @@ tempfile.workspace = true
 cairo-lang-starknet-classes.workspace = true
 walkdir.workspace = true
 test-case.workspace = true
+itertools.workspace = true
 docs = { workspace = true, features = ["testing"] }
 packages_validation = { path = "../testing/packages_validation"}
