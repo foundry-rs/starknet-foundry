@@ -4,8 +4,9 @@ use assert_fs::{
     TempDir,
     fixture::{FileTouch, FileWriteStr, PathChild},
 };
-use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::syscalls::hint_processor::SyscallUsage;
+use blockifier::execution::{
+    deprecated_syscalls::DeprecatedSyscallSelector, syscalls::vm_syscall_utils::SyscallUsage,
+};
 use cairo_vm::types::builtin_name::BuiltinName;
 use camino::Utf8PathBuf;
 use forge_runner::{

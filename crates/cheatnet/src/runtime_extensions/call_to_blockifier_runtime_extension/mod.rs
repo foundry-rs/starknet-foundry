@@ -2,16 +2,14 @@ use std::marker::PhantomData;
 
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::execution_utils::felt_from_ptr;
-use blockifier::execution::syscalls::{
-    CallContractRequest, LibraryCallRequest, SyscallRequestWrapper,
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
+use blockifier::execution::syscalls::vm_syscall_utils::{
+    CallContractRequest, LibraryCallRequest, SyscallRequestWrapper, SyscallSelector,
 };
 use blockifier::execution::{
-    deprecated_syscalls::DeprecatedSyscallSelector,
     execution_utils::ReadOnlySegment,
-    syscalls::{
-        SyscallRequest, SyscallResponse, SyscallResponseWrapper,
-        hint_processor::SyscallHintProcessor,
-    },
+    syscalls::vm_syscall_utils::{SyscallRequest, SyscallResponse, SyscallResponseWrapper},
 };
 use cairo_vm::types::relocatable::MaybeRelocatable;
 use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
@@ -48,7 +46,7 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
 
     fn override_system_call(
         &mut self,
-        selector: DeprecatedSyscallSelector,
+        selector: SyscallSelector,
         vm: &mut VirtualMachine,
         extended_runtime: &mut Self::Runtime,
     ) -> Result<SyscallHandlingResult, HintError> {
@@ -58,7 +56,7 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
             // and to enable handling call errors with safe dispatchers in the test code
             // since call errors cannot be handled on real starknet
             // https://docs.starknet.io/architecture-and-concepts/smart-contracts/system-calls-cairo1/#call_contract
-            DeprecatedSyscallSelector::CallContract => {
+            SyscallSelector::CallContract => {
                 execute_syscall::<CallContractRequest>(vm, extended_runtime)?;
 
                 extended_runtime
@@ -68,7 +66,7 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
 
                 Ok(SyscallHandlingResult::Handled)
             }
-            DeprecatedSyscallSelector::LibraryCall => {
+            SyscallSelector::LibraryCall => {
                 execute_syscall::<LibraryCallRequest>(vm, extended_runtime)?;
 
                 extended_runtime

@@ -21,21 +21,18 @@ use crate::runtime_extensions::{
 };
 use crate::state::{CallTrace, CallTraceNode};
 use anyhow::{Context, Result, anyhow};
+use blockifier::blockifier_versioned_constants::VersionedConstants;
 use blockifier::bouncer::builtins_to_sierra_gas;
 use blockifier::context::TransactionContext;
-use blockifier::execution::call_info::CallExecution;
+use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::contract_class::TrackedResource;
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::CallEntryPoint;
+use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
+use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
 use blockifier::state::errors::StateError;
 use blockifier::transaction::objects::ExecutionResourcesTraits;
 use blockifier::utils::u64_from_usize;
-use blockifier::{
-    execution::{
-        call_info::CallInfo, deprecated_syscalls::DeprecatedSyscallSelector,
-        syscalls::hint_processor::SyscallUsageMap,
-    },
-    versioned_constants::VersionedConstants,
-};
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::{
     errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,

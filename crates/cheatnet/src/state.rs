@@ -10,7 +10,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages
 use blockifier::execution::call_info::OrderedL2ToL1Message;
 use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::execution::entry_point::CallEntryPoint;
-use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
+use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_annotations::trace_data::L1Resources;

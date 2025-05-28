@@ -40,7 +40,18 @@ pub fn initialize_execution_context<'a>(
     // Instantiate Cairo runner.
     let proof_mode = false;
     let trace_enabled = true;
-    let mut runner = CairoRunner::new(program, LayoutName::all_cairo, proof_mode, trace_enabled)?;
+    let mut runner = CairoRunner::new(
+        program,
+        LayoutName::all_cairo,
+        // The `dynamic_layout_params` argument should only be used with dynamic layout.
+        // It is ignored otherwise.
+        None,
+        proof_mode,
+        trace_enabled,
+        // By default, padding should be enabled
+        // See: https://github.com/lambdaclass/cairo-vm/blob/e339ab7cea2794428cff791a84c45841b84ca854/vm/src/cairo_run.rs#L37-L44
+        false,
+    )?;
 
     runner.initialize_function_runner_cairo_1(&builtins_from_program(program))?;
     let mut read_only_segments = ReadOnlySegments::default();

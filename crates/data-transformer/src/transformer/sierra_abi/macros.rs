@@ -62,6 +62,10 @@ impl SupportedCalldataKind for ExprInlineMacro {
                         })
                         .collect::<Result<Vec<_>>>(),
                 ),
+                PathSegment::Missing(_segment) => {
+                    // TODO: Handle that case
+                    None
+                }
             })
             .transpose()?
             .with_context(|| format!(r#"Invalid argument type, expected "{expected_type}", got array"#))?;

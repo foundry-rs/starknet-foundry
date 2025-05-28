@@ -3,11 +3,13 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 };
 use crate::state::CheatnetState;
 use anyhow::Result;
+use blockifier::blockifier_versioned_constants::SyscallGasCost;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::execution::syscalls::hint_processor::OUT_OF_GAS_ERROR;
-use blockifier::execution::syscalls::{
+use blockifier::execution::syscalls::syscall_base::SyscallResult;
+use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
+use blockifier::execution::syscalls::vm_syscall_utils::{
     SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper,
-    syscall_base::SyscallResult,
 };
 use blockifier::execution::{
     common_hints::HintExecutionResult,
@@ -15,7 +17,6 @@ use blockifier::execution::{
     syscalls::hint_processor::{SyscallExecutionError, SyscallHintProcessor},
 };
 use blockifier::utils::u64_from_usize;
-use blockifier::versioned_constants::SyscallGasCost;
 use cairo_vm::{
     types::relocatable::Relocatable,
     vm::{
