@@ -33,6 +33,7 @@ impl SupportedCalldataKind for ExprInlineMacro {
             .elements(db)
             .into_iter()
             .find_map(|element| match element {
+                // We expect exactly one PathSegment::WithGenericArgs. More means that ABI is broken, less means that type other than Array is expected
                 Simple(_) => None,
                 PathSegment::WithGenericArgs(segment) => Some(
                                 segment
