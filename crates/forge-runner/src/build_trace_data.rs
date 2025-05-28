@@ -1,12 +1,10 @@
 use anyhow::{Context, Result};
-use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
 use cairo_annotations::trace_data::{
     CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint,
     CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
     CallType as ProfilerCallType, CasmLevelInfo, ContractAddress,
-    DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector,
     EntryPointSelector as ProfilerEntryPointSelector, EntryPointType as ProfilerEntryPointType,
     ExecutionResources as ProfilerExecutionResources, TraceEntry as ProfilerTraceEntry,
     VersionedCallTrace as VersionedProfilerCallTrace, VmExecutionResources,
@@ -123,7 +121,7 @@ pub fn build_profiler_execution_resources(
 ) -> ProfilerExecutionResources {
     let mut profiler_syscall_counter = HashMap::new();
     for (key, val) in syscall_usage {
-        profiler_syscall_counter.insert(build_profiler_deprecated_syscall_selector(key), val);
+        profiler_syscall_counter.insert(key, val);
     }
     ProfilerExecutionResources {
         vm_resources: VmExecutionResources {
@@ -203,83 +201,6 @@ fn build_profiler_entry_point_type(value: EntryPointType) -> ProfilerEntryPointT
         EntryPointType::Constructor => ProfilerEntryPointType::Constructor,
         EntryPointType::External => ProfilerEntryPointType::External,
         EntryPointType::L1Handler => ProfilerEntryPointType::L1Handler,
-    }
-}
-
-fn build_profiler_deprecated_syscall_selector(
-    value: DeprecatedSyscallSelector,
-) -> ProfilerDeprecatedSyscallSelector {
-    match value {
-        DeprecatedSyscallSelector::CallContract => ProfilerDeprecatedSyscallSelector::CallContract,
-        DeprecatedSyscallSelector::DelegateCall => ProfilerDeprecatedSyscallSelector::DelegateCall,
-        DeprecatedSyscallSelector::DelegateL1Handler => {
-            ProfilerDeprecatedSyscallSelector::DelegateL1Handler
-        }
-        DeprecatedSyscallSelector::Deploy => ProfilerDeprecatedSyscallSelector::Deploy,
-        DeprecatedSyscallSelector::EmitEvent => ProfilerDeprecatedSyscallSelector::EmitEvent,
-        DeprecatedSyscallSelector::GetBlockHash => ProfilerDeprecatedSyscallSelector::GetBlockHash,
-        DeprecatedSyscallSelector::GetBlockNumber => {
-            ProfilerDeprecatedSyscallSelector::GetBlockNumber
-        }
-        DeprecatedSyscallSelector::GetBlockTimestamp => {
-            ProfilerDeprecatedSyscallSelector::GetBlockTimestamp
-        }
-        DeprecatedSyscallSelector::GetCallerAddress => {
-            ProfilerDeprecatedSyscallSelector::GetCallerAddress
-        }
-        DeprecatedSyscallSelector::GetContractAddress => {
-            ProfilerDeprecatedSyscallSelector::GetContractAddress
-        }
-        DeprecatedSyscallSelector::GetExecutionInfo => {
-            ProfilerDeprecatedSyscallSelector::GetExecutionInfo
-        }
-        DeprecatedSyscallSelector::GetSequencerAddress => {
-            ProfilerDeprecatedSyscallSelector::GetSequencerAddress
-        }
-        DeprecatedSyscallSelector::GetTxInfo => ProfilerDeprecatedSyscallSelector::GetTxInfo,
-        DeprecatedSyscallSelector::GetTxSignature => {
-            ProfilerDeprecatedSyscallSelector::GetTxSignature
-        }
-        DeprecatedSyscallSelector::Keccak => ProfilerDeprecatedSyscallSelector::Keccak,
-        DeprecatedSyscallSelector::LibraryCall => ProfilerDeprecatedSyscallSelector::LibraryCall,
-        DeprecatedSyscallSelector::LibraryCallL1Handler => {
-            ProfilerDeprecatedSyscallSelector::LibraryCallL1Handler
-        }
-        DeprecatedSyscallSelector::ReplaceClass => ProfilerDeprecatedSyscallSelector::ReplaceClass,
-        DeprecatedSyscallSelector::Secp256k1Add => ProfilerDeprecatedSyscallSelector::Secp256k1Add,
-        DeprecatedSyscallSelector::Secp256k1GetPointFromX => {
-            ProfilerDeprecatedSyscallSelector::Secp256k1GetPointFromX
-        }
-        DeprecatedSyscallSelector::Secp256k1GetXy => {
-            ProfilerDeprecatedSyscallSelector::Secp256k1GetXy
-        }
-        DeprecatedSyscallSelector::Secp256k1Mul => ProfilerDeprecatedSyscallSelector::Secp256k1Mul,
-        DeprecatedSyscallSelector::Secp256k1New => ProfilerDeprecatedSyscallSelector::Secp256k1New,
-        DeprecatedSyscallSelector::Secp256r1Add => ProfilerDeprecatedSyscallSelector::Secp256r1Add,
-        DeprecatedSyscallSelector::Secp256r1GetPointFromX => {
-            ProfilerDeprecatedSyscallSelector::Secp256r1GetPointFromX
-        }
-        DeprecatedSyscallSelector::Secp256r1GetXy => {
-            ProfilerDeprecatedSyscallSelector::Secp256r1GetXy
-        }
-        DeprecatedSyscallSelector::Secp256r1Mul => ProfilerDeprecatedSyscallSelector::Secp256r1Mul,
-        DeprecatedSyscallSelector::Secp256r1New => ProfilerDeprecatedSyscallSelector::Secp256r1New,
-        DeprecatedSyscallSelector::SendMessageToL1 => {
-            ProfilerDeprecatedSyscallSelector::SendMessageToL1
-        }
-        DeprecatedSyscallSelector::StorageRead => ProfilerDeprecatedSyscallSelector::StorageRead,
-        DeprecatedSyscallSelector::StorageWrite => ProfilerDeprecatedSyscallSelector::StorageWrite,
-        DeprecatedSyscallSelector::Sha256ProcessBlock => {
-            ProfilerDeprecatedSyscallSelector::Sha256ProcessBlock
-        }
-        DeprecatedSyscallSelector::GetClassHashAt => {
-            ProfilerDeprecatedSyscallSelector::GetClassHashAt
-        }
-        DeprecatedSyscallSelector::KeccakRound => ProfilerDeprecatedSyscallSelector::KeccakRound,
-        DeprecatedSyscallSelector::MetaTxV0 => {
-            // TODO: Implement, currently it's a dummy value
-            ProfilerDeprecatedSyscallSelector::Keccak
-        }
     }
 }
 
