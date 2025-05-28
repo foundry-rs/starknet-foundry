@@ -58,6 +58,9 @@ pub fn split(
                     Err(GenericArgsExtractionError::InvalidGenericArgs)
                 };
             }
+            PathSegment::Missing(_path_segment_missing) => {
+                // TODO: Handle path_segment_missing
+            }
         }
     }
 

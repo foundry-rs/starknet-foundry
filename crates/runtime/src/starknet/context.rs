@@ -1,4 +1,5 @@
 use crate::starknet::constants::{TEST_ADDRESS, TEST_CONTRACT_CLASS_HASH};
+use blockifier::blockifier_versioned_constants::VersionedConstants;
 use blockifier::bouncer::BouncerConfig;
 use blockifier::context::{BlockContext, ChainInfo, FeeTokenAddresses, TransactionContext};
 use blockifier::execution::common_hints::ExecutionMode;
@@ -9,7 +10,6 @@ use blockifier::execution::entry_point::{
 use blockifier::transaction::objects::{
     CommonAccountFields, CurrentTransactionInfo, TransactionInfo,
 };
-use blockifier::versioned_constants::VersionedConstants;
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use conversions::string::TryFromHexStr;
 use serde::{Deserialize, Serialize};
@@ -87,7 +87,7 @@ pub fn build_transaction_context(
     chain_id: Option<ChainId>,
 ) -> TransactionContext {
     TransactionContext {
-        block_context: build_block_context(block_info, chain_id),
+        block_context: Arc::new(build_block_context(block_info, chain_id)),
         tx_info: build_tx_info(),
     }
 }

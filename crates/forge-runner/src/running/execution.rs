@@ -49,9 +49,6 @@ pub fn finalize_execution(
         inner_calls: syscall_handler_base.inner_calls.clone(),
         tracked_resource,
         resources: vm_resources,
-        storage_read_values: syscall_handler_base.read_values.clone(),
-        accessed_storage_keys: syscall_handler_base.accessed_keys.clone(),
-        read_class_hash_values: syscall_handler_base.read_class_hash_values.clone(),
-        accessed_contract_addresses: syscall_handler_base.accessed_contract_addresses.clone(),
+        storage_access_tracker: syscall_handler_base.storage_access_tracker.clone(),
     })
 }

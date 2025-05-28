@@ -1,7 +1,6 @@
-use blockifier::execution::syscalls::SyscallSelector;
-use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
+use blockifier::blockifier_versioned_constants::VersionedConstants;
+use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsageMap};
 use blockifier::utils::u64_from_usize;
-use blockifier::versioned_constants::VersionedConstants;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use starknet_api::transaction::fields::Calldata;
@@ -29,7 +28,10 @@ pub fn get_syscalls_gas_consumed(
     syscall_usage
         .iter()
         .map(|(selector, usage)| {
-            let syscall_gas_cost = versioned_constants.get_syscall_gas_cost(selector);
+            let syscall_gas_costs = &versioned_constants.os_constants.gas_costs.syscalls;
+            let syscall_gas_cost = syscall_gas_costs
+                .get_syscall_gas_cost(selector)
+                .expect("Failed to get syscall gas cost");
 
             // `linear_factor` is relevant only for `deploy` syscall, for other syscalls it is 0
             // `base_syscall_cost` makes an assert that `linear_factor` is 0
@@ -38,7 +40,11 @@ pub fn get_syscalls_gas_consumed(
             let base_cost = if let SyscallSelector::Deploy = selector {
                 syscall_gas_cost.get_syscall_cost(0)
             } else {
-                syscall_gas_cost.base_syscall_cost()
+                versioned_constants
+                    .os_constants
+                    .gas_costs
+                    .base
+                    .syscall_base_gas_cost
             };
 
             // We want to calculate `base_cost * call_count + linear_cost * linear_factor`
