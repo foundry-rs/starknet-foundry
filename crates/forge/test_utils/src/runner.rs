@@ -290,8 +290,6 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
             }
             AnyTestCaseSummary::Single(case) => match case {
                 TestCaseSummary::Passed { gas_info: gas, .. } => {
-                    println!("Gas:          {gas:?}");
-                    println!("Asserted gas: {gas:?}");
                     assert_gas_with_margin(*gas, asserted_gas)
                         && any_case
                             .name()
@@ -310,17 +308,8 @@ pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_g
 fn assert_gas_with_margin(gas: GasVector, asserted_gas: GasVector) -> bool {
     if cfg!(feature = "assert_non_exact_gas") {
         let diff = gas_vector_abs_diff(&gas, &asserted_gas);
-        println!("Gas diff: {diff:?}");
         diff.l1_gas.0 <= 10 && diff.l1_data_gas.0 <= 10 && diff.l2_gas.0 <= 200_000
     } else {
-        let equal = gas == asserted_gas;
-        let l1_gas_equal = gas.l1_gas == asserted_gas.l1_gas;
-        println!("{} == {}: {l1_gas_equal}", gas.l1_gas, asserted_gas.l1_gas);
-        let l1_data_gas_equal = gas.l1_data_gas == asserted_gas.l1_data_gas;
-        println!("l1_data_gas == asserted_l1_data_gas: {l1_data_gas_equal}");
-        let l2_gas_equal = gas.l2_gas == asserted_gas.l2_gas;
-        println!("l2_gas == asserted_l2_gas: {l2_gas_equal}");
-        println!("gas == asserted_gas: {equal}");
         gas == asserted_gas
     }
 }
