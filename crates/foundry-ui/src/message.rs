@@ -12,7 +12,7 @@ pub trait Message: Serialize {
 
     /// Return JSON representation of this message.
     fn json(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "Invalid JSON".to_string())
+        serde_json::to_string(self).expect("Failed to serialize message to JSON")
     }
 }
 

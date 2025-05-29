@@ -21,6 +21,14 @@ impl OutputFormat {
     }
 }
 
+pub trait Ui {
+    /// Print the given message to stdout using the configured output format.
+    fn println(&self, message: &impl Message);
+
+    /// Print the given message to stderr using the configured output format.
+    fn eprintln(&self, message: &impl Message);
+}
+
 /// An abstraction around console output which stores preferences for output format (human vs JSON),
 /// colour, etc.
 ///
@@ -41,7 +49,7 @@ impl UI {
     /// Print the given message to stdout using the configured output format.
     pub fn println<T>(&self, message: &T)
     where
-        T: Message + serde::Serialize,
+        T: Message,
     {
         match self.output_format {
             OutputFormat::Human => println!("{}", message.text()),
@@ -52,7 +60,7 @@ impl UI {
     /// Print the given message to stderr using the configured output format.
     pub fn eprintln<T>(&self, message: &T)
     where
-        T: Message + serde::Serialize,
+        T: Message,
     {
         match self.output_format {
             OutputFormat::Human => eprintln!("{}", message.text()),
