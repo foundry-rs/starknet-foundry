@@ -21,7 +21,7 @@ pub fn eth_predeployed_contract() -> PredeployedContract {
     // All storage values are taken from https://starkscan.co/contract/0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d#contract-storage
     let total_supply_low: u128 = 15_000_000_000_000_000_000_000;
     let permitted_minter = ContractAddress::try_from_hex_str(
-        "0x4C5772D1914FE6CE891B64EB35BF3522AEAE1315647314AAC58B01137607F3F",
+        "0x4c5772d1914fe6ce891b64eb35bf3522aeae1315647314aac58b01137607f3f",
     )
     .unwrap();
 

@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - ETH token is now pre-deployed in every test by default
-- `Token::ETH` from `snforge_std` has been added
+- Added `Token::ETH` to snforge_std
 
 #### Changed
 
