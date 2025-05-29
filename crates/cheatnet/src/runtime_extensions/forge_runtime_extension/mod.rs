@@ -717,7 +717,7 @@ fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResourc
     for nested_call in &top_call.borrow().nested_calls {
         match nested_call {
             CallTraceNode::EntryPointCall(nested_call) => {
-                execution_resources += &add_execution_resources(nested_call.clone());
+                execution_resources += &nested_call.borrow().used_execution_resources;
             }
             CallTraceNode::DeployWithoutConstructor => {}
         }
