@@ -848,7 +848,7 @@ fn process_command_result<T>(
     ui: &UI,
     block_explorer_link: Option<String>,
 ) where
-    T: serde::Serialize + Clone + CommandResponse,
+    T: CommandResponse,
     SncastMessage<T>: Message + Serialize,
 {
     let cast_msg = result.map(|command_response| SncastMessage {
