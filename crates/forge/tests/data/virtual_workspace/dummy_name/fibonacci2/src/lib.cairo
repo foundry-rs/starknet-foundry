@@ -30,8 +30,8 @@ mod FibonacciContract {
 
 #[cfg(test)]
 mod tests {
-    use super::fib;
     use snforge_std::declare;
+    use super::fib;
 
     #[test]
     fn it_works() {
