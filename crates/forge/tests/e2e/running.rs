@@ -861,7 +861,6 @@ fn detailed_resources_flag() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn detailed_resources_flag_sierra_gas() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)

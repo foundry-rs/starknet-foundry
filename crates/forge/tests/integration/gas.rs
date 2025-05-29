@@ -1008,7 +1008,6 @@ fn events_contract_cost_cairo_steps() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn declare_cost_is_omitted_sierra_gas() {
     let test = test_case!(
         indoc!(
@@ -1044,7 +1043,6 @@ fn declare_cost_is_omitted_sierra_gas() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn deploy_syscall_cost_sierra_gas() {
     let test = test_case!(
         indoc!(
@@ -1093,7 +1091,6 @@ fn deploy_syscall_cost_sierra_gas() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn snforge_std_deploy_cost_sierra_gas() {
     let test = test_case!(
         indoc!(
@@ -1134,7 +1131,6 @@ fn snforge_std_deploy_cost_sierra_gas() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn keccak_cost_sierra_gas() {
     let test = test_case!(indoc!(
         r"
@@ -1164,7 +1160,6 @@ fn keccak_cost_sierra_gas() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn contract_keccak_cost_sierra_gas() {
     let test = test_case!(
         indoc!(
@@ -1214,7 +1209,6 @@ fn contract_keccak_cost_sierra_gas() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn contract_range_check_cost_sierra_gas() {
     let test = test_case!(
         indoc!(
@@ -1260,7 +1254,6 @@ fn contract_range_check_cost_sierra_gas() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn storage_write_cost_sierra_gas() {
     let test = test_case!(
         indoc!(
@@ -1312,7 +1305,6 @@ fn storage_write_cost_sierra_gas() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn multiple_storage_writes_cost_sierra_gas() {
     let test = test_case!(
         indoc!(
@@ -1371,7 +1363,6 @@ fn multiple_storage_writes_cost_sierra_gas() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn l1_message_cost_sierra_gas() {
     let test = test_case!(
         indoc!(
@@ -1422,7 +1413,6 @@ fn l1_message_cost_sierra_gas() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn l1_message_cost_for_proxy_sierra_gas() {
     let test = test_case!(
         indoc!(
@@ -1487,7 +1477,6 @@ fn l1_message_cost_for_proxy_sierra_gas() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn events_cost_sierra_gas() {
     let test = test_case!(indoc!(
         r"
@@ -1534,7 +1523,6 @@ fn events_cost_sierra_gas() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn events_contract_cost_sierra_gas() {
     let test = test_case!(
         indoc!(
