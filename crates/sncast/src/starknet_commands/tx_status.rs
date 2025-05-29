@@ -1,7 +1,7 @@
 use clap::Args;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
-use sncast::response::structs::{ExecutionStatus, FinalityStatus, TransactionStatusResponse};
+use sncast::response::tx_status::{ExecutionStatus, FinalityStatus, TransactionStatusResponse};
 use starknet::core::types::{TransactionExecutionStatus, TransactionStatus};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};

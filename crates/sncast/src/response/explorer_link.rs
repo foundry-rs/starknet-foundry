@@ -1,16 +1,18 @@
-use super::print::OutputFormat;
 use crate::helpers::block_explorer::{LinkProvider, Service};
+use foundry_ui::OutputFormat;
 use starknet_types_core::felt::Felt;
 
+// TODO(#3391): This code should be refactored to either use common `Message` trait or be directly
+// included in `sncast` output messages.
 pub trait OutputLink {
     const TITLE: &'static str;
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String;
 
-    fn print_links(&self, provider: Box<dyn LinkProvider>) {
+    fn print_links(&self, provider: Box<dyn LinkProvider>) -> String {
         let title = Self::TITLE;
         let links = self.format_links(provider);
-        println!("\nTo see {title} details, visit:\n{links}");
+        format!("\nTo see {title} details, visit:\n{links}")
     }
 }
 
@@ -22,27 +24,29 @@ pub enum ExplorerError {
     UnrecognizedNetwork,
 }
 
-pub fn print_block_explorer_link_if_allowed<T: OutputLink>(
+pub fn block_explorer_link_if_allowed<T: OutputLink>(
     result: &anyhow::Result<T>,
     output_format: OutputFormat,
     chain_id: Felt,
     show_links: bool,
     explorer: Option<Service>,
-) {
+) -> Option<String> {
     if !show_links {
-        return;
+        return None;
     }
     if output_format != OutputFormat::Human {
-        return;
+        return None;
     }
     let Ok(response) = result else {
-        return;
+        return None;
     };
     let Ok(network) = chain_id.try_into() else {
-        return;
+        return None;
     };
 
     if let Ok(provider) = explorer.unwrap_or_default().as_provider(network) {
-        response.print_links(provider);
+        return Some(response.print_links(provider));
     }
+
+    None
 }
