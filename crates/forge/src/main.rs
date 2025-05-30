@@ -1,5 +1,5 @@
-use forge::{ExitStatus, main_execution, pretty_printing};
-use foundry_ui::UI;
+use forge::{ExitStatus, main_execution};
+use foundry_ui::{UI, components::error::ErrorMessage};
 
 fn main() {
     let ui = UI::default();
@@ -7,7 +7,7 @@ fn main() {
         Ok(ExitStatus::Success) => std::process::exit(0),
         Ok(ExitStatus::Failure) => std::process::exit(1),
         Err(error) => {
-            pretty_printing::print_error_message(&error);
+            ui.println(&ErrorMessage::new(&format!("{error:#}")));
             std::process::exit(2);
         }
     };

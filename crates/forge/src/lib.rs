@@ -27,7 +27,6 @@ mod combine_configs;
 mod compatibility_check;
 mod init;
 mod new;
-pub mod pretty_printing;
 pub mod run_tests;
 pub mod scarb;
 pub mod shared_cache;
@@ -268,7 +267,7 @@ pub fn main_execution(ui: &UI) -> Result<ExitStatus> {
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Clean { args } => {
-            clean::clean(args)?;
+            clean::clean(args, ui)?;
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::CleanCache {} => {
@@ -285,11 +284,11 @@ pub fn main_execution(ui: &UI) -> Result<ExitStatus> {
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Test { args } => {
-            check_requirements(false, args.tracked_resource)?;
+            check_requirements(false, args.tracked_resource, ui)?;
             let cores = if let Ok(available_cores) = available_parallelism() {
                 available_cores.get()
             } else {
-                eprintln!("Failed to get the number of available cores, defaulting to 1");
+                ui.eprintln(&"Failed to get the number of available cores, defaulting to 1");
                 1
             };
 
@@ -301,7 +300,7 @@ pub fn main_execution(ui: &UI) -> Result<ExitStatus> {
             rt.block_on(run_for_workspace(args, ui))
         }
         ForgeSubcommand::CheckRequirements => {
-            check_requirements(true, ForgeTrackedResource::default())?;
+            check_requirements(true, ForgeTrackedResource::default(), ui)?;
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Completion(completion) => {
@@ -314,6 +313,7 @@ pub fn main_execution(ui: &UI) -> Result<ExitStatus> {
 fn check_requirements(
     output_on_success: bool,
     forge_tracked_resource: ForgeTrackedResource,
+    ui: &UI,
 ) -> Result<()> {
     let mut requirements_checker = RequirementsChecker::new(output_on_success);
     match forge_tracked_resource {
@@ -356,7 +356,7 @@ fn check_requirements(
             r"universal-sierra-compiler (?<version>[0-9]+.[0-9]+.[0-9]+)",
         ),
     });
-    requirements_checker.check()?;
+    requirements_checker.check(ui)?;
 
     let scarb_version = ScarbCommand::version().run()?.scarb;
     if scarb_version < MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN {
@@ -378,7 +378,7 @@ fn check_requirements(
                 .to_string(),
         });
 
-        requirements_checker.check()?;
+        requirements_checker.check(ui)?;
     }
 
     Ok(())
