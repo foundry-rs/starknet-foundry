@@ -2,6 +2,7 @@ use crate::Arguments;
 use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
+use foundry_ui::UI;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
@@ -40,6 +41,8 @@ pub struct Invoke {
     pub rpc: RpcArgs,
 }
 
+#[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_arguments)]
 pub async fn invoke(
     contract_address: Felt,
     calldata: Vec<Felt>,
@@ -48,6 +51,7 @@ pub async fn invoke(
     function_selector: Felt,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
+    ui: &UI,
 ) -> Result<InvokeResponse, StarknetCommandError> {
     let call = Call {
         to: contract_address,
@@ -55,7 +59,7 @@ pub async fn invoke(
         calldata,
     };
 
-    execute_calls(account, vec![call], fee_args, nonce, wait_config).await
+    execute_calls(account, vec![call], fee_args, nonce, wait_config, ui).await
 }
 
 pub async fn execute_calls(
@@ -64,6 +68,7 @@ pub async fn execute_calls(
     fee_args: FeeArgs,
     nonce: Option<Felt>,
     wait_config: WaitForTx,
+    ui: &UI,
 ) -> Result<InvokeResponse, StarknetCommandError> {
     let execution_calls = account.execute_v3(calls);
 
@@ -106,6 +111,7 @@ pub async fn execute_calls(
                 transaction_hash: transaction_hash.into_(),
             },
             wait_config,
+            ui,
         )
         .await
         .map_err(StarknetCommandError::from),

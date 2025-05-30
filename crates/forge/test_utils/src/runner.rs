@@ -12,6 +12,7 @@ use forge_runner::{
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
     test_target_summary::TestTargetSummary,
 };
+use foundry_ui::UI;
 use indoc::formatdoc;
 use scarb_api::{
     ScarbCommand, StarknetContractArtifacts, get_contracts_artifacts_and_source_sierra_paths,
@@ -57,7 +58,7 @@ impl Contract {
         })
     }
 
-    fn generate_sierra_and_casm(self) -> Result<(String, String)> {
+    fn generate_sierra_and_casm(self, ui: &UI) -> Result<(String, String)> {
         let dir = tempdir_with_tool_versions()?;
 
         let contract_path = dir.child("src/lib.cairo");
@@ -101,7 +102,7 @@ impl Contract {
         let artifacts_dir = target_dir_for_workspace(&scarb_metadata).join("dev");
 
         let contract =
-            get_contracts_artifacts_and_source_sierra_paths(&artifacts_dir, package, false)
+            get_contracts_artifacts_and_source_sierra_paths(&artifacts_dir, package, false, ui)
                 .unwrap()
                 .remove(&self.name)
                 .ok_or(anyhow!("there is no contract with name {}", self.name))?
@@ -194,13 +195,16 @@ impl<'a> TestCase {
         ]
     }
 
-    pub fn contracts(&self) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
+    pub fn contracts(
+        &self,
+        ui: &UI,
+    ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
         self.contracts
             .clone()
             .into_iter()
             .map(|contract| {
                 let name = contract.name.clone();
-                let (sierra, casm) = contract.generate_sierra_and_casm()?;
+                let (sierra, casm) = contract.generate_sierra_and_casm(ui)?;
 
                 Ok((
                     name,

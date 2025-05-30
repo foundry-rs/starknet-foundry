@@ -27,6 +27,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::Contr
 use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
 use conversions::string::TryFromHexStr;
+use foundry_ui::UI;
 use runtime::starknet::constants::TEST_ADDRESS;
 use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
@@ -93,8 +94,9 @@ pub fn get_contracts() -> ContractsData {
 
     let package = scarb_metadata.packages.first().unwrap();
 
+    let ui = UI::default();
     let contracts =
-        get_contracts_artifacts_and_source_sierra_paths(&target_dir, package, false).unwrap();
+        get_contracts_artifacts_and_source_sierra_paths(&target_dir, package, false, &ui).unwrap();
     ContractsData::try_from(contracts).unwrap()
 }
 

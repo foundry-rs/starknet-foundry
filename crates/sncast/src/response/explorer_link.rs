@@ -1,18 +1,39 @@
 use crate::helpers::block_explorer::{LinkProvider, Service};
-use foundry_ui::OutputFormat;
+use foundry_ui::Message;
+use serde::Serialize;
 use starknet_types_core::felt::Felt;
 
-// TODO(#3391): This code should be refactored to either use common `Message` trait or be directly
-// included in `sncast` output messages.
 pub trait OutputLink {
     const TITLE: &'static str;
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String;
+}
 
-    fn print_links(&self, provider: Box<dyn LinkProvider>) -> String {
-        let title = Self::TITLE;
-        let links = self.format_links(provider);
-        format!("\nTo see {title} details, visit:\n{links}")
+#[derive(Serialize)]
+pub struct OutputLinkMessage {
+    title: String,
+    links: String,
+}
+
+impl OutputLinkMessage {
+    pub fn new<T>(response: &T, provider: Box<dyn LinkProvider>) -> Self
+    where
+        T: OutputLink,
+    {
+        Self {
+            title: T::TITLE.to_string(),
+            links: response.format_links(provider),
+        }
+    }
+}
+
+impl Message for OutputLinkMessage {
+    fn text(&self) -> String {
+        format!("\nTo see {} details, visit:\n{}", self.title, self.links)
+    }
+
+    fn json(&self) -> String {
+        String::new()
     }
 }
 
@@ -24,19 +45,19 @@ pub enum ExplorerError {
     UnrecognizedNetwork,
 }
 
-pub fn block_explorer_link_if_allowed<T: OutputLink>(
+pub fn block_explorer_link_if_allowed<T>(
     result: &anyhow::Result<T>,
-    output_format: OutputFormat,
     chain_id: Felt,
     show_links: bool,
     explorer: Option<Service>,
-) -> Option<String> {
+) -> Option<OutputLinkMessage>
+where
+    T: OutputLink + Clone,
+{
     if !show_links {
         return None;
     }
-    if output_format != OutputFormat::Human {
-        return None;
-    }
+
     let Ok(response) = result else {
         return None;
     };
@@ -45,7 +66,7 @@ pub fn block_explorer_link_if_allowed<T: OutputLink>(
     };
 
     if let Ok(provider) = explorer.unwrap_or_default().as_provider(network) {
-        return Some(response.print_links(provider));
+        return Some(OutputLinkMessage::new(response, provider));
     }
 
     None

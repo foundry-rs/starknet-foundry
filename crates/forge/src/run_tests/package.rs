@@ -30,6 +30,7 @@ use forge_runner::{
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
+use foundry_ui::UI;
 use scarb_api::get_contracts_artifacts_and_source_sierra_paths;
 use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
@@ -49,6 +50,7 @@ impl RunForPackageArgs {
         args: &TestArgs,
         cache_dir: &Utf8PathBuf,
         artifacts_dir: &Utf8Path,
+        ui: &UI,
     ) -> Result<RunForPackageArgs> {
         let raw_test_targets = load_test_artifacts(artifacts_dir, &package)?;
 
@@ -59,6 +61,7 @@ impl RunForPackageArgs {
                 &scarb_metadata.app_version_info.version,
                 args.no_optimization,
             ),
+            ui,
         )?;
         let contracts_data = ContractsData::try_from(contracts)?;
 
