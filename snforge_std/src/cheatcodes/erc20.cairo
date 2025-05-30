@@ -3,7 +3,9 @@ use snforge_std::cheatcodes::storage::{map_entry_address, store};
 
 const STRK_CONTRACT_ADDRESS: felt252 =
     0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d;
-const STRK_BALANCES_VARIABLE_SELECTOR: felt252 =
+const ETH_CONTRACT_ADDRESS: felt252 =
+    0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7;
+const BALANCES_VARIABLE_SELECTOR: felt252 =
     0x3a4e8ec16e258a799fe707996fd5d21d42b29adc1499a370edf7f809d8c458a; // selector!("ERC20_balances");
 
 #[derive(Drop, Serde, Copy, Debug)]
@@ -15,6 +17,7 @@ pub struct CustomToken {
 #[derive(Drop, Copy, Clone, Debug)]
 pub enum Token {
     STRK,
+    ETH,
     Custom: CustomToken,
 }
 
@@ -23,13 +26,14 @@ pub impl TokenImpl of TokenTrait {
     fn contract_address(self: Token) -> ContractAddress {
         match self {
             Token::STRK => STRK_CONTRACT_ADDRESS.try_into().unwrap(),
+            Token::ETH => ETH_CONTRACT_ADDRESS.try_into().unwrap(),
             Token::Custom(CustomToken { contract_address, .. }) => contract_address,
         }
     }
 
     fn balances_variable_selector(self: Token) -> felt252 {
         match self {
-            Token::STRK => STRK_BALANCES_VARIABLE_SELECTOR,
+            Token::STRK | Token::ETH => BALANCES_VARIABLE_SELECTOR,
             Token::Custom(CustomToken {
                 balances_variable_selector, ..,
             }) => balances_variable_selector,
