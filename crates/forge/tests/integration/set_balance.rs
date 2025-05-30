@@ -1,5 +1,5 @@
-use cheatnet::predeployment::eth::ETH_CONTRACT_ADDRESS;
-use cheatnet::predeployment::strk::STRK_CONTRACT_ADDRESS;
+use cheatnet::predeployment::erc20::eth::ETH_CONTRACT_ADDRESS;
+use cheatnet::predeployment::erc20::strk::STRK_CONTRACT_ADDRESS;
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::node_url::node_rpc_url;
@@ -31,18 +31,15 @@ fn test_set_balance_predefined_token(token: &str) {
             fn test_set_balance_predefined_token() {{
                 let contract_address: ContractAddress = 0x123.try_into().unwrap();
 
-                let balance_before = get_balance(contract_address, Token::{});
+                let balance_before = get_balance(contract_address, Token::{token});
                 assert_eq!(balance_before, array![0, 0].span(), "Balance should be 0");
 
-                set_balance(contract_address, 10, Token::{});
+                set_balance(contract_address, 10, Token::{token});
 
-                let balance_after = get_balance(contract_address, Token::{});
+                let balance_after = get_balance(contract_address, Token::{token});
                 assert_eq!(balance_after, array![10, 0].span(), "Balance should be 10");
         }}
-        "#,
-            token,
-            token,
-            token,
+        "#
         )
         .as_str(),
         Contract::from_code_path(

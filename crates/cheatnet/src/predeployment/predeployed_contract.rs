@@ -13,14 +13,7 @@ use starknet_api::{
 };
 use starknet_types_core::felt::Felt;
 
-pub struct ERC20ConstructorData {
-    pub name: String,
-    pub symbol: String,
-    pub decimals: u8,
-    pub total_supply: (u128, u128), // (low, high)
-    pub permitted_minter: ContractAddress,
-    pub upgrade_delay: u64,
-}
+use super::erc20::constructor_data::ERC20ConstructorData;
 
 pub struct PredeployedContract {
     pub contract_address: ContractAddress,

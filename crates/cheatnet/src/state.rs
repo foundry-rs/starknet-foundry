@@ -1,8 +1,8 @@
 use crate::constants::build_test_entry_point;
 use crate::forking::state::ForkStateReader;
-use crate::predeployment::eth::eth_predeployed_contract;
+use crate::predeployment::erc20::eth::eth_predeployed_contract;
+use crate::predeployment::erc20::strk::strk_predeployed_contract;
 use crate::predeployment::predeployed_contract::PredeployedContract;
-use crate::predeployment::strk::strk_predeployed_contract;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::{
     ExecutionInfoMock, ResourceBounds,

@@ -1,7 +1,11 @@
 use conversions::string::TryFromHexStr;
 use starknet_api::core::ContractAddress;
 
-use super::predeployed_contract::{ERC20ConstructorData, PredeployedContract};
+use crate::predeployment::predeployed_contract::PredeployedContract;
+
+use super::constructor_data::ERC20ConstructorData;
+
+// use super::predeployed_contract::{ERC20ConstructorData, PredeployedContract};
 
 pub const ETH_CONTRACT_ADDRESS: &str =
     "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
@@ -10,7 +14,7 @@ pub const ETH_CONTRACT_ADDRESS: &str =
 pub fn eth_predeployed_contract() -> PredeployedContract {
     // Compiled with starknet-compile, compiler version: 2.10.0
     // Fetched with `starknet_getCompiledCasm`
-    let raw_casm = include_str!("../data/eth_erc20_casm.json");
+    let raw_casm = include_str!("../../data/eth_erc20_casm.json");
 
     let contract_address = ContractAddress::try_from_hex_str(ETH_CONTRACT_ADDRESS).unwrap();
     let class_hash = TryFromHexStr::try_from_hex_str(
@@ -19,6 +23,7 @@ pub fn eth_predeployed_contract() -> PredeployedContract {
     .unwrap();
 
     // All storage values are taken from https://starkscan.co/contract/0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d#contract-storage
+    // Block 747469
     let total_supply_low: u128 = 15_000_000_000_000_000_000_000;
     let permitted_minter = ContractAddress::try_from_hex_str(
         "0x4c5772d1914fe6ce891b64eb35bf3522aeae1315647314aac58b01137607f3f",
