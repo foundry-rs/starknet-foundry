@@ -1,9 +1,6 @@
 use serde::Serialize;
 
 /// A typed object that can be either printed as a human-readable message or serialized as JSON.
-///
-/// The [`LabeledMessage`][crate::components::LabeledMessage] and [`TaggedMessage`][crate::components::TaggedMessage]
-/// structs are the most frequently used kinds of messages.
 pub trait Message: Serialize {
     /// Return textual (human) representation of this message.
     fn text(&self) -> String;
