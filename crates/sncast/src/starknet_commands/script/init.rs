@@ -26,7 +26,7 @@ pub fn init(init_args: &Init, ui: &UI) -> Result<ScriptInitResponse> {
         .and_then(|()| modify_files_in_src_dir(&init_args.script_name, &script_root_dir_path));
 
     ui.println(&WarningMessage::new(
-        "The newly created script isn't auto-added to the workspace. For more details, please see https://foundry-rs.github.io/starknet-foundry/starknet/script.html#initialize-a-script",
+        &"The newly created script isn't auto-added to the workspace. For more details, please see https://foundry-rs.github.io/starknet-foundry/starknet/script.html#initialize-a-script",
     ));
 
     match modify_files_result {

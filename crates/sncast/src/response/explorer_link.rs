@@ -33,7 +33,7 @@ impl Message for OutputLinkMessage {
     }
 
     fn json(&self) -> String {
-        String::new()
+        serde_json::to_string(self).expect("Failed to serialize as JSON")
     }
 }
 
