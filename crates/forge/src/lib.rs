@@ -254,8 +254,7 @@ pub enum ExitStatus {
     Failure,
 }
 
-pub fn main_execution() -> Result<ExitStatus> {
-    let ui = UI::default();
+pub fn main_execution(&ui: UI) -> Result<ExitStatus> {
     let cli = Cli::parse();
 
     match cli.subcommand {
