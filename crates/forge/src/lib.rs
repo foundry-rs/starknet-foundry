@@ -254,7 +254,7 @@ pub enum ExitStatus {
     Failure,
 }
 
-pub fn main_execution(&ui: UI) -> Result<ExitStatus> {
+pub fn main_execution(ui: &UI) -> Result<ExitStatus> {
     let cli = Cli::parse();
 
     match cli.subcommand {
@@ -297,7 +297,7 @@ pub fn main_execution(&ui: UI) -> Result<ExitStatus> {
                 .enable_all()
                 .build()?;
 
-            rt.block_on(run_for_workspace(args, &ui))
+            rt.block_on(run_for_workspace(args, ui))
         }
         ForgeSubcommand::CheckRequirements => {
             check_requirements(true, ForgeTrackedResource::default(), ui)?;

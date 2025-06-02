@@ -6,10 +6,26 @@ use foundry_ui::Message;
 use serde::Serialize;
 
 #[derive(Serialize)]
-pub enum TestResultStatus {
+enum TestResultStatus {
     Passed,
     Failed,
     Ignored,
+    Skipped,
+}
+
+impl From<AnyTestCaseSummary> for TestResultStatus {
+    fn from(test_result: AnyTestCaseSummary) -> Self {
+        match test_result {
+            AnyTestCaseSummary::Single(TestCaseSummary::Passed { .. })
+            | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed { .. }) => Self::Passed,
+            AnyTestCaseSummary::Single(TestCaseSummary::Failed { .. })
+            | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Failed { .. }) => Self::Failed,
+            AnyTestCaseSummary::Single(TestCaseSummary::Ignored { .. })
+            | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Ignored { .. }) => Self::Ignored,
+            AnyTestCaseSummary::Single(TestCaseSummary::Skipped { .. })
+            | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Skipped { .. }) => Self::Skipped,
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -75,6 +91,7 @@ impl TestResultMessage {
         };
 
         Self {
+            status: TestResultStatus::from(test_result.clone()),
             name,
             msg: test_result.msg().map(std::string::ToString::to_string),
             debugging_trace,
@@ -89,7 +106,7 @@ impl TestResultMessage {
             match self.status {
                 TestResultStatus::Passed => return format!("\n\n{msg}"),
                 TestResultStatus::Failed => return format!("\n\nFailure data: {msg}"),
-                TestResultStatus::Ignored => return String::new(),
+                TestResultStatus::Ignored | TestResultStatus::Skipped => return String::new(),
             }
         }
         String::new()
@@ -100,6 +117,7 @@ impl TestResultMessage {
             TestResultStatus::Passed => format!("[{}]", style("PASS").green()),
             TestResultStatus::Failed => format!("[{}]", style("FAIL").red()),
             TestResultStatus::Ignored => format!("[{}]", style("IGNORE").yellow()),
+            TestResultStatus::Skipped => unreachable!(),
         }
     }
 }
@@ -119,6 +137,10 @@ impl Message for TestResultMessage {
         format!(
             "{result_header} {result_name}{fuzzer_report}{gas_usage}{used_resources}{result_msg}{result_debug_trace}"
         )
+    }
+
+    fn json(&self) -> String {
+        serde_json::to_string(self).expect("Failed to serialize as JSON")
     }
 }
 

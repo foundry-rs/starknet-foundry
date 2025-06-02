@@ -22,6 +22,7 @@ use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use configuration::load_package_config;
+use console::Style;
 use forge_runner::debugging::TraceVerbosity;
 use forge_runner::{
     forge_config::ForgeConfig,
@@ -30,7 +31,7 @@ use forge_runner::{
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
-use foundry_ui::{UI, components::typed::LabeledMessage};
+use foundry_ui::{UI, components::labeled::LabeledMessage};
 use scarb_api::get_contracts_artifacts_and_source_sierra_paths;
 use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
@@ -213,10 +214,9 @@ pub async fn run_for_package(
     });
 
     if any_fuzz_test_was_run {
-        ui.println(&LabeledMessage::styled(
-            "Fuzzer seed",
+        ui.println(&LabeledMessage::new(
+            &Style::new().bold().apply_to("Fuzzer seed").to_string(),
             &forge_config.test_runner_config.fuzzer_seed.to_string(),
-            "bold",
         ));
     }
 

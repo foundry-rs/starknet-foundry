@@ -166,7 +166,7 @@ pub enum TestCaseSummary<T: TestType> {
     Skipped {},
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[expect(clippy::large_enum_variant)]
 pub enum AnyTestCaseSummary {
     Fuzzing(TestCaseSummary<Fuzzing>),
