@@ -1,51 +1,35 @@
-use console::Style;
 use serde::Serialize;
 
 use crate::Message;
 
-/// Generic textual message with `tag` prefix.
+/// Generic message with `tag` prefix.
 ///
 /// The tag prefix can be stylized in text mode.
 /// e.g. "[WARNING]: An example warning message"
 #[derive(Serialize)]
-pub struct TaggedMessage<'a> {
+pub struct TaggedMessage<'a, T: Message + Serialize> {
+    message_type: &'a str,
     tag: &'a str,
-    text: &'a str,
-
-    /// Field which dictates the style of the tag as a string that `console::Style` can interpret.
-    #[serde(skip)]
-    tag_style: Option<&'a str>,
+    message: &'a T,
 }
 
-impl<'a> TaggedMessage<'a> {
+impl<'a, T: Message + Serialize> TaggedMessage<'a, T> {
     #[must_use]
-    pub fn styled(tag: &'a str, text: &'a str, tag_style: &'a str) -> Self {
+    pub fn new(tag: &'a str, message: &'a T) -> Self {
         Self {
+            message_type: "tagged",
             tag,
-            text,
-            tag_style: Some(tag_style),
-        }
-    }
-
-    #[must_use]
-    pub fn raw(tag: &'a str, text: &'a str) -> Self {
-        Self {
-            tag,
-            text,
-            tag_style: None,
+            message,
         }
     }
 }
 
-impl Message for TaggedMessage<'_> {
+impl<T: Message + Serialize> Message for TaggedMessage<'_, T> {
     fn text(&self) -> String {
-        format!(
-            "[{}] {}",
-            self.tag_style
-                .map(Style::from_dotted_str)
-                .unwrap_or_default()
-                .apply_to(self.tag.to_string()),
-            self.text
-        )
+        format!("[{}] {}", self.tag, self.message.text())
+    }
+
+    fn json(&self) -> String {
+        serde_json::to_string(self).expect("Failed to serialize message to JSON")
     }
 }
