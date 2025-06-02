@@ -12,7 +12,7 @@ use sncast::response::cast_message::SncastMessage;
 use sncast::response::command::CommandResponse;
 use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::ResponseError;
-use sncast::response::explorer_link::{OutputLinkMessage, block_explorer_link_if_allowed};
+use sncast::response::explorer_link::{ExplorerLinksMessage, block_explorer_link_if_allowed};
 use sncast::response::transformed_call::TransformedCallResponse;
 use std::io;
 use std::io::IsTerminal;
@@ -857,7 +857,7 @@ fn process_command_result<T>(
     result: Result<T>,
     numbers_format: NumbersFormat,
     ui: &UI,
-    block_explorer_link: Option<OutputLinkMessage>,
+    block_explorer_link: Option<ExplorerLinksMessage>,
 ) where
     T: CommandResponse,
 {
