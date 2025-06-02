@@ -1,3 +1,4 @@
+use console::Style;
 use serde::Serialize;
 
 use crate::Message;
@@ -19,7 +20,12 @@ impl<'a> WarningMessage<'a> {
 
 impl Message for WarningMessage<'_> {
     fn text(&self) -> String {
-        let tagged_message = TaggedMessage::styled("WARNING", self.text, "yellow");
+        let tag = Style::new().yellow().apply_to("WARNING").to_string();
+        let tagged_message = TaggedMessage::new(&tag, self.text);
         tagged_message.text()
+    }
+
+    fn json(&self) -> String {
+        serde_json::to_string(self).expect("Failed to serialize message to JSON")
     }
 }

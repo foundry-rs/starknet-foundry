@@ -1,4 +1,3 @@
-use console::Style;
 use serde::Serialize;
 
 use crate::Message;
@@ -9,43 +8,28 @@ use crate::Message;
 /// e.g. "[WARNING]: An example warning message"
 #[derive(Serialize)]
 pub struct TaggedMessage<'a> {
+    message_type: &'a str,
     tag: &'a str,
     text: &'a str,
-
-    /// Field which dictates the style of the tag as a string that `console::Style` can interpret.
-    #[serde(skip)]
-    tag_style: Option<&'a str>,
 }
 
 impl<'a> TaggedMessage<'a> {
     #[must_use]
-    pub fn styled(tag: &'a str, text: &'a str, tag_style: &'a str) -> Self {
+    pub fn new(tag: &'a str, text: &'a str) -> Self {
         Self {
+            message_type: "tagged",
             tag,
             text,
-            tag_style: Some(tag_style),
-        }
-    }
-
-    #[must_use]
-    pub fn raw(tag: &'a str, text: &'a str) -> Self {
-        Self {
-            tag,
-            text,
-            tag_style: None,
         }
     }
 }
 
 impl Message for TaggedMessage<'_> {
     fn text(&self) -> String {
-        format!(
-            "[{}] {}",
-            self.tag_style
-                .map(Style::from_dotted_str)
-                .unwrap_or_default()
-                .apply_to(self.tag.to_string()),
-            self.text
-        )
+        format!("[{}] {}", self.tag, self.text)
+    }
+
+    fn json(&self) -> String {
+        serde_json::to_string(self).expect("Failed to serialize message to JSON")
     }
 }
