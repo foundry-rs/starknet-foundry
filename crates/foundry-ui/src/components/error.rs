@@ -1,25 +1,42 @@
+use anyhow::Error;
+use console::Style;
 use serde::Serialize;
 
 use crate::Message;
 
 use super::tagged::TaggedMessage;
 
-/// Warning textual message.
+/// Error message.
 #[derive(Serialize)]
-pub struct ErrorMessage<'a> {
-    text: &'a str,
+pub struct ErrorMessage<T: Message> {
+    message_type: &'static str,
+    message: T,
 }
 
-impl<'a> ErrorMessage<'a> {
+impl<T: Message> ErrorMessage<T> {
     #[must_use]
-    pub fn new(text: &'a str) -> Self {
-        Self { text }
+    pub fn new(message: T) -> Self {
+        Self {
+            message_type: "error",
+            message,
+        }
     }
 }
 
-impl Message for ErrorMessage<'_> {
+impl<T: Message> Message for ErrorMessage<T> {
     fn text(&self) -> String {
-        let tagged_message = TaggedMessage::styled("ERROR", self.text, "red");
+        let tag = Style::new().red().apply_to("ERROR").to_string();
+        let tagged_message = TaggedMessage::new(&tag, &self.message);
         tagged_message.text()
+    }
+
+    fn json(&self) -> String {
+        serde_json::to_string(self).expect("Failed to serialize as JSON")
+    }
+}
+
+impl From<Error> for ErrorMessage<String> {
+    fn from(error: Error) -> Self {
+        Self::new(format!("{error:#}"))
     }
 }

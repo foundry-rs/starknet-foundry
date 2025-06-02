@@ -1,4 +1,3 @@
-// TODO(#3022): Rename `printing.rs` to `messages.rs``
 use crate::forge_config::ForgeTrackedResource;
 use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary};
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
@@ -7,10 +6,31 @@ use foundry_ui::Message;
 use serde::Serialize;
 
 #[derive(Serialize)]
+enum TestResultStatus {
+    Passed,
+    Failed,
+    Ignored,
+    Skipped,
+}
+
+impl From<AnyTestCaseSummary> for TestResultStatus {
+    fn from(test_result: AnyTestCaseSummary) -> Self {
+        match test_result {
+            AnyTestCaseSummary::Single(TestCaseSummary::Passed { .. })
+            | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed { .. }) => Self::Passed,
+            AnyTestCaseSummary::Single(TestCaseSummary::Failed { .. })
+            | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Failed { .. }) => Self::Failed,
+            AnyTestCaseSummary::Single(TestCaseSummary::Ignored { .. })
+            | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Ignored { .. }) => Self::Ignored,
+            AnyTestCaseSummary::Single(TestCaseSummary::Skipped { .. })
+            | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Skipped { .. }) => Self::Skipped,
+        }
+    }
+}
+
+#[derive(Serialize)]
 pub struct TestResultMessage {
-    is_passed: bool,
-    is_failed: bool,
-    is_ignored: bool,
+    status: TestResultStatus,
     name: String,
     msg: Option<String>,
     debugging_trace: String,
@@ -21,39 +41,39 @@ pub struct TestResultMessage {
 
 impl TestResultMessage {
     pub fn new(
-        any_test_result: &AnyTestCaseSummary,
+        test_result: &AnyTestCaseSummary,
         show_detailed_resources: bool,
         tracked_resource: ForgeTrackedResource,
     ) -> Self {
-        let name = any_test_result
+        let name = test_result
             .name()
             .expect("Test result must have a name")
             .to_string();
 
-        let debugging_trace = any_test_result
+        let debugging_trace = test_result
             .debugging_trace()
             .map(|trace| format!("\n{trace}"))
             .unwrap_or_default();
 
-        let mut fuzzer_report = None;
-        if let AnyTestCaseSummary::Fuzzing(test_result) = &any_test_result {
-            fuzzer_report = match test_result {
+        let fuzzer_report = if let AnyTestCaseSummary::Fuzzing(test_result) = test_result {
+            match test_result {
                 TestCaseSummary::Passed {
                     test_statistics: FuzzingStatistics { runs },
                     gas_info,
                     ..
-                } => Some(format!(" (runs: {runs}, {gas_info})",)),
+                } => format!(" (runs: {runs}, {gas_info})"),
                 TestCaseSummary::Failed {
                     fuzzer_args,
                     test_statistics: FuzzingStatistics { runs },
                     ..
-                } => Some(format!(" (runs: {runs}, arguments: {fuzzer_args:?})")),
-                _ => None,
-            };
-        }
-        let fuzzer_report = fuzzer_report.unwrap_or_else(String::new);
+                } => format!(" (runs: {runs}, arguments: {fuzzer_args:?})"),
+                _ => String::new(),
+            }
+        } else {
+            String::new()
+        };
 
-        let gas_usage = match any_test_result {
+        let gas_usage = match test_result {
             AnyTestCaseSummary::Single(TestCaseSummary::Passed { gas_info, .. }) => {
                 format!(
                     " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
@@ -63,7 +83,7 @@ impl TestResultMessage {
             _ => String::new(),
         };
 
-        let used_resources = match (show_detailed_resources, &any_test_result) {
+        let used_resources = match (show_detailed_resources, &test_result) {
             (true, AnyTestCaseSummary::Single(TestCaseSummary::Passed { used_resources, .. })) => {
                 format_detailed_resources(used_resources, tracked_resource)
             }
@@ -71,11 +91,9 @@ impl TestResultMessage {
         };
 
         Self {
+            status: TestResultStatus::from(test_result.clone()),
             name,
-            is_passed: any_test_result.is_passed(),
-            is_failed: any_test_result.is_failed(),
-            is_ignored: any_test_result.is_ignored(),
-            msg: any_test_result.msg().map(std::string::ToString::to_string),
+            msg: test_result.msg().map(std::string::ToString::to_string),
             debugging_trace,
             fuzzer_report,
             gas_usage,
@@ -85,27 +103,22 @@ impl TestResultMessage {
 
     fn result_message(&self) -> String {
         if let Some(msg) = &self.msg {
-            if self.is_passed {
-                return format!("\n\n{msg}");
-            }
-            if self.is_failed {
-                return format!("\n\nFailure data:{msg}");
+            match self.status {
+                TestResultStatus::Passed => return format!("\n\n{msg}"),
+                TestResultStatus::Failed => return format!("\n\nFailure data: {msg}"),
+                TestResultStatus::Ignored | TestResultStatus::Skipped => return String::new(),
             }
         }
         String::new()
     }
 
     fn result_header(&self) -> String {
-        if self.is_passed {
-            return format!("[{}]", style("PASS").green());
+        match self.status {
+            TestResultStatus::Passed => format!("[{}]", style("PASS").green()),
+            TestResultStatus::Failed => format!("[{}]", style("FAIL").red()),
+            TestResultStatus::Ignored => format!("[{}]", style("IGNORE").yellow()),
+            TestResultStatus::Skipped => unreachable!(),
         }
-        if self.is_failed {
-            return format!("[{}]", style("FAIL").red());
-        }
-        if self.is_ignored {
-            return format!("[{}]", style("IGNORE").yellow());
-        }
-        unreachable!()
     }
 }
 
@@ -124,6 +137,10 @@ impl Message for TestResultMessage {
         format!(
             "{result_header} {result_name}{fuzzer_report}{gas_usage}{used_resources}{result_msg}{result_debug_trace}"
         )
+    }
+
+    fn json(&self) -> String {
+        serde_json::to_string(self).expect("Failed to serialize as JSON")
     }
 }
 

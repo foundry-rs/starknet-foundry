@@ -2,6 +2,6 @@
 //! a [`UI`].
 
 pub mod error;
+pub mod labeled;
 pub mod tagged;
-pub mod typed;
 pub mod warning;

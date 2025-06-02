@@ -32,6 +32,10 @@ impl Message for TestsRunMessage {
         let plain_text = format!("Running {} test(s) from {}/", self.tests_num, dir_name);
         style(plain_text).bold().to_string()
     }
+
+    fn json(&self) -> String {
+        serde_json::to_string(self).expect("Failed to serialize as JSON")
+    }
 }
 
 #[derive(Serialize)]
@@ -47,6 +51,10 @@ impl Message for CollectedTestsCountMessage {
             self.tests_num, self.package_name
         );
         style(full).bold().to_string()
+    }
+
+    fn json(&self) -> String {
+        serde_json::to_string(self).expect("Failed to serialize as JSON")
     }
 }
 
@@ -92,6 +100,10 @@ impl Message for TestsSummaryMessage {
             self.ignored
         )
     }
+
+    fn json(&self) -> String {
+        serde_json::to_string(self).expect("Failed to serialize as JSON")
+    }
 }
 
 #[derive(Serialize)]
@@ -123,6 +135,10 @@ impl Message for TestsFailureSummaryMessage {
         }
         style(failures).bold().to_string()
     }
+
+    fn json(&self) -> String {
+        serde_json::to_string(self).expect("Failed to serialize as JSON")
+    }
 }
 
 #[derive(Serialize)]
@@ -152,5 +168,9 @@ impl Message for LatestBlocksNumbersMessage {
         }
 
         output
+    }
+
+    fn json(&self) -> String {
+        serde_json::to_string(self).expect("Failed to serialize as JSON")
     }
 }

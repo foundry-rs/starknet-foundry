@@ -4,16 +4,15 @@ use crate::starknet_commands::{
 };
 use anyhow::{Context, Result, bail};
 use data_transformer::{reverse_transform_output, transform};
-use foundry_ui::OutputFormat;
-use foundry_ui::{Message, UI};
-use serde::Serialize;
+use foundry_ui::UI;
 use sncast::helpers::account::generate_account_name;
+use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::response::call::CallResponse;
 use sncast::response::cast_message::SncastMessage;
 use sncast::response::command::CommandResponse;
 use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::ResponseError;
-use sncast::response::explorer_link::{OutputLinkMessage, block_explorer_link_if_allowed};
+use sncast::response::explorer_link::{ExplorerLinksMessage, block_explorer_link_if_allowed};
 use sncast::response::transformed_call::TransformedCallResponse;
 use std::io;
 use std::io::IsTerminal;
@@ -222,7 +221,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     let numbers_format = NumbersFormat::from_flags(cli.hex_format, cli.int_format);
-    let output_format = OutputFormat::from_flag(cli.json);
+    let output_format = output_format_from_json_flag(cli.json);
 
     let ui = UI::new(output_format);
 
@@ -859,10 +858,9 @@ fn process_command_result<T>(
     result: Result<T>,
     numbers_format: NumbersFormat,
     ui: &UI,
-    block_explorer_link: Option<OutputLinkMessage>,
+    block_explorer_link: Option<ExplorerLinksMessage>,
 ) where
-    T: serde::Serialize + Clone + CommandResponse,
-    SncastMessage<T>: Message + Serialize,
+    T: CommandResponse,
 {
     let cast_msg = result.map(|command_response| SncastMessage {
         command: command.to_string(),

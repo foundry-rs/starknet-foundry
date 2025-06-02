@@ -10,12 +10,12 @@ pub trait OutputLink {
 }
 
 #[derive(Serialize)]
-pub struct OutputLinkMessage {
+pub struct ExplorerLinksMessage {
     title: String,
     links: String,
 }
 
-impl OutputLinkMessage {
+impl ExplorerLinksMessage {
     pub fn new<T>(response: &T, provider: Box<dyn LinkProvider>) -> Self
     where
         T: OutputLink,
@@ -27,13 +27,13 @@ impl OutputLinkMessage {
     }
 }
 
-impl Message for OutputLinkMessage {
+impl Message for ExplorerLinksMessage {
     fn text(&self) -> String {
         format!("\nTo see {} details, visit:\n{}", self.title, self.links)
     }
 
     fn json(&self) -> String {
-        String::new()
+        serde_json::to_string(self).expect("Failed to serialize as JSON")
     }
 }
 
@@ -50,7 +50,7 @@ pub fn block_explorer_link_if_allowed<T>(
     chain_id: Felt,
     show_links: bool,
     explorer: Option<Service>,
-) -> Option<OutputLinkMessage>
+) -> Option<ExplorerLinksMessage>
 where
     T: OutputLink + Clone,
 {
@@ -66,7 +66,7 @@ where
     };
 
     if let Ok(provider) = explorer.unwrap_or_default().as_provider(network) {
-        return Some(OutputLinkMessage::new(response, provider));
+        return Some(ExplorerLinksMessage::new(response, provider));
     }
 
     None

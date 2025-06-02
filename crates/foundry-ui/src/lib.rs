@@ -10,22 +10,19 @@ pub enum OutputFormat {
     Json,
 }
 
-impl OutputFormat {
-    #[must_use]
-    pub fn from_flag(json: bool) -> Self {
-        if json {
-            OutputFormat::Json
-        } else {
-            OutputFormat::Human
-        }
-    }
+pub trait Ui {
+    /// Print the given message to stdout using the configured output format.
+    fn println(&self, message: &impl Message);
+
+    /// Print the given message to stderr using the configured output format.
+    fn eprintln(&self, message: &impl Message);
 }
 
 /// An abstraction around console output which stores preferences for output format (human vs JSON),
 /// colour, etc.
 ///
 /// All messaging (basically all writes to `stdout`) must go through this object.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default)]
 pub struct UI {
     output_format: OutputFormat,
     // TODO(3395): Add state here, that can be used for spinner
@@ -41,7 +38,7 @@ impl UI {
     /// Print the given message to stdout using the configured output format.
     pub fn println<T>(&self, message: &T)
     where
-        T: Message + serde::Serialize,
+        T: Message,
     {
         match self.output_format {
             OutputFormat::Human => println!("{}", message.text()),
@@ -52,7 +49,7 @@ impl UI {
     /// Print the given message to stderr using the configured output format.
     pub fn eprintln<T>(&self, message: &T)
     where
-        T: Message + serde::Serialize,
+        T: Message,
     {
         match self.output_format {
             OutputFormat::Human => eprintln!("{}", message.text()),
