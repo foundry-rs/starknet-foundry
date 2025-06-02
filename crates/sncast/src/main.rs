@@ -4,10 +4,10 @@ use crate::starknet_commands::{
 };
 use anyhow::{Context, Result, bail};
 use data_transformer::{reverse_transform_output, transform};
-use foundry_ui::OutputFormat;
 use foundry_ui::{Message, UI};
 use serde::Serialize;
 use sncast::helpers::account::generate_account_name;
+use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::response::call::CallResponse;
 use sncast::response::cast_message::SncastMessage;
 use sncast::response::command::CommandResponse;
@@ -222,7 +222,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     let numbers_format = NumbersFormat::from_flags(cli.hex_format, cli.int_format);
-    let output_format = OutputFormat::from_flag(cli.json);
+    let output_format = output_format_from_json_flag(cli.json);
 
     let ui = UI::new(output_format);
 

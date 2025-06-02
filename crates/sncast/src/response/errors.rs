@@ -24,15 +24,16 @@ impl ResponseError {
 }
 
 impl Message for ResponseError {
-    fn text(&self) -> String
-    where
-        Self: Sized,
-    {
+    fn text(&self) -> String {
         format!(
             "command: {}
 error: {}",
             self.command, self.error
         )
+    }
+
+    fn json(&self) -> String {
+        serde_json::to_string(self).expect("Failed to serialize message to JSON")
     }
 }
 
