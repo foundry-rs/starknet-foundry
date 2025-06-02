@@ -1,51 +1,35 @@
-use console::Style;
 use serde::Serialize;
 
 use crate::Message;
 
-/// Generic textual message with `ty` prefix.
+/// Generic message with `label` prefix.
 ///
-/// The type prefix can be stylized in text mode.
+/// The label prefix can be stylized in text mode.
 /// e.g. "Tests: 1 passed, 1 failed"
 #[derive(Serialize)]
-pub struct LabeledMessage<'a> {
+pub struct LabeledMessage<'a, T> {
+    message_type: &'a str,
     label: &'a str,
-    text: &'a str,
-
-    /// Field which dictates the style of the label as a string that `console::Style` can interpret.
-    #[serde(skip)]
-    label_style: Option<&'a str>,
+    message: &'a T,
 }
 
-impl<'a> LabeledMessage<'a> {
+impl<'a, T> LabeledMessage<'a, T> {
     #[must_use]
-    pub fn styled(label: &'a str, text: &'a str, label_style: &'a str) -> Self {
+    pub fn new(label: &'a str, message: &'a T) -> Self {
         Self {
+            message_type: "labeled",
             label,
-            text,
-            label_style: Some(label_style),
-        }
-    }
-
-    #[must_use]
-    pub fn raw(label: &'a str, text: &'a str) -> Self {
-        Self {
-            label,
-            text,
-            label_style: None,
+            message,
         }
     }
 }
 
-impl Message for LabeledMessage<'_> {
+impl<T: Message> Message for LabeledMessage<'_, T> {
     fn text(&self) -> String {
-        format!(
-            "{}: {}",
-            self.label_style
-                .map(Style::from_dotted_str)
-                .unwrap_or_default()
-                .apply_to(self.label.to_string()),
-            self.text
-        )
+        format!("{}: {}", self.label, self.message.text())
+    }
+
+    fn json(&self) -> String {
+        serde_json::to_string(self).expect("Failed to serialize message to JSON")
     }
 }

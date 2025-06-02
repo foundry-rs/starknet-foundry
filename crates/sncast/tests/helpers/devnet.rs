@@ -71,7 +71,7 @@ fn start_devnet() {
             break;
         } else if now.elapsed() >= timeout {
             UI::default().println(&ErrorMessage::new(
-                "Timed out while waiting for devnet to start!",
+                &"Timed out while waiting for devnet to start!",
             ));
             std::process::exit(1);
         }

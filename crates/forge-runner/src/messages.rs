@@ -6,10 +6,15 @@ use foundry_ui::Message;
 use serde::Serialize;
 
 #[derive(Serialize)]
+pub enum TestResultStatus {
+    Passed,
+    Failed,
+    Ignored,
+}
+
+#[derive(Serialize)]
 pub struct TestResultMessage {
-    is_passed: bool,
-    is_failed: bool,
-    is_ignored: bool,
+    status: TestResultStatus,
     name: String,
     msg: Option<String>,
     debugging_trace: String,
@@ -71,9 +76,6 @@ impl TestResultMessage {
 
         Self {
             name,
-            is_passed: test_result.is_passed(),
-            is_failed: test_result.is_failed(),
-            is_ignored: test_result.is_ignored(),
             msg: test_result.msg().map(std::string::ToString::to_string),
             debugging_trace,
             fuzzer_report,
@@ -84,27 +86,21 @@ impl TestResultMessage {
 
     fn result_message(&self) -> String {
         if let Some(msg) = &self.msg {
-            if self.is_passed {
-                return format!("\n\n{msg}");
-            }
-            if self.is_failed {
-                return format!("\n\nFailure data:{msg}");
+            match self.status {
+                TestResultStatus::Passed => return format!("\n\n{msg}"),
+                TestResultStatus::Failed => return format!("\n\nFailure data: {msg}"),
+                TestResultStatus::Ignored => return String::new(),
             }
         }
         String::new()
     }
 
     fn result_header(&self) -> String {
-        if self.is_passed {
-            return format!("[{}]", style("PASS").green());
+        match self.status {
+            TestResultStatus::Passed => format!("[{}]", style("PASS").green()),
+            TestResultStatus::Failed => format!("[{}]", style("FAIL").red()),
+            TestResultStatus::Ignored => format!("[{}]", style("IGNORE").yellow()),
         }
-        if self.is_failed {
-            return format!("[{}]", style("FAIL").red());
-        }
-        if self.is_ignored {
-            return format!("[{}]", style("IGNORE").yellow());
-        }
-        unreachable!()
     }
 }
 

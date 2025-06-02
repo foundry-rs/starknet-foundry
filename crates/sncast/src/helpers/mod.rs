@@ -6,5 +6,6 @@ pub mod configuration;
 pub mod constants;
 pub mod fee;
 pub mod interactive;
+pub mod output_format;
 pub mod rpc;
 pub mod scarb_utils;

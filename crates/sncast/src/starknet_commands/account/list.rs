@@ -138,6 +138,10 @@ impl Message for AccountDataRepresentationMessage {
 
         result.trim_end().to_string()
     }
+
+    fn json(&self) -> String {
+        serde_json::to_string(self).expect("Failed to serialize as JSON")
+    }
 }
 
 #[derive(Serialize)]
