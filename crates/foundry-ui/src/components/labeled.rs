@@ -2,31 +2,31 @@ use serde::Serialize;
 
 use crate::Message;
 
-/// Generic textual message with `ty` prefix.
+/// Generic message with `label` prefix.
 ///
-/// The type prefix can be stylized in text mode.
+/// The label prefix can be stylized in text mode.
 /// e.g. "Tests: 1 passed, 1 failed"
 #[derive(Serialize)]
-pub struct LabeledMessage<'a> {
+pub struct LabeledMessage<'a, T> {
     message_type: &'a str,
     label: &'a str,
-    text: &'a str,
+    message: &'a T,
 }
 
-impl<'a> LabeledMessage<'a> {
+impl<'a, T> LabeledMessage<'a, T> {
     #[must_use]
-    pub fn new(label: &'a str, text: &'a str) -> Self {
+    pub fn new(label: &'a str, message: &'a T) -> Self {
         Self {
             message_type: "labeled",
             label,
-            text,
+            message,
         }
     }
 }
 
-impl Message for LabeledMessage<'_> {
+impl<T: Message> Message for LabeledMessage<'_, T> {
     fn text(&self) -> String {
-        format!("{}: {}", self.label, self.text)
+        format!("{}: {}", self.label, self.message.text())
     }
 
     fn json(&self) -> String {

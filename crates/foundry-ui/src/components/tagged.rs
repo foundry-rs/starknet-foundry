@@ -2,31 +2,31 @@ use serde::Serialize;
 
 use crate::Message;
 
-/// Generic textual message with `tag` prefix.
+/// Generic message with `tag` prefix.
 ///
 /// The tag prefix can be stylized in text mode.
 /// e.g. "[WARNING]: An example warning message"
 #[derive(Serialize)]
-pub struct TaggedMessage<'a> {
+pub struct TaggedMessage<'a, T: Message + Serialize> {
     message_type: &'a str,
     tag: &'a str,
-    text: &'a str,
+    message: &'a T,
 }
 
-impl<'a> TaggedMessage<'a> {
+impl<'a, T: Message + Serialize> TaggedMessage<'a, T> {
     #[must_use]
-    pub fn new(tag: &'a str, text: &'a str) -> Self {
+    pub fn new(tag: &'a str, message: &'a T) -> Self {
         Self {
             message_type: "tagged",
             tag,
-            text,
+            message,
         }
     }
 }
 
-impl Message for TaggedMessage<'_> {
+impl<T: Message + Serialize> Message for TaggedMessage<'_, T> {
     fn text(&self) -> String {
-        format!("[{}] {}", self.tag, self.text)
+        format!("[{}] {}", self.tag, self.message.text())
     }
 
     fn json(&self) -> String {

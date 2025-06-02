@@ -5,27 +5,27 @@ use crate::Message;
 
 use super::tagged::TaggedMessage;
 
-/// Warning textual message.
+/// Warning message.
 #[derive(Serialize)]
-pub struct WarningMessage<'a> {
+pub struct WarningMessage<'a, T: Message> {
     message_type: &'a str,
-    text: &'a str,
+    message: &'a T,
 }
 
-impl<'a> WarningMessage<'a> {
+impl<'a, T: Message> WarningMessage<'a, T> {
     #[must_use]
-    pub fn new(text: &'a str) -> Self {
+    pub fn new(message: &'a T) -> Self {
         Self {
             message_type: "warning",
-            text,
+            message,
         }
     }
 }
 
-impl Message for WarningMessage<'_> {
+impl<T: Message + Serialize> Message for WarningMessage<'_, T> {
     fn text(&self) -> String {
         let tag = Style::new().yellow().apply_to("WARNING").to_string();
-        let tagged_message = TaggedMessage::new(&tag, self.text);
+        let tagged_message = TaggedMessage::new(&tag, self.message);
         tagged_message.text()
     }
 
