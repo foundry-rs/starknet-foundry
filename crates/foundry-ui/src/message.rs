@@ -19,6 +19,6 @@ where
 
     fn json(&self) -> String {
         serde_json::to_string(&serde_json::json!({ "message": self.to_string() }))
-            .expect("Failed to serialize message to JSON")
+            .expect("Failed to serialize as JSON")
     }
 }

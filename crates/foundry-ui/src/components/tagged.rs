@@ -7,13 +7,13 @@ use crate::Message;
 /// The tag prefix can be stylized in text mode.
 /// e.g. "[WARNING]: An example warning message"
 #[derive(Serialize)]
-pub struct TaggedMessage<'a, T: Message + Serialize> {
+pub struct TaggedMessage<'a, T: Message> {
     message_type: &'a str,
     tag: &'a str,
     message: &'a T,
 }
 
-impl<'a, T: Message + Serialize> TaggedMessage<'a, T> {
+impl<'a, T: Message> TaggedMessage<'a, T> {
     #[must_use]
     pub fn new(tag: &'a str, message: &'a T) -> Self {
         Self {
@@ -24,12 +24,12 @@ impl<'a, T: Message + Serialize> TaggedMessage<'a, T> {
     }
 }
 
-impl<T: Message + Serialize> Message for TaggedMessage<'_, T> {
+impl<T: Message> Message for TaggedMessage<'_, T> {
     fn text(&self) -> String {
         format!("[{}] {}", self.tag, self.message.text())
     }
 
     fn json(&self) -> String {
-        serde_json::to_string(self).expect("Failed to serialize message to JSON")
+        serde_json::to_string(self).expect("Failed to serialize as JSON")
     }
 }

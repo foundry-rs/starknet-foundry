@@ -33,7 +33,7 @@ error: {}",
     }
 
     fn json(&self) -> String {
-        serde_json::to_string(self).expect("Failed to serialize message to JSON")
+        serde_json::to_string(self).expect("Failed to serialize as JSON")
     }
 }
 
