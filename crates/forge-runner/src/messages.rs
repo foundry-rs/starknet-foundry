@@ -76,9 +76,6 @@ impl TestResultMessage {
 
         Self {
             name,
-            // is_passed: test_result.is_passed(),
-            // is_failed: test_result.is_failed(),
-            // is_ignored: test_result.is_ignored(),
             msg: test_result.msg().map(std::string::ToString::to_string),
             debugging_trace,
             fuzzer_report,
