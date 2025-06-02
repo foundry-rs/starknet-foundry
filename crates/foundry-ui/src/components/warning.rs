@@ -8,13 +8,17 @@ use super::tagged::TaggedMessage;
 /// Warning textual message.
 #[derive(Serialize)]
 pub struct WarningMessage<'a> {
+    message_type: &'a str,
     text: &'a str,
 }
 
 impl<'a> WarningMessage<'a> {
     #[must_use]
     pub fn new(text: &'a str) -> Self {
-        Self { text }
+        Self {
+            message_type: "warning",
+            text,
+        }
     }
 }
 
