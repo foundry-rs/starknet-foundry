@@ -1,4 +1,4 @@
-use crate::{ constants::contract_class};
+use crate::constants::contract_class;
 use starknet_api::{
     contract_class::{ContractClass, SierraVersion},
     core::{ClassHash, ContractAddress},
