@@ -24,8 +24,8 @@ use clap::Args;
 use conversions::byte_array::ByteArray;
 use conversions::serde::deserialize::BufferReader;
 use forge_runner::running::{has_segment_arena, syscall_handler_offset};
+use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
-use foundry_ui::{Printer, UI};
 use runtime::starknet::context::{SerializableBlockInfo, build_context};
 use runtime::starknet::state::DictStateReader;
 use runtime::{

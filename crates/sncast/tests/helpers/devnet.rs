@@ -4,8 +4,8 @@ use crate::helpers::fixtures::{
     deploy_latest_oz_account,
 };
 use ctor::{ctor, dtor};
+use foundry_ui::UI;
 use foundry_ui::components::error::ErrorMessage;
-use foundry_ui::{Printer, UI};
 use std::net::TcpStream;
 use std::process::{Command, Stdio};
 use std::string::ToString;

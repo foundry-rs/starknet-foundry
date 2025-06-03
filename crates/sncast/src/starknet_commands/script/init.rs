@@ -1,7 +1,7 @@
 use anyhow::{Context, Ok, Result, ensure};
 use camino::Utf8PathBuf;
+use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
-use foundry_ui::{Printer, UI};
 use std::fs;
 
 use clap::Args;
