@@ -11,6 +11,7 @@ use shared::rpc::create_rpc_client;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use std::collections::HashSet;
 use std::env;
+use std::sync::Arc;
 use url::Url;
 
 pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
@@ -37,7 +38,7 @@ pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
 
 pub(crate) async fn warn_if_incompatible_rpc_version(
     test_targets: &[TestTargetWithResolvedConfig],
-    ui: &UI,
+    ui: Arc<UI>,
 ) -> Result<()> {
     let mut urls = HashSet::<Url>::new();
 

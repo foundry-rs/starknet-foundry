@@ -66,7 +66,7 @@ pub fn run_test(
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
     trace_verbosity: Option<TraceVerbosity>,
-    ui: UI,
+    ui: Arc<UI>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -110,7 +110,7 @@ pub(crate) fn run_fuzz_test(
     fuzzing_send: Sender<()>,
     rng: Arc<Mutex<StdRng>>,
     trace_verbosity: Option<TraceVerbosity>,
-    ui: UI,
+    ui: Arc<UI>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,

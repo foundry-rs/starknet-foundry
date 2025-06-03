@@ -139,7 +139,7 @@ pub async fn run_for_package(
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
     trace_verbosity: Option<TraceVerbosity>,
-    ui: &UI,
+    ui: Arc<UI>,
 ) -> Result<Vec<TestTargetSummary>> {
     let mut test_targets = test_package_with_config_resolved(
         test_targets,
@@ -154,8 +154,8 @@ pub async fn run_for_package(
         tests_filter.filter_tests(&mut test_target.test_cases)?;
     }
 
-    warn_if_available_gas_used_with_incompatible_scarb_version(&test_targets, ui)?;
-    warn_if_incompatible_rpc_version(&test_targets, ui).await?;
+    warn_if_available_gas_used_with_incompatible_scarb_version(&test_targets, &ui)?;
+    warn_if_incompatible_rpc_version(&test_targets, ui.clone()).await?;
 
     let not_filtered = sum_test_cases(&test_targets);
     ui.println(&CollectedTestsCountMessage {
@@ -166,7 +166,8 @@ pub async fn run_for_package(
     let mut summaries = vec![];
 
     for test_target in test_targets {
-        ui.println(&TestsRunMessage::new(
+        let ui = ui.clone();
+        ui.clone().println(&TestsRunMessage::new(
             test_target.tests_location,
             test_target.test_cases.len(),
         ));

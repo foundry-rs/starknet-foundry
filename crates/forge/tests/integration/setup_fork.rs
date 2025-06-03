@@ -130,7 +130,7 @@ fn fork_aliased_decorator() {
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
-    let ui = UI::default();
+    let ui = Arc::new(UI::default());
     let result = rt
         .block_on(run_for_package(
             RunForPackageArgs {
@@ -172,7 +172,7 @@ fn fork_aliased_decorator() {
             },
             &mut BlockNumberMap::default(),
             Option::default(),
-            &ui,
+            ui,
         ))
         .expect("Runner fail");
 
@@ -220,7 +220,7 @@ fn fork_aliased_decorator_overrding() {
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
-    let ui = UI::default();
+    let ui = Arc::new(UI::default());
     let result = rt
         .block_on(run_for_package(
             RunForPackageArgs {
@@ -262,7 +262,7 @@ fn fork_aliased_decorator_overrding() {
             },
             &mut BlockNumberMap::default(),
             Option::default(),
-            &ui,
+            ui,
         ))
         .expect("Runner fail");
 

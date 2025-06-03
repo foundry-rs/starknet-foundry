@@ -47,7 +47,7 @@ pub fn run_test_case(
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
-    let ui = UI::default();
+    let ui = Arc::new(UI::default());
     rt.block_on(run_for_package(
         RunForPackageArgs {
             test_targets: raw_test_targets,
@@ -83,7 +83,7 @@ pub fn run_test_case(
         },
         &mut BlockNumberMap::default(),
         Option::default(),
-        &ui,
+        ui,
     ))
     .expect("Runner fail")
 }
