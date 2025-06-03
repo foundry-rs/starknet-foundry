@@ -7,7 +7,6 @@ use crate::runtime_extensions::{
         CallToBlockifierRuntime,
         rpc::{CallFailure, CallResult},
     },
-    cheatable_starknet_runtime_extension::SyscallSelector,
     common::get_relocated_vm_trace,
     forge_runtime_extension::cheatcodes::{
         CheatcodeError,
@@ -26,10 +25,9 @@ use blockifier::bouncer::builtins_to_sierra_gas;
 use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::contract_class::TrackedResource;
-use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
-use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
+use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsageMap};
 use blockifier::state::errors::StateError;
 use blockifier::transaction::objects::ExecutionResourcesTraits;
 use blockifier::utils::u64_from_usize;
@@ -179,9 +177,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
-                syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
+                syscall_handler.increment_syscall_count_by(&SyscallSelector::Deploy, 1);
                 syscall_handler
-                    .increment_linear_factor_by(&DeprecatedSyscallSelector::Deploy, calldata.len());
+                    .increment_linear_factor_by(&SyscallSelector::Deploy, calldata.len());
 
                 handle_declare_deploy_result(deploy(
                     syscall_handler,
@@ -197,9 +195,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
-                syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
+                syscall_handler.increment_syscall_count_by(&SyscallSelector::Deploy, 1);
                 syscall_handler
-                    .increment_linear_factor_by(&DeprecatedSyscallSelector::Deploy, calldata.len());
+                    .increment_linear_factor_by(&SyscallSelector::Deploy, calldata.len());
 
                 handle_declare_deploy_result(deploy_at(
                     syscall_handler,
@@ -541,7 +539,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
         _extended_runtime: &mut Self::Runtime,
     ) -> Result<SyscallHandlingResult, HintError> {
         match selector {
-            DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
+            SyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
                 "Replace class can't be used in tests",
             ))),
             _ => Ok(SyscallHandlingResult::Forwarded),

@@ -1,7 +1,7 @@
 use crate::vm::{cell_ref_to_relocatable, extract_relocatable, get_val, vm_get_range};
 use anyhow::Result;
-use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
 use blockifier::state::errors::StateError;
 use cairo_lang_casm::hints::{ExternalHint, Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
@@ -99,7 +99,7 @@ impl ResourceTracker for StarknetRuntime<'_> {
 impl SignalPropagator for StarknetRuntime<'_> {
     fn propagate_system_call_signal(
         &mut self,
-        _selector: DeprecatedSyscallSelector,
+        _selector: SyscallSelector,
         _vm: &mut VirtualMachine,
     ) {
     }
@@ -313,7 +313,7 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
         constants: &HashMap<String, Felt>,
     ) -> Result<(), HintError> {
         // We peek into memory to check the selector
-        let selector = DeprecatedSyscallSelector::try_from(
+        let selector = SyscallSelector::try_from(
             vm.get_integer(*self.get_mut_syscall_ptr())
                 .unwrap()
                 .into_owned(),
@@ -336,21 +336,13 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
 }
 
 pub trait SignalPropagator {
-    fn propagate_system_call_signal(
-        &mut self,
-        selector: DeprecatedSyscallSelector,
-        vm: &mut VirtualMachine,
-    );
+    fn propagate_system_call_signal(&mut self, selector: SyscallSelector, vm: &mut VirtualMachine);
 
     fn propagate_cheatcode_signal(&mut self, selector: &str, inputs: &[Felt]);
 }
 
 impl<Extension: ExtensionLogic> SignalPropagator for ExtendedRuntime<Extension> {
-    fn propagate_system_call_signal(
-        &mut self,
-        selector: DeprecatedSyscallSelector,
-        vm: &mut VirtualMachine,
-    ) {
+    fn propagate_system_call_signal(&mut self, selector: SyscallSelector, vm: &mut VirtualMachine) {
         self.extended_runtime
             .propagate_system_call_signal(selector, vm);
         self.extension
@@ -412,7 +404,7 @@ pub trait ExtensionLogic {
 
     fn override_system_call(
         &mut self,
-        _selector: DeprecatedSyscallSelector,
+        _selector: SyscallSelector,
         _vm: &mut VirtualMachine,
         _extended_runtime: &mut Self::Runtime,
     ) -> Result<SyscallHandlingResult, HintError> {
@@ -434,7 +426,7 @@ pub trait ExtensionLogic {
     /// Signals are executed after syscall is handled
     fn handle_system_call_signal(
         &mut self,
-        _selector: DeprecatedSyscallSelector,
+        _selector: SyscallSelector,
         _vm: &mut VirtualMachine,
         _extended_runtime: &mut Self::Runtime,
     ) {
