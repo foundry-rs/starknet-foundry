@@ -8,31 +8,27 @@ use super::tagged::TaggedMessage;
 
 /// Warning message.
 #[derive(Serialize)]
-pub struct WarningMessage<'a, T: Message> {
-    message: &'a T,
-}
+pub struct WarningMessage<T: Message>(T);
 
-impl<'a, T: Message> WarningMessage<'a, T> {
+impl<T: Message> WarningMessage<T> {
     #[must_use]
-    pub fn new(message: &'a T) -> Self {
-        Self { message }
+    pub fn new(message: T) -> Self {
+        Self(message)
     }
 }
 
-impl<T: Message> Message for WarningMessage<'_, T> {
+impl<T: Message> Message for WarningMessage<T> {
     fn text(&self) -> String {
         let tag = style("WARNING").yellow().to_string();
-        let tagged_message = TaggedMessage::new(&tag, self.message);
+        let tagged_message = TaggedMessage::new(&tag, &self.0);
         tagged_message.text()
     }
 
     fn json(&self) -> String {
-        serde_json::to_string(&json!(
-            {
-                "message_type": "warning",
-                "message": self.message.json(),
-            }
-        ))
+        serde_json::to_string(&json!({
+            "message_type": "warning",
+            "message": self.0.json(),
+        }))
         .expect("Failed to serialize as JSON")
     }
 }
