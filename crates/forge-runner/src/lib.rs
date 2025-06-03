@@ -112,9 +112,10 @@ pub fn run_for_test_case(
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
     trace_verbosity: Option<TraceVerbosity>,
-    ui: UI,
+    ui: &Arc<UI>,
 ) -> JoinHandle<Result<AnyTestCaseSummary>> {
     if case.config.fuzzer_config.is_none() {
+        let ui = ui.clone();
         tokio::task::spawn(async move {
             let res = run_test(
                 case,
@@ -123,12 +124,13 @@ pub fn run_for_test_case(
                 versioned_program_path,
                 send,
                 trace_verbosity,
-                ui.clone(),
+                ui,
             )
             .await?;
             Ok(AnyTestCaseSummary::Single(res))
         })
     } else {
+        let ui = ui.clone();
         tokio::task::spawn(async move {
             let res = run_with_fuzzing(
                 case,
@@ -137,7 +139,7 @@ pub fn run_for_test_case(
                 versioned_program_path,
                 send,
                 trace_verbosity,
-                ui.clone(),
+                ui,
             )
             .await??;
             Ok(AnyTestCaseSummary::Fuzzing(res))
@@ -152,7 +154,7 @@ fn run_with_fuzzing(
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
     trace_verbosity: Option<TraceVerbosity>,
-    ui: UI,
+    ui: Arc<UI>,
 ) -> JoinHandle<Result<TestCaseSummary<Fuzzing>>> {
     tokio::task::spawn(async move {
         if send.is_closed() {
@@ -177,6 +179,7 @@ fn run_with_fuzzing(
         let mut tasks = FuturesUnordered::new();
 
         for _ in 1..=fuzzer_runs.get() {
+            let ui = ui.clone();
             tasks.push(run_fuzz_test(
                 case.clone(),
                 casm_program.clone(),
@@ -186,7 +189,7 @@ fn run_with_fuzzing(
                 fuzzing_send.clone(),
                 rng.clone(),
                 trace_verbosity,
-                ui.clone(),
+                ui,
             ));
         }
 

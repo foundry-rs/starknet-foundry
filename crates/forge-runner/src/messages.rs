@@ -106,7 +106,7 @@ impl TestResultMessage {
         if let Some(msg) = &self.msg {
             match self.status {
                 TestResultStatus::Passed => return format!("\n\n{msg}"),
-                TestResultStatus::Failed => return format!("\n\nFailure data: {msg}"),
+                TestResultStatus::Failed => return format!("\n\nFailure data:{msg}"),
                 TestResultStatus::Ignored | TestResultStatus::Skipped => return String::new(),
             }
         }
@@ -118,7 +118,9 @@ impl TestResultMessage {
             TestResultStatus::Passed => format!("[{}]", style("PASS").green()),
             TestResultStatus::Failed => format!("[{}]", style("FAIL").red()),
             TestResultStatus::Ignored => format!("[{}]", style("IGNORE").yellow()),
-            TestResultStatus::Skipped => String::new(),
+            TestResultStatus::Skipped => {
+                unreachable!("Skipped tests should not have visible message representation")
+            }
         }
     }
 }

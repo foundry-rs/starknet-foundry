@@ -16,6 +16,7 @@ use shared::auto_completions::{Completion, generate_completions};
 use std::cell::RefCell;
 use std::ffi::OsString;
 use std::process::Command;
+use std::sync::Arc;
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
 use tokio::runtime::Builder;
 use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
@@ -253,12 +254,12 @@ pub enum ExitStatus {
     Failure,
 }
 
-pub fn main_execution(ui: &UI) -> Result<ExitStatus> {
+pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
     let cli = Cli::parse();
 
     match cli.subcommand {
         ForgeSubcommand::Init { name } => {
-            init::init(name.as_str(), ui)?;
+            init::init(name.as_str(), &ui)?;
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::New { args } => {
@@ -266,7 +267,7 @@ pub fn main_execution(ui: &UI) -> Result<ExitStatus> {
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Clean { args } => {
-            clean::clean(args, ui)?;
+            clean::clean(args, &ui)?;
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::CleanCache {} => {
@@ -281,7 +282,7 @@ pub fn main_execution(ui: &UI) -> Result<ExitStatus> {
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Test { args } => {
-            check_requirements(false, args.tracked_resource, ui)?;
+            check_requirements(false, args.tracked_resource, &ui)?;
             let cores = if let Ok(available_cores) = available_parallelism() {
                 available_cores.get()
             } else {
@@ -297,7 +298,7 @@ pub fn main_execution(ui: &UI) -> Result<ExitStatus> {
             rt.block_on(run_for_workspace(args, ui))
         }
         ForgeSubcommand::CheckRequirements => {
-            check_requirements(true, ForgeTrackedResource::default(), ui)?;
+            check_requirements(true, ForgeTrackedResource::default(), &ui)?;
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Completion(completion) => {
