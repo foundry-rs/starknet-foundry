@@ -61,6 +61,9 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         }
     }
 
+    let skip_patterns = args.skip.join("<<>>");
+    set_forge_test_skip(skip_patterns);
+
     build_artifacts_with_scarb(
         filter.clone(),
         args.features.clone(),
@@ -106,6 +109,8 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         unset_forge_test_filter();
     }
 
+    unset_forge_skip();
+
     Ok(if all_failed_tests.is_empty() {
         ExitStatus::Success
     } else {
@@ -140,4 +145,19 @@ fn unset_forge_test_filter() {
     unsafe {
         env::remove_var(SNFORGE_TEST_FILTER);
     };
+}
+
+fn set_forge_test_skip(skip_filter: String) {
+    println!("skipping `{skip_filter}`");
+    // SAFETY: This runs in a single-threaded environment.
+    unsafe {
+        env::set_var("SNFORGE_TEST_SKIP", skip_filter);
+    }
+}
+
+fn unset_forge_skip() {
+    // SAFETY: This runs in a single-threaded environment.
+    unsafe {
+        env::remove_var("SNFORGE_TEST_SKIP");
+    }
 }
