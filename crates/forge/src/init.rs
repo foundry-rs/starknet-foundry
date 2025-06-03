@@ -1,7 +1,7 @@
 use crate::{NewArgs, Template, new};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
-use foundry_ui::{UI, components::warning::WarningMessage};
+use foundry_ui::{Printer, UI, components::warning::WarningMessage};
 
 pub fn init(project_name: &str, ui: &UI) -> Result<()> {
     let current_dir = std::env::current_dir().context("Failed to get current directory")?;
