@@ -284,7 +284,6 @@ fn with_skip_filter_matching_test_name() {
     );
 }
 
-
 #[test]
 fn with_exact_filter_and_duplicated_test_names() {
     let temp = setup_package("duplicated_test_names");
