@@ -1,5 +1,6 @@
-use console::Style;
+use console::style;
 use serde::Serialize;
+use serde_json::json;
 
 use crate::Message;
 
@@ -7,29 +8,27 @@ use super::tagged::TaggedMessage;
 
 /// Error message.
 #[derive(Serialize)]
-pub struct ErrorMessage<'a, T: Message> {
-    message_type: &'a str,
-    message: &'a T,
-}
+pub struct ErrorMessage<T: Message>(T);
 
-impl<'a, T: Message> ErrorMessage<'a, T> {
+impl<T: Message> ErrorMessage<T> {
     #[must_use]
-    pub fn new(message: &'a T) -> Self {
-        Self {
-            message_type: "error",
-            message,
-        }
+    pub fn new(message: T) -> Self {
+        Self(message)
     }
 }
 
-impl<T: Message> Message for ErrorMessage<'_, T> {
+impl<T: Message> Message for ErrorMessage<T> {
     fn text(&self) -> String {
-        let tag = Style::new().red().apply_to("ERROR").to_string();
-        let tagged_message = TaggedMessage::new(&tag, self.message);
+        let tag = style("ERROR").red().to_string();
+        let tagged_message = TaggedMessage::new(&tag, &self.0);
         tagged_message.text()
     }
 
     fn json(&self) -> String {
-        serde_json::to_string(self).expect("Failed to serialize as JSON")
+        serde_json::to_string(&json!({
+            "message_type": "error",
+            "message": self.0.json(),
+        }))
+        .expect("Failed to serialize as JSON")
     }
 }
