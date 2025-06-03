@@ -2,8 +2,6 @@ use crate::starknet_commands::account::{
     generate_add_profile_message, prepare_account_json, write_account_to_accounts_file,
 };
 use anyhow::{Context, Result, anyhow, bail};
-use bigdecimal::BigDecimal;
-use bigdecimal::num_bigint::{BigInt, Sign};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
@@ -87,8 +85,7 @@ pub async fn create(
         .parse()?;
 
     let mut message = format!(
-        "Account successfully created but it needs to be deployed. The estimated deployment fee is {} STRK. Prefund the account to cover deployment transaction fee",
-        felt_to_bigdecimal(estimated_fee, 18)
+        "Account successfully created but it needs to be deployed. The estimated deployment fee is {estimated_fee} STRK. Prefund the account to cover deployment transaction fee"
     );
 
     if let Some(keystore) = keystore.clone() {
@@ -159,7 +156,7 @@ async fn generate_account(
     salt: Felt,
     class_hash: Felt,
     account_type: AccountType,
-) -> Result<(serde_json::Value, Felt)> {
+) -> Result<(serde_json::Value, u128)> {
     let chain_id = get_chain_id(provider).await?;
     let private_key = SigningKey::from_random();
     let signer = LocalWallet::from_signing_key(private_key.clone());
@@ -201,7 +198,7 @@ async fn generate_account(
         Some(salt),
     );
 
-    Ok((account_json, Felt::from(fee_estimate.overall_fee)))
+    Ok((account_json, fee_estimate.overall_fee))
 }
 
 async fn get_address_and_deployment_fee<T>(
@@ -374,68 +371,4 @@ fn generate_deploy_command_with_keystore(
         "\n\nAfter prefunding the account, run:\n\
         sncast --account {account} --keystore {keystore} account deploy {network_flag}"
     )
-}
-
-fn felt_to_bigdecimal<F, D>(felt: F, decimals: D) -> BigDecimal
-where
-    F: AsRef<Felt>,
-    D: Into<i64>,
-{
-    BigDecimal::new(
-        BigInt::from_bytes_be(Sign::Plus, &felt.as_ref().to_bytes_be()),
-        decimals.into(),
-    )
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_felt_to_bigdecimal_with_zero() {
-        let felt = Felt::ZERO;
-        let result = felt_to_bigdecimal(felt, 18);
-        assert_eq!(result, BigDecimal::from(0));
-    }
-
-    #[test]
-    fn test_felt_to_bigdecimal_with_one() {
-        let felt = Felt::ONE;
-        let result = felt_to_bigdecimal(felt, 18);
-        assert_eq!(result, BigDecimal::new(BigInt::from(1), 18));
-    }
-
-    #[test]
-    fn test_felt_to_bigdecimal_with_large_number() {
-        let felt = Felt::from_dec_str("1311768467463790320").unwrap();
-        let result = felt_to_bigdecimal(felt, 18);
-        let expected = BigDecimal::from_str("1.311768467463790320").unwrap();
-        assert_eq!(result, expected);
-    }
-
-    #[test]
-    fn test_felt_to_bigdecimal_with_different_decimals() {
-        let felt = Felt::from_hex("0x64").unwrap();
-        let result_0 = felt_to_bigdecimal(felt, 0);
-        let result_2 = felt_to_bigdecimal(felt, 2);
-
-        assert_eq!(result_0, BigDecimal::from(100));
-        assert_eq!(result_2, BigDecimal::new(BigInt::from(100), 2));
-    }
-    #[test]
-    fn test_felt_to_bigdecimal_common_token_value() {
-        let felt = Felt::from(1_500_000_000_000_000_000u128);
-        let result = felt_to_bigdecimal(felt, 18);
-        assert_eq!(result.to_string(), "1.500000000000000000");
-    }
-
-    #[test]
-    fn test_felt_to_bigdecimal_with_different_decimal_places() {
-        let felt = Felt::from(123_456_789);
-
-        assert_eq!(felt_to_bigdecimal(felt, 0).to_string(), "123456789");
-        assert_eq!(felt_to_bigdecimal(felt, 3).to_string(), "123456.789");
-        assert_eq!(felt_to_bigdecimal(felt, 6).to_string(), "123.456789");
-        assert_eq!(felt_to_bigdecimal(felt, 9).to_string(), "0.123456789");
-    }
 }

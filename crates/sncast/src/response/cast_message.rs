@@ -1,5 +1,6 @@
 use foundry_ui::{Message, OutputFormat};
 use serde::Serialize;
+use serde_json::Value;
 
 use crate::NumbersFormat;
 
@@ -30,10 +31,12 @@ where
     }
 
     #[must_use]
-    fn json(&self) -> String {
-        OutputData::from(&self.command_response)
-            .format_with(self.numbers_format)
-            .to_string_pretty(&self.command, OutputFormat::Json)
-            .expect("Failed to format response")
+    fn json(&self) -> Value {
+        Value::String(
+            OutputData::from(&self.command_response)
+                .format_with(self.numbers_format)
+                .to_string_pretty(&self.command, OutputFormat::Json)
+                .expect("Failed to format response"),
+        )
     }
 }

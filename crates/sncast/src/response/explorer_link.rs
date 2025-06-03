@@ -1,6 +1,7 @@
 use crate::helpers::block_explorer::{LinkProvider, Service};
 use foundry_ui::Message;
 use serde::Serialize;
+use serde_json::{Value, json};
 use starknet_types_core::felt::Felt;
 
 pub trait OutputLink {
@@ -32,8 +33,8 @@ impl Message for ExplorerLinksMessage {
         format!("\nTo see {} details, visit:\n{}", self.title, self.links)
     }
 
-    fn json(&self) -> String {
-        serde_json::to_string(self).expect("Failed to serialize as JSON")
+    fn json(&self) -> Value {
+        json!(self)
     }
 }
 

@@ -1,5 +1,6 @@
-use console::Style;
+use console::style;
 use serde::Serialize;
+use serde_json::{Value, json};
 
 use crate::Message;
 
@@ -7,29 +8,26 @@ use super::tagged::TaggedMessage;
 
 /// Warning message.
 #[derive(Serialize)]
-pub struct WarningMessage<'a, T: Message> {
-    message_type: &'a str,
-    message: &'a T,
-}
+pub struct WarningMessage<T: Message>(T);
 
-impl<'a, T: Message> WarningMessage<'a, T> {
+impl<T: Message> WarningMessage<T> {
     #[must_use]
-    pub fn new(message: &'a T) -> Self {
-        Self {
-            message_type: "warning",
-            message,
-        }
+    pub fn new(message: T) -> Self {
+        Self(message)
     }
 }
 
-impl<T: Message> Message for WarningMessage<'_, T> {
+impl<T: Message> Message for WarningMessage<T> {
     fn text(&self) -> String {
-        let tag = Style::new().yellow().apply_to("WARNING").to_string();
-        let tagged_message = TaggedMessage::new(&tag, self.message);
+        let tag = style("WARNING").yellow().to_string();
+        let tagged_message = TaggedMessage::new(&tag, &self.0);
         tagged_message.text()
     }
 
-    fn json(&self) -> String {
-        serde_json::to_string(self).expect("Failed to serialize as JSON")
+    fn json(&self) -> Value {
+        json!({
+            "message_type": "warning",
+            "message": self.0.json(),
+        })
     }
 }
