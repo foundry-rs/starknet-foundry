@@ -2,6 +2,7 @@ use crate::starknet_commands::account::{
     generate_add_profile_message, prepare_account_json, write_account_to_accounts_file,
 };
 use anyhow::{Context, Result, anyhow, bail};
+use bigdecimal::BigDecimal;
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
@@ -84,8 +85,9 @@ pub async fn create(
         .context("Invalid address")?
         .parse()?;
 
+    let estimated_fee_strk = BigDecimal::new(estimated_fee.into(), 18.into());
     let mut message = format!(
-        "Account successfully created but it needs to be deployed. The estimated deployment fee is {estimated_fee} STRK. Prefund the account to cover deployment transaction fee"
+        "Account successfully created but it needs to be deployed. The estimated deployment fee is {estimated_fee_strk} STRK. Prefund the account to cover deployment transaction fee"
     );
 
     if let Some(keystore) = keystore.clone() {
