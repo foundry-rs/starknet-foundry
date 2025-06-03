@@ -106,7 +106,7 @@ impl TestResultMessage {
         if let Some(msg) = &self.msg {
             match self.status {
                 TestResultStatus::Passed => return format!("\n\n{msg}"),
-                TestResultStatus::Failed => return format!("\n\nFailure data: {msg}"),
+                TestResultStatus::Failed => return format!("\n\nFailure data:{msg}"),
                 TestResultStatus::Ignored | TestResultStatus::Skipped => return String::new(),
             }
         }
