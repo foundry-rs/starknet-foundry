@@ -101,7 +101,7 @@ async fn test_wait_for_reverted_transaction() {
         &ui,
     )
     .await
-    .map_err(std::convert::Into::<anyhow::Error>::into)
+    .map_err(anyhow::Error::from)
     .unwrap();
 }
 
