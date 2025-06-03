@@ -1,5 +1,5 @@
 use anyhow::{Context, Result, anyhow};
-use foundry_ui::{Printer, UI};
+use foundry_ui::UI;
 use regex::Regex;
 use semver::Version;
 use shared::command::CommandExt;

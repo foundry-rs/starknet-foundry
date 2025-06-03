@@ -4,7 +4,7 @@ use anyhow::{Context, Error, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use conversions::serde::serialize::CairoSerialize;
-use foundry_ui::{Printer, UI};
+use foundry_ui::UI;
 use helpers::braavos::check_braavos_account_compatibility;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::RngCore;

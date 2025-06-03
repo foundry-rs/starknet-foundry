@@ -1,5 +1,5 @@
 use forge::{ExitStatus, main_execution};
-use foundry_ui::{Printer, UI, components::error::ErrorMessage};
+use foundry_ui::{UI, components::error::ErrorMessage};
 
 fn main() {
     let ui = UI::default();
