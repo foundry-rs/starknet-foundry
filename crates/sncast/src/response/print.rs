@@ -127,7 +127,7 @@ impl From<Value> for OutputData {
     }
 }
 
-impl<T: CommandResponse + Serialize> From<&T> for OutputData {
+impl<T: CommandResponse> From<&T> for OutputData {
     fn from(value: &T) -> Self {
         serde_json::to_value(value)
             .expect("Failed to serialize CommandResponse")

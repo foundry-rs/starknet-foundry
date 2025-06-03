@@ -1,6 +1,6 @@
 use anyhow::{Context, Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
-use foundry_ui::{UI, components::warning::WarningMessage};
+use foundry_ui::{Printer, UI, components::warning::WarningMessage};
 use scarb_api::{
     ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
     get_contracts_artifacts_and_source_sierra_paths,

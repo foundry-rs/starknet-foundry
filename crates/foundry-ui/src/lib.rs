@@ -10,25 +10,22 @@ pub enum OutputFormat {
     Json,
 }
 
-impl OutputFormat {
-    #[must_use]
-    pub fn from_flag(json: bool) -> Self {
-        if json {
-            OutputFormat::Json
-        } else {
-            OutputFormat::Human
-        }
-    }
-}
-
 /// An abstraction around console output which stores preferences for output format (human vs JSON),
 /// colour, etc.
 ///
 /// All messaging (basically all writes to `stdout`) must go through this object.
+pub trait Printer {
+    /// Print the given message to stdout using the configured output format.
+    fn println(&self, message: &impl Message);
+
+    /// Print the given message to stderr using the configured output format.
+    fn eprintln(&self, message: &impl Message);
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct UI {
     output_format: OutputFormat,
-    // TODO(3395): Add state here, that can be used for spinner
+    // TODO(#3395): Add state here, that can be used for spinner
 }
 
 impl UI {
@@ -38,25 +35,20 @@ impl UI {
         Self { output_format }
     }
 
-    /// Print the given message to stdout using the configured output format.
-    pub fn println<T>(&self, message: &T)
-    where
-        T: Message + serde::Serialize,
-    {
+    /// Create a [`String`] representation of the given message based on the configured output format.
+    fn format_message(&self, message: &impl Message) -> String {
         match self.output_format {
-            OutputFormat::Human => println!("{}", message.text()),
-            OutputFormat::Json => println!("{}", message.json()),
+            OutputFormat::Human => message.text(),
+            OutputFormat::Json => message.json().to_string(),
         }
     }
+}
+impl Printer for UI {
+    fn println(&self, message: &impl Message) {
+        println!("{}", self.format_message(message));
+    }
 
-    /// Print the given message to stderr using the configured output format.
-    pub fn eprintln<T>(&self, message: &T)
-    where
-        T: Message + serde::Serialize,
-    {
-        match self.output_format {
-            OutputFormat::Human => eprintln!("{}", message.text()),
-            OutputFormat::Json => eprintln!("{}", message.json()),
-        }
+    fn eprintln(&self, message: &impl Message) {
+        eprintln!("{}", self.format_message(message));
     }
 }

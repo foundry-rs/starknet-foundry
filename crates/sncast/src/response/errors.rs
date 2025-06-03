@@ -6,6 +6,7 @@ use conversions::byte_array::ByteArray;
 
 use foundry_ui::Message;
 use serde::Serialize;
+use serde_json::{Value, json};
 use starknet::core::types::{ContractErrorData, StarknetError, TransactionExecutionErrorData};
 use starknet::providers::ProviderError;
 use thiserror::Error;
@@ -24,15 +25,16 @@ impl ResponseError {
 }
 
 impl Message for ResponseError {
-    fn text(&self) -> String
-    where
-        Self: Sized,
-    {
+    fn text(&self) -> String {
         format!(
             "command: {}
 error: {}",
             self.command, self.error
         )
+    }
+
+    fn json(&self) -> Value {
+        json!(self)
     }
 }
 

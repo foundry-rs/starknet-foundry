@@ -7,6 +7,8 @@ use foundry_ui::Message;
 use itertools::Itertools;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_json::Value;
+use serde_json::json;
 use sncast::AccountType;
 use sncast::NumbersFormat;
 use sncast::{AccountData, NestedMap, check_account_file_exists, read_and_parse_json_file};
@@ -138,6 +140,10 @@ impl Message for AccountDataRepresentationMessage {
 
         result.trim_end().to_string()
     }
+
+    fn json(&self) -> Value {
+        json!(self)
+    }
 }
 
 #[derive(Serialize)]
@@ -197,7 +203,7 @@ impl Message for AccountsListMessage {
         }
     }
 
-    fn json(&self) -> String {
+    fn json(&self) -> Value {
         let accounts = read_and_flatten(
             &self.accounts_file,
             self.display_private_keys,
@@ -210,6 +216,6 @@ impl Message for AccountsListMessage {
             accounts_map.insert(name.clone(), data.clone());
         }
 
-        serde_json::to_string(&accounts_map).unwrap_or_else(|_| "{}".to_string())
+        json!(&accounts_map)
     }
 }

@@ -1,6 +1,7 @@
 use crate::helpers::block_explorer::{LinkProvider, Service};
 use foundry_ui::Message;
 use serde::Serialize;
+use serde_json::{Value, json};
 use starknet_types_core::felt::Felt;
 
 pub trait OutputLink {
@@ -10,12 +11,12 @@ pub trait OutputLink {
 }
 
 #[derive(Serialize)]
-pub struct OutputLinkMessage {
+pub struct ExplorerLinksMessage {
     title: String,
     links: String,
 }
 
-impl OutputLinkMessage {
+impl ExplorerLinksMessage {
     pub fn new<T>(response: &T, provider: Box<dyn LinkProvider>) -> Self
     where
         T: OutputLink,
@@ -27,13 +28,13 @@ impl OutputLinkMessage {
     }
 }
 
-impl Message for OutputLinkMessage {
+impl Message for ExplorerLinksMessage {
     fn text(&self) -> String {
         format!("\nTo see {} details, visit:\n{}", self.title, self.links)
     }
 
-    fn json(&self) -> String {
-        String::new()
+    fn json(&self) -> Value {
+        json!(self)
     }
 }
 
@@ -50,7 +51,7 @@ pub fn block_explorer_link_if_allowed<T>(
     chain_id: Felt,
     show_links: bool,
     explorer: Option<Service>,
-) -> Option<OutputLinkMessage>
+) -> Option<ExplorerLinksMessage>
 where
     T: OutputLink + Clone,
 {
@@ -66,7 +67,7 @@ where
     };
 
     if let Ok(provider) = explorer.unwrap_or_default().as_provider(network) {
-        return Some(OutputLinkMessage::new(response, provider));
+        return Some(ExplorerLinksMessage::new(response, provider));
     }
 
     None
