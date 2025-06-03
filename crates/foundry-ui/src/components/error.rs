@@ -1,3 +1,4 @@
+use anyhow::Error;
 use console::style;
 use serde::Serialize;
 use serde_json::{Value, json};
