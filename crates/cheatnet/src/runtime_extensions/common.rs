@@ -40,11 +40,7 @@ pub fn get_syscalls_gas_consumed(
             let base_cost = if let SyscallSelector::Deploy = selector {
                 syscall_gas_cost.get_syscall_cost(0)
             } else {
-                versioned_constants
-                    .os_constants
-                    .gas_costs
-                    .base
-                    .syscall_base_gas_cost
+                syscall_gas_cost.base_syscall_cost()
             };
 
             // We want to calculate `base_cost * call_count + linear_cost * linear_factor`
