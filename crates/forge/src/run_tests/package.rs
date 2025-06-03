@@ -31,7 +31,7 @@ use forge_runner::{
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
-use foundry_ui::{Printer, UI, components::labeled::LabeledMessage};
+use foundry_ui::{UI, components::labeled::LabeledMessage};
 use scarb_api::get_contracts_artifacts_and_source_sierra_paths;
 use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
