@@ -59,8 +59,7 @@ fn assert_is_span(expr: &ExprFunctionCall, db: &SimpleParserDatabase) -> Result<
             bail!("Invalid path specified: generic args in function call not supported")
         }
         PathSegment::Missing(_segment) => {
-            // TODO: Handle that case
-            Ok(())
+            bail!("Path segment missing")
         }
     }
 }

@@ -75,7 +75,7 @@ pub fn parse_inline_macro(
             bail!("Invalid path specified: generic args in array![] macro not supported")
         }
         PathSegment::Missing(_segment) => {
-            // TODO: Handle that case
+            bail!("Path segment missing")
         }
     }
 
