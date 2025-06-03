@@ -9,7 +9,7 @@ use cairo_lang_sierra::program::{ConcreteTypeLongId, Function, TypeDeclaration};
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_config_extension::config::RawFuzzerConfig;
 use foundry_ui::components::warning::WarningMessage;
-use foundry_ui::{Printer, UI};
+use foundry_ui::UI;
 use futures::StreamExt;
 use futures::stream::FuturesUnordered;
 use package_tests::with_config_resolved::TestCaseWithResolvedConfig;

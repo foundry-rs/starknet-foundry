@@ -1,7 +1,7 @@
 use crate::snippet::Snippet;
 use anyhow::{Result, anyhow};
 use camino::Utf8PathBuf;
-use foundry_ui::{Printer, UI};
+use foundry_ui::UI;
 use std::{env, fs, path::PathBuf, str::FromStr};
 use tempfile::TempDir;
 use toml_edit::{DocumentMut, value};
