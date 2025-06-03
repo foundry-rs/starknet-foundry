@@ -14,14 +14,6 @@ pub enum OutputFormat {
 /// colour, etc.
 ///
 /// All messaging (basically all writes to `stdout`) must go through this object.
-pub trait Printer {
-    /// Print the given message to stdout using the configured output format.
-    fn println(&self, message: &impl Message);
-
-    /// Print the given message to stderr using the configured output format.
-    fn eprintln(&self, message: &impl Message);
-}
-
 #[derive(Debug, Default, Clone)]
 pub struct UI {
     output_format: OutputFormat,
@@ -49,13 +41,14 @@ impl UI {
             OutputFormat::Json => message.json().to_string(),
         }
     }
-}
-impl Printer for UI {
-    fn println(&self, message: &impl Message) {
+
+    /// Print the given message to stdout using the configured output format.
+    pub fn println(&self, message: &impl Message) {
         println!("{}", self.format_message(message));
     }
 
-    fn eprintln(&self, message: &impl Message) {
+    /// Print the given message to stderr using the configured output format.
+    pub fn eprintln(&self, message: &impl Message) {
         eprintln!("{}", self.format_message(message));
     }
 }
