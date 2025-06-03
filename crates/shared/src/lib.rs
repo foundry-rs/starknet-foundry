@@ -1,8 +1,8 @@
 use crate::consts::EXPECTED_RPC_VERSION;
 use crate::rpc::{get_rpc_version, is_expected_version};
 use anyhow::Result;
+use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
-use foundry_ui::{Printer, UI};
 use starknet::providers::JsonRpcClient;
 use starknet::providers::jsonrpc::HttpTransport;
 use std::fmt::Display;
