@@ -40,19 +40,21 @@ impl UI {
     pub fn output_format(&self) -> OutputFormat {
         self.output_format
     }
+
+    /// Create a [`String`] representation of the given message based on the configured output format.
+    fn format_message(&self, message: &impl Message) -> String {
+        match self.output_format {
+            OutputFormat::Human => message.text(),
+            OutputFormat::Json => message.json().to_string(),
+        }
+    }
 }
 impl Printer for UI {
     fn println(&self, message: &impl Message) {
-        match self.output_format {
-            OutputFormat::Human => println!("{}", message.text()),
-            OutputFormat::Json => println!("{}", message.json()),
-        }
+        println!("{}", self.format_message(message));
     }
 
     fn eprintln(&self, message: &impl Message) {
-        match self.output_format {
-            OutputFormat::Human => eprintln!("{}", message.text()),
-            OutputFormat::Json => eprintln!("{}", message.json()),
-        }
+        eprintln!("{}", self.format_message(message));
     }
 }
