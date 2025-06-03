@@ -1,4 +1,5 @@
 use serde::Serialize;
+use serde_json::{Value, json};
 
 /// A typed object that can be either printed as a human-readable message or serialized as JSON.
 pub trait Message: Serialize {
@@ -6,7 +7,7 @@ pub trait Message: Serialize {
     fn text(&self) -> String;
 
     /// Return JSON representation of this message.
-    fn json(&self) -> String;
+    fn json(&self) -> Value;
 }
 
 impl<T: ToString> Message for T
@@ -17,8 +18,7 @@ where
         self.to_string()
     }
 
-    fn json(&self) -> String {
-        serde_json::to_string(&serde_json::json!({ "message": self.to_string() }))
-            .expect("Failed to serialize as JSON")
+    fn json(&self) -> Value {
+        json!({ "message": self.to_string() })
     }
 }

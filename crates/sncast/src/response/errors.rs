@@ -6,6 +6,7 @@ use conversions::byte_array::ByteArray;
 
 use foundry_ui::Message;
 use serde::Serialize;
+use serde_json::{Value, json};
 use starknet::core::types::{ContractErrorData, StarknetError, TransactionExecutionErrorData};
 use starknet::providers::ProviderError;
 use thiserror::Error;
@@ -32,8 +33,8 @@ error: {}",
         )
     }
 
-    fn json(&self) -> String {
-        serde_json::to_string(self).expect("Failed to serialize as JSON")
+    fn json(&self) -> Value {
+        json!(self)
     }
 }
 
