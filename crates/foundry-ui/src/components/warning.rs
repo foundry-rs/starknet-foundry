@@ -1,6 +1,6 @@
 use console::style;
 use serde::Serialize;
-use serde_json::json;
+use serde_json::{Value, json};
 
 use crate::Message;
 
@@ -24,11 +24,10 @@ impl<T: Message> Message for WarningMessage<T> {
         tagged_message.text()
     }
 
-    fn json(&self) -> String {
-        serde_json::to_string(&json!({
+    fn json(&self) -> Value {
+        json!({
             "message_type": "warning",
             "message": self.0.json(),
-        }))
-        .expect("Failed to serialize as JSON")
+        })
     }
 }

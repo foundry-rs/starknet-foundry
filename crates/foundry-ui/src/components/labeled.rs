@@ -1,5 +1,5 @@
 use serde::Serialize;
-use serde_json::json;
+use serde_json::{Value, json};
 
 use crate::Message;
 
@@ -24,14 +24,13 @@ impl<T: Message> Message for LabeledMessage<'_, T> {
         format!("{}: {}", self.label, self.message.text())
     }
 
-    fn json(&self) -> String {
-        serde_json::to_string(&json!(
+    fn json(&self) -> Value {
+        json!(
             {
                 "message_type": "labeled",
                 "label": self.label,
                 "message": self.message.json(),
             }
-        ))
-        .expect("Failed to serialize as JSON")
+        )
     }
 }
