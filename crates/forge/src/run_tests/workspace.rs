@@ -61,8 +61,10 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         }
     }
 
-    let skip_patterns = args.skip.join("<<>>");
-    set_forge_test_skip(skip_patterns);
+    if !args.skip.is_empty() {
+        let skip_patterns = args.skip.join("<<>>");
+        set_forge_test_skip(skip_patterns);
+    }
 
     build_artifacts_with_scarb(
         filter.clone(),
