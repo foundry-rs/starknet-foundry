@@ -63,6 +63,7 @@ impl From<Value> for OutputValue {
             ),
             Value::String(s) => OutputValue::String(s.to_string()),
             Value::Bool(b) => OutputValue::String(b.to_string()),
+            Value::Number(n) => OutputValue::String(n.to_string()),
             s => panic!("{s:?} cannot be auto-serialized to output"),
         }
     }

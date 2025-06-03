@@ -32,11 +32,12 @@ where
 
     #[must_use]
     fn json(&self) -> Value {
-        Value::String(
-            OutputData::from(&self.command_response)
+        serde_json::from_str(
+            &OutputData::from(&self.command_response)
                 .format_with(self.numbers_format)
                 .to_string_pretty(&self.command, OutputFormat::Json)
                 .expect("Failed to format response"),
         )
+        .expect("Failed to parse JSON from response")
     }
 }
