@@ -7,6 +7,7 @@ use forge_runner::{
 };
 use foundry_ui::Message;
 use serde::Serialize;
+use serde_json::{Value, json};
 #[derive(Serialize)]
 pub struct TestsRunMessage {
     test_target_location: TestTargetLocation,
@@ -33,8 +34,8 @@ impl Message for TestsRunMessage {
         style(plain_text).bold().to_string()
     }
 
-    fn json(&self) -> String {
-        serde_json::to_string(self).expect("Failed to serialize as JSON")
+    fn json(&self) -> Value {
+        json!(self)
     }
 }
 
@@ -53,8 +54,8 @@ impl Message for CollectedTestsCountMessage {
         style(full).bold().to_string()
     }
 
-    fn json(&self) -> String {
-        serde_json::to_string(self).expect("Failed to serialize as JSON")
+    fn json(&self) -> Value {
+        json!(self)
     }
 }
 
@@ -101,8 +102,8 @@ impl Message for TestsSummaryMessage {
         )
     }
 
-    fn json(&self) -> String {
-        serde_json::to_string(self).expect("Failed to serialize as JSON")
+    fn json(&self) -> Value {
+        json!(self)
     }
 }
 
@@ -136,8 +137,8 @@ impl Message for TestsFailureSummaryMessage {
         style(failures).bold().to_string()
     }
 
-    fn json(&self) -> String {
-        serde_json::to_string(self).expect("Failed to serialize as JSON")
+    fn json(&self) -> Value {
+        json!(self)
     }
 }
 
@@ -170,7 +171,7 @@ impl Message for LatestBlocksNumbersMessage {
         output
     }
 
-    fn json(&self) -> String {
-        serde_json::to_string(self).expect("Failed to serialize as JSON")
+    fn json(&self) -> Value {
+        json!(self)
     }
 }

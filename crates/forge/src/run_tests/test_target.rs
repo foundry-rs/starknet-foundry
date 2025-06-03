@@ -10,7 +10,7 @@ use forge_runner::{
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
     test_target_summary::TestTargetSummary,
 };
-use foundry_ui::UI;
+use foundry_ui::{Printer, UI};
 use futures::{StreamExt, stream::FuturesUnordered};
 use std::sync::Arc;
 use tokio::sync::mpsc::channel;

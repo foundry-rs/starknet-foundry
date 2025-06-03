@@ -4,6 +4,7 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::Use
 use console::style;
 use foundry_ui::Message;
 use serde::Serialize;
+use serde_json::{Value, json};
 
 #[derive(Serialize)]
 enum TestResultStatus {
@@ -117,7 +118,7 @@ impl TestResultMessage {
             TestResultStatus::Passed => format!("[{}]", style("PASS").green()),
             TestResultStatus::Failed => format!("[{}]", style("FAIL").red()),
             TestResultStatus::Ignored => format!("[{}]", style("IGNORE").yellow()),
-            TestResultStatus::Skipped => unreachable!(),
+            TestResultStatus::Skipped => String::new(),
         }
     }
 }
@@ -139,8 +140,8 @@ impl Message for TestResultMessage {
         )
     }
 
-    fn json(&self) -> String {
-        serde_json::to_string(self).expect("Failed to serialize as JSON")
+    fn json(&self) -> Value {
+        json!(self)
     }
 }
 

@@ -7,6 +7,7 @@ use derive_more::Display;
 use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceVerbosity;
 use forge_runner::forge_config::ForgeTrackedResource;
+use foundry_ui::Printer;
 use foundry_ui::UI;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
