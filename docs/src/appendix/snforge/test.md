@@ -13,6 +13,10 @@ containing this filter.
 Will only run a test with a name exactly matching the test filter.
 Test filter must be a whole qualified test name e.g. `package_name::my_test` instead of just `my_test`.
 
+## `--skip <SKIP>`
+
+Skips any tests whose name contains the given SKIP string
+
 ## `-x`, `--exit-first`
 
 Stop executing tests after the first failed test.

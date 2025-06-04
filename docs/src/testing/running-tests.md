@@ -71,6 +71,30 @@ Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
 </details>
 <br>
 
+## Skipping tests
+
+You can use the `--skip` flag to run all tests _except_ those matching a specified filter pattern.
+This is useful for temporarily excluding problematic tests or focusing on a subset of tests by excluding others.
+
+<!-- { "package_name": "failing_example", "ignored_output": false } -->
+```shell
+$ snforge test --skip test_failing --skip xyz
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Collected 1 test(s) from failing_example package
+Running 0 test(s) from src/
+Running 1 test(s) from tests/
+[PASS] failing_example_tests::test_abc (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 2 filtered out
+```
+
+</details>
+<br>
+
 ## Stopping Test Execution After First Failed Test
 
 To stop the test execution after first failed test, you can pass an `--exit-first` flag along with `snforge test` command.

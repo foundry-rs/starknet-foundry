@@ -152,7 +152,7 @@ pub struct TestArgs {
     #[arg(short, long)]
     exact: bool,
 
-    /// Skips any tests whose name contains the given FILTER string.
+    /// Skips any tests whose name contains the given SKIP string.
     #[arg(long)]
     skip: Vec<String>,
 
