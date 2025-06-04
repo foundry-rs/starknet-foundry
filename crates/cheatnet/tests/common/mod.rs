@@ -218,7 +218,7 @@ pub fn call_contract(
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
-        &entry_point.clone(),
+        &entry_point,
         state,
         &mut entry_point_execution_context,
         &hints,
@@ -259,7 +259,7 @@ pub fn call_contract_raw(
     let hints = HashMap::new();
 
     let syscall_hint_processor = build_syscall_hint_processor(
-        &entry_point.clone(),
+        &entry_point,
         state,
         &mut entry_point_execution_context,
         &hints,
