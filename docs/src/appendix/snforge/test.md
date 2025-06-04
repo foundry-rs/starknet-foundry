@@ -15,7 +15,7 @@ Test filter must be a whole qualified test name e.g. `package_name::my_test` ins
 
 ## `--skip <SKIP>`
 
-Skips any tests whose name contains the given SKIP string
+Skips any tests whose name contains the given `SKIP` string
 
 ## `-x`, `--exit-first`
 

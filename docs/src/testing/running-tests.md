@@ -76,7 +76,7 @@ Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
 You can use the `--skip` flag to run all tests _except_ those matching a specified filter pattern.
 This is useful for temporarily excluding problematic tests or focusing on a subset of tests by excluding others.
 
-<!-- { "package_name": "failing_example", "ignored_output": false } -->
+<!-- { "package_name": "failing_example"} -->
 ```shell
 $ snforge test --skip test_failing --skip xyz
 ```
