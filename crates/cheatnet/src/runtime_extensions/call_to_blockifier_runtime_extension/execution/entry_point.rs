@@ -420,15 +420,7 @@ fn mocked_call_info(
         resources: ExecutionResources::default(),
         tracked_resource,
         inner_calls: vec![],
-        storage_access_tracker: StorageAccessTracker {
-            storage_read_values: vec![],
-            accessed_storage_keys: HashSet::new(),
-            read_class_hash_values: vec![],
-            accessed_contract_addresses: HashSet::default(),
-            // TODO: Check if these values are ok as mocks
-            read_block_hash_values: vec![],
-            accessed_blocks: HashSet::default(),
-        },
+        storage_access_tracker: StorageAccessTracker::default(),
     }
 }
 

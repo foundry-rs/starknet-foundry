@@ -3,10 +3,10 @@ use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{WaitForTx, get_account};
 use anyhow::{Context, Result, anyhow};
 use blockifier::execution::contract_class::TrackedResource;
-use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::ExecutableCallEntryPoint;
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
 use blockifier::state::cached_state::CachedState;
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_runnable_utils::builder::{EntryCodeConfig, RunnableBuilder, create_code_footer};
@@ -264,7 +264,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
 
     fn override_system_call(
         &mut self,
-        _selector: DeprecatedSyscallSelector,
+        _selector: SyscallSelector,
         _vm: &mut VirtualMachine,
         _extended_runtime: &mut Self::Runtime,
     ) -> Result<SyscallHandlingResult, HintError> {
