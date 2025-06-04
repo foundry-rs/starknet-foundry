@@ -419,7 +419,7 @@ fn contract_pedersen_cost_cairo_steps() {
 
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
-    // 10 = cost of 86 pedersen and 62 range check builtins (because int(0.08 * 86 + 0.04 * 62) = 10)
+    // 10 = cost of 125 pedersen builtins (because int(0.08 * 125) = 10)
     // 0 l1_gas + 96 l1_data_gas + 10 * (100 / 0.0025) l2 gas
     assert_gas(
         &result,
@@ -427,7 +427,7 @@ fn contract_pedersen_cost_cairo_steps() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(320_000),
+            l2_gas: GasAmount(400_000),
         },
     );
 }

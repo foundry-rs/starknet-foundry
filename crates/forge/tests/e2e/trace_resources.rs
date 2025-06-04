@@ -3,7 +3,7 @@
 // use assert_fs::TempDir;
 // use cairo_annotations::trace_data::{
 //     CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
-//     SyscallSelector::{
+//     DeprecatedSyscallSelector::{
 //         CallContract, Deploy, EmitEvent, GetBlockHash, GetExecutionInfo, Keccak, LibraryCall,
 //         SendMessageToL1, StorageRead, StorageWrite,
 //     },
