@@ -149,6 +149,7 @@ impl Message for AccountDataRepresentationMessage {
 #[derive(Serialize)]
 pub struct AccountsListMessage {
     accounts_file: Utf8PathBuf,
+    accounts_file_path: String,
     display_private_keys: bool,
     numbers_format: NumbersFormat,
 }
@@ -160,8 +161,18 @@ impl AccountsListMessage {
         numbers_format: NumbersFormat,
     ) -> Result<Self, Error> {
         check_account_file_exists(&accounts_file)?;
+
+        let accounts_file_path = accounts_file
+            .canonicalize()
+            .expect("Failed to resolve the accounts file path");
+
+        let accounts_file_path = accounts_file_path
+            .to_str()
+            .expect("Failed to resolve an absolute path to the accounts file");
+
         Ok(Self {
             accounts_file,
+            accounts_file_path: accounts_file_path.to_string(),
             display_private_keys,
             numbers_format,
         })
@@ -178,9 +189,9 @@ impl Message for AccountsListMessage {
         .unwrap_or_default();
 
         if accounts.is_empty() {
-            format!("No accounts available at {}", self.accounts_file)
+            format!("No accounts available at {}", self.accounts_file_path)
         } else {
-            let mut result = format!("Available accounts (at {}):", self.accounts_file);
+            let mut result = format!("Available accounts (at {}):", self.accounts_file_path);
             for (name, data) in accounts.iter().sorted_by_key(|(name, _)| *name) {
                 let _ = writeln!(result, "\n- {}:\n{}", name, data.text());
             }
