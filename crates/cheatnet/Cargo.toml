@@ -42,6 +42,7 @@ k256.workspace = true
 p256.workspace = true
 shared.workspace = true
 rand.workspace = true
+foundry-ui = { path = "../foundry-ui" }
 
 [dev-dependencies]
 ctor.workspace = true
