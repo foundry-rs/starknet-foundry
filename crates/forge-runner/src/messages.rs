@@ -14,8 +14,8 @@ enum TestResultStatus {
     Skipped,
 }
 
-impl From<AnyTestCaseSummary> for TestResultStatus {
-    fn from(test_result: AnyTestCaseSummary) -> Self {
+impl From<&AnyTestCaseSummary> for TestResultStatus {
+    fn from(test_result: &AnyTestCaseSummary) -> Self {
         match test_result {
             AnyTestCaseSummary::Single(TestCaseSummary::Passed { .. })
             | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed { .. }) => Self::Passed,
@@ -91,10 +91,12 @@ impl TestResultMessage {
             _ => String::new(),
         };
 
+        let msg = test_result.msg().map(std::string::ToString::to_string);
+        let status = TestResultStatus::from(test_result);
         Self {
-            status: TestResultStatus::from(test_result.clone()),
+            status,
             name,
-            msg: test_result.msg().map(std::string::ToString::to_string),
+            msg,
             debugging_trace,
             fuzzer_report,
             gas_usage,

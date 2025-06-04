@@ -8,6 +8,8 @@ use forge_runner::{
 use foundry_ui::Message;
 use serde::Serialize;
 use serde_json::{Value, json};
+use std::fmt::Write;
+
 #[derive(Serialize)]
 pub struct TestsRunMessage {
     test_target_location: TestTargetLocation,
@@ -132,7 +134,7 @@ impl Message for TestsFailureSummaryMessage {
 
         let mut failures = "\nFailures:".to_string();
         for name in &self.failed_test_names {
-            failures = format!("{failures}\n    {name}");
+            let _ = write!(&mut failures, "\n    {name}");
         }
         style(failures).bold().to_string()
     }
@@ -164,8 +166,10 @@ impl Message for LatestBlocksNumbersMessage {
         output = format!("{output}\n");
 
         for (url, latest_block_number) in &self.url_to_latest_block_number_map {
-            output =
-                format!("{output}Latest block number = {latest_block_number} for url = {url}\n",);
+            let _ = writeln!(
+                &mut output,
+                "Latest block number = {latest_block_number} for url = {url}"
+            );
         }
 
         output
