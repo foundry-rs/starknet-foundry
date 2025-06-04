@@ -51,7 +51,7 @@ fn test_internal(
     };
 
     let should_run_test = match test_skip {
-        Some(filter) => !filter.split("<<>>").any(|s| name.contains(s)),
+        Some(filter) => !filter.split(";").any(|s| name.contains(s)),
         None => should_run_test,
     };
 
