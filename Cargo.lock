@@ -870,7 +870,7 @@ checksum = "ade8366b8bd5ba243f0a58f036cc0ca8a2f069cff1a2351ef1cac6b083e16fc0"
 [[package]]
 name = "cairo-annotations"
 version = "0.3.1"
-source = "git+https://github.com/software-mansion/cairo-annotations.git?branch=blockifier-0.14.0#bb064e2e4d957baaa31d9519057cff35b3c91366"
+source = "git+https://github.com/software-mansion/cairo-annotations.git?branch=bump-cairo-to-2.12#bb064e2e4d957baaa31d9519057cff35b3c91366"
 dependencies = [
  "cairo-lang-sierra",
  "cairo-lang-sierra-to-casm",
