@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.0] - 2025-05-26
+
 ### Forge
+
+#### Added
+
+- ETH token is now pre-deployed in every test by default
+- Added `Token::ETH` to snforge_std
 
 #### Changed
 
@@ -21,9 +28,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
-#### Updated
+#### Added 
+
+- Displaying the path of the config file when adding a new profile
+
+#### Changed
 
 - OpenZeppelin account updated to v1.0.0 [preset](https://docs.openzeppelin.com/contracts-cairo/1.0.0/api/account#AccountUpgradeable)
+- Restored support for Braavos accounts
+- Accounts created with `--type braavos` use updated v1.2.0 class hash
+- Output of `sncast account create` is now clearer; the estimated fee is displayed in both STRK and FRI.
+- Renamed the field `max_fee` to `estimated_fee` in the `sncast account create` output.
 
 ## [0.43.1] - 2025-05-16
 
