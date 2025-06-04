@@ -1357,16 +1357,15 @@ fn multiple_storage_writes_cost_sierra_gas() {
     //      -> 1 storage write syscall costs 93 cairo steps and 1 range check builtin
     //      -> 1 range check costs 70
     //      -> the minimum total cost is `syscall_base_gas_cost`, which is pre-charged by the compiler (atm it is 100 * 100)
-    // 61830 = reported consumed sierra gas
-    // 0 l1_gas + (64 + 64 + 32 + 32) l1_data_gas + (142810 + 175300 + 20000 + 61830) l2 gas
-    // TODO: Update calculations
+    // 74140 = reported consumed sierra gas
+    // 0 l1_gas + (64 + 64 + 32 + 32) l1_data_gas + (142810 + 175300 + 20000 + 74140) l2 gas
     assert_gas(
         &result,
         "multiple_storage_writes_cost",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(330_510),
+            l2_gas: GasAmount(412_070),
         },
     );
 }
@@ -1474,15 +1473,15 @@ fn l1_message_cost_for_proxy_sierra_gas() {
     //      -> 1 pedersen costs 4050, 1 range check costs 70
     // 175300 = cost of 2 call contract syscalls (see `multiple_storage_writes_cost_sierra_gas` test)
     // 14170 = cost of 1 SendMessageToL1 syscall (see `l1_message_cost_sierra_gas` test)
-    // 64520 = reported consumed sierra gas
-    // 29524 l1_gas + (128 + 64) l1_data_gas + (285620 + 175300 + 14170 + 64520) l2 gas
+    // 132800 = reported consumed sierra gas
+    // 29524 l1_gas + (128 + 64) l1_data_gas + (285620 + 175300 + 14170 + 132800) l2 gas
     assert_gas(
         &result,
         "l1_message_cost_for_proxy",
         GasVector {
             l1_gas: GasAmount(29524),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(526_330),
+            l2_gas: GasAmount(607_890),
         },
     );
 }
