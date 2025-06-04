@@ -457,7 +457,7 @@ async fn run_async_command(
 
                         process_command_result("multicall new", result, numbers_format, ui, None);
                     } else {
-                        ui.println(&DEFAULT_MULTICALL_CONTENTS.to_string());
+                        ui.println(&DEFAULT_MULTICALL_CONTENTS);
                     }
                 }
                 starknet_commands::multicall::Commands::Run(run) => {

@@ -170,15 +170,6 @@ impl AccountsListMessage {
 
 impl Message for AccountsListMessage {
     fn text(&self) -> String {
-        let accounts_file_path = self
-            .accounts_file
-            .canonicalize()
-            .expect("Failed to resolve the accounts file path");
-
-        let accounts_file_path = accounts_file_path
-            .to_str()
-            .expect("Failed to resolve an absolute path to the accounts file");
-
         let accounts = read_and_flatten(
             &self.accounts_file,
             self.display_private_keys,
@@ -187,9 +178,9 @@ impl Message for AccountsListMessage {
         .unwrap_or_default();
 
         if accounts.is_empty() {
-            format!("No accounts available at {accounts_file_path}")
+            format!("No accounts available at {}", self.accounts_file)
         } else {
-            let mut result = format!("Available accounts (at {accounts_file_path}):");
+            let mut result = format!("Available accounts (at {}):", self.accounts_file);
             for (name, data) in accounts.iter().sorted_by_key(|(name, _)| *name) {
                 let _ = writeln!(result, "\n- {}:\n{}", name, data.text());
             }
