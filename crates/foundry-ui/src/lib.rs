@@ -1,5 +1,6 @@
 pub use message::*;
 
+pub mod components;
 pub mod message;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
