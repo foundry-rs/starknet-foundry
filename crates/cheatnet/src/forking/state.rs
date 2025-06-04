@@ -68,7 +68,7 @@ fn other_provider_error<T>(boxed: impl ToString) -> Result<T, StateError> {
     let err_str = boxed.to_string();
 
     Err(StateReadError(
-        if err_str.contains("error sending request") {
+        if err_str.contains("error sending request for url") {
             "Unable to reach the node. Check your internet connection and node url".to_string()
         } else {
             format!("JsonRpc provider error: {err_str}")
