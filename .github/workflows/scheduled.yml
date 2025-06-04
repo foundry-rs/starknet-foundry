@@ -112,7 +112,7 @@ jobs:
           scarb-version: ${{ matrix.version }}
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
-      - name: Install starknet-devnet-rs
+      - name: Install starknet-devnet
         run: ./scripts/install_devnet.sh
 
       - run: cargo test --release -p sncast
