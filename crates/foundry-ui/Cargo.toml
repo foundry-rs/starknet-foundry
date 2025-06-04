@@ -1,0 +1,10 @@
+[package]
+name = "foundry-ui"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+starknet-types-core.workspace = true

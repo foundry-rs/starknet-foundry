@@ -126,7 +126,7 @@ pub struct AccountData {
     pub account_type: Option<AccountType>,
 }
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Serialize)]
 pub enum NumbersFormat {
     Default,
     Decimal,
