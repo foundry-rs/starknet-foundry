@@ -1,7 +1,8 @@
 use super::package::RunForPackageArgs;
+use super::structs::{LatestBlocksNumbersMessage, TestsFailureSummaryMessage};
 use crate::warn::{error_if_snforge_std_not_compatible, warn_if_backtrace_without_panic_hint};
 use crate::{
-    ColorOption, ExitStatus, TestArgs, block_number_map::BlockNumberMap, pretty_printing,
+    ColorOption, ExitStatus, TestArgs, block_number_map::BlockNumberMap,
     run_tests::package::run_for_package, scarb::build_artifacts_with_scarb,
     shared_cache::FailedTestsCache, warn::warn_if_snforge_std_not_compatible,
 };
@@ -86,15 +87,19 @@ pub async fn run_for_workspace(args: TestArgs, ui: &UI) -> Result<ExitStatus> {
         )?;
 
         let tests_file_summaries =
-            run_for_package(args, &mut block_number_map, trace_verbosity).await?;
+            run_for_package(args, &mut block_number_map, trace_verbosity, ui).await?;
 
         all_failed_tests.extend(extract_failed_tests(tests_file_summaries));
     }
 
     FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
 
-    pretty_printing::print_latest_blocks_numbers(block_number_map.get_url_to_latest_block_number());
-    pretty_printing::print_failures(&all_failed_tests);
+    if !block_number_map.get_url_to_latest_block_number().is_empty() {
+        ui.println(&LatestBlocksNumbersMessage::new(
+            block_number_map.get_url_to_latest_block_number().clone(),
+        ));
+    }
+    ui.println(&TestsFailureSummaryMessage::new(&all_failed_tests));
 
     if args.exact {
         unset_forge_test_filter();

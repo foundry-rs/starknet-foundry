@@ -36,7 +36,7 @@ pub mod test_target_summary;
 pub mod backtrace;
 pub mod debugging;
 mod gas;
-pub mod printing;
+pub mod messages;
 pub mod running;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";

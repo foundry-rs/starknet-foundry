@@ -1,12 +1,12 @@
 use super::{
     resolve_config::resolve_config,
+    structs::{CollectedTestsCountMessage, TestsRunMessage, TestsSummaryMessage},
     test_target::{TestTargetRunResult, run_for_test_target},
 };
 use crate::{
     TestArgs,
     block_number_map::BlockNumberMap,
     combine_configs::combine_configs,
-    pretty_printing,
     scarb::{
         config::{ForgeConfigFromScarb, ForkTarget},
         load_test_artifacts, should_compile_starknet_contract_target,
@@ -22,6 +22,7 @@ use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use configuration::load_package_config;
+use console::Style;
 use forge_runner::debugging::TraceVerbosity;
 use forge_runner::{
     forge_config::ForgeConfig,
@@ -30,7 +31,7 @@ use forge_runner::{
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
-use foundry_ui::UI;
+use foundry_ui::{UI, components::labeled::LabeledMessage};
 use scarb_api::get_contracts_artifacts_and_source_sierra_paths;
 use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
@@ -138,6 +139,7 @@ pub async fn run_for_package(
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
     trace_verbosity: Option<TraceVerbosity>,
+    ui: &UI,
 ) -> Result<Vec<TestTargetSummary>> {
     let mut test_targets = test_package_with_config_resolved(
         test_targets,
@@ -156,20 +158,29 @@ pub async fn run_for_package(
     warn_if_incompatible_rpc_version(&test_targets).await?;
 
     let not_filtered = sum_test_cases(&test_targets);
-    pretty_printing::print_collected_tests_count(not_filtered, &package_name);
+    ui.println(&CollectedTestsCountMessage {
+        tests_num: not_filtered,
+        package_name: package_name.clone(),
+    });
 
     let mut summaries = vec![];
 
     for test_target in test_targets {
-        pretty_printing::print_running_tests(
+        ui.println(&TestsRunMessage::new(
             test_target.tests_location,
             test_target.test_cases.len(),
-        );
+        ));
 
         let forge_config = forge_config.clone();
 
-        let summary =
-            run_for_test_target(test_target, forge_config, &tests_filter, trace_verbosity).await?;
+        let summary = run_for_test_target(
+            test_target,
+            forge_config,
+            &tests_filter,
+            trace_verbosity,
+            ui,
+        )
+        .await?;
 
         match summary {
             TestTargetRunResult::Ok(summary) => {
@@ -186,12 +197,13 @@ pub async fn run_for_package(
     }
 
     // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
-    if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
-        pretty_printing::print_test_summary(&summaries, None);
+    let tests_summary = if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
+        TestsSummaryMessage::new(&summaries, None)
     } else {
         let filtered = all_tests - not_filtered;
-        pretty_printing::print_test_summary(&summaries, Some(filtered));
-    }
+        TestsSummaryMessage::new(&summaries, Some(filtered))
+    };
+    ui.println(&tests_summary);
 
     let any_fuzz_test_was_run = summaries.iter().any(|test_target_summary| {
         test_target_summary
@@ -202,7 +214,10 @@ pub async fn run_for_package(
     });
 
     if any_fuzz_test_was_run {
-        pretty_printing::print_test_seed(forge_config.test_runner_config.fuzzer_seed);
+        ui.println(&LabeledMessage::new(
+            &Style::new().bold().apply_to("Fuzzer seed").to_string(),
+            &forge_config.test_runner_config.fuzzer_seed.to_string(),
+        ));
     }
 
     Ok(summaries)
