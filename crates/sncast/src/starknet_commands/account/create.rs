@@ -2,11 +2,13 @@ use crate::starknet_commands::account::{
     generate_add_profile_message, prepare_account_json, write_account_to_accounts_file,
 };
 use anyhow::{Context, Result, anyhow, bail};
+use bigdecimal::BigDecimal;
+use bigdecimal::num_bigint::{BigInt, Sign};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
 use serde_json::json;
-use sncast::helpers::braavos::{BraavosAccountFactory, assert_non_braavos_account};
+use sncast::helpers::braavos::{BraavosAccountFactory, check_braavos_account_compatibility};
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
     CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
@@ -62,8 +64,11 @@ pub async fn create(
     chain_id: Felt,
     create: &Create,
 ) -> Result<AccountCreateResponse> {
-    // TODO(#3118): Remove this check once braavos integration is restored
-    assert_non_braavos_account(Some(create.account_type), create.class_hash)?;
+    // Braavos accounts before v1.2.0 are not compatible with starknet >= 0.13.4
+    // For more, read https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
+    if let Some(class_hash) = create.class_hash {
+        check_braavos_account_compatibility(class_hash)?;
+    }
 
     let salt = extract_or_generate_salt(create.salt);
     let class_hash = create.class_hash.unwrap_or(match create.account_type {
@@ -73,7 +78,7 @@ pub async fn create(
     });
     check_class_hash_exists(provider, class_hash).await?;
 
-    let (account_json, max_fee) =
+    let (account_json, estimated_fee) =
         generate_account(provider, salt, class_hash, create.account_type).await?;
 
     let address: Felt = account_json["address"]
@@ -81,7 +86,10 @@ pub async fn create(
         .context("Invalid address")?
         .parse()?;
 
-    let mut message = "Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.".to_string();
+    let mut message = format!(
+        "Account successfully created but it needs to be deployed. The estimated deployment fee is {} STRK. Prefund the account to cover deployment transaction fee",
+        felt_to_bigdecimal(estimated_fee, 18)
+    );
 
     if let Some(keystore) = keystore.clone() {
         let account_path = Utf8PathBuf::from(&account);
@@ -136,7 +144,7 @@ pub async fn create(
 
     Ok(AccountCreateResponse {
         address: address.into_(),
-        max_fee,
+        estimated_fee,
         add_profile: add_profile_message,
         message: if account_json["deployed"] == json!(false) {
             message
@@ -349,7 +357,7 @@ fn generate_deploy_command(
     let network_flag = generate_network_flag(rpc_url, network);
 
     format!(
-        "\n\nAfter prefunding the address, run:\n\
+        "\n\nAfter prefunding the account, run:\n\
         sncast{accounts_flag} account deploy {network_flag} --name {account}"
     )
 }
@@ -363,7 +371,71 @@ fn generate_deploy_command_with_keystore(
     let network_flag = generate_network_flag(rpc_url, network);
 
     format!(
-        "\n\nAfter prefunding the address, run:\n\
+        "\n\nAfter prefunding the account, run:\n\
         sncast --account {account} --keystore {keystore} account deploy {network_flag}"
     )
+}
+
+fn felt_to_bigdecimal<F, D>(felt: F, decimals: D) -> BigDecimal
+where
+    F: AsRef<Felt>,
+    D: Into<i64>,
+{
+    BigDecimal::new(
+        BigInt::from_bytes_be(Sign::Plus, &felt.as_ref().to_bytes_be()),
+        decimals.into(),
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_felt_to_bigdecimal_with_zero() {
+        let felt = Felt::ZERO;
+        let result = felt_to_bigdecimal(felt, 18);
+        assert_eq!(result, BigDecimal::from(0));
+    }
+
+    #[test]
+    fn test_felt_to_bigdecimal_with_one() {
+        let felt = Felt::ONE;
+        let result = felt_to_bigdecimal(felt, 18);
+        assert_eq!(result, BigDecimal::new(BigInt::from(1), 18));
+    }
+
+    #[test]
+    fn test_felt_to_bigdecimal_with_large_number() {
+        let felt = Felt::from_dec_str("1311768467463790320").unwrap();
+        let result = felt_to_bigdecimal(felt, 18);
+        let expected = BigDecimal::from_str("1.311768467463790320").unwrap();
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_felt_to_bigdecimal_with_different_decimals() {
+        let felt = Felt::from_hex("0x64").unwrap();
+        let result_0 = felt_to_bigdecimal(felt, 0);
+        let result_2 = felt_to_bigdecimal(felt, 2);
+
+        assert_eq!(result_0, BigDecimal::from(100));
+        assert_eq!(result_2, BigDecimal::new(BigInt::from(100), 2));
+    }
+    #[test]
+    fn test_felt_to_bigdecimal_common_token_value() {
+        let felt = Felt::from(1_500_000_000_000_000_000u128);
+        let result = felt_to_bigdecimal(felt, 18);
+        assert_eq!(result.to_string(), "1.500000000000000000");
+    }
+
+    #[test]
+    fn test_felt_to_bigdecimal_with_different_decimal_places() {
+        let felt = Felt::from(123_456_789);
+
+        assert_eq!(felt_to_bigdecimal(felt, 0).to_string(), "123456789");
+        assert_eq!(felt_to_bigdecimal(felt, 3).to_string(), "123456.789");
+        assert_eq!(felt_to_bigdecimal(felt, 6).to_string(), "123.456789");
+        assert_eq!(felt_to_bigdecimal(felt, 9).to_string(), "0.123456789");
+    }
 }

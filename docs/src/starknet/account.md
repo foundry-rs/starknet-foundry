@@ -14,11 +14,7 @@ account information stored locally - this will not remove the account from Stark
 > Accounts creation and deployment is supported for
 >  - OpenZeppelin
 >  - Argent (with guardian set to 0)
-<!-- >  - Braavos -->
-
-<!-- TODO(#3118): Remove this warning and uncomment braavos from possible account variants -->
-> ⚠️ **Warning**
-> Using Braavos accounts is temporarily disabled because they don't yet work with the RPC version supported by `sncast`.
+>  - Braavos
 
 ## Examples
 
@@ -41,9 +37,9 @@ $ sncast \
 ```shell
 command: account create
 add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-address: [..]
-max_fee: [..]
-message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.
+address: 0x0[..]
+estimated_fee: [..]
+message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
 
 To see account creation details, visit:
 account: https://sepolia.starkscan.co/contract/[..]
