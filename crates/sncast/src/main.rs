@@ -12,7 +12,7 @@ use sncast::response::cast_message::SncastMessage;
 use sncast::response::command::CommandResponse;
 use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::ResponseError;
-use sncast::response::explorer_link::block_explorer_link_if_allowed;
+use sncast::response::explorer_link::{ExplorerLinksMessage, block_explorer_link_if_allowed};
 use sncast::response::transformed_call::TransformedCallResponse;
 use std::io;
 use std::io::IsTerminal;
@@ -40,7 +40,7 @@ use starknet::core::types::ContractClass;
 use starknet::core::types::contract::AbiEntry;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
-use starknet_commands::account::list::print_account_list;
+use starknet_commands::account::list::AccountsListMessage;
 use starknet_commands::verify::Verify;
 use starknet_types_core::felt::Felt;
 use tokio::runtime::Runtime;
@@ -229,7 +229,7 @@ fn main() -> Result<()> {
     if let Commands::Script(script) = &cli.command {
         run_script_command(&cli, runtime, script, numbers_format, &ui)
     } else {
-        let config = get_cast_config(&cli)?;
+        let config = get_cast_config(&cli, &ui)?;
 
         runtime.block_on(run_async_command(cli, config, numbers_format, &ui))
     }
@@ -268,6 +268,7 @@ async fn run_async_command(
                     profile: cli.profile.unwrap_or("release".to_string()),
                 },
                 false,
+                ui,
             )
             .expect("Failed to build contract");
             let result = starknet_commands::declare::declare(
@@ -276,6 +277,7 @@ async fn run_async_command(
                 &artifacts,
                 wait_config,
                 false,
+                ui,
             )
             .await
             .map_err(handle_starknet_command_error)
@@ -290,7 +292,6 @@ async fn run_async_command(
 
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                ui.output_format(),
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
@@ -336,13 +337,13 @@ async fn run_async_command(
                 deploy.nonce,
                 &account,
                 wait_config,
+                ui,
             )
             .await
             .map_err(handle_starknet_command_error);
 
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                ui.output_format(),
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
@@ -428,13 +429,13 @@ async fn run_async_command(
                 selector,
                 &account,
                 wait_config,
+                ui,
             )
             .await
             .map_err(handle_starknet_command_error);
 
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                ui.output_format(),
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
@@ -456,7 +457,7 @@ async fn run_async_command(
 
                         process_command_result("multicall new", result, numbers_format, ui, None);
                     } else {
-                        println!("{DEFAULT_MULTICALL_CONTENTS}");
+                        ui.println(&DEFAULT_MULTICALL_CONTENTS);
                     }
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
@@ -469,13 +470,16 @@ async fn run_async_command(
                         config.keystore,
                     )
                     .await?;
-                    let result =
-                        starknet_commands::multicall::run::run(run.clone(), &account, wait_config)
-                            .await;
+                    let result = starknet_commands::multicall::run::run(
+                        run.clone(),
+                        &account,
+                        wait_config,
+                        ui,
+                    )
+                    .await;
 
                     let block_explorer_link = block_explorer_link_if_allowed(
                         &result,
-                        ui.output_format(),
                         provider.chain_id().await?,
                         config.show_explorer_links,
                         config.block_explorer,
@@ -511,7 +515,10 @@ async fn run_async_command(
                         result.as_ref().ok().and_then(|r| r.account_name.clone())
                     {
                         if let Err(err) = prompt_to_add_account_as_default(account_name.as_str()) {
-                            eprintln!("Error: Failed to launch interactive prompt: {err}");
+                            // TODO(#3436)
+                            ui.eprintln(&format!(
+                                "Error: Failed to launch interactive prompt: {err}"
+                            ));
                         }
                     }
                 }
@@ -544,7 +551,6 @@ async fn run_async_command(
 
                 let block_explorer_link = block_explorer_link_if_allowed(
                     &result,
-                    ui.output_format(),
                     provider.chain_id().await?,
                     config.show_explorer_links,
                     config.block_explorer,
@@ -577,6 +583,7 @@ async fn run_async_command(
                     &config.account,
                     keystore_path,
                     fee_args,
+                    ui,
                 )
                 .await;
 
@@ -589,13 +596,15 @@ async fn run_async_command(
                             .name
                             .expect("Must be provided if not using a keystore"),
                     ) {
-                        eprintln!("Error: Failed to launch interactive prompt: {err}");
+                        // TODO(#3436)
+                        ui.eprintln(&format!(
+                            "Error: Failed to launch interactive prompt: {err}"
+                        ));
                     }
                 }
 
                 let block_explorer_link = block_explorer_link_if_allowed(
                     &result,
-                    ui.output_format(),
                     provider.chain_id().await?,
                     config.show_explorer_links,
                     config.block_explorer,
@@ -626,12 +635,14 @@ async fn run_async_command(
                 Ok(())
             }
 
-            account::Commands::List(options) => print_account_list(
-                &config.accounts_file,
-                options.display_private_keys,
-                numbers_format,
-                ui.output_format(),
-            ),
+            account::Commands::List(options) => {
+                ui.println(&AccountsListMessage::new(
+                    config.accounts_file,
+                    options.display_private_keys,
+                    numbers_format,
+                )?);
+                Ok(())
+            }
         },
 
         Commands::ShowConfig(show) => {
@@ -673,6 +684,7 @@ async fn run_async_command(
                     profile: cli.profile.unwrap_or("release".to_string()),
                 },
                 false,
+                ui,
             )
             .expect("Failed to build contract");
             let result = starknet_commands::verify::verify(
@@ -704,14 +716,14 @@ fn run_script_command(
 ) -> Result<()> {
     match &script.command {
         starknet_commands::script::Commands::Init(init) => {
-            let result = starknet_commands::script::init::init(init);
+            let result = starknet_commands::script::init::init(init, ui);
             process_command_result("script init", result, numbers_format, ui, None);
         }
         starknet_commands::script::Commands::Run(run) => {
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &run.package)?;
 
-            let config = get_cast_config(cli)?;
+            let config = get_cast_config(cli, ui)?;
 
             let provider = runtime.block_on(run.rpc.get_provider(&config))?;
 
@@ -723,6 +735,7 @@ fn run_script_command(
                     profile: cli.profile.clone().unwrap_or("dev".to_string()),
                 },
                 true,
+                ui,
             )
             .expect("Failed to build artifacts");
             // TODO(#2042): remove duplicated compilation
@@ -757,6 +770,7 @@ fn run_script_command(
                 runtime,
                 &config,
                 state_file_path,
+                ui,
             );
 
             process_command_result("script run", result, numbers_format, ui, None);
@@ -792,9 +806,9 @@ fn config_with_cli(config: &mut CastConfig, cli: &Cli) {
     );
 }
 
-fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
+fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
     let global_config_path = get_global_config_path().unwrap_or_else(|err| {
-        eprintln!("Error getting global config path: {err}");
+        ui.eprintln(&format!("Error getting global config path: {err}"));
         Utf8PathBuf::new()
     });
 
@@ -844,7 +858,7 @@ fn process_command_result<T>(
     result: Result<T>,
     numbers_format: NumbersFormat,
     ui: &UI,
-    block_explorer_link: Option<String>,
+    block_explorer_link: Option<ExplorerLinksMessage>,
 ) where
     T: CommandResponse,
 {
