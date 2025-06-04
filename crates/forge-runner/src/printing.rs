@@ -1,8 +1,10 @@
 use crate::forge_config::ForgeTrackedResource;
 use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary};
+use anyhow::anyhow;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use console::style;
+use shared::print::print_as_warning;
 
 pub fn print_test_result(
     any_test_result: &AnyTestCaseSummary,
@@ -103,6 +105,12 @@ fn format_detailed_resources(
             );
 
             if used_resources.execution_resources != ExecutionResources::default() {
+                // TODO(#3399): Remove warning
+                print_as_warning(&anyhow!(
+                    "When tracking sierra gas and executing contracts with a Sierra version older than 1.7.0, \
+                    syscall related resources may be incorrectly reported to the wrong resource type \
+                    in the output of `--detailed-resources` flag."
+                ));
                 output.push_str(&vm_resources_output);
             }
             output.push('\n');
