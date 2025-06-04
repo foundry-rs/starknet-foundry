@@ -285,6 +285,42 @@ fn with_skip_filter_matching_test_name() {
 }
 
 #[test]
+fn with_skip_filter_matching_multiple_test_name() {
+    let temp = setup_package("simple_package");
+
+    let output = test_runner(&temp)
+        .arg("--skip")
+        .arg("failing")
+        .arg("--skip")
+        .arg("two")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 9 test(s) from simple_package package
+        Running 7 test(s) from tests/
+        [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
+        [PASS] simple_package_integrationtest::test_simple::test_simple2 (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+        [PASS] simple_package_integrationtest::ext_function_test::test_simple (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+        [PASS] simple_package_integrationtest::without_prefix::five (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+        [PASS] simple_package_integrationtest::ext_function_test::test_my_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~80000)
+        [PASS] simple_package_integrationtest::test_simple::test_simple (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+        [PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~480000)
+        Running 2 test(s) from src/
+        [IGNORE] simple_package::tests::ignored_test
+        [PASS] simple_package::tests::test_fib (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~80000)
+        Tests: 7 passed, 0 failed, 0 skipped, 2 ignored, 0 filtered out
+        "},
+    );
+}
+
+#[test]
 fn with_exact_filter_and_duplicated_test_names() {
     let temp = setup_package("duplicated_test_names");
 

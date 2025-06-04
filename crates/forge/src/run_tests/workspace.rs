@@ -112,7 +112,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     }
 
     if !args.skip.is_empty() {
-        unset_forge_skip();
+        unset_forge_test_skip();
     }
 
     Ok(if all_failed_tests.is_empty() {
