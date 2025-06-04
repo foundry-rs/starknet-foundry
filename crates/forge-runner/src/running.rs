@@ -445,7 +445,6 @@ fn get_fork_state_reader(
     fork_config: Option<&ResolvedForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
     fork_config
-        .as_ref()
         .map(|ResolvedForkConfig { url, block_number }| {
             ForkStateReader::new(url.clone(), *block_number, cache_dir)
         })
