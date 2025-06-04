@@ -34,9 +34,7 @@ fn start_devnet() {
         }
     }
 
-    let devnet_path = "tests/utils/devnet/starknet-devnet";
-
-    Command::new(devnet_path)
+    Command::new("starknet-devnet")
         .args([
             "--port",
             &port,
