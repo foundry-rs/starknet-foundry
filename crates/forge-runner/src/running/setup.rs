@@ -45,6 +45,7 @@ pub fn initialize_execution_context<'a>(
         LayoutName::all_cairo,
         // The `dynamic_layout_params` argument should only be used with dynamic layout.
         // It is ignored otherwise.
+        // See: https://github.com/lambdaclass/cairo-vm/blob/4f02f5aab30f9062c2db1f5addbf28d34843168e/vm/src/vm/runners/cairo_runner.rs#L171
         None,
         proof_mode,
         trace_enabled,
