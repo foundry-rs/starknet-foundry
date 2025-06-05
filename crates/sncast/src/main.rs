@@ -31,10 +31,6 @@ use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_metadata_with_deps,
 };
 use sncast::response::errors::handle_starknet_command_error;
-<<<<<<< HEAD
-
-=======
->>>>>>> 05040d18d8e8ed0adce3aa82df4085f23d3e52bb
 use sncast::{
     NumbersFormat, ValidatedWaitParams, WaitForTx, chain_id_to_network_name, get_account,
     get_block_id, get_chain_id, get_class_hash_by_address, get_contract_class,
