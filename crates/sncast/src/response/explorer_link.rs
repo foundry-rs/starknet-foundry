@@ -4,6 +4,8 @@ use serde::Serialize;
 use serde_json::{Value, json};
 use starknet_types_core::felt::Felt;
 
+// TODO(#3391): This code should be refactored to either use common `Message` trait or be directly
+// included in `sncast` output messages.
 pub trait OutputLink {
     const TITLE: &'static str;
 

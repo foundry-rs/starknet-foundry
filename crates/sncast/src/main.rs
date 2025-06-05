@@ -31,7 +31,10 @@ use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_metadata_with_deps,
 };
 use sncast::response::errors::handle_starknet_command_error;
+<<<<<<< HEAD
 
+=======
+>>>>>>> 05040d18d8e8ed0adce3aa82df4085f23d3e52bb
 use sncast::{
     NumbersFormat, ValidatedWaitParams, WaitForTx, chain_id_to_network_name, get_account,
     get_block_id, get_chain_id, get_class_hash_by_address, get_contract_class,
@@ -458,7 +461,7 @@ async fn run_async_command(
 
                         process_command_result("multicall new", result, numbers_format, ui, None);
                     } else {
-                        ui.println(&DEFAULT_MULTICALL_CONTENTS.to_string());
+                        ui.println(&DEFAULT_MULTICALL_CONTENTS);
                     }
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
@@ -516,6 +519,7 @@ async fn run_async_command(
                         result.as_ref().ok().and_then(|r| r.account_name.clone())
                     {
                         if let Err(err) = prompt_to_add_account_as_default(account_name.as_str()) {
+                            // TODO(#3436)
                             ui.eprintln(&format!(
                                 "Error: Failed to launch interactive prompt: {err}"
                             ));
@@ -596,6 +600,7 @@ async fn run_async_command(
                             .name
                             .expect("Must be provided if not using a keystore"),
                     ) {
+                        // TODO(#3436)
                         ui.eprintln(&format!(
                             "Error: Failed to launch interactive prompt: {err}"
                         ));

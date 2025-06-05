@@ -10,7 +10,7 @@ use super::{
 };
 
 #[derive(Serialize)]
-pub struct SncastMessage<T: Serialize> {
+pub struct SncastMessage<T: CommandResponse> {
     pub command: String,
     pub command_response: T,
     pub numbers_format: NumbersFormat,

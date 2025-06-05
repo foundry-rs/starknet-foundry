@@ -82,9 +82,6 @@ pub fn run_test(
             None,
         );
 
-        // TODO: code below is added to fix snforge tests
-        // remove it after improve exit-first tests
-        // issue #1043
         if send.is_closed() {
             return TestCaseSummary::Skipped {};
         }

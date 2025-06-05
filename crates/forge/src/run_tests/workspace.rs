@@ -95,8 +95,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
 
     FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
 
-    let should_print_latest_blocks = !block_number_map.get_url_to_latest_block_number().is_empty();
-    if should_print_latest_blocks {
+    if !block_number_map.get_url_to_latest_block_number().is_empty() {
         ui.println(&LatestBlocksNumbersMessage::new(
             block_number_map.get_url_to_latest_block_number().clone(),
         ));
