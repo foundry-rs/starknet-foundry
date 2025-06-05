@@ -3,7 +3,7 @@ use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args, ValueEnum};
 use promptly::prompt;
 use scarb_api::StarknetContractArtifacts;
-use sncast::{Network, response::structs::VerifyResponse};
+use sncast::{Network, response::verify::VerifyResponse};
 use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, fmt};
 

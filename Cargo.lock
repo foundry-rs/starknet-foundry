@@ -1447,6 +1447,7 @@ dependencies = [
  "data-transformer",
  "flate2",
  "flatten-serde-json",
+ "foundry-ui",
  "fs2",
  "glob",
  "indexmap 2.9.0",
@@ -2514,6 +2515,7 @@ dependencies = [
  "derive_more 2.0.1",
  "docs",
  "forge_runner",
+ "foundry-ui",
  "futures",
  "include_dir",
  "indoc",
@@ -2564,6 +2566,7 @@ dependencies = [
  "console",
  "conversions",
  "debugging",
+ "foundry-ui",
  "futures",
  "indoc",
  "itertools 0.14.0",
@@ -2594,6 +2597,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e13624c2627564efccf4934284bdd98cbaa14e79b0b5a141218e507b3a823456"
 dependencies = [
  "percent-encoding",
+]
+
+[[package]]
+name = "foundry-ui"
+version = "0.44.0"
+dependencies = [
+ "anyhow",
+ "console",
+ "serde",
+ "serde_json",
+ "starknet-types-core",
 ]
 
 [[package]]
@@ -5117,6 +5131,7 @@ dependencies = [
  "anyhow",
  "assert_fs",
  "camino",
+ "foundry-ui",
  "indoc",
  "itertools 0.14.0",
  "rayon",
@@ -5579,6 +5594,7 @@ dependencies = [
  "dirs",
  "docs",
  "forge_runner",
+ "foundry-ui",
  "fs_extra",
  "indoc",
  "itertools 0.14.0",
@@ -6173,6 +6189,7 @@ dependencies = [
  "cheatnet",
  "forge",
  "forge_runner",
+ "foundry-ui",
  "indoc",
  "project-root",
  "scarb-api",

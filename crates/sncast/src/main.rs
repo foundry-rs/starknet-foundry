@@ -4,9 +4,16 @@ use crate::starknet_commands::{
 };
 use anyhow::{Context, Result, bail};
 use data_transformer::{reverse_transform_output, transform};
+use foundry_ui::UI;
 use sncast::helpers::account::generate_account_name;
-use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
-use sncast::response::print::{OutputFormat, print_command_result};
+use sncast::helpers::output_format::output_format_from_json_flag;
+use sncast::response::call::CallResponse;
+use sncast::response::cast_message::SncastMessage;
+use sncast::response::command::CommandResponse;
+use sncast::response::declare::DeclareResponse;
+use sncast::response::errors::ResponseError;
+use sncast::response::explorer_link::{ExplorerLinksMessage, block_explorer_link_if_allowed};
+use sncast::response::transformed_call::TransformedCallResponse;
 use std::io;
 use std::io::IsTerminal;
 
@@ -24,7 +31,6 @@ use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_metadata_with_deps,
 };
 use sncast::response::errors::handle_starknet_command_error;
-use sncast::response::structs::{CallResponse, DeclareResponse, TransformedCallResponse};
 use sncast::{
     NumbersFormat, ValidatedWaitParams, WaitForTx, chain_id_to_network_name, get_account,
     get_block_id, get_chain_id, get_class_hash_by_address, get_contract_class,
@@ -34,7 +40,7 @@ use starknet::core::types::ContractClass;
 use starknet::core::types::contract::AbiEntry;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
-use starknet_commands::account::list::print_account_list;
+use starknet_commands::account::list::AccountsListMessage;
 use starknet_commands::verify::Verify;
 use starknet_types_core::felt::Felt;
 use tokio::runtime::Runtime;
@@ -214,21 +220,18 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     let numbers_format = NumbersFormat::from_flags(cli.hex_format, cli.int_format);
-    let output_format = OutputFormat::from_flag(cli.json);
+    let output_format = output_format_from_json_flag(cli.json);
+
+    let ui = UI::new(output_format);
 
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = &cli.command {
-        run_script_command(&cli, runtime, script, numbers_format, output_format)
+        run_script_command(&cli, runtime, script, numbers_format, &ui)
     } else {
-        let config = get_cast_config(&cli)?;
+        let config = get_cast_config(&cli, &ui)?;
 
-        runtime.block_on(run_async_command(
-            cli,
-            config,
-            numbers_format,
-            output_format,
-        ))
+        runtime.block_on(run_async_command(cli, config, numbers_format, &ui))
     }
 }
 
@@ -237,7 +240,7 @@ async fn run_async_command(
     cli: Cli,
     config: CastConfig,
     numbers_format: NumbersFormat,
-    output_format: OutputFormat,
+    ui: &UI,
 ) -> Result<()> {
     let wait_config = WaitForTx {
         wait: cli.wait,
@@ -265,6 +268,7 @@ async fn run_async_command(
                     profile: cli.profile.unwrap_or("release".to_string()),
                 },
                 false,
+                ui,
             )
             .expect("Failed to build contract");
             let result = starknet_commands::declare::declare(
@@ -273,6 +277,7 @@ async fn run_async_command(
                 &artifacts,
                 wait_config,
                 false,
+                ui,
             )
             .await
             .map_err(handle_starknet_command_error)
@@ -285,14 +290,15 @@ async fn run_async_command(
                 }
             });
 
-            print_command_result("declare", &result, numbers_format, output_format)?;
-            print_block_explorer_link_if_allowed(
+            let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                output_format,
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
             );
+
+            process_command_result("declare", result, numbers_format, ui, block_explorer_link);
+
             Ok(())
         }
 
@@ -331,18 +337,19 @@ async fn run_async_command(
                 deploy.nonce,
                 &account,
                 wait_config,
+                ui,
             )
             .await
             .map_err(handle_starknet_command_error);
 
-            print_command_result("deploy", &result, numbers_format, output_format)?;
-            print_block_explorer_link_if_allowed(
+            let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                output_format,
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
             );
+            process_command_result("deploy", result, numbers_format, ui, block_explorer_link);
+
             Ok(())
         }
 
@@ -377,14 +384,9 @@ async fn run_async_command(
             if let Some(transformed_result) =
                 transform_response(&result, &contract_class, &selector)
             {
-                print_command_result(
-                    "call",
-                    &Ok(transformed_result),
-                    numbers_format,
-                    output_format,
-                )?;
+                process_command_result("call", Ok(transformed_result), numbers_format, ui, None);
             } else {
-                print_command_result("call", &result, numbers_format, output_format)?;
+                process_command_result("call", result, numbers_format, ui, None);
             }
 
             Ok(())
@@ -427,18 +429,20 @@ async fn run_async_command(
                 selector,
                 &account,
                 wait_config,
+                ui,
             )
             .await
             .map_err(handle_starknet_command_error);
 
-            print_command_result("invoke", &result, numbers_format, output_format)?;
-            print_block_explorer_link_if_allowed(
+            let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
-                output_format,
                 provider.chain_id().await?,
                 config.show_explorer_links,
                 config.block_explorer,
             );
+
+            process_command_result("invoke", result, numbers_format, ui, block_explorer_link);
+
             Ok(())
         }
 
@@ -451,14 +455,9 @@ async fn run_async_command(
                             new.overwrite,
                         );
 
-                        print_command_result(
-                            "multicall new",
-                            &result,
-                            numbers_format,
-                            output_format,
-                        )?;
+                        process_command_result("multicall new", result, numbers_format, ui, None);
                     } else {
-                        println!("{DEFAULT_MULTICALL_CONTENTS}");
+                        ui.println(&DEFAULT_MULTICALL_CONTENTS);
                     }
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
@@ -471,17 +470,26 @@ async fn run_async_command(
                         config.keystore,
                     )
                     .await?;
-                    let result =
-                        starknet_commands::multicall::run::run(run.clone(), &account, wait_config)
-                            .await;
+                    let result = starknet_commands::multicall::run::run(
+                        run.clone(),
+                        &account,
+                        wait_config,
+                        ui,
+                    )
+                    .await;
 
-                    print_command_result("multicall run", &result, numbers_format, output_format)?;
-                    print_block_explorer_link_if_allowed(
+                    let block_explorer_link = block_explorer_link_if_allowed(
                         &result,
-                        output_format,
                         provider.chain_id().await?,
                         config.show_explorer_links,
                         config.block_explorer,
+                    );
+                    process_command_result(
+                        "multicall run",
+                        result,
+                        numbers_format,
+                        ui,
+                        block_explorer_link,
                     );
                 }
             }
@@ -507,12 +515,15 @@ async fn run_async_command(
                         result.as_ref().ok().and_then(|r| r.account_name.clone())
                     {
                         if let Err(err) = prompt_to_add_account_as_default(account_name.as_str()) {
-                            eprintln!("Error: Failed to launch interactive prompt: {err}");
+                            // TODO(#3436)
+                            ui.eprintln(&format!(
+                                "Error: Failed to launch interactive prompt: {err}"
+                            ));
                         }
                     }
                 }
 
-                print_command_result("account import", &result, numbers_format, output_format)?;
+                process_command_result("account import", result, numbers_format, ui, None);
                 Ok(())
             }
 
@@ -538,14 +549,21 @@ async fn run_async_command(
                 )
                 .await;
 
-                print_command_result("account create", &result, numbers_format, output_format)?;
-                print_block_explorer_link_if_allowed(
+                let block_explorer_link = block_explorer_link_if_allowed(
                     &result,
-                    output_format,
                     provider.chain_id().await?,
                     config.show_explorer_links,
                     config.block_explorer,
                 );
+
+                process_command_result(
+                    "account create",
+                    result,
+                    numbers_format,
+                    ui,
+                    block_explorer_link,
+                );
+
                 Ok(())
             }
 
@@ -565,6 +583,7 @@ async fn run_async_command(
                     &config.account,
                     keystore_path,
                     fee_args,
+                    ui,
                 )
                 .await;
 
@@ -577,18 +596,27 @@ async fn run_async_command(
                             .name
                             .expect("Must be provided if not using a keystore"),
                     ) {
-                        eprintln!("Error: Failed to launch interactive prompt: {err}");
+                        // TODO(#3436)
+                        ui.eprintln(&format!(
+                            "Error: Failed to launch interactive prompt: {err}"
+                        ));
                     }
                 }
 
-                print_command_result("account deploy", &result, numbers_format, output_format)?;
-                print_block_explorer_link_if_allowed(
+                let block_explorer_link = block_explorer_link_if_allowed(
                     &result,
-                    output_format,
                     provider.chain_id().await?,
                     config.show_explorer_links,
                     config.block_explorer,
                 );
+                process_command_result(
+                    "account deploy",
+                    result,
+                    numbers_format,
+                    ui,
+                    block_explorer_link,
+                );
+
                 Ok(())
             }
 
@@ -603,16 +631,18 @@ async fn run_async_command(
                     delete.yes,
                 );
 
-                print_command_result("account delete", &result, numbers_format, output_format)?;
+                process_command_result("account delete", result, numbers_format, ui, None);
                 Ok(())
             }
 
-            account::Commands::List(options) => print_account_list(
-                &config.accounts_file,
-                options.display_private_keys,
-                numbers_format,
-                output_format,
-            ),
+            account::Commands::List(options) => {
+                ui.println(&AccountsListMessage::new(
+                    config.accounts_file,
+                    options.display_private_keys,
+                    numbers_format,
+                )?);
+                Ok(())
+            }
         },
 
         Commands::ShowConfig(show) => {
@@ -626,7 +656,7 @@ async fn run_async_command(
             )
             .await;
 
-            print_command_result("show-config", &result, numbers_format, output_format)?;
+            process_command_result("show-config", result, numbers_format, ui, None);
 
             Ok(())
         }
@@ -639,7 +669,7 @@ async fn run_async_command(
                     .await
                     .context("Failed to get transaction status");
 
-            print_command_result("tx-status", &result, numbers_format, output_format)?;
+            process_command_result("tx-status", result, numbers_format, ui, None);
             Ok(())
         }
 
@@ -654,6 +684,7 @@ async fn run_async_command(
                     profile: cli.profile.unwrap_or("release".to_string()),
                 },
                 false,
+                ui,
             )
             .expect("Failed to build contract");
             let result = starknet_commands::verify::verify(
@@ -663,7 +694,7 @@ async fn run_async_command(
             )
             .await;
 
-            print_command_result("verify", &result, numbers_format, output_format)?;
+            process_command_result("verify", result, numbers_format, ui, None);
             Ok(())
         }
 
@@ -681,18 +712,18 @@ fn run_script_command(
     runtime: Runtime,
     script: &Script,
     numbers_format: NumbersFormat,
-    output_format: OutputFormat,
+    ui: &UI,
 ) -> Result<()> {
     match &script.command {
         starknet_commands::script::Commands::Init(init) => {
-            let result = starknet_commands::script::init::init(init);
-            print_command_result("script init", &result, numbers_format, output_format)?;
+            let result = starknet_commands::script::init::init(init, ui);
+            process_command_result("script init", result, numbers_format, ui, None);
         }
         starknet_commands::script::Commands::Run(run) => {
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &run.package)?;
 
-            let config = get_cast_config(cli)?;
+            let config = get_cast_config(cli, ui)?;
 
             let provider = runtime.block_on(run.rpc.get_provider(&config))?;
 
@@ -704,6 +735,7 @@ fn run_script_command(
                     profile: cli.profile.clone().unwrap_or("dev".to_string()),
                 },
                 true,
+                ui,
             )
             .expect("Failed to build artifacts");
             // TODO(#2042): remove duplicated compilation
@@ -738,9 +770,10 @@ fn run_script_command(
                 runtime,
                 &config,
                 state_file_path,
+                ui,
             );
 
-            print_command_result("script run", &result, numbers_format, output_format)?;
+            process_command_result("script run", result, numbers_format, ui, None);
         }
     }
 
@@ -773,9 +806,9 @@ fn config_with_cli(config: &mut CastConfig, cli: &Cli) {
     );
 }
 
-fn get_cast_config(cli: &Cli) -> Result<CastConfig> {
+fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
     let global_config_path = get_global_config_path().unwrap_or_else(|err| {
-        eprintln!("Error getting global config path: {err}");
+        ui.eprintln(&format!("Error getting global config path: {err}"));
         Utf8PathBuf::new()
     });
 
@@ -798,7 +831,7 @@ fn transform_response(
     contract_class: &ContractClass,
     selector: &Felt,
 ) -> Option<TransformedCallResponse> {
-    let Ok(CallResponse { response }) = result else {
+    let Ok(CallResponse { response, .. }) = result else {
         return None;
     };
 
@@ -818,4 +851,33 @@ fn transform_response(
         response_raw: response.clone(),
         response: transformed_response,
     })
+}
+
+fn process_command_result<T>(
+    command: &str,
+    result: Result<T>,
+    numbers_format: NumbersFormat,
+    ui: &UI,
+    block_explorer_link: Option<ExplorerLinksMessage>,
+) where
+    T: CommandResponse,
+{
+    let cast_msg = result.map(|command_response| SncastMessage {
+        command: command.to_string(),
+        command_response,
+        numbers_format,
+    });
+
+    match cast_msg {
+        Ok(response) => {
+            ui.println(&response);
+            if let Some(link) = block_explorer_link {
+                ui.println(&link);
+            }
+        }
+        Err(err) => {
+            let err = ResponseError::new(command.to_string(), format!("{err:#}"));
+            ui.eprintln(&err);
+        }
+    }
 }

@@ -1,7 +1,8 @@
 use super::package::RunForPackageArgs;
+use super::structs::{LatestBlocksNumbersMessage, TestsFailureSummaryMessage};
 use crate::warn::{error_if_snforge_std_not_compatible, warn_if_backtrace_without_panic_hint};
 use crate::{
-    ColorOption, ExitStatus, TestArgs, block_number_map::BlockNumberMap, pretty_printing,
+    ColorOption, ExitStatus, TestArgs, block_number_map::BlockNumberMap,
     run_tests::package::run_for_package, scarb::build_artifacts_with_scarb,
     shared_cache::FailedTestsCache, warn::warn_if_snforge_std_not_compatible,
 };
@@ -11,6 +12,7 @@ use forge_runner::{
     coverage_api::can_coverage_be_generated,
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
 };
+use foundry_ui::UI;
 use scarb_api::{
     ScarbCommand,
     metadata::{Metadata, MetadataCommandExt, PackageMetadata},
@@ -20,7 +22,7 @@ use scarb_ui::args::PackagesFilter;
 use shared::consts::SNFORGE_TEST_FILTER;
 use std::env;
 
-pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
+pub async fn run_for_workspace(args: TestArgs, ui: &UI) -> Result<ExitStatus> {
     match args.color {
         // SAFETY: This runs in a single-threaded environment.
         ColorOption::Always => unsafe { env::set_var("CLICOLOR_FORCE", "1") },
@@ -81,18 +83,23 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
             &args,
             &cache_dir,
             &artifacts_dir_path,
+            ui,
         )?;
 
         let tests_file_summaries =
-            run_for_package(args, &mut block_number_map, trace_verbosity).await?;
+            run_for_package(args, &mut block_number_map, trace_verbosity, ui).await?;
 
         all_failed_tests.extend(extract_failed_tests(tests_file_summaries));
     }
 
     FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
 
-    pretty_printing::print_latest_blocks_numbers(block_number_map.get_url_to_latest_block_number());
-    pretty_printing::print_failures(&all_failed_tests);
+    if !block_number_map.get_url_to_latest_block_number().is_empty() {
+        ui.println(&LatestBlocksNumbersMessage::new(
+            block_number_map.get_url_to_latest_block_number().clone(),
+        ));
+    }
+    ui.println(&TestsFailureSummaryMessage::new(&all_failed_tests));
 
     if args.exact {
         unset_forge_test_filter();

@@ -36,7 +36,7 @@ pub mod test_target_summary;
 pub mod backtrace;
 pub mod debugging;
 mod gas;
-pub mod printing;
+pub mod messages;
 pub mod running;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
@@ -71,6 +71,7 @@ pub fn maybe_save_trace_and_profile(
             let name = sanitize_filename::sanitize(name.replace("::", "_"));
             let trace_path = save_trace_data(&name, trace_data)?;
             if execution_data_to_save.profile {
+                // TODO(#3395): Use Ui spinner
                 let _spinner = Spinner::create_with_message("Running cairo-profiler");
                 run_profiler(&name, &trace_path, &execution_data_to_save.additional_args)?;
             }
@@ -88,6 +89,7 @@ pub fn maybe_generate_coverage(
         if saved_trace_data_paths.is_empty() {
             print_as_warning(&anyhow!("No trace data to generate coverage from"));
         } else {
+            // TODO(#3395): Use Ui spinner
             let _spinner = Spinner::create_with_message("Running cairo-coverage");
             run_coverage(
                 saved_trace_data_paths,
