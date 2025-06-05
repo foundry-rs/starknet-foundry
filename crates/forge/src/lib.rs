@@ -7,10 +7,7 @@ use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceVerbosity;
 use forge_runner::forge_config::ForgeTrackedResource;
 use foundry_ui::UI;
-<<<<<<< HEAD
 use foundry_ui::components::warning::WarningMessage;
-=======
->>>>>>> 403b3555516fa6e5478cdbca8cf8f6c8318a2ce0
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
