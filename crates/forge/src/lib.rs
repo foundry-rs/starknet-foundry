@@ -7,7 +7,10 @@ use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceVerbosity;
 use forge_runner::forge_config::ForgeTrackedResource;
 use foundry_ui::UI;
+<<<<<<< HEAD
 use foundry_ui::components::warning::WarningMessage;
+=======
+>>>>>>> 403b3555516fa6e5478cdbca8cf8f6c8318a2ce0
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
@@ -42,7 +45,7 @@ const MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN: Version = Version::new(2, 10, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 const MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS: Version = Version::new(2, 10, 0);
 // TODO(#3344) Set this to 0.44.0 after it has been released
-const MINIMAL_SNFORGE_STD_VERSION: Version = Version::new(0, 43, 0);
+const MINIMAL_SNFORGE_STD_VERSION: Version = Version::new(0, 44, 0);
 
 #[derive(Parser, Debug)]
 #[command(

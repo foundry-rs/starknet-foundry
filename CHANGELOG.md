@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.0] - 2025-05-26
+
 ### Forge
+
+#### Added
+
+- ETH token is now pre-deployed in every test by default
+- Added `Token::ETH` to snforge_std
 
 #### Changed
 
@@ -20,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bug that caused incorrect gas tracking for contracts using Sierra version less than `1.7.0` when `sierra-gas` was passed as the `tracked-resource`
 
 ### Cast
+
+#### Added 
+
+- Displaying the path of the config file when adding a new profile
 
 #### Changed
 

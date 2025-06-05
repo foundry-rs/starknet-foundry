@@ -515,6 +515,7 @@ async fn run_async_command(
                         result.as_ref().ok().and_then(|r| r.account_name.clone())
                     {
                         if let Err(err) = prompt_to_add_account_as_default(account_name.as_str()) {
+                            // TODO(#3436)
                             ui.eprintln(&format!(
                                 "Error: Failed to launch interactive prompt: {err}"
                             ));
@@ -595,6 +596,7 @@ async fn run_async_command(
                             .name
                             .expect("Must be provided if not using a keystore"),
                     ) {
+                        // TODO(#3436)
                         ui.eprintln(&format!(
                             "Error: Failed to launch interactive prompt: {err}"
                         ));
