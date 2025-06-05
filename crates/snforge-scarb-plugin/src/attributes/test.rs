@@ -39,7 +39,7 @@ fn test_internal(
 
     let config = InternalConfigStatementCollector::ATTR_NAME;
 
-    let _func_item = func.as_syntax_node().get_text(db);
+    let func_item = func.as_syntax_node().get_text(db);
     let name = func.declaration(db).name(db).text(db).to_string();
 
     let test_filter = get_forge_test_filter().ok();
@@ -89,6 +89,8 @@ fn test_internal(
     } else {
         Ok(formatdoc!(
             "
+            #[{config}]
+            {func_item}
         "
         ))
     }
