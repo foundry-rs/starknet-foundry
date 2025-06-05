@@ -62,7 +62,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     }
 
     if !args.skip.is_empty() {
-        set_forge_test_skip(args.skip);
+        set_forge_test_skip(&args.skip);
     }
 
     build_artifacts_with_scarb(
@@ -150,7 +150,7 @@ fn unset_forge_test_filter() {
     };
 }
 
-fn set_forge_test_skip(skip_filter: Vec<String>) {
+fn set_forge_test_skip(skip_filter: &[String]) {
     let skip_filter = skip_filter.join(";");
 
     // SAFETY: This runs in a single-threaded environment.
