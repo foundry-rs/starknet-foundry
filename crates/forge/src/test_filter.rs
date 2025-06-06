@@ -10,8 +10,10 @@ pub struct TestsFilter {
     pub(crate) name_filter: NameFilter,
     // based on `#[ignore]` attribute
     ignored_filter: IgnoredFilter,
-    // based on rerun_failed flag
+    // based on `--rerun_failed` flag
     last_failed_filter: bool,
+    // based on `--skip` flag
+    skip_filter: Vec<String>,
 
     failed_tests_cache: FailedTestsCache,
 }
@@ -36,6 +38,7 @@ impl TestsFilter {
     pub fn from_flags(
         test_name_filter: Option<String>,
         exact_match: bool,
+        skip: Vec<String>,
         only_ignored: bool,
         include_ignored: bool,
         rerun_failed: bool,
@@ -69,6 +72,7 @@ impl TestsFilter {
             name_filter,
             ignored_filter,
             last_failed_filter: rerun_failed,
+            skip_filter: skip,
             failed_tests_cache,
         }
     }
@@ -103,6 +107,10 @@ impl TestsFilter {
             IgnoredFilter::Ignored => {
                 test_cases.retain(|tc| tc.config.ignored);
             }
+        }
+
+        if !self.skip_filter.is_empty() {
+            test_cases.retain(|tc| !self.skip_filter.iter().any(|s| tc.name.contains(s)));
         }
 
         Ok(())
@@ -150,15 +158,29 @@ mod tests {
     #[test]
     #[should_panic(expected = "Arguments only_ignored and include_ignored cannot be both true")]
     fn from_flags_only_ignored_and_include_ignored_both_true() {
-        let _ =
-            TestsFilter::from_flags(None, false, true, true, false, FailedTestsCache::default());
+        let _ = TestsFilter::from_flags(
+            None,
+            false,
+            Vec::new(),
+            true,
+            true,
+            false,
+            FailedTestsCache::default(),
+        );
     }
 
     #[test]
     #[should_panic(expected = "Argument test_name_filter cannot be None with exact_match")]
     fn from_flags_exact_match_true_without_test_filter_name() {
-        let _ =
-            TestsFilter::from_flags(None, true, false, false, false, FailedTestsCache::default());
+        let _ = TestsFilter::from_flags(
+            None,
+            true,
+            Vec::new(),
+            false,
+            false,
+            false,
+            FailedTestsCache::default(),
+        );
     }
 
     #[test]
@@ -234,6 +256,7 @@ mod tests {
         let tests_filter = TestsFilter::from_flags(
             Some("do".to_string()),
             false,
+            Vec::new(),
             false,
             false,
             false,
@@ -264,6 +287,7 @@ mod tests {
         let tests_filter = TestsFilter::from_flags(
             Some("te2::run".to_string()),
             false,
+            Vec::new(),
             false,
             false,
             false,
@@ -293,6 +317,7 @@ mod tests {
         let tests_filter = TestsFilter::from_flags(
             Some("thing".to_string()),
             false,
+            Vec::new(),
             false,
             false,
             false,
@@ -363,6 +388,7 @@ mod tests {
         let tests_filter = TestsFilter::from_flags(
             Some("nonexistent".to_string()),
             false,
+            Vec::new(),
             false,
             false,
             false,
@@ -377,6 +403,7 @@ mod tests {
         let tests_filter = TestsFilter::from_flags(
             Some(String::new()),
             false,
+            Vec::new(),
             false,
             false,
             false,
@@ -464,6 +491,7 @@ mod tests {
         let tests_filter = TestsFilter::from_flags(
             Some(String::new()),
             false,
+            Vec::new(),
             false,
             false,
             false,
@@ -478,6 +506,7 @@ mod tests {
         let tests_filter = TestsFilter::from_flags(
             Some("thing".to_string()),
             false,
+            Vec::new(),
             false,
             false,
             false,
@@ -563,6 +592,7 @@ mod tests {
         let tests_filter = TestsFilter::from_flags(
             Some(String::new()),
             true,
+            Vec::new(),
             false,
             false,
             false,
@@ -577,6 +607,7 @@ mod tests {
         let tests_filter = TestsFilter::from_flags(
             Some("thing".to_string()),
             true,
+            Vec::new(),
             false,
             false,
             false,
@@ -591,6 +622,7 @@ mod tests {
         let tests_filter = TestsFilter::from_flags(
             Some("do_thing".to_string()),
             true,
+            Vec::new(),
             false,
             false,
             false,
@@ -620,6 +652,7 @@ mod tests {
         let tests_filter = TestsFilter::from_flags(
             Some("crate1::do_thing".to_string()),
             true,
+            Vec::new(),
             false,
             false,
             false,
@@ -649,6 +682,7 @@ mod tests {
         let tests_filter = TestsFilter::from_flags(
             Some("crate3::run_other_thing".to_string()),
             true,
+            Vec::new(),
             false,
             false,
             false,
@@ -663,6 +697,7 @@ mod tests {
         let tests_filter = TestsFilter::from_flags(
             Some("outer::crate3::run_other_thing".to_string()),
             true,
+            Vec::new(),
             false,
             false,
             false,
@@ -691,6 +726,7 @@ mod tests {
     }
 
     #[test]
+    #[expect(clippy::too_many_lines)]
     fn filtering_with_only_ignored() {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing(),
@@ -759,8 +795,15 @@ mod tests {
             tests_location: TestTargetLocation::Tests,
         };
 
-        let tests_filter =
-            TestsFilter::from_flags(None, false, true, false, false, FailedTestsCache::default());
+        let tests_filter = TestsFilter::from_flags(
+            None,
+            false,
+            Vec::new(),
+            true,
+            false,
+            false,
+            FailedTestsCache::default(),
+        );
         let mut filtered = mocked_tests;
         tests_filter.filter_tests(&mut filtered.test_cases).unwrap();
 
@@ -867,8 +910,15 @@ mod tests {
             tests_location: TestTargetLocation::Tests,
         };
 
-        let tests_filter =
-            TestsFilter::from_flags(None, false, false, true, false, FailedTestsCache::default());
+        let tests_filter = TestsFilter::from_flags(
+            None,
+            false,
+            Vec::new(),
+            false,
+            true,
+            false,
+            FailedTestsCache::default(),
+        );
         let mut filtered = mocked_tests;
         tests_filter.filter_tests(&mut filtered.test_cases).unwrap();
 

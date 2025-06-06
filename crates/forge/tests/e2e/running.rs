@@ -224,6 +224,103 @@ fn with_exact_filter() {
 }
 
 #[test]
+fn with_skip_filter_matching_module() {
+    let temp = setup_package("simple_package");
+
+    let output = test_runner(&temp)
+        .arg("--skip")
+        .arg("simple_package")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 0 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 0 test(s) from tests/
+        Tests: 0 passed, 0 failed, 0 skipped, 0 ignored, 13 filtered out
+        "},
+    );
+}
+
+#[test]
+fn with_skip_filter_matching_test_name() {
+    let temp = setup_package("simple_package");
+
+    let output = test_runner(&temp)
+        .arg("--skip")
+        .arg("failing")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 11 test(s) from simple_package package
+        Running 9 test(s) from tests/
+        [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
+        [PASS] simple_package_integrationtest::test_simple::test_two [..]
+        [PASS] simple_package_integrationtest::test_simple::test_two_and_two [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple2 [..]
+        [PASS] simple_package_integrationtest::ext_function_test::test_simple [..]
+        [PASS] simple_package_integrationtest::without_prefix::five [..]
+        [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple [..]
+        [PASS] simple_package_integrationtest::contract::call_and_invoke [..]
+        Running 2 test(s) from src/
+        [IGNORE] simple_package::tests::ignored_test
+        [PASS] simple_package::tests::test_fib [..]
+        Tests: 9 passed, 0 failed, 0 skipped, 2 ignored, 0 filtered out
+        "},
+    );
+}
+
+#[test]
+fn with_skip_filter_matching_multiple_test_name() {
+    let temp = setup_package("simple_package");
+
+    let output = test_runner(&temp)
+        .arg("--skip")
+        .arg("failing")
+        .arg("--skip")
+        .arg("two")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 9 test(s) from simple_package package
+        Running 7 test(s) from tests/
+        [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
+        [PASS] simple_package_integrationtest::test_simple::test_simple2 [..]
+        [PASS] simple_package_integrationtest::ext_function_test::test_simple [..]
+        [PASS] simple_package_integrationtest::without_prefix::five [..]
+        [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple [..]
+        [PASS] simple_package_integrationtest::contract::call_and_invoke [..]
+        Running 2 test(s) from src/
+        [IGNORE] simple_package::tests::ignored_test
+        [PASS] simple_package::tests::test_fib [..]
+        Tests: 7 passed, 0 failed, 0 skipped, 2 ignored, 0 filtered out
+        "},
+    );
+}
+
+#[test]
 fn with_exact_filter_and_duplicated_test_names() {
     let temp = setup_package("duplicated_test_names");
 
