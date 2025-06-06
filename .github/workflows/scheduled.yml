@@ -4,7 +4,8 @@ on:
   pull_request:
     paths:
       - scripts/get_scarb_versions.sh
-      - .github/workflows/scheduled.yml
+# TODO: Uncomment before merging
+#      - .github/workflows/scheduled.yml
   schedule:
     - cron: '0 0 * * 3,0'
   workflow_dispatch:
@@ -111,9 +112,7 @@ jobs:
         with:
           scarb-version: ${{ matrix.version }}
       - uses: software-mansion/setup-universal-sierra-compiler@v1
-
-      - name: Install starknet-devnet
-        run: ./scripts/install_devnet.sh
+      - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
 
       - run: cargo test --release -p sncast
 

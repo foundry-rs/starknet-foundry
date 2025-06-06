@@ -44,7 +44,8 @@ about installing `cairo-profiler` [here](https://github.com/software-mansion/cai
 > After pushing the branch to the remote, those tests should pass.
 
 ### Starknet Devnet
-To install it run `./scripts/install_devnet.sh`
+Install [starknet-devnet](https://github.com/0xSpaceShard/starknet-devnet) via [asdf](https://asdf-vm.com/).
+Installation guide can be found [here](https://0xspaceshard.github.io/starknet-devnet/docs/running/install).
 
 ### Universal sierra compiler
 Install the latest [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler) version.
