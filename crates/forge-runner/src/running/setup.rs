@@ -40,7 +40,16 @@ pub fn initialize_execution_context<'a>(
     // Instantiate Cairo runner.
     let proof_mode = false;
     let trace_enabled = true;
-    let mut runner = CairoRunner::new(program, LayoutName::all_cairo, proof_mode, trace_enabled)?;
+    let dynamic_layout_params = None;
+    let disable_trace_padding = false;
+    let mut runner = CairoRunner::new(
+        program,
+        LayoutName::all_cairo,
+        dynamic_layout_params,
+        proof_mode,
+        trace_enabled,
+        disable_trace_padding,
+    )?;
 
     runner.initialize_function_runner_cairo_1(&builtins_from_program(program))?;
     let mut read_only_segments = ReadOnlySegments::default();

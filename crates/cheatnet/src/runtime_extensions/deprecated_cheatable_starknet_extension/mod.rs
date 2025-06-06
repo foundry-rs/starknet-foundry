@@ -5,14 +5,14 @@ use blockifier::execution::deprecated_syscalls::hint_processor::{
 };
 use blockifier::execution::deprecated_syscalls::{
     CallContractRequest, DeployRequest, DeployResponse, DeprecatedSyscallResult,
-    DeprecatedSyscallSelector, GetBlockNumberResponse, GetBlockTimestampResponse,
-    GetContractAddressResponse, LibraryCallRequest, SyscallRequest, SyscallResponse,
-    WriteResponseResult,
+    GetBlockNumberResponse, GetBlockTimestampResponse, GetContractAddressResponse,
+    LibraryCallRequest, SyscallRequest, SyscallResponse, WriteResponseResult,
 };
 use blockifier::execution::entry_point::{CallEntryPoint, CallType, ConstructorContext};
 use blockifier::execution::execution_utils::{
     ReadOnlySegment, execute_deployment, write_maybe_relocatable,
 };
+use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
 use conversions::FromConv;
 
 use ::runtime::SyscallHandlingResult;
@@ -65,14 +65,14 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
 
     fn override_system_call(
         &mut self,
-        selector: DeprecatedSyscallSelector,
+        selector: SyscallSelector,
         vm: &mut VirtualMachine,
         extended_runtime: &mut Self::Runtime,
     ) -> Result<SyscallHandlingResult, HintError> {
         let syscall_handler = &mut extended_runtime.hint_handler;
         let contract_address = syscall_handler.storage_address;
         match selector {
-            DeprecatedSyscallSelector::GetCallerAddress => {
+            SyscallSelector::GetCallerAddress => {
                 if let Some(caller_address) = self
                     .cheatnet_state
                     .get_cheated_caller_address(contract_address)
@@ -91,7 +91,7 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
                     Ok(SyscallHandlingResult::Forwarded)
                 }
             }
-            DeprecatedSyscallSelector::GetBlockNumber => {
+            SyscallSelector::GetBlockNumber => {
                 if let Some(block_number) = self
                     .cheatnet_state
                     .get_cheated_block_number(contract_address)
@@ -109,7 +109,7 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
                     Ok(SyscallHandlingResult::Forwarded)
                 }
             }
-            DeprecatedSyscallSelector::GetBlockTimestamp => {
+            SyscallSelector::GetBlockTimestamp => {
                 if let Some(block_timestamp) = self
                     .cheatnet_state
                     .get_cheated_block_timestamp(contract_address)
@@ -127,7 +127,7 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
                     Ok(SyscallHandlingResult::Forwarded)
                 }
             }
-            DeprecatedSyscallSelector::GetSequencerAddress => {
+            SyscallSelector::GetSequencerAddress => {
                 if let Some(sequencer_address) = self
                     .cheatnet_state
                     .get_cheated_sequencer_address(contract_address)
@@ -148,28 +148,28 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
                     Ok(SyscallHandlingResult::Forwarded)
                 }
             }
-            DeprecatedSyscallSelector::DelegateCall => {
+            SyscallSelector::DelegateCall => {
                 syscall_handler.syscall_ptr += 1;
                 increment_syscall_count(syscall_handler, selector);
 
                 self.execute_syscall(vm, delegate_call, syscall_handler)?;
                 Ok(SyscallHandlingResult::Handled)
             }
-            DeprecatedSyscallSelector::LibraryCall => {
+            SyscallSelector::LibraryCall => {
                 syscall_handler.syscall_ptr += 1;
                 increment_syscall_count(syscall_handler, selector);
 
                 self.execute_syscall(vm, library_call, syscall_handler)?;
                 Ok(SyscallHandlingResult::Handled)
             }
-            DeprecatedSyscallSelector::CallContract => {
+            SyscallSelector::CallContract => {
                 syscall_handler.syscall_ptr += 1;
                 increment_syscall_count(syscall_handler, selector);
 
                 self.execute_syscall(vm, call_contract, syscall_handler)?;
                 Ok(SyscallHandlingResult::Handled)
             }
-            DeprecatedSyscallSelector::Deploy => {
+            SyscallSelector::Deploy => {
                 syscall_handler.syscall_ptr += 1;
                 increment_syscall_count(syscall_handler, selector);
 
@@ -182,15 +182,15 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
 
     fn post_syscall_hook(
         &mut self,
-        selector: &DeprecatedSyscallSelector,
+        selector: &SyscallSelector,
         extended_runtime: &mut Self::Runtime,
     ) {
         let syscall_handler = &extended_runtime.hint_handler;
         match selector {
-            DeprecatedSyscallSelector::EmitEvent => {
+            SyscallSelector::EmitEvent => {
                 syscall_hooks::emit_event_hook(syscall_handler, self.cheatnet_state);
             }
-            DeprecatedSyscallSelector::SendMessageToL1 => {
+            SyscallSelector::SendMessageToL1 => {
                 syscall_hooks::send_message_to_l1_syscall_hook(
                     syscall_handler,
                     self.cheatnet_state,
@@ -231,7 +231,7 @@ impl DeprecatedCheatableStarknetRuntimeExtension<'_> {
 // crates/blockifier/src/execution/deprecated_syscalls/hint_processor.rs:264
 fn increment_syscall_count(
     syscall_handler: &mut DeprecatedSyscallHintProcessor,
-    selector: DeprecatedSyscallSelector,
+    selector: SyscallSelector,
 ) {
     syscall_handler
         .syscalls_usage
@@ -264,7 +264,7 @@ fn deploy(
     // constructor calldata.
     let syscall_usage = syscall_handler
         .syscalls_usage
-        .get_mut(&DeprecatedSyscallSelector::Deploy)
+        .get_mut(&SyscallSelector::Deploy)
         .expect("syscalls_usage entry for Deploy must be initialized");
     syscall_usage.linear_factor += request.constructor_calldata.0.len();
 

@@ -1,4 +1,4 @@
-use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
+use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
 use cairo_lang_casm::hints::{ExternalHint, Hint};
 use cairo_lang_runner::Arg;
 use cairo_lang_runner::casm_run::{cell_ref_to_relocatable, extract_relocatable, get_val};
@@ -46,11 +46,7 @@ impl ResourceTracker for CastScriptRuntime<'_> {
 }
 
 impl SignalPropagator for CastScriptRuntime<'_> {
-    fn propagate_system_call_signal(
-        &mut self,
-        selector: DeprecatedSyscallSelector,
-        vm: &mut VirtualMachine,
-    ) {
+    fn propagate_system_call_signal(&mut self, selector: SyscallSelector, vm: &mut VirtualMachine) {
         self.starknet_runtime
             .propagate_system_call_signal(selector, vm);
     }
