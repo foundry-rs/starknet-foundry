@@ -1,8 +1,8 @@
+use crate::contracts_data::ContractsData;
 use crate::trace::collect::Collector;
 use crate::tree::TreeSerialize;
 use crate::verbosity::{Detailed, Standard, Verbosity};
 use blockifier::execution::entry_point::CallType;
-use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::CallTrace;
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::ContractAddress;

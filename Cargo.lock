@@ -1968,6 +1968,7 @@ dependencies = [
  "console",
  "data-transformer",
  "ptree",
+ "rayon",
  "serde_json",
  "starknet",
  "starknet-types-core",

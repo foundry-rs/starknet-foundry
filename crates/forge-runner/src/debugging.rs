@@ -30,9 +30,10 @@ pub fn build_debugging_trace(
     trace_verbosity: Option<TraceVerbosity>,
     test_name: String,
 ) -> Option<debugging::Trace> {
+    let contracts_data = debugging::ContractsData::new(contracts_data);
     Some(debugging::Trace::new(
         call_trace,
-        contracts_data,
+        &contracts_data,
         trace_verbosity?.into(),
         test_name,
     ))
