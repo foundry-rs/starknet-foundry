@@ -27,9 +27,6 @@ jobs:
           - target: x86_64-apple-darwin
             os: macos-latest
 
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-
     steps:
       - uses: actions/checkout@v4
       - uses: software-mansion/setup-scarb@v1
@@ -55,21 +52,14 @@ jobs:
       - name: Get artifacts path
         shell: bash
         run: |
-          if [[ ${{ matrix.target }} == *windows* ]]; then
-            ARTIFACTS_PATH="artifacts/starknet-foundry-v${{ inputs.bin_version }}-${{ matrix.target }}.zip"
-          else
-            ARTIFACTS_PATH="artifacts/starknet-foundry-v${{ inputs.bin_version }}-${{ matrix.target }}.tar.gz"
-          fi
+          ARTIFACTS_PATH="artifacts/starknet-foundry-v${{ inputs.bin_version }}-${{ matrix.target }}.tar.gz"
+          
           echo "ARTIFACTS_PATH=$ARTIFACTS_PATH" >> $GITHUB_ENV
 
       - name: Unpack artifact
         shell: bash
         run: |
-          if [[ ${{ matrix.target }} == *windows* ]]; then
-            unzip ${{ env.ARTIFACTS_PATH }}
-          else
-            tar xzvf ${{ env.ARTIFACTS_PATH }}
-          fi
+          tar xzvf ${{ env.ARTIFACTS_PATH }}
 
       - name: Install universal-sierra-compiler
         uses: software-mansion/setup-universal-sierra-compiler@v1
@@ -84,13 +74,8 @@ jobs:
           ARTIFACTS_PATH="${ARTIFACTS_PATH%.zip}"
           ARTIFACTS_PATH="${ARTIFACTS_PATH#artifacts/}"
           
-          if [[ ${{ matrix.target }} == *windows* ]]; then
-            SNFORGE_PATH=$(readlink -f $ARTIFACTS_PATH/bin/snforge.exe)
-            SNCAST_PATH=$(readlink -f $ARTIFACTS_PATH/bin/sncast.exe)
-          else
-            SNFORGE_PATH=$(readlink -f $ARTIFACTS_PATH/bin/snforge)
-            SNCAST_PATH=$(readlink -f $ARTIFACTS_PATH/bin/sncast)
-          fi
+          SNFORGE_PATH=$(readlink -f $ARTIFACTS_PATH/bin/snforge)
+          SNCAST_PATH=$(readlink -f $ARTIFACTS_PATH/bin/sncast)
           
           REPO_URL=${{ github.repositoryUrl }}
           REVISION=${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
