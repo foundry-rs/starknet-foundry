@@ -705,7 +705,7 @@ fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
     let mut gas_consumed = top_call.borrow().gas_consumed;
     for nested_call in &top_call.borrow().nested_calls {
         if let CallTraceNode::EntryPointCall(nested_call) = nested_call {
-            gas_consumed += &add_sierra_gas_resources(nested_call);
+            gas_consumed += &nested_call.borrow().gas_consumed;
         }
     }
     gas_consumed
