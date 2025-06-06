@@ -17,6 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - bug that caused `--trace-verbosity` to panic in fork tests
 
+#### Removed
+
+- Windows support. For details on migration, see the WSL [installation guide](https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#linux-and-macos).
+
+### Cast
+
+#### Removed
+
+- Windows support. For details on migration, see the WSL [installation guide](https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#linux-and-macos).
+
 ## [0.44.0] - 2025-05-26
 
 ### Forge

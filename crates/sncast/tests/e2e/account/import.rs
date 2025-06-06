@@ -493,11 +493,7 @@ pub async fn test_invalid_private_key_file_path() {
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
 
-    let expected_file_error = if cfg!(target_os = "windows") {
-        "The system cannot find the file specified[..]"
-    } else {
-        "No such file or directory [..]"
-    };
+    let expected_file_error = "No such file or directory [..]";
 
     assert_stderr_contains(
         output,
