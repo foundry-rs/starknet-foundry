@@ -18,13 +18,14 @@ pub fn add_backtrace_footer(
         return message;
     }
 
-    if !is_backtrace_enabled() {
-        return format!(
-            "{message}\nnote: run with `{BACKTRACE_ENV}=1` environment variable to display a backtrace",
-        );
-    }
+    let backtrace = if is_backtrace_enabled() {
+        get_backtrace(contracts_data, encountered_errors)
+    } else {
+        format!(
+            "{message}\nnote: run with `{BACKTRACE_ENV}=1` environment variable to display a backtrace"
+        )
+    };
 
-    let backtrace = get_backtrace(contracts_data, encountered_errors);
     format!("{message}\n{backtrace}")
 }
 
@@ -40,7 +41,6 @@ pub fn get_backtrace(
             encountered_errors
                 .iter()
                 .map(|(class_hash, pcs)| data_mapping.get_backtrace(pcs, class_hash))
-                .map(|backtrace| backtrace.map(|backtrace| backtrace.to_string()))
                 .collect::<Result<Vec<_>>>()
                 .map(|backtrace| backtrace.join("\n"))
         })

@@ -36,8 +36,11 @@ fn test_backtrace() {
         indoc! {
            "
             [WARNING] To get accurate backtrace results, it is required to use the configuration available in the latest Cairo version. For more details, please visit https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/backtrace.html
+            [FAIL] backtrace_vm_error::Test::test_unwrapped_call_contract_syscall
+            
             Failure data:
             Got an exception while executing a hint: Requested contract address 0x0000000000000000000000000000000000000000000000000000000000000123 is not deployed.
+
             error occurred in contract 'InnerContract'
             stack backtrace:
                0: (inlined) backtrace_vm_error::InnerContract::inner_call
@@ -54,7 +57,24 @@ fn test_backtrace() {
                1: (inlined) backtrace_vm_error::OuterContract::OuterContract::outer
                    at [..]lib.cairo:17:13
                2: backtrace_vm_error::OuterContract::__wrapper__OuterContract__outer
-                   at [..]lib.cairo:15:9"
+                   at [..]lib.cairo:15:9
+            
+            [FAIL] backtrace_vm_error::Test::test_fork_unwrapped_call_contract_syscall
+            
+            Failure data:
+            Got an exception while executing a hint: Requested contract address 0x0000000000000000000000000000000000000000000000000000000000000123 is not deployed.
+
+            error occurred in forked contract with class hash: 0x1a92e0ec431585e5c19b98679e582ebc07d43681ba1cc9c55dcb5ba0ce721a1
+            
+            error occurred in contract 'OuterContract'
+            stack backtrace:
+               0: (inlined) backtrace_vm_error::IInnerContractDispatcherImpl::inner
+                   at [..]lib.cairo:22:1
+               1: (inlined) backtrace_vm_error::OuterContract::OuterContract::outer
+                   at [..]lib.cairo:17:13
+               2: backtrace_vm_error::OuterContract::__wrapper__OuterContract__outer
+                   at [..]lib.cairo:15:9
+            "
         },
     );
 }
@@ -72,8 +92,11 @@ fn test_backtrace_without_inlines() {
     assert_stdout_contains(
         output,
         indoc! {
-           "Failure data:
+           "[FAIL] backtrace_vm_error::Test::test_unwrapped_call_contract_syscall
+            
+            Failure data:
             Got an exception while executing a hint: Requested contract address 0x0000000000000000000000000000000000000000000000000000000000000123 is not deployed.
+
             error occurred in contract 'InnerContract'
             stack backtrace:
                0: backtrace_vm_error::InnerContract::inner_call
@@ -82,7 +105,7 @@ fn test_backtrace_without_inlines() {
                    at [..]lib.cairo:38:13
                2: backtrace_vm_error::InnerContract::__wrapper__InnerContract__inner
                    at [..]lib.cairo:37:9
-
+            
             error occurred in contract 'OuterContract'
             stack backtrace:
                0: backtrace_vm_error::IInnerContractDispatcherImpl::inner
@@ -90,7 +113,24 @@ fn test_backtrace_without_inlines() {
                1: backtrace_vm_error::OuterContract::OuterContract::outer
                    at [..]lib.cairo:17:13
                2: backtrace_vm_error::OuterContract::__wrapper__OuterContract__outer
-                   at [..]lib.cairo:15:9"
+                   at [..]lib.cairo:15:9
+            
+            [FAIL] backtrace_vm_error::Test::test_fork_unwrapped_call_contract_syscall
+            
+            Failure data:
+            Got an exception while executing a hint: Requested contract address 0x0000000000000000000000000000000000000000000000000000000000000123 is not deployed.
+
+            error occurred in forked contract with class hash: 0x1a92e0ec431585e5c19b98679e582ebc07d43681ba1cc9c55dcb5ba0ce721a1
+            
+            error occurred in contract 'OuterContract'
+            stack backtrace:
+               0: backtrace_vm_error::IInnerContractDispatcherImpl::inner
+                   at [..]lib.cairo:22:1
+               1: backtrace_vm_error::OuterContract::OuterContract::outer
+                   at [..]lib.cairo:17:13
+               2: backtrace_vm_error::OuterContract::__wrapper__OuterContract__outer
+                   at [..]lib.cairo:15:9
+            "
         },
     );
 }
@@ -173,13 +213,28 @@ fn test_backtrace_panic() {
         assert_stdout_contains(
             output,
             indoc! {
-               "Failure data:
+               "[FAIL] backtrace_panic::Test::test_contract_panics
+
+                Failure data:
                     0x417373657274206661696c6564 ('Assert failed')
+                
                 error occurred in contract 'InnerContract'
                 stack backtrace:
                    0: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
                        at [..]lib.cairo:34:9
-
+                
+                error occurred in contract 'OuterContract'
+                stack backtrace:
+                   0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+                       at [..]lib.cairo:15:9
+                
+                [FAIL] backtrace_panic::Test::test_fork_contract_panics
+                
+                Failure data:
+                    0x417373657274206661696c6564 ('Assert failed')
+                
+                error occurred in forked contract with class hash: 0x554cb276fb5eb0788344f5431b9a166e2f445d8a91c7aef79d8c77e7eede956
+                
                 error occurred in contract 'OuterContract'
                 stack backtrace:
                    0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
@@ -203,8 +258,11 @@ fn test_backtrace_panic_without_inlines() {
         assert_stdout_contains(
             output,
             indoc! {
-               "Failure data:
+               "[FAIL] backtrace_panic::Test::test_contract_panics
+
+                Failure data:
                     0x417373657274206661696c6564 ('Assert failed')
+                
                 error occurred in contract 'InnerContract'
                 stack backtrace:
                    0: core::array_inline_macro
@@ -227,6 +285,24 @@ fn test_backtrace_panic_without_inlines() {
                    2: backtrace_panic::OuterContract::OuterContract::outer
                        at [..]lib.cairo:17:13
                    3: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+                       at [..]lib.cairo:15:9
+                
+                [FAIL] backtrace_panic::Test::test_fork_contract_panics
+                
+                Failure data:
+                    0x417373657274206661696c6564 ('Assert failed')
+                
+                error occurred in forked contract with class hash: 0x554cb276fb5eb0788344f5431b9a166e2f445d8a91c7aef79d8c77e7eede956
+                
+                error occurred in contract 'OuterContract'
+                stack backtrace:
+                   0: core::starknet::SyscallResultTraitImpl::unwrap_syscall
+                       at [..]starknet.cairo:135:52
+                   1: backtrace_panic::IInnerContractDispatcherImpl::inner
+                       at [..]lib.cairo:22:1
+                   2: backtrace_panic::OuterContract::OuterContract::outer
+                       at [..]lib.cairo:17:13
+                   3: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
                        at [..]lib.cairo:15:9"
             },
         );
@@ -234,13 +310,28 @@ fn test_backtrace_panic_without_inlines() {
         assert_stdout_contains(
             output,
             indoc! {
-               "Failure data:
+               "[FAIL] backtrace_panic::Test::test_contract_panics
+
+                Failure data:
                     0x417373657274206661696c6564 ('Assert failed')
+                
                 error occurred in contract 'InnerContract'
                 stack backtrace:
                    0: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
                        at [..]lib.cairo:34:9
-
+                
+                error occurred in contract 'OuterContract'
+                stack backtrace:
+                   0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+                       at [..]lib.cairo:15:9
+                
+                [FAIL] backtrace_panic::Test::test_fork_contract_panics
+                
+                Failure data:
+                    0x417373657274206661696c6564 ('Assert failed')
+                
+                error occurred in forked contract with class hash: 0x554cb276fb5eb0788344f5431b9a166e2f445d8a91c7aef79d8c77e7eede956
+                
                 error occurred in contract 'OuterContract'
                 stack backtrace:
                    0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
