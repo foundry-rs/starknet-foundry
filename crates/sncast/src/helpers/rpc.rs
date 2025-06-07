@@ -29,8 +29,7 @@ impl RpcArgs {
         }
 
         let url = if let Some(network) = self.network {
-            let free_provider = FreeProvider::semi_random();
-            network.url(&free_provider)
+            network.url()
         } else {
             let url = self.url.clone().or_else(|| {
                 if config.url.is_empty() {
@@ -84,31 +83,13 @@ impl FreeProvider {
 
 impl Network {
     #[must_use]
-    pub fn url(self, provider: &FreeProvider) -> String {
+    pub fn url(self) -> String {
         match self {
-            Network::Mainnet => Self::free_mainnet_rpc(provider),
-            Network::Sepolia => Self::free_sepolia_rpc(provider),
-        }
-    }
-
-    fn free_mainnet_rpc(provider: &FreeProvider) -> String {
-        match provider {
-            FreeProvider::Blast => {
+            Network::Mainnet => {
                 format!("https://starknet-mainnet.public.blastapi.io/rpc/{RPC_URL_VERSION}")
             }
-            FreeProvider::Voyager => {
-                format!("https://free-rpc.nethermind.io/mainnet-juno/{RPC_URL_VERSION}")
-            }
-        }
-    }
-
-    fn free_sepolia_rpc(provider: &FreeProvider) -> String {
-        match provider {
-            FreeProvider::Blast => {
+            Network::Sepolia => {
                 format!("https://starknet-sepolia.public.blastapi.io/rpc/{RPC_URL_VERSION}")
-            }
-            FreeProvider::Voyager => {
-                format!("https://free-rpc.nethermind.io/sepolia-juno/{RPC_URL_VERSION}")
             }
         }
     }
@@ -120,22 +101,17 @@ mod tests {
     use semver::Version;
     use shared::rpc::is_expected_version;
     use starknet::providers::Provider;
-    use test_case::test_case;
 
-    #[test_case(FreeProvider::Voyager)]
-    #[test_case(FreeProvider::Blast)]
     #[tokio::test]
-    async fn test_mainnet_url_happy_case(free_provider: FreeProvider) {
-        let provider = get_provider(&Network::free_sepolia_rpc(&free_provider)).unwrap();
+    async fn test_mainnet_url_happy_case() {
+        let provider = get_provider(&Network::Mainnet.url()).unwrap();
         let spec_version = provider.spec_version().await.unwrap();
         assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
     }
 
-    #[test_case(FreeProvider::Voyager)]
-    #[test_case(FreeProvider::Blast)]
     #[tokio::test]
-    async fn test_sepolia_url_happy_case(free_provider: FreeProvider) {
-        let provider = get_provider(&Network::free_sepolia_rpc(&free_provider)).unwrap();
+    async fn test_sepolia_url_happy_case() {
+        let provider = get_provider(&Network::Sepolia.url()).unwrap();
         let spec_version = provider.spec_version().await.unwrap();
         assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
     }

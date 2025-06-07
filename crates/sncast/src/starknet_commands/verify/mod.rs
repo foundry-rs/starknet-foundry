@@ -5,7 +5,6 @@ use promptly::prompt;
 use scarb_api::StarknetContractArtifacts;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::configuration::CastConfig;
-use sncast::helpers::rpc::FreeProvider;
 use sncast::{Network, response::structs::VerifyResponse};
 use starknet::providers::JsonRpcClient;
 use starknet::providers::jsonrpc::HttpTransport;
@@ -95,7 +94,7 @@ pub async fn verify(
         rpc,
     } = args;
 
-    let free = network.url(&FreeProvider::semi_random());
+    let free = network.url();
     let rpc_url = rpc.map_or_else(
         || {
             let url = if config.url.is_empty() {
