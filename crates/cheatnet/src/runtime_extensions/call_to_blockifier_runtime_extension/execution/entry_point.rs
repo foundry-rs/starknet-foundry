@@ -119,6 +119,8 @@ pub fn execute_call_entry_point(
         .class_hash
         .or(maybe_replacement_class)
         .unwrap_or(storage_class_hash); // If not given, take the storage contract class hash.
+    let compiled_class = state.get_compiled_class(class_hash)?;
+    let current_tracked_resource = compiled_class.get_current_tracked_resource(context);
 
     // region: Modified blockifier code
     cheatnet_state
@@ -156,11 +158,9 @@ pub fn execute_call_entry_point(
         context.n_sent_messages_to_l1,
     ));
 
-    let tracked_resource = *context
+    context
         .tracked_resource_stack
-        .last()
-        .expect("Unexpected empty tracked resource.");
-
+        .push(current_tracked_resource);
     // Region: Modified blockifier code
     let result = match contract_class {
         RunnableCompiledClass::V0(compiled_class_v0) => execute_entry_point_call_cairo0(
@@ -178,12 +178,16 @@ pub fn execute_call_entry_point(
             context,
         ),
     };
+    context
+        .tracked_resource_stack
+        .pop()
+        .expect("Unexpected empty tracked resource.");
 
     // region: Modified blockifier code
     match evaluate_execution_result(
         result,
         entry_point.clone(),
-        tracked_resource,
+        current_tracked_resource,
         cheatnet_state,
         is_revertable,
     ) {
@@ -198,6 +202,7 @@ pub fn execute_call_entry_point(
                 context,
                 cheatnet_state,
                 vm_trace,
+                current_tracked_resource,
             );
             Ok(call_info)
         }
@@ -297,17 +302,14 @@ fn remove_syscall_resources_and_exit_non_error_call(
     context: &mut EntryPointExecutionContext,
     cheatnet_state: &mut CheatnetState,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
+    current_tracked_resource: TrackedResource,
 ) {
     let versioned_constants = context.tx_context.block_context.versioned_constants();
     // We don't want the syscall resources to pollute the results
     let mut resources = call_info.resources.clone();
     let mut gas_consumed = call_info.execution.gas_consumed;
 
-    match &context
-        .tracked_resource_stack
-        .last()
-        .expect("Unexpected empty tracked resource.")
-    {
+    match current_tracked_resource {
         TrackedResource::CairoSteps => {
             resources -= &versioned_constants.get_additional_os_syscall_resources(syscall_usage);
         }

@@ -1,11 +1,12 @@
 use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args};
+use foundry_ui::UI;
 use promptly::prompt;
 use serde_json::Map;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::AccountDeleteResponse;
+use sncast::response::account::delete::AccountDeleteResponse;
 use sncast::{chain_id_to_network_name, get_chain_id};
 
 #[derive(Args, Debug)]
@@ -78,11 +79,15 @@ pub fn delete(
     Ok(AccountDeleteResponse { result })
 }
 
-pub(crate) async fn get_network_name(delete: &Delete, config: &CastConfig) -> Result<String> {
+pub(crate) async fn get_network_name(
+    delete: &Delete,
+    config: &CastConfig,
+    ui: &UI,
+) -> Result<String> {
     if let Some(network_name) = &delete.network_name {
         return Ok(network_name.clone());
     }
 
-    let provider = delete.rpc.get_provider(config).await?;
+    let provider = delete.rpc.get_provider(config, ui).await?;
     Ok(chain_id_to_network_name(get_chain_id(&provider).await?))
 }

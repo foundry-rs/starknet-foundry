@@ -14,7 +14,9 @@ use starknet::core::types::contract::{AbiEntry, AbiFunction};
 /// Interpret `calldata` as a comma-separated series of expressions in Cairo syntax and serialize it
 pub fn transform(calldata: &str, abi: &[AbiEntry], function_selector: &Felt) -> Result<Vec<Felt>> {
     let function = extract_function_from_selector(abi, *function_selector).with_context(|| {
-        format!(r#"Function with selector "{function_selector}" not found in ABI of the contract"#)
+        format!(
+            r#"Function with selector "{function_selector:#x}" not found in ABI of the contract"#
+        )
     })?;
 
     let db = SimpleParserDatabase::default();
@@ -25,6 +27,9 @@ pub fn transform(calldata: &str, abi: &[AbiEntry], function_selector: &Felt) -> 
 }
 
 fn split_expressions(input: &str, db: &SimpleParserDatabase) -> Result<Vec<Expr>> {
+    if input.is_empty() {
+        return Ok(Vec::new());
+    }
     // We need to convert our comma-separated string of expressions into something that is a valid
     // Cairo expression, so we can parse it.
     //

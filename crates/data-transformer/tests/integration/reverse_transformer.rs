@@ -1,7 +1,9 @@
-use crate::integration::get_abi;
+use crate::integration::{NO_CONSTRUCTOR_CLASS_HASH, get_abi, init_class};
 use data_transformer::{reverse_transform_input, reverse_transform_output};
 use itertools::Itertools;
 use primitive_types::U256;
+use starknet::core::types::ContractClass;
+use starknet::core::types::contract::AbiEntry;
 use starknet::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
 
@@ -338,4 +340,27 @@ async fn test_multiple_signed_max() {
         Some(""),
     )
     .await;
+}
+
+#[tokio::test]
+async fn test_no_argument_function() {
+    assert_reverse_transformation(&[], "no_args_fn", "", None).await;
+}
+
+#[tokio::test]
+async fn test_implicit_contract_constructor() {
+    let class = init_class(NO_CONSTRUCTOR_CLASS_HASH).await;
+    let ContractClass::Sierra(sierra_class) = class else {
+        panic!("Expected Sierra class, but got legacy Sierra class")
+    };
+
+    let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str()).unwrap();
+
+    let result =
+        reverse_transform_input(&[], &abi, &get_selector_from_name("constructor").unwrap())
+            .unwrap();
+
+    let expected_output = "";
+
+    assert_eq!(result, expected_output);
 }

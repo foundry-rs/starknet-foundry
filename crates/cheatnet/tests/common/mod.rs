@@ -27,6 +27,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::Contr
 use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
 use conversions::string::TryFromHexStr;
+use foundry_ui::UI;
 use runtime::starknet::constants::TEST_ADDRESS;
 use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
@@ -93,8 +94,9 @@ pub fn get_contracts() -> ContractsData {
 
     let package = scarb_metadata.packages.first().unwrap();
 
+    let ui = UI::default();
     let contracts =
-        get_contracts_artifacts_and_source_sierra_paths(&target_dir, package, false).unwrap();
+        get_contracts_artifacts_and_source_sierra_paths(&target_dir, package, false, &ui).unwrap();
     ContractsData::try_from(contracts).unwrap()
 }
 
@@ -248,6 +250,7 @@ pub fn call_contract_raw(
     contract_address: &ContractAddress,
     entry_point_selector: EntryPointSelector,
     calldata: &[Felt],
+    tracked_resource: TrackedResource,
 ) -> EntryPointExecutionResult<CallInfo> {
     let calldata = create_execute_calldata(calldata);
 
@@ -263,11 +266,8 @@ pub fn call_contract_raw(
         initial_gas: i64::MAX as u64,
     };
 
-    let mut entry_point_execution_context = build_context(
-        &cheatnet_state.block_info,
-        None,
-        &TrackedResource::CairoSteps,
-    );
+    let mut entry_point_execution_context =
+        build_context(&cheatnet_state.block_info, None, &tracked_resource);
     let hints = HashMap::new();
 
     let syscall_hint_processor = build_syscall_hint_processor(

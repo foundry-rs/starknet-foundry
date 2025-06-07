@@ -4,7 +4,8 @@ use anyhow::{Context, Error, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use conversions::serde::serialize::CairoSerialize;
-use helpers::braavos::assert_non_braavos_account;
+use foundry_ui::UI;
+use helpers::braavos::check_braavos_account_compatibility;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::RngCore;
 use rand::rngs::OsRng;
@@ -126,7 +127,7 @@ pub struct AccountData {
     pub account_type: Option<AccountType>,
 }
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Serialize)]
 pub enum NumbersFormat {
     Default,
     Decimal,
@@ -279,8 +280,11 @@ pub async fn get_account<'a>(
         get_account_data_from_accounts_file(account, chain_id, accounts_file)?
     };
 
-    // TODO(#3118): Remove this check once braavos integration is restored
-    assert_non_braavos_account(account_data.account_type, account_data.class_hash)?;
+    // Braavos accounts before v1.2.0 are not compatible with starknet >= 0.13.4
+    // For more, read https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
+    if let Some(class_hash) = account_data.class_hash {
+        check_braavos_account_compatibility(class_hash)?;
+    }
 
     let account = build_account(account_data, chain_id, provider).await?;
 
@@ -585,8 +589,9 @@ pub async fn wait_for_tx(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: Felt,
     wait_params: ValidatedWaitParams,
+    ui: &UI,
 ) -> Result<String, WaitForTransactionError> {
-    println!("Transaction hash: {tx_hash:#x}");
+    ui.println(&format!("Transaction hash: {tx_hash:#x}"));
 
     let retries = wait_params.get_retries();
     for i in (1..retries).rev() {
@@ -614,12 +619,12 @@ pub async fn wait_for_tx(
             Ok(starknet::core::types::TransactionStatus::Received)
             | Err(StarknetError(TransactionHashNotFound)) => {
                 let remaining_time = wait_params.remaining_time(i);
-                println!(
+                ui.println(&format!(
                     "Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)"
-                );
+                ));
             }
             Err(ProviderError::RateLimited) => {
-                println!("Request rate limited while waiting for transaction to be accepted");
+                ui.println(&"Request rate limited while waiting for transaction to be accepted");
                 sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
             }
             Err(err) => return Err(WaitForTransactionError::ProviderError(err.into())),
@@ -653,9 +658,10 @@ pub async fn handle_wait_for_tx<T>(
     transaction_hash: Felt,
     return_value: T,
     wait_config: WaitForTx,
+    ui: &UI,
 ) -> Result<T, WaitForTransactionError> {
     if wait_config.wait {
-        return match wait_for_tx(provider, transaction_hash, wait_config.wait_params).await {
+        return match wait_for_tx(provider, transaction_hash, wait_config.wait_params, ui).await {
             Ok(_) => Ok(return_value),
             Err(error) => Err(error),
         };

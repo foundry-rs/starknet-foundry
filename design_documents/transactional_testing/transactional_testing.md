@@ -25,7 +25,7 @@ This could be considered as a variant of `cast script`, in a way.
 
 The extending/differentiating factors would be:
 
-- Extra environment-specific functions (for [katana](https://book.dojoengine.org/toolchain/katana/reference.html#custom-methods)/[devnet](https://github.com/0xSpaceShard/starknet-devnet-rs#dumping--loading) - see docs)
+- Extra environment-specific functions (for [katana](https://book.dojoengine.org/toolchain/katana/reference.html#custom-methods)/[devnet](https://0xspaceshard.github.io/starknet-devnet/docs/dump-load-restart) - see docs)
 - Additional RPC functions support (receipts, etc.)
 - Test-like behavior (fail/pass)
 - Idempotent functions, for functionalities that can fail when double-running them (i.e. declare)

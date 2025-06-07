@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
 use sncast::{
-    helpers::constants::DEFAULT_MULTICALL_CONTENTS, response::structs::MulticallNewResponse,
+    helpers::constants::DEFAULT_MULTICALL_CONTENTS, response::multicall::new::MulticallNewResponse,
 };
 
 #[derive(Args, Debug)]

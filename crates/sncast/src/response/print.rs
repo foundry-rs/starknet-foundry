@@ -1,28 +1,15 @@
-use super::structs::CommandResponse;
-use crate::NumbersFormat;
-use anyhow::Result;
+use foundry_ui::OutputFormat;
 use itertools::Itertools;
+use std::{collections::HashMap, fmt::Display, str::FromStr};
+
+use anyhow::Result;
 use serde::{Serialize, Serializer};
 use serde_json::Value;
 use starknet_types_core::felt::Felt;
-use std::{collections::HashMap, fmt::Display, str::FromStr};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum OutputFormat {
-    Json,
-    Human,
-}
+use crate::NumbersFormat;
 
-impl OutputFormat {
-    #[must_use]
-    pub fn from_flag(json: bool) -> Self {
-        if json {
-            OutputFormat::Json
-        } else {
-            OutputFormat::Human
-        }
-    }
-}
+use super::command::CommandResponse;
 
 pub trait Format
 where
@@ -76,6 +63,7 @@ impl From<Value> for OutputValue {
             ),
             Value::String(s) => OutputValue::String(s.to_string()),
             Value::Bool(b) => OutputValue::String(b.to_string()),
+            Value::Number(n) => OutputValue::String(n.to_string()),
             s => panic!("{s:?} cannot be auto-serialized to output"),
         }
     }
@@ -110,7 +98,7 @@ impl Format for OutputValue {
 
 /// Constrained subset of `serde::json`. No nested maps allowed.
 #[derive(Debug, PartialEq, Eq, Serialize)]
-struct OutputData(Vec<(String, OutputValue)>);
+pub struct OutputData(Vec<(String, OutputValue)>);
 
 impl Format for OutputData {
     fn format_with(self, numbers: NumbersFormat) -> Self {
@@ -120,20 +108,6 @@ impl Format for OutputData {
                 .map(|(k, v)| (k, v.format_with(numbers)))
                 .collect(),
         )
-    }
-}
-
-impl<T: CommandResponse> From<&Result<T, anyhow::Error>> for OutputData {
-    fn from(value: &Result<T>) -> Self {
-        match value {
-            Ok(response) => serde_json::to_value(response)
-                .expect("Failed to serialize CommandResponse")
-                .into(),
-            Err(message) => Self(vec![(
-                String::from("error"),
-                OutputValue::String(format!("{message:#}")),
-            )]),
-        }
     }
 }
 
@@ -154,6 +128,14 @@ impl From<Value> for OutputData {
     }
 }
 
+impl<T: CommandResponse> From<&T> for OutputData {
+    fn from(value: &T) -> Self {
+        serde_json::to_value(value)
+            .expect("Failed to serialize CommandResponse")
+            .into()
+    }
+}
+
 impl OutputData {
     fn to_json(&self, command: &str) -> Result<String> {
         let mut mapping: HashMap<_, _> = self.0.clone().into_iter().collect();
@@ -164,6 +146,8 @@ impl OutputData {
         serde_json::to_string(&mapping).map_err(anyhow::Error::from)
     }
 
+    // TODO(#3391): This should be removed once we don't use it anymore in default
+    // implementation of `text()` method in `SncastMessage`
     fn to_lines(&self, command: &str) -> String {
         let fields = self
             .0
@@ -174,31 +158,14 @@ impl OutputData {
         format!("command: {command}\n{fields}")
     }
 
-    fn to_string_pretty(&self, command: &str, output_format: OutputFormat) -> Result<String> {
+    // TODO(#3391): This should be removed once we don't use it anymore in default
+    // implementation of `text()` method in `SncastMessage`
+    pub fn to_string_pretty(&self, command: &str, output_format: OutputFormat) -> Result<String> {
         match output_format {
             OutputFormat::Json => self.to_json(command),
             OutputFormat::Human => Ok(self.to_lines(command)),
         }
     }
-}
-
-pub fn print_command_result<T: CommandResponse>(
-    command: &str,
-    result: &Result<T>,
-    numbers_format: NumbersFormat,
-    output_format: OutputFormat,
-) -> Result<()> {
-    let output: OutputData = result.into();
-    let repr = output
-        .format_with(numbers_format)
-        .to_string_pretty(command, output_format)?;
-
-    match result {
-        Ok(_) => println!("{repr}"),
-        Err(_) => eprintln!("{repr}"),
-    }
-
-    Ok(())
 }
 
 #[cfg(test)]
