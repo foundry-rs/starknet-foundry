@@ -28,6 +28,7 @@ use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredErrors, ExtendedStateReader,
 };
 use execution::finalize_execution;
+use foundry_ui::UI;
 use hints::hints_by_representation;
 use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
@@ -65,6 +66,7 @@ pub fn run_test(
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
     trace_verbosity: Option<TraceVerbosity>,
+    ui: Arc<UI>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -80,9 +82,6 @@ pub fn run_test(
             None,
         );
 
-        // TODO: code below is added to fix snforge tests
-        // remove it after improve exit-first tests
-        // issue #1043
         if send.is_closed() {
             return TestCaseSummary::Skipped {};
         }
@@ -93,6 +92,7 @@ pub fn run_test(
             &test_runner_config.contracts_data,
             &versioned_program_path,
             trace_verbosity,
+            &ui,
         )
     })
 }
@@ -107,6 +107,7 @@ pub(crate) fn run_fuzz_test(
     fuzzing_send: Sender<()>,
     rng: Arc<Mutex<StdRng>>,
     trace_verbosity: Option<TraceVerbosity>,
+    ui: Arc<UI>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -136,6 +137,7 @@ pub(crate) fn run_fuzz_test(
             &test_runner_config.contracts_data,
             &versioned_program_path,
             trace_verbosity,
+            &ui,
         )
     })
 }
@@ -335,7 +337,7 @@ pub fn run_test_case(
 
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
-    update_top_call_resources(&mut forge_runtime, &tracked_resource);
+    update_top_call_resources(&mut forge_runtime);
     update_top_call_l1_resources(&mut forge_runtime);
 
     let fuzzer_args = forge_runtime
@@ -383,6 +385,7 @@ fn extract_test_case_summary(
     contracts_data: &ContractsData,
     versioned_program_path: &Utf8Path,
     trace_verbosity: Option<TraceVerbosity>,
+    ui: &UI,
 ) -> TestCaseSummary<Single> {
     match run_result {
         Ok(run_result) => match run_result {
@@ -392,6 +395,7 @@ fn extract_test_case_summary(
                 contracts_data,
                 versioned_program_path,
                 trace_verbosity,
+                ui,
             ),
             RunResult::Error(run_error) => {
                 let mut message = format!(

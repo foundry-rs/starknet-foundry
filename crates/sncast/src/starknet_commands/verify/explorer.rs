@@ -1,8 +1,7 @@
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use serde::Serialize;
-use sncast::{Network, response::structs::VerifyResponse};
-use starknet::providers::{JsonRpcClient, jsonrpc::HttpTransport};
+use sncast::{Network, response::verify::VerifyResponse};
 
 #[derive(Serialize, Debug)]
 #[serde(untagged)]
@@ -20,17 +19,12 @@ pub struct VerificationPayload {
 }
 
 #[async_trait::async_trait]
-pub trait VerificationInterface<'a>: Sized {
-    fn new(
-        network: Network,
-        workspace_dir: Utf8PathBuf,
-        provider: &'a JsonRpcClient<HttpTransport>,
-    ) -> Result<Self>;
+pub trait VerificationInterface {
+    fn new(network: Network, workspace_dir: Utf8PathBuf) -> Self;
     async fn verify(
         &self,
         identifier: ContractIdentifier,
         contract_name: String,
-        package: Option<String>,
     ) -> Result<VerifyResponse>;
-    fn gen_explorer_url(&self) -> String;
+    fn gen_explorer_url(&self) -> Result<String>;
 }

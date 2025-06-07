@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.0] - 2025-05-26
+
 ### Forge
+
+#### Added
+
+- ETH token is now pre-deployed in every test by default
+- Added `Token::ETH` to snforge_std
 
 #### Changed
 
@@ -16,13 +23,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- "invalid syscall selector" error appearing when using arithmetic circuits 
+- "invalid syscall selector" error appearing when using arithmetic circuits
+- Bug that caused incorrect gas tracking for contracts using Sierra version less than `1.7.0` when `sierra-gas` was passed as the `tracked-resource`
 
 ### Cast
 
-#### Updated
+#### Added 
+
+- Displaying the path of the config file when adding a new profile
+
+#### Changed
 
 - OpenZeppelin account updated to v1.0.0 [preset](https://docs.openzeppelin.com/contracts-cairo/1.0.0/api/account#AccountUpgradeable)
+- Restored support for Braavos accounts
+- Accounts created with `--type braavos` use updated v1.2.0 class hash
+- Output of `sncast account create` is now clearer; the estimated fee is displayed in both STRK and FRI.
+- Renamed the field `max_fee` to `estimated_fee` in the `sncast account create` output.
+
+## [0.43.1] - 2025-05-16
+
+### Cast
+
+#### Removed
+
+- Broken Voyager RPC provider
 
 ## [0.43.0] - 2025-05-09
 
@@ -71,16 +95,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bug that prevented from passing values to `--arguments` that started with a leading minus `-` sign.
 - User is now prompted to save an imported or deployed account in `sncast` config even when using `--network` flag
-
-### Cast
-
-#### Added
-
-- `sncast verify` now supports verifying against [voyager](https://voyager.online/) block explorer.
-
-#### Changed
-
-- `sncast verify` no longer defaults to using walnut.
 
 ## [0.41.0] - 2025-04-08
 
@@ -145,7 +159,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 - gas is now reported using resource bounds triplet (l1_gas, l1_data_gas and l2_gas)
-- `available_gas` now accepts named arguments denoting resource bounds (eg #[available_gas(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)])
+- `available_gas` now accepts named arguments denoting resource bounds (eg `#[available_gas(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)]`)
 
 #### Fixed
 

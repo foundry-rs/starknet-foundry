@@ -15,6 +15,7 @@ use cairo_vm::types::builtin_name::BuiltinName;
 use cairo_vm::types::program::Program;
 use cairo_vm::types::relocatable::MaybeRelocatable;
 use camino::Utf8PathBuf;
+use serde::Serialize;
 use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -38,7 +39,7 @@ const BUILTIN_ORDER: [(BuiltinName, GenericTypeId); 9] = [
     (BuiltinName::mul_mod, MulModType::ID),
 ];
 
-#[derive(Debug, PartialEq, Clone, Copy, Hash, Eq)]
+#[derive(Debug, PartialEq, Clone, Copy, Hash, Eq, Serialize)]
 pub enum TestTargetLocation {
     /// Main crate in a package
     Lib,

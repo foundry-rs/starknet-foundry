@@ -3,9 +3,11 @@ name: Test binaries
 on:
   workflow_call:
     inputs:
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       bin_version:
         required: true
         type: string
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       std_version:
         required: true
         type: string
@@ -35,9 +37,9 @@ jobs:
           # TODO(#3144) Remove
           scarb-version: "2.11.0"
 
-      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
-        with:
-          toolchain: stable
+      - name: Setup rust
+        run: |
+          rustup target add ${{ matrix.target }} --toolchain 1.86.0
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -48,15 +50,15 @@ jobs:
         shell: bash
         run: |
           mkdir -p artifacts
-          mv artifacts-dl/build-*/starknet-foundry-* artifacts/
+          mv artifacts-dl/build-*/starknet-foundry-v* artifacts/
 
       - name: Get artifacts path
         shell: bash
         run: |
           if [[ ${{ matrix.target }} == *windows* ]]; then
-            ARTIFACTS_PATH="artifacts/starknet-foundry-${{ inputs.bin_version }}-${{ matrix.target }}.zip"
+            ARTIFACTS_PATH="artifacts/starknet-foundry-v${{ inputs.bin_version }}-${{ matrix.target }}.zip"
           else
-            ARTIFACTS_PATH="artifacts/starknet-foundry-${{ inputs.bin_version }}-${{ matrix.target }}.tar.gz"
+            ARTIFACTS_PATH="artifacts/starknet-foundry-v${{ inputs.bin_version }}-${{ matrix.target }}.tar.gz"
           fi
           echo "ARTIFACTS_PATH=$ARTIFACTS_PATH" >> $GITHUB_ENV
 
@@ -91,7 +93,7 @@ jobs:
           fi
           
           REPO_URL=${{ github.repositoryUrl }}
-          REVISION=${{ github.sha }}
+          REVISION=${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           VERSION=${{ inputs.std_version }}
           
           ./scripts/smoke_test.sh "$RPC_URL" "$SNFORGE_PATH" "$SNCAST_PATH" "$REPO_URL" "$REVISION" "$VERSION"

@@ -1,7 +1,7 @@
 name: CI
 
 env:
-  DEVNET_REV: 26292d1f92807090776b470f43b321f150f55ffd # v0.4.1
+  DEVNET_REV: e0613b1028013dfd7ee8239d677e3a544fd808c8 # v0.4.2
 
 on:
   pull_request:
@@ -264,7 +264,7 @@ jobs:
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
-      - name: Install starknet-devnet-rs on Linux/Macos
+      - name: Install starknet-devnet on Linux/Macos
         if: runner.os != 'Windows'
         run: |
           ./scripts/install_devnet.sh
@@ -279,7 +279,7 @@ jobs:
         if: runner.os == 'Windows' && steps.windows-devnet-cache.outputs.cache-hit != 'true'
         run: |
           $DEVNET_INSTALL_DIR = "${{ github.workspace }}\crates\sncast\tests\utils\devnet"
-          cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev ${{ env.DEVNET_REV }} --root $DEVNET_INSTALL_DIR
+          cargo install --git https://github.com/0xSpaceShard/starknet-devnet.git --locked --rev ${{ env.DEVNET_REV }} --root $DEVNET_INSTALL_DIR
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests

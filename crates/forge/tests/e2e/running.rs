@@ -824,11 +824,10 @@ fn incompatible_snforge_std_version_error() {
 
     let output = test_runner(&temp).assert().failure();
 
-    // TODO Update this to 0.44.0 after it has been released
     assert_stdout_contains(
         output,
         indoc! {r"
-        [ERROR] Package snforge_std version does not meet the minimum required version >=0.43.0. Please upgrade snforge_std in Scarb.toml
+        [ERROR] Package snforge_std version does not meet the minimum required version >=0.44.0. Please upgrade snforge_std in Scarb.toml
         "},
     );
 }

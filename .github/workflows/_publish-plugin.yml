@@ -6,6 +6,7 @@ on:
       prod_registry:
         required: false
         type: boolean
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       overridden_plugin_version:
         required: false
         type: string
@@ -27,9 +28,9 @@ jobs:
           
           snforge_scarb_plugin_version=$(get_version "${{ inputs.overridden_plugin_version }}")
           
-          plugin_uploaded=$(curl -s https://scarbs.xyz/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version "$snforge_scarb_plugin_version" '[.[] | select(.v == $version)] | length > 0')
+          registry_url=${{ inputs.prod_registry == true && 'https://scarbs.xyz' || 'https://scarbs.dev' }}
+          plugin_uploaded=$(curl -s ${registry_url}/api/v1/index/sn/fo/snforge_scarb_plugin.json | jq --arg version "$snforge_scarb_plugin_version" '[.[] | select(.v == $version)] | length > 0')
           echo "plugin_uploaded=$plugin_uploaded" >> $GITHUB_OUTPUT
-
 
   upload-to-registry:
     name: Upload snforge_scarb_plugin to the registry
@@ -55,7 +56,7 @@ jobs:
           set -euxo pipefail
           mkdir -p crates/snforge-scarb-plugin/target/scarb/cairo-plugin
           
-          mv artifacts-dl/build-plugin-*/snforge_scarb_plugin_* crates/snforge-scarb-plugin/target/scarb/cairo-plugin/
+          mv artifacts-dl/build-plugin-*/snforge_scarb_plugin_v* crates/snforge-scarb-plugin/target/scarb/cairo-plugin/
           
           # Required for testing prebuild plugin while creating release.
           if [[ -n "${{ inputs.overridden_plugin_version }}" ]]; then

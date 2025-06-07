@@ -1,6 +1,10 @@
 name: Scheduled
 
 on:
+  pull_request:
+    paths:
+      - scripts/get_scarb_versions.sh
+      - .github/workflows/scheduled.yml
   schedule:
     - cron: '0 0 * * 3,0'
   workflow_dispatch:
@@ -108,7 +112,7 @@ jobs:
           scarb-version: ${{ matrix.version }}
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
-      - name: Install starknet-devnet-rs
+      - name: Install starknet-devnet
         run: ./scripts/install_devnet.sh
 
       - run: cargo test --release -p sncast
@@ -182,5 +186,6 @@ jobs:
         uses: slackapi/slack-github-action@v2.0.0
         with:
           webhook: ${{ secrets.SLACK_SCHEDULED_TESTS_FAILURE_WEBHOOK_URL }}
+          webhook-type: webhook-trigger
           payload: |
             url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

@@ -3,6 +3,7 @@
 ```rust
 pub enum Token {
     STRK,
+    ETH,
     Custom: CustomToken,
 }
 
@@ -12,8 +13,9 @@ pub struct CustomToken {
 }
 ```
 
-`Token` is an enum used to specify ERC20 token for which the balance should be cheated. It can be either `STRK` or a custom token.
+`Token` is an enum used to specify ERC20 token for which the balance should be cheated. Possible variants are:
 - `STRK` is the default STRK token (predeployed in every test case).
+- `ETH` is the default ETH token (predeployed in every test case).
 - `Custom` allows to specify a custom token by providing its contract address and balances variable selector.
 
 ```rust
@@ -21,13 +23,14 @@ pub impl TokenImpl of TokenTrait {
     fn contract_address(self: Token) -> ContractAddress {
         match self {
             Token::STRK => STRK_CONTRACT_ADDRESS.try_into().unwrap(),
+            Token::ETH => ETH_CONTRACT_ADDRESS.try_into().unwrap(),
             Token::Custom(CustomToken { contract_address, .. }) => contract_address,
         }
     }
 
     fn balances_variable_selector(self: Token) -> felt252 {
         match self {
-            Token::STRK => selector!("ERC20_balances"),
+            Token::STRK | TOKEN::ETH => selector!("ERC20_balances"),
             Token::Custom(CustomToken { balances_variable_selector,
             .., }) => balances_variable_selector,
         }
