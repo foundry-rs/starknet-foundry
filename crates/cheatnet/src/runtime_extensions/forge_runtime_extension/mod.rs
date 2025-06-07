@@ -36,7 +36,6 @@ use blockifier::{
     },
     versioned_constants::VersionedConstants,
 };
-use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::{
     errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
@@ -44,7 +43,7 @@ use cairo_vm::vm::{
 };
 use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
-use conversions::felt::TryInferFormat;
+use conversions::felt::{ToShortString, TryInferFormat};
 use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::CairoSerialize;
 use data_transformer::cairo_types::CairoU256;
@@ -366,7 +365,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::from_serializable(result))
             }
             "generate_ecdsa_keys" => {
-                let curve = as_cairo_short_string(&input_reader.read()?);
+                let curve: Felt = input_reader.read()?;
+                let curve = curve.to_short_string().ok();
 
                 let (signing_key_bytes, verifying_key_bytes) = {
                     match curve.as_deref() {
@@ -401,7 +401,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 )))
             }
             "ecdsa_sign_message" => {
-                let curve = as_cairo_short_string(&input_reader.read()?);
+                let curve: Felt = input_reader.read()?;
+                let curve = curve.to_short_string().ok();
                 let secret_key: CairoU256 = input_reader.read()?;
                 let msg_hash: CairoU256 = input_reader.read()?;
 
@@ -602,7 +603,7 @@ pub fn add_resources_to_top_call(
     }
 }
 
-pub fn update_top_call_resources(runtime: &mut ForgeRuntime, tracked_resource: &TrackedResource) {
+pub fn update_top_call_resources(runtime: &mut ForgeRuntime) {
     // call representing the test code
     let top_call = runtime
         .extended_runtime
@@ -613,20 +614,12 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime, tracked_resource: &
         .current_call_stack
         .top();
 
-    let mut top_call = match tracked_resource {
-        TrackedResource::CairoSteps => {
-            let all_execution_resources = add_execution_resources(top_call.clone());
-            let mut top_call = top_call.borrow_mut();
-            top_call.used_execution_resources = all_execution_resources;
-            top_call
-        }
-        TrackedResource::SierraGas => {
-            let all_sierra_gas_consumed = add_sierra_gas_resources(&top_call);
-            let mut top_call = top_call.borrow_mut();
-            top_call.gas_consumed = all_sierra_gas_consumed;
-            top_call
-        }
-    };
+    let all_execution_resources = add_execution_resources(top_call.clone());
+    let all_sierra_gas_consumed = add_sierra_gas_resources(&top_call);
+
+    let mut top_call = top_call.borrow_mut();
+    top_call.used_execution_resources = all_execution_resources;
+    top_call.gas_consumed = all_sierra_gas_consumed;
 
     let top_call_syscalls = runtime
         .extended_runtime

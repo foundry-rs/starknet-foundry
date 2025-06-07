@@ -29,7 +29,6 @@ forge_runner = { path = "../forge-runner" }
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 cairo-lang-sierra.workspace = true
 cairo-annotations.workspace = true
-cairo-lang-runnable-utils.workspace = true
 starknet-types-core.workspace = true
 regex.workspace = true
 serde_json.workspace = true
@@ -52,6 +51,7 @@ futures.workspace = true
 url.workspace = true
 indoc.workspace = true
 derive_more.workspace = true
+foundry-ui = { path = "../foundry-ui" }
 
 [[bin]]
 name = "snforge"
@@ -67,3 +67,4 @@ cairo-lang-starknet-classes.workspace = true
 walkdir.workspace = true
 test-case.workspace = true
 docs = { workspace = true, features = ["testing"] }
+packages_validation = { path = "../testing/packages_validation"}

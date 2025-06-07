@@ -2,9 +2,10 @@ use crate::artifacts::StarknetArtifactsFiles;
 use anyhow::{Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
 pub use command::*;
+use foundry_ui::UI;
+use foundry_ui::components::warning::WarningMessage;
 use scarb_metadata::{Metadata, PackageId, PackageMetadata, TargetMetadata};
-use semver::VersionReq;
-use shared::print::print_as_warning;
+use semver::{BuildMetadata, Prerelease, Version, VersionReq};
 use std::collections::HashMap;
 use std::str::FromStr;
 
@@ -25,29 +26,29 @@ const INTEGRATION_TEST_TYPE: &str = "integration";
 fn get_starknet_artifacts_paths_from_test_targets(
     target_dir: &Utf8Path,
     test_targets: &HashMap<String, &TargetMetadata>,
+    ui: &UI,
 ) -> Option<StarknetArtifactsFiles> {
-    let artifact = |name: &str,
-                    metadata: &TargetMetadata|
-     -> Option<(Utf8PathBuf, Option<String>)> {
-        let path = format!("{name}.test.starknet_artifacts.json");
-        let path = target_dir.join(&path);
-        let path = if path.exists() {
-            Some(path)
-        } else {
-            print_as_warning(&anyhow!(
+    let artifact =
+        |name: &str, metadata: &TargetMetadata| -> Option<(Utf8PathBuf, Option<String>)> {
+            let path = format!("{name}.test.starknet_artifacts.json");
+            let path = target_dir.join(&path);
+            let path = if path.exists() {
+                Some(path)
+            } else {
+                ui.println(&WarningMessage::new(&format!(
                 "File = {path} missing when it should be existing, perhaps due to Scarb problem."
-            ));
-            None
+            )));
+                None
+            };
+
+            let test_type = metadata
+                .params
+                .get("test-type")
+                .and_then(|value| value.as_str())
+                .map(ToString::to_string);
+
+            path.map(|path| (Utf8PathBuf::from_str(path.as_str()).unwrap(), test_type))
         };
-
-        let test_type = metadata
-            .params
-            .get("test-type")
-            .and_then(|value| value.as_str())
-            .map(ToString::to_string);
-
-        path.map(|path| (Utf8PathBuf::from_str(path.as_str()).unwrap(), test_type))
-    };
 
     let artifacts = test_targets
         .iter()
@@ -82,17 +83,18 @@ fn get_starknet_artifacts_paths_from_test_targets(
 fn get_starknet_artifacts_path(
     target_dir: &Utf8Path,
     target_name: &str,
+    ui: &UI,
 ) -> Option<StarknetArtifactsFiles> {
     let path = format!("{target_name}.starknet_artifacts.json");
     let path = target_dir.join(&path);
     let path = if path.exists() {
         Some(path)
     } else {
-        print_as_warning(&anyhow!(
+        ui.println(&WarningMessage::new(&format!(
             "File = {path} missing. \
-        This is most likely caused by `[[target.starknet-contract]]` being undefined in Scarb.toml \
-        No contracts will be available for deployment"
-        ));
+            This is most likely caused by `[[target.starknet-contract]]` being undefined in Scarb.toml \
+            No contracts will be available for deployment"
+        )));
         None
     };
 
@@ -104,10 +106,11 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
     artifacts_dir: &Utf8Path,
     package: &PackageMetadata,
     use_test_target_contracts: bool,
+    ui: &UI,
 ) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
     let starknet_artifact_files = if use_test_target_contracts {
         let test_targets = test_targets_by_name(package);
-        get_starknet_artifacts_paths_from_test_targets(artifacts_dir, &test_targets)
+        get_starknet_artifacts_paths_from_test_targets(artifacts_dir, &test_targets, ui)
     } else {
         let starknet_target_name = package
             .targets
@@ -115,7 +118,7 @@ pub fn get_contracts_artifacts_and_source_sierra_paths(
             .find(|target| target.kind == "starknet-contract")
             .map(|target| target.name.clone());
         starknet_target_name.and_then(|starknet_target_name| {
-            get_starknet_artifacts_path(artifacts_dir, starknet_target_name.as_str())
+            get_starknet_artifacts_path(artifacts_dir, starknet_target_name.as_str(), ui)
         })
     };
 
@@ -143,6 +146,26 @@ pub fn name_for_package(metadata: &Metadata, package: &PackageId) -> Result<Stri
     Ok(package.name.clone())
 }
 
+fn matches_version_with_special_rules(
+    package_name: &str,
+    package_version: &Version,
+    version_req: &VersionReq,
+) -> bool {
+    if package_name == "snforge_std" {
+        let normalized_version = Version {
+            major: package_version.major,
+            minor: package_version.minor,
+            patch: package_version.patch,
+            // Clear pre-release and build metadata to handle exceptions in nightly builds and smoke tests
+            pre: Prerelease::EMPTY,
+            build: BuildMetadata::EMPTY,
+        };
+        version_req.matches(&normalized_version)
+    } else {
+        version_req.matches(package_version)
+    }
+}
+
 /// Checks if the specified package has version compatible with the specified requirement
 pub fn package_matches_version_requirement(
     metadata: &Metadata,
@@ -155,7 +178,11 @@ pub fn package_matches_version_requirement(
         .filter(|package| package.name == name);
 
     match (packages.next(), packages.next()) {
-        (Some(package), None) => Ok(version_req.matches(&package.version)),
+        (Some(package), None) => Ok(matches_version_with_special_rules(
+            name,
+            &package.version,
+            version_req,
+        )),
         (None, None) => Err(anyhow!("Package {name} is not present in dependencies.")),
         _ => Err(anyhow!("Package {name} is duplicated in dependencies")),
     }
@@ -257,9 +284,11 @@ mod tests {
             .run()
             .unwrap();
 
+        let ui = UI::default();
         let path = get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target").join("dev")).unwrap(),
             "basic_package",
+            &ui,
         )
         .unwrap();
 
@@ -298,9 +327,11 @@ mod tests {
             .find(|p| p.name == "basic_package")
             .unwrap();
 
+        let ui = UI::default();
         let path = get_starknet_artifacts_paths_from_test_targets(
             &Utf8PathBuf::from_path_buf(temp.join("target").join("dev")).unwrap(),
             &test_targets_by_name(package),
+            &ui,
         )
         .unwrap();
 
@@ -352,9 +383,11 @@ mod tests {
             .find(|p| p.name == "basic_package")
             .unwrap();
 
+        let ui = UI::default();
         let path = get_starknet_artifacts_paths_from_test_targets(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target").join("dev")).unwrap(),
             &test_targets_by_name(package),
+            &ui,
         )
         .unwrap();
 
@@ -470,9 +503,11 @@ mod tests {
             .run()
             .unwrap();
 
+        let ui = UI::default();
         let path = get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target").join("dev")).unwrap(),
             "essa",
+            &ui,
         )
         .unwrap();
 
@@ -509,9 +544,11 @@ mod tests {
             .run()
             .unwrap();
 
+        let ui = UI::default();
         let path = get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target").join("dev")).unwrap(),
             "empty_lib",
+            &ui,
         );
         assert!(path.is_none());
     }
@@ -520,9 +557,11 @@ mod tests {
     fn get_starknet_artifacts_path_for_project_without_scarb_build() {
         let temp = setup_package("basic_package");
 
+        let ui = UI::default();
         let path = get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target").join("dev")).unwrap(),
             "basic_package",
+            &ui,
         );
         assert!(path.is_none());
     }
@@ -546,9 +585,14 @@ mod tests {
         let target_dir = target_dir_for_workspace(&metadata).join("dev");
         let package = metadata.packages.first().unwrap();
 
-        let contracts =
-            get_contracts_artifacts_and_source_sierra_paths(target_dir.as_path(), package, false)
-                .unwrap();
+        let ui = UI::default();
+        let contracts = get_contracts_artifacts_and_source_sierra_paths(
+            target_dir.as_path(),
+            package,
+            false,
+            &ui,
+        )
+        .unwrap();
 
         assert!(contracts.contains_key("ERC20"));
         assert!(contracts.contains_key("HelloStarknet"));

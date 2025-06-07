@@ -3,11 +3,16 @@ name: Build snforge_scarb_plugin
 on:
   workflow_call:
     inputs:
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       overridden_plugin_version:
+        required: false
+        type: string
+      ref:
         required: false
         type: string
   workflow_dispatch:
     inputs:
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       overridden_plugin_version:
         required: false
         type: string
@@ -66,13 +71,21 @@ jobs:
           #   ext: "so"
 
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Checkout with ref
+        if: inputs.ref != ''
+        uses: actions/checkout@v4
         with:
-          target: ${{ matrix.target }}
+          ref: ${{ inputs.ref }}
 
-      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
+      - name: Checkout default
+        if: inputs.ref == ''
+        uses: actions/checkout@v4
+
+      - name: Setup rust
+        run: |
+          rustup target add ${{ matrix.target }} --toolchain 1.86.0
+
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
 
       - name: Install cross
         if: matrix.cross

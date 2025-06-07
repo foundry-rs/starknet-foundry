@@ -1,5 +1,4 @@
 use crate::test_case_summary::{Single, TestCaseSummary};
-use anyhow::anyhow;
 use blockifier::abi::constants;
 use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::EventSummary;
@@ -14,7 +13,8 @@ use blockifier::utils::u64_from_usize;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableGasConfig;
 use cheatnet::state::ExtendedStateReader;
-use shared::print::print_as_warning;
+use foundry_ui::UI;
+use foundry_ui::components::warning::WarningMessage;
 use starknet_api::execution_resources::{GasAmount, GasVector};
 use starknet_api::transaction::EventContent;
 use starknet_api::transaction::fields::GasVectorComputationMode;
@@ -141,6 +141,7 @@ fn get_state_resources(
 pub fn check_available_gas(
     available_gas: Option<RawAvailableGasConfig>,
     summary: TestCaseSummary<Single>,
+    ui: &UI,
 ) -> TestCaseSummary<Single> {
     match summary {
         TestCaseSummary::Passed {
@@ -151,9 +152,9 @@ pub fn check_available_gas(
         } if available_gas.is_some_and(|available_gas| match available_gas {
             RawAvailableGasConfig::MaxGas(gas) => {
                 // todo(3109): remove uunnamed argument in available_gas
-                print_as_warning(&anyhow!(
+                ui.println(&WarningMessage::new(
                     "Setting available_gas with unnamed argument is deprecated. \
-                Consider setting resource bounds (l1_gas, l1_data_gas and l2_gas) explicitly."
+                Consider setting resource bounds (l1_gas, l1_data_gas and l2_gas) explicitly.",
                 ));
                 // convert resource bounds to classic l1_gas using formula
                 // l1_gas + l1_data_gas + (l2_gas / 40000)

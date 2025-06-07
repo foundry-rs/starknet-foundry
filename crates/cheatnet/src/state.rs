@@ -1,6 +1,8 @@
 use crate::constants::build_test_entry_point;
 use crate::forking::state::ForkStateReader;
-use crate::predeployment::strk::deploy_strk_token;
+use crate::predeployment::erc20::eth::eth_predeployed_contract;
+use crate::predeployment::erc20::strk::strk_predeployed_contract;
+use crate::predeployment::predeployed_contract::PredeployedContract;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::{
     ExecutionInfoMock, ResourceBounds,
@@ -20,6 +22,7 @@ use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use conversions::serde::deserialize::CairoDeserialize;
 use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use conversions::string::TryFromHexStr;
+use indexmap::IndexMap;
 use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::starknet::context::SerializableBlockInfo;
 use runtime::starknet::state::DictStateReader;
@@ -32,7 +35,7 @@ use starknet_api::{
 };
 use starknet_types_core::felt::Felt;
 use std::cell::{Ref, RefCell};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use std::rc::Rc;
 
 // Specifies the duration of the cheat
@@ -53,7 +56,31 @@ impl ExtendedStateReader {
         // We consider contract as deployed solely based on the fact that the test used forking
         let is_fork = self.fork_state_reader.is_some();
         if !is_fork {
-            deploy_strk_token(self);
+            let contracts = vec![strk_predeployed_contract(), eth_predeployed_contract()];
+            for contract in contracts {
+                self.predeploy_contract(contract);
+            }
+        }
+    }
+
+    fn predeploy_contract(&mut self, contract: PredeployedContract) {
+        let PredeployedContract {
+            contract_address,
+            class_hash,
+            contract_class,
+            storage_kv_updates,
+        } = contract;
+        self.dict_state_reader
+            .address_to_class_hash
+            .insert(contract_address, class_hash);
+
+        self.dict_state_reader
+            .class_hash_to_class
+            .insert(class_hash, contract_class);
+
+        for (key, value) in &storage_kv_updates {
+            let entry = (contract_address, *key);
+            self.dict_state_reader.storage_view.insert(entry, *value);
         }
     }
 }
@@ -173,7 +200,6 @@ impl<T> CheatStatus<T> {
 /// Tree structure representing trace of a call.
 #[derive(Debug)]
 pub struct CallTrace {
-    pub run_with_call_header: bool,
     // only these are serialized
     pub entry_point: CallEntryPoint,
     pub nested_calls: Vec<CallTraceNode>,
@@ -207,7 +233,6 @@ impl CairoSerialize for CallTrace {
 impl CallTrace {
     fn default_successful_call() -> Self {
         Self {
-            run_with_call_header: false,
             entry_point: CallEntryPoint::default(),
             used_execution_resources: ExecutionResources::default(),
             used_l1_resources: L1Resources::default(),
@@ -345,7 +370,7 @@ pub struct CheatnetState {
     pub global_block_hash: HashMap<u64, (Felt, Vec<ContractAddress>)>,
 }
 
-pub type EncounteredErrors = BTreeMap<ClassHash, Vec<usize>>;
+pub type EncounteredErrors = IndexMap<ClassHash, Vec<usize>>;
 
 impl Default for CheatnetState {
     fn default() -> Self {
@@ -354,7 +379,6 @@ impl Default for CheatnetState {
             ClassHash(TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap());
         let test_call = Rc::new(RefCell::new(CallTrace {
             entry_point: test_code_entry_point.into(),
-            run_with_call_header: true,
             ..CallTrace::default_successful_call()
         }));
         Self {
@@ -370,7 +394,7 @@ impl Default for CheatnetState {
                 current_call_stack: NotEmptyCallStack::from(test_call),
                 is_vm_trace_needed: false,
             },
-            encountered_errors: BTreeMap::default(),
+            encountered_errors: IndexMap::default(),
             fuzzer_args: Vec::default(),
             block_hash_contracts: HashMap::default(),
             global_block_hash: HashMap::default(),
@@ -486,7 +510,7 @@ impl CheatnetState {
     }
 
     pub fn clear_error(&mut self, class_hash: ClassHash) {
-        self.encountered_errors.remove(&class_hash);
+        self.encountered_errors.shift_remove(&class_hash);
     }
 }
 
@@ -494,7 +518,6 @@ impl TraceData {
     pub fn enter_nested_call(&mut self, entry_point: CallEntryPoint, cheated_data: CheatedData) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
-            run_with_call_header: false,
             ..CallTrace::default_successful_call()
         }));
         let current_call = self.current_call_stack.top();

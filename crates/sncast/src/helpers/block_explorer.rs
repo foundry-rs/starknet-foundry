@@ -132,7 +132,7 @@ mod tests {
     use crate::{
         Network,
         helpers::block_explorer::Service,
-        response::{explorer_link::OutputLink, structs::DeployResponse},
+        response::{deploy::DeployResponse, explorer_link::OutputLink},
     };
     use conversions::padded_felt::PaddedFelt;
     use regex::Regex;

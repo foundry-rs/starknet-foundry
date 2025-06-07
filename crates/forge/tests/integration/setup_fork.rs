@@ -1,4 +1,5 @@
 use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
+use foundry_ui::UI;
 use indoc::{formatdoc, indoc};
 use std::num::NonZeroU32;
 use std::path::Path;
@@ -129,6 +130,7 @@ fn fork_aliased_decorator() {
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
+    let ui = Arc::new(UI::default());
     let result = rt
         .block_on(run_for_package(
             RunForPackageArgs {
@@ -149,10 +151,11 @@ fn fork_aliased_decorator() {
                         fuzzer_seed: 12345,
                         max_n_steps: None,
                         is_vm_trace_needed: false,
-                        cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
+                        cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
                             .unwrap()
                             .join(CACHE_DIR),
-                        contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
+                        contracts_data: ContractsData::try_from(test.contracts(&ui).unwrap())
+                            .unwrap(),
                         tracked_resource: ForgeTrackedResource::CairoSteps,
                         environment_variables: test.env().clone(),
                     }),
@@ -169,6 +172,7 @@ fn fork_aliased_decorator() {
             },
             &mut BlockNumberMap::default(),
             Option::default(),
+            ui,
         ))
         .expect("Runner fail");
 
@@ -216,6 +220,7 @@ fn fork_aliased_decorator_overrding() {
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
+    let ui = Arc::new(UI::default());
     let result = rt
         .block_on(run_for_package(
             RunForPackageArgs {
@@ -236,10 +241,11 @@ fn fork_aliased_decorator_overrding() {
                         fuzzer_seed: 12345,
                         max_n_steps: None,
                         is_vm_trace_needed: false,
-                        cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
+                        cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
                             .unwrap()
                             .join(CACHE_DIR),
-                        contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
+                        contracts_data: ContractsData::try_from(test.contracts(&ui).unwrap())
+                            .unwrap(),
                         tracked_resource: ForgeTrackedResource::CairoSteps,
                         environment_variables: test.env().clone(),
                     }),
@@ -256,6 +262,7 @@ fn fork_aliased_decorator_overrding() {
             },
             &mut BlockNumberMap::default(),
             Option::default(),
+            ui,
         ))
         .expect("Runner fail");
 
