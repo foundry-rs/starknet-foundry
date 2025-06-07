@@ -71,7 +71,8 @@ impl FreeProvider {
 }
 
 impl Network {
-    fn url(self, provider: &FreeProvider) -> String {
+    #[must_use]
+    pub fn url(self, provider: &FreeProvider) -> String {
         match self {
             Network::Mainnet => Self::free_mainnet_rpc(provider),
             Network::Sepolia => Self::free_sepolia_rpc(provider),
