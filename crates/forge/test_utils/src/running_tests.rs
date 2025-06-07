@@ -65,7 +65,7 @@ pub fn run_test_case(
                     fuzzer_seed: 12345,
                     max_n_steps: None,
                     is_vm_trace_needed: false,
-                    cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
+                    cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
                         .unwrap()
                         .join(CACHE_DIR),
                     contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),

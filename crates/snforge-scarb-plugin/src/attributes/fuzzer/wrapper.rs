@@ -39,11 +39,7 @@ fn fuzzer_wrapper_internal(
         if let Some(test_attr) = attr_list.find_attr(db, TestCollector::ATTR_NAME) {
             vec![test_attr]
         } else {
-            [
-                attr_list.query_attr(db, "snforge_internal_test_executable"),
-                attr_list.query_attr(db, InternalConfigStatementCollector::ATTR_NAME),
-            ]
-            .concat()
+            attr_list.query_attr(db, InternalConfigStatementCollector::ATTR_NAME)
         };
 
     let actual_body_fn_attrs = attr_list

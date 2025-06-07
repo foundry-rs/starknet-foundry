@@ -17,6 +17,10 @@ For detailed CLI description, see [verify command reference](../appendix/sncast/
 
 Walnut is a tool for step-by-step debugging of Starknet transactions. You can learn more about Walnut here [walnut.dev](https://walnut.dev). Note that Walnut requires you to specify the Starknet version in your `Scarb.toml` config file.
 
+### Voyager
+
+[Voyager](https://voyager.online/) is the Starknet block explorer.
+
 ## Example
 
 First, ensure that you have created a `Scarb.toml` file for your contract (it should be present in the project directory or one of its parent directories). Make sure the contract has already been deployed on the network.

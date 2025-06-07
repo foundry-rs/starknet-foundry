@@ -19,9 +19,10 @@ Required.
 The name of the contract. The contract name is the part after the `mod` keyword in your contract file.
 
 ## `--verifier, -v <VERIFIER>`
-Optional.
+Required.
 
 The verification provider to use for the verification. Possible values are:
+* `voyager`
 * `walnut`
 
 ## `--network, -n <NETWORK>`
@@ -37,6 +38,13 @@ Optional.
 Name of the package that should be used.
 
 If supplied, a contract from this package will be used. Required if more than one package exists in a workspace.
+
+## `--rpc`
+Optional.
+
+Starknet RPC node url address.
+
+Overrides url from `snfoundry.toml`.
 
 ## `--confirm-verification`
 Optional.

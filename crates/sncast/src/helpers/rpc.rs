@@ -5,8 +5,6 @@ use clap::Args;
 use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet::providers::{JsonRpcClient, jsonrpc::HttpTransport};
-use std::env::current_exe;
-use std::time::UNIX_EPOCH;
 
 #[derive(Args, Clone, Debug, Default)]
 #[group(required = false, multiple = false)]
@@ -57,32 +55,19 @@ impl RpcArgs {
     }
 }
 
-fn installation_constant_seed() -> Result<u64> {
-    let executable_path = current_exe()?;
-    let metadata = executable_path.metadata()?;
-    let modified_time = metadata.modified()?;
-    let duration = modified_time.duration_since(UNIX_EPOCH)?;
-
-    Ok(duration.as_secs())
-}
-
 enum FreeProvider {
     Blast,
-    Voyager,
 }
 
 impl FreeProvider {
     fn semi_random() -> Self {
-        let seed = installation_constant_seed().unwrap_or(2);
-        if seed % 2 == 0 {
-            return Self::Blast;
-        }
-        Self::Voyager
+        FreeProvider::Blast
     }
 }
 
 impl Network {
-    fn url(self, provider: &FreeProvider) -> String {
+    #[must_use]
+    pub fn url(self, provider: &FreeProvider) -> String {
         match self {
             Network::Mainnet => Self::free_mainnet_rpc(provider),
             Network::Sepolia => Self::free_sepolia_rpc(provider),
@@ -94,9 +79,6 @@ impl Network {
             FreeProvider::Blast => {
                 format!("https://starknet-mainnet.public.blastapi.io/rpc/{RPC_URL_VERSION}")
             }
-            FreeProvider::Voyager => {
-                format!("https://free-rpc.nethermind.io/mainnet-juno/{RPC_URL_VERSION}")
-            }
         }
     }
 
@@ -104,9 +86,6 @@ impl Network {
         match provider {
             FreeProvider::Blast => {
                 format!("https://starknet-sepolia.public.blastapi.io/rpc/{RPC_URL_VERSION}")
-            }
-            FreeProvider::Voyager => {
-                format!("https://free-rpc.nethermind.io/sepolia-juno/{RPC_URL_VERSION}")
             }
         }
     }
@@ -120,7 +99,6 @@ mod tests {
     use starknet::providers::Provider;
     use test_case::test_case;
 
-    #[test_case(FreeProvider::Voyager)]
     #[test_case(FreeProvider::Blast)]
     #[tokio::test]
     async fn test_mainnet_url_happy_case(free_provider: FreeProvider) {
@@ -129,7 +107,6 @@ mod tests {
         assert!(is_expected_version(&Version::parse(&spec_version).unwrap()));
     }
 
-    #[test_case(FreeProvider::Voyager)]
     #[test_case(FreeProvider::Blast)]
     #[tokio::test]
     async fn test_sepolia_url_happy_case(free_provider: FreeProvider) {
