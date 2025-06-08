@@ -1,11 +1,13 @@
 use anyhow::{Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args, ValueEnum};
+use foundry_ui::{OutputFormat, UI};
 use promptly::prompt;
 use scarb_api::StarknetContractArtifacts;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::configuration::CastConfig;
-use sncast::{Network, response::structs::VerifyResponse};
+use sncast::helpers::rpc::FreeProvider;
+use sncast::{Network, response::verify::VerifyResponse};
 use starknet::providers::JsonRpcClient;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet_types_core::felt::Felt;
@@ -94,7 +96,7 @@ pub async fn verify(
         rpc,
     } = args;
 
-    let free = network.url();
+    let free = network.url(&FreeProvider::semi_random());
     let rpc_url = rpc.map_or_else(
         || {
             let url = if config.url.is_empty() {
@@ -107,7 +109,12 @@ pub async fn verify(
         Ok,
     )?;
     let provider = JsonRpcClient::new(HttpTransport::new(rpc_url.clone()));
-    verify_and_warn_if_incompatible_rpc_version(&provider, rpc_url).await?;
+    verify_and_warn_if_incompatible_rpc_version(
+        &provider,
+        rpc_url,
+        &UI::new(OutputFormat::default()),
+    )
+    .await?;
 
     // Let's ask confirmation
     if !confirm_verification {

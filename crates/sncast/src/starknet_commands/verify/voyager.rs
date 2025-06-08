@@ -1,13 +1,13 @@
 use anyhow::{Context, Result, anyhow};
 use camino::{Utf8Path, Utf8PathBuf};
+use foundry_ui::{UI, components::warning::WarningMessage};
 use itertools::Itertools;
 use reqwest::{self, StatusCode};
 use scarb_api::metadata::MetadataCommand;
 use scarb_metadata::{Metadata, PackageMetadata};
 use serde::Serialize;
-use shared::print::print_as_warning;
 use sncast::Network;
-use sncast::{helpers::scarb_utils, response::structs::VerifyResponse};
+use sncast::{helpers::scarb_utils, response::verify::VerifyResponse};
 use starknet::{
     core::types::{BlockId, BlockTag},
     providers::{
@@ -292,7 +292,7 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
         }
 
         if selected.manifest_metadata.license.is_none() {
-            print_as_warning(&anyhow!("License not specified in Scarb.toml"));
+            UI::default().println(&WarningMessage::new("License not specified in Scarb.toml"));
         }
 
         let client = reqwest::Client::new();
