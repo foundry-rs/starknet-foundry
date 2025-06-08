@@ -38,10 +38,10 @@ async fn test_happy_case_contract_address() {
         "id": 1,
         "jsonrpc": "2.0",
         "method": "starknet_getClassHashAt",
-        "params": [
-            "latest",
-            MAP_CONTRACT_ADDRESS_SEPOLIA
-        ]
+        "params": {
+            "block_id": "latest",
+            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
+        }
     });
     let rpc_response = json!({
         "id": 1,
@@ -127,10 +127,10 @@ async fn test_happy_case_class_hash() {
         "id": 1,
         "jsonrpc": "2.0",
         "method": "starknet_getClassHashAt",
-        "params": [
-            "latest",
-            MAP_CONTRACT_ADDRESS_SEPOLIA
-        ]
+        "params": {
+            "block_id": "latest",
+            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
+        }
     });
     let contract_not_found = json!({
       "error": {
@@ -219,10 +219,10 @@ async fn test_happy_case_with_confirm_verification_flag() {
         "id": 1,
         "jsonrpc": "2.0",
         "method": "starknet_getClassHashAt",
-        "params": [
-            "latest",
-            MAP_CONTRACT_ADDRESS_SEPOLIA
-        ]
+        "params": {
+            "block_id": "latest",
+            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
+        }
     });
     let rpc_response = json!({
         "id": 1,
@@ -308,10 +308,10 @@ async fn test_failed_verification_contract_address() {
         "id": 1,
         "jsonrpc": "2.0",
         "method": "starknet_getClassHashAt",
-        "params": [
-            "latest",
-            MAP_CONTRACT_ADDRESS_SEPOLIA
-        ]
+        "params": {
+            "block_id": "latest",
+            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
+        }
     });
     let rpc_response = json!({
         "id": 1,
@@ -396,10 +396,10 @@ async fn test_failed_verification_class_hash() {
         "id": 1,
         "jsonrpc": "2.0",
         "method": "starknet_getClassHashAt",
-        "params": [
-            "latest",
-            MAP_CONTRACT_ADDRESS_SEPOLIA
-        ]
+        "params": {
+            "block_id": "latest",
+            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
+        }
     });
     let contract_not_found = json!({
       "error": {
@@ -487,10 +487,10 @@ async fn test_failed_class_hash_lookup() {
         "id": 1,
         "jsonrpc": "2.0",
         "method": "starknet_getClassHashAt",
-        "params": [
-            "latest",
-            MAP_CONTRACT_ADDRESS_SEPOLIA
-        ]
+        "params": {
+            "block_id": "latest",
+            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
+        }
     });
     let contract_not_found = json!({
       "error": {
@@ -576,10 +576,10 @@ async fn test_virtual_workspaces() {
         "id": 1,
         "jsonrpc": "2.0",
         "method": "starknet_getClassHashAt",
-        "params": [
-            "latest",
-            MAP_CONTRACT_ADDRESS_SEPOLIA
-        ]
+        "params": {
+            "block_id": "latest",
+            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
+        }
     });
     let rpc_response = json!({
         "id": 1,
@@ -667,10 +667,10 @@ async fn test_contract_name_not_found() {
         "id": 1,
         "jsonrpc": "2.0",
         "method": "starknet_getClassHashAt",
-        "params": [
-            "latest",
-            MAP_CONTRACT_ADDRESS_SEPOLIA
-        ]
+        "params": {
+            "block_id": "latest",
+            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
+        }
     });
     let rpc_response = json!({
         "id": 1,

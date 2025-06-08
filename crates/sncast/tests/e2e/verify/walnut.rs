@@ -148,13 +148,14 @@ async fn test_failed_verification_contract_address() {
         .stdin("Y");
 
     let output = snapbox.assert().success();
+    println!("output: {:?}", output.get_output());
 
-    assert_stderr_contains(
+    assert_stdout_contains(
         output,
         formatdoc!(
             r"
         command: verify
-        error: {}
+        message: {}
         ",
             verifier_response
         ),
@@ -200,12 +201,12 @@ async fn test_failed_verification_class_hash() {
 
     let output = snapbox.assert().success();
 
-    assert_stderr_contains(
+    assert_stdout_contains(
         output,
         formatdoc!(
             r"
         command: verify
-        error: {}
+        message: {}
         ",
             verifier_response
         ),
