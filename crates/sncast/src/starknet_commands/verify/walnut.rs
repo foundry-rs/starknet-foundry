@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use reqwest::StatusCode;
 use sncast::Network;
@@ -88,7 +88,7 @@ impl VerificationInterface<'_> for WalnutVerificationInterface {
             Ok(VerifyResponse { message })
         } else {
             let message = api_res.text().await.context("Failed to verify contract")?;
-            Err(anyhow!(message))
+            Ok(VerifyResponse { message })
         }
     }
 

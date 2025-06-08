@@ -14,7 +14,7 @@ async fn test_happy_case_contract_address() {
 
     let mock_server = MockServer::start().await;
 
-    let verifier_response = "Contract successfully verified";
+    let verifier_response = "Contract verification has started. You can check the verification status at the following link: https://app.walnut.dev/verification/status/";
 
     Mock::given(method("POST"))
         .and(path("/v1/sn_sepolia/verify"))
@@ -65,7 +65,7 @@ async fn test_happy_case_class_hash() {
 
     let mock_server = MockServer::start().await;
 
-    let verifier_response = "Contract successfully verified";
+    let verifier_response = "Contract verification has started. You can check the verification status at the following link: https://app.walnut.dev/verification/status/";
 
     Mock::given(method("POST"))
         .and(path("/v1/sn_sepolia/verify"))
@@ -284,7 +284,7 @@ async fn test_happy_case_with_confirm_verification_flag() {
 
     let mock_server = MockServer::start().await;
 
-    let verifier_response = "Contract successfully verified";
+    let verifier_response = "Contract verification has started. You can check the verification status at the following link: https://app.walnut.dev/verification/status/";
 
     Mock::given(method("POST"))
         .and(path("/v1/sn_sepolia/verify"))
@@ -335,7 +335,7 @@ async fn test_happy_case_specify_package() {
 
     let mock_server = MockServer::start().await;
 
-    let verifier_response = "Contract successfully verified";
+    let verifier_response = "Contract verification has started. You can check the verification status at the following link: https://app.walnut.dev/verification/status/";
 
     Mock::given(method("POST"))
         .and(path("/v1/sn_sepolia/verify"))
@@ -388,7 +388,7 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
 
     let mock_server = MockServer::start().await;
 
-    let verifier_response = "Contract successfully verified";
+    let verifier_response = "Contract verification has started. You can check the verification status at the following link: https://app.walnut.dev/verification/status/";
 
     Mock::given(method("POST"))
         .and(path("/v1/sn_sepolia/verify"))
