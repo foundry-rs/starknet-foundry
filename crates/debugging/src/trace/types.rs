@@ -1,5 +1,5 @@
-use crate::contracts_data::ContractsData;
-use crate::trace::collect::Collector;
+use crate::contracts_data_store::ContractsDataStore;
+use crate::trace::collect::{Collector, CollectorError};
 use crate::tree::TreeSerialize;
 use crate::verbosity::{Detailed, Standard, Verbosity};
 use blockifier::execution::entry_point::CallType;
@@ -55,15 +55,14 @@ pub struct StorageAddress(pub ContractAddress);
 pub struct CallerAddress(pub ContractAddress);
 
 impl Trace {
-    /// Creates a new [`Trace`] from a given `cheatnet` [`CallTrace`], [`ContractsData`], [`Verbosity`] and a test name.
-    #[must_use]
+    /// Creates a new [`Trace`] from a given `cheatnet` [`CallTrace`], [`ContractsDataStore`], [`Verbosity`] and a test name.
     pub fn new(
         call_trace: &CallTrace,
-        contracts_data: &ContractsData,
+        contracts_data_store: &mut ContractsDataStore,
         verbosity: Verbosity,
         test_name: String,
-    ) -> Self {
-        Collector::new(call_trace, contracts_data, verbosity).collect_trace(test_name)
+    ) -> Result<Self, CollectorError> {
+        Collector::new(call_trace, contracts_data_store, verbosity).collect_trace(test_name)
     }
 }
 
