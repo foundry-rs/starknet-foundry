@@ -5,7 +5,7 @@ use cairo_lang_syntax::node::ast::{
 use cairo_lang_syntax::node::{Token, TypedSyntaxNode};
 
 #[derive(Debug, thiserror::Error)]
-pub enum GenericArgsExtractionError {
+pub enum PathSplitError {
     #[error("Invalid generic arguments")]
     InvalidGenericArgs,
     #[error("Expected exactly one generic argument")]
@@ -35,10 +35,7 @@ pub enum SplitResult {
 /// For example, in a path like `core::array::Array<felt252>`, this function will:
 /// - Collect "core", "array", and "Array" into `splits`
 /// - Extract the generic argument `felt252` from `Array<felt252>`
-pub fn split(
-    path: &ExprPath,
-    db: &SimpleParserDatabase,
-) -> Result<SplitResult, GenericArgsExtractionError> {
+pub fn split(path: &ExprPath, db: &SimpleParserDatabase) -> Result<SplitResult, PathSplitError> {
     let mut splits = Vec::new();
     let elements = path.elements(db);
     for (i, p) in elements.iter().enumerate() {
@@ -57,10 +54,10 @@ pub fn split(
                         generic_args,
                     })
                 } else {
-                    Err(GenericArgsExtractionError::InvalidGenericArgs)
+                    Err(PathSplitError::InvalidGenericArgs)
                 };
             }
-            PathSegment::Missing(_segment) => Err(GenericArgsExtractionError::PathSegmentMissing)?,
+            PathSegment::Missing(_segment) => Err(PathSplitError::PathSegmentMissing)?,
         }
     }
 
@@ -70,25 +67,23 @@ pub fn split(
 fn extract_generic_args(
     segment: &PathSegmentWithGenericArgs,
     db: &SimpleParserDatabase,
-) -> Result<String, GenericArgsExtractionError> {
+) -> Result<String, PathSplitError> {
     let generic_args = segment
         .generic_args(db)
         .generic_args(db)
         .elements(db)
         .into_iter()
         .map(|arg| match arg {
-            GenericArg::Named(_) => Err(GenericArgsExtractionError::InvalidGenericArgs),
+            GenericArg::Named(_) => Err(PathSplitError::InvalidGenericArgs),
             GenericArg::Unnamed(arg) => match arg.value(db) {
                 GenericArgValue::Expr(expr) => Ok(expr.as_syntax_node().get_text(db)),
-                GenericArgValue::Underscore(_) => {
-                    Err(GenericArgsExtractionError::InvalidGenericArgs)
-                }
+                GenericArgValue::Underscore(_) => Err(PathSplitError::InvalidGenericArgs),
             },
         })
-        .collect::<Result<Vec<_>, GenericArgsExtractionError>>()?;
+        .collect::<Result<Vec<_>, PathSplitError>>()?;
 
     let [generic_arg] = generic_args.as_slice() else {
-        return Err(GenericArgsExtractionError::MoreThanOneGenericArg);
+        return Err(PathSplitError::MoreThanOneGenericArg);
     };
 
     Ok(generic_arg.clone())
