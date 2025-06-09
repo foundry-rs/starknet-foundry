@@ -31,9 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added 
 
 - Displaying the path of the config file when adding a new profile
+- `sncast verify` now supports verifying against [voyager](https://voyager.online/) block explorer.
 
 #### Changed
 
+- `sncast verify` no longer defaults to using walnut.
 - OpenZeppelin account updated to v1.0.0 [preset](https://docs.openzeppelin.com/contracts-cairo/1.0.0/api/account#AccountUpgradeable)
 - Restored support for Braavos accounts
 - Accounts created with `--type braavos` use updated v1.2.0 class hash
