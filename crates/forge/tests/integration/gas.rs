@@ -1052,16 +1052,16 @@ fn nested_call_cost_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-    // 96 = gas cost of onchain data (deploy cost)
-    // 11 = cost of 111 range check builtins from constructor (because int(0.04 * 111) = 5)
-    //
+    // (5020 + 12) * 0.0025 = 12.58 ~ 13 = gas cost of steps
+    // 96 * 2 = gas cost of onchain data (deploy cost)
+    // 0 l1_gas + (96 * 2) l1_data_gas + 13 * (100 / 0.0025) l2 gas
     assert_gas(
         &result,
         "test_call_other_contract",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(648_270),
+            l2_gas: GasAmount(520_000),
         },
     );
 }
@@ -1112,27 +1112,16 @@ fn nested_call_cost_in_forked_contract_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-    // l = 1 (updated contract class)
-    // n = 1 (unique contracts updated - in this case it's the new contract address)
-    // ( l + n * 2 ) * felt_size_in_bytes(32) = 96 (total l1 data cost)
-    //
-    // 147660 = cost of 1 deploy syscall (because 1 * (1132 + 8) * 100 + (7 + 1) * 4050 + (18 + 1) * 70)
-    //      -> 1 deploy syscall costs 1132 cairo steps, 7 pedersen and 18 range check builtins
-    //      -> 1 calldata element costs 8 cairo steps and 1 pedersen
-    //      -> 1 pedersen costs 4050, 1 range check costs 70
-    // 87650 = cost of 1 call contract syscall (because 1 * 866 * 100 + 15 * 70)
-    //      -> 1 call contract syscall costs 866 cairo steps and 15 range check builtins
-    //      -> 1 range check costs 70
-    // 4050 = cost of 1 pedersen syscall
-    // 63620 = reported consumed sierra gas
-    // 0 l1_gas + 192 l1_data_gas + (147660 + 2 * 87650 + 20 * 4050 + 63620) l2 gas
+    // (3523 + 8 memory holes) * 0.0025 = 8.8275 ~ 9 = gas cost of steps
+    // 96 = gas cost of onchain data (deploy cost)
+    // 0 l1_gas + 96 l1_data_gas + 9 * (100 / 0.0025) l2 gas
     assert_gas(
         &result,
         "test_call_other_contract_fork",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(467_580),
+            l2_gas: GasAmount(360_000),
         },
     );
 }
