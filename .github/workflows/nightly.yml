@@ -182,7 +182,7 @@ jobs:
 
   cleanup:
     runs-on: ubuntu-latest
-    if: always() && needs.prepare.result == 'success'
+    if: always() && needs.prepare.result == 'success' && needs.create_release.result == 'success'
     needs: [ prepare, create-release ]
     steps:
       - uses: actions/checkout@v4
