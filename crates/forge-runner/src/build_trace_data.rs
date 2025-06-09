@@ -196,6 +196,81 @@ fn build_profiler_entry_point_type(value: EntryPointType) -> ProfilerEntryPointT
     }
 }
 
+#[expect(dead_code)]
+fn build_profiler_deprecated_syscall_selector(
+    value: DeprecatedSyscallSelector,
+) -> ProfilerDeprecatedSyscallSelector {
+    match value {
+        DeprecatedSyscallSelector::CallContract => ProfilerDeprecatedSyscallSelector::CallContract,
+        DeprecatedSyscallSelector::DelegateCall => ProfilerDeprecatedSyscallSelector::DelegateCall,
+        DeprecatedSyscallSelector::DelegateL1Handler => {
+            ProfilerDeprecatedSyscallSelector::DelegateL1Handler
+        }
+        DeprecatedSyscallSelector::Deploy => ProfilerDeprecatedSyscallSelector::Deploy,
+        DeprecatedSyscallSelector::EmitEvent => ProfilerDeprecatedSyscallSelector::EmitEvent,
+        DeprecatedSyscallSelector::GetBlockHash => ProfilerDeprecatedSyscallSelector::GetBlockHash,
+
+        DeprecatedSyscallSelector::GetBlockNumber => {
+            ProfilerDeprecatedSyscallSelector::GetBlockNumber
+        }
+        DeprecatedSyscallSelector::GetBlockTimestamp => {
+            ProfilerDeprecatedSyscallSelector::GetBlockTimestamp
+        }
+        DeprecatedSyscallSelector::GetCallerAddress => {
+            ProfilerDeprecatedSyscallSelector::GetCallerAddress
+        }
+        DeprecatedSyscallSelector::GetContractAddress => {
+            ProfilerDeprecatedSyscallSelector::GetContractAddress
+        }
+        DeprecatedSyscallSelector::GetExecutionInfo => {
+            ProfilerDeprecatedSyscallSelector::GetExecutionInfo
+        }
+        DeprecatedSyscallSelector::GetSequencerAddress => {
+            ProfilerDeprecatedSyscallSelector::GetSequencerAddress
+        }
+        DeprecatedSyscallSelector::GetTxInfo => ProfilerDeprecatedSyscallSelector::GetTxInfo,
+        DeprecatedSyscallSelector::GetTxSignature => {
+            ProfilerDeprecatedSyscallSelector::GetTxSignature
+        }
+        DeprecatedSyscallSelector::Keccak => ProfilerDeprecatedSyscallSelector::Keccak,
+        DeprecatedSyscallSelector::LibraryCall => ProfilerDeprecatedSyscallSelector::LibraryCall,
+        DeprecatedSyscallSelector::LibraryCallL1Handler => {
+            ProfilerDeprecatedSyscallSelector::LibraryCallL1Handler
+        }
+        DeprecatedSyscallSelector::ReplaceClass => ProfilerDeprecatedSyscallSelector::ReplaceClass,
+        DeprecatedSyscallSelector::Secp256k1Add => ProfilerDeprecatedSyscallSelector::Secp256k1Add,
+        DeprecatedSyscallSelector::Secp256k1GetPointFromX => {
+            ProfilerDeprecatedSyscallSelector::Secp256k1GetPointFromX
+        }
+        DeprecatedSyscallSelector::Secp256k1GetXy => {
+            ProfilerDeprecatedSyscallSelector::Secp256k1GetXy
+        }
+        DeprecatedSyscallSelector::Secp256k1Mul => ProfilerDeprecatedSyscallSelector::Secp256k1Mul,
+        DeprecatedSyscallSelector::Secp256k1New => ProfilerDeprecatedSyscallSelector::Secp256k1New,
+        DeprecatedSyscallSelector::Secp256r1Add => ProfilerDeprecatedSyscallSelector::Secp256r1Add,
+        DeprecatedSyscallSelector::Secp256r1GetPointFromX => {
+            ProfilerDeprecatedSyscallSelector::Secp256r1GetPointFromX
+        }
+        DeprecatedSyscallSelector::Secp256r1GetXy => {
+            ProfilerDeprecatedSyscallSelector::Secp256r1GetXy
+        }
+        DeprecatedSyscallSelector::Secp256r1Mul => ProfilerDeprecatedSyscallSelector::Secp256r1Mul,
+        DeprecatedSyscallSelector::Secp256r1New => ProfilerDeprecatedSyscallSelector::Secp256r1New,
+        DeprecatedSyscallSelector::SendMessageToL1 => {
+            ProfilerDeprecatedSyscallSelector::SendMessageToL1
+        }
+        DeprecatedSyscallSelector::StorageRead => ProfilerDeprecatedSyscallSelector::StorageRead,
+        DeprecatedSyscallSelector::StorageWrite => ProfilerDeprecatedSyscallSelector::StorageWrite,
+        DeprecatedSyscallSelector::Sha256ProcessBlock => {
+            ProfilerDeprecatedSyscallSelector::Sha256ProcessBlock
+        }
+        DeprecatedSyscallSelector::GetClassHashAt => {
+            ProfilerDeprecatedSyscallSelector::GetClassHashAt
+        }
+        DeprecatedSyscallSelector::KeccakRound => ProfilerDeprecatedSyscallSelector::KeccakRound,
+    }
+}
+
 fn build_profiler_call_type(value: CallType) -> ProfilerCallType {
     match value {
         CallType::Call => ProfilerCallType::Call,
