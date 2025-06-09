@@ -1,7 +1,7 @@
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use serde::Serialize;
-use sncast::{Network, response::structs::VerifyResponse};
+use sncast::{Network, response::verify::VerifyResponse};
 
 #[derive(Serialize, Debug)]
 #[serde(untagged)]

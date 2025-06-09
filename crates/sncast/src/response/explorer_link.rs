@@ -1,16 +1,42 @@
-use super::print::OutputFormat;
 use crate::helpers::block_explorer::{LinkProvider, Service};
+use foundry_ui::Message;
+use serde::Serialize;
+use serde_json::{Value, json};
 use starknet_types_core::felt::Felt;
 
+// TODO(#3391): This code should be refactored to either use common `Message` trait or be directly
+// included in `sncast` output messages.
 pub trait OutputLink {
     const TITLE: &'static str;
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String;
+}
 
-    fn print_links(&self, provider: Box<dyn LinkProvider>) {
-        let title = Self::TITLE;
-        let links = self.format_links(provider);
-        println!("\nTo see {title} details, visit:\n{links}");
+#[derive(Serialize)]
+pub struct ExplorerLinksMessage {
+    title: String,
+    links: String,
+}
+
+impl ExplorerLinksMessage {
+    pub fn new<T>(response: &T, provider: Box<dyn LinkProvider>) -> Self
+    where
+        T: OutputLink,
+    {
+        Self {
+            title: T::TITLE.to_string(),
+            links: response.format_links(provider),
+        }
+    }
+}
+
+impl Message for ExplorerLinksMessage {
+    fn text(&self) -> String {
+        format!("\nTo see {} details, visit:\n{}", self.title, self.links)
+    }
+
+    fn json(&self) -> Value {
+        json!(self)
     }
 }
 
@@ -22,27 +48,29 @@ pub enum ExplorerError {
     UnrecognizedNetwork,
 }
 
-pub fn print_block_explorer_link_if_allowed<T: OutputLink>(
+pub fn block_explorer_link_if_allowed<T>(
     result: &anyhow::Result<T>,
-    output_format: OutputFormat,
     chain_id: Felt,
     show_links: bool,
     explorer: Option<Service>,
-) {
+) -> Option<ExplorerLinksMessage>
+where
+    T: OutputLink + Clone,
+{
     if !show_links {
-        return;
+        return None;
     }
-    if output_format != OutputFormat::Human {
-        return;
-    }
+
     let Ok(response) = result else {
-        return;
+        return None;
     };
     let Ok(network) = chain_id.try_into() else {
-        return;
+        return None;
     };
 
     if let Ok(provider) = explorer.unwrap_or_default().as_provider(network) {
-        response.print_links(provider);
+        return Some(ExplorerLinksMessage::new(response, provider));
     }
+
+    None
 }
