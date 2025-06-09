@@ -33,8 +33,8 @@ data-transformer = { path = "../data-transformer" }
 configuration = { path = "../configuration" }
 shared = { path = "../shared" }
 forge_runner = { path = "../forge-runner" }
-cairo-lang-runner = "2.12.0-dev.1"
-cairo-lang-runnable-utils = "2.12.0-dev.1"
+cairo-lang-runner = "2.12.0-rc.0"
+cairo-lang-runnable-utils = "2.12.0-rc.0"
 cairo-lang-utils.workspace = true
 cairo-lang-sierra.workspace = true
 cairo-lang-casm.workspace = true
