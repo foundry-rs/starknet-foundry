@@ -61,7 +61,7 @@ pub struct Verify {
 
     /// RPC provider url address; overrides url from snfoundry.toml. Will use public provider if not set.
     #[arg(long)]
-    pub rpc: Option<Url>,
+    pub url: Option<Url>,
 }
 
 #[derive(ValueEnum, Clone, Debug)]
@@ -93,11 +93,11 @@ pub async fn verify(
         network,
         confirm_verification,
         package,
-        rpc,
+        url,
     } = args;
 
     let free = network.url(&FreeProvider::semi_random());
-    let rpc_url = rpc.map_or_else(
+    let rpc_url = url.map_or_else(
         || {
             let url = if config.url.is_empty() {
                 &free

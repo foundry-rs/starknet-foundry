@@ -35,7 +35,7 @@ pub struct Body {
     pub compiler_version: semver::Version,
     pub scarb_version: semver::Version,
     pub project_dir_path: Utf8PathBuf,
-    pub name: String,
+    pub contract_name: String,
     pub package_name: String,
     pub license: Option<String>,
     pub files: HashMap<String, String>,
@@ -299,9 +299,9 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
                 }
             })?;
 
-        println!("The following files will be transferred:");
+        UI::default().println(&"The following files will be transferred:");
         for (name, path) in &files {
-            println!("{name}: \n{path}");
+            UI::default().println(&format!("{name}: \n{path}"));
         }
 
         if selected.manifest_metadata.license.is_none() {
@@ -313,7 +313,7 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
             compiler_version: cairo_version,
             scarb_version,
             project_dir_path: project_dir_path.to_path_buf(),
-            name: contract_name.clone(),
+            contract_name: contract_name.clone(),
             license: selected.manifest_metadata.license.clone(),
             package_name: selected.name,
             files: files
