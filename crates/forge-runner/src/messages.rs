@@ -3,6 +3,7 @@ use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSu
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use console::style;
 use foundry_ui::Message;
+use foundry_ui::components::error::ErrorMessage;
 use serde::Serialize;
 use serde_json::{Value, json};
 
@@ -53,7 +54,14 @@ impl TestResultMessage {
 
         let debugging_trace = test_result
             .debugging_trace()
-            .map(|trace| format!("\n{trace}"))
+            .map(|trace| match trace {
+                Ok(trace) => {
+                    format!("\n{trace}")
+                }
+                Err(error) => {
+                    ErrorMessage::new(format!("Error collecting debugging trace: {error}")).text()
+                }
+            })
             .unwrap_or_default();
 
         let fuzzer_report = if let AnyTestCaseSummary::Fuzzing(test_result) = test_result {

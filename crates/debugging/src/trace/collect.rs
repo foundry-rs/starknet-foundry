@@ -1,3 +1,4 @@
+use crate::contracts_data_store::{ContractsDataStore, NetworkLookupError};
 use crate::trace::types::{
     CallerAddress, ContractName, ContractTrace, Selector, StorageAddress, TestName, TraceInfo,
     TransformedCallResult, TransformedCalldata,
@@ -6,127 +7,107 @@ use crate::{Trace, Verbosity};
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult as CheatnetCallResult,
 };
-use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::{CallTrace, CallTraceNode};
 use data_transformer::{reverse_transform_input, reverse_transform_output};
-use serde_json::Value;
 use starknet::core::types::contract::AbiEntry;
+use starknet_api::core::ClassHash;
 use starknet_api::execution_utils::format_panic_data;
+
+#[derive(thiserror::Error, Debug, Clone)]
+pub enum CollectorError {
+    #[error(transparent)]
+    NetworkLookupError(#[from] NetworkLookupError),
+}
 
 pub struct Collector<'a> {
     call_trace: &'a CallTrace,
-    contracts_data: &'a ContractsData,
+    contracts_data_store: &'a mut ContractsDataStore,
     verbosity: Verbosity,
 }
 
 impl<'a> Collector<'a> {
-    /// Creates a new [`Collector`] from a given `cheatnet` [`CallTrace`], [`ContractsData`] and [`Verbosity`].
+    /// Creates a new [`Collector`] from a given `cheatnet` [`CallTrace`], [`ContractsDataStore`] and [`Verbosity`].
     #[must_use]
     pub fn new(
         call_trace: &'a CallTrace,
-        contracts_data: &'a ContractsData,
+        contracts_data_store: &'a mut ContractsDataStore,
         verbosity: Verbosity,
     ) -> Collector<'a> {
         Collector {
             call_trace,
-            contracts_data,
+            contracts_data_store,
             verbosity,
         }
     }
 
-    /// Creates a new collector for a given `cheatnet` [`CallTrace`]
-    /// and inherits the [`ContractsData`] and [`Verbosity`] from the original collector.
-    fn with_call_trace(&self, call_trace: &'a CallTrace) -> Collector<'a> {
-        Collector {
-            call_trace,
-            contracts_data: self.contracts_data,
-            verbosity: self.verbosity,
-        }
-    }
-
-    pub fn collect_trace(&self, test_name: String) -> Trace {
-        Trace {
+    pub fn collect_trace(&mut self, test_name: String) -> Result<Trace, CollectorError> {
+        Ok(Trace {
             test_name: TestName(test_name),
-            nested_calls: self.collect_nested_calls(),
-        }
+            nested_calls: self.collect_nested_calls()?,
+        })
     }
 
-    fn collect_contract_trace(&self) -> ContractTrace {
-        let nested_calls = self.collect_nested_calls();
-        let contract_name = self.collect_contract_name();
-        let abi = self.collect_abi(&contract_name);
+    fn collect_contract_trace(&mut self) -> Result<ContractTrace, CollectorError> {
+        let verbosity = self.verbosity;
         let entry_point = &self.call_trace.entry_point;
+        let nested_calls = self.collect_nested_calls()?;
+        let contract_name = self.collect_contract_name();
+        let abi = self.collect_abi()?.to_owned();
 
         let trace_info = TraceInfo {
             contract_name,
-            entry_point_type: self.verbosity.detailed(|| entry_point.entry_point_type),
-            calldata: self
-                .verbosity
-                .standard(|| self.collect_transformed_calldata(&abi)),
-            storage_address: self
-                .verbosity
-                .detailed(|| StorageAddress(entry_point.storage_address)),
-            caller_address: self
-                .verbosity
-                .detailed(|| CallerAddress(entry_point.caller_address)),
-            call_type: self.verbosity.detailed(|| entry_point.call_type),
+            entry_point_type: verbosity.detailed(|| entry_point.entry_point_type),
+            calldata: verbosity.standard(|| self.collect_transformed_calldata(&abi)),
+            storage_address: verbosity.detailed(|| StorageAddress(entry_point.storage_address)),
+            caller_address: verbosity.detailed(|| CallerAddress(entry_point.caller_address)),
+            call_type: verbosity.detailed(|| entry_point.call_type),
             nested_calls,
-            call_result: self
-                .verbosity
-                .standard(|| self.collect_transformed_call_result(&abi)),
+            call_result: verbosity.standard(|| self.collect_transformed_call_result(&abi)),
         };
 
-        ContractTrace {
-            selector: self.collect_selector(),
+        Ok(ContractTrace {
+            selector: self.collect_selector()?,
             trace_info,
-        }
+        })
     }
 
-    fn collect_nested_calls(&self) -> Vec<ContractTrace> {
+    fn collect_nested_calls(&mut self) -> Result<Vec<ContractTrace>, CollectorError> {
         self.call_trace
             .nested_calls
             .iter()
             .filter_map(CallTraceNode::extract_entry_point_call)
             .map(|call_trace| {
-                self.with_call_trace(&call_trace.borrow())
-                    .collect_contract_trace()
+                Collector {
+                    call_trace: &call_trace.borrow(),
+                    contracts_data_store: self.contracts_data_store,
+                    verbosity: self.verbosity,
+                }
+                .collect_contract_trace()
             })
-            .collect()
+            .collect::<Result<_, _>>()
     }
 
     fn collect_contract_name(&self) -> ContractName {
-        self.contracts_data
-            .get_contract_name(
-                &self.call_trace.entry_point.class_hash.expect(
-                    "class_hash should be set in `fn execute_call_entry_point` in cheatnet",
-                ),
-            )
+        self.contracts_data_store
+            .get_contract_name(&self.class_hash())
             .cloned()
-            .map(ContractName)
-            .expect("contract name should be present in `ContractsData`")
+            .unwrap_or_else(|| ContractName("forked contract".to_string()))
     }
 
-    fn collect_selector(&self) -> Selector {
-        self.contracts_data
-            .get_function_name(&self.call_trace.entry_point.entry_point_selector)
-            .cloned()
-            .map(Selector)
-            .expect("selector should be present in `ContractsData`")
+    fn collect_selector(&mut self) -> Result<Selector, CollectorError> {
+        Ok(self
+            .contracts_data_store
+            .get_or_fetch_selector(
+                &self.call_trace.entry_point.entry_point_selector,
+                &self.class_hash(),
+            )?
+            .clone())
     }
 
-    fn collect_abi(&self, contract_name: &ContractName) -> Vec<AbiEntry> {
-        let artifacts = self
-            .contracts_data
-            .get_artifacts(&contract_name.0)
-            .expect("artifact should be present in `ContractsData`");
-
-        let abi = serde_json::from_str::<Value>(&artifacts.sierra)
-            .expect("sierra should be valid json")
-            .get_mut("abi")
-            .expect("abi value should be present in sierra")
-            .take();
-
-        serde_json::from_value(abi).expect("abi value should be valid ABI")
+    fn collect_abi(&mut self) -> Result<&[AbiEntry], CollectorError> {
+        Ok(self
+            .contracts_data_store
+            .get_or_fetch_abi(&self.class_hash())?)
     }
 
     fn collect_transformed_calldata(&self, abi: &[AbiEntry]) -> TransformedCalldata {
@@ -158,6 +139,15 @@ impl<'a> Collector<'a> {
                 CallFailure::Error { msg } => format_result_message("error", &msg.to_string()),
             },
         })
+    }
+
+    fn class_hash(&self) -> ClassHash {
+        *self
+            .call_trace
+            .entry_point
+            .class_hash
+            .as_ref()
+            .expect("class_hash should be set in `fn execute_call_entry_point` in cheatnet")
     }
 }
 

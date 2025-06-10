@@ -17,15 +17,15 @@ type FunctionName = String;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct ContractsData {
-    contracts: HashMap<ContractName, ContractData>,
-    class_hashes: BiMap<ContractName, ClassHash>,
-    selectors: HashMap<EntryPointSelector, FunctionName>,
+    pub contracts: HashMap<ContractName, ContractData>,
+    pub class_hashes: BiMap<ContractName, ClassHash>,
+    pub selectors: HashMap<EntryPointSelector, FunctionName>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-struct ContractData {
-    artifacts: StarknetContractArtifacts,
-    class_hash: ClassHash,
+pub struct ContractData {
+    pub artifacts: StarknetContractArtifacts,
+    pub class_hash: ClassHash,
     source_sierra_path: Utf8PathBuf,
 }
 
@@ -118,7 +118,8 @@ impl ContractsData {
     }
 }
 
-fn build_name_selector_map(abi: Vec<AbiEntry>) -> HashMap<EntryPointSelector, FunctionName> {
+#[must_use]
+pub fn build_name_selector_map(abi: Vec<AbiEntry>) -> HashMap<EntryPointSelector, FunctionName> {
     let mut selector_map = HashMap::new();
     for abi_entry in abi {
         match abi_entry {
