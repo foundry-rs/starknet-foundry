@@ -43,8 +43,6 @@ cairo-lang-syntax = "2.12.0-rc.0"
 cairo-lang-test-plugin = "2.12.0-rc.0"
 cairo-lang-starknet-classes = "2.12.0-rc.0"
 cairo-lang-parser = "2.12.0-rc.0"
-cairo-lang-runner = "2.12.0-rc.0"
-cairo-lang-runnable-utils = "2.12.0-rc.0"
 cairo-vm = "2.2.0"
 cairo-annotations = { git = "https://github.com/software-mansion/cairo-annotations.git", branch = "bump-cairo-to-2.12" }
 dirs = "6.0.0"
