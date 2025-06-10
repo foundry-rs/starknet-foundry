@@ -1973,6 +1973,7 @@ dependencies = [
  "starknet",
  "starknet-types-core",
  "starknet_api",
+ "thiserror 2.0.12",
 ]
 
 [[package]]

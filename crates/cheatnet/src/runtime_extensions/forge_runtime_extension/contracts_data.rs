@@ -118,7 +118,8 @@ impl ContractsData {
     }
 }
 
-fn build_name_selector_map(abi: Vec<AbiEntry>) -> HashMap<EntryPointSelector, FunctionName> {
+#[must_use]
+pub fn build_name_selector_map(abi: Vec<AbiEntry>) -> HashMap<EntryPointSelector, FunctionName> {
     let mut selector_map = HashMap::new();
     for abi_entry in abi {
         match abi_entry {
