@@ -1,9 +1,12 @@
 use anyhow::{Context, Result};
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
+use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
 use cairo_annotations::trace_data::{
     CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint,
     CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
     CallType as ProfilerCallType, CasmLevelInfo, ContractAddress,
+    DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector,
     EntryPointSelector as ProfilerEntryPointSelector, EntryPointType as ProfilerEntryPointType,
     ExecutionResources as ProfilerExecutionResources, TraceEntry as ProfilerTraceEntry,
     VersionedCallTrace as VersionedProfilerCallTrace, VmExecutionResources,
@@ -198,7 +201,7 @@ fn build_profiler_entry_point_type(value: EntryPointType) -> ProfilerEntryPointT
 
 #[expect(dead_code)]
 fn build_profiler_deprecated_syscall_selector(
-    value: DeprecatedSyscallSelector,
+    value: SyscallSelector,
 ) -> ProfilerDeprecatedSyscallSelector {
     match value {
         DeprecatedSyscallSelector::CallContract => ProfilerDeprecatedSyscallSelector::CallContract,
@@ -209,7 +212,6 @@ fn build_profiler_deprecated_syscall_selector(
         DeprecatedSyscallSelector::Deploy => ProfilerDeprecatedSyscallSelector::Deploy,
         DeprecatedSyscallSelector::EmitEvent => ProfilerDeprecatedSyscallSelector::EmitEvent,
         DeprecatedSyscallSelector::GetBlockHash => ProfilerDeprecatedSyscallSelector::GetBlockHash,
-
         DeprecatedSyscallSelector::GetBlockNumber => {
             ProfilerDeprecatedSyscallSelector::GetBlockNumber
         }
@@ -268,6 +270,7 @@ fn build_profiler_deprecated_syscall_selector(
             ProfilerDeprecatedSyscallSelector::GetClassHashAt
         }
         DeprecatedSyscallSelector::KeccakRound => ProfilerDeprecatedSyscallSelector::KeccakRound,
+        DeprecatedSyscallSelector::MetaTxV0 => ProfilerDeprecatedSyscallSelector::Deploy,
     }
 }
 

@@ -37,7 +37,7 @@ pub enum SplitResult {
 /// - Extract the generic argument `felt252` from `Array<felt252>`
 pub fn split(path: &ExprPath, db: &SimpleParserDatabase) -> Result<SplitResult, PathSplitError> {
     let mut splits = Vec::new();
-    let elements = path.elements(db);
+    let elements = path.segments(db).elements(db);
     for (i, p) in elements.iter().enumerate() {
         match p {
             PathSegment::Simple(segment) => {
@@ -45,7 +45,7 @@ pub fn split(path: &ExprPath, db: &SimpleParserDatabase) -> Result<SplitResult, 
             }
             PathSegment::WithGenericArgs(segment) => {
                 splits.push(segment.ident(db).token(db).text(db).to_string());
-                let generic_args = extract_generic_args(segment, db)?;
+                let generic_args = extract_generic_args(&segment, db)?;
 
                 let is_last = i == elements.len() - 1;
                 return if is_last {

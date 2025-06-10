@@ -43,6 +43,7 @@ impl SupportedCalldataKind for ExprBinary {
 fn assert_is_span(expr: &ExprFunctionCall, db: &SimpleParserDatabase) -> Result<()> {
     match expr
         .path(db)
+        .segments(db)
         .elements(db)
         .last()
         .expect("Function call must have a name")

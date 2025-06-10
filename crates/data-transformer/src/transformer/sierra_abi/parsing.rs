@@ -1,10 +1,10 @@
 use anyhow::{Result, bail};
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::Terminal;
+use cairo_lang_syntax::node::ast::WrappedTokenTree;
 use cairo_lang_syntax::node::ast::{
     ArgClause, ArgList, Expr, ExprInlineMacro, Modifier, PathSegment, PathSegment::Simple,
-    WrappedArgList,
 };
+use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode};
 use itertools::Itertools;
 
 fn modifier_syntax_token(item: &Modifier) -> &'static str {
@@ -57,6 +57,7 @@ pub fn parse_inline_macro(
 ) -> Result<Vec<Expr>> {
     match invocation
         .path(db)
+        .segments(db)
         .elements(db)
         .iter()
         .last()
@@ -79,15 +80,16 @@ pub fn parse_inline_macro(
         }
     }
 
-    match invocation.arguments(db) {
-        WrappedArgList::BracketedArgList(args) => {
-            let arglist = args.arguments(db);
+    match invocation.arguments(db).subtree(db) {
+        WrappedTokenTree::Bracketed(token_tree) => {
+            let node = token_tree.tokens(db).node;
+            let arglist = ArgList::from_syntax_node(db, node);
             parse_argument_list(&arglist, db)
         }
-        WrappedArgList::ParenthesizedArgList(_) | WrappedArgList::BracedArgList(_) => {
+        WrappedTokenTree::Parenthesized(_) | WrappedTokenTree::Braced(_) => {
             bail!("`array` macro supports only square brackets: array![]")
         }
-        WrappedArgList::Missing(_) => unreachable!(
+        WrappedTokenTree::Missing(_) => unreachable!(
             "If any type of parentheses is missing, then diagnostics have been reported and whole flow should have already been terminated."
         ),
     }
