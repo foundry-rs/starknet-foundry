@@ -48,7 +48,6 @@ pub async fn test_happy_case(account_type: &str) {
         output,
         indoc! {r"
         command: account create
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
         estimated_fee: [..]
         message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
@@ -142,7 +141,6 @@ pub async fn test_happy_case_generate_salt() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         command: account create
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
         estimated_fee: [..]
         message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
@@ -228,7 +226,6 @@ pub async fn test_happy_case_accounts_file_already_exists() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         command: account create
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
         estimated_fee: [..]
         message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
@@ -360,7 +357,6 @@ pub async fn test_happy_case_keystore(account_type: &str) {
 
     snapbox.assert().stdout_matches(formatdoc! {r"
         command: account create
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
         estimated_fee: [..]
         message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
@@ -563,7 +559,6 @@ pub async fn test_happy_case_keystore_int_format() {
 
     snapbox.assert().stdout_matches(formatdoc! {r"
         command: account create
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: [..]
         estimated_fee: [..]
         message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
@@ -607,7 +602,6 @@ pub async fn test_happy_case_keystore_hex_format() {
 
     snapbox.assert().stdout_matches(formatdoc! {r"
         command: account create
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
         estimated_fee: [..]
         message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
@@ -659,7 +653,6 @@ pub async fn test_happy_case_default_name_generation() {
         let snapbox = runner(&create_args).current_dir(tempdir.path());
         snapbox.assert().stdout_matches(formatdoc! {r"
         command: account create
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
         estimated_fee: [..]
         message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
@@ -693,7 +686,6 @@ pub async fn test_happy_case_default_name_generation() {
     let snapbox = runner(&create_args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
         command: account create
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x0[..]
         estimated_fee: [..]
         message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
