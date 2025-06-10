@@ -95,7 +95,7 @@ async fn test_happy_case_contract_address() {
         "voyager",
         "--network",
         "sepolia",
-        "--rpc",
+        "--url",
         &mock_rpc_uri,
     ];
 
@@ -187,7 +187,7 @@ async fn test_happy_case_class_hash() {
         "voyager",
         "--network",
         "sepolia",
-        "--rpc",
+        "--url",
         &mock_rpc_uri,
     ];
 
@@ -277,7 +277,7 @@ async fn test_happy_case_with_confirm_verification_flag() {
         "--network",
         "sepolia",
         "--confirm-verification",
-        "--rpc",
+        "--url",
         &mock_rpc_uri,
     ];
 
@@ -365,7 +365,7 @@ async fn test_failed_verification_contract_address() {
         "voyager",
         "--network",
         "sepolia",
-        "--rpc",
+        "--url",
         &mock_rpc_uri,
     ];
 
@@ -456,7 +456,7 @@ async fn test_failed_verification_class_hash() {
         "voyager",
         "--network",
         "sepolia",
-        "--rpc",
+        "--url",
         &mock_rpc_uri,
     ];
 
@@ -546,7 +546,7 @@ async fn test_failed_class_hash_lookup() {
         "voyager",
         "--network",
         "sepolia",
-        "--rpc",
+        "--url",
         &mock_rpc_uri,
     ];
 
@@ -635,7 +635,7 @@ async fn test_virtual_workspaces() {
         "voyager",
         "--network",
         "sepolia",
-        "--rpc",
+        "--url",
         &mock_rpc_uri,
     ];
 
@@ -726,7 +726,7 @@ async fn test_contract_name_not_found() {
         "voyager",
         "--network",
         "sepolia",
-        "--rpc",
+        "--url",
         &mock_rpc_uri,
     ];
 
