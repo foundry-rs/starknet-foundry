@@ -1,3 +1,4 @@
+use crate::transformer::split_expressions;
 use anyhow::{Result, bail};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::WrappedTokenTree;
@@ -82,9 +83,15 @@ pub fn parse_inline_macro(
 
     match invocation.arguments(db).subtree(db) {
         WrappedTokenTree::Bracketed(token_tree) => {
-            let node = token_tree.tokens(db).as_syntax_node();
-            let arglist = ArgList::from_syntax_node(db, node);
-            parse_argument_list(&arglist, db)
+            let node_text = token_tree
+                .tokens(db)
+                .elements(db)
+                .into_iter()
+                .map(|token| token.as_syntax_node().get_text(db).to_string())
+                .collect::<Vec<String>>()
+                .join("");
+
+            split_expressions(&node_text, db)
         }
         WrappedTokenTree::Parenthesized(_) | WrappedTokenTree::Braced(_) => {
             bail!("`array` macro supports only square brackets: array![]")
