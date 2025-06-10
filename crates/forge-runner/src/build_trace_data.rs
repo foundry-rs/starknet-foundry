@@ -209,7 +209,9 @@ fn build_profiler_deprecated_syscall_selector(
         DeprecatedSyscallSelector::DelegateL1Handler => {
             ProfilerDeprecatedSyscallSelector::DelegateL1Handler
         }
-        DeprecatedSyscallSelector::Deploy => ProfilerDeprecatedSyscallSelector::Deploy,
+        DeprecatedSyscallSelector::Deploy | DeprecatedSyscallSelector::MetaTxV0 => {
+            ProfilerDeprecatedSyscallSelector::Deploy
+        }
         DeprecatedSyscallSelector::EmitEvent => ProfilerDeprecatedSyscallSelector::EmitEvent,
         DeprecatedSyscallSelector::GetBlockHash => ProfilerDeprecatedSyscallSelector::GetBlockHash,
         DeprecatedSyscallSelector::GetBlockNumber => {
@@ -270,7 +272,6 @@ fn build_profiler_deprecated_syscall_selector(
             ProfilerDeprecatedSyscallSelector::GetClassHashAt
         }
         DeprecatedSyscallSelector::KeccakRound => ProfilerDeprecatedSyscallSelector::KeccakRound,
-        DeprecatedSyscallSelector::MetaTxV0 => ProfilerDeprecatedSyscallSelector::Deploy,
     }
 }
 
