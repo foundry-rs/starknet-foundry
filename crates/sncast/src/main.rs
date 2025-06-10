@@ -511,8 +511,7 @@ async fn run_async_command(
                     !import.silent && result.is_ok() && io::stdout().is_terminal();
 
                 if run_interactive_prompt {
-                    if let Some(account_name) =
-                        result.as_ref().ok().and_then(|r| r.account_name.clone())
+                    if let Some(account_name) = result.as_ref().ok().map(|r| r.account_name.clone())
                     {
                         if let Err(err) = prompt_to_add_account_as_default(account_name.as_str()) {
                             // TODO(#3436)
