@@ -1,3 +1,4 @@
+use anyhow::Error;
 use console::style;
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -29,5 +30,11 @@ impl<T: Message> Message for ErrorMessage<T> {
             "message_type": "error",
             "message": self.0.json(),
         })
+    }
+}
+
+impl From<Error> for ErrorMessage<String> {
+    fn from(error: Error) -> Self {
+        Self::new(format!("{error:#}"))
     }
 }
