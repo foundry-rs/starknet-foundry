@@ -88,9 +88,7 @@ pub fn parse_inline_macro(
                 .elements(db)
                 .into_iter()
                 .map(|token| token.as_syntax_node().get_text(db).to_string())
-                .collect::<Vec<String>>()
-                .join("");
-
+                .collect::<String>();
             split_expressions(&node_text, db)
         }
         WrappedTokenTree::Parenthesized(_) | WrappedTokenTree::Braced(_) => {
