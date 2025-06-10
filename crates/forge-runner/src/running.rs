@@ -424,6 +424,7 @@ fn extract_test_case_summary(
                         contracts_data,
                         trace_verbosity,
                         case.name.clone(),
+                        case.config.fork_config.clone(),
                     ),
                 }
             }
