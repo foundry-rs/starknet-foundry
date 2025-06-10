@@ -123,9 +123,22 @@ fn package_sources(package_metadata: &PackageMetadata) -> Result<Vec<Utf8PathBuf
         .filter(|f| f.file_type().is_file())
         .filter(|f| {
             if let Some(ext) = f.path().extension() {
-                return ext == OsStr::new(CAIRO_EXT);
+                if ext != OsStr::new(CAIRO_EXT) {
+                    return false;
+                }
+                // Skip test files
+                let path_str = f.path().to_string_lossy();
+                if path_str.contains("tests") {
+                    return false;
+                }
+                // Skip files containing #[test] attributes
+                if let Ok(contents) = fs::read_to_string(f.path()) {
+                    if contents.contains("#[test]") {
+                        return false;
+                    }
+                }
+                return true;
             }
-
             false
         })
         .map(walkdir::DirEntry::into_path)
