@@ -45,7 +45,7 @@ pub fn split(path: &ExprPath, db: &SimpleParserDatabase) -> Result<SplitResult, 
             }
             PathSegment::WithGenericArgs(segment) => {
                 splits.push(segment.ident(db).token(db).text(db).to_string());
-                let generic_args = extract_generic_args(&segment, db)?;
+                let generic_args = extract_generic_args(segment, db)?;
 
                 let is_last = i == elements.len() - 1;
                 return if is_last {
