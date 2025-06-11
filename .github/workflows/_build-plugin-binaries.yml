@@ -51,11 +51,6 @@ jobs:
             lib-name: "libsnforge_scarb_plugin"
             ext: "dylib"
 
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            lib-name: "snforge_scarb_plugin"
-            ext: "dll"
-
           # The scarb builds for following platforms are experimental and not officially supported by starknet-foundry.
           # https://docs.swmansion.com/scarb/download.html#platform-support
           # Reference issue: TODO(#2886)
