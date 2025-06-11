@@ -245,7 +245,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests
-        run: cargo test --release -p sncast
+        run: cargo test --release -p sncast --no-fail-fast
       # TODO(#3096): Remove running tests with `scarb_since_2_10`
       - uses: software-mansion/setup-scarb@v1
         with:

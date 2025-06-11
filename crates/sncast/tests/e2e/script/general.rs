@@ -49,8 +49,7 @@ async fn test_happy_case(account: &str) {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script run
-        status: success
+        Success: Script executed successfully
     "});
 }
 
@@ -107,8 +106,8 @@ async fn test_fail_when_using_starknet_syscall() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: script run
-        error: Got an exception while executing a hint: Hint Error: Starknet syscalls are not supported
+        Command: script run
+        Error: Got an exception while executing a hint: Hint Error: Starknet syscalls are not supported
         "},
     );
 }
@@ -200,8 +199,7 @@ async fn test_multiple_packages_happy_case() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script run
-        status: success
+        Success: Script executed successfully
     "});
 }
 
@@ -250,8 +248,7 @@ async fn test_run_script_display_debug_traits() {
         debug invoke_result: InvokeResult { transaction_hash: [..] }
         call_result: [2]
         debug call_result: CallResult { data: [2] }
-        command: script run
-        status: success
+        Success: Script executed successfully
     "});
 }
 
@@ -276,8 +273,8 @@ async fn test_nonexistent_account_address() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: script run
-        error: Account with address 0x1010101010011aaabbcc not found on network SN_SEPOLIA
+        Command: script run
+        Error: Account with address 0x1010101010011aaabbcc not found on network SN_SEPOLIA
         "},
     );
 }
@@ -290,8 +287,8 @@ async fn test_no_account_passed() {
     let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts");
     snapbox.assert().success().stdout_matches(indoc! {r#"
         ...
-        command: script run
-        message:[..]
+        Command: script run
+        Message: [..]
             "Account not defined. Please ensure the correct account is passed to `script run` command"
         ...
     "#});
@@ -357,8 +354,7 @@ async fn test_run_script_twice_with_state_file_enabled() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script run
-        status: success
+        Success: Script executed successfully
     "});
 
     let state_file_path = Utf8PathBuf::from_path_buf(
@@ -382,8 +378,7 @@ async fn test_run_script_twice_with_state_file_enabled() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script run
-        status: success
+        Success: Script executed successfully
     "});
 
     let tx_entries_after_second_run = read_txs_from_state_file(&state_file_path).unwrap().unwrap();
@@ -418,8 +413,7 @@ async fn test_state_file_contains_all_failed_txs() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script run
-        status: success
+        Success: Script executed successfully
     "});
 
     let state_file_path = Utf8PathBuf::from_path_buf(

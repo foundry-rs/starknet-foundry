@@ -43,8 +43,9 @@ pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account import
-        account_name: my_account_import
+        Success: Account imported successfully
+
+        Account Name: my_account_import
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -144,8 +145,8 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stderr_matches(formatdoc! {r"
-        command: account import
-        error: Incorrect class hash {} for account address {} was provided
+        Command: account import
+        Error: Incorrect class hash {} for account address {} was provided
     ", DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS});
 }
 
@@ -176,8 +177,8 @@ pub async fn test_nonexistent_account_address_and_nonexistent_class_hash() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stderr_matches(indoc! {r"
-        command: account import
-        error: Class with hash 0x101 is not declared, try using --class-hash with a hash of the declared class
+        Command: account import
+        Error: Class with hash 0x101 is not declared, try using --class-hash with a hash of the declared class
     "});
 }
 
@@ -206,8 +207,8 @@ pub async fn test_nonexistent_account_address() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stderr_matches(indoc! {r"
-        command: account import
-        error: Class hash for the account address 0x123 could not be found. Please provide the class hash
+        Command: account import
+        Error: Class hash for the account address 0x123 could not be found. Please provide the class hash
     "});
 }
 
@@ -246,7 +247,7 @@ pub async fn test_happy_case_add_profile() {
 
     assert_stdout_contains(
         output,
-        format!("add_profile: Profile my_account_import successfully added to {config_path}"),
+        format!("Add Profile:  Profile my_account_import successfully added to {config_path}"),
     );
     let current_dir_utf8 = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
 
@@ -341,8 +342,9 @@ pub async fn test_detect_deployed() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account import
-        account_name: my_account_import
+        Success: Account imported successfully
+
+        Account Name: my_account_import
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -422,8 +424,9 @@ pub async fn test_private_key_from_file() {
     let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account import
-        account_name: my_account_import
+        Success: Account imported successfully
+
+        Account Name: my_account_import
     "});
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
@@ -498,8 +501,8 @@ pub async fn test_invalid_private_key_file_path() {
     assert_stderr_contains(
         output,
         formatdoc! {r"
-        command: account import
-        error: Failed to obtain private key from the file my_private_key: {}
+        Command: account import
+        Error: Failed to obtain private key from the file my_private_key: {}
         ", expected_file_error},
     );
 }
@@ -538,8 +541,8 @@ pub async fn test_invalid_private_key_in_file() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account import
-        error: Failed to obtain private key from the file my_private_key: Failed to create Felt from string
+        Command: account import
+        Error: Failed to obtain private key from the file my_private_key: Failed to create Felt from string
         "},
     );
 }
@@ -631,7 +634,7 @@ pub async fn test_empty_config_add_profile() {
 
     assert_stdout_contains(
         output,
-        format!("add_profile: Profile random successfully added to {config_path}"),
+        format!("Add Profile:  Profile random successfully added to {config_path}"),
     );
     let current_dir_utf8 = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
 
@@ -671,8 +674,9 @@ pub async fn test_happy_case_valid_address_computation() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account import
-        account_name: my_account_import
+        Success: Account imported successfully
+
+        Account Name: my_account_import
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -728,8 +732,8 @@ pub async fn test_invalid_address_computation() {
     let snapbox = runner(&args).current_dir(tempdir.path());
     let computed_address = "0xaf550326d32c8106ef08d25cbc0dba06e5cd10a2201c2e9bc5ad4cbbce45e6";
     snapbox.assert().stderr_matches(formatdoc! {r"
-        command: account import
-        error: Computed address {computed_address} does not match the provided address 0x123. Please ensure that the provided salt, class hash, and account type are correct.
+        Command: account import
+        Error: Computed address {computed_address} does not match the provided address 0x123. Please ensure that the provided salt, class hash, and account type are correct.
     "});
 }
 
@@ -788,8 +792,9 @@ pub async fn test_happy_case_default_name_generation() {
     for i in 0..3 {
         let snapbox = runner(&import_args).current_dir(tempdir.path());
         snapbox.assert().stdout_matches(formatdoc! {r"
-        command: account import
-        account_name: account-{id}
+        Success: Account imported successfully
+
+        Account Name: account-{id}
     ", id = i + 1});
     }
 
@@ -801,8 +806,9 @@ pub async fn test_happy_case_default_name_generation() {
 
     let snapbox = runner(&delete_args).current_dir(tempdir.path()).stdin("Y");
     snapbox.assert().success().stdout_matches(indoc! {r"
-        command: account delete
-        result: Account successfully removed
+        Success: Account deleted
+
+        Account successfully removed
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -813,8 +819,9 @@ pub async fn test_happy_case_default_name_generation() {
 
     let snapbox = runner(&import_args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account import
-        account_name: account-2
+        Success: Account imported successfully
+
+        Account Name: account-2
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))

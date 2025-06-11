@@ -1,5 +1,9 @@
+use foundry_ui::Message;
+use foundry_ui::styling;
 use serde::Serialize;
+use serde_json::Value;
 
+use crate::response::cast_message::SncastMessage;
 use crate::response::command::CommandResponse;
 
 #[derive(Serialize, Clone)]
@@ -9,5 +13,16 @@ pub struct AccountDeleteResponse {
 
 impl CommandResponse for AccountDeleteResponse {}
 
-// TODO(#3391): Update text output to be more user friendly
-// impl Message for SncastMessage<AccountDeleteResponse> {}
+impl Message for SncastMessage<AccountDeleteResponse> {
+    fn text(&self) -> String {
+        styling::OutputBuilder::new()
+            .success_message("Account deleted")
+            .blank_line()
+            .text_field(&self.command_response.result)
+            .build()
+    }
+
+    fn json(&self) -> Value {
+        serde_json::to_value(&self.command_response).unwrap()
+    }
+}
