@@ -692,6 +692,8 @@ async fn run_async_command(
                 verify,
                 &package_metadata.manifest_path,
                 &artifacts,
+                &config,
+                ui,
             )
             .await;
 
