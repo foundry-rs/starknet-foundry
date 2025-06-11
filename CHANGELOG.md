@@ -17,6 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - bug that caused `--trace-verbosity` to panic in fork tests
 
+#### Removed
+
+- Windows support, for migration, see the WSL installation guide.
+
+### Cast
+
+#### Removed
+
+- Windows support, for migration, see the WSL installation guide.
+
 ## [0.44.0] - 2025-05-26
 
 ### Forge

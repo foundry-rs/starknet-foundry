@@ -926,11 +926,7 @@ fn detailed_resources_mixed_resources() {
 fn catch_runtime_errors() {
     let temp = setup_package("simple_package");
 
-    let expected_panic = if cfg!(target_os = "windows") {
-        "The system cannot find the file specified"
-    } else {
-        "No such file or directory"
-    };
+    let expected_panic = "No such file or directory";
 
     temp.child("tests/test.cairo")
         .write_str(
