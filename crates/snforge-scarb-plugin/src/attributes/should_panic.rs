@@ -6,8 +6,8 @@ use crate::{
     config_statement::extend_with_config_cheatcodes,
     types::ParseFromExpr,
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
-use cairo_lang_syntax::node::db::SyntaxGroup;
+use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
+use cairo_lang_parser::utils::SimpleParserDatabase;
 
 mod expected;
 
@@ -23,10 +23,10 @@ impl AttributeTypeData for ShouldPanicCollector {
 
 impl AttributeCollector for ShouldPanicCollector {
     fn args_into_config_expression(
-        db: &dyn SyntaxGroup,
+        db: &SimpleParserDatabase,
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
-    ) -> Result<String, Diagnostics> {
+    ) -> Result<TokenStream, Diagnostics> {
         let named_args = args.named_only::<Self>()?;
 
         let expected = named_args.as_once_optional("expected")?;
@@ -38,8 +38,8 @@ impl AttributeCollector for ShouldPanicCollector {
 
         let expected = expected.as_cairo_expression();
 
-        Ok(format!(
-            "snforge_std::_internals::config_types::ShouldPanicConfig {{ expected: {expected} }}"
+        Ok(quote!(
+            snforge_std::_internals::config_types::ShouldPanicConfig { expected: #expected }
         ))
     }
 }
