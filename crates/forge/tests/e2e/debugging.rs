@@ -115,7 +115,7 @@ fn detailed_debugging_trace_message(test_name: &str) -> String {
         │  ├─ [contract name] SimpleContract
         │  ├─ [entry point type] External
         │  ├─ [calldata] array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
-        │  ├─ [storage address] [..]
+        │  ├─ [contract address] [..]
         │  ├─ [caller address] [..]
         │  ├─ [call type] Call
         │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
@@ -123,7 +123,7 @@ fn detailed_debugging_trace_message(test_name: &str) -> String {
         │  │  ├─ [contract name] SimpleContract
         │  │  ├─ [entry point type] External
         │  │  ├─ [calldata] array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
-        │  │  ├─ [storage address] [..]
+        │  │  ├─ [contract address] [..]
         │  │  ├─ [caller address] [..]
         │  │  ├─ [call type] Call
         │  │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
@@ -131,7 +131,7 @@ fn detailed_debugging_trace_message(test_name: &str) -> String {
         │  │  │  ├─ [contract name] SimpleContract
         │  │  │  ├─ [entry point type] External
         │  │  │  ├─ [calldata] array![]
-        │  │  │  ├─ [storage address] [..]
+        │  │  │  ├─ [contract address] [..]
         │  │  │  ├─ [caller address] [..]
         │  │  │  ├─ [call type] Call
         │  │  │  └─ [call result] success: array![]
@@ -139,7 +139,7 @@ fn detailed_debugging_trace_message(test_name: &str) -> String {
         │  │     ├─ [contract name] SimpleContract
         │  │     ├─ [entry point type] External
         │  │     ├─ [calldata] array![]
-        │  │     ├─ [storage address] [..]
+        │  │     ├─ [contract address] [..]
         │  │     ├─ [caller address] [..]
         │  │     ├─ [call type] Call
         │  │     └─ [call result] success: array![]
@@ -147,7 +147,7 @@ fn detailed_debugging_trace_message(test_name: &str) -> String {
         │     ├─ [contract name] SimpleContract
         │     ├─ [entry point type] External
         │     ├─ [calldata] array![]
-        │     ├─ [storage address] [..]
+        │     ├─ [contract address] [..]
         │     ├─ [caller address] [..]
         │     ├─ [call type] Call
         │     └─ [call result] success: array![]
@@ -155,7 +155,7 @@ fn detailed_debugging_trace_message(test_name: &str) -> String {
            ├─ [contract name] SimpleContract
            ├─ [entry point type] External
            ├─ [calldata] array![0x1, 0x2, 0x3, 0x4, 0x5]
-           ├─ [storage address] [..]
+           ├─ [contract address] [..]
            ├─ [caller address] [..]
            ├─ [call type] Call
            └─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
@@ -169,7 +169,7 @@ fn detailed_debugging_trace_message_fork(test_name: &str) -> String {
         │  ├─ [contract name] forked contract
         │  ├─ [entry point type] External
         │  ├─ [calldata] array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
-        │  ├─ [storage address] [..]
+        │  ├─ [contract address] [..]
         │  ├─ [caller address] [..]
         │  ├─ [call type] Call
         │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
@@ -177,7 +177,7 @@ fn detailed_debugging_trace_message_fork(test_name: &str) -> String {
         │  │  ├─ [contract name] forked contract
         │  │  ├─ [entry point type] External
         │  │  ├─ [calldata] array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
-        │  │  ├─ [storage address] [..]
+        │  │  ├─ [contract address] [..]
         │  │  ├─ [caller address] [..]
         │  │  ├─ [call type] Call
         │  │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
@@ -185,7 +185,7 @@ fn detailed_debugging_trace_message_fork(test_name: &str) -> String {
         │  │  │  ├─ [contract name] forked contract
         │  │  │  ├─ [entry point type] External
         │  │  │  ├─ [calldata] array![]
-        │  │  │  ├─ [storage address] [..]
+        │  │  │  ├─ [contract address] [..]
         │  │  │  ├─ [caller address] [..]
         │  │  │  ├─ [call type] Call
         │  │  │  └─ [call result] success: array![]
@@ -193,7 +193,7 @@ fn detailed_debugging_trace_message_fork(test_name: &str) -> String {
         │  │     ├─ [contract name] forked contract
         │  │     ├─ [entry point type] External
         │  │     ├─ [calldata] array![]
-        │  │     ├─ [storage address] [..]
+        │  │     ├─ [contract address] [..]
         │  │     ├─ [caller address] [..]
         │  │     ├─ [call type] Call
         │  │     └─ [call result] success: array![]
@@ -201,7 +201,7 @@ fn detailed_debugging_trace_message_fork(test_name: &str) -> String {
         │     ├─ [contract name] forked contract
         │     ├─ [entry point type] External
         │     ├─ [calldata] array![]
-        │     ├─ [storage address] [..]
+        │     ├─ [contract address] [..]
         │     ├─ [caller address] [..]
         │     ├─ [call type] Call
         │     └─ [call result] success: array![]
@@ -209,7 +209,7 @@ fn detailed_debugging_trace_message_fork(test_name: &str) -> String {
            ├─ [contract name] forked contract
            ├─ [entry point type] External
            ├─ [calldata] array![0x1, 0x2, 0x3, 0x4, 0x5]
-           ├─ [storage address] [..]
+           ├─ [contract address] [..]
            ├─ [caller address] [..]
            ├─ [call type] Call
            └─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
