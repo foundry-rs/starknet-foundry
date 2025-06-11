@@ -1,7 +1,7 @@
 use anyhow::{Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args, ValueEnum};
-use foundry_ui::{OutputFormat, UI};
+use foundry_ui::UI;
 use promptly::prompt;
 use scarb_api::StarknetContractArtifacts;
 use shared::verify_and_warn_if_incompatible_rpc_version;
@@ -84,6 +84,7 @@ pub async fn verify(
     manifest_path: &Utf8PathBuf,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
     config: &CastConfig,
+    ui: &UI,
 ) -> Result<VerifyResponse> {
     let Verify {
         contract_address,
@@ -109,12 +110,7 @@ pub async fn verify(
         Ok,
     )?;
     let provider = JsonRpcClient::new(HttpTransport::new(rpc_url.clone()));
-    verify_and_warn_if_incompatible_rpc_version(
-        &provider,
-        rpc_url,
-        &UI::new(OutputFormat::default()),
-    )
-    .await?;
+    verify_and_warn_if_incompatible_rpc_version(&provider, rpc_url, ui).await?;
 
     // Let's ask confirmation
     if !confirm_verification {
@@ -153,16 +149,20 @@ pub async fn verify(
 
     match verifier {
         Verifier::Walnut => {
-            let walnut =
-                WalnutVerificationInterface::new(network, workspace_dir.to_path_buf(), &provider)?;
+            let walnut = WalnutVerificationInterface::new(
+                network,
+                workspace_dir.to_path_buf(),
+                &provider,
+                ui,
+            )?;
             walnut
-                .verify(contract_identifier, contract_name, package)
+                .verify(contract_identifier, contract_name, package, ui)
                 .await
         }
         Verifier::Voyager => {
-            let voyager = Voyager::new(network, workspace_dir.to_path_buf(), &provider)?;
+            let voyager = Voyager::new(network, workspace_dir.to_path_buf(), &provider, ui)?;
             voyager
-                .verify(contract_identifier, contract_name, package)
+                .verify(contract_identifier, contract_name, package, ui)
                 .await
         }
     }

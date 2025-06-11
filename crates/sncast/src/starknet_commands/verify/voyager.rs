@@ -126,17 +126,23 @@ fn package_sources(package_metadata: &PackageMetadata) -> Result<Vec<Utf8PathBuf
                 if ext != OsStr::new(CAIRO_EXT) {
                     return false;
                 }
-                // Skip test files
+                // Skip files in test directories, but keep files with "tests" in their name within src/
                 let path_str = f.path().to_string_lossy();
-                if path_str.contains("tests") {
+
+                // Check if we're in the src directory
+                let in_src_dir = path_str.contains("/src/") || path_str.contains("\\src\\");
+
+                // Skip any test directories, unless we're in src
+                if !in_src_dir
+                    && (path_str.contains("/tests/")
+                        || path_str.contains("\\tests\\")
+                        || path_str.contains("/test/")
+                        || path_str.contains("\\test\\"))
+                {
                     return false;
                 }
-                // Skip files containing #[test] attributes
-                if let Ok(contents) = fs::read_to_string(f.path()) {
-                    if contents.contains("#[test]") {
-                        return false;
-                    }
-                }
+                // We'll include files with #[test] attributes since they might be source files
+                // that happen to include unit tests
                 return true;
             }
             false
@@ -227,6 +233,7 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
         network: Network,
         workspace_dir: Utf8PathBuf,
         provider: &'a JsonRpcClient<HttpTransport>,
+        _ui: &'a UI,
     ) -> Result<Self> {
         let manifest_path = scarb_utils::get_scarb_manifest_for(workspace_dir.as_ref())?;
         let metadata = scarb_utils::get_scarb_metadata_with_deps(&manifest_path)?;
@@ -242,6 +249,7 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
         contract_identifier: ContractIdentifier,
         contract_name: String,
         package: Option<String>,
+        ui: &UI,
     ) -> Result<VerifyResponse> {
         let hash = match contract_identifier {
             ContractIdentifier::ClassHash { class_hash } => Felt::from_hex(class_hash.as_ref())?,
@@ -299,13 +307,13 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
                 }
             })?;
 
-        UI::default().println(&"The following files will be transferred:");
+        ui.println(&"The following files will be transferred:");
         for (name, path) in &files {
-            UI::default().println(&format!("{name}: \n{path}"));
+            ui.println(&format!("{name}: \n{path}"));
         }
 
         if selected.manifest_metadata.license.is_none() {
-            UI::default().println(&WarningMessage::new("License not specified in Scarb.toml"));
+            ui.println(&WarningMessage::new("License not specified in Scarb.toml"));
         }
 
         let client = reqwest::Client::new();

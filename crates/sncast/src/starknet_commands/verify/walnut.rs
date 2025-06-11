@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
+use foundry_ui::UI;
 use reqwest::StatusCode;
 use sncast::Network;
 use sncast::response::verify::VerifyResponse;
@@ -21,6 +22,7 @@ impl VerificationInterface<'_> for WalnutVerificationInterface {
         network: Network,
         workspace_dir: Utf8PathBuf,
         _provider: &JsonRpcClient<HttpTransport>,
+        _ui: &UI,
     ) -> Result<Self> {
         Ok(WalnutVerificationInterface {
             network,
@@ -33,6 +35,7 @@ impl VerificationInterface<'_> for WalnutVerificationInterface {
         identifier: ContractIdentifier,
         contract_name: String,
         _package: Option<String>,
+        _ui: &UI,
     ) -> Result<VerifyResponse> {
         // Read all files name along with their contents in a JSON format
         // in the workspace dir recursively

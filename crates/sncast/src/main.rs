@@ -693,6 +693,7 @@ async fn run_async_command(
                 &package_metadata.manifest_path,
                 &artifacts,
                 &config,
+                ui,
             )
             .await;
 
