@@ -1,5 +1,6 @@
 use crate::{ErrorData, WaitForTransactionError, handle_rpc_error};
 use anyhow::anyhow;
+use console::style;
 use conversions::serde::serialize::CairoSerialize;
 
 use conversions::byte_array::ByteArray;
@@ -27,9 +28,11 @@ impl ResponseError {
 impl Message for ResponseError {
     fn text(&self) -> String {
         format!(
-            "command: {}
-error: {}",
-            self.command, self.error
+            "Command: {}
+{}: {}",
+            self.command,
+            style("Error").red(),
+            self.error
         )
     }
 

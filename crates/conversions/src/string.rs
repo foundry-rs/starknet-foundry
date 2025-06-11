@@ -20,6 +20,10 @@ pub trait IntoHexStr {
     fn into_hex_string(self) -> String;
 }
 
+pub trait IntoPaddedHexStr {
+    fn into_padded_hex_str(self) -> String;
+}
+
 impl<T> IntoDecStr for T
 where
     T: IntoConv<Felt>,
@@ -35,5 +39,14 @@ where
 {
     fn into_hex_string(self) -> String {
         self.into_().to_hex_string()
+    }
+}
+
+impl<T> IntoPaddedHexStr for T
+where
+    T: IntoConv<Felt>,
+{
+    fn into_padded_hex_str(self) -> String {
+        self.into_().to_fixed_hex_string()
     }
 }

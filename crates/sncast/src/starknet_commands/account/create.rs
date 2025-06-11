@@ -5,6 +5,7 @@ use anyhow::{Context, Result, anyhow, bail};
 use bigdecimal::BigDecimal;
 use camino::Utf8PathBuf;
 use clap::Args;
+use console::style;
 use conversions::IntoConv;
 use serde_json::json;
 use sncast::helpers::braavos::{BraavosAccountFactory, check_braavos_account_compatibility};
@@ -87,7 +88,8 @@ pub async fn create(
 
     let estimated_fee_strk = BigDecimal::new(estimated_fee.into(), 18.into());
     let mut message = format!(
-        "Account successfully created but it needs to be deployed. The estimated deployment fee is {estimated_fee_strk} STRK. Prefund the account to cover deployment transaction fee"
+        "Account successfully created but it needs to be deployed. The estimated deployment fee is {} STRK. Prefund the account to cover deployment transaction fee",
+        style(estimated_fee_strk).magenta()
     );
 
     if let Some(keystore) = keystore.clone() {

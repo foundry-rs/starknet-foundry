@@ -2,6 +2,7 @@ pub use message::*;
 
 pub mod components;
 pub mod message;
+pub mod styling;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum OutputFormat {

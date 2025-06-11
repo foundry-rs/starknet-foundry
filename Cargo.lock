@@ -5620,6 +5620,7 @@ dependencies = [
  "clap",
  "clap_complete",
  "configuration",
+ "console",
  "const-hex",
  "conversions",
  "ctor",
