@@ -1,9 +1,11 @@
 use crate::forge_config::ForgeTrackedResource;
 use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary};
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use console::style;
-use foundry_ui::Message;
 use foundry_ui::components::error::ErrorMessage;
+use foundry_ui::components::warning::WarningMessage;
+use foundry_ui::{Message, UI};
 use serde::Serialize;
 use serde_json::{Value, json};
 
@@ -46,6 +48,7 @@ impl TestResultMessage {
         test_result: &AnyTestCaseSummary,
         show_detailed_resources: bool,
         tracked_resource: ForgeTrackedResource,
+        ui: &UI,
     ) -> Self {
         let name = test_result
             .name()
@@ -94,7 +97,7 @@ impl TestResultMessage {
 
         let used_resources = match (show_detailed_resources, &test_result) {
             (true, AnyTestCaseSummary::Single(TestCaseSummary::Passed { used_resources, .. })) => {
-                format_detailed_resources(used_resources, tracked_resource)
+                format_detailed_resources(used_resources, tracked_resource, ui)
             }
             _ => String::new(),
         };
@@ -160,6 +163,7 @@ impl Message for TestResultMessage {
 fn format_detailed_resources(
     used_resources: &UsedResources,
     tracked_resource: ForgeTrackedResource,
+    ui: &UI,
 ) -> String {
     // Sort syscalls by call count
     let mut syscall_usage: Vec<_> = used_resources
@@ -169,32 +173,50 @@ fn format_detailed_resources(
         .collect();
     syscall_usage.sort_by(|a, b| b.1.cmp(&a.1));
 
+    let format_vm_resources = |vm_resources: &ExecutionResources| -> String {
+        let sorted_builtins = sort_by_value(&vm_resources.builtin_instance_counter);
+        let builtins = format_items(&sorted_builtins);
+
+        format!(
+            "
+        steps: {}
+        memory holes: {}
+        builtins: ({})",
+            vm_resources.n_steps, vm_resources.n_memory_holes, builtins
+        )
+    };
+
     let syscalls = format_items(&syscall_usage);
+    let vm_resources_output = format_vm_resources(&used_resources.execution_resources);
 
     match tracked_resource {
         ForgeTrackedResource::CairoSteps => {
-            let vm_resources = &used_resources.execution_resources;
-            let sorted_builtins = sort_by_value(&vm_resources.builtin_instance_counter);
-            let builtins = format_items(&sorted_builtins);
-
             format!(
-                "
-        steps: {}
-        memory holes: {}
-        builtins: ({})
-        syscalls: ({})
-            ",
-                vm_resources.n_steps, vm_resources.n_memory_holes, builtins, syscalls,
+                "{vm_resources_output}
+        syscalls: ({syscalls})
+        "
             )
         }
         ForgeTrackedResource::SierraGas => {
-            format!(
+            let mut output = format!(
                 "
-        sierra_gas_consumed: ({})
-        syscalls: ({})
-            ",
-                used_resources.gas_consumed.0, syscalls,
-            )
+        sierra_gas_consumed: {}
+        syscalls: ({syscalls})",
+                used_resources.gas_consumed.0
+            );
+
+            // TODO(#3399): Remove this warning and `ui` from parameter list
+            if used_resources.execution_resources != ExecutionResources::default() {
+                ui.println(&WarningMessage::new(
+                    "When tracking sierra gas and executing contracts with a Sierra version older than 1.7.0, \
+                    syscall related resources may be incorrectly reported to the wrong resource type \
+                    in the output of `--detailed-resources` flag."
+                ));
+                output.push_str(&vm_resources_output);
+            }
+            output.push('\n');
+
+            output
         }
     }
 }
