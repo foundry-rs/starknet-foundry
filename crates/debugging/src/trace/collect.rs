@@ -1,6 +1,6 @@
 use crate::contracts_data_store::{ContractsDataStore, NetworkLookupError};
 use crate::trace::types::{
-    CallerAddress, ContractName, ContractTrace, Selector, StorageAddress, TestName, TraceInfo,
+    CallerAddress, ContractAddress, ContractName, ContractTrace, Selector, TestName, TraceInfo,
     TransformedCallResult, TransformedCalldata,
 };
 use crate::{Trace, Verbosity};
@@ -58,7 +58,7 @@ impl<'a> Collector<'a> {
             contract_name,
             entry_point_type: verbosity.detailed(|| entry_point.entry_point_type),
             calldata: verbosity.standard(|| self.collect_transformed_calldata(&abi)),
-            storage_address: verbosity.detailed(|| StorageAddress(entry_point.storage_address)),
+            contract_address: verbosity.detailed(|| ContractAddress(entry_point.storage_address)),
             caller_address: verbosity.detailed(|| CallerAddress(entry_point.caller_address)),
             call_type: verbosity.detailed(|| entry_point.call_type),
             nested_calls,

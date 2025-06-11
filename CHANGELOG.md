@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Changed
+
+- `storage address` was renamed to `contract address` in the output of `--trace-verbosity`
+
 #### Fixed
 
 - bug that caused `--trace-verbosity` to panic in fork tests
