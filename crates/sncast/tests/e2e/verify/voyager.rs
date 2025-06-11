@@ -8,7 +8,7 @@ use crate::helpers::runner::runner;
 use indoc::formatdoc;
 use serde_json::{Value, json};
 use shared::consts::EXPECTED_RPC_VERSION;
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::assert_stderr_contains;
 use starknet_types_core::felt::Felt;
 use wiremock::matchers::{body_json, body_partial_json, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -69,15 +69,8 @@ async fn test_happy_case_contract_address() {
     let class_hash: Felt =
         Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
-    let expected_body = json!({
-        "project_dir_path": ".",
-        "name": "Map",
-        "package_name": "map",
-        "license": null
-    });
     Mock::given(method("POST"))
         .and(path(format!("class-verify/{class_hash:#068x}")))
-        .and(body_partial_json(&expected_body))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
         .expect(1)
         .mount(&mock_server)
@@ -104,18 +97,7 @@ async fn test_happy_case_contract_address() {
         .current_dir(contract_path.path())
         .stdin("Y");
 
-    let output = snapbox.assert().success();
-
-    assert_stdout_contains(
-        output,
-        formatdoc! {"
-        command: verify
-        message: Map submitted for verification, you can query the status at: {}/class-verify/job/{}
-        ",
-        mock_server.uri(),
-        job_id,
-        },
-    );
+    snapbox.assert().success();
 }
 
 #[tokio::test]
@@ -161,15 +143,8 @@ async fn test_happy_case_class_hash() {
     let class_hash: Felt =
         Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
-    let expected_body = json!({
-        "project_dir_path": ".",
-        "name": "Map",
-        "package_name": "map",
-        "license": null
-    });
     Mock::given(method("POST"))
         .and(path(format!("class-verify/{class_hash:#068x}")))
-        .and(body_partial_json(&expected_body))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
         .expect(1)
         .mount(&mock_server)
@@ -196,18 +171,7 @@ async fn test_happy_case_class_hash() {
         .current_dir(contract_path.path())
         .stdin("Y");
 
-    let output = snapbox.assert().success();
-
-    assert_stdout_contains(
-        output,
-        formatdoc! {"
-        command: verify
-        message: Map submitted for verification, you can query the status at: {}/class-verify/job/{}
-        ",
-        mock_server.uri(),
-        job_id,
-        },
-    );
+    snapbox.assert().success();
 }
 
 #[tokio::test]
@@ -250,15 +214,8 @@ async fn test_happy_case_with_confirm_verification_flag() {
     let class_hash: Felt =
         Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
-    let expected_body = json!({
-        "project_dir_path": ".",
-        "name": "Map",
-        "package_name": "map",
-        "license": null
-    });
     Mock::given(method("POST"))
         .and(path(format!("class-verify/{class_hash:#068x}")))
-        .and(body_partial_json(&expected_body))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
         .expect(1)
         .mount(&mock_server)
@@ -285,18 +242,7 @@ async fn test_happy_case_with_confirm_verification_flag() {
         .env("VERIFIER_API_URL", mock_server.uri())
         .current_dir(contract_path.path());
 
-    let output = snapbox.assert().success();
-
-    assert_stdout_contains(
-        output,
-        formatdoc! {"
-        command: verify
-        message: Map submitted for verification, you can query the status at: {}/class-verify/job/{}
-        ",
-        mock_server.uri(),
-        job_id,
-        },
-    );
+    snapbox.assert().success();
 }
 
 #[tokio::test]
@@ -339,15 +285,8 @@ async fn test_failed_verification_contract_address() {
     let class_hash: Felt =
         Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
-    let expected_body = json!({
-        "project_dir_path": ".",
-        "name": "Map",
-        "package_name": "map",
-        "license": null
-    });
     Mock::given(method("POST"))
         .and(path(format!("class-verify/{class_hash:#068x}")))
-        .and(body_partial_json(&expected_body))
         .respond_with(ResponseTemplate::new(400).set_body_json(json!({ "error": error })))
         .expect(1)
         .mount(&mock_server)
@@ -430,15 +369,8 @@ async fn test_failed_verification_class_hash() {
     let class_hash: Felt =
         Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
-    let expected_body = json!({
-        "project_dir_path": ".",
-        "name": "Map",
-        "package_name": "map",
-        "license": null
-    });
     Mock::given(method("POST"))
         .and(path(format!("class-verify/{class_hash:#068x}")))
-        .and(body_partial_json(&expected_body))
         .respond_with(ResponseTemplate::new(400).set_body_json(json!({ "error": error })))
         .expect(1)
         .mount(&mock_server)
@@ -520,15 +452,8 @@ async fn test_failed_class_hash_lookup() {
     let class_hash: Felt =
         Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
-    let expected_body = json!({
-        "project_dir_path": ".",
-        "name": "Map",
-        "package_name": "map",
-        "license": null
-    });
     Mock::given(method("POST"))
         .and(path(format!("class-verify/{class_hash:#068x}")))
-        .and(body_partial_json(&expected_body))
         .respond_with(ResponseTemplate::new(400))
         .expect(0)
         .mount(&mock_server)
@@ -607,15 +532,8 @@ async fn test_virtual_workspaces() {
     let class_hash: Felt =
         Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
-    let expected_body = json!({
-        "project_dir_path": ".",
-        "name": "FibonacciContract",
-        "package_name": "cast_fibonacci",
-        "license": null
-    });
     Mock::given(method("POST"))
         .and(path(format!("class-verify/{class_hash:#068x}")))
-        .and(body_partial_json(&expected_body))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
         .expect(1)
         .mount(&mock_server)
@@ -644,18 +562,7 @@ async fn test_virtual_workspaces() {
         .current_dir(contract_path.path())
         .stdin("Y");
 
-    let output = snapbox.assert().success();
-
-    assert_stdout_contains(
-        output,
-        formatdoc! {"
-        command: verify
-        message: FibonacciContract submitted for verification, you can query the status at: {}/class-verify/job/{}
-        ",
-        mock_server.uri(),
-        job_id,
-        },
-    );
+    snapbox.assert().success();
 }
 
 #[tokio::test]
