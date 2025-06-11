@@ -30,9 +30,10 @@ $ sncast --account my_account \
 <summary>Output:</summary>
 
 ```shell
-command: declare
-class_hash: [..]
-transaction_hash: [..]
+Success: Declaration completed
+
+Contract Address: 0x0[..]
+Transaction Hash: 0x0[..]
 
 To see declaration details, visit:
 class: https://starkscan.co/search/[..]

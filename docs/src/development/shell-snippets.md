@@ -19,12 +19,12 @@ $ sncast \
 <summary>Output:</summary>
 
 ```shell
-command: account create
-add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-address: 0x0[..]
-estimated_fee: [..]
-message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
-        
+Success: Account created
+
+Address: 0x[..]
+
+Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
+   
 To see account creation details, visit:
 account: https://sepolia.starkscan.co/contract/[..]
 ```

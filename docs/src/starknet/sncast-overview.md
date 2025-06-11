@@ -44,8 +44,9 @@ $ sncast call \
 <summary>Output:</summary>
 
 ```shell
-command: call
-response: [0x0, 0x0, 0x43686172697a617264, 0x9, 0x0, 0x0, 0x41a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7766661ad02bf]
+Success: Call completed
+
+Response: [0x0, 0x0, 0x43686172697a617264, 0x9, 0x0, 0x0, 0x41a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7766661ad02bf]
 ```
 </details>
 <br>
@@ -114,9 +115,10 @@ Received transaction. Status: Pending
 Received transaction. Status: Pending
 Received transaction. Status: Pending
 Received transaction. Status: Pending
-command: deploy
-contract_address: [..]
-transaction_hash: [..]
+Success: Deployment completed
+
+Contract Address: 0x0[..]
+Transaction Hash: 0x0[..]
 
 To see deployment details, visit:
 contract: https://starkscan.co/search/[..]

@@ -47,9 +47,10 @@ async fn test_happy_case_human_readable() {
         output,
         indoc! {
             "
-            command: deploy
-            contract_address: 0x0[..]
-            transaction_hash: 0x0[..]
+            Success: Deployment completed
+
+            Contract Address: 0x0[..]
+            Transaction Hash: 0x0[..]
 
             To see deployment details, visit:
             contract: [..]
@@ -247,8 +248,8 @@ fn test_wrong_calldata() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: deploy
-        error: Transaction execution error [..]
+        Command: deploy
+        Error: Transaction execution error [..]
         "},
     );
 }
@@ -300,8 +301,8 @@ fn test_contract_already_deployed() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: deploy
-        error: Transaction execution error [..]
+        Command: deploy
+        Error: Transaction execution error [..]
         "},
     );
 }
@@ -336,8 +337,8 @@ fn test_too_low_gas() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: deploy
-        error: The transaction's resources don't cover validation or the minimal transaction fee
+        Command: deploy
+        Error: The transaction's resources don't cover validation or the minimal transaction fee
         "},
     );
 }
@@ -354,4 +355,37 @@ async fn test_happy_case_shell() {
         .arg(URL)
         .arg(CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA);
     snapbox.assert().success();
+}
+
+#[tokio::test]
+async fn test_json_output_format() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "--json",
+        "deploy",
+        "--url",
+        URL,
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--salt",
+        "0x2",
+        "--unique",
+    ];
+    let args = apply_test_resource_bounds_flags(args);
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r#"
+            {"contract_address":"0x[..]","transaction_hash":"0x[..]"}
+            {"links":"contract: https://sepolia.starkscan.co/contract/0x[..]\ntransaction: https://sepolia.starkscan.co/tx/0x[..]\n","title":"deployment"}
+            "#},
+    );
 }

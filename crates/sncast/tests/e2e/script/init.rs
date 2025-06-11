@@ -16,8 +16,9 @@ fn test_script_init_happy_case() {
 
     snapbox.assert().stdout_matches(formatdoc! {r"
         [WARNING] [..]
-        command: script init
-        message: Successfully initialized `{script_name}` at [..]/scripts/{script_name}
+        Success: Script initialization completed
+        
+        Initialized `{script_name}` at [..]/scripts/{script_name}
     "});
 
     let script_dir_path = temp_dir.path().join(INIT_SCRIPTS_DIR).join(script_name);
@@ -96,8 +97,8 @@ fn test_init_fails_when_scripts_dir_exists_in_cwd() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: script init
-        error: Scripts directory already exists at [..]
+        Command: script init
+        Error: Scripts directory already exists at [..]
         "},
     );
 }
@@ -121,8 +122,8 @@ fn test_init_twice_fails() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: script init
-        error: Scripts directory already exists at [..]
+        Command: script init
+        Error: Scripts directory already exists at [..]
         "},
     );
 }
@@ -140,8 +141,9 @@ fn test_initialized_script_compiles() {
         output,
         formatdoc! {r"
         [WARNING] The newly created script isn't auto-added to the workspace. [..]
-        command: script init
-        message: Successfully initialized `{script_name}` at [..]{script_name}
+        Success: Script initialization completed
+        
+        Initialized `{script_name}` at [..]{script_name}
     "},
     );
 

@@ -35,8 +35,9 @@ $ sncast \
 <summary>Output:</summary>
 
 ```shell
-command: invoke
-transaction_hash: [..]
+Success: Invoke completed
+
+Transaction Hash: [..]
 
 To see invocation details, visit:
 transaction: https://sepolia.starkscan.co/tx/[..]
@@ -62,8 +63,9 @@ $ sncast invoke \
 <summary>Output:</summary>
 
 ```shell
-command: invoke
-transaction_hash: [..]
+Success: Invoke completed
+
+Transaction Hash: [..]
 
 To see invocation details, visit:
 transaction: https://sepolia.starkscan.co/tx/[..]

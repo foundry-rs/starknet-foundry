@@ -26,9 +26,10 @@ $ sncast \
 <summary>Output:</summary>
 
 ```shell
-command: deploy
-contract_address: [..]
-transaction_hash: [..]
+Success: Deployment completed
+
+Contract Address: 0x0[..]
+Transaction Hash: 0x0[..]
 
 To see deployment details, visit:
 contract: https://sepolia.starkscan.co/contract/[..]
@@ -64,9 +65,10 @@ $ sncast deploy \
 <summary>Output:</summary>
 
 ```shell
-command: deploy
-contract_address: [..]
-transaction_hash: [..]
+Success: Deployment completed
+
+Contract Address: 0x0[..]
+Transaction Hash: 0x0[..]
 
 To see deployment details, visit:
 contract: https://sepolia.starkscan.co/contract/[..]
@@ -94,9 +96,10 @@ $ sncast deploy \
 <summary>Output:</summary>
 
 ```shell
-command: deploy
-contract_address: [..]
-transaction_hash: [..]
+Success: Deployment completed
+
+Contract Address: 0x0[..]
+Transaction Hash: 0x0[..]
 
 To see deployment details, visit:
 contract: https://sepolia.starkscan.co/contract/[..]
@@ -120,9 +123,10 @@ $ sncast deploy \
 <summary>Output:</summary>
     
 ```shell
-command: deploy
-contract_address: [..]
-transaction_hash: [..]
+Success: Deployment completed
+
+Contract Address: 0x0[..]
+Transaction Hash: 0x0[..]
 
 Details:
 contract: https://sepolia.starkscan.co/contract/[..]
