@@ -87,6 +87,7 @@ impl RunForPackageArgs {
         let test_filter = TestsFilter::from_flags(
             args.test_filter.clone(),
             args.exact,
+            args.skip.clone(),
             args.only_ignored,
             args.include_ignored,
             args.rerun_failed,
