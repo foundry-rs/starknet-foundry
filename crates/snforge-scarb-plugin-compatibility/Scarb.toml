@@ -1,0 +1,8 @@
+[package]
+name = "snforge_scarb_plugin_compatibility"
+version = "0.44.0"
+edition = "2024_07"
+include = ["target/scarb/cairo-plugin/"]
+cairo-version = "<2.11.4+nightly-2025-06-18"
+
+[cairo-plugin]
