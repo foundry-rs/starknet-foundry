@@ -82,6 +82,16 @@ jobs:
     with:
       overridden_plugin_version: ${{ needs.prepare.outputs.nightly_version }}
       ref: ${{ needs.prepare.outputs.nightly_branch }}
+      plugin_name: "snforge-scarb-plugin"
+
+  build-compatibility-plugin-binaries:
+    name: Build compatibility plugin binaries
+    needs: prepare
+    uses: ./.github/workflows/_build-plugin-binaries.yml
+    with:
+      overridden_plugin_version: ${{ needs.prepare.outputs.nightly_version }}
+      ref: ${{ needs.prepare.outputs.nightly_branch }}
+      plugin_name: "snforge-scarb-plugin-compatibility"
 
   publish-plugin:
     needs: [ prepare, build-plugin-binaries ]
@@ -90,9 +100,21 @@ jobs:
     with:
       prod_registry: false
       overridden_plugin_version: ${{ needs.prepare.outputs.nightly_version }}
+      plugin_name: "snforge-scarb-plugin"
+
+
+  publish-compatibility-plugin:
+    needs: [ prepare, build-compatibility-plugin-binaries ]
+    uses: ./.github/workflows/_publish-plugin.yml
+    secrets: inherit
+    with:
+      prod_registry: false
+      overridden_plugin_version: ${{ needs.prepare.outputs.nightly_version }}
+      plugin_name: "snforge-scarb-plugin-compatibility"
+
 
   publish-std:
-    needs: [ prepare, publish-plugin ]
+    needs: [ prepare, publish-plugin, publish-compatibility-plugin ]
     uses: ./.github/workflows/publish-std.yml
     secrets: inherit
     with:
@@ -102,7 +124,7 @@ jobs:
 
   test-binary:
     name: Test binary
-    needs: [ prepare, build-binaries, build-plugin-binaries, publish-plugin, publish-std]
+    needs: [ prepare, build-binaries, build-plugin-binaries, publish-plugin, publish-compatibility-plugin, publish-std ]
     uses: ./.github/workflows/_test-binaries.yml
     secrets: inherit
     with:
