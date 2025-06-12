@@ -44,9 +44,6 @@ jobs:
           toolchain: stable
 
       - uses: software-mansion/setup-scarb@v1
-        with:
-          # TODO(#3144) Remove
-          scarb-version: "2.11.0"
 
       - name: Publish sncast_std
         working-directory: sncast_std
@@ -71,4 +68,20 @@ jobs:
             rm Scarb.toml.bak 2>/dev/null
           fi
           
+          scarb publish --allow-dirty ${{ inputs.prod_registry == true && ' ' || '--index https://scarbs.dev/' }}
+
+      - name: Publish snforge_std_compatibility
+        working-directory: snforge_std_compatibility
+        run: |
+          source ../scripts/handle_version.sh
+
+          update_version_in_file "Scarb.toml" "${{ inputs.override_std_version }}"
+
+          if ${{ inputs.prod_registry == true }}; then
+            scarb add snforge_scarb_plugin_compatibility@${{ inputs.plugin_dep_version }}
+          else
+            sed -i.bak "/snforge_scarb_plugin_compatibility/ s/\(snforge_scarb_plugin_compatibility = \).*/\1{ version = \"=${{ inputs.plugin_dep_version }}\", registry = \"https:\/\/scarbs.dev\/\" }/" Scarb.toml
+            rm Scarb.toml.bak 2>/dev/null
+          fi
+
           scarb publish --allow-dirty ${{ inputs.prod_registry == true && ' ' || '--index https://scarbs.dev/' }}
