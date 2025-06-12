@@ -1,7 +1,4 @@
-use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector::{
-    Deploy, EmitEvent, GetBlockHash, GetExecutionInfo, Keccak, SendMessageToL1, StorageRead,
-    StorageWrite,
-};
+use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
 use cairo_vm::types::builtin_name::BuiltinName;
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
@@ -144,15 +141,30 @@ fn syscalls_count() {
 
     assert_passed(&result);
 
-    assert_syscall(&result, "keccak", Keccak, 1);
-    assert_syscall(&result, "deploy", Deploy, 1);
-    assert_syscall(&result, "storage_read", StorageRead, 1);
-    assert_syscall(&result, "storage_write", StorageWrite, 1);
-    assert_syscall(&result, "get_block_hash", GetBlockHash, 1);
-    assert_syscall(&result, "get_execution_info", GetExecutionInfo, 1);
-    assert_syscall(&result, "get_execution_info_v2", GetExecutionInfo, 1);
-    assert_syscall(&result, "send_message_to_l1", SendMessageToL1, 1);
-    assert_syscall(&result, "emit_event", EmitEvent, 1);
+    assert_syscall(&result, "keccak", SyscallSelector::Keccak, 1);
+    assert_syscall(&result, "deploy", SyscallSelector::Deploy, 1);
+    assert_syscall(&result, "storage_read", SyscallSelector::StorageRead, 1);
+    assert_syscall(&result, "storage_write", SyscallSelector::StorageWrite, 1);
+    assert_syscall(&result, "get_block_hash", SyscallSelector::GetBlockHash, 1);
+    assert_syscall(
+        &result,
+        "get_execution_info",
+        SyscallSelector::GetExecutionInfo,
+        1,
+    );
+    assert_syscall(
+        &result,
+        "get_execution_info_v2",
+        SyscallSelector::GetExecutionInfo,
+        1,
+    );
+    assert_syscall(
+        &result,
+        "send_message_to_l1",
+        SyscallSelector::SendMessageToL1,
+        1,
+    );
+    assert_syscall(&result, "emit_event", SyscallSelector::EmitEvent, 1);
 }
 
 #[test]
@@ -197,8 +209,8 @@ fn accumulate_syscalls() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-    assert_syscall(&result, "single_write", StorageWrite, 1);
-    assert_syscall(&result, "double_write", StorageWrite, 2);
+    assert_syscall(&result, "single_write", SyscallSelector::StorageWrite, 1);
+    assert_syscall(&result, "double_write", SyscallSelector::StorageWrite, 2);
 }
 
 #[test]
@@ -271,7 +283,7 @@ fn deploy_with_constructor_calldata() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
 
-    assert_syscall(&result, "deploy_with_syscall", Deploy, 1);
+    assert_syscall(&result, "deploy_with_syscall", SyscallSelector::Deploy, 1);
     // As of Starknet v0.13.5, deploy syscall uses constant 7 pedersen builtins + 1 additional as calldata factor in this case
     // https://github.com/starkware-libs/sequencer/blob/b9d99e118ad23664cda984505414d49c3cb6b19f/crates/blockifier/resources/blockifier_versioned_constants_0_13_5.json#L166
     assert_builtin(&result, "deploy_with_syscall", BuiltinName::pedersen, 8);
