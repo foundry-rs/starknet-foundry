@@ -142,18 +142,7 @@ pub fn execute_call_entry_point(
         return Err(PreExecutionError::FraudAttempt.into());
     }
 
-    let entry_point = ExecutableCallEntryPoint {
-        class_hash,
-        code_address: entry_point.code_address,
-        entry_point_type: entry_point.entry_point_type,
-        entry_point_selector: entry_point.entry_point_selector,
-        calldata: entry_point.calldata.clone(),
-        storage_address: entry_point.storage_address,
-        caller_address: entry_point.caller_address,
-        call_type: entry_point.call_type,
-        initial_gas: entry_point.initial_gas,
-    };
-
+    let entry_point = entry_point.clone().into_executable(class_hash);
     let contract_class = state.get_compiled_class(class_hash)?;
 
     context.revert_infos.0.push(EntryPointRevertInfo::new(
