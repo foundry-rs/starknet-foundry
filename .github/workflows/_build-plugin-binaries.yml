@@ -10,11 +10,17 @@ on:
       ref:
         required: false
         type: string
+      plugin_name:
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       overridden_plugin_version:
         required: false
+        type: string
+      plugin_name:
+        required: true
         type: string
 
 jobs:
@@ -32,23 +38,23 @@ jobs:
             os: ubuntu-latest
             # Use cross to link oldest GLIBC possible.
             cross: true
-            lib-name: "libsnforge_scarb_plugin"
+            lib-name-prefix: "lib"
             ext: "so"
 
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
             cross: true
-            lib-name: "libsnforge_scarb_plugin"
+            lib-name-prefix: "lib"
             ext: "so"
 
           - target: x86_64-apple-darwin
             os: macos-latest
-            lib-name: "libsnforge_scarb_plugin"
+            lib-name-prefix: "lib"
             ext: "dylib"
 
           - target: aarch64-apple-darwin
             os: macos-latest
-            lib-name: "libsnforge_scarb_plugin"
+            lib-name-prefix: "lib"
             ext: "dylib"
 
           # The scarb builds for following platforms are experimental and not officially supported by starknet-foundry.
@@ -93,7 +99,7 @@ jobs:
           echo "CARGO=cross" >> $GITHUB_ENV
 
       - name: Build
-        working-directory: crates/snforge-scarb-plugin
+        working-directory: crates/${{ inputs.plugin_name }}
         run: ${{ env.CARGO }} build --release --locked --target ${{ matrix.target }}
 
       - name: Rename Binary
@@ -103,22 +109,23 @@ jobs:
           
           source scripts/handle_version.sh
           
-          PACKAGE_NAME="snforge_scarb_plugin"
+          PACKAGE_NAME=${{ inputs.plugin_name }}
+          PACKAGE_NAME=${PACKAGE_NAME//-/_}  # Replace `-` with `_` in name
           PACKAGE_VERSION=$(get_version "${{ inputs.overridden_plugin_version }}")
 
           TARGET="${{ matrix.target }}"
           EXT="${{ matrix.ext }}"
-          LIB_NAME="${{ matrix.lib-name }}"
+          LIB_NAME="${{ matrix.lib-name-prefix }}${PACKAGE_NAME}"
 
           OUTPUT_BINARY="${PACKAGE_NAME}_v${PACKAGE_VERSION}_${TARGET}.${EXT}"
 
-          mv ./crates/snforge-scarb-plugin/target/${TARGET}/release/${LIB_NAME}.${EXT} ./crates/snforge-scarb-plugin/target/${TARGET}/release/${OUTPUT_BINARY}
+          mv ./crates/${{ inputs.plugin_name }}/target/${TARGET}/release/${LIB_NAME}.${EXT} ./crates/${{ inputs.plugin_name }}/target/${TARGET}/release/${OUTPUT_BINARY}
 
-          echo "OUTPUT_BINARY_PATH=./crates/snforge-scarb-plugin/target/${TARGET}/release/${OUTPUT_BINARY}" >> $GITHUB_ENV
+          echo "OUTPUT_BINARY_PATH=./crates/${{ inputs.plugin_name }}/target/${TARGET}/release/${OUTPUT_BINARY}" >> $GITHUB_ENV
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-plugin-${{ matrix.target }}
+          name: build-${{ inputs.plugin_name }}-${{ matrix.target }}
           path: ${{ env.OUTPUT_BINARY_PATH }}
           compression-level: 0
