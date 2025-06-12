@@ -29,12 +29,11 @@ pub fn get_syscalls_gas_consumed(
         .iter()
         .map(|(selector, usage)| {
             let syscall_gas_costs = &versioned_constants.os_constants.gas_costs.syscalls;
-            let syscall_gas_cost =
-                syscall_gas_costs
-                    .get_syscall_gas_cost(selector)
-                    .expect(&format!(
-                        "Failed to get syscall gas cost for selector {selector:?}"
-                    ));
+            let syscall_gas_cost = syscall_gas_costs
+                .get_syscall_gas_cost(selector)
+                .unwrap_or_else(|_| {
+                    panic!("Failed to get syscall gas cost for selector {selector:?}")
+                });
 
             // `linear_factor` is relevant only for `deploy` syscall, for other syscalls it is 0
             // `base_syscall_cost` makes an assert that `linear_factor` is 0
