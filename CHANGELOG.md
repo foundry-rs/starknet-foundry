@@ -7,9 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- `storage address` was renamed to `contract address` in the output of `--trace-verbosity`
+
+#### Fixed
+
+- bug that caused `--trace-verbosity` to panic in fork tests
+
 ## [0.44.0] - 2025-05-26
 
 ### Forge
+
+#### Added
+
+- ETH token is now pre-deployed in every test by default
+- Added `Token::ETH` to snforge_std
 
 #### Changed
 

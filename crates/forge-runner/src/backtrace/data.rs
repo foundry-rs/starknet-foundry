@@ -1,68 +1,69 @@
-use anyhow::{Context, Result};
+use crate::backtrace::display::{Backtrace, BacktraceStack, render_fork_backtrace};
+use anyhow::Context;
+use anyhow::Result;
 use cairo_annotations::annotations::TryFromDebugInfo;
 use cairo_annotations::annotations::coverage::{
-    CodeLocation, ColumnNumber, CoverageAnnotationsV1, LineNumber, VersionedCoverageAnnotations,
+    CoverageAnnotationsV1, VersionedCoverageAnnotations,
 };
 use cairo_annotations::annotations::profiler::{
-    FunctionName, ProfilerAnnotationsV1, VersionedProfilerAnnotations,
+    ProfilerAnnotationsV1, VersionedProfilerAnnotations,
 };
 use cairo_lang_sierra::program::StatementIdx;
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet_classes::contract_class::ContractClass;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use cheatnet::state::EncounteredErrors;
 use indoc::indoc;
 use itertools::Itertools;
-use rayon::prelude::*;
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
 use starknet_api::core::ClassHash;
 use std::collections::{HashMap, HashSet};
-use std::fmt::Display;
-use std::{env, fmt};
 
-const BACKTRACE_ENV: &str = "SNFORGE_BACKTRACE";
+pub struct ContractBacktraceDataMapping(HashMap<ClassHash, ContractOrigin>);
 
-#[must_use]
-pub fn add_backtrace_footer(
-    message: String,
-    contracts_data: &ContractsData,
-    encountered_errors: &EncounteredErrors,
-) -> String {
-    if encountered_errors.is_empty() {
-        return message;
+impl ContractBacktraceDataMapping {
+    pub fn new(contracts_data: &ContractsData, class_hashes: HashSet<ClassHash>) -> Result<Self> {
+        Ok(Self(
+            class_hashes
+                .into_par_iter()
+                .map(|class_hash| {
+                    ContractOrigin::new(&class_hash, contracts_data)
+                        .map(|contract_data| (class_hash, contract_data))
+                })
+                .collect::<Result<_>>()?,
+        ))
     }
 
-    if !is_backtrace_enabled() {
-        return format!(
-            "{message}\nnote: run with `{BACKTRACE_ENV}=1` environment variable to display a backtrace",
-        );
+    pub fn render_backtrace(&self, pcs: &[usize], class_hash: &ClassHash) -> Result<String> {
+        self.0
+            .get(class_hash)
+            .expect("class hash should be present in the data mapping")
+            .render_backtrace(pcs)
     }
-
-    let backtrace = get_backtrace(contracts_data, encountered_errors);
-    format!("{message}\n{backtrace}")
 }
 
-#[must_use]
-pub fn get_backtrace(
-    contracts_data: &ContractsData,
-    encountered_errors: &EncounteredErrors,
-) -> String {
-    let class_hashes = encountered_errors.keys().copied().collect();
-
-    ContractBacktraceDataMapping::new(contracts_data, class_hashes)
-        .and_then(|data_mapping| {
-            encountered_errors
-                .iter()
-                .map(|(class_hash, pcs)| data_mapping.get_backtrace(pcs, class_hash))
-                .map(|backtrace| backtrace.map(|backtrace| backtrace.to_string()))
-                .collect::<Result<Vec<_>>>()
-                .map(|backtrace| backtrace.join("\n"))
-        })
-        .unwrap_or_else(|err| format!("failed to create backtrace: {err}"))
+enum ContractOrigin {
+    Fork(ClassHash),
+    Local(ContractBacktraceData),
 }
 
-#[must_use]
-pub fn is_backtrace_enabled() -> bool {
-    env::var(BACKTRACE_ENV).is_ok_and(|value| value == "1")
+impl ContractOrigin {
+    fn new(class_hash: &ClassHash, contracts_data: &ContractsData) -> Result<Self> {
+        if contracts_data.is_fork_class_hash(class_hash) {
+            Ok(ContractOrigin::Fork(*class_hash))
+        } else {
+            Ok(ContractOrigin::Local(ContractBacktraceData::new(
+                class_hash,
+                contracts_data,
+            )?))
+        }
+    }
+    fn render_backtrace(&self, pcs: &[usize]) -> Result<String> {
+        match self {
+            ContractOrigin::Fork(class_hash) => Ok(render_fork_backtrace(class_hash)),
+            ContractOrigin::Local(data) => data.render_backtrace(pcs),
+        }
+    }
 }
 
 struct ContractBacktraceData {
@@ -179,7 +180,7 @@ impl ContractBacktraceData {
         Ok(stack)
     }
 
-    fn backtrace_stack_from(&self, pcs: &[usize]) -> Result<BacktraceStack> {
+    fn render_backtrace(&self, pcs: &[usize]) -> Result<String> {
         let stack = pcs
             .iter()
             .map(|pc| self.backtrace_from(*pc))
@@ -188,69 +189,11 @@ impl ContractBacktraceData {
 
         let contract_name = &self.contract_name;
 
-        Ok(BacktraceStack {
+        let backtrace_stack = BacktraceStack {
             contract_name,
             stack,
-        })
-    }
-}
+        };
 
-struct ContractBacktraceDataMapping(HashMap<ClassHash, ContractBacktraceData>);
-
-impl ContractBacktraceDataMapping {
-    fn new(contracts_data: &ContractsData, class_hashes: HashSet<ClassHash>) -> Result<Self> {
-        Ok(Self(
-            class_hashes
-                .into_par_iter()
-                .map(|class_hash| {
-                    ContractBacktraceData::new(&class_hash, contracts_data)
-                        .map(|contract_data| (class_hash, contract_data))
-                })
-                .collect::<Result<_>>()?,
-        ))
-    }
-
-    fn get_backtrace(&self, pc: &[usize], class_hash: &ClassHash) -> Result<BacktraceStack> {
-        self.0
-            .get(class_hash)
-            .expect("class hash should be present in the data mapping")
-            .backtrace_stack_from(pc)
-    }
-}
-
-struct Backtrace<'a> {
-    code_location: &'a CodeLocation,
-    function_name: &'a FunctionName,
-    inlined: bool,
-}
-
-struct BacktraceStack<'a> {
-    contract_name: &'a str,
-    stack: Vec<Backtrace<'a>>,
-}
-
-impl Display for Backtrace<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let function_name = &self.function_name.0;
-        let path = &self.code_location.0;
-        let line = self.code_location.1.start.line + LineNumber(1); // most editors start line numbers from 1
-        let col = self.code_location.1.start.col + ColumnNumber(1); // most editors start column numbers from 1
-
-        if self.inlined {
-            write!(f, "(inlined) ")?;
-        }
-
-        write!(f, "{function_name}\n       at {path}:{line}:{col}")
-    }
-}
-
-impl Display for BacktraceStack<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "error occurred in contract '{}'", self.contract_name,)?;
-        writeln!(f, "stack backtrace:")?;
-        for (i, backtrace) in self.stack.iter().enumerate() {
-            writeln!(f, "   {i}: {backtrace}")?;
-        }
-        Ok(())
+        Ok(backtrace_stack.to_string())
     }
 }

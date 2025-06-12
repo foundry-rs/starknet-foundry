@@ -1,14 +1,15 @@
-use anyhow::{Context, Ok, Result, anyhow, ensure};
+use anyhow::{Context, Ok, Result, ensure};
 use camino::Utf8PathBuf;
+use foundry_ui::UI;
+use foundry_ui::components::warning::WarningMessage;
 use std::fs;
 
 use clap::Args;
 use indoc::{formatdoc, indoc};
 use scarb_api::ScarbCommand;
-use shared::print::print_as_warning;
 use sncast::helpers::constants::INIT_SCRIPTS_DIR;
 use sncast::helpers::scarb_utils::get_cairo_version;
-use sncast::response::structs::ScriptInitResponse;
+use sncast::response::script::init::ScriptInitResponse;
 
 #[derive(Args, Debug)]
 pub struct Init {
@@ -16,7 +17,7 @@ pub struct Init {
     pub script_name: String,
 }
 
-pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
+pub fn init(init_args: &Init, ui: &UI) -> Result<ScriptInitResponse> {
     let script_root_dir_path = get_script_root_dir_path(&init_args.script_name)?;
 
     init_scarb_project(&init_args.script_name, &script_root_dir_path)?;
@@ -24,8 +25,8 @@ pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
     let modify_files_result = add_dependencies(&script_root_dir_path)
         .and_then(|()| modify_files_in_src_dir(&init_args.script_name, &script_root_dir_path));
 
-    print_as_warning(&anyhow!(
-        "The newly created script isn't auto-added to the workspace. For more details, please see https://foundry-rs.github.io/starknet-foundry/starknet/script.html#initialize-a-script"
+    ui.println(&WarningMessage::new(
+        &"The newly created script isn't auto-added to the workspace. For more details, please see https://foundry-rs.github.io/starknet-foundry/starknet/script.html#initialize-a-script",
     ));
 
     match modify_files_result {
@@ -36,7 +37,7 @@ pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
             ),
         }),
         Err(err) => {
-            clean_created_dir_and_files(&script_root_dir_path);
+            clean_created_dir_and_files(&script_root_dir_path, ui);
             Err(err)
         }
     }
@@ -157,8 +158,10 @@ fn overwrite_lib_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> Resul
     Ok(())
 }
 
-fn clean_created_dir_and_files(script_root_dir: &Utf8PathBuf) {
+fn clean_created_dir_and_files(script_root_dir: &Utf8PathBuf, ui: &UI) {
     if fs::remove_dir_all(script_root_dir).is_err() {
-        eprintln!("Failed to clean created files by init command at {script_root_dir}");
+        ui.eprintln(&format!(
+            "Failed to clean created files by init command at {script_root_dir}"
+        ));
     }
 }

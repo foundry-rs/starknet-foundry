@@ -1,5 +1,5 @@
 use crate::trace::types::{
-    CallerAddress, ContractName, Selector, StorageAddress, TestName, TransformedCallResult,
+    CallerAddress, ContractAddress, ContractName, Selector, TestName, TransformedCallResult,
     TransformedCalldata,
 };
 use blockifier::execution::entry_point::CallType;
@@ -56,8 +56,8 @@ impl NodeDisplay for TransformedCalldata {
     }
 }
 
-impl NodeDisplay for StorageAddress {
-    const TAG: &'static str = "storage address";
+impl NodeDisplay for ContractAddress {
+    const TAG: &'static str = "contract address";
     fn string_pretty(&self) -> String {
         string_hex(self.0)
     }

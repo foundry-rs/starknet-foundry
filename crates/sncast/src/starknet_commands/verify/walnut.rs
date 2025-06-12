@@ -2,7 +2,7 @@ use anyhow::{Context, Result, anyhow};
 use camino::Utf8PathBuf;
 use reqwest::StatusCode;
 use sncast::Network;
-use sncast::response::structs::VerifyResponse;
+use sncast::response::verify::VerifyResponse;
 use std::env;
 use std::ffi::OsStr;
 use walkdir::WalkDir;

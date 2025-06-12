@@ -5,3 +5,4 @@ pub mod forking;
 pub mod predeployment;
 pub mod runtime_extensions;
 pub mod state;
+pub mod sync_client;

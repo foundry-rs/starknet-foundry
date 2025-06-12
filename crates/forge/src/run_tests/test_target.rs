@@ -1,15 +1,16 @@
 use anyhow::Result;
 use forge_runner::debugging::TraceVerbosity;
+use forge_runner::messages::TestResultMessage;
 use forge_runner::{
     TestCaseFilter,
     forge_config::ForgeConfig,
     maybe_generate_coverage, maybe_save_trace_and_profile,
     package_tests::with_config_resolved::TestTargetWithResolvedConfig,
-    printing::print_test_result,
     run_for_test_case,
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
     test_target_summary::TestTargetSummary,
 };
+use foundry_ui::UI;
 use futures::{StreamExt, stream::FuturesUnordered};
 use std::sync::Arc;
 use tokio::sync::mpsc::channel;
@@ -25,6 +26,7 @@ pub async fn run_for_test_target(
     forge_config: Arc<ForgeConfig>,
     tests_filter: &impl TestCaseFilter,
     trace_verbosity: Option<TraceVerbosity>,
+    ui: Arc<UI>,
 ) -> Result<TestTargetRunResult> {
     let casm_program = tests.casm_program.clone();
 
@@ -58,6 +60,7 @@ pub async fn run_for_test_target(
             tests.sierra_program_path.clone(),
             send.clone(),
             trace_verbosity,
+            &ui.clone(),
         ));
     }
 
@@ -68,11 +71,15 @@ pub async fn run_for_test_target(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        print_test_result(
-            &result,
-            forge_config.output_config.detailed_resources,
-            forge_config.test_runner_config.tracked_resource,
-        );
+        if !result.is_skipped() {
+            let test_result_message = TestResultMessage::new(
+                &result,
+                forge_config.output_config.detailed_resources,
+                forge_config.test_runner_config.tracked_resource,
+                &ui,
+            );
+            ui.println(&test_result_message);
+        }
 
         let trace_path = maybe_save_trace_and_profile(
             &result,
@@ -93,6 +100,7 @@ pub async fn run_for_test_target(
     maybe_generate_coverage(
         &forge_config.output_config.execution_data_to_save,
         &saved_trace_data_paths,
+        &ui,
     )?;
 
     let summary = TestTargetSummary {

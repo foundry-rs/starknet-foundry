@@ -11,6 +11,8 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::Use
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use conversions::byte_array::ByteArray;
 use conversions::felt::ToShortString;
+use debugging::CollectorError;
+use foundry_ui::UI;
 use num_traits::Pow;
 use shared::utils::build_readable_text;
 use starknet_api::execution_resources::GasVector;
@@ -134,7 +136,7 @@ pub enum TestCaseSummary<T: TestType> {
         /// Message to be printed after the test case run
         msg: Option<String>,
         /// Trace of the test case run
-        debugging_trace: Option<debugging::Trace>,
+        debugging_trace: Option<Result<debugging::Trace, CollectorError>>,
         /// Information on used gas
         gas_info: <T as TestType>::GasInfo,
         /// Resources used during test
@@ -151,7 +153,7 @@ pub enum TestCaseSummary<T: TestType> {
         /// Message returned by the test case run
         msg: Option<String>,
         /// Trace of the test case run
-        debugging_trace: Option<debugging::Trace>,
+        debugging_trace: Option<Result<debugging::Trace, CollectorError>>,
         /// Random arguments used in the fuzz test case run
         fuzzer_args: Vec<String>,
         /// Statistics of the test run
@@ -167,7 +169,6 @@ pub enum TestCaseSummary<T: TestType> {
 }
 
 #[derive(Debug)]
-#[expect(clippy::large_enum_variant)]
 pub enum AnyTestCaseSummary {
     Fuzzing(TestCaseSummary<Fuzzing>),
     Single(TestCaseSummary<Single>),
@@ -194,7 +195,7 @@ impl<T: TestType> TestCaseSummary<T> {
     }
 
     #[must_use]
-    pub fn debugging_trace(&self) -> Option<&debugging::Trace> {
+    pub fn debugging_trace(&self) -> Option<&Result<debugging::Trace, CollectorError>> {
         match self {
             TestCaseSummary::Passed {
                 debugging_trace, ..
@@ -322,6 +323,7 @@ impl TestCaseSummary<Single> {
         contracts_data: &ContractsData,
         versioned_program_path: &Utf8Path,
         trace_verbosity: Option<TraceVerbosity>,
+        ui: &UI,
     ) -> Self {
         let name = test_case.name.clone();
 
@@ -330,6 +332,7 @@ impl TestCaseSummary<Single> {
             contracts_data,
             trace_verbosity,
             name.clone(),
+            test_case.config.fork_config.clone(),
         );
 
         match status {
@@ -348,7 +351,7 @@ impl TestCaseSummary<Single> {
                         )),
                         debugging_trace,
                     };
-                    check_available_gas(test_case.config.available_gas, summary)
+                    check_available_gas(test_case.config.available_gas, summary, ui)
                 }
                 ExpectedTestResult::Panics(expected_panic_value) => TestCaseSummary::Failed {
                     name,
@@ -443,7 +446,7 @@ impl AnyTestCaseSummary {
     }
 
     #[must_use]
-    pub fn debugging_trace(&self) -> Option<&debugging::Trace> {
+    pub fn debugging_trace(&self) -> Option<&Result<debugging::Trace, CollectorError>> {
         match self {
             AnyTestCaseSummary::Fuzzing(case) => case.debugging_trace(),
             AnyTestCaseSummary::Single(case) => case.debugging_trace(),
