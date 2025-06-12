@@ -3,9 +3,7 @@
 /// The SRC5 component allows contracts to expose the interfaces they implement.
 #[starknet::component]
 pub mod SRC5Component {
-    use starknet::{
-        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map},
-    };
+    use starknet::storage::{Map, StorageMapReadAccess, StoragePathEntry, StoragePointerWriteAccess};
 
     const ISRC5_ID: felt252 = 0x3f918d17e5ee77373b56385708f855659a07f75997f365cf87748628532a055;
 
@@ -59,9 +57,8 @@ pub mod SRC5Component {
 
 #[starknet::component]
 pub mod AccessControlComponent {
-    use starknet::storage::StorageMapReadAccess;
-    use starknet::{storage::{StoragePointerWriteAccess, StoragePathEntry, Map}, ContractAddress};
-    use starknet::get_caller_address;
+    use starknet::storage::{Map, StorageMapReadAccess, StoragePathEntry, StoragePointerWriteAccess};
+    use starknet::{ContractAddress, get_caller_address};
     use super::SRC5Component;
     use super::SRC5Component::InternalTrait as SRC5InternalTrait;
 

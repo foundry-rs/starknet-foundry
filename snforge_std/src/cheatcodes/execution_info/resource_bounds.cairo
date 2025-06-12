@@ -1,7 +1,7 @@
-use super::{
-    ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress,
-};
 use starknet::ResourcesBounds;
+use super::{
+    CheatArguments, CheatSpan, ContractAddress, ExecutionInfoMock, Operation, cheat_execution_info,
+};
 
 
 /// Changes the transaction resource bounds for the given contract address and span.
