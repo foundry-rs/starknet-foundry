@@ -1,0 +1,12 @@
+[package]
+name = "snforge_std_compatibility"
+version = "0.44.0"
+edition = "2024_07"
+description = "Cairo testing library"
+documentation = "https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library.html"
+repository = "https://github.com/foundry-rs/starknet-foundry"
+license-file = "../LICENSE"
+re-export-cairo-plugins = ["snforge_scarb_plugin_compatibility"]
+
+[dependencies]
+snforge_scarb_plugin_compatibility = { path = "../crates/snforge-scarb-plugin-compatibility" }
