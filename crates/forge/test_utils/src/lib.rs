@@ -1,13 +1,14 @@
 pub mod runner;
 pub mod running_tests;
 
-use std::path::PathBuf;
-
 use anyhow::Result;
 use assert_fs::fixture::PathCopy;
+use camino::Utf8PathBuf;
 use project_root::get_project_root;
 use scarb_api::ScarbCommand;
 use semver::Version;
+use std::path::PathBuf;
+use std::str::FromStr;
 
 const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
 const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
@@ -32,4 +33,37 @@ pub fn get_assert_macros_version() -> Result<Version> {
             scarb_version_output.cairo
         };
     Ok(assert_macros_version)
+}
+
+#[must_use]
+pub fn get_std_name() -> String {
+    if use_snforge_std_compatibility() {
+        "snforge_std_compatibility".to_string()
+    } else {
+        "snforge_std".to_string()
+    }
+}
+
+pub fn get_std_path() -> Result<String> {
+    let name = get_std_name();
+    Ok(Utf8PathBuf::from_str(&format!("../../{name}"))?
+        .canonicalize_utf8()?
+        .to_string()
+        .replace('\\', "/"))
+}
+
+pub fn get_snforge_std_entry() -> Result<String> {
+    let name = get_std_name();
+    let path = get_std_path()?;
+
+    Ok(format!("{name} = {{ path = \"{path}\" }}"))
+}
+
+#[must_use]
+pub fn use_snforge_std_compatibility() -> bool {
+    let scarb_version_output = ScarbCommand::version()
+        .run()
+        .expect("Failed to get scarb version");
+    // TODO: Replace with condition for `2.12`
+    scarb_version_output.scarb.build.is_empty()
 }

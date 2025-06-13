@@ -9,8 +9,12 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
 use std::{env, fs};
-use test_utils::{get_assert_macros_version, tempdir_with_tool_versions};
-use toml_edit::{DocumentMut, value};
+use test_utils::runner::replace_snforge_std_with_snforge_std_compatibility;
+use test_utils::{
+    get_assert_macros_version, get_snforge_std_entry, get_std_name, get_std_path,
+    tempdir_with_tool_versions, use_snforge_std_compatibility,
+};
+use toml_edit::{DocumentMut, Item, value};
 use walkdir::WalkDir;
 
 pub(crate) fn runner(temp_dir: &TempDir) -> SnapboxCommand {
@@ -69,13 +73,6 @@ pub(crate) fn setup_package_with_file_patterns(
 
     temp.copy_from(package_path, file_patterns).unwrap();
 
-    let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
-        .unwrap()
-        .canonicalize_utf8()
-        .unwrap()
-        .to_string()
-        .replace('\\', "/");
-
     let manifest_path = temp.child("Scarb.toml");
 
     let mut scarb_toml = fs::read_to_string(&manifest_path)
@@ -85,10 +82,45 @@ pub(crate) fn setup_package_with_file_patterns(
 
     let is_workspace = scarb_toml.get("workspace").is_some();
 
-    if is_workspace {
-        scarb_toml["workspace"]["dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
+    if use_snforge_std_compatibility() {
+        replace_snforge_std_with_snforge_std_compatibility(temp.path());
+        let snforge_std_compatibility_path =
+            Utf8PathBuf::from_str("../../snforge_std_compatibility")
+                .unwrap()
+                .canonicalize_utf8()
+                .unwrap()
+                .to_string()
+                .replace('\\', "/");
+
+        if is_workspace {
+            match scarb_toml["workspace"].get_mut("dependencies") {
+                Some(Item::Table(table)) => table.remove("snforge_std"),
+                _ => panic!("Expected table"),
+            };
+            scarb_toml["workspace"]["dependencies"]["snforge_std_compatibility"]["path"] =
+                value(snforge_std_compatibility_path);
+        } else {
+            match scarb_toml.get_mut("dev-dependencies") {
+                Some(Item::Table(table)) => table.remove("snforge_std"),
+                _ => panic!("Expected table"),
+            };
+            scarb_toml["dev-dependencies"]["snforge_std_compatibility"]["path"] =
+                value(snforge_std_compatibility_path);
+        }
     } else {
-        scarb_toml["dev-dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
+        let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
+            .unwrap()
+            .canonicalize_utf8()
+            .unwrap()
+            .to_string()
+            .replace('\\', "/");
+
+        if is_workspace {
+            scarb_toml["workspace"]["dependencies"]["snforge_std"]["path"] =
+                value(snforge_std_path);
+        } else {
+            scarb_toml["dev-dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
+        }
     }
 
     scarb_toml["dependencies"]["starknet"] = value("2.4.0");
@@ -135,12 +167,8 @@ pub(crate) fn setup_hello_workspace() -> TempDir {
     temp.copy_from("tests/data/hello_workspaces", &["**/*.cairo", "**/*.toml"])
         .unwrap();
 
-    let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
-        .unwrap()
-        .canonicalize_utf8()
-        .unwrap()
-        .to_string()
-        .replace('\\', "/");
+    let snforge_std_name = get_std_name();
+    let snforge_std_path = get_std_path().unwrap();
 
     let manifest_path = temp.child("Scarb.toml");
     manifest_path
@@ -155,11 +183,10 @@ pub(crate) fn setup_hello_workspace() -> TempDir {
                 test = "snforge"
                 
                 [workspace.tool.snforge]
-
                 
                 [workspace.dependencies]
                 starknet = "2.4.0"
-                snforge_std = {{ path = "{}" }}
+                {snforge_std_name} = {{ path = "{snforge_std_path}" }}
                 
                 [workspace.package]
                 version = "0.1.0"
@@ -180,9 +207,8 @@ pub(crate) fn setup_hello_workspace() -> TempDir {
                 addition = {{ path = "crates/addition" }}
 
                 [dev-dependencies]
-                snforge_std.workspace = true
+                {snforge_std_name}.workspace = true
                 "#,
-            snforge_std_path
         ))
         .unwrap();
 
@@ -193,13 +219,6 @@ pub(crate) fn setup_virtual_workspace() -> TempDir {
     let temp = tempdir_with_tool_versions().unwrap();
     temp.copy_from("tests/data/virtual_workspace", &["**/*.cairo", "**/*.toml"])
         .unwrap();
-
-    let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
-        .unwrap()
-        .canonicalize_utf8()
-        .unwrap()
-        .to_string()
-        .replace('\\', "/");
 
     let manifest_path = temp.child("Scarb.toml");
     manifest_path
@@ -217,7 +236,7 @@ pub(crate) fn setup_virtual_workspace() -> TempDir {
                 
                 [workspace.dependencies]
                 starknet = "2.4.0"
-                snforge_std = {{ path = "{}" }}
+                {}
                 
                 [workspace.package]
                 version = "0.1.0"
@@ -228,7 +247,7 @@ pub(crate) fn setup_virtual_workspace() -> TempDir {
                 [tool]
                 snforge.workspace = true
                 "#,
-            snforge_std_path
+            get_snforge_std_entry().unwrap()
         ))
         .unwrap();
 
