@@ -1,6 +1,11 @@
 use super::package::RunForPackageArgs;
 use super::structs::{LatestBlocksNumbersMessage, TestsFailureSummaryMessage};
-use crate::warn::{error_if_snforge_std_not_compatible, warn_if_backtrace_without_panic_hint};
+use crate::warn::{
+    error_if_not_snforge_std_compatibility, error_if_snforge_std_compatibility_not_compatible,
+    error_if_snforge_std_not_compatible, warn_if_backtrace_without_panic_hint,
+    warn_if_snforge_std_compatibility_not_compatible,
+    warn_if_snforge_std_compatibility_on_new_scarb,
+};
 use crate::{
     ColorOption, ExitStatus, TestArgs, block_number_map::BlockNumberMap,
     run_tests::package::run_for_package, scarb::build_artifacts_with_scarb,
@@ -38,8 +43,18 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         can_coverage_be_generated(&scarb_metadata)?;
     }
 
-    error_if_snforge_std_not_compatible(&scarb_metadata)?;
-    warn_if_snforge_std_not_compatible(&scarb_metadata, &ui)?;
+    let scarb_version = ScarbCommand::version().run()?.scarb;
+    // TODO: Update this check for `2.12.0` before merging
+    if scarb_version.build.is_empty() {
+        error_if_not_snforge_std_compatibility(&scarb_metadata)?;
+        error_if_snforge_std_compatibility_not_compatible(&scarb_metadata)?;
+        warn_if_snforge_std_compatibility_not_compatible(&scarb_metadata, &ui)?;
+    } else {
+        error_if_snforge_std_not_compatible(&scarb_metadata)?;
+        warn_if_snforge_std_not_compatible(&scarb_metadata, &ui)?;
+        warn_if_snforge_std_compatibility_on_new_scarb(&scarb_metadata, &ui);
+    }
+
     warn_if_backtrace_without_panic_hint(&scarb_metadata, &ui);
 
     let artifacts_dir_path =
