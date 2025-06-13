@@ -1,5 +1,5 @@
 use crate::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
-use crate::{CAIRO_EDITION, NewArgs, Template};
+use crate::{CAIRO_EDITION, MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT, NewArgs, Template};
 use anyhow::{Context, Ok, Result, anyhow, bail, ensure};
 use camino::Utf8PathBuf;
 use include_dir::{Dir, DirEntry, include_dir};
@@ -50,13 +50,13 @@ struct TemplateManifestConfig {
 impl TemplateManifestConfig {
     fn add_dependencies(
         &self,
-        scarb_version: &Version,
         scarb_manifest_path: &PathBuf,
+        use_snforge_std_deprecated: bool,
     ) -> Result<()> {
         if env::var("DEV_DISABLE_SNFORGE_STD_DEPENDENCY").is_err() {
             // TODO: Check Scarb `2.12`
-            let snforge_package = if scarb_version.build.is_empty() {
-                "snforge_std_compatibility"
+            let snforge_package = if use_snforge_std_deprecated {
+                "snforge_std_deprecated"
             } else {
                 "snforge_std"
             };
@@ -76,7 +76,11 @@ impl TemplateManifestConfig {
         Ok(())
     }
 
-    fn update_config(&self, scarb_manifest_path: &Path) -> Result<()> {
+    fn update_config(
+        &self,
+        scarb_manifest_path: &Path,
+        use_snforge_std_deprecated: bool,
+    ) -> Result<()> {
         let scarb_toml_content = fs::read_to_string(scarb_manifest_path)?;
         let mut document = scarb_toml_content
             .parse::<DocumentMut>()
@@ -89,7 +93,7 @@ impl TemplateManifestConfig {
         set_cairo_edition(&mut document, CAIRO_EDITION);
         add_test_script(&mut document);
         add_assert_macros(&mut document)?;
-        add_allow_prebuilt_macros(&mut document)?;
+        add_allow_prebuilt_macros(&mut document, use_snforge_std_deprecated)?;
 
         if self.fork_config {
             add_fork_config(&mut document)?;
@@ -184,6 +188,7 @@ fn overwrite_or_copy_template_files(
     template_path: &Path,
     project_path: &Path,
     project_name: &str,
+    use_snforge_std_deprecated: bool,
 ) -> Result<()> {
     for entry in dir.entries() {
         let path_without_template_name = entry.path().strip_prefix(template_path)?;
@@ -191,17 +196,34 @@ fn overwrite_or_copy_template_files(
         match entry {
             DirEntry::Dir(dir) => {
                 fs::create_dir_all(&destination)?;
-                overwrite_or_copy_template_files(dir, template_path, project_path, project_name)?;
+                overwrite_or_copy_template_files(
+                    dir,
+                    template_path,
+                    project_path,
+                    project_name,
+                    use_snforge_std_deprecated,
+                )?;
             }
             DirEntry::File(file) => {
                 let contents = file.contents();
                 let contents = replace_project_name(contents, project_name)?;
+                let contents = if use_snforge_std_deprecated {
+                    replace_imports_snforge_std_with_deprecated(&contents)?
+                } else {
+                    contents
+                };
                 fs::write(destination, contents)?;
             }
         }
     }
 
     Ok(())
+}
+
+fn replace_imports_snforge_std_with_deprecated(contents: &[u8]) -> Result<Vec<u8>> {
+    let contents = std::str::from_utf8(contents).context("UTF-8 error")?;
+    let contents = contents.replace("snforge_std::", "snforge_std_deprecated::");
+    Ok(contents.into_bytes())
 }
 
 fn replace_project_name(contents: &[u8], project_name: &str) -> Result<Vec<u8>> {
@@ -251,7 +273,10 @@ fn add_assert_macros(document: &mut DocumentMut) -> Result<()> {
     Ok(())
 }
 
-fn add_allow_prebuilt_macros(document: &mut DocumentMut) -> Result<()> {
+fn add_allow_prebuilt_macros(
+    document: &mut DocumentMut,
+    use_snforge_std_deprecated: bool,
+) -> Result<()> {
     let tool_section = document.entry("tool").or_insert(Item::Table(Table::new()));
     let tool_table = tool_section
         .as_table_mut()
@@ -261,7 +286,11 @@ fn add_allow_prebuilt_macros(document: &mut DocumentMut) -> Result<()> {
     let mut scarb_table = Table::new();
 
     let mut allow_prebuilt_macros = Array::new();
-    allow_prebuilt_macros.push("snforge_std");
+    if use_snforge_std_deprecated {
+        allow_prebuilt_macros.push("snforge_std_deprecated");
+    } else {
+        allow_prebuilt_macros.push("snforge_std");
+    }
 
     scarb_table.insert(
         "allow-prebuilt-plugins",
@@ -371,21 +400,32 @@ pub fn new(
         create_snfoundry_manifest(&snfoundry_manifest_path)?;
     }
 
+    let use_snforge_deprecated =
+        !MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT.matches(&scarb_version);
+
     let template_config = TemplateManifestConfig::try_from(&template)?;
-    template_config.add_dependencies(&scarb_version, &scarb_manifest_path)?;
-    template_config.update_config(&scarb_manifest_path)?;
+    template_config.add_dependencies(&scarb_manifest_path, use_snforge_deprecated)?;
+    template_config.update_config(&scarb_manifest_path, use_snforge_deprecated)?;
 
     let template_dir = get_template_dir(&template)?;
-    overwrite_or_copy_template_files(&template_dir, template_dir.path(), &project_path, &name)?;
+    overwrite_or_copy_template_files(
+        &template_dir,
+        template_dir.path(),
+        &project_path,
+        &name,
+        use_snforge_deprecated,
+    )?;
 
     extend_gitignore(&project_path)?;
 
     // Fetch to create lock file.
-    ScarbCommand::new_with_stdio()
-        .manifest_path(scarb_manifest_path)
-        .arg("fetch")
-        .run()
-        .context("Failed to fetch created project")?;
+    if env::var("DEV_USE_OFFLINE_MODE").is_err() {
+        ScarbCommand::new_with_stdio()
+            .manifest_path(scarb_manifest_path)
+            .arg("fetch")
+            .run()
+            .context("Failed to fetch created project")?;
+    }
 
     Ok(())
 }
