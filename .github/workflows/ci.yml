@@ -37,7 +37,7 @@ jobs:
         with:
           tool: nextest@0.9.98
       - name: Build and archive tests
-        run: cargo nextest archive --release -p forge --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
+        run: cargo nextest archive --release -p forge --features skip_plugin_checks --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v4
         with:
@@ -106,6 +106,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - uses: taiki-e/install-action@v2
@@ -116,6 +117,17 @@ jobs:
           name: nextest-archive-${{ runner.os }}
       - name: nextest partition ${{ matrix.partition }}/3
         run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}.tar.zst' e2e
+
+  test-plugin-checks:
+    name: Test plugin across different scarb versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
+      - run: cargo test --package forge e2e::plugin_versions
 
   test-requirements-check-special-conditions:
     name: Test requirements check special conditions
