@@ -21,6 +21,7 @@ mod fuzzing;
 mod io_operations;
 mod new;
 mod plugin_diagnostics;
+mod plugin_versions;
 mod requirements;
 mod running;
 mod steps;

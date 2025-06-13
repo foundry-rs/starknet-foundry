@@ -9,6 +9,7 @@ edition.workspace = true
 assert_non_exact_gas = []
 
 [dependencies]
+walkdir.workspace = true
 anyhow.workspace = true
 shared.workspace = true
 blockifier.workspace = true
