@@ -1,10 +1,9 @@
 use super::common::runner::{get_current_branch, get_remote_url, setup_package, test_runner};
-use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
-use camino::Utf8PathBuf;
+use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::{AsOutput, assert_stdout, assert_stdout_contains};
-use std::{fs, str::FromStr};
-use test_utils::tempdir_with_tool_versions;
+use std::fs;
+use test_utils::{get_snforge_std_entry, use_snforge_std_deprecated};
 use toml_edit::{DocumentMut, value};
 
 #[test]
@@ -54,13 +53,22 @@ fn simple_package() {
 
 #[test]
 fn simple_package_with_git_dependency() {
-    let temp = tempdir_with_tool_versions().unwrap();
+    let temp = setup_package("simple_package");
 
-    temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-        .unwrap();
     let remote_url = get_remote_url().to_lowercase();
     let branch = get_current_branch();
     let manifest_path = temp.child("Scarb.toml");
+
+    let snforge_std = if use_snforge_std_deprecated() {
+        format!(
+            r#"snforge_std_deprecated = {{ git = "https://github.com/{remote_url}", branch = "{branch}" }}"#
+        )
+    } else {
+        format!(
+            r#"snforge_std = {{ git = "https://github.com/{remote_url}", branch = "{branch}" }}"#
+        )
+    };
+
     manifest_path
         .write_str(&formatdoc!(
             r#"
@@ -72,10 +80,8 @@ fn simple_package_with_git_dependency() {
 
             [dependencies]
             starknet = "2.6.4"
-            snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
+            {snforge_std}
             "#,
-            remote_url,
-            branch
         ))
         .unwrap();
 
@@ -759,17 +765,12 @@ fn with_exit_first() {
 
             [dependencies]
             starknet = "2.4.0"
-            snforge_std = {{ path = "{}" }}
+            {}
 
             [tool.snforge]
             exit_first = true
             "#,
-            Utf8PathBuf::from_str("../../snforge_std")
-                .unwrap()
-                .canonicalize_utf8()
-                .unwrap()
-                .to_string()
-                .replace('\\', "/")
+            get_snforge_std_entry().unwrap()
         ))
         .unwrap();
 
@@ -917,6 +918,7 @@ fn should_panic() {
 }
 
 #[test]
+#[cfg_attr(feature = "skip_plugin_checks", ignore = "Plugin checks skipped")]
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
@@ -956,6 +958,11 @@ fn incompatible_snforge_std_version_warning() {
 
 #[test]
 fn incompatible_snforge_std_version_error() {
+    if use_snforge_std_deprecated() {
+        // Skip this test if deprecated is used
+        return;
+    }
+
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
 
@@ -1066,31 +1073,7 @@ fn detailed_resources_mixed_resources() {
 
 #[test]
 fn catch_runtime_errors() {
-    let temp = setup_package("simple_package");
-
-    let expected_panic = "No such file or directory";
-
-    temp.child("tests/test.cairo")
-        .write_str(
-            formatdoc!(
-                r#"
-                use snforge_std::fs::{{FileTrait, read_txt}};
-
-                #[test]
-                #[should_panic(expected: "{}")]
-                fn catch_no_such_file() {{
-                    let file = FileTrait::new("no_way_this_file_exists");
-                    let content = read_txt(@file);
-
-                    assert!(false);
-                }}
-            "#,
-                expected_panic
-            )
-            .as_str(),
-        )
-        .unwrap();
-
+    let temp = setup_package("runtime_errors_package");
     let output = test_runner(&temp).assert();
 
     assert_stdout_contains(
@@ -1099,7 +1082,7 @@ fn catch_runtime_errors() {
             r"
                 [..]Compiling[..]
                 [..]Finished[..]
-                [PASS] simple_package_integrationtest::test::catch_no_such_file [..]
+                [PASS] runtime_errors_package_integrationtest::with_error::catch_no_such_file [..]
             "
         ),
     );

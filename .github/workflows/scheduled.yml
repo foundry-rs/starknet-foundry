@@ -91,7 +91,7 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
-      - run: cargo test --release -p forge e2e
+      - run: cargo test --release -p forge --features skip_plugin_checks e2e
 
   test-cast:
     if: github.event.repository.fork == false
@@ -151,6 +151,7 @@ jobs:
     uses: ./.github/workflows/_build-plugin-binaries.yml
     with:
       overridden_plugin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
+      plugin_name: 'snforge-scarb-plugin'
 
   publish-plugin:
     needs: [get-version, build-plugin-binaries]
@@ -158,9 +159,26 @@ jobs:
     secrets: inherit
     with:
       overridden_plugin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
+      plugin_name: 'snforge-scarb-plugin'
+
+  build-compatibility-plugin-binaries:
+    name: Build compatibility plugin binaries
+    needs: get-version
+    uses: ./.github/workflows/_build-plugin-binaries.yml
+    with:
+      overridden_plugin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
+      plugin_name: 'snforge-scarb-plugin-compatibility'
+
+  publish-compatibility-plugin:
+    needs: [get-version, build-compatibility-plugin-binaries]
+    uses: ./.github/workflows/_publish-plugin.yml
+    secrets: inherit
+    with:
+      overridden_plugin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
+      plugin_name: 'snforge-scarb-plugin-compatibility'
 
   publish-std:
-    needs: [get-version, publish-plugin]
+    needs: [get-version, publish-plugin, publish-compatibility-plugin]
     uses: ./.github/workflows/publish-std.yml
     secrets: inherit
     with:
