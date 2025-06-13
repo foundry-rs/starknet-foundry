@@ -19,7 +19,7 @@ members = [
     "crates/foundry-ui",
 ]
 
-exclude = ["crates/snforge-scarb-plugin"]
+exclude = ["crates/snforge-scarb-plugin", "crates/snforge-scarb-plugin-compatibility"]
 
 [workspace.package]
 version = "0.44.0"
