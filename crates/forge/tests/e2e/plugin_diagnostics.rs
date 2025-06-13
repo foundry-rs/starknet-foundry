@@ -7,6 +7,7 @@ use snapbox::cmd::Command as SnapboxCommand;
 use std::fs;
 
 #[test]
+#[cfg_attr(feature = "skip_plugin_checks", ignore)]
 #[allow(clippy::too_many_lines)]
 fn syntax() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/syntax"));
@@ -130,6 +131,7 @@ fn syntax() {
 }
 
 #[test]
+#[cfg_attr(feature = "skip_plugin_checks", ignore)]
 fn semantic() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/semantic"));
     let output = SnapboxCommand::from_std(
@@ -174,6 +176,7 @@ fn semantic() {
 }
 
 #[test]
+#[cfg_attr(feature = "skip_plugin_checks", ignore)]
 fn parameters() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/parameters"));
     let output = SnapboxCommand::from_std(
@@ -227,6 +230,7 @@ fn parameters() {
 }
 
 #[test]
+#[cfg_attr(feature = "skip_plugin_checks", ignore)]
 fn multiple() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/multiple"));
     let output = SnapboxCommand::from_std(
@@ -327,6 +331,7 @@ fn multiple() {
 }
 
 #[test]
+#[cfg_attr(feature = "skip_plugin_checks", ignore)]
 fn generic() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/generic"));
     let output = SnapboxCommand::from_std(
@@ -359,6 +364,7 @@ fn generic() {
 }
 
 #[test]
+#[cfg_attr(feature = "skip_plugin_checks", ignore)]
 fn inline_macros() {
     let temp = setup_package_at_path(Utf8PathBuf::from("diagnostics/inline_macros"));
     let output = SnapboxCommand::from_std(
@@ -391,6 +397,7 @@ fn inline_macros() {
 }
 
 #[test]
+#[cfg_attr(feature = "skip_plugin_checks", ignore)]
 fn different_attributes() {
     fn generate_attributes() -> impl Iterator<Item = String> {
         let attributes = vec![
@@ -432,7 +439,7 @@ fn different_attributes() {
             {attribute}
             {expected_underline}
             
-            error: could not compile `different_integrationtest` due to previous error
+            error: could not compile `attributes_integrationtest` due to previous error
     "},
         );
     }

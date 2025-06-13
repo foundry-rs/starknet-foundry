@@ -44,7 +44,7 @@ mod SimpleContract {
                 }
                     .execute_calls(serviced_call.payload.clone());
                 i = i + 1;
-            }
+            };
 
             calls
         }
