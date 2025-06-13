@@ -11,6 +11,7 @@ scarb_2_9_1 = []
 no_scarb_installed = []
 debugging = []
 assert_non_exact_gas = ["test_utils/assert_non_exact_gas"]
+skip_plugin_checks = []
 supports-panic-backtrace = []
 interact-with-state = []
 

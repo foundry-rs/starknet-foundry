@@ -6406,6 +6406,7 @@ dependencies = [
  "starknet_api",
  "tempfile",
  "tokio",
+ "walkdir",
 ]
 
 [[package]]

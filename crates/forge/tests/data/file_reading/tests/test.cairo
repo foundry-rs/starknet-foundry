@@ -15,7 +15,7 @@ world', 'world', 0,
     while i != content.len() {
         assert(*content[i] == *expected[i], 'unexpected content');
         i += 1;
-    }
+    };
 }
 fn compare_with_expected_content_json(content: Array<felt252>) {
     let hello: ByteArray = "hello";
@@ -45,7 +45,7 @@ world";
     while i != content.len() {
         assert(*content[i] == *expected[i], 'unexpected content');
         i += 1;
-    }
+    };
 }
 
 #[derive(Serde, Drop, PartialEq)]
@@ -179,7 +179,7 @@ fn valid_content_different_folder() {
     while i != content.len() {
         assert(*content[i] == *expected[i], 'unexpected content');
         i += 1;
-    }
+    };
 
     assert(1 == 1, '');
 }
