@@ -2,6 +2,7 @@ use assert_fs::TempDir;
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::formatdoc;
+use semver::Version;
 use shared::command::CommandExt;
 use shared::test_utils::node_url::node_rpc_url;
 use snapbox::cmd::{Command as SnapboxCommand, cargo_bin};
@@ -9,8 +10,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
 use std::{env, fs};
+use test_utils::runner::replace_snforge_std_with_snforge_std_compatibility;
 use test_utils::{get_assert_macros_version, tempdir_with_tool_versions};
-use toml_edit::{DocumentMut, value};
+use toml_edit::{DocumentMut, Item, value};
 use walkdir::WalkDir;
 
 pub(crate) fn runner(temp_dir: &TempDir) -> SnapboxCommand {
@@ -47,6 +49,9 @@ pub(crate) fn setup_package_with_file_patterns(
     package: Package,
     file_patterns: &[&str],
 ) -> TempDir {
+    let scarb_version = scarb_api::ScarbCommand::version().run().unwrap().scarb;
+    let use_snforge_std_compatibility = scarb_version < Version::new(2, 12, 0);
+
     let temp = tempdir_with_tool_versions().unwrap();
 
     let package_path = match package {
@@ -69,13 +74,6 @@ pub(crate) fn setup_package_with_file_patterns(
 
     temp.copy_from(package_path, file_patterns).unwrap();
 
-    let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
-        .unwrap()
-        .canonicalize_utf8()
-        .unwrap()
-        .to_string()
-        .replace('\\', "/");
-
     let manifest_path = temp.child("Scarb.toml");
 
     let mut scarb_toml = fs::read_to_string(&manifest_path)
@@ -85,10 +83,45 @@ pub(crate) fn setup_package_with_file_patterns(
 
     let is_workspace = scarb_toml.get("workspace").is_some();
 
-    if is_workspace {
-        scarb_toml["workspace"]["dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
+    if use_snforge_std_compatibility {
+        replace_snforge_std_with_snforge_std_compatibility(temp.path());
+        let snforge_std_compatibility_path =
+            Utf8PathBuf::from_str("../../snforge_std_compatibility")
+                .unwrap()
+                .canonicalize_utf8()
+                .unwrap()
+                .to_string()
+                .replace('\\', "/");
+
+        if is_workspace {
+            match scarb_toml["workspace"].get_mut("dependencies") {
+                Some(Item::Table(table)) => table.remove("snforge_std"),
+                _ => panic!("Expected table"),
+            };
+            scarb_toml["workspace"]["dependencies"]["snforge_std_compatibility"]["path"] =
+                value(snforge_std_compatibility_path);
+        } else {
+            match scarb_toml.get_mut("dev-dependencies") {
+                Some(Item::Table(table)) => table.remove("snforge_std"),
+                _ => panic!("Expected table"),
+            };
+            scarb_toml["dev-dependencies"]["snforge_std_compatibility"]["path"] =
+                value(snforge_std_compatibility_path);
+        }
     } else {
-        scarb_toml["dev-dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
+        let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
+            .unwrap()
+            .canonicalize_utf8()
+            .unwrap()
+            .to_string()
+            .replace('\\', "/");
+
+        if is_workspace {
+            scarb_toml["workspace"]["dependencies"]["snforge_std"]["path"] =
+                value(snforge_std_path);
+        } else {
+            scarb_toml["dev-dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
+        }
     }
 
     scarb_toml["dependencies"]["starknet"] = value("2.4.0");

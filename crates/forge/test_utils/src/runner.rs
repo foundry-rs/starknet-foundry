@@ -18,6 +18,7 @@ use scarb_api::{
     ScarbCommand, StarknetContractArtifacts, get_contracts_artifacts_and_source_sierra_paths,
     metadata::MetadataCommandExt, target_dir_for_workspace,
 };
+use semver::Version;
 use shared::command::CommandExt;
 use starknet_api::execution_resources::{GasAmount, GasVector};
 use std::{
@@ -27,6 +28,7 @@ use std::{
     process::{Command, Stdio},
     str::FromStr,
 };
+use walkdir::WalkDir;
 
 /// Represents a dependency of a Cairo project
 #[derive(Debug, Clone)]
@@ -112,6 +114,18 @@ impl Contract {
     }
 }
 
+pub fn replace_snforge_std_with_snforge_std_compatibility(dir: &Path) {
+    let temp_dir_files = WalkDir::new(dir);
+    for entry in temp_dir_files {
+        let entry = entry.unwrap();
+        if entry.path().is_file() {
+            let content = fs::read_to_string(entry.path()).unwrap();
+            let modified_content = content.replace("snforge_std", "snforge_std_compatibility");
+            fs::write(entry.path(), modified_content).unwrap();
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct TestCase {
     dir: TempDir,
@@ -124,6 +138,9 @@ impl<'a> TestCase {
     const PACKAGE_NAME: &'a str = "my_package";
 
     pub fn from(test_code: &str, contracts: Vec<Contract>) -> Result<Self> {
+        let scarb_version = ScarbCommand::version().run()?.scarb;
+        let use_snforge_std_compatibility = scarb_version < Version::new(2, 12, 0);
+
         let dir = tempdir_with_tool_versions()?;
         let test_file = dir.child(Self::TEST_PATH);
         test_file.touch()?;
@@ -131,18 +148,47 @@ impl<'a> TestCase {
 
         dir.child("src/lib.cairo").touch().unwrap();
 
-        let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
-            .unwrap()
-            .canonicalize_utf8()
-            .unwrap()
-            .to_string()
-            .replace('\\', "/");
+        if use_snforge_std_compatibility {
+            replace_snforge_std_with_snforge_std_compatibility(dir.path());
 
-        let assert_macros_version = get_assert_macros_version()?.to_string();
+            let snforge_std_compatibility_path =
+                Utf8PathBuf::from_str("../../snforge_std_compatibility")
+                    .unwrap()
+                    .canonicalize_utf8()
+                    .unwrap()
+                    .to_string()
+                    .replace('\\', "/");
 
-        let scarb_toml_path = dir.child("Scarb.toml");
-        scarb_toml_path.write_str(&formatdoc!(
-            r#"
+            let assert_macros_version = get_assert_macros_version()?.to_string();
+
+            let scarb_toml_path = dir.child("Scarb.toml");
+            scarb_toml_path.write_str(&formatdoc!(
+                r#"
+                [package]
+                name = "test_package"
+                version = "0.1.0"
+
+                [dependencies]
+                starknet = "2.4.0"
+                snforge_std_compatibility = {{ path = "{}" }}
+                assert_macros = "{}"
+                "#,
+                snforge_std_compatibility_path,
+                assert_macros_version
+            ))?;
+        } else {
+            let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
+                .unwrap()
+                .canonicalize_utf8()
+                .unwrap()
+                .to_string()
+                .replace('\\', "/");
+
+            let assert_macros_version = get_assert_macros_version()?.to_string();
+
+            let scarb_toml_path = dir.child("Scarb.toml");
+            scarb_toml_path.write_str(&formatdoc!(
+                r#"
                 [package]
                 name = "test_package"
                 version = "0.1.0"
@@ -152,9 +198,10 @@ impl<'a> TestCase {
                 snforge_std = {{ path = "{}" }}
                 assert_macros = "{}"
                 "#,
-            snforge_std_path,
-            assert_macros_version
-        ))?;
+                snforge_std_path,
+                assert_macros_version
+            ))?;
+        }
 
         Ok(Self {
             dir,

@@ -75,7 +75,11 @@ impl TemplateManifestConfig {
         Ok(())
     }
 
-    fn update_config(&self, scarb_manifest_path: &Path) -> Result<()> {
+    fn update_config(
+        &self,
+        scarb_manifest_path: &Path,
+        use_snforge_std_compatibility: bool,
+    ) -> Result<()> {
         let scarb_toml_content = fs::read_to_string(scarb_manifest_path)?;
         let mut document = scarb_toml_content
             .parse::<DocumentMut>()
@@ -88,7 +92,7 @@ impl TemplateManifestConfig {
         set_cairo_edition(&mut document, CAIRO_EDITION);
         add_test_script(&mut document);
         add_assert_macros(&mut document)?;
-        add_allow_prebuilt_macros(&mut document)?;
+        add_allow_prebuilt_macros(&mut document, use_snforge_std_compatibility)?;
 
         if self.fork_config {
             add_fork_config(&mut document)?;
@@ -183,6 +187,7 @@ fn overwrite_or_copy_template_files(
     template_path: &Path,
     project_path: &Path,
     project_name: &str,
+    use_snforge_std_compatibility: bool,
 ) -> Result<()> {
     for entry in dir.entries() {
         let path_without_template_name = entry.path().strip_prefix(template_path)?;
@@ -190,17 +195,34 @@ fn overwrite_or_copy_template_files(
         match entry {
             DirEntry::Dir(dir) => {
                 fs::create_dir_all(&destination)?;
-                overwrite_or_copy_template_files(dir, template_path, project_path, project_name)?;
+                overwrite_or_copy_template_files(
+                    dir,
+                    template_path,
+                    project_path,
+                    project_name,
+                    use_snforge_std_compatibility,
+                )?;
             }
             DirEntry::File(file) => {
                 let contents = file.contents();
                 let contents = replace_project_name(contents, project_name)?;
+                let contents = if use_snforge_std_compatibility {
+                    replace_imports_snforge_std_with_compatibility(&contents)?
+                } else {
+                    contents
+                };
                 fs::write(destination, contents)?;
             }
         }
     }
 
     Ok(())
+}
+
+fn replace_imports_snforge_std_with_compatibility(contents: &[u8]) -> Result<Vec<u8>> {
+    let contents = std::str::from_utf8(contents).context("UTF-8 error")?;
+    let contents = contents.replace("snforge_std::", "snforge_std_compatibility::");
+    Ok(contents.into_bytes())
 }
 
 fn replace_project_name(contents: &[u8], project_name: &str) -> Result<Vec<u8>> {
@@ -250,7 +272,10 @@ fn add_assert_macros(document: &mut DocumentMut) -> Result<()> {
     Ok(())
 }
 
-fn add_allow_prebuilt_macros(document: &mut DocumentMut) -> Result<()> {
+fn add_allow_prebuilt_macros(
+    document: &mut DocumentMut,
+    use_snforge_std_compatibility: bool,
+) -> Result<()> {
     let tool_section = document.entry("tool").or_insert(Item::Table(Table::new()));
     let tool_table = tool_section
         .as_table_mut()
@@ -260,7 +285,11 @@ fn add_allow_prebuilt_macros(document: &mut DocumentMut) -> Result<()> {
     let mut scarb_table = Table::new();
 
     let mut allow_prebuilt_macros = Array::new();
-    allow_prebuilt_macros.push("snforge_std");
+    if use_snforge_std_compatibility {
+        allow_prebuilt_macros.push("snforge_std_compatibility");
+    } else {
+        allow_prebuilt_macros.push("snforge_std");
+    }
 
     scarb_table.insert(
         "allow-prebuilt-plugins",
@@ -371,12 +400,20 @@ pub fn new(
         create_snfoundry_manifest(&snfoundry_manifest_path)?;
     }
 
+    let use_snforge_compatibility = scarb_version < Version::new(2, 12, 0);
+
     let template_config = TemplateManifestConfig::try_from(&template)?;
     template_config.add_dependencies(&scarb_version, &scarb_manifest_path)?;
-    template_config.update_config(&scarb_manifest_path)?;
+    template_config.update_config(&scarb_manifest_path, use_snforge_compatibility)?;
 
     let template_dir = get_template_dir(&template)?;
-    overwrite_or_copy_template_files(&template_dir, template_dir.path(), &project_path, &name)?;
+    overwrite_or_copy_template_files(
+        &template_dir,
+        template_dir.path(),
+        &project_path,
+        &name,
+        use_snforge_compatibility,
+    )?;
 
     extend_gitignore(&project_path)?;
 
