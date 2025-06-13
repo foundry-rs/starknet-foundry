@@ -48,11 +48,21 @@ struct TemplateManifestConfig {
 }
 
 impl TemplateManifestConfig {
-    fn add_dependencies(&self, scarb_manifest_path: &PathBuf) -> Result<()> {
+    fn add_dependencies(
+        &self,
+        scarb_version: &Version,
+        scarb_manifest_path: &PathBuf,
+    ) -> Result<()> {
         if env::var("DEV_DISABLE_SNFORGE_STD_DEPENDENCY").is_err() {
+            // TODO: Check Scarb `2.12`
+            let snforge_package = if scarb_version.build.is_empty() {
+                "snforge_std_compatibility"
+            } else {
+                "snforge_std"
+            };
             let snforge_version = env!("CARGO_PKG_VERSION");
             Dependency {
-                name: "snforge_std".to_string(),
+                name: snforge_package.to_string(),
                 version: snforge_version.to_string(),
                 dev: true,
             }
@@ -323,6 +333,8 @@ pub fn new(
         );
     }
     let name = infer_name(name, &path)?;
+    let scarb_version = ScarbCommand::version().run()?.scarb;
+    println!("Scarb version {scarb_version}");
 
     fs::create_dir_all(&path)?;
     let project_path = path.canonicalize()?;
@@ -361,7 +373,7 @@ pub fn new(
     }
 
     let template_config = TemplateManifestConfig::try_from(&template)?;
-    template_config.add_dependencies(&scarb_manifest_path)?;
+    template_config.add_dependencies(&scarb_version, &scarb_manifest_path)?;
     template_config.update_config(&scarb_manifest_path)?;
 
     let template_dir = get_template_dir(&template)?;
