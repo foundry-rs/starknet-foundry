@@ -112,3 +112,7 @@ indicatif = "0.17.11"
 shell-words = "1.1.0"
 sanitize-filename = "0.6.0"
 derive_more = { version = "2.0.1", features = ["display"] }
+
+[patch.crates-io]
+# until release of `cairo-annotations` 0.4.0
+cairo-annotations = { git = "https://github.com/software-mansion/cairo-annotations.git", rev = "967738d" }
