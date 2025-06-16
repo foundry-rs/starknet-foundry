@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - bug that caused `--trace-verbosity` to panic in fork tests
+- partially fixed gas estimations in tests which include nested calls
 
 ## [0.44.0] - 2025-05-26
 

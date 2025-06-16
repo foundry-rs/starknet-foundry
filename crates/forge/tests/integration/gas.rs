@@ -1768,6 +1768,7 @@ fn nested_call_cost_sierra_gas() {
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
+    // TODO(#3473): Once the bug with duplicated builtins from syscalls in nested calls is fixed, reported consumed sierra gas should be lower.
     // 512000 = event keys cost (see `events_contract_cost_sierra_gas` test)
     // 256000 = event data cost (see `events_contract_cost_sierra_gas` test)
     // 10000 = cost of 1 emit event syscall (see `events_contract_cost_sierra_gas` test)
@@ -1839,6 +1840,7 @@ fn nested_call_cost_in_forked_contract_sierra_gas() {
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
+    // TODO(#3473): Once the bug with duplicated builtins from syscalls in nested calls is fixed, reported consumed sierra gas should be lower.
     // 512000 = event keys cost (see `events_contract_cost_sierra_gas` test)
     // 256000 = event data cost (see `events_contract_cost_sierra_gas` test)
     // 10000 = cost of 1 emit event syscall (see `events_contract_cost_sierra_gas` test)
