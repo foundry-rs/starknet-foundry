@@ -328,7 +328,7 @@ fn with_skip_filter_matching_test_name() {
         Running 2 test(s) from src/
         [IGNORE] simple_package::tests::ignored_test
         [PASS] simple_package::tests::test_fib [..]
-        Tests: 9 passed, 0 failed, 2 ignored, 0 filtered out
+        Tests: 9 passed, 0 failed, 2 ignored, 2 filtered out
         "},
     );
 }
@@ -364,7 +364,7 @@ fn with_skip_filter_matching_multiple_test_name() {
         Running 2 test(s) from src/
         [IGNORE] simple_package::tests::ignored_test
         [PASS] simple_package::tests::test_fib [..]
-        Tests: 7 passed, 0 failed, 2 ignored, 0 filtered out
+        Tests: 7 passed, 0 failed, 2 ignored, 4 filtered out
         "},
     );
 }
