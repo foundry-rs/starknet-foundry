@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+- `--skip` flag to allow excluding any test whose name contains the provided string
+
+#### Changed
+- Updated output format for `--exit-first` flag. Tests skipped due to preceding failures are no longer displayed in the summary. Alternative information is shown when applicable.
+
 #### Changed
 
 - `storage address` was renamed to `contract address` in the output of `--trace-verbosity`
@@ -35,7 +41,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ETH token is now pre-deployed in every test by default
 - Added `Token::ETH` to snforge_std
-- `--skip` flag to exclude tests whose name contains the given string
 
 #### Changed
 
