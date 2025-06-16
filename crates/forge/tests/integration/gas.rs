@@ -1014,11 +1014,17 @@ fn nested_call_cost_cairo_steps() {
         indoc!(
             r#"
             use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
-            use starknet::ContractAddress;
+            use starknet::{ContractAddress, SyscallResult};
 
             #[starknet::interface]
-            pub trait INestedCallsChecker<TContractState> {
-                fn call_other_contract(self: @TContractState, contract_address: ContractAddress);
+            trait IGasCheckerProxy<TContractState> {
+                fn send_l1_message_from_gas_checker(self: @TContractState, address: ContractAddress);
+                fn call_other_contract(
+                    self: @TContractState,
+                    contract_address: ContractAddress,
+                    entry_point_selector: felt252,
+                    calldata: Array::<felt252>,
+                ) -> SyscallResult<Span<felt252>>;
             }
 
             fn deploy_contract(name: ByteArray) -> ContractAddress {
@@ -1029,22 +1035,22 @@ fn nested_call_cost_cairo_steps() {
 
             #[test]
             fn test_call_other_contract() {
-                let contract_address = deploy_contract("NestedCallsChecker");
+                let contract_address = deploy_contract("GasCheckerProxy");
                 let other_contract_address = deploy_contract("HelloStarknet");
 
-                let dispatcher = INestedCallsCheckerDispatcher { contract_address };
-                dispatcher.call_other_contract(other_contract_address);
+                let dispatcher = IGasCheckerProxyDispatcher { contract_address };
+                let _ = dispatcher.call_other_contract(other_contract_address, selector!("example_function"), array![]);
             }
         "#
         ),
         Contract::from_code_path(
             "HelloStarknet".to_string(),
-            Path::new("tests/data/contracts/nested_calls_checker.cairo"),
+            Path::new("tests/data/contracts/hello_starknet_for_nested_calls.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "NestedCallsChecker".to_string(),
-            Path::new("tests/data/contracts/nested_calls_checker.cairo"),
+            "GasCheckerProxy".to_string(),
+            Path::new("tests/data/contracts/gas_checker_proxy.cairo"),
         )
         .unwrap()
     );
@@ -1052,16 +1058,19 @@ fn nested_call_cost_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-    // (5020 + 12) * 0.0025 = 12.58 ~ 13 = gas cost of steps
+    // TODO(#3473): Once the bug with duplicated builtins from syscalls in nested calls is fixed, the number of bitwise and some other builtins should be ~2 lower.
+    // int(2242 * 0.16) = 359 = gas cost of bitwise builtins
     // 96 * 2 = gas cost of onchain data (deploy cost)
-    // 0 l1_gas + (96 * 2) l1_data_gas + 13 * (100 / 0.0025) l2 gas
+    // ~1 gas for 1 event key
+    // ~1 gas for 1 event data
+    // 0 l1_gas + (96 * 2) l1_data_gas + 359 * (100 / 0.0025) + 1 * 10240 + 1 * 5120 l2 gas
     assert_gas(
         &result,
         "test_call_other_contract",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(520_000),
+            l2_gas: GasAmount(14_375_360),
         },
     );
 }
@@ -1072,11 +1081,17 @@ fn nested_call_cost_in_forked_contract_cairo_steps() {
         formatdoc!(
             r#"
             use snforge_std::{{ContractClassTrait, DeclareResultTrait, declare}};
-            use starknet::ContractAddress;
+            use starknet::{{ContractAddress, SyscallResult}};
 
             #[starknet::interface]
-            pub trait INestedCallsChecker<TContractState> {{
-                fn call_other_contract(self: @TContractState, contract_address: ContractAddress);
+            trait IGasCheckerProxy<TContractState> {{
+                fn send_l1_message_from_gas_checker(self: @TContractState, address: ContractAddress);
+                fn call_other_contract(
+                    self: @TContractState,
+                    contract_address: ContractAddress,
+                    entry_point_selector: felt252,
+                    calldata: Array::<felt252>,
+                ) -> SyscallResult<Span<felt252>>;
             }}
 
             fn deploy_contract(name: ByteArray) -> ContractAddress {{
@@ -1086,25 +1101,25 @@ fn nested_call_cost_in_forked_contract_cairo_steps() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_number: 831_454)]
+            #[fork(url: "{}", block_number: 861_389)]
             fn test_call_other_contract_fork() {{
-                let contract_address = deploy_contract("NestedCallsChecker");
-                let other_contract_address: ContractAddress = 0x0239010074a53b621c1abc7c08d2ce29b92fa26901d614e9c466c18643f04722.try_into().unwrap();
+                let contract_address = deploy_contract("GasCheckerProxy");
+                let other_contract_address: ContractAddress = 0x07f01bbebed8dfeb60944bd9273e2bd844e39b0106eb6ca05edaeee95a817c64.try_into().unwrap();
 
-                let dispatcher = INestedCallsCheckerDispatcher {{ contract_address }};
-                dispatcher.call_other_contract(other_contract_address);
+                let dispatcher = IGasCheckerProxyDispatcher {{ contract_address }};
+                let _ = dispatcher.call_other_contract(other_contract_address, selector!("example_function"), array![]);
             }}
         "#,
             node_rpc_url()
         ).as_str(),
         Contract::from_code_path(
             "HelloStarknet".to_string(),
-            Path::new("tests/data/contracts/nested_calls_checker.cairo"),
+            Path::new("tests/data/contracts/hello_starknet_for_nested_calls.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "NestedCallsChecker".to_string(),
-            Path::new("tests/data/contracts/nested_calls_checker.cairo"),
+            "GasCheckerProxy".to_string(),
+            Path::new("tests/data/contracts/gas_checker_proxy.cairo"),
         )
         .unwrap()
     );
@@ -1112,16 +1127,19 @@ fn nested_call_cost_in_forked_contract_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-    // (3523 + 8 memory holes) * 0.0025 = 8.8275 ~ 9 = gas cost of steps
-    // 96 = gas cost of onchain data (deploy cost)
-    // 0 l1_gas + 96 l1_data_gas + 9 * (100 / 0.0025) l2 gas
+    // TODO(#3473): Once the bug with duplicated builtins from syscalls in nested calls is fixed, the number of bitwise and some other builtins should be ~2 lower.
+    // int(2242 * 0.16) = 359 = gas cost of bitwise builtins
+    // 96 * 2 = gas cost of onchain data (deploy cost)
+    // ~1 gas for 1 event key
+    // ~1 gas for 1 event data
+    // 0 l1_gas + (96 * 2) l1_data_gas + 359 * (100 / 0.0025) + 1 * 10240 + 1 * 5120 l2 gas
     assert_gas(
         &result,
         "test_call_other_contract_fork",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(360_000),
+            l2_gas: GasAmount(14_375_360),
         },
     );
 }
@@ -1706,11 +1724,17 @@ fn nested_call_cost_sierra_gas() {
         indoc!(
             r#"
             use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
-            use starknet::ContractAddress;
+            use starknet::{ContractAddress, SyscallResult};
 
             #[starknet::interface]
-            pub trait INestedCallsChecker<TContractState> {
-                fn call_other_contract(self: @TContractState, contract_address: ContractAddress);
+            trait IGasCheckerProxy<TContractState> {
+                fn send_l1_message_from_gas_checker(self: @TContractState, address: ContractAddress);
+                fn call_other_contract(
+                    self: @TContractState,
+                    contract_address: ContractAddress,
+                    entry_point_selector: felt252,
+                    calldata: Array::<felt252>,
+                ) -> SyscallResult<Span<felt252>>;
             }
 
             fn deploy_contract(name: ByteArray) -> ContractAddress {
@@ -1721,22 +1745,22 @@ fn nested_call_cost_sierra_gas() {
 
             #[test]
             fn test_call_other_contract() {
-                let contract_address = deploy_contract("NestedCallsChecker");
+                let contract_address = deploy_contract("GasCheckerProxy");
                 let other_contract_address = deploy_contract("HelloStarknet");
 
-                let dispatcher = INestedCallsCheckerDispatcher { contract_address };
-                dispatcher.call_other_contract(other_contract_address);
+                let dispatcher = IGasCheckerProxyDispatcher { contract_address };
+                let _ = dispatcher.call_other_contract(other_contract_address, selector!("example_function"), array![]);
             }
         "#
         ),
         Contract::from_code_path(
             "HelloStarknet".to_string(),
-            Path::new("tests/data/contracts/nested_calls_checker.cairo"),
+            Path::new("tests/data/contracts/hello_starknet_for_nested_calls.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "NestedCallsChecker".to_string(),
-            Path::new("tests/data/contracts/nested_calls_checker.cairo"),
+            "GasCheckerProxy".to_string(),
+            Path::new("tests/data/contracts/gas_checker_proxy.cairo"),
         )
         .unwrap()
     );
@@ -1744,27 +1768,20 @@ fn nested_call_cost_sierra_gas() {
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
-    // l = 2 (updated contract class)
-    // n = 2 (unique contracts updated - in this case it's the new contract address)
-    // ( l + n * 2 ) * felt_size_in_bytes(32) = 192 (total l1 data cost)
-    //
-    // 147660 = cost of 1 deploy syscall (because 1 * (1132 + 8) * 100 + (7 + 1) * 4050 + (18 + 1) * 70)
-    //      -> 1 deploy syscall costs 1132 cairo steps, 7 pedersen and 18 range check builtins
-    //      -> 1 calldata element costs 8 cairo steps and 1 pedersen
-    //      -> 1 pedersen costs 4050, 1 range check costs 70
-    // 87650 = cost of 1 call contract syscall (because 1 * 866 * 100 + 15 * 70)
-    //      -> 1 call contract syscall costs 866 cairo steps and 15 range check builtins
-    //      -> 1 range check costs 70
-    // 4050 = cost of 1 pedersen syscall
-    // 96650 = reported consumed sierra gas
-    // 0 l1_gas + 192 l1_data_gas + (2 * 147660 + 2 * 87650 + 20 * 4050 + 96650) l2 gas
+    // 512000 = event keys cost (see `events_contract_cost_sierra_gas` test)
+    // 256000 = event data cost (see `events_contract_cost_sierra_gas` test)
+    // 10000 = cost of 1 emit event syscall (see `events_contract_cost_sierra_gas` test)
+    // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 87650 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
+    // 1353237 = reported consumed sierra gas
+    // 0 l1_gas + 192 l1_data_gas + (512000 + 256000 + 10000 + 2 * 142810 + 2 * 87650 + 1353237) l2 gas
     assert_gas(
         &result,
         "test_call_other_contract",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(648_270),
+            l2_gas: GasAmount(2_592_157),
         },
     );
 }
@@ -1776,11 +1793,17 @@ fn nested_call_cost_in_forked_contract_sierra_gas() {
         formatdoc!(
             r#"
             use snforge_std::{{ContractClassTrait, DeclareResultTrait, declare}};
-            use starknet::ContractAddress;
+            use starknet::{{ContractAddress, SyscallResult}};
 
             #[starknet::interface]
-            pub trait INestedCallsChecker<TContractState> {{
-                fn call_other_contract(self: @TContractState, contract_address: ContractAddress);
+            trait IGasCheckerProxy<TContractState> {{
+                fn send_l1_message_from_gas_checker(self: @TContractState, address: ContractAddress);
+                fn call_other_contract(
+                    self: @TContractState,
+                    contract_address: ContractAddress,
+                    entry_point_selector: felt252,
+                    calldata: Array::<felt252>,
+                ) -> SyscallResult<Span<felt252>>;
             }}
 
             fn deploy_contract(name: ByteArray) -> ContractAddress {{
@@ -1790,25 +1813,25 @@ fn nested_call_cost_in_forked_contract_sierra_gas() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_number: 831_454)]
+            #[fork(url: "{}", block_number: 861_389)]
             fn test_call_other_contract_fork() {{
-                let contract_address = deploy_contract("NestedCallsChecker");
-                let other_contract_address: ContractAddress = 0x0239010074a53b621c1abc7c08d2ce29b92fa26901d614e9c466c18643f04722.try_into().unwrap();
+                let contract_address = deploy_contract("GasCheckerProxy");
+                let other_contract_address: ContractAddress = 0x07f01bbebed8dfeb60944bd9273e2bd844e39b0106eb6ca05edaeee95a817c64.try_into().unwrap();
 
-                let dispatcher = INestedCallsCheckerDispatcher {{ contract_address }};
-                dispatcher.call_other_contract(other_contract_address);
+                let dispatcher = IGasCheckerProxyDispatcher {{ contract_address }};
+                let _ = dispatcher.call_other_contract(other_contract_address, selector!("example_function"), array![]);
             }}
         "#,
             node_rpc_url()
         ).as_str(),
         Contract::from_code_path(
             "HelloStarknet".to_string(),
-            Path::new("tests/data/contracts/nested_calls_checker.cairo"),
+            Path::new("tests/data/contracts/hello_starknet_for_nested_calls.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "NestedCallsChecker".to_string(),
-            Path::new("tests/data/contracts/nested_calls_checker.cairo"),
+            "GasCheckerProxy".to_string(),
+            Path::new("tests/data/contracts/gas_checker_proxy.cairo"),
         )
         .unwrap()
     );
@@ -1816,27 +1839,20 @@ fn nested_call_cost_in_forked_contract_sierra_gas() {
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
-    // l = 1 (updated contract class)
-    // n = 1 (unique contracts updated - in this case it's the new contract address)
-    // ( l + n * 2 ) * felt_size_in_bytes(32) = 96 (total l1 data cost)
-    //
-    // 147660 = cost of 1 deploy syscall (because 1 * (1132 + 8) * 100 + (7 + 1) * 4050 + (18 + 1) * 70)
-    //      -> 1 deploy syscall costs 1132 cairo steps, 7 pedersen and 18 range check builtins
-    //      -> 1 calldata element costs 8 cairo steps and 1 pedersen
-    //      -> 1 pedersen costs 4050, 1 range check costs 70
-    // 87650 = cost of 1 call contract syscall (because 1 * 866 * 100 + 15 * 70)
-    //      -> 1 call contract syscall costs 866 cairo steps and 15 range check builtins
-    //      -> 1 range check costs 70
-    // 4050 = cost of 1 pedersen syscall
-    // 63620 = reported consumed sierra gas
-    // 0 l1_gas + 192 l1_data_gas + (147660 + 2 * 87650 + 20 * 4050 + 63620) l2 gas
+    // 512000 = event keys cost (see `events_contract_cost_sierra_gas` test)
+    // 256000 = event data cost (see `events_contract_cost_sierra_gas` test)
+    // 10000 = cost of 1 emit event syscall (see `events_contract_cost_sierra_gas` test)
+    // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
+    // 87650 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
+    // 1314357 = reported consumed sierra gas
+    // 0 l1_gas + 192 l1_data_gas + (512000 + 256000 + 10000 + 142810 + 2 * 87650 + 1314357) l2 gas
     assert_gas(
         &result,
         "test_call_other_contract_fork",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(467_580),
+            l2_gas: GasAmount(2_410_467),
         },
     );
 }
