@@ -16,7 +16,7 @@ Running 3 test(s) from tests/
 [PASS] hello_snforge_integrationtest::test_contract::test_calling (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 [PASS] hello_snforge_integrationtest::test_contract::test_executing (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 [PASS] hello_snforge_integrationtest::test_contract::test_calling_another (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-Tests: 3 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 3 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>
 <br>
@@ -39,7 +39,7 @@ Running 0 test(s) from src/
 Running 2 test(s) from tests/
 [PASS] hello_snforge_integrationtest::test_contract::test_calling_another (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 [PASS] hello_snforge_integrationtest::test_contract::test_calling (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 1 filtered out
+Tests: 2 passed, 0 failed, 0 ignored, 1 filtered out
 ```
 </details>
 <br>
@@ -66,7 +66,7 @@ Collected 1 test(s) from hello_snforge package
 Running 1 test(s) from tests/
 [PASS] hello_snforge_integrationtest::test_contract::test_calling (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Running 0 test(s) from src/
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
+Tests: 1 passed, 0 failed, 0 ignored, other filtered out
 ```
 </details>
 <br>
@@ -89,7 +89,7 @@ Collected 1 test(s) from failing_example package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [PASS] failing_example_tests::test_abc (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 
 </details>
@@ -119,7 +119,7 @@ Failure data:
 Failures:
     failing_example_tests::test_failing
 
-Tests: 0 passed, 1 failed, 2 skipped, 0 ignored, 0 filtered out
+Tests: 0 passed, 1 failed, 0 ignored, 0 filtered out
 Interrupted execution of 2 tests.
 ```
 </details>
@@ -152,7 +152,7 @@ Running 2 test(s) from tests/
         syscalls: (CallContract: 3, StorageRead: 3, Deploy: 1, StorageWrite: 1)
 
 Running 0 test(s) from src/
-Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>
 <br>

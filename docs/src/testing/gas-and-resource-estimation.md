@@ -61,7 +61,7 @@ Running 2 test(s) from tests/
         syscalls: (CallContract: 3, StorageRead: 3, Deploy: 1, StorageWrite: 1)
 
 Running 0 test(s) from src/
-Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>
 <br>
