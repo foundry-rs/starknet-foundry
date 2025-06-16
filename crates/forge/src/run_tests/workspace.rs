@@ -19,7 +19,7 @@ use scarb_api::{
     target_dir_for_workspace,
 };
 use scarb_ui::args::PackagesFilter;
-use shared::consts::{SNFORGE_TEST_FILTER, SNFORGE_TEST_SKIP};
+use shared::consts::SNFORGE_TEST_FILTER;
 use std::env;
 use std::sync::Arc;
 
@@ -59,10 +59,6 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         {
             set_forge_test_filter(last_filter);
         }
-    }
-
-    if !args.skip.is_empty() {
-        set_forge_test_skip(&args.skip);
     }
 
     build_artifacts_with_scarb(
@@ -110,10 +106,6 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         unset_forge_test_filter();
     }
 
-    if !args.skip.is_empty() {
-        unset_forge_test_skip();
-    }
-
     Ok(if all_failed_tests.is_empty() {
         ExitStatus::Success
     } else {
@@ -148,20 +140,4 @@ fn unset_forge_test_filter() {
     unsafe {
         env::remove_var(SNFORGE_TEST_FILTER);
     };
-}
-
-fn set_forge_test_skip(skip_filter: &[String]) {
-    let skip_filter = skip_filter.join(";");
-
-    // SAFETY: This runs in a single-threaded environment.
-    unsafe {
-        env::set_var(SNFORGE_TEST_SKIP, skip_filter);
-    }
-}
-
-fn unset_forge_test_skip() {
-    // SAFETY: This runs in a single-threaded environment.
-    unsafe {
-        env::remove_var(SNFORGE_TEST_SKIP);
-    }
 }

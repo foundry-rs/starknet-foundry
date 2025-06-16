@@ -43,16 +43,10 @@ fn test_internal(
     let name = func.declaration(db).name(db).text(db).to_string();
 
     let test_filter = get_forge_test_filter().ok();
-    let test_skip = get_forge_test_skip().ok();
 
     let should_run_test = match test_filter {
         Some(ref filter) => name.contains(filter),
         None => true,
-    };
-
-    let should_run_test = match test_skip {
-        Some(filter) => !filter.split(";").any(|s| name.contains(s)),
-        None => should_run_test,
     };
 
     let name = func.declaration(db).name(db).as_text(db);
@@ -100,9 +94,6 @@ fn get_forge_test_filter() -> Result<String, VarError> {
     env::var("SNFORGE_TEST_FILTER")
 }
 
-fn get_forge_test_skip() -> Result<String, VarError> {
-    env::var("SNFORGE_TEST_SKIP")
-}
 fn ensure_parameters_only_with_fuzzer_attribute(
     db: &dyn SyntaxGroup,
     func: &FunctionWithBody,

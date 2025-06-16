@@ -120,6 +120,7 @@ Failures:
     failing_example_tests::test_failing
 
 Tests: 0 passed, 1 failed, 2 skipped, 0 ignored, 0 filtered out
+Interrupted execution of 2 tests.
 ```
 </details>
 <br>

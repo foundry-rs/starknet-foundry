@@ -789,6 +789,7 @@ fn with_exit_first() {
             0x73696d706c6520636865636b ('simple check')
 
         Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 0 filtered out
+        Interrupted execution of 1 test.
 
         Failures:
             exit_first_integrationtest::ext_function_test::simple_test
@@ -817,6 +818,7 @@ fn with_exit_first_flag() {
             0x73696d706c6520636865636b ('simple check')
 
         Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 0 filtered out
+        Interrupted execution of 1 test.
 
         Failures:
             exit_first_integrationtest::ext_function_test::simple_test
