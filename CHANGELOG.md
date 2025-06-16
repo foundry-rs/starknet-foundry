@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Forge
 
 #### Added
+- ETH token is now pre-deployed by default in every test, and `Token::ETH` was added to `snforge_std`
 - `--skip` flag to allow excluding any test whose name contains the provided string
 
 #### Changed
@@ -36,11 +37,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.44.0] - 2025-05-26
 
 ### Forge
-
-#### Added
-
-- ETH token is now pre-deployed in every test by default
-- Added `Token::ETH` to snforge_std
 
 #### Changed
 
