@@ -89,7 +89,7 @@ Collected 1 test(s) from failing_example package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [PASS] failing_example_tests::test_abc (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
+Tests: 1 passed, 0 failed, 0 ignored, 2 filtered out
 ```
 
 </details>
@@ -120,7 +120,7 @@ Failures:
     failing_example_tests::test_failing
 
 Tests: 0 passed, 1 failed, 0 ignored, 0 filtered out
-Interrupted execution of 2 tests.
+Interrupted execution of 2 test(s).
 ```
 </details>
 <br>
