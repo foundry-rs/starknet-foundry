@@ -73,8 +73,8 @@ Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
 
 ## Skipping tests
 
-You can use the `--skip` flag to run all tests _except_ those matching a specified filter pattern.
-This is useful for temporarily excluding problematic tests or focusing on a subset of tests by excluding others.
+You can use the `--skip` flag to exclude tests matching a specified filter pattern.
+This is useful for temporarily disable problematic tests or focusing on a subset of tests by excluding others.
 
 <!-- { "package_name": "failing_example"} -->
 ```shell
