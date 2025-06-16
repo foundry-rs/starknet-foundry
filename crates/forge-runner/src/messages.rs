@@ -14,7 +14,7 @@ enum TestResultStatus {
     Passed,
     Failed,
     Ignored,
-    Skipped,
+    Interrupted,
 }
 
 impl From<&AnyTestCaseSummary> for TestResultStatus {
@@ -26,8 +26,8 @@ impl From<&AnyTestCaseSummary> for TestResultStatus {
             | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Failed { .. }) => Self::Failed,
             AnyTestCaseSummary::Single(TestCaseSummary::Ignored { .. })
             | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Ignored { .. }) => Self::Ignored,
-            AnyTestCaseSummary::Single(TestCaseSummary::Skipped { .. })
-            | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Skipped { .. }) => Self::Skipped,
+            AnyTestCaseSummary::Single(TestCaseSummary::Interrupted { .. })
+            | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Interrupted { .. }) => Self::Interrupted,
         }
     }
 }
@@ -120,7 +120,7 @@ impl TestResultMessage {
             match self.status {
                 TestResultStatus::Passed => return format!("\n\n{msg}"),
                 TestResultStatus::Failed => return format!("\n\nFailure data:{msg}"),
-                TestResultStatus::Ignored | TestResultStatus::Skipped => return String::new(),
+                TestResultStatus::Ignored | TestResultStatus::Interrupted => return String::new(),
             }
         }
         String::new()
@@ -131,8 +131,8 @@ impl TestResultMessage {
             TestResultStatus::Passed => format!("[{}]", style("PASS").green()),
             TestResultStatus::Failed => format!("[{}]", style("FAIL").red()),
             TestResultStatus::Ignored => format!("[{}]", style("IGNORE").yellow()),
-            TestResultStatus::Skipped => {
-                unreachable!("Skipped tests should not have visible message representation")
+            TestResultStatus::Interrupted => {
+                unreachable!("Interrupted tests should not have visible message representation")
             }
         }
     }

@@ -165,7 +165,7 @@ pub enum TestCaseSummary<T: TestType> {
         name: String,
     },
     /// Test case skipped due to exit first or execution interrupted, test result is ignored.
-    Skipped {},
+    Interrupted {},
 }
 
 #[derive(Debug)]
@@ -181,7 +181,7 @@ impl<T: TestType> TestCaseSummary<T> {
             TestCaseSummary::Failed { name, .. }
             | TestCaseSummary::Passed { name, .. }
             | TestCaseSummary::Ignored { name, .. } => Some(name),
-            TestCaseSummary::Skipped { .. } => None,
+            TestCaseSummary::Interrupted { .. } => None,
         }
     }
 
@@ -262,7 +262,7 @@ impl TestCaseSummary<Fuzzing> {
                 debugging_trace,
             },
             TestCaseSummary::Ignored { name } => TestCaseSummary::Ignored { name: name.clone() },
-            TestCaseSummary::Skipped {} => TestCaseSummary::Skipped {},
+            TestCaseSummary::Interrupted {} => TestCaseSummary::Interrupted {},
         }
     }
 }
@@ -472,11 +472,11 @@ impl AnyTestCaseSummary {
     }
 
     #[must_use]
-    pub fn is_skipped(&self) -> bool {
+    pub fn is_interrupted(&self) -> bool {
         matches!(
             self,
-            AnyTestCaseSummary::Single(TestCaseSummary::Skipped { .. })
-                | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Skipped { .. })
+            AnyTestCaseSummary::Single(TestCaseSummary::Interrupted { .. })
+                | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Interrupted { .. })
         )
     }
 

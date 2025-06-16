@@ -60,7 +60,7 @@ Failure data:
 Failure data:
     0x6661696c696e6720636865636b ('failing check')
 
-Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 1 passed, 2 failed, 0 ignored, 0 filtered out
 
 Failures:
     hello_workspaces_integrationtest::test_failing::test_failing
@@ -89,7 +89,7 @@ Running 4 test(s) from tests/
 [PASS] addition_integrationtest::nested::contract_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Running 1 test(s) from src/
 [PASS] addition::tests::it_works (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>
 <br>
@@ -112,7 +112,7 @@ Running 4 test(s) from tests/
 [PASS] addition_integrationtest::nested::contract_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Running 1 test(s) from src/
 [PASS] addition::tests::it_works (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
 
 
 Collected 6 test(s) from fibonacci package
@@ -128,7 +128,7 @@ Failure data:
 [PASS] fibonacci_tests::abc::efg::efg_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 [PASS] fibonacci_tests::lib_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 [PASS] fibonacci_tests::abc::abc_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 5 passed, 1 failed, 0 ignored, 0 filtered out
 
 
 Collected 3 test(s) from hello_workspaces package
@@ -145,7 +145,7 @@ Failure data:
 Failure data:
     0x6661696c696e6720636865636b ('failing check')
 
-Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 1 passed, 2 failed, 0 ignored, 0 filtered out
 
 Failures:
     fibonacci_tests::abc::efg::failing_test

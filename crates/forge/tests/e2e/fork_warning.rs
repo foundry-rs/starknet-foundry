@@ -75,7 +75,7 @@ fn should_print_warning() {
                 [FAIL] empty_integrationtest::test::t1
 
                 Failure[..]
-                Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+                Tests: 0 passed, 1 failed, 0 ignored, 0 filtered out
 
                 Latest block number = [..] for url = {node_url}
 
@@ -132,7 +132,7 @@ fn should_dedup_urls() {
                 [FAIL] empty_integrationtest::test::t2
 
                 Failure[..]
-                Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
+                Tests: 0 passed, 2 failed, 0 ignored, 0 filtered out
 
                 Latest block number = [..] for url = {node_url}
 
@@ -193,7 +193,7 @@ fn should_print_foreach() {
                 [FAIL] empty_integrationtest::test::t2
 
                 Failure[..]
-                Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
+                Tests: 0 passed, 2 failed, 0 ignored, 0 filtered out
 
                 Latest block number = [..] for url = http://127.0.0.1:3030/?url={node_url}
                 Latest block number = [..] for url = {node_url}

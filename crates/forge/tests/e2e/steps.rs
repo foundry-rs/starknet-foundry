@@ -34,7 +34,7 @@ fn should_allow_less_than_default() {
                     Could not reach the end of the program. RunResources has no remaining steps.
                     Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps
 
-                Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
+                Tests: 0 passed, 2 failed, 0 ignored, 0 filtered out
 
                 Failures:
                     steps::tests::steps_less_than_10000000
@@ -64,7 +64,7 @@ fn should_allow_more_than_10m() {
                 Running 2 test(s) from src/
                 [PASS] steps::tests::steps_more_than_10000000 [..]
                 [PASS] steps::tests::steps_less_than_10000000 [..]
-                Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+                Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
             "
         ),
     );
@@ -91,7 +91,7 @@ fn should_default_to_10m() {
                 Could not reach the end of the program. RunResources has no remaining steps.
                 Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps
 
-            Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+            Tests: 1 passed, 1 failed, 0 ignored, 0 filtered out
 
             Failures:
                 steps::tests::steps_more_than_10000000

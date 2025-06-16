@@ -66,7 +66,7 @@ impl Message for CollectedTestsCountMessage {
 pub struct TestsSummaryMessage {
     passed: usize,
     failed: usize,
-    skipped: usize,
+    interrupted: usize,
     ignored: usize,
     filtered: Option<usize>,
 }
@@ -75,13 +75,16 @@ impl TestsSummaryMessage {
     pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
         let passed = summaries.iter().map(TestTargetSummary::count_passed).sum();
         let failed = summaries.iter().map(TestTargetSummary::count_failed).sum();
-        let skipped = summaries.iter().map(TestTargetSummary::count_skipped).sum();
+        let interrupted = summaries
+            .iter()
+            .map(TestTargetSummary::count_interrupted)
+            .sum();
         let ignored = summaries.iter().map(TestTargetSummary::count_ignored).sum();
 
         Self {
             passed,
             failed,
-            skipped,
+            interrupted,
             ignored,
             filtered,
         }
@@ -94,13 +97,19 @@ impl Message for TestsSummaryMessage {
             .filtered
             .map_or_else(|| "other".to_string(), |v| v.to_string());
 
+        let interrupted = if self.interrupted > 0 {
+            format!("\nInterrupted execution of {} test(s).", self.interrupted)
+        } else {
+            String::new()
+        };
+
         format!(
-            "{}: {} passed, {} failed, {} skipped, {} ignored, {filtered} filtered out",
+            "{}: {} passed, {} failed, {} ignored, {filtered} filtered out{}",
             style("Tests").bold(),
             self.passed,
             self.failed,
-            self.skipped,
-            self.ignored
+            self.ignored,
+            interrupted
         )
     }
 
