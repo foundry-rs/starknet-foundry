@@ -1018,7 +1018,6 @@ fn nested_call_cost_cairo_steps() {
 
             #[starknet::interface]
             trait IGasCheckerProxy<TContractState> {
-                fn send_l1_message_from_gas_checker(self: @TContractState, address: ContractAddress);
                 fn call_other_contract(
                     self: @TContractState,
                     contract_address: ContractAddress,
@@ -1091,7 +1090,6 @@ fn nested_call_cost_in_forked_contract_cairo_steps() {
 
             #[starknet::interface]
             trait IGasCheckerProxy<TContractState> {{
-                fn send_l1_message_from_gas_checker(self: @TContractState, address: ContractAddress);
                 fn call_other_contract(
                     self: @TContractState,
                     contract_address: ContractAddress,
@@ -1740,7 +1738,6 @@ fn nested_call_cost_sierra_gas() {
 
             #[starknet::interface]
             trait IGasCheckerProxy<TContractState> {
-                fn send_l1_message_from_gas_checker(self: @TContractState, address: ContractAddress);
                 fn call_other_contract(
                     self: @TContractState,
                     contract_address: ContractAddress,
@@ -1816,7 +1813,6 @@ fn nested_call_cost_in_forked_contract_sierra_gas() {
 
             #[starknet::interface]
             trait IGasCheckerProxy<TContractState> {{
-                fn send_l1_message_from_gas_checker(self: @TContractState, address: ContractAddress);
                 fn call_other_contract(
                     self: @TContractState,
                     contract_address: ContractAddress,
