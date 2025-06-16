@@ -249,6 +249,55 @@ fn with_skip_filter_matching_module() {
 }
 
 #[test]
+fn with_skip_filter_matching_full_module_path() {
+    let temp = setup_package("simple_package");
+
+    let output = test_runner(&temp)
+        .arg("--skip")
+        .arg("simple_package_integrationtest::test_simple::test_two_and_two")
+        .assert()
+        .failure();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+        
+        Collected 12 test(s) from simple_package package
+        Running 10 test(s) from tests/
+        [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
+        [PASS] simple_package_integrationtest::ext_function_test::test_simple [..]
+        [PASS] simple_package_integrationtest::without_prefix::five [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple2 [..]
+        [PASS] simple_package_integrationtest::test_simple::test_two [..]
+        [FAIL] simple_package_integrationtest::test_simple::test_another_failing
+        
+        Failure data:
+            0x6661696c696e6720636865636b ('failing check')
+        
+        [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
+        [FAIL] simple_package_integrationtest::test_simple::test_failing
+        
+        Failure data:
+            0x6661696c696e6720636865636b ('failing check')
+        
+        [PASS] simple_package_integrationtest::test_simple::test_simple [..]
+        [PASS] simple_package_integrationtest::contract::call_and_invoke [..]
+        Running 2 test(s) from src/
+        [IGNORE] simple_package::tests::ignored_test
+        [PASS] simple_package::tests::test_fib [..]
+        Tests: 8 passed, 2 failed, 0 skipped, 2 ignored, 1 filtered out
+        
+        Failures:
+            simple_package_integrationtest::test_simple::test_another_failing
+            simple_package_integrationtest::test_simple::test_failing
+        "},
+    );
+}
+
+#[test]
 fn with_skip_filter_matching_test_name() {
     let temp = setup_package("simple_package");
 
