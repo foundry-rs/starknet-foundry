@@ -71,7 +71,7 @@ pub async fn run_for_test_target(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        if !result.is_skipped() {
+        if !result.is_interrupted() {
             let test_result_message = TestResultMessage::new(
                 &result,
                 forge_config.output_config.detailed_resources,

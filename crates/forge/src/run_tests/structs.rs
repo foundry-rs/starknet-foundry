@@ -75,7 +75,10 @@ impl TestsSummaryMessage {
     pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
         let passed = summaries.iter().map(TestTargetSummary::count_passed).sum();
         let failed = summaries.iter().map(TestTargetSummary::count_failed).sum();
-        let interrupted = summaries.iter().map(TestTargetSummary::count_skipped).sum();
+        let interrupted = summaries
+            .iter()
+            .map(TestTargetSummary::count_interrupted)
+            .sum();
         let ignored = summaries.iter().map(TestTargetSummary::count_ignored).sum();
 
         Self {
