@@ -235,7 +235,7 @@ jobs:
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
-      - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
+      - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests
@@ -357,4 +357,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: typos-action
-        uses: crate-ci/typos@v1.31.2
+        uses: crate-ci/typos@v1.33.1

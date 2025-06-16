@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
+      - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
         with:
           tool_versions: |
             scarb latest
@@ -117,7 +117,7 @@ jobs:
           devnet_version=$(grep starknet-devnet .tool-versions | cut -d " " -f 2)
           echo "Devnet version: $devnet_version"
           echo "version=$devnet_version" >> "$GITHUB_OUTPUT"
-      - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
+      - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
         with:
           tool_versions: |
             starknet-devnet ${{ steps.get-devnet-version.outputs.version }}
@@ -135,7 +135,7 @@ jobs:
 
       - name: Get version from Cargo.toml
         id: lookupVersion
-        uses: mikefarah/yq@8bf425b4d1344db7cd469a8d10a390876e0c77fd
+        uses: mikefarah/yq@b534aa9ee5d38001fba3cd8fe254a037e4847b37
         with:
           cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
           
@@ -190,7 +190,7 @@ jobs:
     needs: [ test-forge-unit-and-integration, test-forge-e2e, test-cast , build-plugin-binaries, build-binaries, publish-plugin, publish-std, test-binary ]
     steps:
       - name: Notify that the workflow has failed
-        uses: slackapi/slack-github-action@v2.0.0
+        uses: slackapi/slack-github-action@v2.1.0
         with:
           webhook: ${{ secrets.SLACK_SCHEDULED_TESTS_FAILURE_WEBHOOK_URL }}
           webhook-type: webhook-trigger
