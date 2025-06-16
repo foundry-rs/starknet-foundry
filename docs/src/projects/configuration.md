@@ -127,7 +127,6 @@ This same behavior applies for [default profiles](#default-profile) as well. A l
 The global configuration is stored in a specific location depending on the operating system:
 
 - macOS/Linux : The global configuration file is located at `$HOME/.config/starknet-foundry/snfoundry.toml`
-- Windows : The file can be found at `C:\Users\<user>\AppData\Roaming\starknet-foundry\snfoundry.toml`
 
 > 📝 **Note**
 > If missing, global configuration file will be created automatically on running any `sncast` command for the first time.

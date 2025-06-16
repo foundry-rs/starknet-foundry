@@ -22,7 +22,7 @@ members = [
 exclude = ["crates/snforge-scarb-plugin"]
 
 [workspace.package]
-version = "0.44.0"
+version = "0.45.0"
 edition = "2024"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"

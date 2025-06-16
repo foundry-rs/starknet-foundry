@@ -152,6 +152,10 @@ pub struct TestArgs {
     #[arg(short, long)]
     exact: bool,
 
+    /// Skips any tests whose name contains the given SKIP string.
+    #[arg(long)]
+    skip: Vec<String>,
+
     /// Stop executing tests after the first failed test
     #[arg(short = 'x', long)]
     exit_first: bool,

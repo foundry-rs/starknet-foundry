@@ -98,7 +98,7 @@ fn test_output(trace_message_fn: fn(&str) -> String) -> String {
         {debugging_trace_pass}
 
         Running 0 test(s) from src/
-        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 1 passed, 1 failed, 0 ignored, 0 filtered out
 
         Failures:
             trace_info_integrationtest::test_trace::test_debugging_trace_failure

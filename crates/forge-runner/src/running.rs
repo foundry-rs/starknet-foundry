@@ -73,7 +73,7 @@ pub fn run_test(
         // a channel is used to receive information indicating
         // that the execution of the task is no longer necessary.
         if send.is_closed() {
-            return TestCaseSummary::Skipped {};
+            return TestCaseSummary::Interrupted {};
         }
         let run_result = run_test_case(
             &case,
@@ -83,7 +83,7 @@ pub fn run_test(
         );
 
         if send.is_closed() {
-            return TestCaseSummary::Skipped {};
+            return TestCaseSummary::Interrupted {};
         }
 
         extract_test_case_summary(
@@ -114,7 +114,7 @@ pub(crate) fn run_fuzz_test(
         // a channel is used to receive information indicating
         // that the execution of the task is no longer necessary.
         if send.is_closed() | fuzzing_send.is_closed() {
-            return TestCaseSummary::Skipped {};
+            return TestCaseSummary::Interrupted {};
         }
 
         let run_result = run_test_case(
@@ -128,7 +128,7 @@ pub(crate) fn run_fuzz_test(
         // remove it after improve exit-first tests
         // issue #1043
         if send.is_closed() {
-            return TestCaseSummary::Skipped {};
+            return TestCaseSummary::Interrupted {};
         }
 
         extract_test_case_summary(
