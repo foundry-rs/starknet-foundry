@@ -83,7 +83,7 @@ You can skip tests by function name, module name or full path:
 
 <!-- { "package_name": "failing_example"} -->
 ```shell
-$ snforge test --skip test_failing --skip failing_example_tests::xyz
+$ snforge test --skip test_failing --skip failing_example_tests::test_xyz
 ```
 
 <details>
