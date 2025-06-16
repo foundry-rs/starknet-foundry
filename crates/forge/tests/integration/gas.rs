@@ -1035,11 +1035,17 @@ fn nested_call_cost_cairo_steps() {
 
             #[test]
             fn test_call_other_contract() {
-                let contract_address = deploy_contract("GasCheckerProxy");
-                let other_contract_address = deploy_contract("HelloStarknet");
+                let contract_address_a = deploy_contract("GasCheckerProxy");
+                let contract_address_b = deploy_contract("GasCheckerProxy");
+                let hello_starknet_address = deploy_contract("HelloStarknet");
 
-                let dispatcher = IGasCheckerProxyDispatcher { contract_address };
-                let _ = dispatcher.call_other_contract(other_contract_address, selector!("example_function"), array![]);
+                let dispatcher_a = IGasCheckerProxyDispatcher { contract_address: contract_address_a };
+                let _ = dispatcher_a
+                    .call_other_contract(
+                        contract_address_b,
+                        selector!("call_other_contract"),
+                        array![hello_starknet_address.into(), selector!("example_function"), 0],
+                    );
             }
         "#
         ),
@@ -1060,16 +1066,16 @@ fn nested_call_cost_cairo_steps() {
     assert_passed(&result);
     // TODO(#3473): Once the bug with duplicated builtins from syscalls in nested calls is fixed, the number of bitwise and some other builtins should be ~2 lower.
     // int(2242 * 0.16) = 359 = gas cost of bitwise builtins
-    // 96 * 2 = gas cost of onchain data (deploy cost)
+    // 96 * 3 = gas cost of onchain data (deploy cost)
     // ~1 gas for 1 event key
     // ~1 gas for 1 event data
-    // 0 l1_gas + (96 * 2) l1_data_gas + 359 * (100 / 0.0025) + 1 * 10240 + 1 * 5120 l2 gas
+    // 0 l1_gas + (96 * 3) l1_data_gas + 359 * (100 / 0.0025) + 1 * 10240 + 1 * 5120 l2 gas
     assert_gas(
         &result,
         "test_call_other_contract",
         GasVector {
             l1_gas: GasAmount(0),
-            l1_data_gas: GasAmount(192),
+            l1_data_gas: GasAmount(288),
             l2_gas: GasAmount(14_375_360),
         },
     );
@@ -1103,11 +1109,17 @@ fn nested_call_cost_in_forked_contract_cairo_steps() {
             #[test]
             #[fork(url: "{}", block_number: 861_389)]
             fn test_call_other_contract_fork() {{
-                let contract_address = deploy_contract("GasCheckerProxy");
-                let other_contract_address: ContractAddress = 0x07f01bbebed8dfeb60944bd9273e2bd844e39b0106eb6ca05edaeee95a817c64.try_into().unwrap();
+                let contract_address_a = deploy_contract("GasCheckerProxy");
+                let contract_address_b = deploy_contract("GasCheckerProxy");
+                let hello_starknet_address: ContractAddress = 0x07f01bbebed8dfeb60944bd9273e2bd844e39b0106eb6ca05edaeee95a817c64.try_into().unwrap();
 
-                let dispatcher = IGasCheckerProxyDispatcher {{ contract_address }};
-                let _ = dispatcher.call_other_contract(other_contract_address, selector!("example_function"), array![]);
+                let dispatcher_a = IGasCheckerProxyDispatcher {{ contract_address: contract_address_a }};
+                let _ = dispatcher_a
+                    .call_other_contract(
+                        contract_address_b,
+                        selector!("call_other_contract"),
+                        array![hello_starknet_address.into(), selector!("example_function"), 0],
+                    );
             }}
         "#,
             node_rpc_url()
@@ -1138,7 +1150,7 @@ fn nested_call_cost_in_forked_contract_cairo_steps() {
         "test_call_other_contract_fork",
         GasVector {
             l1_gas: GasAmount(0),
-            l1_data_gas: GasAmount(96),
+            l1_data_gas: GasAmount(192),
             l2_gas: GasAmount(14_375_360),
         },
     );
@@ -1745,11 +1757,17 @@ fn nested_call_cost_sierra_gas() {
 
             #[test]
             fn test_call_other_contract() {
-                let contract_address = deploy_contract("GasCheckerProxy");
-                let other_contract_address = deploy_contract("HelloStarknet");
+                let contract_address_a = deploy_contract("GasCheckerProxy");
+                let contract_address_b = deploy_contract("GasCheckerProxy");
+                let hello_starknet_address = deploy_contract("HelloStarknet");
 
-                let dispatcher = IGasCheckerProxyDispatcher { contract_address };
-                let _ = dispatcher.call_other_contract(other_contract_address, selector!("example_function"), array![]);
+                let dispatcher_a = IGasCheckerProxyDispatcher { contract_address: contract_address_a };
+                let _ = dispatcher_a
+                    .call_other_contract(
+                        contract_address_b,
+                        selector!("call_other_contract"),
+                        array![hello_starknet_address.into(), selector!("example_function"), 0],
+                    );
             }
         "#
         ),
@@ -1774,15 +1792,15 @@ fn nested_call_cost_sierra_gas() {
     // 10000 = cost of 1 emit event syscall (see `events_contract_cost_sierra_gas` test)
     // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
     // 87650 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
-    // 1353237 = reported consumed sierra gas
-    // 0 l1_gas + 192 l1_data_gas + (512000 + 256000 + 10000 + 2 * 142810 + 2 * 87650 + 1353237) l2 gas
+    // 1741387 = reported consumed sierra gas
+    // 0 l1_gas + 288 l1_data_gas + (512000 + 256000 + 10000 + 3 * 142810 + 2 * 87650 + 1741387) l2 gas
     assert_gas(
         &result,
         "test_call_other_contract",
         GasVector {
             l1_gas: GasAmount(0),
-            l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(2_592_157),
+            l1_data_gas: GasAmount(288),
+            l2_gas: GasAmount(2_980_307),
         },
     );
 }
@@ -1816,11 +1834,17 @@ fn nested_call_cost_in_forked_contract_sierra_gas() {
             #[test]
             #[fork(url: "{}", block_number: 861_389)]
             fn test_call_other_contract_fork() {{
-                let contract_address = deploy_contract("GasCheckerProxy");
-                let other_contract_address: ContractAddress = 0x07f01bbebed8dfeb60944bd9273e2bd844e39b0106eb6ca05edaeee95a817c64.try_into().unwrap();
+                let contract_address_a = deploy_contract("GasCheckerProxy");
+                let contract_address_b = deploy_contract("GasCheckerProxy");
+                let hello_starknet_address: ContractAddress = 0x07f01bbebed8dfeb60944bd9273e2bd844e39b0106eb6ca05edaeee95a817c64.try_into().unwrap();
 
-                let dispatcher = IGasCheckerProxyDispatcher {{ contract_address }};
-                let _ = dispatcher.call_other_contract(other_contract_address, selector!("example_function"), array![]);
+                let dispatcher_a = IGasCheckerProxyDispatcher {{ contract_address: contract_address_a }};
+                let _ = dispatcher_a
+                    .call_other_contract(
+                        contract_address_b,
+                        selector!("call_other_contract"),
+                        array![hello_starknet_address.into(), selector!("example_function"), 0],
+                    );
             }}
         "#,
             node_rpc_url()
@@ -1846,15 +1870,15 @@ fn nested_call_cost_in_forked_contract_sierra_gas() {
     // 10000 = cost of 1 emit event syscall (see `events_contract_cost_sierra_gas` test)
     // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
     // 87650 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
-    // 1314357 = reported consumed sierra gas
-    // 0 l1_gas + 192 l1_data_gas + (512000 + 256000 + 10000 + 142810 + 2 * 87650 + 1314357) l2 gas
+    // 1559797 = reported consumed sierra gas
+    // 0 l1_gas + 192 l1_data_gas + (512000 + 256000 + 10000 + 2 * 142810 + 2 * 87650 + 1559797) l2 gas
     assert_gas(
         &result,
         "test_call_other_contract_fork",
         GasVector {
             l1_gas: GasAmount(0),
-            l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(2_410_467),
+            l1_data_gas: GasAmount(192),
+            l2_gas: GasAmount(2_798_717),
         },
     );
 }
