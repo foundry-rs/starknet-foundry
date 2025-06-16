@@ -30,7 +30,6 @@ body:
       options:
         - Linux
         - MacOS
-        - Windows
     validations:
       required: true
 
