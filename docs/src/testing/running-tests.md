@@ -74,11 +74,16 @@ Tests: 1 passed, 0 failed, 0 ignored, other filtered out
 ## Skipping tests
 
 You can use the `--skip` flag to exclude tests matching a specified filter pattern.
-This is useful for temporarily disable problematic tests or focusing on a subset of tests by excluding others.
+This is useful for temporarily disabling problematic tests or focusing on a subset of tests by excluding others.
+
+You can skip tests by function name, module name or full path:
+- Skip a specific test: `--skip test_feature_a`
+- Skip tests in a module: `--skip nested_module`
+- Skip by full path: `--skip my_tests::nested_module::test_feature_b`
 
 <!-- { "package_name": "failing_example"} -->
 ```shell
-$ snforge test --skip test_failing --skip xyz
+$ snforge test --skip test_failing --skip failing_example_tests::xyz
 ```
 
 <details>
