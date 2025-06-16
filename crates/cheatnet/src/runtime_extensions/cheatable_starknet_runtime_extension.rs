@@ -3,19 +3,19 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 };
 use crate::state::CheatnetState;
 use anyhow::Result;
+use blockifier::blockifier_versioned_constants::SyscallGasCost;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::execution::syscalls::hint_processor::OUT_OF_GAS_ERROR;
-use blockifier::execution::syscalls::{
-    SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper,
-    syscall_base::SyscallResult,
+use blockifier::execution::syscalls::syscall_base::SyscallResult;
+use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
+use blockifier::execution::syscalls::vm_syscall_utils::{
+    SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper, SyscallSelector,
 };
 use blockifier::execution::{
     common_hints::HintExecutionResult,
-    deprecated_syscalls::DeprecatedSyscallSelector,
     syscalls::hint_processor::{SyscallExecutionError, SyscallHintProcessor},
 };
 use blockifier::utils::u64_from_usize;
-use blockifier::versioned_constants::SyscallGasCost;
 use cairo_vm::{
     types::relocatable::Relocatable,
     vm::{
@@ -26,8 +26,6 @@ use cairo_vm::{
 use conversions::string::TryFromHexStr;
 use runtime::{ExtendedRuntime, ExtensionLogic, StarknetRuntime, SyscallHandlingResult};
 use starknet_types_core::felt::Felt;
-
-pub type SyscallSelector = DeprecatedSyscallSelector;
 
 pub struct CheatableStarknetRuntimeExtension<'a> {
     pub cheatnet_state: &'a mut CheatnetState,
@@ -40,7 +38,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
 
     fn override_system_call(
         &mut self,
-        selector: DeprecatedSyscallSelector,
+        selector: SyscallSelector,
         vm: &mut VirtualMachine,
         extended_runtime: &mut Self::Runtime,
     ) -> Result<SyscallHandlingResult, HintError> {
@@ -94,7 +92,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
 
     fn handle_system_call_signal(
         &mut self,
-        selector: DeprecatedSyscallSelector,
+        selector: SyscallSelector,
         _vm: &mut VirtualMachine,
         extended_runtime: &mut Self::Runtime,
     ) {

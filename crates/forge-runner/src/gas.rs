@@ -119,7 +119,7 @@ fn get_state_resources(
     transaction_context: &TransactionContext,
     state: &mut CachedState<ExtendedStateReader>,
 ) -> Result<StateResources, StateError> {
-    let mut state_changes = state.get_actual_state_changes()?;
+    let mut state_changes = state.to_state_diff()?;
     // compiled_class_hash_updates is used only for keeping track of declares
     // which we don't want to include in gas cost
     state_changes.state_maps.compiled_class_hashes.clear();

@@ -5,29 +5,26 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 use blockifier::execution::syscalls::hint_processor::{
     SyscallExecutionError, SyscallHintProcessor,
 };
-use blockifier::execution::syscalls::{
-    DeployRequest, DeployResponse, GetBlockHashRequest, GetBlockHashResponse, LibraryCallRequest,
-    SyscallResponse, syscall_base::SyscallResult,
+use blockifier::execution::syscalls::syscall_base::SyscallResult;
+use blockifier::execution::syscalls::vm_syscall_utils::{
+    CallContractRequest, DeployRequest, DeployResponse, EmptyRequest, GetBlockHashRequest,
+    GetBlockHashResponse, GetExecutionInfoResponse, LibraryCallRequest, SyscallResponse,
+    SyscallSelector, WriteResponseResult,
 };
 use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
 use blockifier::execution::{
-    execution_utils::ReadOnlySegment,
-    syscalls::{WriteResponseResult, hint_processor::write_segment},
+    execution_utils::ReadOnlySegment, syscalls::hint_processor::write_segment,
 };
 use blockifier::state::errors::StateError;
 use blockifier::{
-    execution::execution_utils::update_remaining_gas,
-    execution::syscalls::{CallContractRequest, hint_processor::create_retdata_segment},
-};
-use blockifier::{
-    execution::{
-        deprecated_syscalls::DeprecatedSyscallSelector,
-        entry_point::{
-            CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
-        },
-        syscalls::{EmptyRequest, GetExecutionInfoResponse},
+    execution::entry_point::{
+        CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
     },
     state::state_api::State,
+};
+use blockifier::{
+    execution::execution_utils::update_remaining_gas,
+    execution::syscalls::hint_processor::create_retdata_segment,
 };
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::vm_core::VirtualMachine;
@@ -37,8 +34,6 @@ use starknet_api::{
     core::{ClassHash, ContractAddress},
     transaction::fields::Calldata,
 };
-
-pub type SyscallSelector = DeprecatedSyscallSelector;
 
 pub fn get_execution_info_syscall(
     _request: EmptyRequest,

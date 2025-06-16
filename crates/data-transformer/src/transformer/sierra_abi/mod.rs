@@ -54,7 +54,8 @@ pub(crate) fn build_representation(
         | Expr::FieldInitShorthand(_)
         | Expr::Indexed(_)
         | Expr::FixedSizeArray(_)
-        | Expr::Missing(_) => {
+        | Expr::Missing(_)
+        | Expr::Placeholder(_) => {
             bail!(r#"Invalid argument type: unsupported expression for type "{expected_type}""#)
         }
     }

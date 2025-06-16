@@ -30,6 +30,7 @@ impl SupportedCalldataKind for ExprInlineMacro {
         };
 
         let type_parameters_from_abi = path
+            .segments(db)
             .elements(db)
             .into_iter()
             .find_map(|element| match element {
@@ -62,6 +63,7 @@ impl SupportedCalldataKind for ExprInlineMacro {
                         })
                         .collect::<Result<Vec<_>>>(),
                 ),
+                PathSegment::Missing(_segment) => Some(Err(anyhow::anyhow!("Path segment missing")))
             })
             .transpose()?
             .with_context(|| format!(r#"Invalid argument type, expected "{expected_type}", got array"#))?;
