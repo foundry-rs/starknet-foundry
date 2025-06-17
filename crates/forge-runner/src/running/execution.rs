@@ -35,7 +35,7 @@ pub fn finalize_execution(
         &vm_resources_without_inner_calls,
         &syscall_handler.base.inner_calls,
     );
-    dbg!(&vm_resources);
+
     let syscall_handler_base = &syscall_handler.base;
     Ok(CallInfo {
         call: syscall_handler_base.call.clone().into(),
