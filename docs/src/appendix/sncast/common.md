@@ -27,16 +27,6 @@ Optional.
 Path to [keystore file](https://book.starkli.rs/signers#encrypted-keystores).
 When specified, the --account argument must be a path to [starkli account JSON file](https://book.starkli.rs/accounts#accounts).
 
-## `--int-format`
-Optional.
-
-If passed, values will be displayed in decimal format. Default is addresses as hex and fees as int.
-
-## `--hex-format`
-Optional.
-
-If passed, values will be displayed in hex format. Default is addresses as hex and fees as int.
-
 ## `--json, -j`
 Optional.
 
