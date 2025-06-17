@@ -318,7 +318,7 @@ fn remove_syscall_resources_and_exit_non_error_call(
         }
     }
 
-    let nested_syscall_usage_sum =
+    let _nested_syscall_usage_sum =
         aggregate_nested_syscall_usage(&cheatnet_state.trace_data.current_call_stack.top());
     // let syscall_usage = sum_syscall_usage(nested_syscall_usage_sum, syscall_usage);
     cheatnet_state.trace_data.exit_nested_call(
