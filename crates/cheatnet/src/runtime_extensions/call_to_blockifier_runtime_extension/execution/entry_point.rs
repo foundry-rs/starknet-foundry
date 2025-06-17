@@ -2,8 +2,8 @@ use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
-use crate::runtime_extensions::common::{get_relocated_vm_trace, get_syscalls_gas_consumed, sum_syscall_usage};
-use crate::state::{CallTrace, CallTraceNode, CheatStatus};
+use crate::runtime_extensions::common::{get_relocated_vm_trace, get_syscalls_gas_consumed};
+use crate::state::CheatStatus;
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
 use blockifier::execution::syscalls::hint_processor::{SyscallUsageMap, ENTRYPOINT_NOT_FOUND_ERROR, OUT_OF_GAS_ERROR};
@@ -28,9 +28,7 @@ use starknet_api::{
     transaction::{fields::Calldata, TransactionVersion},
 };
 use starknet_types_core::felt::Felt;
-use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use std::rc::Rc;
 use blockifier::execution::entry_point::{EntryPointRevertInfo, ExecutableCallEntryPoint};
 use blockifier::execution::stack_trace::{extract_trailing_cairo1_revert_trace, Cairo1RevertHeader};
 use thiserror::Error;
@@ -318,9 +316,6 @@ fn remove_syscall_resources_and_exit_non_error_call(
         }
     }
 
-    let _nested_syscall_usage_sum =
-        aggregate_nested_syscall_usage(&cheatnet_state.trace_data.current_call_stack.top());
-    // let syscall_usage = sum_syscall_usage(nested_syscall_usage_sum, syscall_usage);
     cheatnet_state.trace_data.exit_nested_call(
         resources,
         gas_consumed,
@@ -431,28 +426,6 @@ fn mocked_call_info(
         tracked_resource,
         accessed_contract_addresses: HashSet::default(),
     }
-}
-
-fn aggregate_nested_syscall_usage(trace: &Rc<RefCell<CallTrace>>) -> SyscallUsageMap {
-    let mut result = SyscallUsageMap::new();
-    for nested_call_node in &trace.borrow().nested_calls {
-        if let CallTraceNode::EntryPointCall(nested_call) = nested_call_node {
-            let sub_trace_counter = aggregate_syscall_usage(nested_call);
-            result = sum_syscall_usage(result, &sub_trace_counter);
-        }
-    }
-    result
-}
-
-fn aggregate_syscall_usage(trace: &Rc<RefCell<CallTrace>>) -> SyscallUsageMap {
-    let mut result = trace.borrow().used_syscalls.clone();
-    for nested_call_node in &trace.borrow().nested_calls {
-        if let CallTraceNode::EntryPointCall(nested_call) = nested_call_node {
-            let sub_trace_counter = aggregate_nested_syscall_usage(nested_call);
-            result = sum_syscall_usage(result, &sub_trace_counter);
-        }
-    }
-    result
 }
 
 #[derive(Debug, Error)]
