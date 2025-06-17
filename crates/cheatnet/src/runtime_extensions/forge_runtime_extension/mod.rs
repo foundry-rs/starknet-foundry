@@ -19,7 +19,7 @@ use crate::runtime_extensions::{
         storage::{calculate_variable_address, load, store},
     },
 };
-use crate::state::CallTraceNode;
+use crate::state::{CallTrace, CallTraceNode};
 use anyhow::{Context, Result, anyhow};
 use blockifier::bouncer::builtins_to_sierra_gas;
 use blockifier::context::TransactionContext;
@@ -57,7 +57,9 @@ use starknet::signers::SigningKey;
 use starknet_api::execution_resources::GasAmount;
 use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
 use starknet_types_core::felt::Felt;
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 pub mod cheatcodes;
@@ -611,10 +613,20 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime, call_info: &CallInf
         .trace_data
         .current_call_stack
         .top();
-
+    let all_sierra_gas_consumed = add_sierra_gas_resources(&top_call);
     let mut top_call = top_call.borrow_mut();
     top_call.used_execution_resources = call_info.resources.clone();
-    top_call.gas_consumed = call_info.execution.gas_consumed;
+    top_call.gas_consumed = all_sierra_gas_consumed;
+}
+
+fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
+    let mut gas_consumed = top_call.borrow().gas_consumed;
+    for nested_call in &top_call.borrow().nested_calls {
+        if let CallTraceNode::EntryPointCall(nested_call) = nested_call {
+            gas_consumed += &nested_call.borrow().gas_consumed;
+        }
+    }
+    gas_consumed
 }
 
 pub fn calculate_total_syscall_usage(runtime: &mut ForgeRuntime) -> SyscallUsageMap {
