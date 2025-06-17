@@ -218,8 +218,8 @@ pub fn extract_vm_resources(
                     .map_or_else(|| {}, |val| *val *= SEGMENT_ARENA_BUILTIN_SIZE);
             }
             // Take into account the syscall resources of the current call.
-            vm_resources_without_inner_calls += &versioned_constants
-                .get_additional_os_syscall_resources(&syscall_handler.syscalls_usage);
+            // vm_resources_without_inner_calls += &versioned_constants
+            //     .get_additional_os_syscall_resources(&syscall_handler.syscalls_usage);
             Ok(vm_resources_without_inner_calls)
         }
         TrackedResource::SierraGas => Ok(ExecutionResources::default()),
