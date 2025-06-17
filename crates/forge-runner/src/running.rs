@@ -337,7 +337,7 @@ pub fn run_test_case(
 
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
-    let resources_from_nested_calls = update_top_call_resources(&mut forge_runtime);
+    update_top_call_resources(&mut forge_runtime);
     update_top_call_l1_resources(&mut forge_runtime);
 
     let fuzzer_args = forge_runtime
@@ -349,24 +349,8 @@ pub fn run_test_case(
         .clone();
 
     let transaction_context = get_context(&forge_runtime).tx_context.clone();
-    let mut used_resources =
+    let used_resources =
         get_all_used_resources(forge_runtime, &transaction_context, tracked_resource);
-    used_resources.execution_resources.n_steps -= resources_from_nested_calls.n_steps;
-    used_resources.execution_resources.n_memory_holes -= resources_from_nested_calls.n_memory_holes;
-
-    for (key, value) in resources_from_nested_calls.builtin_instance_counter.iter() {
-        used_resources
-            .execution_resources
-            .builtin_instance_counter
-            .entry(key.clone())
-            .and_modify(|v| {
-                if *v >= *value {
-                    *v -= *value;
-                } else {
-                    *v = 0;
-                }
-            });
-    }
     let gas_used = calculate_used_gas(
         &transaction_context,
         &mut cached_state,

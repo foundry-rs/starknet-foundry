@@ -603,7 +603,7 @@ pub fn add_resources_to_top_call(
     }
 }
 
-pub fn update_top_call_resources(runtime: &mut ForgeRuntime) -> ExecutionResources {
+pub fn update_top_call_resources(runtime: &mut ForgeRuntime) {
     // call representing the test code
     let top_call = runtime
         .extended_runtime
@@ -618,8 +618,6 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime) -> ExecutionResourc
     let all_sierra_gas_consumed = add_sierra_gas_resources(&top_call);
 
     let mut top_call = top_call.borrow_mut();
-    println!("top call resources before:");
-    dbg!(&top_call.used_execution_resources);
     top_call.used_execution_resources = all_execution_resources;
     top_call.gas_consumed = all_sierra_gas_consumed;
 
@@ -640,34 +638,7 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime) -> ExecutionResourc
             sum_syscall_usage(syscalls, &trace.borrow().used_syscalls)
         });
 
-    let mut resources_from_nested_calls_syscalls = ExecutionResources::default();
-    if top_call.nested_calls.len() > 1 {
-        if let CallTraceNode::EntryPointCall(nested_call) = top_call.nested_calls.last().unwrap() {
-            let nested_call_syscalls = &nested_call.borrow().used_syscalls;
-            let used = add_syscall_execution_resources(
-                &runtime
-                    .extended_runtime
-                    .extended_runtime
-                    .extended_runtime
-                    .hint_handler
-                    .base
-                    .context
-                    .tx_context
-                    .block_context
-                    .versioned_constants(),
-                &ExecutionResources::default(),
-                nested_call_syscalls,
-            );
-            resources_from_nested_calls_syscalls += &used;
-        }
-    }
-
     top_call.used_syscalls = sum_syscall_usage(top_call_syscalls, &nested_calls_syscalls);
-    // dbg!(&resources_from_nested_calls_syscalls);
-    println!("top call resources after update:");
-    dbg!(&top_call.used_execution_resources);
-    dbg!(&resources_from_nested_calls_syscalls);
-    resources_from_nested_calls_syscalls
 }
 
 // Only top-level is considered relevant since we can't have l1 handlers deeper than 1 level of nesting
@@ -726,8 +697,6 @@ fn add_syscall_execution_resources(
     syscall_usage: &SyscallUsageMap,
 ) -> ExecutionResources {
     let mut total_vm_usage = execution_resources.filter_unused_builtins();
-    let added = versioned_constants.get_additional_os_syscall_resources(syscall_usage);
-    // dbg!(&added);
     total_vm_usage += &versioned_constants.get_additional_os_syscall_resources(syscall_usage);
     total_vm_usage
 }
@@ -736,7 +705,7 @@ fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
     let mut gas_consumed = top_call.borrow().gas_consumed;
     for nested_call in &top_call.borrow().nested_calls {
         if let CallTraceNode::EntryPointCall(nested_call) = nested_call {
-            gas_consumed += &nested_call.borrow().gas_consumed;
+            gas_consumed += &add_sierra_gas_resources(nested_call);
         }
     }
     gas_consumed
@@ -745,16 +714,10 @@ fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
 #[allow(clippy::needless_pass_by_value)]
 fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResources {
     let mut execution_resources = top_call.borrow().used_execution_resources.clone();
-    let mut counter = 0;
-
     for nested_call in &top_call.borrow().nested_calls {
-        counter += 1;
-        println!("counter: {counter}");
-
         match nested_call {
             CallTraceNode::EntryPointCall(nested_call) => {
-                // dbg!(&nested_call.borrow().used_execution_resources);
-                execution_resources += &nested_call.borrow().used_execution_resources;
+                execution_resources += &add_execution_resources(nested_call.clone());
             }
             CallTraceNode::DeployWithoutConstructor => {}
         }
@@ -806,8 +769,6 @@ pub fn get_all_used_resources(
         .top();
 
     let mut execution_resources = top_call.borrow().used_execution_resources.clone();
-    println!("execution_resources before adding syscall execution resources:");
-    dbg!(&execution_resources);
     let mut sierra_gas_consumed = top_call.borrow().gas_consumed;
     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
 
@@ -824,9 +785,6 @@ pub fn get_all_used_resources(
                 get_syscalls_gas_consumed(&top_call_syscalls, versioned_constants);
         }
     }
-
-    println!("execution_resources after adding syscall execution resources:");
-    dbg!(&execution_resources);
 
     let events = runtime_call_info
         .iter() // This method iterates over inner calls as well
