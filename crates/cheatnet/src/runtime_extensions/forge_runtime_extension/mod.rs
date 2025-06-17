@@ -603,7 +603,7 @@ pub fn add_resources_to_top_call(
     }
 }
 
-pub fn update_top_call_resources(runtime: &mut ForgeRuntime) {
+pub fn update_top_call_resources(runtime: &mut ForgeRuntime) -> ExecutionResources {
     // call representing the test code
     let top_call = runtime
         .extended_runtime
@@ -638,9 +638,30 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime) {
             sum_syscall_usage(syscalls, &trace.borrow().used_syscalls)
         });
 
+    let mut resources_from_nested_calls_syscalls = ExecutionResources::default();
+    for nested_call in &top_call.nested_calls {
+        if let CallTraceNode::EntryPointCall(nested_call) = nested_call {
+            let nested_call_syscalls = &nested_call.borrow().used_syscalls;
+            let used = add_syscall_execution_resources(
+                &runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .base
+                    .context
+                    .tx_context
+                    .block_context
+                    .versioned_constants(),
+                &ExecutionResources::default(),
+                nested_call_syscalls,
+            );
+            resources_from_nested_calls_syscalls += &used;
+        }
+    }
+
     top_call.used_syscalls = sum_syscall_usage(top_call_syscalls, &nested_calls_syscalls);
-    dbg!(&top_call.used_execution_resources);
-    dbg!(&top_call.used_syscalls);
+    resources_from_nested_calls_syscalls
 }
 
 // Only top-level is considered relevant since we can't have l1 handlers deeper than 1 level of nesting
@@ -717,7 +738,7 @@ fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
 
 #[allow(clippy::needless_pass_by_value)]
 fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResources {
-    let execution_resources = top_call.borrow().used_execution_resources.clone();
+    let mut execution_resources = top_call.borrow().used_execution_resources.clone();
     let mut counter = 0;
 
     for nested_call in &top_call.borrow().nested_calls {
@@ -727,7 +748,7 @@ fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResourc
         match nested_call {
             CallTraceNode::EntryPointCall(nested_call) => {
                 dbg!(&nested_call.borrow().used_execution_resources);
-                // execution_resources += &nested_call.borrow().used_execution_resources;
+                execution_resources += &nested_call.borrow().used_execution_resources;
             }
             CallTraceNode::DeployWithoutConstructor => {}
         }

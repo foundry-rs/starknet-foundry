@@ -1075,7 +1075,7 @@ fn nested_call_cost_cairo_steps() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(288),
-            l2_gas: GasAmount(14_375_360),
+            l2_gas: GasAmount(7_215_360),
         },
     );
 }
@@ -1149,7 +1149,7 @@ fn nested_call_cost_in_forked_contract_cairo_steps() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(14_375_360),
+            l2_gas: GasAmount(7_215_360),
         },
     );
 }
