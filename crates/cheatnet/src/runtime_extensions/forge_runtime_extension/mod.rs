@@ -754,7 +754,7 @@ pub fn get_all_used_resources(
     let mut execution_resources = top_call.borrow().used_execution_resources.clone();
     let mut sierra_gas_consumed = top_call.borrow().gas_consumed;
     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
-    dbg!(&top_call_syscalls);
+
     match tracked_resource {
         TrackedResource::CairoSteps => {
             execution_resources = add_syscall_execution_resources(
@@ -780,7 +780,6 @@ pub fn get_all_used_resources(
         })
         .collect();
 
-    dbg!(&total_syscall_usage);
     UsedResources {
         events,
         syscall_usage: total_syscall_usage,
