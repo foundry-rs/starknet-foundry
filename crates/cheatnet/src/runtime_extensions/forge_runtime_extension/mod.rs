@@ -642,27 +642,23 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime) -> ExecutionResourc
 
     let mut resources_from_nested_calls_syscalls = ExecutionResources::default();
     if top_call.nested_calls.len() > 1 {
-        for nested_call in &top_call.nested_calls {
-            if let CallTraceNode::EntryPointCall(nested_call) = nested_call {
-                let nested_call_syscalls = &nested_call.borrow().used_syscalls;
-                let used = add_syscall_execution_resources(
-                    &runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .hint_handler
-                        .base
-                        .context
-                        .tx_context
-                        .block_context
-                        .versioned_constants(),
-                    &ExecutionResources::default(),
-                    nested_call_syscalls,
-                );
-                println!("-------------");
-                dbg!(&used);
-                resources_from_nested_calls_syscalls += &used;
-            }
+        if let CallTraceNode::EntryPointCall(nested_call) = top_call.nested_calls.last().unwrap() {
+            let nested_call_syscalls = &nested_call.borrow().used_syscalls;
+            let used = add_syscall_execution_resources(
+                &runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .base
+                    .context
+                    .tx_context
+                    .block_context
+                    .versioned_constants(),
+                &ExecutionResources::default(),
+                nested_call_syscalls,
+            );
+            resources_from_nested_calls_syscalls += &used;
         }
     }
 
