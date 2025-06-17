@@ -639,6 +639,8 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime) {
         });
 
     top_call.used_syscalls = sum_syscall_usage(top_call_syscalls, &nested_calls_syscalls);
+    dbg!(&top_call.used_execution_resources);
+    dbg!(&top_call.used_syscalls);
 }
 
 // Only top-level is considered relevant since we can't have l1 handlers deeper than 1 level of nesting
@@ -697,6 +699,8 @@ fn add_syscall_execution_resources(
     syscall_usage: &SyscallUsageMap,
 ) -> ExecutionResources {
     let mut total_vm_usage = execution_resources.filter_unused_builtins();
+    let added = versioned_constants.get_additional_os_syscall_resources(syscall_usage);
+    dbg!(&added);
     total_vm_usage += &versioned_constants.get_additional_os_syscall_resources(syscall_usage);
     total_vm_usage
 }
@@ -714,9 +718,16 @@ fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
 #[allow(clippy::needless_pass_by_value)]
 fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResources {
     let mut execution_resources = top_call.borrow().used_execution_resources.clone();
+    let mut counter = 0;
+
     for nested_call in &top_call.borrow().nested_calls {
+        counter += 1;
+        println!("counter: {counter}");
+
         match nested_call {
             CallTraceNode::EntryPointCall(nested_call) => {
+                println!("nested call resources");
+                dbg!(&nested_call.borrow().used_execution_resources);
                 execution_resources += &nested_call.borrow().used_execution_resources;
             }
             CallTraceNode::DeployWithoutConstructor => {}
