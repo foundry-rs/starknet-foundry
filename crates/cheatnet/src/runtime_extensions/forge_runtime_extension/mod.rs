@@ -19,7 +19,7 @@ use crate::runtime_extensions::{
         storage::{calculate_variable_address, load, store},
     },
 };
-use crate::state::{CallTrace, CallTraceNode};
+use crate::state::CallTraceNode;
 use anyhow::{Context, Result, anyhow};
 use blockifier::bouncer::builtins_to_sierra_gas;
 use blockifier::context::TransactionContext;
@@ -57,9 +57,7 @@ use starknet::signers::SigningKey;
 use starknet_api::execution_resources::GasAmount;
 use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
 use starknet_types_core::felt::Felt;
-use std::cell::RefCell;
 use std::collections::HashMap;
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 pub mod cheatcodes;
@@ -603,7 +601,7 @@ pub fn add_resources_to_top_call(
     }
 }
 
-pub fn update_top_call_resources(runtime: &mut ForgeRuntime) {
+pub fn update_top_call_resources(runtime: &mut ForgeRuntime, call_info: &CallInfo) {
     // call representing the test code
     let top_call = runtime
         .extended_runtime
@@ -614,13 +612,21 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime) {
         .current_call_stack
         .top();
 
-    let all_execution_resources = add_execution_resources(top_call.clone());
-    let all_sierra_gas_consumed = add_sierra_gas_resources(&top_call);
-
     let mut top_call = top_call.borrow_mut();
-    top_call.used_execution_resources = all_execution_resources;
-    top_call.gas_consumed = all_sierra_gas_consumed;
+    top_call.used_execution_resources = call_info.resources.clone();
+    top_call.gas_consumed = call_info.execution.gas_consumed;
+}
 
+pub fn calculate_total_syscall_usage(runtime: &mut ForgeRuntime) -> SyscallUsageMap {
+    let top_call = runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .trace_data
+        .current_call_stack
+        .top();
+    let top_call = top_call.borrow_mut();
     let top_call_syscalls = runtime
         .extended_runtime
         .extended_runtime
@@ -637,8 +643,8 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime) {
         .fold(SyscallUsageMap::new(), |syscalls, trace| {
             sum_syscall_usage(syscalls, &trace.borrow().used_syscalls)
         });
-
-    top_call.used_syscalls = sum_syscall_usage(top_call_syscalls, &nested_calls_syscalls);
+    let total_syscall_usage = sum_syscall_usage(top_call_syscalls, &nested_calls_syscalls);
+    total_syscall_usage
 }
 
 // Only top-level is considered relevant since we can't have l1 handlers deeper than 1 level of nesting
@@ -701,35 +707,12 @@ fn add_syscall_execution_resources(
     total_vm_usage
 }
 
-fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
-    let mut gas_consumed = top_call.borrow().gas_consumed;
-    for nested_call in &top_call.borrow().nested_calls {
-        if let CallTraceNode::EntryPointCall(nested_call) = nested_call {
-            gas_consumed += &nested_call.borrow().gas_consumed;
-        }
-    }
-    gas_consumed
-}
-
-#[allow(clippy::needless_pass_by_value)]
-fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResources {
-    let mut execution_resources = top_call.borrow().used_execution_resources.clone();
-    for nested_call in &top_call.borrow().nested_calls {
-        match nested_call {
-            CallTraceNode::EntryPointCall(nested_call) => {
-                execution_resources += &nested_call.borrow().used_execution_resources;
-            }
-            CallTraceNode::DeployWithoutConstructor => {}
-        }
-    }
-    execution_resources
-}
-
 #[must_use]
 pub fn get_all_used_resources(
     runtime: ForgeRuntime,
     transaction_context: &TransactionContext,
     tracked_resource: TrackedResource,
+    total_syscall_usage: SyscallUsageMap,
 ) -> UsedResources {
     let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
     let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.base.l2_to_l1_messages;
@@ -771,7 +754,7 @@ pub fn get_all_used_resources(
     let mut execution_resources = top_call.borrow().used_execution_resources.clone();
     let mut sierra_gas_consumed = top_call.borrow().gas_consumed;
     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
-
+    dbg!(&top_call_syscalls);
     match tracked_resource {
         TrackedResource::CairoSteps => {
             execution_resources = add_syscall_execution_resources(
@@ -797,9 +780,10 @@ pub fn get_all_used_resources(
         })
         .collect();
 
+    dbg!(&total_syscall_usage);
     UsedResources {
         events,
-        syscall_usage: top_call_syscalls,
+        syscall_usage: total_syscall_usage,
         execution_resources,
         gas_consumed: GasAmount::from(sierra_gas_consumed),
         l1_handler_payload_lengths,

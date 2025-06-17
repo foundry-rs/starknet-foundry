@@ -21,7 +21,7 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::Use
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
-    ForgeExtension, ForgeRuntime, add_resources_to_top_call, get_all_used_resources,
+    ForgeExtension, ForgeRuntime, calculate_total_syscall_usage, get_all_used_resources,
     update_top_call_l1_resources, update_top_call_resources, update_top_call_vm_trace,
 };
 use cheatnet::state::{
@@ -302,17 +302,7 @@ pub fn run_test_case(
                 tracked_resource,
             )?;
 
-            // TODO(#3292) this can be done better, we can take gas directly from call info
-            let vm_resources_without_inner_calls = runner
-                .get_execution_resources()
-                .expect("Execution resources missing")
-                .filter_unused_builtins();
-
-            add_resources_to_top_call(
-                &mut forge_runtime,
-                &vm_resources_without_inner_calls,
-                &tracked_resource,
-            );
+            update_top_call_resources(&mut forge_runtime, &call_info);
 
             update_top_call_vm_trace(&mut forge_runtime, &mut runner);
 
@@ -337,7 +327,6 @@ pub fn run_test_case(
 
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
-    update_top_call_resources(&mut forge_runtime);
     update_top_call_l1_resources(&mut forge_runtime);
 
     let fuzzer_args = forge_runtime
@@ -349,8 +338,14 @@ pub fn run_test_case(
         .clone();
 
     let transaction_context = get_context(&forge_runtime).tx_context.clone();
-    let used_resources =
-        get_all_used_resources(forge_runtime, &transaction_context, tracked_resource);
+    let total_syscall_usage = calculate_total_syscall_usage(&mut forge_runtime);
+    let used_resources = get_all_used_resources(
+        forge_runtime,
+        &transaction_context,
+        tracked_resource,
+        total_syscall_usage,
+    );
+
     let gas_used = calculate_used_gas(
         &transaction_context,
         &mut cached_state,
