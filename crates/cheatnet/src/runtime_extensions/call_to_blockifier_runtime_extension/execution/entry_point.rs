@@ -320,11 +320,11 @@ fn remove_syscall_resources_and_exit_non_error_call(
 
     let nested_syscall_usage_sum =
         aggregate_nested_syscall_usage(&cheatnet_state.trace_data.current_call_stack.top());
-    let syscall_usage = sum_syscall_usage(nested_syscall_usage_sum, syscall_usage);
+    // let syscall_usage = sum_syscall_usage(nested_syscall_usage_sum, syscall_usage);
     cheatnet_state.trace_data.exit_nested_call(
         resources,
         gas_consumed,
-        syscall_usage,
+        syscall_usage.clone(),
         CallResult::from_non_error(call_info),
         &call_info.execution.l2_to_l1_messages,
         vm_trace,
