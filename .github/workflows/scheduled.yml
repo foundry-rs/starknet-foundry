@@ -90,7 +90,6 @@ jobs:
       - name: Install cairo-coverage
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
-      - uses: taiki-e/install-action@nextest
 
       - run: cargo test --release -p forge e2e
 

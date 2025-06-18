@@ -17,7 +17,7 @@ have to be updated accordingly.
 # Nightly releases
 
 Nightly release must be triggered manually using the Nightly GitHub action.
-This action builds binaries from specified ref and uploads them to the [starknet-foundry-nightlies](https://github.com/foundry-rs/starknet-foundry-nightlies) repository.
+This action builds binaries from specified ref and uploads them to the [starknet-foundry-nightlies](https://github.com/software-mansion-labs/starknet-foundry-nightlies) repository.
 Additionally, there are `stds` and `plugin` versions uploaded to the [_dev_ registry](https://scarbs.dev/).
 After a successful release, [Ma'at](https://github.com/software-mansion/maat) is automatically triggered to run experiments in nightly workspace. Results can be found [here](https://docs.swmansion.com/maat/)
 
