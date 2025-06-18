@@ -1,6 +1,6 @@
 use self::contracts_data::ContractsData;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
-use crate::runtime_extensions::common::sum_syscall_usage;
+use crate::runtime_extensions::common::{get_syscalls_gas_consumed, sum_syscall_usage};
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
 use crate::runtime_extensions::{
     call_to_blockifier_runtime_extension::{
@@ -19,7 +19,7 @@ use crate::runtime_extensions::{
         storage::{calculate_variable_address, load, store},
     },
 };
-use crate::state::{CallTrace, CallTraceNode};
+use crate::state::CallTraceNode;
 use anyhow::{Context, Result, anyhow};
 use blockifier::bouncer::builtins_to_sierra_gas;
 use blockifier::context::TransactionContext;
@@ -53,9 +53,7 @@ use starknet::signers::SigningKey;
 use starknet_api::execution_resources::GasAmount;
 use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
 use starknet_types_core::felt::Felt;
-use std::cell::RefCell;
 use std::collections::HashMap;
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 pub mod cheatcodes;
@@ -637,29 +635,10 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &mut C
             Some(get_relocated_vm_trace(cairo_runner));
     }
 }
-fn add_syscall_execution_resources(
-    versioned_constants: &VersionedConstants,
-    execution_resources: &ExecutionResources,
-    syscall_usage: &SyscallUsageMap,
-) -> ExecutionResources {
-    let mut total_vm_usage = execution_resources.filter_unused_builtins();
-    total_vm_usage += &versioned_constants.get_additional_os_syscall_resources(syscall_usage);
-    total_vm_usage
-}
-
-fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
-    let mut gas_consumed = top_call.borrow().gas_consumed;
-    for nested_call in &top_call.borrow().nested_calls {
-        if let CallTraceNode::EntryPointCall(nested_call) = nested_call {
-            gas_consumed += &nested_call.borrow().gas_consumed;
-        }
-    }
-    gas_consumed
-}
 
 #[must_use]
 pub fn get_all_used_resources(
-    runtime: ForgeRuntime,
+    _runtime: ForgeRuntime,
     transaction_context: &TransactionContext,
     tracked_resource: TrackedResource,
     total_syscall_usage: SyscallUsageMap,
@@ -672,33 +651,11 @@ pub fn get_all_used_resources(
     let l1_handler_payload_lengths =
         get_l1_handlers_payloads_lengths(&runtime_call_info.inner_calls);
 
-    // call representing the test code
-    let top_call = runtime
-        .extended_runtime
-        .extended_runtime
-        .extension
-        .cheatnet_state
-        .trace_data
-        .current_call_stack
-        .top();
+    let mut gas_consumed = summary.charged_resources.gas_consumed.0;
 
-    // let mut execution_resources = top_call.borrow().used_execution_resources.clone();
-    // let mut sierra_gas_consumed = top_call.borrow().gas_consumed;
-    let top_call_syscalls = top_call.borrow().used_syscalls.clone();
-
-    // match tracked_resource {
-    //     TrackedResource::CairoSteps => {
-    //         execution_resources = add_syscall_execution_resources(
-    //             versioned_constants,
-    //             &execution_resources,
-    //             &top_call_syscalls,
-    //         );
-    //     }
-    //     TrackedResource::SierraGas => {
-    //         sierra_gas_consumed +=
-    //             get_syscalls_gas_consumed(&total_syscall_usage, versioned_constants);
-    //     }
-    // }
+    if tracked_resource == TrackedResource::SierraGas {
+        gas_consumed += get_syscalls_gas_consumed(&total_syscall_usage, versioned_constants);
+    }
 
     let events = runtime_call_info
         .iter() // This method iterates over inner calls as well
@@ -715,7 +672,7 @@ pub fn get_all_used_resources(
         events,
         syscall_usage: total_syscall_usage,
         execution_resources: summary.charged_resources.vm_resources,
-        gas_consumed: summary.charged_resources.gas_consumed,
+        gas_consumed: GasAmount(gas_consumed),
         l1_handler_payload_lengths,
         l2_to_l1_payload_lengths,
     }
