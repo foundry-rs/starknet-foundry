@@ -141,7 +141,7 @@ jobs:
         run: |
           gh release create \
             "${{ needs.prepare.outputs.nightly_tag }}" \
-            --repo foundry-rs/starknet-foundry-nightlies \
+            --repo software-mansion-labs/starknet-foundry-nightlies \
             --latest \
             --title "${{ needs.prepare.outputs.nightly_tag }}" \
             --notes-file NIGHTLY_RELEASE_NOTES.md
@@ -165,7 +165,7 @@ jobs:
             gh release upload \
               "${{ needs.prepare.outputs.nightly_tag }}" \
               "$file" \
-              --repo foundry-rs/starknet-foundry-nightlies
+              --repo software-mansion-labs/starknet-foundry-nightlies
           done
 
       - name: Upload source code archives
@@ -177,7 +177,7 @@ jobs:
             gh release upload \
               "${{ needs.prepare.outputs.nightly_tag }}" \
               "$file" \
-              --repo foundry-rs/starknet-foundry-nightlies
+              --repo software-mansion-labs/starknet-foundry-nightlies
           done
 
   cleanup:
