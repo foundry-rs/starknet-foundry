@@ -596,7 +596,7 @@ pub fn add_resources_to_top_call(
     let mut top_call = top_call.borrow_mut();
 
     match tracked_resource {
-        TrackedResource::CairoSteps => top_call.used_execution_resources += resources,
+        TrackedResource::CairoSteps => {}
         TrackedResource::SierraGas => {
             top_call.gas_consumed += vm_resources_to_sierra_gas(resources, versioned_constants).0;
         }
@@ -613,20 +613,11 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime, call_info: &CallInf
         .trace_data
         .current_call_stack
         .top();
+
     let all_sierra_gas_consumed = add_sierra_gas_resources(&top_call);
     let mut top_call = top_call.borrow_mut();
     top_call.used_execution_resources = call_info.resources.clone();
     top_call.gas_consumed = all_sierra_gas_consumed;
-}
-
-fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
-    let mut gas_consumed = top_call.borrow().gas_consumed;
-    for nested_call in &top_call.borrow().nested_calls {
-        if let CallTraceNode::EntryPointCall(nested_call) = nested_call {
-            gas_consumed += &nested_call.borrow().gas_consumed;
-        }
-    }
-    gas_consumed
 }
 
 pub fn calculate_total_syscall_usage(runtime: &mut ForgeRuntime) -> SyscallUsageMap {
@@ -717,6 +708,16 @@ fn add_syscall_execution_resources(
     let mut total_vm_usage = execution_resources.filter_unused_builtins();
     total_vm_usage += &versioned_constants.get_additional_os_syscall_resources(syscall_usage);
     total_vm_usage
+}
+
+fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
+    let mut gas_consumed = top_call.borrow().gas_consumed;
+    for nested_call in &top_call.borrow().nested_calls {
+        if let CallTraceNode::EntryPointCall(nested_call) = nested_call {
+            gas_consumed += &nested_call.borrow().gas_consumed;
+        }
+    }
+    gas_consumed
 }
 
 #[must_use]

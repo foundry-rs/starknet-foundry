@@ -21,8 +21,9 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::Use
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
-    ForgeExtension, ForgeRuntime, calculate_total_syscall_usage, get_all_used_resources,
-    update_top_call_l1_resources, update_top_call_resources, update_top_call_vm_trace,
+    ForgeExtension, ForgeRuntime, add_resources_to_top_call, calculate_total_syscall_usage,
+    get_all_used_resources, update_top_call_l1_resources, update_top_call_resources,
+    update_top_call_vm_trace,
 };
 use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredErrors, ExtendedStateReader,
@@ -302,6 +303,17 @@ pub fn run_test_case(
                 tracked_resource,
             )?;
 
+            // TODO(#3292) this can be done better, we can take gas directly from call info
+            let vm_resources_without_inner_calls = runner
+                .get_execution_resources()
+                .expect("Execution resources missing")
+                .filter_unused_builtins();
+
+            add_resources_to_top_call(
+                &mut forge_runtime,
+                &vm_resources_without_inner_calls,
+                &tracked_resource,
+            );
             update_top_call_resources(&mut forge_runtime, &call_info);
 
             update_top_call_vm_trace(&mut forge_runtime, &mut runner);
