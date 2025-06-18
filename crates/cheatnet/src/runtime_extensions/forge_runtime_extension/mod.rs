@@ -615,6 +615,7 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime, call_info: &CallInf
         .top();
 
     let all_sierra_gas_consumed = add_sierra_gas_resources(&top_call);
+
     let mut top_call = top_call.borrow_mut();
     top_call.used_execution_resources = call_info.resources.clone();
     top_call.gas_consumed = all_sierra_gas_consumed;
@@ -646,8 +647,7 @@ pub fn calculate_total_syscall_usage(runtime: &mut ForgeRuntime) -> SyscallUsage
         .fold(SyscallUsageMap::new(), |syscalls, trace| {
             sum_syscall_usage(syscalls, &trace.borrow().used_syscalls)
         });
-    let total_syscall_usage = sum_syscall_usage(top_call_syscalls, &nested_calls_syscalls);
-    total_syscall_usage
+    sum_syscall_usage(top_call_syscalls, &nested_calls_syscalls)
 }
 
 // Only top-level is considered relevant since we can't have l1 handlers deeper than 1 level of nesting
