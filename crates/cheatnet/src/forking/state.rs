@@ -33,7 +33,7 @@ use url::Url;
 #[derive(Debug)]
 pub struct ForkStateReader {
     client: SyncClient,
-    cache: RefCell<ForkCache>,
+    pub cache: RefCell<ForkCache>,
 }
 
 impl ForkStateReader {

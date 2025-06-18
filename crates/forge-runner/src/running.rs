@@ -15,6 +15,7 @@ use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::constants as cheatnet_constants;
+use cheatnet::forking::data::ForksData;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
@@ -154,6 +155,7 @@ pub struct RunCompleted {
     pub(crate) used_resources: UsedResources,
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
+    pub(crate) forks_data: Option<ForksData>,
 }
 
 #[allow(clippy::too_many_lines)]
@@ -162,6 +164,7 @@ pub struct RunError {
     pub(crate) call_trace: Rc<RefCell<CallTrace>>,
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
+    pub(crate) forks_data: Option<ForksData>,
 }
 
 pub enum RunResult {
@@ -357,6 +360,18 @@ pub fn run_test_case(
         used_resources.clone(),
     )?;
 
+    let forks_data = cached_state
+        .state
+        .fork_state_reader
+        .map(|fork_state_reader| {
+            ForksData::new(
+                fork_state_reader
+                    .cache
+                    .borrow()
+                    .get_compiled_contract_class_map(),
+            )
+        });
+
     Ok(match result {
         Ok(result) => RunResult::Completed(Box::new(RunCompleted {
             status: if result.execution.failed {
@@ -369,12 +384,14 @@ pub fn run_test_case(
             used_resources,
             encountered_errors,
             fuzzer_args,
+            forks_data,
         })),
         Err(error) => RunResult::Error(RunError {
             error: Box::new(error),
             call_trace: call_trace_ref,
             encountered_errors,
             fuzzer_args,
+            forks_data,
         }),
     })
 }
@@ -424,7 +441,7 @@ fn extract_test_case_summary(
                         contracts_data,
                         trace_verbosity,
                         case.name.clone(),
-                        case.config.fork_config.clone(),
+                        run_error.forks_data.unwrap_or_default(),
                     ),
                 }
             }

@@ -112,6 +112,11 @@ impl FileTruncateExtension for File {
 }
 
 impl ForkCache {
+    #[must_use]
+    pub fn get_compiled_contract_class_map(&self) -> &HashMap<ClassHash, ContractClass> {
+        &self.fork_cache_content.compiled_contract_class
+    }
+
     pub(crate) fn load_or_new(
         url: &Url,
         block_number: BlockNumber,

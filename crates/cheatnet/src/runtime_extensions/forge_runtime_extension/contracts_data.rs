@@ -13,7 +13,7 @@ use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 
 type ContractName = String;
-type FunctionName = String;
+pub type FunctionName = String;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct ContractsData {

@@ -1,4 +1,4 @@
-use crate::contracts_data_store::{ContractsDataStore, NetworkLookupError};
+use crate::contracts_data_store::ContractsDataStore;
 use crate::trace::types::{
     CallerAddress, ContractAddress, ContractName, ContractTrace, Selector, TestName, TraceInfo,
     TransformedCallResult, TransformedCalldata,
@@ -13,15 +13,9 @@ use starknet::core::types::contract::AbiEntry;
 use starknet_api::core::ClassHash;
 use starknet_api::execution_utils::format_panic_data;
 
-#[derive(thiserror::Error, Debug, Clone)]
-pub enum CollectorError {
-    #[error(transparent)]
-    NetworkLookupError(#[from] NetworkLookupError),
-}
-
 pub struct Collector<'a> {
     call_trace: &'a CallTrace,
-    contracts_data_store: &'a mut ContractsDataStore,
+    contracts_data_store: &'a ContractsDataStore,
     verbosity: Verbosity,
 }
 
@@ -30,7 +24,7 @@ impl<'a> Collector<'a> {
     #[must_use]
     pub fn new(
         call_trace: &'a CallTrace,
-        contracts_data_store: &'a mut ContractsDataStore,
+        contracts_data_store: &'a ContractsDataStore,
         verbosity: Verbosity,
     ) -> Collector<'a> {
         Collector {
@@ -40,38 +34,38 @@ impl<'a> Collector<'a> {
         }
     }
 
-    pub fn collect_trace(&mut self, test_name: String) -> Result<Trace, CollectorError> {
-        Ok(Trace {
+    pub fn collect_trace(&self, test_name: String) -> Trace {
+        Trace {
             test_name: TestName(test_name),
-            nested_calls: self.collect_nested_calls()?,
-        })
+            nested_calls: self.collect_nested_calls(),
+        }
     }
 
-    fn collect_contract_trace(&mut self) -> Result<ContractTrace, CollectorError> {
+    fn collect_contract_trace(&self) -> ContractTrace {
         let verbosity = self.verbosity;
         let entry_point = &self.call_trace.entry_point;
-        let nested_calls = self.collect_nested_calls()?;
+        let nested_calls = self.collect_nested_calls();
         let contract_name = self.collect_contract_name();
-        let abi = self.collect_abi()?.to_owned();
+        let abi = self.collect_abi();
 
         let trace_info = TraceInfo {
             contract_name,
             entry_point_type: verbosity.detailed(|| entry_point.entry_point_type),
-            calldata: verbosity.standard(|| self.collect_transformed_calldata(&abi)),
+            calldata: verbosity.standard(|| self.collect_transformed_calldata(abi)),
             contract_address: verbosity.detailed(|| ContractAddress(entry_point.storage_address)),
             caller_address: verbosity.detailed(|| CallerAddress(entry_point.caller_address)),
             call_type: verbosity.detailed(|| entry_point.call_type),
             nested_calls,
-            call_result: verbosity.standard(|| self.collect_transformed_call_result(&abi)),
+            call_result: verbosity.standard(|| self.collect_transformed_call_result(abi)),
         };
 
-        Ok(ContractTrace {
-            selector: self.collect_selector()?,
+        ContractTrace {
+            selector: self.collect_selector(),
             trace_info,
-        })
+        }
     }
 
-    fn collect_nested_calls(&mut self) -> Result<Vec<ContractTrace>, CollectorError> {
+    fn collect_nested_calls(&self) -> Vec<ContractTrace> {
         self.call_trace
             .nested_calls
             .iter()
@@ -84,7 +78,7 @@ impl<'a> Collector<'a> {
                 }
                 .collect_contract_trace()
             })
-            .collect::<Result<_, _>>()
+            .collect()
     }
 
     fn collect_contract_name(&self) -> ContractName {
@@ -94,20 +88,17 @@ impl<'a> Collector<'a> {
             .unwrap_or_else(|| ContractName("forked contract".to_string()))
     }
 
-    fn collect_selector(&mut self) -> Result<Selector, CollectorError> {
-        Ok(self
-            .contracts_data_store
-            .get_or_fetch_selector(
-                &self.call_trace.entry_point.entry_point_selector,
-                &self.class_hash(),
-            )?
-            .clone())
+    fn collect_selector(&self) -> Selector {
+        self.contracts_data_store
+            .get_selector(&self.call_trace.entry_point.entry_point_selector)
+            .cloned()
+            .expect("selector should be present in `ContractsDataStore`")
     }
 
-    fn collect_abi(&mut self) -> Result<&[AbiEntry], CollectorError> {
-        Ok(self
-            .contracts_data_store
-            .get_or_fetch_abi(&self.class_hash())?)
+    fn collect_abi(&self) -> &[AbiEntry] {
+        self.contracts_data_store
+            .get_abi(&self.class_hash())
+            .expect("`ABI` should be present in `ContractsDataStore`")
     }
 
     fn collect_transformed_calldata(&self, abi: &[AbiEntry]) -> TransformedCalldata {
