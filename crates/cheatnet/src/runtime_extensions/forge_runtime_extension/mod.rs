@@ -19,13 +19,11 @@ use crate::runtime_extensions::{
         storage::{calculate_variable_address, load, store},
     },
 };
-use crate::state::{CallTrace, CallTraceNode};
+use crate::state::CallTraceNode;
 use anyhow::{Context, Result, anyhow};
 use blockifier::bouncer::builtins_to_sierra_gas;
 use blockifier::context::TransactionContext;
-use blockifier::execution::call_info::CallExecution;
 use blockifier::execution::contract_class::TrackedResource;
-use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::state::errors::StateError;
 use blockifier::transaction::objects::ExecutionResourcesTraits;
 use blockifier::utils::u64_from_usize;
@@ -41,14 +39,12 @@ use cairo_vm::vm::{
     errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
     vm_core::VirtualMachine,
 };
-use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
 use conversions::felt::{ToShortString, TryInferFormat};
 use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::CairoSerialize;
 use data_transformer::cairo_types::CairoU256;
 use rand::prelude::StdRng;
-use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
@@ -57,9 +53,7 @@ use starknet::signers::SigningKey;
 use starknet_api::execution_resources::GasAmount;
 use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
 use starknet_types_core::felt::Felt;
-use std::cell::RefCell;
 use std::collections::HashMap;
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 pub mod cheatcodes;
@@ -182,10 +176,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
-                syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
-                syscall_handler
-                    .increment_linear_factor_by(&DeprecatedSyscallSelector::Deploy, calldata.len());
-
                 handle_declare_deploy_result(deploy(
                     syscall_handler,
                     cheatnet_runtime.extension.cheatnet_state,
@@ -199,10 +189,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let contract_address = input_reader.read()?;
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
-
-                syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
-                syscall_handler
-                    .increment_linear_factor_by(&DeprecatedSyscallSelector::Deploy, calldata.len());
 
                 handle_declare_deploy_result(deploy_at(
                     syscall_handler,
@@ -570,21 +556,7 @@ fn handle_declare_deploy_result<T: CairoSerialize>(
     Ok(CheatcodeHandlingResult::from_serializable(result))
 }
 
-pub fn add_resources_to_top_call(
-    runtime: &mut ForgeRuntime,
-    resources: &ExecutionResources,
-    tracked_resource: &TrackedResource,
-) {
-    let versioned_constants = runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .base
-        .context
-        .tx_context
-        .block_context
-        .versioned_constants();
+pub fn calculate_total_syscall_usage(runtime: &mut ForgeRuntime) -> SyscallUsageMap {
     let top_call = runtime
         .extended_runtime
         .extended_runtime
@@ -593,34 +565,7 @@ pub fn add_resources_to_top_call(
         .trace_data
         .current_call_stack
         .top();
-    let mut top_call = top_call.borrow_mut();
-
-    match tracked_resource {
-        TrackedResource::CairoSteps => top_call.used_execution_resources += resources,
-        TrackedResource::SierraGas => {
-            top_call.gas_consumed += vm_resources_to_sierra_gas(resources, versioned_constants).0;
-        }
-    }
-}
-
-pub fn update_top_call_resources(runtime: &mut ForgeRuntime) {
-    // call representing the test code
-    let top_call = runtime
-        .extended_runtime
-        .extended_runtime
-        .extension
-        .cheatnet_state
-        .trace_data
-        .current_call_stack
-        .top();
-
-    let all_execution_resources = add_execution_resources(top_call.clone());
-    let all_sierra_gas_consumed = add_sierra_gas_resources(&top_call);
-
-    let mut top_call = top_call.borrow_mut();
-    top_call.used_execution_resources = all_execution_resources;
-    top_call.gas_consumed = all_sierra_gas_consumed;
-
+    let top_call = top_call.borrow_mut();
     let top_call_syscalls = runtime
         .extended_runtime
         .extended_runtime
@@ -637,8 +582,7 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime) {
         .fold(SyscallUsageMap::new(), |syscalls, trace| {
             sum_syscall_usage(syscalls, &trace.borrow().used_syscalls)
         });
-
-    top_call.used_syscalls = sum_syscall_usage(top_call_syscalls, &nested_calls_syscalls);
+    sum_syscall_usage(top_call_syscalls, &nested_calls_syscalls)
 }
 
 // Only top-level is considered relevant since we can't have l1 handlers deeper than 1 level of nesting
@@ -691,99 +635,26 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &mut C
             Some(get_relocated_vm_trace(cairo_runner));
     }
 }
-fn add_syscall_execution_resources(
-    versioned_constants: &VersionedConstants,
-    execution_resources: &ExecutionResources,
-    syscall_usage: &SyscallUsageMap,
-) -> ExecutionResources {
-    let mut total_vm_usage = execution_resources.filter_unused_builtins();
-    total_vm_usage += &versioned_constants.get_additional_os_syscall_resources(syscall_usage);
-    total_vm_usage
-}
-
-fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
-    let mut gas_consumed = top_call.borrow().gas_consumed;
-    for nested_call in &top_call.borrow().nested_calls {
-        if let CallTraceNode::EntryPointCall(nested_call) = nested_call {
-            gas_consumed += &nested_call.borrow().gas_consumed;
-        }
-    }
-    gas_consumed
-}
-
-#[allow(clippy::needless_pass_by_value)]
-fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResources {
-    let mut execution_resources = top_call.borrow().used_execution_resources.clone();
-    for nested_call in &top_call.borrow().nested_calls {
-        match nested_call {
-            CallTraceNode::EntryPointCall(nested_call) => {
-                execution_resources += &nested_call.borrow().used_execution_resources;
-            }
-            CallTraceNode::DeployWithoutConstructor => {}
-        }
-    }
-    execution_resources
-}
 
 #[must_use]
 pub fn get_all_used_resources(
-    runtime: ForgeRuntime,
+    _runtime: ForgeRuntime,
     transaction_context: &TransactionContext,
     tracked_resource: TrackedResource,
+    total_syscall_usage: SyscallUsageMap,
+    runtime_call_info: &CallInfo,
 ) -> UsedResources {
-    let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
-    let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.base.l2_to_l1_messages;
-    let top_call_events = starknet_runtime.hint_handler.base.events;
-
     let versioned_constants = transaction_context.block_context.versioned_constants();
-
-    // used just to obtain payloads of L2 -> L1 messages
-    let runtime_call_info = CallInfo {
-        execution: CallExecution {
-            l2_to_l1_messages: top_call_l2_to_l1_messages,
-            events: top_call_events,
-            ..Default::default()
-        },
-        call: CallEntryPoint {
-            class_hash: Some(Felt::from_hex(TEST_CONTRACT_CLASS_HASH).unwrap().into_()),
-            ..Default::default()
-        },
-        inner_calls: starknet_runtime.hint_handler.base.inner_calls,
-        tracked_resource,
-        ..Default::default()
-    };
     let summary = runtime_call_info.summarize(versioned_constants);
     let l2_to_l1_payload_lengths = summary.l2_to_l1_payload_lengths;
 
     let l1_handler_payload_lengths =
         get_l1_handlers_payloads_lengths(&runtime_call_info.inner_calls);
 
-    // call representing the test code
-    let top_call = runtime
-        .extended_runtime
-        .extended_runtime
-        .extension
-        .cheatnet_state
-        .trace_data
-        .current_call_stack
-        .top();
+    let mut gas_consumed = summary.charged_resources.gas_consumed.0;
 
-    let mut execution_resources = top_call.borrow().used_execution_resources.clone();
-    let mut sierra_gas_consumed = top_call.borrow().gas_consumed;
-    let top_call_syscalls = top_call.borrow().used_syscalls.clone();
-
-    match tracked_resource {
-        TrackedResource::CairoSteps => {
-            execution_resources = add_syscall_execution_resources(
-                versioned_constants,
-                &execution_resources,
-                &top_call_syscalls,
-            );
-        }
-        TrackedResource::SierraGas => {
-            sierra_gas_consumed +=
-                get_syscalls_gas_consumed(&top_call_syscalls, versioned_constants);
-        }
+    if tracked_resource == TrackedResource::SierraGas {
+        gas_consumed += get_syscalls_gas_consumed(&total_syscall_usage, versioned_constants);
     }
 
     let events = runtime_call_info
@@ -799,9 +670,9 @@ pub fn get_all_used_resources(
 
     UsedResources {
         events,
-        syscall_usage: top_call_syscalls,
-        execution_resources,
-        gas_consumed: GasAmount::from(sierra_gas_consumed),
+        syscall_usage: total_syscall_usage,
+        execution_resources: summary.charged_resources.vm_resources,
+        gas_consumed: GasAmount(gas_consumed),
         l1_handler_payload_lengths,
         l2_to_l1_payload_lengths,
     }
