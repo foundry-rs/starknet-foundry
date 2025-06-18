@@ -5,7 +5,6 @@ URL="$2"
 DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA="$3"
 
 $CAST_BINARY \
-  --int-format \
   --json \
   call \
   --url \
