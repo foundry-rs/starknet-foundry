@@ -778,7 +778,7 @@ pub fn get_all_used_resources(
         }
         TrackedResource::SierraGas => {
             sierra_gas_consumed +=
-                get_syscalls_gas_consumed(&top_call_syscalls, versioned_constants);
+                get_syscalls_gas_consumed(&total_syscall_usage, versioned_constants);
         }
     }
 
