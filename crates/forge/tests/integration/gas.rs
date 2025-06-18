@@ -849,21 +849,21 @@ fn l1_message_cost_for_proxy_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-    // 2804 * 0.0025 = 7.01 ~ 8 = gas cost of steps
+    // 2733 * 0.0025 = 6.8325 ~ 7 = gas cost of steps
     // l = number of class hash updates
     // n = unique contracts updated
     // So, as per formula:
     // n(2) * 2 * 32 = 128
     // l(2) * 32 = 64
     // 29524 = gas cost of message
-    // 29524 l1_gas + (128 + 64) l1_data_gas + 8 * (100 / 0.0025) l2 gas
+    // 29524 l1_gas + (128 + 64) l1_data_gas + 7 * (100 / 0.0025) l2 gas
     assert_gas(
         &result,
         "l1_message_cost_for_proxy",
         GasVector {
             l1_gas: GasAmount(29524),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(320_000),
+            l2_gas: GasAmount(280_000),
         },
     );
 }
@@ -1346,7 +1346,7 @@ fn contract_keccak_cost_sierra_gas() {
     //      -> 1 call contract syscall costs 866 cairo steps and 15 range check builtins
     //      -> 1 range check costs 70
     // 1160975 = reported consumed sierra gas
-    // 0 l1_gas + 96 l1_data_gas + (142810 + 50000 + 87650 + 1160975) l2 gas
+    // 0 l1_gas + 96 l1_data_gas + (50000 + 87650 + 1160975) l2 gas
     assert_gas(
         &result,
         "contract_keccak_cost",
