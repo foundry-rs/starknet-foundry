@@ -544,7 +544,6 @@ pub async fn test_happy_case_keystore_int_format() {
         keystore_file,
         "--account",
         account_file,
-        "--int-format",
         "account",
         "create",
         "--url",
@@ -576,49 +575,6 @@ pub async fn test_happy_case_keystore_int_format() {
     assert!(contents.contains("\"variant\": {"));
     assert!(contents.contains("\"version\": 1"));
     assert!(contents.contains("\"legacy\": true"));
-}
-
-#[tokio::test]
-pub async fn test_happy_case_keystore_hex_format() {
-    let temp_dir = tempdir().expect("Unable to create a temporary directory");
-    let keystore_file = "my_key_hex.json";
-    let account_file = "my_account_hex.json";
-
-    set_create_keystore_password_env();
-
-    let args = vec![
-        "--keystore",
-        keystore_file,
-        "--account",
-        account_file,
-        "--hex-format",
-        "account",
-        "create",
-        "--url",
-        URL,
-    ];
-
-    let snapbox = runner(&args).current_dir(temp_dir.path());
-
-    snapbox.assert().stdout_matches(formatdoc! {r"
-        command: account create
-        address: 0x0[..]
-        estimated_fee: [..]
-        message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
-        
-        After prefunding the account, run:
-        sncast --account {} --keystore {} account deploy --url {}
-        
-        To see account creation details, visit:
-        account: [..]
-    ", account_file, keystore_file, URL});
-
-    let contents = fs::read_to_string(temp_dir.path().join(account_file))
-        .expect("Unable to read created file");
-    assert!(contents.contains("\"deployment\": {"));
-    assert!(contents.contains("\"variant\": {"));
-    assert!(contents.contains("\"version\": 1"));
-    assert!(contents.contains("\"legacy\": false"));
 }
 
 #[tokio::test]

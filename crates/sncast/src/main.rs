@@ -32,9 +32,8 @@ use sncast::helpers::scarb_utils::{
 };
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::{
-    NumbersFormat, ValidatedWaitParams, WaitForTx, chain_id_to_network_name, get_account,
-    get_block_id, get_chain_id, get_class_hash_by_address, get_contract_class,
-    get_default_state_file_name,
+    ValidatedWaitParams, WaitForTx, chain_id_to_network_name, get_account, get_block_id,
+    get_chain_id, get_class_hash_by_address, get_contract_class, get_default_state_file_name,
 };
 use starknet::core::types::ContractClass;
 use starknet::core::types::contract::AbiEntry;
@@ -79,7 +78,6 @@ Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
 )]
 #[command(about = "sncast - All-in-one tool for interacting with Starknet smart contracts", long_about = None)]
 #[command(name = "sncast")]
-#[expect(clippy::struct_excessive_bools)]
 struct Cli {
     /// Profile name in snfoundry.toml config file
     #[arg(short, long)]
@@ -98,14 +96,6 @@ struct Cli {
     /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
     #[arg(short, long)]
     keystore: Option<Utf8PathBuf>,
-
-    /// If passed, values will be displayed as integers
-    #[arg(long, conflicts_with = "hex_format")]
-    int_format: bool,
-
-    /// If passed, values will be displayed as hex
-    #[arg(long, conflicts_with = "int_format")]
-    hex_format: bool,
 
     /// If passed, output will be displayed in json format
     #[arg(short, long)]
@@ -219,7 +209,6 @@ impl From<DeployArguments> for Arguments {
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    let numbers_format = NumbersFormat::from_flags(cli.hex_format, cli.int_format);
     let output_format = output_format_from_json_flag(cli.json);
 
     let ui = UI::new(output_format);
@@ -227,21 +216,16 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = &cli.command {
-        run_script_command(&cli, runtime, script, numbers_format, &ui)
+        run_script_command(&cli, runtime, script, &ui)
     } else {
         let config = get_cast_config(&cli, &ui)?;
 
-        runtime.block_on(run_async_command(cli, config, numbers_format, &ui))
+        runtime.block_on(run_async_command(cli, config, &ui))
     }
 }
 
 #[expect(clippy::too_many_lines)]
-async fn run_async_command(
-    cli: Cli,
-    config: CastConfig,
-    numbers_format: NumbersFormat,
-    ui: &UI,
-) -> Result<()> {
+async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> {
     let wait_config = WaitForTx {
         wait: cli.wait,
         wait_params: config.wait_params,
@@ -297,7 +281,7 @@ async fn run_async_command(
                 config.block_explorer,
             );
 
-            process_command_result("declare", result, numbers_format, ui, block_explorer_link);
+            process_command_result("declare", result, ui, block_explorer_link);
 
             Ok(())
         }
@@ -348,7 +332,7 @@ async fn run_async_command(
                 config.show_explorer_links,
                 config.block_explorer,
             );
-            process_command_result("deploy", result, numbers_format, ui, block_explorer_link);
+            process_command_result("deploy", result, ui, block_explorer_link);
 
             Ok(())
         }
@@ -384,9 +368,9 @@ async fn run_async_command(
             if let Some(transformed_result) =
                 transform_response(&result, &contract_class, &selector)
             {
-                process_command_result("call", Ok(transformed_result), numbers_format, ui, None);
+                process_command_result("call", Ok(transformed_result), ui, None);
             } else {
-                process_command_result("call", result, numbers_format, ui, None);
+                process_command_result("call", result, ui, None);
             }
 
             Ok(())
@@ -441,7 +425,7 @@ async fn run_async_command(
                 config.block_explorer,
             );
 
-            process_command_result("invoke", result, numbers_format, ui, block_explorer_link);
+            process_command_result("invoke", result, ui, block_explorer_link);
 
             Ok(())
         }
@@ -455,7 +439,7 @@ async fn run_async_command(
                             new.overwrite,
                         );
 
-                        process_command_result("multicall new", result, numbers_format, ui, None);
+                        process_command_result("multicall new", result, ui, None);
                     } else {
                         ui.println(&DEFAULT_MULTICALL_CONTENTS);
                     }
@@ -484,13 +468,7 @@ async fn run_async_command(
                         config.show_explorer_links,
                         config.block_explorer,
                     );
-                    process_command_result(
-                        "multicall run",
-                        result,
-                        numbers_format,
-                        ui,
-                        block_explorer_link,
-                    );
+                    process_command_result("multicall run", result, ui, block_explorer_link);
                 }
             }
             Ok(())
@@ -522,7 +500,7 @@ async fn run_async_command(
                     }
                 }
 
-                process_command_result("account import", result, numbers_format, ui, None);
+                process_command_result("account import", result, ui, None);
                 Ok(())
             }
 
@@ -555,13 +533,7 @@ async fn run_async_command(
                     config.block_explorer,
                 );
 
-                process_command_result(
-                    "account create",
-                    result,
-                    numbers_format,
-                    ui,
-                    block_explorer_link,
-                );
+                process_command_result("account create", result, ui, block_explorer_link);
 
                 Ok(())
             }
@@ -608,13 +580,7 @@ async fn run_async_command(
                     config.show_explorer_links,
                     config.block_explorer,
                 );
-                process_command_result(
-                    "account deploy",
-                    result,
-                    numbers_format,
-                    ui,
-                    block_explorer_link,
-                );
+                process_command_result("account deploy", result, ui, block_explorer_link);
 
                 Ok(())
             }
@@ -631,7 +597,7 @@ async fn run_async_command(
                     delete.yes,
                 );
 
-                process_command_result("account delete", result, numbers_format, ui, None);
+                process_command_result("account delete", result, ui, None);
                 Ok(())
             }
 
@@ -639,7 +605,6 @@ async fn run_async_command(
                 ui.println(&AccountsListMessage::new(
                     config.accounts_file,
                     options.display_private_keys,
-                    numbers_format,
                 )?);
                 Ok(())
             }
@@ -656,7 +621,7 @@ async fn run_async_command(
             )
             .await;
 
-            process_command_result("show-config", result, numbers_format, ui, None);
+            process_command_result("show-config", result, ui, None);
 
             Ok(())
         }
@@ -669,7 +634,7 @@ async fn run_async_command(
                     .await
                     .context("Failed to get transaction status");
 
-            process_command_result("tx-status", result, numbers_format, ui, None);
+            process_command_result("tx-status", result, ui, None);
             Ok(())
         }
 
@@ -694,7 +659,7 @@ async fn run_async_command(
             )
             .await;
 
-            process_command_result("verify", result, numbers_format, ui, None);
+            process_command_result("verify", result, ui, None);
             Ok(())
         }
 
@@ -707,17 +672,11 @@ async fn run_async_command(
     }
 }
 
-fn run_script_command(
-    cli: &Cli,
-    runtime: Runtime,
-    script: &Script,
-    numbers_format: NumbersFormat,
-    ui: &UI,
-) -> Result<()> {
+fn run_script_command(cli: &Cli, runtime: Runtime, script: &Script, ui: &UI) -> Result<()> {
     match &script.command {
         starknet_commands::script::Commands::Init(init) => {
             let result = starknet_commands::script::init::init(init, ui);
-            process_command_result("script init", result, numbers_format, ui, None);
+            process_command_result("script init", result, ui, None);
         }
         starknet_commands::script::Commands::Run(run) => {
             let manifest_path = assert_manifest_path_exists()?;
@@ -773,7 +732,7 @@ fn run_script_command(
                 ui,
             );
 
-            process_command_result("script run", result, numbers_format, ui, None);
+            process_command_result("script run", result, ui, None);
         }
     }
 
@@ -856,7 +815,6 @@ fn transform_response(
 fn process_command_result<T>(
     command: &str,
     result: Result<T>,
-    numbers_format: NumbersFormat,
     ui: &UI,
     block_explorer_link: Option<ExplorerLinksMessage>,
 ) where
@@ -865,7 +823,6 @@ fn process_command_result<T>(
     let cast_msg = result.map(|command_response| SncastMessage {
         command: command.to_string(),
         command_response,
-        numbers_format,
     });
 
     match cast_msg {
