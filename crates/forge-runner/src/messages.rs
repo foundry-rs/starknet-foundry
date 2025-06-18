@@ -46,7 +46,7 @@ pub struct TestResultMessage {
 impl TestResultMessage {
     pub fn new(
         test_result: &AnyTestCaseSummary,
-        _show_detailed_resources: bool,
+        show_detailed_resources: bool,
         tracked_resource: ForgeTrackedResource,
         ui: &UI,
     ) -> Self {
@@ -95,7 +95,7 @@ impl TestResultMessage {
             _ => String::new(),
         };
 
-        let used_resources = match (true, &test_result) {
+        let used_resources = match (show_detailed_resources, &test_result) {
             (true, AnyTestCaseSummary::Single(TestCaseSummary::Passed { used_resources, .. })) => {
                 format_detailed_resources(used_resources, tracked_resource, ui)
             }
