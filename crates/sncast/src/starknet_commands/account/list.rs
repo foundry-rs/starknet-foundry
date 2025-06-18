@@ -1,7 +1,6 @@
 use anyhow::Error;
 use camino::Utf8PathBuf;
 use clap::Args;
-use conversions::string::IntoDecStr;
 use conversions::string::IntoHexStr;
 use foundry_ui::Message;
 use itertools::Itertools;
@@ -10,7 +9,6 @@ use serde::Serialize;
 use serde_json::Value;
 use serde_json::json;
 use sncast::AccountType;
-use sncast::NumbersFormat;
 use sncast::{AccountData, NestedMap, check_account_file_exists, read_and_parse_json_file};
 use std::collections::HashMap;
 use std::fmt::Write;
@@ -49,34 +47,17 @@ pub struct AccountDataRepresentationMessage {
 }
 
 impl AccountDataRepresentationMessage {
-    fn new(
-        account: &AccountData,
-        display_private_key: bool,
-        numbers_format: NumbersFormat,
-    ) -> Self {
-        match numbers_format {
-            NumbersFormat::Default | NumbersFormat::Hex => Self {
-                private_key: display_private_key.then(|| account.private_key.into_hex_string()),
-                public_key: account.public_key.into_hex_string(),
-                network: None,
-                address: account.address.map(IntoHexStr::into_hex_string),
-                salt: account.salt.map(IntoHexStr::into_hex_string),
-                deployed: account.deployed,
-                class_hash: account.class_hash.map(IntoHexStr::into_hex_string),
-                legacy: account.legacy,
-                account_type: account.account_type,
-            },
-            NumbersFormat::Decimal => Self {
-                private_key: display_private_key.then(|| account.private_key.into_dec_string()),
-                public_key: account.public_key.into_dec_string(),
-                network: None,
-                address: account.address.map(IntoDecStr::into_dec_string),
-                salt: account.salt.map(IntoDecStr::into_dec_string),
-                deployed: account.deployed,
-                class_hash: account.class_hash.map(IntoDecStr::into_dec_string),
-                legacy: account.legacy,
-                account_type: account.account_type,
-            },
+    fn new(account: &AccountData, display_private_key: bool) -> Self {
+        Self {
+            private_key: display_private_key.then(|| account.private_key.into_hex_string()),
+            public_key: account.public_key.into_hex_string(),
+            network: None,
+            address: account.address.map(IntoHexStr::into_hex_string),
+            salt: account.salt.map(IntoHexStr::into_hex_string),
+            deployed: account.deployed,
+            class_hash: account.class_hash.map(IntoHexStr::into_hex_string),
+            legacy: account.legacy,
+            account_type: account.account_type,
         }
     }
 
@@ -88,15 +69,13 @@ impl AccountDataRepresentationMessage {
 fn read_and_flatten(
     accounts_file: &Utf8PathBuf,
     display_private_keys: bool,
-    numbers_format: NumbersFormat,
 ) -> anyhow::Result<HashMap<String, AccountDataRepresentationMessage>> {
     let networks: NestedMap<AccountData> = read_and_parse_json_file(accounts_file)?;
     let mut result = HashMap::new();
 
     for (network, accounts) in networks.iter().sorted_by_key(|(name, _)| *name) {
         for (name, data) in accounts.iter().sorted_by_key(|(name, _)| *name) {
-            let mut data_repr =
-                AccountDataRepresentationMessage::new(data, display_private_keys, numbers_format);
+            let mut data_repr = AccountDataRepresentationMessage::new(data, display_private_keys);
 
             data_repr.set_network(network);
             result.insert(name.to_owned(), data_repr);
@@ -151,15 +130,10 @@ pub struct AccountsListMessage {
     accounts_file: Utf8PathBuf,
     accounts_file_path: String,
     display_private_keys: bool,
-    numbers_format: NumbersFormat,
 }
 
 impl AccountsListMessage {
-    pub fn new(
-        accounts_file: Utf8PathBuf,
-        display_private_keys: bool,
-        numbers_format: NumbersFormat,
-    ) -> Result<Self, Error> {
+    pub fn new(accounts_file: Utf8PathBuf, display_private_keys: bool) -> Result<Self, Error> {
         check_account_file_exists(&accounts_file)?;
 
         let accounts_file_path = accounts_file
@@ -174,19 +148,14 @@ impl AccountsListMessage {
             accounts_file,
             accounts_file_path: accounts_file_path.to_string(),
             display_private_keys,
-            numbers_format,
         })
     }
 }
 
 impl Message for AccountsListMessage {
     fn text(&self) -> String {
-        let accounts = read_and_flatten(
-            &self.accounts_file,
-            self.display_private_keys,
-            self.numbers_format,
-        )
-        .unwrap_or_default();
+        let accounts =
+            read_and_flatten(&self.accounts_file, self.display_private_keys).unwrap_or_default();
 
         if accounts.is_empty() {
             format!("No accounts available at {}", self.accounts_file_path)
@@ -206,12 +175,8 @@ impl Message for AccountsListMessage {
     }
 
     fn json(&self) -> Value {
-        let accounts = read_and_flatten(
-            &self.accounts_file,
-            self.display_private_keys,
-            self.numbers_format,
-        )
-        .unwrap_or_default();
+        let accounts =
+            read_and_flatten(&self.accounts_file, self.display_private_keys).unwrap_or_default();
 
         let mut accounts_map: HashMap<String, AccountDataRepresentationMessage> = HashMap::new();
         for (name, data) in &accounts {
