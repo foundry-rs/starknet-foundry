@@ -4,7 +4,7 @@ use crate::starknet_commands::{
 };
 use anyhow::{Context, Result, bail};
 use data_transformer::{reverse_transform_output, transform};
-use foundry_ui::UI;
+use foundry_ui::{Message, UI};
 use sncast::helpers::account::generate_account_name;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::response::call::CallResponse;
@@ -819,6 +819,7 @@ fn process_command_result<T>(
     block_explorer_link: Option<ExplorerLinksMessage>,
 ) where
     T: CommandResponse,
+    SncastMessage<T>: Message,
 {
     let cast_msg = result.map(|command_response| SncastMessage {
         command: command.to_string(),

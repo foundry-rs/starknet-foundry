@@ -1,9 +1,16 @@
+use conversions::string::IntoHexStr;
 use conversions::{padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
+use foundry_ui::Message;
+use foundry_ui::styling;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use crate::{
     helpers::block_explorer::LinkProvider,
-    response::{command::CommandResponse, explorer_link::OutputLink, invoke::InvokeResponse},
+    response::{
+        cast_message::SncastMessage, command::CommandResponse, explorer_link::OutputLink,
+        invoke::InvokeResponse,
+    },
 };
 
 #[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
@@ -13,8 +20,22 @@ pub struct MulticallRunResponse {
 
 impl CommandResponse for MulticallRunResponse {}
 
-// TODO(#3391): Update text output to be more user friendly
-// impl Message for SncastMessage<MulticallRunResponse> {}
+impl Message for SncastMessage<MulticallRunResponse> {
+    fn text(&self) -> String {
+        styling::OutputBuilder::new()
+            .success_message("Multicall completed")
+            .blank_line()
+            .field(
+                "Transaction Hash",
+                &self.command_response.transaction_hash.into_hex_string(),
+            )
+            .build()
+    }
+
+    fn json(&self) -> Value {
+        serde_json::to_value(&self.command_response).unwrap()
+    }
+}
 
 impl From<InvokeResponse> for MulticallRunResponse {
     fn from(value: InvokeResponse) -> Self {

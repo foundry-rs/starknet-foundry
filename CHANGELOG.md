@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Changed
+
+- Improved commands output readability with colors and simplified layout.
+
 #### Removed
 
 - `--int-format` and `--hex-format`, all values are displayed with default format

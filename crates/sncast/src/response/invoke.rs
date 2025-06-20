@@ -1,8 +1,14 @@
 use crate::helpers::block_explorer::LinkProvider;
 
 use super::{command::CommandResponse, explorer_link::OutputLink};
+use conversions::string::IntoPaddedHexStr;
 use conversions::{padded_felt::PaddedFelt, serde::serialize::CairoSerialize};
+use foundry_ui::Message;
+use foundry_ui::styling;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+use crate::response::cast_message::SncastMessage;
 
 #[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct InvokeResponse {
@@ -11,8 +17,22 @@ pub struct InvokeResponse {
 
 impl CommandResponse for InvokeResponse {}
 
-// TODO(#3391): Update text output to be more user friendly
-// impl Message for SncastMessage<InvokeResponse> { }
+impl Message for SncastMessage<InvokeResponse> {
+    fn text(&self) -> String {
+        styling::OutputBuilder::new()
+            .success_message("Invocation completed")
+            .blank_line()
+            .field(
+                "Transaction Hash",
+                &self.command_response.transaction_hash.into_padded_hex_str(),
+            )
+            .build()
+    }
+
+    fn json(&self) -> Value {
+        serde_json::to_value(&self.command_response).unwrap()
+    }
+}
 
 impl OutputLink for InvokeResponse {
     const TITLE: &'static str = "invocation";
