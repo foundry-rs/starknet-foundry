@@ -413,7 +413,7 @@ fn different_attributes() {
             {attribute}
             {expected_underline}
             
-            error: could not compile `different_integrationtest` due to previous error
+            error: could not compile `attributes_integrationtest` due to previous error
     "},
         );
     }
