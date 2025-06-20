@@ -7,9 +7,8 @@ use crate::{
     config_statement::extend_with_config_cheatcodes,
     types::ParseFromExpr,
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, Severity, TokenStream};
-use cairo_lang_syntax::node::db::SyntaxGroup;
-use indoc::formatdoc;
+use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, Severity, TokenStream};
+use cairo_lang_parser::utils::SimpleParserDatabase;
 use url::Url;
 
 mod block_id;
@@ -26,10 +25,10 @@ impl AttributeTypeData for ForkCollector {
 
 impl AttributeCollector for ForkCollector {
     fn args_into_config_expression(
-        db: &dyn SyntaxGroup,
+        db: &SimpleParserDatabase,
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
-    ) -> Result<String, Diagnostics> {
+    ) -> Result<TokenStream, Diagnostics> {
         let expr = branch!(
             inline_args(db, &args),
             overridden_args(db, &args),
@@ -40,7 +39,7 @@ impl AttributeCollector for ForkCollector {
     }
 }
 
-fn inline_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
+fn inline_args(db: &SimpleParserDatabase, args: &Arguments) -> Result<TokenStream, Diagnostic> {
     let named_args = args.named_only::<ForkCollector>()?;
 
     let block_id = named_args.one_of_once(&[
@@ -56,19 +55,17 @@ fn inline_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnos
     let block_id = block_id.as_cairo_expression();
     let url = url.as_cairo_expression();
 
-    Ok(formatdoc!(
-        "
-            snforge_std::_internals::config_types::ForkConfig::Inline(
-                snforge_std::_internals::config_types::InlineForkConfig {{
-                    url: {url},
-                    block: {block_id}
-                }}
-            )
-        "
+    Ok(quote!(
+        snforge_std::_internals::config_types::ForkConfig::Inline(
+            snforge_std::_internals::config_types::InlineForkConfig {
+                url: #url,
+                block: #block_id
+            }
+        )
     ))
 }
 
-fn from_file_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
+fn from_file_args(db: &SimpleParserDatabase, args: &Arguments) -> Result<TokenStream, Diagnostic> {
     let &[arg] = args
         .unnamed_only::<ForkCollector>()?
         .of_length::<1, ForkCollector>()?;
@@ -77,12 +74,10 @@ fn from_file_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diag
 
     let name = name.as_cairo_expression();
 
-    Ok(format!(
-        r"snforge_std::_internals::config_types::ForkConfig::Named({name})"
-    ))
+    Ok(quote!(snforge_std::_internals::config_types::ForkConfig::Named(#name)))
 }
 
-fn overridden_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
+fn overridden_args(db: &SimpleParserDatabase, args: &Arguments) -> Result<TokenStream, Diagnostic> {
     let &[arg] = args.unnamed().of_length::<1, ForkCollector>()?;
 
     let block_id = args.named.one_of_once(&[
@@ -97,15 +92,13 @@ fn overridden_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Dia
     let block_id = block_id.as_cairo_expression();
     let name = name.as_cairo_expression();
 
-    Ok(formatdoc!(
-        "
-            snforge_std::_internals::config_types::ForkConfig::Overridden(
-                snforge_std::_internals::config_types::OverriddenForkConfig {{
-                    block: {block_id},
-                    name: {name}
-                }}
-            )
-        "
+    Ok(quote!(
+        snforge_std::_internals::config_types::ForkConfig::Overridden(
+            snforge_std::_internals::config_types::OverriddenForkConfig {
+                block: #block_id,
+                name: #name
+            }
+        )
     ))
 }
 

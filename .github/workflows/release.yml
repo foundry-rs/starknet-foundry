@@ -69,17 +69,37 @@ jobs:
     if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
     needs: verify-version
     uses: ./.github/workflows/_build-plugin-binaries.yml
+    with:
+      plugin_name: "snforge-scarb-plugin"
+
+  build-compatibility-plugin-binaries:
+    name: Build compatibility plugin binaries
+    if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
+    needs: verify-version
+    uses: ./.github/workflows/_build-plugin-binaries.yml
+    with:
+      plugin_name: "snforge-scarb-plugin-compatibility"
 
   dev-publish-plugin:
-    needs: [verify-version, build-binaries]
+    needs: [verify-version, build-plugin-binaries]
     if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
     uses: ./.github/workflows/_publish-plugin.yml
     secrets: inherit
     with:
       overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
+      plugin_name: "snforge-scarb-plugin"
+
+  dev-publish-compatibility-plugin:
+    needs: [ verify-version, build-compatibility-plugin-binaries ]
+    if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
+    uses: ./.github/workflows/_publish-plugin.yml
+    secrets: inherit
+    with:
+      overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
+      plugin_name: "snforge-scarb-plugin-compatibility"
 
   dev-publish-std:
-    needs: [verify-version, dev-publish-plugin]
+    needs: [verify-version, dev-publish-plugin, dev-publish-compatibility-plugin]
     if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
     uses: ./.github/workflows/publish-std.yml
     secrets: inherit
@@ -89,7 +109,7 @@ jobs:
 
   test-binary:
     name: Test binary
-    needs: [ build-binaries, verify-version, dev-publish-std]
+    needs: [build-binaries, verify-version, dev-publish-std, dev-publish-plugin, dev-publish-compatibility-plugin]
     uses: ./.github/workflows/_test-binaries.yml
     secrets: inherit
     with:
@@ -138,10 +158,20 @@ jobs:
     secrets: inherit
     with:
       prod_registry: true
+      plugin_name: "snforge-scarb-plugin"
+
+  publish-snforge-scarb-plugin-compatibility:
+    name: Publish snforge_scarb_plugin_compatibility
+    needs: [ test-binary, create-release ]
+    uses: ./.github/workflows/_publish-plugin.yml
+    secrets: inherit
+    with:
+      prod_registry: true
+      plugin_name: "snforge-scarb-plugin-compatibility"
 
   publish-to-registry:
     name: Publish packages to the registry
-    needs: [ verify-version, publish-snforge-scarb-plugin ]
+    needs: [ verify-version, publish-snforge-scarb-plugin, publish-snforge-scarb-plugin-compatibility ]
     uses: ./.github/workflows/publish-std.yml
     secrets: inherit
     with:

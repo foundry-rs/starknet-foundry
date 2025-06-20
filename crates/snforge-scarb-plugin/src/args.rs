@@ -1,9 +1,9 @@
 use self::{named::NamedArgs, unnamed::UnnamedArgs};
 use crate::attributes::{AttributeInfo, ErrorExt};
 use cairo_lang_macro::Diagnostic;
+use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::{
     ast::{ArgClause, Expr, OptionArgListParenthesized},
-    db::SyntaxGroup,
     Terminal,
 };
 use smol_str::SmolStr;
@@ -21,7 +21,7 @@ pub struct Arguments {
 
 impl Arguments {
     pub fn new<T: AttributeInfo>(
-        db: &dyn SyntaxGroup,
+        db: &SimpleParserDatabase,
         args: OptionArgListParenthesized,
         warns: &mut Vec<Diagnostic>,
     ) -> Self {
@@ -56,7 +56,7 @@ impl Arguments {
                         .or_default()
                         .push(value.value(db));
                 }
-            };
+            }
         }
 
         this

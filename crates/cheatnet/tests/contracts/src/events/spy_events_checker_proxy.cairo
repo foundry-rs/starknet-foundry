@@ -18,9 +18,8 @@ trait ISpyEventsChecker<TContractState> {
 #[starknet::contract]
 mod SpyEventsCheckerProxy {
     use starknet::ContractAddress;
-    use super::ISpyEventsCheckerDispatcherTrait;
-    use super::ISpyEventsCheckerDispatcher;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use super::{ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait};
 
     #[storage]
     struct Storage {

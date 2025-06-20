@@ -9,8 +9,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
 use std::{env, fs};
+use test_utils::runner::replace_snforge_std_with_snforge_std_compatibility;
 use test_utils::{get_assert_macros_version, tempdir_with_tool_versions};
-use toml_edit::{DocumentMut, value};
+use toml_edit::{DocumentMut, Item, value};
 use walkdir::WalkDir;
 
 pub(crate) fn runner(temp_dir: &TempDir) -> SnapboxCommand {
@@ -38,35 +39,40 @@ fn is_package_from_docs_listings(package: &str) -> bool {
     fs::canonicalize(&package_path).is_ok()
 }
 
+pub enum Package {
+    Name(String),
+    Path(Utf8PathBuf),
+}
+
 pub(crate) fn setup_package_with_file_patterns(
-    package_name: &str,
+    package: Package,
     file_patterns: &[&str],
 ) -> TempDir {
+    let scarb_version = scarb_api::ScarbCommand::version().run().unwrap().scarb;
+    // TODO: Change this condition to Scarb `2.12.0`
+    let use_snforge_std_compatibility = scarb_version.build.is_empty();
+
     let temp = tempdir_with_tool_versions().unwrap();
 
-    let is_from_docs_listings = is_package_from_docs_listings(package_name);
-
-    let package_path = if is_from_docs_listings {
-        format!("../../docs/listings/{package_name}",)
-    } else {
-        format!("tests/data/{package_name}",)
+    let package_path = match package {
+        Package::Name(name) => {
+            let is_from_docs_listings = is_package_from_docs_listings(&name);
+            if is_from_docs_listings {
+                Utf8PathBuf::from(format!("../../docs/listings/{name}"))
+            } else {
+                Utf8PathBuf::from(format!("tests/data/{name}"))
+            }
+        }
+        Package::Path(path) => Utf8PathBuf::from("tests/data").join(path),
     };
 
-    let package_path = Utf8PathBuf::from_str(&package_path)
-        .unwrap()
+    let package_path = package_path
         .canonicalize_utf8()
         .unwrap()
         .to_string()
         .replace('\\', "/");
 
     temp.copy_from(package_path, file_patterns).unwrap();
-
-    let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
-        .unwrap()
-        .canonicalize_utf8()
-        .unwrap()
-        .to_string()
-        .replace('\\', "/");
 
     let manifest_path = temp.child("Scarb.toml");
 
@@ -77,10 +83,45 @@ pub(crate) fn setup_package_with_file_patterns(
 
     let is_workspace = scarb_toml.get("workspace").is_some();
 
-    if is_workspace {
-        scarb_toml["workspace"]["dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
+    if use_snforge_std_compatibility {
+        replace_snforge_std_with_snforge_std_compatibility(temp.path());
+        let snforge_std_compatibility_path =
+            Utf8PathBuf::from_str("../../snforge_std_compatibility")
+                .unwrap()
+                .canonicalize_utf8()
+                .unwrap()
+                .to_string()
+                .replace('\\', "/");
+
+        if is_workspace {
+            match scarb_toml["workspace"].get_mut("dependencies") {
+                Some(Item::Table(table)) => table.remove("snforge_std"),
+                _ => panic!("Expected table"),
+            };
+            scarb_toml["workspace"]["dependencies"]["snforge_std_compatibility"]["path"] =
+                value(snforge_std_compatibility_path);
+        } else {
+            match scarb_toml.get_mut("dev-dependencies") {
+                Some(Item::Table(table)) => table.remove("snforge_std"),
+                _ => panic!("Expected table"),
+            };
+            scarb_toml["dev-dependencies"]["snforge_std_compatibility"]["path"] =
+                value(snforge_std_compatibility_path);
+        }
     } else {
-        scarb_toml["dev-dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
+        let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
+            .unwrap()
+            .canonicalize_utf8()
+            .unwrap()
+            .to_string()
+            .replace('\\', "/");
+
+        if is_workspace {
+            scarb_toml["workspace"]["dependencies"]["snforge_std"]["path"] =
+                value(snforge_std_path);
+        } else {
+            scarb_toml["dev-dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
+        }
     }
 
     scarb_toml["dependencies"]["starknet"] = value("2.4.0");
@@ -97,7 +138,11 @@ pub(crate) fn setup_package_with_file_patterns(
 }
 
 pub(crate) fn setup_package(package_name: &str) -> TempDir {
-    setup_package_with_file_patterns(package_name, BASE_FILE_PATTERNS)
+    setup_package_with_file_patterns(Package::Name(package_name.to_string()), BASE_FILE_PATTERNS)
+}
+
+pub(crate) fn setup_package_at_path(package_path: Utf8PathBuf) -> TempDir {
+    setup_package_with_file_patterns(Package::Path(package_path), BASE_FILE_PATTERNS)
 }
 
 fn replace_node_rpc_url_placeholders(dir_path: &Path) {
