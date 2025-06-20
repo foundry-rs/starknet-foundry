@@ -9,13 +9,3 @@ snforge --version
 ```
 
 If the command is not found, the uninstallation was successful.
-
-### Verify Uninstallation
-To ensure Starknet Foundry is fully removed, open a Command Prompt or PowerShell and run:
-
-```powershell
-snforge --version
-sncast --version
-```
-
-If you see “command not found”, the uninstallation was successful. 
