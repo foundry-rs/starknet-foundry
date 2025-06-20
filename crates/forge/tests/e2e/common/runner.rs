@@ -2,7 +2,6 @@ use assert_fs::TempDir;
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::formatdoc;
-use semver::Version;
 use shared::command::CommandExt;
 use shared::test_utils::node_url::node_rpc_url;
 use snapbox::cmd::{Command as SnapboxCommand, cargo_bin};
