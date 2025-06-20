@@ -10,11 +10,7 @@ fn file_reading() {
         &[BASE_FILE_PATTERNS, &["**/*.txt", "**/*.json"]].concat(),
     );
 
-    let expected_file_error = if cfg!(target_os = "windows") {
-        "The system cannot find the file specified[..]"
-    } else {
-        "No such file or directory [..]"
-    };
+    let expected_file_error = "No such file or directory [..]";
 
     let expected = formatdoc! {r#"
         [..]Compiling[..]
@@ -58,7 +54,7 @@ fn file_reading() {
         
         [PASS] file_reading_integrationtest::test::json_serialization [..]
         [PASS] file_reading_integrationtest::test::json_deserialization [..]
-        Tests: 5 passed, 6 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 5 passed, 6 failed, 0 ignored, 0 filtered out
         
         Failures:
             file_reading_integrationtest::test::json_non_existent

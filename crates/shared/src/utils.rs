@@ -1,25 +1,14 @@
-use cairo_lang_runner::casm_run::format_next_item;
+use starknet_api::execution_utils::format_panic_data;
 use starknet_types_core::felt::Felt;
 
-/// Helper function to build readable text from a run data.
+/// Helper function to build readable text from run data.
 #[must_use]
 pub fn build_readable_text(data: &[Felt]) -> Option<String> {
-    let mut data_iter = data.iter().copied();
-    let mut items = Vec::new();
-
-    while let Some(item) = format_next_item(&mut data_iter) {
-        items.push(item.quote_if_string());
+    if data.is_empty() {
+        return None;
     }
 
-    if items.is_empty() {
-        return None;
-    };
-
-    let string = if let [item] = &items[..] {
-        item.clone()
-    } else {
-        format!("({})", items.join(", "))
-    };
+    let string = format_panic_data(data);
 
     let mut result = indent_string(&format!("\n{string}"));
     result.push('\n');
@@ -27,20 +16,15 @@ pub fn build_readable_text(data: &[Felt]) -> Option<String> {
 }
 
 fn indent_string(string: &str) -> String {
-    let mut modified_string = string.to_string();
-    let trailing_newline = if string.ends_with('\n') {
-        modified_string.pop();
-        true
+    let without_trailing = string.strip_suffix('\n').unwrap_or(string);
+    let indented = without_trailing.replace('\n', "\n    ");
+    let should_append_newline = string.ends_with('\n');
+
+    if should_append_newline {
+        format!("{indented}\n")
     } else {
-        false
-    };
-
-    modified_string = modified_string.replace('\n', "\n    ");
-    if trailing_newline {
-        modified_string.push('\n');
+        indented
     }
-
-    modified_string
 }
 
 #[cfg(test)]

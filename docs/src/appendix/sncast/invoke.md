@@ -5,7 +5,7 @@ Send an invoke transaction to Starknet.
 
 * [`account`](./common.md#--account--a-account_name)
 
-## `--contract-address, -a <CONTRACT_ADDRESS>`
+## `--contract-address, -d <CONTRACT_ADDRESS>`
 Required.
 
 The address of the contract being called in hex (prefixed with '0x') or decimal representation.
@@ -17,9 +17,19 @@ The name of the function to call.
 
 ## `--calldata, -c <CALLDATA>`
 Optional.
+Conflicts with: [`--arguments`](#--arguments)
 
 Inputs to the function, represented by a list of space-delimited values `0x1 2 0x3`.
 Calldata arguments may be either 0x hex or decimal felts.
+
+## `--arguments`
+Optional.
+Conflicts with: [`--calldata`](#--calldata--c-calldata)
+
+Function arguments provided as a comma-separated string of Cairo expressions.
+For example: `--arguments '1, 2, MyStruct { x: 1, y: 2 }, MyEnum::Variant'`
+
+For more information on supported expressions and syntax, see [Calldata Transformation](../../starknet/calldata-transformation.md).
 
 ## `--url, -u <RPC_URL>`
 Optional.
@@ -38,17 +48,37 @@ Possible values: `mainnet`, `sepolia`.
 ## `--max-fee, -m <MAX_FEE>`
 Optional.
 
-Maximum fee for the `invoke` transaction in Fri or Wei depending on fee token or transaction version. When not used, defaults to auto-estimation. Must be greater than zero.
+Maximum fee for the `invoke` denoted in FRI. Must be greater than zero. If provided, it is not possible to use any of the following fee related flags: `--l1-gas`, `--l1-data-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price`.
 
-## `--max-gas <MAX_GAS>`
+## `--l1-gas <L1_GAS>`
 Optional.
 
-Maximum gas for the `invoke` transaction. When not used, defaults to auto-estimation. Must be greater than zero. (Only for STRK fee payment)
+Maximum L1 gas for the `invoke` transaction. When not used, defaults to auto-estimation.
 
-## ` --max-gas-unit-price <MAX_GAS_UNIT_PRICE>`
+## ` --l1-gas-price <l1_gas_price>`
 Optional.
 
-Maximum gas unit price for the `invoke` transaction paid in Fri. When not used, defaults to auto-estimation. Must be greater than zero. (Only for STRK fee payment)
+Maximum L1 gas unit price for the `invoke` transaction. When not used, defaults to auto-estimation.
+
+## `--l2-gas <L2_GAS>`
+Optional.
+
+Maximum L2 gas for the `invoke` transaction. When not used, defaults to auto-estimation.
+
+## `--l2-gas-price <L2_GAS_PRICE>`
+Optional.
+
+Maximum L2 gas unit price for the `invoke` transaction. When not used, defaults to auto-estimation.
+
+## `--l1-data-gas <L1_DATA_GAS>`
+Optional.
+
+Maximum L1 data gas for the `invoke` transaction. When not used, defaults to auto-estimation.
+
+## `--l1-data-gas-price <l1_data_gas_price>`
+Optional.
+
+Maximum L1 data gas unit price for the `invoke` transaction. When not used, defaults to auto-estimation.
 
 ## `--nonce, -n <NONCE>`
 Optional.

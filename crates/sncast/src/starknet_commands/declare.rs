@@ -2,14 +2,15 @@ use anyhow::{Context, Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
+use foundry_ui::UI;
 use scarb_api::StarknetContractArtifacts;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::errors::StarknetCommandError;
-use sncast::response::structs::{
+use sncast::response::declare::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
 };
-use sncast::{ErrorData, WaitForTx, apply_optional, handle_wait_for_tx};
+use sncast::response::errors::StarknetCommandError;
+use sncast::{ErrorData, WaitForTx, apply_optional_fields, handle_wait_for_tx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, DeclarationV3};
 use starknet::core::types::{DeclareTransactionResult, StarknetError};
@@ -28,21 +29,21 @@ use std::sync::Arc;
 #[command(about = "Declare a contract to starknet", long_about = None)]
 pub struct Declare {
     /// Contract name
-    #[clap(short = 'c', long = "contract-name")]
+    #[arg(short = 'c', long = "contract-name")]
     pub contract: String,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub fee_args: FeeArgs,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub nonce: Option<Felt>,
 
     /// Specifies scarb package to be used
-    #[clap(long)]
+    #[arg(long)]
     pub package: Option<String>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 
@@ -52,12 +53,8 @@ pub async fn declare(
     artifacts: &HashMap<String, StarknetContractArtifacts>,
     wait_config: WaitForTx,
     skip_on_already_declared: bool,
+    ui: &UI,
 ) -> Result<DeclareResponse, StarknetCommandError> {
-    let fee_settings = declare
-        .fee_args
-        .try_into_fee_settings(account.provider(), account.block_id())
-        .await?;
-
     let contract_artifacts =
         artifacts
             .get(&declare.contract)
@@ -78,26 +75,40 @@ pub async fn declare(
         .class_hash()
         .map_err(anyhow::Error::from)?;
 
-    let FeeSettings {
-        max_gas,
-        max_gas_unit_price,
-    } = fee_settings;
     let declaration = account.declare_v3(
         Arc::new(contract_definition.flatten().map_err(anyhow::Error::from)?),
         casm_class_hash,
     );
 
-    let declaration = apply_optional(
+    let fee_settings = if declare.fee_args.max_fee.is_some() {
+        let fee_estimate = declaration
+            .estimate_fee()
+            .await
+            .expect("Failed to estimate fee");
+        declare.fee_args.try_into_fee_settings(Some(&fee_estimate))
+    } else {
+        declare.fee_args.try_into_fee_settings(None)
+    };
+
+    let FeeSettings {
+        l1_gas,
+        l1_gas_price,
+        l2_gas,
+        l2_gas_price,
+        l1_data_gas,
+        l1_data_gas_price,
+    } = fee_settings.expect("Failed to convert to fee settings");
+
+    let declaration = apply_optional_fields!(
         declaration,
-        max_gas.map(std::num::NonZero::get),
-        DeclarationV3::gas,
+        l1_gas => DeclarationV3::l1_gas,
+        l1_gas_price => DeclarationV3::l1_gas_price,
+        l2_gas => DeclarationV3::l2_gas,
+        l2_gas_price => DeclarationV3::l2_gas_price,
+        l1_data_gas => DeclarationV3::l1_data_gas,
+        l1_data_gas_price => DeclarationV3::l1_data_gas_price,
+        declare.nonce => DeclarationV3::nonce
     );
-    let declaration = apply_optional(
-        declaration,
-        max_gas_unit_price.map(std::num::NonZero::get),
-        DeclarationV3::gas_price,
-    );
-    let declaration = apply_optional(declaration, declare.nonce, DeclarationV3::nonce);
 
     let declared = declaration.send().await;
 
@@ -113,6 +124,7 @@ pub async fn declare(
                 transaction_hash: transaction_hash.into_(),
             }),
             wait_config,
+            ui,
         )
         .await
         .map_err(StarknetCommandError::from),

@@ -101,7 +101,7 @@ async fn test_same_salt_and_class_hash_deployed_twice() {
         ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Transaction execution has failed:
         [..]
         [..]: Error in the contract class constructor ([..]):
-        Requested ContractAddress(PatriciaKey([..])) is unavailable for deployment.
+        Deployment failed: contract already deployed at address [..]
         " })))
         command: script run
         status: success
@@ -175,7 +175,9 @@ async fn test_invalid_call_data() {
         ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Transaction execution has failed:
         [..]
         [..]: Error in the contract class constructor ([..]):
-        Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
+        Execution failed. Failure reason:
+        Error in contract [..]:
+        0x4661696c656420746f20646573657269616c697a6520706172616d202332 ('Failed to deserialize param #2').
         " })))
         command: script run
         status: success

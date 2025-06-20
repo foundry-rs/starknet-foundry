@@ -53,9 +53,9 @@ Running 2 test(s) from tests/
 Failure data:
     (0x50414e4943 ('PANIC'), 0x444159544148 ('DAYTAH'))
 
-[PASS] testing_smart_contracts_handling_errors_integrationtest::handle_panic::handling_string_errors (gas: ~103)
+[PASS] testing_smart_contracts_handling_errors_integrationtest::handle_panic::handling_string_errors (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~280000)
 Running 0 test(s) from src/
-Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 1 passed, 1 failed, 0 ignored, 0 filtered out
 
 Failures:
     testing_smart_contracts_handling_errors_integrationtest::panic::failing
@@ -97,9 +97,9 @@ Running 2 test(s) from tests/
 Failure data:
     (0x50414e4943 ('PANIC'), 0x444159544148 ('DAYTAH'))
 
-[PASS] testing_smart_contracts_handling_errors_integrationtest::handle_panic::handling_string_errors (gas: ~103)
+[PASS] testing_smart_contracts_handling_errors_integrationtest::handle_panic::handling_string_errors (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~280000)
 Running 0 test(s) from src/
-Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 1 passed, 1 failed, 0 ignored, 0 filtered out
 
 Failures:
     testing_smart_contracts_handling_errors_integrationtest::panic::failing
@@ -110,10 +110,7 @@ Failures:
 ### `SafeDispatcher`
 
 Using `SafeDispatcher` we can test that the function in fact panics with an expected message.
-Safe dispatcher is a special kind of dispatcher, which are not allowed in contracts themselves,
-but are available for testing purposes.
-
-They allow using the contract without automatically unwrapping the result, which allows to catch the error like shown below.
+Safe dispatcher is a special kind of dispatcher that allows using the contract without automatically unwrapping the result, thereby making possible to catch the error like shown below.
 
 ```rust
 {{#include ../../listings/testing_smart_contracts_safe_dispatcher/tests/safe_dispatcher.cairo}}
@@ -132,11 +129,16 @@ $ snforge test
 Collected 1 test(s) from testing_smart_contracts_safe_dispatcher package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
-[PASS] testing_smart_contracts_safe_dispatcher_integrationtest::safe_dispatcher::handling_errors (gas: ~103)
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+[PASS] testing_smart_contracts_safe_dispatcher_integrationtest::safe_dispatcher::handling_errors (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~280000)
+Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>
 <br>
+
+> 📝 **Note**
+>
+> It is not possible to catch errors that cause immediate termination of execution, e.g. calling a contract with a nonexistent address.
+> A full list of such errors can be found [here](https://community.starknet.io/t/starknet-v0-13-4-pre-release-notes/115257#p-2358763-catching-errors-12).
 
 Similarly, you can handle the panics which use `ByteArray` as an argument (like an `assert!` or `panic!` macro)
 

@@ -21,7 +21,6 @@ struct CleanComponentsState {
 }
 
 #[test]
-#[cfg(not(target_os = "windows"))]
 fn test_clean_coverage() {
     let temp_dir = setup_package("coverage_project");
 
@@ -55,7 +54,6 @@ fn test_clean_coverage() {
 }
 
 #[test]
-#[cfg(not(target_os = "windows"))]
 fn test_clean_profile() {
     let temp_dir = setup_package("coverage_project");
 
@@ -120,7 +118,6 @@ fn test_clean_cache() {
 }
 
 #[test]
-#[cfg(not(target_os = "windows"))]
 fn test_clean_all() {
     let temp_dir = setup_package("coverage_project");
 
@@ -216,7 +213,7 @@ fn generate_clean_components(state: CleanComponentsState, temp_dir: &TempDir) {
         state => {
             panic!("Invalid state: {state:?}");
         }
-    };
+    }
 
     assert_eq!(check_clean_components_state(temp_dir.path()), state);
 }

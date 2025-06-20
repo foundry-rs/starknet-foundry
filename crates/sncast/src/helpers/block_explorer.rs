@@ -6,7 +6,6 @@ const STARKSCAN: &str = "starkscan.co";
 const VOYAGER: &str = "voyager.online";
 const VIEWBLOCK: &str = "https://viewblock.io/starknet";
 const OKLINK: &str = "https://www.oklink.com/starknet";
-const NFTSCAN: &str = "https://starknet.nftscan.com";
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Service {
@@ -15,7 +14,6 @@ pub enum Service {
     Voyager,
     ViewBlock,
     OkLink,
-    NftScan,
 }
 
 impl Service {
@@ -25,7 +23,6 @@ impl Service {
             (Service::Voyager, _) => Ok(Box::new(Voyager { network })),
             (Service::ViewBlock, Network::Mainnet) => Ok(Box::new(ViewBlock)),
             (Service::OkLink, Network::Mainnet) => Ok(Box::new(OkLink)),
-            (Service::NftScan, Network::Mainnet) => Ok(Box::new(NftScan)),
             (_, Network::Sepolia) => Err(ExplorerError::SepoliaNotSupported),
         }
     }
@@ -130,28 +127,12 @@ impl LinkProvider for OkLink {
     }
 }
 
-pub struct NftScan;
-
-impl LinkProvider for NftScan {
-    fn transaction(&self, hash: PaddedFelt) -> String {
-        format!("{NFTSCAN}/{hash:#x}")
-    }
-
-    fn class(&self, hash: PaddedFelt) -> String {
-        format!("{NFTSCAN}/{hash:#x}")
-    }
-
-    fn contract(&self, address: PaddedFelt) -> String {
-        format!("{NFTSCAN}/{address:#x}")
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::{
         Network,
         helpers::block_explorer::Service,
-        response::{explorer_link::OutputLink, structs::DeployResponse},
+        response::{deploy::DeployResponse, explorer_link::OutputLink},
     };
     use conversions::padded_felt::PaddedFelt;
     use regex::Regex;
@@ -212,7 +193,6 @@ mod tests {
     #[tokio::test]
     #[test_case(Service::ViewBlock; "viewblock")]
     #[test_case(Service::OkLink; "oklink")]
-    #[test_case(Service::NftScan; "nftscan")]
     async fn test_happy_case_mainnet(explorer: Service) {
         let result = MAINNET_RESPONSE.format_links(explorer.as_provider(Network::Mainnet).unwrap());
         assert_valid_links(&result).await;
@@ -221,7 +201,6 @@ mod tests {
     #[tokio::test]
     #[test_case(Service::ViewBlock; "viewblock")]
     #[test_case(Service::OkLink; "oklink")]
-    #[test_case(Service::NftScan; "nftscan")]
     async fn test_fail_on_sepolia(explorer: Service) {
         assert!(explorer.as_provider(Network::Sepolia).is_err());
     }

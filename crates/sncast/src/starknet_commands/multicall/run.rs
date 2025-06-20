@@ -2,12 +2,13 @@ use crate::starknet_commands::invoke::execute_calls;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
+use foundry_ui::UI;
 use serde::Deserialize;
 use sncast::helpers::constants::UDC_ADDRESS;
 use sncast::helpers::fee::FeeArgs;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::handle_starknet_command_error;
-use sncast::response::structs::InvokeResponse;
+use sncast::response::multicall::run::MulticallRunResponse;
 use sncast::{WaitForTx, extract_or_generate_salt, udc_uniqueness};
 use starknet::accounts::{Account, SingleOwnerAccount};
 use starknet::core::types::Call;
@@ -22,13 +23,13 @@ use std::collections::HashMap;
 #[command(about = "Execute a multicall from a .toml file", long_about = None)]
 pub struct Run {
     /// Path to the toml file with declared operations
-    #[clap(short = 'p', long = "path")]
+    #[arg(short = 'p', long = "path")]
     pub path: Utf8PathBuf,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub fee_args: FeeArgs,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 
@@ -56,10 +57,11 @@ struct InvokeCall {
 }
 
 pub async fn run(
-    run: Run,
+    run: Box<Run>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
-) -> Result<InvokeResponse> {
+    ui: &UI,
+) -> Result<MulticallRunResponse> {
     let fee_args = run.fee_args.clone();
 
     let contents = std::fs::read_to_string(&run.path)?;
@@ -130,8 +132,9 @@ pub async fn run(
         }
     }
 
-    execute_calls(account, parsed_calls, fee_args, None, wait_config)
+    execute_calls(account, parsed_calls, fee_args, None, wait_config, ui)
         .await
+        .map(Into::into)
         .map_err(handle_starknet_command_error)
 }
 

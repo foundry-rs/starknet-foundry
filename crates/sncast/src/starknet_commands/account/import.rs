@@ -1,7 +1,8 @@
+use std::str::FromStr;
+
 use super::deploy::compute_account_address;
 use crate::starknet_commands::account::{
-    AccountType, add_created_profile_to_configuration, prepare_account_json,
-    write_account_to_accounts_file,
+    generate_add_profile_message, prepare_account_json, write_account_to_accounts_file,
 };
 use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
@@ -9,12 +10,10 @@ use clap::Args;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
-use sncast::helpers::configuration::CastConfig;
+use sncast::helpers::braavos::check_braavos_account_compatibility;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::AccountImportResponse;
-use sncast::{
-    AccountType as SNCastAccountType, check_class_hash_exists, get_chain_id, handle_rpc_error,
-};
+use sncast::response::account::import::AccountImportResponse;
+use sncast::{AccountType, check_class_hash_exists, get_chain_id, handle_rpc_error};
 use starknet::core::types::{BlockId, BlockTag, StarknetError};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::providers::{Provider, ProviderError};
@@ -25,42 +24,42 @@ use starknet_types_core::felt::Felt;
 #[command(about = "Add an account to the accounts file")]
 pub struct Import {
     /// Name of the account to be imported
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub name: Option<String>,
 
     /// Address of the account
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub address: Felt,
 
     /// Type of the account
-    #[clap(short = 't', long = "type")]
+    #[arg(short = 't', long = "type", value_parser = AccountType::from_str)]
     pub account_type: AccountType,
 
     /// Class hash of the account
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub class_hash: Option<Felt>,
 
     /// Account private key
-    #[clap(long, group = "private_key_input")]
+    #[arg(long, group = "private_key_input")]
     pub private_key: Option<Felt>,
 
     /// Path to the file holding account private key
-    #[clap(long = "private-key-file", group = "private_key_input")]
+    #[arg(long = "private-key-file", group = "private_key_input")]
     pub private_key_file_path: Option<Utf8PathBuf>,
 
     /// Salt for the address
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub salt: Option<Felt>,
 
     /// If passed, a profile with the provided name and corresponding data will be created in snfoundry.toml
-    #[clap(long, conflicts_with = "network")]
+    #[arg(long, conflicts_with = "network")]
     pub add_profile: Option<String>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 
     /// If passed, the command will not trigger an interactive prompt to add an account as a default
-    #[clap(long)]
+    #[arg(long)]
     pub silent: bool,
 }
 
@@ -70,6 +69,12 @@ pub async fn import(
     provider: &JsonRpcClient<HttpTransport>,
     import: &Import,
 ) -> Result<AccountImportResponse> {
+    // Braavos accounts before v1.2.0 are not compatible with Starknet >= 0.13.4
+    // For more, read https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
+    if let Some(class_hash) = import.class_hash {
+        check_braavos_account_compatibility(class_hash)?;
+    }
+
     let private_key = if let Some(passed_private_key) = &import.private_key {
         passed_private_key
     } else if let Some(passed_private_key_file_path) = &import.private_key_file_path {
@@ -121,12 +126,7 @@ pub async fn import(
 
     let chain_id = get_chain_id(provider).await?;
     if let Some(salt) = import.salt {
-        // TODO(#2571)
-        let sncast_account_type = match import.account_type {
-            AccountType::Argent => SNCastAccountType::Argent,
-            AccountType::Braavos => SNCastAccountType::Braavos,
-            AccountType::Oz => SNCastAccountType::OpenZeppelin,
-        };
+        let sncast_account_type = import.account_type;
         let computed_address =
             compute_account_address(salt, private_key, class_hash, sncast_account_type, chain_id);
         ensure!(
@@ -144,32 +144,23 @@ pub async fn import(
         import.address,
         deployed,
         legacy,
-        &import.account_type,
+        import.account_type,
         Some(class_hash),
         import.salt,
     );
 
     write_account_to_accounts_file(&account_name, accounts_file, chain_id, account_json.clone())?;
 
-    if import.add_profile.is_some() {
-        if let Some(url) = &import.rpc.url {
-            let config = CastConfig {
-                url: url.clone(),
-                account: account_name.clone(),
-                accounts_file: accounts_file.into(),
-                ..Default::default()
-            };
-            add_created_profile_to_configuration(import.add_profile.as_deref(), &config, None)?;
-        } else {
-            unreachable!("Conflicting arguments should be handled in clap");
-        }
-    }
+    let add_profile_message = generate_add_profile_message(
+        import.add_profile.as_ref(),
+        &import.rpc,
+        &account_name,
+        accounts_file,
+        None,
+    )?;
 
     Ok(AccountImportResponse {
-        add_profile: import.add_profile.as_ref().map_or_else(
-            || "--add-profile flag was not set. No profile added to snfoundry.toml".to_string(),
-            |profile_name| format!("Profile {profile_name} successfully added to snfoundry.toml"),
-        ),
+        add_profile: add_profile_message,
         account_name: account.map_or_else(|| Some(account_name), |_| None),
     })
 }

@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use blockifier::execution::syscalls::hint_processor::SyscallCounter;
+use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
 use cairo_annotations::trace_data::{
     CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint,
     CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
@@ -50,7 +50,6 @@ pub fn build_profiler_call_trace(
         vm_trace,
         contracts_data,
         versioned_program_path,
-        value.run_with_call_header,
     );
 
     ProfilerCallTrace {
@@ -58,6 +57,7 @@ pub fn build_profiler_call_trace(
         cumulative_resources: build_profiler_execution_resources(
             value.used_execution_resources.clone(),
             value.used_syscalls.clone(),
+            value.gas_consumed,
         ),
         used_l1_resources: value.used_l1_resources.clone(),
         nested_calls: value
@@ -74,7 +74,6 @@ fn build_cairo_execution_info(
     vm_trace: Option<Vec<ProfilerTraceEntry>>,
     contracts_data: &ContractsData,
     versioned_program_path: &Utf8Path,
-    run_with_call_header: bool,
 ) -> Option<CairoExecutionInfo> {
     let contract_name = get_contract_name(entry_point.class_hash, contracts_data);
     let source_sierra_path = contract_name
@@ -82,7 +81,7 @@ fn build_cairo_execution_info(
 
     Some(CairoExecutionInfo {
         casm_level_info: CasmLevelInfo {
-            run_with_call_header,
+            run_with_call_header: false,
             vm_trace: vm_trace?,
         },
         source_sierra_path: source_sierra_path?,
@@ -119,10 +118,11 @@ fn build_profiler_call_trace_node(
 #[must_use]
 pub fn build_profiler_execution_resources(
     execution_resources: ExecutionResources,
-    syscall_counter: SyscallCounter,
+    syscall_usage: SyscallUsageMap,
+    gas_consumed: u64,
 ) -> ProfilerExecutionResources {
     let mut profiler_syscall_counter = HashMap::new();
-    for (key, val) in syscall_counter {
+    for (key, val) in syscall_usage {
         profiler_syscall_counter.insert(build_profiler_deprecated_syscall_selector(key), val);
     }
     ProfilerExecutionResources {
@@ -135,6 +135,7 @@ pub fn build_profiler_execution_resources(
                 .map(|(key, value)| (key.to_str_with_suffix().to_owned(), value))
                 .collect(),
         },
+        gas_consumed: Some(gas_consumed),
     }
 }
 

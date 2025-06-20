@@ -2,8 +2,9 @@ use crate::starknet_commands::declare::Declare;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{WaitForTx, get_account};
 use anyhow::{Context, Result, anyhow};
+use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::entry_point::CallEntryPoint;
+use blockifier::execution::entry_point::ExecutableCallEntryPoint;
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
@@ -13,7 +14,6 @@ use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{Arg, RunResultValue, SierraCasmRunner};
 use cairo_lang_sierra::program::VersionedProgram;
-use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
@@ -24,6 +24,8 @@ use clap::Args;
 use conversions::byte_array::ByteArray;
 use conversions::serde::deserialize::BufferReader;
 use forge_runner::running::{has_segment_arena, syscall_handler_offset};
+use foundry_ui::UI;
+use foundry_ui::components::warning::WarningMessage;
 use runtime::starknet::context::{SerializableBlockInfo, build_context};
 use runtime::starknet::state::DictStateReader;
 use runtime::{
@@ -32,15 +34,15 @@ use runtime::{
 };
 use scarb_api::{StarknetContractArtifacts, package_matches_version_requirement};
 use scarb_metadata::{Metadata, PackageMetadata};
+use script_runtime::CastScriptRuntime;
 use semver::{Comparator, Op, Version, VersionReq};
-use shared::print::print_as_warning;
 use shared::utils::build_readable_text;
 use sncast::get_nonce;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::helpers::fee::{FeeArgs, ScriptFeeSettings};
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::ScriptRunResponse;
+use sncast::response::script::run::ScriptRunResponse;
 use sncast::state::hashing::{
     generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
 };
@@ -55,6 +57,8 @@ use std::collections::HashMap;
 use std::fs;
 use tokio::runtime::Runtime;
 
+mod script_runtime;
+
 type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
 
 #[derive(Args, Debug)]
@@ -64,14 +68,14 @@ pub struct Run {
     pub script_name: String,
 
     /// Specifies scarb package to be used
-    #[clap(long)]
+    #[arg(long)]
     pub package: Option<String>,
 
     /// Do not use the state file
-    #[clap(long)]
+    #[arg(long)]
     pub no_state_file: bool,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 
@@ -82,6 +86,7 @@ pub struct CastScriptExtension<'a> {
     pub config: &'a CastConfig,
     pub artifacts: &'a HashMap<String, StarknetContractArtifacts>,
     pub state: StateManager,
+    pub ui: &'a UI,
 }
 
 impl CastScriptExtension<'_> {
@@ -93,7 +98,7 @@ impl CastScriptExtension<'_> {
 }
 
 impl<'a> ExtensionLogic for CastScriptExtension<'a> {
-    type Runtime = StarknetRuntime<'a>;
+    type Runtime = CastScriptRuntime<'a>;
 
     #[expect(clippy::too_many_lines)]
     fn handle_cheatcode(
@@ -147,6 +152,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait_params: self.config.wait_params,
                     },
                     true,
+                    self.ui,
                 ));
 
                 self.state.maybe_insert_tx_entry(
@@ -185,6 +191,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait: true,
                         wait_params: self.config.wait_params,
                     },
+                    self.ui,
                 ));
 
                 self.state.maybe_insert_tx_entry(
@@ -222,6 +229,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait: true,
                         wait_params: self.config.wait_params,
                     },
+                    self.ui,
                 ));
 
                 self.state.maybe_insert_tx_entry(
@@ -271,7 +279,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
     }
 }
 
-#[expect(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments, clippy::too_many_lines)]
 pub fn run(
     module_name: &str,
     metadata: &Metadata,
@@ -281,8 +289,10 @@ pub fn run(
     tokio_runtime: Runtime,
     config: &CastConfig,
     state_file_path: Option<Utf8PathBuf>,
+    ui: &UI,
 ) -> Result<ScriptRunResponse> {
-    warn_if_sncast_std_not_compatible(metadata)?;
+    warn_if_sncast_std_not_compatible(metadata, ui)?;
+
     let artifacts = inject_lib_artifact(metadata, package_metadata, artifacts)?;
 
     let artifact = artifacts
@@ -297,7 +307,7 @@ pub fn run(
 
     let runner = SierraCasmRunner::new(
         sierra_program.clone(),
-        Some(MetadataComputationConfig::default()),
+        None,
         OrderedHashMap::default(),
         None,
     )
@@ -305,8 +315,8 @@ pub fn run(
 
     // `builder` field in `SierraCasmRunner` is private, hence the need to create a new `RunnableBuilder`
     // https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L184
-    let builder = RunnableBuilder::new(sierra_program, Some(MetadataComputationConfig::default()))
-        .with_context(|| "Failed to create builder")?;
+    let builder =
+        RunnableBuilder::new(sierra_program, None).with_context(|| "Failed to create builder")?;
 
     let name_suffix = module_name.to_string() + "::main";
     let func = runner.find_function(name_suffix.as_str())
@@ -326,7 +336,11 @@ pub fn run(
     let (hints_dict, string_to_hint) = hints_to_params(assembled_program.hints);
 
     // hint processor
-    let mut context = build_context(&SerializableBlockInfo::default().into(), None);
+    let mut context = build_context(
+        &SerializableBlockInfo::default().into(),
+        None,
+        &TrackedResource::CairoSteps,
+    );
 
     let mut blockifier_state = CachedState::new(DictStateReader::default());
 
@@ -344,7 +358,7 @@ pub fn run(
                 .expect("Failed to convert index to isize"),
             offset: 0,
         },
-        CallEntryPoint::default(),
+        ExecutableCallEntryPoint::default(),
         &string_to_hint,
         ReadOnlySegments::default(),
     );
@@ -368,15 +382,16 @@ pub fn run(
         artifacts: &artifacts,
         account: account.as_ref(),
         state,
+        ui,
     };
 
     let mut cast_runtime = ExtendedRuntime {
         extension: cast_extension,
-        extended_runtime: StarknetRuntime {
-            hint_handler: syscall_handler,
-            // If for some reason we need to calculate `user_args`, here
-            // is the function to do it: https://github.com/starkware-libs/cairo/blob/66f5c7223f7a6c27c5f800816dba05df9b60674e/crates/cairo-lang-runner/src/lib.rs#L464
-            // See TODO(#2966)
+        extended_runtime: CastScriptRuntime {
+            starknet_runtime: StarknetRuntime {
+                hint_handler: syscall_handler,
+                panic_traceback: None,
+            },
             user_args: vec![vec![Arg::Value(Felt::from(i64::MAX))]],
         },
     };
@@ -416,16 +431,16 @@ fn sncast_std_version_requirement() -> VersionReq {
     }
 }
 
-fn warn_if_sncast_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
+fn warn_if_sncast_std_not_compatible(scarb_metadata: &Metadata, ui: &UI) -> Result<()> {
     let sncast_std_version_requirement = sncast_std_version_requirement();
     if !package_matches_version_requirement(
         scarb_metadata,
         "sncast_std",
         &sncast_std_version_requirement,
     )? {
-        print_as_warning(&anyhow!(
+        ui.println(&WarningMessage::new(&format!(
             "Package sncast_std version does not meet the recommended version requirement {sncast_std_version_requirement}, it might result in unexpected behaviour"
-        ));
+        )));
     }
     Ok(())
 }

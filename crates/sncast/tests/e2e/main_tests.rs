@@ -2,6 +2,7 @@ use crate::helpers::constants::{
     ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
 };
 use crate::helpers::env::set_keystore_password_env;
+use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
     duplicate_contract_directory_with_salt, get_accounts_path, get_keystores_path,
 };
@@ -166,7 +167,8 @@ async fn test_happy_case_from_cli_with_sncast_config() {
 
     snapbox.assert().success().stdout_eq(indoc! {r"
         command: call
-        response: [0x0]
+        response: 0x0
+        response_raw: [0x0]
     "});
 }
 
@@ -193,7 +195,8 @@ async fn test_happy_case_mixed() {
 
     snapbox.assert().success().stdout_eq(indoc! {r"
         command: call
-        response: [0x0]
+        response: 0x0
+        response_raw: [0x0]
     "});
 }
 
@@ -350,6 +353,7 @@ async fn test_keystore_declare() {
         "--contract-name",
         "Map",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     set_keystore_password_env();
     let snapbox = runner(&args).current_dir(contract_path.path());

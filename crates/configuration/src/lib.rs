@@ -1,9 +1,9 @@
 use anyhow::{Context, Result, anyhow};
+use camino::Utf8PathBuf;
 use scarb_metadata::{Metadata, PackageId};
 use serde_json::{Map, Number};
+use std::fs::File;
 use std::{env, fs};
-
-use camino::Utf8PathBuf;
 use tempfile::{TempDir, tempdir};
 use toml::Value;
 pub const CONFIG_FILENAME: &str = "snfoundry.toml";
@@ -51,6 +51,17 @@ pub fn get_profile(
         None if profile_name == "default" => Ok(serde_json::Value::Object(Map::default())),
         None => Err(anyhow!("Profile [{}] not found in config", profile_name)),
     }
+}
+
+#[must_use]
+pub fn resolve_config_file() -> Utf8PathBuf {
+    find_config_file().unwrap_or_else(|_| {
+        let path = Utf8PathBuf::from(CONFIG_FILENAME);
+        File::create(&path).expect("creating file in current directory should be possible");
+
+        path.canonicalize_utf8()
+            .expect("path canonicalize in current directory should be possible")
+    })
 }
 
 pub fn load_config<T: Config + Default>(
@@ -160,7 +171,7 @@ pub fn copy_config_to_tempdir(src_path: &str, additional_path: Option<&str>) -> 
     if let Some(dir) = additional_path {
         let path = temp_dir.path().join(dir);
         fs::create_dir_all(path).context("Failed to create directories in temp dir")?;
-    };
+    }
     let temp_dir_file_path = temp_dir.path().join(CONFIG_FILENAME);
     fs::copy(src_path, temp_dir_file_path).context("Failed to copy config file to temp dir")?;
 

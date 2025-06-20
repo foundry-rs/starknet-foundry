@@ -4,9 +4,9 @@ version = "0.1.0"
 edition.workspace = true
 
 [dependencies]
+starknet_api.workspace = true
 anyhow.workspace = true
 starknet-types-core.workspace = true
-cairo-lang-runner.workspace = true
 console.workspace = true
 semver.workspace = true
 starknet.workspace = true
@@ -16,3 +16,9 @@ snapbox.workspace = true
 indicatif.workspace = true
 clap.workspace = true
 clap_complete.workspace = true
+cairo-vm.workspace = true
+num-traits.workspace = true
+foundry-ui ={ path = "../foundry-ui" }
+
+[features]
+testing = []

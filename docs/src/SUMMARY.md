@@ -37,13 +37,14 @@
 * [Conditional Compilation](snforge-advanced-features/conditional-compilation.md)
 * [Direct Storage Access](snforge-advanced-features/storage-cheatcodes.md)
 * [Profiling](snforge-advanced-features/profiling.md)
-* [Backtrace](snforge-advanced-features/backtrace.md)
+* [Debugging](snforge-advanced-features/debugging.md)
 
 ---
 
 # `sncast` Overview
 
 * [Outline](starknet/sncast-overview.md)
+* [`sncast` 101](starknet/101.md)
 * [Creating And Deploying Accounts](starknet/account.md)
 * [Importing Accounts](starknet/account-import.md)
 * [Declaring New Contracts](starknet/declare.md)
@@ -81,6 +82,7 @@
     * [caller_address](appendix/cheatcodes/caller_address.md)
     * [block_number](appendix/cheatcodes/block_number.md)
     * [block_timestamp](appendix/cheatcodes/block_timestamp.md)
+    * [block_hash](appendix/cheatcodes/block_hash.md)
     * [sequencer_address](appendix/cheatcodes/sequencer_address.md)
     * [version](appendix/cheatcodes/transaction_version.md)
     * [account_contract_address](appendix/cheatcodes/account_contract_address.md)
@@ -105,6 +107,8 @@
     * [load](appendix/cheatcodes/load.md)
     * [generate_random_felt](appendix/cheatcodes/generate_random_felt.md)
     * [generate_arg](appendix/cheatcodes/generate_arg.md)
+    * [set_balance](appendix/cheatcodes/set_balance.md)
+    * [Token](appendix/cheatcodes/token.md)
 * [`snforge` Library Reference](appendix/snforge-library.md)
     * [byte_array](appendix/snforge-library/byte_array.md)
     * [declare](appendix/snforge-library/declare.md)
@@ -144,6 +148,7 @@
     * [get_nonce](appendix/sncast-library/get_nonce.md)
     * [tx_status](appendix/sncast-library/tx_status.md)
     * [errors](appendix/sncast-library/errors.md)
+    * [`FeeSettingsTrait`](appendix/sncast-library/fee_settings_trait.md)
 * [`snfoundry.toml` Reference](appendix/snfoundry-toml.md)
 * [`Scarb.toml` Reference](appendix/scarb-toml.md)
 * [Starknet Foundry Github Action](appendix/starknet-foundry-github-action.md)

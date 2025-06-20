@@ -1,0 +1,29 @@
+name: Work Item
+description: Submit an actionable task
+body:
+  - type: textarea
+    id: current-state
+    attributes:
+      label: Current State
+      description: Describe the current state and outline the problem
+      placeholder: Currently, the `print_a` cheatcode prints `"a"` to stdout. This is problematic because user might want it to be printed on their actual printer.
+    validations:
+      required: true
+
+  - type: input
+    id: objective
+    attributes:
+      label: Objective
+      description: Briefly describe the correct state
+      placeholder: The `print_a` cheatcode should magically detect if user wants to print to stdout or a printer.
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Provide additional context on the desired state.
+      placeholder: If we can detect any printers in local network it might indicate that user wants to print to it.
+    validations:
+      required: false

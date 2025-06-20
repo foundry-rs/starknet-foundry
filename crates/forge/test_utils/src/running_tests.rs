@@ -10,9 +10,10 @@ use forge::{
 };
 use forge_runner::CACHE_DIR;
 use forge_runner::forge_config::{
-    ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
+    ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
 };
 use forge_runner::test_target_summary::TestTargetSummary;
+use foundry_ui::UI;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use std::num::NonZeroU32;
 use std::sync::Arc;
@@ -20,7 +21,10 @@ use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
 #[must_use]
-pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
+pub fn run_test_case(
+    test: &TestCase,
+    tracked_resource: ForgeTrackedResource,
+) -> Vec<TestTargetSummary> {
     ScarbCommand::new_with_stdio()
         .current_dir(test.path().unwrap())
         .arg("build")
@@ -43,6 +47,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
     let raw_test_targets =
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
+    let ui = Arc::new(UI::default());
     rt.block_on(run_for_package(
         RunForPackageArgs {
             test_targets: raw_test_targets,
@@ -50,6 +55,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
             tests_filter: TestsFilter::from_flags(
                 None,
                 false,
+                Vec::new(),
                 false,
                 false,
                 false,
@@ -62,10 +68,11 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
                     fuzzer_seed: 12345,
                     max_n_steps: None,
                     is_vm_trace_needed: false,
-                    cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
+                    cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().keep())
                         .unwrap()
                         .join(CACHE_DIR),
-                    contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
+                    contracts_data: ContractsData::try_from(test.contracts(&ui).unwrap()).unwrap(),
+                    tracked_resource,
                     environment_variables: test.env().clone(),
                 }),
                 output_config: Arc::new(OutputConfig {
@@ -76,6 +83,8 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
             fork_targets: vec![],
         },
         &mut BlockNumberMap::default(),
+        Option::default(),
+        ui,
     ))
     .expect("Runner fail")
 }

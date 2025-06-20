@@ -119,7 +119,7 @@ async fn test_with_invalid_max_fee() {
     let snapbox = runner(&args).current_dir(script_dir.path());
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientMaxFee(())))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientResourcesForValidate(())))
         command: script run
         status: success
     "});
@@ -161,6 +161,7 @@ async fn test_with_invalid_nonce() {
 }
 
 #[tokio::test]
+#[ignore = "TODO(#3091) Devnet response does not match te spec"]
 async fn test_insufficient_account_balance() {
     let contract_dir = duplicate_contract_directory_with_salt(
         SCRIPTS_DIR.to_owned() + "/map_script/contracts/",

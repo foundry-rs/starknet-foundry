@@ -1,100 +1,313 @@
 use super::common::runner::{setup_package, test_runner};
-use indoc::{formatdoc, indoc};
+use indoc::formatdoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
-const DEBUGGING_TRACE: &str = indoc! {r"
-        [selector] 0x17340c6779204ea2a91c87d1c2226a3aebda65c64da3672a36893c4330ea27b
-        ├─ [entry point type] External
-        ├─ [calldata] []
-        ├─ [storage address] 0x1724987234973219347210837402
-        ├─ [caller address] 0x0
-        ├─ [call type] Call
-        ├─ [call result] success: []
-        ├─ [selector] 0x387cbcd4e21cd976a8be7d24cd16b8e65e1940f9e06ded4f42798cf64c089be
-        │  ├─ [contract name] SimpleContract
-        │  ├─ [entry point type] External
-        │  ├─ [calldata] [0x2, 0x73668021e0dfc00aa573e654a0763dca79dbbfb5a60e4987f71a3472026994a, 0x2, 0x6ce4a1209f067bb71fbd98f37e1240f45beaf8fb22c39628cb2accfe4fb5bcb, 0x0, 0x6ce4a1209f067bb71fbd98f37e1240f45beaf8fb22c39628cb2accfe4fb5bcb, 0x0, 0x6ce4a1209f067bb71fbd98f37e1240f45beaf8fb22c39628cb2accfe4fb5bcb, 0x0]
-        │  ├─ [storage address] 0x29e61a26d304881d5944a9ab3446685cb791af1ff827f9d4bc34489a2ff9629
-        │  ├─ [caller address] 0x1724987234973219347210837402
-        │  ├─ [call type] Call
-        │  ├─ [call result] success: []
-        │  ├─ [selector] 0x387cbcd4e21cd976a8be7d24cd16b8e65e1940f9e06ded4f42798cf64c089be
-        │  │  ├─ [contract name] SimpleContract
-        │  │  ├─ [entry point type] External
-        │  │  ├─ [calldata] [0x2, 0x6ce4a1209f067bb71fbd98f37e1240f45beaf8fb22c39628cb2accfe4fb5bcb, 0x0, 0x6ce4a1209f067bb71fbd98f37e1240f45beaf8fb22c39628cb2accfe4fb5bcb, 0x0]
-        │  │  ├─ [storage address] 0x73668021e0dfc00aa573e654a0763dca79dbbfb5a60e4987f71a3472026994a
-        │  │  ├─ [caller address] 0x29e61a26d304881d5944a9ab3446685cb791af1ff827f9d4bc34489a2ff9629
-        │  │  ├─ [call type] Call
-        │  │  ├─ [call result] success: []
-        │  │  ├─ [selector] 0x387cbcd4e21cd976a8be7d24cd16b8e65e1940f9e06ded4f42798cf64c089be
-        │  │  │  ├─ [contract name] SimpleContract
-        │  │  │  ├─ [entry point type] External
-        │  │  │  ├─ [calldata] [0x0]
-        │  │  │  ├─ [storage address] 0x6ce4a1209f067bb71fbd98f37e1240f45beaf8fb22c39628cb2accfe4fb5bcb
-        │  │  │  ├─ [caller address] 0x73668021e0dfc00aa573e654a0763dca79dbbfb5a60e4987f71a3472026994a
-        │  │  │  ├─ [call type] Call
-        │  │  │  └─ [call result] success: []
-        │  │  └─ [selector] 0x387cbcd4e21cd976a8be7d24cd16b8e65e1940f9e06ded4f42798cf64c089be
-        │  │     ├─ [contract name] SimpleContract
-        │  │     ├─ [entry point type] External
-        │  │     ├─ [calldata] [0x0]
-        │  │     ├─ [storage address] 0x6ce4a1209f067bb71fbd98f37e1240f45beaf8fb22c39628cb2accfe4fb5bcb
-        │  │     ├─ [caller address] 0x73668021e0dfc00aa573e654a0763dca79dbbfb5a60e4987f71a3472026994a
-        │  │     ├─ [call type] Call
-        │  │     └─ [call result] success: []
-        │  └─ [selector] 0x387cbcd4e21cd976a8be7d24cd16b8e65e1940f9e06ded4f42798cf64c089be
-        │     ├─ [contract name] SimpleContract
-        │     ├─ [entry point type] External
-        │     ├─ [calldata] [0x0]
-        │     ├─ [storage address] 0x6ce4a1209f067bb71fbd98f37e1240f45beaf8fb22c39628cb2accfe4fb5bcb
-        │     ├─ [caller address] 0x29e61a26d304881d5944a9ab3446685cb791af1ff827f9d4bc34489a2ff9629
-        │     ├─ [call type] Call
-        │     └─ [call result] success: []
-        └─ [selector] 0x32564d7e0fe091d49b4c20f4632191e4ed6986bf993849879abfef9465def25
-           ├─ [contract name] SimpleContract
-           ├─ [entry point type] External
-           ├─ [calldata] [0x5, 0x1, 0x2, 0x3, 0x4, 0x5]
-           ├─ [storage address] 0x29e61a26d304881d5944a9ab3446685cb791af1ff827f9d4bc34489a2ff9629
-           ├─ [caller address] 0x1724987234973219347210837402
-           ├─ [call type] Call
-           └─ [call result] panic: [0x1, 0x2, 0x3, 0x4, 0x5]
-        "};
-
 #[test]
-fn debugging_trace() {
+fn debugging_trace_detailed() {
     let temp = setup_package("debugging");
 
-    let output = test_runner(&temp).assert().code(1);
+    let output = test_runner(&temp)
+        .arg("--trace-verbosity")
+        .arg("detailed")
+        .assert()
+        .code(1);
 
-    assert_stdout_contains(
-        output,
-        formatdoc! {r"
+    assert_stdout_contains(output, test_output(detailed_debugging_trace_message));
+}
+
+#[test]
+fn debugging_trace_detailed_fork() {
+    let temp = setup_package("debugging_fork");
+
+    let output = test_runner(&temp)
+        .arg("--trace-verbosity")
+        .arg("detailed")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(output, test_output(detailed_debugging_trace_message_fork));
+}
+
+#[test]
+fn debugging_trace_standard() {
+    let temp = setup_package("debugging");
+
+    let output = test_runner(&temp)
+        .arg("--trace-verbosity")
+        .arg("standard")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(output, test_output(standard_debugging_trace_message));
+}
+
+#[test]
+fn debugging_trace_standard_fork() {
+    let temp = setup_package("debugging_fork");
+
+    let output = test_runner(&temp)
+        .arg("--trace-verbosity")
+        .arg("standard")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(output, test_output(standard_debugging_trace_message_fork));
+}
+
+#[test]
+fn debugging_trace_minimal() {
+    let temp = setup_package("debugging");
+
+    let output = test_runner(&temp)
+        .arg("--trace-verbosity")
+        .arg("minimal")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(output, test_output(minimal_debugging_trace_message));
+}
+
+#[test]
+fn debugging_trace_minimal_fork() {
+    let temp = setup_package("debugging_fork");
+
+    let output = test_runner(&temp)
+        .arg("--trace-verbosity")
+        .arg("minimal")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(output, test_output(minimal_debugging_trace_message_fork));
+}
+
+fn test_output(trace_message_fn: fn(&str) -> String) -> String {
+    formatdoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
         Collected 2 test(s) from trace_info package
         Running 2 test(s) from tests/
-        [FAIL] trace_info_integrationtest::test_trace::test_debugging_trace_fail
-
+        [FAIL] trace_info_integrationtest::test_trace::test_debugging_trace_failure
         Failure data:
             (0x1, 0x2, 0x3, 0x4, 0x5)
 
         note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
-        {debugging_trace}
+        {debugging_trace_fail}
 
-        [PASS] trace_info_integrationtest::test_trace::test_debugging_trace_success (gas: ~324)
-
-        Success data:
-            (0x1, 0x2, 0x3, 0x4, 0x5)
-
-        note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
-        {debugging_trace}
+        [PASS] trace_info_integrationtest::test_trace::test_debugging_trace_success (l1_gas: ~[..], l1_data_gas: ~[..], l2_gas: ~[..])
+        {debugging_trace_pass}
 
         Running 0 test(s) from src/
-        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 1 passed, 1 failed, 0 ignored, 0 filtered out
 
         Failures:
-            trace_info_integrationtest::test_trace::test_debugging_trace_fail
-        ", debugging_trace = DEBUGGING_TRACE},
-    );
+            trace_info_integrationtest::test_trace::test_debugging_trace_failure
+        ",
+        debugging_trace_fail = trace_message_fn("failure"),
+        debugging_trace_pass = trace_message_fn("success")
+    }
+}
+
+fn detailed_debugging_trace_message(test_name: &str) -> String {
+    formatdoc! {r"
+        [test name] trace_info_integrationtest::test_trace::test_debugging_trace_{test_name}
+        ├─ [selector] execute_calls
+        │  ├─ [contract name] SimpleContract
+        │  ├─ [entry point type] External
+        │  ├─ [calldata] array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  ├─ [contract address] [..]
+        │  ├─ [caller address] [..]
+        │  ├─ [call type] Call
+        │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  ├─ [selector] execute_calls
+        │  │  ├─ [contract name] SimpleContract
+        │  │  ├─ [entry point type] External
+        │  │  ├─ [calldata] array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  │  ├─ [contract address] [..]
+        │  │  ├─ [caller address] [..]
+        │  │  ├─ [call type] Call
+        │  │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  │  ├─ [selector] execute_calls
+        │  │  │  ├─ [contract name] SimpleContract
+        │  │  │  ├─ [entry point type] External
+        │  │  │  ├─ [calldata] array![]
+        │  │  │  ├─ [contract address] [..]
+        │  │  │  ├─ [caller address] [..]
+        │  │  │  ├─ [call type] Call
+        │  │  │  └─ [call result] success: array![]
+        │  │  └─ [selector] execute_calls
+        │  │     ├─ [contract name] SimpleContract
+        │  │     ├─ [entry point type] External
+        │  │     ├─ [calldata] array![]
+        │  │     ├─ [contract address] [..]
+        │  │     ├─ [caller address] [..]
+        │  │     ├─ [call type] Call
+        │  │     └─ [call result] success: array![]
+        │  └─ [selector] execute_calls
+        │     ├─ [contract name] SimpleContract
+        │     ├─ [entry point type] External
+        │     ├─ [calldata] array![]
+        │     ├─ [contract address] [..]
+        │     ├─ [caller address] [..]
+        │     ├─ [call type] Call
+        │     └─ [call result] success: array![]
+        └─ [selector] fail
+           ├─ [contract name] SimpleContract
+           ├─ [entry point type] External
+           ├─ [calldata] array![0x1, 0x2, 0x3, 0x4, 0x5]
+           ├─ [contract address] [..]
+           ├─ [caller address] [..]
+           ├─ [call type] Call
+           └─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
+        "}
+}
+
+fn detailed_debugging_trace_message_fork(test_name: &str) -> String {
+    formatdoc! {r"
+        [test name] trace_info_integrationtest::test_trace::test_debugging_trace_{test_name}
+        ├─ [selector] execute_calls
+        │  ├─ [contract name] forked contract
+        │  ├─ [entry point type] External
+        │  ├─ [calldata] array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  ├─ [contract address] [..]
+        │  ├─ [caller address] [..]
+        │  ├─ [call type] Call
+        │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  ├─ [selector] execute_calls
+        │  │  ├─ [contract name] forked contract
+        │  │  ├─ [entry point type] External
+        │  │  ├─ [calldata] array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  │  ├─ [contract address] [..]
+        │  │  ├─ [caller address] [..]
+        │  │  ├─ [call type] Call
+        │  │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  │  ├─ [selector] execute_calls
+        │  │  │  ├─ [contract name] forked contract
+        │  │  │  ├─ [entry point type] External
+        │  │  │  ├─ [calldata] array![]
+        │  │  │  ├─ [contract address] [..]
+        │  │  │  ├─ [caller address] [..]
+        │  │  │  ├─ [call type] Call
+        │  │  │  └─ [call result] success: array![]
+        │  │  └─ [selector] execute_calls
+        │  │     ├─ [contract name] forked contract
+        │  │     ├─ [entry point type] External
+        │  │     ├─ [calldata] array![]
+        │  │     ├─ [contract address] [..]
+        │  │     ├─ [caller address] [..]
+        │  │     ├─ [call type] Call
+        │  │     └─ [call result] success: array![]
+        │  └─ [selector] execute_calls
+        │     ├─ [contract name] forked contract
+        │     ├─ [entry point type] External
+        │     ├─ [calldata] array![]
+        │     ├─ [contract address] [..]
+        │     ├─ [caller address] [..]
+        │     ├─ [call type] Call
+        │     └─ [call result] success: array![]
+        └─ [selector] fail
+           ├─ [contract name] forked contract
+           ├─ [entry point type] External
+           ├─ [calldata] array![0x1, 0x2, 0x3, 0x4, 0x5]
+           ├─ [contract address] [..]
+           ├─ [caller address] [..]
+           ├─ [call type] Call
+           └─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
+        "}
+}
+
+fn standard_debugging_trace_message(test_name: &str) -> String {
+    formatdoc! {r"
+        [test name] trace_info_integrationtest::test_trace::test_debugging_trace_{test_name}
+        ├─ [selector] execute_calls
+        │  ├─ [contract name] SimpleContract
+        │  ├─ [calldata] array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  ├─ [selector] execute_calls
+        │  │  ├─ [contract name] SimpleContract
+        │  │  ├─ [calldata] array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  │  ├─ [selector] execute_calls
+        │  │  │  ├─ [contract name] SimpleContract
+        │  │  │  ├─ [calldata] array![]
+        │  │  │  └─ [call result] success: array![]
+        │  │  └─ [selector] execute_calls
+        │  │     ├─ [contract name] SimpleContract
+        │  │     ├─ [calldata] array![]
+        │  │     └─ [call result] success: array![]
+        │  └─ [selector] execute_calls
+        │     ├─ [contract name] SimpleContract
+        │     ├─ [calldata] array![]
+        │     └─ [call result] success: array![]
+        └─ [selector] fail
+           ├─ [contract name] SimpleContract
+           ├─ [calldata] array![0x1, 0x2, 0x3, 0x4, 0x5]
+           └─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
+        "}
+}
+
+fn standard_debugging_trace_message_fork(test_name: &str) -> String {
+    formatdoc! {r"
+        [test name] trace_info_integrationtest::test_trace::test_debugging_trace_{test_name}
+        ├─ [selector] execute_calls
+        │  ├─ [contract name] forked contract
+        │  ├─ [calldata] array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  ├─ [selector] execute_calls
+        │  │  ├─ [contract name] forked contract
+        │  │  ├─ [calldata] array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  │  ├─ [selector] execute_calls
+        │  │  │  ├─ [contract name] forked contract
+        │  │  │  ├─ [calldata] array![]
+        │  │  │  └─ [call result] success: array![]
+        │  │  └─ [selector] execute_calls
+        │  │     ├─ [contract name] forked contract
+        │  │     ├─ [calldata] array![]
+        │  │     └─ [call result] success: array![]
+        │  └─ [selector] execute_calls
+        │     ├─ [contract name] forked contract
+        │     ├─ [calldata] array![]
+        │     └─ [call result] success: array![]
+        └─ [selector] fail
+           ├─ [contract name] forked contract
+           ├─ [calldata] array![0x1, 0x2, 0x3, 0x4, 0x5]
+           └─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
+        "}
+}
+
+fn minimal_debugging_trace_message(test_name: &str) -> String {
+    formatdoc! {r"
+        [test name] trace_info_integrationtest::test_trace::test_debugging_trace_{test_name}
+        ├─ [selector] execute_calls
+        │  ├─ [contract name] SimpleContract
+        │  ├─ [selector] execute_calls
+        │  │  ├─ [contract name] SimpleContract
+        │  │  ├─ [selector] execute_calls
+        │  │  │  └─ [contract name] SimpleContract
+        │  │  └─ [selector] execute_calls
+        │  │     └─ [contract name] SimpleContract
+        │  └─ [selector] execute_calls
+        │     └─ [contract name] SimpleContract
+        └─ [selector] fail
+           └─ [contract name] SimpleContract
+        "}
+}
+
+fn minimal_debugging_trace_message_fork(test_name: &str) -> String {
+    formatdoc! {r"
+        [test name] trace_info_integrationtest::test_trace::test_debugging_trace_{test_name}
+        ├─ [selector] execute_calls
+        │  ├─ [contract name] forked contract
+        │  ├─ [selector] execute_calls
+        │  │  ├─ [contract name] forked contract
+        │  │  ├─ [selector] execute_calls
+        │  │  │  └─ [contract name] forked contract
+        │  │  └─ [selector] execute_calls
+        │  │     └─ [contract name] forked contract
+        │  └─ [selector] execute_calls
+        │     └─ [contract name] forked contract
+        └─ [selector] fail
+           └─ [contract name] forked contract
+        "}
 }

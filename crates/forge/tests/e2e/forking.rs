@@ -28,7 +28,7 @@ fn without_cache() {
         [PASS] forking::tests::test_fork_simple_number_hex [..]
         [PASS] forking::tests::test_fork_simple_hash_hex [..]
         [PASS] forking::tests::test_fork_simple_hash_number [..]
-        Tests: 4 passed, 0 failed, 0 skipped, 0 ignored, 1 filtered out
+        Tests: 4 passed, 0 failed, 0 ignored, 2 filtered out
         "},
     );
 }
@@ -64,7 +64,7 @@ fn with_cache() {
         Failure data:
             0x42616c616e63652073686f756c642062652030 ('Balance should be 0')
 
-        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, other filtered out
+        Tests: 0 passed, 1 failed, 0 ignored, other filtered out
 
         Failures:
             forking::tests::test_fork_simple
@@ -96,7 +96,7 @@ fn with_clean_cache() {
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
         [PASS] forking::tests::test_fork_simple [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
         "},
     );
 }
@@ -124,9 +124,37 @@ fn printing_latest_block_number() {
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
         [PASS] forking::tests::print_block_number_when_latest [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
 
         Latest block number = [..] for url = {node_rpc_url}
+        "},
+    );
+}
+
+#[test]
+fn with_skip_fork_tests_env() {
+    let temp = setup_package_with_file_patterns("forking", BASE_FILE_PATTERNS);
+
+    let output = test_runner(&temp)
+        .env("SNFORGE_IGNORE_FORK_TESTS", "1")
+        .arg("forking::tests::test_fork_simple")
+        .assert()
+        .code(0);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 4 test(s) from forking package
+        Running 4 test(s) from src/
+        [IGNORE] forking::tests::test_fork_simple
+        [IGNORE] forking::tests::test_fork_simple_number_hex
+        [IGNORE] forking::tests::test_fork_simple_hash_hex
+        [IGNORE] forking::tests::test_fork_simple_hash_number
+        Tests: 0 passed, 0 failed, 4 ignored, 2 filtered out
         "},
     );
 }

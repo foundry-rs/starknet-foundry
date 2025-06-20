@@ -1,11 +1,10 @@
+use crate::vm::{cell_ref_to_relocatable, extract_relocatable, get_val, vm_get_range};
 use anyhow::Result;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::errors::StateError;
 use cairo_lang_casm::hints::{ExternalHint, Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::{MemBuffer, extract_relocatable, get_val, vm_get_range};
-use cairo_lang_runner::{Arg, casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::hint_processor::hint_processor_definition::{
     HintProcessor, HintProcessorLogic, HintReference,
@@ -24,7 +23,7 @@ use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::raw::RawFeltVec;
 use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
 use indoc::indoc;
-use num_traits::cast::ToPrimitive;
+use shared::vm::VirtualMachineExt;
 use starknet_api::StarknetApiError;
 use starknet_types_core::felt::Felt;
 use std::any::Any;
@@ -33,6 +32,7 @@ use std::io;
 use thiserror::Error;
 
 pub mod starknet;
+mod vm;
 
 // from core/src/starknet/testing.cairo
 const CAIRO_TEST_CHEATCODES: [&str; 14] = [
@@ -57,10 +57,7 @@ pub trait SyscallPtrAccess {
 
 pub struct StarknetRuntime<'a> {
     pub hint_handler: SyscallHintProcessor<'a>,
-    // Required for handling `External` hints
-    //
-    // See https://github.com/starkware-libs/cairo/blob/dfb5d3fdcf80bff30c205c14163f99c890dbdc10/crates/cairo-lang-runner/src/casm_run/mod.rs#L94
-    pub user_args: Vec<Vec<Arg>>,
+    pub panic_traceback: Option<Vec<usize>>,
 }
 
 impl SyscallPtrAccess for StarknetRuntime<'_> {
@@ -129,10 +126,6 @@ fn fetch_cheatcode_input(
     Ok(inputs)
 }
 
-fn args_size(args: &[Arg]) -> usize {
-    args.iter().map(Arg::size).sum()
-}
-
 impl HintProcessorLogic for StarknetRuntime<'_> {
     fn execute_hint(
         &mut self,
@@ -167,41 +160,18 @@ impl HintProcessorLogic for StarknetRuntime<'_> {
 
                     return Err(CustomHint(error.into()));
                 }
-                // Copied from https://github.com/starkware-libs/cairo/blob/3d5631d3f6563b5f97c11c816f530be99095a843/crates/cairo-lang-runner/src/casm_run/mod.rs#L1316
-                Hint::External(ExternalHint::AddRelocationRule { src, dst }) => {
-                    return Ok(vm.add_relocation_rule(
-                        extract_relocatable(vm, src)?,
-                        extract_relocatable(vm, dst)?,
-                    )?);
-                }
-                // Copied from https://github.com/starkware-libs/cairo/blob/3d5631d3f6563b5f97c11c816f530be99095a843/crates/cairo-lang-runner/src/casm_run/mod.rs#L1320
-                Hint::External(ExternalHint::WriteRunParam { index, dst }) => {
-                    let index = get_val(vm, index)?.to_usize().expect("Got a bad index.");
-                    let mut stack =
-                        vec![(cell_ref_to_relocatable(dst, vm), &self.user_args[index])];
-                    while let Some((mut buffer, values)) = stack.pop() {
-                        for value in values {
-                            match value {
-                                Arg::Value(v) => {
-                                    vm.insert_value(buffer, v)?;
-                                    buffer += 1;
-                                }
-                                Arg::Array(arr) => {
-                                    let arr_buffer = vm.add_memory_segment();
-                                    stack.push((arr_buffer, arr));
-                                    vm.insert_value(buffer, arr_buffer)?;
-                                    buffer += 1;
-                                    vm.insert_value(buffer, (arr_buffer + args_size(arr))?)?;
-                                    buffer += 1;
-                                }
-                            }
-                        }
+                Hint::External(ExternalHint::AddTrace { flag }) => {
+                    const PANIC_IN_BYTES: Felt = Felt::from_hex_unchecked("0x70616e6963");
+                    let flag = get_val(vm, flag)?;
+                    // Setting the panic backtrace if the given flag is panic.
+                    if flag == PANIC_IN_BYTES {
+                        self.panic_traceback = Some(vm.get_reversed_pc_traceback());
                     }
                     return Ok(());
                 }
                 _ => {}
             }
-        };
+        }
 
         self.hint_handler
             .execute_hint(vm, exec_scopes, hint_data, constants)
@@ -321,17 +291,15 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
         }
         .serialize_to_vec();
 
-        let mut buffer = MemBuffer::new_segment(vm);
-        let result_start = buffer.ptr;
-        buffer
-            .write_data(res.iter())
-            .expect("Failed to insert cheatcode result to memory");
-        let result_end = buffer.ptr;
+        let WrittenData {
+            start: result_start,
+            end: result_end,
+        } = write_data(res, vm)?;
         let output_start = vm_io_ptrs.output_start;
         let output_end = vm_io_ptrs.output_end;
 
-        insert_value_to_cellref!(vm, output_start, result_start)?;
-        insert_value_to_cellref!(vm, output_end, result_end)?;
+        vm.insert_value(cell_ref_to_relocatable(*output_start, vm), result_start)?;
+        vm.insert_value(cell_ref_to_relocatable(*output_end, vm), result_end)?;
 
         self.propagate_cheatcode_signal(&selector, &inputs);
 
@@ -517,4 +485,19 @@ impl From<BufferReadError> for EnhancedHintError {
                     )
             )
     }
+}
+
+struct WrittenData {
+    start: Relocatable,
+    end: Relocatable,
+}
+
+fn write_data(data: Vec<Felt>, vm: &mut VirtualMachine) -> Result<WrittenData, HintError> {
+    let mut ptr = vm.add_memory_segment();
+    let start = ptr;
+    for data in data {
+        vm.insert_value(ptr, data)?;
+        ptr += 1;
+    }
+    Ok(WrittenData { start, end: ptr })
 }

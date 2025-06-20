@@ -52,7 +52,7 @@ Running 1 test(s) from tests/
 Failure data:
     0x75736572206973206e6f7420616c6c6f776564 ('user is not allowed')
 
-Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 0 passed, 1 failed, 0 ignored, 0 filtered out
 
 Failures:
     using_cheatcodes_tests::call_and_invoke
@@ -87,8 +87,8 @@ $ snforge test
 Collected 1 test(s) from using_cheatcodes_cheat_address package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
-[PASS] using_cheatcodes_cheat_address_tests::call_and_invoke (gas: ~239)
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+[PASS] using_cheatcodes_cheat_address_tests::call_and_invoke (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~600000)
+Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>
 <br>
@@ -121,7 +121,7 @@ Failure data:
     0x5365636f6e642063616c6c206661696c656421 ('Second call failed!')
 
 Running 0 test(s) from src/
-Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 0 passed, 1 failed, 0 ignored, 0 filtered out
 
 Failures:
     using_cheatcodes_cancelling_cheat_tests::call_and_invoke
@@ -184,4 +184,25 @@ To better understand the functionality of `CheatSpan`, here's a full example:
 
 ```rust
 {{#include ../../listings/using_cheatcodes_others/tests/caller_address/span.cairo}}
+```
+
+### Cheating ERC-20 Token balance
+
+If you want to cheat the balance of an ERC-20 token (STRK, ETH or custom one), you can use the [`set_balance`](../appendix/cheatcodes/set_balance.md) cheatcode.
+
+> ℹ️ **Info**
+>
+> STRK and ETH are predeployed in every test case by default, so you can use them without any additional setup.
+> The predeployment can be disabled by the `#[disable_predeployed_contracts]` attribute.
+
+Below is a basic example of setting and reading STRK balance:
+
+```rust
+{{#include ../../listings/using_cheatcodes_others/tests/set_balance_strk.cairo}}
+```
+
+You can also use `CustomToken` (see [`Token`](../appendix/cheatcodes/token.md) docs). It needs `contract_address` and `balances_variable_selector` (which refers to storage variable, holding the mapping of balances -> amounts):
+
+```rust
+{{#include ../../listings/using_cheatcodes_others/tests/set_balance_custom_token.cairo}}
 ```

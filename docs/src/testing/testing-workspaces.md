@@ -48,7 +48,7 @@ $ snforge test
 ```shell
 Collected 3 test(s) from hello_workspaces package
 Running 1 test(s) from src/
-[PASS] hello_workspaces::tests::test_simple (gas: ~1)
+[PASS] hello_workspaces::tests::test_simple (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Running 2 test(s) from tests/
 [FAIL] hello_workspaces_integrationtest::test_failing::test_failing
 
@@ -60,7 +60,7 @@ Failure data:
 Failure data:
     0x6661696c696e6720636865636b ('failing check')
 
-Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 1 passed, 2 failed, 0 ignored, 0 filtered out
 
 Failures:
     hello_workspaces_integrationtest::test_failing::test_failing
@@ -83,13 +83,13 @@ $ snforge test --package addition
 ```shell
 Collected 5 test(s) from addition package
 Running 4 test(s) from tests/
-[PASS] addition_integrationtest::nested::test_nested::test_two (gas: ~1)
-[PASS] addition_integrationtest::nested::test_nested::test_two_and_two (gas: ~1)
-[PASS] addition_integrationtest::nested::simple_case (gas: ~1)
-[PASS] addition_integrationtest::nested::contract_test (gas: ~1)
+[PASS] addition_integrationtest::nested::test_nested::test_two (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] addition_integrationtest::nested::test_nested::test_two_and_two (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] addition_integrationtest::nested::simple_case (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] addition_integrationtest::nested::contract_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Running 1 test(s) from src/
-[PASS] addition::tests::it_works (gas: ~1)
-Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+[PASS] addition::tests::it_works (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>
 <br>
@@ -106,34 +106,34 @@ $ snforge test --workspace
 ```shell
 Collected 5 test(s) from addition package
 Running 4 test(s) from tests/
-[PASS] addition_integrationtest::nested::test_nested::test_two (gas: ~1)
-[PASS] addition_integrationtest::nested::simple_case (gas: ~1)
-[PASS] addition_integrationtest::nested::test_nested::test_two_and_two (gas: ~1)
-[PASS] addition_integrationtest::nested::contract_test (gas: ~1)
+[PASS] addition_integrationtest::nested::test_nested::test_two (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] addition_integrationtest::nested::simple_case (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] addition_integrationtest::nested::test_nested::test_two_and_two (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] addition_integrationtest::nested::contract_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Running 1 test(s) from src/
-[PASS] addition::tests::it_works (gas: ~1)
-Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+[PASS] addition::tests::it_works (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
 
 
 Collected 6 test(s) from fibonacci package
 Running 2 test(s) from src/
-[PASS] fibonacci::tests::it_works (gas: ~1)
-[PASS] fibonacci::tests::contract_test (gas: ~1)
+[PASS] fibonacci::tests::it_works (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] fibonacci::tests::contract_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Running 4 test(s) from tests/
 [FAIL] fibonacci_tests::abc::efg::failing_test
 
 Failure data:
     0x0 ('')
 
-[PASS] fibonacci_tests::abc::efg::efg_test (gas: ~1)
-[PASS] fibonacci_tests::lib_test (gas: ~1)
-[PASS] fibonacci_tests::abc::abc_test (gas: ~1)
-Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+[PASS] fibonacci_tests::abc::efg::efg_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] fibonacci_tests::lib_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] fibonacci_tests::abc::abc_test (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+Tests: 5 passed, 1 failed, 0 ignored, 0 filtered out
 
 
 Collected 3 test(s) from hello_workspaces package
 Running 1 test(s) from src/
-[PASS] hello_workspaces::tests::test_simple (gas: ~1)
+[PASS] hello_workspaces::tests::test_simple (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
 Running 2 test(s) from tests/
 [FAIL] hello_workspaces_integrationtest::test_failing::test_another_failing
 
@@ -145,7 +145,7 @@ Failure data:
 Failure data:
     0x6661696c696e6720636865636b ('failing check')
 
-Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 1 passed, 2 failed, 0 ignored, 0 filtered out
 
 Failures:
     fibonacci_tests::abc::efg::failing_test

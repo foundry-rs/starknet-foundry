@@ -36,7 +36,7 @@ Collected 2 test(s) from fuzz_testing package
 Running 2 test(s) from src/
 [PASS] fuzz_testing::with_parameters::tests::test_sum (runs: 22, gas: {max: ~124, min: ~121, mean: ~123.00, std deviation: ~0.90})
 [PASS] fuzz_testing::basic_example::tests::test_sum (runs: 256, gas: {max: ~124, min: ~121, mean: ~123.00, std deviation: ~0.81})
-Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 Fuzzer seed: [..]
 ```
 </details>

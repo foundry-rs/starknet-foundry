@@ -8,7 +8,6 @@ trait IUpgradeable<T> {
 #[starknet::contract]
 mod GetClassHashCheckerUpg {
     use starknet::ClassHash;
-    use result::ResultTrait;
 
     #[storage]
     struct Storage {
@@ -23,7 +22,7 @@ mod GetClassHashCheckerUpg {
     }
 
     fn _upgrade(class_hash: ClassHash) {
-        match starknet::replace_class_syscall(class_hash) {
+        match starknet::syscalls::replace_class_syscall(class_hash) {
             Result::Ok(()) => {},
             Result::Err(e) => panic(e),
         };

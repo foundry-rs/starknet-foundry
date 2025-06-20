@@ -3,7 +3,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::{Decimal, ShowConfigResponse};
+use sncast::response::show_config::ShowConfigResponse;
 use sncast::{chain_id_to_network_name, get_chain_id};
 use starknet::providers::JsonRpcClient;
 use starknet::providers::jsonrpc::HttpTransport;
@@ -11,7 +11,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 #[derive(Args)]
 #[command(about = "Show current configuration being used", long_about = None)]
 pub struct ShowConfig {
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 
@@ -47,8 +47,8 @@ pub async fn show_config(
         account,
         accounts_file_path,
         keystore,
-        wait_timeout: wait_timeout.map(|x| Decimal(u64::from(x))),
-        wait_retry_interval: wait_retry_interval.map(|x| Decimal(u64::from(x))),
+        wait_timeout: wait_timeout.map(u64::from),
+        wait_retry_interval: wait_retry_interval.map(u64::from),
         show_explorer_links: cast_config.show_explorer_links,
         block_explorer,
     })

@@ -1,11 +1,12 @@
 use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args};
+use foundry_ui::UI;
 use promptly::prompt;
 use serde_json::Map;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::AccountDeleteResponse;
+use sncast::response::account::delete::AccountDeleteResponse;
 use sncast::{chain_id_to_network_name, get_chain_id};
 
 #[derive(Args, Debug)]
@@ -16,18 +17,18 @@ use sncast::{chain_id_to_network_name, get_chain_id};
     .multiple(false)))]
 pub struct Delete {
     /// Name of the account to be deleted
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub name: String,
 
     /// Assume "yes" as answer to confirmation prompt and run non-interactively
-    #[clap(long, default_value = "false")]
+    #[arg(long, default_value = "false")]
     pub yes: bool,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 
     /// Literal name of the network used in accounts file
-    #[clap(long)]
+    #[arg(long)]
     pub network_name: Option<String>,
 }
 
@@ -78,11 +79,15 @@ pub fn delete(
     Ok(AccountDeleteResponse { result })
 }
 
-pub(crate) async fn get_network_name(delete: &Delete, config: &CastConfig) -> Result<String> {
+pub(crate) async fn get_network_name(
+    delete: &Delete,
+    config: &CastConfig,
+    ui: &UI,
+) -> Result<String> {
     if let Some(network_name) = &delete.network_name {
         return Ok(network_name.clone());
     }
 
-    let provider = delete.rpc.get_provider(config).await?;
+    let provider = delete.rpc.get_provider(config, ui).await?;
     Ok(chain_id_to_network_name(get_chain_id(&provider).await?))
 }

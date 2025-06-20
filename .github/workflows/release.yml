@@ -29,9 +29,9 @@ jobs:
 
       - name: Get version from Cargo.toml
         id: lookupVersion
-        uses: mikefarah/yq@bbdd97482f2d439126582a59689eb1c855944955
+        uses: mikefarah/yq@8bf425b4d1344db7cd469a8d10a390876e0c77fd
         with:
-          cmd: yq -oy '"v" + .workspace.package.version' 'Cargo.toml'
+          cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
 
       - name: Get version from the latest releases
         id: lookupVersionRelease
@@ -57,167 +57,44 @@ jobs:
         run: echo "Version from commit is not greater from newest release, skipping build"
 
   build-binaries:
-    name: Build ${{ matrix.target }}
+    name: Build binaries
     needs: verify-version
     if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
-    runs-on: ${{ matrix.os }}
-    continue-on-error: true
+    uses: ./.github/workflows/_build-binaries.yml
+    with:
+      version: ${{ needs.verify-version.outputs.version }}
 
-    env:
-      # Cross-compiled targets will override this to `cross`.
-      CARGO: cargo
+  build-plugin-binaries:
+    name: Build plugin binaries
+    if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
+    needs: verify-version
+    uses: ./.github/workflows/_build-plugin-binaries.yml
 
-    strategy:
-      matrix:
-        include:
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-            # Use cross to link oldest GLIBC possible.
-            cross: true
+  dev-publish-plugin:
+    needs: [verify-version, build-binaries]
+    if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
+    uses: ./.github/workflows/_publish-plugin.yml
+    secrets: inherit
+    with:
+      overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
 
-          - target: x86_64-unknown-linux-musl
-            os: ubuntu-latest
-            cross: true
-
-          - target: aarch64-unknown-linux-gnu
-            os: ubuntu-latest
-            cross: true
-
-          - target: aarch64-unknown-linux-musl
-            os: ubuntu-latest
-            cross: true
-
-          - target: x86_64-apple-darwin
-            os: macos-latest
-
-          - target: aarch64-apple-darwin
-            os: macos-latest
-
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
-        with:
-          toolchain: stable
-          target: ${{ matrix.target }}
-
-      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab
-        with:
-          workspaces: starknet-foundry
-
-      - name: Install cross
-        if: matrix.cross
-        uses: taiki-e/install-action@cross
-
-      - name: Enable cross-compilation
-        if: matrix.cross
-        shell: bash
-        run: |
-          echo "CARGO=cross" >> $GITHUB_ENV
-
-      - name: Build
-        run: ${{ env.CARGO }} build --release --locked --target ${{ matrix.target }}
-
-      - name: Package
-        shell: bash
-        run: |
-          set -euxo pipefail
-          PKG_FULL_NAME="starknet-foundry-${{ needs.verify-version.outputs.version }}-${{ matrix.target }}"
-          echo "PKG_FULL_NAME=$PKG_FULL_NAME" >> $GITHUB_ENV
-
-          chmod +x ./scripts/package.sh
-          ./scripts/package.sh "${{ matrix.target }}" "$PKG_FULL_NAME"
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-${{ matrix.target }}
-          path: ${{ env.PKG_FULL_NAME }}.*
+  dev-publish-std:
+    needs: [verify-version, dev-publish-plugin]
+    if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
+    uses: ./.github/workflows/publish-std.yml
+    secrets: inherit
+    with:
+      plugin_dep_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
+      override_std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
 
   test-binary:
     name: Test binary
-    runs-on: ${{ matrix.os }}
-    needs: [ build-binaries, verify-version ]
-
-    strategy:
-      fail-fast: true
-      matrix:
-        include:
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-
-          - target: x86_64-apple-darwin
-            os: macos-latest
-
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: software-mansion/setup-scarb@v1
-
-      - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
-        with:
-          toolchain: stable
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts-dl
-
-      - name: Move artifacts to staging director
-        shell: bash
-        run: |
-          mkdir -p artifacts
-          mv artifacts-dl/build-*/starknet-foundry-* artifacts/
-
-      - name: Get binary path
-        shell: bash
-        run: |
-          if [[ ${{ matrix.target }} == *windows* ]]; then
-            BINARY_PATH="artifacts/starknet-foundry-${{ needs.verify-version.outputs.version }}-${{ matrix.target }}.zip"
-          else
-            BINARY_PATH="artifacts/starknet-foundry-${{ needs.verify-version.outputs.version }}-${{ matrix.target }}.tar.gz"
-          fi
-          echo "BINARY_PATH=$BINARY_PATH" >> $GITHUB_ENV
-
-      - name: Unpack artifact
-        shell: bash
-        run: |
-          if [[ ${{ matrix.target }} == *windows* ]]; then
-            unzip ${{ env.BINARY_PATH }}
-          else
-            tar xzvf ${{ env.BINARY_PATH }}
-          fi
-
-      - name: Install universal-sierra-compiler
-        uses: software-mansion/setup-universal-sierra-compiler@v1
-
-      - name: Smoke test
-        shell: bash
-        env:
-          RPC_URL: "http://188.34.188.184:7070/rpc/v0_7"
-        run: |
-          BINARY_PATH="${{ env.BINARY_PATH }}"
-          BINARY_PATH="${BINARY_PATH%.tar.gz}"
-          BINARY_PATH="${BINARY_PATH%.zip}"
-          BINARY_PATH="${BINARY_PATH#artifacts/}"
-          
-          if [[ ${{ matrix.target }} == *windows* ]]; then
-            SNFORGE_PATH=$(readlink -f $BINARY_PATH/bin/snforge.exe)
-            SNCAST_PATH=$(readlink -f $BINARY_PATH/bin/sncast.exe)
-          else
-            SNFORGE_PATH=$(readlink -f $BINARY_PATH/bin/snforge)
-            SNCAST_PATH=$(readlink -f $BINARY_PATH/bin/sncast)
-          fi
-          
-          REPO_URL=${{ github.repositoryUrl }}
-          REVISION=${{ github.sha }}
-          
-          ./scripts/smoke_test.sh "$RPC_URL" "$SNFORGE_PATH" "$SNCAST_PATH" "$REPO_URL" "$REVISION"
+    needs: [ build-binaries, verify-version, dev-publish-std]
+    uses: ./.github/workflows/_test-binaries.yml
+    secrets: inherit
+    with:
+      bin_version: ${{ needs.verify-version.outputs.version }}
+      std_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
 
   create-release:
     name: Create release
@@ -238,14 +115,14 @@ jobs:
 
       - name: Create GitHub release
         id: create-release
-        uses: taiki-e/create-gh-release-action@72d65cee1f8033ef0c8b5d79eaf0c45c7c578ce3
+        uses: taiki-e/create-gh-release-action@26b80501670402f1999aff4b934e1574ef2d3705
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
           changelog: CHANGELOG.md
           allow-missing-changelog: false
           title: $version
-          ref: refs/tags/${{ needs.verify-version.outputs.version }}
+          ref: refs/tags/v${{ needs.verify-version.outputs.version }}
 
       - name: Upload artifacts to the release
         working-directory: artifacts
@@ -256,32 +133,17 @@ jobs:
 
   publish-snforge-scarb-plugin:
     name: Publish snforge_scarb_plugin
-    uses: ./.github/workflows/publish_plugin.yml
+    needs: [test-binary, create-release]
+    uses: ./.github/workflows/_publish-plugin.yml
     secrets: inherit
+    with:
+      prod_registry: true
 
   publish-to-registry:
     name: Publish packages to the registry
-    runs-on: ubuntu-latest
-    needs: [ create-release, publish-snforge-scarb-plugin ]
-    env:
-      SCARB_REGISTRY_AUTH_TOKEN: ${{ secrets.SCARB_REGISTRY_AUTH_TOKEN }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a
-        with:
-          toolchain: stable
-
-      - uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: "2.11.0"
-
-      - name: Publish sncast_std
-        working-directory: sncast_std
-        run: scarb publish --allow-dirty
-
-      - name: Publish snforge_std
-        working-directory: snforge_std
-        run: |
-          ../scripts/set_plugin_version.sh
-          scarb publish --allow-dirty
+    needs: [ verify-version, publish-snforge-scarb-plugin ]
+    uses: ./.github/workflows/publish-std.yml
+    secrets: inherit
+    with:
+      plugin_dep_version: ${{ needs.verify-version.outputs.version }}
+      prod_registry: true

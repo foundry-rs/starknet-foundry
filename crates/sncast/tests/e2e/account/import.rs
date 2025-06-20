@@ -8,7 +8,7 @@ use configuration::CONFIG_FILENAME;
 use conversions::string::IntoHexStr;
 use indoc::{formatdoc, indoc};
 use serde_json::json;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use std::fs::{self, File};
 use tempfile::tempdir;
 use test_case::test_case;
@@ -237,12 +237,17 @@ pub async fn test_happy_case_add_profile() {
         "my_account_import",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = runner(&args).current_dir(tempdir.path()).assert();
 
-    snapbox.assert().stdout_matches(indoc! {r"
-        command: account import
-        add_profile: Profile my_account_import successfully added to snfoundry.toml
-    "});
+    let config_path = Utf8PathBuf::from_path_buf(tempdir.path().join("snfoundry.toml"))
+        .unwrap()
+        .canonicalize_utf8()
+        .unwrap();
+
+    assert_stdout_contains(
+        output,
+        format!("add_profile: Profile my_account_import successfully added to {config_path}"),
+    );
     let current_dir_utf8 = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
 
     let contents = fs::read_to_string(current_dir_utf8.join(accounts_file))
@@ -488,11 +493,7 @@ pub async fn test_invalid_private_key_file_path() {
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
 
-    let expected_file_error = if cfg!(target_os = "windows") {
-        "The system cannot find the file specified[..]"
-    } else {
-        "No such file or directory [..]"
-    };
+    let expected_file_error = "No such file or directory [..]";
 
     assert_stderr_contains(
         output,
@@ -621,12 +622,17 @@ pub async fn test_empty_config_add_profile() {
         "random",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = runner(&args).current_dir(tempdir.path()).assert();
 
-    snapbox.assert().stdout_matches(indoc! {r"
-        command: account import
-        add_profile: Profile random successfully added to snfoundry.toml
-    "});
+    let config_path = Utf8PathBuf::from_path_buf(tempdir.path().join("snfoundry.toml"))
+        .unwrap()
+        .canonicalize_utf8()
+        .unwrap();
+
+    assert_stdout_contains(
+        output,
+        format!("add_profile: Profile random successfully added to {config_path}"),
+    );
     let current_dir_utf8 = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
 
     let contents = fs::read_to_string(current_dir_utf8.join("snfoundry.toml"))

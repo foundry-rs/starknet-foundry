@@ -1,15 +1,16 @@
 use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
+use foundry_ui::UI;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
+use sncast::response::deploy::DeployResponse;
 use sncast::response::errors::StarknetCommandError;
-use sncast::response::structs::DeployResponse;
-use sncast::{WaitForTx, handle_wait_for_tx};
+use sncast::{WaitForTx, apply_optional_fields, handle_wait_for_tx};
 use sncast::{extract_or_generate_salt, udc_uniqueness};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
-use starknet::contract::ContractFactory;
+use starknet::contract::{ContractFactory, DeploymentV3};
 use starknet::core::utils::get_udc_deployed_address;
 use starknet::providers::JsonRpcClient;
 use starknet::providers::jsonrpc::HttpTransport;
@@ -20,28 +21,28 @@ use starknet_types_core::felt::Felt;
 #[command(about = "Deploy a contract on Starknet")]
 pub struct Deploy {
     /// Class hash of contract to deploy
-    #[clap(short = 'g', long)]
+    #[arg(short = 'g', long)]
     pub class_hash: Felt,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub arguments: DeployArguments,
 
     /// Salt for the address
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub salt: Option<Felt>,
 
     /// If true, salt will be modified with an account address
-    #[clap(long)]
+    #[arg(long)]
     pub unique: bool,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub fee_args: FeeArgs,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub nonce: Option<Felt>,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 
@@ -49,11 +50,11 @@ pub struct Deploy {
 #[group(multiple = false)]
 pub struct DeployArguments {
     /// Arguments of the called function serialized as a series of felts
-    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
+    #[arg(short, long, value_delimiter = ' ', num_args = 1..)]
     pub constructor_calldata: Option<Vec<String>>,
 
     // Arguments of the called function as a comma-separated string of Cairo expressions
-    #[clap(long)]
+    #[arg(long)]
     pub arguments: Option<String>,
 }
 
@@ -67,33 +68,43 @@ pub async fn deploy(
     nonce: Option<Felt>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
+    ui: &UI,
 ) -> Result<DeployResponse, StarknetCommandError> {
-    let fee_settings = fee_args
-        .try_into_fee_settings(account.provider(), account.block_id())
-        .await?;
-
     let salt = extract_or_generate_salt(salt);
     let factory = ContractFactory::new(class_hash, account);
 
-    let FeeSettings {
-        max_gas,
-        max_gas_unit_price,
-    } = fee_settings;
-    let execution = factory.deploy_v3(calldata.clone(), salt, unique);
+    let deployment = factory.deploy_v3(calldata.clone(), salt, unique);
 
-    let execution = match max_gas {
-        None => execution,
-        Some(max_gas) => execution.gas(max_gas.into()),
+    let fee_settings = if fee_args.max_fee.is_some() {
+        let fee_estimate = deployment
+            .estimate_fee()
+            .await
+            .expect("Failed to estimate fee");
+        fee_args.try_into_fee_settings(Some(&fee_estimate))
+    } else {
+        fee_args.try_into_fee_settings(None)
     };
-    let execution = match max_gas_unit_price {
-        None => execution,
-        Some(max_gas_unit_price) => execution.gas_price(max_gas_unit_price.into()),
-    };
-    let execution = match nonce {
-        None => execution,
-        Some(nonce) => execution.nonce(nonce),
-    };
-    let result = execution.send().await;
+
+    let FeeSettings {
+        l1_gas,
+        l1_gas_price,
+        l2_gas,
+        l2_gas_price,
+        l1_data_gas,
+        l1_data_gas_price,
+    } = fee_settings.expect("Failed to convert to fee settings");
+
+    let deployment = apply_optional_fields!(
+        deployment,
+        l1_gas => DeploymentV3::l1_gas,
+        l1_gas_price => DeploymentV3::l1_gas_price,
+        l2_gas => DeploymentV3::l2_gas,
+        l2_gas_price => DeploymentV3::l2_gas_price,
+        l1_data_gas => DeploymentV3::l1_data_gas,
+        l1_data_gas_price => DeploymentV3::l1_data_gas_price,
+        nonce => DeploymentV3::nonce
+    );
+    let result = deployment.send().await;
 
     match result {
         Ok(result) => handle_wait_for_tx(
@@ -110,6 +121,7 @@ pub async fn deploy(
                 transaction_hash: result.transaction_hash.into_(),
             },
             wait_config,
+            ui,
         )
         .await
         .map_err(StarknetCommandError::from),

@@ -28,8 +28,8 @@ $ snforge test
 ```shell
 Collected 1 test(s) from first_test package
 Running 1 test(s) from src/
-[PASS] first_test::tests::test_sum (gas: ~1)
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+[PASS] first_test::tests::test_sum (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>
 <br>
@@ -57,7 +57,7 @@ Running 1 test(s) from src/
 Failure data:
     0x70616e6963206d657373616765 ('panic message')
 
-Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 0 passed, 1 failed, 0 ignored, 0 filtered out
 
 Failures:
     panicking_test::tests::failing
@@ -65,7 +65,7 @@ Failures:
 </details>
 <br>
 
-When contract fails, you can get backtrace information by setting the `SNFORGE_BACKTRACE=1` environment variable. Read more about it [here](../snforge-advanced-features/backtrace.md).
+When contract fails, you can get backtrace information by setting the `SNFORGE_BACKTRACE=1` environment variable. Read more about it [here](../snforge-advanced-features/debugging.md).
 
 ## Expected Failures
 
@@ -103,12 +103,12 @@ $ snforge test
 ```shell
 Collected 5 test(s) from should_panic_example package
 Running 5 test(s) from src/
-[PASS] should_panic_example::tests::should_panic_felt_matching (gas: ~1)
-[PASS] should_panic_example::tests::should_panic_multiple_messages (gas: ~1)
-[PASS] should_panic_example::tests::should_panic_exact (gas: ~1)
-[PASS] should_panic_example::tests::should_panic_expected_is_substring (gas: ~1)
-[PASS] should_panic_example::tests::should_panic_check_data (gas: ~1)
-Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+[PASS] should_panic_example::tests::should_panic_felt_matching (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] should_panic_example::tests::should_panic_multiple_messages (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] should_panic_example::tests::should_panic_exact (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] should_panic_example::tests::should_panic_expected_is_substring (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] should_panic_example::tests::should_panic_check_data (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>
 <br>
@@ -133,7 +133,7 @@ $ snforge test
 Collected 1 test(s) from ignoring_example package
 Running 1 test(s) from src/
 [IGNORE] ignoring_example::tests::ignored_test
-Tests: 0 passed, 0 failed, 0 skipped, 1 ignored, 0 filtered out
+Tests: 0 passed, 0 failed, 1 ignored, 0 filtered out
 ```
 </details>
 <br>

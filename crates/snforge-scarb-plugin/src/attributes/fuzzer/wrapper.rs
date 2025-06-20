@@ -39,11 +39,7 @@ fn fuzzer_wrapper_internal(
         if let Some(test_attr) = attr_list.find_attr(db, TestCollector::ATTR_NAME) {
             vec![test_attr]
         } else {
-            [
-                attr_list.query_attr(db, "snforge_internal_test_executable"),
-                attr_list.query_attr(db, InternalConfigStatementCollector::ATTR_NAME),
-            ]
-            .concat()
+            attr_list.query_attr(db, InternalConfigStatementCollector::ATTR_NAME)
         };
 
     let actual_body_fn_attrs = attr_list
@@ -72,7 +68,7 @@ fn fuzzer_wrapper_internal(
             format!(
                 r"
                 let {}{} = snforge_std::fuzzable::Fuzzable::generate();
-                snforge_std::_internals::_save_fuzzer_arg(@{});
+                snforge_std::_internals::save_fuzzer_arg(@{});
                 ",
                 param.name(db).as_text(db),
                 param.type_clause(db).as_text(db),
@@ -101,7 +97,7 @@ fn fuzzer_wrapper_internal(
         "
             {test_or_executable_attrs}
             {vis} fn {name}() {{
-                if snforge_std::_internals::_is_config_run() {{
+                if snforge_std::_internals::is_config_run() {{
                     {if_content}
 
                     {actual_body_fn_name}({blank_values_for_config_run});

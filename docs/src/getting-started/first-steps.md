@@ -9,6 +9,11 @@ To start a new project with Starknet Foundry, run `snforge new`
 $ snforge new hello_starknet
 ```
 
+> 📝 **Note**
+>
+> By default, `snforge new` creates a project with a simple `HelloStarknet` contract. You can create a different project using the `--template` flag. 
+> To see the list of available templates, refer to the [snforge new documentation](../appendix/snforge/new.md#-t---template)
+
 Let's check out the project structure
 
 ```shell
@@ -50,9 +55,9 @@ $ snforge test
 Collected 2 test(s) from hello_starknet package
 Running 0 test(s) from src/
 Running 2 test(s) from tests/
-[PASS] hello_starknet_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value (gas: ~105)
-[PASS] hello_starknet_integrationtest::test_contract::test_increase_balance (gas: ~172)
-Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+[PASS] hello_starknet_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~360000)
+[PASS] hello_starknet_integrationtest::test_contract::test_increase_balance (l1_gas: ~0, l1_data_gas: ~192, l2_gas: ~480000)
+Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>
 <br>

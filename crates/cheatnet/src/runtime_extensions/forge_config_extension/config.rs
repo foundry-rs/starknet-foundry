@@ -3,15 +3,47 @@ use serde::{
     Deserialize, Deserializer,
     de::{self, MapAccess, Visitor},
 };
+use starknet_api::execution_resources::{GasAmount, GasVector};
 use starknet_types_core::felt::Felt;
 use std::str::FromStr;
 use std::{fmt, num::NonZeroU32};
 use url::Url;
 // available gas
 
-#[derive(Debug, Clone, CairoDeserialize)]
-pub struct RawAvailableGasConfig {
-    pub gas: usize,
+#[derive(Debug, Clone, Copy, CairoDeserialize, PartialEq)]
+pub enum RawAvailableGasConfig {
+    MaxGas(usize),
+    MaxResourceBounds(RawAvailableResourceBoundsConfig),
+}
+
+impl RawAvailableGasConfig {
+    #[must_use]
+    pub fn is_zero(&self) -> bool {
+        match self {
+            RawAvailableGasConfig::MaxGas(amount) => *amount == 0,
+            RawAvailableGasConfig::MaxResourceBounds(bounds) => {
+                bounds.to_gas_vector() == GasVector::ZERO
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, CairoDeserialize, PartialEq)]
+pub struct RawAvailableResourceBoundsConfig {
+    pub l1_gas: usize,
+    pub l1_data_gas: usize,
+    pub l2_gas: usize,
+}
+
+impl RawAvailableResourceBoundsConfig {
+    #[must_use]
+    pub fn to_gas_vector(&self) -> GasVector {
+        GasVector {
+            l1_gas: GasAmount(self.l1_gas as u64),
+            l1_data_gas: GasAmount(self.l1_data_gas as u64),
+            l2_gas: GasAmount(self.l2_gas as u64),
+        }
+    }
 }
 
 // fork
@@ -135,6 +167,13 @@ pub struct RawIgnoreConfig {
     pub is_ignored: bool,
 }
 
+// disable strk predeployment
+
+#[derive(Debug, Clone, CairoDeserialize)]
+pub struct RawPredeployedContractsConfig {
+    pub is_disabled: bool,
+}
+
 // config
 
 #[derive(Debug, Default, Clone)]
@@ -144,4 +183,5 @@ pub struct RawForgeConfig {
     pub ignore: Option<RawIgnoreConfig>,
     pub should_panic: Option<RawShouldPanicConfig>,
     pub fuzzer: Option<RawFuzzerConfig>,
+    pub disable_predeployed_contracts: Option<RawPredeployedContractsConfig>,
 }

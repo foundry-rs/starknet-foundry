@@ -1,10 +1,10 @@
 mod available_gas;
 mod builtins;
+mod cheat_block_hash;
 mod cheat_block_number;
 mod cheat_block_timestamp;
 mod cheat_caller_address;
 mod cheat_execution_info;
-#[cfg(not(target_os = "windows"))]
 mod cheat_fork;
 mod cheat_sequencer_address;
 mod declare;
@@ -25,7 +25,7 @@ mod pure_cairo;
 mod replace_bytecode;
 mod resources;
 mod runtime;
-#[cfg(not(target_os = "windows"))]
+mod set_balance;
 mod setup_fork;
 mod should_panic;
 mod signing;

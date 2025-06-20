@@ -1,7 +1,7 @@
 use clap::Args;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
-use sncast::response::structs::{ExecutionStatus, FinalityStatus, TransactionStatusResponse};
+use sncast::response::tx_status::{ExecutionStatus, FinalityStatus, TransactionStatusResponse};
 use starknet::core::types::{TransactionExecutionStatus, TransactionStatus};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
@@ -13,7 +13,7 @@ pub struct TxStatus {
     /// Hash of the transaction
     pub transaction_hash: Felt,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub rpc: RpcArgs,
 }
 
@@ -38,13 +38,13 @@ fn build_transaction_status_response(status: &TransactionStatus) -> TransactionS
             finality_status: FinalityStatus::Rejected,
             execution_status: None,
         },
-        TransactionStatus::AcceptedOnL2(tx_exec_status) => TransactionStatusResponse {
+        TransactionStatus::AcceptedOnL2(tx_exec_result) => TransactionStatusResponse {
             finality_status: FinalityStatus::AcceptedOnL2,
-            execution_status: Some(build_execution_status(*tx_exec_status)),
+            execution_status: Some(build_execution_status(tx_exec_result.status())),
         },
-        TransactionStatus::AcceptedOnL1(tx_exec_status) => TransactionStatusResponse {
+        TransactionStatus::AcceptedOnL1(tx_exec_result) => TransactionStatusResponse {
             finality_status: FinalityStatus::AcceptedOnL1,
-            execution_status: Some(build_execution_status(*tx_exec_status)),
+            execution_status: Some(build_execution_status(tx_exec_result.status())),
         },
     }
 }

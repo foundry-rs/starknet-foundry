@@ -10,6 +10,7 @@ pub trait ICheatcodeChecker<TContractState> {
 pub mod CheatcodeChecker {
     use core::box::BoxTrait;
     use starknet::get_caller_address;
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     #[storage]
     struct Storage {

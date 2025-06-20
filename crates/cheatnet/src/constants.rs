@@ -2,8 +2,9 @@ use starknet_api::contract_class::{ContractClass, SierraVersion};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use blockifier::execution::entry_point::{CallEntryPoint, CallType};
+use blockifier::execution::entry_point::{CallType, ExecutableCallEntryPoint};
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
+use cairo_lang_starknet_classes::compiler_version::current_sierra_version_id;
 use conversions::IntoConv;
 use conversions::string::TryFromHexStr;
 use indoc::indoc;
@@ -14,6 +15,7 @@ use runtime::starknet::context::ERC20_CONTRACT_ADDRESS;
 use runtime::starknet::state::DictStateReader;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::contract_class::EntryPointType;
+use starknet_api::core::ClassHash;
 use starknet_api::{core::ContractAddress, transaction::fields::Calldata};
 
 // Mocked class hashes, those are not checked anywhere
@@ -33,10 +35,18 @@ fn contract_class_no_entrypoints() -> ContractClass {
           }
         }"#,
     );
-    let casm_contract_class: CasmContractClass =
-        serde_json::from_str(raw_contract_class).expect("Could not casm_contract_class from raw");
+    let casm_contract_class: CasmContractClass = serde_json::from_str(raw_contract_class)
+        .expect("`raw_contract_class` should be valid casm contract class");
 
-    ContractClass::V1((casm_contract_class, SierraVersion::LATEST))
+    ContractClass::V1((casm_contract_class, SierraVersion::default()))
+}
+
+#[must_use]
+pub fn contract_class(raw_casm: &str, sierra_version: SierraVersion) -> ContractClass {
+    let casm_contract_class: CasmContractClass =
+        serde_json::from_str(raw_casm).expect("`raw_casm` should be valid casm contract class");
+
+    ContractClass::V1((casm_contract_class, sierra_version))
 }
 
 // Creates a state with predeployed account and erc20 used to send transactions during tests.
@@ -65,15 +75,16 @@ pub fn build_testing_state() -> DictStateReader {
     DictStateReader {
         address_to_class_hash,
         class_hash_to_class,
+        ..Default::default()
     }
 }
 
 #[must_use]
-pub fn build_test_entry_point() -> CallEntryPoint {
+pub fn build_test_entry_point() -> ExecutableCallEntryPoint {
     let test_selector = get_selector_from_name(TEST_ENTRY_POINT_SELECTOR).unwrap();
     let entry_point_selector = test_selector.into_();
-    CallEntryPoint {
-        class_hash: None,
+    ExecutableCallEntryPoint {
+        class_hash: ClassHash(TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap()),
         code_address: Some(TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap()),
         entry_point_type: EntryPointType::External,
         entry_point_selector,
@@ -83,4 +94,14 @@ pub fn build_test_entry_point() -> CallEntryPoint {
         call_type: CallType::Call,
         initial_gas: i64::MAX as u64,
     }
+}
+
+#[must_use]
+pub fn get_current_sierra_version() -> SierraVersion {
+    let version_id = current_sierra_version_id();
+    SierraVersion::new(
+        version_id.major as u64,
+        version_id.minor as u64,
+        version_id.patch as u64,
+    )
 }

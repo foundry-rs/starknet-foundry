@@ -1,9 +1,9 @@
-use crate::{NewArgs, new};
-use anyhow::{Context, Result, anyhow};
+use crate::{NewArgs, Template, new};
+use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
-use shared::print::print_as_warning;
+use foundry_ui::{UI, components::warning::WarningMessage};
 
-pub fn init(project_name: &str) -> Result<()> {
+pub fn init(project_name: &str, ui: &UI) -> Result<()> {
     let current_dir = std::env::current_dir().context("Failed to get current directory")?;
     let project_path = Utf8PathBuf::from_path_buf(current_dir)
         .expect("Failed to create Utf8PathBuf for the current directory")
@@ -11,9 +11,7 @@ pub fn init(project_name: &str) -> Result<()> {
 
     // To prevent printing this warning when running scarb init/new with an older version of Scarb
     if !project_path.join("Scarb.toml").exists() {
-        print_as_warning(&anyhow!(
-            "Command `snforge init` is deprecated and will be removed in the future. Please use `snforge new` instead."
-        ));
+        ui.println(&WarningMessage::new("Command `snforge init` is deprecated and will be removed in the future. Please use `snforge new` instead."));
     }
 
     new::new(NewArgs {
@@ -21,5 +19,6 @@ pub fn init(project_name: &str) -> Result<()> {
         name: Some(project_name.to_string()),
         no_vcs: false,
         overwrite: true,
+        template: Template::BalanceContract,
     })
 }

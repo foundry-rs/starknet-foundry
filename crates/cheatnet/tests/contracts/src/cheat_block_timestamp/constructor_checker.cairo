@@ -6,7 +6,9 @@ trait IConstructorCheatBlockTimestampChecker<TContractState> {
 
 #[starknet::contract]
 mod ConstructorCheatBlockTimestampChecker {
-    use box::BoxTrait;
+    use core::box::BoxTrait;
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+
     #[storage]
     struct Storage {
         blk_timestamp: u64,
@@ -20,7 +22,7 @@ mod ConstructorCheatBlockTimestampChecker {
 
     #[abi(embed_v0)]
     impl IConstructorCheatBlockTimestampChecker of super::IConstructorCheatBlockTimestampChecker<
-        ContractState
+        ContractState,
     > {
         fn get_stored_block_timestamp(ref self: ContractState) -> u64 {
             self.blk_timestamp.read()

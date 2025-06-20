@@ -5,15 +5,17 @@ use crate::starknet_commands::account::import::Import;
 use crate::starknet_commands::account::list::List;
 use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
-use clap::{Args, Subcommand, ValueEnum};
-use configuration::{
-    CONFIG_FILENAME, find_config_file, load_config, search_config_upwards_relative_to,
-};
+use clap::{Args, Subcommand};
+use configuration::resolve_config_file;
+use configuration::{load_config, search_config_upwards_relative_to};
 use serde_json::json;
-use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
+use sncast::helpers::rpc::RpcArgs;
+use sncast::{
+    AccountType, chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig,
+};
 use starknet::signers::SigningKey;
 use starknet_types_core::felt::Felt;
-use std::{fmt, fs::OpenOptions, io::Write};
+use std::{fs::OpenOptions, io::Write};
 use toml::Value;
 
 pub mod create;
@@ -25,7 +27,7 @@ pub mod list;
 #[derive(Args)]
 #[command(about = "Creates and deploys an account to the Starknet")]
 pub struct Account {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     pub command: Commands,
 }
 
@@ -38,33 +40,12 @@ pub enum Commands {
     List(List),
 }
 
-#[expect(clippy::doc_markdown)]
-#[derive(ValueEnum, Clone, Debug)]
-pub enum AccountType {
-    /// OpenZeppelin account implementation
-    Oz,
-    /// Argent account implementation
-    Argent,
-    /// Braavos account implementation
-    Braavos,
-}
-
-impl fmt::Display for AccountType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            AccountType::Oz => write!(f, "open_zeppelin"),
-            AccountType::Argent => write!(f, "argent"),
-            AccountType::Braavos => write!(f, "braavos"),
-        }
-    }
-}
-
 pub fn prepare_account_json(
     private_key: &SigningKey,
     address: Felt,
     deployed: bool,
     legacy: bool,
-    account_type: &AccountType,
+    account_type: AccountType,
     class_hash: Option<Felt>,
     salt: Option<Felt>,
 ) -> serde_json::Value {
@@ -72,7 +53,7 @@ pub fn prepare_account_json(
         "private_key": format!("{:#x}", private_key.secret_scalar()),
         "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
         "address": format!("{address:#x}"),
-        "type": format!("{account_type}"),
+        "type": format!("{account_type}").to_lowercase().replace("openzeppelin", "open_zeppelin"),
         "deployed": deployed,
         "legacy": legacy,
     });
@@ -123,9 +104,9 @@ pub fn write_account_to_accounts_file(
 pub fn add_created_profile_to_configuration(
     profile: Option<&str>,
     cast_config: &CastConfig,
-    path: Option<&Utf8PathBuf>,
+    path: &Utf8PathBuf,
 ) -> Result<()> {
-    if !load_config::<CastConfig>(path, profile)
+    if !load_config::<CastConfig>(Some(path), profile)
         .unwrap_or_default()
         .account
         .is_empty()
@@ -164,10 +145,7 @@ pub fn add_created_profile_to_configuration(
         toml::to_string(&Value::Table(sncast_config)).context("Failed to convert toml to string")?
     };
 
-    let config_path = match path.as_ref() {
-        Some(p) => search_config_upwards_relative_to(p)?,
-        None => find_config_file().unwrap_or(Utf8PathBuf::from(CONFIG_FILENAME)),
-    };
+    let config_path = search_config_upwards_relative_to(path)?;
 
     let mut snfoundry_toml = OpenOptions::new()
         .create(true)
@@ -179,6 +157,37 @@ pub fn add_created_profile_to_configuration(
         .context("Failed to write to the snfoundry.toml")?;
 
     Ok(())
+}
+
+fn generate_add_profile_message(
+    profile_name: Option<&String>,
+    rpc: &RpcArgs,
+    account_name: &str,
+    accounts_file: &Utf8PathBuf,
+    keystore: Option<Utf8PathBuf>,
+) -> Result<String> {
+    if let Some(profile_name) = profile_name {
+        let url = rpc
+            .url
+            .clone()
+            .expect("the argument '--network' should not be used with '--add-profile' argument");
+        let config = CastConfig {
+            url,
+            account: account_name.into(),
+            accounts_file: accounts_file.into(),
+            keystore,
+            ..Default::default()
+        };
+        let config_path = resolve_config_file();
+        add_created_profile_to_configuration(Some(profile_name), &config, &config_path)?;
+        Ok(format!(
+            "Profile {profile_name} successfully added to {config_path}",
+        ))
+    } else {
+        Ok(String::from(
+            "--add-profile flag was not set. No profile added to snfoundry.toml",
+        ))
+    }
 }
 
 #[cfg(test)]
@@ -205,7 +214,7 @@ mod tests {
         let res = add_created_profile_to_configuration(
             Some(&String::from("some-name")),
             &config,
-            Some(&path.clone()),
+            &path.clone(),
         );
         assert!(res.is_ok());
 
@@ -230,7 +239,7 @@ mod tests {
         let res = add_created_profile_to_configuration(
             Some(&String::from("default")),
             &config,
-            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            &Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap(),
         );
         assert!(res.is_err());
     }

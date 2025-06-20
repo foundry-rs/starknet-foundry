@@ -1,7 +1,7 @@
 use crate::test_case_summary::{Single, TestCaseSummary};
 use blockifier::abi::constants;
 use blockifier::context::TransactionContext;
-use blockifier::execution::call_info::{ChargedResources, EventSummary, ExecutionSummary};
+use blockifier::execution::call_info::EventSummary;
 use blockifier::fee::resources::{
     ArchivalDataResources, ComputationResources, MessageResources, StarknetResources,
     StateResources, TransactionResources,
@@ -11,11 +11,13 @@ use blockifier::state::errors::StateError;
 use blockifier::transaction::objects::HasRelatedFeeType;
 use blockifier::utils::u64_from_usize;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
+use cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableGasConfig;
 use cheatnet::state::ExtendedStateReader;
+use foundry_ui::UI;
+use foundry_ui::components::warning::WarningMessage;
 use starknet_api::execution_resources::{GasAmount, GasVector};
 use starknet_api::transaction::EventContent;
 use starknet_api::transaction::fields::GasVectorComputationMode;
-use std::collections::HashSet;
 
 pub fn calculate_used_gas(
     transaction_context: &TransactionContext,
@@ -41,10 +43,8 @@ pub fn calculate_used_gas(
     let computation_resources = ComputationResources {
         vm_resources: resources.execution_resources.clone(),
         n_reverted_steps: 0,
-        // TODO(#2977)
-        sierra_gas: GasAmount(0),
-        // TODO(#2977)
-        reverted_sierra_gas: GasAmount(0),
+        sierra_gas: resources.gas_consumed,
+        reverted_sierra_gas: GasAmount::ZERO,
     };
 
     let transaction_resources = TransactionResources {
@@ -56,8 +56,7 @@ pub fn calculate_used_gas(
     Ok(transaction_resources.to_gas_vector(
         versioned_constants,
         use_kzg_da,
-        // TODO(#2977)
-        &GasVectorComputationMode::NoL2Gas,
+        &GasVectorComputationMode::All,
     ))
 }
 
@@ -72,29 +71,15 @@ fn get_archival_data_resources(events: Vec<EventContent>) -> ArchivalDataResourc
         event_summary.total_event_keys += u64_from_usize(event.keys.len());
     }
 
-    // TODO(#2978) this is a workaround because we cannot create `ArchivalDataResources` directly yet
-    //  because of private fields
-    let dummy_execution_summary = ExecutionSummary {
-        charged_resources: ChargedResources::default(),
-        executed_class_hashes: HashSet::default(),
-        visited_storage_entries: HashSet::default(),
-        l2_to_l1_payload_lengths: vec![],
+    // calldata length, signature length and code size are set to 0, because
+    // we don't include them in estimations
+    // ref: https://github.com/foundry-rs/starknet-foundry/blob/5ce15b029135545452588c00aae580c05eb11ca8/docs/src/testing/gas-and-resource-estimation.md?plain=1#L73
+    ArchivalDataResources {
         event_summary,
-    };
-
-    let dummy_starknet_resources = StarknetResources::new(
-        // calldata length, signature length and code size are set to 0, because
-        // we don't include them in estimations
-        // ref: https://github.com/foundry-rs/starknet-foundry/blob/5ce15b029135545452588c00aae580c05eb11ca8/docs/src/testing/gas-and-resource-estimation.md?plain=1#L73
-        0,
-        0,
-        0,
-        StateResources::default(),
-        None,
-        dummy_execution_summary,
-    );
-
-    dummy_starknet_resources.archival_data
+        calldata_length: 0,
+        signature_length: 0,
+        code_size: 0,
+    }
 }
 
 // Put together from a few blockifier functions
@@ -154,23 +139,43 @@ fn get_state_resources(
 }
 
 pub fn check_available_gas(
-    available_gas: Option<usize>,
+    available_gas: Option<RawAvailableGasConfig>,
     summary: TestCaseSummary<Single>,
+    ui: &UI,
 ) -> TestCaseSummary<Single> {
     match summary {
         TestCaseSummary::Passed {
             name,
-            arguments,
             gas_info,
             debugging_trace,
             ..
-        } if available_gas.is_some_and(|available_gas| gas_info > available_gas as u128) => {
+        } if available_gas.is_some_and(|available_gas| match available_gas {
+            RawAvailableGasConfig::MaxGas(gas) => {
+                // todo(3109): remove uunnamed argument in available_gas
+                ui.println(&WarningMessage::new(
+                    "Setting available_gas with unnamed argument is deprecated. \
+                Consider setting resource bounds (l1_gas, l1_data_gas and l2_gas) explicitly.",
+                ));
+                // convert resource bounds to classic l1_gas using formula
+                // l1_gas + l1_data_gas + (l2_gas / 40000)
+                // because 100 l2_gas = 0.0025 l1_gas
+                gas_info.l1_gas + gas_info.l1_data_gas + (gas_info.l2_gas / 40000)
+                    > GasAmount(gas as u64)
+            }
+            RawAvailableGasConfig::MaxResourceBounds(bounds) => {
+                let av_gas = bounds.to_gas_vector();
+                gas_info.l1_gas > av_gas.l1_gas
+                    || gas_info.l1_data_gas > av_gas.l1_data_gas
+                    || gas_info.l2_gas > av_gas.l2_gas
+            }
+        }) =>
+        {
             TestCaseSummary::Failed {
                 name,
                 msg: Some(format!(
-                    "\n\tTest cost exceeded the available gas. Consumed gas: ~{gas_info}"
+                    "\n\tTest cost exceeded the available gas. Consumed l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{}",
+                    gas_info.l1_gas, gas_info.l1_data_gas, gas_info.l2_gas
                 )),
-                arguments,
                 fuzzer_args: Vec::default(),
                 test_statistics: (),
                 debugging_trace,

@@ -1,5 +1,5 @@
 use starknet::{ContractAddress, EthAddress};
-use super::super::_cheatcode::execute_cheatcode_and_deserialize;
+use crate::cheatcode::execute_cheatcode_and_deserialize;
 
 /// Creates `MessageToL1Spy` instance that spies on all messages sent to L1
 pub fn spy_messages_to_l1() -> MessageToL1Spy {
@@ -12,19 +12,19 @@ pub struct MessageToL1 {
     /// An ethereum address where the message is destined to go
     pub to_address: EthAddress,
     /// Actual payload which will be delivered to L1 contract
-    pub payload: Array<felt252>
+    pub payload: Array<felt252>,
 }
 
 /// A message spy structure allowing to get messages emitted only after its creation.
 #[derive(Drop, Serde)]
 pub struct MessageToL1Spy {
-    message_offset: usize
+    message_offset: usize,
 }
 
 /// A wrapper structure on an array of messages to handle filtering smoothly.
 #[derive(Drop, Serde)]
 pub struct MessagesToL1 {
-    pub messages: Array<(ContractAddress, MessageToL1)>
+    pub messages: Array<(ContractAddress, MessageToL1)>,
 }
 
 pub trait MessageToL1SpyTrait {
@@ -35,7 +35,7 @@ pub trait MessageToL1SpyTrait {
 impl MessageToL1SpyTraitImpl of MessageToL1SpyTrait {
     fn get_messages(ref self: MessageToL1Spy) -> MessagesToL1 {
         execute_cheatcode_and_deserialize::<
-            'get_messages_to_l1'
+            'get_messages_to_l1',
         >(array![self.message_offset.into()].span())
     }
 }

@@ -16,6 +16,7 @@ pub use cheatcodes::events::EventSpyTrait;
 pub use cheatcodes::events::EventSpyAssertionsTrait;
 pub use cheatcodes::events::EventsFilterTrait;
 pub use cheatcodes::events::spy_events;
+pub use cheatcodes::events::IsEmitted;
 
 pub use cheatcodes::message_to_l1::{
     spy_messages_to_l1, MessageToL1, MessageToL1Spy, MessageToL1SpyTrait, MessageToL1FilterTrait,
@@ -25,6 +26,12 @@ pub use cheatcodes::message_to_l1::{
 pub use cheatcodes::storage::store;
 pub use cheatcodes::storage::load;
 pub use cheatcodes::storage::map_entry_address;
+
+pub use cheatcodes::erc20::set_balance;
+pub use cheatcodes::erc20::Token;
+pub use cheatcodes::erc20::TokenImpl;
+pub use cheatcodes::erc20::TokenTrait;
+pub use cheatcodes::erc20::CustomToken;
 
 pub use cheatcodes::CheatSpan;
 pub use cheatcodes::ReplaceBytecodeError;
@@ -123,6 +130,12 @@ pub use cheatcodes::execution_info::account_contract_address::start_cheat_accoun
 
 pub use cheatcodes::generate_random_felt::generate_random_felt;
 
+pub use cheatcodes::block_hash::cheat_block_hash;
+pub use cheatcodes::block_hash::start_cheat_block_hash_global;
+pub use cheatcodes::block_hash::stop_cheat_block_hash;
+pub use cheatcodes::block_hash::stop_cheat_block_hash_global;
+pub use cheatcodes::block_hash::start_cheat_block_hash;
+
 pub mod fuzzable;
 
 pub mod fs;
@@ -135,13 +148,16 @@ pub mod trace;
 
 pub mod byte_array;
 
-pub mod _config_types;
+mod config_types;
 
-mod _cheatcode;
+mod cheatcode;
 
+#[doc(hidden)]
 pub mod _internals {
-    use super::_cheatcode;
+    use super::cheatcode;
 
-    pub use _cheatcode::_is_config_run;
-    pub use _cheatcode::_save_fuzzer_arg;
+    pub use cheatcode::is_config_run;
+    pub use cheatcode::save_fuzzer_arg;
+
+    pub use super::config_types;
 }

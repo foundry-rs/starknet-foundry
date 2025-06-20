@@ -1,0 +1,94 @@
+name: Build binaries
+
+on:
+  workflow_call:
+    inputs:
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
+      version:
+        required: true
+        type: string
+      ref:
+        required: false
+        type: string
+
+jobs:
+  build-binaries:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+
+    env:
+      # Cross-compiled targets will override this to `cross`.
+      CARGO: cargo
+
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            # Use cross to link oldest GLIBC possible.
+            cross: true
+
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            cross: true
+
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            cross: true
+
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+            cross: true
+
+          - target: x86_64-apple-darwin
+            os: macos-latest
+
+          - target: aarch64-apple-darwin
+            os: macos-latest
+
+    steps:
+      - name: Checkout with ref
+        if: inputs.ref != ''
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Checkout default
+        if: inputs.ref == ''
+        uses: actions/checkout@v4
+
+      - name: Setup rust
+        run: |
+          rustup target add ${{ matrix.target }} --toolchain 1.86.0
+
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+        with:
+          workspaces: starknet-foundry
+
+      - name: Install cross
+        if: matrix.cross
+        uses: taiki-e/install-action@cross
+
+      - name: Enable cross-compilation
+        if: matrix.cross
+        shell: bash
+        run: |
+          echo "CARGO=cross" >> $GITHUB_ENV
+
+      - name: Build
+        run: ${{ env.CARGO }} build --release --locked --target ${{ matrix.target }}
+
+      - name: Package
+        shell: bash
+        run: |
+          set -euxo pipefail
+          PKG_FULL_NAME="starknet-foundry-v${{ inputs.version }}-${{ matrix.target }}"
+          echo "PKG_FULL_NAME=$PKG_FULL_NAME" >> $GITHUB_ENV
+
+          ./scripts/package.sh "${{ matrix.target }}" "$PKG_FULL_NAME"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.target }}
+          path: ${{ env.PKG_FULL_NAME }}.*

@@ -1,14 +1,15 @@
-use anyhow::{Context, Ok, Result, anyhow, ensure};
+use anyhow::{Context, Ok, Result, ensure};
 use camino::Utf8PathBuf;
+use foundry_ui::UI;
+use foundry_ui::components::warning::WarningMessage;
 use std::fs;
 
 use clap::Args;
 use indoc::{formatdoc, indoc};
 use scarb_api::ScarbCommand;
-use shared::print::print_as_warning;
 use sncast::helpers::constants::INIT_SCRIPTS_DIR;
 use sncast::helpers::scarb_utils::get_cairo_version;
-use sncast::response::structs::ScriptInitResponse;
+use sncast::response::script::init::ScriptInitResponse;
 
 #[derive(Args, Debug)]
 pub struct Init {
@@ -16,7 +17,7 @@ pub struct Init {
     pub script_name: String,
 }
 
-pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
+pub fn init(init_args: &Init, ui: &UI) -> Result<ScriptInitResponse> {
     let script_root_dir_path = get_script_root_dir_path(&init_args.script_name)?;
 
     init_scarb_project(&init_args.script_name, &script_root_dir_path)?;
@@ -24,8 +25,8 @@ pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
     let modify_files_result = add_dependencies(&script_root_dir_path)
         .and_then(|()| modify_files_in_src_dir(&init_args.script_name, &script_root_dir_path));
 
-    print_as_warning(&anyhow!(
-        "The newly created script isn't auto-added to the workspace. For more details, please see https://foundry-rs.github.io/starknet-foundry/starknet/script.html#initialize-a-script"
+    ui.println(&WarningMessage::new(
+        &"The newly created script isn't auto-added to the workspace. For more details, please see https://foundry-rs.github.io/starknet-foundry/starknet/script.html#initialize-a-script",
     ));
 
     match modify_files_result {
@@ -36,7 +37,7 @@ pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
             ),
         }),
         Err(err) => {
-            clean_created_dir_and_files(&script_root_dir_path);
+            clean_created_dir_and_files(&script_root_dir_path, ui);
             Err(err)
         }
     }
@@ -85,19 +86,11 @@ fn add_dependencies(script_root_dir: &Utf8PathBuf) -> Result<()> {
 }
 
 fn add_sncast_std_dependency(script_root_dir: &Utf8PathBuf) -> Result<()> {
-    let cast_version = format!("v{}", env!("CARGO_PKG_VERSION"));
-
+    let cast_version = env!("CARGO_PKG_VERSION").to_string();
+    let dep_id = format!("sncast_std@{cast_version}");
     ScarbCommand::new()
         .current_dir(script_root_dir)
-        .args([
-            "--offline",
-            "add",
-            "sncast_std",
-            "--git",
-            "https://github.com/foundry-rs/starknet-foundry.git",
-            "--tag",
-            &cast_version,
-        ])
+        .args(["--offline", "add", &dep_id])
         .run()?;
 
     Ok(())
@@ -130,13 +123,20 @@ fn create_script_main_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> 
     fs::write(
         script_main_file_path,
         indoc! {r#"
-            use sncast_std::{call, CallResult};
+            use sncast_std::call;
 
             // The example below uses a contract deployed to the Sepolia testnet
+            const CONTRACT_ADDRESS: felt252 =
+                0x07e867f1fa6da2108dd2b3d534f1fbec411c5ec9504eb3baa1e49c7a0bef5ab5;
+
             fn main() {
-                let contract_address = 0x07e867f1fa6da2108dd2b3d534f1fbec411c5ec9504eb3baa1e49c7a0bef5ab5;
-                let call_result = call(contract_address.try_into().unwrap(), selector!("get_greeting"), array![]).expect('call failed');
-                assert(*call_result.data[1]=='Hello, Starknet!', *call_result.data[1]);
+                let call_result = call(
+                    CONTRACT_ADDRESS.try_into().unwrap(), selector!("get_greeting"), array![],
+                )
+                    .expect('call failed');
+
+                assert(*call_result.data[1] == 'Hello, Starknet!', *call_result.data[1]);
+
                 println!("{:?}", call_result);
             }
         "#},
@@ -158,8 +158,10 @@ fn overwrite_lib_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> Resul
     Ok(())
 }
 
-fn clean_created_dir_and_files(script_root_dir: &Utf8PathBuf) {
+fn clean_created_dir_and_files(script_root_dir: &Utf8PathBuf, ui: &UI) {
     if fs::remove_dir_all(script_root_dir).is_err() {
-        eprintln!("Failed to clean created files by init command at {script_root_dir}");
+        ui.eprintln(&format!(
+            "Failed to clean created files by init command at {script_root_dir}"
+        ));
     }
 }

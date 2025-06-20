@@ -1,6 +1,11 @@
 # Importing Accounts
 
-You can export your private key from wallet (Argent, Braavos) and import it into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default).
+You can export your private key from wallet (Argent) and import it into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default).
+
+> ⚠️ **Warning**
+>
+> **Never share your private key!**
+> Anyone with access to your private key can access your account and funds. You are doing this at your own risk.
 
 ## Exporting Your Private Key
 

@@ -1,5 +1,8 @@
 use crate::constants::build_test_entry_point;
 use crate::forking::state::ForkStateReader;
+use crate::predeployment::erc20::eth::eth_predeployed_contract;
+use crate::predeployment::erc20::strk::strk_predeployed_contract;
+use crate::predeployment::predeployed_contract::PredeployedContract;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::{
     ExecutionInfoMock, ResourceBounds,
@@ -9,7 +12,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages
 use blockifier::execution::call_info::OrderedL2ToL1Message;
 use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::execution::entry_point::CallEntryPoint;
-use blockifier::execution::syscalls::hint_processor::SyscallCounter;
+use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_annotations::trace_data::L1Resources;
@@ -19,6 +22,7 @@ use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use conversions::serde::deserialize::CairoDeserialize;
 use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use conversions::string::TryFromHexStr;
+use indexmap::IndexMap;
 use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::starknet::context::SerializableBlockInfo;
 use runtime::starknet::state::DictStateReader;
@@ -45,6 +49,40 @@ pub enum CheatSpan {
 pub struct ExtendedStateReader {
     pub dict_state_reader: DictStateReader,
     pub fork_state_reader: Option<ForkStateReader>,
+}
+
+impl ExtendedStateReader {
+    pub fn predeploy_contracts(&mut self) {
+        // We consider contract as deployed solely based on the fact that the test used forking
+        let is_fork = self.fork_state_reader.is_some();
+        if !is_fork {
+            let contracts = vec![strk_predeployed_contract(), eth_predeployed_contract()];
+            for contract in contracts {
+                self.predeploy_contract(contract);
+            }
+        }
+    }
+
+    fn predeploy_contract(&mut self, contract: PredeployedContract) {
+        let PredeployedContract {
+            contract_address,
+            class_hash,
+            contract_class,
+            storage_kv_updates,
+        } = contract;
+        self.dict_state_reader
+            .address_to_class_hash
+            .insert(contract_address, class_hash);
+
+        self.dict_state_reader
+            .class_hash_to_class
+            .insert(class_hash, contract_class);
+
+        for (key, value) in &storage_kv_updates {
+            let entry = (contract_address, *key);
+            self.dict_state_reader.storage_view.insert(entry, *value);
+        }
+    }
 }
 
 pub trait BlockInfoReader {
@@ -162,7 +200,6 @@ impl<T> CheatStatus<T> {
 /// Tree structure representing trace of a call.
 #[derive(Debug)]
 pub struct CallTrace {
-    pub run_with_call_header: bool,
     // only these are serialized
     pub entry_point: CallEntryPoint,
     pub nested_calls: Vec<CallTraceNode>,
@@ -172,8 +209,9 @@ pub struct CallTrace {
     // These also include resources used by internal calls
     pub used_execution_resources: ExecutionResources,
     pub used_l1_resources: L1Resources,
-    pub used_syscalls: SyscallCounter,
+    pub used_syscalls: SyscallUsageMap,
     pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
+    pub gas_consumed: u64,
 }
 
 impl CairoSerialize for CallTrace {
@@ -195,14 +233,14 @@ impl CairoSerialize for CallTrace {
 impl CallTrace {
     fn default_successful_call() -> Self {
         Self {
-            run_with_call_header: false,
             entry_point: CallEntryPoint::default(),
             used_execution_resources: ExecutionResources::default(),
             used_l1_resources: L1Resources::default(),
-            used_syscalls: SyscallCounter::default(),
+            used_syscalls: SyscallUsageMap::default(),
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
             vm_trace: None,
+            gas_consumed: u64::default(),
         }
     }
 }
@@ -314,12 +352,6 @@ pub struct TraceData {
     pub is_vm_trace_needed: bool,
 }
 
-#[derive(Clone)]
-pub struct EncounteredError {
-    pub pc: usize,
-    pub class_hash: ClassHash,
-}
-
 pub struct CheatnetState {
     pub cheated_execution_info_contracts: HashMap<ContractAddress, ExecutionInfoMock>,
     pub global_cheated_execution_info: ExecutionInfoMock,
@@ -332,18 +364,21 @@ pub struct CheatnetState {
     pub deploy_salt_base: u32,
     pub block_info: BlockInfo,
     pub trace_data: TraceData,
-    pub encountered_errors: Vec<EncounteredError>,
+    pub encountered_errors: EncounteredErrors,
     pub fuzzer_args: Vec<String>,
+    pub block_hash_contracts: HashMap<(ContractAddress, u64), (CheatSpan, Felt)>,
+    pub global_block_hash: HashMap<u64, (Felt, Vec<ContractAddress>)>,
 }
+
+pub type EncounteredErrors = IndexMap<ClassHash, Vec<usize>>;
 
 impl Default for CheatnetState {
     fn default() -> Self {
         let mut test_code_entry_point = build_test_entry_point();
         test_code_entry_point.class_hash =
-            Some(TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap());
+            ClassHash(TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap());
         let test_call = Rc::new(RefCell::new(CallTrace {
-            entry_point: test_code_entry_point,
-            run_with_call_header: true,
+            entry_point: test_code_entry_point.into(),
             ..CallTrace::default_successful_call()
         }));
         Self {
@@ -359,8 +394,10 @@ impl Default for CheatnetState {
                 current_call_stack: NotEmptyCallStack::from(test_call),
                 is_vm_trace_needed: false,
             },
-            encountered_errors: vec![],
+            encountered_errors: IndexMap::default(),
             fuzzer_args: Vec::default(),
+            block_hash_contracts: HashMap::default(),
+            global_block_hash: HashMap::default(),
         }
     }
 }
@@ -467,13 +504,20 @@ impl CheatnetState {
     pub fn update_fuzzer_args(&mut self, arg: String) {
         self.fuzzer_args.push(arg);
     }
+
+    pub fn register_error(&mut self, class_hash: ClassHash, pcs: Vec<usize>) {
+        self.encountered_errors.insert(class_hash, pcs);
+    }
+
+    pub fn clear_error(&mut self, class_hash: ClassHash) {
+        self.encountered_errors.shift_remove(&class_hash);
+    }
 }
 
 impl TraceData {
     pub fn enter_nested_call(&mut self, entry_point: CallEntryPoint, cheated_data: CheatedData) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
-            run_with_call_header: false,
             ..CallTrace::default_successful_call()
         }));
         let current_call = self.current_call_stack.top();
@@ -494,7 +538,8 @@ impl TraceData {
     pub fn exit_nested_call(
         &mut self,
         execution_resources: ExecutionResources,
-        used_syscalls: SyscallCounter,
+        gas_consumed: u64,
+        used_syscalls: SyscallUsageMap,
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
         vm_trace: Option<Vec<RelocatedTraceEntry>>,
@@ -506,6 +551,7 @@ impl TraceData {
 
         let mut last_call = last_call.borrow_mut();
         last_call.used_execution_resources = execution_resources;
+        last_call.gas_consumed = gas_consumed;
 
         last_call.used_syscalls = used_syscalls;
 

@@ -3,12 +3,12 @@ use starknet::ContractAddress;
 #[derive(Drop, Serde, Clone)]
 struct RecursiveCall {
     contract_address: ContractAddress,
-    payload: Array<RecursiveCall>
+    payload: Array<RecursiveCall>,
 }
 
 #[starknet::interface]
 trait RecursiveCaller<T> {
-    fn execute_calls(self: @T, calls: Array<RecursiveCall>);
+    fn execute_calls(self: @T, calls: Array<RecursiveCall>) -> Array<RecursiveCall>;
 }
 
 #[starknet::interface]
@@ -24,7 +24,7 @@ mod SimpleContract {
     use starknet::get_contract_address;
     use super::{
         RecursiveCaller, RecursiveCallerDispatcher, RecursiveCallerDispatcherTrait, RecursiveCall,
-        Failing
+        Failing,
     };
 
 
@@ -34,16 +34,20 @@ mod SimpleContract {
 
     #[abi(embed_v0)]
     impl RecursiveCallerImpl of RecursiveCaller<ContractState> {
-        fn execute_calls(self: @ContractState, calls: Array<RecursiveCall>) {
+        fn execute_calls(
+            self: @ContractState, calls: Array<RecursiveCall>,
+        ) -> Array<RecursiveCall> {
             let mut i = 0;
             while i < calls.len() {
                 let serviced_call = calls.at(i);
                 RecursiveCallerDispatcher {
-                    contract_address: serviced_call.contract_address.clone()
+                    contract_address: serviced_call.contract_address.clone(),
                 }
                     .execute_calls(serviced_call.payload.clone());
                 i = i + 1;
-            }
+            };
+
+            calls
         }
     }
 

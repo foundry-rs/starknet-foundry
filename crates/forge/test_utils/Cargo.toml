@@ -5,6 +5,9 @@ edition.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+assert_non_exact_gas = []
+
 [dependencies]
 anyhow.workspace = true
 shared.workspace = true
@@ -17,7 +20,9 @@ tempfile.workspace = true
 tokio.workspace = true
 project-root.workspace = true
 semver.workspace = true
+starknet_api.workspace = true
 forge = { path = "../../forge" }
 scarb-api = { path = "../../scarb-api" }
 forge_runner = { path = "../../forge-runner" }
 cheatnet = { path = "../../cheatnet" }
+foundry-ui = { path = "../../foundry-ui" }

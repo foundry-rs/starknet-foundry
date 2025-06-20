@@ -1,11 +1,9 @@
-use crate::trace::{CallerAddress, ContractName, StorageAddress};
-use blockifier::execution::entry_point::CallType;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    CallFailure, CallResult,
+use crate::trace::types::{
+    CallerAddress, ContractAddress, ContractName, Selector, TestName, TransformedCallResult,
+    TransformedCalldata,
 };
+use blockifier::execution::entry_point::CallType;
 use starknet_api::contract_class::EntryPointType;
-use starknet_api::core::EntryPointSelector;
-use starknet_api::transaction::fields::Calldata;
 use starknet_types_core::felt::Felt;
 use std::fmt::Debug;
 
@@ -23,6 +21,13 @@ pub trait NodeDisplay {
     }
 }
 
+impl NodeDisplay for TestName {
+    const TAG: &'static str = "test name";
+    fn string_pretty(&self) -> String {
+        self.0.clone()
+    }
+}
+
 impl NodeDisplay for ContractName {
     const TAG: &'static str = "contract name";
     fn string_pretty(&self) -> String {
@@ -30,10 +35,10 @@ impl NodeDisplay for ContractName {
     }
 }
 
-impl NodeDisplay for EntryPointSelector {
+impl NodeDisplay for Selector {
     const TAG: &'static str = "selector";
     fn string_pretty(&self) -> String {
-        string_hex(self.0)
+        self.0.to_string()
     }
 }
 
@@ -44,15 +49,15 @@ impl NodeDisplay for EntryPointType {
     }
 }
 
-impl NodeDisplay for Calldata {
+impl NodeDisplay for TransformedCalldata {
     const TAG: &'static str = "calldata";
     fn string_pretty(&self) -> String {
-        string_debug(&self.0)
+        self.0.clone()
     }
 }
 
-impl NodeDisplay for StorageAddress {
-    const TAG: &'static str = "storage address";
+impl NodeDisplay for ContractAddress {
+    const TAG: &'static str = "contract address";
     fn string_pretty(&self) -> String {
         string_hex(self.0)
     }
@@ -72,22 +77,10 @@ impl NodeDisplay for CallType {
     }
 }
 
-impl NodeDisplay for CallResult {
+impl NodeDisplay for TransformedCallResult {
     const TAG: &'static str = "call result";
     fn string_pretty(&self) -> String {
-        match self {
-            CallResult::Success { ret_data } => {
-                format!("success: {ret_data:?}")
-            }
-            CallResult::Failure(call_failure) => match call_failure {
-                CallFailure::Panic { panic_data } => {
-                    format!("panic: {panic_data:?}")
-                }
-                CallFailure::Error { msg } => {
-                    format!("error: {msg}")
-                }
-            },
-        }
+        self.0.clone()
     }
 }
 
