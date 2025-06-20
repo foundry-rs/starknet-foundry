@@ -25,6 +25,7 @@ In this section, we will walk through the process of installing Starknet Foundry
     * [Universal-Sierra-Compiler update](#universal-sierra-compiler-update)
         * [Linux and macOS](#linux-and-macos-2)
     * [How to build Starknet Foundry from source code](#how-to-build-starknet-foundry-from-source-code)
+* [Uninstallation](#uninstallation)
 
 <!-- TOC -->
 
@@ -334,3 +335,25 @@ the [source code](https://github.com/foundry-rs/starknet-foundry) as follows:
 2. Run `cd starknet-foundry && cargo build --release`. This will create a `target` directory.
 3. Move the `target` directory to the desired location (e.g. `~/.starknet-foundry`).
 4. Add `DESIRED_LOCATION/target/release/` to your `PATH`.
+
+# Uninstallation
+
+## Remove the Starknet Foundry Plugin
+
+Follow the official asdf documentation to remove the Starknet Foundry plugin:
+
+```bash
+asdf plugin remove starknet-foundry
+```
+
+For more details, refer to the [asdf plugin documentation](https://asdf-vm.com/manage/plugins.html#remove).
+
+## Verify Uninstallation
+
+To confirm Starknet Foundry has been completely removed, run:
+
+```bash
+snforge --version
+```
+
+If the uninstallation was successful, you should see `command not found: snforge`
