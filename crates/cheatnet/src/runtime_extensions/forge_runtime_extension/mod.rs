@@ -626,15 +626,14 @@ pub fn get_all_used_resources(
     mut runtime: ForgeRuntime,
     transaction_context: &TransactionContext,
     tracked_resource: TrackedResource,
-    runtime_call_info: &CallInfo,
+    call_info: &CallInfo,
 ) -> UsedResources {
     let total_syscall_usage = calculate_total_syscall_usage(&mut runtime);
     let versioned_constants = transaction_context.block_context.versioned_constants();
-    let summary = runtime_call_info.summarize(versioned_constants);
+    let summary = call_info.summarize(versioned_constants);
     let l2_to_l1_payload_lengths = summary.l2_to_l1_payload_lengths;
 
-    let l1_handler_payload_lengths =
-        get_l1_handlers_payloads_lengths(&runtime_call_info.inner_calls);
+    let l1_handler_payload_lengths = get_l1_handlers_payloads_lengths(&call_info.inner_calls);
 
     let mut gas_consumed = summary.charged_resources.gas_consumed.0;
 
@@ -642,7 +641,7 @@ pub fn get_all_used_resources(
         gas_consumed += get_syscalls_gas_consumed(&total_syscall_usage, versioned_constants);
     }
 
-    let events = runtime_call_info
+    let events = call_info
         .iter() // This method iterates over inner calls as well
         .flat_map(|call_info| {
             call_info
