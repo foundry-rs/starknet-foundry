@@ -8,7 +8,7 @@ use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
 // all calculations are based on formulas from
-// https://docs.starknet.io/architecture-and-concepts/network-architecture/fee-mechanism/#overall_fee
+// https://docs.starknet.io/architecture-and-concepts/fees/#overall_fee
 // important info from this link regarding gas calculations:
 // 1 cairo step = 0.0025 L1 gas = 100 L2 gas
 // 1 sierra gas = 1 l2 gas
