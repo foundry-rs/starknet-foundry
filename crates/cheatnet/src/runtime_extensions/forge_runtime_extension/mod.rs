@@ -176,6 +176,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
+                syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
+                syscall_handler
+                    .increment_linear_factor_by(&DeprecatedSyscallSelector::Deploy, calldata.len());
+
                 handle_declare_deploy_result(deploy(
                     syscall_handler,
                     cheatnet_runtime.extension.cheatnet_state,
@@ -189,6 +193,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let contract_address = input_reader.read()?;
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
+
+                syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
+                syscall_handler
+                    .increment_linear_factor_by(&DeprecatedSyscallSelector::Deploy, calldata.len());
 
                 handle_declare_deploy_result(deploy_at(
                     syscall_handler,
@@ -582,6 +590,7 @@ pub fn calculate_total_syscall_usage(runtime: &mut ForgeRuntime) -> SyscallUsage
         .fold(SyscallUsageMap::new(), |syscalls, trace| {
             sum_syscall_usage(syscalls, &trace.borrow().used_syscalls)
         });
+
     sum_syscall_usage(top_call_syscalls, &nested_calls_syscalls)
 }
 
@@ -598,31 +607,8 @@ fn get_l1_handlers_payloads_lengths(inner_calls: &[CallInfo]) -> Vec<usize> {
         .collect()
 }
 
-pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
-    let all_l2_l1_message_sizes = runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .base
-        .l2_to_l1_messages
-        .iter()
-        .map(|ordered_message| ordered_message.message.payload.0.len())
-        .collect();
-
-    // call representing the test code
-    let top_call = runtime
-        .extended_runtime
-        .extended_runtime
-        .extension
-        .cheatnet_state
-        .trace_data
-        .current_call_stack
-        .top();
-    top_call.borrow_mut().used_l1_resources.l2_l1_message_sizes = all_l2_l1_message_sizes;
-}
-
 pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &mut CairoRunner) {
+    println!("UPDATE");
     let trace_data = &mut runtime
         .extended_runtime
         .extended_runtime
