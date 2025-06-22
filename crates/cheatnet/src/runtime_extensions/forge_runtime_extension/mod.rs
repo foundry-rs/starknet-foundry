@@ -632,7 +632,6 @@ pub fn get_all_used_resources(
     let versioned_constants = transaction_context.block_context.versioned_constants();
     let summary = call_info.summarize(versioned_constants);
     let l2_to_l1_payload_lengths = summary.l2_to_l1_payload_lengths;
-
     let l1_handler_payload_lengths = get_l1_handlers_payloads_lengths(&call_info.inner_calls);
 
     let mut gas_consumed = summary.charged_resources.gas_consumed.0;
