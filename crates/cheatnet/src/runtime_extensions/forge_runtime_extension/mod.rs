@@ -564,7 +564,7 @@ fn handle_declare_deploy_result<T: CairoSerialize>(
     Ok(CheatcodeHandlingResult::from_serializable(result))
 }
 
-pub fn calculate_total_syscall_usage(runtime: &mut ForgeRuntime) -> SyscallUsageMap {
+fn calculate_total_syscall_usage(runtime: &mut ForgeRuntime) -> SyscallUsageMap {
     let top_call = runtime
         .extended_runtime
         .extended_runtime
@@ -632,7 +632,6 @@ pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
 }
 
 pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &mut CairoRunner) {
-    println!("UPDATE");
     let trace_data = &mut runtime
         .extended_runtime
         .extended_runtime
@@ -648,12 +647,12 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &mut C
 
 #[must_use]
 pub fn get_all_used_resources(
-    _runtime: ForgeRuntime,
+    mut runtime: ForgeRuntime,
     transaction_context: &TransactionContext,
     tracked_resource: TrackedResource,
-    total_syscall_usage: SyscallUsageMap,
     runtime_call_info: &CallInfo,
 ) -> UsedResources {
+    let total_syscall_usage = calculate_total_syscall_usage(&mut runtime);
     let versioned_constants = transaction_context.block_context.versioned_constants();
     let summary = runtime_call_info.summarize(versioned_constants);
     let l2_to_l1_payload_lengths = summary.l2_to_l1_payload_lengths;
