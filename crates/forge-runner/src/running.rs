@@ -21,8 +21,7 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::Use
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
-    ForgeExtension, ForgeRuntime, get_all_used_resources, update_top_call_l1_resources,
-    update_top_call_vm_trace,
+    ForgeExtension, ForgeRuntime, get_all_used_resources, update_top_call_vm_trace,
 };
 use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredErrors, ExtendedStateReader,
@@ -324,8 +323,6 @@ pub fn run_test_case(
         .clone();
 
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
-
-    update_top_call_l1_resources(&mut forge_runtime);
 
     let fuzzer_args = forge_runtime
         .extended_runtime
