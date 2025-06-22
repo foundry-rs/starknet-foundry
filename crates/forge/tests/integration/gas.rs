@@ -1673,7 +1673,7 @@ fn events_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(0),
-            l2_gas: GasAmount(985450),
+            l2_gas: GasAmount(985_450),
         },
     );
 }
