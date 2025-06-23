@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Fixed
+
+- bug where `account create` would fail with a parsing error if the file specified by `--accounts-file` was empty
+
 #### Removed
 
 - Windows support. For details on migration, see the WSL [installation guide](https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#linux-and-macos).
