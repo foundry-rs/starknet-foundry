@@ -675,20 +675,3 @@ fn n_steps_to_sierra_gas(n_steps: usize, versioned_constants: &VersionedConstant
     });
     GasAmount(n_steps_gas_cost)
 }
-
-// Based on: https://github.com/starkware-libs/sequencer/blob/main-v0.13.4/crates/blockifier/src/bouncer.rs#L320
-#[must_use]
-pub fn vm_resources_to_sierra_gas(
-    resources: &ExecutionResources,
-    versioned_constants: &VersionedConstants,
-) -> GasAmount {
-    let builtins_gas_cost =
-        builtins_to_sierra_gas(&resources.prover_builtins(), versioned_constants);
-    let n_steps_gas_cost = n_steps_to_sierra_gas(resources.total_n_steps(), versioned_constants);
-    n_steps_gas_cost.checked_add(builtins_gas_cost).unwrap_or_else(|| {
-        panic!(
-            "Addition overflow while converting vm resources to gas. steps gas: {n_steps_gas_cost}, \
-            builtins gas: {builtins_gas_cost}."
-        )
-    })
-}
