@@ -1,4 +1,3 @@
-use crate::starknet_commands::account::common::load_accounts;
 use crate::starknet_commands::account::create::Create;
 use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
@@ -10,6 +9,7 @@ use clap::{Args, Subcommand};
 use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
 use serde_json::json;
+use sncast::helpers::account::load_accounts;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::{
     AccountType, chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig,
@@ -19,7 +19,6 @@ use starknet_types_core::felt::Felt;
 use std::{fs::OpenOptions, io::Write};
 use toml::Value;
 
-pub mod common;
 pub mod create;
 pub mod delete;
 pub mod deploy;
