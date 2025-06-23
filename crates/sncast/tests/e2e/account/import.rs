@@ -44,7 +44,7 @@ pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account import
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        account_name: my_account_import
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -342,7 +342,7 @@ pub async fn test_detect_deployed() {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account import
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        account_name: my_account_import
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -423,7 +423,7 @@ pub async fn test_private_key_from_file() {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account import
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        account_name: my_account_import
     "});
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
@@ -493,11 +493,7 @@ pub async fn test_invalid_private_key_file_path() {
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
 
-    let expected_file_error = if cfg!(target_os = "windows") {
-        "The system cannot find the file specified[..]"
-    } else {
-        "No such file or directory [..]"
-    };
+    let expected_file_error = "No such file or directory [..]";
 
     assert_stderr_contains(
         output,
@@ -676,7 +672,7 @@ pub async fn test_happy_case_valid_address_computation() {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account import
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        account_name: my_account_import
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -794,7 +790,6 @@ pub async fn test_happy_case_default_name_generation() {
         snapbox.assert().stdout_matches(formatdoc! {r"
         command: account import
         account_name: account-{id}
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
     ", id = i + 1});
     }
 
@@ -820,7 +815,6 @@ pub async fn test_happy_case_default_name_generation() {
     snapbox.assert().stdout_matches(indoc! {r"
         command: account import
         account_name: account-2
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))

@@ -161,7 +161,7 @@ pub async fn import(
 
     Ok(AccountImportResponse {
         add_profile: add_profile_message,
-        account_name: account.map_or_else(|| Some(account_name), |_| None),
+        account_name,
     })
 }
 

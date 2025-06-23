@@ -55,7 +55,7 @@ Failure data:
 
 [PASS] testing_smart_contracts_handling_errors_integrationtest::handle_panic::handling_string_errors (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~280000)
 Running 0 test(s) from src/
-Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 1 passed, 1 failed, 0 ignored, 0 filtered out
 
 Failures:
     testing_smart_contracts_handling_errors_integrationtest::panic::failing
@@ -99,7 +99,7 @@ Failure data:
 
 [PASS] testing_smart_contracts_handling_errors_integrationtest::handle_panic::handling_string_errors (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~280000)
 Running 0 test(s) from src/
-Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 1 passed, 1 failed, 0 ignored, 0 filtered out
 
 Failures:
     testing_smart_contracts_handling_errors_integrationtest::panic::failing
@@ -130,7 +130,7 @@ Collected 1 test(s) from testing_smart_contracts_safe_dispatcher package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [PASS] testing_smart_contracts_safe_dispatcher_integrationtest::safe_dispatcher::handling_errors (l1_gas: ~0, l1_data_gas: ~96, l2_gas: ~280000)
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>
 <br>

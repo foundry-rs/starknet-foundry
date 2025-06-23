@@ -55,6 +55,7 @@ pub fn run_test_case(
             tests_filter: TestsFilter::from_flags(
                 None,
                 false,
+                Vec::new(),
                 false,
                 false,
                 false,

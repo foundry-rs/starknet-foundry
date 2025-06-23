@@ -3,4 +3,4 @@ version = 1
 
 [[package]]
 name = "sncast_std"
-version = "0.44.0"
+version = "0.45.0"

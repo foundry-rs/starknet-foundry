@@ -25,10 +25,10 @@ impl TestTargetSummary {
     }
 
     #[must_use]
-    pub fn count_skipped(&self) -> usize {
+    pub fn count_interrupted(&self) -> usize {
         self.test_case_summaries
             .iter()
-            .filter(|tu| tu.is_skipped())
+            .filter(|tu| tu.is_interrupted())
             .count()
     }
 

@@ -158,7 +158,7 @@ fn run_with_fuzzing(
 ) -> JoinHandle<Result<TestCaseSummary<Fuzzing>>> {
     tokio::task::spawn(async move {
         if send.is_closed() {
-            return Ok(TestCaseSummary::Skipped {});
+            return Ok(TestCaseSummary::Interrupted {});
         }
 
         let (fuzzing_send, mut fuzzing_rec) = channel(1);
@@ -224,7 +224,7 @@ fn run_with_fuzzing(
             // get Passed after Skipped. To treat fuzzing a test as Passed
             // we have to ensure that all fuzzing subtests Passed
             if runs != fuzzer_runs.get() {
-                return Ok(TestCaseSummary::Skipped {});
+                return Ok(TestCaseSummary::Interrupted {});
             }
         }
 

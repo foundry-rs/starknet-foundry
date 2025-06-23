@@ -34,13 +34,7 @@ fn start_devnet() {
         }
     }
 
-    let devnet_path = if cfg!(target_os = "windows") {
-        "tests/utils/devnet/bin/starknet-devnet.exe"
-    } else {
-        "tests/utils/devnet/starknet-devnet"
-    };
-
-    Command::new(devnet_path)
+    Command::new("starknet-devnet")
         .args([
             "--port",
             &port,
@@ -88,15 +82,8 @@ fn stop_devnet() {
     let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
     let pattern = format!("starknet-devnet.*{port}.*{SEED}");
 
-    if cfg!(target_os = "windows") {
-        Command::new("taskkill")
-            .args(["/IM", &pattern, "/F"])
-            .output()
-            .expect("Failed to kill devnet processes");
-    } else {
-        Command::new("pkill")
-            .args(["-f", &pattern])
-            .output()
-            .expect("Failed to kill devnet processes");
-    }
+    Command::new("pkill")
+        .args(["-f", &pattern])
+        .output()
+        .expect("Failed to kill devnet processes");
 }
