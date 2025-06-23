@@ -1,9 +1,10 @@
+use crate::starknet_commands::account::common::load_accounts;
 use crate::starknet_commands::account::create::Create;
 use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
 use crate::starknet_commands::account::import::Import;
 use crate::starknet_commands::account::list::List;
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{Args, Subcommand};
 use configuration::resolve_config_file;
@@ -18,6 +19,7 @@ use starknet_types_core::felt::Felt;
 use std::{fs::OpenOptions, io::Write};
 use toml::Value;
 
+pub mod common;
 pub mod create;
 pub mod delete;
 pub mod deploy;
@@ -79,9 +81,7 @@ pub fn write_account_to_accounts_file(
         std::fs::write(accounts_file.clone(), "{}")?;
     }
 
-    let contents = std::fs::read_to_string(accounts_file.clone())?;
-    let mut items: serde_json::Value = serde_json::from_str(&contents)
-        .map_err(|_| anyhow!("Failed to parse accounts file at = {}", accounts_file))?;
+    let mut items = load_accounts(accounts_file)?;
 
     let network_name = chain_id_to_network_name(chain_id);
 

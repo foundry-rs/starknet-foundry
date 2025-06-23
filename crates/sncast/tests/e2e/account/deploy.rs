@@ -9,9 +9,9 @@ use crate::helpers::runner::runner;
 use configuration::copy_config_to_tempdir;
 use conversions::string::IntoHexStr;
 use indoc::indoc;
-use serde_json::Value;
 use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
 use sncast::AccountType;
+use sncast::helpers::account::load_accounts;
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
 };
@@ -54,8 +54,9 @@ pub async fn test_happy_case(class_hash: &str, account_type: &str) {
     assert!(stdout_str.contains("account deploy"));
     assert!(stdout_str.contains("transaction_hash"));
 
-    let contents = fs::read_to_string(tempdir.path().join(accounts_file)).unwrap();
-    let items: Value = serde_json::from_str(&contents).expect("Failed to parse accounts file at ");
+    let path = camino::Utf8PathBuf::from_path_buf(tempdir.path().join(accounts_file))
+        .expect("Path is not valid UTF-8");
+    let items = load_accounts(&path).expect("Failed to load accounts");
     assert_eq!(items["alpha-sepolia"]["my_account"]["deployed"], true);
 }
 
@@ -89,8 +90,9 @@ pub async fn test_happy_case_max_fee() {
     assert!(stdout_str.contains("account deploy"));
     assert!(stdout_str.contains("transaction_hash"));
 
-    let contents = fs::read_to_string(tempdir.path().join(accounts_file)).unwrap();
-    let items: Value = serde_json::from_str(&contents).expect("Failed to parse accounts file at ");
+    let path = camino::Utf8PathBuf::from_path_buf(tempdir.path().join(accounts_file))
+        .expect("Path is not valid UTF-8");
+    let items = load_accounts(&path).expect("Failed to load accounts");
     assert_eq!(items["alpha-sepolia"]["my_account"]["deployed"], true);
 }
 
@@ -233,9 +235,9 @@ pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &
 
     runner(&args).current_dir(tempdir.path()).assert().success();
 
-    let contents = fs::read_to_string(tempdir.path().join(accounts_file)).unwrap();
-    let items: Value =
-        serde_json::from_str(&contents).expect("Failed to parse accounts file at {path}");
+    let path = camino::Utf8PathBuf::from_path_buf(tempdir.path().join(accounts_file))
+        .expect("Path is not valid UTF-8");
+    let items = load_accounts(&path).expect("Failed to load accounts");
 
     mint_token(
         items["alpha-sepolia"]["my_account"]["address"]
@@ -302,8 +304,9 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         transaction: [..]
     "});
 
-    let contents = fs::read_to_string(tempdir.path().join(account_file)).unwrap();
-    let items: Value = serde_json::from_str(&contents).expect("Failed to parse accounts file at ");
+    let path = camino::Utf8PathBuf::from_path_buf(tempdir.path().join(account_file))
+        .expect("Path is not valid UTF-8");
+    let items = load_accounts(&path).expect("Failed to load accounts");
     assert_eq!(items["deployment"]["status"], "deployed");
     assert!(!items["deployment"]["address"].is_null());
     assert!(items["deployment"]["salt"].is_null());
