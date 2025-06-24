@@ -9,7 +9,6 @@ $CAST_BINARY \
   accounts.json \
   --account \
   my_account \
-  --int-format \
   --json \
   deploy \
   --url \

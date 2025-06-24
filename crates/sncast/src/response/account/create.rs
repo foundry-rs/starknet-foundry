@@ -18,7 +18,7 @@ pub struct AccountCreateResponse {
     pub address: PaddedFelt,
     #[serde(serialize_with = "as_str")]
     pub estimated_fee: u128,
-    pub add_profile: String,
+    pub add_profile: Option<String>,
     pub message: String,
 }
 

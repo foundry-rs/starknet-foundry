@@ -165,7 +165,7 @@ fn generate_add_profile_message(
     account_name: &str,
     accounts_file: &Utf8PathBuf,
     keystore: Option<Utf8PathBuf>,
-) -> Result<String> {
+) -> Result<Option<String>> {
     if let Some(profile_name) = profile_name {
         let url = rpc
             .url
@@ -180,13 +180,11 @@ fn generate_add_profile_message(
         };
         let config_path = resolve_config_file();
         add_created_profile_to_configuration(Some(profile_name), &config, &config_path)?;
-        Ok(format!(
+        Ok(Some(format!(
             "Profile {profile_name} successfully added to {config_path}",
-        ))
+        )))
     } else {
-        Ok(String::from(
-            "--add-profile flag was not set. No profile added to snfoundry.toml",
-        ))
+        Ok(None)
     }
 }
 

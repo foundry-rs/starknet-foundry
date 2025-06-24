@@ -1,13 +1,10 @@
 use foundry_ui::OutputFormat;
 use itertools::Itertools;
-use std::{collections::HashMap, fmt::Display, str::FromStr};
+use std::{collections::HashMap, fmt::Display};
 
 use anyhow::Result;
 use serde::{Serialize, Serializer};
 use serde_json::Value;
-use starknet_types_core::felt::Felt;
-
-use crate::NumbersFormat;
 
 use super::command::CommandResponse;
 
@@ -16,7 +13,7 @@ where
     Self: Sized,
 {
     #[must_use]
-    fn format_with(self, _: NumbersFormat) -> Self;
+    fn format_with(self) -> Self;
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -70,26 +67,11 @@ impl From<Value> for OutputValue {
 }
 
 impl Format for OutputValue {
-    fn format_with(self, numbers: NumbersFormat) -> Self {
+    fn format_with(self) -> Self {
         match self {
-            OutputValue::String(input) => {
-                if let Ok(field) = Felt::from_str(&input) {
-                    return match numbers {
-                        NumbersFormat::Decimal => OutputValue::String(format!("{field:#}")),
-                        NumbersFormat::Hex if input.len() == 66 && input.starts_with("0x0") => {
-                            OutputValue::String(input)
-                        }
-                        NumbersFormat::Hex => OutputValue::String(format!("{field:#x}")),
-                        NumbersFormat::Default => OutputValue::String(input),
-                    };
-                }
-                OutputValue::String(input)
-            }
+            OutputValue::String(input) => OutputValue::String(input),
             OutputValue::Array(arr) => {
-                let formatted_arr = arr
-                    .into_iter()
-                    .map(|item| item.format_with(numbers))
-                    .collect();
+                let formatted_arr = arr.into_iter().map(Format::format_with).collect();
                 OutputValue::Array(formatted_arr)
             }
         }
@@ -101,11 +83,11 @@ impl Format for OutputValue {
 pub struct OutputData(Vec<(String, OutputValue)>);
 
 impl Format for OutputData {
-    fn format_with(self, numbers: NumbersFormat) -> Self {
+    fn format_with(self) -> Self {
         Self(
             self.0
                 .into_iter()
-                .map(|(k, v)| (k, v.format_with(numbers)))
+                .map(|(k, v)| (k, v.format_with()))
                 .collect(),
         )
     }
@@ -171,20 +153,8 @@ impl OutputData {
 #[cfg(test)]
 mod tests {
     use super::{OutputData, OutputValue};
-    use crate::{NumbersFormat, response::print::Format};
+    use crate::response::print::Format;
     use serde_json::{Map, Value};
-
-    #[test]
-    fn test_format_json_value_force_decimal() {
-        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
-            "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
-        ))]);
-
-        let actual = json_value.format_with(NumbersFormat::Decimal);
-        let v = "2087021424722619777119509474943472645767659996348769578120564519014510906823";
-        let expected = OutputValue::Array(vec![OutputValue::String(String::from(v))]);
-        assert_eq!(actual, expected);
-    }
 
     #[test]
     fn test_format_json_value_leave_default_decimal() {
@@ -192,7 +162,7 @@ mod tests {
             "2087021424722619777119509474943472645767659996348769578120564519014510906823",
         ))]);
 
-        let actual = json_value.format_with(NumbersFormat::Default);
+        let actual = json_value.format_with();
         let expected = OutputValue::Array(vec![OutputValue::String(String::from(
             "2087021424722619777119509474943472645767659996348769578120564519014510906823",
         ))]);
@@ -205,51 +175,10 @@ mod tests {
             "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
         ))]);
 
-        let actual = json_value.format_with(NumbersFormat::Default);
+        let actual = json_value.format_with();
         let expected = OutputValue::Array(vec![OutputValue::String(String::from(
             "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
         ))]);
-        assert_eq!(actual, expected);
-    }
-
-    #[test]
-    fn test_format_json_value_force_hex() {
-        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
-            "2087021424722619777119509474943472645767659996348769578120564519014510906823",
-        ))]);
-
-        let actual = json_value.format_with(NumbersFormat::Hex);
-        let expected = OutputValue::Array(vec![OutputValue::String(String::from(
-            "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
-        ))]);
-        assert_eq!(actual, expected);
-    }
-
-    #[test]
-    fn format_address_force_hex() {
-        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
-            "0x0163a86513df426f4fd7ad989b11062769b03d3fd75fb83fae6c0f416b33a3d5",
-        ))]);
-
-        let actual = json_value.format_with(NumbersFormat::Hex);
-        let expected = OutputValue::Array(vec![OutputValue::String(String::from(
-            "0x0163a86513df426f4fd7ad989b11062769b03d3fd75fb83fae6c0f416b33a3d5",
-        ))]);
-
-        assert_eq!(actual, expected);
-    }
-
-    #[test]
-    fn format_address_force_decimal() {
-        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
-            "0x0163a86513df426f4fd7ad989b11062769b03d3fd75fb83fae6c0f416b33a3d5",
-        ))]);
-
-        let actual = json_value.format_with(NumbersFormat::Decimal);
-        let expected = OutputValue::Array(vec![OutputValue::String(String::from(
-            "628392926429977811333168641010360117621605580210734736624161546314682966997",
-        ))]);
-
         assert_eq!(actual, expected);
     }
 
@@ -259,7 +188,7 @@ mod tests {
             "0x0163a86513df426f4fd7ad989b11062769b03d3fd75fb83fae6c0f416b33a3d5",
         ))]);
 
-        let actual = json_value.format_with(NumbersFormat::Default);
+        let actual = json_value.format_with();
         let expected = OutputValue::Array(vec![OutputValue::String(String::from(
             "0x0163a86513df426f4fd7ad989b11062769b03d3fd75fb83fae6c0f416b33a3d5",
         ))]);
