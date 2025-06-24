@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- bug where `account create` would fail with a parsing error if the file specified by `--accounts-file` was empty
+- bug where `account create` raised an error if the file specified by `--accounts-file` was empty
 
 #### Removed
 
