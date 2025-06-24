@@ -6,6 +6,7 @@ use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
 };
 use crate::helpers::runner::runner;
+use camino::Utf8PathBuf;
 use configuration::copy_config_to_tempdir;
 use conversions::string::IntoHexStr;
 use indoc::indoc;
@@ -54,7 +55,7 @@ pub async fn test_happy_case(class_hash: &str, account_type: &str) {
     assert!(stdout_str.contains("account deploy"));
     assert!(stdout_str.contains("transaction_hash"));
 
-    let path = camino::Utf8PathBuf::from_path_buf(tempdir.path().join(accounts_file))
+    let path = Utf8PathBuf::from_path_buf(tempdir.path().join(accounts_file))
         .expect("Path is not valid UTF-8");
     let items = load_accounts(&path).expect("Failed to load accounts");
     assert_eq!(items["alpha-sepolia"]["my_account"]["deployed"], true);
@@ -90,7 +91,7 @@ pub async fn test_happy_case_max_fee() {
     assert!(stdout_str.contains("account deploy"));
     assert!(stdout_str.contains("transaction_hash"));
 
-    let path = camino::Utf8PathBuf::from_path_buf(tempdir.path().join(accounts_file))
+    let path = Utf8PathBuf::from_path_buf(tempdir.path().join(accounts_file))
         .expect("Path is not valid UTF-8");
     let items = load_accounts(&path).expect("Failed to load accounts");
     assert_eq!(items["alpha-sepolia"]["my_account"]["deployed"], true);
@@ -235,7 +236,7 @@ pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &
 
     runner(&args).current_dir(tempdir.path()).assert().success();
 
-    let path = camino::Utf8PathBuf::from_path_buf(tempdir.path().join(accounts_file))
+    let path = Utf8PathBuf::from_path_buf(tempdir.path().join(accounts_file))
         .expect("Path is not valid UTF-8");
     let items = load_accounts(&path).expect("Failed to load accounts");
 
@@ -304,7 +305,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         transaction: [..]
     "});
 
-    let path = camino::Utf8PathBuf::from_path_buf(tempdir.path().join(account_file))
+    let path = Utf8PathBuf::from_path_buf(tempdir.path().join(account_file))
         .expect("Path is not valid UTF-8");
     let items = load_accounts(&path).expect("Failed to load accounts");
     assert_eq!(items["deployment"]["status"], "deployed");
