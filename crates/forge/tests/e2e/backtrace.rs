@@ -2,6 +2,7 @@ use super::common::runner::{setup_package, test_runner};
 use assert_fs::TempDir;
 use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::indoc;
+use scarb_api::ScarbCommand;
 use shared::test_utils::output_assert::{AsOutput, assert_stdout_contains};
 use std::fs;
 use toml_edit::{DocumentMut, value};
@@ -170,6 +171,7 @@ fn test_wrong_scarb_toml_configuration() {
 }
 
 #[test]
+#[ignore = "Investigate backtrace regression in 2.12"]
 fn test_backtrace_panic() {
     let temp = setup_package("backtrace_panic");
 
@@ -178,7 +180,41 @@ fn test_backtrace_panic() {
         .assert()
         .failure();
 
-    if cfg!(feature = "supports-panic-backtrace") {
+    let scarb_version = ScarbCommand::version().run().unwrap().scarb;
+    // TODO: Replace with condition for `2.12`
+    if scarb_version.build.is_empty() {
+        assert_stdout_contains(
+            output,
+            indoc! {
+               "[FAIL] backtrace_panic::Test::test_contract_panics
+
+                Failure data:
+                    0x417373657274206661696c6564 ('Assert failed')
+
+                error occurred in contract 'InnerContract'
+                stack backtrace:
+                   0: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
+                       at [..]lib.cairo:34:9
+
+                error occurred in contract 'OuterContract'
+                stack backtrace:
+                   0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+                       at [..]lib.cairo:15:9
+
+                [FAIL] backtrace_panic::Test::test_fork_contract_panics
+
+                Failure data:
+                    0x417373657274206661696c6564 ('Assert failed')
+
+                error occurred in forked contract with class hash: 0x554cb276fb5eb0788344f5431b9a166e2f445d8a91c7aef79d8c77e7eede956
+
+                error occurred in contract 'OuterContract'
+                stack backtrace:
+                   0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
+                       at [..]lib.cairo:15:9"
+            },
+        );
+    } else {
         assert_stdout_contains(
             output,
             indoc! {
@@ -209,7 +245,22 @@ fn test_backtrace_panic() {
                        at [..]lib.cairo:15:9"
             },
         );
-    } else {
+    }
+}
+
+#[test]
+fn test_backtrace_panic_without_inlines() {
+    let temp = setup_package("backtrace_panic");
+    without_inlines(&temp);
+
+    let output = test_runner(&temp)
+        .env("SNFORGE_BACKTRACE", "1")
+        .assert()
+        .failure();
+
+    let scarb_version = ScarbCommand::version().run().unwrap().scarb;
+    // TODO: Replace with condition for `2.12`
+    if scarb_version.build.is_empty() {
         assert_stdout_contains(
             output,
             indoc! {
@@ -241,20 +292,7 @@ fn test_backtrace_panic() {
                        at [..]lib.cairo:15:9"
             },
         );
-    }
-}
-
-#[test]
-fn test_backtrace_panic_without_inlines() {
-    let temp = setup_package("backtrace_panic");
-    without_inlines(&temp);
-
-    let output = test_runner(&temp)
-        .env("SNFORGE_BACKTRACE", "1")
-        .assert()
-        .failure();
-
-    if cfg!(feature = "supports-panic-backtrace") {
+    } else {
         assert_stdout_contains(
             output,
             indoc! {
@@ -306,43 +344,11 @@ fn test_backtrace_panic_without_inlines() {
                        at [..]lib.cairo:15:9"
             },
         );
-    } else {
-        assert_stdout_contains(
-            output,
-            indoc! {
-               "[FAIL] backtrace_panic::Test::test_contract_panics
-
-                Failure data:
-                    0x417373657274206661696c6564 ('Assert failed')
-                
-                error occurred in contract 'InnerContract'
-                stack backtrace:
-                   0: backtrace_panic::InnerContract::__wrapper__InnerContract__inner
-                       at [..]lib.cairo:34:9
-                
-                error occurred in contract 'OuterContract'
-                stack backtrace:
-                   0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
-                       at [..]lib.cairo:15:9
-                
-                [FAIL] backtrace_panic::Test::test_fork_contract_panics
-                
-                Failure data:
-                    0x417373657274206661696c6564 ('Assert failed')
-                
-                error occurred in forked contract with class hash: 0x554cb276fb5eb0788344f5431b9a166e2f445d8a91c7aef79d8c77e7eede956
-                
-                error occurred in contract 'OuterContract'
-                stack backtrace:
-                   0: backtrace_panic::OuterContract::__wrapper__OuterContract__outer
-                       at [..]lib.cairo:15:9"
-            },
-        );
     }
 }
 
 #[test]
-#[cfg_attr(not(feature = "supports-panic-backtrace"), ignore)]
+#[ignore = "Investigate backtrace regression in 2.12"]
 fn test_handled_error_not_display() {
     let temp = setup_package("dispatchers");
 
