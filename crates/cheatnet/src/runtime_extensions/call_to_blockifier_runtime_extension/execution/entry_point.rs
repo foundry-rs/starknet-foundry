@@ -295,15 +295,12 @@ fn exit_non_error_call(
     cheatnet_state: &mut CheatnetState,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
 ) {
-    let resources = call_info.resources.clone();
-    let gas_consumed = call_info.execution.gas_consumed;
-
     let nested_syscall_usage_sum =
         aggregate_nested_syscall_usage(&cheatnet_state.trace_data.current_call_stack.top());
     let syscall_usage = sum_syscall_usage(nested_syscall_usage_sum, syscall_usage);
     cheatnet_state.trace_data.exit_nested_call(
-        resources,
-        gas_consumed,
+        call_info.resources.clone(),
+        call_info.execution.gas_consumed,
         syscall_usage,
         CallResult::from_non_error(call_info),
         &call_info.execution.l2_to_l1_messages,
