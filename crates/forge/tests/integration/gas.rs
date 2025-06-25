@@ -1075,7 +1075,7 @@ fn nested_call_cost_cairo_steps() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(288),
-            l2_gas: GasAmount(14_375_360),
+            l2_gas: GasAmount(7_215_360),
         },
     );
 }
@@ -1149,7 +1149,7 @@ fn nested_call_cost_in_forked_contract_cairo_steps() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(14_375_360),
+            l2_gas: GasAmount(7_215_360),
         },
     );
 }
@@ -1783,21 +1783,20 @@ fn nested_call_cost_sierra_gas() {
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
-    // TODO(#3473): Once the bug with duplicated builtins from syscalls in nested calls is fixed, reported consumed sierra gas should be lower.
     // 512000 = event keys cost (see `events_contract_cost_sierra_gas` test)
     // 256000 = event data cost (see `events_contract_cost_sierra_gas` test)
     // 10000 = cost of 1 emit event syscall (see `events_contract_cost_sierra_gas` test)
     // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
     // 87650 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
-    // 1741387 = reported consumed sierra gas
-    // 0 l1_gas + 288 l1_data_gas + (512000 + 256000 + 10000 + 3 * 142810 + 2 * 87650 + 1741387) l2 gas
+    // 639292 = reported consumed sierra gas
+    // 0 l1_gas + 288 l1_data_gas + (512000 + 256000 + 10000 + 3 * 142810 + 2 * 87650 + 639292) l2 gas
     assert_gas(
         &result,
         "test_call_other_contract",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(288),
-            l2_gas: GasAmount(2_980_307),
+            l2_gas: GasAmount(2_021_022),
         },
     );
 }
@@ -1860,21 +1859,20 @@ fn nested_call_cost_in_forked_contract_sierra_gas() {
     let result = run_test_case(&test, ForgeTrackedResource::SierraGas);
 
     assert_passed(&result);
-    // TODO(#3473): Once the bug with duplicated builtins from syscalls in nested calls is fixed, reported consumed sierra gas should be lower.
     // 512000 = event keys cost (see `events_contract_cost_sierra_gas` test)
     // 256000 = event data cost (see `events_contract_cost_sierra_gas` test)
     // 10000 = cost of 1 emit event syscall (see `events_contract_cost_sierra_gas` test)
     // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
     // 87650 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
-    // 1559797 = reported consumed sierra gas
-    // 0 l1_gas + 192 l1_data_gas + (512000 + 256000 + 10000 + 2 * 142810 + 2 * 87650 + 1559797) l2 gas
+    // 600512 = reported consumed sierra gas
+    // 0 l1_gas + 192 l1_data_gas + (512000 + 256000 + 10000 + 2 * 142810 + 2 * 87650 + 600512) l2 gas
     assert_gas(
         &result,
         "test_call_other_contract_fork",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(2_798_717),
+            l2_gas: GasAmount(1_839_432),
         },
     );
 }

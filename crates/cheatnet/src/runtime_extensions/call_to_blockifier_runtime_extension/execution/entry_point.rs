@@ -2,7 +2,7 @@ use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
-use crate::runtime_extensions::common::{get_relocated_vm_trace, get_syscalls_gas_consumed, sum_syscall_usage};
+use crate::runtime_extensions::common::{get_relocated_vm_trace, sum_syscall_usage};
 use crate::state::{CallTrace, CallTraceNode, CheatStatus};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
@@ -196,14 +196,7 @@ pub fn execute_call_entry_point(
             syscall_usage,
             vm_trace,
         }) => {
-            remove_syscall_resources_and_exit_non_error_call(
-                &call_info,
-                &syscall_usage,
-                context,
-                cheatnet_state,
-                vm_trace,
-                current_tracked_resource,
-            );
+            exit_non_error_call(&call_info, &syscall_usage, cheatnet_state, vm_trace);
             Ok(call_info)
         }
         Err(EntryPointExecutionErrorWithTrace { source: err, trace }) => {
@@ -296,27 +289,14 @@ fn call_info_from_pre_execution_error(
     }
 }
 
-fn remove_syscall_resources_and_exit_non_error_call(
+fn exit_non_error_call(
     call_info: &CallInfo,
     syscall_usage: &SyscallUsageMap,
-    context: &mut EntryPointExecutionContext,
     cheatnet_state: &mut CheatnetState,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
-    current_tracked_resource: TrackedResource,
 ) {
-    let versioned_constants = context.tx_context.block_context.versioned_constants();
-    // We don't want the syscall resources to pollute the results
-    let mut resources = call_info.resources.clone();
-    let mut gas_consumed = call_info.execution.gas_consumed;
-
-    match current_tracked_resource {
-        TrackedResource::CairoSteps => {
-            resources -= &versioned_constants.get_additional_os_syscall_resources(syscall_usage);
-        }
-        TrackedResource::SierraGas => {
-            gas_consumed -= get_syscalls_gas_consumed(syscall_usage, versioned_constants);
-        }
-    }
+    let resources = call_info.resources.clone();
+    let gas_consumed = call_info.execution.gas_consumed;
 
     let nested_syscall_usage_sum =
         aggregate_nested_syscall_usage(&cheatnet_state.trace_data.current_call_stack.top());
