@@ -1628,7 +1628,7 @@ fn l1_message_cost_for_proxy_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(29524),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(586_310),
+            l2_gas: GasAmount(572_140),
         },
     );
 }
