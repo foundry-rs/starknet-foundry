@@ -1063,11 +1063,11 @@ fn nested_call_cost_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-    // int(2242 * 0.16) = 359 = gas cost of bitwise builtins
+    // int(1121 * 0.16) = 180 = gas cost of bitwise builtins
     // 96 * 3 = gas cost of onchain data (deploy cost)
     // ~1 gas for 1 event key
     // ~1 gas for 1 event data
-    // 0 l1_gas + (96 * 3) l1_data_gas + 359 * (100 / 0.0025) + 1 * 10240 + 1 * 5120 l2 gas
+    // 0 l1_gas + (96 * 3) l1_data_gas + 180 * (100 / 0.0025) + 1 * 10240 + 1 * 5120 l2 gas
     assert_gas(
         &result,
         "test_call_other_contract",
@@ -1136,11 +1136,11 @@ fn nested_call_cost_in_forked_contract_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-    // int(2242 * 0.16) = 359 = gas cost of bitwise builtins
+    // int(1121 * 0.16) = 180 = gas cost of bitwise builtins
     // 96 * 2 = gas cost of onchain data (deploy cost)
     // ~1 gas for 1 event key
     // ~1 gas for 1 event data
-    // 0 l1_gas + (96 * 2) l1_data_gas + 359 * (100 / 0.0025) + 1 * 10240 + 1 * 5120 l2 gas
+    // 0 l1_gas + (96 * 2) l1_data_gas + 180 * (100 / 0.0025) + 1 * 10240 + 1 * 5120 l2 gas
     assert_gas(
         &result,
         "test_call_other_contract_fork",
