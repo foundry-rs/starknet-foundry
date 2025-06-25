@@ -8,6 +8,7 @@ use fs_extra::dir::{CopyOptions, copy};
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value, json};
+use sncast::helpers::account::load_accounts;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH,
@@ -162,9 +163,8 @@ async fn deploy_account_to_devnet<T: AccountFactory + Sync>(factory: T, address:
 }
 
 fn get_account_deployment_data(account: &str) -> (String, String, SigningKey) {
-    let contents = fs::read_to_string(ACCOUNT_FILE_PATH).expect("Failed to read accounts file");
-    let items: Value = serde_json::from_str(&contents)
-        .unwrap_or_else(|_| panic!("Failed to parse accounts file at = {ACCOUNT_FILE_PATH}"));
+    let items =
+        load_accounts(&Utf8PathBuf::from(ACCOUNT_FILE_PATH)).expect("Failed to load accounts");
 
     let account_data = items
         .get("alpha-sepolia")
