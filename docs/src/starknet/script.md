@@ -402,11 +402,12 @@ $ sncast \
 <summary>Output:</summary>
 
 ```shell
-command: script run
-message:
-    0x6d6170206465706c6f79206661696c6564 ('map deploy failed')
+Success: Script execution completed
 
-status: script panicked
+Status: script panicked
+
+
+    0x6d6170206465706c6f79206661696c6564 ('map deploy failed')
 ```
 </details>
 <br>

@@ -61,9 +61,10 @@ $ sncast --profile myprofile \
 <summary>Output:</summary>
 
 ```shell
-command: call
-response: 0x0
-response_raw: [0x0]
+Success: Call completed
+
+Response:     0x0
+Response Raw: [0x0]
 ```
 </details>
 <br>
@@ -98,9 +99,10 @@ $ sncast call \
 <summary>Output:</summary>
 
 ```shell
-command: call
-response: 0x0
-response_raw: [0x0]
+Success: Call completed
+
+Response:     0x0
+Response Raw: [0x0]
 ```
 </details>
 <br>

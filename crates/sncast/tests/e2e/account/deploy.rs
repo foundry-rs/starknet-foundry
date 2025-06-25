@@ -128,8 +128,8 @@ pub async fn test_happy_case_add_profile() {
     assert!(stdout_str.contains("transaction_hash"));
 }
 
-#[test_case("{\"alpha-sepolia\": {}}", "error: Account = my_account not found under network = alpha-sepolia" ; "when account name not present")]
-#[test_case("{\"alpha-sepolia\": {\"my_account\" : {}}}", "error: Failed to parse field `alpha-sepolia.my_account` in file 'accounts.json': missing field `private_key`[..]" ; "when private key not present")]
+#[test_case("{\"alpha-sepolia\": {}}", "Error: Account = my_account not found under network = alpha-sepolia" ; "when account name not present")]
+#[test_case("{\"alpha-sepolia\": {\"my_account\" : {}}}", "Error: Failed to parse field `alpha-sepolia.my_account` in file 'accounts.json': missing field `private_key`[..]" ; "when private key not present")]
 fn test_account_deploy_error(accounts_content: &str, error: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
@@ -174,11 +174,12 @@ pub async fn test_valid_class_hash() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
-        command: account deploy
-        transaction_hash: [..]
+        Success: Account deployed
 
-        To see invocation details, visit:
-        transaction: [..]
+        Transaction Hash: 0x[..]
+
+        To see account deployment details, visit:
+        transaction: https://sepolia.starkscan.co/tx/0x[..]
     "});
 }
 
@@ -203,11 +204,12 @@ pub async fn test_valid_no_max_fee() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
-        command: account deploy
-        transaction_hash: [..]
+        Success: Account deployed
 
-        To see invocation details, visit:
-        transaction: [..]
+        Transaction Hash: 0x[..]
+
+        To see account deployment details, visit:
+        transaction: https://sepolia.starkscan.co/tx/0x[..]
     "});
 }
 
@@ -298,11 +300,12 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account deploy
-        transaction_hash: 0x0[..]
+        Success: Account deployed
 
-        To see invocation details, visit:
-        transaction: [..]
+        Transaction Hash: 0x[..]
+
+        To see account deployment details, visit:
+        transaction: https://sepolia.starkscan.co/tx/0x[..]
     "});
 
     let path = Utf8PathBuf::from_path_buf(tempdir.path().join(account_file))
@@ -349,8 +352,8 @@ pub async fn test_keystore_already_deployed() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account deploy
-        error: Account already deployed
+        Command: account deploy
+        Error: Account already deployed
         "},
     );
 }
@@ -391,8 +394,8 @@ pub async fn test_keystore_key_mismatch() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account deploy
-        error: Public key and private key from keystore do not match
+        Command: account deploy
+        Error: Public key and private key from keystore do not match
         "},
     );
 }
@@ -428,8 +431,8 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account deploy
-        error: Failed to find keystore file
+        Command: account deploy
+        Error: Failed to find keystore file
         "},
     );
 }
@@ -465,8 +468,8 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account deploy
-        error: File containing the account does not exist: When using `--keystore` argument, the `--account` argument should be a path to the starkli JSON account file
+        Command: account deploy
+        Error: File containing the account does not exist: When using `--keystore` argument, the `--account` argument should be a path to the starkli JSON account file
         "},
     );
 }
@@ -506,8 +509,8 @@ pub async fn test_deploy_keystore_no_status() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account deploy
-        error: Failed to get status key from account JSON file
+        Command: account deploy
+        Error: Failed to get status key from account JSON file
         "},
     );
 }
@@ -560,10 +563,36 @@ pub async fn test_deploy_keystore_other_args() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account deploy
-        transaction_hash: 0x0[..]
+        Success: Account deployed
 
-        To see invocation details, visit:
-        transaction: [..]
+        Transaction Hash: 0x[..]
+
+        To see account deployment details, visit:
+        transaction: https://sepolia.starkscan.co/tx/0x[..]
     "});
+}
+
+#[tokio::test]
+pub async fn test_json_output_format() {
+    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "--json",
+        "account",
+        "deploy",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+    ];
+    let args = apply_test_resource_bounds_flags(args);
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    snapbox.assert().stdout_matches(indoc! {r#"
+        {"transaction_hash":"0x0[..]"}
+        {"links":"transaction: https://sepolia.starkscan.co/tx/0x0[..]","title":"account deployment"}
+    "#});
 }

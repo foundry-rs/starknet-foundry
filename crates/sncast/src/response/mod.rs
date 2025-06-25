@@ -8,7 +8,6 @@ pub mod errors;
 pub mod explorer_link;
 pub mod invoke;
 pub mod multicall;
-pub mod print;
 pub mod script;
 pub mod show_config;
 pub mod transformed_call;

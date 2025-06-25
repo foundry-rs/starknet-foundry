@@ -51,8 +51,9 @@ async fn test_happy_case_contract_address() {
         output,
         formatdoc!(
             r"
-        command: verify
-        message: {}
+        Success: Verification completed
+
+        {}
         ",
             verifier_response
         ),
@@ -102,8 +103,9 @@ async fn test_happy_case_class_hash() {
         output,
         formatdoc!(
             r"
-        command: verify
-        message: {}
+        Success: Verification completed
+
+        {}
         ",
             verifier_response
         ),
@@ -153,8 +155,8 @@ async fn test_failed_verification_contract_address() {
         output,
         formatdoc!(
             r"
-        command: verify
-        error: {}
+        Command: verify
+        Error: {}
         ",
             verifier_response
         ),
@@ -204,8 +206,8 @@ async fn test_failed_verification_class_hash() {
         output,
         formatdoc!(
             r"
-        command: verify
-        error: {}
+        Command: verify
+        Error: {}
         ",
             verifier_response
         ),
@@ -238,8 +240,8 @@ async fn test_verification_abort() {
         output,
         formatdoc!(
             r"
-        command: verify
-        error: Verification aborted
+        Command: verify
+        Error: Verification aborted
         "
         ),
     );
@@ -271,8 +273,8 @@ async fn test_wrong_contract_name_passed() {
         output,
         formatdoc!(
             r"
-        command: verify
-        error: Contract named 'nonexistent' was not found
+        Command: verify
+        Error: Contract named 'nonexistent' was not found
         "
         ),
     );
@@ -321,8 +323,9 @@ async fn test_happy_case_with_confirm_verification_flag() {
         output,
         formatdoc!(
             r"
-        command: verify
-        message: {}
+        Success: Verification completed
+
+        {}
         ",
             verifier_response
         ),
@@ -374,8 +377,9 @@ async fn test_happy_case_specify_package() {
         output,
         formatdoc!(
             r"
-        command: verify
-        message: {}
+        Success: Verification completed
+
+        {}
         ",
             verifier_response
         ),
@@ -427,8 +431,9 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         output,
         formatdoc!(
             r"
-        command: verify
-        message: {}
+        Success: Verification completed
+
+        {}
         ",
             verifier_response
         ),
@@ -463,8 +468,8 @@ async fn test_worskpaces_package_no_contract() {
         output,
         formatdoc!(
             r"
-        command: verify
-        error: Contract named 'nonexistent' was not found
+        Command: verify
+        Error: Contract named 'nonexistent' was not found
         "
         ),
     );

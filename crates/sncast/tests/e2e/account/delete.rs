@@ -23,8 +23,8 @@ pub fn test_no_accounts_in_network() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account delete
-        error: No accounts defined for network = my-custom-network
+        Command: account delete
+        Error: No accounts defined for network = my-custom-network
         "},
     );
 }
@@ -48,8 +48,8 @@ pub fn test_account_does_not_exist() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account delete
-        error: Account with name user99 does not exist
+        Command: account delete
+        Error: Account with name user99 does not exist
         "},
     );
 }
@@ -79,8 +79,8 @@ pub fn test_delete_abort() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account delete
-        error: Delete aborted
+        Command: account delete
+        Error: Delete aborted
         "},
     );
 }
@@ -107,8 +107,9 @@ pub fn test_happy_case() {
     let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
 
     snapbox.assert().success().stdout_matches(indoc! {r"
-        command: account delete
-        result: Account successfully removed
+        Success: Account deleted
+
+        Account successfully removed
     "});
 }
 
@@ -131,8 +132,9 @@ pub fn test_happy_case_url() {
     let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
 
     snapbox.assert().success().stdout_matches(indoc! {r"
-        command: account delete
-        result: Account successfully removed
+        Success: Account deleted
+
+        Account successfully removed
     "});
 }
 
@@ -161,8 +163,9 @@ pub fn test_happy_case_with_yes_flag() {
 
     assert!(output.as_stderr().is_empty());
     output.stdout_matches(indoc! {r"
-        command: account delete
-        result: Account successfully removed
+        Success: Account deleted
+
+        Account successfully removed
     "});
 }
 
