@@ -1063,7 +1063,6 @@ fn nested_call_cost_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-    // TODO(#3473): Once the bug with duplicated builtins from syscalls in nested calls is fixed, the number of bitwise and some other builtins should be ~2 lower.
     // int(2242 * 0.16) = 359 = gas cost of bitwise builtins
     // 96 * 3 = gas cost of onchain data (deploy cost)
     // ~1 gas for 1 event key
@@ -1137,7 +1136,6 @@ fn nested_call_cost_in_forked_contract_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-    // TODO(#3473): Once the bug with duplicated builtins from syscalls in nested calls is fixed, the number of bitwise and some other builtins should be ~2 lower.
     // int(2242 * 0.16) = 359 = gas cost of bitwise builtins
     // 96 * 2 = gas cost of onchain data (deploy cost)
     // ~1 gas for 1 event key
@@ -1620,8 +1618,8 @@ fn l1_message_cost_for_proxy_sierra_gas() {
     //      -> 1 pedersen costs 4050, 1 range check costs 70
     // 175300 = cost of 2 call contract syscalls (see `multiple_storage_writes_cost_sierra_gas` test)
     // 14170 = cost of 1 SendMessageToL1 syscall (see `l1_message_cost_sierra_gas` test)
-    // 111220 = reported consumed sierra gas
-    // 29524 l1_gas + (128 + 64) l1_data_gas + (285620 + 175300 + 14170 + 111220) l2 gas
+    // 97050 = reported consumed sierra gas
+    // 29524 l1_gas + (128 + 64) l1_data_gas + (285620 + 175300 + 14170 + 97050) l2 gas
     assert_gas(
         &result,
         "l1_message_cost_for_proxy",
