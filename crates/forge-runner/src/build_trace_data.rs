@@ -47,7 +47,7 @@ fn remove_syscall_resources_from_call_trace(
     let mut execution_resources = call_trace.used_execution_resources.clone();
     let mut gas_consumed = call_trace.gas_consumed;
 
-    match TrackedResource::CairoSteps {
+    match tracked_resource {
         TrackedResource::CairoSteps => {
             execution_resources -=
                 &versioned_constants.get_additional_os_syscall_resources(&syscall_usage);
@@ -60,7 +60,7 @@ fn remove_syscall_resources_from_call_trace(
     call_trace.used_execution_resources = execution_resources.filter_unused_builtins().clone();
     call_trace.gas_consumed = gas_consumed;
 
-    for nested_call in call_trace.nested_calls.iter_mut() {
+    for nested_call in &mut call_trace.nested_calls {
         match nested_call {
             CallTraceNode::EntryPointCall(nested_call_trace) => {
                 remove_syscall_resources_from_call_trace(
