@@ -9,7 +9,7 @@ pub trait IHelloStarknet<TContractState> {
 #[starknet::contract]
 pub mod HelloStarknet {
     use core::array::ArrayTrait;
-    use starknet::storage::{StoragePointerWriteAccess, StoragePointerReadAccess};
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     #[storage]
     struct Storage {
@@ -45,8 +45,8 @@ pub mod HelloStarknet {
 
 #[cfg(test)]
 mod tests {
-    use snforge_std::{declare};
     use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
+    use snforge_std::declare;
 
     #[test]
     fn declare_contract_from_lib() {

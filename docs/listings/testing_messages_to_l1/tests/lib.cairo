@@ -1,2 +1,2 @@
-pub mod simple;
 pub mod detailed;
+pub mod simple;

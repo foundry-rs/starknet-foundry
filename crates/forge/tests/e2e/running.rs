@@ -1,10 +1,9 @@
 use super::common::runner::{get_current_branch, get_remote_url, setup_package, test_runner};
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
-use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::{AsOutput, assert_stdout, assert_stdout_contains};
-use std::{fs, str::FromStr};
-use test_utils::tempdir_with_tool_versions;
+use std::fs;
+use test_utils::{get_snforge_std_entry, tempdir_with_tool_versions};
 use toml_edit::{DocumentMut, value};
 
 #[test]
@@ -759,17 +758,12 @@ fn with_exit_first() {
 
             [dependencies]
             starknet = "2.4.0"
-            snforge_std = {{ path = "{}" }}
+            {}
 
             [tool.snforge]
             exit_first = true
             "#,
-            Utf8PathBuf::from_str("../../snforge_std")
-                .unwrap()
-                .canonicalize_utf8()
-                .unwrap()
-                .to_string()
-                .replace('\\', "/")
+            get_snforge_std_entry().unwrap()
         ))
         .unwrap();
 
@@ -1008,7 +1002,6 @@ fn detailed_resources_flag() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn detailed_resources_flag_sierra_gas() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)
@@ -1038,7 +1031,6 @@ fn detailed_resources_flag_sierra_gas() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn detailed_resources_mixed_resources() {
     let temp = setup_package("forking");
     let output = test_runner(&temp)

@@ -11,11 +11,11 @@ trait IBlocker<TContractState> {
 
 #[starknet::contract]
 mod Blocker {
-    use core::{array::ArrayTrait, box::BoxTrait};
-    use starknet::{
-        SyscallResultTrait, syscalls::get_block_hash_syscall, get_block_info, ContractAddress,
-    };
+    use core::array::ArrayTrait;
+    use core::box::BoxTrait;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::syscalls::get_block_hash_syscall;
+    use starknet::{ContractAddress, SyscallResultTrait, get_block_info};
 
     #[storage]
     struct Storage {

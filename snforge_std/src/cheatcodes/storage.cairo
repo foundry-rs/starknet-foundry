@@ -49,7 +49,7 @@ pub fn load(target: ContractAddress, storage_address: felt252, size: felt252) ->
         let loaded = load_felt252(target, storage_address + offset.into());
         output_array.append(loaded);
         offset += 1;
-    };
+    }
     output_array
 }
 

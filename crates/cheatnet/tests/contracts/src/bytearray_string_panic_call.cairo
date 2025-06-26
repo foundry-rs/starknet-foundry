@@ -39,7 +39,7 @@ trait IByteArrayPanickingContractProxy<TContractState> {
 #[starknet::contract]
 mod ByteArrayPanickingContractProxy {
     use starknet::ContractAddress;
-    use super::{IByteArrayPanickingContractDispatcherTrait, IByteArrayPanickingContractDispatcher};
+    use super::{IByteArrayPanickingContractDispatcher, IByteArrayPanickingContractDispatcherTrait};
 
     #[storage]
     struct Storage {}
