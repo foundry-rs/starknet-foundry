@@ -1,7 +1,9 @@
 use anyhow::{Context, Result};
+use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
+use blockifier::versioned_constants::VersionedConstants;
 use cairo_annotations::trace_data::{
     CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint,
     CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
@@ -14,6 +16,7 @@ use cairo_annotations::trace_data::{
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use camino::{Utf8Path, Utf8PathBuf};
+use cheatnet::runtime_extensions::common::get_syscalls_gas_consumed;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::{CallTrace, CallTraceNode};
 use conversions::IntoConv;
@@ -33,7 +36,56 @@ pub const TRACE_DIR: &str = "snfoundry_trace";
 pub const TEST_CODE_CONTRACT_NAME: &str = "SNFORGE_TEST_CODE";
 pub const TEST_CODE_FUNCTION_NAME: &str = "SNFORGE_TEST_CODE_FUNCTION";
 
-pub fn build_profiler_call_trace(
+fn remove_syscall_resources_from_call_trace(
+    value: &Rc<RefCell<CallTrace>>,
+    tracked_resource: TrackedResource,
+    versioned_constants: &VersionedConstants,
+) {
+    let mut call_trace = value.borrow_mut();
+    let syscall_usage = call_trace.used_syscalls.clone();
+
+    let mut execution_resources = call_trace.used_execution_resources.clone();
+    let mut gas_consumed = call_trace.gas_consumed;
+
+    match TrackedResource::CairoSteps {
+        TrackedResource::CairoSteps => {
+            execution_resources -=
+                &versioned_constants.get_additional_os_syscall_resources(&syscall_usage);
+        }
+        TrackedResource::SierraGas => {
+            gas_consumed -= get_syscalls_gas_consumed(&syscall_usage, versioned_constants);
+        }
+    }
+
+    call_trace.used_execution_resources = execution_resources.filter_unused_builtins().clone();
+    call_trace.gas_consumed = gas_consumed;
+
+    for nested_call in call_trace.nested_calls.iter_mut() {
+        match nested_call {
+            CallTraceNode::EntryPointCall(nested_call_trace) => {
+                remove_syscall_resources_from_call_trace(
+                    nested_call_trace,
+                    tracked_resource,
+                    versioned_constants,
+                );
+            }
+            CallTraceNode::DeployWithoutConstructor => {}
+        }
+    }
+}
+
+pub fn build_profiler_call_trace_with_adjusted_resources(
+    value: &Rc<RefCell<CallTrace>>,
+    contracts_data: &ContractsData,
+    versioned_program_path: &Utf8Path,
+    tracked_resource: TrackedResource,
+) -> ProfilerCallTrace {
+    let versioned_constants = VersionedConstants::latest_constants();
+    remove_syscall_resources_from_call_trace(value, tracked_resource, versioned_constants);
+    build_profiler_call_trace(&value, contracts_data, versioned_program_path)
+}
+
+fn build_profiler_call_trace(
     value: &Rc<RefCell<CallTrace>>,
     contracts_data: &ContractsData,
     versioned_program_path: &Utf8Path,
