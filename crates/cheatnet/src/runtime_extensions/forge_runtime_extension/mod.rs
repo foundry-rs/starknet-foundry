@@ -644,7 +644,7 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime, tracked_resource: &
                 versioned_constants,
                 &all_execution_resources,
                 &top_call_syscalls,
-            )
+            );
         }
         TrackedResource::SierraGas => {
             all_sierra_gas_consumed +=
