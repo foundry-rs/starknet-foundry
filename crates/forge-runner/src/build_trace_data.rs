@@ -82,7 +82,7 @@ pub fn build_profiler_call_trace_with_adjusted_resources(
 ) -> ProfilerCallTrace {
     let versioned_constants = VersionedConstants::latest_constants();
     remove_syscall_resources_from_call_trace(value, tracked_resource, versioned_constants);
-    build_profiler_call_trace(&value, contracts_data, versioned_program_path)
+    build_profiler_call_trace(value, contracts_data, versioned_program_path)
 }
 
 fn build_profiler_call_trace(
