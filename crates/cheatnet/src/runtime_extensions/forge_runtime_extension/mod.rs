@@ -615,7 +615,6 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime, tracked_resource: &
         .top();
 
     let mut all_execution_resources = add_execution_resources(top_call.clone());
-
     let mut all_sierra_gas_consumed = add_sierra_gas_resources(&top_call);
 
     let mut top_call = top_call.borrow_mut();
@@ -637,7 +636,8 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime, tracked_resource: &
         .syscalls_usage
         .clone();
 
-    // Execution resources from nested calls syscalls were already added
+    // Execution resources from nested calls syscalls were already added, so we only
+    // need to add resources from top call syscalls.
     match tracked_resource {
         TrackedResource::CairoSteps => {
             all_execution_resources = add_syscall_execution_resources(
@@ -663,6 +663,7 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime, tracked_resource: &
         .fold(SyscallUsageMap::new(), |syscalls, trace| {
             sum_syscall_usage(syscalls, &trace.borrow().used_syscalls)
         });
+
     top_call.used_syscalls = sum_syscall_usage(top_call_syscalls, &nested_calls_syscalls);
 }
 
@@ -755,7 +756,6 @@ pub fn get_all_used_resources(
     runtime: ForgeRuntime,
     transaction_context: &TransactionContext,
     tracked_resource: TrackedResource,
-    // total_syscalls: SyscallUsageMap,
 ) -> UsedResources {
     let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
     let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.base.l2_to_l1_messages;
@@ -794,6 +794,7 @@ pub fn get_all_used_resources(
         .current_call_stack
         .top();
 
+    let top_call_syscalls = top_call.borrow().used_syscalls.clone();
     let execution_resources = top_call.borrow().used_execution_resources.clone();
     let sierra_gas_consumed = top_call.borrow().gas_consumed;
 
@@ -807,8 +808,6 @@ pub fn get_all_used_resources(
                 .map(|evt| evt.event.clone())
         })
         .collect();
-
-    let top_call_syscalls = top_call.borrow().used_syscalls.clone();
 
     UsedResources {
         events,

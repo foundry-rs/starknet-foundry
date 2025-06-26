@@ -350,7 +350,6 @@ pub fn run_test_case(
         .clone();
 
     let transaction_context = get_context(&forge_runtime).tx_context.clone();
-
     let used_resources =
         get_all_used_resources(forge_runtime, &transaction_context, tracked_resource);
     let gas_used = calculate_used_gas(
