@@ -154,6 +154,7 @@ pub struct RunCompleted {
     pub(crate) used_resources: UsedResources,
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
+    pub(crate) tracked_resource: TrackedResource,
 }
 
 #[allow(clippy::too_many_lines)]
@@ -337,7 +338,7 @@ pub fn run_test_case(
 
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
-    update_top_call_resources(&mut forge_runtime);
+    update_top_call_resources(&mut forge_runtime, &tracked_resource);
     update_top_call_l1_resources(&mut forge_runtime);
 
     let fuzzer_args = forge_runtime
@@ -369,6 +370,7 @@ pub fn run_test_case(
             used_resources,
             encountered_errors,
             fuzzer_args,
+            tracked_resource,
         })),
         Err(error) => RunResult::Error(RunError {
             error: Box::new(error),

@@ -1,5 +1,5 @@
 use crate::backtrace::{add_backtrace_footer, get_backtrace, is_backtrace_enabled};
-use crate::build_trace_data::build_profiler_call_trace;
+use crate::build_trace_data::build_profiler_call_trace_with_adjusted_resources;
 use crate::debugging::{TraceVerbosity, build_debugging_trace};
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
@@ -318,6 +318,7 @@ impl TestCaseSummary<Single> {
             used_resources,
             encountered_errors,
             fuzzer_args,
+            tracked_resource,
         }: RunCompleted,
         test_case: &TestCaseWithResolvedConfig,
         contracts_data: &ContractsData,
@@ -344,11 +345,14 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info,
                         used_resources,
-                        trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
-                            &call_trace,
-                            contracts_data,
-                            versioned_program_path,
-                        )),
+                        trace_data: VersionedProfilerCallTrace::V1(
+                            build_profiler_call_trace_with_adjusted_resources(
+                                &call_trace,
+                                contracts_data,
+                                versioned_program_path,
+                                tracked_resource,
+                            ),
+                        ),
                         debugging_trace,
                     };
                     check_available_gas(test_case.config.available_gas, summary, ui)
@@ -381,11 +385,14 @@ impl TestCaseSummary<Single> {
                             test_statistics: (),
                             gas_info,
                             used_resources,
-                            trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
-                                &call_trace,
-                                contracts_data,
-                                versioned_program_path,
-                            )),
+                            trace_data: VersionedProfilerCallTrace::V1(
+                                build_profiler_call_trace_with_adjusted_resources(
+                                    &call_trace,
+                                    contracts_data,
+                                    versioned_program_path,
+                                    tracked_resource,
+                                ),
+                            ),
                             debugging_trace,
                         }
                     } else {
