@@ -1,8 +1,5 @@
 name: CI
 
-env:
-  DEVNET_REV: e0613b1028013dfd7ee8239d677e3a544fd808c8 # v0.4.2
-
 on:
   pull_request:
   merge_group:
