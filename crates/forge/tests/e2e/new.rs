@@ -19,7 +19,7 @@ use std::str::FromStr;
 use std::sync::LazyLock;
 use std::{env, fs, iter};
 use test_case::test_case;
-use test_utils::{get_local_snforge_std_absolute_path, tempdir_with_tool_versions};
+use test_utils::{tempdir_with_tool_versions, use_snforge_std_compatibility};
 use toml_edit::{DocumentMut, Formatted, InlineTable, Item, Value};
 
 static RE_NEWLINES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\n{3,}").unwrap());
@@ -43,7 +43,7 @@ fn init_new_project() {
         ),
     );
 
-    validate_init(&temp.join("test_name"), None, &Template::BalanceContract);
+    validate_init(&temp.join("test_name"), false, &Template::BalanceContract);
 }
 
 #[test_case(&Template::CairoProgram; "cairo-program")]
@@ -66,7 +66,7 @@ fn create_new_project_dir_not_exist(template: &Template) {
         .assert()
         .success();
 
-    validate_init(&project_path, None, template);
+    validate_init(&project_path, false, template);
 }
 
 #[test]
@@ -105,7 +105,7 @@ fn create_new_project_dir_exists_and_empty() {
         .assert()
         .success();
 
-    validate_init(&project_path, None, &Template::BalanceContract);
+    validate_init(&project_path, false, &Template::BalanceContract);
 }
 
 #[test]
@@ -123,11 +123,7 @@ fn init_new_project_from_scarb() {
         .assert()
         .success();
 
-    validate_init(
-        &temp.join("test_name"),
-        Some(SnforgeStd::Normal),
-        &Template::BalanceContract,
-    );
+    validate_init(&temp.join("test_name"), true, &Template::BalanceContract);
 }
 
 #[test]
@@ -148,11 +144,7 @@ fn init_new_project_from_scarb_snforge_std_compatibility() {
         .assert()
         .success();
 
-    validate_init(
-        &temp.join("test_name"),
-        Some(SnforgeStd::Compatibility),
-        &Template::BalanceContract,
-    );
+    validate_init(&temp.join("test_name"), true, &Template::BalanceContract);
 }
 pub fn append_to_path_var(path: &Path) -> OsString {
     let script_path = iter::once(path.to_path_buf());
@@ -161,15 +153,12 @@ pub fn append_to_path_var(path: &Path) -> OsString {
     env::join_paths(script_path.chain(other_paths)).unwrap()
 }
 
-fn validate_init(
-    project_path: &PathBuf,
-    validate_snforge_std: Option<SnforgeStd>,
-    template: &Template,
-) {
+fn validate_init(project_path: &PathBuf, validate_snforge_std: bool, template: &Template) {
     let manifest_path = project_path.join("Scarb.toml");
     let scarb_toml = fs::read_to_string(manifest_path.clone()).unwrap();
 
     let expected = get_expected_manifest_content(template, validate_snforge_std);
+    dbg!(&expected);
     assert_matches(&expected, &scarb_toml);
 
     let mut scarb_toml = DocumentMut::from_str(&scarb_toml).unwrap();
@@ -180,17 +169,39 @@ fn validate_init(
         .as_table_mut()
         .unwrap();
 
-    let local_snforge_std = get_local_snforge_std_absolute_path()
-        .unwrap()
-        .to_str()
-        .unwrap()
-        .to_string();
+    if use_snforge_std_compatibility() {
+        let local_snforge_std_compatibility = Path::new("../../snforge_std_compatibility")
+            .canonicalize()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string();
 
-    let mut snforge_std = InlineTable::new();
-    snforge_std.insert("path", Value::String(Formatted::new(local_snforge_std)));
+        let mut snforge_std_compatibility = InlineTable::new();
+        snforge_std_compatibility.insert(
+            "path",
+            Value::String(Formatted::new(local_snforge_std_compatibility)),
+        );
 
-    dependencies.remove("snforge_std");
-    dependencies.insert("snforge_std", Item::Value(Value::InlineTable(snforge_std)));
+        dependencies.remove("snforge_std_compatibility");
+        dependencies.insert(
+            "snforge_std_compatibility",
+            Item::Value(Value::InlineTable(snforge_std_compatibility)),
+        );
+    } else {
+        let local_snforge_std = Path::new("../../snforge_std")
+            .canonicalize()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string();
+
+        let mut snforge_std = InlineTable::new();
+        snforge_std.insert("path", Value::String(Formatted::new(local_snforge_std)));
+
+        dependencies.remove("snforge_std");
+        dependencies.insert("snforge_std", Item::Value(Value::InlineTable(snforge_std)));
+    }
 
     fs::write(manifest_path, scarb_toml.to_string()).unwrap();
 
@@ -203,21 +214,13 @@ fn validate_init(
     assert_stdout_contains(output, expected);
 }
 
-enum SnforgeStd {
-    Normal,
-    Compatibility,
-}
-
-fn get_expected_manifest_content(
-    template: &Template,
-    validate_snforge_std: Option<SnforgeStd>,
-) -> String {
-    let snforge_std_assert = match validate_snforge_std {
-        None => "",
-        Some(snforge_std) => match snforge_std {
-            SnforgeStd::Normal => "\nsnforge_std = \"[..]\"",
-            SnforgeStd::Compatibility => "\nsnforge_std_compatibility = \"[..]\"",
-        },
+fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool) -> String {
+    let snforge_std_assert = if !validate_snforge_std {
+        ""
+    } else if use_snforge_std_compatibility() {
+        "\nsnforge_std_compatibility = \"[..]\""
+    } else {
+        "\nsnforge_std = \"[..]\""
     };
 
     let target_contract_entry = "[[target.starknet-contract]]\nsierra = true";
@@ -244,6 +247,12 @@ fn get_expected_manifest_content(
         Template::CairoProgram => ("", ""),
     };
 
+    let allow_prebuild_plugins_assert = if use_snforge_std_compatibility() {
+        r#"allow-prebuilt-plugins = ["snforge_std_compatibility"]"#
+    } else {
+        r#"allow-prebuilt-plugins = ["snforge_std"]"#
+    };
+
     let expected_manifest = formatdoc!(
         r#"
             [package]
@@ -265,7 +274,7 @@ fn get_expected_manifest_content(
             test = "snforge test"
 
             [tool.scarb]
-            allow-prebuilt-plugins = ["snforge_std"]
+            {allow_prebuild_plugins_assert}
 
             {fork_config}
 

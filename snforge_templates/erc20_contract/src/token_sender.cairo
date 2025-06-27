@@ -16,7 +16,7 @@ pub trait ITokenSender<TContractState> {
         ref self: TContractState,
         token_address: ContractAddress,
         transfer_list: Array<TransferRequest>,
-    ) -> ();
+    );
 }
 
 #[starknet::contract]

@@ -166,7 +166,7 @@ fn fuzzing_incorrect_function_args() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        error: Trait has no implementation in context: snforge_std::fuzzable::Fuzzable::<fuzzing_integrationtest::incorrect_args::MyStruct, fuzzing_integrationtest::incorrect_args::MyStructDebug>.
+        error: Trait has no implementation in context: snforge_std[..]::fuzzable::Fuzzable::<fuzzing_integrationtest::incorrect_args::MyStruct, fuzzing_integrationtest::incorrect_args::MyStructDebug>.
 
         [ERROR] Failed to build test artifacts with Scarb: `scarb` exited with error
         "},

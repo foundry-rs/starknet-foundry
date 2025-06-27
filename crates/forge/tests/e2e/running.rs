@@ -1,10 +1,11 @@
 use super::common::runner::{get_current_branch, get_remote_url, setup_package, test_runner};
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
-use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::{AsOutput, assert_stdout, assert_stdout_contains};
-use std::{fs, str::FromStr};
-use test_utils::tempdir_with_tool_versions;
+use std::fs;
+use test_utils::{
+    get_snforge_std_entry, tempdir_with_tool_versions, use_snforge_std_compatibility,
+};
 use toml_edit::{DocumentMut, value};
 
 #[test]
@@ -759,17 +760,12 @@ fn with_exit_first() {
 
             [dependencies]
             starknet = "2.4.0"
-            snforge_std = {{ path = "{}" }}
+            {}
 
             [tool.snforge]
             exit_first = true
             "#,
-            Utf8PathBuf::from_str("../../snforge_std")
-                .unwrap()
-                .canonicalize_utf8()
-                .unwrap()
-                .to_string()
-                .replace('\\', "/")
+            get_snforge_std_entry().unwrap()
         ))
         .unwrap();
 
@@ -958,6 +954,11 @@ fn incompatible_snforge_std_version_warning() {
 
 #[test]
 fn incompatible_snforge_std_version_error() {
+    if use_snforge_std_compatibility() {
+        // Skip this test if compatibility is used
+        return;
+    }
+
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
 
@@ -1069,31 +1070,7 @@ fn detailed_resources_mixed_resources() {
 
 #[test]
 fn catch_runtime_errors() {
-    let temp = setup_package("simple_package");
-
-    let expected_panic = "No such file or directory";
-
-    temp.child("tests/test.cairo")
-        .write_str(
-            formatdoc!(
-                r#"
-                use snforge_std::fs::{{FileTrait, read_txt}};
-
-                #[test]
-                #[should_panic(expected: "{}")]
-                fn catch_no_such_file() {{
-                    let file = FileTrait::new("no_way_this_file_exists");
-                    let content = read_txt(@file);
-
-                    assert!(false);
-                }}
-            "#,
-                expected_panic
-            )
-            .as_str(),
-        )
-        .unwrap();
-
+    let temp = setup_package("runtime_errors_package");
     let output = test_runner(&temp).assert();
 
     assert_stdout_contains(
@@ -1102,7 +1079,7 @@ fn catch_runtime_errors() {
             r"
                 [..]Compiling[..]
                 [..]Finished[..]
-                [PASS] simple_package_integrationtest::test::catch_no_such_file [..]
+                [PASS] runtime_errors_package_integrationtest::with_error::catch_no_such_file [..]
             "
         ),
     );
