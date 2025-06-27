@@ -12,6 +12,3 @@ project-root.workspace = true
 
 [dev-dependencies]
 test-case.workspace = true
-
-[features]
-scarb_since_2_10 = []
