@@ -1,11 +1,8 @@
 use core::array::ArrayTrait;
 use core::result::ResultTrait;
-
-use snforge_std::{declare, ContractClassTrait};
+use simple_package::hello_starknet::{IHelloStarknetDispatcher, IHelloStarknetDispatcherTrait};
 use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
-
-use simple_package::hello_starknet::IHelloStarknetDispatcher;
-use simple_package::hello_starknet::IHelloStarknetDispatcherTrait;
+use snforge_std::{ContractClassTrait, declare};
 
 #[test]
 fn call_and_invoke() {

@@ -7,7 +7,6 @@ pub trait IMessageSender<TContractState> {
 pub mod MessageSender {
     #[storage]
     struct Storage {}
-
     use starknet::syscalls::send_message_to_l1_syscall;
 
     #[external(v0)]

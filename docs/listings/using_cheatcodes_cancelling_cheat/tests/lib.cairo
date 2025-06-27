@@ -1,8 +1,7 @@
 use snforge_std::{
-    declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address,
+    ContractClassTrait, DeclareResultTrait, declare, start_cheat_caller_address,
     stop_cheat_caller_address,
 };
-
 use using_cheatcodes_cancelling_cheat::{
     ICheatcodeCheckerSafeDispatcher, ICheatcodeCheckerSafeDispatcherTrait,
 };

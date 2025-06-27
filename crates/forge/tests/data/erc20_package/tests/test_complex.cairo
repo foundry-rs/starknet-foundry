@@ -1,13 +1,10 @@
+use erc20_package::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
-use starknet::ContractAddress;
-
 use snforge_std::{
-    declare, ContractClassTrait, test_address, start_cheat_caller_address,
-    stop_cheat_caller_address,
+    ContractClassTrait, declare, start_cheat_caller_address, stop_cheat_caller_address,
+    test_address,
 };
-
-use erc20_package::erc20::IERC20Dispatcher;
-use erc20_package::erc20::IERC20DispatcherTrait;
+use starknet::ContractAddress;
 
 const NAME: felt252 = 'TOKEN';
 const SYMBOL: felt252 = 'TKN';
@@ -19,7 +16,7 @@ fn deploy_erc20(
 ) -> ContractAddress {
     let contract = declare("ERC20").unwrap().contract_class();
 
-    let mut constructor_calldata: Array::<felt252> = array![name, symbol, decimals.into()];
+    let mut constructor_calldata: Array<felt252> = array![name, symbol, decimals.into()];
 
     let mut initial_supply_serialized = array![];
     initial_supply.serialize(ref initial_supply_serialized);

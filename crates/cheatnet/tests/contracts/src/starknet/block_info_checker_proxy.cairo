@@ -19,8 +19,7 @@ trait IBlockInfoCheckerProxy<TContractState> {
 #[starknet::contract]
 mod BlockInfoCheckerProxy {
     use starknet::ContractAddress;
-    use super::IBlockInfoCheckerDispatcherTrait;
-    use super::IBlockInfoCheckerDispatcher;
+    use super::{IBlockInfoCheckerDispatcher, IBlockInfoCheckerDispatcherTrait};
 
     #[storage]
     struct Storage {}
