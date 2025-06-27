@@ -10,6 +10,7 @@ use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
 use blockifier::transaction::objects::HasRelatedFeeType;
 use blockifier::utils::u64_from_usize;
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::forge_config_extension::config::RawAvailableGasConfig;
 use cheatnet::state::ExtendedStateReader;
@@ -41,7 +42,11 @@ pub fn calculate_used_gas(
         state: state_resources,
     };
     let computation_resources = ComputationResources {
-        vm_resources: resources.execution_resources.clone(),
+        tx_vm_resources: resources.execution_resources.clone(),
+        // OS resources (transaction type related costs) and fee transfer resources are not included
+        // as they are not relevant for test execution (see documentation for details):
+        // https://github.com/foundry-rs/starknet-foundry/blob/979caf23c5d1085349e253d75682dd0e2527e321/docs/src/testing/gas-and-resource-estimation.md?plain=1#L75
+        os_vm_resources: ExecutionResources::default(),
         n_reverted_steps: 0,
         sierra_gas: resources.gas_consumed,
         reverted_sierra_gas: GasAmount::ZERO,

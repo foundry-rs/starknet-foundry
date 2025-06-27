@@ -5,6 +5,7 @@ use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::errors::PostExecutionError;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::transaction::objects::ExecutionResourcesTraits;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 
 // Based on the code from blockifer
@@ -43,6 +44,7 @@ pub fn finalize_execution(
             retdata: call_result.retdata,
             events: syscall_handler_base.events.clone(),
             l2_to_l1_messages: syscall_handler_base.l2_to_l1_messages.clone(),
+            cairo_native: false,
             failed: call_result.failed,
             gas_consumed: call_result.gas_consumed,
         },
@@ -53,5 +55,6 @@ pub fn finalize_execution(
         accessed_storage_keys: syscall_handler_base.accessed_keys.clone(),
         read_class_hash_values: syscall_handler_base.read_class_hash_values.clone(),
         accessed_contract_addresses: syscall_handler_base.accessed_contract_addresses.clone(),
+        builtin_counters: vm_resources_without_inner_calls.prover_builtins(),
     })
 }

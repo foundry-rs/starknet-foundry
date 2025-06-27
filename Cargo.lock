@@ -660,7 +660,7 @@ dependencies = [
 [[package]]
 name = "blockifier"
 version = "0.14.0-rc.3"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#823cba4d0e94638fb1f91607f7047428f7e8131f"
+source = "git+https://github.com/starkware-libs/sequencer.git?branch=main-v0.13.6#3e0570f6dcf64272df87cd95bdd508b593226093"
 dependencies = [
  "anyhow",
  "ark-ec 0.4.2",
@@ -1570,7 +1570,7 @@ version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fde0e0ec90c9dfb3b4b1a0891a7dcd0e2bffde2f7efed5fe7c9bb00e5bfb915e"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -4042,7 +4042,7 @@ dependencies = [
 [[package]]
 name = "papyrus_config"
 version = "0.14.0-rc.3"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#823cba4d0e94638fb1f91607f7047428f7e8131f"
+source = "git+https://github.com/starkware-libs/sequencer.git?branch=main-v0.13.6#3e0570f6dcf64272df87cd95bdd508b593226093"
 dependencies = [
  "clap",
  "itertools 0.12.1",
@@ -5957,7 +5957,7 @@ dependencies = [
 [[package]]
 name = "starknet_api"
 version = "0.14.0-rc.3"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#823cba4d0e94638fb1f91607f7047428f7e8131f"
+source = "git+https://github.com/starkware-libs/sequencer.git?branch=main-v0.13.6#3e0570f6dcf64272df87cd95bdd508b593226093"
 dependencies = [
  "bitvec",
  "cairo-lang-runner",
@@ -5985,7 +5985,7 @@ dependencies = [
 [[package]]
 name = "starknet_compile_to_native"
 version = "0.14.0-rc.3"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#823cba4d0e94638fb1f91607f7047428f7e8131f"
+source = "git+https://github.com/starkware-libs/sequencer.git?branch=main-v0.13.6#3e0570f6dcf64272df87cd95bdd508b593226093"
 dependencies = [
  "papyrus_config",
  "serde",
@@ -5995,7 +5995,7 @@ dependencies = [
 [[package]]
 name = "starknet_infra_utils"
 version = "0.14.0-rc.3"
-source = "git+https://github.com/software-mansion-labs/sequencer.git?branch=main-v0.13.5-modified-sierra-dep#823cba4d0e94638fb1f91607f7047428f7e8131f"
+source = "git+https://github.com/starkware-libs/sequencer.git?branch=main-v0.13.6#3e0570f6dcf64272df87cd95bdd508b593226093"
 dependencies = [
  "tokio",
  "tracing",
@@ -6949,7 +6949,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
