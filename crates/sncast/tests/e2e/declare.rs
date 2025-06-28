@@ -10,7 +10,7 @@ use configuration::CONFIG_FILENAME;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::AccountType;
-use sncast::helpers::constants::{READY_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
+use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
 use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Declare;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
