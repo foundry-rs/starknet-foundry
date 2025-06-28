@@ -13,7 +13,7 @@ account information stored locally - this will not remove the account from Stark
 > 💡 **Info**
 > Accounts creation and deployment is supported for
 >  - OpenZeppelin
->  - Argent (with guardian set to 0)
+>  - Ready (with guardian set to 0)
 >  - Braavos
 
 ## Examples
@@ -170,7 +170,7 @@ $ sncast account delete \
 
 By default, `sncast` creates/deploys an account
 using [OpenZeppelin's account contract class hash](https://starkscan.co/class/0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564).
-It is possible to create an account using custom openzeppelin, argent or braavos contract declared to starknet. This can
+It is possible to create an account using custom openzeppelin, ready or braavos contract declared to starknet. This can
 be achieved
 with `--class-hash` flag:
 

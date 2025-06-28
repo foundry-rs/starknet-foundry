@@ -11,7 +11,7 @@ use serde_json::{Map, Value, json};
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{
-    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH,
+    BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH,
 };
 use sncast::helpers::fee::FeeSettings;
 use sncast::helpers::scarb_utils::get_package_metadata;
@@ -87,16 +87,16 @@ pub async fn deploy_latest_oz_account() {
     )
     .await;
 }
-pub async fn deploy_argent_account() {
+pub async fn deploy_ready_account() {
     let provider = get_provider(URL).expect("Failed to get the provider");
     let chain_id = get_chain_id(&provider)
         .await
         .expect("Failed to get chain id");
 
-    let (address, salt, private_key) = get_account_deployment_data("argent");
+    let (address, salt, private_key) = get_account_deployment_data("ready");
 
     let factory = ArgentAccountFactory::new(
-        ARGENT_CLASS_HASH,
+        READY_CLASS_HASH,
         chain_id,
         None,
         LocalWallet::from_signing_key(private_key),
@@ -507,7 +507,7 @@ pub fn get_address_from_keystore(
     .unwrap();
     let class_hash = match account_type {
         AccountType::Braavos => BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-        AccountType::OpenZeppelin | AccountType::Argent => Felt::from_hex(
+        AccountType::OpenZeppelin | AccountType::Ready => Felt::from_hex(
             deployment
                 .get("class_hash")
                 .and_then(serde_json::Value::as_str)
@@ -520,9 +520,9 @@ pub fn get_address_from_keystore(
         AccountType::OpenZeppelin | AccountType::Braavos => {
             vec![private_key.verifying_key().scalar()]
         }
-        // This is a serialization of `Signer` enum for the variant `StarknetSigner` from the Argent account code
+        // This is a serialization of `Signer` enum for the variant `StarknetSigner` from the Ready account code
         // One stands for `None` for the guardian argument
-        AccountType::Argent => vec![Felt::ZERO, private_key.verifying_key().scalar(), Felt::ONE],
+        AccountType::Ready => vec![Felt::ZERO, private_key.verifying_key().scalar(), Felt::ONE],
     };
 
     get_contract_address(salt, class_hash, &calldata, Felt::ZERO)
@@ -589,7 +589,7 @@ pub async fn create_and_deploy_account(class_hash: Felt, account_type: AccountTy
     let class_hash = &class_hash.into_hex_string();
     let account_type = match account_type {
         AccountType::OpenZeppelin => "oz",
-        AccountType::Argent => "argent",
+        AccountType::Ready => "ready",
         AccountType::Braavos => "braavos",
     };
     let tempdir = tempdir().unwrap();
