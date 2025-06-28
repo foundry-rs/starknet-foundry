@@ -1,15 +1,16 @@
 use anyhow::{Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
+use blockifier::execution::syscalls::hint_processor::{SyscallUsage, SyscallUsageMap};
 use cairo_annotations::trace_data::{
     CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint,
     CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
     CallType as ProfilerCallType, CasmLevelInfo, ContractAddress,
     DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector,
     EntryPointSelector as ProfilerEntryPointSelector, EntryPointType as ProfilerEntryPointType,
-    ExecutionResources as ProfilerExecutionResources, TraceEntry as ProfilerTraceEntry,
-    VersionedCallTrace as VersionedProfilerCallTrace, VmExecutionResources,
+    ExecutionResources as ProfilerExecutionResources, SyscallUsage as ProfilerSyscallUsage,
+    TraceEntry as ProfilerTraceEntry, VersionedCallTrace as VersionedProfilerCallTrace,
+    VmExecutionResources,
 };
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
@@ -23,7 +24,6 @@ use starknet::core::utils::get_selector_from_name;
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, EntryPointSelector};
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -121,10 +121,16 @@ pub fn build_profiler_execution_resources(
     syscall_usage: SyscallUsageMap,
     gas_consumed: u64,
 ) -> ProfilerExecutionResources {
-    let mut profiler_syscall_counter = HashMap::new();
-    for (key, val) in syscall_usage {
-        profiler_syscall_counter.insert(build_profiler_deprecated_syscall_selector(key), val);
-    }
+    let profiler_syscall_counter = syscall_usage
+        .into_iter()
+        .map(|(key, val)| {
+            (
+                build_profiler_deprecated_syscall_selector(key),
+                build_profiler_syscall_usage(val),
+            )
+        })
+        .collect();
+
     ProfilerExecutionResources {
         vm_resources: VmExecutionResources {
             n_steps: execution_resources.n_steps,
@@ -136,6 +142,7 @@ pub fn build_profiler_execution_resources(
                 .collect(),
         },
         gas_consumed: Some(gas_consumed),
+        syscall_counter: Some(profiler_syscall_counter),
     }
 }
 
@@ -158,10 +165,10 @@ pub fn build_profiler_call_entry_point(
     let function_name = get_function_name(&entry_point_selector, contracts_data);
 
     ProfilerCallEntryPoint {
-        class_hash: class_hash.map(|ch| cairo_annotations::trace_data::ClassHash(ch.to_string())),
+        class_hash: class_hash.map(|ch| cairo_annotations::trace_data::ClassHash(ch.0)),
         entry_point_type: build_profiler_entry_point_type(entry_point_type),
-        entry_point_selector: ProfilerEntryPointSelector(format!("{}", entry_point_selector.0)),
-        contract_address: ContractAddress(format!("{}", storage_address.0.key())),
+        entry_point_selector: ProfilerEntryPointSelector(entry_point_selector.0),
+        contract_address: ContractAddress(*storage_address.0.key()),
         call_type: build_profiler_call_type(call_type),
         contract_name,
         function_name,
@@ -277,6 +284,18 @@ fn build_profiler_deprecated_syscall_selector(
             ProfilerDeprecatedSyscallSelector::GetClassHashAt
         }
         DeprecatedSyscallSelector::KeccakRound => ProfilerDeprecatedSyscallSelector::KeccakRound,
+    }
+}
+
+fn build_profiler_syscall_usage(
+    SyscallUsage {
+        call_count,
+        linear_factor,
+    }: SyscallUsage,
+) -> ProfilerSyscallUsage {
+    ProfilerSyscallUsage {
+        call_count,
+        linear_factor,
     }
 }
 
