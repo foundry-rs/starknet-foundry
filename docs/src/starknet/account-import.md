@@ -1,6 +1,6 @@
 # Importing Accounts
 
-You can export your private key from wallet (Argent) and import it into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default).
+You can export your private key from wallet (Ready) and import it into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default).
 
 > ⚠️ **Warning**
 >
@@ -13,32 +13,32 @@ This section shows how to export your private key from specific wallets.
 
 ### Examples
 
-#### Argent
+#### Ready (previously Argent)
 
-1. Open the Argent app > Settings.
+1. Open the Ready app > Settings.
 <br/>
 <br/>
-<img src="./img/argent_export_1.png" width="300"/>
+<img src="./img/ready_export_1.png" width="300"/>
 
 2. Click on the current account.
 <br/>
 <br/>
-<img src="./img/argent_export_2.png" width="300"/>
+<img src="./img/ready_export_2.png" width="300"/>
 
 3. Click on "Export private key".
 <br/>
 <br/>
-<img src="./img/argent_export_3.png" width="300"/>
+<img src="./img/ready_export_3.png" width="300"/>
 
 4. Enter your password.
 <br/>
 <br/>
-<img src="./img/argent_export_4.png" width="300"/>
+<img src="./img/ready_export_4.png" width="300"/>
 
 5. Copy your private key.
 <br/>
 <br/>
-<img src="./img/argent_export_5.png" width="300"/>
+<img src="./img/ready_export_5.png" width="300"/>
 
 
 #### Braavos
@@ -111,18 +111,18 @@ Type in your private key and press enter:
 </details>
 <br>
 
-#### Argent
+#### Ready (previously Argent)
 
-To import Argent account, set the `--type` flag to `argent`.
+To import Ready account, set the `--type` flag to `ready`.
 
 ```shell
 $ sncast \
     account import \
 	--network sepolia \
-    --name account_argent \
+    --name account_ready \
     --address 0x1 \
     --private-key 0x2 \
-    --type argent
+    --type ready
 ```
 
 #### Braavos

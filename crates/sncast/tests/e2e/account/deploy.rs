@@ -14,7 +14,7 @@ use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
 use sncast::AccountType;
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::constants::{
-    ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
+    BRAAVOS_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH, READY_CLASS_HASH,
 };
 use starknet::core::types::TransactionReceipt::DeployAccount;
 use std::fs;
@@ -23,7 +23,7 @@ use test_case::test_case;
 
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0, "oz"; "cairo_0_class_hash")]
 #[test_case(&OZ_CLASS_HASH.into_hex_string(), "oz"; "cairo_1_class_hash")]
-#[test_case(&ARGENT_CLASS_HASH.into_hex_string(), "argent"; "argent_class_hash")]
+#[test_case(&READY_CLASS_HASH.into_hex_string(), "ready"; "READY_CLASS_HASH")]
 #[test_case(&BRAAVOS_CLASS_HASH.into_hex_string(), "braavos"; "braavos_class_hash")]
 #[tokio::test]
 pub async fn test_happy_case(class_hash: &str, account_type: &str) {
@@ -253,7 +253,7 @@ pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &
 }
 
 #[test_case("oz"; "open_zeppelin_account")]
-#[test_case("argent"; "argent_account")]
+#[test_case("ready"; "ready_account")]
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 pub async fn test_happy_case_keystore(account_type: &str) {

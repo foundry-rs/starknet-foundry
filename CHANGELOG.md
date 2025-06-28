@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Improved commands output readability with colors and simplified layout.
+- The account type `argent` has been renamed to `ready` for the `--type` flag used in the `account create` and `account import`
 
 #### Removed
 
