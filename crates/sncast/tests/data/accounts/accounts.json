@@ -112,7 +112,7 @@
             "salt": "0xe35eea9d1b0fa729",
             "legacy": true
         },
-        "readt": {
+        "ready": {
             "address": "0x0321dd5ed1ff8ca08792d5c7c66d9daad1f0249c4defbe045b28ab0fec1beaed",
             "class_hash": "0x36078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f",
             "legacy": false,
