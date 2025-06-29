@@ -139,6 +139,7 @@
     * [tx-status](appendix/sncast/tx-status.md)
     * [verify](appendix/sncast/verify.md)
     * [completion](appendix/sncast/completion.md)
+    * [serialize](appendix/sncast/serialize.md)
 * [`sncast` Library Reference](appendix/sncast-library.md)
     * [declare](appendix/sncast-library/declare.md)
     * [deploy](appendix/sncast-library/deploy.md)
