@@ -58,6 +58,31 @@ Note that the arguments must be:
 > User-defined items such as enums and structs should be referred to depending on a way they are defined in ABI.\
 > In general, paths to items have form: `<project-name>::<module-path>::<item-name>`.
 
+### Standalone Serialization
+
+In case you just want to serialize a Cairo expression without producing any on-chain activity, you can use the `sncast serialize` command.
+
+#### Basic Serialization Example
+
+```shell
+$ sncast serialize \
+    --network sepolia \
+    --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
+    --function tuple_fn \
+    --arguments '(0x10, 3, hello_sncast::data_transformer_contract::Enum::One)' \
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Success: Serialization completed
+
+Calldata: [0x10, 0x3, 0x0]
+```
+</details>
+<br>
+
 ## Supported Expressions
 
 Cast supports most important Cairo corelib types:

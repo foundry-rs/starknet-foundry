@@ -1,3 +1,4 @@
+use crate::starknet_commands::serialize::Serialize;
 use crate::starknet_commands::{
     account, account::Account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke,
     multicall::Multicall, script::Script, show_config::ShowConfig, tx_status::TxStatus,
@@ -151,6 +152,9 @@ enum Commands {
 
     /// Generate completion script
     Completion(Completion),
+
+    /// Serialize Cairo expressions into calldata
+    Serialize(Serialize),
 }
 
 #[derive(Debug, Clone, clap::Args)]
@@ -426,6 +430,36 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             );
 
             process_command_result("invoke", result, ui, block_explorer_link);
+
+            Ok(())
+        }
+
+        Commands::Serialize(serialize) => {
+            let Serialize {
+                contract_address,
+                function,
+                arguments,
+                rpc,
+            } = serialize;
+
+            let provider = rpc.get_provider(&config, ui).await?;
+
+            let selector = get_selector_from_name(&function)
+                .context("Failed to convert entry point selector to FieldElement")?;
+            let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
+            let contract_class = get_contract_class(class_hash, &provider).await?;
+            let arguments = Arguments {
+                calldata: None,
+                arguments: Some(arguments),
+            };
+            let calldata = arguments
+                .try_into_calldata(contract_class, &selector)
+                .context("Failed to transform arguments into calldata")?;
+
+            let result = starknet_commands::serialize::serialize(calldata)
+                .map_err(handle_starknet_command_error);
+
+            process_command_result("serialize", result, ui, None);
 
             Ok(())
         }
