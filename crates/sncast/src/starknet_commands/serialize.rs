@@ -9,14 +9,14 @@ use starknet_types_core::felt::Felt;
 #[command(about = "Serialize Cairo expressions into calldata")]
 pub struct Serialize {
     /// Comma-separated string of Cairo expressions
-    #[arg(short = 'v', long, allow_hyphen_values = true)]
+    #[arg(long, allow_hyphen_values = true)]
     pub arguments: String,
 
-    /// Address of contract to invoke
+    /// Address of contract which contains the function
     #[arg(short = 'd', long)]
     pub contract_address: Felt,
 
-    /// Name of the function to invoke
+    /// Name of the function whose calldata should be serialized
     #[arg(short, long)]
     pub function: String,
 
