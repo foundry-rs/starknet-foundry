@@ -21,6 +21,7 @@ pub fn sum_syscall_usage(mut a: SyscallUsageMap, b: &SyscallUsageMap) -> Syscall
     a
 }
 
+#[must_use]
 pub fn subtract_syscall_usage(mut a: SyscallUsageMap, b: &SyscallUsageMap) -> SyscallUsageMap {
     for (key, b_usage) in b {
         a.entry(*key).and_modify(|a_usage| {

@@ -2,11 +2,12 @@ use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
-use crate::runtime_extensions::common::{get_relocated_vm_trace, get_syscalls_gas_consumed, sum_syscall_usage};
+use crate::runtime_extensions::common::{get_relocated_vm_trace, get_syscalls_gas_consumed, subtract_syscall_usage, sum_syscall_usage};
 use crate::state::{CallTrace, CallTraceNode, CheatStatus};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
 use blockifier::execution::syscalls::hint_processor::{SyscallUsageMap, ENTRYPOINT_NOT_FOUND_ERROR, OUT_OF_GAS_ERROR};
+use blockifier::versioned_constants::VersionedConstants;
 use blockifier::{
     execution::{
         call_info::CallInfo,
@@ -68,11 +69,17 @@ pub fn execute_call_entry_point(
         cheated_data_
     };
 
+    let tracked_resource = *context
+        .tracked_resource_stack
+        .last()
+        .expect("Unexpected empty tracked resource.");
     // region: Modified blockifier code
     // We skip recursion depth validation here.
-    cheatnet_state
-        .trace_data
-        .enter_nested_call(entry_point.clone(), cheated_data);
+    cheatnet_state.trace_data.enter_nested_call(
+        entry_point.clone(),
+        cheated_data,
+        tracked_resource,
+    );
 
     if let Some(cheat_status) = get_mocked_function_cheat_status(entry_point, cheatnet_state) {
         if let CheatStatus::Cheated(ret_data, _) = (*cheat_status).clone() {
@@ -88,11 +95,9 @@ pub fn execute_call_entry_point(
                 },
                 &[],
                 None,
+                tracked_resource,
             );
-            let tracked_resource = *context
-                .tracked_resource_stack
-                .last()
-                .expect("Unexpected empty tracked resource.");
+
             return Ok(mocked_call_info(
                 entry_point.clone(),
                 ret_data.clone(),
@@ -296,6 +301,54 @@ fn call_info_from_pre_execution_error(
     }
 }
 
+fn calculate_resources_and_gas_from_nested_calls(
+    trace: &Rc<RefCell<CallTrace>>,
+) -> (ExecutionResources, u64) {
+    fn recursively_collect_resources_and_gas(
+        trace: &Rc<RefCell<CallTrace>>,
+    ) -> (SyscallUsageMap, ExecutionResources, u64) {
+        let trace_borrowed = trace.borrow();
+        let versioned_constants = VersionedConstants::latest_constants();
+
+        let mut children_syscalls: SyscallUsageMap = HashMap::new();
+        let mut total_resources = ExecutionResources::default();
+        let mut total_gas = 0_u64;
+
+        for nested_call_node in &trace_borrowed.nested_calls {
+            if let CallTraceNode::EntryPointCall(nested_call) = nested_call_node {
+                let (child_syscalls, child_resources, child_gas) =
+                    recursively_collect_resources_and_gas(nested_call);
+                children_syscalls = sum_syscall_usage(children_syscalls.clone(), &child_syscalls);
+                total_resources += &child_resources;
+                total_gas += child_gas;
+            }
+        }
+
+        let mut local_syscalls = trace_borrowed.used_syscalls.clone();
+        local_syscalls = subtract_syscall_usage(local_syscalls, &children_syscalls);
+
+        let (local_resources, gas_consumed) = match trace_borrowed.tracked_resource {
+            TrackedResource::CairoSteps => (
+                versioned_constants.get_additional_os_syscall_resources(&local_syscalls),
+                0,
+            ),
+            TrackedResource::SierraGas => (
+                ExecutionResources::default(),
+                get_syscalls_gas_consumed(&local_syscalls, versioned_constants),
+            ),
+        };
+
+        (
+            trace_borrowed.used_syscalls.clone(),
+            &total_resources + &local_resources,
+            total_gas + gas_consumed,
+        )
+    }
+
+    let (_all_syscalls, total_resources, total_gas) = recursively_collect_resources_and_gas(trace);
+    (total_resources, total_gas)
+}
+
 fn remove_syscall_resources_and_exit_non_error_call(
     call_info: &CallInfo,
     syscall_usage: &SyscallUsageMap,
@@ -309,18 +362,28 @@ fn remove_syscall_resources_and_exit_non_error_call(
     let mut resources = call_info.resources.clone();
     let mut gas_consumed = call_info.execution.gas_consumed;
 
-    let nested_syscall_usage_sum =
-        aggregate_nested_syscall_usage(&cheatnet_state.trace_data.current_call_stack.top());
-    let syscall_usage = sum_syscall_usage(nested_syscall_usage_sum, syscall_usage);
-
+    // Remove resources consumed by syscalls from the current call
     match current_tracked_resource {
         TrackedResource::CairoSteps => {
-            resources -= &versioned_constants.get_additional_os_syscall_resources(&syscall_usage);
+            resources -= &versioned_constants.get_additional_os_syscall_resources(syscall_usage);
         }
         TrackedResource::SierraGas => {
-            gas_consumed -= get_syscalls_gas_consumed(&syscall_usage, versioned_constants);
+            gas_consumed -= get_syscalls_gas_consumed(syscall_usage, versioned_constants);
         }
     }
+
+    let nested_syscall_usage_sum =
+        aggregate_nested_syscall_usage(&cheatnet_state.trace_data.current_call_stack.top());
+    let (resources_from_nested_calls, gas_from_nested_calls) =
+        calculate_resources_and_gas_from_nested_calls(
+            &cheatnet_state.trace_data.current_call_stack.top(),
+        );
+
+    // Remove resources consumed by syscalls from nested calls
+    resources -= &resources_from_nested_calls;
+    gas_consumed -= gas_from_nested_calls;
+
+    let syscall_usage = sum_syscall_usage(nested_syscall_usage_sum, syscall_usage);
 
     cheatnet_state.trace_data.exit_nested_call(
         resources,
@@ -329,6 +392,7 @@ fn remove_syscall_resources_and_exit_non_error_call(
         CallResult::from_non_error(call_info),
         &call_info.execution.l2_to_l1_messages,
         vm_trace,
+        current_tracked_resource,
     );
 }
 
@@ -349,6 +413,7 @@ fn exit_error_call(
         CallResult::from_err(error, &identifier),
         &[],
         vm_trace,
+        TrackedResource::default(),
     );
 }
 
