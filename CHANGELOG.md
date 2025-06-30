@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- bug where syscall execution resources from nested calls were being calculated twice
+- Bug where syscall execution resources from nested calls were being calculated twice
 
 ### Cast
 
