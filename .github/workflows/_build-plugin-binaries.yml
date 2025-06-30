@@ -7,6 +7,9 @@ on:
       overridden_plugin_version:
         required: false
         type: string
+      ref:
+        required: false
+        type: string
   workflow_dispatch:
     inputs:
       # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
@@ -48,11 +51,6 @@ jobs:
             lib-name: "libsnforge_scarb_plugin"
             ext: "dylib"
 
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            lib-name: "snforge_scarb_plugin"
-            ext: "dll"
-
           # The scarb builds for following platforms are experimental and not officially supported by starknet-foundry.
           # https://docs.swmansion.com/scarb/download.html#platform-support
           # Reference issue: TODO(#2886)
@@ -68,7 +66,15 @@ jobs:
           #   ext: "so"
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout with ref
+        if: inputs.ref != ''
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Checkout default
+        if: inputs.ref == ''
+        uses: actions/checkout@v4
 
       - name: Setup rust
         run: |

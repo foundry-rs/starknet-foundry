@@ -29,7 +29,6 @@ async fn test_happy_case_human_readable() {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "invoke",
         "--url",
         URL,
@@ -49,8 +48,9 @@ async fn test_happy_case_human_readable() {
         output,
         indoc! {
             "
-            command: invoke
-            transaction_hash: [..]
+            Success: Invoke completed
+
+            Transaction Hash: 0x0[..]
 
             To see invocation details, visit:
             transaction: [..]
@@ -71,7 +71,6 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "--json",
         "invoke",
         "--url",
@@ -121,7 +120,6 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "--json",
         "invoke",
         "--url",
@@ -246,8 +244,8 @@ fn test_wrong_calldata() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: invoke
-        error: Transaction execution error [..]0x4661696c656420746f20646573657269616c697a6520706172616d202332[..]
+        Command: invoke
+        Error: Transaction execution error [..]0x4661696c656420746f20646573657269616c697a6520706172616d202332[..]
         "},
     );
 }
@@ -290,8 +288,8 @@ fn test_too_low_gas() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: invoke
-        error: The transaction's resources don't cover validation or the minimal transaction fee
+        Command: invoke
+        Error: The transaction's resources don't cover validation or the minimal transaction fee
         "},
     );
 }
@@ -307,7 +305,6 @@ async fn test_happy_case_cairo_expression_calldata() {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "--json",
         "invoke",
         "--url",

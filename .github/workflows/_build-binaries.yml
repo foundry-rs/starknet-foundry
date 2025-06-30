@@ -7,6 +7,9 @@ on:
       version:
         required: true
         type: string
+      ref:
+        required: false
+        type: string
 
 jobs:
   build-binaries:
@@ -43,11 +46,16 @@ jobs:
           - target: aarch64-apple-darwin
             os: macos-latest
 
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout with ref
+        if: inputs.ref != ''
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Checkout default
+        if: inputs.ref == ''
+        uses: actions/checkout@v4
 
       - name: Setup rust
         run: |

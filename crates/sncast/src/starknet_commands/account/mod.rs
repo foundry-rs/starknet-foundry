@@ -3,12 +3,13 @@ use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
 use crate::starknet_commands::account::import::Import;
 use crate::starknet_commands::account::list::List;
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{Args, Subcommand};
 use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
 use serde_json::json;
+use sncast::helpers::account::load_accounts;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::{
     AccountType, chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig,
@@ -79,9 +80,7 @@ pub fn write_account_to_accounts_file(
         std::fs::write(accounts_file.clone(), "{}")?;
     }
 
-    let contents = std::fs::read_to_string(accounts_file.clone())?;
-    let mut items: serde_json::Value = serde_json::from_str(&contents)
-        .map_err(|_| anyhow!("Failed to parse accounts file at = {}", accounts_file))?;
+    let mut items = load_accounts(accounts_file)?;
 
     let network_name = chain_id_to_network_name(chain_id);
 
@@ -165,7 +164,7 @@ fn generate_add_profile_message(
     account_name: &str,
     accounts_file: &Utf8PathBuf,
     keystore: Option<Utf8PathBuf>,
-) -> Result<String> {
+) -> Result<Option<String>> {
     if let Some(profile_name) = profile_name {
         let url = rpc
             .url
@@ -180,13 +179,11 @@ fn generate_add_profile_message(
         };
         let config_path = resolve_config_file();
         add_created_profile_to_configuration(Some(profile_name), &config, &config_path)?;
-        Ok(format!(
+        Ok(Some(format!(
             "Profile {profile_name} successfully added to {config_path}",
-        ))
+        )))
     } else {
-        Ok(String::from(
-            "--add-profile flag was not set. No profile added to snfoundry.toml",
-        ))
+        Ok(None)
     }
 }
 

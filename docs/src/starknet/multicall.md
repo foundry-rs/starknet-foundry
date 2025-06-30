@@ -56,8 +56,9 @@ $ sncast multicall run --path multicall_example.toml
 <summary>Output:</summary>
 
 ```shell
-command: multicall
-transaction_hash: [..]
+Success: Multicall completed
+
+Transaction Hash: 0x[..]
 
 To see invocation details, visit:
 transaction: https://sepolia.starkscan.co/tx/[..]
@@ -79,8 +80,11 @@ $ sncast multicall new ./template.toml
 <summary>Output:</summary>
 
 ```shell
-command: multicall new
-content: [[call]]
+Success: Multicall template created successfully
+
+Path:    ./template.toml
+Content: [[call]]
+
 call_type = "deploy"
 class_hash = ""
 inputs = []
@@ -92,8 +96,6 @@ call_type = "invoke"
 contract_address = ""
 function = ""
 inputs = []
-
-path: ./template.toml
 ```
 </details>
 <br>
@@ -113,8 +115,11 @@ $ sncast multicall new ./template.toml --overwrite
 <summary>Output:</summary>
 
 ```shell
-command: multicall new
-content: [[call]]
+Success: Multicall template created successfully
+
+Path:    ./template.toml
+Content: [[call]]
+
 call_type = "deploy"
 class_hash = ""
 inputs = []
@@ -126,7 +131,5 @@ call_type = "invoke"
 contract_address = ""
 function = ""
 inputs = []
-
-path: ./template.toml
 ```
 </details>

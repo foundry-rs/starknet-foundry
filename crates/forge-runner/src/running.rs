@@ -28,6 +28,7 @@ use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredErrors, ExtendedStateReader,
 };
 use execution::finalize_execution;
+use foundry_ui::UI;
 use hints::hints_by_representation;
 use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
@@ -65,13 +66,14 @@ pub fn run_test(
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
     trace_verbosity: Option<TraceVerbosity>,
+    ui: Arc<UI>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
         // a channel is used to receive information indicating
         // that the execution of the task is no longer necessary.
         if send.is_closed() {
-            return TestCaseSummary::Skipped {};
+            return TestCaseSummary::Interrupted {};
         }
         let run_result = run_test_case(
             &case,
@@ -81,7 +83,7 @@ pub fn run_test(
         );
 
         if send.is_closed() {
-            return TestCaseSummary::Skipped {};
+            return TestCaseSummary::Interrupted {};
         }
 
         extract_test_case_summary(
@@ -90,6 +92,7 @@ pub fn run_test(
             &test_runner_config.contracts_data,
             &versioned_program_path,
             trace_verbosity,
+            &ui,
         )
     })
 }
@@ -104,13 +107,14 @@ pub(crate) fn run_fuzz_test(
     fuzzing_send: Sender<()>,
     rng: Arc<Mutex<StdRng>>,
     trace_verbosity: Option<TraceVerbosity>,
+    ui: Arc<UI>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
         // a channel is used to receive information indicating
         // that the execution of the task is no longer necessary.
         if send.is_closed() | fuzzing_send.is_closed() {
-            return TestCaseSummary::Skipped {};
+            return TestCaseSummary::Interrupted {};
         }
 
         let run_result = run_test_case(
@@ -124,7 +128,7 @@ pub(crate) fn run_fuzz_test(
         // remove it after improve exit-first tests
         // issue #1043
         if send.is_closed() {
-            return TestCaseSummary::Skipped {};
+            return TestCaseSummary::Interrupted {};
         }
 
         extract_test_case_summary(
@@ -133,6 +137,7 @@ pub(crate) fn run_fuzz_test(
             &test_runner_config.contracts_data,
             &versioned_program_path,
             trace_verbosity,
+            &ui,
         )
     })
 }
@@ -380,6 +385,7 @@ fn extract_test_case_summary(
     contracts_data: &ContractsData,
     versioned_program_path: &Utf8Path,
     trace_verbosity: Option<TraceVerbosity>,
+    ui: &UI,
 ) -> TestCaseSummary<Single> {
     match run_result {
         Ok(run_result) => match run_result {
@@ -389,6 +395,7 @@ fn extract_test_case_summary(
                 contracts_data,
                 versioned_program_path,
                 trace_verbosity,
+                ui,
             ),
             RunResult::Error(run_error) => {
                 let mut message = format!(
@@ -417,6 +424,7 @@ fn extract_test_case_summary(
                         contracts_data,
                         trace_verbosity,
                         case.name.clone(),
+                        case.config.fork_config.clone(),
                     ),
                 }
             }
@@ -438,7 +446,6 @@ fn get_fork_state_reader(
     fork_config: Option<&ResolvedForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
     fork_config
-        .as_ref()
         .map(|ResolvedForkConfig { url, block_number }| {
             ForkStateReader::new(url.clone(), *block_number, cache_dir)
         })
