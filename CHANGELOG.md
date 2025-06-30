@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Fixed
+
+- bug where syscall execution resources from nested calls were being calculated twice
+
 ### Cast
 
 #### Changed
