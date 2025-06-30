@@ -309,18 +309,19 @@ fn remove_syscall_resources_and_exit_non_error_call(
     let mut resources = call_info.resources.clone();
     let mut gas_consumed = call_info.execution.gas_consumed;
 
-    match current_tracked_resource {
-        TrackedResource::CairoSteps => {
-            resources -= &versioned_constants.get_additional_os_syscall_resources(syscall_usage);
-        }
-        TrackedResource::SierraGas => {
-            gas_consumed -= get_syscalls_gas_consumed(syscall_usage, versioned_constants);
-        }
-    }
-
     let nested_syscall_usage_sum =
         aggregate_nested_syscall_usage(&cheatnet_state.trace_data.current_call_stack.top());
     let syscall_usage = sum_syscall_usage(nested_syscall_usage_sum, syscall_usage);
+
+    match current_tracked_resource {
+        TrackedResource::CairoSteps => {
+            resources -= &versioned_constants.get_additional_os_syscall_resources(&syscall_usage);
+        }
+        TrackedResource::SierraGas => {
+            gas_consumed -= get_syscalls_gas_consumed(&syscall_usage, versioned_constants);
+        }
+    }
+
     cheatnet_state.trace_data.exit_nested_call(
         resources,
         gas_consumed,
@@ -439,19 +440,7 @@ fn aggregate_nested_syscall_usage(trace: &Rc<RefCell<CallTrace>>) -> SyscallUsag
     let mut result = SyscallUsageMap::new();
     for nested_call_node in &trace.borrow().nested_calls {
         if let CallTraceNode::EntryPointCall(nested_call) = nested_call_node {
-            let sub_trace_counter = aggregate_syscall_usage(nested_call);
-            result = sum_syscall_usage(result, &sub_trace_counter);
-        }
-    }
-    result
-}
-
-fn aggregate_syscall_usage(trace: &Rc<RefCell<CallTrace>>) -> SyscallUsageMap {
-    let mut result = trace.borrow().used_syscalls.clone();
-    for nested_call_node in &trace.borrow().nested_calls {
-        if let CallTraceNode::EntryPointCall(nested_call) = nested_call_node {
-            let sub_trace_counter = aggregate_nested_syscall_usage(nested_call);
-            result = sum_syscall_usage(result, &sub_trace_counter);
+            result = sum_syscall_usage(result, &nested_call.borrow().used_syscalls);
         }
     }
     result

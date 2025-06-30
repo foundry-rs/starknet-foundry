@@ -1064,18 +1064,18 @@ fn nested_call_cost_cairo_steps() {
 
     assert_passed(&result);
     // TODO(#3473): Once the bug with duplicated builtins from syscalls in nested calls is fixed, the number of bitwise and some other builtins should be ~2 lower.
-    // int(2242 * 0.16) = 359 = gas cost of bitwise builtins
+    // int(1121 * 0.16) = 180 = gas cost of bitwise builtins
     // 96 * 3 = gas cost of onchain data (deploy cost)
     // ~1 gas for 1 event key
     // ~1 gas for 1 event data
-    // 0 l1_gas + (96 * 3) l1_data_gas + 359 * (100 / 0.0025) + 1 * 10240 + 1 * 5120 l2 gas
+    // 0 l1_gas + (96 * 3) l1_data_gas + 180 * (100 / 0.0025) + 1 * 10240 + 1 * 5120 l2 gas
     assert_gas(
         &result,
         "test_call_other_contract",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(288),
-            l2_gas: GasAmount(14_375_360),
+            l2_gas: GasAmount(7_215_360),
         },
     );
 }
@@ -1138,18 +1138,18 @@ fn nested_call_cost_in_forked_contract_cairo_steps() {
 
     assert_passed(&result);
     // TODO(#3473): Once the bug with duplicated builtins from syscalls in nested calls is fixed, the number of bitwise and some other builtins should be ~2 lower.
-    // int(2242 * 0.16) = 359 = gas cost of bitwise builtins
+    // int(1121 * 0.16) = 180 = gas cost of bitwise builtins
     // 96 * 2 = gas cost of onchain data (deploy cost)
     // ~1 gas for 1 event key
     // ~1 gas for 1 event data
-    // 0 l1_gas + (96 * 2) l1_data_gas + 359 * (100 / 0.0025) + 1 * 10240 + 1 * 5120 l2 gas
+    // 0 l1_gas + (96 * 2) l1_data_gas + 180 * (100 / 0.0025) + 1 * 10240 + 1 * 5120 l2 gas
     assert_gas(
         &result,
         "test_call_other_contract_fork",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(14_375_360),
+            l2_gas: GasAmount(7_215_360),
         },
     );
 }
@@ -1789,15 +1789,15 @@ fn nested_call_cost_sierra_gas() {
     // 10000 = cost of 1 emit event syscall (see `events_cost_sierra_gas` test)
     // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
     // 87650 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
-    // 1597317 = reported consumed sierra gas
-    // 0 l1_gas + 288 l1_data_gas + (512000 + 256000 + 10000 + 3 * 142810 + 2 * 87650 + 1597317) l2 gas
+    // 638032 = reported consumed sierra gas
+    // 0 l1_gas + 288 l1_data_gas + (512000 + 256000 + 10000 + 3 * 142810 + 2 * 87650 + 638032) l2 gas
     assert_gas(
         &result,
         "test_call_other_contract",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(288),
-            l2_gas: GasAmount(2_979_047),
+            l2_gas: GasAmount(2_019_762),
         },
     );
 }
@@ -1866,15 +1866,15 @@ fn nested_call_cost_in_forked_contract_sierra_gas() {
     // 10000 = cost of 1 emit event syscall (see `events_cost_sierra_gas` test)
     // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
     // 87650 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
-    // 1558897 = reported consumed sierra gas
-    // 0 l1_gas + 192 l1_data_gas + (512000 + 256000 + 10000 + 2 * 142810 + 2 * 87650 + 1558897) l2 gas
+    // 599612 = reported consumed sierra gas
+    // 0 l1_gas + 192 l1_data_gas + (512000 + 256000 + 10000 + 2 * 142810 + 2 * 87650 + 599612) l2 gas
     assert_gas(
         &result,
         "test_call_other_contract_fork",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(2_797_817),
+            l2_gas: GasAmount(1_838_532),
         },
     );
 }
