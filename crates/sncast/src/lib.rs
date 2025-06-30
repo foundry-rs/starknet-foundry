@@ -65,7 +65,7 @@ impl FromStr for AccountType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "open_zeppelin" | "open-zeppelin" | "oz" => Ok(AccountType::OpenZeppelin),
-            // we still accept "argent" for backwards compatibility
+            // We still accept "argent" for backward compatibility
             "argent" | "ready" => Ok(AccountType::Ready),
             "braavos" => Ok(AccountType::Braavos),
             account_type => Err(anyhow!("Invalid account type = {account_type}")),
