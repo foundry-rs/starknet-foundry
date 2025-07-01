@@ -34,7 +34,7 @@ fn start_devnet() {
         }
     }
 
-    Command::new("starknet-devnet")
+    Command::new("./starknet-devnet")
         .args([
             "--port",
             &port,

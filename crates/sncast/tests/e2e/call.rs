@@ -148,7 +148,9 @@ fn test_wrong_function_name() {
 
     assert_stderr_contains(
         output,
-        r#"Error: Function with selector "0x2924aec1f107eca35a5dc447cee68cc6985fe404841c9aad477adfcbe596d0a" not found in ABI of the contract"#,
+        r#"Error: Failed to transform arguments into calldata
+Caused by:
+    Function with selector "0x2924aec1f107eca35a5dc447cee68cc6985fe404841c9aad477adfcbe596d0a" not found in ABI of the contract"#,
     );
 }
 
