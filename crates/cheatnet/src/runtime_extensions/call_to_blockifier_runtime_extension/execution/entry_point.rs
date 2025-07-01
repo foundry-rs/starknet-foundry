@@ -301,7 +301,7 @@ fn call_info_from_pre_execution_error(
     }
 }
 
-/// Recursively collects syscall usage, execution resources, and gas from the nested calls of the given call trace.
+/// Recursively collects execution resources and consumed gas from the nested calls of the given call trace.
 ///
 /// Important note is that it aggregates them from the bottom.
 /// That's because nested calls may use different tracked resources.
@@ -339,7 +339,8 @@ fn collect_resources_and_gas(
         ),
     };
 
-    // We want to add local execution resources and gas only if this is not the very top call.
+    // Here, we add local execution resources and gas consumed by the current call.
+    // We do it only for nested calls (and not for the very top call).
     if !is_top_call {
         accumulated_resources += &local_resources;
         accumulated_gas += local_gas;
