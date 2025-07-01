@@ -23,7 +23,7 @@ use test_case::test_case;
 
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0, "oz"; "cairo_0_class_hash")]
 #[test_case(&OZ_CLASS_HASH.into_hex_string(), "oz"; "cairo_1_class_hash")]
-#[test_case(&READY_CLASS_HASH.into_hex_string(), "ready"; "READY_CLASS_HASH")]
+#[test_case(&READY_CLASS_HASH.into_hex_string(), "ready"; "ready_class_hash")]
 #[test_case(&BRAAVOS_CLASS_HASH.into_hex_string(), "braavos"; "braavos_class_hash")]
 #[tokio::test]
 pub async fn test_happy_case(class_hash: &str, account_type: &str) {
