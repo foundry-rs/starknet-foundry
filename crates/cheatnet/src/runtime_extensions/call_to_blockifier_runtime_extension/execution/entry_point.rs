@@ -3,6 +3,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::common::{get_relocated_vm_trace, get_syscalls_gas_consumed, subtract_syscall_usage, sum_syscall_usage};
+use crate::runtime_extensions::forge_runtime_extension::get_nested_calls_syscalls;
 use crate::state::{CallTrace, CallTraceNode, CheatStatus};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
@@ -300,30 +301,33 @@ fn call_info_from_pre_execution_error(
     }
 }
 
-fn recursively_collect_resources_and_gas(
+/// Recursively collects syscall usage, execution resources, and gas from the nested calls of the given call trace.
+///
+/// Important note is that it aggregates them from the bottom.
+/// That's because nested calls may use different tracked resources.
+fn collect_resources_and_gas(
     trace: &Rc<RefCell<CallTrace>>,
-) -> (SyscallUsageMap, ExecutionResources, u64) {
-    let mut aggregated_syscalls = HashMap::new();
+    is_top_call: bool,
+) -> (ExecutionResources, u64) {
     let mut accumulated_resources = ExecutionResources::default();
     let mut accumulated_gas = 0_u64;
+    let nested_calls_syscalls = get_nested_calls_syscalls(&trace);
 
     let trace_ref = trace.borrow();
 
     for call in &trace_ref.nested_calls {
         if let CallTraceNode::EntryPointCall(nested_call) = call {
-            let (child_syscalls, child_resources, child_gas) =
-                recursively_collect_resources_and_gas(nested_call);
-            aggregated_syscalls = sum_syscall_usage(aggregated_syscalls, &child_syscalls);
-            accumulated_resources += &child_resources;
-            accumulated_gas += child_gas;
+            let (nested_calls_resources, nested_calls_gas) =
+                collect_resources_and_gas(nested_call, false);
+            accumulated_resources += &nested_calls_resources;
+            accumulated_gas += nested_calls_gas;
         }
     }
 
     let local_syscalls =
-        subtract_syscall_usage(trace_ref.used_syscalls.clone(), &aggregated_syscalls);
+        subtract_syscall_usage(trace_ref.used_syscalls.clone(), &nested_calls_syscalls);
 
     let versioned_constants = VersionedConstants::latest_constants();
-
     let (local_resources, local_gas) = match trace_ref.tracked_resource {
         TrackedResource::CairoSteps => (
             versioned_constants.get_additional_os_syscall_resources(&local_syscalls),
@@ -335,16 +339,19 @@ fn recursively_collect_resources_and_gas(
         ),
     };
 
-    let total_resources = &accumulated_resources + &local_resources;
-    let total_gas = accumulated_gas + local_gas;
+    // We want to add local execution resources and gas only if this is not the very top call.
+    if !is_top_call {
+        accumulated_resources += &local_resources;
+        accumulated_gas += local_gas;
+    }
 
-    (trace_ref.used_syscalls.clone(), total_resources, total_gas)
+    (accumulated_resources, accumulated_gas)
 }
 
 fn calculate_resources_and_gas_from_nested_calls(
     trace: &Rc<RefCell<CallTrace>>,
 ) -> (ExecutionResources, u64) {
-    let (_all_syscalls, total_resources, total_gas) = recursively_collect_resources_and_gas(trace);
+    let (total_resources, total_gas) = collect_resources_and_gas(trace, true);
     (total_resources, total_gas)
 }
 
