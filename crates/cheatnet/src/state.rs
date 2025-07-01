@@ -10,7 +10,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execut
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
-use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
+use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
@@ -212,7 +212,6 @@ pub struct CallTrace {
     pub used_syscalls: SyscallUsageMap,
     pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
     pub gas_consumed: u64,
-    pub tracked_resource: TrackedResource,
 }
 
 impl CairoSerialize for CallTrace {
@@ -242,7 +241,6 @@ impl CallTrace {
             result: CallResult::Success { ret_data: vec![] },
             vm_trace: None,
             gas_consumed: u64::default(),
-            tracked_resource: TrackedResource::default(),
         }
     }
 }
@@ -517,15 +515,9 @@ impl CheatnetState {
 }
 
 impl TraceData {
-    pub fn enter_nested_call(
-        &mut self,
-        entry_point: CallEntryPoint,
-        cheated_data: CheatedData,
-        tracked_resource: TrackedResource,
-    ) {
+    pub fn enter_nested_call(&mut self, entry_point: CallEntryPoint, cheated_data: CheatedData) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
-            tracked_resource,
             ..CallTrace::default_successful_call()
         }));
         let current_call = self.current_call_stack.top();
@@ -543,7 +535,6 @@ impl TraceData {
         current_call.borrow_mut().entry_point.class_hash = Some(class_hash);
     }
 
-    #[expect(clippy::too_many_arguments)]
     pub fn exit_nested_call(
         &mut self,
         execution_resources: ExecutionResources,
@@ -552,7 +543,6 @@ impl TraceData {
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
         vm_trace: Option<Vec<RelocatedTraceEntry>>,
-        tracked_resource: TrackedResource,
     ) {
         let CallStackElement {
             call_trace: last_call,
@@ -562,7 +552,7 @@ impl TraceData {
         let mut last_call = last_call.borrow_mut();
         last_call.used_execution_resources = execution_resources;
         last_call.gas_consumed = gas_consumed;
-        last_call.tracked_resource = tracked_resource;
+
         last_call.used_syscalls = used_syscalls;
 
         last_call.used_l1_resources.l2_l1_message_sizes = l2_to_l1_messages
