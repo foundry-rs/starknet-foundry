@@ -1401,7 +1401,7 @@ fn contract_range_check_cost_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(96),
-            l2_gas: GasAmount(370_690),
+            l2_gas: GasAmount(370_150),
         },
     );
 }
