@@ -1,5 +1,6 @@
 use crate::helpers::constants::{
-    DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
+    DATA_TRANSFORMER_CONTRACT_ABI_PATH, DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA,
+    DATA_TRANSFORMER_CONTRACT_CLASS_HASH_SEPOLIA, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
 };
 use crate::helpers::runner::runner;
 use crate::helpers::shell::os_specific_shell;
@@ -10,7 +11,7 @@ use snapbox::cmd::cargo_bin;
 use tempfile::tempdir;
 
 #[tokio::test]
-async fn test_happy_case_human_readable() {
+async fn test_happy_case() {
     let tempdir = tempdir().unwrap();
 
     let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
@@ -21,6 +22,64 @@ async fn test_happy_case_human_readable() {
         calldata,
         "--contract-address",
         DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "nested_struct_fn",
+        "--url",
+        URL,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_eq(indoc! {r"
+    Success: Serialization completed
+
+    Calldata: [0x24, 0x60]
+    "});
+}
+
+#[tokio::test]
+async fn test_happy_case_class_hash() {
+    let tempdir = tempdir().unwrap();
+
+    let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
+
+    let args = vec![
+        "serialize",
+        "--arguments",
+        calldata,
+        "--class-hash",
+        DATA_TRANSFORMER_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--function",
+        "nested_struct_fn",
+        "--url",
+        URL,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().success().stdout_eq(indoc! {r"
+    Success: Serialization completed
+
+    Calldata: [0x24, 0x60]
+    "});
+}
+
+#[tokio::test]
+async fn test_happy_case_abi_file() {
+    let tempdir = tempdir().unwrap();
+    let abi_file_path = Utf8PathBuf::from(DATA_TRANSFORMER_CONTRACT_ABI_PATH);
+    let temp_abi_file_path = tempdir.path().join(abi_file_path.file_name().unwrap());
+    std::fs::copy(abi_file_path, &temp_abi_file_path)
+        .expect("Failed to copy ABI file to temp directory");
+
+    let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
+
+    let args = vec![
+        "serialize",
+        "--arguments",
+        calldata,
+        "--abi-file",
+        temp_abi_file_path.to_str().unwrap(),
         "--function",
         "nested_struct_fn",
         "--url",

@@ -15,8 +15,8 @@ use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::ResponseError;
 use sncast::response::explorer_link::{ExplorerLinksMessage, block_explorer_link_if_allowed};
 use sncast::response::transformed_call::TransformedCallResponse;
-use std::io;
 use std::io::IsTerminal;
+use std::{fs, io};
 
 use crate::starknet_commands::deploy::DeployArguments;
 use camino::Utf8PathBuf;
@@ -172,8 +172,9 @@ pub struct Arguments {
 impl Arguments {
     fn try_into_calldata(
         self,
-        contract_class: ContractClass,
+        contract_class: Option<ContractClass>,
         selector: &Felt,
+        abi_file: Option<Utf8PathBuf>,
     ) -> Result<Vec<Felt>> {
         if let Some(calldata) = self.calldata {
             calldata
@@ -185,14 +186,30 @@ impl Arguments {
                 })
                 .collect()
         } else {
-            let ContractClass::Sierra(sierra_class) = contract_class else {
-                bail!("Transformation of arguments is not available for Cairo Zero contracts")
-            };
-
-            let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str())
-                .context("Couldn't deserialize ABI received from network")?;
-
-            transform(&self.arguments.unwrap_or_default(), &abi, selector)
+            match (contract_class, abi_file) {
+                (Some(_), Some(_)) => {
+                    bail!("`contract_class` and `abi_file` params are mutually exclusive")
+                }
+                (Some(contract_class), None) => {
+                    let ContractClass::Sierra(sierra_class) = contract_class else {
+                        bail!(
+                            "Transformation of arguments is not available for Cairo Zero contracts"
+                        )
+                    };
+                    let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str())
+                        .context("Couldn't deserialize ABI received from network")?;
+                    transform(&self.arguments.unwrap_or_default(), &abi, selector)
+                        .context("Failed to transform arguments into calldata")
+                }
+                (None, Some(abi_file)) => {
+                    let abi = fs::read_to_string(abi_file).context("Failed to read ABI file")?;
+                    let abi: Vec<AbiEntry> = serde_json::from_str(&abi)
+                        .context("Failed to deserialize ABI from file")?;
+                    transform(&self.arguments.unwrap_or_default(), &abi, selector)
+                        .context("Failed to transform arguments into calldata")
+                }
+                (None, None) => bail!("Either `contract_class` or `abi_file` must be provided"),
+            }
         }
     }
 }
@@ -314,7 +331,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let contract_class = get_contract_class(deploy.class_hash, &provider).await?;
 
             let arguments: Arguments = arguments.into();
-            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
+            let calldata = arguments.try_into_calldata(Some(contract_class), &selector, None)?;
 
             let result = starknet_commands::deploy::deploy(
                 deploy.class_hash,
@@ -357,7 +374,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let calldata = arguments.try_into_calldata(contract_class.clone(), &selector)?;
+            let calldata =
+                arguments.try_into_calldata(Some(contract_class.clone()), &selector, None)?;
 
             let result = starknet_commands::call::call(
                 contract_address,
@@ -407,7 +425,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
-            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
+            let calldata = arguments.try_into_calldata(Some(contract_class), &selector, None)?;
 
             let result = starknet_commands::invoke::invoke(
                 contract_address,
@@ -436,25 +454,31 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Serialize(serialize) => {
             let Serialize {
-                contract_address,
                 function,
                 arguments,
                 rpc,
-            } = serialize;
+                abi_file,
+                ..
+            } = serialize.clone();
 
             let provider = rpc.get_provider(&config, ui).await?;
 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
-            let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
-            let contract_class = get_contract_class(class_hash, &provider).await?;
+
             let arguments = Arguments {
                 calldata: None,
                 arguments: Some(arguments),
             };
-            let calldata = arguments
-                .try_into_calldata(contract_class, &selector)
-                .context("Failed to transform arguments into calldata")?;
+            let calldata = if let Some(abi_file) = abi_file {
+                arguments
+                    .try_into_calldata(None, &selector, Some(abi_file))
+                    .context("Failed to transform arguments into calldata")?
+            } else {
+                let class_hash = serialize.class_hash(config, ui).await?;
+                let contract_class = get_contract_class(class_hash, &provider).await?;
+                arguments.try_into_calldata(Some(contract_class), &selector, None)?
+            };
 
             let result = starknet_commands::serialize::serialize(calldata)
                 .map_err(handle_starknet_command_error);
