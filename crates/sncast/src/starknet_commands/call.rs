@@ -1,6 +1,6 @@
-use crate::Arguments;
 use anyhow::Result;
 use clap::Args;
+use sncast::helpers::arguments::Arguments;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::call::CallResponse;
 use sncast::response::errors::StarknetCommandError;

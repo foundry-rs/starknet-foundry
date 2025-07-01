@@ -1,8 +1,8 @@
-use crate::Arguments;
 use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use foundry_ui::UI;
+use sncast::helpers::arguments::Arguments;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;

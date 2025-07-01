@@ -2,6 +2,7 @@ use anyhow::{Result, anyhow};
 use clap::Args;
 use conversions::IntoConv;
 use foundry_ui::UI;
+use sncast::helpers::arguments::Arguments;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::deploy::DeployResponse;
@@ -56,6 +57,19 @@ pub struct DeployArguments {
     // Arguments of the called function as a comma-separated string of Cairo expressions
     #[arg(long)]
     pub arguments: Option<String>,
+}
+
+impl From<DeployArguments> for Arguments {
+    fn from(value: DeployArguments) -> Self {
+        let DeployArguments {
+            constructor_calldata,
+            arguments,
+        } = value;
+        Self {
+            calldata: constructor_calldata,
+            arguments,
+        }
+    }
 }
 
 #[expect(clippy::ptr_arg, clippy::too_many_arguments)]
