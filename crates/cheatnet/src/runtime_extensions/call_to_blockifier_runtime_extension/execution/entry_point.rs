@@ -68,7 +68,6 @@ pub fn execute_call_entry_point(
         cheatnet_state.update_cheats(&contract_address);
         cheated_data_
     };
-
     let tracked_resource = *context
         .tracked_resource_stack
         .last()
@@ -301,50 +300,48 @@ fn call_info_from_pre_execution_error(
     }
 }
 
+fn recursively_collect_resources_and_gas(
+    trace: &Rc<RefCell<CallTrace>>,
+) -> (SyscallUsageMap, ExecutionResources, u64) {
+    let trace_ref = trace.borrow();
+    let versioned_constants = VersionedConstants::latest_constants();
+
+    let mut aggregated_syscalls = HashMap::new();
+    let mut accumulated_resources = ExecutionResources::default();
+    let mut accumulated_gas = 0_u64;
+    for call in &trace_ref.nested_calls {
+        if let CallTraceNode::EntryPointCall(nested_call) = call {
+            let (child_syscalls, child_resources, child_gas) =
+                recursively_collect_resources_and_gas(nested_call);
+            aggregated_syscalls = sum_syscall_usage(aggregated_syscalls, &child_syscalls);
+            accumulated_resources += &child_resources;
+            accumulated_gas += child_gas;
+        }
+    }
+
+    let local_syscalls =
+        subtract_syscall_usage(trace_ref.used_syscalls.clone(), &aggregated_syscalls);
+
+    let (local_resources, local_gas) = match trace_ref.tracked_resource {
+        TrackedResource::CairoSteps => (
+            versioned_constants.get_additional_os_syscall_resources(&local_syscalls),
+            0,
+        ),
+        TrackedResource::SierraGas => (
+            ExecutionResources::default(),
+            get_syscalls_gas_consumed(&local_syscalls, versioned_constants),
+        ),
+    };
+
+    let total_resources = &accumulated_resources + &local_resources;
+    let total_gas = accumulated_gas + local_gas;
+
+    (trace_ref.used_syscalls.clone(), total_resources, total_gas)
+}
+
 fn calculate_resources_and_gas_from_nested_calls(
     trace: &Rc<RefCell<CallTrace>>,
 ) -> (ExecutionResources, u64) {
-    fn recursively_collect_resources_and_gas(
-        trace: &Rc<RefCell<CallTrace>>,
-    ) -> (SyscallUsageMap, ExecutionResources, u64) {
-        let trace_borrowed = trace.borrow();
-        let versioned_constants = VersionedConstants::latest_constants();
-
-        let mut children_syscalls: SyscallUsageMap = HashMap::new();
-        let mut total_resources = ExecutionResources::default();
-        let mut total_gas = 0_u64;
-
-        for nested_call_node in &trace_borrowed.nested_calls {
-            if let CallTraceNode::EntryPointCall(nested_call) = nested_call_node {
-                let (child_syscalls, child_resources, child_gas) =
-                    recursively_collect_resources_and_gas(nested_call);
-                children_syscalls = sum_syscall_usage(children_syscalls.clone(), &child_syscalls);
-                total_resources += &child_resources;
-                total_gas += child_gas;
-            }
-        }
-
-        let mut local_syscalls = trace_borrowed.used_syscalls.clone();
-        local_syscalls = subtract_syscall_usage(local_syscalls, &children_syscalls);
-
-        let (local_resources, gas_consumed) = match trace_borrowed.tracked_resource {
-            TrackedResource::CairoSteps => (
-                versioned_constants.get_additional_os_syscall_resources(&local_syscalls),
-                0,
-            ),
-            TrackedResource::SierraGas => (
-                ExecutionResources::default(),
-                get_syscalls_gas_consumed(&local_syscalls, versioned_constants),
-            ),
-        };
-
-        (
-            trace_borrowed.used_syscalls.clone(),
-            &total_resources + &local_resources,
-            total_gas + gas_consumed,
-        )
-    }
-
     let (_all_syscalls, total_resources, total_gas) = recursively_collect_resources_and_gas(trace);
     (total_resources, total_gas)
 }
