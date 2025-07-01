@@ -311,7 +311,7 @@ fn collect_resources_and_gas(
 ) -> (ExecutionResources, u64) {
     let mut accumulated_resources = ExecutionResources::default();
     let mut accumulated_gas = 0_u64;
-    let nested_calls_syscalls = get_nested_calls_syscalls(&trace);
+    let nested_calls_syscalls = get_nested_calls_syscalls(trace);
 
     let trace_ref = trace.borrow();
 
