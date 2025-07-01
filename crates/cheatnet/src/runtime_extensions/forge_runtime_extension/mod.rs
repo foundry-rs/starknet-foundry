@@ -565,6 +565,7 @@ fn handle_declare_deploy_result<T: CairoSerialize>(
     Ok(CheatcodeHandlingResult::from_serializable(result))
 }
 
+// TODO: Should be removed once we don't hold `vm_resources_to_sierra_gas` implementation
 // Copied blockifier code
 // https://github.com/starkware-libs/sequencer/blob/5bc3098ebd04facfc3868fd09d818392748a81b4/crates/blockifier/src/bouncer.rs#L590
 fn n_steps_to_gas(n_steps: usize, versioned_constants: &VersionedConstants) -> GasAmount {
@@ -576,6 +577,7 @@ fn n_steps_to_gas(n_steps: usize, versioned_constants: &VersionedConstants) -> G
     vm_resource_to_gas_amount(n_steps, gas_per_step, "steps")
 }
 
+// TODO: Should be removed once we don't hold `vm_resources_to_sierra_gas` implementation
 // Copied blockifier code
 // https://github.com/starkware-libs/sequencer/blob/5bc3098ebd04facfc3868fd09d818392748a81b4/crates/blockifier/src/bouncer.rs#L578C1-L589C1
 fn vm_resource_to_gas_amount(amount: usize, gas_per_unit: u64, name: &str) -> GasAmount {
@@ -589,6 +591,7 @@ fn vm_resource_to_gas_amount(amount: usize, gas_per_unit: u64, name: &str) -> Ga
     GasAmount(gas)
 }
 
+// TODO: Should be removed once we don't hold `vm_resources_to_sierra_gas` implementation
 // Copied blockifier code
 // https://github.com/starkware-libs/sequencer/blob/5bc3098ebd04facfc3868fd09d818392748a81b4/crates/blockifier/src/bouncer.rs#L595C4-L595C23
 fn memory_holes_to_gas(
@@ -603,6 +606,7 @@ fn memory_holes_to_gas(
     vm_resource_to_gas_amount(n_memory_holes, gas_per_memory_hole, "memory_holes")
 }
 
+// TODO: Should be taken from blockifier
 // Copied blockifier code
 // https://github.com/starkware-libs/sequencer/blob/5bc3098ebd04facfc3868fd09d818392748a81b4/crates/blockifier/src/bouncer.rs#L649
 fn vm_resources_to_sierra_gas(
