@@ -96,6 +96,81 @@ async fn test_happy_case_abi_file() {
 }
 
 #[tokio::test]
+async fn test_abi_file_missing_function() {
+    let tempdir = tempdir().unwrap();
+    let abi_file_path =
+        Utf8PathBuf::from("tests/data/files/data_transformer_contract_abi_missing_function.json");
+    let temp_abi_file_path = tempdir.path().join(abi_file_path.file_name().unwrap());
+    std::fs::copy(abi_file_path, &temp_abi_file_path)
+        .expect("Failed to copy ABI file to temp directory");
+
+    let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
+
+    let args = vec![
+        "serialize",
+        "--arguments",
+        calldata,
+        "--abi-file",
+        temp_abi_file_path.to_str().unwrap(),
+        "--function",
+        "nested_struct_fn",
+        "--url",
+        URL,
+    ];
+
+    let output = runner(&args).current_dir(tempdir.path()).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r#"
+    Error: Failed to transform arguments into calldata
+    
+    Caused by:
+        0: Failed to transform arguments into calldata
+        1: Function with selector "0x2cf7c96d7437a80a891adac280b9089dbe00c5413e7d253bbc87845271ae772" not found in ABI of the contract
+    "#},
+    );
+}
+
+#[tokio::test]
+async fn test_abi_file_missing_type() {
+    let tempdir = tempdir().unwrap();
+    let abi_file_path =
+        Utf8PathBuf::from("tests/data/files/data_transformer_contract_abi_missing_type.json");
+    let temp_abi_file_path = tempdir.path().join(abi_file_path.file_name().unwrap());
+    std::fs::copy(abi_file_path, &temp_abi_file_path)
+        .expect("Failed to copy ABI file to temp directory");
+
+    let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
+
+    let args = vec![
+        "serialize",
+        "--arguments",
+        calldata,
+        "--abi-file",
+        temp_abi_file_path.to_str().unwrap(),
+        "--function",
+        "nested_struct_fn",
+        "--url",
+        URL,
+    ];
+
+    let output = runner(&args).current_dir(tempdir.path()).assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r#"
+    Error: Failed to transform arguments into calldata
+    
+    Caused by:
+        0: Failed to transform arguments into calldata
+        1: Error while processing Cairo-like calldata
+        2: Struct "NestedStructWithField" not found in ABI
+    "#},
+    );
+}
+
+#[tokio::test]
 async fn test_happy_case_json() {
     let tempdir = tempdir().unwrap();
 
