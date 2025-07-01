@@ -433,7 +433,6 @@ fn mocked_call_info(
         tracked_resource,
         inner_calls: vec![],
         storage_access_tracker: StorageAccessTracker::default(),
-        accessed_contract_addresses: HashSet::default(),
         builtin_counters: HashMap::default(),
     }
 }

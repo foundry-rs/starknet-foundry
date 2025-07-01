@@ -1,7 +1,10 @@
 use anyhow::{Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use blockifier::execution::syscalls::hint_processor::{SyscallUsage, SyscallUsageMap};
+use blockifier::execution::syscalls::vm_syscall_utils::{
+    SyscallSelector, SyscallUsage, SyscallUsageMap,
+};
+
 use cairo_annotations::trace_data::{
     CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint,
     CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
@@ -56,6 +59,7 @@ pub fn build_profiler_call_trace(
         entry_point,
         cumulative_resources: build_profiler_execution_resources(
             value.used_execution_resources.clone(),
+            value.used_syscalls.clone(),
             value.gas_consumed,
         ),
         used_l1_resources: value.used_l1_resources.clone(),
@@ -117,6 +121,7 @@ fn build_profiler_call_trace_node(
 #[must_use]
 pub fn build_profiler_execution_resources(
     execution_resources: ExecutionResources,
+    syscall_usage: SyscallUsageMap,
     gas_consumed: u64,
 ) -> ProfilerExecutionResources {
     let profiler_syscall_counter = syscall_usage
@@ -211,7 +216,6 @@ fn build_profiler_entry_point_type(value: EntryPointType) -> ProfilerEntryPointT
     }
 }
 
-#[expect(dead_code)]
 fn build_profiler_deprecated_syscall_selector(
     value: SyscallSelector,
 ) -> ProfilerDeprecatedSyscallSelector {

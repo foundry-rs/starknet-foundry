@@ -5,7 +5,7 @@ use blockifier::execution::execution_utils::felt_from_ptr;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
 use blockifier::execution::syscalls::vm_syscall_utils::{
-    CallContractRequest, LibraryCallRequest, SyscallRequestWrapper, SyscallSelector,
+    CallContractRequest, LibraryCallRequest, RevertData, SyscallRequestWrapper, SyscallSelector,
 };
 use blockifier::execution::{
     execution_utils::ReadOnlySegment,
@@ -202,7 +202,7 @@ fn write_call_response(
         CallResult::Failure(failure_type) => match failure_type {
             CallFailure::Panic { panic_data } => SyscallResponseWrapper::Failure {
                 gas_counter,
-                error_data: panic_data,
+                revert_data: RevertData::new_normal(panic_data),
             },
             CallFailure::Error { msg } => {
                 return Err(HintError::CustomHint(Box::from(msg.to_string())));

@@ -9,7 +9,8 @@ use blockifier::execution::syscalls::hint_processor::OUT_OF_GAS_ERROR;
 use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
 use blockifier::execution::syscalls::vm_syscall_utils::{
-    SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper, SyscallSelector,
+    RevertData, SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper,
+    SyscallSelector,
 };
 use blockifier::execution::{
     common_hints::HintExecutionResult,
@@ -185,11 +186,11 @@ impl CheatableStarknetRuntimeExtension<'_> {
 
         if gas_counter < required_gas {
             //  Out of gas failure.
-            let out_of_gas_error = TryFromHexStr::try_from_hex_str(OUT_OF_GAS_ERROR)
-                .map_err(SyscallExecutionError::from)?;
+            let out_of_gas_error =
+                Felt::try_from_hex_str(OUT_OF_GAS_ERROR).map_err(SyscallExecutionError::from)?;
             let response: SyscallResponseWrapper<Response> = SyscallResponseWrapper::Failure {
                 gas_counter,
-                error_data: vec![out_of_gas_error],
+                revert_data: RevertData::new_normal(vec![out_of_gas_error]),
             };
             response.write(vm, &mut syscall_handler.syscall_ptr)?;
 
@@ -213,7 +214,7 @@ impl CheatableStarknetRuntimeExtension<'_> {
             Err(SyscallExecutionError::Revert { error_data: data }) => {
                 SyscallResponseWrapper::Failure {
                     gas_counter: remaining_gas,
-                    error_data: data,
+                    revert_data: RevertData::new_normal(data),
                 }
             }
             Err(error) => return Err(error.into()),
