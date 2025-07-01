@@ -62,14 +62,33 @@ Note that the arguments must be:
 
 In case you just want to serialize a Cairo expression without producing any on-chain activity, you can use the `sncast serialize` command.
 
-#### Basic Serialization Example
-
 ```shell
 $ sncast serialize \
-    --network sepolia \
     --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
     --function tuple_fn \
     --arguments '(0x10, 3, hello_sncast::data_transformer_contract::Enum::One)' \
+    --network sepolia
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Success: Serialization completed
+
+Calldata: [0x10, 0x3, 0x0]
+```
+</details>
+<br>
+
+Serialization can also be performed by passing the path to a file containing the contract ABI, instead of using `--contract-address` or `--class-hash`. This allows the command to run without making a network request.
+
+```shell
+$ sncast serialize \
+    --abi-file tests/data/files/data_transformer_contract_abi.json \
+    --function tuple_fn \
+    --arguments '(0x10, 3, hello_sncast::data_transformer_contract::Enum::One)' \
+    --network sepolia
 ```
 
 <details>
