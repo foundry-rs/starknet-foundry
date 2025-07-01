@@ -64,9 +64,9 @@ In case you just want to serialize a Cairo expression without producing any on-c
 
 ```shell
 $ sncast serialize \
-    --contract-address 0x05075f6d418f7c53c6cdc21cbb5aca2b69c83b6fbcc8256300419a9f101c8b77 \
-    --function tuple_fn \
-    --arguments '(0x10, 3, hello_sncast::data_transformer_contract::Enum::One)' \
+    --contract-address 0x00351c816183324878714973f3da1a43c1a40d661b8dac5cb69294cc333342ed \
+    --function nested_struct_fn \
+    --arguments 'NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }' \
     --network sepolia
 ```
 
@@ -76,18 +76,18 @@ $ sncast serialize \
 ```shell
 Success: Serialization completed
 
-Calldata: [0x10, 0x3, 0x0]
+Calldata: [0x24, 0x60]
 ```
 </details>
 <br>
 
-Serialization can also be performed by passing the path to a file containing the contract ABI, instead of using `--contract-address` or `--class-hash`. This allows the command to run without making a network request.
+Serialization can also be performed by passing the path to a file containing the contract ABI, instead of using `--class-hash` or `--contract-address`. This allows the command to run without making a network request.
 
 ```shell
 $ sncast serialize \
-    --abi-file tests/data/files/data_transformer_contract_abi.json \
-    --function tuple_fn \
-    --arguments '(0x10, 3, hello_sncast::data_transformer_contract::Enum::One)' \
+    --abi-file data_transformer_contract_abi.json \
+    --function nested_struct_fn \
+    --arguments 'NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }' \
     --network sepolia
 ```
 
@@ -97,7 +97,7 @@ $ sncast serialize \
 ```shell
 Success: Serialization completed
 
-Calldata: [0x10, 0x3, 0x0]
+Calldata: [0x24, 0x60]
 ```
 </details>
 <br>
