@@ -303,12 +303,12 @@ fn call_info_from_pre_execution_error(
 fn recursively_collect_resources_and_gas(
     trace: &Rc<RefCell<CallTrace>>,
 ) -> (SyscallUsageMap, ExecutionResources, u64) {
-    let trace_ref = trace.borrow();
-    let versioned_constants = VersionedConstants::latest_constants();
-
     let mut aggregated_syscalls = HashMap::new();
     let mut accumulated_resources = ExecutionResources::default();
     let mut accumulated_gas = 0_u64;
+
+    let trace_ref = trace.borrow();
+
     for call in &trace_ref.nested_calls {
         if let CallTraceNode::EntryPointCall(nested_call) = call {
             let (child_syscalls, child_resources, child_gas) =
@@ -321,6 +321,8 @@ fn recursively_collect_resources_and_gas(
 
     let local_syscalls =
         subtract_syscall_usage(trace_ref.used_syscalls.clone(), &aggregated_syscalls);
+
+    let versioned_constants = VersionedConstants::latest_constants();
 
     let (local_resources, local_gas) = match trace_ref.tracked_resource {
         TrackedResource::CairoSteps => (
