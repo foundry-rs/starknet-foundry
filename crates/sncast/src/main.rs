@@ -15,8 +15,8 @@ use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::ResponseError;
 use sncast::response::explorer_link::{ExplorerLinksMessage, block_explorer_link_if_allowed};
 use sncast::response::transformed_call::TransformedCallResponse;
+use std::io;
 use std::io::IsTerminal;
-use std::{fs, io};
 
 use crate::starknet_commands::deploy::DeployArguments;
 use camino::Utf8PathBuf;
@@ -172,43 +172,28 @@ pub struct Arguments {
 impl Arguments {
     fn try_into_calldata(
         self,
-        contract_class: Option<ContractClass>,
+        contract_class: ContractClass,
         selector: &Felt,
-        abi_file: Option<Utf8PathBuf>,
     ) -> Result<Vec<Felt>> {
         if let Some(calldata) = self.calldata {
-            return calldata
+            calldata
                 .iter()
                 .map(|data| {
                     Felt::from_dec_str(data)
                         .or_else(|_| Felt::from_hex(data))
                         .context("Failed to parse to felt")
                 })
-                .collect();
+                .collect()
+        } else {
+            let ContractClass::Sierra(sierra_class) = contract_class else {
+                bail!("Transformation of arguments is not available for Cairo Zero contracts")
+            };
+
+            let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str())
+                .context("Couldn't deserialize ABI received from network")?;
+
+            transform(&self.arguments.unwrap_or_default(), &abi, selector)
         }
-
-        let abi: Vec<AbiEntry> = match (contract_class, abi_file) {
-            (Some(_), Some(_)) => {
-                bail!("`contract_class` and `abi_file` params are mutually exclusive");
-            }
-            (Some(ContractClass::Sierra(sierra_class)), None) => {
-                serde_json::from_str(sierra_class.abi.as_str())
-                    .context("Couldn't deserialize ABI received from network")?
-            }
-            (Some(_), None) => {
-                bail!("Transformation of arguments is not available for Cairo Zero contracts");
-            }
-            (None, Some(path)) => {
-                let abi_str = fs::read_to_string(path).context("Failed to read ABI file")?;
-                serde_json::from_str(&abi_str).context("Failed to deserialize ABI from file")?
-            }
-            (None, None) => {
-                bail!("Either `contract_class` or `abi_file` must be provided");
-            }
-        };
-
-        let args = self.arguments.unwrap_or_default();
-        transform(&args, &abi, selector).context("Failed to transform arguments into calldata")
     }
 }
 
@@ -329,7 +314,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let contract_class = get_contract_class(deploy.class_hash, &provider).await?;
 
             let arguments: Arguments = arguments.into();
-            let calldata = arguments.try_into_calldata(Some(contract_class), &selector, None)?;
+            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
 
             let result = starknet_commands::deploy::deploy(
                 deploy.class_hash,
@@ -372,8 +357,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
-            let calldata =
-                arguments.try_into_calldata(Some(contract_class.clone()), &selector, None)?;
+            let calldata = arguments.try_into_calldata(contract_class.clone(), &selector)?;
 
             let result = starknet_commands::call::call(
                 contract_address,
@@ -423,7 +407,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
             let contract_class = get_contract_class(class_hash, &provider).await?;
 
-            let calldata = arguments.try_into_calldata(Some(contract_class), &selector, None)?;
+            let calldata = arguments.try_into_calldata(contract_class, &selector)?;
 
             let result = starknet_commands::invoke::invoke(
                 contract_address,

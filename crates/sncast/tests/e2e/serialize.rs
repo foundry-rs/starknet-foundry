@@ -121,11 +121,7 @@ async fn test_abi_file_missing_function() {
     assert_stderr_contains(
         output,
         indoc! {r#"
-    Error: Failed to transform arguments into calldata
-    
-    Caused by:
-        0: Failed to transform arguments into calldata
-        1: Function with selector "0x2cf7c96d7437a80a891adac280b9089dbe00c5413e7d253bbc87845271ae772" not found in ABI of the contract
+    Error: Function with selector "0x2cf7c96d7437a80a891adac280b9089dbe00c5413e7d253bbc87845271ae772" not found in ABI of the contract
     "#},
     );
 }
@@ -159,12 +155,8 @@ async fn test_abi_file_missing_type() {
     assert_stderr_contains(
         output,
         indoc! {r#"
-    Error: Failed to transform arguments into calldata
-    
-    Caused by:
-        0: Failed to transform arguments into calldata
-        1: Error while processing Cairo-like calldata
-        2: Struct "NestedStructWithField" not found in ABI
+    Error: Error while processing Cairo-like calldata
+        Struct "NestedStructWithField" not found in ABI
     "#},
     );
 }
@@ -242,9 +234,7 @@ async fn test_wrong_function_name() {
 
     assert_stderr_contains(
         output,
-        r#"Error: Failed to transform arguments into calldata
-Caused by:
-    Function with selector "0x38a013a14030cb08ae86482a9e0f3bad42daeb0222bdfe0634d77388deab9b9" not found in ABI of the contract"#,
+        r#"Error: Function with selector "0x38a013a14030cb08ae86482a9e0f3bad42daeb0222bdfe0634d77388deab9b9" not found in ABI of the contract"#,
     );
 }
 
