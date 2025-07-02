@@ -1,13 +1,16 @@
-use anyhow::{Result, bail};
+use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
 use foundry_ui::UI;
 use sncast::{
-    get_class_hash_by_address,
+    get_class_hash_by_address, get_contract_class,
     helpers::{configuration::CastConfig, rpc::RpcArgs},
     response::{errors::StarknetCommandError, serialize::SerializeResponse},
 };
+use starknet::core::utils::get_selector_from_name;
 use starknet_types_core::felt::Felt;
+
+use crate::Arguments;
 
 #[derive(Args, Clone, Debug)]
 #[command(about = "Serialize Cairo expressions into calldata")]
@@ -49,7 +52,36 @@ impl Serialize {
     }
 }
 
-#[allow(clippy::unnecessary_wraps)]
-pub fn serialize(calldata: Vec<Felt>) -> Result<SerializeResponse, StarknetCommandError> {
+pub async fn serialize(
+    serialize_args: Serialize,
+    config: CastConfig,
+    ui: &UI,
+) -> Result<SerializeResponse, StarknetCommandError> {
+    let Serialize {
+        function,
+        arguments,
+        rpc,
+        abi_file,
+        ..
+    } = serialize_args.clone();
+
+    let provider = rpc.get_provider(&config, ui).await?;
+
+    let selector = get_selector_from_name(&function)
+        .context("Failed to convert entry point selector to FieldElement")?;
+
+    let arguments = Arguments {
+        calldata: None,
+        arguments: Some(arguments),
+    };
+    let calldata = if let Some(abi_file) = abi_file {
+        arguments
+            .try_into_calldata(None, &selector, Some(abi_file))
+            .context("Failed to transform arguments into calldata")?
+    } else {
+        let class_hash = serialize_args.class_hash(config, ui).await?;
+        let contract_class = get_contract_class(class_hash, &provider).await?;
+        arguments.try_into_calldata(Some(contract_class), &selector, None)?
+    };
     Ok(SerializeResponse { calldata })
 }

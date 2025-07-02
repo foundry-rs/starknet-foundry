@@ -451,37 +451,11 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         }
 
         Commands::Serialize(serialize) => {
-            let Serialize {
-                function,
-                arguments,
-                rpc,
-                abi_file,
-                ..
-            } = serialize.clone();
+            let result = starknet_commands::serialize::serialize(serialize, config, ui)
+                .await
+                .map_err(handle_starknet_command_error)?;
 
-            let provider = rpc.get_provider(&config, ui).await?;
-
-            let selector = get_selector_from_name(&function)
-                .context("Failed to convert entry point selector to FieldElement")?;
-
-            let arguments = Arguments {
-                calldata: None,
-                arguments: Some(arguments),
-            };
-            let calldata = if let Some(abi_file) = abi_file {
-                arguments
-                    .try_into_calldata(None, &selector, Some(abi_file))
-                    .context("Failed to transform arguments into calldata")?
-            } else {
-                let class_hash = serialize.class_hash(config, ui).await?;
-                let contract_class = get_contract_class(class_hash, &provider).await?;
-                arguments.try_into_calldata(Some(contract_class), &selector, None)?
-            };
-
-            let result = starknet_commands::serialize::serialize(calldata)
-                .map_err(handle_starknet_command_error);
-
-            process_command_result("serialize", result, ui, None);
+            process_command_result("serialize", Ok(result), ui, None);
 
             Ok(())
         }
