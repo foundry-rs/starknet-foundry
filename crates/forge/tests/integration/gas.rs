@@ -1866,7 +1866,7 @@ fn nested_call_cost_in_forked_contract_sierra_gas() {
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(2823077),
+            l2_gas: GasAmount(2_823_077),
         },
     );
 }
