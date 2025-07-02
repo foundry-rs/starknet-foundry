@@ -299,7 +299,7 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
             .root
             .strip_prefix(prefix)
             // backend expects this: "." for cwd
-            .map(|p| {
+            .map(|path| {
                 if p.as_str().is_empty() {
                     Utf8Path::new(".")
                 } else {
