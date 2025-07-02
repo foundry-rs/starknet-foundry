@@ -1,6 +1,4 @@
-use std::fs;
-
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
 use data_transformer::transform;
@@ -55,7 +53,7 @@ pub struct Serialize {
 }
 
 impl Location {
-    pub async fn resolve_class_hash(
+    async fn resolve_class_hash(
         &self,
         rpc_args: RpcArgs,
         config: CastConfig,
@@ -69,6 +67,34 @@ impl Location {
             }
             (None, None) => {
                 unreachable!("Either `--class-hash` or `--contract-address` must be provided")
+            }
+        }
+    }
+
+    pub async fn resolve_abi(
+        &self,
+        rpc: RpcArgs,
+        config: CastConfig,
+        ui: &UI,
+    ) -> Result<Vec<AbiEntry>> {
+        if let Some(ref path) = self.abi_file {
+            let abi_str = tokio::fs::read_to_string(path)
+                .await
+                .context("Failed to read ABI file")?;
+            serde_json::from_str(&abi_str).context("Failed to deserialize ABI from file")
+        } else {
+            let class_hash = self
+                .resolve_class_hash(rpc.clone(), config.clone(), ui)
+                .await?;
+            let contract_class =
+                get_contract_class(class_hash, &rpc.get_provider(&config, ui).await?).await?;
+
+            match contract_class {
+                ContractClass::Sierra(sierra) => serde_json::from_str(&sierra.abi)
+                    .context("Couldn't deserialize ABI received from network"),
+                ContractClass::Legacy(_) => {
+                    bail!("Transformation of arguments is not available for Cairo Zero contracts")
+                }
             }
         }
     }
@@ -87,33 +113,15 @@ pub async fn serialize(
         ..
     } = serialize_args;
 
-    let provider = rpc.get_provider(&config, ui).await?;
-
     let selector = get_selector_from_name(&function)
         .context("Failed to convert entry point selector to FieldElement")?;
 
-    let calldata = if let Some(abi_file) = location.abi_file {
-        let abi_str = fs::read_to_string(abi_file).context("Failed to read ABI file")?;
-        let abi: Vec<AbiEntry> =
-            serde_json::from_str(&abi_str).context("Failed to deserialize ABI from file")?;
-        transform(&arguments, &abi, &selector)?
-    } else {
-        let class_hash = location.resolve_class_hash(rpc, config, ui).await?;
-        let contract_class = get_contract_class(class_hash, &provider).await?;
+    let abi = location
+        .resolve_abi(rpc.clone(), config.clone(), ui)
+        .await
+        .map_err(StarknetCommandError::from)?;
 
-        let sierra_class = match contract_class {
-            ContractClass::Sierra(sierra_class) => sierra_class,
-            ContractClass::Legacy(_) => {
-                return Err(StarknetCommandError::UnknownError(anyhow::anyhow!(
-                    "Transformation of arguments is not available for Cairo Zero contracts"
-                )));
-            }
-        };
+    let calldata = transform(&arguments, &abi, &selector)?;
 
-        let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str())
-            .context("Couldn't deserialize ABI received from network")?;
-
-        transform(&arguments, &abi, &selector)?
-    };
     Ok(SerializeResponse { calldata })
 }
