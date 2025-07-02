@@ -5,11 +5,10 @@ use foundry_ui::UI;
 use promptly::prompt;
 use scarb_api::StarknetContractArtifacts;
 use shared::verify_and_warn_if_incompatible_rpc_version;
+use sncast::get_provider;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::FreeProvider;
 use sncast::{Network, response::verify::VerifyResponse};
-use starknet::providers::JsonRpcClient;
-use starknet::providers::jsonrpc::HttpTransport;
 use starknet_types_core::felt::Felt;
 use std::{collections::HashMap, fmt};
 use url::Url;
@@ -101,7 +100,7 @@ pub async fn verify(
     let rpc_url = url.map_or_else(
         || {
             let url = if config.url.is_empty() {
-                &free
+                &free_rpc_provider
             } else {
                 &config.url
             };
@@ -109,13 +108,13 @@ pub async fn verify(
         },
         Ok,
     )?;
-    let provider = JsonRpcClient::new(HttpTransport::new(rpc_url.clone()));
+    let provider = get_provider(rpc_url.as_str())?;
     verify_and_warn_if_incompatible_rpc_version(&provider, rpc_url, ui).await?;
 
     // Let's ask confirmation
     if !confirm_verification {
         let prompt_text = format!(
-            "\n\tYou are about to submit the entire workspace code to the third-party verifier at {verifier}.\n\n\tImportant: Make sure your project does not include sensitive information like private keys. The snfoundry.toml file will be uploaded. Keep the keystore outside the project to prevent it from being uploaded.\n\n\tAre you sure you want to proceed? (Y/n)"
+            "\n\tYou are about to submit the entire workspace code to the third-party verifier at {verifier}.\n\n\tImportant: Make sure your project's Scarb.toml does not include sensitive information like private keys.\n\n\tAre you sure you want to proceed? (Y/n)"
         );
         let input: String = prompt(prompt_text)?;
 

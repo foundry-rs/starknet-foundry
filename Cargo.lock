@@ -4793,6 +4793,7 @@ dependencies = [
  "encoding_rs",
  "futures-channel",
  "futures-core",
+ "futures-util",
  "h2",
  "http",
  "http-body",

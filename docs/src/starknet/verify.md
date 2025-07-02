@@ -44,7 +44,7 @@ $ sncast \
 
     You are about to submit the entire workspace code to the third-party verifier at walnut.
 
-    Important: Make sure your project does not include sensitive information like private keys. The snfoundry.toml file will be uploaded. Keep the keystore outside the project to prevent it from being uploaded.
+    Important: Make sure your project does not include sensitive information like private keys.
 
     Are you sure you want to proceed? (Y/n): Y
 
@@ -73,7 +73,7 @@ $ sncast \
 
     You are about to submit the entire workspace code to the third-party verifier at voyager.
 
-    Important: Make sure your project does not include sensitive information like private keys. The snfoundry.toml file will be uploaded. Keep the keystore outside the project to prevent it from being uploaded.
+    Important: Make sure your project's Scarb.toml does not include sensitive information like private keys.
 
     Are you sure you want to proceed? (Y/n): Y
 

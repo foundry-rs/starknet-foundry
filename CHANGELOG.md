@@ -14,10 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 - ETH token is now pre-deployed by default in every test, and `Token::ETH` was added to `snforge_std`
 - `--skip` flag to allow excluding any test whose name contains the provided string
+- `sncast verify` now supports verifying against [voyager](https://voyager.online/) block explorer.
 
 #### Changed
 - Updated output format for `--exit-first` flag. Tests skipped due to preceding failures are no longer displayed in the summary. Alternative information is shown when applicable.
 - `storage address` was renamed to `contract address` in the output of `--trace-verbosity`
+- `sncast verify` no longer defaults to using walnut.
 
 #### Fixed
 
@@ -57,7 +59,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- `sncast verify` no longer defaults to using walnut.
 - OpenZeppelin account updated to v1.0.0 [preset](https://docs.openzeppelin.com/contracts-cairo/1.0.0/api/account#AccountUpgradeable)
 - Restored support for Braavos accounts
 - Accounts created with `--type braavos` use updated v1.2.0 class hash

@@ -127,7 +127,11 @@ fn package_sources(package_metadata: &PackageMetadata) -> Result<Vec<Utf8PathBuf
                     return false;
                 }
                 // Skip files in test directories, but keep files with "tests" in their name within src/
-                let parts: Vec<_> = f.path().components().map(|c| c.as_os_str().to_string_lossy().to_lowercase()).collect();
+                let parts: Vec<_> = f
+                    .path()
+                    .components()
+                    .map(|c| c.as_os_str().to_string_lossy().to_lowercase())
+                    .collect();
 
                 if parts.contains(&"src".to_string()) {
                     return true;
@@ -180,11 +184,11 @@ fn longest_common_prefix<P: AsRef<Utf8Path> + Clone>(
     let mut longest_prefix = first_guess.as_ref();
     for prefix in ancestors {
         if paths.iter().all(|src| src.starts_with(prefix)) {
-            biggest_prefix = prefix;
+            longest_prefix = prefix;
             break;
         }
     }
-    biggest_prefix.to_path_buf()
+    longest_prefix.to_path_buf()
 }
 
 impl Voyager<'_> {
@@ -198,7 +202,7 @@ impl Voyager<'_> {
             sources.append(&mut package_sources);
         }
 
-        let prefix = biggest_common_prefix(&sources, &self.metadata.workspace.root);
+        let prefix = longest_common_prefix(&sources, &self.metadata.workspace.root);
         let manifest_path = &self.metadata.workspace.manifest_path;
         let manifest = manifest_path
             .strip_prefix(&prefix)
@@ -295,10 +299,10 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
             .strip_prefix(prefix)
             // backend expects this: "." for cwd
             .map(|path| {
-                if p.as_str().is_empty() {
+                if path.as_str().is_empty() {
                     Utf8Path::new(".")
                 } else {
-                    p
+                    path
                 }
             })?;
 
