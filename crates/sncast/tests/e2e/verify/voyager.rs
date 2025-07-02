@@ -10,6 +10,7 @@ use serde_json::{Value, json};
 use shared::consts::EXPECTED_RPC_VERSION;
 use shared::test_utils::output_assert::assert_stderr_contains;
 use starknet_types_core::felt::Felt;
+use std::net::TcpListener;
 use wiremock::matchers::{body_json, body_partial_json, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -29,11 +30,20 @@ static SPEC_RESPONSE: LazyLock<Value> = LazyLock::new(|| {
     })
 });
 
+// Helper function to create a mock server with explicit localhost binding
+async fn create_mock_server() -> MockServer {
+    // Find an available port on localhost
+    let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind to localhost");
+
+    // Start mock server on the specific localhost address
+    MockServer::builder().listener(listener).start().await
+}
+
 #[tokio::test]
 async fn test_happy_case_contract_address() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-    let mock_server = MockServer::start().await;
+    let mock_server = create_mock_server().await;
     let rpc_request = json!({
         "id": 1,
         "jsonrpc": "2.0",
@@ -49,7 +59,7 @@ async fn test_happy_case_contract_address() {
         "result": MAP_CONTRACT_CLASS_HASH_SEPOLIA
     });
 
-    let mock_rpc = MockServer::start().await;
+    let mock_rpc = create_mock_server().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
     Mock::given(method("POST"))
         .and(body_json(LazyLock::force(&SPEC_REQUEST)))
@@ -104,7 +114,7 @@ async fn test_happy_case_contract_address() {
 async fn test_happy_case_class_hash() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-    let mock_server = MockServer::start().await;
+    let mock_server = create_mock_server().await;
     let rpc_request = json!({
         "id": 1,
         "jsonrpc": "2.0",
@@ -123,7 +133,7 @@ async fn test_happy_case_class_hash() {
       "jsonrpc": "2.0"
     });
 
-    let mock_rpc = MockServer::start().await;
+    let mock_rpc = create_mock_server().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
     Mock::given(method("POST"))
         .and(body_json(LazyLock::force(&SPEC_REQUEST)))
@@ -178,7 +188,7 @@ async fn test_happy_case_class_hash() {
 async fn test_happy_case_with_confirm_verification_flag() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-    let mock_server = MockServer::start().await;
+    let mock_server = create_mock_server().await;
     let rpc_request = json!({
         "id": 1,
         "jsonrpc": "2.0",
@@ -194,7 +204,7 @@ async fn test_happy_case_with_confirm_verification_flag() {
         "result": MAP_CONTRACT_CLASS_HASH_SEPOLIA
     });
 
-    let mock_rpc = MockServer::start().await;
+    let mock_rpc = create_mock_server().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
     Mock::given(method("POST"))
         .and(body_json(LazyLock::force(&SPEC_REQUEST)))
@@ -249,7 +259,7 @@ async fn test_happy_case_with_confirm_verification_flag() {
 async fn test_failed_verification_contract_address() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-    let mock_server = MockServer::start().await;
+    let mock_server = create_mock_server().await;
     let rpc_request = json!({
         "id": 1,
         "jsonrpc": "2.0",
@@ -265,7 +275,7 @@ async fn test_failed_verification_contract_address() {
         "result": MAP_CONTRACT_CLASS_HASH_SEPOLIA
     });
 
-    let mock_rpc = MockServer::start().await;
+    let mock_rpc = create_mock_server().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
     Mock::given(method("POST"))
         .and(body_json(LazyLock::force(&SPEC_REQUEST)))
@@ -330,7 +340,7 @@ async fn test_failed_verification_contract_address() {
 async fn test_failed_verification_class_hash() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-    let mock_server = MockServer::start().await;
+    let mock_server = create_mock_server().await;
     let rpc_request = json!({
         "id": 1,
         "jsonrpc": "2.0",
@@ -349,7 +359,7 @@ async fn test_failed_verification_class_hash() {
       "jsonrpc": "2.0"
     });
 
-    let mock_rpc = MockServer::start().await;
+    let mock_rpc = create_mock_server().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
     Mock::given(method("POST"))
         .and(body_json(LazyLock::force(&SPEC_REQUEST)))
@@ -414,7 +424,7 @@ async fn test_failed_verification_class_hash() {
 async fn test_failed_class_hash_lookup() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-    let mock_server = MockServer::start().await;
+    let mock_server = create_mock_server().await;
     let rpc_request = json!({
         "id": 1,
         "jsonrpc": "2.0",
@@ -433,7 +443,7 @@ async fn test_failed_class_hash_lookup() {
       "jsonrpc": "2.0"
     });
 
-    let mock_rpc = MockServer::start().await;
+    let mock_rpc = create_mock_server().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
     Mock::given(method("POST"))
         .and(body_json(LazyLock::force(&SPEC_REQUEST)))
@@ -496,7 +506,7 @@ async fn test_failed_class_hash_lookup() {
 async fn test_virtual_workspaces() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
 
-    let mock_server = MockServer::start().await;
+    let mock_server = create_mock_server().await;
     let rpc_request = json!({
         "id": 1,
         "jsonrpc": "2.0",
@@ -512,7 +522,7 @@ async fn test_virtual_workspaces() {
         "result": MAP_CONTRACT_CLASS_HASH_SEPOLIA
     });
 
-    let mock_rpc = MockServer::start().await;
+    let mock_rpc = create_mock_server().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
     Mock::given(method("POST"))
         .and(body_json(LazyLock::force(&SPEC_REQUEST)))
@@ -569,7 +579,7 @@ async fn test_virtual_workspaces() {
 async fn test_contract_name_not_found() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
 
-    let mock_server = MockServer::start().await;
+    let mock_server = create_mock_server().await;
     let rpc_request = json!({
         "id": 1,
         "jsonrpc": "2.0",
@@ -585,7 +595,7 @@ async fn test_contract_name_not_found() {
         "result": MAP_CONTRACT_CLASS_HASH_SEPOLIA
     });
 
-    let mock_rpc = MockServer::start().await;
+    let mock_rpc = create_mock_server().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
     Mock::given(method("POST"))
         .and(body_json(LazyLock::force(&SPEC_REQUEST)))
