@@ -13,6 +13,7 @@ no_scarb_installed = []
 debugging = []
 assert_non_exact_gas = ["test_utils/assert_non_exact_gas"]
 supports-panic-backtrace = []
+interact-with-state = []
 
 [dependencies]
 anyhow.workspace = true
