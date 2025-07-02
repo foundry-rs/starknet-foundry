@@ -21,7 +21,7 @@ use crate::runtime_extensions::{
 use crate::state::{CallTrace, CallTraceNode};
 use anyhow::{Context, Result, anyhow};
 use blockifier::blockifier_versioned_constants::VersionedConstants;
-use blockifier::bouncer::builtins_to_sierra_gas;
+use blockifier::bouncer::vm_resources_to_sierra_gas;
 use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::contract_class::TrackedResource;
@@ -29,8 +29,6 @@ use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
 use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsageMap};
 use blockifier::state::errors::StateError;
-use blockifier::transaction::objects::ExecutionResourcesTraits;
-use blockifier::utils::u64_from_usize;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::{
     errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
@@ -563,71 +561,6 @@ fn handle_declare_deploy_result<T: CairoSerialize>(
     };
 
     Ok(CheatcodeHandlingResult::from_serializable(result))
-}
-
-// TODO: Should be removed once we don't hold `vm_resources_to_sierra_gas` implementation
-// Copied blockifier code
-// https://github.com/starkware-libs/sequencer/blob/5bc3098ebd04facfc3868fd09d818392748a81b4/crates/blockifier/src/bouncer.rs#L590
-fn n_steps_to_gas(n_steps: usize, versioned_constants: &VersionedConstants) -> GasAmount {
-    let gas_per_step = versioned_constants
-        .os_constants
-        .gas_costs
-        .base
-        .step_gas_cost;
-    vm_resource_to_gas_amount(n_steps, gas_per_step, "steps")
-}
-
-// TODO: Should be removed once we don't hold `vm_resources_to_sierra_gas` implementation
-// Copied blockifier code
-// https://github.com/starkware-libs/sequencer/blob/5bc3098ebd04facfc3868fd09d818392748a81b4/crates/blockifier/src/bouncer.rs#L578C1-L589C1
-fn vm_resource_to_gas_amount(amount: usize, gas_per_unit: u64, name: &str) -> GasAmount {
-    let amount_u64 = u64_from_usize(amount);
-    let gas = amount_u64.checked_mul(gas_per_unit).unwrap_or_else(|| {
-        panic!(
-            "Multiplication overflow converting {name} to gas. units: {amount_u64}, gas per unit: {gas_per_unit}.",
-        )
-    });
-
-    GasAmount(gas)
-}
-
-// TODO: Should be removed once we don't hold `vm_resources_to_sierra_gas` implementation
-// Copied blockifier code
-// https://github.com/starkware-libs/sequencer/blob/5bc3098ebd04facfc3868fd09d818392748a81b4/crates/blockifier/src/bouncer.rs#L595C4-L595C23
-fn memory_holes_to_gas(
-    n_memory_holes: usize,
-    versioned_constants: &VersionedConstants,
-) -> GasAmount {
-    let gas_per_memory_hole = versioned_constants
-        .os_constants
-        .gas_costs
-        .base
-        .memory_hole_gas_cost;
-    vm_resource_to_gas_amount(n_memory_holes, gas_per_memory_hole, "memory_holes")
-}
-
-// TODO: Should be taken from blockifier
-// Copied blockifier code
-// https://github.com/starkware-libs/sequencer/blob/5bc3098ebd04facfc3868fd09d818392748a81b4/crates/blockifier/src/bouncer.rs#L649
-fn vm_resources_to_sierra_gas(
-    resources: &ExecutionResources,
-    versioned_constants: &VersionedConstants,
-) -> GasAmount {
-    let builtins_gas_cost =
-        builtins_to_sierra_gas(&resources.prover_builtins(), versioned_constants);
-    let n_steps_gas_cost = n_steps_to_gas(resources.total_n_steps(), versioned_constants);
-    let n_memory_holes_gas_cost =
-        memory_holes_to_gas(resources.n_memory_holes, versioned_constants);
-
-    n_steps_gas_cost
-        .checked_add(n_memory_holes_gas_cost)
-        .and_then(|sum| sum.checked_add(builtins_gas_cost))
-        .unwrap_or_else(|| {
-            panic!(
-                "Addition overflow while converting vm resources to gas. steps gas: {n_steps_gas_cost}, memory \
-                 holes gas: {builtins_gas_cost}, builtins gas: {n_memory_holes_gas_cost}.",
-            )
-        })
 }
 
 pub fn add_resources_to_top_call(
