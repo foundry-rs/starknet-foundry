@@ -127,18 +127,13 @@ fn package_sources(package_metadata: &PackageMetadata) -> Result<Vec<Utf8PathBuf
                     return false;
                 }
                 // Skip files in test directories, but keep files with "tests" in their name within src/
-                let path_str = f.path().to_string_lossy();
+                let parts: Vec<_> = f.path().components().map(|c| c.as_os_str().to_string_lossy().to_lowercase()).collect();
 
-                // Check if we're in the src directory
-                let in_src_dir = path_str.contains("/src/") || path_str.contains("\\src\\");
+                if parts.contains(&"src".to_string()) {
+                    return true;
+                }
 
-                // Skip any test directories, unless we're in src
-                if !in_src_dir
-                    && (path_str.contains("/tests/")
-                        || path_str.contains("\\tests\\")
-                        || path_str.contains("/test/")
-                        || path_str.contains("\\test\\"))
-                {
+                if parts.contains(&"test".to_string()) || parts.contains(&"tests".to_string()) {
                     return false;
                 }
                 // We'll include files with #[test] attributes since they might be source files
