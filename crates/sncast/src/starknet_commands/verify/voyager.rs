@@ -182,7 +182,7 @@ fn biggest_common_prefix<P: AsRef<Utf8Path> + Clone>(
     first_guess: P,
 ) -> Utf8PathBuf {
     let ancestors = Utf8Path::ancestors(first_guess.as_ref());
-    let mut biggest_prefix = first_guess.as_ref();
+    let mut longest_prefix = first_guess.as_ref();
     for prefix in ancestors {
         if paths.iter().all(|src| src.starts_with(prefix)) {
             biggest_prefix = prefix;
