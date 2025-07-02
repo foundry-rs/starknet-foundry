@@ -10,10 +10,11 @@ use sncast::{
     helpers::{configuration::CastConfig, rpc::RpcArgs},
     response::{errors::StarknetCommandError, serialize::SerializeResponse},
 };
-use starknet::core::{types::contract::AbiEntry, utils::get_selector_from_name};
+use starknet::core::{
+    types::{ContractClass, contract::AbiEntry},
+    utils::get_selector_from_name,
+};
 use starknet_types_core::felt::Felt;
-
-use crate::Arguments;
 
 #[derive(Args, Clone, Debug)]
 #[group(
@@ -95,15 +96,24 @@ pub async fn serialize(
         let abi_str = fs::read_to_string(abi_file).context("Failed to read ABI file")?;
         let abi: Vec<AbiEntry> =
             serde_json::from_str(&abi_str).context("Failed to deserialize ABI from file")?;
-        transform(arguments.as_str(), &abi, &selector)?
+        transform(&arguments, &abi, &selector)?
     } else {
         let class_hash = location.resolve_class_hash(rpc, config, ui).await?;
         let contract_class = get_contract_class(class_hash, &provider).await?;
-        let arguments = Arguments {
-            calldata: None,
-            arguments: Some(arguments),
+
+        let sierra_class = match contract_class {
+            ContractClass::Sierra(sierra_class) => sierra_class,
+            ContractClass::Legacy(_) => {
+                return Err(StarknetCommandError::UnknownError(anyhow::anyhow!(
+                    "Transformation of arguments is not available for Cairo Zero contracts"
+                )));
+            }
         };
-        arguments.try_into_calldata(contract_class, &selector)?
+
+        let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str())
+            .context("Couldn't deserialize ABI received from network")?;
+
+        transform(&arguments, &abi, &selector)?
     };
     Ok(SerializeResponse { calldata })
 }
