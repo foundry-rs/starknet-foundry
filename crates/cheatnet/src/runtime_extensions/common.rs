@@ -22,19 +22,6 @@ pub fn sum_syscall_usage(mut a: SyscallUsageMap, b: &SyscallUsageMap) -> Syscall
 }
 
 #[must_use]
-pub fn subtract_syscall_usage(mut a: SyscallUsageMap, b: &SyscallUsageMap) -> SyscallUsageMap {
-    for (key, b_usage) in b {
-        a.entry(*key).and_modify(|a_usage| {
-            a_usage.call_count -= b_usage.call_count;
-            a_usage.linear_factor -= b_usage.linear_factor;
-        });
-    }
-    a.into_iter()
-        .filter(|(_, usage)| usage.call_count > 0)
-        .collect()
-}
-
-#[must_use]
 pub fn get_syscalls_gas_consumed(
     syscall_usage: &SyscallUsageMap,
     versioned_constants: &VersionedConstants,

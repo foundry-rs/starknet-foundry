@@ -67,10 +67,7 @@ pub fn execute_call_entry_point(
         cheatnet_state.update_cheats(&contract_address);
         cheated_data_
     };
-    let tracked_resource = *context
-        .tracked_resource_stack
-        .last()
-        .expect("Unexpected empty tracked resource.");
+
     // region: Modified blockifier code
     // We skip recursion depth validation here.
     cheatnet_state
@@ -93,6 +90,10 @@ pub fn execute_call_entry_point(
                 &[],
                 None,
             );
+            let tracked_resource = *context
+                .tracked_resource_stack
+                .last()
+                .expect("Unexpected empty tracked resource.");
 
             return Ok(mocked_call_info(
                 entry_point.clone(),
