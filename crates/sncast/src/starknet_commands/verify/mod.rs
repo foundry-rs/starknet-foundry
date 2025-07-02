@@ -4,7 +4,6 @@ use clap::{ArgGroup, Args, ValueEnum};
 use foundry_ui::UI;
 use promptly::prompt;
 use scarb_api::StarknetContractArtifacts;
-use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::get_provider;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::FreeProvider;
@@ -109,7 +108,6 @@ pub async fn verify(
         Ok,
     )?;
     let provider = get_provider(rpc_url.as_str())?;
-    verify_and_warn_if_incompatible_rpc_version(&provider, rpc_url, ui).await?;
 
     // Let's ask confirmation
     if !confirm_verification {
