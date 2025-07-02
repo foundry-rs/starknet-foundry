@@ -164,6 +164,15 @@ pub fn get_cheated_exec_info_ptr(
         );
     }
 
+    if cheated_data.contract_address.is_some() {
+        new_exec_info[3] = MaybeRelocatable::Int(
+            cheated_data
+                .contract_address
+                .expect("No contract address value found for the cheated contract address contract")
+                .into_(),
+        );
+    }
+
     vm.load_data(ptr_cheated_exec_info, &new_exec_info).unwrap();
 
     ptr_cheated_exec_info
