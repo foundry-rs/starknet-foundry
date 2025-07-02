@@ -4,13 +4,14 @@ use crate::predeployment::erc20::eth::eth_predeployed_contract;
 use crate::predeployment::erc20::strk::strk_predeployed_contract;
 use crate::predeployment::predeployed_contract::PredeployedContract;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
+use crate::runtime_extensions::common::sum_syscall_usage;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::{
     ExecutionInfoMock, ResourceBounds,
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
-use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
+use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
@@ -209,10 +210,10 @@ pub struct CallTrace {
     // These also include resources used by internal calls
     pub used_execution_resources: ExecutionResources,
     pub used_l1_resources: L1Resources,
-    pub used_syscalls: SyscallUsageMap,
+    pub used_syscalls_vm_resources: SyscallUsageMap,
+    pub used_syscalls_sierra_gas: SyscallUsageMap,
     pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
     pub gas_consumed: u64,
-    pub tracked_resource: TrackedResource,
 }
 
 impl CairoSerialize for CallTrace {
@@ -237,13 +238,21 @@ impl CallTrace {
             entry_point: CallEntryPoint::default(),
             used_execution_resources: ExecutionResources::default(),
             used_l1_resources: L1Resources::default(),
-            used_syscalls: SyscallUsageMap::default(),
+            used_syscalls_vm_resources: SyscallUsageMap::default(),
+            used_syscalls_sierra_gas: SyscallUsageMap::default(),
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
             vm_trace: None,
             gas_consumed: u64::default(),
-            tracked_resource: TrackedResource::default(),
         }
+    }
+
+    #[must_use]
+    pub fn get_total_used_syscalls(&self) -> SyscallUsageMap {
+        sum_syscall_usage(
+            self.used_syscalls_vm_resources.clone(),
+            &self.used_syscalls_sierra_gas,
+        )
     }
 }
 
@@ -517,15 +526,9 @@ impl CheatnetState {
 }
 
 impl TraceData {
-    pub fn enter_nested_call(
-        &mut self,
-        entry_point: CallEntryPoint,
-        cheated_data: CheatedData,
-        tracked_resource: TrackedResource,
-    ) {
+    pub fn enter_nested_call(&mut self, entry_point: CallEntryPoint, cheated_data: CheatedData) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
-            tracked_resource,
             ..CallTrace::default_successful_call()
         }));
         let current_call = self.current_call_stack.top();
@@ -548,11 +551,11 @@ impl TraceData {
         &mut self,
         execution_resources: ExecutionResources,
         gas_consumed: u64,
-        used_syscalls: SyscallUsageMap,
+        used_syscalls_vm_resources: SyscallUsageMap,
+        used_syscalls_sierra_gas: SyscallUsageMap,
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
         vm_trace: Option<Vec<RelocatedTraceEntry>>,
-        tracked_resource: TrackedResource,
     ) {
         let CallStackElement {
             call_trace: last_call,
@@ -562,8 +565,8 @@ impl TraceData {
         let mut last_call = last_call.borrow_mut();
         last_call.used_execution_resources = execution_resources;
         last_call.gas_consumed = gas_consumed;
-        last_call.tracked_resource = tracked_resource;
-        last_call.used_syscalls = used_syscalls;
+        last_call.used_syscalls_vm_resources = used_syscalls_vm_resources;
+        last_call.used_syscalls_sierra_gas = used_syscalls_sierra_gas;
 
         last_call.used_l1_resources.l2_l1_message_sizes = l2_to_l1_messages
             .iter()

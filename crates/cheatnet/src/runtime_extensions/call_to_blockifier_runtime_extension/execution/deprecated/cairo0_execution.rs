@@ -7,13 +7,14 @@ use crate::runtime_extensions::deprecated_cheatable_starknet_extension::Deprecat
 use crate::runtime_extensions::deprecated_cheatable_starknet_extension::runtime::{
     DeprecatedExtendedRuntime, DeprecatedStarknetRuntime,
 };
-use blockifier::execution::contract_class::CompiledClassV0;
+use blockifier::execution::contract_class::{CompiledClassV0, TrackedResource};
 use blockifier::execution::deprecated_entry_point_execution::{
     VmExecutionContext, finalize_execution, initialize_execution_context, prepare_call_arguments,
 };
 use blockifier::execution::entry_point::{EntryPointExecutionContext, ExecutableCallEntryPoint};
 use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::execution::execution_utils::Args;
+use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
 use blockifier::state::state_api::State;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
 use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner};
@@ -80,9 +81,19 @@ pub(crate) fn execute_entry_point_call_cairo0(
         n_total_args,
     )?;
 
+    let mut syscall_usage_vm_resources = SyscallUsageMap::default();
+    let mut syscall_usage_sierra_gas = SyscallUsageMap::default();
+
+    match execution_result.tracked_resource {
+        TrackedResource::CairoSteps => syscall_usage_vm_resources.clone_from(&syscall_usage),
+
+        TrackedResource::SierraGas => syscall_usage_sierra_gas.clone_from(&syscall_usage),
+    }
+
     Ok(CallInfoWithExecutionData {
         call_info: execution_result,
-        syscall_usage,
+        syscall_usage_vm_resources,
+        syscall_usage_sierra_gas,
         vm_trace: None,
     })
     // endregion

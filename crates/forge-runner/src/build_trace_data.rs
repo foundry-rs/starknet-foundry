@@ -56,7 +56,7 @@ pub fn build_profiler_call_trace(
         entry_point,
         cumulative_resources: build_profiler_execution_resources(
             value.used_execution_resources.clone(),
-            value.used_syscalls.clone(),
+            value.get_total_used_syscalls(),
             value.gas_consumed,
         ),
         used_l1_resources: value.used_l1_resources.clone(),
