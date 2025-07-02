@@ -127,13 +127,10 @@ pub(crate) fn execute_entry_point_call_cairo1(
             .register_error(class_hash, pcs);
     }
 
-    let mut syscall_usage_vm_resources = SyscallUsageMap::default();
-    let mut syscall_usage_sierra_gas = SyscallUsageMap::default();
-
-    match tracked_resource {
-        TrackedResource::CairoSteps => syscall_usage_vm_resources.clone_from(&syscall_usage),
-        TrackedResource::SierraGas => syscall_usage_sierra_gas.clone_from(&syscall_usage),
-    }
+    let (syscall_usage_vm_resources, syscall_usage_sierra_gas) = match tracked_resource {
+        TrackedResource::CairoSteps => (syscall_usage, SyscallUsageMap::default()),
+        TrackedResource::SierraGas => (SyscallUsageMap::default(), syscall_usage),
+    };
 
     Ok(CallInfoWithExecutionData {
         call_info,
