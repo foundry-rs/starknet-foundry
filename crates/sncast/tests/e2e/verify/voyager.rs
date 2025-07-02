@@ -318,8 +318,8 @@ async fn test_failed_verification_contract_address() {
     assert_stderr_contains(
         output,
         formatdoc! {"
-        command: verify
-        error: {}
+        Command: verify
+        Error: {}
         ",
         error,
         },
@@ -402,8 +402,8 @@ async fn test_failed_verification_class_hash() {
     assert_stderr_contains(
         output,
         formatdoc! {"
-        command: verify
-        error: {}
+        Command: verify
+        Error: {}
         ",
         error,
         },
@@ -485,8 +485,8 @@ async fn test_failed_class_hash_lookup() {
     assert_stderr_contains(
         output,
         formatdoc! {"
-        command: verify
-        error: ContractNotFound
+        Command: verify
+        Error: ContractNotFound
         ",
         },
     );
@@ -647,8 +647,8 @@ async fn test_contract_name_not_found() {
     assert_stderr_contains(
         output,
         formatdoc! {"
-        command: verify
-        error: Contract named 'non_existent' was not found
+        Command: verify
+        Error: Contract named 'non_existent' was not found
         ",
         },
     );

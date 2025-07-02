@@ -155,8 +155,9 @@ async fn test_failed_verification_contract_address() {
         output,
         formatdoc!(
             r"
-        command: verify
-        message: {}
+        Success: Verification completed
+
+        {}
         ",
             verifier_response
         ),
@@ -206,8 +207,9 @@ async fn test_failed_verification_class_hash() {
         output,
         formatdoc!(
             r"
-        command: verify
-        message: {}
+        Success: Verification completed
+
+        {}
         ",
             verifier_response
         ),
