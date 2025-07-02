@@ -177,7 +177,7 @@ fn package_sources(package_metadata: &PackageMetadata) -> Result<Vec<Utf8PathBuf
     Ok(sources)
 }
 
-fn biggest_common_prefix<P: AsRef<Utf8Path> + Clone>(
+fn longest_common_prefix<P: AsRef<Utf8Path> + Clone>(
     paths: &[Utf8PathBuf],
     first_guess: P,
 ) -> Utf8PathBuf {
