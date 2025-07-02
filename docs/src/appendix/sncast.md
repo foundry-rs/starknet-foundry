@@ -18,4 +18,5 @@
     * [run](./sncast/script/run.md)
 * [show-config](./sncast/show_config.md)
 * [tx-status](./sncast/tx-status.md)
-* [serialize](./sncast/serialize.md)
+* [utils](./sncast/utils/utils.md)
+    * [serialize](./sncast/utils/serialize.md)

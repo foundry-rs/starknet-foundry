@@ -1,4 +1,4 @@
-use crate::starknet_commands::serialize::Serialize;
+use crate::starknet_commands::utils::{self, Utils};
 use crate::starknet_commands::{
     account, account::Account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke,
     multicall::Multicall, script::Script, show_config::ShowConfig, tx_status::TxStatus,
@@ -153,8 +153,8 @@ enum Commands {
     /// Generate completion script
     Completion(Completion),
 
-    /// Serialize Cairo expressions into calldata
-    Serialize(Serialize),
+    /// Utility commands
+    Utils(Utils),
 }
 
 #[derive(Debug, Clone, clap::Args)]
@@ -450,15 +450,17 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             Ok(())
         }
 
-        Commands::Serialize(serialize) => {
-            let result = starknet_commands::serialize::serialize(serialize, config, ui)
-                .await
-                .map_err(handle_starknet_command_error)?;
+        Commands::Utils(utils) => match utils.command {
+            utils::Commands::Serialize(serialize) => {
+                let result = starknet_commands::utils::serialize::serialize(serialize, config, ui)
+                    .await
+                    .map_err(handle_starknet_command_error)?;
 
-            process_command_result("serialize", Ok(result), ui, None);
+                process_command_result("serialize", Ok(result), ui, None);
 
-            Ok(())
-        }
+                Ok(())
+            }
+        },
 
         Commands::Multicall(multicall) => {
             match &multicall.command {

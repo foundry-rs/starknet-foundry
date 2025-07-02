@@ -60,10 +60,10 @@ Note that the arguments must be:
 
 ### Standalone Serialization
 
-In case you just want to serialize a Cairo expression without producing any on-chain activity, you can use the `sncast serialize` command.
+In case you just want to serialize a Cairo expression without producing any on-chain activity, you can use the `sncast utils serialize` command.
 
 ```shell
-$ sncast serialize \
+$ sncast utils serialize \
     --contract-address 0x00351c816183324878714973f3da1a43c1a40d661b8dac5cb69294cc333342ed \
     --function nested_struct_fn \
     --arguments 'NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }' \
@@ -84,7 +84,7 @@ Calldata: [0x24, 0x60]
 Serialization can also be performed by passing the path to a file containing the contract ABI, instead of using `--class-hash` or `--contract-address`. This allows the command to run without making a network request.
 
 ```shell
-$ sncast serialize \
+$ sncast utils serialize \
     --abi-file data_transformer_contract_abi.json \
     --function nested_struct_fn \
     --arguments 'NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }' \

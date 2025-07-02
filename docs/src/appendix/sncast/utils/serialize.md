@@ -7,7 +7,7 @@ Required.
 Function arguments provided as a comma-separated string of Cairo expressions.
 For example: `--arguments '1, 2, MyStruct { x: 1, y: 2 }, MyEnum::Variant'`
 
-For more information on supported expressions and syntax, see [Calldata Transformation](../../starknet/calldata-transformation.md).
+For more information on supported expressions and syntax, see [Calldata Transformation](../../../starknet/calldata-transformation.md).
 
 ## `--class-hash, -c <CLASS-HASH>`
 Optional. Required if neither `--contract-address` nor `--abi-file` is passed.
