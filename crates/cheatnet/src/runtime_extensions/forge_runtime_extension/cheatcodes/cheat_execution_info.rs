@@ -59,6 +59,7 @@ pub struct ExecutionInfoMock {
     pub block_info: BlockInfoMock,
     pub tx_info: TxInfoMock,
     pub caller_address: CheatStatus<ContractAddress>,
+    pub contract_address: CheatStatus<ContractAddress>,
 }
 
 #[derive(CairoDeserialize, Clone, Default, Debug)]
@@ -90,11 +91,13 @@ pub struct ExecutionInfoMockOperations {
     pub block_info: BlockInfoMockOperations,
     pub tx_info: TxInfoMockOperations,
     pub caller_address: Operation<ContractAddress>,
+    pub contract_address: Operation<ContractAddress>,
 }
 
 macro_rules! for_all_fields {
     ($macro:ident!) => {
         $macro!(caller_address);
+        $macro!(contract_address);
 
         $macro!(block_info.block_number);
         $macro!(block_info.block_timestamp);
