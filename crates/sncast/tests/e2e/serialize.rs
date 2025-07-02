@@ -17,6 +17,7 @@ async fn test_happy_case() {
     let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
 
     let args = vec![
+        "utils",
         "serialize",
         "--arguments",
         calldata,
@@ -44,6 +45,7 @@ async fn test_happy_case_class_hash() {
     let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
 
     let args = vec![
+        "utils",
         "serialize",
         "--arguments",
         calldata,
@@ -75,6 +77,7 @@ async fn test_happy_case_abi_file() {
     let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
 
     let args = vec![
+        "utils",
         "serialize",
         "--arguments",
         calldata,
@@ -107,6 +110,7 @@ async fn test_abi_file_missing_function() {
     let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
 
     let args = vec![
+        "utils",
         "serialize",
         "--arguments",
         calldata,
@@ -144,6 +148,7 @@ async fn test_abi_file_missing_type() {
     let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
 
     let args = vec![
+        "utils",
         "serialize",
         "--arguments",
         calldata,
@@ -178,6 +183,7 @@ async fn test_happy_case_json() {
 
     let args = vec![
         "--json",
+        "utils",
         "serialize",
         "--arguments",
         calldata,
@@ -199,6 +205,7 @@ async fn test_happy_case_json() {
 #[tokio::test]
 async fn test_contract_does_not_exist() {
     let args = vec![
+        "utils",
         "serialize",
         "--arguments",
         "some_calldata",
@@ -224,6 +231,7 @@ async fn test_wrong_function_name() {
     let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
 
     let args = vec![
+        "utils",
         "serialize",
         "--arguments",
         calldata,
