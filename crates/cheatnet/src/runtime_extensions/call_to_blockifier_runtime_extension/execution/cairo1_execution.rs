@@ -5,12 +5,13 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 };
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use crate::runtime_extensions::common::get_relocated_vm_trace;
-use blockifier::execution::contract_class::CompiledClassV1;
+use blockifier::execution::contract_class::{CompiledClassV1, TrackedResource};
 use blockifier::execution::entry_point::ExecutableCallEntryPoint;
 use blockifier::execution::entry_point_execution::{
     ExecutionRunnerMode, VmExecutionContext, finalize_execution,
     initialize_execution_context_with_runner_mode, prepare_call_arguments,
 };
+use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
 use blockifier::{
     execution::{
         contract_class::EntryPointV1, entry_point::EntryPointExecutionContext,
@@ -93,6 +94,8 @@ pub(crate) fn execute_entry_point_call_cairo1(
     })?;
 
     let trace = get_relocated_vm_trace(&mut runner);
+
+    // Syscall usage here is flat, meaning it only includes syscalls from current call
     let syscall_usage = cheatable_runtime
         .extended_runtime
         .hint_handler
@@ -124,9 +127,15 @@ pub(crate) fn execute_entry_point_call_cairo1(
             .register_error(class_hash, pcs);
     }
 
+    let (syscall_usage_vm_resources, syscall_usage_sierra_gas) = match tracked_resource {
+        TrackedResource::CairoSteps => (syscall_usage, SyscallUsageMap::default()),
+        TrackedResource::SierraGas => (SyscallUsageMap::default(), syscall_usage),
+    };
+
     Ok(CallInfoWithExecutionData {
         call_info,
-        syscall_usage,
+        syscall_usage_vm_resources,
+        syscall_usage_sierra_gas,
         vm_trace: Some(trace),
     })
     // endregion
