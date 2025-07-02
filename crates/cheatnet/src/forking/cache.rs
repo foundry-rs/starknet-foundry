@@ -22,7 +22,7 @@ pub fn cache_version() -> String {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct ForkCacheContent {
+pub struct ForkCacheContent {
     cache_version: String,
     storage_at: HashMap<ContractAddress, HashMap<StorageKey, Felt>>,
     nonce_at: HashMap<ContractAddress, Nonce>,
@@ -77,6 +77,10 @@ impl ForkCacheContent {
         if other.block_info.is_some() {
             self.block_info.clone_from(&other.block_info);
         }
+    }
+
+    fn compiled_contract_class_map(&self) -> &HashMap<ClassHash, ContractClass> {
+        &self.compiled_contract_class
     }
 }
 
@@ -214,6 +218,11 @@ impl ForkCache {
             .class_hash_at
             .get(contract_address)
             .copied()
+    }
+
+    #[must_use]
+    pub fn compiled_contract_class_map(&self) -> &HashMap<ClassHash, ContractClass> {
+        self.fork_cache_content.compiled_contract_class_map()
     }
 
     pub(crate) fn cache_get_class_hash_at(
