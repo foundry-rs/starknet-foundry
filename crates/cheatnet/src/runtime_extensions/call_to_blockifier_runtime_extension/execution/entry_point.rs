@@ -206,7 +206,6 @@ pub fn execute_call_entry_point(
                 context,
                 cheatnet_state,
                 vm_trace,
-                current_tracked_resource,
             );
             Ok(call_info)
         }
@@ -308,7 +307,6 @@ fn remove_syscall_resources_and_exit_non_error_call(
     context: &mut EntryPointExecutionContext,
     cheatnet_state: &mut CheatnetState,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
-    current_tracked_resource: TrackedResource,
 ) {
     let versioned_constants = context.tx_context.block_context.versioned_constants();
     // We don't want the syscall resources to pollute the results
@@ -317,16 +315,9 @@ fn remove_syscall_resources_and_exit_non_error_call(
 
     // Remove resources consumed by syscalls from the current call
     // `syscall_usage_vm_resources` and `syscall_usage_sierra_gas` are flat, meaning they only include syscalls from the specific call
-    match current_tracked_resource {
-        TrackedResource::CairoSteps => {
-            resources -= &versioned_constants
-                .get_additional_os_syscall_resources(syscall_usage_vm_resources);
-        }
-        TrackedResource::SierraGas => {
-            gas_consumed -=
-                get_syscalls_gas_consumed(syscall_usage_sierra_gas, versioned_constants);
-        }
-    }
+    resources -=
+        &versioned_constants.get_additional_os_syscall_resources(syscall_usage_vm_resources);
+    gas_consumed -= get_syscalls_gas_consumed(syscall_usage_sierra_gas, versioned_constants);
 
     // Below syscall usages are cumulative.
     let nested_syscall_usage_vm_resources =

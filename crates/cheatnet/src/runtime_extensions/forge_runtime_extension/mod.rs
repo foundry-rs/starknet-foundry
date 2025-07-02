@@ -812,19 +812,15 @@ pub fn get_all_used_resources(
     let mut sierra_gas_consumed = top_call.borrow().gas_consumed;
     let top_call_syscalls = top_call.borrow().get_total_used_syscalls();
 
-    match tracked_resource {
-        TrackedResource::CairoSteps => {
-            execution_resources = add_syscall_execution_resources(
-                versioned_constants,
-                &execution_resources,
-                &top_call_syscalls,
-            );
-        }
-        TrackedResource::SierraGas => {
-            sierra_gas_consumed +=
-                get_syscalls_gas_consumed(&top_call_syscalls, versioned_constants);
-        }
-    }
+    execution_resources = add_syscall_execution_resources(
+        versioned_constants,
+        &execution_resources,
+        &top_call.borrow().used_syscalls_vm_resources,
+    );
+    sierra_gas_consumed += get_syscalls_gas_consumed(
+        &top_call.borrow().used_syscalls_sierra_gas,
+        versioned_constants,
+    );
 
     let events = runtime_call_info
         .iter() // This method iterates over inner calls as well

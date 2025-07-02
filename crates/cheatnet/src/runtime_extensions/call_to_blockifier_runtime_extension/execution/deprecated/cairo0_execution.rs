@@ -7,7 +7,7 @@ use crate::runtime_extensions::deprecated_cheatable_starknet_extension::Deprecat
 use crate::runtime_extensions::deprecated_cheatable_starknet_extension::runtime::{
     DeprecatedExtendedRuntime, DeprecatedStarknetRuntime,
 };
-use blockifier::execution::contract_class::{CompiledClassV0, TrackedResource};
+use blockifier::execution::contract_class::CompiledClassV0;
 use blockifier::execution::deprecated_entry_point_execution::{
     VmExecutionContext, finalize_execution, initialize_execution_context, prepare_call_arguments,
 };
@@ -81,16 +81,10 @@ pub(crate) fn execute_entry_point_call_cairo0(
         n_total_args,
     )?;
 
-    let (syscall_usage_vm_resources, syscall_usage_sierra_gas) =
-        match execution_result.tracked_resource {
-            TrackedResource::CairoSteps => (syscall_usage, SyscallUsageMap::default()),
-            TrackedResource::SierraGas => (SyscallUsageMap::default(), syscall_usage),
-        };
-
     Ok(CallInfoWithExecutionData {
         call_info: execution_result,
-        syscall_usage_vm_resources,
-        syscall_usage_sierra_gas,
+        syscall_usage_vm_resources: syscall_usage,
+        syscall_usage_sierra_gas: SyscallUsageMap::default(),
         vm_trace: None,
     })
     // endregion
