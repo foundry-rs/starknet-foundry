@@ -19,7 +19,7 @@ Walnut is a tool for step-by-step debugging of Starknet transactions. You can le
 
 ### Voyager
 
-Voyager is a Starknet block explorer that provides contract verification services. It allows you to verify your contracts and make their source code publicly available on the explorer. Voyager supports both mainnet and testnet (Sepolia) networks.
+[Voyager](https://voyager.online) is a Starknet block explorer that provides contract verification services. It allows you to verify your contracts and make their source code publicly available on the explorer. Voyager supports both mainnet and testnet (Sepolia) networks.
 
 ## Examples
 
