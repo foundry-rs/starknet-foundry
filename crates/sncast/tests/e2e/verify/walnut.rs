@@ -3,7 +3,6 @@ use crate::helpers::constants::{
 };
 use crate::helpers::fixtures::copy_directory_to_tempdir;
 use crate::helpers::runner::runner;
-use foundry_ui::UI;
 use indoc::formatdoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use wiremock::matchers::{method, path};
@@ -149,7 +148,6 @@ async fn test_failed_verification_contract_address() {
         .stdin("Y");
 
     let output = snapbox.assert().success();
-    UI::default().println(&format!("{:?}", output.get_output()));
 
     assert_stdout_contains(
         output,
