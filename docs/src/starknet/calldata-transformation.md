@@ -60,7 +60,7 @@ Note that the arguments must be:
 
 ### Standalone Serialization
 
-In case you just want to serialize a Cairo expression without producing any on-chain activity, you can use the `sncast utils serialize` command.
+In case you just want to serialize a Cairo expression into calldata for use in other tools, scripts, etc., you can use the `sncast serialize` command.
 
 ```shell
 $ sncast utils serialize \
@@ -74,14 +74,12 @@ $ sncast utils serialize \
 <summary>Output:</summary>
 
 ```shell
-Success: Serialization completed
-
 Calldata: [0x24, 0x60]
 ```
 </details>
 <br>
 
-Serialization can also be performed by passing the path to a file containing the contract ABI, instead of using `--class-hash` or `--contract-address`. This allows the command to run without making a network request.
+Serialization can also be performed by passing the path to a file containing the contract ABI, instead of using `--class-hash` or `--contract-address`. This allows the command to run without making a network request to fetch the ABI.
 
 ```shell
 $ sncast utils serialize \
@@ -95,8 +93,6 @@ $ sncast utils serialize \
 <summary>Output:</summary>
 
 ```shell
-Success: Serialization completed
-
 Calldata: [0x24, 0x60]
 ```
 </details>

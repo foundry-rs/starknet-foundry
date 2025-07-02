@@ -32,8 +32,6 @@ async fn test_happy_case() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_eq(indoc! {r"
-    Success: Serialization completed
-
     Calldata: [0x24, 0x60]
     "});
 }
@@ -60,8 +58,6 @@ async fn test_happy_case_class_hash() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_eq(indoc! {r"
-    Success: Serialization completed
-
     Calldata: [0x24, 0x60]
     "});
 }
@@ -92,8 +88,6 @@ async fn test_happy_case_abi_file() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_eq(indoc! {r"
-    Success: Serialization completed
-
     Calldata: [0x24, 0x60]
     "});
 }

@@ -20,8 +20,6 @@ impl Message for SncastMessage<SerializeResponse> {
         let calldata = format!("{:?}", &self.command_response.calldata);
 
         styling::OutputBuilder::new()
-            .success_message("Serialization completed")
-            .blank_line()
             .field("Calldata", &calldata)
             .build()
     }
