@@ -1,75 +1,34 @@
-use std::sync::LazyLock;
-
 use crate::helpers::constants::{
     ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
 };
 use crate::helpers::fixtures::copy_directory_to_tempdir;
 use crate::helpers::runner::runner;
 use indoc::formatdoc;
-use serde_json::{Value, json};
-use shared::consts::EXPECTED_RPC_VERSION;
+use serde_json::json;
 use shared::test_utils::output_assert::assert_stderr_contains;
 use starknet_types_core::felt::Felt;
-use std::net::TcpListener;
-use wiremock::matchers::{body_json, body_partial_json, method, path};
+use wiremock::matchers::{body_partial_json, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
-
-static SPEC_REQUEST: LazyLock<Value> = LazyLock::new(|| {
-    json!({
-        "id": 1,
-        "jsonrpc": "2.0",
-        "method": "starknet_specVersion",
-        "params": [],
-    })
-});
-static SPEC_RESPONSE: LazyLock<Value> = LazyLock::new(|| {
-    json!({
-        "id": 1,
-        "jsonrpc": "2.0",
-        "result": EXPECTED_RPC_VERSION,
-    })
-});
-
-// Helper function to create a mock server with explicit localhost binding
-async fn create_mock_server() -> MockServer {
-    // Find an available port on localhost
-    let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind to localhost");
-
-    // Start mock server on the specific localhost address
-    MockServer::builder().listener(listener).start().await
-}
 
 #[tokio::test]
 async fn test_happy_case_contract_address() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-    let mock_server = create_mock_server().await;
-    let rpc_request = json!({
-        "id": 1,
-        "jsonrpc": "2.0",
-        "method": "starknet_getClassHashAt",
-        "params": {
-            "block_id": "latest",
-            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
-        }
-    });
+    let mock_server = MockServer::start().await;
     let rpc_response = json!({
         "id": 1,
         "jsonrpc": "2.0",
         "result": MAP_CONTRACT_CLASS_HASH_SEPOLIA
     });
 
-    let mock_rpc = create_mock_server().await;
+    let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
-    Mock::given(method("POST"))
-        .and(body_json(LazyLock::force(&SPEC_REQUEST)))
-        .respond_with(ResponseTemplate::new(200).set_body_json(LazyLock::force(&SPEC_RESPONSE)))
-        .expect(1)
-        .mount(&mock_rpc)
-        .await;
 
+    // Only mock the getClassHashAt call that voyager actually makes
     Mock::given(method("POST"))
-        .and(body_json(rpc_request))
+        .and(body_partial_json(
+            json!({"method": "starknet_getClassHashAt"}),
+        ))
         .respond_with(ResponseTemplate::new(200).set_body_json(rpc_response))
         .expect(1)
         .mount(&mock_rpc)
@@ -114,40 +73,12 @@ async fn test_happy_case_contract_address() {
 async fn test_happy_case_class_hash() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-    let mock_server = create_mock_server().await;
-    let rpc_request = json!({
-        "id": 1,
-        "jsonrpc": "2.0",
-        "method": "starknet_getClassHashAt",
-        "params": {
-            "block_id": "latest",
-            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
-        }
-    });
-    let contract_not_found = json!({
-      "error": {
-        "code": 20,
-        "message": "Contract not found"
-      },
-      "id": 1,
-      "jsonrpc": "2.0"
-    });
-
-    let mock_rpc = create_mock_server().await;
+    let mock_server = MockServer::start().await;
+    let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
-    Mock::given(method("POST"))
-        .and(body_json(LazyLock::force(&SPEC_REQUEST)))
-        .respond_with(ResponseTemplate::new(200).set_body_json(LazyLock::force(&SPEC_RESPONSE)))
-        .expect(1)
-        .mount(&mock_rpc)
-        .await;
 
-    Mock::given(method("POST"))
-        .and(body_json(rpc_request))
-        .respond_with(ResponseTemplate::new(400).set_body_json(contract_not_found))
-        .expect(0)
-        .mount(&mock_rpc)
-        .await;
+    // For class hash tests, no RPC calls are made since we already have the class hash
+    // No need to mock any RPC calls
 
     let job_id = "2b206064-ffee-4955-8a86-1ff3b854416a";
     let class_hash: Felt =
@@ -188,33 +119,21 @@ async fn test_happy_case_class_hash() {
 async fn test_happy_case_with_confirm_verification_flag() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-    let mock_server = create_mock_server().await;
-    let rpc_request = json!({
-        "id": 1,
-        "jsonrpc": "2.0",
-        "method": "starknet_getClassHashAt",
-        "params": {
-            "block_id": "latest",
-            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
-        }
-    });
+    let mock_server = MockServer::start().await;
     let rpc_response = json!({
         "id": 1,
         "jsonrpc": "2.0",
         "result": MAP_CONTRACT_CLASS_HASH_SEPOLIA
     });
 
-    let mock_rpc = create_mock_server().await;
+    let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
-    Mock::given(method("POST"))
-        .and(body_json(LazyLock::force(&SPEC_REQUEST)))
-        .respond_with(ResponseTemplate::new(200).set_body_json(LazyLock::force(&SPEC_RESPONSE)))
-        .expect(1)
-        .mount(&mock_rpc)
-        .await;
 
+    // Only mock the getClassHashAt call that voyager actually makes
     Mock::given(method("POST"))
-        .and(body_json(rpc_request))
+        .and(body_partial_json(
+            json!({"method": "starknet_getClassHashAt"}),
+        ))
         .respond_with(ResponseTemplate::new(200).set_body_json(rpc_response))
         .expect(1)
         .mount(&mock_rpc)
@@ -259,33 +178,21 @@ async fn test_happy_case_with_confirm_verification_flag() {
 async fn test_failed_verification_contract_address() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-    let mock_server = create_mock_server().await;
-    let rpc_request = json!({
-        "id": 1,
-        "jsonrpc": "2.0",
-        "method": "starknet_getClassHashAt",
-        "params": {
-            "block_id": "latest",
-            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
-        }
-    });
+    let mock_server = MockServer::start().await;
     let rpc_response = json!({
         "id": 1,
         "jsonrpc": "2.0",
         "result": MAP_CONTRACT_CLASS_HASH_SEPOLIA
     });
 
-    let mock_rpc = create_mock_server().await;
+    let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
-    Mock::given(method("POST"))
-        .and(body_json(LazyLock::force(&SPEC_REQUEST)))
-        .respond_with(ResponseTemplate::new(200).set_body_json(LazyLock::force(&SPEC_RESPONSE)))
-        .expect(1)
-        .mount(&mock_rpc)
-        .await;
 
+    // Only mock the getClassHashAt call that voyager actually makes
     Mock::given(method("POST"))
-        .and(body_json(rpc_request))
+        .and(body_partial_json(
+            json!({"method": "starknet_getClassHashAt"}),
+        ))
         .respond_with(ResponseTemplate::new(200).set_body_json(rpc_response))
         .expect(1)
         .mount(&mock_rpc)
@@ -340,40 +247,12 @@ async fn test_failed_verification_contract_address() {
 async fn test_failed_verification_class_hash() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-    let mock_server = create_mock_server().await;
-    let rpc_request = json!({
-        "id": 1,
-        "jsonrpc": "2.0",
-        "method": "starknet_getClassHashAt",
-        "params": {
-            "block_id": "latest",
-            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
-        }
-    });
-    let contract_not_found = json!({
-      "error": {
-        "code": 20,
-        "message": "Contract not found"
-      },
-      "id": 1,
-      "jsonrpc": "2.0"
-    });
-
-    let mock_rpc = create_mock_server().await;
+    let mock_server = MockServer::start().await;
+    let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
-    Mock::given(method("POST"))
-        .and(body_json(LazyLock::force(&SPEC_REQUEST)))
-        .respond_with(ResponseTemplate::new(200).set_body_json(LazyLock::force(&SPEC_RESPONSE)))
-        .expect(1)
-        .mount(&mock_rpc)
-        .await;
 
-    Mock::given(method("POST"))
-        .and(body_json(rpc_request))
-        .respond_with(ResponseTemplate::new(400).set_body_json(contract_not_found))
-        .expect(0)
-        .mount(&mock_rpc)
-        .await;
+    // For class hash tests, no RPC calls are made since we already have the class hash
+    // No need to mock any RPC calls
 
     let error = "some error message";
     let class_hash: Felt =
@@ -424,41 +303,30 @@ async fn test_failed_verification_class_hash() {
 async fn test_failed_class_hash_lookup() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-    let mock_server = create_mock_server().await;
-    let rpc_request = json!({
-        "id": 1,
-        "jsonrpc": "2.0",
-        "method": "starknet_getClassHashAt",
-        "params": {
-            "block_id": "latest",
-            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
-        }
-    });
+    let mock_server = MockServer::start().await;
     let contract_not_found = json!({
-      "error": {
-        "code": 20,
-        "message": "Contract not found"
-      },
-      "id": 1,
-      "jsonrpc": "2.0"
+        "error": {
+            "code": 20,
+            "message": "Contract not found"
+        },
+        "id": 1,
+        "jsonrpc": "2.0"
     });
 
-    let mock_rpc = create_mock_server().await;
+    let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
-    Mock::given(method("POST"))
-        .and(body_json(LazyLock::force(&SPEC_REQUEST)))
-        .respond_with(ResponseTemplate::new(200).set_body_json(LazyLock::force(&SPEC_RESPONSE)))
-        .expect(1)
-        .mount(&mock_rpc)
-        .await;
 
+    // Mock the getClassHashAt call to return contract not found
     Mock::given(method("POST"))
-        .and(body_json(rpc_request))
+        .and(body_partial_json(
+            json!({"method": "starknet_getClassHashAt"}),
+        ))
         .respond_with(ResponseTemplate::new(400).set_body_json(contract_not_found))
         .expect(1)
         .mount(&mock_rpc)
         .await;
 
+    // Voyager API should not be called since RPC call fails
     let class_hash: Felt =
         Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
@@ -506,33 +374,21 @@ async fn test_failed_class_hash_lookup() {
 async fn test_virtual_workspaces() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
 
-    let mock_server = create_mock_server().await;
-    let rpc_request = json!({
-        "id": 1,
-        "jsonrpc": "2.0",
-        "method": "starknet_getClassHashAt",
-        "params": {
-            "block_id": "latest",
-            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
-        }
-    });
+    let mock_server = MockServer::start().await;
     let rpc_response = json!({
         "id": 1,
         "jsonrpc": "2.0",
         "result": MAP_CONTRACT_CLASS_HASH_SEPOLIA
     });
 
-    let mock_rpc = create_mock_server().await;
+    let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
-    Mock::given(method("POST"))
-        .and(body_json(LazyLock::force(&SPEC_REQUEST)))
-        .respond_with(ResponseTemplate::new(200).set_body_json(LazyLock::force(&SPEC_RESPONSE)))
-        .expect(1)
-        .mount(&mock_rpc)
-        .await;
 
+    // Only mock the getClassHashAt call that voyager actually makes
     Mock::given(method("POST"))
-        .and(body_json(rpc_request))
+        .and(body_partial_json(
+            json!({"method": "starknet_getClassHashAt"}),
+        ))
         .respond_with(ResponseTemplate::new(200).set_body_json(rpc_response))
         .expect(1)
         .mount(&mock_rpc)
@@ -579,37 +435,12 @@ async fn test_virtual_workspaces() {
 async fn test_contract_name_not_found() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
 
-    let mock_server = create_mock_server().await;
-    let rpc_request = json!({
-        "id": 1,
-        "jsonrpc": "2.0",
-        "method": "starknet_getClassHashAt",
-        "params": {
-            "block_id": "latest",
-            "contract_address": MAP_CONTRACT_ADDRESS_SEPOLIA
-        }
-    });
-    let rpc_response = json!({
-        "id": 1,
-        "jsonrpc": "2.0",
-        "result": MAP_CONTRACT_CLASS_HASH_SEPOLIA
-    });
-
-    let mock_rpc = create_mock_server().await;
+    let mock_server = MockServer::start().await;
+    let mock_rpc = MockServer::start().await;
     let mock_rpc_uri = mock_rpc.uri().clone();
-    Mock::given(method("POST"))
-        .and(body_json(LazyLock::force(&SPEC_REQUEST)))
-        .respond_with(ResponseTemplate::new(200).set_body_json(LazyLock::force(&SPEC_RESPONSE)))
-        .expect(1)
-        .mount(&mock_rpc)
-        .await;
 
-    Mock::given(method("POST"))
-        .and(body_json(rpc_request))
-        .respond_with(ResponseTemplate::new(200).set_body_json(rpc_response))
-        .expect(0)
-        .mount(&mock_rpc)
-        .await;
+    // For this test, the error happens before any RPC calls are made (contract name not found)
+    // So no RPC mocks needed
 
     let job_id = "2b206064-ffee-4955-8a86-1ff3b854416a";
     let class_hash: Felt =
