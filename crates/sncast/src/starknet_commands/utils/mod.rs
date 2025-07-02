@@ -5,8 +5,7 @@ use crate::starknet_commands::utils::serialize::Serialize;
 pub mod serialize;
 
 #[derive(Args)]
-// TODO: Update message
-#[command(about = "Creates and deploys an account to the Starknet")]
+#[command(about = "Utility commands for Starknet")]
 pub struct Utils {
     #[command(subcommand)]
     pub command: Commands,
