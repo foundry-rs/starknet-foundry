@@ -17,14 +17,7 @@ impl CommandResponse for SerializeResponse {}
 
 impl Message for SncastMessage<SerializeResponse> {
     fn text(&self) -> String {
-        let calldata = &self
-            .command_response
-            .calldata
-            .iter()
-            .map(|felt| format!("{felt:?}"))
-            .collect::<Vec<String>>()
-            .join(", ");
-        let calldata = format!("[{calldata}]");
+        let calldata = format!("{:?}", &self.command_response.calldata);
 
         styling::OutputBuilder::new()
             .success_message("Serialization completed")
