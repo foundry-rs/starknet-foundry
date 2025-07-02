@@ -349,6 +349,7 @@ impl TestCaseSummary<Single> {
                         trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
                             &call_trace,
                             contracts_data,
+                            &fork_data,
                             versioned_program_path,
                         )),
                         debugging_trace,
@@ -386,6 +387,7 @@ impl TestCaseSummary<Single> {
                             trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
                                 &call_trace,
                                 contracts_data,
+                                &fork_data,
                                 versioned_program_path,
                             )),
                             debugging_trace,
