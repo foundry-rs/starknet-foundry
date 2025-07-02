@@ -86,7 +86,6 @@ pub(crate) fn execute_entry_point_call_cairo0(
 
     match execution_result.tracked_resource {
         TrackedResource::CairoSteps => syscall_usage_vm_resources.clone_from(&syscall_usage),
-
         TrackedResource::SierraGas => syscall_usage_sierra_gas.clone_from(&syscall_usage),
     }
 
