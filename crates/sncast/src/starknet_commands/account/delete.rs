@@ -1,9 +1,9 @@
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{Result, bail};
 use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args};
 use foundry_ui::UI;
 use promptly::prompt;
-use serde_json::Map;
+use sncast::helpers::account::load_accounts;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::delete::AccountDeleteResponse;
@@ -38,9 +38,7 @@ pub fn delete(
     network_name: &str,
     yes: bool,
 ) -> Result<AccountDeleteResponse> {
-    let contents = std::fs::read_to_string(path.clone()).context("Failed to read accounts file")?;
-    let items: serde_json::Value = serde_json::from_str(&contents)
-        .map_err(|_| anyhow!("Failed to parse accounts file at {path}"))?;
+    let mut items = load_accounts(path)?;
 
     if items[&network_name].is_null() {
         bail!("No accounts defined for network = {network_name}");
@@ -48,9 +46,6 @@ pub fn delete(
     if items[&network_name][&name].is_null() {
         bail!("Account with name {name} does not exist")
     }
-
-    let mut items: Map<String, serde_json::Value> = serde_json::from_str(&contents)
-        .unwrap_or_else(|_| panic!("Failed to read file at path = {path}"));
 
     // Let's ask confirmation
     if !yes {

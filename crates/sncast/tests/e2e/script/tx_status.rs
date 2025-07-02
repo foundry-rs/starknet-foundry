@@ -22,8 +22,9 @@ async fn test_tx_status_status_reverted() {
         indoc! {r"
         finality_status: AcceptedOnL1, execution_status: Reverted
         TxStatusResult { finality_status: FinalityStatus::AcceptedOnL1(()), execution_status: Option::Some(ExecutionStatus::Reverted(())) }
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
         "},
     );
 }
@@ -46,8 +47,9 @@ async fn test_tx_status_status_succeeded() {
         indoc! {r"
         finality_status: AcceptedOnL1, execution_status: Succeeded
         TxStatusResult { finality_status: FinalityStatus::AcceptedOnL1(()), execution_status: Option::Some(ExecutionStatus::Succeeded(())) }
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
         "},
     );
 }
@@ -69,8 +71,9 @@ async fn test_tx_status_incorrect_transaction_hash() {
         output,
         indoc! {r"
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::TransactionHashNotFound(())))
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
         "},
     );
 }

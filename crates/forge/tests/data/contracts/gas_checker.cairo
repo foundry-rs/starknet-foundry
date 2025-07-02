@@ -262,6 +262,8 @@ mod GasChecker {
             core::pedersen::pedersen(1, 2);
             core::pedersen::pedersen(1, 2);
             core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
         }
 
         fn poseidon(self: @ContractState) {

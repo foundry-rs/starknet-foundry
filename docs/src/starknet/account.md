@@ -35,10 +35,11 @@ $ sncast \
 <summary>Output:</summary>
 
 ```shell
-command: account create
-address: 0x0[..]
-estimated_fee: [..]
-message: Account successfully created but it needs to be deployed. The estimated deployment fee is [..]
+Success: Account created
+
+Address: 0x[..]
+
+Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
 
 After prefunding the account, run:
 sncast --accounts-file [..]accounts.json account deploy --url [..] --name new_account
@@ -80,8 +81,9 @@ $ sncast \
 <summary>Output:</summary>
 
 ```shell
-command: account deploy
-transaction_hash: [..]
+Success: Account deployed
+
+Transaction Hash: 0x[..]
 
 To see invocation details, visit:
 transaction: https://sepolia.starkscan.co/tx/[..]

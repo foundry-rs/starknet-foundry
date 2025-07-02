@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Changed
+
+- Improved commands output readability with colors and simplified layout.
+
+#### Removed
+
+- `--int-format` and `--hex-format`, all values are displayed with default format
+
 ## [0.45.0] - 2025-06-16
 
 ### Forge
@@ -31,6 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows support. For details on migration, see the WSL [installation guide](https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#linux-and-macos).
 
 ### Cast
+
+#### Fixed
+
+- bug where `account create` raised an error if the file specified by `--accounts-file` was empty
 
 #### Removed
 

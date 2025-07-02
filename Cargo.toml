@@ -29,9 +29,9 @@ license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-blockifier = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.13.5-modified-sierra-dep", default-features = false, features = ["testing", "tracing"] }
+blockifier = { git = "https://github.com/starkware-libs/sequencer.git", branch = "main-v0.13.6", default-features = false, features = ["testing", "tracing"] }
 bigdecimal = "0.4.8"
-starknet_api = { git = "https://github.com/software-mansion-labs/sequencer.git", branch = "main-v0.13.5-modified-sierra-dep" }
+starknet_api = { git = "https://github.com/starkware-libs/sequencer.git", branch = "main-v0.13.6" }
 cairo-lang-casm = { version = "2.11.2", features = ["serde"] }
 cairo-lang-sierra = "2.11.2"
 cairo-lang-utils = "2.11.2"
@@ -44,7 +44,7 @@ cairo-lang-test-plugin = "2.11.2"
 cairo-lang-starknet-classes = "2.11.2"
 cairo-lang-parser = "2.11.2"
 cairo-vm = "1.0.2"
-cairo-annotations = "0.3.1"
+cairo-annotations = "0.4.0"
 dirs = "6.0.0"
 dialoguer = "0.11.0"
 starknet-types-core = { version = "0.1.7", features = ["hash", "prime-bigint"] }

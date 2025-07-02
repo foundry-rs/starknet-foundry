@@ -46,9 +46,10 @@ async fn test_happy_case_human_readable() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        command: declare
-        class_hash: 0x0[..]
-        transaction_hash: 0x0[..]
+        Success: Declaration completed
+
+        Class Hash:       0x[..]
+        Transaction Hash: 0x[..]
         
         To see declaration details, visit:
         class: https://[..]
@@ -76,7 +77,6 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "--json",
         "declare",
         "--url",
@@ -136,7 +136,6 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "--json",
         "declare",
         "--url",
@@ -194,7 +193,6 @@ async fn test_happy_case_specify_package() {
         accounts_json_path.as_str(),
         "--account",
         "user8",
-        "--int-format",
         "--json",
         "declare",
         "--url",
@@ -246,8 +244,8 @@ async fn test_contract_already_declared() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: declare
-        error: Contract with the same class hash is already declared
+        Command: declare
+        Error: Contract with the same class hash is already declared
         "},
     );
 }
@@ -262,7 +260,6 @@ async fn test_invalid_nonce() {
         accounts_json_path.as_str(),
         "--account",
         "user8",
-        "--int-format",
         "declare",
         "--url",
         URL,
@@ -279,8 +276,8 @@ async fn test_invalid_nonce() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: declare
-        error: Invalid transaction nonce
+        Command: declare
+        Error: Invalid transaction nonce
         "},
     );
 }
@@ -311,8 +308,8 @@ async fn test_wrong_contract_name_passed() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: declare
-        error: Failed to find nonexistent artifact in starknet_artifacts.json file[..]
+        Command: declare
+        Error: Failed to find nonexistent artifact in starknet_artifacts.json file[..]
         "},
     );
 }
@@ -425,8 +422,8 @@ fn test_too_low_gas() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: declare
-        error: The transaction's resources don't cover validation or the minimal transaction fee
+        Command: declare
+        Error: The transaction's resources don't cover validation or the minimal transaction fee
         "},
     );
 }
@@ -476,9 +473,10 @@ fn test_scarb_no_casm_artifact() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        command: declare
-        class_hash: [..]
-        transaction_hash: [..]
+        Success: Declaration completed
+
+        Class Hash: [..]
+        Transaction Hash: [..]
         "},
     );
 }
@@ -492,7 +490,6 @@ async fn test_many_packages_default() {
         accounts_json_path.as_str(),
         "--account",
         "user8",
-        "--int-format",
         "--json",
         "declare",
         "--url",
@@ -520,7 +517,6 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         accounts_json_path.as_str(),
         "--account",
         "user8",
-        "--int-format",
         "--json",
         "declare",
         "--url",
@@ -550,7 +546,6 @@ async fn test_worskpaces_package_no_contract() {
         accounts_json_path.as_str(),
         "--account",
         "user8",
-        "--int-format",
         "declare",
         "--url",
         URL,
@@ -567,8 +562,8 @@ async fn test_worskpaces_package_no_contract() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: declare
-        error: Failed to find whatever artifact in starknet_artifacts.json file[..]
+        Command: declare
+        Error: Failed to find whatever artifact in starknet_artifacts.json file[..]
         "},
     );
 }
@@ -604,9 +599,10 @@ async fn test_no_scarb_profile() {
         indoc! {"
             [..]
             [WARNING] Profile profile5 does not exist in scarb, using 'release' profile.
-            command: declare
-            class_hash: [..]
-            transaction_hash: [..]
+            Success: Declaration completed
+
+            Class Hash:       [..]
+            Transaction Hash: [..]
 
             To see declaration details, visit:
             class: [..]

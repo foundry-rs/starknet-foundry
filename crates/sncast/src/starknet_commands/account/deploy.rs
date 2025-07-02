@@ -4,6 +4,7 @@ use clap::Args;
 use conversions::IntoConv;
 use foundry_ui::UI;
 use serde_json::Map;
+use sncast::helpers::account::load_accounts;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
@@ -353,10 +354,7 @@ fn update_account_in_accounts_file(
 ) -> Result<()> {
     let network_name = chain_id_to_network_name(chain_id);
 
-    let contents =
-        std::fs::read_to_string(accounts_file.clone()).context("Failed to read accounts file")?;
-    let mut items: serde_json::Value = serde_json::from_str(&contents)
-        .with_context(|| format!("Failed to parse accounts file at = {accounts_file}"))?;
+    let mut items = load_accounts(&accounts_file)?;
     items[&network_name][account_name]["deployed"] = serde_json::Value::from(true);
     std::fs::write(accounts_file, serde_json::to_string_pretty(&items).unwrap())
         .context("Failed to write to accounts file")?;

@@ -29,9 +29,10 @@ $ sncast \
 <summary>Output:</summary>
 
 ```shell
-command: call
-response: 0_u256
-response_raw: [0x0, 0x0]
+Success: Call completed
+
+Response:     0_u256
+Response Raw: [0x0, 0x0]
 ```
 </details>
 <br>
@@ -56,8 +57,9 @@ $ sncast call \
 <summary>Output:</summary>
 
 ```shell
-command: call
-response: 0_u256
-response_raw: [0x0, 0x0]
+Success: Call completed
+
+Response:     0_u256
+Response Raw: [0x0, 0x0]
 ```
 </details>

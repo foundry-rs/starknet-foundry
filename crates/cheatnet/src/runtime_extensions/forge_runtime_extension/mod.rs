@@ -21,14 +21,12 @@ use crate::runtime_extensions::{
 };
 use crate::state::{CallTrace, CallTraceNode};
 use anyhow::{Context, Result, anyhow};
-use blockifier::bouncer::builtins_to_sierra_gas;
+use blockifier::bouncer::vm_resources_to_sierra_gas;
 use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::CallExecution;
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::state::errors::StateError;
-use blockifier::transaction::objects::ExecutionResourcesTraits;
-use blockifier::utils::u64_from_usize;
 use blockifier::{
     execution::{
         call_info::CallInfo, deprecated_syscalls::DeprecatedSyscallSelector,
@@ -598,7 +596,8 @@ pub fn add_resources_to_top_call(
     match tracked_resource {
         TrackedResource::CairoSteps => top_call.used_execution_resources += resources,
         TrackedResource::SierraGas => {
-            top_call.gas_consumed += vm_resources_to_sierra_gas(resources, versioned_constants).0;
+            top_call.gas_consumed +=
+                vm_resources_to_sierra_gas(resources.clone(), versioned_constants).0;
         }
     }
 }
@@ -805,36 +804,4 @@ pub fn get_all_used_resources(
         l1_handler_payload_lengths,
         l2_to_l1_payload_lengths,
     }
-}
-
-fn n_steps_to_sierra_gas(n_steps: usize, versioned_constants: &VersionedConstants) -> GasAmount {
-    let n_steps_u64 = u64_from_usize(n_steps);
-    let gas_per_step = versioned_constants
-        .os_constants
-        .gas_costs
-        .base
-        .step_gas_cost;
-    let n_steps_gas_cost = n_steps_u64.checked_mul(gas_per_step).unwrap_or_else(|| {
-        panic!(
-            "Multiplication overflow while converting steps to gas. steps: {n_steps}, gas per step: {gas_per_step}."
-        )
-    });
-    GasAmount(n_steps_gas_cost)
-}
-
-// Based on: https://github.com/starkware-libs/sequencer/blob/main-v0.13.4/crates/blockifier/src/bouncer.rs#L320
-#[must_use]
-pub fn vm_resources_to_sierra_gas(
-    resources: &ExecutionResources,
-    versioned_constants: &VersionedConstants,
-) -> GasAmount {
-    let builtins_gas_cost =
-        builtins_to_sierra_gas(&resources.prover_builtins(), versioned_constants);
-    let n_steps_gas_cost = n_steps_to_sierra_gas(resources.total_n_steps(), versioned_constants);
-    n_steps_gas_cost.checked_add(builtins_gas_cost).unwrap_or_else(|| {
-        panic!(
-            "Addition overflow while converting vm resources to gas. steps gas: {n_steps_gas_cost}, \
-            builtins gas: {builtins_gas_cost}."
-        )
-    })
 }

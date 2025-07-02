@@ -420,6 +420,7 @@ fn mocked_call_info(
             retdata: Retdata(ret_data),
             events: vec![],
             l2_to_l1_messages: vec![],
+            cairo_native: false,
             failed: false,
             gas_consumed: 0,
         },
@@ -430,6 +431,7 @@ fn mocked_call_info(
         read_class_hash_values: vec![],
         tracked_resource,
         accessed_contract_addresses: HashSet::default(),
+        builtin_counters: HashMap::default(),
     }
 }
 

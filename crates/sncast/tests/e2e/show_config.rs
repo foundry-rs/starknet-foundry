@@ -10,14 +10,13 @@ async fn test_show_config_from_snfoundry_toml() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
-        command: show-config
-        account: user1
-        accounts_file_path: ../account-file
-        chain_id: alpha-sepolia
-        rpc_url: {}
-        show_explorer_links: true
-        wait_retry_interval: 5
-        wait_timeout: 300
+        Chain ID:            alpha-sepolia
+        RPC URL:             {}
+        Account:             user1
+        Accounts File Path:  ../account-file
+        Wait Timeout:        300s
+        Wait Retry Interval: 5s
+        Show Explorer Links: true
     ", URL});
 }
 
@@ -40,14 +39,13 @@ async fn test_show_config_from_cli() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
-        command: show-config
-        account: /path/to/account.json
-        chain_id: alpha-sepolia
-        keystore: ../keystore
-        rpc_url: {}
-        show_explorer_links: true
-        wait_retry_interval: 1
-        wait_timeout: 2
+        Chain ID:            alpha-sepolia
+        RPC URL:             {}
+        Account:             /path/to/account.json
+        Keystore:            ../keystore
+        Wait Timeout:        2s
+        Wait Retry Interval: 1s
+        Show Explorer Links: true
     ", URL});
 }
 
@@ -59,15 +57,14 @@ async fn test_show_config_from_cli_and_snfoundry_toml() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
-        command: show-config
-        account: user2
-        accounts_file_path: ../account-file
-        chain_id: alpha-sepolia
-        profile: profile2
-        rpc_url: {}
-        show_explorer_links: true
-        wait_retry_interval: 5
-        wait_timeout: 300
+        Profile:             profile2
+        Chain ID:            alpha-sepolia
+        RPC URL:             {}
+        Account:             user2
+        Accounts File Path:  ../account-file
+        Wait Timeout:        300s
+        Wait Retry Interval: 5s
+        Show Explorer Links: true
     ", URL});
 }
 
@@ -79,15 +76,14 @@ async fn test_show_config_when_no_keystore() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
-        command: show-config
-        account: user3
-        accounts_file_path: ../account-file
-        chain_id: alpha-sepolia
-        profile: profile4
-        rpc_url: {}
-        show_explorer_links: true
-        wait_retry_interval: 5
-        wait_timeout: 300
+        Profile:             profile4
+        Chain ID:            alpha-sepolia
+        RPC URL:             {}
+        Account:             user3
+        Accounts File Path:  ../account-file
+        Wait Timeout:        300s
+        Wait Retry Interval: 5s
+        Show Explorer Links: true
     ", URL});
 }
 
@@ -99,15 +95,14 @@ async fn test_show_config_when_keystore() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
-        command: show-config
-        account: /path/to/account.json
-        chain_id: alpha-sepolia
-        keystore: ../keystore
-        profile: profile3
-        rpc_url: {}
-        show_explorer_links: true
-        wait_retry_interval: 5
-        wait_timeout: 300
+        Profile:             profile3
+        Chain ID:            alpha-sepolia
+        RPC URL:             {}
+        Account:             /path/to/account.json
+        Keystore:            ../keystore
+        Wait Timeout:        300s
+        Wait Retry Interval: 5s
+        Show Explorer Links: true
     ", URL});
 }
 
@@ -119,12 +114,11 @@ async fn test_show_config_no_url() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_eq(formatdoc! {r"
-        command: show-config
-        account: user1
-        accounts_file_path: /path/to/account.json
-        profile: profile6
-        show_explorer_links: false
-        wait_retry_interval: 10
-        wait_timeout: 500
+        Profile:             profile6
+        Account:             user1
+        Accounts File Path:  /path/to/account.json
+        Wait Timeout:        500s
+        Wait Retry Interval: 10s
+        Show Explorer Links: false
     "});
 }

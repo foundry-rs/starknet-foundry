@@ -23,10 +23,13 @@ $ sncast \
 <summary>Output:</summary>
 
 ```shell
-command: show-config
-account: my_account
-chain_id: alpha-sepolia
-rpc_url: http://127.0.0.1:5055/rpc
+Chain ID:            alpha-sepolia
+RPC URL:             http://127.0.0.1:5055/rpc
+Account:             my_account
+Accounts File Path:  [..]/accounts.json
+Wait Timeout:        300s
+Wait Retry Interval: 5s
+Show Explorer Links: true
 ```
 </details>
 <br>
