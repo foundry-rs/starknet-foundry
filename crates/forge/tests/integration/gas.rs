@@ -863,7 +863,7 @@ fn l1_message_cost_for_proxy_cairo_steps() {
         GasVector {
             l1_gas: GasAmount(29524),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(560_000),
+            l2_gas: GasAmount(520_000),
         },
     );
 }
