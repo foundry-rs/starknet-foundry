@@ -30,6 +30,10 @@ pub const DEFAULT_CHAIN_ID: &str = "SN_SEPOLIA";
 pub const DEFAULT_BLOCK_NUMBER: u64 = 2000;
 pub const SEQUENCER_ADDRESS: &str = "0x1000";
 pub const ERC20_CONTRACT_ADDRESS: &str = "0x1001";
+pub const STRK_CONTRACT_ADDRESS: &str =
+    "0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
+pub const ETH_CONTRACT_ADDRESS: &str =
+    "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
 
 fn default_chain_id() -> ChainId {
     ChainId::from(String::from(DEFAULT_CHAIN_ID))
@@ -42,9 +46,9 @@ pub fn build_block_context(block_info: &BlockInfo, chain_id: Option<ChainId>) ->
         ChainInfo {
             chain_id: chain_id.unwrap_or_else(default_chain_id),
             fee_token_addresses: FeeTokenAddresses {
-                strk_fee_token_address: ContractAddress::try_from_hex_str(ERC20_CONTRACT_ADDRESS)
+                strk_fee_token_address: ContractAddress::try_from_hex_str(STRK_CONTRACT_ADDRESS)
                     .unwrap(),
-                eth_fee_token_address: ContractAddress::try_from_hex_str(ERC20_CONTRACT_ADDRESS)
+                eth_fee_token_address: ContractAddress::try_from_hex_str(ETH_CONTRACT_ADDRESS)
                     .unwrap(),
             },
         },
