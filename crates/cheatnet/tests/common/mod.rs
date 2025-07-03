@@ -3,7 +3,6 @@ use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
-    ExecutableCallEntryPoint,
 };
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
@@ -45,22 +44,13 @@ pub mod cache;
 pub mod state;
 
 fn build_syscall_hint_processor<'a>(
-    call_entry_point: CallEntryPoint,
+    call_entry_point: &CallEntryPoint,
     state: &'a mut dyn State,
     entry_point_execution_context: &'a mut EntryPointExecutionContext,
     hints: &'a HashMap<String, Hint>,
 ) -> SyscallHintProcessor<'a> {
-    let call_entry_point = ExecutableCallEntryPoint {
-        class_hash: call_entry_point.class_hash.unwrap_or_default(),
-        code_address: call_entry_point.code_address,
-        entry_point_type: call_entry_point.entry_point_type,
-        entry_point_selector: call_entry_point.entry_point_selector,
-        calldata: call_entry_point.calldata,
-        storage_address: call_entry_point.storage_address,
-        caller_address: call_entry_point.caller_address,
-        call_type: call_entry_point.call_type,
-        initial_gas: call_entry_point.initial_gas,
-    };
+    let class_hash = call_entry_point.class_hash.unwrap_or_default();
+    let call_entry_point = call_entry_point.clone().into_executable(class_hash);
 
     SyscallHintProcessor::new(
         state,
@@ -120,7 +110,7 @@ pub fn deploy_contract(
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
-        CallEntryPoint::default(),
+        &CallEntryPoint::default(),
         state,
         &mut entry_point_execution_context,
         &hints,
@@ -151,7 +141,7 @@ pub fn deploy_wrapper(
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
-        CallEntryPoint::default(),
+        &CallEntryPoint::default(),
         state,
         &mut entry_point_execution_context,
         &hints,
@@ -182,7 +172,7 @@ pub fn deploy_at_wrapper(
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
-        CallEntryPoint::default(),
+        &CallEntryPoint::default(),
         state,
         &mut entry_point_execution_context,
         &hints,
@@ -230,7 +220,7 @@ pub fn call_contract(
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
-        entry_point.clone(),
+        &entry_point,
         state,
         &mut entry_point_execution_context,
         &hints,
@@ -271,7 +261,7 @@ pub fn call_contract_raw(
     let hints = HashMap::new();
 
     let syscall_hint_processor = build_syscall_hint_processor(
-        entry_point.clone(),
+        &entry_point,
         state,
         &mut entry_point_execution_context,
         &hints,

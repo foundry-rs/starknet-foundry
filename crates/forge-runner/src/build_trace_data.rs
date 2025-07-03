@@ -1,7 +1,10 @@
 use anyhow::{Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use blockifier::execution::syscalls::hint_processor::{SyscallUsage, SyscallUsageMap};
+use blockifier::execution::syscalls::vm_syscall_utils::{
+    SyscallSelector, SyscallUsage, SyscallUsageMap,
+};
+
 use cairo_annotations::trace_data::{
     CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint,
     CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
@@ -214,7 +217,7 @@ fn build_profiler_entry_point_type(value: EntryPointType) -> ProfilerEntryPointT
 }
 
 fn build_profiler_deprecated_syscall_selector(
-    value: DeprecatedSyscallSelector,
+    value: SyscallSelector,
 ) -> ProfilerDeprecatedSyscallSelector {
     match value {
         DeprecatedSyscallSelector::CallContract => ProfilerDeprecatedSyscallSelector::CallContract,
@@ -225,7 +228,6 @@ fn build_profiler_deprecated_syscall_selector(
         DeprecatedSyscallSelector::Deploy => ProfilerDeprecatedSyscallSelector::Deploy,
         DeprecatedSyscallSelector::EmitEvent => ProfilerDeprecatedSyscallSelector::EmitEvent,
         DeprecatedSyscallSelector::GetBlockHash => ProfilerDeprecatedSyscallSelector::GetBlockHash,
-
         DeprecatedSyscallSelector::GetBlockNumber => {
             ProfilerDeprecatedSyscallSelector::GetBlockNumber
         }
@@ -284,6 +286,7 @@ fn build_profiler_deprecated_syscall_selector(
             ProfilerDeprecatedSyscallSelector::GetClassHashAt
         }
         DeprecatedSyscallSelector::KeccakRound => ProfilerDeprecatedSyscallSelector::KeccakRound,
+        DeprecatedSyscallSelector::MetaTxV0 => ProfilerDeprecatedSyscallSelector::MetaTxV0,
     }
 }
 
