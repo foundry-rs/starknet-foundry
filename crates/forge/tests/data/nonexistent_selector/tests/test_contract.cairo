@@ -1,7 +1,5 @@
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
-
-use nonexistent_selector::IMyContractSafeDispatcher;
-use nonexistent_selector::IMyContractSafeDispatcherTrait;
+use nonexistent_selector::{IMyContractSafeDispatcher, IMyContractSafeDispatcherTrait};
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 
 #[test]
 #[feature("safe_dispatcher")]

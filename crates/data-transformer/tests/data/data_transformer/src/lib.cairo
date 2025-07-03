@@ -67,8 +67,8 @@ pub trait IDataTransformer<TContractState> {
 
 #[starknet::contract]
 mod DataTransformer {
-    use super::*;
     use core::starknet::ContractAddress;
+    use super::*;
 
     #[storage]
     struct Storage {
