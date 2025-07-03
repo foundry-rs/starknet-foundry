@@ -1,6 +1,7 @@
 // TODO(#3293) Remove this file once the copied code is upstreamed to blockifier.
 //! Module containing copied code to be upstreamed to blockifier
 
+use blockifier::blockifier_versioned_constants::GasCosts;
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::{EntryPointV1, TrackedResource};
 use blockifier::execution::entry_point::EntryPointExecutionResult;
@@ -13,7 +14,6 @@ use blockifier::execution::execution_utils::{
     write_maybe_relocatable,
 };
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::versioned_constants::GasCosts;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
 use cairo_vm::types::builtin_name::BuiltinName;
 use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};

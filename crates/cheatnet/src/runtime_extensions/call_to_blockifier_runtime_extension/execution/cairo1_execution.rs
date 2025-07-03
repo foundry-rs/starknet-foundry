@@ -11,7 +11,7 @@ use blockifier::execution::entry_point_execution::{
     ExecutionRunnerMode, VmExecutionContext, finalize_execution,
     initialize_execution_context_with_runner_mode, prepare_call_arguments,
 };
-use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
+use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
 use blockifier::{
     execution::{
         contract_class::EntryPointV1, entry_point::EntryPointExecutionContext,

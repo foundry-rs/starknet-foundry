@@ -81,7 +81,7 @@ impl CheatnetState {
         &mut self,
         contract_address: ContractAddress,
         block_number: u64,
-        syscall_handler: &SyscallHintProcessor,
+        syscall_handler: &mut SyscallHintProcessor,
     ) -> SyscallResult<BlockHash> {
         if let Some((cheat_span, block_hash)) = self
             .block_hash_contracts

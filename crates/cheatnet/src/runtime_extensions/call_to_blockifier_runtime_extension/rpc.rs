@@ -5,12 +5,14 @@ use crate::runtime_extensions::{
     },
     common::create_execute_calldata,
 };
-use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::{
     call_info::CallInfo,
     entry_point::{CallType, EntryPointExecutionResult},
     errors::{EntryPointExecutionError, PreExecutionError},
-    syscalls::hint_processor::{SyscallHintProcessor, SyscallUsageMap},
+    syscalls::hint_processor::SyscallHintProcessor,
+};
+use blockifier::execution::{
+    entry_point::CallEntryPoint, syscalls::vm_syscall_utils::SyscallUsageMap,
 };
 use blockifier::state::errors::StateError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;

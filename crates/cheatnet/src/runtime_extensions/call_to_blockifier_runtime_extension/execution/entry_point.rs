@@ -3,18 +3,25 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::common::{get_relocated_vm_trace, get_syscalls_gas_consumed, sum_syscall_usage};
+use crate::state::CheatStatus;
+use blockifier::execution::call_info::{CallExecution, Retdata, StorageAccessTracker};
 use crate::runtime_extensions::forge_runtime_extension::{get_nested_calls_syscalls_sierra_gas, get_nested_calls_syscalls_vm_resources};
-use crate::state::{CheatStatus};
-use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::execution::contract_class::{RunnableCompiledClass, TrackedResource};
-use blockifier::execution::syscalls::hint_processor::{SyscallUsageMap, ENTRYPOINT_NOT_FOUND_ERROR, OUT_OF_GAS_ERROR};
+
+use blockifier::execution::entry_point::{EntryPointRevertInfo, ExecutableCallEntryPoint};
+use blockifier::execution::stack_trace::{
+    Cairo1RevertHeader, extract_trailing_cairo1_revert_trace,
+};
+use blockifier::execution::syscalls::hint_processor::{
+    ENTRYPOINT_NOT_FOUND_ERROR, OUT_OF_GAS_ERROR,
+};
+use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
 use blockifier::{
     execution::{
         call_info::CallInfo,
         entry_point::{
-            handle_empty_constructor, CallEntryPoint, CallType, ConstructorContext,
-            EntryPointExecutionContext, EntryPointExecutionResult,
-            FAULTY_CLASS_HASH,
+            CallEntryPoint, CallType, ConstructorContext, EntryPointExecutionContext,
+            EntryPointExecutionResult, FAULTY_CLASS_HASH, handle_empty_constructor,
         },
         errors::{EntryPointExecutionError, PreExecutionError},
     },
@@ -22,19 +29,17 @@ use blockifier::{
 };
 use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
+use conversions::FromConv;
 use conversions::string::TryFromHexStr;
+use shared::vm::VirtualMachineExt;
 use starknet_api::{
     contract_class::EntryPointType,
     core::ClassHash,
-    transaction::{fields::Calldata, TransactionVersion},
+    transaction::{TransactionVersion, fields::Calldata},
 };
 use starknet_types_core::felt::Felt;
 use std::collections::{HashMap, HashSet};
-use blockifier::execution::entry_point::{EntryPointRevertInfo, ExecutableCallEntryPoint};
-use blockifier::execution::stack_trace::{extract_trailing_cairo1_revert_trace, Cairo1RevertHeader};
 use thiserror::Error;
-use conversions::FromConv;
-use shared::vm::VirtualMachineExt;
 
 pub(crate) type ContractClassEntryPointExecutionResult =
     Result<CallInfoWithExecutionData, EntryPointExecutionErrorWithTrace>;
@@ -444,12 +449,9 @@ fn mocked_call_info(
             gas_consumed: 0,
         },
         resources: ExecutionResources::default(),
-        inner_calls: vec![],
-        storage_read_values: vec![],
-        accessed_storage_keys: HashSet::new(),
-        read_class_hash_values: vec![],
         tracked_resource,
-        accessed_contract_addresses: HashSet::default(),
+        inner_calls: vec![],
+        storage_access_tracker: StorageAccessTracker::default(),
         builtin_counters: HashMap::default(),
     }
 }
