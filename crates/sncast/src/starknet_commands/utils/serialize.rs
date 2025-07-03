@@ -16,7 +16,7 @@ use starknet_types_core::felt::Felt;
 
 #[derive(Args, Clone, Debug)]
 #[group(required = true, multiple = false)]
-pub struct Location {
+pub struct LocationArgs {
     /// Class hash of contract which contains the function
     #[arg(short = 'c', long)]
     pub class_hash: Option<Felt>,
@@ -28,6 +28,28 @@ pub struct Location {
     /// Path to the file containing ABI of the contract class
     #[arg(long)]
     pub abi_file: Option<Utf8PathBuf>,
+}
+
+#[derive(Debug)]
+pub enum Location {
+    AbiFile(Utf8PathBuf),
+    ClassHash(Felt),
+    ContractAddress(Felt),
+}
+
+impl TryFrom<LocationArgs> for Location {
+    type Error = anyhow::Error;
+
+    fn try_from(args: LocationArgs) -> Result<Self> {
+        match (args.class_hash, args.contract_address, args.abi_file) {
+            (Some(class_hash), None, None) => Ok(Location::ClassHash(class_hash)),
+            (None, Some(address), None) => Ok(Location::ContractAddress(address)),
+            (None, None, Some(path)) => Ok(Location::AbiFile(path)),
+            _ => bail!(
+                "Exactly one of --class-hash, --contract-address, or --abi-file must be provided"
+            ),
+        }
+    }
 }
 
 #[derive(Args, Clone, Debug)]
@@ -42,77 +64,68 @@ pub struct Serialize {
     pub function: String,
 
     #[command(flatten)]
-    pub location: Location,
+    pub location_args: LocationArgs,
 
     #[command(flatten)]
-    pub rpc: Option<RpcArgs>,
-}
-
-impl Location {
-    async fn resolve_class_hash(
-        &self,
-        rpc_args: RpcArgs,
-        config: CastConfig,
-        ui: &UI,
-    ) -> Result<Felt> {
-        match (self.class_hash, self.contract_address) {
-            (Some(hash), _) => Ok(hash),
-            (None, Some(address)) => {
-                let provider = rpc_args.get_provider(&config, ui).await?;
-                get_class_hash_by_address(&provider, address).await
-            }
-            (None, None) => {
-                unreachable!("Either `--class-hash` or `--contract-address` must be provided")
-            }
-        }
-    }
-
-    pub async fn resolve_abi(
-        &self,
-        rpc: Option<RpcArgs>,
-        config: CastConfig,
-        ui: &UI,
-    ) -> Result<Vec<AbiEntry>> {
-        if let Some(ref path) = self.abi_file {
-            let abi_str = std::fs::read_to_string(path).context("Failed to read ABI file")?;
-            serde_json::from_str(&abi_str).context("Failed to deserialize ABI from file")
-        } else {
-            let rpc = rpc
-                .ok_or_else(|| anyhow::anyhow!("Either `--network` or `--url` must be provided"))?;
-            let class_hash = self
-                .resolve_class_hash(rpc.clone(), config.clone(), ui)
-                .await?;
-            let contract_class =
-                get_contract_class(class_hash, &rpc.get_provider(&config, ui).await?).await?;
-
-            match contract_class {
-                ContractClass::Sierra(sierra) => serde_json::from_str(&sierra.abi)
-                    .context("Couldn't deserialize ABI received from network"),
-                ContractClass::Legacy(_) => {
-                    bail!("Transformation of arguments is not available for Cairo Zero contracts")
-                }
-            }
-        }
-    }
+    pub rpc_args: Option<RpcArgs>,
 }
 
 pub async fn serialize(
-    function: String,
-    arguments: String,
-    rpc: Option<RpcArgs>,
-    location: Location,
+    Serialize {
+        function,
+        arguments,
+        rpc_args,
+        location_args,
+    }: Serialize,
     config: CastConfig,
     ui: &UI,
 ) -> Result<SerializeResponse, StarknetCommandError> {
     let selector = get_selector_from_name(&function)
         .context("Failed to convert entry point selector to FieldElement")?;
+    let location = Location::try_from(location_args)?;
 
-    let abi = location
-        .resolve_abi(rpc, config, ui)
-        .await
-        .map_err(StarknetCommandError::from)?;
+    let abi = resolve_abi(location, rpc_args, &config, ui).await?;
 
     let calldata = transform(&arguments, &abi, &selector)?;
 
     Ok(SerializeResponse { calldata })
+}
+
+pub async fn resolve_abi(
+    location: Location,
+    rpc_args: Option<RpcArgs>,
+    config: &CastConfig,
+    ui: &UI,
+) -> Result<Vec<AbiEntry>> {
+    match location {
+        Location::AbiFile(path) => {
+            let abi_str = tokio::fs::read_to_string(path)
+                .await
+                .context("Failed to read ABI file")?;
+            serde_json::from_str(&abi_str).context("Failed to deserialize ABI from file")
+        }
+        Location::ClassHash(class_hash) => {
+            let provider = rpc_args
+                .context(
+                    "Either `--network` or `--url` must be provided when using `--class-hash`",
+                )?
+                .get_provider(config, ui)
+                .await?;
+            let contract_class = get_contract_class(class_hash, &provider).await?;
+            parse_abi_from_contract_class(contract_class)
+        }
+        Location::ContractAddress(address) => {
+            let provider = rpc_args.context("Either `--network` or `--url` must be provided when using `--contract-address`")?.get_provider(config, ui).await?;
+            let class_hash = get_class_hash_by_address(&provider, address).await?;
+            let contract_class = get_contract_class(class_hash, &provider).await?;
+            parse_abi_from_contract_class(contract_class)
+        }
+    }
+}
+
+fn parse_abi_from_contract_class(contract_class: ContractClass) -> Result<Vec<AbiEntry>> {
+    let ContractClass::Sierra(sierra) = contract_class else {
+        bail!("ABI transformation not supported for Cairo 0 (legacy) contracts");
+    };
+    serde_json::from_str(&sierra.abi).context("Couldn't deserialize ABI from network")
 }

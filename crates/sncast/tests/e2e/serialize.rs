@@ -243,6 +243,30 @@ async fn test_rpc_args_not_passed_when_using_class_hash() {
         "serialize",
         "--arguments",
         calldata,
+        "--class-hash",
+        DATA_TRANSFORMER_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--function",
+        "nested_struct_fn",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().failure().stderr_eq(indoc! {r"
+    Error: Either `--network` or `--url` must be provided when using `--class-hash`
+    "});
+}
+
+#[tokio::test]
+async fn test_rpc_args_not_passed_when_using_contract_address() {
+    let tempdir = tempdir().unwrap();
+
+    let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
+
+    let args = vec![
+        "utils",
+        "serialize",
+        "--arguments",
+        calldata,
         "--contract-address",
         DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -252,7 +276,7 @@ async fn test_rpc_args_not_passed_when_using_class_hash() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().failure().stderr_eq(indoc! {r"
-    Error: Either `--network` or `--url` must be provided
+    Error: Either `--network` or `--url` must be provided when using `--contract-address`
     "});
 }
 
