@@ -164,7 +164,7 @@ pub fn check_available_gas(
                 // convert resource bounds to classic l1_gas using formula
                 // l1_gas + l1_data_gas + (l2_gas / 40000)
                 // because 100 l2_gas = 0.0025 l1_gas
-                gas_info.l1_gas + gas_info.l1_data_gas + (gas_info.l2_gas / 40000)
+                GasAmount::from(gas_info.l1_gas + gas_info.l1_data_gas + (gas_info.l2_gas / 40000))
                     > GasAmount(gas as u64)
             }
             RawAvailableGasConfig::MaxResourceBounds(bounds) => {

@@ -20,7 +20,6 @@ use starknet_api::execution_resources::GasAmount;
 use starknet_api::transaction::fields::{AccountDeploymentData, PaymasterData, Tip};
 use starknet_api::transaction::fields::{AllResourceBounds, ResourceBounds, ValidResourceBounds};
 use starknet_api::{
-    contract_address,
     core::{ChainId, ContractAddress, Nonce},
     transaction::TransactionVersion,
 };
@@ -43,8 +42,10 @@ pub fn build_block_context(block_info: &BlockInfo, chain_id: Option<ChainId>) ->
         ChainInfo {
             chain_id: chain_id.unwrap_or_else(default_chain_id),
             fee_token_addresses: FeeTokenAddresses {
-                strk_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
-                eth_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
+                strk_fee_token_address: ContractAddress::try_from_hex_str(ERC20_CONTRACT_ADDRESS)
+                    .unwrap(),
+                eth_fee_token_address: ContractAddress::try_from_hex_str(ERC20_CONTRACT_ADDRESS)
+                    .unwrap(),
             },
         },
         VersionedConstants::latest_constants().clone(), // 0.13.1
