@@ -1620,15 +1620,15 @@ fn l1_message_cost_for_proxy_sierra_gas() {
     //      -> 1 pedersen costs 4050, 1 range check costs 70
     // 175300 = cost of 2 call contract syscalls (see `multiple_storage_writes_cost_sierra_gas` test)
     // 14170 = cost of 1 SendMessageToL1 syscall (see `l1_message_cost_sierra_gas` test)
-    // 96150 = reported consumed sierra gas
-    // 29524 l1_gas + (128 + 64) l1_data_gas + (285620 + 175300 + 14170 + 96150) l2 gas
+    // 112890 = reported consumed sierra gas
+    // 29524 l1_gas + (128 + 64) l1_data_gas + (285620 + 175300 + 14170 + 112890) l2 gas
     assert_gas(
         &result,
         "l1_message_cost_for_proxy",
         GasVector {
             l1_gas: GasAmount(29524),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(571_240),
+            l2_gas: GasAmount(587_980),
         },
     );
 }
@@ -1785,15 +1785,15 @@ fn nested_call_cost_sierra_gas() {
     // 10000 = cost of 1 emit event syscall (see `events_cost_sierra_gas` test)
     // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
     // 87650 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
-    // 638032 = reported consumed sierra gas
-    // 0 l1_gas + 288 l1_data_gas + (512000 + 256000 + 10000 + 3 * 142810 + 2 * 87650 + 638032) l2 gas
+    // 663192 = reported consumed sierra gas
+    // 0 l1_gas + 288 l1_data_gas + (512000 + 256000 + 10000 + 3 * 142810 + 2 * 87650 + 663192) l2 gas
     assert_gas(
         &result,
         "test_call_other_contract",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(288),
-            l2_gas: GasAmount(2_019_762),
+            l2_gas: GasAmount(2_044_922),
         },
     );
 }
@@ -1858,15 +1858,15 @@ fn nested_call_cost_in_forked_contract_sierra_gas() {
     // 10000 = cost of 1 emit event syscall (see `events_cost_sierra_gas` test)
     // 142810 = cost of 1 deploy syscall (see `deploy_syscall_cost_sierra_gas` test)
     // 87650 = cost of 1 call contract syscall (see `contract_keccak_cost_sierra_gas` test)
-    // 599612 = reported consumed sierra gas
-    // 0 l1_gas + 192 l1_data_gas + (512000 + 256000 + 10000 + 2 * 142810 + 2 * 87650 + 599612) l2 gas
+    // 620462 = reported consumed sierra gas
+    // 0 l1_gas + 192 l1_data_gas + (512000 + 256000 + 10000 + 2 * 142810 + 2 * 87650 + 620462) l2 gas
     assert_gas(
         &result,
         "test_call_other_contract_fork",
         GasVector {
             l1_gas: GasAmount(0),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(1_838_532),
+            l2_gas: GasAmount(1_859_382),
         },
     );
 }
