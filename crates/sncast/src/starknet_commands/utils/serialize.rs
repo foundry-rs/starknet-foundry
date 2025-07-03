@@ -15,11 +15,7 @@ use starknet::core::{
 use starknet_types_core::felt::Felt;
 
 #[derive(Args, Clone, Debug)]
-#[group(
-    required = true,
-    multiple = false,
-    args = ["class_hash", "contract_address", "abi_file"]
-)]
+#[group(required = true, multiple = false)]
 pub struct Location {
     /// Class hash of contract which contains the function
     #[arg(short = 'c', long)]
@@ -49,7 +45,7 @@ pub struct Serialize {
     pub location: Location,
 
     #[command(flatten)]
-    pub rpc: RpcArgs,
+    pub rpc: Option<RpcArgs>,
 }
 
 impl Location {
@@ -73,16 +69,16 @@ impl Location {
 
     pub async fn resolve_abi(
         &self,
-        rpc: RpcArgs,
+        rpc: Option<RpcArgs>,
         config: CastConfig,
         ui: &UI,
     ) -> Result<Vec<AbiEntry>> {
         if let Some(ref path) = self.abi_file {
-            let abi_str = tokio::fs::read_to_string(path)
-                .await
-                .context("Failed to read ABI file")?;
+            let abi_str = std::fs::read_to_string(path).context("Failed to read ABI file")?;
             serde_json::from_str(&abi_str).context("Failed to deserialize ABI from file")
         } else {
+            let rpc = rpc
+                .ok_or_else(|| anyhow::anyhow!("Either `--network` or `--url` must be provided"))?;
             let class_hash = self
                 .resolve_class_hash(rpc.clone(), config.clone(), ui)
                 .await?;
@@ -101,23 +97,18 @@ impl Location {
 }
 
 pub async fn serialize(
-    serialize_args: Serialize,
+    function: String,
+    arguments: String,
+    rpc: Option<RpcArgs>,
+    location: Location,
     config: CastConfig,
     ui: &UI,
 ) -> Result<SerializeResponse, StarknetCommandError> {
-    let Serialize {
-        function,
-        arguments,
-        rpc,
-        location,
-        ..
-    } = serialize_args;
-
     let selector = get_selector_from_name(&function)
         .context("Failed to convert entry point selector to FieldElement")?;
 
     let abi = location
-        .resolve_abi(rpc.clone(), config.clone(), ui)
+        .resolve_abi(rpc, config, ui)
         .await
         .map_err(StarknetCommandError::from)?;
 

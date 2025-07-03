@@ -42,9 +42,10 @@ fn test_docs_snippets() {
 
     let tempdir = TempDir::new().expect("Unable to create a temporary directory");
 
+    let target_path = tempdir.path();
+
     for dir in &dirs_to_copy {
         let source_path = root_dir_path.join(dir);
-        let target_path = tempdir.path();
 
         fs_extra::dir::copy(
             source_path.as_path(),

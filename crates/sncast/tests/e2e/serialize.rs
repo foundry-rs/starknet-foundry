@@ -81,8 +81,6 @@ async fn test_happy_case_abi_file() {
         temp_abi_file_path.to_str().unwrap(),
         "--function",
         "nested_struct_fn",
-        "--url",
-        URL,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -112,8 +110,6 @@ async fn test_abi_file_missing_function() {
         temp_abi_file_path.to_str().unwrap(),
         "--function",
         "nested_struct_fn",
-        "--url",
-        URL,
     ];
 
     let output = runner(&args).current_dir(tempdir.path()).assert().failure();
@@ -146,8 +142,6 @@ async fn test_abi_file_missing_type() {
         temp_abi_file_path.to_str().unwrap(),
         "--function",
         "nested_struct_fn",
-        "--url",
-        URL,
     ];
 
     let output = runner(&args).current_dir(tempdir.path()).assert().failure();
@@ -236,6 +230,30 @@ async fn test_wrong_function_name() {
         output,
         r#"Error: Function with selector "0x38a013a14030cb08ae86482a9e0f3bad42daeb0222bdfe0634d77388deab9b9" not found in ABI of the contract"#,
     );
+}
+
+#[tokio::test]
+async fn test_rpc_args_not_passed_when_using_class_hash() {
+    let tempdir = tempdir().unwrap();
+
+    let calldata = r"NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }";
+
+    let args = vec![
+        "utils",
+        "serialize",
+        "--arguments",
+        calldata,
+        "--contract-address",
+        DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "nested_struct_fn",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().failure().stderr_eq(indoc! {r"
+    Error: Either `--network` or `--url` must be provided
+    "});
 }
 
 #[tokio::test]

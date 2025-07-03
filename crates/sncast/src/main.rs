@@ -436,9 +436,16 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Utils(utils) => match utils.command {
             utils::Commands::Serialize(serialize) => {
-                let result = starknet_commands::utils::serialize::serialize(serialize, config, ui)
-                    .await
-                    .map_err(handle_starknet_command_error)?;
+                let result = starknet_commands::utils::serialize::serialize(
+                    serialize.function,
+                    serialize.arguments,
+                    serialize.rpc,
+                    serialize.location,
+                    config,
+                    ui,
+                )
+                .await
+                .map_err(handle_starknet_command_error)?;
 
                 process_command_result("serialize", Ok(result), ui, None);
 
