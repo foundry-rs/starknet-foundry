@@ -215,9 +215,7 @@ fn test_wrong_function_name() {
 
     assert_stderr_contains(
         output,
-        r#"Error: Failed to transform arguments into calldata
-Caused by:
-    Function with selector "0x2e0f845a8d0319c5c37d558023299beec2a0155d415f41cca140a09e6877c67" not found in ABI of the contract"#,
+        r#"Error: Function with selector "0x2e0f845a8d0319c5c37d558023299beec2a0155d415f41cca140a09e6877c67" not found in ABI of the contract"#,
     );
 }
 
