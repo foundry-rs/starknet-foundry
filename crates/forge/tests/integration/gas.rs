@@ -1733,36 +1733,36 @@ fn nested_call_cost_sierra_gas() {
     let test = test_case!(
         indoc!(
             r#"
-        use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
-        use starknet::{ContractAddress, SyscallResult};
-        #[starknet::interface]
-        trait IGasCheckerProxy<TContractState> {
-            fn call_other_contract(
-                self: @TContractState,
-                contract_address: ContractAddress,
-                entry_point_selector: felt252,
-                calldata: Array::<felt252>,
-            ) -> SyscallResult<Span<felt252>>;
-        }
-        fn deploy_contract(name: ByteArray) -> ContractAddress {
-            let contract = declare(name).unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-            contract_address
-        }
-        #[test]
-        fn test_call_other_contract() {
-            let contract_address_a = deploy_contract("GasCheckerProxy");
-            let contract_address_b = deploy_contract("GasCheckerProxy");
-            let hello_starknet_address = deploy_contract("HelloStarknet");
-            let dispatcher_a = IGasCheckerProxyDispatcher { contract_address: contract_address_a };
-            let _ = dispatcher_a
-                .call_other_contract(
-                    contract_address_b,
-                    selector!("call_other_contract"),
-                    array![hello_starknet_address.into(), selector!("example_function"), 0],
-                );
-        }
-    "#
+            use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
+            use starknet::{ContractAddress, SyscallResult};
+            #[starknet::interface]
+            trait IGasCheckerProxy<TContractState> {
+                fn call_other_contract(
+                    self: @TContractState,
+                    contract_address: ContractAddress,
+                    entry_point_selector: felt252,
+                    calldata: Array::<felt252>,
+                ) -> SyscallResult<Span<felt252>>;
+            }
+            fn deploy_contract(name: ByteArray) -> ContractAddress {
+                let contract = declare(name).unwrap().contract_class();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                contract_address
+            }
+            #[test]
+            fn test_call_other_contract() {
+                let contract_address_a = deploy_contract("GasCheckerProxy");
+                let contract_address_b = deploy_contract("GasCheckerProxy");
+                let hello_starknet_address = deploy_contract("HelloStarknet");
+                let dispatcher_a = IGasCheckerProxyDispatcher { contract_address: contract_address_a };
+                let _ = dispatcher_a
+                    .call_other_contract(
+                        contract_address_b,
+                        selector!("call_other_contract"),
+                        array![hello_starknet_address.into(), selector!("example_function"), 0],
+                    );
+            }
+        "#
         ),
         Contract::from_code_path(
             "HelloStarknet".to_string(),
