@@ -43,9 +43,10 @@ $ sncast --account my_account \
 <summary>Output:</summary>
 
 ```shell
-command: Declare
-class_hash: [..]
-transaction_hash: [..]
+Success: Declaration completed
+
+Class Hash:       0x[..]
+Transaction Hash: 0x[..]
 ```
 </details>
 <br>
@@ -63,9 +64,10 @@ $ sncast declare \
 <summary>Output:</summary>
 
 ```shell
-command: Declare
-class_hash: [..]
-transaction_hash: [..]
+Success: Declaration completed
+
+Class Hash:       0x[..]
+Transaction Hash: 0x[..]
 ```
 </details>
 <br>
@@ -85,9 +87,10 @@ $ sncast --account my_account \
 <summary>Output:</summary>
 
 ```shell
-command: Deploy
-contract_address: [..]
-transaction_hash: [..]
+Success: Deployment completed
+
+Contract Address: 0x0[..]
+Transaction Hash: 0x0[..]
 ```
 </details>
 <br>
@@ -105,9 +108,10 @@ $ sncast deploy \
 <summary>Output:</summary>
 
 ```shell
-command: Deploy
-contract_address: [..]
-transaction_hash: [..]
+Success: Deployment completed
+
+Contract Address: 0x0[..]
+Transaction Hash: 0x0[..]
 ```
 </details>
 <br>
@@ -129,8 +133,9 @@ $ sncast \
 <summary>Output:</summary>
 
 ```shell
-command: invoke
-transaction_hash: [..]
+Success: Invoke completed
+
+Transaction Hash: [..]
 
 To see invocation details, visit:
 transaction: https://sepolia.starkscan.co/tx/[..]
@@ -153,8 +158,9 @@ $ sncast invoke \
 <summary>Output:</summary>
 
 ```shell
-command: invoke
-transaction_hash: [..]
+Success: Invoke completed
+
+Transaction Hash: [..]
 
 To see invocation details, visit:
 transaction: https://sepolia.starkscan.co/tx/[..]
@@ -177,9 +183,10 @@ $ sncast \
 <summary>Output:</summary>
 
 ```shell
-command: call
-response: 0x6
-response_raw: [0x6]
+Success: Call completed
+
+Response:     0x6
+Response Raw: [0x6]
 ```
 </details>
 <br>
@@ -199,9 +206,10 @@ $ sncast call \
 <summary>Output:</summary>
 
 ```shell
-command: call
-response: 0x6
-response_raw: [0x6]
+Success: Call completed
+
+Response:     0x6
+Response Raw: [0x6]
 ```
 </details>
 <br>

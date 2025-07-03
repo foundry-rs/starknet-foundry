@@ -12,7 +12,7 @@ use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
 use sncast::helpers::braavos::check_braavos_account_compatibility;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::AccountImportResponse;
+use sncast::response::account::import::AccountImportResponse;
 use sncast::{AccountType, check_class_hash_exists, get_chain_id, handle_rpc_error};
 use starknet::core::types::{BlockId, BlockTag, StarknetError};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
@@ -161,7 +161,7 @@ pub async fn import(
 
     Ok(AccountImportResponse {
         add_profile: add_profile_message,
-        account_name: account.map_or_else(|| Some(account_name), |_| None),
+        account_name,
     })
 }
 

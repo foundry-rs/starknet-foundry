@@ -44,8 +44,9 @@ async fn test_wrong_contract_name(account: &str) {
         output,
         indoc! {r#"
         ScriptCommandError::ContractArtifactsNotFound(ErrorData { msg: "Mapaaaa" })
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
         "#},
     );
 }
@@ -85,8 +86,9 @@ async fn test_same_contract_twice() {
         success
         DeclareResult::Success(DeclareTransactionResult { class_hash: [..], transaction_hash: [..] })
         DeclareResult::AlreadyDeclared(AlreadyDeclaredResult { class_hash: [..] })
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
     "});
 }
 
@@ -120,8 +122,9 @@ async fn test_with_invalid_max_fee() {
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientResourcesForValidate(())))
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
     "});
 }
 
@@ -155,8 +158,9 @@ async fn test_with_invalid_nonce() {
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InvalidTransactionNonce(())))
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
     "});
 }
 
@@ -191,8 +195,9 @@ async fn test_insufficient_account_balance() {
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientAccountBalance(())))
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
     "});
 }
 
@@ -231,8 +236,9 @@ async fn test_sncast_timed_out() {
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TimedOut(()))
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
     "});
 }
 
@@ -267,7 +273,8 @@ async fn test_fee_settings() {
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         success
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
     "});
 }

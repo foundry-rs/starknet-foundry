@@ -202,28 +202,29 @@ pub fn extract_vm_resources(
     syscall_handler: &SyscallHintProcessor<'_>,
     tracked_resource: TrackedResource,
 ) -> Result<ExecutionResources, PostExecutionError> {
-    match tracked_resource {
-        TrackedResource::CairoSteps => {
-            // Take into account the resources of the current call, without inner calls.
-            // Has to happen after marking holes in segments as accessed.
-            let mut vm_resources_without_inner_calls = runner
-                .get_execution_resources()
-                .map_err(VirtualMachineError::RunnerError)?
-                .filter_unused_builtins();
-            let versioned_constants = syscall_handler.base.context.versioned_constants();
-            if versioned_constants.segment_arena_cells {
-                vm_resources_without_inner_calls
-                    .builtin_instance_counter
-                    .get_mut(&BuiltinName::segment_arena)
-                    .map_or_else(|| {}, |val| *val *= SEGMENT_ARENA_BUILTIN_SIZE);
-            }
-            // Take into account the syscall resources of the current call.
-            vm_resources_without_inner_calls += &versioned_constants
-                .get_additional_os_syscall_resources(&syscall_handler.syscalls_usage);
-            Ok(vm_resources_without_inner_calls)
-        }
-        TrackedResource::SierraGas => Ok(ExecutionResources::default()),
+    // Take into account the resources of the current call, without inner calls.
+    // Has to happen after marking holes in segments as accessed.
+    let mut vm_resources_without_inner_calls = runner
+        .get_execution_resources()
+        .map_err(VirtualMachineError::RunnerError)?
+        .filter_unused_builtins();
+    let versioned_constants = syscall_handler.base.context.versioned_constants();
+    if versioned_constants.segment_arena_cells {
+        vm_resources_without_inner_calls
+            .builtin_instance_counter
+            .get_mut(&BuiltinName::segment_arena)
+            .map_or_else(|| {}, |val| *val *= SEGMENT_ARENA_BUILTIN_SIZE);
     }
+    // Take into account the syscall resources of the current call.
+    vm_resources_without_inner_calls +=
+        &versioned_constants.get_additional_os_syscall_resources(&syscall_handler.syscalls_usage);
+
+    let tracked_vm_resources_without_inner_calls = match tracked_resource {
+        TrackedResource::CairoSteps => vm_resources_without_inner_calls,
+        TrackedResource::SierraGas => ExecutionResources::default(),
+    };
+
+    Ok(tracked_vm_resources_without_inner_calls)
 }
 
 pub fn total_vm_resources(

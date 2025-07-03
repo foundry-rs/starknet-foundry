@@ -84,4 +84,26 @@ mod tests {
     fn print_block_number_when_latest() {
         assert(1 == 1, '');
     }
+
+    #[test]
+    #[fork(url: "{{ NODE_RPC_URL }}", block_number: 785646)]
+    fn test_track_resources() {
+        let dispatcher = IHelloStarknetDispatcher {
+            contract_address: CONTRACT_ADDRESS.try_into().unwrap(),
+        };
+        dispatcher.increase_balance(100);
+        let balance = dispatcher.get_balance();
+        assert(balance == 100, 'Balance should be 100');
+
+        // Default init contract compiled with Sierra version 1.7.0
+        let hello_starknet_updated: starknet::ContractAddress =
+            0x01aeb8ac66ebc01c7db8bb8123d3bbf1867be93604f57c540ad70056c04c4cc4
+            .try_into()
+            .unwrap();
+
+        let dispatcher = IHelloStarknetDispatcher { contract_address: hello_starknet_updated };
+        dispatcher.increase_balance(200);
+        let balance = dispatcher.get_balance();
+        assert(balance == 200, 'Balance should be 200');
+    }
 }

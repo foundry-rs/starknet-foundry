@@ -14,7 +14,7 @@ fn test_debugging_trace_success() {
 }
 
 #[test]
-fn test_debugging_trace_fail() {
+fn test_debugging_trace_failure() {
     run_test();
 }
 

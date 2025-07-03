@@ -23,8 +23,9 @@ $ sncast \
 <summary>Output:</summary>
 
 ```shell
-command: tx-status
-execution_status: Succeeded
-finality_status: AcceptedOnL1
+Success: Transaction status retrieved
+
+Finality Status:  Accepted on L1
+Execution Status: Succeeded
 ```
 </details>

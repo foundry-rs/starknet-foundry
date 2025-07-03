@@ -30,6 +30,7 @@ impl SupportedCalldataKind for ExprInlineMacro {
         };
 
         let type_parameters_from_abi = path
+            .segments(db)
             .elements(db)
             .into_iter()
             .find_map(|element| match element {

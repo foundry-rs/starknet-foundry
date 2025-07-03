@@ -30,7 +30,7 @@ impl AsTreeNode for TraceInfo {
         parent.leaf(&self.contract_name);
         parent.leaf_optional(self.entry_point_type.as_option());
         parent.leaf_optional(self.calldata.as_option());
-        parent.leaf_optional(self.storage_address.as_option());
+        parent.leaf_optional(self.contract_address.as_option());
         parent.leaf_optional(self.caller_address.as_option());
         parent.leaf_optional(self.call_type.as_option());
         parent.leaf_optional(self.call_result.as_option());

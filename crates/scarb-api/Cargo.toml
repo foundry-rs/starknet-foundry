@@ -18,6 +18,7 @@ regex.workspace = true
 rayon.workspace = true
 itertools.workspace = true
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
+foundry-ui = { path = "../foundry-ui" }
 
 [dev-dependencies]
 assert_fs.workspace = true
