@@ -849,21 +849,21 @@ fn l1_message_cost_for_proxy_cairo_steps() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
-    // 5416 * 0.0025 = 13.54 ~ 14 = gas cost of steps
+    // 5167 * 0.0025 = 12.9175 ~ 13 = gas cost of steps
     // l = number of class hash updates
     // n = unique contracts updated
     // So, as per formula:
     // n(2) * 2 * 32 = 128
     // l(2) * 32 = 64
     // 29524 = gas cost of message
-    // 29524 l1_gas + (128 + 64) l1_data_gas + 14 * (100 / 0.0025) l2 gas
+    // 29524 l1_gas + (128 + 64) l1_data_gas + 13 * (100 / 0.0025) l2 gas
     assert_gas(
         &result,
         "l1_message_cost_for_proxy",
         GasVector {
             l1_gas: GasAmount(29524),
             l1_data_gas: GasAmount(192),
-            l2_gas: GasAmount(560_000),
+            l2_gas: GasAmount(520_000),
         },
     );
 }
