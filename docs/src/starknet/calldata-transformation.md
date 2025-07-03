@@ -86,7 +86,6 @@ $ sncast utils serialize \
     --abi-file data_transformer_contract_abi.json \
     --function nested_struct_fn \
     --arguments 'NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }' \
-    --network sepolia
 ```
 
 <details>
