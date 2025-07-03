@@ -132,7 +132,7 @@ mod tests {
         let mut i: u8 = 0;
         while i != a {
             i += 1;
-        }
+        };
 
         assert(1 == 1, '');
     }
