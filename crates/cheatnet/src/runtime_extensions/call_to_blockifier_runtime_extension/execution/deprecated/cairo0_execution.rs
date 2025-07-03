@@ -14,6 +14,7 @@ use blockifier::execution::deprecated_entry_point_execution::{
 use blockifier::execution::entry_point::{EntryPointExecutionContext, ExecutableCallEntryPoint};
 use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::execution::execution_utils::Args;
+use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
 use blockifier::state::state_api::State;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
 use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner};
@@ -82,7 +83,8 @@ pub(crate) fn execute_entry_point_call_cairo0(
 
     Ok(CallInfoWithExecutionData {
         call_info: execution_result,
-        syscall_usage,
+        syscall_usage_vm_resources: syscall_usage,
+        syscall_usage_sierra_gas: SyscallUsageMap::default(),
         vm_trace: None,
     })
     // endregion
