@@ -8,6 +8,7 @@ mod invoke;
 mod main_tests;
 mod multicall;
 mod script;
+mod serialize;
 mod show_config;
 mod tx_status;
 mod verify;
