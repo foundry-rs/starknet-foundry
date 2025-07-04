@@ -12,14 +12,14 @@ use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_co
 use snapbox::assert_matches;
 use sncast::AccountType;
 use sncast::helpers::constants::{
-    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH,
+    BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH,
 };
 use std::fs;
 use tempfile::tempdir;
 use test_case::test_case;
 
 #[test_case("oz"; "oz_account_type")]
-#[test_case("argent"; "argent_account_type")]
+#[test_case("ready"; "ready_account_type")]
 #[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case(account_type: &str) {
@@ -334,7 +334,7 @@ pub async fn test_account_already_exists() {
 }
 
 #[test_case("oz"; "oz_account_type")]
-#[test_case("argent"; "argent_account_type")]
+#[test_case("ready"; "ready_account_type")]
 #[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case_keystore(account_type: &str) {
@@ -732,19 +732,19 @@ fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&s
                 }
             )
         }
-        AccountType::Argent => {
+        AccountType::Ready => {
             json!(
                 {
                     "version": 1,
                     "variant": {
-                        "type": "argent",
+                        "type": "ready",
                         "version": 1,
                         "owner": "0x[..]",
                         "guardian": "0x0"
                     },
                     "deployment": {
                         "status": "undeployed",
-                        "class_hash": class_hash.unwrap_or(&ARGENT_CLASS_HASH.into_hex_string()),
+                        "class_hash": class_hash.unwrap_or(&READY_CLASS_HASH.into_hex_string()),
                         "salt": "0x[..]",
                     }
                 }

@@ -17,7 +17,7 @@ Address of the account.
 ## `--type, -t <ACCOUNT_TYPE>`
 Required.
 
-Type of the account. Possible values: oz, argent, braavos.
+Type of the account. Possible values: `oz`, `ready` (formerly), `braavos`.
 
 ## `--url, -u <RPC_URL>`
 Optional.

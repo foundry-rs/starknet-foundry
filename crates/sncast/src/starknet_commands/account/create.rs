@@ -10,8 +10,8 @@ use conversions::IntoConv;
 use serde_json::json;
 use sncast::helpers::braavos::{BraavosAccountFactory, check_braavos_account_compatibility};
 use sncast::helpers::constants::{
-    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
-    CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
+    BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, CREATE_KEYSTORE_PASSWORD_ENV_VAR,
+    OZ_CLASS_HASH, READY_CLASS_HASH,
 };
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::create::AccountCreateResponse;
@@ -73,7 +73,7 @@ pub async fn create(
     let salt = extract_or_generate_salt(create.salt);
     let class_hash = create.class_hash.unwrap_or(match create.account_type {
         AccountType::OpenZeppelin => OZ_CLASS_HASH,
-        AccountType::Argent => ARGENT_CLASS_HASH,
+        AccountType::Ready => READY_CLASS_HASH,
         AccountType::Braavos => BRAAVOS_CLASS_HASH,
     });
     check_class_hash_exists(provider, class_hash).await?;
@@ -171,7 +171,7 @@ async fn generate_account(
                 OpenZeppelinAccountFactory::new(class_hash, chain_id, signer, provider).await?;
             get_address_and_deployment_fee(factory, salt).await?
         }
-        AccountType::Argent => {
+        AccountType::Ready => {
             let factory =
                 ArgentAccountFactory::new(class_hash, chain_id, None, signer, provider).await?;
 
@@ -268,11 +268,11 @@ fn create_to_keystore(
                 }
             })
         }
-        AccountType::Argent => {
+        AccountType::Ready => {
             json!({
                 "version": 1,
                 "variant": {
-                    "type": AccountType::Argent,
+                    "type": AccountType::Ready,
                     "version": 1,
                     "owner": format!("{:#x}", private_key.verifying_key().scalar()),
                     "guardian": "0x0",
