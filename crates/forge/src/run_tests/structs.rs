@@ -63,7 +63,7 @@ impl Message for CollectedTestsCountMessage {
 
 // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
 #[derive(Serialize)]
-pub struct TestsSummaryMessage {
+struct TestsSummary {
     passed: usize,
     failed: usize,
     interrupted: usize,
@@ -71,8 +71,9 @@ pub struct TestsSummaryMessage {
     filtered: Option<usize>,
 }
 
-impl TestsSummaryMessage {
-    pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
+impl TestsSummary {
+    #[must_use]
+    fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
         let passed = summaries.iter().map(TestTargetSummary::count_passed).sum();
         let failed = summaries.iter().map(TestTargetSummary::count_failed).sum();
         let interrupted = summaries
@@ -89,10 +90,8 @@ impl TestsSummaryMessage {
             filtered,
         }
     }
-}
 
-impl Message for TestsSummaryMessage {
-    fn text(&self) -> String {
+    fn format_summary_message(&self, label: &str) -> String {
         let filtered = self
             .filtered
             .map_or_else(|| "other".to_string(), |v| v.to_string());
@@ -104,17 +103,34 @@ impl Message for TestsSummaryMessage {
         };
 
         format!(
-            "{}: {} passed, {} failed, {} ignored, {filtered} filtered out{}",
-            style("Tests").bold(),
+            "{}: {} passed, {} failed, {} ignored, {filtered} filtered out{interrupted}",
+            style(label).bold(),
             self.passed,
             self.failed,
             self.ignored,
-            interrupted
         )
+    }
+}
+
+#[derive(Serialize)]
+pub struct TestsSummaryMessage(TestsSummary);
+
+impl TestsSummaryMessage {
+    const LABEL: &'static str = "Tests";
+
+    #[must_use]
+    pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
+        Self(TestsSummary::new(summaries, filtered))
+    }
+}
+
+impl Message for TestsSummaryMessage {
+    fn text(&self) -> String {
+        self.0.format_summary_message(Self::LABEL)
     }
 
     fn json(&self) -> Value {
-        json!(self)
+        json!(self.0)
     }
 }
 
@@ -186,5 +202,30 @@ impl Message for LatestBlocksNumbersMessage {
 
     fn json(&self) -> Value {
         json!(self)
+    }
+}
+
+#[derive(Serialize)]
+pub struct OverallSummaryMessage(TestsSummary);
+
+impl OverallSummaryMessage {
+    const LABEL: &'static str = "Tests summary";
+
+    #[must_use]
+    pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
+        Self(TestsSummary::new(summaries, filtered))
+    }
+}
+
+impl Message for OverallSummaryMessage {
+    fn text(&self) -> String {
+        let summary = self.0.format_summary_message(Self::LABEL);
+
+        // Add newline to separate summary from previous output
+        format!("\n{summary}")
+    }
+
+    fn json(&self) -> Value {
+        json!(self.0)
     }
 }
