@@ -265,6 +265,8 @@ fn root_workspace_for_entire_workspace() {
             fibonacci_tests::abc::efg::failing_test
             hello_workspaces_integrationtest::test_failing::test_failing
             hello_workspaces_integrationtest::test_failing::test_another_failing
+        
+        Tests summary: 11 passed, 3 failed, 0 ignored, 0 filtered out
         "},
     );
 }
@@ -337,6 +339,8 @@ fn root_workspace_for_entire_workspace_inside_package() {
             fibonacci_tests::abc::efg::failing_test
             hello_workspaces_integrationtest::test_failing::test_failing
             hello_workspaces_integrationtest::test_failing::test_another_failing
+
+        Tests summary: 11 passed, 3 failed, 0 ignored, 0 filtered out
         "},
     );
 }
@@ -412,6 +416,8 @@ fn virtual_workspace_without_arguments() {
         
         Failures:
             fibonacci2_tests::abc::efg::failing_test
+
+        Tests summary: 10 passed, 1 failed, 0 ignored, 0 filtered out
         "},
     );
 }
@@ -575,6 +581,8 @@ fn virtual_workspace_for_entire_workspace() {
         
         Failures:
             fibonacci2_tests::abc::efg::failing_test
+
+        Tests summary: 10 passed, 1 failed, 0 ignored, 0 filtered out
         "},
     );
 }
@@ -623,6 +631,8 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
         
         Failures:
             fibonacci2_tests::abc::efg::failing_test
+
+        Tests summary: 10 passed, 1 failed, 0 ignored, 0 filtered out
         "},
     );
 }
@@ -652,4 +662,237 @@ fn virtual_workspace_missing_package() {
     let stdout = String::from_utf8_lossy(&result.get_output().stdout);
 
     assert!(stdout.contains("Failed to find any packages matching the specified filter"));
+}
+
+#[test]
+fn root_workspace_for_entire_workspace_with_filter() {
+    let temp = setup_hello_workspace();
+
+    let output = test_runner(&temp)
+        .args(["--workspace", "simple"])
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 1 test(s) from addition package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] addition_integrationtest::nested::simple_case [..]
+        Tests: 1 passed, 0 failed, 0 ignored, 4 filtered out
+        
+        
+        Collected 0 test(s) from fibonacci package
+        Running 0 test(s) from src/
+        Running 0 test(s) from tests/
+        Tests: 0 passed, 0 failed, 0 ignored, 6 filtered out
+        
+        
+        Collected 1 test(s) from hello_workspaces package
+        Running 1 test(s) from src/
+        [PASS] hello_workspaces::tests::test_simple [..]
+        Running 0 test(s) from tests/
+        Tests: 1 passed, 0 failed, 0 ignored, 2 filtered out
+        
+        
+        Tests summary: 2 passed, 0 failed, 0 ignored, 12 filtered out
+        "},
+    );
+}
+
+#[test]
+fn virtual_workspace_for_entire_workspace_with_filter() {
+    let temp = setup_virtual_workspace();
+
+    let output = test_runner(&temp)
+        .args(["--workspace", "simple"])
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 0 test(s) from fibonacci2 package
+        Running 0 test(s) from src/
+        Running 0 test(s) from tests/
+        Tests: 0 passed, 0 failed, 0 ignored, 6 filtered out
+        
+        
+        Collected 1 test(s) from subtraction package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] subtraction_integrationtest::nested::simple_case [..]
+        Tests: 1 passed, 0 failed, 0 ignored, 4 filtered out
+        
+
+        Tests summary: 1 passed, 0 failed, 0 ignored, 10 filtered out
+        "},
+    );
+}
+
+#[test]
+fn root_workspace_multiple_package_arguments() {
+    let temp = setup_hello_workspace();
+
+    let result = test_runner(&temp)
+        .args(["--package", "addition", "--package", "fibonacci"])
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(
+        result,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 5 test(s) from addition package
+        Running 1 test(s) from src/
+        [PASS] addition::tests::it_works [..]
+        Running 4 test(s) from tests/
+        [PASS] addition_integrationtest::nested::simple_case [..]
+        [PASS] addition_integrationtest::nested::contract_test [..]
+        [PASS] addition_integrationtest::nested::test_nested::test_two [..]
+        [PASS] addition_integrationtest::nested::test_nested::test_two_and_two [..]
+        Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
+        
+        
+        Collected 6 test(s) from fibonacci package
+        Running 2 test(s) from src/
+        [PASS] fibonacci::tests::it_works [..]
+        [PASS] fibonacci::tests::contract_test [..]
+        Running 4 test(s) from tests/
+        [PASS] fibonacci_tests::lib_test [..]
+        [PASS] fibonacci_tests::abc::abc_test [..]
+        [PASS] fibonacci_tests::abc::efg::efg_test [..]
+        [FAIL] fibonacci_tests::abc::efg::failing_test
+        
+        Failure data:
+            0x0 ('')
+        
+        Tests: 5 passed, 1 failed, 0 ignored, 0 filtered out
+        
+        Failures:
+            fibonacci_tests::abc::efg::failing_test
+        
+        Tests summary: 10 passed, 1 failed, 0 ignored, 0 filtered out
+        "},
+    );
+}
+
+#[test]
+fn virtual_workspace_multiple_package_arguments() {
+    let temp = setup_virtual_workspace();
+
+    let result = test_runner(&temp)
+        .args(["--package", "fibonacci2", "--package", "subtraction"])
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(
+        result,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 6 test(s) from fibonacci2 package
+        Running 2 test(s) from src/
+        [PASS] fibonacci2::tests::it_works [..]
+        [PASS] fibonacci2::tests::contract_test [..]
+        Running 4 test(s) from tests/
+        [PASS] fibonacci2_tests::lib_test [..]
+        [PASS] fibonacci2_tests::abc::abc_test [..]
+        [PASS] fibonacci2_tests::abc::efg::efg_test [..]
+        [FAIL] fibonacci2_tests::abc::efg::failing_test
+        
+        Failure data:
+            0x0 ('')
+        
+        Tests: 5 passed, 1 failed, 0 ignored, 0 filtered out
+
+
+        Collected 5 test(s) from subtraction package
+        Running 1 test(s) from src/
+        [PASS] subtraction::tests::it_works [..]
+        Running 4 test(s) from tests/
+        [PASS] subtraction_integrationtest::nested::simple_case [..]
+        [PASS] subtraction_integrationtest::nested::contract_test [..]
+        [PASS] subtraction_integrationtest::nested::test_nested::test_two [..]
+        [PASS] subtraction_integrationtest::nested::test_nested::test_two_and_two [..]
+        Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
+        
+        Failures:
+            fibonacci2_tests::abc::efg::failing_test
+
+        Tests summary: 10 passed, 1 failed, 0 ignored, 0 filtered out
+        "},
+    );
+}
+
+#[test]
+fn root_workspace_for_entire_workspace_with_exact() {
+    let temp = setup_hello_workspace();
+
+    let output = test_runner(&temp)
+        .args([
+            "--workspace",
+            "--exact",
+            "hello_workspaces::tests::test_simple",
+        ])
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 0 test(s) from addition package
+        Running 0 test(s) from src/
+        Running 0 test(s) from tests/
+        Tests: 0 passed, 0 failed, 0 ignored, other filtered out
+        
+        
+        Collected 0 test(s) from fibonacci package
+        Running 0 test(s) from src/
+        Running 0 test(s) from tests/
+        Tests: 0 passed, 0 failed, 0 ignored, other filtered out
+        
+        
+        Collected 1 test(s) from hello_workspaces package
+        Running 1 test(s) from src/
+        [PASS] hello_workspaces::tests::test_simple [..]
+        Running 0 test(s) from tests/
+        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
+        
+
+        Tests summary: 1 passed, 0 failed, 0 ignored, other filtered out
+        "},
+    );
 }

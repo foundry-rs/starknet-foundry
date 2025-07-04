@@ -1,5 +1,6 @@
 use super::package::RunForPackageArgs;
 use super::structs::{LatestBlocksNumbersMessage, TestsFailureSummaryMessage};
+use crate::run_tests::structs::OverallSummaryMessage;
 use crate::warn::{error_if_snforge_std_not_compatible, warn_if_backtrace_without_panic_hint};
 use crate::{
     ColorOption, ExitStatus, TestArgs, block_number_map::BlockNumberMap,
@@ -9,8 +10,7 @@ use crate::{
 use anyhow::{Context, Result};
 use forge_runner::{CACHE_DIR, test_target_summary::TestTargetSummary};
 use forge_runner::{
-    coverage_api::can_coverage_be_generated,
-    test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
+    coverage_api::can_coverage_be_generated, test_case_summary::AnyTestCaseSummary,
 };
 use foundry_ui::UI;
 use scarb_api::{
@@ -69,11 +69,13 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     )?;
 
     let mut block_number_map = BlockNumberMap::default();
-    let mut all_failed_tests = vec![];
+    let mut all_tests = vec![];
+    let mut total_filtered_count = Some(0);
 
     let workspace_root = &scarb_metadata.workspace.root;
     let cache_dir = workspace_root.join(CACHE_DIR);
     let trace_verbosity = args.trace_verbosity;
+    let packages_len = packages.len();
 
     for package in packages {
         env::set_current_dir(&package.root)?;
@@ -86,12 +88,21 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
             &artifacts_dir_path,
             &ui,
         )?;
-
-        let tests_file_summaries =
+        let result =
             run_for_package(args, &mut block_number_map, trace_verbosity, ui.clone()).await?;
 
-        all_failed_tests.extend(extract_failed_tests(tests_file_summaries));
+        all_tests.extend(result.summaries);
+
+        // Accumulate filtered test counts across packages. When using --exact flag,
+        // result.filtered_count is None, so total_filtered_count becomes None too.
+        total_filtered_count = total_filtered_count
+            .zip(result.filtered_count)
+            .map(|(total, filtered)| total + filtered);
     }
+
+    let overall_summary = &OverallSummaryMessage::new(&all_tests, total_filtered_count);
+    let all_failed_tests: Vec<AnyTestCaseSummary> =
+        extract_failed_tests(all_tests).collect::<Vec<_>>();
 
     FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
 
@@ -100,7 +111,13 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
             block_number_map.get_url_to_latest_block_number().clone(),
         ));
     }
+
     ui.println(&TestsFailureSummaryMessage::new(&all_failed_tests));
+
+    // Print the overall summary only when testing multiple packages
+    if packages_len > 1 {
+        ui.println(overall_summary);
+    }
 
     if args.exact {
         unset_forge_test_filter();
@@ -118,14 +135,8 @@ fn extract_failed_tests(
 ) -> impl Iterator<Item = AnyTestCaseSummary> {
     tests_summaries
         .into_iter()
-        .flat_map(|test_file_summary| test_file_summary.test_case_summaries)
-        .filter(|test_case_summary| {
-            matches!(
-                test_case_summary,
-                AnyTestCaseSummary::Fuzzing(TestCaseSummary::Failed { .. })
-                    | AnyTestCaseSummary::Single(TestCaseSummary::Failed { .. })
-            )
-        })
+        .flat_map(|summary| summary.test_case_summaries)
+        .filter(AnyTestCaseSummary::is_failed)
 }
 
 fn set_forge_test_filter(test_filter: String) {
