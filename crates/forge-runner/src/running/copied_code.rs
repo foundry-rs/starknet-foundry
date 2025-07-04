@@ -26,7 +26,7 @@ use cairo_vm::vm::security::verify_secure_runner;
 use num_traits::{ToPrimitive, Zero};
 use starknet_types_core::felt::Felt;
 
-#[allow(clippy::needless_pass_by_value)]
+#[allow(clippy::needless_pass_by_value, clippy::result_large_err)]
 // Reason copied: Signature change
 /// Runs the runner from the given PC.
 pub(crate) fn run_entry_point<HP: HintProcessor>(
@@ -57,7 +57,11 @@ pub(crate) fn run_entry_point<HP: HintProcessor>(
     Ok(())
 }
 
-#[allow(clippy::items_after_statements, clippy::needless_pass_by_value)]
+#[allow(
+    clippy::items_after_statements,
+    clippy::needless_pass_by_value,
+    clippy::result_large_err
+)]
 // Reason copied: Required by `run_entry_point`
 /// Fills the holes after running the entry point.
 /// Currently only fills the holes in the rc96 segment.

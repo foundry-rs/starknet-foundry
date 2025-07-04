@@ -52,7 +52,7 @@ pub(crate) struct CallInfoWithExecutionData {
 }
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
-#[expect(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines, clippy::result_large_err)]
 pub fn execute_call_entry_point(
     entry_point: &mut CallEntryPoint, // Instead of 'self'
     state: &mut dyn State,
@@ -211,6 +211,7 @@ pub fn execute_call_entry_point(
     // endregion
 }
 
+#[allow(clippy::result_large_err)]
 fn evaluate_execution_result(
     result: ContractClassEntryPointExecutionResult,
     call: ExecutableCallEntryPoint,
@@ -240,6 +241,7 @@ fn evaluate_execution_result(
     }
 }
 
+#[allow(clippy::result_large_err)]
 fn handle_entry_point_execution_error(
     err: EntryPointExecutionErrorWithTrace,
     call: ExecutableCallEntryPoint,
@@ -365,6 +367,7 @@ fn exit_error_call(
 }
 
 // blockifier/src/execution/entry_point.rs:366 (execute_constructor_entry_point)
+#[allow(clippy::result_large_err)]
 pub fn execute_constructor_entry_point(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,

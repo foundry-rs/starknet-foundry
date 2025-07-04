@@ -63,7 +63,6 @@ impl Default for CastConfig {
 }
 
 impl Config for CastConfig {
-    #[must_use]
     fn tool_name() -> &'static str {
         "sncast"
     }

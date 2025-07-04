@@ -107,7 +107,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
         mut input_reader: BufferReader,
         _extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
-        let res = match selector {
+        match selector {
             "call" => {
                 let contract_address = input_reader.read()?;
                 let function_selector = input_reader.read()?;
@@ -262,9 +262,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 Ok(CheatcodeHandlingResult::from_serializable(tx_status_result))
             }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
-        };
-
-        res
+        }
     }
 
     fn override_system_call(

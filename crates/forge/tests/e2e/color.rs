@@ -26,7 +26,7 @@ fn color_always() {
 }
 
 #[test]
-#[ignore] // TODO(2356): Fix this test, compiling of snforge_scarb_plugin is causing issues, but only in CI
+#[ignore = "TODO(2356): Fix this test, compiling of snforge_scarb_plugin is causing issues, but only in CI"]
 fn color_never() {
     let temp = setup_package("simple_package");
     let snapbox = runner_color("never");
