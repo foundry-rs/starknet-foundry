@@ -58,6 +58,45 @@ Note that the arguments must be:
 > User-defined items such as enums and structs should be referred to depending on a way they are defined in ABI.\
 > In general, paths to items have form: `<project-name>::<module-path>::<item-name>`.
 
+### Standalone Serialization
+
+In case you just want to serialize a Cairo expression into calldata for use in other tools, scripts, etc., you can use the `sncast serialize` command.
+
+```shell
+$ sncast utils serialize \
+    --contract-address 0x00351c816183324878714973f3da1a43c1a40d661b8dac5cb69294cc333342ed \
+    --function nested_struct_fn \
+    --arguments 'NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }' \
+    --network sepolia
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Calldata: [0x24, 0x60]
+```
+</details>
+<br>
+
+Serialization can also be performed by passing the path to a file containing the contract ABI, instead of using `--class-hash` or `--contract-address`. This allows the command to run without making a network request to fetch the ABI.
+
+```shell
+$ sncast utils serialize \
+    --abi-file data_transformer_contract_abi.json \
+    --function nested_struct_fn \
+    --arguments 'NestedStructWithField { a: SimpleStruct { a: 0x24 }, b: 96 }' \
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Calldata: [0x24, 0x60]
+```
+</details>
+<br>
+
 ## Supported Expressions
 
 Cast supports most important Cairo corelib types:
