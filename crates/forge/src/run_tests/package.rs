@@ -38,14 +38,15 @@ use std::sync::Arc;
 
 pub struct PackageTestResult {
     pub summaries: Vec<TestTargetSummary>,
-    pub filtered_count: Option<usize>,
+    pub filtered: Option<usize>,
 }
 
 impl PackageTestResult {
-    pub fn new(summaries: Vec<TestTargetSummary>, filtered_count: Option<usize>) -> Self {
+    #[must_use]
+    pub fn new(summaries: Vec<TestTargetSummary>, filtered: Option<usize>) -> Self {
         Self {
             summaries,
-            filtered_count,
+            filtered,
         }
     }
 }

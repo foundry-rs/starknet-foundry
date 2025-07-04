@@ -96,7 +96,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         // Accumulate filtered test counts across packages. When using --exact flag,
         // result.filtered_count is None, so total_filtered_count becomes None too.
         total_filtered_count = total_filtered_count
-            .zip(result.filtered_count)
+            .zip(result.filtered)
             .map(|(total, filtered)| total + filtered);
     }
 

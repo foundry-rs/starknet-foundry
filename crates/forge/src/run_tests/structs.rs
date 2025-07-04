@@ -72,6 +72,7 @@ struct TestsSummary {
 }
 
 impl TestsSummary {
+    #[must_use]
     fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
         let passed = summaries.iter().map(TestTargetSummary::count_passed).sum();
         let failed = summaries.iter().map(TestTargetSummary::count_failed).sum();
@@ -117,6 +118,7 @@ pub struct TestsSummaryMessage(TestsSummary);
 impl TestsSummaryMessage {
     const LABEL: &'static str = "Tests";
 
+    #[must_use]
     pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
         Self(TestsSummary::new(summaries, filtered))
     }
@@ -209,8 +211,9 @@ pub struct OverallSummaryMessage(TestsSummary);
 impl OverallSummaryMessage {
     const LABEL: &'static str = "Tests summary";
 
-    pub fn new(summaries: &[TestTargetSummary], filtered_out: Option<usize>) -> Self {
-        Self(TestsSummary::new(summaries, filtered_out))
+    #[must_use]
+    pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
+        Self(TestsSummary::new(summaries, filtered))
     }
 }
 
@@ -219,7 +222,7 @@ impl Message for OverallSummaryMessage {
         let summary = self.0.format_summary_message(Self::LABEL);
 
         // Add newline to separate summary from previous output
-        format!("\n{}", summary)
+        format!("\n{summary}")
     }
 
     fn json(&self) -> Value {
