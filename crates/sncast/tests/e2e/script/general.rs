@@ -400,7 +400,7 @@ async fn test_run_script_twice_with_state_file_enabled() {
 }
 
 #[tokio::test]
-#[ignore = "TODO find why it was ignored"]
+#[ignore = "TODO(#3519) find why it was ignored"]
 async fn test_state_file_contains_all_failed_txs() {
     let script_dir = copy_script_directory_to_tempdir(
         SCRIPTS_DIR.to_owned() + "/state_file/",
