@@ -9,6 +9,5 @@ mod tree;
 mod verbosity;
 
 pub use contracts_data_store::ContractsDataStore;
-pub use trace::collect::CollectorError;
 pub use trace::types::Trace;
 pub use verbosity::Verbosity;
