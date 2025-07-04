@@ -234,6 +234,7 @@ pub fn call_contract(
     )
 }
 
+#[allow(clippy::result_large_err)]
 pub fn call_contract_raw(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,

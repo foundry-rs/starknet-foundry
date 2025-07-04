@@ -5,6 +5,7 @@ use std::fmt;
 use std::fmt::Display;
 use std::str::FromStr;
 
+#[allow(clippy::struct_field_names)]
 #[derive(CairoDeserialize, CairoSerialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CairoU384 {
     limb_0: u128,

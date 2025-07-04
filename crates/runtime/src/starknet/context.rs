@@ -139,6 +139,7 @@ pub struct SerializableBlockInfo {
     // This has influence on the cost of publishing the data on l1
     pub use_kzg_da: bool,
 }
+#[allow(clippy::struct_field_names)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SerializableGasPrices {
     eth_l1_gas_price: NonzeroGasPrice,
