@@ -252,7 +252,7 @@ pub fn storage_read(
     _remaining_gas: &mut u64,
 ) -> SyscallResult<StorageReadResponse> {
     let original_storage_address = syscall_handler.base.call.storage_address;
-    maybe_modify_storage_address(syscall_handler, cheatnet_state);
+    maybe_modify_storage_address(syscall_handler, cheatnet_state)?;
 
     let value = syscall_handler
         .base
@@ -277,7 +277,7 @@ pub fn storage_write(
     _remaining_gas: &mut u64,
 ) -> SyscallResult<StorageWriteResponse> {
     let original_storage_address = syscall_handler.base.call.storage_address;
-    maybe_modify_storage_address(syscall_handler, cheatnet_state);
+    maybe_modify_storage_address(syscall_handler, cheatnet_state)?;
 
     syscall_handler
         .base
@@ -298,19 +298,33 @@ pub fn storage_write(
 fn maybe_modify_storage_address(
     syscall_handler: &mut SyscallHintProcessor<'_>,
     cheatnet_state: &mut CheatnetState,
-) {
+) -> Result<(), StateError> {
     let contract_address = syscall_handler.storage_address();
 
     if contract_address
         != TryFromHexStr::try_from_hex_str(TEST_ADDRESS).expect("Failed to parse TEST_ADDRESS")
     {
-        return;
+        return Ok(());
     }
 
     let cheated_data = cheatnet_state.get_cheated_data(contract_address);
     if let Some(actual_address) = cheated_data.contract_address {
+        let class_hash = syscall_handler
+            .base
+            .state
+            .get_class_hash_at(actual_address)
+            .expect("get_class_hash_at should never fail");
+
+        if class_hash == ClassHash::default() {
+            return Err(StateError::StateReadError(format!(
+                "Contract at address {actual_address} does not exist"
+            )));
+        }
+
         syscall_handler.base.call.storage_address = actual_address;
     }
+
+    Ok(())
 }
 
 #[derive(Debug)]
