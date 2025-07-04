@@ -18,6 +18,7 @@ pub fn parse_expression(source: &str, db: &SimpleParserDatabase) -> Result<Expr,
         content: source.to_string().into(),
         code_mappings: [].into(),
         kind: FileKind::Expr,
+        original_item_removed: false,
     })
     .intern(db);
 

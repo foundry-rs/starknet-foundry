@@ -4,8 +4,7 @@ use assert_fs::{
     TempDir,
     fixture::{FileTouch, FileWriteStr, PathChild},
 };
-use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::syscalls::hint_processor::SyscallUsage;
+use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsage};
 use cairo_vm::types::builtin_name::BuiltinName;
 use camino::Utf8PathBuf;
 use forge_runner::{
@@ -328,7 +327,7 @@ fn gas_vector_abs_diff(a: &GasVector, b: &GasVector) -> GasVector {
 pub fn assert_syscall(
     result: &[TestTargetSummary],
     test_case_name: &str,
-    syscall: DeprecatedSyscallSelector,
+    syscall: SyscallSelector,
     expected_count: usize,
 ) {
     let test_name_suffix = format!("::{test_case_name}");
