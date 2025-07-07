@@ -176,7 +176,7 @@ fn fork_aliased_decorator() {
             ui,
         ))
         .expect("Runner fail")
-        .summaries;
+        .summaries();
 
     assert_passed(&result);
 }
@@ -268,7 +268,7 @@ fn fork_aliased_decorator_overrding() {
             ui,
         ))
         .expect("Runner fail")
-        .summaries;
+        .summaries();
 
     assert_passed(&result);
 }

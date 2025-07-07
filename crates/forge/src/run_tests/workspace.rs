@@ -88,21 +88,22 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
             &artifacts_dir_path,
             &ui,
         )?;
+
         let result =
             run_for_package(args, &mut block_number_map, trace_verbosity, ui.clone()).await?;
 
-        all_tests.extend(result.summaries);
+        let filtered = result.filtered();
+        all_tests.extend(result.summaries());
 
         // Accumulate filtered test counts across packages. When using --exact flag,
         // result.filtered_count is None, so total_filtered_count becomes None too.
         total_filtered_count = total_filtered_count
-            .zip(result.filtered)
+            .zip(filtered)
             .map(|(total, filtered)| total + filtered);
     }
 
-    let overall_summary = &OverallSummaryMessage::new(&all_tests, total_filtered_count);
-    let all_failed_tests: Vec<AnyTestCaseSummary> =
-        extract_failed_tests(all_tests).collect::<Vec<_>>();
+    let overall_summary = OverallSummaryMessage::new(&all_tests, total_filtered_count);
+    let all_failed_tests: Vec<AnyTestCaseSummary> = extract_failed_tests(all_tests).collect();
 
     FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
 
@@ -116,7 +117,9 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
 
     // Print the overall summary only when testing multiple packages
     if packages_len > 1 {
-        ui.println(overall_summary);
+        // Add newline to separate summary from previous output
+        ui.print_blank_line();
+        ui.println(&overall_summary);
     }
 
     if args.exact {

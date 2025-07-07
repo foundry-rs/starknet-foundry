@@ -87,5 +87,5 @@ pub fn run_test_case(
         ui,
     ))
     .expect("Runner fail")
-    .summaries
+    .summaries()
 }

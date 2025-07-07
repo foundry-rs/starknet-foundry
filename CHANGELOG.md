@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Total test summary when running tests across multiple packages (for example with `--workspace` flag)
+- Total test summary when running tests across multiple packages (for example when running `snforge test --workspace`)
 
 #### Fixed
 

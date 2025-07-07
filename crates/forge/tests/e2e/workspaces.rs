@@ -541,7 +541,7 @@ fn virtual_workspace_inside_nested_package() {
 #[test]
 fn virtual_workspace_for_entire_workspace() {
     let temp = setup_virtual_workspace();
-    let snapbox = test_runner(&temp).arg("--workspace");
+    let snapbox = test_runner(&temp);
 
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains(
@@ -713,10 +713,7 @@ fn root_workspace_for_entire_workspace_with_filter() {
 fn virtual_workspace_for_entire_workspace_with_filter() {
     let temp = setup_virtual_workspace();
 
-    let output = test_runner(&temp)
-        .args(["--workspace", "simple"])
-        .assert()
-        .success();
+    let output = test_runner(&temp).arg("simple").assert().success();
 
     assert_stdout_contains(
         output,

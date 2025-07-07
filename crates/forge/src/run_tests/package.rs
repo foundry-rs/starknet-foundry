@@ -37,8 +37,8 @@ use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
 
 pub struct PackageTestResult {
-    pub summaries: Vec<TestTargetSummary>,
-    pub filtered: Option<usize>,
+    summaries: Vec<TestTargetSummary>,
+    filtered: Option<usize>,
 }
 
 impl PackageTestResult {
@@ -48,6 +48,16 @@ impl PackageTestResult {
             summaries,
             filtered,
         }
+    }
+
+    #[must_use]
+    pub fn filtered(&self) -> Option<usize> {
+        self.filtered
+    }
+
+    #[must_use]
+    pub fn summaries(self) -> Vec<TestTargetSummary> {
+        self.summaries
     }
 }
 

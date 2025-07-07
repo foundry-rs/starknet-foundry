@@ -5,7 +5,7 @@ use forge_runner::{
     package_tests::TestTargetLocation, test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
-use foundry_ui::Message;
+use foundry_ui::{Message, components::labeled::LabeledMessage};
 use serde::Serialize;
 use serde_json::{Value, json};
 use std::fmt::Write;
@@ -91,7 +91,7 @@ impl TestsSummary {
         }
     }
 
-    fn format_summary_message(&self, label: &str) -> String {
+    fn format_summary_message(&self) -> String {
         let filtered = self
             .filtered
             .map_or_else(|| "other".to_string(), |v| v.to_string());
@@ -103,34 +103,36 @@ impl TestsSummary {
         };
 
         format!(
-            "{}: {} passed, {} failed, {} ignored, {filtered} filtered out{interrupted}",
-            style(label).bold(),
-            self.passed,
-            self.failed,
-            self.ignored,
+            "{} passed, {} failed, {} ignored, {filtered} filtered out{interrupted}",
+            self.passed, self.failed, self.ignored,
         )
     }
 }
 
 #[derive(Serialize)]
-pub struct TestsSummaryMessage(TestsSummary);
+pub struct TestsSummaryMessage {
+    summary: TestsSummary,
+}
 
 impl TestsSummaryMessage {
-    const LABEL: &'static str = "Tests";
+    pub const LABEL: &str = "Tests";
 
     #[must_use]
     pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
-        Self(TestsSummary::new(summaries, filtered))
+        Self {
+            summary: TestsSummary::new(summaries, filtered),
+        }
     }
 }
 
 impl Message for TestsSummaryMessage {
     fn text(&self) -> String {
-        self.0.format_summary_message(Self::LABEL)
+        let styled_label = style(&Self::LABEL).bold().to_string();
+        LabeledMessage::new(&styled_label, &self.summary.format_summary_message()).text()
     }
 
     fn json(&self) -> Value {
-        json!(self.0)
+        json!(self)
     }
 }
 
@@ -206,26 +208,28 @@ impl Message for LatestBlocksNumbersMessage {
 }
 
 #[derive(Serialize)]
-pub struct OverallSummaryMessage(TestsSummary);
+pub struct OverallSummaryMessage {
+    summary: TestsSummary,
+}
 
 impl OverallSummaryMessage {
-    const LABEL: &'static str = "Tests summary";
+    pub const LABEL: &str = "Tests summary";
 
     #[must_use]
     pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
-        Self(TestsSummary::new(summaries, filtered))
+        Self {
+            summary: TestsSummary::new(summaries, filtered),
+        }
     }
 }
 
 impl Message for OverallSummaryMessage {
     fn text(&self) -> String {
-        let summary = self.0.format_summary_message(Self::LABEL);
-
-        // Add newline to separate summary from previous output
-        format!("\n{summary}")
+        let styled_label = style(&Self::LABEL).bold().to_string();
+        LabeledMessage::new(&styled_label, &self.summary.format_summary_message()).text()
     }
 
     fn json(&self) -> Value {
-        json!(self.0)
+        json!(self)
     }
 }
