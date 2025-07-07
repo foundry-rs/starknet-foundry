@@ -16,13 +16,15 @@ use starknet::{
     },
 };
 use starknet_types_core::felt::Felt;
-use std::{collections::HashMap, env, ffi::OsStr, fmt, fs, path::PathBuf};
+use std::{collections::HashMap, env, ffi::OsStr, fs, path::PathBuf};
 use url::Url;
 use walkdir::WalkDir;
 
 use super::explorer::{ContractIdentifier, VerificationInterface};
 
 const CAIRO_EXT: &str = "cairo";
+const VERIFY_ENDPOINT: &str = "/class-verify";
+const STATUS_ENDPOINT: &str = "/class-verify/job";
 
 pub struct Voyager<'a> {
     network: Network,
@@ -51,18 +53,13 @@ pub struct VerificationJobDispatch {
     job_id: String,
 }
 
-fn dependency_path<S>(name: S, path: S) -> anyhow::Error
-where
-    S: fmt::Display,
-{
-    anyhow!("Couldn't parse {name} path: {path}")
-}
+#[derive(Debug, thiserror::Error)]
+pub enum VoyagerApiError {
+    #[error("Failed to parse {name} path: {path}")]
+    DependencyPathError { name: String, path: String },
 
-fn metadata_error<S>(name: S, path: S) -> anyhow::Error
-where
-    S: fmt::Display,
-{
-    anyhow!("Scarb metadata failed for {name}: {path}")
+    #[error("Scarb metadata failed for {name}: {path}")]
+    MetadataError { name: String, path: String },
 }
 
 fn gather_packages(metadata: &Metadata, packages: &mut Vec<PackageMetadata>) -> Result<()> {
@@ -84,13 +81,20 @@ fn gather_packages(metadata: &Metadata, packages: &mut Vec<PackageMetadata>) -> 
     for package in &workspace_packages {
         for dependency in &package.dependencies {
             let name = &dependency.name;
-            let url = Url::parse(&dependency.source.repr)
-                .map_err(|_| dependency_path(name.clone(), dependency.source.repr.clone()))?;
+            let url = Url::parse(&dependency.source.repr).map_err(|_| {
+                VoyagerApiError::DependencyPathError {
+                    name: name.clone(),
+                    path: dependency.source.repr.clone(),
+                }
+            })?;
 
             if url.scheme().starts_with("path") {
-                let path = url
-                    .to_file_path()
-                    .map_err(|()| dependency_path(name.clone(), dependency.source.repr.clone()))?;
+                let path =
+                    url.to_file_path()
+                        .map_err(|()| VoyagerApiError::DependencyPathError {
+                            name: name.clone(),
+                            path: dependency.source.repr.clone(),
+                        })?;
                 dependencies.insert(name.clone(), path);
             }
         }
@@ -109,7 +113,10 @@ fn gather_packages(metadata: &Metadata, packages: &mut Vec<PackageMetadata>) -> 
             .json()
             .manifest_path(manifest)
             .exec()
-            .map_err(|_| metadata_error(name.clone(), manifest.to_string_lossy().to_string()))?;
+            .map_err(|_| VoyagerApiError::MetadataError {
+                name: name.clone(),
+                path: manifest.to_string_lossy().to_string(),
+            })?;
         gather_packages(&new_meta, packages)?;
     }
 
@@ -332,7 +339,12 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
                 .try_collect()?,
         };
 
-        let url = format!("{}/class-verify/{:#068x}", self.gen_explorer_url(), hash);
+        let url = format!(
+            "{}{}/{:#064x}",
+            self.gen_explorer_url(),
+            VERIFY_ENDPOINT,
+            hash
+        );
 
         let response = client
             .post(url)
@@ -344,9 +356,10 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
         match response.status() {
             StatusCode::OK => {
                 let message = format!(
-                    "{} submitted for verification, you can query the status at: {}/class-verify/job/{}",
+                    "{} submitted for verification, you can query the status at: {}{}/{}",
                     contract_name.clone(),
                     self.gen_explorer_url(),
+                    STATUS_ENDPOINT,
                     response.json::<VerificationJobDispatch>().await?.job_id,
                 );
                 Ok(VerifyResponse { message })

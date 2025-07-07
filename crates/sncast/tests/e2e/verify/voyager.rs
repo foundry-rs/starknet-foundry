@@ -35,8 +35,7 @@ async fn test_happy_case_contract_address() {
         .await;
 
     let job_id = "2b206064-ffee-4955-8a86-1ff3b854416a";
-    let class_hash: Felt =
-        Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+    let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
     Mock::given(method("POST"))
         .and(path(format!("class-verify/{class_hash:#068x}")))
@@ -81,8 +80,7 @@ async fn test_happy_case_class_hash() {
     // No need to mock any RPC calls
 
     let job_id = "2b206064-ffee-4955-8a86-1ff3b854416a";
-    let class_hash: Felt =
-        Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+    let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
     Mock::given(method("POST"))
         .and(path(format!("class-verify/{class_hash:#068x}")))
@@ -140,8 +138,7 @@ async fn test_happy_case_with_confirm_verification_flag() {
         .await;
 
     let job_id = "2b206064-ffee-4955-8a86-1ff3b854416a";
-    let class_hash: Felt =
-        Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+    let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
     Mock::given(method("POST"))
         .and(path(format!("class-verify/{class_hash:#068x}")))
@@ -199,8 +196,7 @@ async fn test_failed_verification_contract_address() {
         .await;
 
     let error = "some error message";
-    let class_hash: Felt =
-        Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+    let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
     Mock::given(method("POST"))
         .and(path(format!("class-verify/{class_hash:#068x}")))
@@ -255,8 +251,7 @@ async fn test_failed_verification_class_hash() {
     // No need to mock any RPC calls
 
     let error = "some error message";
-    let class_hash: Felt =
-        Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+    let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
     Mock::given(method("POST"))
         .and(path(format!("class-verify/{class_hash:#068x}")))
@@ -327,8 +322,7 @@ async fn test_failed_class_hash_lookup() {
         .await;
 
     // Voyager API should not be called since RPC call fails
-    let class_hash: Felt =
-        Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+    let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
     Mock::given(method("POST"))
         .and(path(format!("class-verify/{class_hash:#068x}")))
@@ -395,8 +389,7 @@ async fn test_virtual_workspaces() {
         .await;
 
     let job_id = "2b206064-ffee-4955-8a86-1ff3b854416a";
-    let class_hash: Felt =
-        Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+    let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
     Mock::given(method("POST"))
         .and(path(format!("class-verify/{class_hash:#068x}")))
@@ -443,8 +436,7 @@ async fn test_contract_name_not_found() {
     // So no RPC mocks needed
 
     let job_id = "2b206064-ffee-4955-8a86-1ff3b854416a";
-    let class_hash: Felt =
-        Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+    let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
     let expected_body = json!({
         "project_dir_path": ".",
