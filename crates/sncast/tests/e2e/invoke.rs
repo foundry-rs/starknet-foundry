@@ -219,7 +219,6 @@ fn test_wrong_function_name() {
     );
 }
 
-// TODO(#3116): Before, the error message included "Failed to deserialize param #2", but now it's an undecoded felt.
 #[test]
 fn test_wrong_calldata() {
     let args = vec![
