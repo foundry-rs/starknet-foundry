@@ -91,7 +91,7 @@ impl VerificationInterface<'_> for WalnutVerificationInterface {
             Ok(VerifyResponse { message })
         } else {
             let message = api_res.text().await.context("Failed to verify contract")?;
-            Ok(VerifyResponse { message })
+            Err(anyhow::anyhow!("{}", message))
         }
     }
 

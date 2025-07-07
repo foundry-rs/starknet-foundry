@@ -48,8 +48,9 @@ $ sncast \
 
     Are you sure you want to proceed? (Y/n): Y
 
-command: verify
-message: Contract verification has started. You can check the verification status at the following link: https://app.walnut.dev/verification/status/77f1d905-fdb4-4280-b7d6-57cd029d1259.
+Success: Verification completed
+
+Contract successfully verified
 ```
 
 </details>
@@ -77,8 +78,9 @@ $ sncast \
 
     Are you sure you want to proceed? (Y/n): Y
 
-command: verify
-message: Contract verification has started. You can check the verification status at the following link: https://api.voyager.online/beta/class-verify/job/{job_id}.
+Success: Verification completed
+
+SimpleBalance submitted for verification, you can query the status at: https://sepolia-api.voyager.online/beta/class-verify/job/2b206064-ffee-4955-8a86-1ff3b854416a
 ```
 
 </details>
