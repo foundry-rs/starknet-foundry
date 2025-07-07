@@ -247,7 +247,7 @@ fn test_wrong_calldata() {
         output,
         indoc! {r"
         Command: deploy
-        Error: Transaction execution error [..] Input too long for arguments[..]
+        Error: Transaction execution error [..]Input too long for arguments[..]
         "},
     );
 }
