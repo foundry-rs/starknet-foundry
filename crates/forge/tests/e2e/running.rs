@@ -1054,7 +1054,6 @@ fn detailed_resources_mixed_resources() {
         indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
-        [WARNING] When tracking sierra gas and executing contracts with a Sierra version older than 1.7.0, syscall related resources may be incorrectly reported to the wrong resource type in the output of `--detailed-resources` flag.
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
         [PASS] forking::tests::test_track_resources [..]
