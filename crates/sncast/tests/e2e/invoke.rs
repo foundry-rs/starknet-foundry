@@ -244,7 +244,7 @@ fn test_wrong_calldata() {
         output,
         indoc! {r"
         Command: invoke
-        Error: Transaction execution error [..]0x4661696c656420746f20646573657269616c697a6520706172616d202332[..]
+        Error: Transaction execution error [..]Failed to deserialize param #2[..]
         "},
     );
 }

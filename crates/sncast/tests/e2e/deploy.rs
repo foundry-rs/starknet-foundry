@@ -247,7 +247,7 @@ fn test_wrong_calldata() {
         output,
         indoc! {r"
         Command: deploy
-        Error: Transaction execution error [..]
+        Error: Transaction execution error [..] Input too long for arguments[..]
         "},
     );
 }
@@ -298,7 +298,7 @@ fn test_contract_already_deployed() {
         output,
         indoc! {r"
         Command: deploy
-        Error: Transaction execution error [..]
+        Error: Transaction execution error [..] contract already deployed at address [..]
         "},
     );
 }
