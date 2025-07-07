@@ -156,7 +156,6 @@ pub struct RunCompleted {
     pub(crate) fuzzer_args: Vec<String>,
 }
 
-#[allow(clippy::too_many_lines)]
 pub struct RunError {
     pub(crate) error: Box<CairoRunError>,
     pub(crate) call_trace: Rc<RefCell<CallTrace>>,

@@ -23,6 +23,7 @@ use starknet_types_core::felt::Felt;
 use super::entry_point::execute_call_entry_point;
 
 // blockifier/src/execution/syscalls/hint_processor.rs:541 (execute_inner_call)
+#[expect(clippy::result_large_err)]
 pub fn execute_inner_call(
     call: &mut CallEntryPoint,
     vm: &mut VirtualMachine,
@@ -82,7 +83,7 @@ pub fn execute_inner_call(
 }
 
 // blockifier/src/execution/syscalls/hint_processor.rs:577 (execute_library_call)
-#[expect(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments, clippy::result_large_err)]
 pub fn execute_library_call(
     syscall_handler: &mut SyscallHintProcessor<'_>,
     cheatnet_state: &mut CheatnetState,
