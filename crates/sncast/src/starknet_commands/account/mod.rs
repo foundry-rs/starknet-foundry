@@ -194,6 +194,7 @@ fn generate_add_profile_message(
     }
 }
 
+#[allow(clippy::too_many_lines)]
 pub async fn account(
     account: Account,
     config: CastConfig,
