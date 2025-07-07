@@ -82,13 +82,13 @@ impl GasStatistics {
         }
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(clippy::cast_precision_loss)]
     fn mean(gas_usages: &[u64]) -> f64 {
         let sum: f64 = gas_usages.iter().map(|&x| x as f64).sum();
         sum / gas_usages.len() as f64
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(clippy::cast_precision_loss)]
     fn std_deviation(mean: f64, gas_usages: &[u64]) -> f64 {
         let sum_squared_diff = gas_usages
             .iter()
@@ -170,7 +170,7 @@ pub enum TestCaseSummary<T: TestType> {
 
 #[derive(Debug)]
 // We allow large enum variant because `Single` is the bigger variant and it is used most often
-#[allow(clippy::large_enum_variant)]
+#[expect(clippy::large_enum_variant)]
 pub enum AnyTestCaseSummary {
     Fuzzing(TestCaseSummary<Fuzzing>),
     Single(TestCaseSummary<Single>),

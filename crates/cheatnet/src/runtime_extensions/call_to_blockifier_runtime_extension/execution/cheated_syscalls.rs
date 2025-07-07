@@ -35,7 +35,7 @@ use starknet_api::{
     transaction::fields::Calldata,
 };
 
-#[allow(clippy::result_large_err)]
+#[expect(clippy::result_large_err)]
 pub fn get_execution_info_syscall(
     _request: EmptyRequest,
     vm: &mut VirtualMachine,
@@ -55,7 +55,7 @@ pub fn get_execution_info_syscall(
 }
 
 // blockifier/src/execution/syscalls/mod.rs:222 (deploy_syscall)
-#[allow(clippy::result_large_err)]
+#[expect(clippy::result_large_err)]
 pub fn deploy_syscall(
     request: DeployRequest,
     vm: &mut VirtualMachine,
@@ -114,7 +114,7 @@ pub fn deploy_syscall(
 }
 
 // blockifier/src/execution/execution_utils.rs:217 (execute_deployment)
-#[allow(clippy::result_large_err)]
+#[expect(clippy::result_large_err)]
 pub fn execute_deployment(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
@@ -146,7 +146,7 @@ pub fn execute_deployment(
 }
 
 // blockifier/src/execution/syscalls/mod.rs:407 (library_call)
-#[allow(clippy::result_large_err)]
+#[expect(clippy::result_large_err)]
 pub fn library_call_syscall(
     request: LibraryCallRequest,
     vm: &mut VirtualMachine,
@@ -180,7 +180,7 @@ pub fn library_call_syscall(
 }
 
 // blockifier/src/execution/syscalls/mod.rs:157 (call_contract)
-#[allow(clippy::result_large_err)]
+#[expect(clippy::result_large_err)]
 pub fn call_contract_syscall(
     request: CallContractRequest,
     vm: &mut VirtualMachine,
@@ -225,7 +225,7 @@ pub fn call_contract_syscall(
     // endregion
 }
 
-#[allow(clippy::needless_pass_by_value, clippy::result_large_err)]
+#[expect(clippy::needless_pass_by_value, clippy::result_large_err)]
 pub fn get_block_hash_syscall(
     request: GetBlockHashRequest,
     _vm: &mut VirtualMachine,
