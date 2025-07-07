@@ -16,7 +16,6 @@ use shared::auto_completions::{Completion, generate_completions};
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
-use sncast::helpers::data_transformer::transform_response;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
@@ -27,6 +26,7 @@ use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::ResponseError;
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::explorer_link::{ExplorerLinksMessage, block_explorer_link_if_allowed};
+use sncast::response::transformed_call::transform_response;
 use sncast::{
     ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
     get_contract_class,
