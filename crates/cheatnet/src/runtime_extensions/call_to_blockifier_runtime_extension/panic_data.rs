@@ -104,7 +104,7 @@ mod test {
         assert_eq!(try_extract_panic_data(data), expected.cloned());
     }
 
-    #[expect(clippy::needless_pass_by_value)]
+    #[allow(clippy::needless_pass_by_value)]
     #[test_case(indoc!(
                     r#"
                     Error at pc=0:107:
