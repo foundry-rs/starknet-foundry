@@ -1,5 +1,5 @@
 [package]
-name = "testing_complex_example"
+name = "testing_smart_contracts_constructor_params"
 version = "0.1.0"
 edition = "2024_07"
 

@@ -187,11 +187,11 @@ Below, we will show 2nd option.
 Below contract simulates a basic shopping cart. Its constrcutor, takes initial products which are vector of `Product` structs.
 
 ```rust
-{{#include ../../listings/testing_complex_example/src/lib.cairo}}
+{{#include ../../listings/testing_smart_contracts_constructor_params/src/lib.cairo}}
 ```
 
 And the test itself:
 
 ```rust
-{{#include ../../listings/testing_complex_example/tests/test_contract.cairo}}
+{{#include ../../listings/testing_smart_contracts_constructor_params/tests/test_contract.cairo}}
 ```

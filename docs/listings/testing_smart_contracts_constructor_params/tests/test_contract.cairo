@@ -1,5 +1,7 @@
 use snforge_std::{ContractClassTrait, DeclareResult, DeclareResultTrait, declare};
-use testing_complex_example::{IShoppingCartDispatcher, IShoppingCartDispatcherTrait, Product};
+use testing_smart_contracts_constructor_params::{
+    IShoppingCartDispatcher, IShoppingCartDispatcherTrait, Product,
+};
 
 #[test]
 fn test_initial_cart_non_empty() {
