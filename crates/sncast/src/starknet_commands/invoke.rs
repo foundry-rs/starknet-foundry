@@ -41,7 +41,6 @@ pub struct Invoke {
     pub rpc: RpcArgs,
 }
 
-#[expect(clippy::too_many_lines)]
 #[expect(clippy::too_many_arguments)]
 pub async fn invoke(
     contract_address: Felt,
