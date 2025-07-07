@@ -173,3 +173,25 @@ You also could skip the de-serialization of the `panic_data`, and not use `try_d
 Sometimes the test code failing can be a desired behavior.
 Instead of manually handling it, you can simply mark your test as `#[should_panic(...)]`.
 [See here](./testing.md#expected-failures) for more details.
+
+## Contracts With Constructor Params
+
+The previous example was a basic one. However, sometimes you may need to pass arguments to contract's constructor. This can be done in 2 ways:
+- With `serde` serialization
+- With "typed deployer" (available since Cairo 2.12)
+
+Below, we will show 2nd option.
+
+## Test Contract
+
+Below contract simulates a basic shopping cart. Its constrcutor, takes initial products which are vector of `Product` structs.
+
+```rust
+{{#include ../../listings/testing_complex_example/src/lib.cairo}}
+```
+
+And the test itself:
+
+```rust
+{{#include ../../listings/testing_complex_example/tests/test_contract.cairo}}
+```
