@@ -7,4 +7,5 @@ pub mod multicall;
 pub mod script;
 pub mod show_config;
 pub mod tx_status;
+pub mod utils;
 pub mod verify;

@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Added
+
+- `sncast utils serialize` command to serialize Cairo expressions into calldata
+
 #### Changed
 
 - Improved commands output readability with colors and simplified layout.
