@@ -4,6 +4,7 @@ use data_transformer::reverse_transform_output;
 use starknet::core::types::{ContractClass, contract::AbiEntry};
 use starknet_types_core::felt::Felt;
 
+#[must_use]
 pub fn transform_response(
     result: &Result<CallResponse>,
     contract_class: &ContractClass,
