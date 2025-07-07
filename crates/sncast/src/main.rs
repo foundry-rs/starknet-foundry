@@ -1,46 +1,41 @@
+use crate::starknet_commands::deploy::DeployArguments;
+use crate::starknet_commands::multicall;
+use crate::starknet_commands::script::run_script_command;
 use crate::starknet_commands::utils::{self, Utils};
 use crate::starknet_commands::{
     account, account::Account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke,
     multicall::Multicall, script::Script, show_config::ShowConfig, tx_status::TxStatus,
 };
 use anyhow::{Context, Result, bail};
+use camino::Utf8PathBuf;
+use clap::{CommandFactory, Parser, Subcommand};
+use configuration::load_config;
 use data_transformer::{reverse_transform_output, transform};
 use foundry_ui::{Message, UI};
-use sncast::helpers::account::generate_account_name;
+use shared::auto_completions::{Completion, generate_completions};
+use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
+use sncast::helpers::configuration::CastConfig;
+use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use sncast::helpers::output_format::output_format_from_json_flag;
+use sncast::helpers::scarb_utils::{
+    BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
+};
 use sncast::response::call::CallResponse;
 use sncast::response::cast_message::SncastMessage;
 use sncast::response::command::CommandResponse;
 use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::ResponseError;
+use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::explorer_link::{ExplorerLinksMessage, block_explorer_link_if_allowed};
 use sncast::response::transformed_call::TransformedCallResponse;
-use std::io;
-use std::io::IsTerminal;
-
-use crate::starknet_commands::deploy::DeployArguments;
-use camino::Utf8PathBuf;
-use clap::{CommandFactory, Parser, Subcommand};
-use configuration::load_config;
-use shared::auto_completions::{Completion, generate_completions};
-use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
-use sncast::helpers::configuration::CastConfig;
-use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
-use sncast::helpers::interactive::prompt_to_add_account_as_default;
-use sncast::helpers::scarb_utils::{
-    BuildConfig, assert_manifest_path_exists, build, build_and_load_artifacts,
-    get_package_metadata, get_scarb_metadata_with_deps,
-};
-use sncast::response::errors::handle_starknet_command_error;
 use sncast::{
-    ValidatedWaitParams, WaitForTx, chain_id_to_network_name, get_account, get_block_id,
-    get_chain_id, get_class_hash_by_address, get_contract_class, get_default_state_file_name,
+    ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
+    get_contract_class,
 };
 use starknet::core::types::ContractClass;
 use starknet::core::types::contract::AbiEntry;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
-use starknet_commands::account::list::AccountsListMessage;
 use starknet_commands::verify::Verify;
 use starknet_types_core::felt::Felt;
 use tokio::runtime::Runtime;
@@ -223,7 +218,6 @@ fn main() -> Result<()> {
         run_script_command(&cli, runtime, script, &ui)
     } else {
         let config = get_cast_config(&cli, &ui)?;
-
         runtime.block_on(run_async_command(cli, config, &ui))
     }
 }
@@ -434,197 +428,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             Ok(())
         }
 
-        Commands::Utils(utils) => match utils.command {
-            utils::Commands::Serialize(serialize) => {
-                let result = starknet_commands::utils::serialize::serialize(serialize, config, ui)
-                    .await
-                    .map_err(handle_starknet_command_error)?;
-
-                process_command_result("serialize", Ok(result), ui, None);
-
-                Ok(())
-            }
-        },
+        Commands::Utils(utils) => utils::utils(utils, config, ui).await,
 
         Commands::Multicall(multicall) => {
-            match &multicall.command {
-                starknet_commands::multicall::Commands::New(new) => {
-                    if let Some(output_path) = &new.output_path {
-                        let result = starknet_commands::multicall::new::write_empty_template(
-                            output_path,
-                            new.overwrite,
-                        );
-
-                        process_command_result("multicall new", result, ui, None);
-                    } else {
-                        ui.println(&DEFAULT_MULTICALL_CONTENTS);
-                    }
-                }
-                starknet_commands::multicall::Commands::Run(run) => {
-                    let provider = run.rpc.get_provider(&config, ui).await?;
-
-                    let account = get_account(
-                        &config.account,
-                        &config.accounts_file,
-                        &provider,
-                        config.keystore,
-                    )
-                    .await?;
-                    let result = starknet_commands::multicall::run::run(
-                        run.clone(),
-                        &account,
-                        wait_config,
-                        ui,
-                    )
-                    .await;
-
-                    let block_explorer_link = block_explorer_link_if_allowed(
-                        &result,
-                        provider.chain_id().await?,
-                        config.show_explorer_links,
-                        config.block_explorer,
-                    );
-                    process_command_result("multicall run", result, ui, block_explorer_link);
-                }
-            }
-            Ok(())
+            multicall::multicall(multicall, config, ui, wait_config).await
         }
 
-        Commands::Account(account) => match account.command {
-            account::Commands::Import(import) => {
-                let provider = import.rpc.get_provider(&config, ui).await?;
-                let result = account::import::import(
-                    import.name.clone(),
-                    &config.accounts_file,
-                    &provider,
-                    &import,
-                )
-                .await;
-
-                let run_interactive_prompt =
-                    !import.silent && result.is_ok() && io::stdout().is_terminal();
-
-                if run_interactive_prompt {
-                    if let Some(account_name) = result.as_ref().ok().map(|r| r.account_name.clone())
-                    {
-                        if let Err(err) = prompt_to_add_account_as_default(account_name.as_str()) {
-                            // TODO(#3436)
-                            ui.eprintln(&format!(
-                                "Error: Failed to launch interactive prompt: {err}"
-                            ));
-                        }
-                    }
-                }
-
-                process_command_result("account import", result, ui, None);
-                Ok(())
-            }
-
-            account::Commands::Create(create) => {
-                let provider = create.rpc.get_provider(&config, ui).await?;
-
-                let chain_id = get_chain_id(&provider).await?;
-                let account = if config.keystore.is_none() {
-                    create
-                        .name
-                        .clone()
-                        .unwrap_or_else(|| generate_account_name(&config.accounts_file).unwrap())
-                } else {
-                    config.account.clone()
-                };
-                let result = starknet_commands::account::create::create(
-                    &account,
-                    &config.accounts_file,
-                    config.keystore,
-                    &provider,
-                    chain_id,
-                    &create,
-                )
-                .await;
-
-                let block_explorer_link = block_explorer_link_if_allowed(
-                    &result,
-                    provider.chain_id().await?,
-                    config.show_explorer_links,
-                    config.block_explorer,
-                );
-
-                process_command_result("account create", result, ui, block_explorer_link);
-
-                Ok(())
-            }
-
-            account::Commands::Deploy(deploy) => {
-                let provider = deploy.rpc.get_provider(&config, ui).await?;
-
-                let fee_args = deploy.fee_args.clone();
-
-                let chain_id = get_chain_id(&provider).await?;
-                let keystore_path = config.keystore.clone();
-                let result = starknet_commands::account::deploy::deploy(
-                    &provider,
-                    config.accounts_file,
-                    &deploy,
-                    chain_id,
-                    wait_config,
-                    &config.account,
-                    keystore_path,
-                    fee_args,
-                    ui,
-                )
-                .await;
-
-                let run_interactive_prompt =
-                    !deploy.silent && result.is_ok() && io::stdout().is_terminal();
-
-                if config.keystore.is_none() && run_interactive_prompt {
-                    if let Err(err) = prompt_to_add_account_as_default(
-                        &deploy
-                            .name
-                            .expect("Must be provided if not using a keystore"),
-                    ) {
-                        // TODO(#3436)
-                        ui.eprintln(&format!(
-                            "Error: Failed to launch interactive prompt: {err}"
-                        ));
-                    }
-                }
-
-                let block_explorer_link = block_explorer_link_if_allowed(
-                    &result,
-                    provider.chain_id().await?,
-                    config.show_explorer_links,
-                    config.block_explorer,
-                );
-                process_command_result("account deploy", result, ui, block_explorer_link);
-
-                Ok(())
-            }
-
-            account::Commands::Delete(delete) => {
-                let network_name =
-                    starknet_commands::account::delete::get_network_name(&delete, &config, ui)
-                        .await?;
-
-                let result = starknet_commands::account::delete::delete(
-                    &delete.name,
-                    &config.accounts_file,
-                    &network_name,
-                    delete.yes,
-                );
-
-                process_command_result("account delete", result, ui, None);
-                Ok(())
-            }
-
-            account::Commands::List(options) => {
-                ui.println(&AccountsListMessage::new(
-                    config.accounts_file,
-                    options.display_private_keys,
-                )?);
-                Ok(())
-            }
-        },
+        Commands::Account(account) => account::account(account, config, ui, wait_config).await,
 
         Commands::ShowConfig(show) => {
             let provider = show.rpc.get_provider(&config, ui).await.ok();
@@ -686,73 +496,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Script(_) => unreachable!(),
     }
-}
-
-fn run_script_command(cli: &Cli, runtime: Runtime, script: &Script, ui: &UI) -> Result<()> {
-    match &script.command {
-        starknet_commands::script::Commands::Init(init) => {
-            let result = starknet_commands::script::init::init(init, ui);
-            process_command_result("script init", result, ui, None);
-        }
-        starknet_commands::script::Commands::Run(run) => {
-            let manifest_path = assert_manifest_path_exists()?;
-            let package_metadata = get_package_metadata(&manifest_path, &run.package)?;
-
-            let config = get_cast_config(cli, ui)?;
-
-            let provider = runtime.block_on(run.rpc.get_provider(&config, ui))?;
-
-            let mut artifacts = build_and_load_artifacts(
-                &package_metadata,
-                &BuildConfig {
-                    scarb_toml_path: manifest_path.clone(),
-                    json: cli.json,
-                    profile: cli.profile.clone().unwrap_or("dev".to_string()),
-                },
-                true,
-                ui,
-            )
-            .expect("Failed to build artifacts");
-            // TODO(#2042): remove duplicated compilation
-            build(
-                &package_metadata,
-                &BuildConfig {
-                    scarb_toml_path: manifest_path.clone(),
-                    json: cli.json,
-                    profile: "dev".to_string(),
-                },
-                "dev",
-            )
-            .expect("Failed to build script");
-            let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;
-
-            let chain_id = runtime.block_on(get_chain_id(&provider))?;
-            let state_file_path = if run.no_state_file {
-                None
-            } else {
-                Some(package_metadata.root.join(get_default_state_file_name(
-                    &run.script_name,
-                    &chain_id_to_network_name(chain_id),
-                )))
-            };
-
-            let result = starknet_commands::script::run::run(
-                &run.script_name,
-                &metadata_with_deps,
-                &package_metadata,
-                &mut artifacts,
-                &provider,
-                runtime,
-                &config,
-                state_file_path,
-                ui,
-            );
-
-            process_command_result("script run", result, ui, None);
-        }
-    }
-
-    Ok(())
 }
 
 fn config_with_cli(config: &mut CastConfig, cli: &Cli) {
