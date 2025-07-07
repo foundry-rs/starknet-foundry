@@ -10,24 +10,23 @@ use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
 use configuration::load_config;
-use data_transformer::{reverse_transform_output, transform};
+use data_transformer::transform;
 use foundry_ui::{Message, UI};
 use shared::auto_completions::{Completion, generate_completions};
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
+use sncast::helpers::data_transformer::transform_response;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
 };
-use sncast::response::call::CallResponse;
 use sncast::response::cast_message::SncastMessage;
 use sncast::response::command::CommandResponse;
 use sncast::response::declare::DeclareResponse;
 use sncast::response::errors::ResponseError;
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::explorer_link::{ExplorerLinksMessage, block_explorer_link_if_allowed};
-use sncast::response::transformed_call::TransformedCallResponse;
 use sncast::{
     ValidatedWaitParams, WaitForTx, get_account, get_block_id, get_class_hash_by_address,
     get_contract_class,
@@ -542,33 +541,6 @@ fn get_cast_config(cli: &Cli, ui: &UI) -> Result<CastConfig> {
 
     config_with_cli(&mut combined_config, cli);
     Ok(combined_config)
-}
-
-fn transform_response(
-    result: &Result<CallResponse>,
-    contract_class: &ContractClass,
-    selector: &Felt,
-) -> Option<TransformedCallResponse> {
-    let Ok(CallResponse { response, .. }) = result else {
-        return None;
-    };
-
-    if response.is_empty() {
-        return None;
-    }
-
-    let ContractClass::Sierra(sierra_class) = contract_class else {
-        return None;
-    };
-
-    let abi: Vec<AbiEntry> = serde_json::from_str(sierra_class.abi.as_str()).ok()?;
-
-    let transformed_response = reverse_transform_output(response, &abi, selector).ok()?;
-
-    Some(TransformedCallResponse {
-        response_raw: response.clone(),
-        response: transformed_response,
-    })
 }
 
 fn process_command_result<T>(

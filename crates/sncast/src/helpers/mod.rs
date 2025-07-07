@@ -4,6 +4,7 @@ pub mod braavos;
 pub mod config;
 pub mod configuration;
 pub mod constants;
+pub mod data_transformer;
 pub mod fee;
 pub mod interactive;
 pub mod output_format;
