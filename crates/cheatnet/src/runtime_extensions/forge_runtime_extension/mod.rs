@@ -746,7 +746,7 @@ fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
     gas_consumed
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResources {
     let mut execution_resources = top_call.borrow().used_execution_resources.clone();
     for nested_call in &top_call.borrow().nested_calls {
