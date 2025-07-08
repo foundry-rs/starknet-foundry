@@ -37,6 +37,7 @@ pub struct Body {
     pub compiler_version: semver::Version,
     pub scarb_version: semver::Version,
     pub project_dir_path: Utf8PathBuf,
+    #[serde(rename = "name")]
     pub contract_name: String,
     pub package_name: String,
     pub license: Option<String>,
