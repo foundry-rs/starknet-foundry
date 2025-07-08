@@ -205,7 +205,7 @@ impl Voyager<'_> {
 
         let mut sources: Vec<Utf8PathBuf> = vec![];
         for package in &packages {
-            let mut package_sources = package_sources(package)?;
+            let mut package_sources = package_source_files(package)?;
             sources.append(&mut package_sources);
         }
 

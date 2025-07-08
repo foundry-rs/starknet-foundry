@@ -47,7 +47,7 @@ pub struct Verify {
 
     /// The network on which block explorer will do the verification
     #[arg(short, long, value_enum)]
-    pub network: Network,
+    pub network: Option<Network>,
 
     /// Assume "yes" as answer to confirmation prompt and run non-interactively
     #[arg(long, default_value = "false")]
@@ -95,18 +95,20 @@ pub async fn verify(
         url,
     } = args;
 
-    let free_rpc_provider = network.url(&FreeProvider::semi_random());
-    let rpc_url = url.map_or_else(
-        || {
-            let url = if config.url.is_empty() {
-                &free_rpc_provider
+    let url_provided = url.is_some();
+    let rpc_url = match url {
+        Some(url) => url,
+        None => {
+            if config.url.is_empty() {
+                let network =
+                    network.ok_or_else(|| anyhow!("Either --network or --url must be provided"))?;
+                let free_rpc_provider = network.url(&FreeProvider::semi_random());
+                Url::parse(&free_rpc_provider)?
             } else {
-                &config.url
-            };
-            Url::parse(url)
-        },
-        Ok,
-    )?;
+                Url::parse(&config.url)?
+            }
+        }
+    };
     let provider = get_provider(rpc_url.as_str())?;
 
     // Let's ask confirmation
@@ -141,6 +143,20 @@ pub async fn verify(
 
         _ => {
             unreachable!("Exactly one of class_hash or contract_address must be provided.");
+        }
+    };
+
+    // If --url is provided but --network is not, default to sepolia
+    // If neither is provided, the error is already handled above in rpc_url logic
+    let network = match (network, url_provided) {
+        (Some(network), _) => network,
+        (None, true) => Network::Sepolia, // --url provided but no --network
+        (None, false) => {
+            // This case should be handled by the rpc_url logic above, but add explicit check
+            if config.url.is_empty() {
+                return Err(anyhow!("Either --network or --url must be provided"));
+            }
+            Network::Sepolia // fallback when config.url is set
         }
     };
 

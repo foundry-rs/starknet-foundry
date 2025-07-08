@@ -484,3 +484,34 @@ async fn test_contract_name_not_found() {
         },
     );
 }
+
+#[tokio::test]
+async fn test_error_when_neither_network_nor_url_provided() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "voyager",
+        "--confirm-verification",
+    ];
+
+    let snapbox = runner(&args).current_dir(contract_path.path());
+
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        formatdoc! {"
+        Command: verify
+        Error: Either --network or --url must be provided
+        ",
+        },
+    );
+}
