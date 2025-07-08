@@ -11,7 +11,6 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::Use
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use conversions::byte_array::ByteArray;
 use conversions::felt::ToShortString;
-use debugging::CollectorError;
 use foundry_ui::UI;
 use num_traits::Pow;
 use shared::utils::build_readable_text;
@@ -136,7 +135,7 @@ pub enum TestCaseSummary<T: TestType> {
         /// Message to be printed after the test case run
         msg: Option<String>,
         /// Trace of the test case run
-        debugging_trace: Option<Result<debugging::Trace, CollectorError>>,
+        debugging_trace: Option<debugging::Trace>,
         /// Information on used gas
         gas_info: <T as TestType>::GasInfo,
         /// Resources used during test
@@ -153,7 +152,7 @@ pub enum TestCaseSummary<T: TestType> {
         /// Message returned by the test case run
         msg: Option<String>,
         /// Trace of the test case run
-        debugging_trace: Option<Result<debugging::Trace, CollectorError>>,
+        debugging_trace: Option<debugging::Trace>,
         /// Random arguments used in the fuzz test case run
         fuzzer_args: Vec<String>,
         /// Statistics of the test run
@@ -197,7 +196,7 @@ impl<T: TestType> TestCaseSummary<T> {
     }
 
     #[must_use]
-    pub fn debugging_trace(&self) -> Option<&Result<debugging::Trace, CollectorError>> {
+    pub fn debugging_trace(&self) -> Option<&debugging::Trace> {
         match self {
             TestCaseSummary::Passed {
                 debugging_trace, ..
@@ -320,6 +319,7 @@ impl TestCaseSummary<Single> {
             used_resources,
             encountered_errors,
             fuzzer_args,
+            fork_data,
         }: RunCompleted,
         test_case: &TestCaseWithResolvedConfig,
         contracts_data: &ContractsData,
@@ -334,7 +334,7 @@ impl TestCaseSummary<Single> {
             contracts_data,
             trace_verbosity,
             name.clone(),
-            test_case.config.fork_config.clone(),
+            &fork_data,
         );
 
         match status {
@@ -349,6 +349,7 @@ impl TestCaseSummary<Single> {
                         trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
                             &call_trace,
                             contracts_data,
+                            &fork_data,
                             versioned_program_path,
                         )),
                         debugging_trace,
@@ -386,6 +387,7 @@ impl TestCaseSummary<Single> {
                             trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
                                 &call_trace,
                                 contracts_data,
+                                &fork_data,
                                 versioned_program_path,
                             )),
                             debugging_trace,
@@ -448,7 +450,7 @@ impl AnyTestCaseSummary {
     }
 
     #[must_use]
-    pub fn debugging_trace(&self) -> Option<&Result<debugging::Trace, CollectorError>> {
+    pub fn debugging_trace(&self) -> Option<&debugging::Trace> {
         match self {
             AnyTestCaseSummary::Fuzzing(case) => case.debugging_trace(),
             AnyTestCaseSummary::Single(case) => case.debugging_trace(),

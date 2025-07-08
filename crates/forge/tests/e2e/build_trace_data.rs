@@ -175,6 +175,15 @@ fn trace_has_deploy_with_no_constructor_phantom_nodes() {
 
 #[test]
 fn trace_is_produced_even_if_contract_panics() {
+    fn assert_all_execution_info_exists(trace: &ProfilerCallTrace) {
+        assert!(trace.cairo_execution_info.is_some());
+
+        for trace_node in &trace.nested_calls {
+            if let ProfilerCallTraceNode::EntryPointCall(trace) = trace_node {
+                assert_all_execution_info_exists(trace);
+            }
+        }
+    }
     let temp = setup_package("backtrace_panic");
     test_runner(&temp)
         .arg("--save-trace-data")
@@ -193,12 +202,26 @@ fn trace_is_produced_even_if_contract_panics() {
     assert_all_execution_info_exists(&call_trace);
 }
 
-fn assert_all_execution_info_exists(trace: &ProfilerCallTrace) {
-    assert!(trace.cairo_execution_info.is_some());
+#[test]
+fn trace_contains_human_readable_form_of_selectors_for_forks() {
+    fn assert_selectors_in_trace_exist(trace: &ProfilerCallTrace) {
+        assert!(trace.entry_point.function_name.is_some());
 
-    for trace_node in &trace.nested_calls {
-        if let ProfilerCallTraceNode::EntryPointCall(trace) = trace_node {
-            assert_all_execution_info_exists(trace);
+        for trace_node in &trace.nested_calls {
+            if let ProfilerCallTraceNode::EntryPointCall(trace) = trace_node {
+                assert_selectors_in_trace_exist(trace);
+            }
         }
     }
+    let temp = setup_package("debugging_fork");
+    test_runner(&temp).arg("--save-trace-data").assert().code(1);
+
+    let trace_data = fs::read_to_string(
+        temp.join(TRACE_DIR)
+            .join("trace_info_integrationtest_test_trace_test_debugging_trace_success.json"),
+    )
+    .unwrap();
+
+    let call_trace: ProfilerCallTrace = serde_json::from_str(&trace_data).unwrap();
+    assert_selectors_in_trace_exist(&call_trace);
 }
