@@ -123,7 +123,7 @@ fn gather_packages(metadata: &Metadata, packages: &mut Vec<PackageMetadata>) -> 
     Ok(())
 }
 
-fn package_sources(package_metadata: &PackageMetadata) -> Result<Vec<Utf8PathBuf>> {
+fn package_source_files(package_metadata: &PackageMetadata) -> Result<Vec<Utf8PathBuf>> {
     let mut sources: Vec<Utf8PathBuf> = WalkDir::new(package_metadata.root.clone())
         .into_iter()
         .filter_map(std::result::Result::ok)
