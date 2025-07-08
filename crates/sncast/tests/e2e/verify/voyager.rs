@@ -157,8 +157,6 @@ async fn test_happy_case_with_confirm_verification_flag() {
         "Map",
         "--verifier",
         "voyager",
-        "--network",
-        "sepolia",
         "--confirm-verification",
         "--url",
         &mock_rpc_uri,
