@@ -38,7 +38,7 @@ async fn test_happy_case_contract_address() {
     let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
 
     Mock::given(method("POST"))
-        .and(path(format!("class-verify/{class_hash:#068x}")))
+        .and(path(format!("class-verify/{class_hash:#064x}")))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
         .expect(1)
         .mount(&mock_server)
