@@ -80,7 +80,7 @@ $ sncast \
 
 Success: Verification completed
 
-SimpleBalance submitted for verification, you can query the status at: https://sepolia-api.voyager.online/beta/class-verify/job/2b206064-ffee-4955-8a86-1ff3b854416a
+SimpleBalance submitted for verification, you can query the status at: https://sepolia-api.voyager.online/beta/class-verify/job/[..]
 ```
 
 </details>
