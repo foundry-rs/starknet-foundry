@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+- `interact_with_state` cheatcode to enable effective use of `contract_state_for_testing` in snforge tests
+
 ## [0.46.0] - 2025-07-09
 
 ### Forge

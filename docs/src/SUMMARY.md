@@ -108,6 +108,7 @@
     * [generate_arg](appendix/cheatcodes/generate_arg.md)
     * [set_balance](appendix/cheatcodes/set_balance.md)
     * [Token](appendix/cheatcodes/token.md)
+    * [interact_with_state](appendix/cheatcodes/interact_with_state.md)
 * [`snforge` Library Reference](appendix/snforge-library.md)
     * [byte_array](appendix/snforge-library/byte_array.md)
     * [declare](appendix/snforge-library/declare.md)
