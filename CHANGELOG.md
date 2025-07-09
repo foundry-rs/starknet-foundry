@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- Use of `NonZero<usize>` instead of `usize` in `CheatSpan::TargetCalls`
+- Use of `NonZero<usize>` type instead of `usize` in `CheatSpan::TargetCalls`
 
 ### Cast
 
