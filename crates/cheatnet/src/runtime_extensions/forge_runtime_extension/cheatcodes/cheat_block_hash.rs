@@ -77,6 +77,7 @@ impl CheatnetState {
         self.cheat_block_hash(block_number, Operation::StopGlobal);
     }
 
+    #[expect(clippy::result_large_err)]
     pub fn get_block_hash_for_contract(
         &mut self,
         contract_address: ContractAddress,

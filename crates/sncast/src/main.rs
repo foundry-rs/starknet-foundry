@@ -481,6 +481,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 verify,
                 &package_metadata.manifest_path,
                 &artifacts,
+                &config,
+                ui,
             )
             .await;
 

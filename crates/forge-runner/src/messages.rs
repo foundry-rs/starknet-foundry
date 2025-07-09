@@ -3,9 +3,7 @@ use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSu
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use console::style;
-use foundry_ui::components::error::ErrorMessage;
-use foundry_ui::components::warning::WarningMessage;
-use foundry_ui::{Message, UI};
+use foundry_ui::Message;
 use serde::Serialize;
 use serde_json::{Value, json};
 
@@ -48,7 +46,6 @@ impl TestResultMessage {
         test_result: &AnyTestCaseSummary,
         show_detailed_resources: bool,
         tracked_resource: ForgeTrackedResource,
-        ui: &UI,
     ) -> Self {
         let name = test_result
             .name()
@@ -57,14 +54,7 @@ impl TestResultMessage {
 
         let debugging_trace = test_result
             .debugging_trace()
-            .map(|trace| match trace {
-                Ok(trace) => {
-                    format!("\n{trace}")
-                }
-                Err(error) => {
-                    ErrorMessage::new(format!("Error collecting debugging trace: {error}")).text()
-                }
-            })
+            .map(|trace| format!("\n{trace}"))
             .unwrap_or_default();
 
         let fuzzer_report = if let AnyTestCaseSummary::Fuzzing(test_result) = test_result {
@@ -97,7 +87,7 @@ impl TestResultMessage {
 
         let used_resources = match (show_detailed_resources, &test_result) {
             (true, AnyTestCaseSummary::Single(TestCaseSummary::Passed { used_resources, .. })) => {
-                format_detailed_resources(used_resources, tracked_resource, ui)
+                format_detailed_resources(used_resources, tracked_resource)
             }
             _ => String::new(),
         };
@@ -163,7 +153,6 @@ impl Message for TestResultMessage {
 fn format_detailed_resources(
     used_resources: &UsedResources,
     tracked_resource: ForgeTrackedResource,
-    ui: &UI,
 ) -> String {
     // Sort syscalls by call count
     let mut syscall_usage: Vec<_> = used_resources
@@ -205,13 +194,7 @@ fn format_detailed_resources(
                 used_resources.gas_consumed.0
             );
 
-            // TODO(#3399): Remove this warning and `ui` from parameter list
             if used_resources.execution_resources != ExecutionResources::default() {
-                ui.println(&WarningMessage::new(
-                    "When tracking sierra gas and executing contracts with a Sierra version older than 1.7.0, \
-                    syscall related resources may be incorrectly reported to the wrong resource type \
-                    in the output of `--detailed-resources` flag."
-                ));
                 output.push_str(&vm_resources_output);
             }
             output.push('\n');

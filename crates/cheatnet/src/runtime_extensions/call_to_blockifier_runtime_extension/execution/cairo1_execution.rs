@@ -27,6 +27,7 @@ use cairo_vm::{
 use runtime::{ExtendedRuntime, StarknetRuntime};
 
 // blockifier/src/execution/cairo1_execution.rs:48 (execute_entry_point_call)
+#[expect(clippy::result_large_err)]
 pub(crate) fn execute_entry_point_call_cairo1(
     call: ExecutableCallEntryPoint,
     compiled_class_v1: &CompiledClassV1,
@@ -142,6 +143,7 @@ pub(crate) fn execute_entry_point_call_cairo1(
 }
 
 // crates/blockifier/src/execution/cairo1_execution.rs:236 (run_entry_point)
+#[expect(clippy::result_large_err)]
 pub fn cheatable_run_entry_point(
     runner: &mut CairoRunner,
     hint_processor: &mut dyn HintProcessor,
