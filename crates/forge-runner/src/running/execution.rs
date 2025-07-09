@@ -1,8 +1,9 @@
-use crate::running::copied_code::{
-    extract_vm_resources, finalize_runner, get_call_result, total_vm_resources,
-};
+use crate::running::copied_code::get_call_result;
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::contract_class::TrackedResource;
+use blockifier::execution::entry_point_execution::{
+    extract_vm_resources, finalize_runner, total_vm_resources,
+};
 use blockifier::execution::errors::PostExecutionError;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::transaction::objects::ExecutionResourcesTraits;
@@ -27,8 +28,7 @@ pub fn finalize_execution(
 
     let call_result = get_call_result(runner, syscall_handler, &tracked_resource)?;
 
-    let vm_resources_without_inner_calls =
-        extract_vm_resources(runner, syscall_handler, tracked_resource)?;
+    let vm_resources_without_inner_calls = extract_vm_resources(runner, syscall_handler)?;
 
     syscall_handler.finalize();
 
