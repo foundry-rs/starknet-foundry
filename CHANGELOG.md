@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- Total test summary when running tests across multiple packages (for example when running `snforge test --workspace`)
+
 #### Fixed
 
 - Bug where syscall execution resources from nested calls were being calculated twice
