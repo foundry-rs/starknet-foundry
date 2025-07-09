@@ -26,6 +26,7 @@ pub use cheatcodes::message_to_l1::{
 pub use cheatcodes::storage::store;
 pub use cheatcodes::storage::load;
 pub use cheatcodes::storage::map_entry_address;
+pub use cheatcodes::storage::interact_with_state;
 
 pub use cheatcodes::erc20::set_balance;
 pub use cheatcodes::erc20::Token;
