@@ -2,20 +2,27 @@ use crate::starknet_commands::account::create::Create;
 use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
 use crate::starknet_commands::account::import::Import;
-use crate::starknet_commands::account::list::List;
+use crate::starknet_commands::account::list::{AccountsListMessage, List};
+use crate::{process_command_result, starknet_commands};
 use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{Args, Subcommand};
 use configuration::resolve_config_file;
 use configuration::{load_config, search_config_upwards_relative_to};
+use foundry_ui::UI;
 use serde_json::json;
-use sncast::helpers::account::load_accounts;
+use sncast::helpers::account::{generate_account_name, load_accounts};
+use sncast::helpers::interactive::prompt_to_add_account_as_default;
 use sncast::helpers::rpc::RpcArgs;
+use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::{
     AccountType, chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig,
 };
+use sncast::{WaitForTx, get_chain_id};
+use starknet::providers::Provider;
 use starknet::signers::SigningKey;
 use starknet_types_core::felt::Felt;
+use std::io::{self, IsTerminal};
 use std::{fs::OpenOptions, io::Write};
 use toml::Value;
 
@@ -184,6 +191,145 @@ fn generate_add_profile_message(
         )))
     } else {
         Ok(None)
+    }
+}
+
+#[allow(clippy::too_many_lines)]
+pub async fn account(
+    account: Account,
+    config: CastConfig,
+    ui: &UI,
+    wait_config: WaitForTx,
+) -> anyhow::Result<()> {
+    match account.command {
+        Commands::Import(import) => {
+            let provider = import.rpc.get_provider(&config, ui).await?;
+            let result = starknet_commands::account::import::import(
+                import.name.clone(),
+                &config.accounts_file,
+                &provider,
+                &import,
+            )
+            .await;
+
+            let run_interactive_prompt =
+                !import.silent && result.is_ok() && io::stdout().is_terminal();
+
+            if run_interactive_prompt {
+                if let Some(account_name) = result.as_ref().ok().map(|r| r.account_name.clone()) {
+                    if let Err(err) = prompt_to_add_account_as_default(account_name.as_str()) {
+                        // TODO(#3436)
+                        ui.eprintln(&format!(
+                            "Error: Failed to launch interactive prompt: {err}"
+                        ));
+                    }
+                }
+            }
+
+            process_command_result("account import", result, ui, None);
+            Ok(())
+        }
+        Commands::Create(create) => {
+            let provider = create.rpc.get_provider(&config, ui).await?;
+
+            let chain_id = get_chain_id(&provider).await?;
+            let account = if config.keystore.is_none() {
+                create
+                    .name
+                    .clone()
+                    .unwrap_or_else(|| generate_account_name(&config.accounts_file).unwrap())
+            } else {
+                config.account.clone()
+            };
+            let result = starknet_commands::account::create::create(
+                &account,
+                &config.accounts_file,
+                config.keystore,
+                &provider,
+                chain_id,
+                &create,
+            )
+            .await;
+
+            let block_explorer_link = block_explorer_link_if_allowed(
+                &result,
+                provider.chain_id().await?,
+                config.show_explorer_links,
+                config.block_explorer,
+            );
+
+            process_command_result("account create", result, ui, block_explorer_link);
+            Ok(())
+        }
+
+        Commands::Deploy(deploy) => {
+            let provider = deploy.rpc.get_provider(&config, ui).await?;
+
+            let fee_args = deploy.fee_args.clone();
+
+            let chain_id = get_chain_id(&provider).await?;
+            let keystore_path = config.keystore.clone();
+            let result = starknet_commands::account::deploy::deploy(
+                &provider,
+                config.accounts_file,
+                &deploy,
+                chain_id,
+                wait_config,
+                &config.account,
+                keystore_path,
+                fee_args,
+                ui,
+            )
+            .await;
+
+            let run_interactive_prompt =
+                !deploy.silent && result.is_ok() && io::stdout().is_terminal();
+
+            if config.keystore.is_none() && run_interactive_prompt {
+                if let Err(err) = prompt_to_add_account_as_default(
+                    &deploy
+                        .name
+                        .expect("Must be provided if not using a keystore"),
+                ) {
+                    // TODO(#3436)
+                    ui.eprintln(&format!(
+                        "Error: Failed to launch interactive prompt: {err}"
+                    ));
+                }
+            }
+
+            let block_explorer_link = block_explorer_link_if_allowed(
+                &result,
+                provider.chain_id().await?,
+                config.show_explorer_links,
+                config.block_explorer,
+            );
+            process_command_result("account deploy", result, ui, block_explorer_link);
+            Ok(())
+        }
+
+        Commands::Delete(delete) => {
+            let network_name =
+                starknet_commands::account::delete::get_network_name(&delete, &config, ui).await?;
+
+            let result = starknet_commands::account::delete::delete(
+                &delete.name,
+                &config.accounts_file,
+                &network_name,
+                delete.yes,
+            );
+
+            process_command_result("account delete", result, ui, None);
+            Ok(())
+        }
+
+        Commands::List(options) => {
+            ui.println(&AccountsListMessage::new(
+                config.accounts_file,
+                options.display_private_keys,
+            )?);
+            Ok(())
+        }
     }
 }
 
