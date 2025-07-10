@@ -161,7 +161,7 @@ That's where [`CheatSpan`](../appendix/cheatcodes/cheat_span.md) comes in handy.
 ```rust
 enum CheatSpan {
     Indefinite: (),
-    TargetCalls: usize,
+    TargetCalls: NonZero<usize>,
 }
 ```
 
