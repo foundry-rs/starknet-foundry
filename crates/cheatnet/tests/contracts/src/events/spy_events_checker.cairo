@@ -18,8 +18,7 @@ trait ISpyEventsChecker<TContractState> {
 
 #[starknet::contract]
 mod SpyEventsChecker {
-    use starknet::ContractAddress;
-    use starknet::SyscallResultTrait;
+    use starknet::{ContractAddress, SyscallResultTrait};
 
     #[storage]
     struct Storage {}

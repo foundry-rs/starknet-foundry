@@ -15,7 +15,7 @@ trait ISpyEventsCairo0<TContractState> {
 #[starknet::contract]
 mod SpyEventsCairo0 {
     use core::traits::Into;
-    use starknet::{get_contract_address, get_caller_address, ContractAddress};
+    use starknet::{ContractAddress, get_caller_address, get_contract_address};
     use super::ICairo0ContractDispatcherTrait;
 
     #[storage]
