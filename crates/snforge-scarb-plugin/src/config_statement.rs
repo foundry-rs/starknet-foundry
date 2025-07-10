@@ -1,12 +1,14 @@
-use crate::utils::{get_statements, TypedSyntaxNodeAsText};
+use crate::utils::{create_single_token, get_statements};
 use crate::{
     args::Arguments,
     attributes::AttributeCollector,
     common::{into_proc_macro_result, with_parsed_values},
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
-use cairo_lang_syntax::node::{ast::FunctionWithBody, db::SyntaxGroup};
-use indoc::formatdoc;
+use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
+use cairo_lang_parser::utils::SimpleParserDatabase;
+use cairo_lang_syntax::node::ast::FunctionWithBody;
+use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
+use cairo_lang_syntax::node::TypedSyntaxNode;
 
 pub fn extend_with_config_cheatcodes<Collector>(
     args: TokenStream,
@@ -21,58 +23,64 @@ where
 }
 
 fn with_config_cheatcodes<Collector>(
-    db: &dyn SyntaxGroup,
+    db: &SimpleParserDatabase,
     func: &FunctionWithBody,
-    args_db: &dyn SyntaxGroup,
+    args_db: &SimpleParserDatabase,
     args: Arguments,
     warns: &mut Vec<Diagnostic>,
-) -> Result<String, Diagnostics>
+) -> Result<TokenStream, Diagnostics>
 where
     Collector: AttributeCollector,
 {
     let value = Collector::args_into_config_expression(args_db, args, warns)?;
 
     let cheatcode_name = Collector::CHEATCODE_NAME;
+    let cheatcode = create_single_token(format!("'{cheatcode_name}'"));
+    let cheatcode = quote! {
+        starknet::testing::cheatcode::<#cheatcode>(data.span());
+    };
 
-    let config_cheatcode = formatdoc!(
-        r"
+    let config_cheatcode = quote!(
             let mut data = array![];
 
-            {value}
+            #value
             .serialize(ref data);
 
-            starknet::testing::cheatcode::<'{cheatcode_name}'>(data.span());
-        "
+            #cheatcode
     );
 
-    Ok(append_config_statements(db, func, &config_cheatcode))
+    Ok(append_config_statements(db, func, config_cheatcode))
 }
 
+#[expect(clippy::needless_pass_by_value)]
 pub fn append_config_statements(
-    db: &dyn SyntaxGroup,
+    db: &SimpleParserDatabase,
     func: &FunctionWithBody,
-    config_statements: &str,
-) -> String {
-    let vis = func.visibility(db).as_text(db);
-    let attrs = func.attributes(db).as_text(db);
-    let declaration = func.declaration(db).as_text(db);
+    config_statements: TokenStream,
+) -> TokenStream {
+    let vis = func.visibility(db).as_syntax_node();
+    let vis = SyntaxNodeWithDb::new(&vis, db);
+
+    let attrs = func.attributes(db).as_syntax_node();
+    let attrs = SyntaxNodeWithDb::new(&attrs, db);
+
+    let declaration = func.declaration(db).as_syntax_node();
+    let declaration = SyntaxNodeWithDb::new(&declaration, db);
 
     let (statements, if_content) = get_statements(db, func);
 
-    formatdoc!(
-        "
-            {attrs}
-            {vis} {declaration} {{
-                if snforge_std::_internals::is_config_run() {{
-                    {if_content}
+    quote!(
+        #attrs
+        #vis #declaration {
+            if snforge_std::_internals::is_config_run() {
+                #if_content
 
-                    {config_statements}
+                #config_statements
 
-                    return;
-                }}
+                return;
+            }
 
-                {statements}
-            }}
-        "
+            #statements
+        }
     )
 }
