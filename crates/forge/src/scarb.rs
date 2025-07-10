@@ -120,7 +120,6 @@ mod tests {
     use crate::scarb::config::ForkTarget;
     use assert_fs::TempDir;
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
-    use camino::Utf8PathBuf;
     use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
     use configuration::load_package_config;
     use forge_runner::forge_config::ForgeTrackedResource;
@@ -128,8 +127,7 @@ mod tests {
     use scarb_api::metadata::MetadataCommandExt;
     use scarb_metadata::PackageId;
     use std::env;
-    use std::str::FromStr;
-    use test_utils::tempdir_with_tool_versions;
+    use test_utils::{get_snforge_std_entry, tempdir_with_tool_versions};
 
     fn setup_package(package_name: &str) -> TempDir {
         let temp = tempdir_with_tool_versions().unwrap();
@@ -139,12 +137,7 @@ mod tests {
         )
         .unwrap();
 
-        let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
-            .unwrap()
-            .canonicalize_utf8()
-            .unwrap()
-            .to_string()
-            .replace('\\', "/");
+        let snforge_std_entry = get_snforge_std_entry().unwrap();
 
         let manifest_path = temp.child("Scarb.toml");
         manifest_path
@@ -156,7 +149,7 @@ mod tests {
 
                 [dependencies]
                 starknet = "2.4.0"
-                snforge_std = {{ path = "{}" }}
+                {}
 
                 [[tool.snforge.fork]]
                 name = "FIRST_FORK_NAME"
@@ -179,7 +172,7 @@ mod tests {
                 block_id.tag = "latest"
                 "#,
                 package_name,
-                snforge_std_path
+                snforge_std_entry
             ))
             .unwrap();
 
