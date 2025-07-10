@@ -7,7 +7,7 @@ use blockifier::execution::entry_point_execution::{
 use blockifier::execution::errors::PostExecutionError;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::transaction::objects::ExecutionResourcesTraits;
-use cairo_vm::vm::runners::cairo_runner::CairoRunner;
+use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
 
 // Based on the code from blockifer
 pub fn finalize_execution(
@@ -30,10 +30,15 @@ pub fn finalize_execution(
 
     let vm_resources_without_inner_calls = extract_vm_resources(runner, syscall_handler)?;
 
+    let tracked_vm_resources_without_inner_calls = match tracked_resource {
+        TrackedResource::CairoSteps => &vm_resources_without_inner_calls,
+        TrackedResource::SierraGas => &ExecutionResources::default(),
+    };
+
     syscall_handler.finalize();
 
     let vm_resources = total_vm_resources(
-        &vm_resources_without_inner_calls,
+        tracked_vm_resources_without_inner_calls,
         &syscall_handler.base.inner_calls,
     );
 
