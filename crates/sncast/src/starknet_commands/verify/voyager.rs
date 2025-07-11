@@ -124,7 +124,10 @@ fn gather_packages(metadata: &Metadata, packages: &mut Vec<PackageMetadata>) -> 
     Ok(())
 }
 
-fn package_source_files(package_metadata: &PackageMetadata) -> Result<Vec<Utf8PathBuf>> {
+fn package_source_files(
+    package_metadata: &PackageMetadata,
+    include_test_files: bool,
+) -> Result<Vec<Utf8PathBuf>> {
     let mut sources: Vec<Utf8PathBuf> = WalkDir::new(package_metadata.root.clone())
         .into_iter()
         .filter_map(std::result::Result::ok)
@@ -134,7 +137,6 @@ fn package_source_files(package_metadata: &PackageMetadata) -> Result<Vec<Utf8Pa
                 if ext != OsStr::new(CAIRO_EXT) {
                     return false;
                 }
-                // Skip files in test directories, but keep files with "tests" in their name within src/
                 let parts: Vec<_> = f
                     .path()
                     .components()
@@ -142,6 +144,15 @@ fn package_source_files(package_metadata: &PackageMetadata) -> Result<Vec<Utf8Pa
                     .collect();
 
                 if parts.contains(&"src".to_string()) {
+                    // If include_test_files is true, include all files under src/
+                    if include_test_files {
+                        return true;
+                    }
+                    // Otherwise, skip files with "test" in their path under src/
+                    let path_str = f.path().to_string_lossy().to_lowercase();
+                    if path_str.contains("/test") || path_str.contains("\\test") {
+                        return false;
+                    }
                     return true;
                 }
 
@@ -200,13 +211,16 @@ fn longest_common_prefix<P: AsRef<Utf8Path> + Clone>(
 }
 
 impl Voyager<'_> {
-    fn gather_files(&self) -> Result<(Utf8PathBuf, HashMap<String, Utf8PathBuf>)> {
+    fn gather_files(
+        &self,
+        include_test_files: bool,
+    ) -> Result<(Utf8PathBuf, HashMap<String, Utf8PathBuf>)> {
         let mut packages = vec![];
         gather_packages(&self.metadata, &mut packages)?;
 
         let mut sources: Vec<Utf8PathBuf> = vec![];
         for package in &packages {
-            let mut package_sources = package_source_files(package)?;
+            let mut package_sources = package_source_files(package, include_test_files)?;
             sources.append(&mut package_sources);
         }
 
@@ -256,6 +270,7 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
         contract_identifier: ContractIdentifier,
         contract_name: String,
         package: Option<String>,
+        test_files: bool,
         ui: &UI,
     ) -> Result<VerifyResponse> {
         let hash = match contract_identifier {
@@ -299,7 +314,7 @@ impl<'a> VerificationInterface<'a> for Voyager<'a> {
                 .ok_or(anyhow!("No packages found in scarb metadata"))
         })?;
 
-        let (prefix, files) = self.gather_files()?;
+        let (prefix, files) = self.gather_files(test_files)?;
         let project_dir_path = self
             .metadata
             .workspace

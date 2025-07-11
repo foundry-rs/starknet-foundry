@@ -60,6 +60,10 @@ pub struct Verify {
     /// RPC provider url address; overrides url from snfoundry.toml. Will use public provider if not set.
     #[arg(long)]
     pub url: Option<Url>,
+
+    /// Include test files under src/ for verification (only applies to voyager)
+    #[arg(long, default_value = "false")]
+    pub test_files: bool,
 }
 
 #[derive(ValueEnum, Clone, Debug)]
@@ -93,6 +97,7 @@ pub async fn verify(
         confirm_verification,
         package,
         url,
+        test_files,
     } = args;
 
     let url_provided = url.is_some();
@@ -169,13 +174,13 @@ pub async fn verify(
                 ui,
             )?;
             walnut
-                .verify(contract_identifier, contract_name, package, ui)
+                .verify(contract_identifier, contract_name, package, test_files, ui)
                 .await
         }
         Verifier::Voyager => {
             let voyager = Voyager::new(network, workspace_dir.to_path_buf(), &provider, ui)?;
             voyager
-                .verify(contract_identifier, contract_name, package, ui)
+                .verify(contract_identifier, contract_name, package, test_files, ui)
                 .await
         }
     }
