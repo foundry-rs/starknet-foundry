@@ -14,7 +14,7 @@ fn main() {
         .try_into()
         .expect('Invalid class hash value');
 
-    let deploy_nonce = get_nonce('pending');
+    let deploy_nonce = get_nonce('preconfirmed');
     deploy(
         class_hash,
         array![0x2, 0x2, 0x0],
@@ -29,7 +29,7 @@ fn main() {
         .try_into()
         .expect('Invalid class hash value');
 
-    let deploy_nonce = get_nonce('pending');
+    let deploy_nonce = get_nonce('preconfirmed');
     let deploy_result = deploy(
         class_hash,
         array![0x2, 0x2, 0x0],

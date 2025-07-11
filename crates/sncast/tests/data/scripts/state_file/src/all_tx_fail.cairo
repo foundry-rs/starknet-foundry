@@ -17,7 +17,7 @@ fn main() {
     declare("Not_this_time", fee_settings, Option::Some(declare_nonce))
         .expect_err('error expected declare');
 
-    let deploy_nonce = get_nonce('pending');
+    let deploy_nonce = get_nonce('preconfirmed');
     deploy(
         nonexistent_class_hash,
         ArrayTrait::new(),
@@ -28,7 +28,7 @@ fn main() {
     )
         .expect_err('error expected deploy');
 
-    let invoke_nonce = get_nonce('pending');
+    let invoke_nonce = get_nonce('preconfirmed');
     invoke(
         map_contract_address,
         selector!("put"),
