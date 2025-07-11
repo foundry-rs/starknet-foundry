@@ -1,7 +1,4 @@
-use sncast_std::{
-    get_nonce, deploy, DeployResult, ScriptCommandError, ProviderError, StarknetError,
-    FeeSettingsTrait,
-};
+use sncast_std::{get_nonce, deploy, FeeSettingsTrait};
 use starknet::{ClassHash};
 
 fn main() {

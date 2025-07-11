@@ -1,4 +1,4 @@
-use sncast_std::{call, CallResult, ScriptCommandError, ProviderError, StarknetError};
+use sncast_std::{call, ScriptCommandError, ProviderError, StarknetError};
 
 fn main() {
     let eth = 0x049;

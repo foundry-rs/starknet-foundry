@@ -1,4 +1,4 @@
-use sncast_std::{deploy, DeployResult, FeeSettingsTrait};
+use sncast_std::{deploy, FeeSettingsTrait};
 use starknet::{ClassHash};
 
 fn main() {
