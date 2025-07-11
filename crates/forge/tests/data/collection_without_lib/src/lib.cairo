@@ -3,7 +3,6 @@ pub mod fob;
 pub mod fab;
 
 use fob::fob_impl::fob_fn;
-use fib::fib_fn;
 
 #[cfg(test)]
 mod tests {
