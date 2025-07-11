@@ -1,4 +1,5 @@
 use collection_with_lib::fib::fib_fn;
+use super::fn_from_above;
 
 pub fn fab_fn(a: felt252, b: felt252, n: felt252) -> felt252 {
     match n {
