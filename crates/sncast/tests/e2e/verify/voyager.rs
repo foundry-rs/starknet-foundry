@@ -515,3 +515,131 @@ async fn test_error_when_neither_network_nor_url_provided() {
         },
     );
 }
+
+#[tokio::test]
+async fn test_test_files_flag_includes_test_files() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map_with_tests");
+
+    let mock_server = MockServer::start().await;
+    let rpc_response = json!({
+        "id": 1,
+        "jsonrpc": "2.0",
+        "result": MAP_CONTRACT_CLASS_HASH_SEPOLIA
+    });
+
+    let mock_rpc = MockServer::start().await;
+    let mock_rpc_uri = mock_rpc.uri().clone();
+
+    // Mock the getClassHashAt call
+    Mock::given(method("POST"))
+        .and(body_partial_json(
+            json!({"method": "starknet_getClassHashAt"}),
+        ))
+        .respond_with(ResponseTemplate::new(200).set_body_json(rpc_response))
+        .expect(1)
+        .mount(&mock_rpc)
+        .await;
+
+    let job_id = "test-job-id-with-test-files";
+    let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+
+    // Mock the verification request and verify that test files are included
+    Mock::given(method("POST"))
+        .and(path(format!("class-verify/{class_hash:#064x}")))
+        .and(body_partial_json(json!({
+            "name": "Map",
+            "package_name": "map_with_tests"
+        })))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "voyager",
+        "--network",
+        "sepolia",
+        "--url",
+        &mock_rpc_uri,
+        "--test-files",
+    ];
+
+    let snapbox = runner(&args)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .current_dir(contract_path.path())
+        .stdin("Y");
+
+    snapbox.assert().success();
+}
+
+#[tokio::test]
+async fn test_without_test_files_flag_excludes_test_files() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map_with_tests");
+
+    let mock_server = MockServer::start().await;
+    let rpc_response = json!({
+        "id": 1,
+        "jsonrpc": "2.0",
+        "result": MAP_CONTRACT_CLASS_HASH_SEPOLIA
+    });
+
+    let mock_rpc = MockServer::start().await;
+    let mock_rpc_uri = mock_rpc.uri().clone();
+
+    // Mock the getClassHashAt call
+    Mock::given(method("POST"))
+        .and(body_partial_json(
+            json!({"method": "starknet_getClassHashAt"}),
+        ))
+        .respond_with(ResponseTemplate::new(200).set_body_json(rpc_response))
+        .expect(1)
+        .mount(&mock_rpc)
+        .await;
+
+    let job_id = "test-job-id-without-test-files";
+    let class_hash = Felt::from_hex(MAP_CONTRACT_CLASS_HASH_SEPOLIA).expect("Invalid class hash");
+
+    // Mock the verification request - without --test-files flag, test files should be excluded
+    Mock::given(method("POST"))
+        .and(path(format!("class-verify/{class_hash:#064x}")))
+        .and(body_partial_json(json!({
+            "name": "Map",
+            "package_name": "map_with_tests"
+        })))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "voyager",
+        "--network",
+        "sepolia",
+        "--url",
+        &mock_rpc_uri,
+        // Note: --test-files flag is NOT included
+    ];
+
+    let snapbox = runner(&args)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .current_dir(contract_path.path())
+        .stdin("Y");
+
+    snapbox.assert().success();
+}
