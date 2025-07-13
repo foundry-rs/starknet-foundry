@@ -28,7 +28,7 @@ pub async fn utils(utils: Utils, config: CastConfig, ui: &UI) -> anyhow::Result<
                 .await
                 .map_err(handle_starknet_command_error)?;
 
-            process_command_result("serialize", Ok(result), ui, None);
+            process_command_result("utils serialize", Ok(result), ui, None);
         }
     }
 
