@@ -18,19 +18,11 @@ impl<T: CommandResponse> SncastMessage<T> {
                 serde_json::Value::Object(map)
             }
             Ok(other) => {
-                let mut map = serde_json::Map::new();
-                map.insert(
-                    "command".to_string(),
-                    serde_json::Value::String(self.command.clone()),
-                );
-                map.insert(
-                    "error".to_string(),
-                    serde_json::Value::String(
-                        "expected a JSON object/map for command_response".to_string(),
-                    ),
-                );
-                map.insert("command_response".to_string(), other);
-                serde_json::Value::Object(map)
+                serde_json::json!({
+                    "error": "Expected a map for `command_response`",
+                    "command": self.command,
+                    "details": other.to_string()
+                })
             }
             Err(err) => {
                 serde_json::json!({
