@@ -21,33 +21,25 @@ use crate::runtime_extensions::{
 use crate::state::{CallTrace, CallTraceNode};
 use anyhow::{Context, Result, anyhow};
 use blockifier::blockifier_versioned_constants::VersionedConstants;
-use blockifier::bouncer::vm_resources_to_sierra_gas;
 use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::contract_class::TrackedResource;
-use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
 use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsageMap};
 use blockifier::state::errors::StateError;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
-use cairo_vm::vm::{
-    errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
-    vm_core::VirtualMachine,
-};
-use conversions::IntoConv;
+use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
 use conversions::byte_array::ByteArray;
 use conversions::felt::{ToShortString, TryInferFormat};
 use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::CairoSerialize;
 use data_transformer::cairo_types::CairoU256;
 use rand::prelude::StdRng;
-use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
 };
 use starknet::signers::SigningKey;
-use starknet_api::execution_resources::GasAmount;
 use starknet_api::{contract_class::EntryPointType::L1Handler, core::ClassHash};
 use starknet_types_core::felt::Felt;
 use std::cell::RefCell;
