@@ -22,8 +22,8 @@ rm crates/snforge-scarb-plugin/Scarb.toml.bak 2> /dev/null
 sed -i.bak "/\[package\]/,/version =/ s/version = \".*/version = \"${VERSION}\"/" crates/snforge-scarb-plugin/Cargo.toml
 rm crates/snforge-scarb-plugin/Cargo.toml.bak 2> /dev/null
 
-sed -i.bak "/\[package\]/,/version =/ s/version = \".*/version = \"${VERSION}\"/" snforge_std_compatibility/Scarb.toml
-rm snforge_std_compatibility/Scarb.toml.bak 2> /dev/null
+sed -i.bak "/\[package\]/,/version =/ s/version = \".*/version = \"${VERSION}\"/" snforge_std_deprecated/Scarb.toml
+rm snforge_std_deprecated/Scarb.toml.bak 2> /dev/null
 
 sed -i.bak "/\[package\]/,/version =/ s/version = \".*/version = \"${VERSION}\"/" crates/snforge-scarb-plugin-deprecated/Scarb.toml
 rm crates/snforge-scarb-plugin-deprecated/Scarb.toml.bak 2> /dev/null
@@ -45,7 +45,7 @@ rm "$NEW_FILE_PATH.bak" 2> /dev/null
 # end
 
 scarb --manifest-path snforge_std/Scarb.toml build
-scarb --manifest-path snforge_std_compatibility/Scarb.toml build
+scarb --manifest-path snforge_std_deprecated/Scarb.toml build --ignore-cairo-version
 
 cargo update
 cargo update --manifest-path crates/snforge-scarb-plugin/Cargo.toml

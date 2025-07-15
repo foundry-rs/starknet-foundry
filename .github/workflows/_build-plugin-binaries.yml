@@ -111,7 +111,7 @@ jobs:
           
           PACKAGE_NAME=${{ inputs.plugin_name }}
           PACKAGE_NAME=${PACKAGE_NAME//-/_}  # Replace `-` with `_` in name
-          PACKAGE_VERSION=$(get_version "${{ inputs.overridden_plugin_version }}")
+          PACKAGE_VERSION=$(get_version "${{ inputs.overridden_plugin_version }}" "crates/${{ inputs.plugin_name }}/Scarb.toml")
 
           TARGET="${{ matrix.target }}"
           EXT="${{ matrix.ext }}"

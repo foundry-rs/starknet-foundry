@@ -7,7 +7,6 @@ use flatten_serde_json::flatten;
 use runtime::EnhancedHintError;
 use serde_json::{Map, Value};
 use starknet_types_core::felt::Felt;
-use starknet_types_core::felt::FromStrError;
 use std::fs::read_to_string;
 
 pub(super) fn read_txt(path: String) -> Result<Vec<Felt>, EnhancedHintError> {
@@ -42,7 +41,7 @@ pub(super) fn read_json(path: String) -> Result<Vec<Felt>, EnhancedHintError> {
     Ok(result)
 }
 
-fn value_into_vec(value: &Value, output: &mut Vec<Felt>) -> Result<(), FromStrError> {
+fn value_into_vec(value: &Value, output: &mut Vec<Felt>) -> Result<()> {
     match value {
         Value::Array(vec) => {
             output.push(vec.len().into());

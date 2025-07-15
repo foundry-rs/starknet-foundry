@@ -355,9 +355,19 @@ fn test_handled_error_not_display() {
             .contains("error occurred in contract 'FailableContract'")
     );
 
-    assert_stdout_contains(
-        output,
-        indoc! {"
+    if use_snforge_std_compatibility() {
+        assert_stdout_contains(
+            output,
+            indoc! {"
+            error occurred in contract 'ErrorHandler'
+            stack backtrace:
+               0: dispatchers::error_handler::ErrorHandler::__wrapper__ErrorHandler__catch_panic_and_fail
+        "},
+        );
+    } else {
+        assert_stdout_contains(
+            output,
+            indoc! {"
             error occurred in contract 'ErrorHandler'
             stack backtrace:
                0: core::panic_with_const_felt252
@@ -369,7 +379,8 @@ fn test_handled_error_not_display() {
                3: dispatchers::error_handler::ErrorHandler::__wrapper__ErrorHandler__catch_panic_and_fail
                    at [..]error_handler.cairo:42:9
         "},
-    );
+        );
+    }
 }
 
 fn without_inlines(temp_dir: &TempDir) {
