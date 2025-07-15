@@ -18,6 +18,7 @@ use cairo_annotations::trace_data::{
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use camino::{Utf8Path, Utf8PathBuf};
+use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::{CallTrace, CallTraceNode};
 use conversions::IntoConv;
@@ -39,11 +40,13 @@ pub const TEST_CODE_FUNCTION_NAME: &str = "SNFORGE_TEST_CODE_FUNCTION";
 pub fn build_profiler_call_trace(
     value: &Rc<RefCell<CallTrace>>,
     contracts_data: &ContractsData,
+    fork_data: &ForkData,
     versioned_program_path: &Utf8Path,
 ) -> ProfilerCallTrace {
     let value = value.borrow();
 
-    let entry_point = build_profiler_call_entry_point(value.entry_point.clone(), contracts_data);
+    let entry_point =
+        build_profiler_call_entry_point(value.entry_point.clone(), contracts_data, fork_data);
     let vm_trace = value
         .vm_trace
         .as_ref()
@@ -66,7 +69,9 @@ pub fn build_profiler_call_trace(
         nested_calls: value
             .nested_calls
             .iter()
-            .map(|c| build_profiler_call_trace_node(c, contracts_data, versioned_program_path))
+            .map(|c| {
+                build_profiler_call_trace_node(c, contracts_data, fork_data, versioned_program_path)
+            })
             .collect(),
         cairo_execution_info,
     }
@@ -108,11 +113,12 @@ fn get_source_sierra_path(
 fn build_profiler_call_trace_node(
     value: &CallTraceNode,
     contracts_data: &ContractsData,
+    fork_data: &ForkData,
     versioned_program_path: &Utf8Path,
 ) -> ProfilerCallTraceNode {
     match value {
         CallTraceNode::EntryPointCall(trace) => ProfilerCallTraceNode::EntryPointCall(Box::new(
-            build_profiler_call_trace(trace, contracts_data, versioned_program_path),
+            build_profiler_call_trace(trace, contracts_data, fork_data, versioned_program_path),
         )),
         CallTraceNode::DeployWithoutConstructor => ProfilerCallTraceNode::DeployWithoutConstructor,
     }
@@ -154,6 +160,7 @@ pub fn build_profiler_execution_resources(
 pub fn build_profiler_call_entry_point(
     value: CallEntryPoint,
     contracts_data: &ContractsData,
+    fork_data: &ForkData,
 ) -> ProfilerCallEntryPoint {
     let CallEntryPoint {
         class_hash,
@@ -165,7 +172,7 @@ pub fn build_profiler_call_entry_point(
     } = value;
 
     let contract_name = get_contract_name(class_hash, contracts_data);
-    let function_name = get_function_name(&entry_point_selector, contracts_data);
+    let function_name = get_function_name(&entry_point_selector, contracts_data, fork_data);
 
     ProfilerCallEntryPoint {
         class_hash: class_hash.map(|ch| cairo_annotations::trace_data::ClassHash(ch.0)),
@@ -194,17 +201,21 @@ fn get_contract_name(
 fn get_function_name(
     entry_point_selector: &EntryPointSelector,
     contracts_data: &ContractsData,
+    fork_data: &ForkData,
 ) -> Option<String> {
     if entry_point_selector.0
         == get_selector_from_name(TEST_ENTRY_POINT_SELECTOR)
             .unwrap()
             .into_()
     {
-        Some(String::from(TEST_CODE_FUNCTION_NAME))
+        Some(TEST_CODE_FUNCTION_NAME.to_string())
+    } else if let Some(name) = contracts_data
+        .get_function_name(entry_point_selector)
+        .cloned()
+    {
+        Some(name)
     } else {
-        contracts_data
-            .get_function_name(entry_point_selector)
-            .cloned()
+        fork_data.selectors.get(entry_point_selector).cloned()
     }
 }
 
