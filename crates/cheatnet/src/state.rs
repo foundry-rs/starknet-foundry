@@ -358,6 +358,7 @@ pub struct CheatedData {
     pub block_number: Option<u64>,
     pub block_timestamp: Option<u64>,
     pub caller_address: Option<ContractAddress>,
+    pub contract_address: Option<ContractAddress>,
     pub sequencer_address: Option<ContractAddress>,
     pub tx_info: CheatedTxInfo,
 }
@@ -427,6 +428,7 @@ impl CheatnetState {
             block_number: execution_info.block_info.block_number.as_value(),
             block_timestamp: execution_info.block_info.block_timestamp.as_value(),
             caller_address: execution_info.caller_address.as_value(),
+            contract_address: execution_info.contract_address.as_value(),
             sequencer_address: execution_info.block_info.sequencer_address.as_value(),
             tx_info: CheatedTxInfo {
                 version: execution_info.tx_info.version.as_value(),

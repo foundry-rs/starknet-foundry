@@ -36,6 +36,31 @@ use scarb_api::get_contracts_artifacts_and_source_sierra_paths;
 use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
 
+pub struct PackageTestResult {
+    summaries: Vec<TestTargetSummary>,
+    filtered: Option<usize>,
+}
+
+impl PackageTestResult {
+    #[must_use]
+    pub fn new(summaries: Vec<TestTargetSummary>, filtered: Option<usize>) -> Self {
+        Self {
+            summaries,
+            filtered,
+        }
+    }
+
+    #[must_use]
+    pub fn filtered(&self) -> Option<usize> {
+        self.filtered
+    }
+
+    #[must_use]
+    pub fn summaries(self) -> Vec<TestTargetSummary> {
+        self.summaries
+    }
+}
+
 pub struct RunForPackageArgs {
     pub test_targets: Vec<TestTargetRaw>,
     pub tests_filter: TestsFilter,
@@ -141,7 +166,7 @@ pub async fn run_for_package(
     block_number_map: &mut BlockNumberMap,
     trace_verbosity: Option<TraceVerbosity>,
     ui: Arc<UI>,
-) -> Result<Vec<TestTargetSummary>> {
+) -> Result<PackageTestResult> {
     let mut test_targets = test_package_with_config_resolved(
         test_targets,
         &fork_targets,
@@ -168,16 +193,14 @@ pub async fn run_for_package(
 
     for test_target in test_targets {
         let ui = ui.clone();
-        ui.clone().println(&TestsRunMessage::new(
+        ui.println(&TestsRunMessage::new(
             test_target.tests_location,
             test_target.test_cases.len(),
         ));
 
-        let forge_config = forge_config.clone();
-
         let summary = run_for_test_target(
             test_target,
-            forge_config,
+            forge_config.clone(),
             &tests_filter,
             trace_verbosity,
             ui,
@@ -199,13 +222,13 @@ pub async fn run_for_package(
     }
 
     // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
-    let tests_summary = if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
-        TestsSummaryMessage::new(&summaries, None)
+    let filtered_count = if let NameFilter::ExactMatch(_) = tests_filter.name_filter {
+        None
     } else {
-        let filtered = all_tests - not_filtered;
-        TestsSummaryMessage::new(&summaries, Some(filtered))
+        Some(all_tests - not_filtered)
     };
-    ui.println(&tests_summary);
+
+    ui.println(&TestsSummaryMessage::new(&summaries, filtered_count));
 
     let any_fuzz_test_was_run = summaries.iter().any(|test_target_summary| {
         test_target_summary
@@ -222,5 +245,5 @@ pub async fn run_for_package(
         ));
     }
 
-    Ok(summaries)
+    Ok(PackageTestResult::new(summaries, filtered_count))
 }
