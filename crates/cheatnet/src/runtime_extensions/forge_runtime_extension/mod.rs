@@ -22,7 +22,7 @@ use crate::state::{CallTrace, CallTraceNode};
 use anyhow::{Context, Result, anyhow};
 use blockifier::blockifier_versioned_constants::VersionedConstants;
 use blockifier::context::TransactionContext;
-use blockifier::execution::call_info::{CallExecution, CallInfo};
+use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
 use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsageMap};
@@ -699,35 +699,12 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &mut C
 
 #[must_use]
 pub fn get_all_used_resources(
-    runtime: ForgeRuntime,
+    runtime: &mut ForgeRuntime,
     transaction_context: &TransactionContext,
-    tracked_resource: TrackedResource,
     call_info: &CallInfo,
 ) -> UsedResources {
-    let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
-    let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.base.l2_to_l1_messages;
-    let top_call_events = starknet_runtime.hint_handler.base.events;
-
     let versioned_constants = transaction_context.block_context.versioned_constants();
-
-    // used just to obtain payloads of L2 -> L1 messages
-    let runtime_call_info = CallInfo {
-        resources: call_info.resources.clone(),
-        execution: CallExecution {
-            l2_to_l1_messages: top_call_l2_to_l1_messages,
-            events: top_call_events,
-            ..call_info.execution.clone()
-        },
-        call: call_info.call.clone(),
-        inner_calls: starknet_runtime.hint_handler.base.inner_calls.clone(),
-        tracked_resource,
-        storage_access_tracker: call_info.storage_access_tracker.clone(),
-        builtin_counters: call_info.builtin_counters.clone(),
-    };
-    let runtime_call_info_summary = runtime_call_info.summarize(versioned_constants);
-    dbg!(&runtime_call_info_summary.l2_to_l1_payload_lengths);
     let summary = call_info.summarize(versioned_constants);
-    dbg!(&summary.l2_to_l1_payload_lengths);
     let l2_to_l1_payload_lengths = summary.l2_to_l1_payload_lengths;
 
     let l1_handler_payload_lengths = get_l1_handlers_payloads_lengths(&call_info.inner_calls);

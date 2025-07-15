@@ -344,12 +344,8 @@ pub fn run_test_case(
 
     Ok(match result {
         Ok(call_info) => {
-            let used_resources = get_all_used_resources(
-                forge_runtime,
-                &transaction_context,
-                tracked_resource,
-                &call_info,
-            );
+            let used_resources =
+                get_all_used_resources(&mut forge_runtime, &transaction_context, &call_info);
             let gas_used = calculate_used_gas(
                 &transaction_context,
                 &mut cached_state,
