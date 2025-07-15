@@ -137,7 +137,7 @@ jobs:
         uses: mikefarah/yq@8bf425b4d1344db7cd469a8d10a390876e0c77fd
         with:
           cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
-          
+
       - name: Return version
         id: validVersion
         run: |
@@ -154,31 +154,31 @@ jobs:
       plugin_name: 'snforge-scarb-plugin'
 
   publish-plugin:
-    needs: [get-version, build-plugin-binaries]
+    needs: [ get-version, build-plugin-binaries ]
     uses: ./.github/workflows/_publish-plugin.yml
     secrets: inherit
     with:
       overridden_plugin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
       plugin_name: 'snforge-scarb-plugin'
 
-  build-compatibility-plugin-binaries:
-    name: Build compatibility plugin binaries
+  build-deprecated-plugin-binaries:
+    name: Build deprecated plugin binaries
     needs: get-version
     uses: ./.github/workflows/_build-plugin-binaries.yml
     with:
       overridden_plugin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
-      plugin_name: 'snforge-scarb-plugin-compatibility'
+      plugin_name: 'snforge-scarb-plugin-deprecated'
 
-  publish-compatibility-plugin:
-    needs: [get-version, build-compatibility-plugin-binaries]
+  publish-deprecated-plugin:
+    needs: [ get-version, build-deprecated-plugin-binaries ]
     uses: ./.github/workflows/_publish-plugin.yml
     secrets: inherit
     with:
       overridden_plugin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
-      plugin_name: 'snforge-scarb-plugin-compatibility'
+      plugin_name: 'snforge-scarb-plugin-deprecated'
 
   publish-std:
-    needs: [get-version, publish-plugin, publish-compatibility-plugin]
+    needs: [ get-version, publish-plugin, publish-deprecated-plugin ]
     uses: ./.github/workflows/publish-std.yml
     secrets: inherit
     with:
@@ -186,7 +186,7 @@ jobs:
       override_std_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
 
   build-binaries:
-    needs: [get-version]
+    needs: [ get-version ]
     uses: ./.github/workflows/_build-binaries.yml
     with:
       version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}

@@ -31,9 +31,39 @@ on:
         type: string
 
 jobs:
+  check-uploaded:
+    name: Check stds uploaded
+    runs-on: ubuntu-latest
+    outputs:
+      snforge_std_uploaded: ${{ steps.check-uploaded.outputs.snforge_std_uploaded }}
+      snforge_std_deprecated_uploaded: ${{ steps.check-uploaded.outputs.snforge_std_deprecated_uploaded }}
+      sncast_std_uploaded: ${{ steps.check-uploaded.outputs.sncast_std_uploaded }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check version
+        id: check-uploaded
+        run: |
+          set -exo pipefail
+          
+          source scripts/handle_version.sh
+          
+          snforge_std_version=$(get_version "${{ inputs.override_std_version }}" "snforge_std")
+          snforge_std_deprecated_version=$(get_version "${{ inputs.override_std_version }}" "snforge_std_compatibilty")
+          sncast_std_version=$(get_version "${{ inputs.override_std_version }}" "sncast_std")
+          
+          registry_url=${{ inputs.prod_registry == true && 'https://scarbs.xyz' || 'https://scarbs.dev' }}
+          
+          snforge_std_uploaded=$(curl -s ${registry_url}/api/v1/index/sn/fo/snforge_std.json | jq --arg version "$snforge_std_version" '[.[] | select(.v == $version)] | length > 0')
+          snforge_std_deprecated_uploaded=$(curl -s ${registry_url}/api/v1/index/sn/fo/snforge_std_deprecated.json | jq --arg version "$snforge_std_deprecated_version" '[.[] | select(.v == $version)] | length > 0')
+          sncast_std_uploaded=$(curl -s ${registry_url}/api/v1/index/sn/ca/sncast_std.json | jq --arg version "$sncast_std_version" '[.[] | select(.v == $version)] | length > 0')
+          
+          echo "snforge_std_uploaded=$snforge_std_uploaded" >> $GITHUB_OUTPUT
+          echo "snforge_std_deprecated_uploaded=$snforge_std_deprecated_uploaded" >> $GITHUB_OUTPUT
+          echo "sncast_std_uploaded=$sncast_std_uploaded" >> $GITHUB_OUTPUT
   publish-to-registry:
     name: Publish packages to the registry
     runs-on: ubuntu-latest
+    needs: [ check-uploaded ]
     env:
       SCARB_REGISTRY_AUTH_TOKEN: ${{ inputs.prod_registry == true && secrets.SCARB_REGISTRY_AUTH_TOKEN || secrets.DEV_SCARB_REGISTRY_AUTH_TOKEN }}
     steps:
@@ -46,6 +76,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
 
       - name: Publish sncast_std
+        if: needs.check-uploaded.outputs.sncast_std_uploaded == 'false'
         working-directory: sncast_std
         run: |
           source ../scripts/handle_version.sh
@@ -55,6 +86,7 @@ jobs:
           scarb publish --allow-dirty ${{ inputs.prod_registry == true && ' ' || '--index https://scarbs.dev/' }}
 
       - name: Publish snforge_std
+        if: needs.check-uploaded.outputs.snforge_std_uploaded == 'false'
         working-directory: snforge_std
         run: |
           source ../scripts/handle_version.sh
@@ -70,18 +102,19 @@ jobs:
           
           scarb publish --allow-dirty ${{ inputs.prod_registry == true && ' ' || '--index https://scarbs.dev/' }}
 
-      - name: Publish snforge_std_compatibility
-        working-directory: snforge_std_compatibility
+      - name: Publish snforge_std_deprecated
+        if: needs.check-uploaded.outputs.snforge_std_deprecated_uploaded == 'false'
+        working-directory: snforge_std_deprecated
         run: |
           source ../scripts/handle_version.sh
 
           update_version_in_file "Scarb.toml" "${{ inputs.override_std_version }}"
 
           if ${{ inputs.prod_registry == true }}; then
-            scarb add snforge_scarb_plugin_compatibility@${{ inputs.plugin_dep_version }}
+            scarb add snforge_scarb_plugin_deprecated@${{ inputs.plugin_dep_version }}
           else
-            sed -i.bak "/snforge_scarb_plugin_compatibility/ s/\(snforge_scarb_plugin_compatibility = \).*/\1{ version = \"=${{ inputs.plugin_dep_version }}\", registry = \"https:\/\/scarbs.dev\/\" }/" Scarb.toml
+            sed -i.bak "/snforge_scarb_plugin_deprecated/ s/\(snforge_scarb_plugin_deprecated = \).*/\1{ version = \"=${{ inputs.plugin_dep_version }}\", registry = \"https:\/\/scarbs.dev\/\" }/" Scarb.toml
             rm Scarb.toml.bak 2>/dev/null
           fi
 
-          scarb publish --allow-dirty ${{ inputs.prod_registry == true && ' ' || '--index https://scarbs.dev/' }}
+          scarb publish --allow-dirty ${{ inputs.prod_registry == true && ' ' || '--index https://scarbs.dev/' }} --ignore-cairo-version
