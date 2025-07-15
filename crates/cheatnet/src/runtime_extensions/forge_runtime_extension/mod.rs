@@ -577,14 +577,6 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime, call_info: &CallInf
     let execution_summary = call_info.summarize(VersionedConstants::latest_constants());
     top_call.used_execution_resources = execution_summary.charged_resources.vm_resources.clone();
     top_call.gas_consumed = execution_summary.charged_resources.gas_consumed.0;
-
-    dbg!(execution_summary.charged_resources.gas_consumed.0);
-
-    // top_call.gas_consumed = vm_resources_to_sierra_gas(
-    //     &execution_summary.charged_resources.vm_resources,
-    //     VersionedConstants::latest_constants(),
-    // )
-    // .0;
 }
 
 pub fn update_top_call_syscalls(
@@ -710,39 +702,6 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &mut C
         trace_data.current_call_stack.top().borrow_mut().vm_trace =
             Some(get_relocated_vm_trace(cairo_runner));
     }
-}
-fn add_syscall_execution_resources(
-    versioned_constants: &VersionedConstants,
-    execution_resources: &ExecutionResources,
-    syscall_usage: &SyscallUsageMap,
-) -> ExecutionResources {
-    let mut total_vm_usage = execution_resources.filter_unused_builtins();
-    total_vm_usage += &versioned_constants.get_additional_os_syscall_resources(syscall_usage);
-    total_vm_usage
-}
-
-fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
-    let mut gas_consumed = top_call.borrow().gas_consumed;
-    for nested_call in &top_call.borrow().nested_calls {
-        if let CallTraceNode::EntryPointCall(nested_call) = nested_call {
-            gas_consumed += &nested_call.borrow().gas_consumed;
-        }
-    }
-    gas_consumed
-}
-
-#[expect(clippy::needless_pass_by_value)]
-fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResources {
-    let mut execution_resources = top_call.borrow().used_execution_resources.clone();
-    for nested_call in &top_call.borrow().nested_calls {
-        match nested_call {
-            CallTraceNode::EntryPointCall(nested_call) => {
-                execution_resources += &nested_call.borrow().used_execution_resources;
-            }
-            CallTraceNode::DeployWithoutConstructor => {}
-        }
-    }
-    execution_resources
 }
 
 #[must_use]
