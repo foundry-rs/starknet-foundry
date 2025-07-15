@@ -356,14 +356,6 @@ pub fn run_test_case(
                 used_resources.clone(),
             )?;
 
-            // let fork_data = cached_state
-            //     .state
-            //     .fork_state_reader
-            //     .map(|fork_state_reader| {
-            //         ForkData::new(&fork_state_reader.compiled_contract_class_map())
-            //     })
-            //     .unwrap_or_default();
-
             RunResult::Completed(Box::new(RunCompleted {
                 status: if call_info.execution.failed {
                     RunStatus::Panic(call_info.execution.retdata.0)

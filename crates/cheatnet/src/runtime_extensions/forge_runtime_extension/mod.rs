@@ -1,6 +1,6 @@
 use self::contracts_data::ContractsData;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
-use crate::runtime_extensions::common::{get_syscalls_gas_consumed, sum_syscall_usage};
+use crate::runtime_extensions::common::sum_syscall_usage;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
 use crate::runtime_extensions::{
     call_to_blockifier_runtime_extension::{
@@ -566,7 +566,8 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime, call_info: &CallInf
         .top();
     let mut top_call = top_call.borrow_mut();
 
-    let execution_summary = call_info.summarize(VersionedConstants::latest_constants());
+    let versioned_constants = VersionedConstants::latest_constants();
+    let execution_summary = call_info.summarize(versioned_constants);
     top_call.used_execution_resources = execution_summary.charged_resources.vm_resources.clone();
     top_call.gas_consumed = execution_summary.charged_resources.gas_consumed.0;
 }
@@ -712,21 +713,14 @@ pub fn get_all_used_resources(
     // used just to obtain payloads of L2 -> L1 messages
     let runtime_call_info = CallInfo {
         resources: call_info.resources.clone(),
-        // execution: call_info.execution.clone(),
         execution: CallExecution {
             l2_to_l1_messages: top_call_l2_to_l1_messages,
             events: top_call_events,
-            // ..Default::default()
             ..call_info.execution.clone()
         },
-        // call: CallEntryPoint {
-        //     class_hash: Some(Felt::from_hex(TEST_CONTRACT_CLASS_HASH).unwrap().into_()),
-        //     ..Default::default()
-        // },
         call: call_info.call.clone(),
         inner_calls: starknet_runtime.hint_handler.base.inner_calls.clone(),
         tracked_resource,
-        // ..Default::default()
         storage_access_tracker: call_info.storage_access_tracker.clone(),
         builtin_counters: call_info.builtin_counters.clone(),
     };
@@ -747,27 +741,6 @@ pub fn get_all_used_resources(
         .top();
 
     let top_call_syscalls = top_call.borrow().get_total_used_syscalls();
-
-    dbg!(&top_call_syscalls);
-
-    // let execution_summary = call_info.summarize(VersionedConstants::latest_constants());
-
-    let sierra_gas_from_syscalls = get_syscalls_gas_consumed(
-        &top_call.borrow().used_syscalls_sierra_gas,
-        VersionedConstants::latest_constants(),
-    );
-    let sierra_gas_from_all_syscalls = get_syscalls_gas_consumed(
-        &top_call.borrow().get_total_used_syscalls(),
-        VersionedConstants::latest_constants(),
-    );
-    println!(
-        "sierra_gas_from_syscalls + summary.charged_resources.gas_consumed = {}",
-        sierra_gas_from_syscalls + summary.charged_resources.gas_consumed.0
-    );
-    println!(
-        "sierra_gas_from_all_syscalls + summary.charged_resources.gas_consumed = {}",
-        sierra_gas_from_all_syscalls + summary.charged_resources.gas_consumed.0
-    );
 
     let events = runtime_call_info
         .iter() // This method iterates over inner calls as well
