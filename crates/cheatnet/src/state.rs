@@ -187,7 +187,7 @@ impl<T> CheatStatus<T> {
                 *self = CheatStatus::Uncheated;
             } else {
                 *n = NonZeroUsize::new(calls_number)
-                    .expect("NonZeroUsize should not be zero after decrement");
+                    .expect("`NonZeroUsize` should not be zero after decrement");
             }
         }
     }

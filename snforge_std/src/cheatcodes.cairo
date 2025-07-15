@@ -48,12 +48,12 @@ pub fn test_address() -> ContractAddress {
 pub fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
     contract_address: ContractAddress, function_selector: felt252, ret_data: T, n_times: u32,
 ) {
-    assert!(n_times > 0, "cannot mock_call 0 times, n_times argument must be greater than 0");
+    assert!(n_times > 0, "cannot `mock_call` 0 times, `n_times` argument must be greater than 0");
 
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
 
-    CheatSpan::TargetCalls(n_times.try_into().expect('n_times must be greater than 0'))
+    CheatSpan::TargetCalls(n_times.try_into().expect('`n_times` must be > 0'))
         .serialize(ref inputs);
 
     let mut ret_data_arr = ArrayTrait::new();

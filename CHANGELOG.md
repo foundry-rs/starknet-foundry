@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Fixed
+
+- Passing a cheatcode span of 0 was incorrectly treated as `CheatSpan::Indefinite`. This is now resolved by making `CheatSpan::TargetCalls` accept `NonZero<usize>` instead of just `usize` in `snforge_std`.
+
 ## [0.46.0] - 2025-07-09
 
 ### Forge
@@ -18,10 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - Bug where syscall execution resources from nested calls were being calculated twice
-
-#### Changed
-
-- Use of `NonZero<usize>` type instead of `usize` in `CheatSpan::TargetCalls`
 
 ### Cast
 

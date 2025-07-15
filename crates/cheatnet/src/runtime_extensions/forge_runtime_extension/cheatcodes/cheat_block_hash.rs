@@ -102,7 +102,7 @@ impl CheatnetState {
                         (
                             CheatSpan::TargetCalls(
                                 NonZeroUsize::new(calls_number)
-                                    .expect("NonZeroUsize should not be zero after decrement"),
+                                    .expect("`NonZeroUsize` should not be zero after decrement"),
                             ),
                             block_hash,
                         ),
