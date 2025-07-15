@@ -724,11 +724,13 @@ pub fn get_all_used_resources(
         storage_access_tracker: call_info.storage_access_tracker.clone(),
         builtin_counters: call_info.builtin_counters.clone(),
     };
-    let summary = runtime_call_info.summarize(versioned_constants);
+    let runtime_call_info_summary = runtime_call_info.summarize(versioned_constants);
+    dbg!(&runtime_call_info_summary.l2_to_l1_payload_lengths);
+    let summary = call_info.summarize(versioned_constants);
+    dbg!(&summary.l2_to_l1_payload_lengths);
     let l2_to_l1_payload_lengths = summary.l2_to_l1_payload_lengths;
 
-    let l1_handler_payload_lengths =
-        get_l1_handlers_payloads_lengths(&runtime_call_info.inner_calls);
+    let l1_handler_payload_lengths = get_l1_handlers_payloads_lengths(&call_info.inner_calls);
 
     // call representing the test code
     let top_call = runtime
@@ -742,7 +744,7 @@ pub fn get_all_used_resources(
 
     let top_call_syscalls = top_call.borrow().get_total_used_syscalls();
 
-    let events = runtime_call_info
+    let events = call_info
         .iter() // This method iterates over inner calls as well
         .flat_map(|call_info| {
             call_info
