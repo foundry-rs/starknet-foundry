@@ -15,8 +15,6 @@ Hides user's private keys by default.
 
 ## Optional Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
 
-* [`int-format`]()
-* [`hex-format`]()
 * [`json`]()
 
 ## `--display-private-keys`, `-p`

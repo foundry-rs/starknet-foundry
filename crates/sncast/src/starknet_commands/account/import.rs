@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use super::deploy::compute_account_address;
 use crate::starknet_commands::account::{
-    add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
+    generate_add_profile_message, prepare_account_json, write_account_to_accounts_file,
 };
 use anyhow::{Context, Result, bail, ensure};
 use camino::Utf8PathBuf;
@@ -10,10 +10,9 @@ use clap::Args;
 use conversions::string::{TryFromDecStr, TryFromHexStr};
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
-use sncast::helpers::braavos::assert_non_braavos_account;
-use sncast::helpers::configuration::CastConfig;
+use sncast::helpers::braavos::check_braavos_account_compatibility;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::AccountImportResponse;
+use sncast::response::account::import::AccountImportResponse;
 use sncast::{AccountType, check_class_hash_exists, get_chain_id, handle_rpc_error};
 use starknet::core::types::{BlockId, BlockTag, StarknetError};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
@@ -70,8 +69,11 @@ pub async fn import(
     provider: &JsonRpcClient<HttpTransport>,
     import: &Import,
 ) -> Result<AccountImportResponse> {
-    // TODO(#3118): Remove this check once braavos integration is restored
-    assert_non_braavos_account(Some(import.account_type), import.class_hash)?;
+    // Braavos accounts before v1.2.0 are not compatible with Starknet >= 0.13.4
+    // For more, read https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
+    if let Some(class_hash) = import.class_hash {
+        check_braavos_account_compatibility(class_hash)?;
+    }
 
     let private_key = if let Some(passed_private_key) = &import.private_key {
         passed_private_key
@@ -149,26 +151,17 @@ pub async fn import(
 
     write_account_to_accounts_file(&account_name, accounts_file, chain_id, account_json.clone())?;
 
-    if import.add_profile.is_some() {
-        if let Some(url) = &import.rpc.url {
-            let config = CastConfig {
-                url: url.clone(),
-                account: account_name.clone(),
-                accounts_file: accounts_file.into(),
-                ..Default::default()
-            };
-            add_created_profile_to_configuration(import.add_profile.as_deref(), &config, None)?;
-        } else {
-            unreachable!("Conflicting arguments should be handled in clap");
-        }
-    }
+    let add_profile_message = generate_add_profile_message(
+        import.add_profile.as_ref(),
+        &import.rpc,
+        &account_name,
+        accounts_file,
+        None,
+    )?;
 
     Ok(AccountImportResponse {
-        add_profile: import.add_profile.as_ref().map_or_else(
-            || "--add-profile flag was not set. No profile added to snfoundry.toml".to_string(),
-            |profile_name| format!("Profile {profile_name} successfully added to snfoundry.toml"),
-        ),
-        account_name: account.map_or_else(|| Some(account_name), |_| None),
+        add_profile: add_profile_message,
+        account_name,
     })
 }
 

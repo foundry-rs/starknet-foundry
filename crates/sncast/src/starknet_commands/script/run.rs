@@ -3,10 +3,10 @@ use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{WaitForTx, get_account};
 use anyhow::{Context, Result, anyhow};
 use blockifier::execution::contract_class::TrackedResource;
-use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::ExecutableCallEntryPoint;
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::execution::syscalls::vm_syscall_utils::SyscallSelector;
 use blockifier::state::cached_state::CachedState;
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_runnable_utils::builder::{EntryCodeConfig, RunnableBuilder, create_code_footer};
@@ -24,6 +24,8 @@ use clap::Args;
 use conversions::byte_array::ByteArray;
 use conversions::serde::deserialize::BufferReader;
 use forge_runner::running::{has_segment_arena, syscall_handler_offset};
+use foundry_ui::UI;
+use foundry_ui::components::warning::WarningMessage;
 use runtime::starknet::context::{SerializableBlockInfo, build_context};
 use runtime::starknet::state::DictStateReader;
 use runtime::{
@@ -34,14 +36,13 @@ use scarb_api::{StarknetContractArtifacts, package_matches_version_requirement};
 use scarb_metadata::{Metadata, PackageMetadata};
 use script_runtime::CastScriptRuntime;
 use semver::{Comparator, Op, Version, VersionReq};
-use shared::print::print_as_warning;
 use shared::utils::build_readable_text;
 use sncast::get_nonce;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::helpers::fee::{FeeArgs, ScriptFeeSettings};
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::ScriptRunResponse;
+use sncast::response::script::run::ScriptRunResponse;
 use sncast::state::hashing::{
     generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
 };
@@ -85,6 +86,7 @@ pub struct CastScriptExtension<'a> {
     pub config: &'a CastConfig,
     pub artifacts: &'a HashMap<String, StarknetContractArtifacts>,
     pub state: StateManager,
+    pub ui: &'a UI,
 }
 
 impl CastScriptExtension<'_> {
@@ -105,7 +107,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
         mut input_reader: BufferReader,
         _extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
-        let res = match selector {
+        match selector {
             "call" => {
                 let contract_address = input_reader.read()?;
                 let function_selector = input_reader.read()?;
@@ -150,6 +152,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait_params: self.config.wait_params,
                     },
                     true,
+                    self.ui,
                 ));
 
                 self.state.maybe_insert_tx_entry(
@@ -188,6 +191,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait: true,
                         wait_params: self.config.wait_params,
                     },
+                    self.ui,
                 ));
 
                 self.state.maybe_insert_tx_entry(
@@ -225,6 +229,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait: true,
                         wait_params: self.config.wait_params,
                     },
+                    self.ui,
                 ));
 
                 self.state.maybe_insert_tx_entry(
@@ -257,14 +262,12 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 Ok(CheatcodeHandlingResult::from_serializable(tx_status_result))
             }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
-        };
-
-        res
+        }
     }
 
     fn override_system_call(
         &mut self,
-        _selector: DeprecatedSyscallSelector,
+        _selector: SyscallSelector,
         _vm: &mut VirtualMachine,
         _extended_runtime: &mut Self::Runtime,
     ) -> Result<SyscallHandlingResult, HintError> {
@@ -284,8 +287,10 @@ pub fn run(
     tokio_runtime: Runtime,
     config: &CastConfig,
     state_file_path: Option<Utf8PathBuf>,
+    ui: &UI,
 ) -> Result<ScriptRunResponse> {
-    warn_if_sncast_std_not_compatible(metadata)?;
+    warn_if_sncast_std_not_compatible(metadata, ui)?;
+
     let artifacts = inject_lib_artifact(metadata, package_metadata, artifacts)?;
 
     let artifact = artifacts
@@ -375,6 +380,7 @@ pub fn run(
         artifacts: &artifacts,
         account: account.as_ref(),
         state,
+        ui,
     };
 
     let mut cast_runtime = ExtendedRuntime {
@@ -423,16 +429,16 @@ fn sncast_std_version_requirement() -> VersionReq {
     }
 }
 
-fn warn_if_sncast_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
+fn warn_if_sncast_std_not_compatible(scarb_metadata: &Metadata, ui: &UI) -> Result<()> {
     let sncast_std_version_requirement = sncast_std_version_requirement();
     if !package_matches_version_requirement(
         scarb_metadata,
         "sncast_std",
         &sncast_std_version_requirement,
     )? {
-        print_as_warning(&anyhow!(
+        ui.println(&WarningMessage::new(&format!(
             "Package sncast_std version does not meet the recommended version requirement {sncast_std_version_requirement}, it might result in unexpected behaviour"
-        ));
+        )));
     }
     Ok(())
 }

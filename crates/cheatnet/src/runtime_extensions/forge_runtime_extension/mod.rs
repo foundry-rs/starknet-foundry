@@ -7,7 +7,6 @@ use crate::runtime_extensions::{
         CallToBlockifierRuntime,
         rpc::{CallFailure, CallResult},
     },
-    cheatable_starknet_runtime_extension::SyscallSelector,
     common::get_relocated_vm_trace,
     forge_runtime_extension::cheatcodes::{
         CheatcodeError,
@@ -21,21 +20,15 @@ use crate::runtime_extensions::{
 };
 use crate::state::{CallTrace, CallTraceNode};
 use anyhow::{Context, Result, anyhow};
-use blockifier::bouncer::builtins_to_sierra_gas;
+use blockifier::blockifier_versioned_constants::VersionedConstants;
+use blockifier::bouncer::vm_resources_to_sierra_gas;
 use blockifier::context::TransactionContext;
-use blockifier::execution::call_info::CallExecution;
+use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::CallEntryPoint;
+use blockifier::execution::syscalls::syscall_executor::SyscallExecutor;
+use blockifier::execution::syscalls::vm_syscall_utils::{SyscallSelector, SyscallUsageMap};
 use blockifier::state::errors::StateError;
-use blockifier::transaction::objects::ExecutionResourcesTraits;
-use blockifier::utils::u64_from_usize;
-use blockifier::{
-    execution::{
-        call_info::CallInfo, deprecated_syscalls::DeprecatedSyscallSelector,
-        syscalls::hint_processor::SyscallUsageMap,
-    },
-    versioned_constants::VersionedConstants,
-};
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::{
     errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
@@ -187,9 +180,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
-                syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
+                syscall_handler.increment_syscall_count_by(&SyscallSelector::Deploy, 1);
                 syscall_handler
-                    .increment_linear_factor_by(&DeprecatedSyscallSelector::Deploy, calldata.len());
+                    .increment_linear_factor_by(&SyscallSelector::Deploy, calldata.len());
 
                 handle_declare_deploy_result(deploy(
                     syscall_handler,
@@ -205,9 +198,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
-                syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
+                syscall_handler.increment_syscall_count_by(&SyscallSelector::Deploy, 1);
                 syscall_handler
-                    .increment_linear_factor_by(&DeprecatedSyscallSelector::Deploy, calldata.len());
+                    .increment_linear_factor_by(&SyscallSelector::Deploy, calldata.len());
 
                 handle_declare_deploy_result(deploy_at(
                     syscall_handler,
@@ -549,7 +542,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
         _extended_runtime: &mut Self::Runtime,
     ) -> Result<SyscallHandlingResult, HintError> {
         match selector {
-            DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
+            SyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
                 "Replace class can't be used in tests",
             ))),
             _ => Ok(SyscallHandlingResult::Forwarded),
@@ -603,12 +596,16 @@ pub fn add_resources_to_top_call(
     match tracked_resource {
         TrackedResource::CairoSteps => top_call.used_execution_resources += resources,
         TrackedResource::SierraGas => {
-            top_call.gas_consumed += vm_resources_to_sierra_gas(resources, versioned_constants).0;
+            top_call.gas_consumed +=
+                vm_resources_to_sierra_gas(&resources.clone(), versioned_constants).0;
         }
     }
 }
 
-pub fn update_top_call_resources(runtime: &mut ForgeRuntime, tracked_resource: &TrackedResource) {
+pub fn update_top_call_resources(
+    runtime: &mut ForgeRuntime,
+    top_call_tracked_resource: TrackedResource,
+) {
     // call representing the test code
     let top_call = runtime
         .extended_runtime
@@ -619,21 +616,18 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime, tracked_resource: &
         .current_call_stack
         .top();
 
-    let mut top_call = match tracked_resource {
-        TrackedResource::CairoSteps => {
-            let all_execution_resources = add_execution_resources(top_call.clone());
-            let mut top_call = top_call.borrow_mut();
-            top_call.used_execution_resources = all_execution_resources;
-            top_call
-        }
-        TrackedResource::SierraGas => {
-            let all_sierra_gas_consumed = add_sierra_gas_resources(&top_call);
-            let mut top_call = top_call.borrow_mut();
-            top_call.gas_consumed = all_sierra_gas_consumed;
-            top_call
-        }
-    };
+    let all_execution_resources = add_execution_resources(top_call.clone());
+    let all_sierra_gas_consumed = add_sierra_gas_resources(&top_call);
 
+    // Below syscall usages are cumulative, meaning they include syscalls from their inner calls.
+    let nested_calls_syscalls_vm_resources = get_nested_calls_syscalls_vm_resources(&top_call);
+    let nested_calls_syscalls_sierra_gas = get_nested_calls_syscalls_sierra_gas(&top_call);
+
+    let mut top_call = top_call.borrow_mut();
+    top_call.used_execution_resources = all_execution_resources;
+    top_call.gas_consumed = all_sierra_gas_consumed;
+
+    // Syscall usage here is flat, meaning it only includes syscalls from current call (in this case the top-level call)
     let top_call_syscalls = runtime
         .extended_runtime
         .extended_runtime
@@ -642,16 +636,49 @@ pub fn update_top_call_resources(runtime: &mut ForgeRuntime, tracked_resource: &
         .syscalls_usage
         .clone();
 
+    let mut total_syscalls_vm_resources = nested_calls_syscalls_vm_resources.clone();
+    let mut total_syscalls_sierra_gas = nested_calls_syscalls_sierra_gas.clone();
+
+    // Based on the tracked resource of top call, we add the syscall usage to respective totals.
+    match top_call_tracked_resource {
+        TrackedResource::CairoSteps => {
+            total_syscalls_vm_resources =
+                sum_syscall_usage(total_syscalls_vm_resources, &top_call_syscalls);
+        }
+        TrackedResource::SierraGas => {
+            total_syscalls_sierra_gas =
+                sum_syscall_usage(total_syscalls_sierra_gas, &top_call_syscalls);
+        }
+    }
+
+    top_call.used_syscalls_vm_resources = total_syscalls_vm_resources;
+    top_call.used_syscalls_sierra_gas = total_syscalls_sierra_gas;
+}
+
+/// Calculates the total syscall usage from nested calls where the tracked resource is Cairo steps.
+pub fn get_nested_calls_syscalls_vm_resources(trace: &Rc<RefCell<CallTrace>>) -> SyscallUsageMap {
     // Only sum 1-level since these include syscalls from inner calls
-    let nested_calls_syscalls = top_call
+    trace
+        .borrow()
         .nested_calls
         .iter()
         .filter_map(CallTraceNode::extract_entry_point_call)
         .fold(SyscallUsageMap::new(), |syscalls, trace| {
-            sum_syscall_usage(syscalls, &trace.borrow().used_syscalls)
-        });
+            sum_syscall_usage(syscalls, &trace.borrow().used_syscalls_vm_resources)
+        })
+}
 
-    top_call.used_syscalls = sum_syscall_usage(top_call_syscalls, &nested_calls_syscalls);
+/// Calculates the total syscall usage from nested calls where the tracked resource is Sierra gas.
+pub fn get_nested_calls_syscalls_sierra_gas(trace: &Rc<RefCell<CallTrace>>) -> SyscallUsageMap {
+    // Only sum 1-level since these include syscalls from inner calls
+    trace
+        .borrow()
+        .nested_calls
+        .iter()
+        .filter_map(CallTraceNode::extract_entry_point_call)
+        .fold(SyscallUsageMap::new(), |syscalls, trace| {
+            sum_syscall_usage(syscalls, &trace.borrow().used_syscalls_sierra_gas)
+        })
 }
 
 // Only top-level is considered relevant since we can't have l1 handlers deeper than 1 level of nesting
@@ -718,19 +745,19 @@ fn add_sierra_gas_resources(top_call: &Rc<RefCell<CallTrace>>) -> u64 {
     let mut gas_consumed = top_call.borrow().gas_consumed;
     for nested_call in &top_call.borrow().nested_calls {
         if let CallTraceNode::EntryPointCall(nested_call) = nested_call {
-            gas_consumed += &add_sierra_gas_resources(nested_call);
+            gas_consumed += &nested_call.borrow().gas_consumed;
         }
     }
     gas_consumed
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn add_execution_resources(top_call: Rc<RefCell<CallTrace>>) -> ExecutionResources {
     let mut execution_resources = top_call.borrow().used_execution_resources.clone();
     for nested_call in &top_call.borrow().nested_calls {
         match nested_call {
             CallTraceNode::EntryPointCall(nested_call) => {
-                execution_resources += &add_execution_resources(nested_call.clone());
+                execution_resources += &nested_call.borrow().used_execution_resources;
             }
             CallTraceNode::DeployWithoutConstructor => {}
         }
@@ -783,21 +810,17 @@ pub fn get_all_used_resources(
 
     let mut execution_resources = top_call.borrow().used_execution_resources.clone();
     let mut sierra_gas_consumed = top_call.borrow().gas_consumed;
-    let top_call_syscalls = top_call.borrow().used_syscalls.clone();
+    let top_call_syscalls = top_call.borrow().get_total_used_syscalls();
 
-    match tracked_resource {
-        TrackedResource::CairoSteps => {
-            execution_resources = add_syscall_execution_resources(
-                versioned_constants,
-                &execution_resources,
-                &top_call_syscalls,
-            );
-        }
-        TrackedResource::SierraGas => {
-            sierra_gas_consumed +=
-                get_syscalls_gas_consumed(&top_call_syscalls, versioned_constants);
-        }
-    }
+    execution_resources = add_syscall_execution_resources(
+        versioned_constants,
+        &execution_resources,
+        &top_call.borrow().used_syscalls_vm_resources,
+    );
+    sierra_gas_consumed += get_syscalls_gas_consumed(
+        &top_call.borrow().used_syscalls_sierra_gas,
+        versioned_constants,
+    );
 
     let events = runtime_call_info
         .iter() // This method iterates over inner calls as well
@@ -818,36 +841,4 @@ pub fn get_all_used_resources(
         l1_handler_payload_lengths,
         l2_to_l1_payload_lengths,
     }
-}
-
-fn n_steps_to_sierra_gas(n_steps: usize, versioned_constants: &VersionedConstants) -> GasAmount {
-    let n_steps_u64 = u64_from_usize(n_steps);
-    let gas_per_step = versioned_constants
-        .os_constants
-        .gas_costs
-        .base
-        .step_gas_cost;
-    let n_steps_gas_cost = n_steps_u64.checked_mul(gas_per_step).unwrap_or_else(|| {
-        panic!(
-            "Multiplication overflow while converting steps to gas. steps: {n_steps}, gas per step: {gas_per_step}."
-        )
-    });
-    GasAmount(n_steps_gas_cost)
-}
-
-// Based on: https://github.com/starkware-libs/sequencer/blob/main-v0.13.4/crates/blockifier/src/bouncer.rs#L320
-#[must_use]
-pub fn vm_resources_to_sierra_gas(
-    resources: &ExecutionResources,
-    versioned_constants: &VersionedConstants,
-) -> GasAmount {
-    let builtins_gas_cost =
-        builtins_to_sierra_gas(&resources.prover_builtins(), versioned_constants);
-    let n_steps_gas_cost = n_steps_to_sierra_gas(resources.total_n_steps(), versioned_constants);
-    n_steps_gas_cost.checked_add(builtins_gas_cost).unwrap_or_else(|| {
-        panic!(
-            "Addition overflow while converting vm resources to gas. steps gas: {n_steps_gas_cost}, \
-            builtins gas: {builtins_gas_cost}."
-        )
-    })
 }

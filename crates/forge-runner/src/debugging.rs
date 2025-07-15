@@ -1,3 +1,4 @@
+use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::CallTrace;
 use clap::ValueEnum;
@@ -29,10 +30,12 @@ pub fn build_debugging_trace(
     contracts_data: &ContractsData,
     trace_verbosity: Option<TraceVerbosity>,
     test_name: String,
+    fork_data: &ForkData,
 ) -> Option<debugging::Trace> {
+    let contracts_data_store = debugging::ContractsDataStore::new(contracts_data, fork_data);
     Some(debugging::Trace::new(
         call_trace,
-        contracts_data,
+        &contracts_data_store,
         trace_verbosity?.into(),
         test_name,
     ))

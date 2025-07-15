@@ -9,8 +9,6 @@ mod color;
 mod completions;
 mod components;
 mod contract_artifacts;
-#[cfg(not(target_os = "windows"))]
-// TODO(#2990): Run coverage test on Windows
 mod coverage;
 #[cfg(feature = "debugging")]
 mod debugging;

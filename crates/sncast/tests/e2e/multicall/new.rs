@@ -24,9 +24,10 @@ async fn test_happy_case_file() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        command: multicall new
-        content:[..]
-        path: multicall.toml
+        Success: Multicall template created successfully
+
+        Path:    multicall.toml
+        Content: [..]
         "},
     );
 
@@ -74,17 +75,13 @@ async fn test_directory_non_existent() {
 
     assert!(output.as_stdout().is_empty());
 
-    let expected_file_error = if cfg!(target_os = "windows") {
-        "The system cannot find the path specified[..]"
-    } else {
-        "No such file or directory [..]"
-    };
+    let expected_file_error = "No such file or directory [..]";
 
     assert_stderr_contains(
         output,
         formatdoc! {r"
-        command: multicall new
-        error: {}
+        Command: multicall new
+        Error: {}
         ", expected_file_error},
     );
 }
@@ -112,8 +109,8 @@ async fn test_file_invalid_path() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: multicall new
-        error: Output file cannot be a directory[..]
+        Command: multicall new
+        Error: Output file cannot be a directory[..]
         "},
     );
 }

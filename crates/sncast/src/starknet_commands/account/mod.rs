@@ -2,19 +2,27 @@ use crate::starknet_commands::account::create::Create;
 use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
 use crate::starknet_commands::account::import::Import;
-use crate::starknet_commands::account::list::List;
-use anyhow::{Context, Result, anyhow, bail};
+use crate::starknet_commands::account::list::{AccountsListMessage, List};
+use crate::{process_command_result, starknet_commands};
+use anyhow::{Context, Result, bail};
 use camino::Utf8PathBuf;
 use clap::{Args, Subcommand};
-use configuration::{
-    CONFIG_FILENAME, find_config_file, load_config, search_config_upwards_relative_to,
-};
+use configuration::resolve_config_file;
+use configuration::{load_config, search_config_upwards_relative_to};
+use foundry_ui::UI;
 use serde_json::json;
+use sncast::helpers::account::{generate_account_name, load_accounts};
+use sncast::helpers::interactive::prompt_to_add_account_as_default;
+use sncast::helpers::rpc::RpcArgs;
+use sncast::response::explorer_link::block_explorer_link_if_allowed;
 use sncast::{
     AccountType, chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig,
 };
+use sncast::{WaitForTx, get_chain_id};
+use starknet::providers::Provider;
 use starknet::signers::SigningKey;
 use starknet_types_core::felt::Felt;
+use std::io::{self, IsTerminal};
 use std::{fs::OpenOptions, io::Write};
 use toml::Value;
 
@@ -79,9 +87,7 @@ pub fn write_account_to_accounts_file(
         std::fs::write(accounts_file.clone(), "{}")?;
     }
 
-    let contents = std::fs::read_to_string(accounts_file.clone())?;
-    let mut items: serde_json::Value = serde_json::from_str(&contents)
-        .map_err(|_| anyhow!("Failed to parse accounts file at = {}", accounts_file))?;
+    let mut items = load_accounts(accounts_file)?;
 
     let network_name = chain_id_to_network_name(chain_id);
 
@@ -104,9 +110,9 @@ pub fn write_account_to_accounts_file(
 pub fn add_created_profile_to_configuration(
     profile: Option<&str>,
     cast_config: &CastConfig,
-    path: Option<&Utf8PathBuf>,
+    path: &Utf8PathBuf,
 ) -> Result<()> {
-    if !load_config::<CastConfig>(path, profile)
+    if !load_config::<CastConfig>(Some(path), profile)
         .unwrap_or_default()
         .account
         .is_empty()
@@ -145,10 +151,7 @@ pub fn add_created_profile_to_configuration(
         toml::to_string(&Value::Table(sncast_config)).context("Failed to convert toml to string")?
     };
 
-    let config_path = match path.as_ref() {
-        Some(p) => search_config_upwards_relative_to(p)?,
-        None => find_config_file().unwrap_or(Utf8PathBuf::from(CONFIG_FILENAME)),
-    };
+    let config_path = search_config_upwards_relative_to(path)?;
 
     let mut snfoundry_toml = OpenOptions::new()
         .create(true)
@@ -160,6 +163,174 @@ pub fn add_created_profile_to_configuration(
         .context("Failed to write to the snfoundry.toml")?;
 
     Ok(())
+}
+
+fn generate_add_profile_message(
+    profile_name: Option<&String>,
+    rpc: &RpcArgs,
+    account_name: &str,
+    accounts_file: &Utf8PathBuf,
+    keystore: Option<Utf8PathBuf>,
+) -> Result<Option<String>> {
+    if let Some(profile_name) = profile_name {
+        let url = rpc
+            .url
+            .clone()
+            .expect("the argument '--network' should not be used with '--add-profile' argument");
+        let config = CastConfig {
+            url,
+            account: account_name.into(),
+            accounts_file: accounts_file.into(),
+            keystore,
+            ..Default::default()
+        };
+        let config_path = resolve_config_file();
+        add_created_profile_to_configuration(Some(profile_name), &config, &config_path)?;
+        Ok(Some(format!(
+            "Profile {profile_name} successfully added to {config_path}",
+        )))
+    } else {
+        Ok(None)
+    }
+}
+
+#[allow(clippy::too_many_lines)]
+pub async fn account(
+    account: Account,
+    config: CastConfig,
+    ui: &UI,
+    wait_config: WaitForTx,
+) -> anyhow::Result<()> {
+    match account.command {
+        Commands::Import(import) => {
+            let provider = import.rpc.get_provider(&config, ui).await?;
+            let result = starknet_commands::account::import::import(
+                import.name.clone(),
+                &config.accounts_file,
+                &provider,
+                &import,
+            )
+            .await;
+
+            let run_interactive_prompt =
+                !import.silent && result.is_ok() && io::stdout().is_terminal();
+
+            if run_interactive_prompt {
+                if let Some(account_name) = result.as_ref().ok().map(|r| r.account_name.clone()) {
+                    if let Err(err) = prompt_to_add_account_as_default(account_name.as_str()) {
+                        // TODO(#3436)
+                        ui.eprintln(&format!(
+                            "Error: Failed to launch interactive prompt: {err}"
+                        ));
+                    }
+                }
+            }
+
+            process_command_result("account import", result, ui, None);
+            Ok(())
+        }
+        Commands::Create(create) => {
+            let provider = create.rpc.get_provider(&config, ui).await?;
+
+            let chain_id = get_chain_id(&provider).await?;
+            let account = if config.keystore.is_none() {
+                create
+                    .name
+                    .clone()
+                    .unwrap_or_else(|| generate_account_name(&config.accounts_file).unwrap())
+            } else {
+                config.account.clone()
+            };
+            let result = starknet_commands::account::create::create(
+                &account,
+                &config.accounts_file,
+                config.keystore,
+                &provider,
+                chain_id,
+                &create,
+            )
+            .await;
+
+            let block_explorer_link = block_explorer_link_if_allowed(
+                &result,
+                provider.chain_id().await?,
+                config.show_explorer_links,
+                config.block_explorer,
+            );
+
+            process_command_result("account create", result, ui, block_explorer_link);
+            Ok(())
+        }
+
+        Commands::Deploy(deploy) => {
+            let provider = deploy.rpc.get_provider(&config, ui).await?;
+
+            let fee_args = deploy.fee_args.clone();
+
+            let chain_id = get_chain_id(&provider).await?;
+            let keystore_path = config.keystore.clone();
+            let result = starknet_commands::account::deploy::deploy(
+                &provider,
+                config.accounts_file,
+                &deploy,
+                chain_id,
+                wait_config,
+                &config.account,
+                keystore_path,
+                fee_args,
+                ui,
+            )
+            .await;
+
+            let run_interactive_prompt =
+                !deploy.silent && result.is_ok() && io::stdout().is_terminal();
+
+            if config.keystore.is_none() && run_interactive_prompt {
+                if let Err(err) = prompt_to_add_account_as_default(
+                    &deploy
+                        .name
+                        .expect("Must be provided if not using a keystore"),
+                ) {
+                    // TODO(#3436)
+                    ui.eprintln(&format!(
+                        "Error: Failed to launch interactive prompt: {err}"
+                    ));
+                }
+            }
+
+            let block_explorer_link = block_explorer_link_if_allowed(
+                &result,
+                provider.chain_id().await?,
+                config.show_explorer_links,
+                config.block_explorer,
+            );
+            process_command_result("account deploy", result, ui, block_explorer_link);
+            Ok(())
+        }
+
+        Commands::Delete(delete) => {
+            let network_name =
+                starknet_commands::account::delete::get_network_name(&delete, &config, ui).await?;
+
+            let result = starknet_commands::account::delete::delete(
+                &delete.name,
+                &config.accounts_file,
+                &network_name,
+                delete.yes,
+            );
+
+            process_command_result("account delete", result, ui, None);
+            Ok(())
+        }
+
+        Commands::List(options) => {
+            ui.println(&AccountsListMessage::new(
+                config.accounts_file,
+                options.display_private_keys,
+            )?);
+            Ok(())
+        }
+    }
 }
 
 #[cfg(test)]
@@ -186,7 +357,7 @@ mod tests {
         let res = add_created_profile_to_configuration(
             Some(&String::from("some-name")),
             &config,
-            Some(&path.clone()),
+            &path.clone(),
         );
         assert!(res.is_ok());
 
@@ -211,7 +382,7 @@ mod tests {
         let res = add_created_profile_to_configuration(
             Some(&String::from("default")),
             &config,
-            Some(&Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            &Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap(),
         );
         assert!(res.is_err());
     }

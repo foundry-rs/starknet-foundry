@@ -1,21 +1,22 @@
 use crate::compatibility_check::{Requirement, RequirementsChecker, create_version_parser};
 use anyhow::Result;
-use anyhow::anyhow;
 use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use derive_more::Display;
 use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceVerbosity;
 use forge_runner::forge_config::ForgeTrackedResource;
+use foundry_ui::UI;
+use foundry_ui::components::warning::WarningMessage;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
 use shared::auto_completions::{Completion, generate_completions};
-use shared::print::print_as_warning;
 use std::cell::RefCell;
 use std::ffi::OsString;
 use std::process::Command;
+use std::sync::Arc;
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
 use tokio::runtime::Builder;
 use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
@@ -26,7 +27,6 @@ mod combine_configs;
 mod compatibility_check;
 mod init;
 mod new;
-pub mod pretty_printing;
 pub mod run_tests;
 pub mod scarb;
 pub mod shared_cache;
@@ -42,7 +42,7 @@ const MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN: Version = Version::new(2, 10, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 const MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS: Version = Version::new(2, 10, 0);
 // TODO(#3344) Set this to 0.44.0 after it has been released
-const MINIMAL_SNFORGE_STD_VERSION: Version = Version::new(0, 43, 0);
+const MINIMAL_SNFORGE_STD_VERSION: Version = Version::new(0, 44, 0);
 
 #[derive(Parser, Debug)]
 #[command(
@@ -152,6 +152,10 @@ pub struct TestArgs {
     #[arg(short, long)]
     exact: bool,
 
+    /// Skips any tests whose name contains the given SKIP string.
+    #[arg(long)]
+    skip: Vec<String>,
+
     /// Stop executing tests after the first failed test
     #[arg(short = 'x', long)]
     exit_first: bool,
@@ -254,12 +258,12 @@ pub enum ExitStatus {
     Failure,
 }
 
-pub fn main_execution() -> Result<ExitStatus> {
+pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
     let cli = Cli::parse();
 
     match cli.subcommand {
         ForgeSubcommand::Init { name } => {
-            init::init(name.as_str())?;
+            init::init(name.as_str(), &ui)?;
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::New { args } => {
@@ -267,13 +271,11 @@ pub fn main_execution() -> Result<ExitStatus> {
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Clean { args } => {
-            clean::clean(args)?;
+            clean::clean(args, &ui)?;
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::CleanCache {} => {
-            print_as_warning(&anyhow!(
-                "`snforge clean-cache` is deprecated and will be removed in the future. Use `snforge clean cache` instead"
-            ));
+            ui.println(&WarningMessage::new("`snforge clean-cache` is deprecated and will be removed in the future. Use `snforge clean cache` instead"));
             let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
             let cache_dir = scarb_metadata.workspace.root.join(CACHE_DIR);
 
@@ -284,11 +286,11 @@ pub fn main_execution() -> Result<ExitStatus> {
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Test { args } => {
-            check_requirements(false, args.tracked_resource)?;
+            check_requirements(false, args.tracked_resource, &ui)?;
             let cores = if let Ok(available_cores) = available_parallelism() {
                 available_cores.get()
             } else {
-                eprintln!("Failed to get the number of available cores, defaulting to 1");
+                ui.eprintln(&"Failed to get the number of available cores, defaulting to 1");
                 1
             };
 
@@ -297,10 +299,10 @@ pub fn main_execution() -> Result<ExitStatus> {
                 .enable_all()
                 .build()?;
 
-            rt.block_on(run_for_workspace(args))
+            rt.block_on(run_for_workspace(args, ui))
         }
         ForgeSubcommand::CheckRequirements => {
-            check_requirements(true, ForgeTrackedResource::default())?;
+            check_requirements(true, ForgeTrackedResource::default(), &ui)?;
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Completion(completion) => {
@@ -313,6 +315,7 @@ pub fn main_execution() -> Result<ExitStatus> {
 fn check_requirements(
     output_on_success: bool,
     forge_tracked_resource: ForgeTrackedResource,
+    ui: &UI,
 ) -> Result<()> {
     let mut requirements_checker = RequirementsChecker::new(output_on_success);
     match forge_tracked_resource {
@@ -355,7 +358,7 @@ fn check_requirements(
             r"universal-sierra-compiler (?<version>[0-9]+.[0-9]+.[0-9]+)",
         ),
     });
-    requirements_checker.check()?;
+    requirements_checker.check(ui)?;
 
     let scarb_version = ScarbCommand::version().run()?.scarb;
     if scarb_version < MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN {
@@ -377,7 +380,7 @@ fn check_requirements(
                 .to_string(),
         });
 
-        requirements_checker.check()?;
+        requirements_checker.check(ui)?;
     }
 
     Ok(())

@@ -17,8 +17,7 @@ use test_case::test_case;
 #[test_case("oz_cairo_1"; "cairo_1_account")]
 #[test_case("oz"; "oz_account")]
 #[test_case("argent"; "argent_account")]
-// TODO(#3118)
-// #[test_case("braavos"; "braavos_account")]
+#[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 async fn test_happy_case(account: &str) {
     let contract_dir = duplicate_contract_directory_with_salt(
@@ -50,8 +49,9 @@ async fn test_happy_case(account: &str) {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script run
-        status: success
+        Success: Script execution completed
+
+        Status: success
     "});
 }
 
@@ -83,7 +83,7 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
 }
 
 #[tokio::test]
-#[ignore] // TODO: Fix this tests in https://github.com/foundry-rs/starknet-foundry/issues/2351
+#[ignore = "TODO: Fix this tests in https://github.com/foundry-rs/starknet-foundry/issues/2351"]
 async fn test_fail_when_using_starknet_syscall() {
     let script_dir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/misc", Vec::<String>::new());
@@ -108,8 +108,8 @@ async fn test_fail_when_using_starknet_syscall() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: script run
-        error: Got an exception while executing a hint: Hint Error: Starknet syscalls are not supported
+        Command: script run
+        Error: Got an exception while executing a hint: Hint Error: Starknet syscalls are not supported
         "},
     );
 }
@@ -201,8 +201,9 @@ async fn test_multiple_packages_happy_case() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script run
-        status: success
+        Success: Script execution completed
+
+        Status: success
     "});
 }
 
@@ -251,8 +252,9 @@ async fn test_run_script_display_debug_traits() {
         debug invoke_result: InvokeResult { transaction_hash: [..] }
         call_result: [2]
         debug call_result: CallResult { data: [2] }
-        command: script run
-        status: success
+        Success: Script execution completed
+
+        Status: success
     "});
 }
 
@@ -277,8 +279,8 @@ async fn test_nonexistent_account_address() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: script run
-        error: Account with address 0x1010101010011aaabbcc not found on network SN_SEPOLIA
+        Command: script run
+        Error: Account with address 0x1010101010011aaabbcc not found on network SN_SEPOLIA
         "},
     );
 }
@@ -291,8 +293,11 @@ async fn test_no_account_passed() {
     let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts");
     snapbox.assert().success().stdout_matches(indoc! {r#"
         ...
-        command: script run
-        message:[..]
+        Success: Script execution completed
+        
+        Status: script panicked
+
+
             "Account not defined. Please ensure the correct account is passed to `script run` command"
         ...
     "#});
@@ -358,8 +363,9 @@ async fn test_run_script_twice_with_state_file_enabled() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script run
-        status: success
+        Success: Script execution completed
+
+        Status: success
     "});
 
     let state_file_path = Utf8PathBuf::from_path_buf(
@@ -383,8 +389,9 @@ async fn test_run_script_twice_with_state_file_enabled() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script run
-        status: success
+        Success: Script execution completed
+
+        Status: success
     "});
 
     let tx_entries_after_second_run = read_txs_from_state_file(&state_file_path).unwrap().unwrap();
@@ -393,7 +400,7 @@ async fn test_run_script_twice_with_state_file_enabled() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "TODO(#3519) find why it was ignored"]
 async fn test_state_file_contains_all_failed_txs() {
     let script_dir = copy_script_directory_to_tempdir(
         SCRIPTS_DIR.to_owned() + "/state_file/",
@@ -419,8 +426,7 @@ async fn test_state_file_contains_all_failed_txs() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script run
-        status: success
+        Success: Script execution completed
     "});
 
     let state_file_path = Utf8PathBuf::from_path_buf(
@@ -508,8 +514,9 @@ async fn test_state_file_rerun_failed_tx() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
     "});
 
     let tx_entries_after_first_run = read_txs_from_state_file(&state_file_path).unwrap().unwrap();
@@ -552,7 +559,8 @@ async fn test_using_release_profile() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
     "});
 }

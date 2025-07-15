@@ -10,8 +10,7 @@ use test_case::test_case;
 #[test_case("oz_cairo_1"; "cairo_1_account")]
 #[test_case("oz"; "oz_account")]
 #[test_case("argent"; "argent_account")]
-// TODO(#3118)
-// #[test_case("braavos"; "braavos_account")]
+#[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 async fn test_wrong_contract_name(account: &str) {
     let contract_dir = duplicate_contract_directory_with_salt(
@@ -45,15 +44,15 @@ async fn test_wrong_contract_name(account: &str) {
         output,
         indoc! {r#"
         ScriptCommandError::ContractArtifactsNotFound(ErrorData { msg: "Mapaaaa" })
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
         "#},
     );
 }
 
-// TODO(#2912)
 #[tokio::test]
-#[ignore]
+#[ignore = "TODO(#2912)"]
 async fn test_same_contract_twice() {
     let contract_dir = duplicate_contract_directory_with_salt(
         SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
@@ -86,8 +85,9 @@ async fn test_same_contract_twice() {
         success
         DeclareResult::Success(DeclareTransactionResult { class_hash: [..], transaction_hash: [..] })
         DeclareResult::AlreadyDeclared(AlreadyDeclaredResult { class_hash: [..] })
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
     "});
 }
 
@@ -121,8 +121,9 @@ async fn test_with_invalid_max_fee() {
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientResourcesForValidate(())))
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
     "});
 }
 
@@ -156,8 +157,9 @@ async fn test_with_invalid_nonce() {
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InvalidTransactionNonce(())))
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
     "});
 }
 
@@ -192,8 +194,9 @@ async fn test_insufficient_account_balance() {
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientAccountBalance(())))
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
     "});
 }
 
@@ -232,8 +235,9 @@ async fn test_sncast_timed_out() {
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TimedOut(()))
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
     "});
 }
 
@@ -268,7 +272,8 @@ async fn test_fee_settings() {
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         success
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
     "});
 }

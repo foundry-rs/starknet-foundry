@@ -10,13 +10,11 @@ use configuration::CONFIG_FILENAME;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::AccountType;
-use sncast::helpers::constants::ARGENT_CLASS_HASH;
-use sncast::helpers::constants::OZ_CLASS_HASH;
+use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Declare;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 use std::fs;
-use tempfile::tempdir;
 use test_case::test_case;
 
 #[tokio::test]
@@ -48,9 +46,10 @@ async fn test_happy_case_human_readable() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        command: declare
-        class_hash: 0x0[..]
-        transaction_hash: 0x0[..]
+        Success: Declaration completed
+
+        Class Hash:       0x[..]
+        Transaction Hash: 0x[..]
         
         To see declaration details, visit:
         class: https://[..]
@@ -63,8 +62,7 @@ async fn test_happy_case_human_readable() {
 )]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
 #[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
-// TODO(#3118)
-// #[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
+#[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
 async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let contract_path = duplicate_contract_directory_with_salt(
@@ -79,7 +77,6 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "--json",
         "declare",
         "--url",
@@ -139,7 +136,6 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "--json",
         "declare",
         "--url",
@@ -197,7 +193,6 @@ async fn test_happy_case_specify_package() {
         accounts_json_path.as_str(),
         "--account",
         "user8",
-        "--int-format",
         "--json",
         "declare",
         "--url",
@@ -249,8 +244,8 @@ async fn test_contract_already_declared() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: declare
-        error: Contract with the same class hash is already declared
+        Command: declare
+        Error: Contract with the same class hash is already declared
         "},
     );
 }
@@ -265,7 +260,6 @@ async fn test_invalid_nonce() {
         accounts_json_path.as_str(),
         "--account",
         "user8",
-        "--int-format",
         "declare",
         "--url",
         URL,
@@ -282,8 +276,8 @@ async fn test_invalid_nonce() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: declare
-        error: Invalid transaction nonce
+        Command: declare
+        Error: Invalid transaction nonce
         "},
     );
 }
@@ -314,8 +308,8 @@ async fn test_wrong_contract_name_passed() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: declare
-        error: Failed to find nonexistent artifact in starknet_artifacts.json file[..]
+        Command: declare
+        Error: Failed to find nonexistent artifact in starknet_artifacts.json file[..]
         "},
     );
 }
@@ -428,8 +422,8 @@ fn test_too_low_gas() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: declare
-        error: The transaction's resources don't cover validation or the minimal transaction fee
+        Command: declare
+        Error: The transaction's resources don't cover validation or the minimal transaction fee
         "},
     );
 }
@@ -479,9 +473,10 @@ fn test_scarb_no_casm_artifact() {
     assert_stdout_contains(
         output,
         indoc! {r"
-        command: declare
-        class_hash: [..]
-        transaction_hash: [..]
+        Success: Declaration completed
+
+        Class Hash: [..]
+        Transaction Hash: [..]
         "},
     );
 }
@@ -495,7 +490,6 @@ async fn test_many_packages_default() {
         accounts_json_path.as_str(),
         "--account",
         "user8",
-        "--int-format",
         "--json",
         "declare",
         "--url",
@@ -523,7 +517,6 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         accounts_json_path.as_str(),
         "--account",
         "user8",
-        "--int-format",
         "--json",
         "declare",
         "--url",
@@ -553,7 +546,6 @@ async fn test_worskpaces_package_no_contract() {
         accounts_json_path.as_str(),
         "--account",
         "user8",
-        "--int-format",
         "declare",
         "--url",
         URL,
@@ -570,8 +562,8 @@ async fn test_worskpaces_package_no_contract() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: declare
-        error: Failed to find whatever artifact in starknet_artifacts.json file[..]
+        Command: declare
+        Error: Failed to find whatever artifact in starknet_artifacts.json file[..]
         "},
     );
 }
@@ -607,50 +599,14 @@ async fn test_no_scarb_profile() {
         indoc! {"
             [..]
             [WARNING] Profile profile5 does not exist in scarb, using 'release' profile.
-            command: declare
-            class_hash: [..]
-            transaction_hash: [..]
+            Success: Declaration completed
+
+            Class Hash:       [..]
+            Transaction Hash: [..]
 
             To see declaration details, visit:
             class: [..]
             transaction: [..]
-        "},
-    );
-}
-
-// TODO(#3118: Remove this test, once integration with braavos is restored
-#[tokio::test]
-async fn test_braavos_disabled() {
-    let contract_path = duplicate_contract_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/map",
-        "put",
-        "human_readable",
-    );
-    let tempdir = tempdir().expect("Failed to create a temporary directory");
-    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
-    join_tempdirs(&contract_path, &tempdir);
-
-    let args = vec![
-        "--accounts-file",
-        &accounts_json_path,
-        "--account",
-        "braavos",
-        "declare",
-        "--url",
-        URL,
-        "--contract-name",
-        "Map",
-    ];
-    let args = apply_test_resource_bounds_flags(args);
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().failure();
-
-    assert_stderr_contains(
-        output,
-        indoc! {r"
-        Error: Using Braavos accounts is temporarily disabled because they don't yet work with starknet 0.13.5.
-            Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
         "},
     );
 }

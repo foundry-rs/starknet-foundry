@@ -4,10 +4,12 @@ use bimap::BiMap;
 use camino::Utf8PathBuf;
 use conversions::IntoConv;
 use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
+use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use scarb_api::StarknetContractArtifacts;
 use starknet::core::types::contract::{AbiEntry, SierraClass};
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::{ClassHash, EntryPointSelector};
+use starknet_types_core::felt::Felt;
 use std::collections::HashMap;
 
 type ContractName = String;
@@ -15,15 +17,15 @@ type FunctionName = String;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct ContractsData {
-    contracts: HashMap<ContractName, ContractData>,
-    class_hashes: BiMap<ContractName, ClassHash>,
-    selectors: HashMap<EntryPointSelector, FunctionName>,
+    pub contracts: HashMap<ContractName, ContractData>,
+    pub class_hashes: BiMap<ContractName, ClassHash>,
+    pub selectors: HashMap<EntryPointSelector, FunctionName>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-struct ContractData {
-    artifacts: StarknetContractArtifacts,
-    class_hash: ClassHash,
+pub struct ContractData {
+    pub artifacts: StarknetContractArtifacts,
+    pub class_hash: ClassHash,
     source_sierra_path: Utf8PathBuf,
 }
 
@@ -105,9 +107,19 @@ impl ContractsData {
     ) -> Option<&FunctionName> {
         self.selectors.get(entry_point_selector)
     }
+
+    #[must_use]
+    pub fn is_fork_class_hash(&self, class_hash: &ClassHash) -> bool {
+        if class_hash.0 == Felt::from_hex_unchecked(TEST_CONTRACT_CLASS_HASH) {
+            false
+        } else {
+            !self.class_hashes.contains_right(class_hash)
+        }
+    }
 }
 
-fn build_name_selector_map(abi: Vec<AbiEntry>) -> HashMap<EntryPointSelector, FunctionName> {
+#[must_use]
+pub fn build_name_selector_map(abi: Vec<AbiEntry>) -> HashMap<EntryPointSelector, FunctionName> {
     let mut selector_map = HashMap::new();
     for abi_entry in abi {
         match abi_entry {

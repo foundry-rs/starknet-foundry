@@ -166,9 +166,10 @@ async fn test_happy_case_from_cli_with_sncast_config() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_eq(indoc! {r"
-        command: call
-        response: 0x0
-        response_raw: [0x0]
+        Success: Call completed
+        
+        Response:     0x0
+        Response Raw: [0x0]
     "});
 }
 
@@ -194,9 +195,10 @@ async fn test_happy_case_mixed() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_eq(indoc! {r"
-        command: call
-        response: 0x0
-        response_raw: [0x0]
+        Success: Call completed
+        
+        Response:     0x0
+        Response Raw: [0x0]
     "});
 }
 

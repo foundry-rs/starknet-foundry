@@ -15,7 +15,7 @@ Name of a package to create, defaults to the directory name.
 Name of a template to use when creating a new project. Possible values:
 - `balance-contract` (default): Basic contract with example tests.
 - `cairo-program`: Simple Cairo program with unit tests.
-- `erc20-template`: Includes an ERC-20 token contract and a contract that allows multiple transfers of a specific token.
+- `erc20-contract`: Includes an ERC-20 token contract and a contract that allows multiple transfers of a specific token.
 
 ## `--no-vcs`
 

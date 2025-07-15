@@ -16,12 +16,12 @@ starknet-types-core.workspace = true
 starknet-crypto.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-utils.workspace = true
-cairo-lang-starknet.workspace = true
 cairo-lang-starknet-classes.workspace = true
 cairo-vm.workspace = true
 cairo-annotations.workspace = true
 regex.workspace = true
 indoc.workspace = true
+indexmap.workspace = true
 starknet.workspace = true
 thiserror.workspace = true
 serde_json.workspace = true
@@ -43,6 +43,7 @@ k256.workspace = true
 p256.workspace = true
 shared.workspace = true
 rand.workspace = true
+foundry-ui = { path = "../foundry-ui" }
 
 [dev-dependencies]
 ctor.workspace = true

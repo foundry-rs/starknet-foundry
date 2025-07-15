@@ -1,4 +1,4 @@
-use blockifier::versioned_constants::{EventLimits, VersionedConstants};
+use blockifier::blockifier_versioned_constants::{EventLimits, VersionedConstants};
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::formatdoc;
 use std::path::Path;

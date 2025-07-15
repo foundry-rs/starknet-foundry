@@ -4,8 +4,8 @@ use crate::helpers::constants::{
 };
 use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
-    create_and_deploy_account, create_and_deploy_oz_account, get_accounts_path,
-    get_transaction_hash, get_transaction_receipt,
+    create_and_deploy_account, create_and_deploy_oz_account, get_transaction_hash,
+    get_transaction_receipt,
 };
 use crate::helpers::runner::runner;
 use crate::helpers::shell::os_specific_shell;
@@ -18,7 +18,6 @@ use sncast::helpers::constants::OZ_CLASS_HASH;
 use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Deploy;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
-use tempfile::tempdir;
 use test_case::test_case;
 
 #[tokio::test]
@@ -48,9 +47,10 @@ async fn test_happy_case_human_readable() {
         output,
         indoc! {
             "
-            command: deploy
-            contract_address: 0x0[..]
-            transaction_hash: 0x0[..]
+            Success: Deployment completed
+
+            Contract Address: 0x0[..]
+            Transaction Hash: 0x0[..]
 
             To see deployment details, visit:
             contract: [..]
@@ -63,8 +63,7 @@ async fn test_happy_case_human_readable() {
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
 #[test_case(sncast::helpers::constants::ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
-// TODO(#3118)
-// #[test_case(sncast::helpers::constants::BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
+#[test_case(sncast::helpers::constants::BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
 async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let tempdir = create_and_deploy_account(class_hash, account_type).await;
@@ -73,7 +72,6 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "--json",
         "deploy",
         "--url",
@@ -121,7 +119,6 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "--json",
         "deploy",
         "--url",
@@ -176,7 +173,6 @@ async fn test_happy_case_with_constructor() {
         ACCOUNT_FILE_PATH,
         "--account",
         "user4",
-        "--int-format",
         "--json",
         "deploy",
         "--url",
@@ -208,7 +204,6 @@ async fn test_happy_case_with_constructor_cairo_expression_calldata() {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "--json",
         "deploy",
         "--url",
@@ -229,8 +224,6 @@ async fn test_happy_case_with_constructor_cairo_expression_calldata() {
     assert!(matches!(receipt, Deploy(_)));
 }
 
-// TODO(#3116): Before, this test returned message 'Input too long for arguments').
-// Now, it returns message about transaction execution error.
 #[test]
 fn test_wrong_calldata() {
     let args = vec![
@@ -253,8 +246,8 @@ fn test_wrong_calldata() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: deploy
-        error: Transaction execution error [..]
+        Command: deploy
+        Error: Transaction execution error [..]Input too long for arguments[..]
         "},
     );
 }
@@ -282,8 +275,6 @@ async fn test_contract_not_declared() {
     );
 }
 
-// TODO(#3116): Before, this test returned message containing info that contract is already deployed.
-// Now, it returns message about transaction execution error.
 #[test]
 fn test_contract_already_deployed() {
     let args = vec![
@@ -306,8 +297,8 @@ fn test_contract_already_deployed() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: deploy
-        error: Transaction execution error [..]
+        Command: deploy
+        Error: Transaction execution error [..] contract already deployed at address [..]
         "},
     );
 }
@@ -342,8 +333,8 @@ fn test_too_low_gas() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: deploy
-        error: The transaction's resources don't cover validation or the minimal transaction fee
+        Command: deploy
+        Error: The transaction's resources don't cover validation or the minimal transaction fee
         "},
     );
 }
@@ -362,32 +353,35 @@ async fn test_happy_case_shell() {
     snapbox.assert().success();
 }
 
-// TODO(#3118: Remove this test, once integration with braavos is restored
 #[tokio::test]
-async fn test_braavos_disabled() {
-    let tempdir = tempdir().expect("Failed to create a temporary directory");
-    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+async fn test_json_output_format() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
 
     let args = vec![
         "--accounts-file",
-        &accounts_json_path,
+        "accounts.json",
         "--account",
-        "braavos",
+        "my_account",
+        "--json",
         "deploy",
         "--url",
         URL,
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--salt",
+        "0x2",
+        "--unique",
     ];
+    let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().failure();
+    let output = snapbox.assert().success();
 
-    assert_stderr_contains(
+    assert_stdout_contains(
         output,
-        indoc! {r"
-        Error: Using Braavos accounts is temporarily disabled because they don't yet work with starknet 0.13.5.
-            Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
-        "},
+        indoc! {r#"
+            {"contract_address":"0x[..]","transaction_hash":"0x[..]"}
+            {"links":"contract: https://sepolia.starkscan.co/contract/0x[..]\ntransaction: https://sepolia.starkscan.co/tx/0x[..]\n","title":"deployment"}
+            "#},
     );
 }

@@ -7,6 +7,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.46.0] - 2025-07-09
+
+### Forge
+
+#### Added
+
+- Total test summary when running tests across multiple packages (for example when running `snforge test --workspace`)
+
+#### Fixed
+
+- Bug where syscall execution resources from nested calls were being calculated twice
+
+### Cast
+
+#### Added
+
+- `sncast utils serialize` command to serialize Cairo expressions into calldata
+- `sncast verify` now supports verifying against [voyager](https://voyager.online/) block explorer.
+
+#### Changed
+
+- Improved commands output readability with colors and simplified layout.
+- `sncast verify` no longer defaults to using walnut.
+
+#### Fixed
+
+- Bug where `account create` raised an error if no `--name` was provided and the file specified by `--accounts-file` was empty
+
+#### Removed
+
+- `--int-format` and `--hex-format`, all values are displayed with default format
+
+## [0.45.0] - 2025-06-16
+
+### Forge
+
+#### Added
+- ETH token is now pre-deployed by default in every test, and `Token::ETH` was added to `snforge_std`
+- `--skip` flag to allow excluding any test whose name contains the provided string
+
+#### Changed
+- Updated output format for `--exit-first` flag. Tests skipped due to preceding failures are no longer displayed in the summary. Alternative information is shown when applicable.
+- `storage address` was renamed to `contract address` in the output of `--trace-verbosity`
+
+#### Fixed
+
+- bug that caused `--trace-verbosity` to panic in fork tests
+- fixed a bug in tests where resources used in nested calls were counted multiple times, leading to overestimated gas and resource usage
+
+#### Removed
+
+- Windows support. For details on migration, see the WSL [installation guide](https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#linux-and-macos).
+
+### Cast
+
+#### Fixed
+
+- bug where `account create` raised an error if the file specified by `--accounts-file` was empty
+
+#### Removed
+
+- Windows support. For details on migration, see the WSL [installation guide](https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#linux-and-macos).
+
+## [0.44.0] - 2025-05-26
+
 ### Forge
 
 #### Changed
@@ -16,13 +81,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- "invalid syscall selector" error appearing when using arithmetic circuits 
+- "invalid syscall selector" error appearing when using arithmetic circuits
+- Bug that caused incorrect gas tracking for contracts using Sierra version less than `1.7.0` when `sierra-gas` was passed as the `tracked-resource`
 
 ### Cast
 
-#### Updated
+#### Added 
+
+- Displaying the path of the config file when adding a new profile
+
+#### Changed
 
 - OpenZeppelin account updated to v1.0.0 [preset](https://docs.openzeppelin.com/contracts-cairo/1.0.0/api/account#AccountUpgradeable)
+- Restored support for Braavos accounts
+- Accounts created with `--type braavos` use updated v1.2.0 class hash
+- Output of `sncast account create` is now clearer; the estimated fee is displayed in both STRK and FRI.
+- Renamed the field `max_fee` to `estimated_fee` in the `sncast account create` output.
+
+## [0.43.1] - 2025-05-16
+
+### Cast
+
+#### Removed
+
+- Broken Voyager RPC provider
 
 ## [0.43.0] - 2025-05-09
 

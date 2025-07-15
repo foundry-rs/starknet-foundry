@@ -11,6 +11,7 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::Use
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use conversions::byte_array::ByteArray;
 use conversions::felt::ToShortString;
+use foundry_ui::UI;
 use num_traits::Pow;
 use shared::utils::build_readable_text;
 use starknet_api::execution_resources::GasVector;
@@ -80,13 +81,13 @@ impl GasStatistics {
         }
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(clippy::cast_precision_loss)]
     fn mean(gas_usages: &[u64]) -> f64 {
         let sum: f64 = gas_usages.iter().map(|&x| x as f64).sum();
         sum / gas_usages.len() as f64
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(clippy::cast_precision_loss)]
     fn std_deviation(mean: f64, gas_usages: &[u64]) -> f64 {
         let sum_squared_diff = gas_usages
             .iter()
@@ -163,10 +164,11 @@ pub enum TestCaseSummary<T: TestType> {
         name: String,
     },
     /// Test case skipped due to exit first or execution interrupted, test result is ignored.
-    Skipped {},
+    Interrupted {},
 }
 
 #[derive(Debug)]
+// We allow large enum variant because `Single` is the bigger variant and it is used most often
 #[expect(clippy::large_enum_variant)]
 pub enum AnyTestCaseSummary {
     Fuzzing(TestCaseSummary<Fuzzing>),
@@ -180,7 +182,7 @@ impl<T: TestType> TestCaseSummary<T> {
             TestCaseSummary::Failed { name, .. }
             | TestCaseSummary::Passed { name, .. }
             | TestCaseSummary::Ignored { name, .. } => Some(name),
-            TestCaseSummary::Skipped { .. } => None,
+            TestCaseSummary::Interrupted { .. } => None,
         }
     }
 
@@ -261,7 +263,7 @@ impl TestCaseSummary<Fuzzing> {
                 debugging_trace,
             },
             TestCaseSummary::Ignored { name } => TestCaseSummary::Ignored { name: name.clone() },
-            TestCaseSummary::Skipped {} => TestCaseSummary::Skipped {},
+            TestCaseSummary::Interrupted {} => TestCaseSummary::Interrupted {},
         }
     }
 }
@@ -317,11 +319,13 @@ impl TestCaseSummary<Single> {
             used_resources,
             encountered_errors,
             fuzzer_args,
+            fork_data,
         }: RunCompleted,
         test_case: &TestCaseWithResolvedConfig,
         contracts_data: &ContractsData,
         versioned_program_path: &Utf8Path,
         trace_verbosity: Option<TraceVerbosity>,
+        ui: &UI,
     ) -> Self {
         let name = test_case.name.clone();
 
@@ -330,6 +334,7 @@ impl TestCaseSummary<Single> {
             contracts_data,
             trace_verbosity,
             name.clone(),
+            &fork_data,
         );
 
         match status {
@@ -344,11 +349,12 @@ impl TestCaseSummary<Single> {
                         trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
                             &call_trace,
                             contracts_data,
+                            &fork_data,
                             versioned_program_path,
                         )),
                         debugging_trace,
                     };
-                    check_available_gas(test_case.config.available_gas, summary)
+                    check_available_gas(test_case.config.available_gas, summary, ui)
                 }
                 ExpectedTestResult::Panics(expected_panic_value) => TestCaseSummary::Failed {
                     name,
@@ -381,6 +387,7 @@ impl TestCaseSummary<Single> {
                             trace_data: VersionedProfilerCallTrace::V1(build_profiler_call_trace(
                                 &call_trace,
                                 contracts_data,
+                                &fork_data,
                                 versioned_program_path,
                             )),
                             debugging_trace,
@@ -469,11 +476,11 @@ impl AnyTestCaseSummary {
     }
 
     #[must_use]
-    pub fn is_skipped(&self) -> bool {
+    pub fn is_interrupted(&self) -> bool {
         matches!(
             self,
-            AnyTestCaseSummary::Single(TestCaseSummary::Skipped { .. })
-                | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Skipped { .. })
+            AnyTestCaseSummary::Single(TestCaseSummary::Interrupted { .. })
+                | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Interrupted { .. })
         )
     }
 

@@ -1,19 +1,20 @@
 use crate::starknet_commands::account::{
-    add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
+    generate_add_profile_message, prepare_account_json, write_account_to_accounts_file,
 };
 use anyhow::{Context, Result, anyhow, bail};
+use bigdecimal::BigDecimal;
 use camino::Utf8PathBuf;
 use clap::Args;
+use console::style;
 use conversions::IntoConv;
 use serde_json::json;
-use sncast::helpers::braavos::{BraavosAccountFactory, assert_non_braavos_account};
-use sncast::helpers::configuration::CastConfig;
+use sncast::helpers::braavos::{BraavosAccountFactory, check_braavos_account_compatibility};
 use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
     CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
 };
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::AccountCreateResponse;
+use sncast::response::account::create::AccountCreateResponse;
 use sncast::{
     AccountType, Network, check_class_hash_exists, check_if_legacy_contract,
     extract_or_generate_salt, get_chain_id, get_keystore_password, handle_account_factory_error,
@@ -63,10 +64,12 @@ pub async fn create(
     chain_id: Felt,
     create: &Create,
 ) -> Result<AccountCreateResponse> {
-    // TODO(#3118): Remove this check once braavos integration is restored
-    assert_non_braavos_account(Some(create.account_type), create.class_hash)?;
+    // Braavos accounts before v1.2.0 are not compatible with starknet >= 0.13.4
+    // For more, read https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
+    if let Some(class_hash) = create.class_hash {
+        check_braavos_account_compatibility(class_hash)?;
+    }
 
-    let add_profile = create.add_profile.clone();
     let salt = extract_or_generate_salt(create.salt);
     let class_hash = create.class_hash.unwrap_or(match create.account_type {
         AccountType::OpenZeppelin => OZ_CLASS_HASH,
@@ -75,7 +78,7 @@ pub async fn create(
     });
     check_class_hash_exists(provider, class_hash).await?;
 
-    let (account_json, max_fee) =
+    let (account_json, estimated_fee) =
         generate_account(provider, salt, class_hash, create.account_type).await?;
 
     let address: Felt = account_json["address"]
@@ -83,7 +86,11 @@ pub async fn create(
         .context("Invalid address")?
         .parse()?;
 
-    let mut message = "Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.".to_string();
+    let estimated_fee_strk = BigDecimal::new(estimated_fee.into(), 18.into());
+    let mut message = format!(
+        "Account successfully created but it needs to be deployed. The estimated deployment fee is {} STRK. Prefund the account to cover deployment transaction fee",
+        style(estimated_fee_strk).magenta()
+    );
 
     if let Some(keystore) = keystore.clone() {
         let account_path = Utf8PathBuf::from(&account);
@@ -128,32 +135,18 @@ pub async fn create(
         message.push_str(&deploy_command);
     }
 
-    if add_profile.is_some() {
-        if let Some(url) = &create.rpc.url {
-            let config = CastConfig {
-                url: url.clone(),
-                account: account.into(),
-                accounts_file: accounts_file.into(),
-                keystore,
-                ..Default::default()
-            };
-            add_created_profile_to_configuration(create.add_profile.as_deref(), &config, None)?;
-        } else {
-            unreachable!("Conflicting arguments should be handled in clap");
-        }
-    }
+    let add_profile_message = generate_add_profile_message(
+        create.add_profile.as_ref(),
+        &create.rpc,
+        account,
+        accounts_file,
+        keystore.clone(),
+    )?;
 
     Ok(AccountCreateResponse {
         address: address.into_(),
-        max_fee,
-        add_profile: if add_profile.is_some() {
-            format!(
-                "Profile {} successfully added to snfoundry.toml",
-                add_profile.clone().expect("Failed to get profile name")
-            )
-        } else {
-            "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
-        },
+        estimated_fee,
+        add_profile: add_profile_message,
         message: if account_json["deployed"] == json!(false) {
             message
         } else {
@@ -167,7 +160,7 @@ async fn generate_account(
     salt: Felt,
     class_hash: Felt,
     account_type: AccountType,
-) -> Result<(serde_json::Value, Felt)> {
+) -> Result<(serde_json::Value, u128)> {
     let chain_id = get_chain_id(provider).await?;
     let private_key = SigningKey::from_random();
     let signer = LocalWallet::from_signing_key(private_key.clone());
@@ -209,7 +202,7 @@ async fn generate_account(
         Some(salt),
     );
 
-    Ok((account_json, Felt::from(fee_estimate.overall_fee)))
+    Ok((account_json, fee_estimate.overall_fee))
 }
 
 async fn get_address_and_deployment_fee<T>(
@@ -365,7 +358,7 @@ fn generate_deploy_command(
     let network_flag = generate_network_flag(rpc_url, network);
 
     format!(
-        "\n\nAfter prefunding the address, run:\n\
+        "\n\nAfter prefunding the account, run:\n\
         sncast{accounts_flag} account deploy {network_flag} --name {account}"
     )
 }
@@ -379,7 +372,7 @@ fn generate_deploy_command_with_keystore(
     let network_flag = generate_network_flag(rpc_url, network);
 
     format!(
-        "\n\nAfter prefunding the address, run:\n\
+        "\n\nAfter prefunding the account, run:\n\
         sncast --account {account} --keystore {keystore} account deploy {network_flag}"
     )
 }

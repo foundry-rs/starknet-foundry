@@ -2,12 +2,15 @@ use anyhow::{Context, Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::IntoConv;
+use foundry_ui::UI;
 use serde_json::Map;
+use sncast::helpers::account::load_accounts;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::InvokeResponse;
+use sncast::response::account::deploy::AccountDeployResponse;
+use sncast::response::invoke::InvokeResponse;
 use sncast::{
     AccountType, WaitForTx, apply_optional_fields, chain_id_to_network_name,
     check_account_file_exists, get_account_data_from_accounts_file, get_account_data_from_keystore,
@@ -52,7 +55,8 @@ pub async fn deploy(
     account: &str,
     keystore_path: Option<Utf8PathBuf>,
     fee_args: FeeArgs,
-) -> Result<InvokeResponse> {
+    ui: &UI,
+) -> Result<AccountDeployResponse> {
     if let Some(keystore_path_) = keystore_path {
         deploy_from_keystore(
             provider,
@@ -61,8 +65,10 @@ pub async fn deploy(
             wait_config,
             account,
             keystore_path_,
+            ui,
         )
         .await
+        .map(Into::into)
     } else {
         let account_name = deploy_args
             .name
@@ -76,8 +82,10 @@ pub async fn deploy(
             chain_id,
             fee_args,
             wait_config,
+            ui,
         )
         .await
+        .map(Into::into)
     }
 }
 
@@ -88,6 +96,7 @@ async fn deploy_from_keystore(
     wait_config: WaitForTx,
     account: &str,
     keystore_path: Utf8PathBuf,
+    ui: &UI,
 ) -> Result<InvokeResponse> {
     let account_data = get_account_data_from_keystore(account, &keystore_path)?;
 
@@ -139,6 +148,7 @@ async fn deploy_from_keystore(
             chain_id,
             fee_args,
             wait_config,
+            ui,
         )
         .await?
     };
@@ -155,6 +165,7 @@ async fn deploy_from_accounts_file(
     chain_id: Felt,
     fee_args: FeeArgs,
     wait_config: WaitForTx,
+    ui: &UI,
 ) -> Result<InvokeResponse> {
     let account_data = get_account_data_from_accounts_file(&name, chain_id, &accounts_file)?;
 
@@ -175,6 +186,7 @@ async fn deploy_from_accounts_file(
         chain_id,
         fee_args,
         wait_config,
+        ui,
     )
     .await?;
 
@@ -193,6 +205,7 @@ async fn get_deployment_result(
     chain_id: Felt,
     fee_args: FeeArgs,
     wait_config: WaitForTx,
+    ui: &UI,
 ) -> Result<InvokeResponse> {
     match account_type {
         AccountType::Argent => {
@@ -205,7 +218,16 @@ async fn get_deployment_result(
             )
             .await?;
 
-            deploy_account(factory, provider, salt, fee_args, wait_config, class_hash).await
+            deploy_account(
+                factory,
+                provider,
+                salt,
+                fee_args,
+                wait_config,
+                class_hash,
+                ui,
+            )
+            .await
         }
         AccountType::OpenZeppelin => {
             let factory = OpenZeppelinAccountFactory::new(
@@ -216,7 +238,16 @@ async fn get_deployment_result(
             )
             .await?;
 
-            deploy_account(factory, provider, salt, fee_args, wait_config, class_hash).await
+            deploy_account(
+                factory,
+                provider,
+                salt,
+                fee_args,
+                wait_config,
+                class_hash,
+                ui,
+            )
+            .await
         }
         AccountType::Braavos => {
             let factory = BraavosAccountFactory::new(
@@ -228,7 +259,16 @@ async fn get_deployment_result(
             )
             .await?;
 
-            deploy_account(factory, provider, salt, fee_args, wait_config, class_hash).await
+            deploy_account(
+                factory,
+                provider,
+                salt,
+                fee_args,
+                wait_config,
+                class_hash,
+                ui,
+            )
+            .await
         }
     }
 }
@@ -240,6 +280,7 @@ async fn deploy_account<T>(
     fee_args: FeeArgs,
     wait_config: WaitForTx,
     class_hash: Felt,
+    ui: &UI,
 ) -> Result<InvokeResponse>
 where
     T: AccountFactory + Sync,
@@ -294,6 +335,7 @@ where
                 result.transaction_hash,
                 return_value.clone(),
                 wait_config,
+                ui,
             )
             .await
             {
@@ -312,10 +354,7 @@ fn update_account_in_accounts_file(
 ) -> Result<()> {
     let network_name = chain_id_to_network_name(chain_id);
 
-    let contents =
-        std::fs::read_to_string(accounts_file.clone()).context("Failed to read accounts file")?;
-    let mut items: serde_json::Value = serde_json::from_str(&contents)
-        .with_context(|| format!("Failed to parse accounts file at = {accounts_file}"))?;
+    let mut items = load_accounts(&accounts_file)?;
     items[&network_name][account_name]["deployed"] = serde_json::Value::from(true);
     std::fs::write(accounts_file, serde_json::to_string_pretty(&items).unwrap())
         .context("Failed to write to accounts file")?;

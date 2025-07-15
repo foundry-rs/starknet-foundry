@@ -1,11 +1,13 @@
-use crate::running::copied_code::{
-    extract_vm_resources, finalize_runner, get_call_result, total_vm_resources,
-};
+use crate::running::copied_code::get_call_result;
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::contract_class::TrackedResource;
+use blockifier::execution::entry_point_execution::{
+    extract_vm_resources, finalize_runner, total_vm_resources,
+};
 use blockifier::execution::errors::PostExecutionError;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use cairo_vm::vm::runners::cairo_runner::CairoRunner;
+use blockifier::transaction::objects::ExecutionResourcesTraits;
+use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
 
 // Based on the code from blockifer
 pub fn finalize_execution(
@@ -26,13 +28,17 @@ pub fn finalize_execution(
 
     let call_result = get_call_result(runner, syscall_handler, &tracked_resource)?;
 
-    let vm_resources_without_inner_calls =
-        extract_vm_resources(runner, syscall_handler, tracked_resource)?;
+    let vm_resources_without_inner_calls = extract_vm_resources(runner, syscall_handler)?;
+
+    let tracked_vm_resources_without_inner_calls = match tracked_resource {
+        TrackedResource::CairoSteps => &vm_resources_without_inner_calls,
+        TrackedResource::SierraGas => &ExecutionResources::default(),
+    };
 
     syscall_handler.finalize();
 
     let vm_resources = total_vm_resources(
-        &vm_resources_without_inner_calls,
+        tracked_vm_resources_without_inner_calls,
         &syscall_handler.base.inner_calls,
     );
 
@@ -43,15 +49,14 @@ pub fn finalize_execution(
             retdata: call_result.retdata,
             events: syscall_handler_base.events.clone(),
             l2_to_l1_messages: syscall_handler_base.l2_to_l1_messages.clone(),
+            cairo_native: false,
             failed: call_result.failed,
             gas_consumed: call_result.gas_consumed,
         },
         inner_calls: syscall_handler_base.inner_calls.clone(),
         tracked_resource,
         resources: vm_resources,
-        storage_read_values: syscall_handler_base.read_values.clone(),
-        accessed_storage_keys: syscall_handler_base.accessed_keys.clone(),
-        read_class_hash_values: syscall_handler_base.read_class_hash_values.clone(),
-        accessed_contract_addresses: syscall_handler_base.accessed_contract_addresses.clone(),
+        storage_access_tracker: syscall_handler_base.storage_access_tracker.clone(),
+        builtin_counters: vm_resources_without_inner_calls.prover_builtins(),
     })
 }

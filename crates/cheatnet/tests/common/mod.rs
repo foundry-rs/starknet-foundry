@@ -3,7 +3,6 @@ use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
-    ExecutableCallEntryPoint,
 };
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
@@ -27,6 +26,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::Contr
 use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
 use conversions::string::TryFromHexStr;
+use foundry_ui::UI;
 use runtime::starknet::constants::TEST_ADDRESS;
 use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
@@ -44,22 +44,13 @@ pub mod cache;
 pub mod state;
 
 fn build_syscall_hint_processor<'a>(
-    call_entry_point: CallEntryPoint,
+    call_entry_point: &CallEntryPoint,
     state: &'a mut dyn State,
     entry_point_execution_context: &'a mut EntryPointExecutionContext,
     hints: &'a HashMap<String, Hint>,
 ) -> SyscallHintProcessor<'a> {
-    let call_entry_point = ExecutableCallEntryPoint {
-        class_hash: call_entry_point.class_hash.unwrap_or_default(),
-        code_address: call_entry_point.code_address,
-        entry_point_type: call_entry_point.entry_point_type,
-        entry_point_selector: call_entry_point.entry_point_selector,
-        calldata: call_entry_point.calldata,
-        storage_address: call_entry_point.storage_address,
-        caller_address: call_entry_point.caller_address,
-        call_type: call_entry_point.call_type,
-        initial_gas: call_entry_point.initial_gas,
-    };
+    let class_hash = call_entry_point.class_hash.unwrap_or_default();
+    let call_entry_point = call_entry_point.clone().into_executable(class_hash);
 
     SyscallHintProcessor::new(
         state,
@@ -93,8 +84,9 @@ pub fn get_contracts() -> ContractsData {
 
     let package = scarb_metadata.packages.first().unwrap();
 
+    let ui = UI::default();
     let contracts =
-        get_contracts_artifacts_and_source_sierra_paths(&target_dir, package, false).unwrap();
+        get_contracts_artifacts_and_source_sierra_paths(&target_dir, package, false, &ui).unwrap();
     ContractsData::try_from(contracts).unwrap()
 }
 
@@ -118,7 +110,7 @@ pub fn deploy_contract(
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
-        CallEntryPoint::default(),
+        &CallEntryPoint::default(),
         state,
         &mut entry_point_execution_context,
         &hints,
@@ -149,7 +141,7 @@ pub fn deploy_wrapper(
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
-        CallEntryPoint::default(),
+        &CallEntryPoint::default(),
         state,
         &mut entry_point_execution_context,
         &hints,
@@ -180,7 +172,7 @@ pub fn deploy_at_wrapper(
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
-        CallEntryPoint::default(),
+        &CallEntryPoint::default(),
         state,
         &mut entry_point_execution_context,
         &hints,
@@ -228,7 +220,7 @@ pub fn call_contract(
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
-        entry_point.clone(),
+        &entry_point,
         state,
         &mut entry_point_execution_context,
         &hints,
@@ -242,12 +234,14 @@ pub fn call_contract(
     )
 }
 
+#[expect(clippy::result_large_err)]
 pub fn call_contract_raw(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
     entry_point_selector: EntryPointSelector,
     calldata: &[Felt],
+    tracked_resource: TrackedResource,
 ) -> EntryPointExecutionResult<CallInfo> {
     let calldata = create_execute_calldata(calldata);
 
@@ -263,15 +257,12 @@ pub fn call_contract_raw(
         initial_gas: i64::MAX as u64,
     };
 
-    let mut entry_point_execution_context = build_context(
-        &cheatnet_state.block_info,
-        None,
-        &TrackedResource::CairoSteps,
-    );
+    let mut entry_point_execution_context =
+        build_context(&cheatnet_state.block_info, None, &tracked_resource);
     let hints = HashMap::new();
 
     let syscall_hint_processor = build_syscall_hint_processor(
-        entry_point.clone(),
+        &entry_point,
         state,
         &mut entry_point_execution_context,
         &hints,

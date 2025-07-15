@@ -11,8 +11,7 @@ use test_case::test_case;
 #[test_case("oz_cairo_1"; "cairo_1_account")]
 #[test_case("oz"; "oz_account")]
 #[test_case("argent"; "argent_account")]
-// TODO(#3118)
-// #[test_case("braavos"; "braavos_account")]
+#[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 async fn test_happy_case(account: &str) {
     let path = project_root::get_project_root().expect("failed to get project root path");
@@ -45,8 +44,9 @@ async fn test_happy_case(account: &str) {
     );
 
     output.stdout_matches(indoc! {r"
-        command: multicall run
-        transaction_hash: 0x0[..]
+        Success: Multicall completed
+
+        Transaction Hash: 0x[..]
 
         To see invocation details, visit:
         transaction: [..]
@@ -87,8 +87,9 @@ async fn test_calldata_ids() {
     );
 
     output.stdout_matches(indoc! {r"
-        command: multicall run
-        transaction_hash: 0x0[..]
+        Success: Multicall completed
+
+        Transaction Hash: 0x[..]
 
         To see invocation details, visit:
         transaction: [..]
@@ -117,17 +118,13 @@ async fn test_invalid_path() {
 
     assert!(output.as_stdout().is_empty());
 
-    let expected_file_error = if cfg!(target_os = "windows") {
-        "The system cannot find the file specified[..]"
-    } else {
-        "No such file or directory [..]"
-    };
+    let expected_file_error = "No such file or directory [..]";
 
     assert_stderr_contains(
         output,
         formatdoc! {r"
-        command: multicall run
-        error: {}
+        Command: multicall run
+        Error: {}
         ", expected_file_error},
     );
 }
@@ -161,8 +158,8 @@ async fn test_deploy_fail() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: multicall run
-        error: Transaction execution error [..]
+        Command: multicall run
+        Error: Transaction execution error [..]
         "},
     );
 }
@@ -196,8 +193,8 @@ async fn test_invoke_fail() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: multicall run
-        error: Transaction execution error [..]
+        Command: multicall run
+        Error: Transaction execution error [..]
         "},
     );
 }
@@ -231,8 +228,8 @@ async fn test_deploy_success_invoke_fails() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: multicall run
-        error: Transaction execution error [..]
+        Command: multicall run
+        Error: Transaction execution error [..]
         "},
     );
 }
@@ -271,8 +268,9 @@ async fn test_numeric_inputs() {
     );
 
     output.stdout_matches(indoc! {r"
-        command: multicall run
-        transaction_hash: 0x0[..]
+        Success: Multicall completed
+
+        Transaction Hash: 0x[..]
 
         To see invocation details, visit:
         transaction: [..]
@@ -308,8 +306,8 @@ async fn test_numeric_overflow() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: multicall run
-        error: Failed to parse [..]
+        Command: multicall run
+        Error: Failed to parse [..]
         number too large to fit in target type
         "},
     );

@@ -1,6 +1,6 @@
 [package]
 name = "sncast_std"
-version = "0.43.0"
+version = "0.46.0"
 edition = "2023_11"
 description = "Library used for writing deployment scripts in Cairo"
 homepage = "https://foundry-rs.github.io/starknet-foundry/starknet/script.html"

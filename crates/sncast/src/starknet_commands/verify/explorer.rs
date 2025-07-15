@@ -1,7 +1,9 @@
 use anyhow::Result;
 use camino::Utf8PathBuf;
+use foundry_ui::UI;
 use serde::Serialize;
-use sncast::{Network, response::structs::VerifyResponse};
+use sncast::{Network, response::verify::VerifyResponse};
+use starknet::providers::{JsonRpcClient, jsonrpc::HttpTransport};
 
 #[derive(Serialize, Debug)]
 #[serde(untagged)]
@@ -19,12 +21,19 @@ pub struct VerificationPayload {
 }
 
 #[async_trait::async_trait]
-pub trait VerificationInterface {
-    fn new(network: Network, workspace_dir: Utf8PathBuf) -> Self;
+pub trait VerificationInterface<'a>: Sized {
+    fn new(
+        network: Network,
+        workspace_dir: Utf8PathBuf,
+        provider: &'a JsonRpcClient<HttpTransport>,
+        ui: &'a UI,
+    ) -> Result<Self>;
     async fn verify(
         &self,
         identifier: ContractIdentifier,
         contract_name: String,
+        package: Option<String>,
+        ui: &UI,
     ) -> Result<VerifyResponse>;
-    fn gen_explorer_url(&self) -> Result<String>;
+    fn gen_explorer_url(&self) -> String;
 }

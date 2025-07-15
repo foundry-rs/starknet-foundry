@@ -1,0 +1,26 @@
+[
+    {
+        "name": "DataTransformerImpl",
+        "type": "impl",
+        "interface_name": "data_transformer_contract::IDataTransformer"
+    },
+    {
+        "name": "data_transformer_contract::IDataTransformer",
+        "type": "interface",
+        "items": [
+            {
+                "name": "nested_struct_fn",
+                "type": "function",
+                "inputs": [
+                    {
+                        "name": "a",
+                        "type": "data_transformer_contract::NestedStructWithField"
+                    }
+                ],
+                "outputs": [],
+                "state_mutability": "external"
+            }
+        ]
+    }
+]
+

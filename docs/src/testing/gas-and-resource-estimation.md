@@ -27,7 +27,7 @@ While using the fuzzing feature additional gas statistics will be displayed:
 > 📝 **Note**
 >  
 > Starknet-Foundry uses blob-based gas calculation formula in order to calculate gas usage. 
-> For details on the exact formula, [see the docs](https://docs.starknet.io/architecture-and-concepts/network-architecture/fee-mechanism/#overall_fee_blob). 
+> For details on the exact formula, [see the docs](https://docs.starknet.io/architecture-and-concepts/fees/#overall_fee). 
 
 ## Resources Estimation 
 
@@ -61,7 +61,7 @@ Running 2 test(s) from tests/
         syscalls: (CallContract: 3, StorageRead: 3, Deploy: 1, StorageWrite: 1)
 
 Running 0 test(s) from src/
-Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>
 <br>

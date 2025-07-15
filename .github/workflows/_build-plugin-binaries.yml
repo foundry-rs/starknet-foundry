@@ -3,11 +3,16 @@ name: Build snforge_scarb_plugin
 on:
   workflow_call:
     inputs:
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       overridden_plugin_version:
+        required: false
+        type: string
+      ref:
         required: false
         type: string
   workflow_dispatch:
     inputs:
+      # Specify the version in MAJOR.MINOR.PATCH format, without a leading 'v'
       overridden_plugin_version:
         required: false
         type: string
@@ -46,11 +51,6 @@ jobs:
             lib-name: "libsnforge_scarb_plugin"
             ext: "dylib"
 
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            lib-name: "snforge_scarb_plugin"
-            ext: "dll"
-
           # The scarb builds for following platforms are experimental and not officially supported by starknet-foundry.
           # https://docs.swmansion.com/scarb/download.html#platform-support
           # Reference issue: TODO(#2886)
@@ -66,11 +66,19 @@ jobs:
           #   ext: "so"
 
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Checkout with ref
+        if: inputs.ref != ''
+        uses: actions/checkout@v4
         with:
-          target: ${{ matrix.target }}
+          ref: ${{ inputs.ref }}
+
+      - name: Checkout default
+        if: inputs.ref == ''
+        uses: actions/checkout@v4
+
+      - name: Setup rust
+        run: |
+          rustup target add ${{ matrix.target }}
 
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
 

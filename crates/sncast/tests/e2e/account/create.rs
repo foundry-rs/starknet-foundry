@@ -5,6 +5,7 @@ use configuration::copy_config_to_tempdir;
 use indoc::{formatdoc, indoc};
 
 use crate::helpers::env::set_create_keystore_password_env;
+use camino::Utf8PathBuf;
 use conversions::string::IntoHexStr;
 use serde_json::{json, to_string_pretty};
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
@@ -19,8 +20,7 @@ use test_case::test_case;
 
 #[test_case("oz"; "oz_account_type")]
 #[test_case("argent"; "argent_account_type")]
-// TODO(#3118): Re-enable this test once braavos integration is restored
-// #[test_case("braavos"; "braavos_account_type")]
+#[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
@@ -47,13 +47,13 @@ pub async fn test_happy_case(account_type: &str) {
     assert_stdout_contains(
         output,
         indoc! {r"
-        command: account create
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-        address: 0x0[..]
-        max_fee: [..]
-        message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.
+        Success: Account created
 
-        After prefunding the address, run:
+        Address: 0x0[..]
+        
+        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
+
+        After prefunding the account, run:
         sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
 
         To see account creation details, visit:
@@ -112,8 +112,8 @@ pub async fn test_invalid_class_hash() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account create
-        error: Class with hash 0x10101 is not declared, try using --class-hash with a hash of the declared class
+        Command: account create
+        Error: Class with hash 0x10101 is not declared, try using --class-hash with a hash of the declared class
         "},
     );
 }
@@ -141,13 +141,13 @@ pub async fn test_happy_case_generate_salt() {
     let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
-        command: account create
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-        address: 0x0[..]
-        max_fee: [..]
-        message: Account successfully created[..]
+        Success: Account created
 
-        After prefunding the address, run:
+        Address: 0x0[..]
+        
+        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
+
+        After prefunding the account, run:
         sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
 
         To see account creation details, visit:
@@ -185,12 +185,15 @@ pub async fn test_happy_case_add_profile() {
         "my_account",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = runner(&args).current_dir(tempdir.path()).assert();
+    let config_path = Utf8PathBuf::from_path_buf(tempdir.path().join("snfoundry.toml"))
+        .unwrap()
+        .canonicalize_utf8()
+        .unwrap();
 
     assert_stdout_contains(
         output,
-        "add_profile: Profile my_account successfully added to snfoundry.toml",
+        format!("Add Profile: Profile my_account successfully added to {config_path}"),
     );
 
     let contents = fs::read_to_string(tempdir.path().join("snfoundry.toml"))
@@ -224,13 +227,13 @@ pub async fn test_happy_case_accounts_file_already_exists() {
     let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
-        command: account create
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-        address: 0x0[..]
-        max_fee: [..]
-        message: Account successfully created[..]
+        Success: Account created
 
-        After prefunding the address, run:
+        Address: 0x0[..]
+        
+        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
+
+        After prefunding the account, run:
         sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
 
         To see account creation details, visit:
@@ -297,8 +300,8 @@ pub async fn test_profile_already_exists() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account create
-        error: Failed to add profile = default to the snfoundry.toml. Profile already exists
+        Command: account create
+        Error: Failed to add profile = default to the snfoundry.toml. Profile already exists
         "},
     );
 }
@@ -324,16 +327,15 @@ pub async fn test_account_already_exists() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account create
-        error: Account with name = user1 already exists in network with chain_id = SN_SEPOLIA
+        Command: account create
+        Error: Account with name = user1 already exists in network with chain_id = SN_SEPOLIA
         "},
     );
 }
 
 #[test_case("oz"; "oz_account_type")]
 #[test_case("argent"; "argent_account_type")]
-// TODO(#3118)
-// #[test_case("braavos"; "braavos_account_type")]
+#[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case_keystore(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
@@ -357,13 +359,13 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(formatdoc! {r"
-        command: account create
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-        address: 0x0[..]
-        max_fee: [..]
-        message: Account successfully created[..]
+        Success: Account created
 
-        After prefunding the address, run:
+        Address: 0x0[..]
+        
+        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
+
+        After prefunding the account, run:
         sncast --account {} --keystore {} account deploy --url {}
 
         To see account creation details, visit:
@@ -404,11 +406,16 @@ pub async fn test_happy_case_keystore_add_profile() {
         "with_keystore",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = runner(&args).current_dir(tempdir.path()).assert();
+
+    let config_path = Utf8PathBuf::from_path_buf(tempdir.path().join("snfoundry.toml"))
+        .unwrap()
+        .canonicalize_utf8()
+        .unwrap();
+
     assert_stdout_contains(
         output,
-        "add_profile: Profile with_keystore successfully added to snfoundry.toml",
+        format!("Add Profile: Profile with_keystore successfully added to {config_path}"),
     );
 
     let contents =
@@ -449,8 +456,8 @@ pub async fn test_keystore_without_account() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account create
-        error: Argument `--account` must be passed and be a path when using `--keystore`
+        Command: account create
+        Error: Argument `--account` must be passed and be a path when using `--keystore`
         "},
     );
 }
@@ -485,8 +492,8 @@ pub async fn test_keystore_file_already_exists() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account create
-        error: Keystore file my_key.json already exists
+        Command: account create
+        Error: Keystore file my_key.json already exists
         "},
     );
 }
@@ -522,8 +529,8 @@ pub async fn test_keystore_account_file_already_exists() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account create
-        error: Account file my_account.json already exists
+        Command: account create
+        Error: Account file my_account.json already exists
         "},
     );
 }
@@ -541,7 +548,6 @@ pub async fn test_happy_case_keystore_int_format() {
         keystore_file,
         "--account",
         account_file,
-        "--int-format",
         "account",
         "create",
         "--url",
@@ -555,13 +561,13 @@ pub async fn test_happy_case_keystore_int_format() {
     let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(formatdoc! {r"
-        command: account create
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-        address: [..]
-        max_fee: [..]
-        message: Account successfully created[..]
+        Success: Account created
 
-        After prefunding the address, run:
+        Address: [..]
+        
+        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
+
+        After prefunding the account, run:
         sncast --account {} --keystore {} account deploy --url {}
 
         To see account creation details, visit:
@@ -577,51 +583,6 @@ pub async fn test_happy_case_keystore_int_format() {
 }
 
 #[tokio::test]
-pub async fn test_happy_case_keystore_hex_format() {
-    let temp_dir = tempdir().expect("Unable to create a temporary directory");
-    let keystore_file = "my_key_hex.json";
-    let account_file = "my_account_hex.json";
-
-    set_create_keystore_password_env();
-
-    let args = vec![
-        "--keystore",
-        keystore_file,
-        "--account",
-        account_file,
-        "--hex-format",
-        "account",
-        "create",
-        "--url",
-        URL,
-    ];
-
-    let snapbox = runner(&args).current_dir(temp_dir.path());
-
-    snapbox.assert().stdout_matches(formatdoc! {r"
-        command: account create
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-        address: 0x0[..]
-        max_fee: 0x[..]
-        message: Account successfully created[..]
-
-        After prefunding the address, run:
-        sncast --account {} --keystore {} account deploy --url {}
-
-        To see account creation details, visit:
-        account: [..]
-    ", account_file, keystore_file, URL});
-
-    let contents = fs::read_to_string(temp_dir.path().join(account_file))
-        .expect("Unable to read created file");
-    assert!(contents.contains("\"deployment\": {"));
-    assert!(contents.contains("\"variant\": {"));
-    assert!(contents.contains("\"version\": 1"));
-    assert!(contents.contains("\"legacy\": false"));
-}
-
-#[tokio::test]
-#[expect(clippy::too_many_lines)]
 pub async fn test_happy_case_default_name_generation() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
@@ -651,13 +612,13 @@ pub async fn test_happy_case_default_name_generation() {
     for i in 0..3 {
         let snapbox = runner(&create_args).current_dir(tempdir.path());
         snapbox.assert().stdout_matches(formatdoc! {r"
-        command: account create
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-        address: 0x0[..]
-        max_fee: [..]
-        message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.
+        Success: Account created
 
-        After prefunding the address, run:
+        Address: 0x0[..]
+        
+        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
+
+        After prefunding the account, run:
         sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name account-{id}
 
         To see account creation details, visit:
@@ -674,8 +635,9 @@ pub async fn test_happy_case_default_name_generation() {
 
     let snapbox = runner(&delete_args).current_dir(tempdir.path()).stdin("Y");
     snapbox.assert().success().stdout_matches(indoc! {r"
-        command: account delete
-        result: Account successfully removed
+        Success: Account deleted
+
+        Account successfully removed
     "});
 
     let contents_after_delete = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -685,13 +647,13 @@ pub async fn test_happy_case_default_name_generation() {
 
     let snapbox = runner(&create_args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account create
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
-        address: 0x0[..]
-        max_fee: [..]
-        message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens. It is good to send more in the case of higher demand.
+        Success: Account created
 
-        After prefunding the address, run:
+        Address: 0x0[..]
+        
+        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
+
+        After prefunding the account, run:
         sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name account-2
 
         To see account creation details, visit:
@@ -822,8 +784,9 @@ fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&s
     to_string_pretty(&account_json).unwrap()
 }
 
-#[test]
-fn test_braavos_disabled() {
+#[test_case("0x02c8c7e6fbcfb3e8e15a46648e8914c6aa1fc506fc1e7fb3d1e19630716174bc"; "braavos_v1_1_0")]
+#[test_case("0x041bf1e71792aecb9df3e9d04e1540091c5e13122a731e02bec588f71dc1a5c3"; "braavos_v1_0_0")]
+fn test_old_braavos_class_hashes_disabled(class_hash: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
@@ -838,6 +801,8 @@ fn test_braavos_disabled() {
         "my_account",
         "--salt",
         "0x1",
+        "--class-hash",
+        class_hash,
         "--type",
         "braavos",
     ];
@@ -848,9 +813,106 @@ fn test_braavos_disabled() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account create
-        error: Using Braavos accounts is temporarily disabled because they don't yet work with starknet 0.13.5.
+        Command: account create
+        Error: Using incompatible Braavos accounts is disabled because they don't work with starknet >= 0.13.4.
             Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
         "},
     );
+}
+
+#[tokio::test]
+pub async fn test_happy_case_deployment_fee_message() {
+    let tempdir = tempdir().expect("Failed to create a temporary directory");
+
+    let args = vec!["account", "create", "--url", URL];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        "Account successfully created but it needs to be deployed. The estimated deployment fee is 0.000836288000000000 STRK. Prefund the account to cover deployment transaction fee",
+    );
+}
+
+#[tokio::test]
+pub async fn test_happy_case_default_name_generation_when_accounts_file_empty() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "test_accounts.json";
+    let accounts_path = temp_dir.path().join(accounts_file);
+    std::fs::File::create(&accounts_path).expect("Failed to create empty accounts file");
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "--type",
+        "oz",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+
+    snapbox.assert().success();
+}
+
+#[tokio::test]
+pub async fn test_happy_case_accounts_file_empty() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "test_accounts.json";
+    let accounts_path = temp_dir.path().join(accounts_file);
+    std::fs::File::create(&accounts_path).expect("Failed to create empty accounts file");
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "--type",
+        "oz",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+
+    snapbox.assert().success();
+}
+
+#[tokio::test]
+pub async fn test_json_output_format() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "--json",
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--salt",
+        "0x1",
+        "--type",
+        "oz",
+        "--add-profile",
+        "my_account",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+    snapbox.assert().stdout_matches(indoc! {r#"
+        {"add_profile":"Profile my_account successfully added to [..]/snfoundry.toml","address":"0x[..]","estimated_fee":"[..]","message":"Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee/n/nAfter prefunding the account, run:/nsncast --accounts-file accounts.json account deploy --url [..] --name my_account"}
+        {"links":"account: https://sepolia.starkscan.co/contract/0x[..]","title":"account creation"}
+    "#});
 }

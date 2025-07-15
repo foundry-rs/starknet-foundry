@@ -1,7 +1,7 @@
 // TODO(#3293) Remove this file once the copied code is upstreamed to blockifier.
 //! Module containing copied code to be upstreamed to blockifier
 
-use blockifier::execution::call_info::CallInfo;
+use blockifier::blockifier_versioned_constants::GasCosts;
 use blockifier::execution::contract_class::{EntryPointV1, TrackedResource};
 use blockifier::execution::entry_point::EntryPointExecutionResult;
 use blockifier::execution::entry_point_execution::CallResult;
@@ -9,11 +9,9 @@ use blockifier::execution::errors::{
     EntryPointExecutionError, PostExecutionError, PreExecutionError,
 };
 use blockifier::execution::execution_utils::{
-    Args, ReadOnlySegments, SEGMENT_ARENA_BUILTIN_SIZE, read_execution_retdata, write_felt,
-    write_maybe_relocatable,
+    Args, ReadOnlySegments, read_execution_retdata, write_felt, write_maybe_relocatable,
 };
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::versioned_constants::GasCosts;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
 use cairo_vm::types::builtin_name::BuiltinName;
 use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
@@ -21,12 +19,12 @@ use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::memory_errors::MemoryError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::builtin_runner::BuiltinRunner;
-use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner, ExecutionResources};
+use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner};
 use cairo_vm::vm::security::verify_secure_runner;
 use num_traits::{ToPrimitive, Zero};
 use starknet_types_core::felt::Felt;
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value, clippy::result_large_err)]
 // Reason copied: Signature change
 /// Runs the runner from the given PC.
 pub(crate) fn run_entry_point<HP: HintProcessor>(
@@ -57,7 +55,11 @@ pub(crate) fn run_entry_point<HP: HintProcessor>(
     Ok(())
 }
 
-#[allow(clippy::items_after_statements, clippy::needless_pass_by_value)]
+#[expect(
+    clippy::items_after_statements,
+    clippy::needless_pass_by_value,
+    clippy::result_large_err
+)]
 // Reason copied: Required by `run_entry_point`
 /// Fills the holes after running the entry point.
 /// Currently only fills the holes in the rc96 segment.
@@ -172,68 +174,7 @@ pub(crate) fn prepare_program_extra_data(
     Ok(program_extra_data_length)
 }
 
-pub fn finalize_runner(
-    runner: &mut CairoRunner,
-    n_total_args: usize,
-    program_extra_data_length: usize,
-) -> Result<(), PostExecutionError> {
-    // Close memory holes in segments (OS code touches those memory cells, we simulate it).
-    let program_start_ptr = runner
-        .program_base
-        .expect("The `program_base` field should be initialized after running the entry point.");
-    let program_end_ptr = (program_start_ptr + runner.get_program().data_len())?;
-    runner
-        .vm
-        .mark_address_range_as_accessed(program_end_ptr, program_extra_data_length)?;
-
-    let initial_fp = runner
-        .get_initial_fp()
-        .expect("The `initial_fp` field should be initialized after running the entry point.");
-    // When execution starts the stack holds the EP arguments + [ret_fp, ret_pc].
-    let args_ptr = (initial_fp - (n_total_args + 2))?;
-    runner
-        .vm
-        .mark_address_range_as_accessed(args_ptr, n_total_args)?;
-    Ok(())
-}
-
-pub fn extract_vm_resources(
-    runner: &CairoRunner,
-    syscall_handler: &SyscallHintProcessor<'_>,
-    tracked_resource: TrackedResource,
-) -> Result<ExecutionResources, PostExecutionError> {
-    match tracked_resource {
-        TrackedResource::CairoSteps => {
-            // Take into account the resources of the current call, without inner calls.
-            // Has to happen after marking holes in segments as accessed.
-            let mut vm_resources_without_inner_calls = runner
-                .get_execution_resources()
-                .map_err(VirtualMachineError::RunnerError)?
-                .filter_unused_builtins();
-            let versioned_constants = syscall_handler.base.context.versioned_constants();
-            if versioned_constants.segment_arena_cells {
-                vm_resources_without_inner_calls
-                    .builtin_instance_counter
-                    .get_mut(&BuiltinName::segment_arena)
-                    .map_or_else(|| {}, |val| *val *= SEGMENT_ARENA_BUILTIN_SIZE);
-            }
-            // Take into account the syscall resources of the current call.
-            vm_resources_without_inner_calls += &versioned_constants
-                .get_additional_os_syscall_resources(&syscall_handler.syscalls_usage);
-            Ok(vm_resources_without_inner_calls)
-        }
-        TrackedResource::SierraGas => Ok(ExecutionResources::default()),
-    }
-}
-
-pub fn total_vm_resources(
-    vm_resources_without_inner_calls: &ExecutionResources,
-    inner_calls: &[CallInfo],
-) -> ExecutionResources {
-    vm_resources_without_inner_calls + &CallInfo::summarize_vm_resources(inner_calls.iter())
-}
-
-#[allow(clippy::trivially_copy_pass_by_ref)]
+#[expect(clippy::trivially_copy_pass_by_ref)]
 // Reason copied: Required by `finalize_execution`
 pub fn get_call_result(
     runner: &CairoRunner,

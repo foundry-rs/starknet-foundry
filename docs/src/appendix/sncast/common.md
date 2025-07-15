@@ -1,4 +1,5 @@
 # `sncast` common flags
+These flags must be specified directly after the `sncast` command and before the subcommand name.
 
 ## `--profile, -p <PROFILE_NAME>`
 Optional.
@@ -9,7 +10,7 @@ Defaults to `default` (`snfoundry.toml`) and `dev` (`Scarb.toml`).
 ## `--account, -a <ACCOUNT_NAME>`
 Optional.
 
-Account name used to interact with the network, aliased in open zeppelin accounts file.
+Account name used to interact with the network, aliased in the accounts file.
 
 Overrides account from `snfoundry.toml`.
 
@@ -18,23 +19,13 @@ If used with `--keystore`, should be a path to [starkli account JSON file](https
 ## `--accounts-file, -f <PATH_TO_ACCOUNTS_FILE>`
 Optional.
 
-Path to the open zeppelin accounts file holding accounts info. Defaults to `~/.starknet_accounts/starknet_open_zeppelin_accounts.json`.
+Path to the accounts file holding accounts information. Defaults to `~/.starknet_accounts/starknet_open_zeppelin_accounts.json`.
 
 ## `--keystore, -k <PATH_TO_KEYSTORE_FILE>`
 Optional.
 
 Path to [keystore file](https://book.starkli.rs/signers#encrypted-keystores).
 When specified, the --account argument must be a path to [starkli account JSON file](https://book.starkli.rs/accounts#accounts).
-
-## `--int-format`
-Optional.
-
-If passed, values will be displayed in decimal format. Default is addresses as hex and fees as int.
-
-## `--hex-format`
-Optional.
-
-If passed, values will be displayed in hex format. Default is addresses as hex and fees as int.
 
 ## `--json, -j`
 Optional.

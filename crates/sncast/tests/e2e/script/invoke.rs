@@ -9,8 +9,7 @@ use test_case::test_case;
 #[test_case("oz_cairo_1"; "cairo_1_account")]
 #[test_case("oz"; "oz_account")]
 #[test_case("argent"; "argent_account")]
-// TODO(#3118)
-// #[test_case("braavos"; "braavos_account")]
+#[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 async fn test_insufficient_resource_for_validate(account: &str) {
     let script_dir =
@@ -37,8 +36,9 @@ async fn test_insufficient_resource_for_validate(account: &str) {
         output,
         indoc! {r"
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientResourcesForValidate(())))
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
         "},
     );
 }
@@ -74,8 +74,9 @@ async fn test_contract_does_not_exist() {
         [..]: Error in the called contract ([..]):
         Requested contract address [..] is not deployed.
         " })))
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
         "#},
     );
 }
@@ -102,7 +103,6 @@ fn test_wrong_function_name() {
     let snapbox = runner(&args).current_dir(script_dir.path());
     let output = snapbox.assert().success();
 
-    // TODO(#3116): Change message to string after issue with undecoded felt is resolved.
     assert_stdout_contains(
         output,
         indoc! {r#"
@@ -114,8 +114,9 @@ fn test_wrong_function_name() {
         Error in contract (contract address: [..], class hash: [..], selector: [..]):
         [..] ('ENTRYPOINT_NOT_FOUND').
          ["0x454e545259504f494e545f4e4f545f464f554e44"]") }) }) }) })))
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
         "#},
     );
 }
@@ -142,7 +143,6 @@ fn test_wrong_calldata() {
     let snapbox = runner(&args).current_dir(script_dir.path());
     let output = snapbox.assert().success();
 
-    // TODO(#3116): Change message to string after issue with undecoded felt is resolved.
     assert_stdout_contains(
         output,
         indoc! {r#"
@@ -153,8 +153,9 @@ fn test_wrong_calldata() {
         Error in contract (contract address: [..], class hash: [..], selector: [..]):
         [..] ('Failed to deserialize param #2').
          ["0x4661696c656420746f20646573657269616c697a6520706172616d202332"]") }) }) }) })))
-        command: script run
-        status: success
+        Success: Script execution completed
+        
+        Status: success
         "#},
     );
 }

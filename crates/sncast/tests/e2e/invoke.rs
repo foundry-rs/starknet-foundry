@@ -4,8 +4,8 @@ use crate::helpers::constants::{
 };
 use crate::helpers::fee::apply_test_resource_bounds_flags;
 use crate::helpers::fixtures::{
-    create_and_deploy_account, create_and_deploy_oz_account, get_accounts_path,
-    get_transaction_hash, get_transaction_receipt,
+    create_and_deploy_account, create_and_deploy_oz_account, get_transaction_hash,
+    get_transaction_receipt,
 };
 use crate::helpers::runner::runner;
 use crate::helpers::shell::os_specific_shell;
@@ -14,11 +14,10 @@ use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use snapbox::cmd::cargo_bin;
 use sncast::AccountType;
-use sncast::helpers::constants::{ARGENT_CLASS_HASH, OZ_CLASS_HASH};
+use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::helpers::fee::FeeArgs;
 use starknet::core::types::TransactionReceipt::Invoke;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
-use tempfile::tempdir;
 use test_case::test_case;
 
 #[tokio::test]
@@ -30,7 +29,6 @@ async fn test_happy_case_human_readable() {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "invoke",
         "--url",
         URL,
@@ -50,8 +48,9 @@ async fn test_happy_case_human_readable() {
         output,
         indoc! {
             "
-            command: invoke
-            transaction_hash: [..]
+            Success: Invoke completed
+
+            Transaction Hash: 0x0[..]
 
             To see invocation details, visit:
             transaction: [..]
@@ -63,8 +62,7 @@ async fn test_happy_case_human_readable() {
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
 #[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
-// TODO(#3118)
-// #[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
+#[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
 async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     let tempdir = create_and_deploy_account(class_hash, account_type).await;
@@ -73,7 +71,6 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "--json",
         "invoke",
         "--url",
@@ -123,7 +120,6 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "--json",
         "invoke",
         "--url",
@@ -198,7 +194,6 @@ async fn test_contract_does_not_exist() {
     );
 }
 
-// TODO(#3116): Before, the error message included 'ENTRYPOINT_NOT_FOUND', but now it's an undecoded felt.
 #[test]
 fn test_wrong_function_name() {
     let args = vec![
@@ -216,18 +211,14 @@ fn test_wrong_function_name() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
-        indoc! {"
-            command: invoke
-            error: Transaction execution error [..]0x454e545259504f494e545f4e4f545f464f554e44[..]
-        "},
+        r#"Error: Function with selector "0x2e0f845a8d0319c5c37d558023299beec2a0155d415f41cca140a09e6877c67" not found in ABI of the contract"#,
     );
 }
 
-// TODO(#3116): Before, the error message included "Failed to deserialize param #2", but now it's an undecoded felt.
 #[test]
 fn test_wrong_calldata() {
     let args = vec![
@@ -252,8 +243,8 @@ fn test_wrong_calldata() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: invoke
-        error: Transaction execution error [..]0x4661696c656420746f20646573657269616c697a6520706172616d202332[..]
+        Command: invoke
+        Error: Transaction execution error [..]Failed to deserialize param #2[..]
         "},
     );
 }
@@ -296,8 +287,8 @@ fn test_too_low_gas() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: invoke
-        error: The transaction's resources don't cover validation or the minimal transaction fee
+        Command: invoke
+        Error: The transaction's resources don't cover validation or the minimal transaction fee
         "},
     );
 }
@@ -313,7 +304,6 @@ async fn test_happy_case_cairo_expression_calldata() {
         "accounts.json",
         "--account",
         "my_account",
-        "--int-format",
         "--json",
         "invoke",
         "--url",
@@ -348,38 +338,4 @@ async fn test_happy_case_shell() {
         .arg(URL)
         .arg(DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA);
     snapbox.assert().success();
-}
-
-// TODO(#3118): Remove this test, once integration with braavos is restored
-#[tokio::test]
-async fn test_braavos_disabled() {
-    let tempdir = tempdir().expect("Failed to create a temporary directory");
-    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
-
-    let args = vec![
-        "--accounts-file",
-        &accounts_json_path,
-        "--account",
-        "braavos",
-        "invoke",
-        "--url",
-        URL,
-        "--contract-address",
-        MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--function",
-        "put",
-        "--calldata",
-        "0x1 0x2",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().failure();
-
-    assert_stderr_contains(
-        output,
-        indoc! {r"
-        Error: Using Braavos accounts is temporarily disabled because they don't yet work with starknet 0.13.5.
-            Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
-        "},
-    );
 }

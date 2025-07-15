@@ -1,6 +1,10 @@
 name: Scheduled
 
 on:
+  pull_request:
+    paths:
+      - scripts/get_scarb_versions.sh
+      - .github/workflows/scheduled.yml
   schedule:
     - cron: '0 0 * * 3,0'
   workflow_dispatch:
@@ -86,7 +90,6 @@ jobs:
       - name: Install cairo-coverage
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
-      - uses: taiki-e/install-action@nextest
 
       - run: cargo test --release -p forge e2e
 
@@ -107,9 +110,16 @@ jobs:
         with:
           scarb-version: ${{ matrix.version }}
       - uses: software-mansion/setup-universal-sierra-compiler@v1
-
-      - name: Install starknet-devnet-rs
-        run: ./scripts/install_devnet.sh
+      - name: Get Devnet version from .tool-versions
+        id: get-devnet-version
+        run: |
+          devnet_version=$(grep starknet-devnet .tool-versions | cut -d " " -f 2)
+          echo "Devnet version: $devnet_version"
+          echo "version=$devnet_version" >> "$GITHUB_OUTPUT"
+      - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
+        with:
+          tool_versions: |
+            starknet-devnet ${{ steps.get-devnet-version.outputs.version }}
 
       - run: cargo test --release -p sncast
 
@@ -141,7 +151,7 @@ jobs:
     uses: ./.github/workflows/_build-plugin-binaries.yml
     with:
       overridden_plugin_version: ${{ needs.get-version.outputs.version }}-test.${{ github.run_id }}
-          
+
   publish-plugin:
     needs: [get-version, build-plugin-binaries]
     uses: ./.github/workflows/_publish-plugin.yml
@@ -182,5 +192,6 @@ jobs:
         uses: slackapi/slack-github-action@v2.0.0
         with:
           webhook: ${{ secrets.SLACK_SCHEDULED_TESTS_FAILURE_WEBHOOK_URL }}
+          webhook-type: webhook-trigger
           payload: |
             url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

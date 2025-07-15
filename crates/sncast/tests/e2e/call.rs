@@ -31,9 +31,10 @@ fn test_happy_case() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r"
-        command: call
-        response: 0x0
-        response_raw: [0x0]
+        Success: Call completed
+
+        Response:     0x0
+        Response Raw: [0x0]
     "});
 }
 
@@ -56,8 +57,9 @@ fn test_happy_case_cairo_expression_calldata() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r"
-        command: call
-        response: []
+        Success: Call completed
+        
+        Response: []
     "});
 }
 
@@ -97,9 +99,10 @@ async fn test_call_after_storage_changed() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r"
-        command: call
-        response: 0x3
-        response_raw: [0x3]
+        Success: Call completed
+
+        Response:     0x3
+        Response Raw: [0x3]
     "});
 }
 
@@ -141,14 +144,11 @@ fn test_wrong_function_name() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
-        indoc! {r"
-        command: call
-        error: Requested entrypoint does not exist in the contract
-        "},
+        r#"Error: Function with selector "0x2924aec1f107eca35a5dc447cee68cc6985fe404841c9aad477adfcbe596d0a" not found in ABI of the contract"#,
     );
 }
 
@@ -177,8 +177,8 @@ fn test_wrong_calldata() {
     assert_stderr_contains(
         output,
         indoc! {r#"
-        command: call
-        error: An error occurred in the called contract = [..] error: Message("[\"0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473\"]") }) }
+        Command: call
+        Error: An error occurred in the called contract = [..] error: Message("[\"0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473\"]") }) }
         "#},
     );
 }
@@ -237,8 +237,8 @@ fn test_wrong_block_id() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: call
-        error: Block was not found
+        Command: call
+        Error: Block was not found
         "},
     );
 }
@@ -265,4 +265,30 @@ fn test_leading_negative_values() {
         .arg(URL)
         .arg(DATA_TRANSFORMER_CONTRACT_ADDRESS_SEPOLIA);
     snapbox.assert().success();
+}
+
+#[test]
+fn test_json_output_format() {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--json",
+        "call",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "get",
+        "--calldata",
+        "0x0",
+        "--block-id",
+        "latest",
+    ];
+
+    let snapbox = runner(&args);
+
+    snapbox.assert().success().stdout_eq(indoc! {r#"
+        {"response":"0x0","response_raw":["0x0"]}
+    "#});
 }

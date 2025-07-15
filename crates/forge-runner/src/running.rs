@@ -15,6 +15,7 @@ use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::constants as cheatnet_constants;
+use cheatnet::forking::data::ForkData;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
@@ -28,6 +29,7 @@ use cheatnet::state::{
     BlockInfoReader, CallTrace, CheatnetState, EncounteredErrors, ExtendedStateReader,
 };
 use execution::finalize_execution;
+use foundry_ui::UI;
 use hints::hints_by_representation;
 use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
@@ -65,13 +67,14 @@ pub fn run_test(
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
     trace_verbosity: Option<TraceVerbosity>,
+    ui: Arc<UI>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
         // a channel is used to receive information indicating
         // that the execution of the task is no longer necessary.
         if send.is_closed() {
-            return TestCaseSummary::Skipped {};
+            return TestCaseSummary::Interrupted {};
         }
         let run_result = run_test_case(
             &case,
@@ -80,11 +83,8 @@ pub fn run_test(
             None,
         );
 
-        // TODO: code below is added to fix snforge tests
-        // remove it after improve exit-first tests
-        // issue #1043
         if send.is_closed() {
-            return TestCaseSummary::Skipped {};
+            return TestCaseSummary::Interrupted {};
         }
 
         extract_test_case_summary(
@@ -93,6 +93,7 @@ pub fn run_test(
             &test_runner_config.contracts_data,
             &versioned_program_path,
             trace_verbosity,
+            &ui,
         )
     })
 }
@@ -107,13 +108,14 @@ pub(crate) fn run_fuzz_test(
     fuzzing_send: Sender<()>,
     rng: Arc<Mutex<StdRng>>,
     trace_verbosity: Option<TraceVerbosity>,
+    ui: Arc<UI>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
         // a channel is used to receive information indicating
         // that the execution of the task is no longer necessary.
         if send.is_closed() | fuzzing_send.is_closed() {
-            return TestCaseSummary::Skipped {};
+            return TestCaseSummary::Interrupted {};
         }
 
         let run_result = run_test_case(
@@ -127,7 +129,7 @@ pub(crate) fn run_fuzz_test(
         // remove it after improve exit-first tests
         // issue #1043
         if send.is_closed() {
-            return TestCaseSummary::Skipped {};
+            return TestCaseSummary::Interrupted {};
         }
 
         extract_test_case_summary(
@@ -136,6 +138,7 @@ pub(crate) fn run_fuzz_test(
             &test_runner_config.contracts_data,
             &versioned_program_path,
             trace_verbosity,
+            &ui,
         )
     })
 }
@@ -152,14 +155,15 @@ pub struct RunCompleted {
     pub(crate) used_resources: UsedResources,
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
+    pub(crate) fork_data: ForkData,
 }
 
-#[allow(clippy::too_many_lines)]
 pub struct RunError {
     pub(crate) error: Box<CairoRunError>,
     pub(crate) call_trace: Rc<RefCell<CallTrace>>,
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
+    pub(crate) fork_data: ForkData,
 }
 
 pub enum RunResult {
@@ -335,7 +339,7 @@ pub fn run_test_case(
 
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
-    update_top_call_resources(&mut forge_runtime, &tracked_resource);
+    update_top_call_resources(&mut forge_runtime, tracked_resource);
     update_top_call_l1_resources(&mut forge_runtime);
 
     let fuzzer_args = forge_runtime
@@ -355,6 +359,12 @@ pub fn run_test_case(
         used_resources.clone(),
     )?;
 
+    let fork_data = cached_state
+        .state
+        .fork_state_reader
+        .map(|fork_state_reader| ForkData::new(&fork_state_reader.compiled_contract_class_map()))
+        .unwrap_or_default();
+
     Ok(match result {
         Ok(result) => RunResult::Completed(Box::new(RunCompleted {
             status: if result.execution.failed {
@@ -367,12 +377,14 @@ pub fn run_test_case(
             used_resources,
             encountered_errors,
             fuzzer_args,
+            fork_data,
         })),
         Err(error) => RunResult::Error(RunError {
             error: Box::new(error),
             call_trace: call_trace_ref,
             encountered_errors,
             fuzzer_args,
+            fork_data,
         }),
     })
 }
@@ -383,6 +395,7 @@ fn extract_test_case_summary(
     contracts_data: &ContractsData,
     versioned_program_path: &Utf8Path,
     trace_verbosity: Option<TraceVerbosity>,
+    ui: &UI,
 ) -> TestCaseSummary<Single> {
     match run_result {
         Ok(run_result) => match run_result {
@@ -392,6 +405,7 @@ fn extract_test_case_summary(
                 contracts_data,
                 versioned_program_path,
                 trace_verbosity,
+                ui,
             ),
             RunResult::Error(run_error) => {
                 let mut message = format!(
@@ -420,6 +434,7 @@ fn extract_test_case_summary(
                         contracts_data,
                         trace_verbosity,
                         case.name.clone(),
+                        &run_error.fork_data,
                     ),
                 }
             }
@@ -441,7 +456,6 @@ fn get_fork_state_reader(
     fork_config: Option<&ResolvedForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
     fork_config
-        .as_ref()
         .map(|ResolvedForkConfig { url, block_number }| {
             ForkStateReader::new(url.clone(), *block_number, cache_dir)
         })

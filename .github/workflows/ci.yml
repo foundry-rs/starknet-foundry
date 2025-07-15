@@ -1,8 +1,5 @@
 name: CI
 
-env:
-  DEVNET_REV: 26292d1f92807090776b470f43b321f150f55ffd # v0.4.1
-
 on:
   pull_request:
   merge_group:
@@ -16,27 +13,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix_os: ${{ steps.set-matrix.outputs.matrix_os }}
-    steps:
-      - name: Set OS matrix based on event
-        id: set-matrix
-        run: |
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo 'matrix_os=["ubuntu-latest"]' >> $GITHUB_OUTPUT
-          else
-            echo 'matrix_os=["ubuntu-latest","windows-latest"]' >> $GITHUB_OUTPUT
-          fi
-
   test-forge-unit:
-    needs: setup
     name: Test Forge / Unit Tests
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -54,57 +33,56 @@ jobs:
         run: cargo test --release -p forge --features scarb_since_2_10 validate_snforge_std
 
   build-test-forge-nextest-archive:
-    needs: setup
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       - name: Install nextest
-        uses: taiki-e/install-action@nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest@0.9.98
       - name: Build and archive tests
-        run: cargo nextest archive --release -p forge --archive-file 'nextest-archive-${{ matrix.os }}.tar.zst'
+        run: cargo nextest archive --release -p forge --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v4
         with:
-          name: nextest-archive-${{ matrix.os }}
-          path: nextest-archive-${{ matrix.os }}.tar.zst
+          name: nextest-archive-${{ runner.os }}
+          path: nextest-archive-${{ runner.os }}.tar.zst
 
   test-forge-integration:
     name: Test Forge / Integration Tests
-    runs-on: ${{ matrix.os }}
-    needs: [ build-test-forge-nextest-archive, setup ]
+    runs-on: [ubuntu-latest]
+    needs: [ build-test-forge-nextest-archive ]
     strategy:
       fail-fast: false
       matrix:
         partition: [ 1, 2, 3 ]
-        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
-      - uses: taiki-e/install-action@nextest
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: nextest@0.9.98
       - uses: actions/download-artifact@v4
         with:
-          name: nextest-archive-${{ matrix.os }}
+          name: nextest-archive-${{ runner.os }}
       - name: nextest partition ${{ matrix.partition }}/3
-        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ matrix.os }}.tar.zst' integration
+        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}.tar.zst' integration
 
   test-forge-e2e:
     name: Test Forge / E2E Tests
-    runs-on: ${{ matrix.os }}
-    needs: [ build-test-forge-nextest-archive, setup ]
+    runs-on: ubuntu-latest
+    needs: [ build-test-forge-nextest-archive ]
     strategy:
       fail-fast: false
       matrix:
         partition: [ 1, 2, 3 ]
-        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
     steps:
       - name: Extract branch name
         if: github.event_name != 'pull_request'
@@ -127,11 +105,9 @@ jobs:
         shell: bash
 
       - name: Install cairo-profiler
-        if: runner.os != 'Windows'
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-profiler/main/scripts/install.sh | sh
       - name: Install cairo-coverage
-        if: runner.os != 'Windows'
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
@@ -140,12 +116,14 @@ jobs:
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
-      - uses: taiki-e/install-action@nextest
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: nextest@0.9.98
       - uses: actions/download-artifact@v4
         with:
-          name: nextest-archive-${{ matrix.os }}
+          name: nextest-archive-${{ runner.os }}
       - name: nextest partition ${{ matrix.partition }}/3
-        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ matrix.os }}.tar.zst' e2e
+        run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}.tar.zst' e2e
 
   test-requirements-check-special-conditions:
     name: Test requirements check special conditions
@@ -253,33 +231,14 @@ jobs:
 
   test-cast:
     name: Test Cast
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        # TODO(#3083): Restore running sncast tests on Windows
-        os: [ ubuntu-latest ]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
-      - name: Install starknet-devnet-rs on Linux/Macos
-        if: runner.os != 'Windows'
-        run: |
-          ./scripts/install_devnet.sh
-      - name: Cache devnet build
-        if: runner.os == 'Windows'
-        id: windows-devnet-cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}\crates\sncast\tests\utils\devnet
-          key: ${{ runner.os }}-devnet-${{ env.DEVNET_REV }}
-      - name: Install devnet
-        if: runner.os == 'Windows' && steps.windows-devnet-cache.outputs.cache-hit != 'true'
-        run: |
-          $DEVNET_INSTALL_DIR = "${{ github.workspace }}\crates\sncast\tests\utils\devnet"
-          cargo install --git https://github.com/0xSpaceShard/starknet-devnet-rs.git --locked --rev ${{ env.DEVNET_REV }} --root $DEVNET_INSTALL_DIR
+      - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests
@@ -313,12 +272,8 @@ jobs:
       - run: cargo test --release -p shared
 
   test-scarb-api:
-    needs: setup
     name: Test Scarb Api
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: ${{ fromJson(needs.setup.outputs.matrix_os) }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable

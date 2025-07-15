@@ -2,7 +2,7 @@ use super::common::runner::{get_current_branch, get_remote_url, setup_package, t
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
-use shared::test_utils::output_assert::{assert_stdout, assert_stdout_contains};
+use shared::test_utils::output_assert::{AsOutput, assert_stdout, assert_stdout_contains};
 use std::{fs, str::FromStr};
 use test_utils::tempdir_with_tool_versions;
 use toml_edit::{DocumentMut, value};
@@ -43,7 +43,7 @@ fn simple_package() {
         0x6661696c696e6720636865636b ('failing check')
 
     [PASS] simple_package_integrationtest::without_prefix::five [..]
-    Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
+    Tests: 9 passed, 2 failed, 2 ignored, 0 filtered out
 
     Failures:
         simple_package_integrationtest::test_simple::test_failing
@@ -114,7 +114,7 @@ fn simple_package_with_git_dependency() {
             0x6661696c696e6720636865636b ('failing check')
 
         [PASS] simple_package_integrationtest::without_prefix::five [..]
-        Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
+        Tests: 9 passed, 2 failed, 2 ignored, 0 filtered out
 
         Failures:
             simple_package_integrationtest::test_simple::test_failing
@@ -166,7 +166,7 @@ fn with_filter() {
         Running 2 test(s) from tests/
         [PASS] simple_package_integrationtest::test_simple::test_two [..]
         [PASS] simple_package_integrationtest::test_simple::test_two_and_two [..]
-        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 11 filtered out
+        Tests: 2 passed, 0 failed, 0 ignored, 11 filtered out
         "},
     );
 }
@@ -192,7 +192,7 @@ fn with_filter_matching_module() {
         [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
         [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
         [PASS] simple_package_integrationtest::ext_function_test::test_simple [..]
-        Tests: 2 passed, 0 failed, 0 skipped, 1 ignored, 10 filtered out
+        Tests: 2 passed, 0 failed, 1 ignored, 10 filtered out
         "},
     );
 }
@@ -218,7 +218,153 @@ fn with_exact_filter() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] simple_package_integrationtest::test_simple::test_two [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
+        "},
+    );
+}
+
+#[test]
+fn with_skip_filter_matching_module() {
+    let temp = setup_package("simple_package");
+
+    let output = test_runner(&temp)
+        .arg("--skip")
+        .arg("simple_package")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 0 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 0 test(s) from tests/
+        Tests: 0 passed, 0 failed, 0 ignored, 13 filtered out
+        "},
+    );
+}
+
+#[test]
+fn with_skip_filter_matching_full_module_path() {
+    let temp = setup_package("simple_package");
+
+    let output = test_runner(&temp)
+        .arg("--skip")
+        .arg("simple_package_integrationtest::test_simple::test_two_and_two")
+        .assert()
+        .failure();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+        
+        Collected 12 test(s) from simple_package package
+        Running 10 test(s) from tests/
+        [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
+        [PASS] simple_package_integrationtest::ext_function_test::test_simple [..]
+        [PASS] simple_package_integrationtest::without_prefix::five [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple2 [..]
+        [PASS] simple_package_integrationtest::test_simple::test_two [..]
+        [FAIL] simple_package_integrationtest::test_simple::test_another_failing
+        
+        Failure data:
+            0x6661696c696e6720636865636b ('failing check')
+        
+        [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
+        [FAIL] simple_package_integrationtest::test_simple::test_failing
+        
+        Failure data:
+            0x6661696c696e6720636865636b ('failing check')
+        
+        [PASS] simple_package_integrationtest::test_simple::test_simple [..]
+        [PASS] simple_package_integrationtest::contract::call_and_invoke [..]
+        Running 2 test(s) from src/
+        [IGNORE] simple_package::tests::ignored_test
+        [PASS] simple_package::tests::test_fib [..]
+        Tests: 8 passed, 2 failed, 2 ignored, 1 filtered out
+        
+        Failures:
+            simple_package_integrationtest::test_simple::test_another_failing
+            simple_package_integrationtest::test_simple::test_failing
+        "},
+    );
+}
+
+#[test]
+fn with_skip_filter_matching_test_name() {
+    let temp = setup_package("simple_package");
+
+    let output = test_runner(&temp)
+        .arg("--skip")
+        .arg("failing")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 11 test(s) from simple_package package
+        Running 9 test(s) from tests/
+        [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
+        [PASS] simple_package_integrationtest::test_simple::test_two [..]
+        [PASS] simple_package_integrationtest::test_simple::test_two_and_two [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple2 [..]
+        [PASS] simple_package_integrationtest::ext_function_test::test_simple [..]
+        [PASS] simple_package_integrationtest::without_prefix::five [..]
+        [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple [..]
+        [PASS] simple_package_integrationtest::contract::call_and_invoke [..]
+        Running 2 test(s) from src/
+        [IGNORE] simple_package::tests::ignored_test
+        [PASS] simple_package::tests::test_fib [..]
+        Tests: 9 passed, 0 failed, 2 ignored, 2 filtered out
+        "},
+    );
+}
+
+#[test]
+fn with_skip_filter_matching_multiple_test_name() {
+    let temp = setup_package("simple_package");
+
+    let output = test_runner(&temp)
+        .arg("--skip")
+        .arg("failing")
+        .arg("--skip")
+        .arg("two")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 9 test(s) from simple_package package
+        Running 7 test(s) from tests/
+        [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
+        [PASS] simple_package_integrationtest::test_simple::test_simple2 [..]
+        [PASS] simple_package_integrationtest::ext_function_test::test_simple [..]
+        [PASS] simple_package_integrationtest::without_prefix::five [..]
+        [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple [..]
+        [PASS] simple_package_integrationtest::contract::call_and_invoke [..]
+        Running 2 test(s) from src/
+        [IGNORE] simple_package::tests::ignored_test
+        [PASS] simple_package::tests::test_fib [..]
+        Tests: 7 passed, 0 failed, 2 ignored, 4 filtered out
         "},
     );
 }
@@ -244,7 +390,7 @@ fn with_exact_filter_and_duplicated_test_names() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] duplicated_test_names_integrationtest::tests_a::test_simple [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, other filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, other filtered out
         "},
     );
 }
@@ -265,7 +411,7 @@ fn with_non_matching_filter() {
         Collected 0 test(s) from simple_package package
         Running 0 test(s) from src/
         Running 0 test(s) from tests/
-        Tests: 0 passed, 0 failed, 0 skipped, 0 ignored, 13 filtered out
+        Tests: 0 passed, 0 failed, 0 ignored, 13 filtered out
         "},
     );
 }
@@ -292,7 +438,7 @@ fn with_ignored_flag() {
         Failure data:
             0x6e6f742070617373696e67 ('not passing')
 
-        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 11 filtered out
+        Tests: 1 passed, 1 failed, 0 ignored, 11 filtered out
 
         Failures:
             simple_package_integrationtest::ext_function_test::ignored_test
@@ -341,7 +487,7 @@ fn with_include_ignored_flag() {
             0x6661696c696e6720636865636b ('failing check')
 
         [PASS] simple_package_integrationtest::without_prefix::five [..]
-        Tests: 10 passed, 3 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 10 passed, 3 failed, 0 ignored, 0 filtered out
 
         Failures:
             simple_package_integrationtest::ext_function_test::ignored_test
@@ -376,7 +522,7 @@ fn with_ignored_flag_and_filter() {
         Failure data:
             0x6e6f742070617373696e67 ('not passing')
 
-        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 12 filtered out
+        Tests: 0 passed, 1 failed, 0 ignored, 12 filtered out
 
         Failures:
             simple_package_integrationtest::ext_function_test::ignored_test
@@ -410,7 +556,7 @@ fn with_include_ignored_flag_and_filter() {
         Failure data:
             0x6e6f742070617373696e67 ('not passing')
 
-        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 11 filtered out
+        Tests: 1 passed, 1 failed, 0 ignored, 11 filtered out
 
         Failures:
             simple_package_integrationtest::ext_function_test::ignored_test
@@ -456,7 +602,7 @@ fn with_rerun_failed_flag_without_cache() {
             simple_package_integrationtest::test_simple::test_another_failing
         [IGNORE] simple_package::tests::ignored_test
         [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
-        Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
+        Tests: 9 passed, 2 failed, 2 ignored, 0 filtered out
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
 
@@ -489,7 +635,7 @@ fn with_rerun_failed_flag_and_name_filter() {
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
 
-        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 12 filtered out
+        Tests: 0 passed, 1 failed, 0 ignored, 12 filtered out
 
         Failures:
             simple_package_integrationtest::test_simple::test_another_failing
@@ -525,7 +671,7 @@ fn with_rerun_failed_flag() {
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
 
-        Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 11 filtered out
+        Tests: 0 passed, 2 failed, 0 ignored, 11 filtered out
 
         Failures:
             simple_package_integrationtest::test_simple::test_another_failing
@@ -586,7 +732,7 @@ fn with_panic_data_decoding() {
             x: 5
             y: 6"
 
-        Tests: 2 passed, 6 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 2 passed, 6 failed, 0 ignored, 0 filtered out
 
         Failures:
             panic_decoding_integrationtest::test_panic_decoding::test_panic_decoding2
@@ -642,7 +788,8 @@ fn with_exit_first() {
         Failure data:
             0x73696d706c6520636865636b ('simple check')
 
-        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 0 filtered out
+        Tests: 0 passed, 1 failed, 0 ignored, 0 filtered out
+        Interrupted execution of 1 test(s).
 
         Failures:
             exit_first_integrationtest::ext_function_test::simple_test
@@ -666,11 +813,11 @@ fn with_exit_first_flag() {
         Collected 2 test(s) from exit_first package
         Running 2 test(s) from tests/
         [FAIL] exit_first_integrationtest::ext_function_test::simple_test
-
         Failure data:
             0x73696d706c6520636865636b ('simple check')
 
-        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 0 filtered out
+        Tests: 0 passed, 1 failed, 0 ignored, 0 filtered out
+        Interrupted execution of 1 test(s).
 
         Failures:
             exit_first_integrationtest::ext_function_test::simple_test
@@ -753,7 +900,7 @@ fn should_panic() {
             Actual:    [0x6661696c696e6720636865636b] (failing check)
             Expected:  [0x0] ()
 
-        Tests: 5 passed, 9 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 5 passed, 9 failed, 0 ignored, 0 filtered out
 
         Failures:
             should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
@@ -770,7 +917,6 @@ fn should_panic() {
 }
 
 #[test]
-#[ignore = "TODO(#3322) restore the asserted message to be proper test output and not `ERROR` after there exists a previous plugin version compatible with changes from #3027"]
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
@@ -779,8 +925,7 @@ fn incompatible_snforge_std_version_warning() {
         .unwrap()
         .parse::<DocumentMut>()
         .unwrap();
-    scarb_toml["dev-dependencies"]["snforge_std"] = value("0.34.1");
-    scarb_toml["dev-dependencies"]["snforge_scarb_plugin"] = value("0.34.1");
+    scarb_toml["dev-dependencies"]["snforge_std"] = value("0.45.0");
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
     let output = test_runner(&temp).assert().failure();
@@ -801,7 +946,7 @@ fn incompatible_snforge_std_version_warning() {
             Could not reach the end of the program. RunResources has no remaining steps.
             Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps
 
-        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 1 passed, 1 failed, 0 ignored, 0 filtered out
 
         Failures:
             steps::tests::steps_more_than_10000000
@@ -824,11 +969,10 @@ fn incompatible_snforge_std_version_error() {
 
     let output = test_runner(&temp).assert().failure();
 
-    // TODO Update this to 0.44.0 after it has been released
     assert_stdout_contains(
         output,
         indoc! {r"
-        [ERROR] Package snforge_std version does not meet the minimum required version >=0.43.0. Please upgrade snforge_std in Scarb.toml
+        [ERROR] Package snforge_std version does not meet the minimum required version >=0.44.0. Please upgrade snforge_std in Scarb.toml
         "},
     );
 }
@@ -856,7 +1000,7 @@ fn detailed_resources_flag() {
                 memory holes: [..]
                 builtins: ([..])
                 syscalls: ([..])
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
         "},
     );
 }
@@ -872,6 +1016,9 @@ fn detailed_resources_flag_sierra_gas() {
         .assert()
         .success();
 
+    // Extra check to ensure that the output does not contain VM resources
+    assert!(!output.as_stdout().contains("steps:"));
+
     assert_stdout_contains(
         output,
         indoc! {r"
@@ -881,9 +1028,40 @@ fn detailed_resources_flag_sierra_gas() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] erc20_package_integrationtest::test_complex::complex[..]
-                sierra_gas_consumed: ([..])
+                sierra_gas_consumed: [..]
                 syscalls: ([..])
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
+        "},
+    );
+}
+
+#[test]
+#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
+fn detailed_resources_mixed_resources() {
+    let temp = setup_package("forking");
+    let output = test_runner(&temp)
+        .arg("test_track_resources")
+        .arg("--detailed-resources")
+        .arg("--tracked-resource")
+        .arg("sierra-gas")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 1 test(s) from forking package
+        Running 1 test(s) from src/
+        [PASS] forking::tests::test_track_resources [..]
+                sierra_gas_consumed: [..]
+                syscalls: ([..])
+                steps: [..]
+                memory holes: [..]
+                builtins: (range_check: [..])
+
+        Tests: 1 passed, 0 failed, 0 ignored, [..] filtered out
         "},
     );
 }
@@ -892,11 +1070,7 @@ fn detailed_resources_flag_sierra_gas() {
 fn catch_runtime_errors() {
     let temp = setup_package("simple_package");
 
-    let expected_panic = if cfg!(target_os = "windows") {
-        "The system cannot find the file specified"
-    } else {
-        "No such file or directory"
-    };
+    let expected_panic = "No such file or directory";
 
     temp.child("tests/test.cairo")
         .write_str(
@@ -946,7 +1120,7 @@ fn call_nonexistent_selector() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] nonexistent_selector_integrationtest::test_contract::test_unwrapped_call_contract_syscall [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
         "},
     );
 }
@@ -988,7 +1162,7 @@ fn exact_printing_pass() {
         Running 2 test(s) from src/
         [PASS] deterministic_output::test::first_test_pass_y [..]
         [PASS] deterministic_output::test::second_test_pass_x [..]
-        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 2 filtered out
+        Tests: 2 passed, 0 failed, 0 ignored, 2 filtered out
         "},
     );
 }
@@ -1014,7 +1188,7 @@ fn exact_printing_fail() {
         Failure data:
             0x73696d706c6520636865636b ('simple check')
 
-        Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 2 filtered out
+        Tests: 0 passed, 2 failed, 0 ignored, 2 filtered out
 
         Failures:
             deterministic_output::test::first_test_fail_x
@@ -1040,7 +1214,7 @@ fn exact_printing_mixed() {
             0x73696d706c6520636865636b ('simple check')
 
         [PASS] deterministic_output::test::second_test_pass_x [..]
-        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 2 filtered out
+        Tests: 1 passed, 1 failed, 0 ignored, 2 filtered out
 
         Failures:
             deterministic_output::test::first_test_fail_x
@@ -1067,7 +1241,7 @@ fn dispatchers() {
         [PASS] dispatchers_integrationtest::test::test_error_handled_in_contract [..]
         [PASS] dispatchers_integrationtest::test::test_handle_and_panic [..]
         [PASS] dispatchers_integrationtest::test::test_handle_recoverable_in_test [..]
-        Tests: 3 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 3 passed, 1 failed, 0 ignored, 0 filtered out
 
         Failures:
             dispatchers_integrationtest::test::test_unrecoverable_not_possible_to_handle

@@ -16,8 +16,8 @@ async fn test_incorrect_transaction_hash() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: tx-status
-        error: Failed to get transaction status: Transaction with provided hash was not found (does not exist)
+        Command: tx-status
+        Error: Failed to get transaction status: Transaction with provided hash was not found (does not exist)
         "},
     );
 }
@@ -28,9 +28,10 @@ async fn test_succeeded() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r"
-        command: tx-status
-        execution_status: Succeeded
-        finality_status: AcceptedOnL1
+        Success: Transaction status retrieved
+        
+        Finality Status:  Accepted on L1
+        Execution Status: Succeeded
     "});
 }
 
@@ -40,8 +41,9 @@ async fn test_reverted() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r"
-        command: tx-status
-        execution_status: Reverted
-        finality_status: AcceptedOnL1
+        Success: Transaction status retrieved
+        
+        Finality Status:  Accepted on L1
+        Execution Status: Reverted
     "});
 }

@@ -8,15 +8,14 @@ use configuration::CONFIG_FILENAME;
 use conversions::string::IntoHexStr;
 use indoc::{formatdoc, indoc};
 use serde_json::json;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use std::fs::{self, File};
 use tempfile::tempdir;
 use test_case::test_case;
 
 #[test_case("oz", "open_zeppelin"; "oz_account_type")]
 #[test_case("argent", "argent"; "argent_account_type")]
-// TODO(#3118)
-// #[test_case("braavos", "braavos"; "braavos_account_type")]
+#[test_case("braavos", "braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
@@ -44,8 +43,9 @@ pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account import
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        Success: Account imported successfully
+
+        Account Name: my_account_import
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -145,8 +145,8 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stderr_matches(formatdoc! {r"
-        command: account import
-        error: Incorrect class hash {} for account address {} was provided
+        Command: account import
+        Error: Incorrect class hash {} for account address {} was provided
     ", DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS});
 }
 
@@ -177,8 +177,8 @@ pub async fn test_nonexistent_account_address_and_nonexistent_class_hash() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stderr_matches(indoc! {r"
-        command: account import
-        error: Class with hash 0x101 is not declared, try using --class-hash with a hash of the declared class
+        Command: account import
+        Error: Class with hash 0x101 is not declared, try using --class-hash with a hash of the declared class
     "});
 }
 
@@ -207,8 +207,8 @@ pub async fn test_nonexistent_account_address() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stderr_matches(indoc! {r"
-        command: account import
-        error: Class hash for the account address 0x123 could not be found. Please provide the class hash
+        Command: account import
+        Error: Class hash for the account address 0x123 could not be found. Please provide the class hash
     "});
 }
 
@@ -238,12 +238,17 @@ pub async fn test_happy_case_add_profile() {
         "my_account_import",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = runner(&args).current_dir(tempdir.path()).assert();
 
-    snapbox.assert().stdout_matches(indoc! {r"
-        command: account import
-        add_profile: Profile my_account_import successfully added to snfoundry.toml
-    "});
+    let config_path = Utf8PathBuf::from_path_buf(tempdir.path().join("snfoundry.toml"))
+        .unwrap()
+        .canonicalize_utf8()
+        .unwrap();
+
+    assert_stdout_contains(
+        output,
+        format!("Add Profile:  Profile my_account_import successfully added to {config_path}"),
+    );
     let current_dir_utf8 = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
 
     let contents = fs::read_to_string(current_dir_utf8.join(accounts_file))
@@ -337,8 +342,9 @@ pub async fn test_detect_deployed() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account import
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        Success: Account imported successfully
+
+        Account Name: my_account_import
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -418,8 +424,9 @@ pub async fn test_private_key_from_file() {
     let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account import
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        Success: Account imported successfully
+
+        Account Name: my_account_import
     "});
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
@@ -489,17 +496,13 @@ pub async fn test_invalid_private_key_file_path() {
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
 
-    let expected_file_error = if cfg!(target_os = "windows") {
-        "The system cannot find the file specified[..]"
-    } else {
-        "No such file or directory [..]"
-    };
+    let expected_file_error = "No such file or directory [..]";
 
     assert_stderr_contains(
         output,
         formatdoc! {r"
-        command: account import
-        error: Failed to obtain private key from the file my_private_key: {}
+        Command: account import
+        Error: Failed to obtain private key from the file my_private_key: {}
         ", expected_file_error},
     );
 }
@@ -538,8 +541,8 @@ pub async fn test_invalid_private_key_in_file() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account import
-        error: Failed to obtain private key from the file my_private_key: Failed to create Felt from string
+        Command: account import
+        Error: Failed to obtain private key from the file my_private_key: Failed to create Felt from string
         "},
     );
 }
@@ -622,12 +625,17 @@ pub async fn test_empty_config_add_profile() {
         "random",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = runner(&args).current_dir(tempdir.path()).assert();
 
-    snapbox.assert().stdout_matches(indoc! {r"
-        command: account import
-        add_profile: Profile random successfully added to snfoundry.toml
-    "});
+    let config_path = Utf8PathBuf::from_path_buf(tempdir.path().join("snfoundry.toml"))
+        .unwrap()
+        .canonicalize_utf8()
+        .unwrap();
+
+    assert_stdout_contains(
+        output,
+        format!("Add Profile:  Profile random successfully added to {config_path}"),
+    );
     let current_dir_utf8 = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
 
     let contents = fs::read_to_string(current_dir_utf8.join("snfoundry.toml"))
@@ -666,8 +674,9 @@ pub async fn test_happy_case_valid_address_computation() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account import
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        Success: Account imported successfully
+
+        Account Name: my_account_import
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -723,8 +732,8 @@ pub async fn test_invalid_address_computation() {
     let snapbox = runner(&args).current_dir(tempdir.path());
     let computed_address = "0xaf550326d32c8106ef08d25cbc0dba06e5cd10a2201c2e9bc5ad4cbbce45e6";
     snapbox.assert().stderr_matches(formatdoc! {r"
-        command: account import
-        error: Computed address {computed_address} does not match the provided address 0x123. Please ensure that the provided salt, class hash, and account type are correct.
+        Command: account import
+        Error: Computed address {computed_address} does not match the provided address 0x123. Please ensure that the provided salt, class hash, and account type are correct.
     "});
 }
 
@@ -783,9 +792,9 @@ pub async fn test_happy_case_default_name_generation() {
     for i in 0..3 {
         let snapbox = runner(&import_args).current_dir(tempdir.path());
         snapbox.assert().stdout_matches(formatdoc! {r"
-        command: account import
-        account_name: account-{id}
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        Success: Account imported successfully
+
+        Account Name: account-{id}
     ", id = i + 1});
     }
 
@@ -797,8 +806,9 @@ pub async fn test_happy_case_default_name_generation() {
 
     let snapbox = runner(&delete_args).current_dir(tempdir.path()).stdin("Y");
     snapbox.assert().success().stdout_matches(indoc! {r"
-        command: account delete
-        result: Account successfully removed
+        Success: Account deleted
+
+        Account successfully removed
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -809,9 +819,9 @@ pub async fn test_happy_case_default_name_generation() {
 
     let snapbox = runner(&import_args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account import
-        account_name: account-2
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        Success: Account imported successfully
+
+        Account Name: account-2
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -819,36 +829,4 @@ pub async fn test_happy_case_default_name_generation() {
     let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
 
     assert_eq!(contents_json, all_accounts_content);
-}
-
-#[tokio::test]
-pub async fn test_braavos_disabled() {
-    let tempdir = tempdir().expect("Unable to create a temporary directory");
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "account",
-        "import",
-        "--url",
-        URL,
-        "--name",
-        "my_account_import",
-        "--address",
-        "0x123",
-        "--private-key",
-        "0x456",
-        "--type",
-        "braavos",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-
-    snapbox.assert().stderr_matches(indoc! {r"
-        command: account import
-        error: Using Braavos accounts is temporarily disabled because they don't yet work with starknet 0.13.5.
-            Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
-        "},
-    );
 }
