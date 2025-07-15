@@ -585,7 +585,8 @@ fn mock_calls_when_mixed() {
 #[test]
 fn mock_calls_start_stop_when_mixed() {
     let test = test_case!(
-        indoc!(            r#"
+        indoc!(
+            r#"
         use result::ResultTrait;
         use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, mock_call_when, MockCalldata, start_mock_call, start_mock_call_when, stop_mock_call, stop_mock_call_when};
 
@@ -656,14 +657,15 @@ fn mock_calls_start_stop_when_mixed() {
             let thing = dispatcher.get_thing();
             assert_eq!(thing, 420);
         }
-        "#),
-               Contract::from_code_path(
+        "#
+        ),
+        Contract::from_code_path(
             "MockChecker".to_string(),
             Path::new("tests/data/contracts/mock_checker.cairo"),
         )
         .unwrap()
-    ); 
-    
+    );
+
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
 }
@@ -671,7 +673,8 @@ fn mock_calls_start_stop_when_mixed() {
 #[test]
 fn mock_calls_start_stop_when_interleaved() {
     let test = test_case!(
-        indoc!(            r#"
+        indoc!(
+            r#"
         use result::ResultTrait;
         use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, MockCalldata, start_mock_call, start_mock_call_when, stop_mock_call, stop_mock_call_when};
 
@@ -734,14 +737,15 @@ fn mock_calls_start_stop_when_interleaved() {
             let thing = dispatcher.get_thing();
             assert_eq!(thing, 420);
         }
-        "#),
-               Contract::from_code_path(
+        "#
+        ),
+        Contract::from_code_path(
             "MockChecker".to_string(),
             Path::new("tests/data/contracts/mock_checker.cairo"),
         )
         .unwrap()
-    ); 
-    
+    );
+
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
 }

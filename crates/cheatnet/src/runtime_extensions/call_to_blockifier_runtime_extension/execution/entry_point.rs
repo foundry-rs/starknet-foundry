@@ -28,10 +28,10 @@ use blockifier::{
     state::state_api::State,
 };
 use cairo_vm::vm::runners::cairo_runner::{CairoRunner, ExecutionResources};
-use num_traits::Zero;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use conversions::FromConv;
 use conversions::string::TryFromHexStr;
+use num_traits::Zero;
 use shared::vm::VirtualMachineExt;
 use starknet_api::{
     contract_class::EntryPointType,
