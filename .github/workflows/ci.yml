@@ -147,7 +147,7 @@ jobs:
       - run: cargo test --package forge --features scarb_2_9_1 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
       - run: cargo test --package forge --features scarb_2_9_1 --lib compatibility_check::tests::warning_requirements
       - run: cargo test --package forge --features scarb_2_9_1 --test main e2e::running::sierra_gas_with_older_scarb
-      - run: cargo test --package forge --features scarb_2_9_1 --test main e2e::new::init_new_project_from_scarb_with_snforge_std_compatibility
+      - run: cargo test --package forge --features scarb_2_9_1 --test main e2e::new::init_new_project_from_scarb_with_snforge_std_deprecated
 
   # TODO(#3212): Closures in Cairo are fully supported since version 2.11
   test-interact-with-state:
@@ -219,8 +219,8 @@ jobs:
         working-directory: crates/snforge-scarb-plugin
         run: cargo test --release
 
-  test-forge-scarb-plugin-compatibility:
-    name: Test Forge Scarb Plugin Compatibility
+  test-forge-scarb-plugin-deprecated:
+    name: Test Forge Scarb Plugin Deprecated
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -229,7 +229,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run Forge Scarb Plugin tests
-        working-directory: crates/snforge-scarb-plugin-compatibility
+        working-directory: crates/snforge-scarb-plugin-deprecated
         run: cargo test --release
 
   test-cast:
@@ -287,7 +287,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - name: Check cairo files format
         run: |
-          output=$(find . -type f -name "Scarb.toml" -not -path "*/snforge_std_compatibility/*" -execdir sh -c '
+          output=$(find . -type f -name "Scarb.toml" -not -path "*/snforge_std_deprecated/*" -execdir sh -c '
               echo "Running \"scarb fmt\" in directory: $PWD"
               scarb fmt --check
           ' \;)

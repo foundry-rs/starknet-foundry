@@ -31,7 +31,7 @@ jobs:
           
           plugin_name_underscores=${{ inputs.plugin_name }}
           plugin_name_underscores=${plugin_name_underscores//-/_}
-          plugin_version=$(get_version "${{ inputs.overridden_plugin_version }}")
+          plugin_version=$(get_version "${{ inputs.overridden_plugin_version }}" "crates/${{ inputs.plugin_name }}/Scarb.toml")
           
           registry_url=${{ inputs.prod_registry == true && 'https://scarbs.xyz' || 'https://scarbs.dev' }}
           plugin_uploaded=$(curl -s ${registry_url}/api/v1/index/sn/fo/${plugin_name_underscores}.json | jq --arg version "$plugin_version" '[.[] | select(.v == $version)] | length > 0')
@@ -78,7 +78,7 @@ jobs:
           fi
 
       - name: Publish ${{ inputs.plugin_name }}
-        if: needs.check-uploaded.outputs.plugin_uploaded == 'false' || github.event_name == 'workflow_dispatch'
+        if: needs.check-uploaded.outputs.plugin_uploaded == 'false'
         working-directory: crates/${{ inputs.plugin_name }}
         run: |
           set -exo pipefail
@@ -87,4 +87,4 @@ jobs:
           update_version_in_file "Scarb.toml" "${{ inputs.overridden_plugin_version }}"
           update_version_in_file "Cargo.toml" "${{ inputs.overridden_plugin_version }}"
 
-          scarb publish --allow-dirty ${{ inputs.prod_registry == true && ' ' || '--index https://scarbs.dev/' }}
+          scarb publish --allow-dirty ${{ inputs.prod_registry == true && ' ' || '--index https://scarbs.dev/' }} ${{ inputs.overridden_plugin_version == 'snforge-scarb-plugin-deprecated' && '--ignore-cairo-version' || ' ' }} 

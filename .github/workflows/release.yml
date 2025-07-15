@@ -72,13 +72,13 @@ jobs:
     with:
       plugin_name: "snforge-scarb-plugin"
 
-  build-compatibility-plugin-binaries:
-    name: Build compatibility plugin binaries
+  build-deprecated-plugin-binaries:
+    name: Build deprecated plugin binaries
     if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
     needs: verify-version
     uses: ./.github/workflows/_build-plugin-binaries.yml
     with:
-      plugin_name: "snforge-scarb-plugin-compatibility"
+      plugin_name: "snforge-scarb-plugin-deprecated"
 
   dev-publish-plugin:
     needs: [verify-version, build-plugin-binaries]
@@ -89,17 +89,17 @@ jobs:
       overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
       plugin_name: "snforge-scarb-plugin"
 
-  dev-publish-compatibility-plugin:
-    needs: [ verify-version, build-compatibility-plugin-binaries ]
+  dev-publish-deprecated-plugin:
+    needs: [ verify-version, build-deprecated-plugin-binaries ]
     if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
     uses: ./.github/workflows/_publish-plugin.yml
     secrets: inherit
     with:
       overridden_plugin_version: ${{ needs.verify-version.outputs.version }}-test.${{ github.run_id }}
-      plugin_name: "snforge-scarb-plugin-compatibility"
+      plugin_name: "snforge-scarb-plugin-deprecated"
 
   dev-publish-std:
-    needs: [verify-version, dev-publish-plugin, dev-publish-compatibility-plugin]
+    needs: [verify-version, dev-publish-plugin, dev-publish-deprecated-plugin]
     if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
     uses: ./.github/workflows/publish-std.yml
     secrets: inherit
@@ -109,7 +109,7 @@ jobs:
 
   test-binary:
     name: Test binary
-    needs: [build-binaries, verify-version, dev-publish-std, dev-publish-plugin, dev-publish-compatibility-plugin]
+    needs: [build-binaries, verify-version, dev-publish-std, dev-publish-plugin, dev-publish-deprecated-plugin]
     uses: ./.github/workflows/_test-binaries.yml
     secrets: inherit
     with:
@@ -160,18 +160,18 @@ jobs:
       prod_registry: true
       plugin_name: "snforge-scarb-plugin"
 
-  publish-snforge-scarb-plugin-compatibility:
-    name: Publish snforge_scarb_plugin_compatibility
+  publish-snforge-scarb-plugin-deprecated:
+    name: Publish snforge_scarb_plugin_deprecated
     needs: [ test-binary, create-release ]
     uses: ./.github/workflows/_publish-plugin.yml
     secrets: inherit
     with:
       prod_registry: true
-      plugin_name: "snforge-scarb-plugin-compatibility"
+      plugin_name: "snforge-scarb-plugin-deprecated"
 
   publish-to-registry:
     name: Publish packages to the registry
-    needs: [ verify-version, publish-snforge-scarb-plugin, publish-snforge-scarb-plugin-compatibility ]
+    needs: [ verify-version, publish-snforge-scarb-plugin, publish-snforge-scarb-plugin-deprecated ]
     uses: ./.github/workflows/publish-std.yml
     secrets: inherit
     with:
