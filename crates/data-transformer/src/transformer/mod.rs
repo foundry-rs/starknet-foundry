@@ -38,7 +38,7 @@ fn split_expressions(input: &str, db: &SimpleParserDatabase) -> Result<Vec<Expr>
     let expr = parse_expression(&input, db)?;
 
     match expr {
-        Expr::Tuple(tuple) => Ok(tuple.expressions(db).elements(db)),
+        Expr::Tuple(tuple) => Ok(tuple.expressions(db).elements(db).collect()),
         Expr::Parenthesized(expr) => Ok(vec![expr.expr(db)]),
         _ => bail!("Wrong calldata format - expected tuple of Cairo expressions"),
     }

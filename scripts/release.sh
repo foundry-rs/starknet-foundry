@@ -45,7 +45,7 @@ rm "$NEW_FILE_PATH.bak" 2> /dev/null
 # end
 
 scarb --manifest-path snforge_std/Scarb.toml build
-scarb --manifest-path snforge_std_compatibility/Scarb.toml build
+scarb --manifest-path snforge_std_compatibility/Scarb.toml build --ignore-cairo-version
 
 cargo update
 cargo update --manifest-path crates/snforge-scarb-plugin/Cargo.toml
