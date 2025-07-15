@@ -581,3 +581,167 @@ fn mock_calls_when_mixed() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
 }
+
+#[test]
+fn mock_calls_start_stop_when_mixed() {
+    let test = test_case!(
+        indoc!(            r#"
+        use result::ResultTrait;
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, mock_call_when, MockCalldata, start_mock_call, start_mock_call_when, stop_mock_call, stop_mock_call_when};
+
+        #[starknet::interface]
+        trait IMockChecker<TContractState> {
+            fn get_thing(ref self: TContractState) -> felt252;
+        }
+
+        #[test]
+        fn mock_calls_start_stop_when_mixed() {
+            let calldata = array![420];
+
+            let contract = declare("MockChecker").unwrap().contract_class();
+            let (contract_address, _) = contract.deploy(@calldata).unwrap();
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+
+            let mock_ret_data = 421;
+            let mock_when_ret_data = 422;
+
+            let expected_calldata = MockCalldata::Values([].span());
+            start_mock_call(contract_address, selector!("get_thing"), mock_ret_data);
+            start_mock_call_when(contract_address, selector!("get_thing"), expected_calldata, mock_when_ret_data);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, mock_when_ret_data, "1st Mock call when");
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, mock_when_ret_data, "2nd Mock call when");
+            stop_mock_call_when(contract_address, selector!("get_thing"), expected_calldata);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, mock_ret_data, "Mock call");
+
+            stop_mock_call(contract_address, selector!("get_thing"));
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 420);
+        }
+
+        #[test]
+        fn mock_calls_start_stop_when_count_mixed() {
+            let calldata = array![420];
+
+            let contract = declare("MockChecker").unwrap().contract_class();
+            let (contract_address, _) = contract.deploy(@calldata).unwrap();
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+
+            let mock_ret_data = 421;
+            let mock_when_ret_data = 422;
+
+            let expected_calldata = MockCalldata::Values([].span());
+            start_mock_call(contract_address, selector!("get_thing"), mock_ret_data);
+            mock_call_when(contract_address, selector!("get_thing"), expected_calldata, mock_when_ret_data, 2);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, mock_when_ret_data, "1st Mock call when");
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, mock_when_ret_data, "2nd Mock call when");
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, mock_ret_data, "Mock call");
+
+            stop_mock_call(contract_address, selector!("get_thing"));
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 420);
+        }
+        "#),
+               Contract::from_code_path(
+            "MockChecker".to_string(),
+            Path::new("tests/data/contracts/mock_checker.cairo"),
+        )
+        .unwrap()
+    ); 
+    
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    assert_passed(&result);
+}
+
+#[test]
+fn mock_calls_start_stop_when_interleaved() {
+    let test = test_case!(
+        indoc!(            r#"
+        use result::ResultTrait;
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, MockCalldata, start_mock_call, start_mock_call_when, stop_mock_call, stop_mock_call_when};
+
+        #[starknet::interface]
+        trait IMockChecker<TContractState> {
+            fn get_thing(ref self: TContractState) -> felt252;
+        }
+
+        #[test]
+        fn mock_calls_start_when_and_stop() {
+            let calldata = array![420];
+
+            let contract = declare("MockChecker").unwrap().contract_class();
+            let (contract_address, _) = contract.deploy(@calldata).unwrap();
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+
+            let mock_when_ret_data = 422;
+
+            let expected_calldata = MockCalldata::Values([].span());
+            start_mock_call_when(contract_address, selector!("get_thing"), expected_calldata, mock_when_ret_data);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, mock_when_ret_data, "1st Mock call when");
+
+            stop_mock_call(contract_address, selector!("get_thing"));
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, mock_when_ret_data, "2nd Mock call when");
+            stop_mock_call_when(contract_address, selector!("get_thing"), expected_calldata);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 420);
+        }
+
+        #[test]
+        fn mock_calls_start_and_stop_when() {
+            let calldata = array![420];
+
+            let contract = declare("MockChecker").unwrap().contract_class();
+            let (contract_address, _) = contract.deploy(@calldata).unwrap();
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+
+            let mock_ret_data = 421;
+
+            let expected_calldata = MockCalldata::Values([].span());
+
+            start_mock_call(contract_address, selector!("get_thing"), mock_ret_data);
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, mock_ret_data, "Mock call");
+
+            stop_mock_call_when(contract_address, selector!("get_thing"), expected_calldata);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, mock_ret_data, "Mock call");
+
+            stop_mock_call(contract_address, selector!("get_thing"));
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 420);
+        }
+        "#),
+               Contract::from_code_path(
+            "MockChecker".to_string(),
+            Path::new("tests/data/contracts/mock_checker.cairo"),
+        )
+        .unwrap()
+    ); 
+    
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    assert_passed(&result);
+}
