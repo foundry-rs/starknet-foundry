@@ -209,6 +209,7 @@ pub async fn account(
                 &config.accounts_file,
                 &provider,
                 &import,
+                ui,
             )
             .await;
 
@@ -248,6 +249,7 @@ pub async fn account(
                 &provider,
                 chain_id,
                 &create,
+                ui,
             )
             .await;
 

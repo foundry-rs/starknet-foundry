@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- `--ready` flag to `account create` and `account import` commands (Argent wallet has rebranded as Ready)
+
+#### Deprecated
+
+- `--argent` flag in `account create` and `account import` commands. Use `--ready` instead
+
 ## [0.46.0] - 2025-07-09
 
 ### Forge

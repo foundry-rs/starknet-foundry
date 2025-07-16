@@ -72,6 +72,63 @@ pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
 }
 
 #[tokio::test]
+pub async fn test_happy_case_argent_with_deprecation_warning() {
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "import",
+        "--url",
+        URL,
+        "--name",
+        "my_account_import",
+        "--address",
+        "0x123",
+        "--private-key",
+        "0x456",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "--type",
+        "argent",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().stdout_matches(indoc! {r"
+        [WARNING] Argent has rebranded as Ready. The `--argent` option for `account import` is now deprecated, please use `--ready` instead.
+        
+        Success: Account imported successfully
+
+        Account Name: my_account_import
+    "});
+
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file))
+        .expect("Unable to read created file");
+    let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
+    assert_eq!(
+        contents_json,
+        json!(
+            {
+                "alpha-sepolia": {
+                  "my_account_import": {
+                    "address": "0x123",
+                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
+                    "deployed": false,
+                    "legacy": true,
+                    "private_key": "0x456",
+                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
+                    "type": "argent"
+                  }
+                }
+            }
+        )
+    );
+}
+
+#[tokio::test]
 pub async fn test_existent_account_address() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";

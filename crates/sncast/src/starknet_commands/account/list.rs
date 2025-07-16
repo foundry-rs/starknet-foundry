@@ -114,7 +114,13 @@ impl Message for AccountDataRepresentationMessage {
             let _ = writeln!(result, "  legacy: {legacy}");
         }
         if let Some(ref account_type) = self.account_type {
-            let _ = writeln!(result, "  type: {account_type}");
+            // TODO: Remove this adjustment when the `argent` account type is removed
+            let displayed_type = if account_type == &AccountType::Argent {
+                &AccountType::Ready
+            } else {
+                account_type
+            };
+            let _ = writeln!(result, "  type: {displayed_type:?}");
         }
 
         result.trim_end().to_string()
