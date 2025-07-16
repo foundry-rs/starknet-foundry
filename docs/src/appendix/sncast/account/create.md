@@ -28,18 +28,21 @@ Possible values: `mainnet`, `sepolia`.
 ## `--type, -t <ACCOUNT_TYPE>`
 Optional. Required if `--class-hash` is passed.
 
-Type of the account. Possible values: `oz`, `argent`, `ready` (formerly `argent`), `braavos`. Defaults to oz.
+<!-- TODO(#3556): Remove `argent` option once we drop Argent account type. -->                              |
+Type of the account. Possible values: `oz`, `argent`, `ready`, `braavos`. Defaults to oz.
 
+<!-- TODO(#3556): Remove warning once we drop Argent account type. -->                              |
 > ⚠️ **Warning**
 >
 > Argent has rebranded as Ready. The `--argent` option is deprecated, please use `--ready` instead.
 
 Versions of the account contracts:
 
-| Account Contract | Version | Class Hash                                                                                                                                                          |
+| Account Contract | Version | Class Hash                                                                                                                            
 |------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `oz`             | v1.0.0  | [0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564](https://starkscan.co/class/0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564) |
-| `argent` / `ready` (formerly `argent`)        | v0.4.0  | [0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f](https://starkscan.co/class/0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f) |
+<!-- TODO(#3556): Remove `argent` option once we drop Argent account type. -->                              |
+| `argent` / `ready`        | v0.4.0  | [0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f](https://starkscan.co/class/0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f) |
 | `braavos`        | v1.2.0  | [0x03957f9f5a1cbfe918cedc2015c85200ca51a5f7506ecb6de98a5207b759bf8a](https://starkscan.co/class/0x03957f9f5a1cbfe918cedc2015c85200ca51a5f7506ecb6de98a5207b759bf8a) |
 
 ## `--salt, -s <SALT>`
