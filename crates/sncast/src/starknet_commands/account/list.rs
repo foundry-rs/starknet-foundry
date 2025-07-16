@@ -114,7 +114,7 @@ impl Message for AccountDataRepresentationMessage {
             let _ = writeln!(result, "  legacy: {legacy}");
         }
         if let Some(ref account_type) = self.account_type {
-            // TODO: Remove this adjustment when the `argent` account type is removed
+            // TODO(#3556): Remove this adjustment when the `argent` account type is removed
             let displayed_type = if account_type == &AccountType::Argent {
                 &AccountType::Ready
             } else {

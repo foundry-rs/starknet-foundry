@@ -76,6 +76,7 @@ impl FromStr for AccountType {
 
 impl Display for AccountType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // TODO(#3556): Remove this adjustment once `Argent` variant is removed
         if self == &AccountType::Ready {
             write!(f, "{:?}", AccountType::Argent)
         } else {
