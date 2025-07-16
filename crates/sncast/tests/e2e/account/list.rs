@@ -33,18 +33,18 @@ fn test_happy_case() {
           address: 0x4f5f24ceaae64434fa2bc2befd08976b51cf8f6a5d8257f7ec3616f61de263a
           type: OpenZeppelin
 
-        - user-1:
+        - user1:
           network: alpha-sepolia
-          public-key: 0x63b3a3ac141e4c007b167b27450f110c729cc0d0238541ca705b0de5144edbd
+          public key: 0x63b3a3ac141e4c007b167b27450f110c729cc0d0238541ca705b0de5144edbd
           address: 0x9613a934141dd6625748a7e066a380b3f9787f079f35ecc2f3ba934d507d4e
           salt: 0xe2b200bbdf76c31b
           type: Ready
-          
+          class hash: 0x36078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f
+
         - user3:
           network: custom-network
           public key: 0x7e52885445756b313ea16849145363ccb73fb4ab0440dbac333cf9d13de82b9
           address: 0x7e00d496e324876bbc8531f2d9a82bf154d1a04a50218ee74cdd372f75a551a
-          salt: 0xe2b200bbdf76c31b
 
         - user4:
           network: custom-network
@@ -95,6 +95,14 @@ fn test_happy_case_with_private_keys() {
           address: 0x4f5f24ceaae64434fa2bc2befd08976b51cf8f6a5d8257f7ec3616f61de263a
           type: OpenZeppelin
 
+        - user1:
+          network: alpha-sepolia
+          private key: 0x1c3495fce931c0b3ed244f55c54226441a8254deafbc7fab2e46926b4d2fdae
+          public key: 0x63b3a3ac141e4c007b167b27450f110c729cc0d0238541ca705b0de5144edbd
+          address: 0x9613a934141dd6625748a7e066a380b3f9787f079f35ecc2f3ba934d507d4e
+          salt: 0xe2b200bbdf76c31b
+          type: Ready
+
         - user3:
           network: custom-network
           private key: 0xe3e70682c2094cac629f6fbed82c07cd
@@ -108,15 +116,6 @@ fn test_happy_case_with_private_keys() {
           address: 0x7ccdf182d27c7aaa2e733b94db4a3f7b28ff56336b34abf43c15e3a9edfbe91
           salt: 0x54aa715a5cff30ccf7845ad4659eb1dac5b730c2541263c358c7e3a4c4a8064
           deployed: true
-
-        - user-1:
-          network: alpha-sepolia
-          private key: 0x1c3495fce931c0b3ed244f55c54226441a8254deafbc7fab2e46926b4d2fdae
-          public key: 0x63b3a3ac141e4c007b167b27450f110c729cc0d0238541ca705b0de5144edbd
-          address: 0x9613a934141dd6625748a7e066a380b3f9787f079f35ecc2f3ba934d507d4e
-          class hash: 0x36078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f
-          salt: 0xe2b200bbdf76c31b
-          type: Argent
         ",
         accounts_file_path.to_str().unwrap()
     );
@@ -167,12 +166,13 @@ fn test_happy_case_json() {
               "type": "open_zeppelin",
               "network": "alpha-sepolia"
             },
-            "user-1": {
+            "user1": {
               "address": "0x9613a934141dd6625748a7e066a380b3f9787f079f35ecc2f3ba934d507d4e",
               "class_hash": "0x36078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f",
               "public_key": "0x63b3a3ac141e4c007b167b27450f110c729cc0d0238541ca705b0de5144edbd",
               "salt": "0xe2b200bbdf76c31b",
-              "type": "argent"
+              "type": "argent",
+              "network": "alpha-sepolia"
           },
         }
     );
@@ -227,13 +227,14 @@ fn test_happy_case_with_private_keys_json() {
             "network": "alpha-sepolia",
             "private_key": "0x1e9038bdc68ce1d27d54205256988e85",
           },
-          "user-1": {
+          "user1": {
             "address": "0x9613a934141dd6625748a7e066a380b3f9787f079f35ecc2f3ba934d507d4e",
             "class_hash": "0x36078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f",
             "private_key": "0x1c3495fce931c0b3ed244f55c54226441a8254deafbc7fab2e46926b4d2fdae",
             "public_key": "0x63b3a3ac141e4c007b167b27450f110c729cc0d0238541ca705b0de5144edbd",
             "salt": "0xe2b200bbdf76c31b",
-            "type": "argent"
+            "type": "argent",
+            "network": "alpha-sepolia",
         },
         }
     );
