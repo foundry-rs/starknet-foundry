@@ -86,7 +86,7 @@ pub async fn test_happy_case(account_type: &str) {
     assert_matches(to_string_pretty(&expected).unwrap(), contents);
 }
 
-// TODO: Remove this test once we drop Argent account type
+// TODO(#3556): Remove this test once we drop Argent account type
 #[tokio::test]
 pub async fn test_happy_case_argent_with_deprecation_warning() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
@@ -451,7 +451,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     );
 }
 
-// TODO: Remove this test once we drop Argent account type
+// TODO(#3556): Remove this test once we drop Argent account type
 #[tokio::test]
 pub async fn test_happy_case_keystore_argent_with_deprecation_warning() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");

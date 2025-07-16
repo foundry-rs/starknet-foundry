@@ -35,15 +35,16 @@ fn test_happy_case() {
 
         - user-1:
           network: alpha-sepolia
-          public-key: 
+          public-key: 0x63b3a3ac141e4c007b167b27450f110c729cc0d0238541ca705b0de5144edbd
           address: 0x9613a934141dd6625748a7e066a380b3f9787f079f35ecc2f3ba934d507d4e
+          salt: 0xe2b200bbdf76c31b
+          type: Ready
           
         - user3:
           network: custom-network
-          public key: 0x63b3a3ac141e4c007b167b27450f110c729cc0d0238541ca705b0de5144edbd
+          public key: 0x7e52885445756b313ea16849145363ccb73fb4ab0440dbac333cf9d13de82b9
           address: 0x7e00d496e324876bbc8531f2d9a82bf154d1a04a50218ee74cdd372f75a551a
           salt: 0xe2b200bbdf76c31b
-          type: Ready
 
         - user4:
           network: custom-network

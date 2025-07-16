@@ -71,6 +71,7 @@ pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
     );
 }
 
+// TODO(#3556): Remove this test once we drop Argent account type
 #[tokio::test]
 pub async fn test_happy_case_argent_with_deprecation_warning() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
