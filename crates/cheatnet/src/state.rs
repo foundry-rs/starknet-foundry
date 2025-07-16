@@ -37,13 +37,14 @@ use starknet_api::{
 use starknet_types_core::felt::Felt;
 use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
+use std::num::NonZeroUsize;
 use std::rc::Rc;
 
 // Specifies the duration of the cheat
 #[derive(CairoDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum CheatSpan {
     Indefinite,
-    TargetCalls(usize),
+    TargetCalls(NonZeroUsize),
 }
 
 #[derive(Debug)]
@@ -180,9 +181,13 @@ pub enum CheatStatus<T> {
 impl<T> CheatStatus<T> {
     pub fn decrement_cheat_span(&mut self) {
         if let CheatStatus::Cheated(_, CheatSpan::TargetCalls(n)) = self {
-            *n -= 1;
-            if *n == 0 {
+            let calls_number = n.get() - 1;
+
+            if calls_number == 0 {
                 *self = CheatStatus::Uncheated;
+            } else {
+                *n = NonZeroUsize::new(calls_number)
+                    .expect("`NonZeroUsize` should not be zero after decrement");
             }
         }
     }

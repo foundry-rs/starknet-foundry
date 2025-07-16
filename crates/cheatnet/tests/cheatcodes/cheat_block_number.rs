@@ -4,6 +4,7 @@ use conversions::IntoConv;
 use runtime::starknet::context::DEFAULT_BLOCK_NUMBER;
 use starknet_api::core::ContractAddress;
 use starknet_types_core::felt::Felt;
+use std::num::NonZeroUsize;
 
 use super::test_environment::TestEnvironment;
 
@@ -288,7 +289,11 @@ fn cheat_block_number_simple_with_span() {
 
     let contract_address = test_env.deploy("CheatBlockNumberChecker", &[]);
 
-    test_env.cheat_block_number(contract_address, 123, CheatSpan::TargetCalls(2));
+    test_env.cheat_block_number(
+        contract_address,
+        123,
+        CheatSpan::TargetCalls(NonZeroUsize::new(2).unwrap()),
+    );
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
@@ -313,7 +318,11 @@ fn cheat_block_number_proxy_with_span() {
     let contract_address_1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address_2 = test_env.deploy_wrapper(&class_hash, &[]);
 
-    test_env.cheat_block_number(contract_address_1, 123, CheatSpan::TargetCalls(1));
+    test_env.cheat_block_number(
+        contract_address_1,
+        123,
+        CheatSpan::TargetCalls(NonZeroUsize::new(1).unwrap()),
+    );
 
     let output = test_env.call_contract(
         &contract_address_1,
@@ -332,7 +341,11 @@ fn cheat_block_number_in_constructor_with_span() {
     let class_hash = test_env.declare("ConstructorCheatBlockNumberChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
-    test_env.cheat_block_number(precalculated_address, 123, CheatSpan::TargetCalls(2));
+    test_env.cheat_block_number(
+        precalculated_address,
+        123,
+        CheatSpan::TargetCalls(NonZeroUsize::new(2).unwrap()),
+    );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
     assert_eq!(precalculated_address, contract_address);
@@ -360,7 +373,11 @@ fn cheat_block_number_no_constructor_with_span() {
     let class_hash = test_env.declare("CheatBlockNumberChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
-    test_env.cheat_block_number(precalculated_address, 123, CheatSpan::TargetCalls(1));
+    test_env.cheat_block_number(
+        precalculated_address,
+        123,
+        CheatSpan::TargetCalls(NonZeroUsize::new(1).unwrap()),
+    );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
     assert_eq!(precalculated_address, contract_address);
@@ -381,7 +398,11 @@ fn cheat_block_number_override_span() {
 
     let contract_address = test_env.deploy("CheatBlockNumberChecker", &[]);
 
-    test_env.cheat_block_number(contract_address, 123, CheatSpan::TargetCalls(2));
+    test_env.cheat_block_number(
+        contract_address,
+        123,
+        CheatSpan::TargetCalls(NonZeroUsize::new(2).unwrap()),
+    );
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
@@ -415,7 +436,11 @@ fn cheat_block_number_library_call_with_span() {
     let class_hash = test_env.declare("CheatBlockNumberChecker", &contracts_data);
     let contract_address = test_env.deploy("CheatBlockNumberCheckerLibCall", &[]);
 
-    test_env.cheat_block_number(contract_address, 123, CheatSpan::TargetCalls(1));
+    test_env.cheat_block_number(
+        contract_address,
+        123,
+        CheatSpan::TargetCalls(NonZeroUsize::new(1).unwrap()),
+    );
 
     let lib_call_selector = "get_block_number_with_lib_call";
 
