@@ -1,10 +1,8 @@
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::felt_from_ptr_immutable;
 use anyhow::Result;
 use blockifier::execution::{
-    deprecated_syscalls::{
-        DeprecatedSyscallSelector, hint_processor::DeprecatedSyscallHintProcessor,
-    },
-    hint_code,
+    deprecated_syscalls::hint_processor::DeprecatedSyscallHintProcessor, hint_code,
+    syscalls::vm_syscall_utils::SyscallSelector,
 };
 use cairo_vm::{
     hint_processor::{
@@ -134,10 +132,8 @@ impl<Extension: DeprecatedExtensionLogic> DeprecatedExtendedRuntime<Extension> {
     ) -> Result<(), HintError> {
         let initial_syscall_ptr = get_ptr_from_var_name("syscall_ptr", vm, ids_data, ap_tracking)?;
 
-        let selector = DeprecatedSyscallSelector::try_from(felt_from_ptr_immutable(
-            vm,
-            &initial_syscall_ptr,
-        )?)?;
+        let selector =
+            SyscallSelector::try_from(felt_from_ptr_immutable(vm, &initial_syscall_ptr)?)?;
 
         if let SyscallHandlingResult::Handled =
             self.extension
@@ -187,7 +183,7 @@ pub trait DeprecatedExtensionLogic {
 
     fn override_system_call(
         &mut self,
-        _selector: DeprecatedSyscallSelector,
+        _selector: SyscallSelector,
         _vm: &mut VirtualMachine,
         _extended_runtime: &mut Self::Runtime,
     ) -> Result<SyscallHandlingResult, HintError> {
@@ -196,7 +192,7 @@ pub trait DeprecatedExtensionLogic {
 
     fn post_syscall_hook(
         &mut self,
-        _selector: &DeprecatedSyscallSelector,
+        _selector: &SyscallSelector,
         _extended_runtime: &mut Self::Runtime,
     );
 }

@@ -4,6 +4,7 @@ use crate::predeployment::erc20::eth::eth_predeployed_contract;
 use crate::predeployment::erc20::strk::strk_predeployed_contract;
 use crate::predeployment::predeployed_contract::PredeployedContract;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
+use crate::runtime_extensions::common::sum_syscall_usage;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::{
     ExecutionInfoMock, ResourceBounds,
 };
@@ -12,7 +13,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages
 use blockifier::execution::call_info::OrderedL2ToL1Message;
 use blockifier::execution::contract_class::RunnableCompiledClass;
 use blockifier::execution::entry_point::CallEntryPoint;
-use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
+use blockifier::execution::syscalls::vm_syscall_utils::SyscallUsageMap;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_annotations::trace_data::L1Resources;
@@ -209,7 +210,8 @@ pub struct CallTrace {
     // These also include resources used by internal calls
     pub used_execution_resources: ExecutionResources,
     pub used_l1_resources: L1Resources,
-    pub used_syscalls: SyscallUsageMap,
+    pub used_syscalls_vm_resources: SyscallUsageMap,
+    pub used_syscalls_sierra_gas: SyscallUsageMap,
     pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
     pub gas_consumed: u64,
 }
@@ -236,12 +238,21 @@ impl CallTrace {
             entry_point: CallEntryPoint::default(),
             used_execution_resources: ExecutionResources::default(),
             used_l1_resources: L1Resources::default(),
-            used_syscalls: SyscallUsageMap::default(),
+            used_syscalls_vm_resources: SyscallUsageMap::default(),
+            used_syscalls_sierra_gas: SyscallUsageMap::default(),
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
             vm_trace: None,
             gas_consumed: u64::default(),
         }
+    }
+
+    #[must_use]
+    pub fn get_total_used_syscalls(&self) -> SyscallUsageMap {
+        sum_syscall_usage(
+            self.used_syscalls_vm_resources.clone(),
+            &self.used_syscalls_sierra_gas,
+        )
     }
 }
 
@@ -342,6 +353,7 @@ pub struct CheatedData {
     pub block_number: Option<u64>,
     pub block_timestamp: Option<u64>,
     pub caller_address: Option<ContractAddress>,
+    pub contract_address: Option<ContractAddress>,
     pub sequencer_address: Option<ContractAddress>,
     pub tx_info: CheatedTxInfo,
 }
@@ -411,6 +423,7 @@ impl CheatnetState {
             block_number: execution_info.block_info.block_number.as_value(),
             block_timestamp: execution_info.block_info.block_timestamp.as_value(),
             caller_address: execution_info.caller_address.as_value(),
+            contract_address: execution_info.contract_address.as_value(),
             sequencer_address: execution_info.block_info.sequencer_address.as_value(),
             tx_info: CheatedTxInfo {
                 version: execution_info.tx_info.version.as_value(),
@@ -535,11 +548,13 @@ impl TraceData {
         current_call.borrow_mut().entry_point.class_hash = Some(class_hash);
     }
 
+    #[expect(clippy::too_many_arguments)]
     pub fn exit_nested_call(
         &mut self,
         execution_resources: ExecutionResources,
         gas_consumed: u64,
-        used_syscalls: SyscallUsageMap,
+        used_syscalls_vm_resources: SyscallUsageMap,
+        used_syscalls_sierra_gas: SyscallUsageMap,
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
         vm_trace: Option<Vec<RelocatedTraceEntry>>,
@@ -552,8 +567,8 @@ impl TraceData {
         let mut last_call = last_call.borrow_mut();
         last_call.used_execution_resources = execution_resources;
         last_call.gas_consumed = gas_consumed;
-
-        last_call.used_syscalls = used_syscalls;
+        last_call.used_syscalls_vm_resources = used_syscalls_vm_resources;
+        last_call.used_syscalls_sierra_gas = used_syscalls_sierra_gas;
 
         last_call.used_l1_resources.l2_l1_message_sizes = l2_to_l1_messages
             .iter()

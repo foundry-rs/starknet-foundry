@@ -100,7 +100,6 @@ async fn test_call_invalid_calldata() {
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
-    // TODO(#3116): Change message to string after issue with undecoded felt is resolved.
     assert_stdout_contains(
         output,
         indoc! {r#"

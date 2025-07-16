@@ -1,19 +1,24 @@
 use anyhow::{Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use blockifier::execution::syscalls::hint_processor::SyscallUsageMap;
+use blockifier::execution::syscalls::vm_syscall_utils::{
+    SyscallSelector, SyscallUsage, SyscallUsageMap,
+};
+
 use cairo_annotations::trace_data::{
     CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint,
     CallTraceNode as ProfilerCallTraceNode, CallTraceV1 as ProfilerCallTrace,
     CallType as ProfilerCallType, CasmLevelInfo, ContractAddress,
     DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector,
     EntryPointSelector as ProfilerEntryPointSelector, EntryPointType as ProfilerEntryPointType,
-    ExecutionResources as ProfilerExecutionResources, TraceEntry as ProfilerTraceEntry,
-    VersionedCallTrace as VersionedProfilerCallTrace, VmExecutionResources,
+    ExecutionResources as ProfilerExecutionResources, SyscallUsage as ProfilerSyscallUsage,
+    TraceEntry as ProfilerTraceEntry, VersionedCallTrace as VersionedProfilerCallTrace,
+    VmExecutionResources,
 };
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use camino::{Utf8Path, Utf8PathBuf};
+use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::{CallTrace, CallTraceNode};
 use conversions::IntoConv;
@@ -23,7 +28,6 @@ use starknet::core::utils::get_selector_from_name;
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::{ClassHash, EntryPointSelector};
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -36,11 +40,13 @@ pub const TEST_CODE_FUNCTION_NAME: &str = "SNFORGE_TEST_CODE_FUNCTION";
 pub fn build_profiler_call_trace(
     value: &Rc<RefCell<CallTrace>>,
     contracts_data: &ContractsData,
+    fork_data: &ForkData,
     versioned_program_path: &Utf8Path,
 ) -> ProfilerCallTrace {
     let value = value.borrow();
 
-    let entry_point = build_profiler_call_entry_point(value.entry_point.clone(), contracts_data);
+    let entry_point =
+        build_profiler_call_entry_point(value.entry_point.clone(), contracts_data, fork_data);
     let vm_trace = value
         .vm_trace
         .as_ref()
@@ -56,14 +62,16 @@ pub fn build_profiler_call_trace(
         entry_point,
         cumulative_resources: build_profiler_execution_resources(
             value.used_execution_resources.clone(),
-            value.used_syscalls.clone(),
+            value.get_total_used_syscalls(),
             value.gas_consumed,
         ),
         used_l1_resources: value.used_l1_resources.clone(),
         nested_calls: value
             .nested_calls
             .iter()
-            .map(|c| build_profiler_call_trace_node(c, contracts_data, versioned_program_path))
+            .map(|c| {
+                build_profiler_call_trace_node(c, contracts_data, fork_data, versioned_program_path)
+            })
             .collect(),
         cairo_execution_info,
     }
@@ -105,11 +113,12 @@ fn get_source_sierra_path(
 fn build_profiler_call_trace_node(
     value: &CallTraceNode,
     contracts_data: &ContractsData,
+    fork_data: &ForkData,
     versioned_program_path: &Utf8Path,
 ) -> ProfilerCallTraceNode {
     match value {
         CallTraceNode::EntryPointCall(trace) => ProfilerCallTraceNode::EntryPointCall(Box::new(
-            build_profiler_call_trace(trace, contracts_data, versioned_program_path),
+            build_profiler_call_trace(trace, contracts_data, fork_data, versioned_program_path),
         )),
         CallTraceNode::DeployWithoutConstructor => ProfilerCallTraceNode::DeployWithoutConstructor,
     }
@@ -121,10 +130,16 @@ pub fn build_profiler_execution_resources(
     syscall_usage: SyscallUsageMap,
     gas_consumed: u64,
 ) -> ProfilerExecutionResources {
-    let mut profiler_syscall_counter = HashMap::new();
-    for (key, val) in syscall_usage {
-        profiler_syscall_counter.insert(build_profiler_deprecated_syscall_selector(key), val);
-    }
+    let profiler_syscall_counter = syscall_usage
+        .into_iter()
+        .map(|(key, val)| {
+            (
+                build_profiler_deprecated_syscall_selector(key),
+                build_profiler_syscall_usage(val),
+            )
+        })
+        .collect();
+
     ProfilerExecutionResources {
         vm_resources: VmExecutionResources {
             n_steps: execution_resources.n_steps,
@@ -136,6 +151,7 @@ pub fn build_profiler_execution_resources(
                 .collect(),
         },
         gas_consumed: Some(gas_consumed),
+        syscall_counter: Some(profiler_syscall_counter),
     }
 }
 
@@ -144,6 +160,7 @@ pub fn build_profiler_execution_resources(
 pub fn build_profiler_call_entry_point(
     value: CallEntryPoint,
     contracts_data: &ContractsData,
+    fork_data: &ForkData,
 ) -> ProfilerCallEntryPoint {
     let CallEntryPoint {
         class_hash,
@@ -155,13 +172,13 @@ pub fn build_profiler_call_entry_point(
     } = value;
 
     let contract_name = get_contract_name(class_hash, contracts_data);
-    let function_name = get_function_name(&entry_point_selector, contracts_data);
+    let function_name = get_function_name(&entry_point_selector, contracts_data, fork_data);
 
     ProfilerCallEntryPoint {
-        class_hash: class_hash.map(|ch| cairo_annotations::trace_data::ClassHash(ch.to_string())),
+        class_hash: class_hash.map(|ch| cairo_annotations::trace_data::ClassHash(ch.0)),
         entry_point_type: build_profiler_entry_point_type(entry_point_type),
-        entry_point_selector: ProfilerEntryPointSelector(format!("{}", entry_point_selector.0)),
-        contract_address: ContractAddress(format!("{}", storage_address.0.key())),
+        entry_point_selector: ProfilerEntryPointSelector(entry_point_selector.0),
+        contract_address: ContractAddress(*storage_address.0.key()),
         call_type: build_profiler_call_type(call_type),
         contract_name,
         function_name,
@@ -184,17 +201,21 @@ fn get_contract_name(
 fn get_function_name(
     entry_point_selector: &EntryPointSelector,
     contracts_data: &ContractsData,
+    fork_data: &ForkData,
 ) -> Option<String> {
     if entry_point_selector.0
         == get_selector_from_name(TEST_ENTRY_POINT_SELECTOR)
             .unwrap()
             .into_()
     {
-        Some(String::from(TEST_CODE_FUNCTION_NAME))
+        Some(TEST_CODE_FUNCTION_NAME.to_string())
+    } else if let Some(name) = contracts_data
+        .get_function_name(entry_point_selector)
+        .cloned()
+    {
+        Some(name)
     } else {
-        contracts_data
-            .get_function_name(entry_point_selector)
-            .cloned()
+        fork_data.selectors.get(entry_point_selector).cloned()
     }
 }
 
@@ -207,7 +228,7 @@ fn build_profiler_entry_point_type(value: EntryPointType) -> ProfilerEntryPointT
 }
 
 fn build_profiler_deprecated_syscall_selector(
-    value: DeprecatedSyscallSelector,
+    value: SyscallSelector,
 ) -> ProfilerDeprecatedSyscallSelector {
     match value {
         DeprecatedSyscallSelector::CallContract => ProfilerDeprecatedSyscallSelector::CallContract,
@@ -218,7 +239,6 @@ fn build_profiler_deprecated_syscall_selector(
         DeprecatedSyscallSelector::Deploy => ProfilerDeprecatedSyscallSelector::Deploy,
         DeprecatedSyscallSelector::EmitEvent => ProfilerDeprecatedSyscallSelector::EmitEvent,
         DeprecatedSyscallSelector::GetBlockHash => ProfilerDeprecatedSyscallSelector::GetBlockHash,
-
         DeprecatedSyscallSelector::GetBlockNumber => {
             ProfilerDeprecatedSyscallSelector::GetBlockNumber
         }
@@ -277,6 +297,19 @@ fn build_profiler_deprecated_syscall_selector(
             ProfilerDeprecatedSyscallSelector::GetClassHashAt
         }
         DeprecatedSyscallSelector::KeccakRound => ProfilerDeprecatedSyscallSelector::KeccakRound,
+        DeprecatedSyscallSelector::MetaTxV0 => ProfilerDeprecatedSyscallSelector::MetaTxV0,
+    }
+}
+
+fn build_profiler_syscall_usage(
+    SyscallUsage {
+        call_count,
+        linear_factor,
+    }: SyscallUsage,
+) -> ProfilerSyscallUsage {
+    ProfilerSyscallUsage {
+        call_count,
+        linear_factor,
     }
 }
 

@@ -7,12 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.46.0] - 2025-07-09
+
+### Forge
+
+#### Added
+
+- Total test summary when running tests across multiple packages (for example when running `snforge test --workspace`)
+
+#### Fixed
+
+- Bug where syscall execution resources from nested calls were being calculated twice
+
 ### Cast
+
+#### Added
+
+- `sncast utils serialize` command to serialize Cairo expressions into calldata
+- `sncast verify` now supports verifying against [voyager](https://voyager.online/) block explorer.
 
 #### Changed
 
 - Improved commands output readability with colors and simplified layout.
-- The account type `argent` has been renamed to `ready` for the `--type` flag used in the `account create` and `account import`
+- `sncast verify` no longer defaults to using walnut.
+
+#### Fixed
+
+- Bug where `account create` raised an error if no `--name` was provided and the file specified by `--accounts-file` was empty
 
 #### Removed
 

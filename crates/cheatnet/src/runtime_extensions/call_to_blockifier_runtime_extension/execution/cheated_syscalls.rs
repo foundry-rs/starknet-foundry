@@ -5,29 +5,26 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 use blockifier::execution::syscalls::hint_processor::{
     SyscallExecutionError, SyscallHintProcessor,
 };
-use blockifier::execution::syscalls::{
-    DeployRequest, DeployResponse, GetBlockHashRequest, GetBlockHashResponse, LibraryCallRequest,
-    SyscallResponse, syscall_base::SyscallResult,
+use blockifier::execution::syscalls::syscall_base::SyscallResult;
+use blockifier::execution::syscalls::vm_syscall_utils::{
+    CallContractRequest, DeployRequest, DeployResponse, EmptyRequest, GetBlockHashRequest,
+    GetBlockHashResponse, GetExecutionInfoResponse, LibraryCallRequest, SyscallResponse,
+    SyscallSelector, WriteResponseResult,
 };
 use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
 use blockifier::execution::{
-    execution_utils::ReadOnlySegment,
-    syscalls::{WriteResponseResult, hint_processor::write_segment},
+    execution_utils::ReadOnlySegment, syscalls::hint_processor::write_segment,
 };
 use blockifier::state::errors::StateError;
 use blockifier::{
-    execution::execution_utils::update_remaining_gas,
-    execution::syscalls::{CallContractRequest, hint_processor::create_retdata_segment},
-};
-use blockifier::{
-    execution::{
-        deprecated_syscalls::DeprecatedSyscallSelector,
-        entry_point::{
-            CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
-        },
-        syscalls::{EmptyRequest, GetExecutionInfoResponse},
+    execution::entry_point::{
+        CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
     },
     state::state_api::State,
+};
+use blockifier::{
+    execution::execution_utils::update_remaining_gas,
+    execution::syscalls::hint_processor::create_retdata_segment,
 };
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::vm_core::VirtualMachine;
@@ -38,8 +35,7 @@ use starknet_api::{
     transaction::fields::Calldata,
 };
 
-pub type SyscallSelector = DeprecatedSyscallSelector;
-
+#[expect(clippy::result_large_err)]
 pub fn get_execution_info_syscall(
     _request: EmptyRequest,
     vm: &mut VirtualMachine,
@@ -59,6 +55,7 @@ pub fn get_execution_info_syscall(
 }
 
 // blockifier/src/execution/syscalls/mod.rs:222 (deploy_syscall)
+#[expect(clippy::result_large_err)]
 pub fn deploy_syscall(
     request: DeployRequest,
     vm: &mut VirtualMachine,
@@ -117,6 +114,7 @@ pub fn deploy_syscall(
 }
 
 // blockifier/src/execution/execution_utils.rs:217 (execute_deployment)
+#[expect(clippy::result_large_err)]
 pub fn execute_deployment(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
@@ -148,6 +146,7 @@ pub fn execute_deployment(
 }
 
 // blockifier/src/execution/syscalls/mod.rs:407 (library_call)
+#[expect(clippy::result_large_err)]
 pub fn library_call_syscall(
     request: LibraryCallRequest,
     vm: &mut VirtualMachine,
@@ -181,6 +180,7 @@ pub fn library_call_syscall(
 }
 
 // blockifier/src/execution/syscalls/mod.rs:157 (call_contract)
+#[expect(clippy::result_large_err)]
 pub fn call_contract_syscall(
     request: CallContractRequest,
     vm: &mut VirtualMachine,
@@ -225,7 +225,7 @@ pub fn call_contract_syscall(
     // endregion
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value, clippy::result_large_err)]
 pub fn get_block_hash_syscall(
     request: GetBlockHashRequest,
     _vm: &mut VirtualMachine,

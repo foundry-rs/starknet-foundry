@@ -836,6 +836,31 @@ pub async fn test_happy_case_deployment_fee_message() {
 }
 
 #[tokio::test]
+pub async fn test_happy_case_default_name_generation_when_accounts_file_empty() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "test_accounts.json";
+    let accounts_path = temp_dir.path().join(accounts_file);
+    std::fs::File::create(&accounts_path).expect("Failed to create empty accounts file");
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "--type",
+        "oz",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+
+    snapbox.assert().success();
+}
+
+#[tokio::test]
 pub async fn test_happy_case_accounts_file_empty() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "test_accounts.json";

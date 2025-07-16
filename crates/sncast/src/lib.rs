@@ -442,9 +442,17 @@ pub fn get_account_data_from_accounts_file(
         .ok_or_else(|| anyhow!("Account = {name} not found under network = {network_name}"))
 }
 
-pub fn read_and_parse_json_file<T: DeserializeOwned>(path: &Utf8PathBuf) -> Result<T> {
+pub fn read_and_parse_json_file<T>(path: &Utf8PathBuf) -> Result<T>
+where
+    T: DeserializeOwned + Default,
+{
     let file_content =
         fs::read_to_string(path).with_context(|| format!("Failed to read a file = {path}"))?;
+
+    if file_content.trim().is_empty() {
+        return Ok(T::default());
+    }
+
     let deserializer = &mut Deserializer::from_str(&file_content);
     serde_path_to_error::deserialize(deserializer).map_err(|err| {
         let path_to_field = err.path().to_string();

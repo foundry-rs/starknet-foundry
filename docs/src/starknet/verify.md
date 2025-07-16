@@ -17,11 +17,15 @@ For detailed CLI description, see [verify command reference](../appendix/sncast/
 
 Walnut is a tool for step-by-step debugging of Starknet transactions. You can learn more about Walnut here [walnut.dev](https://walnut.dev). Note that Walnut requires you to specify the Starknet version in your `Scarb.toml` config file.
 
-## Example
+### Voyager
+
+[Voyager](https://voyager.online) is a Starknet block explorer that provides contract verification services. It allows you to verify your contracts and make their source code publicly available on the explorer. Voyager supports both mainnet and testnet (Sepolia) networks.
+
+## Examples
 
 First, ensure that you have created a `Scarb.toml` file for your contract (it should be present in the project directory or one of its parent directories). Make sure the contract has already been deployed on the network.
 
-Then run:
+### Using Walnut
 
 <!-- { "ignored_output": true, "replace_network": false } -->
 ```shell
@@ -40,12 +44,43 @@ $ sncast \
 
     You are about to submit the entire workspace code to the third-party verifier at walnut.
 
-    Important: Make sure your project does not include sensitive information like private keys. The snfoundry.toml file will be uploaded. Keep the keystore outside the project to prevent it from being uploaded.
+    Important: Make sure your project does not include sensitive information like private keys.
 
     Are you sure you want to proceed? (Y/n): Y
 
-command: verify
-message: Contract verification has started. You can check the verification status at the following link: https://app.walnut.dev/verification/status/77f1d905-fdb4-4280-b7d6-57cd029d1259.
+Success: Verification completed
+
+Contract successfully verified
+```
+
+</details>
+
+### Using Voyager
+
+<!-- { "ignored_output": true, "replace_network": false } -->
+```shell
+$ sncast \
+    verify \
+    --class-hash 0x031966c9fe618bcee61d267750b9d46e3d71469e571e331f35f0ca26efe306dc \
+    --contract-name SimpleBalance \
+    --verifier voyager \
+    --network sepolia
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+
+    You are about to submit the entire workspace code to the third-party verifier at voyager.
+
+    Important: Make sure your project's Scarb.toml does not include sensitive information like private keys.
+
+    Are you sure you want to proceed? (Y/n): Y
+
+Success: Verification completed
+
+SimpleBalance submitted for verification, you can query the status at: https://sepolia-api.voyager.online/beta/class-verify/job/[..]
 ```
 
 </details>

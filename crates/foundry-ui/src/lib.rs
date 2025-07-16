@@ -45,4 +45,9 @@ impl UI {
     pub fn eprintln(&self, message: &impl Message) {
         eprintln!("{}", self.format_message(message));
     }
+
+    /// Print a blank line to stdout.
+    pub fn print_blank_line(&self) {
+        println!();
+    }
 }

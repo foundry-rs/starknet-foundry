@@ -24,7 +24,8 @@ use starknet_api::contract_class::SierraVersion;
 use starknet_api::core::{ChainId, ClassHash, CompiledClassHash, ContractAddress, Nonce};
 use starknet_api::state::StorageKey;
 use starknet_types_core::felt::Felt;
-use std::cell::RefCell;
+use std::cell::{Ref, RefCell};
+use std::collections::HashMap;
 use std::io::Read;
 use std::sync::Arc;
 use universal_sierra_compiler_api::{SierraType, compile_sierra};
@@ -51,6 +52,12 @@ impl ForkStateReader {
         let id = self.client.chain_id()?;
         let id = parse_cairo_short_string(&id)?;
         Ok(ChainId::from(id))
+    }
+
+    pub fn compiled_contract_class_map(&self) -> Ref<HashMap<ClassHash, ContractClassStarknet>> {
+        Ref::map(self.cache.borrow(), |cache| {
+            cache.compiled_contract_class_map()
+        })
     }
 }
 

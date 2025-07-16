@@ -77,11 +77,12 @@ impl CheatnetState {
         self.cheat_block_hash(block_number, Operation::StopGlobal);
     }
 
+    #[expect(clippy::result_large_err)]
     pub fn get_block_hash_for_contract(
         &mut self,
         contract_address: ContractAddress,
         block_number: u64,
-        syscall_handler: &SyscallHintProcessor,
+        syscall_handler: &mut SyscallHintProcessor,
     ) -> SyscallResult<BlockHash> {
         if let Some((cheat_span, block_hash)) = self
             .block_hash_contracts
