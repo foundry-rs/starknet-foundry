@@ -19,6 +19,12 @@ Required.
 
 Type of the account. Possible values: `oz`, `ready` (formerly), `braavos`.
 
+Type of the account. Possible values: `oz`, `argent`, `ready` (formerly `argent`), `braavos`.
+
+> ⚠️ **Warning**
+>
+> Argent has rebranded as Ready. The `--argent` option is deprecated, please use `--ready` instead.
+
 ## `--url, -u <RPC_URL>`
 Optional.
 

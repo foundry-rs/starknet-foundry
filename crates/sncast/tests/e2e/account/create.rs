@@ -113,7 +113,7 @@ pub async fn test_happy_case_argent_with_deprecation_warning() {
     assert_stdout(
         output,
         indoc! {r"
-        [WARNING] Argent has rebranded as Ready. The `--argent` option for `account create` is now deprecated, please use `--ready` instead.
+        [WARNING] Argent has rebranded as Ready. The `--argent` option for `account create` is deprecated, please use `--ready` instead.
         
         Success: Account created
 
@@ -475,7 +475,7 @@ pub async fn test_happy_case_keystore_argent_with_deprecation_warning() {
     let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(formatdoc! {r"
-        [WARNING] Argent has rebranded as Ready. The `--argent` option for `account create` is now deprecated, please use `--ready` instead.
+        [WARNING] Argent has rebranded as Ready. The `--argent` option for `account create` is deprecated, please use `--ready` instead.
         
         Success: Account created
 

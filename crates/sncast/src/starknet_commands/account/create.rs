@@ -70,7 +70,7 @@ pub async fn create(
     // TODO: Remove this warning once we drop Argent account type
     if create.account_type == AccountType::Argent {
         ui.println(&WarningMessage::new(
-            "Argent has rebranded as Ready. The `--argent` option for `account create` is now deprecated, please use `--ready` instead.",
+            "Argent has rebranded as Ready. The `--argent` option for `account create` is deprecated, please use `--ready` instead.",
         ));
         ui.print_blank_line();
     }
