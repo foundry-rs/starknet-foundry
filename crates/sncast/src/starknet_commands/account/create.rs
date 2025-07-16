@@ -67,7 +67,7 @@ pub async fn create(
     create: &Create,
     ui: &UI,
 ) -> Result<AccountCreateResponse> {
-    // TODO: Remove this warning once we drop Argent account type
+    // TODO(#3556): Remove this warning once we drop Argent account type
     if create.account_type == AccountType::Argent {
         ui.println(&WarningMessage::new(
             "Argent has rebranded as Ready. The `--argent` option for `account create` is deprecated, please use `--ready` instead.",
