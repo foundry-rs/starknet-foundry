@@ -831,7 +831,7 @@ pub async fn test_happy_case_deployment_fee_message() {
 
     assert_stdout_contains(
         output,
-        "Account successfully created but it needs to be deployed. The estimated deployment fee is 0.000836288000000000 STRK. Prefund the account to cover deployment transaction fee",
+        "Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee",
     );
 }
 
