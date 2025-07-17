@@ -113,7 +113,7 @@ pub async fn test_happy_case_argent_with_deprecation_warning() {
     assert_stdout(
         output,
         indoc! {r"
-        [WARNING] Argent has rebranded as Ready. The `--argent` option for `account create` is deprecated, please use `--ready` instead.
+        [WARNING] Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account create` is deprecated, please use `ready` instead.
         
         Success: Account created
 
@@ -475,7 +475,7 @@ pub async fn test_happy_case_keystore_argent_with_deprecation_warning() {
     let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(formatdoc! {r"
-        [WARNING] Argent has rebranded as Ready. The `--argent` option for `account create` is deprecated, please use `--ready` instead.
+        [WARNING] Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account create` is deprecated, please use `ready` instead.
         
         Success: Account created
 
@@ -856,6 +856,7 @@ fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&s
                 {
                     "version": 1,
                     "variant": {
+                        // TODO(#3556): Remove format! and use `AccountType::Ready`
                         "type": format!("{account_type}"),
                         "version": 1,
                         "owner": "0x[..]",

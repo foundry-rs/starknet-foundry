@@ -99,7 +99,7 @@ pub async fn test_happy_case_argent_with_deprecation_warning() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        [WARNING] Argent has rebranded as Ready. The `--argent` option for `account import` is deprecated, please use `--ready` instead.
+        [WARNING] Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account import` is deprecated, please use `ready` instead.
         
         Success: Account imported successfully
 

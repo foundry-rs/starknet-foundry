@@ -70,7 +70,7 @@ pub async fn create(
     // TODO(#3556): Remove this warning once we drop Argent account type
     if create.account_type == AccountType::Argent {
         ui.println(&WarningMessage::new(
-            "Argent has rebranded as Ready. The `--argent` option for `account create` is deprecated, please use `--ready` instead.",
+            "Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account create` is deprecated, please use `ready` instead.",
         ));
         ui.print_blank_line();
     }
@@ -283,6 +283,7 @@ fn create_to_keystore(
             json!({
                 "version": 1,
                 "variant": {
+                    // TODO(#3556): Remove format! and use `AccountType::Ready`
                     "type": format!("{account_type}"),
                     "version": 1,
                     "owner": format!("{:#x}", private_key.verifying_key().scalar()),

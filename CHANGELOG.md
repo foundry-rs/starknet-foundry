@@ -17,11 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `ready` option `--type` flag for `account create` and `account import` commands (Argent wallet has rebranded as Ready)
+- `ready` option for `--type` flag in `account create` and `account import` commands (Argent wallet has rebranded as Ready)
 
 #### Deprecated
 
-- `argent` option for `--type` flag for `account create` and `account import` commands. Use `--ready` instead
+- `argent` option for `--type` flag in `account create` and `account import` commands. Use `ready` instead
 
 ## [0.46.0] - 2025-07-09
 

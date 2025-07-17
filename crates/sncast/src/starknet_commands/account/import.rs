@@ -75,7 +75,7 @@ pub async fn import(
     // TODO(#3556): Remove this warning once we drop Argent account type
     if import.account_type == AccountType::Argent {
         ui.println(&WarningMessage::new(
-                "Argent has rebranded as Ready. The `--argent` option for `account import` is deprecated, please use `--ready` instead.",
+                "Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account import` is deprecated, please use `ready` instead.",
             ));
         ui.print_blank_line();
     }
