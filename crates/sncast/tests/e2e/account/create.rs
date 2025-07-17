@@ -856,8 +856,8 @@ fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&s
                 {
                     "version": 1,
                     "variant": {
-                        // TODO(#3556): Remove format! and use `AccountType::Ready`
-                        "type": format!("{account_type}"),
+                        // TODO(#3556): Remove hardcoded "argent" and use format! with `AccountType::Ready`
+                        "type": "argent",
                         "version": 1,
                         "owner": "0x[..]",
                         "guardian": "0x0"

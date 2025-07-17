@@ -283,8 +283,8 @@ fn create_to_keystore(
             json!({
                 "version": 1,
                 "variant": {
-                    // TODO(#3556): Remove format! and use `AccountType::Ready`
-                    "type": format!("{account_type}"),
+                    // TODO(#3556): Remove hardcoded "argent" and use format! with `AccountType::Ready`
+                    "type": "argent",
                     "version": 1,
                     "owner": format!("{:#x}", private_key.verifying_key().scalar()),
                     "guardian": "0x0",
