@@ -24,9 +24,9 @@ pub struct Call {
     pub arguments: Arguments,
 
     /// Block identifier on which call should be performed.
-    /// Possible values: preconfirmed, latest, block hash (0x prefixed string)
+    /// Possible values: `pre_confirmed`, `latest`, block hash (0x prefixed string)
     /// and block number (u64)
-    #[arg(short, long, default_value = "preconfirmed")]
+    #[arg(short, long, default_value = "pre_confirmed")]
     pub block_id: String,
 
     #[command(flatten)]

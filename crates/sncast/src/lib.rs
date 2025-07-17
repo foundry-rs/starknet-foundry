@@ -545,13 +545,13 @@ fn map_encoding(legacy: bool) -> ExecutionEncoding {
 
 pub fn get_block_id(value: &str) -> Result<BlockId> {
     match value {
-        "preconfirmed" => Ok(BlockId::Tag(PreConfirmed)),
+        "pre_confirmed" => Ok(BlockId::Tag(PreConfirmed)),
         "latest" => Ok(BlockId::Tag(Latest)),
         _ if value.starts_with("0x") => Ok(BlockId::Hash(Felt::from_hex(value)?)),
         _ => match value.parse::<u64>() {
             Ok(value) => Ok(BlockId::Number(value)),
             Err(_) => Err(anyhow::anyhow!(
-                "Incorrect value passed for block_id = {value}. Possible values are preconfirmed, latest, block hash (hex) and block number (u64)"
+                "Incorrect value passed for block_id = {value}. Possible values are pre_confirmed, latest, block hash (hex) and block number (u64)"
             )),
         },
     }
@@ -776,7 +776,7 @@ mod tests {
 
     #[test]
     fn test_get_block_id() {
-        let pending_block = get_block_id("preconfirmed").unwrap();
+        let pending_block = get_block_id("pre_confirmed").unwrap();
         let latest_block = get_block_id("latest").unwrap();
 
         assert_eq!(pending_block, BlockId::Tag(PreConfirmed));
@@ -810,7 +810,7 @@ mod tests {
         let block = get_block_id("mariusz").unwrap_err();
         assert!(block
             .to_string()
-            .contains("Incorrect value passed for block_id = mariusz. Possible values are preconfirmed, latest, block hash (hex) and block number (u64)"));
+            .contains("Incorrect value passed for block_id = mariusz. Possible values are pre_confirmed, latest, block hash (hex) and block number (u64)"));
     }
 
     #[test]
