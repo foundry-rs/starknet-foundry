@@ -59,7 +59,7 @@ pub fn prepare_account_json(
 ) -> serde_json::Value {
     // TODO(#3556): Once `Argent` variant is deleted, use `account_type` directly
     let saved_account_type = match account_type {
-        AccountType::Ready => AccountType::Argent,
+        AccountType::Argent => AccountType::Ready,
         _ => account_type,
     };
     let mut account_json = json!({

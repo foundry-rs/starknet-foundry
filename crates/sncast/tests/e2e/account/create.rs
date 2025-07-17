@@ -143,7 +143,7 @@ pub async fn test_happy_case_argent_with_deprecation_warning() {
                     "private_key": "0x[..]",
                     "public_key": "0x[..]",
                     "salt": "0x1",
-                    "type": "argent"
+                    "type": "ready"
                 }
             }
         }
@@ -826,7 +826,6 @@ pub async fn test_happy_case_default_name_generation() {
 fn get_formatted_account_type(account_type: &str) -> &str {
     match account_type {
         "oz" => "open_zeppelin",
-        "ready" => "argent",
         _ => account_type,
     }
 }

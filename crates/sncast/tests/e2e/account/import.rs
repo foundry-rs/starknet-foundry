@@ -14,7 +14,7 @@ use tempfile::tempdir;
 use test_case::test_case;
 
 #[test_case("oz", "open_zeppelin"; "oz_account_type")]
-#[test_case("ready", "argent"; "ready_account_type")]
+#[test_case("ready", "ready"; "ready_account_type")]
 #[test_case("braavos", "braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
@@ -121,7 +121,7 @@ pub async fn test_happy_case_argent_with_deprecation_warning() {
                     "legacy": true,
                     "private_key": "0x456",
                     "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
-                    "type": "argent"
+                    "type": "ready"
                   }
                 }
             }

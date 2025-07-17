@@ -119,7 +119,7 @@
             "private_key": "0x00bb17245c662eb6ada1ae85c0a6afc77b0df2aa92ee9046e577f4427cdf6d3a",
             "public_key": "0x04d2c00e488819b43a09d720694fe97aa44054803f411bdc93d6b22d548f69a2",
             "salt": "0x50d1de0aa965925d611a0d52142f22f6fd0a664838b213da4621f8d70230b40",
-            "type": "argent"
+            "type": "ready"
         },
         "braavos": {
             "address": "0x2235bf96ef3f88915e3537f9a692977f5caf10b728dd95b0a3ccca2282fbb9b",

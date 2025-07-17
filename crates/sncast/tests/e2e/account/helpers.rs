@@ -25,7 +25,7 @@ pub fn create_tempdir_with_accounts_file(file_name: &str, with_sample_data: bool
                     "private_key": "0x1c3495fce931c0b3ed244f55c54226441a8254deafbc7fab2e46926b4d2fdae",
                     "public_key": "0x63b3a3ac141e4c007b167b27450f110c729cc0d0238541ca705b0de5144edbd",
                     "salt": "0xe2b200bbdf76c31b",
-                    "type": "argent"
+                    "type": "ready"
                 }
             },
             "custom-network": {
