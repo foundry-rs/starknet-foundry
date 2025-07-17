@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Passing a cheatcode span of 0 was incorrectly treated as `CheatSpan::Indefinite`. This is now resolved by making `CheatSpan::TargetCalls` accept `NonZero<usize>` instead of just `usize` in `snforge_std`.
 
+### Cast
+
+#### Changed
+
+- The supported RPC version is now 0.9.0
+
 ## [0.46.0] - 2025-07-09
 
 ### Forge

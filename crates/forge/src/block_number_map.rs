@@ -1,7 +1,7 @@
 use anyhow::{Result, anyhow};
 use conversions::{IntoConv, string::IntoHexStr};
 use starknet::{
-    core::types::{BlockId, MaybePendingBlockWithTxHashes},
+    core::types::{BlockId, MaybePreConfirmedBlockWithTxHashes},
     providers::{JsonRpcClient, Provider, jsonrpc::HttpTransport},
 };
 use starknet_api::block::BlockNumber;
@@ -73,7 +73,7 @@ async fn fetch_block_number_for_hash(url: Url, block_hash: Felt) -> Result<Block
         .spawn(async move { client.get_block_with_tx_hashes(hash).await })
         .await?
     {
-        Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockNumber(block.block_number)),
+        Ok(MaybePreConfirmedBlockWithTxHashes::Block(block)) => Ok(BlockNumber(block.block_number)),
         _ => Err(anyhow!(
             "Could not get the block number for block with hash 0x{}",
             block_hash.into_hex_string()

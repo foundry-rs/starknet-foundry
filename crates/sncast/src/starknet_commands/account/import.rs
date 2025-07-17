@@ -93,7 +93,7 @@ pub async fn import(
         .unwrap_or_else(|| generate_account_name(accounts_file).unwrap());
 
     let fetched_class_hash = match provider
-        .get_class_hash_at(BlockId::Tag(BlockTag::Pending), import.address)
+        .get_class_hash_at(BlockId::Tag(BlockTag::PreConfirmed), import.address)
         .await
     {
         Ok(class_hash) => Ok(Some(class_hash)),
