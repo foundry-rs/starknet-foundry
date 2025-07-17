@@ -23,7 +23,7 @@ Type of the account. Possible values: `oz`, `argent`, `ready`, `braavos`.
 <!-- TODO(#3556): Remove warning once we drop Argent account type. -->                              |
 > ⚠️ **Warning**
 >
-> Argent has rebranded as Ready. The `--argent` option is deprecated, please use `--ready` instead.
+> Argent has rebranded as Ready. The `argent` option is deprecated, please use `ready` instead.
 
 ## `--url, -u <RPC_URL>`
 Optional.
