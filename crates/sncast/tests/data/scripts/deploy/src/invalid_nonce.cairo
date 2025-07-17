@@ -1,6 +1,5 @@
 use sncast_std::{
-    get_nonce, deploy, DeployResult, ScriptCommandError, ProviderError, StarknetError,
-    FeeSettingsTrait, TransactionExecutionErrorData,
+    get_nonce, deploy, ScriptCommandError, ProviderError, StarknetError, FeeSettingsTrait,
 };
 
 use starknet::{ClassHash};
