@@ -617,7 +617,7 @@ pub async fn wait_for_tx(
                 ExecutionResult::Succeeded,
             )) => {
                 let remaining_time = wait_params.remaining_time(i);
-                ui.println(&"Transaction pre confirmed".to_string());
+                ui.println(&"Transaction pre-confirmed".to_string());
                 ui.println(&format!(
                     "Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)"
                 ));
