@@ -12,7 +12,7 @@ use run_tests::workspace::run_for_workspace;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
-use shared::auto_completions::{Completion, generate_completions};
+use shared::auto_completions::{Completions, generate_completions};
 use std::cell::RefCell;
 use std::ffi::OsString;
 use std::process::Command;
@@ -107,8 +107,9 @@ enum ForgeSubcommand {
     CleanCache {},
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
-    /// Generate completion script
-    Completion(Completion),
+    /// Generate completions script
+    #[command(alias = "completion")]
+    Completions(Completions),
 }
 
 #[derive(Parser, Debug)]
@@ -305,8 +306,8 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
             check_requirements(true, ForgeTrackedResource::default(), &ui)?;
             Ok(ExitStatus::Success)
         }
-        ForgeSubcommand::Completion(completion) => {
-            generate_completions(completion.shell, &mut Cli::command())?;
+        ForgeSubcommand::Completions(completions) => {
+            generate_completions(completions.shell, &mut Cli::command())?;
             Ok(ExitStatus::Success)
         }
     }
