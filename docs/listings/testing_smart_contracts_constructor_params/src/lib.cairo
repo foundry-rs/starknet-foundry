@@ -11,7 +11,7 @@ pub trait IShoppingCart<TContractState> {
 }
 
 #[starknet::contract]
-mod ShoppingCart {
+pub mod ShoppingCart {
     use starknet::storage::{MutableVecTrait, StoragePointerReadAccess, Vec, VecTrait};
     use super::Product;
 
