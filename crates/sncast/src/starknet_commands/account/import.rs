@@ -12,7 +12,6 @@ use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use sncast::check_if_legacy_contract;
 use sncast::helpers::account::generate_account_name;
-use sncast::helpers::braavos::check_braavos_account_compatibility;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::account::import::AccountImportResponse;
 use sncast::{AccountType, check_class_hash_exists, get_chain_id, handle_rpc_error};
@@ -78,12 +77,6 @@ pub async fn import(
                 "Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account import` is deprecated, please use `ready` instead.",
             ));
         ui.print_blank_line();
-    }
-
-    // Braavos accounts before v1.2.0 are not compatible with Starknet >= 0.13.4
-    // For more, read https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
-    if let Some(class_hash) = import.class_hash {
-        check_braavos_account_compatibility(class_hash)?;
     }
 
     let private_key = if let Some(passed_private_key) = &import.private_key {

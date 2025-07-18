@@ -10,7 +10,7 @@ use conversions::IntoConv;
 use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use serde_json::json;
-use sncast::helpers::braavos::{BraavosAccountFactory, check_braavos_account_compatibility};
+use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{
     BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, CREATE_KEYSTORE_PASSWORD_ENV_VAR,
     OZ_CLASS_HASH, READY_CLASS_HASH,
@@ -73,12 +73,6 @@ pub async fn create(
             "Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account create` is deprecated, please use `ready` instead.",
         ));
         ui.print_blank_line();
-    }
-
-    // Braavos accounts before v1.2.0 are not compatible with starknet >= 0.13.4
-    // For more, read https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
-    if let Some(class_hash) = create.class_hash {
-        check_braavos_account_compatibility(class_hash)?;
     }
 
     let salt = extract_or_generate_salt(create.salt);
