@@ -3,13 +3,10 @@ name = "deployment_with_constructor_args"
 version = "0.1.0"
 edition = "2024_07"
 
-# See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
-
 [dependencies]
 starknet = "2.12.0-rc.1"
 
 [dev-dependencies]
-# TODO: Change
 snforge_std = { path = "../../../snforge_std" }
 assert_macros = "2.12.0-rc.1"
 
