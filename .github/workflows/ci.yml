@@ -325,7 +325,7 @@ jobs:
     name: Test Building Docs
     runs-on: ubuntu-latest
     env:
-      MDBOOK_VERSION: 0.4.31
+      MDBOOK_VERSION: 0.4.52
     steps:
       - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
         with:
