@@ -37,6 +37,7 @@ mod SimpleContract {
             self: @ContractState, calls: Array<RecursiveCall>,
         ) -> Array<RecursiveCall> {
             let mut i = 0;
+            #[cairofmt::skip]
             while i < calls.len() {
                 let serviced_call = calls.at(i);
                 RecursiveCallerDispatcher {
@@ -44,7 +45,7 @@ mod SimpleContract {
                 }
                     .execute_calls(serviced_call.payload.clone());
                 i = i + 1;
-            }
+            };
 
             calls
         }
