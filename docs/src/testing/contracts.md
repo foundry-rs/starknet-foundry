@@ -176,7 +176,7 @@ Instead of manually handling it, you can simply mark your test as `#[should_pani
 
 ## Passing Constructor Arguments
 
-The previous example was a basic one. However, sometimes you may need to pass arguments to contract's constructor. This can be done in 2 ways:
+The previous example was a basic one. However, sometimes you may need to pass arguments to contract's constructor. This can be done in two ways:
 - With manual serialization
 - With `deploy_for_test` function (available since Cairo 2.12)
 
