@@ -190,18 +190,18 @@ Below contract simulates a basic shopping cart. Its constructor takes initial pr
 {{#include ../../listings/deployment_with_constructor_args/src/lib.cairo}}
 ```
 
-### Deployment with Manual Serialization
-
-In this case we need to manually serialize the constructor parameters and pass them as calldata to the `deploy` function.
-
-```rust
-{{#include ../../listings/deployment_with_constructor_args/tests/test_with_serialization.cairo}}
-```
-
 ### Deployment with `deploy_for_test`
 
 `deploy_for_test` is an utility function that simplifies the deployment process by automatically handling serialization of constructor parameters.
 
 ```rust
 {{#include ../../listings/deployment_with_constructor_args/tests/test_with_deploy_for_test.cairo}}
+```
+
+### Deployment with Manual Serialization
+
+In this case we need to manually serialize the constructor parameters and pass them as calldata to the `deploy` function.
+
+```rust
+{{#include ../../listings/deployment_with_constructor_args/tests/test_with_serialization.cairo}}
 ```
