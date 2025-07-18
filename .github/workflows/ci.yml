@@ -358,7 +358,6 @@ jobs:
         run: |
           ./scripts/verify_cairo_listings_scarb_2_12.sh
 
-
   typos:
     name: Check typos
     runs-on: ubuntu-latest
