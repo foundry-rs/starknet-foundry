@@ -3,10 +3,10 @@
 //! They are not exposed through the public API in a general form, as there are no known use cases
 //! that would require them.
 
-use super::{
-    ExecutionInfoMock, cheat_execution_info, Operation, ContractAddress, CheatArguments, CheatSpan,
-};
 use crate::test_address;
+use super::{
+    CheatArguments, CheatSpan, ContractAddress, ExecutionInfoMock, Operation, cheat_execution_info,
+};
 
 /// Overrides the contract address for the default test address.
 /// After this function is called, any call to `starknet::get_contract_address()`

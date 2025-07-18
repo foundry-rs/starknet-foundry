@@ -1,5 +1,5 @@
 use sncast_std::{
-    get_nonce, declare, ScriptCommandError, ProviderError, StarknetError, FeeSettingsTrait,
+    FeeSettingsTrait, ProviderError, ScriptCommandError, StarknetError, declare, get_nonce,
 };
 
 fn main() {
