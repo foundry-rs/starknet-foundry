@@ -1,5 +1,5 @@
 [package]
-name = "testing_smart_contracts_constructor_params"
+name = "deployment_with_constructor_args"
 version = "0.1.0"
 edition = "2024_07"
 

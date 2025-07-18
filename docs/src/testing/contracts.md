@@ -187,7 +187,7 @@ Let's compare both approaches.
 Below contract simulates a basic shopping cart. Its constructor takes initial products which are vector of `Product` structs.
 
 ```rust
-{{#include ../../listings/testing_smart_contracts_constructor_params/src/lib.cairo}}
+{{#include ../../listings/deployment_with_constructor_args/src/lib.cairo}}
 ```
 
 ### Deployment with Manual Serialization
@@ -195,7 +195,7 @@ Below contract simulates a basic shopping cart. Its constructor takes initial pr
 In this case we need to manually serialize the constructor parameters and pass them as calldata to the `deploy` function.
 
 ```rust
-{{#include ../../listings/testing_smart_contracts_constructor_params/tests/test_with_serialization.cairo}}
+{{#include ../../listings/deployment_with_constructor_args/tests/test_with_serialization.cairo}}
 ```
 
 ### Deployment with `deploy_for_test`
@@ -203,5 +203,5 @@ In this case we need to manually serialize the constructor parameters and pass t
 `deploy_for_test` is a utility function that simplifies the deployment process by automatically handling serialization of constructor parameters.
 
 ```rust
-{{#include ../../listings/testing_smart_contracts_constructor_params/tests/test_with_deploy_for_test.cairo}}
+{{#include ../../listings/deployment_with_constructor_args/tests/test_with_deploy_for_test.cairo}}
 ```

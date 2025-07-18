@@ -1,6 +1,6 @@
 use snforge_std::{ContractClassTrait, DeclareResult, DeclareResultTrait, declare};
 use starknet::storage::StorableStoragePointerReadAccess;
-use testing_smart_contracts_constructor_params::Product;
+use deployment_with_constructor_args::Product;
 
 
 #[test]
