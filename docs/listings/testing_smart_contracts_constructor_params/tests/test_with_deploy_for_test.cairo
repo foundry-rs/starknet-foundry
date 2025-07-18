@@ -21,6 +21,6 @@ fn test_initial_cart_non_empty_with_deploy_for_test() {
 
     // 4. Use `deploy_for_test` to deploy the contract
     // It automatically handles serialization of constructor parameters
-    let (contract_address, _) = deploy_for_test(*class_hash, deployment_params, initial_products)
+    let (_contract_address, _) = deploy_for_test(*class_hash, deployment_params, initial_products)
         .expect('Deployment failed');
 }

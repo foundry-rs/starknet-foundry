@@ -23,5 +23,5 @@ fn test_initial_cart_non_empty_with_serialization() {
     initial_products.serialize(ref calldata);
 
     // 5. Deploy the contract
-    let (contract_address, _) = contract.deploy(@calldata).unwrap();
+    let (_contract_address, _) = contract.deploy(@calldata).unwrap();
 }
