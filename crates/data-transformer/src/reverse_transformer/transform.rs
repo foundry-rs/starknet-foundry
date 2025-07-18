@@ -73,11 +73,13 @@ impl<'a> ReverseTransformer<'a> {
         &mut self,
         expr: &ExprListParenthesized,
     ) -> Result<Type, TransformationError> {
-        let parsed_exprs = expr
+        let elements = expr
             .expressions(&self.db)
             .elements(&self.db)
-            .into_iter()
-            .map(|expr| self.transform_expr(&expr))
+            .collect::<Vec<_>>();
+        let parsed_exprs = elements
+            .iter()
+            .map(|expr| self.transform_expr(expr))
             .collect::<Result<Vec<_>, TransformationError>>()?;
 
         Ok(Type::Tuple(Tuple(parsed_exprs)))
