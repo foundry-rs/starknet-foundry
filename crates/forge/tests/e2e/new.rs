@@ -9,6 +9,7 @@ use forge::Template;
 use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use indoc::{formatdoc, indoc};
 use regex::Regex;
+use scarb_api::ScarbCommand;
 use shared::consts::FREE_RPC_PROVIDER_URL;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::assert_matches;
@@ -43,7 +44,7 @@ fn init_new_project() {
         ),
     );
 
-    validate_init(&temp.join("test_name"), false, &Template::BalanceContract);
+    validate_init(&temp.join("test_name"), None, &Template::BalanceContract);
 }
 
 #[test_case(&Template::CairoProgram; "cairo-program")]
@@ -66,7 +67,7 @@ fn create_new_project_dir_not_exist(template: &Template) {
         .assert()
         .success();
 
-    validate_init(&project_path, false, template);
+    validate_init(&project_path, None, template);
 }
 
 #[test]
@@ -105,27 +106,61 @@ fn create_new_project_dir_exists_and_empty() {
         .assert()
         .success();
 
-    validate_init(&project_path, false, &Template::BalanceContract);
+    validate_init(&project_path, None, &Template::BalanceContract);
 }
 
 #[test]
 fn init_new_project_from_scarb() {
     let temp = tempdir_with_tool_versions().unwrap();
 
-    SnapboxCommand::new("scarb")
-        .current_dir(&temp)
-        .args(["new", "test_name"])
-        .env("SCARB_INIT_TEST_RUNNER", "starknet-foundry")
-        .env(
-            "PATH",
-            append_to_path_var(snforge_test_bin_path().parent().unwrap()),
-        )
-        .assert()
-        .success();
+    SnapboxCommand::from_std(
+        ScarbCommand::new()
+            .current_dir(temp.path())
+            .args(["new", "test_name"])
+            .env("SCARB_INIT_TEST_RUNNER", "starknet-foundry")
+            .env(
+                "PATH",
+                append_to_path_var(snforge_test_bin_path().parent().unwrap()),
+            )
+            .command(),
+    )
+    .assert()
+    .success();
 
-    validate_init(&temp.join("test_name"), true, &Template::BalanceContract);
+    validate_init(
+        &temp.join("test_name"),
+        Some(SnforgeStd::Normal),
+        &Template::BalanceContract,
+    );
 }
 
+#[test]
+#[cfg_attr(not(feature = "scarb_2_9_1"), ignore)]
+fn init_new_project_from_scarb_with_snforge_std_compatibility() {
+    let temp = tempdir_with_tool_versions().unwrap();
+    let tool_version_path = temp.join(".tool-versions");
+    fs::write(tool_version_path, "scarb 2.11.4").unwrap();
+
+    SnapboxCommand::from_std(
+        ScarbCommand::new()
+            .current_dir(temp.path())
+            .args(["new", "test_name"])
+            .env("SCARB_INIT_TEST_RUNNER", "starknet-foundry")
+            .env(
+                "PATH",
+                append_to_path_var(snforge_test_bin_path().parent().unwrap()),
+            )
+            .command(),
+    )
+    .assert()
+    .success();
+
+    validate_init(
+        &temp.join("test_name"),
+        Some(SnforgeStd::Compatibility),
+        &Template::BalanceContract,
+    );
+}
 pub fn append_to_path_var(path: &Path) -> OsString {
     let script_path = iter::once(path.to_path_buf());
     let os_path = env::var_os("PATH").unwrap();
@@ -133,7 +168,11 @@ pub fn append_to_path_var(path: &Path) -> OsString {
     env::join_paths(script_path.chain(other_paths)).unwrap()
 }
 
-fn validate_init(project_path: &PathBuf, validate_snforge_std: bool, template: &Template) {
+fn validate_init(
+    project_path: &PathBuf,
+    validate_snforge_std: Option<SnforgeStd>,
+    template: &Template,
+) {
     let manifest_path = project_path.join("Scarb.toml");
     let scarb_toml = fs::read_to_string(manifest_path.clone()).unwrap();
 
@@ -160,7 +199,7 @@ fn validate_init(project_path: &PathBuf, validate_snforge_std: bool, template: &
     dependencies.remove("snforge_std");
     dependencies.insert("snforge_std", Item::Value(Value::InlineTable(snforge_std)));
 
-    std::fs::write(manifest_path, scarb_toml.to_string()).unwrap();
+    fs::write(manifest_path, scarb_toml.to_string()).unwrap();
 
     let output = test_runner(&TempDir::new().unwrap())
         .current_dir(project_path)
@@ -171,11 +210,21 @@ fn validate_init(project_path: &PathBuf, validate_snforge_std: bool, template: &
     assert_stdout_contains(output, expected);
 }
 
-fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool) -> String {
-    let snforge_std_assert = if validate_snforge_std {
-        "\nsnforge_std = \"[..]\""
-    } else {
-        ""
+enum SnforgeStd {
+    Normal,
+    Compatibility,
+}
+
+fn get_expected_manifest_content(
+    template: &Template,
+    validate_snforge_std: Option<SnforgeStd>,
+) -> String {
+    let snforge_std_assert = match validate_snforge_std {
+        None => "",
+        Some(snforge_std) => match snforge_std {
+            SnforgeStd::Normal => "\nsnforge_std = \"[..]\"",
+            SnforgeStd::Compatibility => "\nsnforge_std_compatibility = \"[..]\"",
+        },
     };
 
     let target_contract_entry = "[[target.starknet-contract]]\nsierra = true";
