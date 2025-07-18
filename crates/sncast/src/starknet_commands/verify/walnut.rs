@@ -1,8 +1,10 @@
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
+use foundry_ui::UI;
 use reqwest::StatusCode;
 use sncast::Network;
 use sncast::response::verify::VerifyResponse;
+use starknet::providers::{JsonRpcClient, jsonrpc::HttpTransport};
 use std::env;
 use std::ffi::OsStr;
 use walkdir::WalkDir;
@@ -15,18 +17,25 @@ pub struct WalnutVerificationInterface {
 }
 
 #[async_trait::async_trait]
-impl VerificationInterface for WalnutVerificationInterface {
-    fn new(network: Network, workspace_dir: Utf8PathBuf) -> Self {
-        WalnutVerificationInterface {
+impl VerificationInterface<'_> for WalnutVerificationInterface {
+    fn new(
+        network: Network,
+        workspace_dir: Utf8PathBuf,
+        _provider: &JsonRpcClient<HttpTransport>,
+        _ui: &UI,
+    ) -> Result<Self> {
+        Ok(WalnutVerificationInterface {
             network,
             workspace_dir,
-        }
+        })
     }
 
     async fn verify(
         &self,
         identifier: ContractIdentifier,
         contract_name: String,
+        _package: Option<String>,
+        _ui: &UI,
     ) -> Result<VerifyResponse> {
         // Read all files name along with their contents in a JSON format
         // in the workspace dir recursively
@@ -67,7 +76,7 @@ impl VerificationInterface for WalnutVerificationInterface {
         // Send the POST request to the explorer
         let client = reqwest::Client::new();
         let api_res = client
-            .post(self.gen_explorer_url()?)
+            .post(self.gen_explorer_url())
             .header("Content-Type", "application/json")
             .body(json_payload)
             .send()
@@ -82,17 +91,17 @@ impl VerificationInterface for WalnutVerificationInterface {
             Ok(VerifyResponse { message })
         } else {
             let message = api_res.text().await.context("Failed to verify contract")?;
-            Err(anyhow!(message))
+            Err(anyhow::anyhow!("{}", message))
         }
     }
 
-    fn gen_explorer_url(&self) -> Result<String> {
+    fn gen_explorer_url(&self) -> String {
         let api_base_url =
-            env::var("WALNUT_API_URL").unwrap_or_else(|_| "https://api.walnut.dev".to_string());
+            env::var("VERIFIER_API_URL").unwrap_or_else(|_| "https://api.walnut.dev".to_string());
         let path = match self.network {
             Network::Mainnet => "/v1/sn_main/verify",
             Network::Sepolia => "/v1/sn_sepolia/verify",
         };
-        Ok(format!("{api_base_url}{path}"))
+        format!("{api_base_url}{path}")
     }
 }

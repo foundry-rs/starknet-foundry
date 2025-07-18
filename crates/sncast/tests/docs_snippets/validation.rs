@@ -1,6 +1,6 @@
 use std::fs;
 
-use crate::helpers::fixtures::copy_directory_to_tempdir;
+use crate::helpers::constants::URL;
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use docs::snippet::{Snippet, SnippetType};
@@ -10,6 +10,7 @@ use docs::utils::{
 };
 use docs::validation::{extract_snippets_from_directory, extract_snippets_from_file};
 use shared::test_utils::output_assert::assert_stdout_contains;
+use tempfile::TempDir;
 
 #[test]
 fn test_docs_snippets() {
@@ -33,7 +34,29 @@ fn test_docs_snippets() {
     let hello_sncast_dir =
         Utf8PathBuf::from_path_buf(root_dir_path.join("docs/listings/hello_sncast"))
             .expect("Invalid UTF-8 path");
-    let tempdir = copy_directory_to_tempdir(&hello_sncast_dir);
+
+    let dirs_to_copy = [
+        "crates/sncast/tests/data/files",
+        "docs/listings/hello_sncast",
+    ];
+
+    let tempdir = TempDir::new().expect("Unable to create a temporary directory");
+
+    let target_path = tempdir.path();
+
+    for dir in &dirs_to_copy {
+        let source_path = root_dir_path.join(dir);
+
+        fs_extra::dir::copy(
+            source_path.as_path(),
+            target_path,
+            &fs_extra::dir::CopyOptions::new()
+                .overwrite(true)
+                .content_only(true),
+        )
+        .expect("Failed to copy the directory");
+    }
+
     let source_accouns_json_path = hello_sncast_dir.join("accounts.json");
     let target_accounts_json_path = tempdir.path().join("accounts.json");
 
@@ -60,7 +83,7 @@ fn test_docs_snippets() {
             let network_pos = args.iter().position(|arg| *arg == "--network");
             if let Some(network_pos) = network_pos {
                 args[network_pos] = "--url";
-                args[network_pos + 1] = "http://127.0.0.1:5055";
+                args[network_pos + 1] = URL;
             }
         }
 

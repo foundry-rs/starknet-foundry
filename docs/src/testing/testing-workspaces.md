@@ -151,7 +151,10 @@ Failures:
     fibonacci_tests::abc::efg::failing_test
     hello_workspaces_integrationtest::test_failing::test_another_failing
     hello_workspaces_integrationtest::test_failing::test_failing
+
+Tests summary: 11 passed, 3 failed, 0 ignored, 0 filtered out
 ```
+
 </details>
 <br>
 

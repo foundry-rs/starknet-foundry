@@ -124,7 +124,7 @@ fn get_state_resources(
     transaction_context: &TransactionContext,
     state: &mut CachedState<ExtendedStateReader>,
 ) -> Result<StateResources, StateError> {
-    let mut state_changes = state.get_actual_state_changes()?;
+    let mut state_changes = state.to_state_diff()?;
     // compiled_class_hash_updates is used only for keeping track of declares
     // which we don't want to include in gas cost
     state_changes.state_maps.compiled_class_hashes.clear();
@@ -164,7 +164,7 @@ pub fn check_available_gas(
                 // convert resource bounds to classic l1_gas using formula
                 // l1_gas + l1_data_gas + (l2_gas / 40000)
                 // because 100 l2_gas = 0.0025 l1_gas
-                gas_info.l1_gas + gas_info.l1_data_gas + (gas_info.l2_gas / 40000)
+                (gas_info.l1_gas + gas_info.l1_data_gas + (gas_info.l2_gas / 40000))
                     > GasAmount(gas as u64)
             }
             RawAvailableGasConfig::MaxResourceBounds(bounds) => {

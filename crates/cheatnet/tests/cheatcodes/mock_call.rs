@@ -14,6 +14,7 @@ use conversions::IntoConv;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::ContractAddress;
 use starknet_types_core::felt::Felt;
+use std::num::NonZeroUsize;
 
 trait MockCallTrait {
     fn mock_call(
@@ -595,7 +596,7 @@ fn mock_call_simple_with_span() {
         &contract_address,
         "get_thing",
         &[123],
-        CheatSpan::TargetCalls(2),
+        CheatSpan::TargetCalls(NonZeroUsize::new(2).unwrap()),
     );
 
     assert_success(
@@ -623,7 +624,7 @@ fn mock_call_proxy_with_span() {
         &contract_address,
         "get_thing",
         &[123],
-        CheatSpan::TargetCalls(2),
+        CheatSpan::TargetCalls(NonZeroUsize::new(2).unwrap()),
     );
 
     assert_success(
@@ -665,7 +666,7 @@ fn mock_call_in_constructor_with_span() {
         &balance_address,
         "get_balance",
         &[111],
-        CheatSpan::TargetCalls(2),
+        CheatSpan::TargetCalls(NonZeroUsize::new(2).unwrap()),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[balance_address.into_()]);
@@ -700,7 +701,7 @@ fn mock_call_twice_in_function() {
         &precalculated_address,
         "get_thing",
         &[222],
-        CheatSpan::TargetCalls(2),
+        CheatSpan::TargetCalls(NonZeroUsize::new(2).unwrap()),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[111.into()]);
@@ -730,7 +731,7 @@ fn mock_call_override_span() {
         &contract_address,
         "get_thing",
         &[222],
-        CheatSpan::TargetCalls(2),
+        CheatSpan::TargetCalls(NonZeroUsize::new(2).unwrap()),
     );
 
     assert_success(

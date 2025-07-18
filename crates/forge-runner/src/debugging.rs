@@ -1,9 +1,7 @@
-use crate::package_tests::with_config_resolved::ResolvedForkConfig;
+use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::CallTrace;
-use cheatnet::sync_client::SyncClient;
 use clap::ValueEnum;
-use debugging::CollectorError;
 
 /// Trace verbosity level.
 #[derive(ValueEnum, Debug, Clone, Copy)]
@@ -32,13 +30,12 @@ pub fn build_debugging_trace(
     contracts_data: &ContractsData,
     trace_verbosity: Option<TraceVerbosity>,
     test_name: String,
-    fork_config: Option<ResolvedForkConfig>,
-) -> Option<Result<debugging::Trace, CollectorError>> {
-    let client = fork_config.map(|config| SyncClient::new(config.url, config.block_number));
-    let mut contracts_data_store = debugging::ContractsDataStore::new(contracts_data, client);
+    fork_data: &ForkData,
+) -> Option<debugging::Trace> {
+    let contracts_data_store = debugging::ContractsDataStore::new(contracts_data, fork_data);
     Some(debugging::Trace::new(
         call_trace,
-        &mut contracts_data_store,
+        &contracts_data_store,
         trace_verbosity?.into(),
         test_name,
     ))

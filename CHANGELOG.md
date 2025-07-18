@@ -7,11 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Fixed
+
+- Passing a cheatcode span of 0 was incorrectly treated as `CheatSpan::Indefinite`. This is now resolved by making `CheatSpan::TargetCalls` accept `NonZero<usize>` instead of just `usize` in `snforge_std`.
+
 ### Cast
+
+#### Added
+
+- `ready` option for `--type` flag in `account create` and `account import` commands (Argent wallet has rebranded as Ready)
+
+#### Changed
+
+- Braavos accounts with all class hashes are now supported 
+
+#### Deprecated
+
+- `argent` option for `--type` flag in `account create` and `account import` commands. Use `ready` instead
+
+## [0.46.0] - 2025-07-09
+
+### Forge
+
+#### Added
+
+- Total test summary when running tests across multiple packages (for example when running `snforge test --workspace`)
+
+#### Fixed
+
+- Bug where syscall execution resources from nested calls were being calculated twice
+
+### Cast
+
+#### Added
+
+- `sncast utils serialize` command to serialize Cairo expressions into calldata
+- `sncast verify` now supports verifying against [voyager](https://voyager.online/) block explorer.
 
 #### Changed
 
 - Improved commands output readability with colors and simplified layout.
+- `sncast verify` no longer defaults to using walnut.
+
+#### Fixed
+
+- Bug where `account create` raised an error if no `--name` was provided and the file specified by `--accounts-file` was empty
 
 #### Removed
 
