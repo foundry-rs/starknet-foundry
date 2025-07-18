@@ -9,6 +9,7 @@ use starknet_api::block::BlockHash;
 use starknet_api::core::ContractAddress;
 use starknet_api::hash::StarkHash;
 use starknet_types_core::felt::Felt;
+use std::num::NonZeroUsize;
 
 impl CheatnetState {
     pub fn cheat_block_hash(&mut self, block_number: u64, operation: Operation<Felt>) {
@@ -77,11 +78,12 @@ impl CheatnetState {
         self.cheat_block_hash(block_number, Operation::StopGlobal);
     }
 
+    #[expect(clippy::result_large_err)]
     pub fn get_block_hash_for_contract(
         &mut self,
         contract_address: ContractAddress,
         block_number: u64,
-        syscall_handler: &SyscallHintProcessor,
+        syscall_handler: &mut SyscallHintProcessor,
     ) -> SyscallResult<BlockHash> {
         if let Some((cheat_span, block_hash)) = self
             .block_hash_contracts
@@ -89,14 +91,21 @@ impl CheatnetState {
             .copied()
         {
             match cheat_span {
-                CheatSpan::TargetCalls(1) => {
+                CheatSpan::TargetCalls(n) if n.get() == 1 => {
                     self.block_hash_contracts
                         .remove(&(contract_address, block_number));
                 }
                 CheatSpan::TargetCalls(num) => {
+                    let calls_number = num.get() - 1;
                     self.block_hash_contracts.insert(
                         (contract_address, block_number),
-                        (CheatSpan::TargetCalls(num - 1), block_hash),
+                        (
+                            CheatSpan::TargetCalls(
+                                NonZeroUsize::new(calls_number)
+                                    .expect("`NonZeroUsize` should not be zero after decrement"),
+                            ),
+                            block_hash,
+                        ),
                     );
                 }
                 CheatSpan::Indefinite => {}

@@ -56,11 +56,10 @@ pub mod ErrorHandler {
 
         fn call_unrecoverable(self: @ContractState) {
             let dispatcher = get_safe_dispatcher(self);
+            // Unreachable
 
-            match dispatcher.unrecoverable_error() {
-                // Unreachable
-                Result::Ok(_) => {},
-                Result::Err(_) => {},
+            if let Result::Ok(_) = dispatcher.unrecoverable_error() {
+                {}
             }
         }
     }

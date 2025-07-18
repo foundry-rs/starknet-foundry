@@ -62,7 +62,7 @@ fn cairo_test_cheatcode_error() {
 }
 
 #[test]
-#[ignore] // TODO(#2765)
+#[ignore = "TODO(#2765)"]
 fn cheatcode_invalid_args() {
     let test = test_utils::test_case!(indoc!(
         r"

@@ -62,7 +62,7 @@ async fn test_happy_case_human_readable() {
 
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
-#[test_case(sncast::helpers::constants::ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
+#[test_case(sncast::helpers::constants::READY_CLASS_HASH, AccountType::Ready; "READY_CLASS_HASH")]
 #[test_case(sncast::helpers::constants::BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
 async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
@@ -224,8 +224,6 @@ async fn test_happy_case_with_constructor_cairo_expression_calldata() {
     assert!(matches!(receipt, Deploy(_)));
 }
 
-// TODO(#3116): Before, this test returned message 'Input too long for arguments').
-// Now, it returns message about transaction execution error.
 #[test]
 fn test_wrong_calldata() {
     let args = vec![
@@ -249,7 +247,7 @@ fn test_wrong_calldata() {
         output,
         indoc! {r"
         Command: deploy
-        Error: Transaction execution error [..]
+        Error: Transaction execution error [..]Input too long for arguments[..]
         "},
     );
 }
@@ -277,8 +275,6 @@ async fn test_contract_not_declared() {
     );
 }
 
-// TODO(#3116): Before, this test returned message containing info that contract is already deployed.
-// Now, it returns message about transaction execution error.
 #[test]
 fn test_contract_already_deployed() {
     let args = vec![
@@ -302,7 +298,7 @@ fn test_contract_already_deployed() {
         output,
         indoc! {r"
         Command: deploy
-        Error: Transaction execution error [..]
+        Error: Transaction execution error [..] contract already deployed at address [..]
         "},
     );
 }

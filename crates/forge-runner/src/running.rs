@@ -15,6 +15,7 @@ use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::constants as cheatnet_constants;
+use cheatnet::forking::data::ForkData;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
@@ -154,14 +155,15 @@ pub struct RunCompleted {
     pub(crate) used_resources: UsedResources,
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
+    pub(crate) fork_data: ForkData,
 }
 
-#[allow(clippy::too_many_lines)]
 pub struct RunError {
     pub(crate) error: Box<CairoRunError>,
     pub(crate) call_trace: Rc<RefCell<CallTrace>>,
     pub(crate) encountered_errors: EncounteredErrors,
     pub(crate) fuzzer_args: Vec<String>,
+    pub(crate) fork_data: ForkData,
 }
 
 pub enum RunResult {
@@ -337,7 +339,7 @@ pub fn run_test_case(
 
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
-    update_top_call_resources(&mut forge_runtime);
+    update_top_call_resources(&mut forge_runtime, tracked_resource);
     update_top_call_l1_resources(&mut forge_runtime);
 
     let fuzzer_args = forge_runtime
@@ -357,6 +359,12 @@ pub fn run_test_case(
         used_resources.clone(),
     )?;
 
+    let fork_data = cached_state
+        .state
+        .fork_state_reader
+        .map(|fork_state_reader| ForkData::new(&fork_state_reader.compiled_contract_class_map()))
+        .unwrap_or_default();
+
     Ok(match result {
         Ok(result) => RunResult::Completed(Box::new(RunCompleted {
             status: if result.execution.failed {
@@ -369,12 +377,14 @@ pub fn run_test_case(
             used_resources,
             encountered_errors,
             fuzzer_args,
+            fork_data,
         })),
         Err(error) => RunResult::Error(RunError {
             error: Box::new(error),
             call_trace: call_trace_ref,
             encountered_errors,
             fuzzer_args,
+            fork_data,
         }),
     })
 }
@@ -424,7 +434,7 @@ fn extract_test_case_summary(
                         contracts_data,
                         trace_verbosity,
                         case.name.clone(),
-                        case.config.fork_config.clone(),
+                        &run_error.fork_data,
                     ),
                 }
             }

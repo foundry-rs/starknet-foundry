@@ -18,7 +18,7 @@ mod GasChecker {
 
     #[storage]
     struct Storage {
-        balance: u64
+        balance: u64,
     }
 
     #[abi(embed_v0)]
@@ -264,6 +264,43 @@ mod GasChecker {
             core::pedersen::pedersen(1, 2);
             core::pedersen::pedersen(1, 2);
             core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
         }
 
         fn poseidon(self: @ContractState) {
@@ -362,21 +399,21 @@ mod GasChecker {
         }
 
         fn send_l1_message(self: @ContractState) {
-            starknet::send_message_to_l1_syscall(1, array![1, 2 ,3].span()).unwrap();
+            starknet::send_message_to_l1_syscall(1, array![1, 2, 3].span()).unwrap();
         }
 
         fn emit_event(self: @ContractState, n_keys_and_vals: u32) {
-             let mut keys = array![];
-             let mut values =  array![];
+            let mut keys = array![];
+            let mut values = array![];
 
-             let mut i: u32 = 0;
-             while i < n_keys_and_vals {
+            let mut i: u32 = 0;
+            while i < n_keys_and_vals {
                 keys.append('key');
                 values.append(1);
-                    i += 1;
-             };
+                i += 1;
+            };
 
-             starknet::emit_event_syscall(keys.span(), values.span()).unwrap();
+            starknet::emit_event_syscall(keys.span(), values.span()).unwrap();
         }
     }
 

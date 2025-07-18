@@ -5,7 +5,7 @@ use forge_runner::{
     package_tests::TestTargetLocation, test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
-use foundry_ui::Message;
+use foundry_ui::{Message, components::labeled::LabeledMessage};
 use serde::Serialize;
 use serde_json::{Value, json};
 use std::fmt::Write;
@@ -63,7 +63,7 @@ impl Message for CollectedTestsCountMessage {
 
 // TODO(#2574): Bring back "filtered out" number in tests summary when running with `--exact` flag
 #[derive(Serialize)]
-pub struct TestsSummaryMessage {
+struct TestsSummary {
     passed: usize,
     failed: usize,
     interrupted: usize,
@@ -71,8 +71,9 @@ pub struct TestsSummaryMessage {
     filtered: Option<usize>,
 }
 
-impl TestsSummaryMessage {
-    pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
+impl TestsSummary {
+    #[must_use]
+    fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
         let passed = summaries.iter().map(TestTargetSummary::count_passed).sum();
         let failed = summaries.iter().map(TestTargetSummary::count_failed).sum();
         let interrupted = summaries
@@ -89,10 +90,8 @@ impl TestsSummaryMessage {
             filtered,
         }
     }
-}
 
-impl Message for TestsSummaryMessage {
-    fn text(&self) -> String {
+    fn format_summary_message(&self) -> String {
         let filtered = self
             .filtered
             .map_or_else(|| "other".to_string(), |v| v.to_string());
@@ -104,13 +103,32 @@ impl Message for TestsSummaryMessage {
         };
 
         format!(
-            "{}: {} passed, {} failed, {} ignored, {filtered} filtered out{}",
-            style("Tests").bold(),
-            self.passed,
-            self.failed,
-            self.ignored,
-            interrupted
+            "{} passed, {} failed, {} ignored, {filtered} filtered out{interrupted}",
+            self.passed, self.failed, self.ignored,
         )
+    }
+}
+
+#[derive(Serialize)]
+pub struct TestsSummaryMessage {
+    summary: TestsSummary,
+}
+
+impl TestsSummaryMessage {
+    pub const LABEL: &str = "Tests";
+
+    #[must_use]
+    pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
+        Self {
+            summary: TestsSummary::new(summaries, filtered),
+        }
+    }
+}
+
+impl Message for TestsSummaryMessage {
+    fn text(&self) -> String {
+        let styled_label = style(&Self::LABEL).bold().to_string();
+        LabeledMessage::new(&styled_label, &self.summary.format_summary_message()).text()
     }
 
     fn json(&self) -> Value {
@@ -182,6 +200,33 @@ impl Message for LatestBlocksNumbersMessage {
         }
 
         output
+    }
+
+    fn json(&self) -> Value {
+        json!(self)
+    }
+}
+
+#[derive(Serialize)]
+pub struct OverallSummaryMessage {
+    summary: TestsSummary,
+}
+
+impl OverallSummaryMessage {
+    pub const LABEL: &str = "Tests summary";
+
+    #[must_use]
+    pub fn new(summaries: &[TestTargetSummary], filtered: Option<usize>) -> Self {
+        Self {
+            summary: TestsSummary::new(summaries, filtered),
+        }
+    }
+}
+
+impl Message for OverallSummaryMessage {
+    fn text(&self) -> String {
+        let styled_label = style(&Self::LABEL).bold().to_string();
+        LabeledMessage::new(&styled_label, &self.summary.format_summary_message()).text()
     }
 
     fn json(&self) -> Value {

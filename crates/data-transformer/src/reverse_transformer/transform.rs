@@ -2,7 +2,7 @@ use crate::reverse_transformer::types::{
     Enum, Primitive, Sequence, SequenceType, Struct, StructField, Tuple, Type,
 };
 use crate::shared::parsing::{ParseError, parse_expression};
-use crate::shared::path::{GenericArgsExtractionError, SplitResult, split};
+use crate::shared::path::{PathSplitError, SplitResult, split};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{Expr, ExprListParenthesized, ExprPath};
 use conversions::serde::deserialize::{BufferReadError, BufferReader};
@@ -26,7 +26,7 @@ pub enum TransformationError {
     #[error(transparent)]
     ParseError(#[from] ParseError),
     #[error(transparent)]
-    GenericArgsExtractionError(#[from] GenericArgsExtractionError),
+    PathSplitError(#[from] PathSplitError),
 }
 
 /// An error that can occur when trying to transform a primitive type.

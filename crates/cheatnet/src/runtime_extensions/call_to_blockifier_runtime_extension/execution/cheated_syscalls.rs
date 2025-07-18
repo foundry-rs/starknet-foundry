@@ -5,32 +5,32 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 use blockifier::execution::syscalls::hint_processor::{
     SyscallExecutionError, SyscallHintProcessor,
 };
-use blockifier::execution::syscalls::{
-    DeployRequest, DeployResponse, GetBlockHashRequest, GetBlockHashResponse, LibraryCallRequest,
-    SyscallResponse, syscall_base::SyscallResult,
+use blockifier::execution::syscalls::syscall_base::SyscallResult;
+use blockifier::execution::syscalls::vm_syscall_utils::{
+    CallContractRequest, DeployRequest, DeployResponse, EmptyRequest, GetBlockHashRequest,
+    GetBlockHashResponse, GetExecutionInfoResponse, LibraryCallRequest, StorageReadRequest,
+    StorageReadResponse, StorageWriteRequest, StorageWriteResponse, SyscallResponse,
+    SyscallSelector, WriteResponseResult,
 };
 use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
 use blockifier::execution::{
-    execution_utils::ReadOnlySegment,
-    syscalls::{WriteResponseResult, hint_processor::write_segment},
+    execution_utils::ReadOnlySegment, syscalls::hint_processor::write_segment,
 };
 use blockifier::state::errors::StateError;
 use blockifier::{
-    execution::execution_utils::update_remaining_gas,
-    execution::syscalls::{CallContractRequest, hint_processor::create_retdata_segment},
-};
-use blockifier::{
-    execution::{
-        deprecated_syscalls::DeprecatedSyscallSelector,
-        entry_point::{
-            CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
-        },
-        syscalls::{EmptyRequest, GetExecutionInfoResponse},
+    execution::entry_point::{
+        CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
     },
     state::state_api::State,
 };
+use blockifier::{
+    execution::execution_utils::update_remaining_gas,
+    execution::syscalls::hint_processor::create_retdata_segment,
+};
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::vm_core::VirtualMachine;
+use conversions::string::TryFromHexStr;
+use runtime::starknet::constants::TEST_ADDRESS;
 use starknet_api::core::calculate_contract_address;
 use starknet_api::{
     contract_class::EntryPointType,
@@ -38,8 +38,7 @@ use starknet_api::{
     transaction::fields::Calldata,
 };
 
-pub type SyscallSelector = DeprecatedSyscallSelector;
-
+#[expect(clippy::result_large_err)]
 pub fn get_execution_info_syscall(
     _request: EmptyRequest,
     vm: &mut VirtualMachine,
@@ -59,6 +58,7 @@ pub fn get_execution_info_syscall(
 }
 
 // blockifier/src/execution/syscalls/mod.rs:222 (deploy_syscall)
+#[expect(clippy::result_large_err)]
 pub fn deploy_syscall(
     request: DeployRequest,
     vm: &mut VirtualMachine,
@@ -117,6 +117,7 @@ pub fn deploy_syscall(
 }
 
 // blockifier/src/execution/execution_utils.rs:217 (execute_deployment)
+#[expect(clippy::result_large_err)]
 pub fn execute_deployment(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
@@ -148,6 +149,7 @@ pub fn execute_deployment(
 }
 
 // blockifier/src/execution/syscalls/mod.rs:407 (library_call)
+#[expect(clippy::result_large_err)]
 pub fn library_call_syscall(
     request: LibraryCallRequest,
     vm: &mut VirtualMachine,
@@ -181,6 +183,7 @@ pub fn library_call_syscall(
 }
 
 // blockifier/src/execution/syscalls/mod.rs:157 (call_contract)
+#[expect(clippy::result_large_err)]
 pub fn call_contract_syscall(
     request: CallContractRequest,
     vm: &mut VirtualMachine,
@@ -225,7 +228,7 @@ pub fn call_contract_syscall(
     // endregion
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value, clippy::result_large_err)]
 pub fn get_block_hash_syscall(
     request: GetBlockHashRequest,
     _vm: &mut VirtualMachine,
@@ -243,6 +246,76 @@ pub fn get_block_hash_syscall(
     )?;
 
     Ok(GetBlockHashResponse { block_hash })
+}
+
+#[expect(clippy::needless_pass_by_value, clippy::result_large_err)]
+pub fn storage_read(
+    request: StorageReadRequest,
+    _vm: &mut VirtualMachine,
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
+    _remaining_gas: &mut u64,
+) -> SyscallResult<StorageReadResponse> {
+    let original_storage_address = syscall_handler.base.call.storage_address;
+    maybe_modify_storage_address(syscall_handler, cheatnet_state);
+
+    let value = syscall_handler
+        .base
+        .storage_read(request.address)
+        .inspect_err(|_| {
+            // Restore state on error before bubbling up
+            syscall_handler.base.call.storage_address = original_storage_address;
+        })?;
+
+    // Restore the original storage_address
+    syscall_handler.base.call.storage_address = original_storage_address;
+
+    Ok(StorageReadResponse { value })
+}
+
+#[expect(clippy::needless_pass_by_value, clippy::result_large_err)]
+pub fn storage_write(
+    request: StorageWriteRequest,
+    _vm: &mut VirtualMachine,
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
+    _remaining_gas: &mut u64,
+) -> SyscallResult<StorageWriteResponse> {
+    let original_storage_address = syscall_handler.base.call.storage_address;
+    maybe_modify_storage_address(syscall_handler, cheatnet_state);
+
+    syscall_handler
+        .base
+        .storage_write(request.address, request.value)
+        .inspect_err(|_| {
+            // Restore state on error before bubbling up
+            syscall_handler.base.call.storage_address = original_storage_address;
+        })?;
+
+    // Restore the original storage_address
+    syscall_handler.base.call.storage_address = original_storage_address;
+
+    Ok(StorageWriteResponse {})
+}
+
+// This logic is used to modify the storage address to enable using `contract_state_for_testing`
+// inside `interact_with_state` closure cheatcode.
+fn maybe_modify_storage_address(
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
+) {
+    let contract_address = syscall_handler.storage_address();
+    let test_address =
+        TryFromHexStr::try_from_hex_str(TEST_ADDRESS).expect("Failed to parse `TEST_ADDRESS`");
+
+    if contract_address != test_address {
+        return;
+    }
+
+    let cheated_data = cheatnet_state.get_cheated_data(contract_address);
+    if let Some(actual_address) = cheated_data.contract_address {
+        syscall_handler.base.call.storage_address = actual_address;
+    }
 }
 
 #[derive(Debug)]

@@ -16,7 +16,7 @@ use test_case::test_case;
 #[test_case("oz_cairo_0"; "cairo_0_account")]
 #[test_case("oz_cairo_1"; "cairo_1_account")]
 #[test_case("oz"; "oz_account")]
-#[test_case("argent"; "argent_account")]
+#[test_case("ready"; "ready_account")]
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 async fn test_happy_case(account: &str) {
@@ -83,7 +83,7 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
 }
 
 #[tokio::test]
-#[ignore] // TODO: Fix this tests in https://github.com/foundry-rs/starknet-foundry/issues/2351
+#[ignore = "TODO: Fix this tests in https://github.com/foundry-rs/starknet-foundry/issues/2351"]
 async fn test_fail_when_using_starknet_syscall() {
     let script_dir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/misc", Vec::<String>::new());
@@ -400,7 +400,7 @@ async fn test_run_script_twice_with_state_file_enabled() {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "TODO(#3519) find why it was ignored"]
 async fn test_state_file_contains_all_failed_txs() {
     let script_dir = copy_script_directory_to_tempdir(
         SCRIPTS_DIR.to_owned() + "/state_file/",
