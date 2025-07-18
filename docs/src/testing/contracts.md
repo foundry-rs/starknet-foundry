@@ -200,7 +200,7 @@ In this case we need to manually serialize the constructor parameters and pass t
 
 ### Deployment with `deploy_for_test`
 
-`deploy_for_test` is a utility function that simplifies the deployment process by automatically handling serialization of constructor parameters.
+`deploy_for_test` is an utility function that simplifies the deployment process by automatically handling serialization of constructor parameters.
 
 ```rust
 {{#include ../../listings/deployment_with_constructor_args/tests/test_with_deploy_for_test.cairo}}
