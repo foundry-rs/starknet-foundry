@@ -380,7 +380,7 @@ async fn test_json_output_format() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-            {"contract_address":"0x[..]","transaction_hash":"0x[..]"}
+            {"command":"deploy","contract_address":"0x[..]","transaction_hash":"0x[..]"}
             {"links":"contract: https://sepolia.starkscan.co/contract/0x[..]\ntransaction: https://sepolia.starkscan.co/tx/0x[..]\n","title":"deployment"}
             "#},
     );
