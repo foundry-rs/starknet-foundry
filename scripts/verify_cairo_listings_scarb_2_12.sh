@@ -5,5 +5,5 @@ set -xe
 scarb_2_12_packages=("deployment_with_constructor_args")
 
 for package in "${scarb_2_12_packages[@]}"; do
-    (cd "./docs/listings/$d" && scarb build);
+    (cd "./docs/listings/$package" && scarb build);
 done
