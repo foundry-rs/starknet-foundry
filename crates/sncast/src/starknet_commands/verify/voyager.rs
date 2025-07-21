@@ -153,6 +153,10 @@ fn package_source_files(
                     if path_str.contains("/test") || path_str.contains("\\test") {
                         return false;
                     }
+                    // Also skip files ending with "_test.cairo"
+                    if path_str.ends_with("_test.cairo") {
+                        return false;
+                    }
                     return true;
                 }
 
