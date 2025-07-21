@@ -518,7 +518,7 @@ async fn test_error_when_neither_network_nor_url_provided() {
 
 #[tokio::test]
 async fn test_test_files_flag_includes_test_files() {
-    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map_with_tests");
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
     let mock_server = MockServer::start().await;
     let rpc_response = json!({
@@ -548,7 +548,7 @@ async fn test_test_files_flag_includes_test_files() {
         .and(path(format!("class-verify/{class_hash:#064x}")))
         .and(body_partial_json(json!({
             "name": "Map",
-            "package_name": "map_with_tests"
+            "package_name": "map"
         })))
         .and(|req: &Request| {
             if let Ok(body_str) = std::str::from_utf8(&req.body) {
@@ -596,7 +596,7 @@ async fn test_test_files_flag_includes_test_files() {
 
 #[tokio::test]
 async fn test_without_test_files_flag_excludes_test_files() {
-    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map_with_tests");
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
     let mock_server = MockServer::start().await;
     let rpc_response = json!({
@@ -626,7 +626,7 @@ async fn test_without_test_files_flag_excludes_test_files() {
         .and(path(format!("class-verify/{class_hash:#064x}")))
         .and(body_partial_json(json!({
             "name": "Map",
-            "package_name": "map_with_tests"
+            "package_name": "map"
         })))
         .and(|req: &Request| {
             if let Ok(body_str) = std::str::from_utf8(&req.body) {
