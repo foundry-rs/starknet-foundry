@@ -57,11 +57,16 @@ pub fn prepare_account_json(
     class_hash: Option<Felt>,
     salt: Option<Felt>,
 ) -> serde_json::Value {
+    // TODO(#3556): Once `Argent` variant is deleted, use `account_type` directly
+    let saved_account_type = match account_type {
+        AccountType::Argent => AccountType::Ready,
+        _ => account_type,
+    };
     let mut account_json = json!({
         "private_key": format!("{:#x}", private_key.secret_scalar()),
         "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
         "address": format!("{address:#x}"),
-        "type": format!("{account_type}").to_lowercase().replace("openzeppelin", "open_zeppelin"),
+        "type": format!("{saved_account_type}").to_lowercase().replace("openzeppelin", "open_zeppelin"),
         "deployed": deployed,
         "legacy": legacy,
     });
@@ -209,6 +214,7 @@ pub async fn account(
                 &config.accounts_file,
                 &provider,
                 &import,
+                ui,
             )
             .await;
 
@@ -248,6 +254,7 @@ pub async fn account(
                 &provider,
                 chain_id,
                 &create,
+                ui,
             )
             .await;
 

@@ -5,7 +5,6 @@ use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use conversions::serde::serialize::CairoSerialize;
 use foundry_ui::UI;
-use helpers::braavos::check_braavos_account_compatibility;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::RngCore;
 use rand::rngs::OsRng;
@@ -56,6 +55,7 @@ pub enum AccountType {
     #[serde(rename = "open_zeppelin")]
     OpenZeppelin,
     Argent,
+    Ready,
     Braavos,
 }
 
@@ -66,6 +66,7 @@ impl FromStr for AccountType {
         match s {
             "open_zeppelin" | "open-zeppelin" | "oz" => Ok(AccountType::OpenZeppelin),
             "argent" => Ok(AccountType::Argent),
+            "ready" => Ok(AccountType::Ready),
             "braavos" => Ok(AccountType::Braavos),
             account_type => Err(anyhow!("Invalid account type = {account_type}")),
         }
@@ -255,13 +256,6 @@ pub async fn get_account<'a>(
     } else {
         get_account_data_from_accounts_file(account, chain_id, accounts_file)?
     };
-
-    // Braavos accounts before v1.2.0 are not compatible with starknet >= 0.13.4
-    // For more, read https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
-    if let Some(class_hash) = account_data.class_hash {
-        check_braavos_account_compatibility(class_hash)?;
-    }
-
     let account = build_account(account_data, chain_id, provider).await?;
 
     Ok(account)
@@ -385,7 +379,7 @@ pub fn get_account_data_from_keystore(
         .and_then(|account_type| account_type.parse().ok());
 
     let public_key = match account_type.context("Failed to get type key")? {
-        AccountType::Argent => parse_to_felt("/variant/owner"),
+        AccountType::Argent | AccountType::Ready => parse_to_felt("/variant/owner"),
         AccountType::OpenZeppelin => parse_to_felt("/variant/public_key"),
         AccountType::Braavos => get_braavos_account_public_key(&account_info)?,
     }

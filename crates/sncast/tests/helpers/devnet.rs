@@ -1,7 +1,7 @@
 use crate::helpers::constants::{FORK_BLOCK_NUMBER, SEED, SEPOLIA_RPC_URL, URL};
 use crate::helpers::fixtures::{
-    deploy_argent_account, deploy_braavos_account, deploy_cairo_0_account, deploy_keystore_account,
-    deploy_latest_oz_account,
+    deploy_braavos_account, deploy_cairo_0_account, deploy_keystore_account,
+    deploy_latest_oz_account, deploy_ready_account,
 };
 use ctor::{ctor, dtor};
 use std::net::TcpStream;
@@ -72,7 +72,7 @@ fn start_devnet() {
     rt.block_on(deploy_keystore_account());
     rt.block_on(deploy_cairo_0_account());
     rt.block_on(deploy_latest_oz_account());
-    rt.block_on(deploy_argent_account());
+    rt.block_on(deploy_ready_account());
     rt.block_on(deploy_braavos_account());
 }
 
