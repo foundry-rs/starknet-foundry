@@ -478,10 +478,19 @@ pub async fn check_if_legacy_contract(
     address: Felt,
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<bool> {
-    let contract_class = provider
-        .get_class(BlockId::Tag(PreConfirmed), class_hash.unwrap_or(address))
-        .await
-        .map_err(handle_rpc_error)?;
+    let contract_class = match class_hash {
+        Some(class_hash) => {
+            provider
+                .get_class(BlockId::Tag(PreConfirmed), class_hash)
+                .await
+        }
+        None => {
+            provider
+                .get_class_at(BlockId::Tag(PreConfirmed), address)
+                .await
+        }
+    }
+    .map_err(handle_rpc_error)?;
 
     Ok(is_legacy_contract(&contract_class))
 }
