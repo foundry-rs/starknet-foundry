@@ -145,6 +145,7 @@ enum Commands {
     Verify(Verify),
 
     /// Generate completions script
+    // TODO(#3560): Remove the `completion` alias
     #[command(alias = "completion")]
     Completions(Completions),
 
@@ -492,7 +493,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         }
 
         Commands::Completions(completions) => {
-            generate_completions(completions.shell, &mut Cli::command())?;
+            generate_completions(completions.shell, &mut Cli::command(), ui)?;
             Ok(())
         }
 

@@ -108,6 +108,7 @@ enum ForgeSubcommand {
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
     /// Generate completions script
+    // TODO(#3560): Remove the `completion` alias
     #[command(alias = "completion")]
     Completions(Completions),
 }
@@ -307,7 +308,7 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Completions(completions) => {
-            generate_completions(completions.shell, &mut Cli::command())?;
+            generate_completions(completions.shell, &mut Cli::command(), &ui)?;
             Ok(ExitStatus::Success)
         }
     }

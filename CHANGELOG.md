@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Deprecated
+
+- The `snforge completion` command. Go with `snforge completions` instead
+
 #### Fixed
 
 - Passing a cheatcode span of 0 was incorrectly treated as `CheatSpan::Indefinite`. This is now resolved by making `CheatSpan::TargetCalls` accept `NonZero<usize>` instead of just `usize` in `snforge_std`.
@@ -26,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Deprecated
 
 - `argent` option for `--type` flag in `account create` and `account import` commands. Use `ready` instead
+- The `sncast completion` command. Go with `sncast completions` instead
 
 ## [0.46.0] - 2025-07-09
 
