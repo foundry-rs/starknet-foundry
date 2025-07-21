@@ -15,9 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Added
+
+- `ready` option for `--type` flag in `account create` and `account import` commands (Argent wallet has rebranded as Ready)
+
 #### Changed
 
+- Braavos accounts with all class hashes are now supported 
 - The supported RPC version is now 0.9.0
+
+#### Deprecated
+
+- `argent` option for `--type` flag in `account create` and `account import` commands. Use `ready` instead
 
 ## [0.46.0] - 2025-07-09
 

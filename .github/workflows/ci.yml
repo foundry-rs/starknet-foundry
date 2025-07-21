@@ -159,6 +159,22 @@ jobs:
 
       - run: cargo test --package forge --features scarb_since_2_10 sierra_gas
 
+  # TODO(#3212): Closures in Cairo are fully supported since version 2.11
+  test-interact-with-state:
+    name: Test interact with state
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: "2.11.0"
+      - uses: software-mansion/setup-universal-sierra-compiler@v1
+
+      - run: cargo test --release --package forge --features interact-with-state --test main integration::interact_with_state
+      - run: cargo test --release --package forge --features interact-with-state --test main e2e::running::test_interact_with_state
+
   test-forge-runner:
     name: Test Forge Runner
     runs-on: ubuntu-latest

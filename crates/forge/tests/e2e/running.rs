@@ -1248,3 +1248,31 @@ fn dispatchers() {
         "},
     );
 }
+
+#[test]
+#[cfg_attr(not(feature = "interact-with-state"), ignore)]
+fn test_interact_with_state() {
+    let temp = setup_package("contract_state");
+    let output = test_runner(&temp).assert().code(0);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+    [..]Compiling[..]
+    [..]Finished[..]
+
+    Collected 8 test(s) from contract_state package
+    Running 0 test(s) from src/
+    Running 8 test(s) from tests/
+    [PASS] contract_state_integrationtest::test_storage_node::test_storage_node [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_state_return [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_state_internal_function [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_initialized_state [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_state [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_state_map [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_state_vec [..]
+    [PASS] contract_state_integrationtest::test_fork::test_fork_contract [..]
+    Tests: 8 passed, 0 failed, 0 ignored, 0 filtered out
+    "},
+    );
+}
