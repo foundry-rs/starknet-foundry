@@ -40,7 +40,7 @@ impl VerificationInterface<'_> for WalnutVerificationInterface {
     ) -> Result<VerifyResponse> {
         if test_files {
             return Err(anyhow::anyhow!(
-                "The --test-files option is not supported by the walnut verifier"
+                "The `--test-files` option is not supported by the walnut verifier"
             ));
         }
         // Read all files name along with their contents in a JSON format
