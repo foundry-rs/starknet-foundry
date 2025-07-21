@@ -474,3 +474,38 @@ async fn test_worskpaces_package_no_contract() {
         ),
     );
 }
+
+#[tokio::test]
+async fn test_test_files_flag_not_supported() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "walnut",
+        "--network",
+        "sepolia",
+        "--test-files",
+        "--confirm-verification",
+    ];
+
+    let snapbox = runner(&args).current_dir(contract_path.path());
+
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        formatdoc!(
+            r"
+        Command: verify
+        Error: The --test-files option is not supported by the walnut verifier
+        "
+        ),
+    );
+}
