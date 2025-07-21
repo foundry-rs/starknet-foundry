@@ -504,7 +504,7 @@ async fn test_test_files_flag_not_supported() {
         formatdoc!(
             r"
         Command: verify
-        Error: The --test-files option is not supported by the walnut verifier
+        Error: The `--test-files` option is not supported by the walnut verifier
         "
         ),
     );
