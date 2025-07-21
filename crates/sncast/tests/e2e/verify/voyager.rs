@@ -8,7 +8,7 @@ use serde_json::json;
 use shared::test_utils::output_assert::assert_stderr_contains;
 use starknet_types_core::felt::Felt;
 use wiremock::matchers::{body_partial_json, method, path};
-use wiremock::{Mock, MockServer, ResponseTemplate};
+use wiremock::{Mock, MockServer, Request, ResponseTemplate};
 
 #[tokio::test]
 async fn test_happy_case_contract_address() {
@@ -550,6 +550,20 @@ async fn test_test_files_flag_includes_test_files() {
             "name": "Map",
             "package_name": "map_with_tests"
         })))
+        .and(|req: &Request| {
+            if let Ok(body_str) = std::str::from_utf8(&req.body) {
+                if let Ok(body_json) = serde_json::from_str::<serde_json::Value>(body_str) {
+                    if let Some(files) = body_json.get("files") {
+                        if let Some(files_obj) = files.as_object() {
+                            // Verify that test files ARE present
+                            return files_obj.contains_key("src/test_helpers.cairo")
+                                && files_obj.contains_key("src/tests.cairo");
+                        }
+                    }
+                }
+            }
+            false
+        })
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
         .expect(1)
         .mount(&mock_server)
@@ -614,6 +628,20 @@ async fn test_without_test_files_flag_excludes_test_files() {
             "name": "Map",
             "package_name": "map_with_tests"
         })))
+        .and(|req: &Request| {
+            if let Ok(body_str) = std::str::from_utf8(&req.body) {
+                if let Ok(body_json) = serde_json::from_str::<serde_json::Value>(body_str) {
+                    if let Some(files) = body_json.get("files") {
+                        if let Some(files_obj) = files.as_object() {
+                            // Verify that test files are NOT present
+                            return !files_obj.contains_key("src/test_helpers.cairo")
+                                && !files_obj.contains_key("src/tests.cairo");
+                        }
+                    }
+                }
+            }
+            false
+        })
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({ "job_id": job_id })))
         .expect(1)
         .mount(&mock_server)
