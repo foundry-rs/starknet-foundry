@@ -8,7 +8,7 @@ use shared::test_utils::output_assert::assert_stderr_contains;
 fn test_happy_case() {
     for variant in Shell::value_variants() {
         let shell = variant.to_string();
-        let args = vec!["completion", shell.as_str()];
+        let args = vec!["completions", shell.as_str()];
 
         let snapbox = runner(&args);
 
@@ -23,7 +23,7 @@ fn test_generate_completions_unsupported_shell() {
     unsafe {
         std::env::set_var("SHELL", "/bin/unsupported");
     }
-    let args = vec!["completion"];
+    let args = vec!["completions"];
 
     let snapbox = runner(&args);
 

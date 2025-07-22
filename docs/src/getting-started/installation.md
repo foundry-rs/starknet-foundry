@@ -242,18 +242,18 @@ Add the following to `~/.bashrc` or `~/.bash_profile` (macOS):
 ```bash
 # BEGIN FOUNDRY COMPLETIONS
 _snforge() {
-  if ! snforge completion bash >/dev/null 2>&1; then
+  if ! snforge completions bash >/dev/null 2>&1; then
     return 0
   fi
-  source <(snforge completion bash)
+  source <(snforge completions bash)
   _snforge "$@"
 }
 
 _sncast() {
-  if ! sncast completion bash >/dev/null 2>&1; then
+  if ! sncast completions bash >/dev/null 2>&1; then
     return 0
   fi
-  source <(sncast completion bash)
+  source <(sncast completions bash)
   _sncast "$@"
 }
 
@@ -274,18 +274,18 @@ Add the following to `~/.zshrc`:
 ```bash
 # BEGIN FOUNDRY COMPLETIONS
 _snforge() {
-  if ! snforge completion zsh >/dev/null 2>&1; then
+  if ! snforge completions zsh >/dev/null 2>&1; then
     return 0
   fi
-  eval "$(snforge completion zsh)"
+  eval "$(snforge completions zsh)"
   _snforge "$@"
 }
 
 _sncast() {
-  if ! sncast completion zsh >/dev/null 2>&1; then
+  if ! sncast completions zsh >/dev/null 2>&1; then
     return 0
   fi
-  eval "$(sncast completion zsh)"
+  eval "$(sncast completions zsh)"
   _sncast "$@"
 }
 
@@ -297,7 +297,7 @@ compdef _sncast sncast
 
 > 📝 **Note**
 >
-> If you already have `autoload -Uz compinit && compinit` in your `~/.zshrc` (for example, from another completion such as `scarb`), do not add it again. Only one call is needed.
+> If you already have `autoload -Uz compinit && compinit` in your `~/.zshrc` (for example, from another completions such as `scarb`), do not add it again. Only one call is needed.
 
 Run `source ~/.zshrc`, or open a new terminal session to apply the changes.
 
@@ -313,18 +313,18 @@ Add the following to `~/.config/fish/config.fish`:
 ```bash
 # BEGIN FOUNDRY COMPLETIONS
 function _snforge
-  if not snforge completion fish >/dev/null 2>&1
+  if not snforge completions fish >/dev/null 2>&1
     return 0
   end
-  source (snforge completion fish | psub)
+  source (snforge completions fish | psub)
   complete -C (commandline -cp)
 end
 
 function _sncast
-  if not sncast completion fish >/dev/null 2>&1
+  if not sncast completions fish >/dev/null 2>&1
     return 0
   end
-  source (sncast completion fish | psub)
+  source (sncast completions fish | psub)
   complete -C (commandline -cp)
 end
 
@@ -345,11 +345,11 @@ Add the following to your `~/.config/elvish/rc.elv` file:
 ```bash
 # BEGIN FOUNDRY COMPLETIONS
 try {
-  eval (snforge completion elvish | slurp)
+  eval (snforge completions elvish | slurp)
 } catch { return }
 
 try {
-  eval (sncast completion elvish | slurp)
+  eval (sncast completions elvish | slurp)
 } catch { return }
 # END FOUNDRY COMPLETIONS
 ```
@@ -372,11 +372,11 @@ Add the following lines to the opened file:
 ```bash
 # BEGIN FOUNDRY COMPLETIONS
 try {
-    Invoke-Expression -Command $(snforge completion powershell | Out-String)
+    Invoke-Expression -Command $(snforge completions powershell | Out-String)
 } catch {}
 
 try {
-    Invoke-Expression -Command $(sncast completion powershell | Out-String)
+    Invoke-Expression -Command $(sncast completions powershell | Out-String)
 } catch {}
 # END FOUNDRY COMPLETIONS
 ```

@@ -10,7 +10,7 @@ fn test_happy_case() {
     for variant in Shell::value_variants() {
         let shell = variant.to_string();
         let snapbox = Command::new(snforge_test_bin_path())
-            .arg("completion")
+            .arg("completions")
             .arg(shell.as_str());
 
         snapbox.assert().success();
