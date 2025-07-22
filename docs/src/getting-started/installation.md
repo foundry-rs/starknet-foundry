@@ -358,41 +358,6 @@ Run `eval (slurp <  ~/.config/elvish/rc.elv)`, or open a new terminal session to
 
 </details>
 
-<details>
-  <summary><strong>PowerShell</strong></summary>
-Open your profile script with:
-
-```bash
-mkdir -Path (Split-Path -Parent $profile) -ErrorAction SilentlyContinue
-notepad $profile
-```
-
-Add the following lines to the opened file:
-
-```bash
-# BEGIN FOUNDRY COMPLETIONS
-try {
-    Invoke-Expression -Command $(snforge completions powershell | Out-String)
-} catch {}
-
-try {
-    Invoke-Expression -Command $(sncast completions powershell | Out-String)
-} catch {}
-# END FOUNDRY COMPLETIONS
-```
-
-Start a new PowerShell session to apply the changes.
-
-> ⚠️ **Warning**
->
-> At the start of the PowerShell session, you may encounter an error due to a restrictive `ExecutionPolicy`. You can resolve this issue by running the following command:
->
-> ```bash
-> Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-> ```
-
-</details>
-
 ## Universal-Sierra-Compiler update
 
 If you would like to bump the USC manually (e.g. when the new Sierra version is released) you can do it by running:

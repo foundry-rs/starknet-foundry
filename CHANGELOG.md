@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Deprecated
 
-- The `snforge completion` command. Go with `snforge completions` instead
+- The `snforge completion` command. Use `snforge completions` instead
 
 #### Fixed
 
@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Deprecated
 
 - `argent` option for `--type` flag in `account create` and `account import` commands. Use `ready` instead
-- The `sncast completion` command. Go with `sncast completions` instead
+- The `sncast completion` command. Use `sncast completions` instead
 
 ## [0.46.0] - 2025-07-09
 

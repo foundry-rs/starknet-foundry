@@ -6,7 +6,6 @@
 * [`snforge clean`](./snforge/clean.md)
 * [`snforge clean-cache`](./snforge/clean-cache.md)
 * [`snforge check-requirements`](./snforge/check-requirements.md)
-* [`snforge check-requirements`](./snforge/check-requirements.md)
 * [`snforge completions`](./snforge/completions.md)
 
 
