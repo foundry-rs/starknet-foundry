@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Passing a cheatcode span of 0 was incorrectly treated as `CheatSpan::Indefinite`. This is now resolved by making `CheatSpan::TargetCalls` accept `NonZero<usize>` instead of just `usize` in `snforge_std`.
 
+#### Removed
+
+- The deprecated command `snforge init`. Use `snforge new` to initialize new `Forge` projects
+
 ### Cast
 
 #### Added
