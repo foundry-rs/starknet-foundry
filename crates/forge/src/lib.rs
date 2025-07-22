@@ -6,8 +6,8 @@ use derive_more::Display;
 use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceVerbosity;
 use forge_runner::forge_config::ForgeTrackedResource;
-use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
+use foundry_ui::{Message, UI};
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
@@ -308,7 +308,18 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
             Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Completions(completions) => {
-            generate_completions(completions.shell, &mut Cli::command(), &ui)?;
+            generate_completions(completions.shell, &mut Cli::command())?;
+
+            // TODO(#3560): Remove this warning when the `completion` alias is removed
+            if std::env::args().nth(1).as_deref() == Some("completion") {
+                let message = &WarningMessage::new(
+                    "Command `snforge completion` is deprecated and will be removed in the future. Please use `snforge completions` instead.",
+                );
+
+                // `#` is required since `snforge completions` generates a script and the output is used directly
+                ui.println(&format!("# {}", message.text()));
+            }
+
             Ok(ExitStatus::Success)
         }
     }
