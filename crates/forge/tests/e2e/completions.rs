@@ -2,6 +2,7 @@ use crate::e2e::common::runner::snforge_test_bin_path;
 use clap::ValueEnum;
 use clap_complete::Shell;
 use indoc::formatdoc;
+use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::cmd::Command;
 
@@ -37,4 +38,26 @@ fn test_generate_completions_unsupported_shell() {
             "
         ),
     );
+}
+
+#[test]
+fn test_deprecated_alias() {
+    for variant in Shell::value_variants() {
+        let shell = variant.to_string();
+
+        let output = Command::new(snforge_test_bin_path())
+            .arg("completion")
+            .arg(shell.as_str())
+            .assert()
+            .success();
+
+        assert_stdout_contains(
+            output,
+            indoc!(
+                r"
+                # [WARNING] Command `snforge completion` is deprecated and will be removed in the future. Please use `snforge completions` instead.
+                "
+            ),
+        );
+    }
 }
