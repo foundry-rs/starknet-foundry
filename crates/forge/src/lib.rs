@@ -10,7 +10,7 @@ use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
-use scarb_ui::args::{FeaturesSpec, PackagesFilter};
+use scarb_ui::args::{FeaturesSpec, PackagesFilter, ProfileSpec};
 use semver::Version;
 use shared::auto_completions::{Completion, generate_completions};
 use std::cell::RefCell;
@@ -160,9 +160,6 @@ pub struct TestArgs {
     #[arg(short = 'x', long)]
     exit_first: bool,
 
-    #[command(flatten)]
-    packages_filter: PackagesFilter,
-
     /// Number of fuzzer runs
     #[arg(short = 'r', long)]
     fuzzer_runs: Option<NonZeroU32>,
@@ -205,10 +202,6 @@ pub struct TestArgs {
     #[arg(long)]
     max_n_steps: Option<u32>,
 
-    /// Specify features to enable
-    #[command(flatten)]
-    pub features: FeaturesSpec,
-
     /// Build contracts separately in the scarb starknet contract target
     #[arg(long)]
     no_optimization: bool,
@@ -220,6 +213,21 @@ pub struct TestArgs {
     /// Additional arguments for cairo-coverage or cairo-profiler
     #[arg(last = true)]
     additional_args: Vec<OsString>,
+
+    #[command(flatten)]
+    scarb_args: ScarbArgs,
+}
+
+#[derive(Parser, Debug)]
+pub struct ScarbArgs {
+    #[command(flatten)]
+    packages_filter: PackagesFilter,
+
+    #[command(flatten)]
+    features: FeaturesSpec,
+
+    #[command(flatten)]
+    profile: ProfileSpec,
 }
 
 #[derive(ValueEnum, Display, Debug, Clone)]
