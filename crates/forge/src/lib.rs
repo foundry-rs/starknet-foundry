@@ -6,13 +6,13 @@ use derive_more::Display;
 use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceVerbosity;
 use forge_runner::forge_config::ForgeTrackedResource;
-use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
+use foundry_ui::{Message, UI};
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use semver::Version;
-use shared::auto_completions::{Completion, generate_completions};
+use shared::auto_completions::{Completions, generate_completions};
 use std::cell::RefCell;
 use std::ffi::OsString;
 use std::process::Command;
@@ -107,8 +107,10 @@ enum ForgeSubcommand {
     CleanCache {},
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
-    /// Generate completion script
-    Completion(Completion),
+    /// Generate completions script
+    // TODO(#3560): Remove the `completion` alias
+    #[command(alias = "completion")]
+    Completions(Completions),
 }
 
 #[derive(Parser, Debug)]
@@ -305,8 +307,19 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
             check_requirements(true, ForgeTrackedResource::default(), &ui)?;
             Ok(ExitStatus::Success)
         }
-        ForgeSubcommand::Completion(completion) => {
-            generate_completions(completion.shell, &mut Cli::command())?;
+        ForgeSubcommand::Completions(completions) => {
+            generate_completions(completions.shell, &mut Cli::command())?;
+
+            // TODO(#3560): Remove this warning when the `completion` alias is removed
+            if std::env::args().nth(1).as_deref() == Some("completion") {
+                let message = &WarningMessage::new(
+                    "Command `snforge completion` is deprecated and will be removed in the future. Please use `snforge completions` instead.",
+                );
+
+                // `#` is required since `snforge completions` generates a script and the output is used directly
+                ui.println(&format!("# {}", message.text()));
+            }
+
             Ok(ExitStatus::Success)
         }
     }
