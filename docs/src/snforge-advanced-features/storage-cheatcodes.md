@@ -9,6 +9,10 @@ In order to obtain the variable address that you'd like to write to, or read fro
 - `map_entry_address` function in tandem with `selector!` - for key-value pair of a map variable
 - `starknet::storage_access::storage_address_from_base`
 
+> 📝 **Note**
+>
+> For more user friendly access to storage, consider using the [`interact_with_state`](../appendix/cheatcodes/interact_with_state.md) cheatcode.
+
 ## Example: Felt-only storage
 This example uses only felts for simplicity.
 

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- `interact_with_state` cheatcode to enable effective use of `contract_state_for_testing` in snforge tests
+
 #### Deprecated
 
 - The `snforge completion` command. Use `snforge completions` instead
