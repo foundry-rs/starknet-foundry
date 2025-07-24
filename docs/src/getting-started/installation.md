@@ -237,85 +237,125 @@ Shell completions allow your terminal to suggest and automatically complete comm
 <details>
   <summary><strong>Bash</strong></summary>
 
-Completions are configured by doing the following:
+Add the following to `~/.bashrc` or `~/.bash_profile` (macOS):
+
 ```bash
-mkdir -p "${ASDF_DATA_DIR:-$HOME/.asdf}/completions"
-sncast completion bash > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/sncast.bash"
-snforge completion bash > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/snforge.bash"
+# BEGIN FOUNDRY COMPLETIONS
+_snforge() {
+  if ! snforge completions bash >/dev/null 2>&1; then
+    return 0
+  fi
+  source <(snforge completions bash)
+  _snforge "$@"
+}
+
+_sncast() {
+  if ! sncast completions bash >/dev/null 2>&1; then
+    return 0
+  fi
+  source <(sncast completions bash)
+  _sncast "$@"
+}
+
+complete -o default -F _snforge snforge
+complete -o default -F _sncast sncast
+# END FOUNDRY COMPLETIONS
 ```
 
-Then add the following to your `.bash`:
-```bash
-# source completion scripts
-. "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/sncast.bash"     
-. "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/snforge.bash"
-```
+Run `source ~/.bashrc` (or `source ~/.bash_profile`), or open a new terminal session to apply the changes.
 
 </details>
 
 <details>
   <summary><strong>ZSH</strong></summary>
 
-Completions are configured by doing the following:
+Add the following to `~/.zshrc`:
+
 ```bash
-mkdir -p "${ASDF_DATA_DIR:-$HOME/.asdf}/completions"
-sncast completion zsh > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/_sncast"
-snforge completion zsh > "${ASDF_DATA_DIR:-$HOME/.asdf}/completions/_snforge"
+# BEGIN FOUNDRY COMPLETIONS
+_snforge() {
+  if ! snforge completions zsh >/dev/null 2>&1; then
+    return 0
+  fi
+  eval "$(snforge completions zsh)"
+  _snforge "$@"
+}
+
+_sncast() {
+  if ! sncast completions zsh >/dev/null 2>&1; then
+    return 0
+  fi
+  eval "$(sncast completions zsh)"
+  _sncast "$@"
+}
+
+autoload -Uz compinit && compinit
+compdef _snforge snforge
+compdef _sncast sncast
+# END FOUNDRY COMPLETIONS
 ```
 
-Then add the following to your `.zshrc`:
-```bash
-# append completions to fpath
-fpath=(${ASDF_DATA_DIR:-$HOME/.asdf}/completions $fpath)
-# initialise completions with ZSH's compinit
-autoload -Uz compinit && compinit
-```
-This is to enable autocompletion in [ZSH](https://wiki.archlinux.org/title/Zsh#Command_completion).
+> 📝 **Note**
+>
+> If you already have `autoload -Uz compinit && compinit` in your `~/.zshrc` (for example, from another completions such as `scarb`), do not add it again. Only one call is needed.
+
+Run `source ~/.zshrc`, or open a new terminal session to apply the changes.
+
+For more information about Zsh completions, see the [Zsh documentation](https://zsh.sourceforge.io/Doc/Release/Completion-System.html) or the [Arch Wiki](https://wiki.archlinux.org/title/Zsh#Command_completion).
 
 </details>
 
 <details>
   <summary><strong>Fish</strong></summary>
 
-Completions are configured by doing the following:
+Add the following to `~/.config/fish/config.fish`:
+
 ```bash
-sncast completion fish > ~/.config/fish/completions/sncast.fish
-snforge completion fish > ~/.config/fish/completions/snforge.fish
+# BEGIN FOUNDRY COMPLETIONS
+function _snforge
+  if not snforge completions fish >/dev/null 2>&1
+    return 0
+  end
+  source (snforge completions fish | psub)
+  complete -C (commandline -cp)
+end
+
+function _sncast
+  if not sncast completions fish >/dev/null 2>&1
+    return 0
+  end
+  source (sncast completions fish | psub)
+  complete -C (commandline -cp)
+end
+
+complete -c snforge -f -a '(_snforge)'
+complete -c sncast -f -a '(_sncast)'
+# END FOUNDRY COMPLETIONS
 ```
+
+Run `source ~/.config/fish/config.fish`, or open a new terminal session to apply the changes.
 
 </details>
 
 <details>
   <summary><strong>Elvish</strong></summary>
 
-Completions are configured by doing the following:
+Add the following to your `~/.config/elvish/rc.elv` file:
 
 ```bash
-sncast completion elvish >> ~/.config/elvish/rc.elv
-snforge completion elvish >> ~/.config/elvish/rc.elv
+# BEGIN FOUNDRY COMPLETIONS
+try {
+  eval (snforge completions elvish | slurp)
+} catch { return }
+
+try {
+  eval (sncast completions elvish | slurp)
+} catch { return }
+# END FOUNDRY COMPLETIONS
 ```
 
-</details>
+Run `eval (slurp <  ~/.config/elvish/rc.elv)`, or open a new terminal session to apply the changes.
 
-<details>
-  <summary><strong>PowerShell</strong></summary>
-Open your profile script with:
-
-```bash
-mkdir -Path (Split-Path -Parent $profile) -ErrorAction SilentlyContinue
-notepad $profile
-```
-
-Add the line and save the file:
-```bash
-Invoke-Expression -Command $(sncast completion powershell | Out-String)
-Invoke-Expression -Command $(snforge completion powershell | Out-String)
-``` 
-At the start of the PowerShell session, you may encounter an error due to a restrictive `ExecutionPolicy`. You can resolve this issue by running the following command:
-
-```bash
-Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
 </details>
 
 ## Universal-Sierra-Compiler update

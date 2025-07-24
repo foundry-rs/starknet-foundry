@@ -11,8 +11,9 @@ use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand};
 use configuration::load_config;
 use data_transformer::transform;
+use foundry_ui::components::warning::WarningMessage;
 use foundry_ui::{Message, UI};
-use shared::auto_completions::{Completion, generate_completions};
+use shared::auto_completions::{Completions, generate_completions};
 use sncast::helpers::config::{combine_cast_configs, get_global_config_path};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
@@ -144,8 +145,10 @@ enum Commands {
     /// Verify a contract
     Verify(Verify),
 
-    /// Generate completion script
-    Completion(Completion),
+    /// Generate completions script
+    // TODO(#3560): Remove the `completion` alias
+    #[command(alias = "completion")]
+    Completions(Completions),
 
     /// Utility commands
     Utils(Utils),
@@ -490,8 +493,19 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             Ok(())
         }
 
-        Commands::Completion(completion) => {
-            generate_completions(completion.shell, &mut Cli::command())?;
+        Commands::Completions(completions) => {
+            generate_completions(completions.shell, &mut Cli::command())?;
+
+            // TODO(#3560): Remove this warning when the `completion` alias is removed
+            if std::env::args().nth(1).as_deref() == Some("completion") {
+                let message = &WarningMessage::new(
+                    "Command `sncast completion` is deprecated and will be removed in the future. Please use `sncast completions` instead.",
+                );
+
+                // `#` is required since `sncast completion` generates a script and the output is used directly
+                ui.println(&format!("# {}", message.text()));
+            }
+
             Ok(())
         }
 
