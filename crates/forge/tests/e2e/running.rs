@@ -773,7 +773,11 @@ fn with_exit_first() {
         ))
         .unwrap();
 
-    let output = test_runner(&temp).assert().code(1);
+    let output = test_runner(&temp)
+        .args(["--max-n-steps", "10000000"])
+        .assert()
+        .code(1);
+    
     assert_stdout_contains(
         output,
         indoc! {r"
@@ -801,7 +805,11 @@ fn with_exit_first() {
 fn with_exit_first_flag() {
     let temp = setup_package("exit_first");
 
-    let output = test_runner(&temp).arg("--exit-first").assert().code(1);
+    let output = test_runner(&temp)
+        .arg("--exit-first")
+        .args(["--max-n-steps", "10000000"])
+        .assert()
+        .code(1);
 
     assert_stdout_contains(
         output,
