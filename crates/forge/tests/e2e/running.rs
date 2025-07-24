@@ -777,7 +777,7 @@ fn with_exit_first() {
         .args(["--max-n-steps", "10000000"])
         .assert()
         .code(1);
-    
+
     assert_stdout_contains(
         output,
         indoc! {r"
