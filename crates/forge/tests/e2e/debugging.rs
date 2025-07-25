@@ -94,7 +94,7 @@ fn test_output(trace_message_fn: fn(&str) -> String) -> String {
         note: run with `SNFORGE_BACKTRACE=1` environment variable to display a backtrace
         {debugging_trace_fail}
 
-        [PASS] trace_info_integrationtest::test_trace::test_debugging_trace_success (l1_gas: ~[..], l1_data_gas: ~[..], l2_gas: ~[..])
+        [PASS] trace_info_integrationtest::test_trace::test_debugging_trace_success
         {debugging_trace_pass}
 
         Running 0 test(s) from src/

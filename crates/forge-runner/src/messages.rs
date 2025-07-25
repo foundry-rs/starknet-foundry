@@ -64,7 +64,13 @@ impl TestResultMessage {
                     test_statistics: FuzzingStatistics { runs },
                     gas_info,
                     ..
-                } => format!(" (runs: {runs}, {gas_info})"),
+                } => {
+                    if scarb_profile == "release" {
+                        format!(" (runs: {runs}, {gas_info})")
+                    } else {
+                        format!(" (runs: {runs})")
+                    }
+                }
                 TestCaseSummary::Failed {
                     fuzzer_args,
                     test_statistics: FuzzingStatistics { runs },

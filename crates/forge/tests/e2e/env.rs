@@ -25,7 +25,7 @@ fn env_var_reading() {
 
         Collected 1 test(s) from env package
         Running 1 test(s) from src/
-        [PASS] env::tests::reading_env_vars [..]
+        [PASS] env::tests::reading_env_vars
         Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
         "},
     );
