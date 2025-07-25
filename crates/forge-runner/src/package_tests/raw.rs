@@ -8,4 +8,5 @@ pub struct TestTargetRaw {
     pub sierra_program: ProgramArtifact,
     pub sierra_program_path: Utf8PathBuf,
     pub tests_location: TestTargetLocation,
+    pub scarb_profile: String,
 }

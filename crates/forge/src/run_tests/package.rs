@@ -78,7 +78,7 @@ impl RunForPackageArgs {
         artifacts_dir: &Utf8Path,
         ui: &UI,
     ) -> Result<RunForPackageArgs> {
-        let raw_test_targets = load_test_artifacts(artifacts_dir, &package)?;
+        let raw_test_targets = load_test_artifacts(artifacts_dir, &package, scarb_metadata)?;
 
         let contracts = get_contracts_artifacts_and_source_sierra_paths(
             artifacts_dir,

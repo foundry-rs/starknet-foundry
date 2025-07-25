@@ -84,6 +84,7 @@ pub fn test_target_with_config(
         sierra_program: test_target_raw.sierra_program,
         sierra_program_path: test_target_raw.sierra_program_path.into(),
         casm_program,
+        scarb_profile: test_target_raw.scarb_profile,
     })
 }
 

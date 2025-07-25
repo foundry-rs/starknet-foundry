@@ -45,7 +45,7 @@ pub fn run_test_case(
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
     let raw_test_targets =
-        load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
+        load_test_artifacts(&test.path().unwrap().join("target/dev"), package, &metadata).unwrap();
 
     let ui = Arc::new(UI::default());
     rt.block_on(run_for_package(

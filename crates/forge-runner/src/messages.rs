@@ -46,6 +46,7 @@ impl TestResultMessage {
         test_result: &AnyTestCaseSummary,
         show_detailed_resources: bool,
         tracked_resource: ForgeTrackedResource,
+        scarb_profile: &str,
     ) -> Self {
         let name = test_result
             .name()
@@ -77,10 +78,14 @@ impl TestResultMessage {
 
         let gas_usage = match test_result {
             AnyTestCaseSummary::Single(TestCaseSummary::Passed { gas_info, .. }) => {
-                format!(
-                    " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
-                    gas_info.l1_gas, gas_info.l1_data_gas, gas_info.l2_gas
-                )
+                if scarb_profile == "release" {
+                    format!(
+                        " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
+                        gas_info.l1_gas, gas_info.l1_data_gas, gas_info.l2_gas
+                    )
+                } else {
+                    String::new()
+                }
             }
             _ => String::new(),
         };
