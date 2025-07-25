@@ -28,7 +28,7 @@ $ snforge test
 ```shell
 Collected 1 test(s) from first_test package
 Running 1 test(s) from src/
-[PASS] first_test::tests::test_sum (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] first_test::tests::test_sum
 Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>
@@ -103,11 +103,11 @@ $ snforge test
 ```shell
 Collected 5 test(s) from should_panic_example package
 Running 5 test(s) from src/
-[PASS] should_panic_example::tests::should_panic_felt_matching (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-[PASS] should_panic_example::tests::should_panic_multiple_messages (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-[PASS] should_panic_example::tests::should_panic_exact (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-[PASS] should_panic_example::tests::should_panic_expected_is_substring (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
-[PASS] should_panic_example::tests::should_panic_check_data (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+[PASS] should_panic_example::tests::should_panic_felt_matching
+[PASS] should_panic_example::tests::should_panic_multiple_messages
+[PASS] should_panic_example::tests::should_panic_exact
+[PASS] should_panic_example::tests::should_panic_expected_is_substring
+[PASS] should_panic_example::tests::should_panic_check_data
 Tests: 5 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>

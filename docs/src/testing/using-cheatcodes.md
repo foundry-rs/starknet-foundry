@@ -87,7 +87,7 @@ $ snforge test
 Collected 1 test(s) from using_cheatcodes_cheat_address package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
-[PASS] using_cheatcodes_cheat_address_tests::call_and_invoke (l1_gas: ~0, l1_data_gas: ~288, l2_gas: ~600000)
+[PASS] using_cheatcodes_cheat_address_tests::call_and_invoke
 Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
 ```
 </details>

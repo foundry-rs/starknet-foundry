@@ -1,9 +1,14 @@
 # Gas and VM Resources Estimation
 
-`snforge` supports gas and other VM resources estimation for each individual test case. 
+`snforge` supports gas and other VM resources estimation for each individual test case.
 
 It does not calculate the final transaction fee, for details on how fees are calculated, 
 please refer to fee mechanism in [Starknet documentation](https://docs.starknet.io/architecture-and-concepts/network-architecture/fee-mechanism).
+
+> ⚠️ **Warning**
+>
+> To obtain gas estimations and VM resource usage, tests must be built using the release profile. The easiest way to do this is by running the test command with the `--release` flag.
+
 
 ## Gas Estimation
 
