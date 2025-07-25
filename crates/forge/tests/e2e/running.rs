@@ -53,6 +53,51 @@ fn simple_package() {
 }
 
 #[test]
+fn simple_package_display_gas_if_release_profile() {
+    let temp = setup_package("simple_package");
+    let output = test_runner(&temp).arg("--release").assert().code(1);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+    [..]Compiling[..]
+    [..]Finished[..]
+
+
+    Collected 13 test(s) from simple_package package
+    Running 2 test(s) from src/
+    [PASS] simple_package::tests::test_fib (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [IGNORE] simple_package::tests::ignored_test
+    Running 11 test(s) from tests/
+    [PASS] simple_package_integrationtest::contract::call_and_invoke (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] simple_package_integrationtest::ext_function_test::test_my_test (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
+    [PASS] simple_package_integrationtest::ext_function_test::test_simple (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] simple_package_integrationtest::test_simple::test_simple (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] simple_package_integrationtest::test_simple::test_simple2 (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] simple_package_integrationtest::test_simple::test_two (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] simple_package_integrationtest::test_simple::test_two_and_two (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [FAIL] simple_package_integrationtest::test_simple::test_failing
+
+    Failure data:
+        0x6661696c696e6720636865636b ('failing check')
+
+    [FAIL] simple_package_integrationtest::test_simple::test_another_failing
+
+    Failure data:
+        0x6661696c696e6720636865636b ('failing check')
+
+    [PASS] simple_package_integrationtest::without_prefix::five (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    Tests: 9 passed, 2 failed, 2 ignored, 0 filtered out
+
+    Failures:
+        simple_package_integrationtest::test_simple::test_failing
+        simple_package_integrationtest::test_simple::test_another_failing
+    "},
+    );
+}
+
+#[test]
 fn simple_package_with_git_dependency() {
     let temp = tempdir_with_tool_versions().unwrap();
 
