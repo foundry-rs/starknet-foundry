@@ -48,6 +48,8 @@ jobs:
           echo "nightly_version=$NIGHTLY_VERSION" >> $GITHUB_OUTPUT
           echo "nightly_branch=$NIGHTLY_BRANCH" >> $GITHUB_OUTPUT
 
+      - uses: software-mansion/setup-scarb@v1
+
       - name: Update metadata before release
         run: ./scripts/release.sh ${{ env.NIGHTLY_VERSION }}
 
@@ -82,6 +84,18 @@ jobs:
     with:
       overridden_plugin_version: ${{ needs.prepare.outputs.nightly_version }}
       ref: ${{ needs.prepare.outputs.nightly_branch }}
+      plugin_name: "snforge-scarb-plugin"
+
+  build-deprecated-plugin-binaries:
+    # This job is not necessary for nightly releases, but we still publish deprecated plugin for
+    # the sake of consistency with the normal release workflow.
+    name: Build deprecated plugin binaries
+    needs: prepare
+    uses: ./.github/workflows/_build-plugin-binaries.yml
+    with:
+      overridden_plugin_version: ${{ needs.prepare.outputs.nightly_version }}
+      ref: ${{ needs.prepare.outputs.nightly_branch }}
+      plugin_name: "snforge-scarb-plugin-deprecated"
 
   publish-plugin:
     needs: [ prepare, build-plugin-binaries ]
@@ -90,9 +104,23 @@ jobs:
     with:
       prod_registry: false
       overridden_plugin_version: ${{ needs.prepare.outputs.nightly_version }}
+      plugin_name: "snforge-scarb-plugin"
+
+
+  publish-deprecated-plugin:
+    # This job is not necessary for nightly releases, but we still publish deprecated plugin for
+    # the sake of consistency with the normal release workflow.
+    needs: [ prepare, build-deprecated-plugin-binaries ]
+    uses: ./.github/workflows/_publish-plugin.yml
+    secrets: inherit
+    with:
+      prod_registry: false
+      overridden_plugin_version: ${{ needs.prepare.outputs.nightly_version }}
+      plugin_name: "snforge-scarb-plugin-deprecated"
+
 
   publish-std:
-    needs: [ prepare, publish-plugin ]
+    needs: [ prepare, publish-plugin, publish-deprecated-plugin ]
     uses: ./.github/workflows/publish-std.yml
     secrets: inherit
     with:
@@ -102,7 +130,7 @@ jobs:
 
   test-binary:
     name: Test binary
-    needs: [ prepare, build-binaries, build-plugin-binaries, publish-plugin, publish-std]
+    needs: [ prepare, build-binaries, build-plugin-binaries, publish-plugin, publish-deprecated-plugin, publish-std ]
     uses: ./.github/workflows/_test-binaries.yml
     secrets: inherit
     with:

@@ -24,7 +24,6 @@ use cairo_vm::{
         vm_core::VirtualMachine,
     },
 };
-use conversions::string::TryFromHexStr;
 use runtime::{ExtendedRuntime, ExtensionLogic, StarknetRuntime, SyscallHandlingResult};
 use starknet_types_core::felt::Felt;
 
@@ -204,8 +203,8 @@ impl CheatableStarknetRuntimeExtension<'_> {
 
         if gas_counter < required_gas {
             //  Out of gas failure.
-            let out_of_gas_error =
-                Felt::try_from_hex_str(OUT_OF_GAS_ERROR).map_err(SyscallExecutionError::from)?;
+            let out_of_gas_error = Felt::from_hex(OUT_OF_GAS_ERROR)
+                .expect("Failed to parse OUT_OF_GAS_ERROR hex string");
             let response: SyscallResponseWrapper<Response> = SyscallResponseWrapper::Failure {
                 gas_counter,
                 revert_data: RevertData::new_normal(vec![out_of_gas_error]),

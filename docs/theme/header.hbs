@@ -1,0 +1,27 @@
+<div class="migration-banner">
+    <p>
+        <strong>Important:</strong> If you're upgrading snforge to version 0.47.0 or later, please read the
+        <a href="{{ path_to_root }}getting-started/0-47-0-migration-guide.html">0.47.0 Migration Guide</a>.
+    </p>
+</div>
+
+<style>
+    .migration-banner {
+        position: relative;
+        z-index: 100;
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 0.0625rem solid #f5c6cb;
+        border-radius: 0;
+        text-align: center;
+        padding: 5rem 1rem 0 1rem;
+        width: calc(100% + 8px + var(--page-padding));
+        margin-left: calc((8px + var(--page-padding)) * -1);
+    }
+
+    .migration-banner a {
+        color: #721c24;
+        font-weight: bold;
+        text-decoration: underline;
+    }
+</style>

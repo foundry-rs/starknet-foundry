@@ -10,6 +10,9 @@ on:
       overridden_plugin_version:
         required: false
         type: string
+      plugin_name:
+        required: true
+        type: string
 
 jobs:
   build-binaries:
@@ -17,6 +20,7 @@ jobs:
     uses: ./.github/workflows/_build-plugin-binaries.yml
     with:
       overridden_plugin_version: ${{ inputs.overridden_plugin_version != '' && inputs.overridden_plugin_version || '' }}
+      plugin_name: ${{ inputs.plugin_name }}
   
   publish-plugin:
     name: Publish Plugin
@@ -25,4 +29,5 @@ jobs:
     with:
       prod_registry: ${{ inputs.prod_registry }}
       overridden_plugin_version: ${{ inputs.overridden_plugin_version != '' && inputs.overridden_plugin_version || '' }}
+      plugin_name: '${{ inputs.plugin_name }}'
     secrets: inherit

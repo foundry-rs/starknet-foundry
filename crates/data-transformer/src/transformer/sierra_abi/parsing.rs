@@ -16,14 +16,16 @@ fn modifier_syntax_token(item: &Modifier) -> &'static str {
 }
 
 pub fn parse_argument_list(arguments: &ArgList, db: &SimpleParserDatabase) -> Result<Vec<Expr>> {
+    let args_lists = arguments;
     let arguments = arguments.elements(db);
 
     if let Some(modifiers) = arguments
-        .iter()
         .map(|arg| arg.modifiers(db).elements(db))
-        .find(|mod_list| !mod_list.is_empty())
+        .find(|mod_list| mod_list.len() != 0)
     {
-        let modifiers = modifiers.iter().map(modifier_syntax_token).collect_vec();
+        let modifiers = modifiers
+            .map(|modifier| modifier_syntax_token(&modifier))
+            .collect_vec();
 
         match &modifiers[..] {
             [] => unreachable!(),
@@ -38,8 +40,8 @@ pub fn parse_argument_list(arguments: &ArgList, db: &SimpleParserDatabase) -> Re
         }
     }
 
-    arguments
-        .iter()
+    args_lists
+        .elements(db)
         .map(|arg| match arg.arg_clause(db) {
             ArgClause::Unnamed(expr) => Ok(expr.value(db)),
             ArgClause::Named(_) => {
@@ -60,7 +62,6 @@ pub fn parse_inline_macro(
         .path(db)
         .segments(db)
         .elements(db)
-        .iter()
         .last()
         .expect("Macro must have a name")
     {
@@ -86,7 +87,6 @@ pub fn parse_inline_macro(
             let node_text = token_tree
                 .tokens(db)
                 .elements(db)
-                .into_iter()
                 .map(|token| token.as_syntax_node().get_text(db).to_string())
                 .collect::<String>();
             split_expressions(&node_text, db)

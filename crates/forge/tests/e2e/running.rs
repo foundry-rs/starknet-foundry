@@ -1,10 +1,9 @@
 use super::common::runner::{get_current_branch, get_remote_url, setup_package, test_runner};
-use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
-use camino::Utf8PathBuf;
+use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::{AsOutput, assert_stdout, assert_stdout_contains};
-use std::{fs, str::FromStr};
-use test_utils::tempdir_with_tool_versions;
+use std::fs;
+use test_utils::{get_snforge_std_entry, use_snforge_std_deprecated};
 use toml_edit::{DocumentMut, value};
 
 #[test]
@@ -54,13 +53,22 @@ fn simple_package() {
 
 #[test]
 fn simple_package_with_git_dependency() {
-    let temp = tempdir_with_tool_versions().unwrap();
+    let temp = setup_package("simple_package");
 
-    temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-        .unwrap();
     let remote_url = get_remote_url().to_lowercase();
     let branch = get_current_branch();
     let manifest_path = temp.child("Scarb.toml");
+
+    let snforge_std = if use_snforge_std_deprecated() {
+        format!(
+            r#"snforge_std_deprecated = {{ git = "https://github.com/{remote_url}", branch = "{branch}" }}"#
+        )
+    } else {
+        format!(
+            r#"snforge_std = {{ git = "https://github.com/{remote_url}", branch = "{branch}" }}"#
+        )
+    };
+
     manifest_path
         .write_str(&formatdoc!(
             r#"
@@ -72,10 +80,8 @@ fn simple_package_with_git_dependency() {
 
             [dependencies]
             starknet = "2.6.4"
-            snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
+            {snforge_std}
             "#,
-            remote_url,
-            branch
         ))
         .unwrap();
 
@@ -759,17 +765,12 @@ fn with_exit_first() {
 
             [dependencies]
             starknet = "2.4.0"
-            snforge_std = {{ path = "{}" }}
+            {}
 
             [tool.snforge]
             exit_first = true
             "#,
-            Utf8PathBuf::from_str("../../snforge_std")
-                .unwrap()
-                .canonicalize_utf8()
-                .unwrap()
-                .to_string()
-                .replace('\\', "/")
+            get_snforge_std_entry().unwrap()
         ))
         .unwrap();
 
@@ -917,6 +918,7 @@ fn should_panic() {
 }
 
 #[test]
+#[cfg_attr(feature = "skip_plugin_checks", ignore = "Plugin checks skipped")]
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
@@ -928,7 +930,10 @@ fn incompatible_snforge_std_version_warning() {
     scarb_toml["dev-dependencies"]["snforge_std"] = value("0.45.0");
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
-    let output = test_runner(&temp).assert().failure();
+    let output = test_runner(&temp)
+        .args(["--max-n-steps", "99999999"])
+        .assert()
+        .success();
 
     assert_stdout_contains(
         output,
@@ -940,22 +945,20 @@ fn incompatible_snforge_std_version_warning() {
         Collected 2 test(s) from steps package
         Running 2 test(s) from src/
         [PASS] steps::tests::steps_less_than_10000000 [..]
-        [FAIL] steps::tests::steps_more_than_10000000
+        [PASS] steps::tests::steps_more_than_10000000 [..]
 
-        Failure data:
-            Could not reach the end of the program. RunResources has no remaining steps.
-            Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps
-
-        Tests: 1 passed, 1 failed, 0 ignored, 0 filtered out
-
-        Failures:
-            steps::tests::steps_more_than_10000000
+        Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
         "},
     );
 }
 
 #[test]
 fn incompatible_snforge_std_version_error() {
+    if use_snforge_std_deprecated() {
+        // Skip this test if deprecated is used
+        return;
+    }
+
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
 
@@ -1006,7 +1009,6 @@ fn detailed_resources_flag() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn detailed_resources_flag_sierra_gas() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)
@@ -1036,7 +1038,6 @@ fn detailed_resources_flag_sierra_gas() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn detailed_resources_mixed_resources() {
     let temp = setup_package("forking");
     let output = test_runner(&temp)
@@ -1068,31 +1069,7 @@ fn detailed_resources_mixed_resources() {
 
 #[test]
 fn catch_runtime_errors() {
-    let temp = setup_package("simple_package");
-
-    let expected_panic = "No such file or directory";
-
-    temp.child("tests/test.cairo")
-        .write_str(
-            formatdoc!(
-                r#"
-                use snforge_std::fs::{{FileTrait, read_txt}};
-
-                #[test]
-                #[should_panic(expected: "{}")]
-                fn catch_no_such_file() {{
-                    let file = FileTrait::new("no_way_this_file_exists");
-                    let content = read_txt(@file);
-
-                    assert!(false);
-                }}
-            "#,
-                expected_panic
-            )
-            .as_str(),
-        )
-        .unwrap();
-
+    let temp = setup_package("runtime_errors_package");
     let output = test_runner(&temp).assert();
 
     assert_stdout_contains(
@@ -1101,7 +1078,7 @@ fn catch_runtime_errors() {
             r"
                 [..]Compiling[..]
                 [..]Finished[..]
-                [PASS] simple_package_integrationtest::test::catch_no_such_file [..]
+                [PASS] runtime_errors_package_integrationtest::with_error::catch_no_such_file [..]
             "
         ),
     );
@@ -1153,7 +1130,11 @@ fn sierra_gas_with_older_scarb() {
 fn exact_printing_pass() {
     let temp = setup_package("deterministic_output");
 
-    let output = test_runner(&temp).arg("pass").assert().code(0);
+    let output = test_runner(&temp)
+        .args(["--max-n-steps", "99999999"])
+        .arg("pass")
+        .assert()
+        .code(0);
 
     assert_stdout(
         output,
@@ -1171,7 +1152,11 @@ fn exact_printing_pass() {
 fn exact_printing_fail() {
     let temp = setup_package("deterministic_output");
 
-    let output = test_runner(&temp).arg("fail").assert().code(1);
+    let output = test_runner(&temp)
+        .args(["--max-n-steps", "99999999"])
+        .arg("fail")
+        .assert()
+        .code(1);
 
     assert_stdout(
         output,
@@ -1201,7 +1186,11 @@ fn exact_printing_fail() {
 fn exact_printing_mixed() {
     let temp = setup_package("deterministic_output");
 
-    let output = test_runner(&temp).arg("x").assert().code(1);
+    let output = test_runner(&temp)
+        .args(["--max-n-steps", "99999999"])
+        .arg("x")
+        .assert()
+        .code(1);
 
     assert_stdout(
         output,

@@ -1,9 +1,9 @@
 use contract_state::storage_node::{
-    StorageNodeContract, IStorageNodeContractDispatcher, IStorageNodeContractDispatcherTrait,
+    IStorageNodeContractDispatcher, IStorageNodeContractDispatcherTrait, StorageNodeContract,
 };
 use snforge_std::interact_with_state;
+use starknet::storage::{StoragePathEntry, StoragePointerWriteAccess};
 use crate::utils::deploy_contract;
-use starknet::storage::{StoragePointerWriteAccess, StoragePathEntry};
 
 #[test]
 fn test_storage_node() {
