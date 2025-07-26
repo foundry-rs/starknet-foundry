@@ -18,23 +18,69 @@ fn fuzzing() {
 
         Collected 13 test(s) from fuzzing package
         Running 13 test(s) from src/
-        [PASS] fuzzing::tests::adding [..]
-        [PASS] fuzzing::tests::fuzzed_argument (runs: 256, [..]
-        [PASS] fuzzing::tests::fuzzed_both_arguments (runs: 256, [..]
-        [PASS] fuzzing::tests::passing [..]
+        [PASS] fuzzing::tests::adding (runs: 256)
+        [PASS] fuzzing::tests::fuzzed_argument (runs: 256)
+        [PASS] fuzzing::tests::fuzzed_both_arguments (runs: 256)
+        [PASS] fuzzing::tests::passing (runs: 256)
         [FAIL] fuzzing::tests::failing_fuzz (runs: 1, arguments: [[..], [..]])
 
         Failure data:
             0x726573756c74203d3d2061202b2062 ('result == a + b')
 
-        [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10, [..]
-        [PASS] fuzzing::tests::uint8_arg (runs: 256, [..]
-        [PASS] fuzzing::tests::fuzzed_while_loop (runs: 256, [..]
-        [PASS] fuzzing::tests::uint16_arg (runs: 256, [..]
-        [PASS] fuzzing::tests::uint32_arg (runs: 256, [..]
-        [PASS] fuzzing::tests::uint64_arg (runs: 256, [..]
-        [PASS] fuzzing::tests::uint128_arg (runs: 256, [..]
-        [PASS] fuzzing::tests::uint256_arg (runs: 256, [..]
+        [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10)
+        [PASS] fuzzing::tests::uint8_arg (runs: 256)
+        [PASS] fuzzing::tests::fuzzed_while_loop (runs: 256)
+        [PASS] fuzzing::tests::uint16_arg (runs: 256)
+        [PASS] fuzzing::tests::uint32_arg (runs: 256)
+        [PASS] fuzzing::tests::uint64_arg (runs: 256)
+        [PASS] fuzzing::tests::uint128_arg (runs: 256)
+        [PASS] fuzzing::tests::uint256_arg (runs: 256)
+        Running 0 test(s) from tests/
+        Tests: 12 passed, 1 failed, 0 ignored, 11 filtered out
+        Fuzzer seed: [..]
+
+        Failures:
+            fuzzing::tests::failing_fuzz
+        "},
+    );
+}
+
+#[test]
+fn fuzzing_display_gas_if_release_profile() {
+    let temp = setup_package("fuzzing");
+
+    let output = test_runner(&temp)
+        .arg("--release")
+        .arg("fuzzing::")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 13 test(s) from fuzzing package
+        Running 13 test(s) from src/
+        [PASS] fuzzing::tests::adding (runs: 256, (l1_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l1_data_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l2_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}))
+        [PASS] fuzzing::tests::fuzzed_argument (runs: 256, (l1_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l1_data_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l2_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}))
+        [PASS] fuzzing::tests::fuzzed_both_arguments (runs: 256, (l1_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l1_data_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l2_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}))
+        [PASS] fuzzing::tests::passing (runs: 256, (l1_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l1_data_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l2_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}))
+        [FAIL] fuzzing::tests::failing_fuzz (runs: 1, arguments: [[..], [..]])
+
+        Failure data:
+            0x726573756c74203d3d2061202b2062 ('result == a + b')
+
+        [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10, (l1_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l1_data_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l2_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}))
+        [PASS] fuzzing::tests::uint8_arg (runs: 256, (l1_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l1_data_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l2_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}))
+        [PASS] fuzzing::tests::fuzzed_while_loop (runs: 256, (l1_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l1_data_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l2_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}))
+        [PASS] fuzzing::tests::uint16_arg (runs: 256, (l1_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l1_data_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l2_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}))
+        [PASS] fuzzing::tests::uint32_arg (runs: 256, (l1_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l1_data_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l2_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}))
+        [PASS] fuzzing::tests::uint64_arg (runs: 256, (l1_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l1_data_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l2_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}))
+        [PASS] fuzzing::tests::uint128_arg (runs: 256, (l1_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l1_data_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l2_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}))
+        [PASS] fuzzing::tests::uint256_arg (runs: 256, (l1_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l1_data_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}, l2_gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]}))
         Running 0 test(s) from tests/
         Tests: 12 passed, 1 failed, 0 ignored, 11 filtered out
         Fuzzer seed: [..]
@@ -59,27 +105,27 @@ fn fuzzing_set_runs() {
         indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
-        
-        
+
+
         Collected 13 test(s) from fuzzing package
         Running 13 test(s) from src/
-        [PASS] fuzzing::tests::adding [..]
-        [PASS] fuzzing::tests::fuzzed_argument (runs: 10, [..]
-        [PASS] fuzzing::tests::fuzzed_both_arguments (runs: 10, [..]
-        [PASS] fuzzing::tests::passing [..]
+        [PASS] fuzzing::tests::adding (runs: 10)
+        [PASS] fuzzing::tests::fuzzed_argument (runs: 10)
+        [PASS] fuzzing::tests::fuzzed_both_arguments (runs: 10)
+        [PASS] fuzzing::tests::passing (runs: 10)
         [FAIL] fuzzing::tests::failing_fuzz (runs: 1, arguments: [[..], [..]])
 
         Failure data:
             0x726573756c74203d3d2061202b2062 ('result == a + b')
 
-        [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10, [..]
-        [PASS] fuzzing::tests::uint8_arg (runs: 10, [..]
-        [PASS] fuzzing::tests::fuzzed_while_loop (runs: 256, [..]
-        [PASS] fuzzing::tests::uint16_arg (runs: 10, [..]
-        [PASS] fuzzing::tests::uint32_arg (runs: 10, [..]
-        [PASS] fuzzing::tests::uint64_arg (runs: 10, [..]
-        [PASS] fuzzing::tests::uint128_arg (runs: 10, [..]
-        [PASS] fuzzing::tests::uint256_arg (runs: 10, [..]
+        [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10)
+        [PASS] fuzzing::tests::uint8_arg (runs: 10)
+        [PASS] fuzzing::tests::fuzzed_while_loop (runs: 256)
+        [PASS] fuzzing::tests::uint16_arg (runs: 10)
+        [PASS] fuzzing::tests::uint32_arg (runs: 10)
+        [PASS] fuzzing::tests::uint64_arg (runs: 10)
+        [PASS] fuzzing::tests::uint128_arg (runs: 10)
+        [PASS] fuzzing::tests::uint256_arg (runs: 10)
         Running 0 test(s) from tests/
         Tests: 12 passed, 1 failed, 0 ignored, 11 filtered out
         Fuzzer seed: [..]
@@ -104,27 +150,27 @@ fn fuzzing_set_seed() {
         indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
-        
-        
+
+
         Collected 13 test(s) from fuzzing package
         Running 13 test(s) from src/
-        [PASS] fuzzing::tests::adding [..]
-        [PASS] fuzzing::tests::fuzzed_argument (runs: 256, [..]
-        [PASS] fuzzing::tests::fuzzed_both_arguments (runs: 256, [..]
-        [PASS] fuzzing::tests::passing [..]
+        [PASS] fuzzing::tests::adding (runs: 256)
+        [PASS] fuzzing::tests::fuzzed_argument (runs: 256)
+        [PASS] fuzzing::tests::fuzzed_both_arguments (runs: 256)
+        [PASS] fuzzing::tests::passing (runs: 256)
         [FAIL] fuzzing::tests::failing_fuzz (runs: 1, arguments: [[..], [..]])
 
         Failure data:
             0x726573756c74203d3d2061202b2062 ('result == a + b')
 
-        [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10, [..]
-        [PASS] fuzzing::tests::uint8_arg (runs: 256, [..]
-        [PASS] fuzzing::tests::fuzzed_while_loop (runs: 256, [..]
-        [PASS] fuzzing::tests::uint16_arg (runs: 256, [..]
-        [PASS] fuzzing::tests::uint32_arg (runs: 256, [..]
-        [PASS] fuzzing::tests::uint64_arg (runs: 256, [..]
-        [PASS] fuzzing::tests::uint128_arg (runs: 256, [..]
-        [PASS] fuzzing::tests::uint256_arg (runs: 256, [..]
+        [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10)
+        [PASS] fuzzing::tests::uint8_arg (runs: 256)
+        [PASS] fuzzing::tests::fuzzed_while_loop (runs: 256)
+        [PASS] fuzzing::tests::uint16_arg (runs: 256)
+        [PASS] fuzzing::tests::uint32_arg (runs: 256)
+        [PASS] fuzzing::tests::uint64_arg (runs: 256)
+        [PASS] fuzzing::tests::uint128_arg (runs: 256)
+        [PASS] fuzzing::tests::uint256_arg (runs: 256)
         Running 0 test(s) from tests/
         Tests: 12 passed, 1 failed, 0 ignored, 11 filtered out
         Fuzzer seed: 1234
@@ -257,9 +303,9 @@ fn fuzzing_multiple_attributes() {
         Collected 4 test(s) from fuzzing package
         Running 4 test(s) from tests/
         [IGNORE] fuzzing_integrationtest::multiple_attributes::ignored
-        [PASS] fuzzing_integrationtest::multiple_attributes::with_should_panic (runs: 256, [..])
-        [PASS] fuzzing_integrationtest::multiple_attributes::with_available_gas (runs: 50, [..])
-        [PASS] fuzzing_integrationtest::multiple_attributes::with_both (runs: 300, [..])
+        [PASS] fuzzing_integrationtest::multiple_attributes::with_should_panic (runs: 256)
+        [PASS] fuzzing_integrationtest::multiple_attributes::with_available_gas (runs: 50)
+        [PASS] fuzzing_integrationtest::multiple_attributes::with_both (runs: 300)
         Tests: 3 passed, 0 failed, 1 ignored, 20 filtered out
         "},
     );
@@ -285,7 +331,7 @@ fn generate_arg_cheatcode() {
         Failure data:
             "`generate_arg` cheatcode: `min_value` must be <= `max_value`, provided values after deserialization: 101 and 100"
 
-        [PASS] fuzzing_integrationtest::generate_arg::use_generate_arg_outside_fuzzer (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
+        [PASS] fuzzing_integrationtest::generate_arg::use_generate_arg_outside_fuzzer
         Tests: 1 passed, 1 failed, 0 ignored, 22 filtered out
         "#},
     );

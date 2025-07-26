@@ -22,8 +22,8 @@ fn features() {
         Collected 2 test(s) from features package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [PASS] features_integrationtest::test::test_mock_function [..]
-        [PASS] features_integrationtest::test::test_mock_contract [..]
+        [PASS] features_integrationtest::test::test_mock_function
+        [PASS] features_integrationtest::test::test_mock_contract
         Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
         "},
     );

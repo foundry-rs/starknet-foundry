@@ -39,9 +39,9 @@ fn file_reading() {
         Failure data:
             "Failed to parse data/non_ascii.txt file"
         
-        [PASS] file_reading_integrationtest::test::valid_content_and_same_content_no_matter_newlines [..]
-        [PASS] file_reading_integrationtest::test::serialization [..]
-        [PASS] file_reading_integrationtest::test::json_with_array [..]
+        [PASS] file_reading_integrationtest::test::valid_content_and_same_content_no_matter_newlines
+        [PASS] file_reading_integrationtest::test::serialization
+        [PASS] file_reading_integrationtest::test::json_with_array
         [FAIL] file_reading_integrationtest::test::negative_number
             "Failed to parse data/negative_number.txt file"
         
@@ -52,8 +52,8 @@ fn file_reading() {
         Failure data:
             0x756e657870656374656420636f6e74656e74 ('unexpected content')
         
-        [PASS] file_reading_integrationtest::test::json_serialization [..]
-        [PASS] file_reading_integrationtest::test::json_deserialization [..]
+        [PASS] file_reading_integrationtest::test::json_serialization
+        [PASS] file_reading_integrationtest::test::json_deserialization
         Tests: 5 passed, 6 failed, 0 ignored, 0 filtered out
         
         Failures:

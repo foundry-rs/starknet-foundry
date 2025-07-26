@@ -62,8 +62,8 @@ fn should_allow_more_than_10m() {
 
                 Collected 2 test(s) from steps package
                 Running 2 test(s) from src/
-                [PASS] steps::tests::steps_more_than_10000000 [..]
-                [PASS] steps::tests::steps_less_than_10000000 [..]
+                [PASS] steps::tests::steps_more_than_10000000
+                [PASS] steps::tests::steps_less_than_10000000
                 Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
             "
         ),
@@ -84,7 +84,7 @@ fn should_default_to_10m() {
 
             Collected 2 test(s) from steps package
             Running 2 test(s) from src/
-            [PASS] steps::tests::steps_less_than_10000000 (l1_gas: ~[..], l1_data_gas: ~[..], l2_gas: ~[..])
+            [PASS] steps::tests::steps_less_than_10000000
             [FAIL] steps::tests::steps_more_than_10000000
 
             Failure data:

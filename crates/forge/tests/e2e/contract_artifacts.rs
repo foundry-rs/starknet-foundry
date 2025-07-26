@@ -19,9 +19,9 @@ fn unit_and_integration() {
 
     Collected 2 test(s) from unit_and_integration package
     Running 1 test(s) from tests/
-    [PASS] unit_and_integration_integrationtest::tests::declare_and_call_contract_from_lib (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] unit_and_integration_integrationtest::tests::declare_and_call_contract_from_lib
     Running 1 test(s) from src/
-    [PASS] unit_and_integration::tests::declare_contract_from_lib (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] unit_and_integration::tests::declare_contract_from_lib
     Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
     "},
     );
@@ -41,9 +41,9 @@ fn unit_and_lib_integration() {
 
     Collected 2 test(s) from unit_and_lib_integration package
     Running 1 test(s) from tests/
-    [PASS] unit_and_lib_integration_tests::tests::declare_and_call_contract_from_lib (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] unit_and_lib_integration_tests::tests::declare_and_call_contract_from_lib
     Running 1 test(s) from src/
-    [PASS] unit_and_lib_integration::tests::declare_contract_from_lib (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] unit_and_lib_integration::tests::declare_contract_from_lib
     Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
     "},
     );
@@ -63,7 +63,7 @@ fn only_integration() {
 
     Collected 1 test(s) from only_integration package
     Running 1 test(s) from tests/
-    [PASS] only_integration_integrationtest::tests::declare_and_call_contract_from_lib (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] only_integration_integrationtest::tests::declare_and_call_contract_from_lib
     Running 0 test(s) from src/
     Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
     "},
@@ -84,7 +84,7 @@ fn only_unit() {
 
     Collected 1 test(s) from only_unit package
     Running 1 test(s) from src/
-    [PASS] only_unit::tests::declare_contract_from_lib (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] only_unit::tests::declare_contract_from_lib
     Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
     "},
     );
@@ -104,7 +104,7 @@ fn only_lib_integration() {
 
     Collected 1 test(s) from only_lib_integration package
     Running 1 test(s) from tests/
-    [PASS] only_lib_integration_tests::tests::declare_and_call_contract_from_lib (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] only_lib_integration_tests::tests::declare_and_call_contract_from_lib
     Running 0 test(s) from src/
     Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
     "},
@@ -129,9 +129,9 @@ fn with_features() {
 
     Collected 2 test(s) from with_features package
     Running 1 test(s) from tests/
-    [PASS] with_features_integrationtest::tests::declare_and_call_contract_from_lib (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] with_features_integrationtest::tests::declare_and_call_contract_from_lib
     Running 1 test(s) from src/
-    [PASS] with_features::tests::declare_contract_from_lib (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] with_features::tests::declare_contract_from_lib
     Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
     "},
     );
@@ -189,9 +189,9 @@ fn custom_target() {
 
     Collected 2 test(s) from custom_target package
     Running 1 test(s) from tests/
-    [PASS] custom_target_integrationtest::tests::declare_and_call_contract_from_lib (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] custom_target_integrationtest::tests::declare_and_call_contract_from_lib
     Running 1 test(s) from src/
-    [PASS] custom_target::tests::declare_contract_from_lib (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] custom_target::tests::declare_contract_from_lib
     Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
     "},
     );
@@ -217,9 +217,9 @@ fn custom_target_custom_names() {
 
     Collected 2 test(s) from custom_target_custom_names package
     Running 1 test(s) from tests/
-    [PASS] custom_first::tests::declare_and_call_contract_from_lib (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] custom_first::tests::declare_and_call_contract_from_lib
     Running 1 test(s) from src/
-    [PASS] custom_target_custom_names::tests::declare_contract_from_lib (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] custom_target_custom_names::tests::declare_contract_from_lib
     Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
     "},
     );
@@ -242,7 +242,7 @@ fn custom_target_only_integration() {
 
     Collected 1 test(s) from custom_target_only_integration package
     Running 1 test(s) from tests/
-    [PASS] custom_first::tests::declare_and_call_contract_from_lib (l1_gas: [..], l1_data_gas: [..], l2_gas: [..])
+    [PASS] custom_first::tests::declare_and_call_contract_from_lib
     Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
     "},
     );
@@ -332,17 +332,17 @@ fn simple_package_no_starknet_contract_target() {
 
     Collected 13 test(s) from simple_package package
     Running 2 test(s) from src/
-    [PASS] simple_package::tests::test_fib [..]
+    [PASS] simple_package::tests::test_fib
     [IGNORE] simple_package::tests::ignored_test
     Running 11 test(s) from tests/
-    [PASS] simple_package_integrationtest::contract::call_and_invoke [..]
-    [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
+    [PASS] simple_package_integrationtest::contract::call_and_invoke
+    [PASS] simple_package_integrationtest::ext_function_test::test_my_test
     [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
-    [PASS] simple_package_integrationtest::ext_function_test::test_simple [..]
-    [PASS] simple_package_integrationtest::test_simple::test_simple [..]
-    [PASS] simple_package_integrationtest::test_simple::test_simple2 [..]
-    [PASS] simple_package_integrationtest::test_simple::test_two [..]
-    [PASS] simple_package_integrationtest::test_simple::test_two_and_two [..]
+    [PASS] simple_package_integrationtest::ext_function_test::test_simple
+    [PASS] simple_package_integrationtest::test_simple::test_simple
+    [PASS] simple_package_integrationtest::test_simple::test_simple2
+    [PASS] simple_package_integrationtest::test_simple::test_two
+    [PASS] simple_package_integrationtest::test_simple::test_two_and_two
     [FAIL] simple_package_integrationtest::test_simple::test_failing
 
     Failure data:
@@ -353,7 +353,7 @@ fn simple_package_no_starknet_contract_target() {
     Failure data:
         0x6661696c696e6720636865636b ('failing check')
 
-    [PASS] simple_package_integrationtest::without_prefix::five [..]
+    [PASS] simple_package_integrationtest::without_prefix::five
     Tests: 9 passed, 2 failed, 2 ignored, 0 filtered out
 
     Failures:
@@ -385,7 +385,7 @@ fn no_optimization_flag() {
         Collected 1 test(s) from erc20_package package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] erc20_package_integrationtest::test_complex::complex[..]
+        [PASS] erc20_package_integrationtest::test_complex::complex
         Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
         "},
     );

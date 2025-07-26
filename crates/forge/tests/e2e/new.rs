@@ -249,7 +249,7 @@ fn get_expected_output(template: &Template) -> &str {
 
                 Collected 1 test(s) from test_name package
                 Running 1 test(s) from src/
-                [PASS] test_name::tests::it_works [..]
+                [PASS] test_name::tests::it_works
                 Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
                 "
             )
@@ -263,8 +263,8 @@ fn get_expected_output(template: &Template) -> &str {
                 Collected 2 test(s) from test_name package
                 Running 0 test(s) from src/
                 Running 2 test(s) from tests/
-                [PASS] test_name_integrationtest::test_contract::test_increase_balance [..]
-                [PASS] test_name_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value [..]
+                [PASS] test_name_integrationtest::test_contract::test_increase_balance
+                [PASS] test_name_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value
                 Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
                 "
             )
@@ -277,14 +277,14 @@ fn get_expected_output(template: &Template) -> &str {
 
                 Collected 8 test(s) from test_name package
                 Running 8 test(s) from tests/
-                [PASS] test_name_integrationtest::test_erc20::should_panic_transfer [..]
-                [PASS] test_name_integrationtest::test_erc20::test_get_balance [..]
-                [PASS] test_name_integrationtest::test_erc20::test_transfer [..]
-                [PASS] test_name_integrationtest::test_erc20::test_transfer_event [..]
-                [PASS] test_name_integrationtest::test_token_sender::test_multisend [..]
-                [PASS] test_name_integrationtest::test_token_sender::test_single_send_fuzz [..]
-                [PASS] test_name_integrationtest::test_token_sender::test_single_send [..]
-                [PASS] test_name_integrationtest::test_erc20::test_fork_transfer [..]
+                [PASS] test_name_integrationtest::test_erc20::should_panic_transfer
+                [PASS] test_name_integrationtest::test_erc20::test_get_balance
+                [PASS] test_name_integrationtest::test_erc20::test_transfer
+                [PASS] test_name_integrationtest::test_erc20::test_transfer_event
+                [PASS] test_name_integrationtest::test_token_sender::test_multisend
+                [PASS] test_name_integrationtest::test_token_sender::test_single_send_fuzz (runs: [..])
+                [PASS] test_name_integrationtest::test_token_sender::test_single_send
+                [PASS] test_name_integrationtest::test_erc20::test_fork_transfer
                 Running 0 test(s) from src/
                 Tests: 8 passed, 0 failed, 0 ignored, 0 filtered out
                 "
@@ -342,8 +342,8 @@ fn test_init_project_with_custom_snforge_dependency_git() {
         Collected 2 test(s) from test_name package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [PASS] test_name_integrationtest::test_contract::test_increase_balance [..]
-        [PASS] test_name_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value [..]
+        [PASS] test_name_integrationtest::test_contract::test_increase_balance
+        [PASS] test_name_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value
         Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
         ",
         remote_url.trim_end_matches(".git")

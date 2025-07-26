@@ -196,6 +196,7 @@ mod tests {
                 )
                 .unwrap(),
             ),
+            scarb_profile: String::default(),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -484,6 +485,7 @@ mod tests {
                 )
                 .unwrap(),
             ),
+            scarb_profile: String::default(),
             test_cases: vec![],
             tests_location: TestTargetLocation::Lib,
         };
@@ -532,6 +534,7 @@ mod tests {
                 )
                 .unwrap(),
             ),
+            scarb_profile: String::default(),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -738,6 +741,7 @@ mod tests {
                 )
                 .unwrap(),
             ),
+            scarb_profile: String::default(),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -853,6 +857,7 @@ mod tests {
                 )
                 .unwrap(),
             ),
+            scarb_profile: String::default(),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),

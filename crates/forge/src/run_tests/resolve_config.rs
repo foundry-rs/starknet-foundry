@@ -48,6 +48,7 @@ pub async fn resolve_config(
         sierra_program: test_target.sierra_program,
         sierra_program_path: test_target.sierra_program_path,
         casm_program: test_target.casm_program,
+        scarb_profile: test_target.scarb_profile,
         test_cases,
     })
 }
@@ -159,6 +160,7 @@ mod tests {
                 )
                 .unwrap(),
             ),
+            scarb_profile: String::default(),
             test_cases: vec![TestCaseWithConfig {
                 name: "crate1::do_thing".to_string(),
                 config: TestCaseConfig {

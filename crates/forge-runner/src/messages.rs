@@ -46,6 +46,7 @@ impl TestResultMessage {
         test_result: &AnyTestCaseSummary,
         show_detailed_resources: bool,
         tracked_resource: ForgeTrackedResource,
+        scarb_profile: &str,
     ) -> Self {
         let name = test_result
             .name()
@@ -63,7 +64,13 @@ impl TestResultMessage {
                     test_statistics: FuzzingStatistics { runs },
                     gas_info,
                     ..
-                } => format!(" (runs: {runs}, {gas_info})"),
+                } => {
+                    if scarb_profile == "release" {
+                        format!(" (runs: {runs}, {gas_info})")
+                    } else {
+                        format!(" (runs: {runs})")
+                    }
+                }
                 TestCaseSummary::Failed {
                     fuzzer_args,
                     test_statistics: FuzzingStatistics { runs },
@@ -77,10 +84,14 @@ impl TestResultMessage {
 
         let gas_usage = match test_result {
             AnyTestCaseSummary::Single(TestCaseSummary::Passed { gas_info, .. }) => {
-                format!(
-                    " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
-                    gas_info.l1_gas, gas_info.l1_data_gas, gas_info.l2_gas
-                )
+                if scarb_profile == "release" {
+                    format!(
+                        " (l1_gas: ~{}, l1_data_gas: ~{}, l2_gas: ~{})",
+                        gas_info.l1_gas, gas_info.l1_data_gas, gas_info.l2_gas
+                    )
+                } else {
+                    String::new()
+                }
             }
             _ => String::new(),
         };

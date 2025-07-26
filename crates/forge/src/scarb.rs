@@ -6,7 +6,7 @@ use configuration::PackageConfig;
 use forge_runner::package_tests::TestTargetLocation;
 use forge_runner::package_tests::raw::TestTargetRaw;
 use scarb_api::{ScarbCommand, test_targets_by_name};
-use scarb_metadata::PackageMetadata;
+use scarb_metadata::{Metadata, PackageMetadata};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter, ProfileSpec};
 use semver::Version;
 use std::fs;
@@ -85,6 +85,7 @@ fn build_test_artifacts_with_scarb(
 pub fn load_test_artifacts(
     target_dir: &Utf8Path,
     package: &PackageMetadata,
+    scarb_metadata: &Metadata,
 ) -> Result<Vec<TestTargetRaw>> {
     let mut targets = vec![];
 
@@ -113,6 +114,7 @@ pub fn load_test_artifacts(
                     sierra_program,
                     sierra_program_path,
                     tests_location,
+                    scarb_profile: scarb_metadata.current_profile.clone(),
                 };
 
                 targets.push(test_target);

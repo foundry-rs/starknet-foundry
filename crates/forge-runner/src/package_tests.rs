@@ -103,6 +103,7 @@ pub struct TestTarget<C> {
     pub sierra_program: ProgramArtifact,
     pub sierra_program_path: Arc<Utf8PathBuf>,
     pub casm_program: Arc<AssembledProgramWithDebugInfo>,
+    pub scarb_profile: String,
     pub test_cases: Vec<TestCase<C>>,
 }
 

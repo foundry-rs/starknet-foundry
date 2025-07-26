@@ -76,6 +76,7 @@ pub async fn run_for_test_target(
                 &result,
                 forge_config.output_config.detailed_resources,
                 forge_config.test_runner_config.tracked_resource,
+                &tests.scarb_profile,
             );
             ui.println(&test_result_message);
         }
