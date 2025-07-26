@@ -3,7 +3,8 @@ use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSu
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use console::style;
-use foundry_ui::Message;
+use foundry_ui::components::warning::WarningMessage;
+use foundry_ui::{Message, UI};
 use serde::Serialize;
 use serde_json::{Value, json};
 
@@ -47,6 +48,7 @@ impl TestResultMessage {
         show_detailed_resources: bool,
         tracked_resource: ForgeTrackedResource,
         scarb_profile: &str,
+        ui: &UI,
     ) -> Self {
         let name = test_result
             .name()
@@ -98,7 +100,12 @@ impl TestResultMessage {
 
         let used_resources = match (show_detailed_resources, &test_result) {
             (true, AnyTestCaseSummary::Single(TestCaseSummary::Passed { used_resources, .. })) => {
-                format_detailed_resources(used_resources, tracked_resource)
+                if scarb_profile == "release" {
+                    format_detailed_resources(used_resources, tracked_resource)
+                } else {
+                    ui.println(&WarningMessage::new("`--detailed-resources` flag is ignored because it's only available when compiling with the release profile"));
+                    String::new()
+                }
             }
             _ => String::new(),
         };

@@ -1026,6 +1026,7 @@ fn incompatible_snforge_std_version_error() {
 fn detailed_resources_flag() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)
+        .arg("--release")
         .arg("--detailed-resources")
         .assert()
         .success();
@@ -1040,7 +1041,7 @@ fn detailed_resources_flag() {
         Collected 1 test(s) from erc20_package package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] erc20_package_integrationtest::test_complex::complex
+        [PASS] erc20_package_integrationtest::test_complex::complex (l1_gas: ~[..], l1_data_gas: ~[..], l2_gas: ~[..])
                 steps: [..]
                 memory holes: [..]
                 builtins: ([..])
@@ -1055,6 +1056,7 @@ fn detailed_resources_flag() {
 fn detailed_resources_flag_sierra_gas() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)
+        .arg("--release")
         .arg("--detailed-resources")
         .arg("--tracked-resource")
         .arg("sierra-gas")
@@ -1072,7 +1074,7 @@ fn detailed_resources_flag_sierra_gas() {
         Collected 1 test(s) from erc20_package package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] erc20_package_integrationtest::test_complex::complex
+        [PASS] erc20_package_integrationtest::test_complex::complex (l1_gas: ~[..], l1_data_gas: ~[..], l2_gas: ~[..])
                 sierra_gas_consumed: [..]
                 syscalls: ([..])
         Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
@@ -1086,6 +1088,7 @@ fn detailed_resources_mixed_resources() {
     let temp = setup_package("forking");
     let output = test_runner(&temp)
         .arg("test_track_resources")
+        .arg("--release")
         .arg("--detailed-resources")
         .arg("--tracked-resource")
         .arg("sierra-gas")
@@ -1099,7 +1102,7 @@ fn detailed_resources_mixed_resources() {
         [..]Finished[..]
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
-        [PASS] forking::tests::test_track_resources
+        [PASS] forking::tests::test_track_resources (l1_gas: ~[..], l1_data_gas: ~[..], l2_gas: ~[..])
                 sierra_gas_consumed: [..]
                 syscalls: ([..])
                 steps: [..]
@@ -1107,6 +1110,29 @@ fn detailed_resources_mixed_resources() {
                 builtins: (range_check: [..])
 
         Tests: 1 passed, 0 failed, 0 ignored, [..] filtered out
+        "},
+    );
+}
+
+#[test]
+fn detailed_resources_no_release_profile() {
+    let temp = setup_package("erc20_package");
+    let output = test_runner(&temp)
+        .arg("--detailed-resources")
+        .assert()
+        .success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 1 test(s) from erc20_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] erc20_package_integrationtest::test_complex::complex
+        [WARNING] `--detailed-resources` flag is ignored because it's only available when compiling with the release profile
+        Tests: 1 passed, 0 failed, 0 ignored, 0 filtered out
         "},
     );
 }
@@ -1175,7 +1201,6 @@ fn call_nonexistent_selector() {
 fn sierra_gas_with_older_scarb() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)
-        .arg("--detailed-resources")
         .arg("--tracked-resource")
         .arg("sierra-gas")
         .assert()
