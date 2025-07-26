@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Gas summary for tests is now displayed only when compiling with the `--release` profile
+- `--detailed-resources` flag is now ignored unless the release profile is used
 
 #### Deprecated
 
