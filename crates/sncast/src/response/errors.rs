@@ -1,5 +1,6 @@
-use crate::{ErrorData, WaitForTransactionError, handle_rpc_error};
+use crate::{handle_rpc_error, ErrorData, WaitForTransactionError};
 use anyhow::anyhow;
+use cairo_vm::Felt252;
 use console::style;
 use conversions::serde::serialize::CairoSerialize;
 
@@ -7,7 +8,7 @@ use conversions::byte_array::ByteArray;
 
 use foundry_ui::Message;
 use serde::Serialize;
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 use starknet::core::types::{ContractErrorData, StarknetError, TransactionExecutionErrorData};
 use starknet::providers::ProviderError;
 use thiserror::Error;
@@ -51,6 +52,8 @@ pub enum StarknetCommandError {
     WaitForTransactionError(#[from] WaitForTransactionError),
     #[error(transparent)]
     ProviderError(#[from] SNCastProviderError),
+    #[error("Contract with class hash {0} is already declared on Starknet.")]
+    ClassAlreadyDeclared(Felt252),
 }
 
 #[must_use]

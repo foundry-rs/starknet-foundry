@@ -1,7 +1,7 @@
-use anyhow::{Context, Result, anyhow};
+use anyhow::{anyhow, Context, Result};
 use clap::Args;
-use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
+use conversions::IntoConv;
 use foundry_ui::UI;
 use scarb_api::StarknetContractArtifacts;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
@@ -10,7 +10,7 @@ use sncast::response::declare::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
 };
 use sncast::response::errors::StarknetCommandError;
-use sncast::{ErrorData, WaitForTx, apply_optional_fields, handle_wait_for_tx};
+use sncast::{apply_optional_fields, handle_wait_for_tx, ErrorData, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, DeclarationV3};
 use starknet::core::types::{DeclareTransactionResult, StarknetError};
@@ -135,7 +135,9 @@ pub async fn declare(
                 class_hash: class_hash.into_(),
             }))
         }
-        Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
+        Err(Provider(ProviderError::StarknetError(StarknetError::ClassAlreadyDeclared))) => Err(
+            StarknetCommandError::ClassAlreadyDeclared(class_hash.into_()),
+        ),
         Err(error) => Err(anyhow!(format!("Unexpected error occurred: {error}")).into()),
     }
 }
