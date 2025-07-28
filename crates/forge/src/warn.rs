@@ -130,8 +130,7 @@ pub fn warn_if_snforge_std_deprecated_does_not_match_package_version(
     scarb_metadata: &Metadata,
     ui: &UI,
 ) -> Result<()> {
-    let snforge_std_deprecated_version_requirement =
-        snforge_std_deprecated_recommended_version();
+    let snforge_std_deprecated_version_requirement = snforge_std_deprecated_recommended_version();
     if !package_matches_version_requirement(
         scarb_metadata,
         "snforge_std_deprecated",
