@@ -38,16 +38,17 @@ pub enum SplitResult {
 pub fn split(path: &ExprPath, db: &SimpleParserDatabase) -> Result<SplitResult, PathSplitError> {
     let mut splits = Vec::new();
     let elements = path.segments(db).elements(db);
-    for (i, p) in elements.iter().enumerate() {
+    let elements_len = elements.len();
+    for (i, p) in elements.enumerate() {
         match p {
             PathSegment::Simple(segment) => {
                 splits.push(segment.ident(db).token(db).text(db).to_string());
             }
             PathSegment::WithGenericArgs(segment) => {
                 splits.push(segment.ident(db).token(db).text(db).to_string());
-                let generic_args = extract_generic_args(segment, db)?;
+                let generic_args = extract_generic_args(&segment, db)?;
 
-                let is_last = i == elements.len() - 1;
+                let is_last = i == elements_len - 1;
                 return if is_last {
                     Ok(SplitResult::WithGenericArgs {
                         splits,
@@ -72,7 +73,6 @@ fn extract_generic_args(
         .generic_args(db)
         .generic_args(db)
         .elements(db)
-        .into_iter()
         .map(|arg| match arg {
             GenericArg::Named(_) => Err(PathSplitError::InvalidGenericArgs),
             GenericArg::Unnamed(arg) => match arg.value(db) {
