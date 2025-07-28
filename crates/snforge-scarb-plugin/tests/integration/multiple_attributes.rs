@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, empty_function};
-use cairo_lang_macro::{quote, TokenStream};
+use cairo_lang_macro::{quote, TokenStream, TokenTree};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{ModuleItem, SyntaxFile};
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
@@ -41,7 +41,7 @@ fn get_function(token_stream: &TokenStream, function_name: &str, skip_args: bool
     let attrs = function.attributes(&db).as_syntax_node();
     let attrs = SyntaxNodeWithDb::new(&attrs, &db);
 
-    if skip_args {
+    let mut token_stream = if skip_args {
         quote! {
             #vis #signature
             #body
@@ -52,7 +52,15 @@ fn get_function(token_stream: &TokenStream, function_name: &str, skip_args: bool
             #vis #signature
             #body
         }
+    };
+
+    match &mut token_stream.tokens[0] {
+        TokenTree::Ident(ident) => {
+            ident.span.start = 0;
+        }
     }
+
+    token_stream
 }
 
 #[test]
