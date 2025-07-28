@@ -7,7 +7,7 @@ use anyhow::{Result, bail};
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
-use blockifier::execution::entry_point_execution::prepare_call_arguments;
+use blockifier::execution::entry_point_execution::{prepare_call_arguments, run_entry_point};
 use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::cached_state::CachedState;
 use cairo_vm::Felt252;
@@ -53,7 +53,6 @@ mod syscall_handler;
 pub mod with_config;
 
 use crate::debugging::{TraceVerbosity, build_debugging_trace};
-use crate::running::copied_code::run_entry_point;
 pub use hints::hints_to_params;
 use setup::VmExecutionContext;
 pub use syscall_handler::has_segment_arena;
