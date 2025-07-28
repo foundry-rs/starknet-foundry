@@ -1,7 +1,7 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use clap::Args;
-use conversions::byte_array::ByteArray;
 use conversions::IntoConv;
+use conversions::byte_array::ByteArray;
 use foundry_ui::UI;
 use scarb_api::StarknetContractArtifacts;
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
@@ -10,7 +10,7 @@ use sncast::response::declare::{
     AlreadyDeclaredResponse, DeclareResponse, DeclareTransactionResponse,
 };
 use sncast::response::errors::StarknetCommandError;
-use sncast::{apply_optional_fields, handle_wait_for_tx, ErrorData, WaitForTx};
+use sncast::{ErrorData, WaitForTx, apply_optional_fields, handle_wait_for_tx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, DeclarationV3};
 use starknet::core::types::{DeclareTransactionResult, StarknetError};

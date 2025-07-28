@@ -1,4 +1,4 @@
-use crate::{handle_rpc_error, ErrorData, WaitForTransactionError};
+use crate::{ErrorData, WaitForTransactionError, handle_rpc_error};
 use anyhow::anyhow;
 use cairo_vm::Felt252;
 use console::style;
@@ -8,7 +8,7 @@ use conversions::byte_array::ByteArray;
 
 use foundry_ui::Message;
 use serde::Serialize;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use starknet::core::types::{ContractErrorData, StarknetError, TransactionExecutionErrorData};
 use starknet::providers::ProviderError;
 use thiserror::Error;
