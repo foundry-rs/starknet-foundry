@@ -1,6 +1,6 @@
 use crate::attributes::{AttributeInfo, ErrorExt};
 use crate::utils::create_single_token;
-use cairo_lang_macro::{quote, Diagnostic, TokenStream};
+use cairo_lang_macro::{quote, Diagnostic, TokenStream, TokenTree};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::SyntaxFile;
 use cairo_lang_syntax::node::{
@@ -47,11 +47,19 @@ impl AttributeInfo for InternalCollector {
 pub fn parse_args(args: &TokenStream) -> (SimpleParserDatabase, OptionArgListParenthesized) {
     let attr_name = create_single_token(InternalCollector::ATTR_NAME);
     let args = args.clone();
-    let (simple_db, func) = parse::<InternalCollector>(&quote! {
+    let mut token_stream = quote! {
         #[#attr_name #args]
         fn __SNFORGE_INTERNAL_FN__(){{}}
-    })
-    .expect("Parsing the arguments shouldn't fail at this stage"); // Arguments were parsed previously, so they should pass parsing here
+    };
+    if !token_stream.is_empty() {
+        match &mut token_stream.tokens[0] {
+            TokenTree::Ident(ident) => {
+                ident.span.start = 0;
+            }
+        }
+    }
+    let (simple_db, func) = parse::<InternalCollector>(&token_stream)
+        .expect("Parsing the arguments shouldn't fail at this stage"); // Arguments were parsed previously, so they should pass parsing here
 
     let db = simple_db.upcast();
 
