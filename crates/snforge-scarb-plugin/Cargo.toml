@@ -10,9 +10,9 @@ crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 cairo-lang-macro = "0.2.0-rc.1"
-cairo-lang-parser = { git = "https://github.com/starkware-libs/cairo.git", rev = "dd5e56753f1cb88240929ae51fc38c327492d2ea" }
-cairo-lang-utils = { git = "https://github.com/starkware-libs/cairo.git", rev = "dd5e56753f1cb88240929ae51fc38c327492d2ea" }
-cairo-lang-syntax = { git = "https://github.com/starkware-libs/cairo.git", rev = "dd5e56753f1cb88240929ae51fc38c327492d2ea" }
+cairo-lang-parser = "2.12.0-rc.2"
+cairo-lang-utils = "2.12.0-rc.2"
+cairo-lang-syntax = "2.12.0-rc.2"
 cairo-lang-primitive-token = "1"
 url = "=2.5.4"
 indoc = "=2.0.5"
@@ -20,4 +20,4 @@ smol_str = "=0.3.2"
 num-bigint = "=0.4.6"
 
 [dev-dependencies]
-cairo-lang-formatter = { git = "https://github.com/starkware-libs/cairo.git", rev = "dd5e56753f1cb88240929ae51fc38c327492d2ea" }
+cairo-lang-formatter = "2.12.0-rc.2"
