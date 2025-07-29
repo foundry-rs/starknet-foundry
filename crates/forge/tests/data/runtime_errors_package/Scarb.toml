@@ -1,0 +1,15 @@
+[package]
+name = "runtime_errors_package"
+version = "0.1.0"
+edition = "2024_07"
+
+[dependencies]
+starknet = "2.4.0"
+
+[dev-dependencies]
+snforge_std = { path = "../../../../../snforge_std" }
+
+[[target.starknet-contract]]
+
+[tool.snforge]
+exit_first = false

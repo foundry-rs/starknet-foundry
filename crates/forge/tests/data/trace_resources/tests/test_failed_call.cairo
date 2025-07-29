@@ -1,11 +1,12 @@
 use core::clone::Clone;
 use core::panic_with_felt252;
 use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
-use snforge_std::{declare, ContractClassTrait};
-
-use trace_resources::{
-    trace_info_checker::{ITraceInfoCheckerSafeDispatcherTrait, ITraceInfoCheckerSafeDispatcher},
-    trace_info_proxy::{ITraceInfoProxySafeDispatcherTrait, ITraceInfoProxySafeDispatcher},
+use snforge_std::{ContractClassTrait, declare};
+use trace_resources::trace_info_checker::{
+    ITraceInfoCheckerSafeDispatcher, ITraceInfoCheckerSafeDispatcherTrait,
+};
+use trace_resources::trace_info_proxy::{
+    ITraceInfoProxySafeDispatcher, ITraceInfoProxySafeDispatcherTrait,
 };
 
 #[test]

@@ -62,7 +62,7 @@ impl ScarbCommand {
     /// Creates [`VersionCommand`] command
     #[must_use]
     pub fn version() -> VersionCommand {
-        VersionCommand
+        VersionCommand::new()
     }
 
     /// Ensures that `scarb` binary is available in the system.

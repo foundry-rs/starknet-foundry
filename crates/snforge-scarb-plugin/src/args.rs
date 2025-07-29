@@ -1,9 +1,9 @@
 use self::{named::NamedArgs, unnamed::UnnamedArgs};
 use crate::attributes::{AttributeInfo, ErrorExt};
 use cairo_lang_macro::Diagnostic;
+use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::{
     ast::{ArgClause, Expr, OptionArgListParenthesized},
-    db::SyntaxGroup,
     Terminal,
 };
 use smol_str::SmolStr;
@@ -21,7 +21,7 @@ pub struct Arguments {
 
 impl Arguments {
     pub fn new<T: AttributeInfo>(
-        db: &dyn SyntaxGroup,
+        db: &SimpleParserDatabase,
         args: OptionArgListParenthesized,
         warns: &mut Vec<Diagnostic>,
     ) -> Self {
@@ -30,13 +30,13 @@ impl Arguments {
             OptionArgListParenthesized::ArgListParenthesized(args) => {
                 let args = args.arguments(db).elements(db);
 
-                if args.is_empty() {
+                if args.len() == 0 {
                     warns.push(T::warn(
                         "used with empty argument list. Either remove () or specify some arguments",
                     ));
                 }
 
-                args
+                args.collect::<Vec<_>>()
             }
         };
 
@@ -56,7 +56,7 @@ impl Arguments {
                         .or_default()
                         .push(value.value(db));
                 }
-            };
+            }
         }
 
         this

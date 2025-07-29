@@ -1,5 +1,6 @@
 use camino::Utf8PathBuf;
 use packages_validation::check_and_lint;
+use test_utils::use_snforge_std_deprecated;
 
 #[test]
 fn validate_snforge_std() {
@@ -8,5 +9,7 @@ fn validate_snforge_std() {
         .unwrap()
         .try_into()
         .unwrap();
-    check_and_lint(&package_path);
+    if !use_snforge_std_deprecated() {
+        check_and_lint(&package_path);
+    }
 }
