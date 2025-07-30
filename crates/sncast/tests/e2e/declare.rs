@@ -8,7 +8,7 @@ use crate::helpers::fixtures::{
 use crate::helpers::runner::runner;
 use configuration::CONFIG_FILENAME;
 use indoc::indoc;
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains, assert_stdout_contains};
 use sncast::AccountType;
 use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH};
 use sncast::helpers::fee::FeeArgs;
@@ -40,7 +40,9 @@ async fn test_happy_case_human_readable() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
     assert_stdout_contains(
@@ -509,7 +511,7 @@ async fn test_many_packages_default() {
 }
 
 #[tokio::test]
-async fn test_worskpaces_package_specified_virtual_fibonacci() {
+async fn test_workspaces_package_specified_virtual_fibonacci() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
@@ -528,7 +530,9 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
 
     let output = snapbox.assert().success().get_output().clone();
     let output = output.stdout.clone();
@@ -538,7 +542,7 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
 }
 
 #[tokio::test]
-async fn test_worskpaces_package_no_contract() {
+async fn test_workspaces_package_no_contract() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
@@ -591,7 +595,9 @@ async fn test_no_scarb_profile() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(contract_path.path());
+    let snapbox = runner(&args)
+        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(contract_path.path());
     let output = snapbox.assert().success();
 
     assert_stdout_contains(
@@ -608,5 +614,38 @@ async fn test_no_scarb_profile() {
             class: [..]
             transaction: [..]
         "},
+    );
+}
+
+#[tokio::test]
+async fn test_no_explorer_links_on_localhost() {
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "localhost_test",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "declare",
+        "--url",
+        "http://localhost:5055/rpc",
+        "--contract-name",
+        "Map",
+    ];
+    let args = apply_test_resource_bounds_flags(args);
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert!(
+        !output
+            .as_stdout()
+            .contains("To see declaration details, visit:")
     );
 }

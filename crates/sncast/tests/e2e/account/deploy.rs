@@ -43,7 +43,9 @@ pub async fn test_happy_case(class_hash: &str, account_type: &str) {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     let bdg = snapbox.assert();
 
     let hash = get_transaction_hash(&bdg.get_output().stdout);
@@ -79,7 +81,9 @@ pub async fn test_happy_case_max_fee() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     let bdg = snapbox.assert();
 
     let hash = get_transaction_hash(&bdg.get_output().stdout);
@@ -115,7 +119,9 @@ pub async fn test_happy_case_add_profile() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     let output = snapbox.assert();
 
     let hash = get_transaction_hash(&output.get_output().stdout);
@@ -171,7 +177,9 @@ pub async fn test_valid_class_hash() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         Success: Account deployed
@@ -201,7 +209,9 @@ pub async fn test_valid_no_max_fee() {
         "my_account",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         Success: Account deployed
@@ -297,7 +307,9 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
         Success: Account deployed
@@ -561,7 +573,9 @@ pub async fn test_deploy_keystore_other_args() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
         Success: Account deployed
 
@@ -590,7 +604,9 @@ pub async fn test_json_output_format() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r#"
         {"transaction_hash":"0x0[..]"}
         {"links":"transaction: https://sepolia.starkscan.co/tx/0x0[..]","title":"account deployment"}

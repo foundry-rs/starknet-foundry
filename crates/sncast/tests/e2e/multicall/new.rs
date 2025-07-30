@@ -18,7 +18,9 @@ async fn test_happy_case_file() {
         multicall_toml_file,
     ];
 
-    let snapbox = runner(&args).current_dir(tmp_dir.path());
+    let snapbox = runner(&args)
+        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tmp_dir.path());
     let output = snapbox.assert().success();
 
     assert_stdout_contains(
