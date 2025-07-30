@@ -1,0 +1,2 @@
+'Hello Starknet!'
+'Let's code in Cairo!'
