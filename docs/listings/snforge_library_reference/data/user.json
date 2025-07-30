@@ -1,0 +1,10 @@
+{
+    "age": 30,
+    "job": "Software Engineer",
+    "location": {
+        "city": "New York",
+        "country": "USA"
+    },
+    "name": "John",
+    "surname": "Doe"
+}
