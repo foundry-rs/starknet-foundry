@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- Max steps in tests (configured via the `--max-n-steps` argument) now defaults to `usize::MAX` when not specified (previously 10 million).
+
 ## [0.47.0] - 2025-07-28
 
 ### Forge
@@ -15,10 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `interact_with_state` cheatcode to enable effective use of `contract_state_for_testing` in snforge tests
 - Support for using [Scarb profiles](https://docs.swmansion.com/scarb/docs/reference/profiles.html) with `snforge test`, allowing to pass the same profile flags as in Scarb (`--release`, `--dev`, `--profile`) to build artifacts using a specific profile
-
-#### Changed
-
-- Max steps in tests (configured via the `--max-n-steps` argument) now defaults to `usize::MAX` when not specified (previously 10 million).
 
 #### Deprecated
 
