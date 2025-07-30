@@ -24,28 +24,6 @@ use toml_edit::{DocumentMut, Formatted, InlineTable, Item, Value};
 
 static RE_NEWLINES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\n{3,}").unwrap());
 
-#[test]
-fn init_new_project() {
-    let temp = tempdir_with_tool_versions().unwrap();
-
-    let output = runner(&temp)
-        .args(["init", "test_name"])
-        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
-        .assert()
-        .success();
-
-    assert_stdout_contains(
-        output,
-        indoc!(
-            r"
-                [WARNING] Command `snforge init` is deprecated and will be removed in the future. Please use `snforge new` instead.
-            "
-        ),
-    );
-
-    validate_init(&temp.join("test_name"), false, &Template::BalanceContract);
-}
-
 #[test_case(&Template::CairoProgram; "cairo-program")]
 #[test_case(&Template::BalanceContract; "balance-contract")]
 #[test_case(&Template::Erc20Contract; "erc20-contract")]
