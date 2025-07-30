@@ -1,7 +1,7 @@
 use snforge_std::{
     declare, ContractClassTrait, DeclareResultTrait, spy_events,
     EventSpyAssertionsTrait, // Add for assertions on the EventSpy
-    Event, // Import the base Event
+    Event // Import the base Event
 };
 
 use testing_events::contract::{
@@ -25,13 +25,6 @@ fn test_simple_assertions() {
 
     let expected = Event { keys, data }; // Instantiate the Event
 
-    spy
-        .assert_emitted(
-            @array![ // Assert
-                (
-                    contract_address,
-                    expected
-                ),
-            ],
-        );
+    spy.assert_emitted(@array![ // Assert
+    (contract_address, expected)]);
 }
