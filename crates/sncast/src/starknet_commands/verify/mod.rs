@@ -2,6 +2,7 @@ use anyhow::{Result, anyhow, bail};
 use camino::Utf8PathBuf;
 use clap::{ArgGroup, Args, ValueEnum};
 use foundry_ui::UI;
+use foundry_ui::components::warning::WarningMessage;
 use promptly::prompt;
 use scarb_api::StarknetContractArtifacts;
 use sncast::get_provider;
@@ -167,6 +168,11 @@ pub async fn verify(
 
     match verifier {
         Verifier::Walnut => {
+            if test_files {
+                ui.println(&WarningMessage::new(
+                    "The --test-files option is ignored for Walnut verifier",
+                ));
+            }
             let walnut = WalnutVerificationInterface::new(
                 network,
                 workspace_dir.to_path_buf(),
@@ -174,7 +180,7 @@ pub async fn verify(
                 ui,
             )?;
             walnut
-                .verify(contract_identifier, contract_name, package, test_files, ui)
+                .verify(contract_identifier, contract_name, package, false, ui)
                 .await
         }
         Verifier::Voyager => {

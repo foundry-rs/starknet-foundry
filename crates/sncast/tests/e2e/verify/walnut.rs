@@ -476,8 +476,22 @@ async fn test_worskpaces_package_no_contract() {
 }
 
 #[tokio::test]
-async fn test_test_files_flag_not_supported() {
+async fn test_test_files_flag_ignored_with_warning() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+
+    let mock_server = MockServer::start().await;
+
+    let verifier_response = "Contract successfully verified";
+
+    Mock::given(method("POST"))
+        .and(path("/v1/sn_sepolia/verify"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .append_header("content-type", "text/plain")
+                .set_body_string(verifier_response),
+        )
+        .mount(&mock_server)
+        .await;
 
     let args = vec![
         "--accounts-file",
@@ -495,17 +509,23 @@ async fn test_test_files_flag_not_supported() {
         "--confirm-verification",
     ];
 
-    let snapbox = runner(&args).current_dir(contract_path.path());
+    let snapbox = runner(&args)
+        .env("VERIFIER_API_URL", mock_server.uri())
+        .current_dir(contract_path.path());
 
     let output = snapbox.assert().success();
 
-    assert_stderr_contains(
+    assert_stdout_contains(
         output,
         formatdoc!(
             r"
-        Command: verify
-        Error: The `--test-files` option is not supported by the walnut verifier
-        "
+        [WARNING] The --test-files option is ignored for Walnut verifier
+        {}Success: Verification completed
+
+        {}
+        ",
+            "",
+            verifier_response
         ),
     );
 }

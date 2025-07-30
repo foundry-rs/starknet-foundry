@@ -35,14 +35,9 @@ impl VerificationInterface<'_> for WalnutVerificationInterface {
         identifier: ContractIdentifier,
         contract_name: String,
         _package: Option<String>,
-        test_files: bool,
+        _test_files: bool,
         _ui: &UI,
     ) -> Result<VerifyResponse> {
-        if test_files {
-            return Err(anyhow::anyhow!(
-                "The `--test-files` option is not supported by the walnut verifier"
-            ));
-        }
         // Read all files name along with their contents in a JSON format
         // in the workspace dir recursively
         // key is the file name and value is the file content
