@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `ready` option for `--type` flag in `account create` and `account import` commands (Argent wallet has rebranded as Ready)
+- `--test-files` flag to `verify` command to include test files under src/ for verification (only applies to voyager)
 
 #### Changed
 
