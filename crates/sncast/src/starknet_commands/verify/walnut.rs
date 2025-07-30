@@ -35,6 +35,7 @@ impl VerificationInterface<'_> for WalnutVerificationInterface {
         identifier: ContractIdentifier,
         contract_name: String,
         _package: Option<String>,
+        _test_files: bool,
         _ui: &UI,
     ) -> Result<VerifyResponse> {
         // Read all files name along with their contents in a JSON format
