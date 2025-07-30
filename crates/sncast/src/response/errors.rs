@@ -1,6 +1,6 @@
 use crate::{ErrorData, WaitForTransactionError, handle_rpc_error};
 use anyhow::anyhow;
-use cairo_vm::Felt252;
+use starknet_types_core::felt::Felt;
 use console::style;
 use conversions::serde::serialize::CairoSerialize;
 
