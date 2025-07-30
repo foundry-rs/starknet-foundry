@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Changed
+
+- Max steps in tests (configured via the `--max-n-steps` argument) now defaults to `usize::MAX` when not specified (previously 10 million).
+
+## [0.47.0] - 2025-07-28
+
+### Forge
+
 #### Added
 
 - `interact_with_state` cheatcode to enable effective use of `contract_state_for_testing` in snforge tests
