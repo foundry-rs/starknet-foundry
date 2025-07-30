@@ -1338,10 +1338,6 @@ snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v
 
 ### Cast
 
-#### Added
-
-- ClassAlreadyDeclared(Felt252) to the custom errors in `sncast/error.rs`.
-
 #### Changed
 
-- Match arm to include the new error message instead of the RPC provider error, for a more descriptive error.
+- Error in case of redeclaration was improved.

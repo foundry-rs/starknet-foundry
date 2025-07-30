@@ -1,8 +1,8 @@
 use crate::{ErrorData, WaitForTransactionError, handle_rpc_error};
 use anyhow::anyhow;
-use starknet_types_core::felt::Felt;
 use console::style;
 use conversions::serde::serialize::CairoSerialize;
+use starknet_types_core::felt::Felt;
 
 use conversions::byte_array::ByteArray;
 
@@ -53,7 +53,7 @@ pub enum StarknetCommandError {
     #[error(transparent)]
     ProviderError(#[from] SNCastProviderError),
     #[error("Contract with class hash {0} is already declared on Starknet.")]
-    ClassAlreadyDeclared(Felt252),
+    ClassAlreadyDeclared(Felt),
 }
 
 #[must_use]
