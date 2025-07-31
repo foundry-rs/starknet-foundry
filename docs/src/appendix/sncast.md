@@ -20,3 +20,4 @@
 * [tx-status](./sncast/tx-status.md)
 * [utils](./sncast/utils/utils.md)
     * [serialize](./sncast/utils/serialize.md)
+* [completions](./sncast/completions.md)
