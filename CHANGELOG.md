@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Changed
+
+- Max steps in tests (configured via the `--max-n-steps` argument) now defaults to `usize::MAX` when not specified (previously 10 million).
+
+## [0.47.0] - 2025-07-28
+
+### Forge
+
+#### Added
+
+- `interact_with_state` cheatcode to enable effective use of `contract_state_for_testing` in snforge tests
+- Support for using [Scarb profiles](https://docs.swmansion.com/scarb/docs/reference/profiles.html) with `snforge test`, allowing to pass the same profile flags as in Scarb (`--release`, `--dev`, `--profile`) to build artifacts using a specific profile
+
+#### Deprecated
+
+- The `snforge completion` command. Use `snforge completions` instead
+
 #### Fixed
 
 - Passing a cheatcode span of 0 was incorrectly treated as `CheatSpan::Indefinite`. This is now resolved by making `CheatSpan::TargetCalls` accept `NonZero<usize>` instead of just `usize` in `snforge_std`.
@@ -27,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Deprecated
 
 - `argent` option for `--type` flag in `account create` and `account import` commands. Use `ready` instead
+- The `sncast completion` command. Use `sncast completions` instead
 
 ## [0.46.0] - 2025-07-09
 

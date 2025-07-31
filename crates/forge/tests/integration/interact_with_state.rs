@@ -1,6 +1,6 @@
 use forge_runner::forge_config::ForgeTrackedResource;
 use indoc::indoc;
-use test_utils::runner::{Contract, assert_passed};
+use test_utils::runner::{Contract, assert_case_output_contains, assert_failed, assert_passed};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
@@ -81,4 +81,41 @@ fn get_contract_address_in_interact_with_state() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
 
     assert_passed(&result);
+}
+
+#[test]
+fn raise_error_if_non_existent_address() {
+    let test = test_case!(indoc!(
+        r"
+        use snforge_std::interact_with_state;
+
+        #[starknet::contract]
+        mod SingleFelt {
+            #[storage]
+            pub struct Storage {
+                pub field: felt252,
+            }
+        }
+
+        #[test]
+        fn test_single_felt() {
+            interact_with_state(
+                0x123.try_into().unwrap(),
+                || {
+                    let mut state = SingleFelt::contract_state_for_testing();
+                    state.field.write(1);
+                },
+            )
+        }
+            "
+    ));
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
+        "test_single_felt",
+        "Failed to interact with contract state because no contract is deployed at address 0x0000000000000000000000000000000000000000000000000000000000000123",
+    );
 }

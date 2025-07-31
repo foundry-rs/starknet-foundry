@@ -1,7 +1,7 @@
 use crate::package_tests::TestDetails;
-use crate::running::copied_code::prepare_program_extra_data;
 use blockifier::execution::contract_class::EntryPointV1;
 use blockifier::execution::entry_point::{EntryPointExecutionContext, ExecutableCallEntryPoint};
+use blockifier::execution::entry_point_execution::prepare_program_extra_data;
 use blockifier::execution::errors::PreExecutionError;
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
