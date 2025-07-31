@@ -34,8 +34,11 @@ $ snforge test read_txt_example
 ```shell
 Collected 1 test(s) from snforge_library_reference package
 Running 1 test(s) from tests/
-375902487384752430391285504918516769
-436145792296873180682911121719386801692617109281
+0x48656c6c6f20537461726b6e657421
+0x4c6574277320636f646520696e20436169726f21
+0x0
+0x4578616d706c652062797465206172726179
+0x12
 [PASS] snforge_library_reference_integrationtest::test_fs_read_txt::read_txt_example ([..])
 Running 0 test(s) from src/
 Tests: 1 passed, 0 failed, 0 ignored, [..] filtered out

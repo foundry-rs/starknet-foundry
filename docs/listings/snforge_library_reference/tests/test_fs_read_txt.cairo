@@ -4,7 +4,7 @@ use snforge_std::fs::{FileTrait, read_txt};
 fn read_txt_example() {
     let file = FileTrait::new("data/hello_starknet.txt");
     let content = read_txt(@file);
-    println!("{:?}", content);
+
     let expected = array![
         'Hello Starknet!',
         'Let\'s code in Cairo!',
