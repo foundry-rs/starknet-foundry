@@ -26,7 +26,7 @@ fn read_json_example() {
     let mut i = 0;
 
     while i != content.len() {
-        println!("{}", content[i]);
+        println!("0x{:x}", *content[i]);
         assert!(*content[i] == *expected_serialized_json[i]);
         i += 1;
     };
