@@ -119,7 +119,7 @@ For example, removing a `#[key]` attribute from this event would not lead to any
  }
 ```
 
-As an alternative solution to using contract structs, a base `snforge_std::Event` struct can be used in tests.
+A recommended solution to this problem is using the base `snforge_std::Event` struct in tests.
 
 ```rust
 {{#include ../../listings/testing_events/tests/assert_base.cairo}}
