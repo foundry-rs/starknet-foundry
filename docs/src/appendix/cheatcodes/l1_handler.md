@@ -22,7 +22,7 @@ Test code:
 {{#include ../../../listings/cheatcodes_reference/tests/test_l1_handler.cairo}}
 ```
 
-<!-- { "package_name": "snforge_library_reference" } -->
+<!-- { "package_name": "cheatcodes_reference" } -->
 Let's run the test:
 ```shell
 $ snforge test test_l1_handler
