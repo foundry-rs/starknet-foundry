@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Max steps in tests (configured via the `--max-n-steps` argument) now defaults to `usize::MAX` when not specified (previously 10 million).
 
+### Cast
+
+#### Changed
+
+- The supported RPC version is now 0.9.0
+
 ## [0.47.0] - 2025-07-28
 
 ### Forge
