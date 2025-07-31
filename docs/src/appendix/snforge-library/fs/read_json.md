@@ -34,22 +34,22 @@ $ snforge test read_json_example
 ```shell
 Collected 1 test(s) from snforge_library_reference package
 Running 1 test(s) from tests/
-30
-0
-28391512738467412385612170632190008583538
-17
-0
-5649052288429290091
-8
-0
-5591873
-3
-0
-1248815214
-4
-0
-4484965
-3
+0x1e
+0x0
+0x536f66747761726520456e67696e656572
+0x11
+0x0
+0x4e657720596f726b
+0x8
+0x0
+0x555341
+0x3
+0x0
+0x4a6f686e
+0x4
+0x0
+0x446f65
+0x3
 [PASS] snforge_library_reference_integrationtest::test_fs_read_json::read_json_example ([..])
 Running 0 test(s) from src/
 Tests: 1 passed, 0 failed, 0 ignored, [..] filtered out
