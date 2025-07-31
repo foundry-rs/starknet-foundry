@@ -245,7 +245,7 @@ async fn test_contract_already_declared() {
         output,
         indoc! {r"
         Command: declare
-        Error: Contract with the same class hash is already declared
+        Error: Contract with class hash 3108664225240562387851974058679424955795215347221665253736957753632123141297 is already declared on Starknet.
         "},
     );
 }
