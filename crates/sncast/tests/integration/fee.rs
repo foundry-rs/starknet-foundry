@@ -1,5 +1,5 @@
 use sncast::helpers::fee::{FeeArgs, FeeSettings};
-use starknet::core::types::{FeeEstimate, PriceUnit};
+use starknet::core::types::FeeEstimate;
 use starknet_types_core::felt::{Felt, NonZeroFelt};
 
 #[tokio::test]
@@ -65,7 +65,6 @@ async fn test_max_fee_set() {
         l2_gas_price: 4,
         l1_data_gas_consumed: 5,
         l1_data_gas_price: 6,
-        unit: PriceUnit::Fri,
         overall_fee: 44,
     };
 
@@ -105,7 +104,6 @@ async fn test_max_fee_set_and_fee_estimate_higher() {
         l2_gas_price: 40,
         l1_data_gas_consumed: 50,
         l1_gas_price: 60,
-        unit: PriceUnit::Fri,
         overall_fee: 4400,
     };
 
