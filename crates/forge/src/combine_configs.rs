@@ -1,6 +1,7 @@
 use crate::scarb::config::ForgeConfigFromScarb;
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
+use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, ForgeTrackedResource, OutputConfig, TestRunnerConfig,
 };
@@ -26,6 +27,7 @@ pub fn combine_configs(
     cache_dir: Utf8PathBuf,
     forge_config_from_scarb: &ForgeConfigFromScarb,
     additional_args: &[OsString],
+    trace_args: TraceArgs,
 ) -> ForgeConfig {
     let execution_data_to_save = ExecutionDataToSave::from_flags(
         save_trace_data || forge_config_from_scarb.save_trace_data,
@@ -51,6 +53,7 @@ pub fn combine_configs(
             environment_variables: env::vars().collect(),
         }),
         output_config: Arc::new(OutputConfig {
+            trace_args,
             detailed_resources: detailed_resources || forge_config_from_scarb.detailed_resources,
             execution_data_to_save,
         }),
@@ -77,6 +80,7 @@ mod tests {
             Utf8PathBuf::default(),
             &ForgeConfigFromScarb::default(),
             &[],
+            TraceArgs::default(),
         );
         let config2 = combine_configs(
             false,
@@ -92,6 +96,7 @@ mod tests {
             Utf8PathBuf::default(),
             &ForgeConfigFromScarb::default(),
             &[],
+            TraceArgs::default(),
         );
 
         assert_ne!(config.test_runner_config.fuzzer_seed, 0);
@@ -118,6 +123,7 @@ mod tests {
             Utf8PathBuf::default(),
             &ForgeConfigFromScarb::default(),
             &[],
+            TraceArgs::default(),
         );
         assert_eq!(
             config,
@@ -136,6 +142,7 @@ mod tests {
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: false,
                     execution_data_to_save: ExecutionDataToSave::default(),
+                    trace_args: TraceArgs::default(),
                 }),
             }
         );
@@ -170,6 +177,7 @@ mod tests {
             Utf8PathBuf::default(),
             &config_from_scarb,
             &[],
+            TraceArgs::default(),
         );
         assert_eq!(
             config,
@@ -193,6 +201,7 @@ mod tests {
                         coverage: true,
                         additional_args: vec![],
                     },
+                    trace_args: TraceArgs::default(),
                 }),
             }
         );
@@ -226,6 +235,7 @@ mod tests {
             Utf8PathBuf::default(),
             &config_from_scarb,
             &[],
+            TraceArgs::default(),
         );
 
         assert_eq!(
@@ -250,6 +260,7 @@ mod tests {
                         coverage: true,
                         additional_args: vec![],
                     },
+                    trace_args: TraceArgs::default(),
                 }),
             }
         );

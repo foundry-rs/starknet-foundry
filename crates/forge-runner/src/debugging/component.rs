@@ -1,8 +1,9 @@
 use crate::debugging::trace_verbosity::TraceVerbosity;
+use clap::ValueEnum;
 use strum_macros::VariantArray;
 
 /// Components that will be included in the trace.
-#[derive(Clone, VariantArray)]
+#[derive(ValueEnum, Clone, VariantArray, Debug, Eq, PartialEq)]
 pub enum Component {
     /// The name of the contract being called.
     ContractName,
@@ -34,8 +35,8 @@ impl Component {
     }
 }
 
-impl From<Component> for debugging::Component {
-    fn from(component: Component) -> Self {
+impl From<&Component> for debugging::Component {
+    fn from(component: &Component) -> Self {
         match component {
             Component::ContractName => debugging::Component::ContractName,
             Component::EntryPointType => debugging::Component::EntryPointType,
