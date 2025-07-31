@@ -1,3 +1,3 @@
 'Hello Starknet!'
 'Let's code in Cairo!'
-"Example of a reeeeeeeeeeeeeeeeally long byte array"
+"Example byte array"
