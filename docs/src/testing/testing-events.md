@@ -102,3 +102,25 @@ And add a test for it:
 
 Using `Event` struct from the `snforge_std` library we can easily assert nonstandard events.
 This also allows for testing the events you don't have the code of, or you don't want to import those.
+
+## Events and ABI Stability
+
+The testing approach where event structs from the contract are used may lead to accidental breaking changes in the
+contracts ABI.
+
+For example, removing a `#[key]` attribute from this event would not lead to any code changes in the event tests.
+
+```rust
+#[derive(Drop, starknet::Event)]
+ pub struct FirstEvent {
+     #[key]
+     pub some_key: felt252,
+     pub some_data: felt252,
+ }
+```
+
+A recommended solution to this problem is using the base `snforge_std::Event` struct in tests.
+
+```rust
+{{#include ../../listings/testing_events/tests/assert_base.cairo}}
+```
