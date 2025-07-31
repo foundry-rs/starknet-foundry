@@ -44,7 +44,7 @@ pub async fn test_happy_case(account_type: &str) {
     ];
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(temp_dir.path());
     let output = snapbox.assert().success();
 
@@ -110,7 +110,7 @@ pub async fn test_happy_case_argent_with_deprecation_warning() {
     ];
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(temp_dir.path());
     let output = snapbox.assert().success();
 
@@ -211,7 +211,7 @@ pub async fn test_happy_case_generate_salt() {
     ];
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(temp_dir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
@@ -299,7 +299,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
     ];
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(temp_dir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
@@ -433,7 +433,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     ];
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(formatdoc! {r"
@@ -483,7 +483,7 @@ pub async fn test_happy_case_keystore_argent_with_deprecation_warning() {
     ];
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(formatdoc! {r"
@@ -689,7 +689,7 @@ pub async fn test_happy_case_keystore_int_format() {
     ];
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(formatdoc! {r"
@@ -743,7 +743,7 @@ pub async fn test_happy_case_default_name_generation() {
 
     let assert_account_created = |id: usize| {
         runner(&create_args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path())
         .assert()
         .stdout_matches(formatdoc! {r"
@@ -1008,7 +1008,7 @@ pub async fn test_json_output_format() {
     ];
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(temp_dir.path());
     snapbox.assert().stdout_matches(indoc! {r#"
         {"add_profile":"Profile my_account successfully added to [..]/snfoundry.toml","address":"0x[..]","estimated_fee":"[..]","message":"Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee/n/nAfter prefunding the account, run:/nsncast --accounts-file accounts.json account deploy --url [..] --name my_account"}
@@ -1038,7 +1038,7 @@ pub async fn test_no_explorer_links_on_localhost() {
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().success();
-    println!("{}", output.as_stdout());
+
     assert!(
         !output
             .as_stdout()

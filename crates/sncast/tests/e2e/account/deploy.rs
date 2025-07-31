@@ -44,7 +44,7 @@ pub async fn test_happy_case(class_hash: &str, account_type: &str) {
     let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
     let bdg = snapbox.assert();
 
@@ -82,7 +82,7 @@ pub async fn test_happy_case_max_fee() {
     let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
     let bdg = snapbox.assert();
 
@@ -120,7 +120,7 @@ pub async fn test_happy_case_add_profile() {
     let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
     let output = snapbox.assert();
 
@@ -178,7 +178,7 @@ pub async fn test_valid_class_hash() {
     let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
@@ -210,7 +210,7 @@ pub async fn test_valid_no_max_fee() {
     ];
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
@@ -308,7 +308,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
@@ -574,7 +574,7 @@ pub async fn test_deploy_keystore_other_args() {
     let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
         Success: Account deployed
@@ -605,7 +605,7 @@ pub async fn test_json_output_format() {
     let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r#"
         {"transaction_hash":"0x0[..]"}

@@ -4,7 +4,7 @@ use serde::Serialize;
 use serde_json::{Value, json};
 use starknet_types_core::felt::Felt;
 
-const FORCE_SHOW_EXPLORER_LINKS_ENV: &str = "FORCE_SHOW_EXPLORER_LINKS";
+const SNCAST_FORCE_SHOW_EXPLORER_LINKS_ENV: &str = "SNCAST_FORCE_SHOW_EXPLORER_LINKS";
 
 // TODO(#3391): This code should be refactored to either use common `Message` trait or be directly
 // included in `sncast` output messages.
@@ -81,7 +81,7 @@ where
 
 #[must_use]
 pub fn is_explorer_link_overridden() -> bool {
-    std::env::var(FORCE_SHOW_EXPLORER_LINKS_ENV)
+    std::env::var(SNCAST_FORCE_SHOW_EXPLORER_LINKS_ENV)
         .map(|value| value == "1")
         .unwrap_or(false)
 }

@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- Block explorer links are now hidden by default when using `Devnet`. Set `FORCE_SHOW_EXPLORER_LINKS=1` env variable to display them.
+- Block explorer links are now hidden by default when using [`starknet-devnet`](https://github.com/0xSpaceShard/starknet-devnet). Set `SNCAST_FORCE_SHOW_EXPLORER_LINKS=1` env variable to display them.
 
 ## [0.47.0] - 2025-07-28
 

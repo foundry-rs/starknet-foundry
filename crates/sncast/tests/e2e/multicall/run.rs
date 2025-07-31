@@ -34,7 +34,7 @@ async fn test_happy_case(account: &str) {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).env("FORCE_SHOW_EXPLORER_LINKS", "1");
+    let snapbox = runner(&args).env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1");
     let output = snapbox.assert();
 
     let stderr_str = output.as_stderr();
@@ -78,7 +78,7 @@ async fn test_calldata_ids() {
     let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
     let output = snapbox.assert();
 
@@ -261,7 +261,7 @@ async fn test_numeric_inputs() {
     let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
     let output = snapbox.assert();
 

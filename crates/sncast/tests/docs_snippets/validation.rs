@@ -88,7 +88,7 @@ fn test_docs_snippets() {
         }
 
         let snapbox = runner(&args)
-            .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+            .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
             .current_dir(tempdir.path());
         let output = snapbox.assert().success();
 

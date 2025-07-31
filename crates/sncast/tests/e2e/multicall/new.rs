@@ -19,7 +19,7 @@ async fn test_happy_case_file() {
     ];
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tmp_dir.path());
     let output = snapbox.assert().success();
 

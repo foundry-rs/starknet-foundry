@@ -41,7 +41,7 @@ async fn test_happy_case_human_readable() {
     let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
@@ -531,7 +531,7 @@ async fn test_workspaces_package_specified_virtual_fibonacci() {
     let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
 
     let output = snapbox.assert().success().get_output().clone();
@@ -596,7 +596,7 @@ async fn test_no_scarb_profile() {
     let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(contract_path.path());
     let output = snapbox.assert().success();
 

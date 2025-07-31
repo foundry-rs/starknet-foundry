@@ -41,7 +41,7 @@ async fn test_happy_case_human_readable() {
     let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
@@ -377,7 +377,7 @@ async fn test_json_output_format() {
     let args = apply_test_resource_bounds_flags(args);
 
     let snapbox = runner(&args)
-        .env("FORCE_SHOW_EXPLORER_LINKS", "1")
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
         .current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
