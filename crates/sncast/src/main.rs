@@ -235,11 +235,13 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         Commands::Declare(declare) => {
             let provider = declare.rpc.get_provider(&config, ui).await?;
 
+            let rpc = declare.rpc.clone();
+
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
                 &provider,
-                config.keystore,
+                config.keystore.as_ref(),
             )
             .await?;
             let manifest_path = assert_manifest_path_exists()?;
@@ -255,6 +257,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 ui,
             )
             .expect("Failed to build contract");
+
             let result = starknet_commands::declare::declare(
                 declare,
                 &account,
@@ -274,13 +277,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 }
             });
 
-            let block_explorer_link = block_explorer_link_if_allowed(
-                &result,
-                provider.chain_id().await?,
-                config.show_explorer_links,
-                config.block_explorer,
-            );
-
+            let block_explorer_link =
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
             process_command_result("declare", result, ui, block_explorer_link);
 
             Ok(())
@@ -300,7 +298,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 &config.account,
                 &config.accounts_file,
                 &provider,
-                config.keystore,
+                config.keystore.as_ref(),
             )
             .await?;
 
@@ -326,12 +324,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .await
             .map_err(handle_starknet_command_error);
 
-            let block_explorer_link = block_explorer_link_if_allowed(
-                &result,
-                provider.chain_id().await?,
-                config.show_explorer_links,
-                config.block_explorer,
-            );
+            let block_explorer_link =
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
             process_command_result("deploy", result, ui, block_explorer_link);
 
             Ok(())
@@ -393,7 +387,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 &config.account,
                 &config.accounts_file,
                 &provider,
-                config.keystore,
+                config.keystore.as_ref(),
             )
             .await?;
 
@@ -418,12 +412,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .await
             .map_err(handle_starknet_command_error);
 
-            let block_explorer_link = block_explorer_link_if_allowed(
-                &result,
-                provider.chain_id().await?,
-                config.show_explorer_links,
-                config.block_explorer,
-            );
+            let block_explorer_link =
+                block_explorer_link_if_allowed(&result, provider.chain_id().await?, &rpc, &config);
 
             process_command_result("invoke", result, ui, block_explorer_link);
 
