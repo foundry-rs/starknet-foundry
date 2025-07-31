@@ -2,28 +2,6 @@
 
 Module containing functions for interacting with the filesystem.
 
-## `File`
-```
-trait FileTrait {
-    fn new(path: ByteArray) -> File;
-}
-```
-
-## `FileParser<T>`
-```rust
-trait FileParser<T, +Serde<T>> {
-    fn parse_txt(file: @File) -> Option<T>;
-    fn parse_json(file: @File) -> Option<T>;
-}
-```
-
-## `read_txt` & `read_json`
-```rust
-fn read_txt(file: @File) -> Array<felt252>;
-fn read_json(file: @File) -> Array<felt252>;
-```
-
-
 ## File format
 Some rules have to be checked when providing a file for snforge, in order for correct parsing behavior.
 Different ones apply for JSON and plain text files.
