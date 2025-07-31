@@ -32,7 +32,11 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         ColorOption::Auto => (),
     }
 
-    let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
+    let mut metadata_command = ScarbCommand::metadata();
+    if let Some(profile) = &args.scarb_args.profile.specified() {
+        metadata_command.profile(profile.clone());
+    }
+    let scarb_metadata = metadata_command.inherit_stderr().run()?;
 
     if args.coverage {
         can_coverage_be_generated(&scarb_metadata)?;
@@ -46,6 +50,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
         target_dir_for_workspace(&scarb_metadata).join(&scarb_metadata.current_profile);
 
     let packages: Vec<PackageMetadata> = args
+        .scarb_args
         .packages_filter
         .match_many(&scarb_metadata)
         .context("Failed to find any packages matching the specified filter")?;
@@ -63,7 +68,8 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
 
     build_artifacts_with_scarb(
         filter.clone(),
-        args.features.clone(),
+        args.scarb_args.features.clone(),
+        args.scarb_args.profile.clone(),
         &scarb_metadata.app_version_info.version,
         args.no_optimization,
     )?;

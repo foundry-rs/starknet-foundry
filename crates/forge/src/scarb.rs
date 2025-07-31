@@ -7,7 +7,7 @@ use forge_runner::package_tests::TestTargetLocation;
 use forge_runner::package_tests::raw::TestTargetRaw;
 use scarb_api::{ScarbCommand, test_targets_by_name};
 use scarb_metadata::PackageMetadata;
-use scarb_ui::args::{FeaturesSpec, PackagesFilter};
+use scarb_ui::args::{FeaturesSpec, PackagesFilter, ProfileSpec};
 use semver::Version;
 use std::fs;
 use std::io::ErrorKind;
@@ -40,32 +40,43 @@ pub fn should_compile_starknet_contract_target(
 pub fn build_artifacts_with_scarb(
     filter: PackagesFilter,
     features: FeaturesSpec,
+    profile: ProfileSpec,
     scarb_version: &Version,
     no_optimization: bool,
 ) -> Result<()> {
     if should_compile_starknet_contract_target(scarb_version, no_optimization) {
-        build_contracts_with_scarb(filter.clone(), features.clone())?;
+        build_contracts_with_scarb(filter.clone(), features.clone(), profile.clone())?;
     }
-    build_test_artifacts_with_scarb(filter, features)?;
+    build_test_artifacts_with_scarb(filter, features, profile)?;
     Ok(())
 }
 
-fn build_contracts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) -> Result<()> {
+fn build_contracts_with_scarb(
+    filter: PackagesFilter,
+    features: FeaturesSpec,
+    profile: ProfileSpec,
+) -> Result<()> {
     ScarbCommand::new_with_stdio()
         .arg("build")
         .packages_filter(filter)
         .features(features)
+        .profile(profile)
         .run()
         .context("Failed to build contracts with Scarb")?;
     Ok(())
 }
 
-fn build_test_artifacts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) -> Result<()> {
+fn build_test_artifacts_with_scarb(
+    filter: PackagesFilter,
+    features: FeaturesSpec,
+    profile: ProfileSpec,
+) -> Result<()> {
     ScarbCommand::new_with_stdio()
         .arg("build")
         .arg("--test")
         .packages_filter(filter)
         .features(features)
+        .profile(profile)
         .run()
         .context("Failed to build test artifacts with Scarb")?;
     Ok(())

@@ -32,7 +32,6 @@ impl SupportedCalldataKind for ExprInlineMacro {
         let type_parameters_from_abi = path
             .segments(db)
             .elements(db)
-            .into_iter()
             .find_map(|element| match element {
                 // We expect exactly one PathSegment::WithGenericArgs. More means that ABI is broken, less means that type other than Array is expected
                 Simple(_) => None,
@@ -41,7 +40,6 @@ impl SupportedCalldataKind for ExprInlineMacro {
                         .generic_args(db)
                         .generic_args(db)
                         .elements(db)
-                        .into_iter()
                         .map(|arg| match arg {
                             // There shouldn't be expressions like `identifier<T: some-trait-bound>` in the ABI
                             arg @ cairo_lang_syntax::node::ast::GenericArg::Named(_) => bail!(

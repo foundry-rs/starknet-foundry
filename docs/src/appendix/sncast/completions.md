@@ -1,5 +1,5 @@
-# `completion`
-Generates a completion script for the specified shell and writes it to `stdout`.
+# `completions`
+Generates a completions script for the specified shell and writes it to `stdout`.
 
 ## `[SHELL]`
 Optional 
