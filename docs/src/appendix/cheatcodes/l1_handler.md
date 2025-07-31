@@ -32,12 +32,12 @@ $ snforge test test_l1_handler
 <summary>Output:</summary>
 
 ```shell
-Collected 1 test(s) from snforge_library_reference package
-Running 0 test(s) from src/
+Collected 1 test(s) from cheatcodes_reference package
 Running 1 test(s) from tests/
 L1 message received from: 0x123
 Numbers: [1, 2, 3]
-[PASS] snforge_library_reference_integrationtest::test_l1_handler::test_l1_handler ([..])
+[PASS] cheatcodes_reference_integrationtest::test_l1_handler::test_l1_handler ([..])
+Running 0 test(s) from src/
 Tests: 1 passed, 0 failed, 0 ignored, [..] filtered out
 ```
 </details>
