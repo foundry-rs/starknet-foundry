@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
+      - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
         with:
           tool_versions: |
             scarb latest
@@ -42,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
@@ -79,7 +79,7 @@ jobs:
 
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
@@ -105,7 +105,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ matrix.version }}
@@ -116,7 +116,7 @@ jobs:
           devnet_version=$(grep starknet-devnet .tool-versions | cut -d " " -f 2)
           echo "Devnet version: $devnet_version"
           echo "version=$devnet_version" >> "$GITHUB_OUTPUT"
-      - uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
+      - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
         with:
           tool_versions: |
             starknet-devnet ${{ steps.get-devnet-version.outputs.version }}
@@ -134,7 +134,7 @@ jobs:
 
       - name: Get version from Cargo.toml
         id: lookupVersion
-        uses: mikefarah/yq@8bf425b4d1344db7cd469a8d10a390876e0c77fd
+        uses: mikefarah/yq@f03c9dc599c37bfcaf533427211d05e51e6fee64
         with:
           cmd: yq -oy '.workspace.package.version' 'Cargo.toml'
           
@@ -189,7 +189,7 @@ jobs:
     needs: [ test-forge-unit-and-integration, test-forge-e2e, test-cast , build-plugin-binaries, build-binaries, publish-plugin, publish-std, test-binary ]
     steps:
       - name: Notify that the workflow has failed
-        uses: slackapi/slack-github-action@v2.0.0
+        uses: slackapi/slack-github-action@v2.1.1
         with:
           webhook: ${{ secrets.SLACK_SCHEDULED_TESTS_FAILURE_WEBHOOK_URL }}
           webhook-type: webhook-trigger
