@@ -173,7 +173,7 @@ pub fn build_profiler_call_entry_point(
 
     let contract_name = get_contract_name(class_hash, contracts_data);
     let function_name = get_function_name(&entry_point_selector, contracts_data, fork_data);
-    let calldata_len = calldata.0.as_ref().len();
+    let calldata_len = calldata.0.len();
 
     ProfilerCallEntryPoint {
         class_hash: class_hash.map(|ch| cairo_annotations::trace_data::ClassHash(ch.0)),
