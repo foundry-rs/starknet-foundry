@@ -4,7 +4,7 @@ use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::indoc;
 use shared::test_utils::output_assert::{AsOutput, assert_stdout_contains};
 use std::fs;
-use test_utils::use_snforge_std_compatibility;
+use test_utils::use_snforge_std_deprecated;
 use toml_edit::{DocumentMut, value};
 
 #[test]
@@ -179,7 +179,7 @@ fn test_backtrace_panic() {
         .assert()
         .failure();
 
-    if use_snforge_std_compatibility() {
+    if use_snforge_std_deprecated() {
         assert_stdout_contains(
             output,
             indoc! {
@@ -251,7 +251,7 @@ fn test_backtrace_panic_without_inlines() {
         .assert()
         .failure();
 
-    if use_snforge_std_compatibility() {
+    if use_snforge_std_deprecated() {
         assert_stdout_contains(
             output,
             indoc! {
@@ -355,7 +355,7 @@ fn test_handled_error_not_display() {
             .contains("error occurred in contract 'FailableContract'")
     );
 
-    if use_snforge_std_compatibility() {
+    if use_snforge_std_deprecated() {
         assert_stdout_contains(
             output,
             indoc! {"

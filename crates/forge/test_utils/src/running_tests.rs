@@ -20,27 +20,17 @@ use std::sync::Arc;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
-fn run(
+#[must_use]
+pub fn run_test_case(
     test: &TestCase,
     tracked_resource: ForgeTrackedResource,
-    use_release_profile: bool,
 ) -> Vec<TestTargetSummary> {
-    if use_release_profile {
-        ScarbCommand::new_with_stdio()
-            .args(["--profile", "release"])
-            .current_dir(test.path().unwrap())
-            .arg("build")
-            .arg("--test")
-            .run()
-            .unwrap();
-    } else {
-        ScarbCommand::new_with_stdio()
-            .current_dir(test.path().unwrap())
-            .arg("build")
-            .arg("--test")
-            .run()
-            .unwrap();
-    }
+    ScarbCommand::new_with_stdio()
+        .current_dir(test.path().unwrap())
+        .arg("build")
+        .arg("--test")
+        .run()
+        .unwrap();
 
     let metadata = ScarbCommand::metadata()
         .current_dir(test.path().unwrap())
@@ -54,7 +44,7 @@ fn run(
         .unwrap();
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
-    let raw_test_targets = if use_release_profile {
+    let raw_test_targets = if false {
         load_test_artifacts(&test.path().unwrap().join("target/release"), package).unwrap()
     } else {
         load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap()
@@ -101,20 +91,4 @@ fn run(
     ))
     .expect("Runner fail")
     .summaries()
-}
-
-#[must_use]
-pub fn run_test_case_with_release_profile(
-    test: &TestCase,
-    tracked_resource: ForgeTrackedResource,
-) -> Vec<TestTargetSummary> {
-    run(test, tracked_resource, true)
-}
-
-#[must_use]
-pub fn run_test_case(
-    test: &TestCase,
-    tracked_resource: ForgeTrackedResource,
-) -> Vec<TestTargetSummary> {
-    run(test, tracked_resource, false)
 }
