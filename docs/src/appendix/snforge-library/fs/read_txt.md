@@ -1,5 +1,7 @@
 # `read_txt`
 
+Function for reading plain text files.
+
 ```rust
 fn read_txt(file: @File) -> Array<felt252>;
 ```

@@ -1,5 +1,7 @@
 # `FileParser<T>`
 
+Trait used for parsing files in different formats, such as JSON and plain text.
+
 ```rust
 trait FileParser<T, +Serde<T>> {
     fn parse_txt(file: @File) -> Option<T>;

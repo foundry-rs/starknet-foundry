@@ -1,5 +1,7 @@
 # `read_json`
 
+Function for reading JSON files.
+
 ```rust
 fn read_json(file: @File) -> Array<felt252>;
 ```

@@ -1,5 +1,7 @@
 # `File`
 
+Trait for handling file operations in Starknet Foundry.
+
 ```rust
 trait FileTrait {
     fn new(path: ByteArray) -> File;
