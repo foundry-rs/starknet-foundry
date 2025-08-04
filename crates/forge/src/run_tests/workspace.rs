@@ -48,7 +48,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
     }
 
     let scarb_version = ScarbCommand::version().run()?.scarb;
-    if MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT.matches(&scarb_version) {
+    if scarb_version >= MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT {
         error_if_snforge_std_not_compatible(&scarb_metadata)?;
         warn_if_snforge_std_does_not_match_package_version(&scarb_metadata, &ui)?;
     } else {

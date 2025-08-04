@@ -11,12 +11,12 @@ use foundry_ui::{Message, UI};
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter, ProfileSpec};
-use semver::{Version, VersionReq};
+use semver::Version;
 use shared::auto_completions::{Completions, generate_completions};
 use std::cell::RefCell;
 use std::ffi::OsString;
 use std::process::Command;
-use std::sync::{Arc, LazyLock};
+use std::sync::Arc;
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
 use tokio::runtime::Builder;
 use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
@@ -45,8 +45,7 @@ const MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS: Version = Version::new(2, 10, 0);
 const MINIMAL_SNFORGE_STD_VERSION: Version = Version::new(0, 44, 0);
 // TODO Set this to version from v2 macros release
 const MINIMAL_SNFORGE_STD_DEPRECATED_VERSION: Version = Version::new(0, 44, 0);
-pub static MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT: LazyLock<VersionReq> =
-    LazyLock::new(|| VersionReq::parse(">=2.12.0-rc.1").expect("Failed to parse version req"));
+pub const MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT: Version = Version::new(2, 12, 0);
 
 #[derive(Parser, Debug)]
 #[command(

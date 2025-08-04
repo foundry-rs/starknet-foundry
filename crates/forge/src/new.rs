@@ -54,7 +54,6 @@ impl TemplateManifestConfig {
         use_snforge_std_deprecated: bool,
     ) -> Result<()> {
         if env::var("DEV_DISABLE_SNFORGE_STD_DEPENDENCY").is_err() {
-            // TODO: Check Scarb `2.12`
             let snforge_package = if use_snforge_std_deprecated {
                 "snforge_std_deprecated"
             } else {
@@ -400,8 +399,7 @@ pub fn new(
         create_snfoundry_manifest(&snfoundry_manifest_path)?;
     }
 
-    let use_snforge_deprecated =
-        !MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT.matches(&scarb_version);
+    let use_snforge_deprecated = scarb_version < MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT;
 
     let template_config = TemplateManifestConfig::try_from(&template)?;
     template_config.add_dependencies(&scarb_manifest_path, use_snforge_deprecated)?;

@@ -59,5 +59,5 @@ pub fn use_snforge_std_deprecated() -> bool {
     let scarb_version_output = ScarbCommand::version()
         .run()
         .expect("Failed to get scarb version");
-    !MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT.matches(&scarb_version_output.scarb)
+    scarb_version_output.scarb < MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT
 }

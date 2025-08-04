@@ -430,8 +430,7 @@ mod tests {
             package_matches_version_requirement(
                 &scarb_metadata,
                 "starknet",
-                // TODO: Update to 2.12
-                &VersionReq::parse("2.12.0-rc.1").unwrap(),
+                &VersionReq::parse("2.12.0").unwrap(),
             )
             .unwrap()
         );
