@@ -285,7 +285,7 @@ fn generate_arg_cheatcode() {
         Failure data:
             "`generate_arg` cheatcode: `min_value` must be <= `max_value`, provided values after deserialization: 101 and 100"
 
-        [PASS] fuzzing_integrationtest::generate_arg::use_generate_arg_outside_fuzzer ([..])
+        [PASS] fuzzing_integrationtest::generate_arg::use_generate_arg_outside_fuzzer (l1_gas: ~0, l1_data_gas: ~0, l2_gas: ~40000)
         Tests: 1 passed, 1 failed, 0 ignored, 22 filtered out
         "#},
     );

@@ -49,7 +49,7 @@ fn should_allow_more_than_10m() {
     let temp = setup_package("steps");
 
     let output = test_runner(&temp)
-        .args(["--max-n-steps", "99999999"])
+        .args(["--max-n-steps", "15000100"])
         .assert()
         .code(0);
 

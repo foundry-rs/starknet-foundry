@@ -138,7 +138,7 @@ fn new_scarb_deprecated_macros() {
         .current_dir(temp.path())
         .run()
         .unwrap()
-        .cairo
+        .scarb
         .to_string();
 
     let output = test_runner(temp.join("abc")).assert().failure();

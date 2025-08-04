@@ -930,10 +930,7 @@ fn incompatible_snforge_std_version_warning() {
     scarb_toml["dev-dependencies"]["snforge_std"] = value("0.45.0");
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
-    let output = test_runner(&temp)
-        .args(["--max-n-steps", "99999999"])
-        .assert()
-        .success();
+    let output = test_runner(&temp).assert().failure();
 
     assert_stdout_contains(
         output,
@@ -945,9 +942,16 @@ fn incompatible_snforge_std_version_warning() {
         Collected 2 test(s) from steps package
         Running 2 test(s) from src/
         [PASS] steps::tests::steps_less_than_10000000 [..]
-        [PASS] steps::tests::steps_more_than_10000000 [..]
+        [FAIL] steps::tests::steps_more_than_10000000
 
-        Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
+        Failure data:
+            Could not reach the end of the program. RunResources has no remaining steps.
+            Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps
+
+        Tests: 1 passed, 1 failed, 0 ignored, 0 filtered out
+
+        Failures:
+            steps::tests::steps_more_than_10000000
         "},
     );
 }
@@ -1130,11 +1134,7 @@ fn sierra_gas_with_older_scarb() {
 fn exact_printing_pass() {
     let temp = setup_package("deterministic_output");
 
-    let output = test_runner(&temp)
-        .args(["--max-n-steps", "99999999"])
-        .arg("pass")
-        .assert()
-        .code(0);
+    let output = test_runner(&temp).arg("pass").assert().code(0);
 
     assert_stdout(
         output,
@@ -1152,11 +1152,7 @@ fn exact_printing_pass() {
 fn exact_printing_fail() {
     let temp = setup_package("deterministic_output");
 
-    let output = test_runner(&temp)
-        .args(["--max-n-steps", "99999999"])
-        .arg("fail")
-        .assert()
-        .code(1);
+    let output = test_runner(&temp).arg("fail").assert().code(1);
 
     assert_stdout(
         output,
@@ -1186,11 +1182,7 @@ fn exact_printing_fail() {
 fn exact_printing_mixed() {
     let temp = setup_package("deterministic_output");
 
-    let output = test_runner(&temp)
-        .args(["--max-n-steps", "99999999"])
-        .arg("x")
-        .assert()
-        .code(1);
+    let output = test_runner(&temp).arg("x").assert().code(1);
 
     assert_stdout(
         output,
