@@ -12,6 +12,7 @@ use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::cached_state::CachedState;
 use cairo_vm::Felt252;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
+use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::data::ForkData;
@@ -197,12 +198,9 @@ pub fn run_test_case(
     let tracked_resource = TrackedResource::from(runtime_config.tracked_resource);
     let mut context = build_context(&block_info, chain_id, &tracked_resource);
 
-    let max_n_steps = runtime_config
-        .max_n_steps
-        .map_or(usize::MAX, |n| n as usize);
-
-    set_max_steps(&mut context, max_n_steps);
-
+    if let Some(max_n_steps) = runtime_config.max_n_steps {
+        set_max_steps(&mut context, max_n_steps);
+    }
     let mut cached_state = CachedState::new(state_reader);
 
     let hints = hints_by_representation(&casm_program.assembled_cairo_program);
@@ -409,14 +407,20 @@ fn extract_test_case_summary(
                 ui,
             ),
             RunResult::Error(run_error) => {
-                let message = format!(
+                let mut message = format!(
                     "\n    {}\n",
                     run_error
                         .error
                         .to_string()
                         .replace(" Custom Hint Error: ", "\n    ")
                 );
-
+                if let CairoRunError::VirtualMachine(VirtualMachineError::UnfinishedExecution) =
+                    *run_error.error
+                {
+                    message.push_str(
+                        "\n    Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps",
+                    );
+                }
                 TestCaseSummary::Failed {
                     name: case.name.clone(),
                     msg: Some(message).map(|msg| {
