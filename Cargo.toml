@@ -32,19 +32,19 @@ license-file = "LICENSE"
 blockifier = { version = "0.15.0-rc.2", features = ["testing", "tracing"]}
 bigdecimal = "0.4.8"
 starknet_api = "0.15.0-rc.2"
-cairo-lang-casm = { version = "2.12.0-rc.0", features = ["serde"] }
-cairo-lang-sierra = "2.12.0-rc.0"
-cairo-lang-utils = "2.12.0-rc.0"
-cairo-lang-starknet = "2.12.0-rc.0"
-cairo-lang-filesystem = "2.12.0-rc.0"
-cairo-lang-diagnostics = "2.12.0-rc.0"
-cairo-lang-sierra-type-size = "2.12.0-rc.0"
-cairo-lang-syntax = "2.12.0-rc.0"
-cairo-lang-test-plugin = "2.12.0-rc.0"
-cairo-lang-starknet-classes = "2.12.0-rc.0"
-cairo-lang-parser = "2.12.0-rc.0"
+cairo-lang-casm = { version = "2.12.0", features = ["serde"] }
+cairo-lang-sierra = "2.12.0"
+cairo-lang-utils = "2.12.0"
+cairo-lang-starknet = "2.12.0"
+cairo-lang-filesystem = "2.12.0"
+cairo-lang-diagnostics = "2.12.0"
+cairo-lang-sierra-type-size = "2.12.0"
+cairo-lang-syntax = "2.12.0"
+cairo-lang-test-plugin = "2.12.0"
+cairo-lang-starknet-classes = "2.12.0"
+cairo-lang-parser = "2.12.0"
 cairo-vm = "2.2.0"
-cairo-annotations = "0.5.0-rc.2"
+cairo-annotations = "0.5.0"
 dirs = "6.0.0"
 dialoguer = "0.11.0"
 starknet-types-core = { version = "0.1.7", features = ["hash", "prime-bigint"] }
@@ -112,6 +112,3 @@ indicatif = "0.17.11"
 shell-words = "1.1.0"
 sanitize-filename = "0.6.0"
 derive_more = { version = "2.0.1", features = ["display"] }
-
-[patch.crates-io]
-cairo-annotations = { git = "https://github.com/software-mansion/cairo-annotations.git", branch = "szymczyk/calldata-length" }
