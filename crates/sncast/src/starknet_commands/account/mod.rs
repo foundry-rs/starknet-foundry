@@ -250,7 +250,7 @@ pub async fn account(
             let result = starknet_commands::account::create::create(
                 &account,
                 &config.accounts_file,
-                config.keystore,
+                config.keystore.as_ref(),
                 &provider,
                 chain_id,
                 &create,
@@ -261,8 +261,8 @@ pub async fn account(
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
                 provider.chain_id().await?,
-                config.show_explorer_links,
-                config.block_explorer,
+                &create.rpc,
+                &config,
             );
 
             process_command_result("account create", result, ui, block_explorer_link);
@@ -278,7 +278,7 @@ pub async fn account(
             let keystore_path = config.keystore.clone();
             let result = starknet_commands::account::deploy::deploy(
                 &provider,
-                config.accounts_file,
+                &config.accounts_file,
                 &deploy,
                 chain_id,
                 wait_config,
@@ -308,8 +308,8 @@ pub async fn account(
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
                 provider.chain_id().await?,
-                config.show_explorer_links,
-                config.block_explorer,
+                &deploy.rpc,
+                &config,
             );
             process_command_result("account deploy", result, ui, block_explorer_link);
             Ok(())
