@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
-#### Changed
+### Cast
 
-- Max steps in tests (configured via the `--max-n-steps` argument) now defaults to `usize::MAX` when not specified (previously 10 million).
+#### Fixed
+
+- Block explorer links are now hidden by default when using [`starknet-devnet`](https://github.com/0xSpaceShard/starknet-devnet). Set `SNCAST_FORCE_SHOW_EXPLORER_LINKS=1` env variable to display them.
 
 ### Cast
 
