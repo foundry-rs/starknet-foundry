@@ -10,7 +10,7 @@ fn read_json(file: @File) -> Array<felt252>;
 >
 > Specific rules must be followed for snforge to correctly parse JSON and plain text files.
 >
-> Read more about them [here](../fs.md#file-format).
+> Read [file format rules](./file_format_rules.md) for more.
 
 ## Example
 
