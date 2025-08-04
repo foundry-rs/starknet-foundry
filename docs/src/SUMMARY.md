@@ -55,6 +55,7 @@
 * [Inspecting Transactions](starknet/tx-status.md)
 * [Verifying Contracts](starknet/verify.md)
 * [Calldata Transformation](starknet/calldata-transformation.md)
+* [Block Explorers](starknet/block_explorer.md)
 
 ---
 
