@@ -1,5 +1,7 @@
 # `FileParser<T>`
 
+Trait used for parsing files in different formats, such as JSON and plain text.
+
 ```rust
 trait FileParser<T, +Serde<T>> {
     fn parse_txt(file: @File) -> Option<T>;
@@ -11,9 +13,9 @@ trait FileParser<T, +Serde<T>> {
 >
 > Specific rules must be followed for snforge to correctly parse JSON and plain text files.
 >
-> Read more about them [here](../fs.md#file-format).
+> Read [file format rules](./file_format_rules.md) for more.
 
-### Example for `parse_json`
+## Example
 
 File content:
 ```json

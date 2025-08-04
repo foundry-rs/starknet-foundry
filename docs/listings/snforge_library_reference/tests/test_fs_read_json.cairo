@@ -2,7 +2,10 @@ use snforge_std::fs::{FileTrait, read_json};
 
 #[test]
 fn read_json_example() {
+    // Create an instance of `File` to be used later
     let file = FileTrait::new("data/user.json");
+
+    // Read the JSON content from the file
     let content = read_json(@file);
 
     let expected_serialized_json = array![
@@ -25,6 +28,7 @@ fn read_json_example() {
     ];
     let mut i = 0;
 
+    // Iterate through the content and compare with expected values
     while i != content.len() {
         println!("0x{:x}", *content[i]);
         assert!(*content[i] == *expected_serialized_json[i]);
