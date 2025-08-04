@@ -21,7 +21,7 @@ fn test_simple_assertions() {
     let mut keys = array![];
     keys.append(selector!("FirstEvent")); // Append the name of the event to keys
     let mut data = array![];
-    data.append(123); // Append the expected data;
+    data.append(123); // Append the expected data
 
     let expected = Event { keys, data }; // Instantiate the Event
 
