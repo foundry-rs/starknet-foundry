@@ -115,6 +115,7 @@
     * [contract_class](appendix/snforge-library/contract_class.md)
     * [get_call_trace](appendix/snforge-library/get_call_trace.md)
     * [fs](appendix/snforge-library/fs.md)
+        * [file format rules](appendix/snforge-library/fs/file_format_rules.md)
         * [`File`](appendix/snforge-library/fs/file.md)
         * [`FileParser`](appendix/snforge-library/fs/file_parser.md)
         * [`read_txt`](appendix/snforge-library/fs/read_txt.md)
