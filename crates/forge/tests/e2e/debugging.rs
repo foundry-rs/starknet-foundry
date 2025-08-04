@@ -1,6 +1,21 @@
 use super::common::runner::{setup_package, test_runner};
-use indoc::formatdoc;
+use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stdout_contains;
+
+#[test]
+fn debugging_trace_custom_components() {
+    let temp = setup_package("debugging");
+
+    let output = test_runner(&temp)
+        .arg("--trace-components")
+        .arg("contract-name")
+        .arg("call-result")
+        .arg("call-type")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(output, test_output(custom_output_trace_message));
+}
 
 #[test]
 fn debugging_trace_detailed() {
@@ -78,6 +93,26 @@ fn debugging_trace_minimal_fork() {
         .code(1);
 
     assert_stdout_contains(output, test_output(minimal_debugging_trace_message_fork));
+}
+
+#[test]
+fn debugging_double_flags() {
+    let temp = setup_package("debugging");
+
+    test_runner(&temp)
+        .arg("--trace-verbosity")
+        .arg("minimal")
+        .arg("--trace-components")
+        .arg("contract-name")
+        .assert()
+        .code(2)
+        .stderr_eq(indoc! {"
+            error: the argument '--trace-verbosity <TRACE_VERBOSITY>' cannot be used with '--trace-components <TRACE_COMPONENTS>...'
+
+            Usage: snforge test --trace-verbosity <TRACE_VERBOSITY> [TEST_FILTER] [-- <ADDITIONAL_ARGS>...]
+
+            For more information, try '--help'.
+        "});
 }
 
 fn test_output(trace_message_fn: fn(&str) -> String) -> String {
@@ -309,5 +344,35 @@ fn minimal_debugging_trace_message_fork(test_name: &str) -> String {
         │     └─ [contract name] forked contract
         └─ [selector] fail
            └─ [contract name] forked contract
+        "}
+}
+
+fn custom_output_trace_message(test_name: &str) -> String {
+    formatdoc! {r"
+        [test name] trace_info_integrationtest::test_trace::test_debugging_trace_{test_name}
+        ├─ [selector] execute_calls
+        │  ├─ [contract name] SimpleContract
+        │  ├─ [call type] Call
+        │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  ├─ [selector] execute_calls
+        │  │  ├─ [contract name] SimpleContract
+        │  │  ├─ [call type] Call
+        │  │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  │  ├─ [selector] execute_calls
+        │  │  │  ├─ [contract name] SimpleContract
+        │  │  │  ├─ [call type] Call
+        │  │  │  └─ [call result] success: array![]
+        │  │  └─ [selector] execute_calls
+        │  │     ├─ [contract name] SimpleContract
+        │  │     ├─ [call type] Call
+        │  │     └─ [call result] success: array![]
+        │  └─ [selector] execute_calls
+        │     ├─ [contract name] SimpleContract
+        │     ├─ [call type] Call
+        │     └─ [call result] success: array![]
+        └─ [selector] fail
+           ├─ [contract name] SimpleContract
+           ├─ [call type] Call
+           └─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
         "}
 }
