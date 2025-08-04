@@ -21,10 +21,13 @@ struct User {
 
 #[test]
 fn parse_json_example() {
+    // Create an instance of `File` to be used later
     let file = FileTrait::new("data/user.json");
 
+    // Parse the JSON content from the file
     let content = FileParser::<User>::parse_json(@file).expect('Failed to parse JSON');
 
+    // Serialize the content to an array for comparison
     let mut output_array = ArrayTrait::new();
     content.serialize(ref output_array);
 
