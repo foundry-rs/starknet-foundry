@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Block explorer links are now hidden by default when using [`starknet-devnet`](https://github.com/0xSpaceShard/starknet-devnet). Set `SNCAST_FORCE_SHOW_EXPLORER_LINKS=1` env variable to display them.
 
+### Cast
+
+#### Changed
+
+- The supported RPC version is now 0.9.0
+
 ## [0.47.0] - 2025-07-28
 
 ### Forge
@@ -41,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Braavos accounts with all class hashes are now supported 
+- The supported RPC version is now 0.9.0
 
 #### Deprecated
 

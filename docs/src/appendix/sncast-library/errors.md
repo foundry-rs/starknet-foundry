@@ -88,7 +88,6 @@ pub enum ProviderError {
 
 #[derive(Drop, Serde, PartialEq, Debug)]
 pub enum TransactionError {
-    Rejected,
     Reverted: ErrorData,
 }
 

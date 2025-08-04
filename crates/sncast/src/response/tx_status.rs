@@ -10,7 +10,8 @@ use serde_json::json;
 #[derive(Serialize, CairoSerialize, Clone)]
 pub enum FinalityStatus {
     Received,
-    Rejected,
+    Candidate,
+    PreConfirmed,
     AcceptedOnL2,
     AcceptedOnL1,
 }
@@ -33,7 +34,8 @@ impl Message for SncastMessage<TransactionStatusResponse> {
     fn text(&self) -> String {
         let finality_status = match &self.command_response.finality_status {
             FinalityStatus::Received => "Received",
-            FinalityStatus::Rejected => "Rejected",
+            FinalityStatus::Candidate => "Candidate",
+            FinalityStatus::PreConfirmed => "Pre confirmed",
             FinalityStatus::AcceptedOnL2 => "Accepted on L2",
             FinalityStatus::AcceptedOnL1 => "Accepted on L1",
         };
