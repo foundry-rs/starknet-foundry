@@ -7,7 +7,6 @@ documentation = "https://foundry-rs.github.io/starknet-foundry/appendix/snforge-
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license-file = "../LICENSE"
 re-export-cairo-plugins = ["snforge_scarb_plugin"]
-cairo-version = ">=2.12.0"
 
 [dependencies]
 snforge_scarb_plugin = { path = "../crates/snforge-scarb-plugin" }
