@@ -108,8 +108,9 @@ pub use cheatcodes::message_to_l1::{
 pub use cheatcodes::storage::store;
 pub use cheatcodes::storage::{interact_with_state, load, map_entry_address};
 pub use cheatcodes::{
-    ReplaceBytecodeError, mock_call, replace_bytecode, start_mock_call, stop_mock_call,
-    test_address, test_selector,
+    MockCalldata, ReplaceBytecodeError, mock_call, mock_call_when, replace_bytecode,
+    start_mock_call, start_mock_call_when, stop_mock_call, stop_mock_call_when, test_address,
+    test_selector,
 };
 
 pub mod byte_array;
