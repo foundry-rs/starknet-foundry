@@ -1,33 +1,81 @@
-use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN, FN_WITH_SINGLE_FELT252_PARAM};
-use cairo_lang_macro::{ProcMacroResult, TokenStream};
-use indoc::formatdoc;
+use crate::utils::{assert_diagnostics, assert_output, empty_function};
+use cairo_lang_macro::{quote, TokenStream, TokenTree};
+use cairo_lang_parser::utils::SimpleParserDatabase;
+use cairo_lang_syntax::node::ast::{ModuleItem, SyntaxFile};
+use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
+use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode};
 use snforge_scarb_plugin::attributes::fuzzer::wrapper::fuzzer_wrapper;
 use snforge_scarb_plugin::attributes::fuzzer::{fuzzer, fuzzer_config};
 use snforge_scarb_plugin::attributes::{available_gas::available_gas, fork::fork, test::test};
+use snforge_scarb_plugin::create_single_token;
 
-fn last_n_lines(result: &ProcMacroResult, n_lines: usize) -> TokenStream {
-    let lines = result.token_stream.to_string();
-    let lines = lines
-        .lines()
-        .skip(lines.lines().count() - n_lines)
-        .collect::<String>();
-    TokenStream::new(lines)
+fn get_function(token_stream: &TokenStream, function_name: &str, skip_args: bool) -> TokenStream {
+    let db = SimpleParserDatabase::default();
+    let (parsed_node, _diagnostics) = db.parse_token_stream(token_stream);
+    let syntax_file = SyntaxFile::from_syntax_node(&db, parsed_node);
+    let function = syntax_file
+        .items(&db)
+        .elements(&db)
+        .find_map(|e| {
+            if let ModuleItem::FreeFunction(free_function) = e {
+                if free_function.declaration(&db).name(&db).text(&db) == function_name {
+                    Some(free_function.clone())
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        })
+        .unwrap();
+
+    let vis = function.visibility(&db).as_syntax_node();
+    let vis = SyntaxNodeWithDb::new(&vis, &db);
+
+    let signature = function.declaration(&db).as_syntax_node();
+    let signature = SyntaxNodeWithDb::new(&signature, &db);
+
+    let body = function.body(&db).as_syntax_node();
+    let body = SyntaxNodeWithDb::new(&body, &db);
+
+    let attrs = function.attributes(&db).as_syntax_node();
+    let attrs = SyntaxNodeWithDb::new(&attrs, &db);
+
+    let mut token_stream = if skip_args {
+        quote! {
+            #vis #signature
+            #body
+        }
+    } else {
+        quote! {
+            #attrs
+            #vis #signature
+            #body
+        }
+    };
+
+    match &mut token_stream.tokens[0] {
+        TokenTree::Ident(ident) => {
+            ident.span.start = 0;
+        }
+    }
+
+    token_stream
 }
 
 #[test]
 fn works_with_few_attributes() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(String::new());
+    let args = TokenStream::empty();
 
-    let result = test(args, item);
+    let result = test(args, empty_function());
 
     assert_diagnostics(&result, &[]);
 
     assert_output(
         &result,
         "
-            #[snforge_internal_test_executable]
             #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+            #[snforge_internal_test_executable]
             fn empty_fn(mut _data: Span<felt252>) -> Span::<felt252> {
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
@@ -49,8 +97,8 @@ fn works_with_few_attributes() {
         ",
     );
 
-    let item = last_n_lines(&result, 4);
-    let args = TokenStream::new("(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)".into());
+    let item = get_function(&result.token_stream, "empty_fn_return_wrapper", false);
+    let args = quote!((l1_gas: 1, l1_data_gas: 2, l2_gas: 3));
 
     let result = available_gas(args, item);
 
@@ -75,14 +123,14 @@ fn works_with_few_attributes() {
 
                     starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
 
-                    return; 
+                    return;
                 }
             }
         ",
     );
 
     let item = result.token_stream;
-    let args = TokenStream::new(r#"("test")"#.into());
+    let args = quote!(("test"));
 
     let result = fork(args, item);
 
@@ -114,7 +162,7 @@ fn works_with_few_attributes() {
 
                     starknet::testing::cheatcode::<'set_config_fork'>(data.span());
 
-                    return; 
+                    return;
                 }
             }
         "#,
@@ -123,18 +171,17 @@ fn works_with_few_attributes() {
 
 #[test]
 fn works_with_fuzzer() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(String::new());
+    let args = TokenStream::empty();
 
-    let result = test(args, item);
+    let result = test(args, empty_function());
 
     assert_diagnostics(&result, &[]);
 
     assert_output(
         &result,
         "
-           #[snforge_internal_test_executable]
             #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+            #[snforge_internal_test_executable]
             fn empty_fn(mut _data: Span<felt252>) -> Span::<felt252> {
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
@@ -156,8 +203,8 @@ fn works_with_fuzzer() {
         ",
     );
 
-    let item = last_n_lines(&result, 4);
-    let args = TokenStream::new("(runs: 123, seed: 321)".into());
+    let item = get_function(&result.token_stream, "empty_fn_return_wrapper", false);
+    let args = quote!((runs: 123, seed: 321));
 
     let result = fuzzer(args, item);
 
@@ -166,9 +213,9 @@ fn works_with_fuzzer() {
     assert_output(
         &result,
         r"
-            #[__internal_config_statement]
             #[__fuzzer_config(runs: 123, seed: 321)]
             #[__fuzzer_wrapper]
+            #[__internal_config_statement]
             fn empty_fn_return_wrapper() {}
         ",
     );
@@ -177,8 +224,10 @@ fn works_with_fuzzer() {
 #[test]
 #[expect(clippy::too_many_lines)]
 fn works_with_fuzzer_config_wrapper() {
-    let item = TokenStream::new(FN_WITH_SINGLE_FELT252_PARAM.into());
-    let args = TokenStream::new("(l2_gas: 999)".into());
+    let item = quote!(
+        fn empty_fn(f: felt252) {}
+    );
+    let args = quote!((l2_gas: 999));
 
     let result = available_gas(args, item);
 
@@ -209,21 +258,16 @@ fn works_with_fuzzer_config_wrapper() {
     );
 
     // Append `#[fuzzer]` so we can use `test()`
-    let item = TokenStream::new(formatdoc!(
-        r"
-        #[fuzzer]
-        {}
-        ",
-        result.token_stream
-    ));
+    let mut item = TokenStream::new(vec![create_single_token("#[fuzzer]")]);
+    item.extend(result.token_stream);
 
-    let result = test(TokenStream::new(String::new()), item);
+    let result = test(TokenStream::empty(), item);
     assert_diagnostics(&result, &[]);
     assert_output(
         &result,
         r"
-            #[snforge_internal_test_executable]
             #[implicit_precedence(core::pedersen::Pedersen, core::RangeCheck, core::integer::Bitwise, core::ec::EcOp, core::poseidon::Poseidon, core::SegmentArena, core::circuit::RangeCheck96, core::circuit::AddMod, core::circuit::MulMod, core::gas::GasBuiltin, System)]
+            #[snforge_internal_test_executable]
             fn empty_fn(mut _data: Span<felt252>) -> Span::<felt252> {
                 core::internal::require_implicit::<System>();
                 core::internal::revoke_ap_tracking();
@@ -262,11 +306,16 @@ fn works_with_fuzzer_config_wrapper() {
     );
 
     // Skip all the lines including `#[fuzzer]` that was appended previously
-    let item = last_n_lines(&result, 25);
-    let args = TokenStream::new("(runs: 123, seed: 321)".into());
+    let item = get_function(&result.token_stream, "empty_fn_return_wrapper", true);
+    let internal_config_statement =
+        TokenStream::new(vec![create_single_token("__internal_config_statement")]);
+    let item = quote! {
+        #[#internal_config_statement]
+        #item
+    };
+    let args = quote!((runs: 123, seed: 321));
 
     let result = fuzzer_config(args, item);
-
     assert_diagnostics(&result, &[]);
 
     assert_output(
@@ -305,7 +354,7 @@ fn works_with_fuzzer_config_wrapper() {
     );
 
     let item = result.token_stream;
-    let args = TokenStream::new(String::new());
+    let args = TokenStream::empty();
 
     let result = fuzzer_wrapper(args, item);
 

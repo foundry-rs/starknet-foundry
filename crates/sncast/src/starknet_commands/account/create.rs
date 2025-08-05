@@ -61,7 +61,7 @@ pub struct Create {
 pub async fn create(
     account: &str,
     accounts_file: &Utf8PathBuf,
-    keystore: Option<Utf8PathBuf>,
+    keystore: Option<&Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: Felt,
     create: &Create,
@@ -97,7 +97,7 @@ pub async fn create(
         style(estimated_fee_strk).magenta()
     );
 
-    if let Some(keystore) = keystore.clone() {
+    if let Some(keystore) = keystore {
         let account_path = Utf8PathBuf::from(&account);
         if account_path == Utf8PathBuf::default() {
             bail!("Argument `--account` must be passed and be a path when using `--keystore`");
@@ -116,14 +116,14 @@ pub async fn create(
             salt,
             class_hash,
             create.account_type,
-            &keystore,
+            keystore,
             &account_path,
             legacy,
         )?;
 
         let deploy_command = generate_deploy_command_with_keystore(
             account,
-            &keystore,
+            keystore,
             create.rpc.url.as_deref(),
             create.rpc.network.as_ref(),
         );
@@ -145,7 +145,7 @@ pub async fn create(
         &create.rpc,
         account,
         accounts_file,
-        keystore.clone(),
+        keystore.cloned(),
     )?;
 
     Ok(AccountCreateResponse {

@@ -55,7 +55,7 @@ pub async fn multicall(
                 &config.account,
                 &config.accounts_file,
                 &provider,
-                config.keystore,
+                config.keystore.as_ref(),
             )
             .await?;
             let result =
@@ -65,8 +65,8 @@ pub async fn multicall(
             let block_explorer_link = block_explorer_link_if_allowed(
                 &result,
                 provider.chain_id().await?,
-                config.show_explorer_links,
-                config.block_explorer,
+                &run.rpc,
+                &config,
             );
             process_command_result("multicall run", result, ui, block_explorer_link);
             Ok(())

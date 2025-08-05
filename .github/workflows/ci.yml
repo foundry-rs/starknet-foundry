@@ -23,14 +23,6 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: cargo test --release --lib -p forge
-      # TODO(#3096): Remove running tests with `scarb_since_2_10`
-      - uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: "2.10.1"
-      - name: Check and lint forge templates
-        run: cargo test --release -p forge --features scarb_since_2_10 validate_templates
-      - name: Check and lint snforge_std
-        run: cargo test --release -p forge --features scarb_since_2_10 validate_snforge_std
 
   build-test-forge-nextest-archive:
     runs-on: ubuntu-latest
@@ -45,7 +37,7 @@ jobs:
         with:
           tool: nextest@0.9.98
       - name: Build and archive tests
-        run: cargo nextest archive --release -p forge --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
+        run: cargo nextest archive --release -p forge --features skip_plugin_checks --archive-file 'nextest-archive-${{ runner.os }}.tar.zst'
       - name: Upload archive to workflow
         uses: actions/upload-artifact@v4
         with:
@@ -114,6 +106,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
       - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - uses: taiki-e/install-action@v2
@@ -124,6 +117,17 @@ jobs:
           name: nextest-archive-${{ runner.os }}
       - name: nextest partition ${{ matrix.partition }}/3
         run: cargo nextest run --no-fail-fast --partition 'count:${{ matrix.partition }}/3' --archive-file 'nextest-archive-${{ runner.os }}.tar.zst' e2e
+
+  test-plugin-checks:
+    name: Test plugin across different scarb versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
+      - run: cargo test --package forge e2e::plugin_versions
 
   test-requirements-check-special-conditions:
     name: Test requirements check special conditions
@@ -143,21 +147,21 @@ jobs:
       - run: cargo test --package forge --features scarb_2_9_1 --test main e2e::requirements::test_warning_on_scarb_version_below_recommended
       - run: cargo test --package forge --features scarb_2_9_1 --lib compatibility_check::tests::warning_requirements
       - run: cargo test --package forge --features scarb_2_9_1 --test main e2e::running::sierra_gas_with_older_scarb
+      - run: cargo test --package forge --features scarb_2_9_1 --test main e2e::new::init_new_project_from_scarb_with_snforge_std_deprecated
 
-  # todo(3096): Remove this and the feature as soon as scarb 2.10 is the oldest officially supported version
-  test-scarb-since-2-10:
-    name: Test scarb 2.10
+  # TODO(#3212): Closures in Cairo are fully supported since version 2.11
+  test-interact-with-state:
+    name: Test interact with state
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       - uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: "2.10.1"
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
-      - run: cargo test --package forge --features scarb_since_2_10 sierra_gas
+      - run: cargo test --release --package forge --features interact-with-state --test main integration::interact_with_state
+      - run: cargo test --release --package forge --features interact-with-state --test main e2e::running::test_interact_with_state
 
   test-forge-runner:
     name: Test Forge Runner
@@ -197,24 +201,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
-      - uses: software-mansion/setup-scarb@22f50f68eb6ffacfc173786dab19aa7d49b43441 # v1.5.0
+      - uses: software-mansion/setup-scarb@v1
       - uses: software-mansion/setup-universal-sierra-compiler@58146c4184fa6ec5e8aaf02309ab85e35f782ed0 # v1.0.0
       - name: Run Forge Debugging tests
         run: cargo test --release -p forge --features debugging --test main e2e::debugging
-
-  test-forge-backtrace:
-    name: Test Forge Backtrace - support for `panic-backtrace` in Scarb.toml
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
-      - uses: software-mansion/setup-scarb@22f50f68eb6ffacfc173786dab19aa7d49b43441 # v1.5.0
-        with:
-          scarb-version: "nightly-2025-03-27"
-      - uses: software-mansion/setup-universal-sierra-compiler@58146c4184fa6ec5e8aaf02309ab85e35f782ed0 # v1.0.0
-      - name: Run Forge Debugging tests
-        run: cargo test --release -p forge --features supports-panic-backtrace --test main e2e::backtrace
 
   test-forge-scarb-plugin:
     name: Test Forge Scarb Plugin
@@ -227,6 +217,19 @@ jobs:
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run Forge Scarb Plugin tests
         working-directory: crates/snforge-scarb-plugin
+        run: cargo test --release
+
+  test-forge-scarb-plugin-deprecated:
+    name: Test Forge Scarb Plugin Deprecated
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+      - uses: software-mansion/setup-scarb@v1
+      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - name: Run Forge Scarb Plugin tests
+        working-directory: crates/snforge-scarb-plugin-deprecated
         run: cargo test --release
 
   test-cast:
@@ -243,12 +246,6 @@ jobs:
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests
         run: cargo test --release -p sncast
-      # TODO(#3096): Remove running tests with `scarb_since_2_10`
-      - uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: "2.10.1"
-      - name: Check and lint sncast_std
-        run: cargo test --release -p sncast --features scarb_since_2_10 validate_sncast_std
 
   test-conversions:
     name: Test Conversions
@@ -290,7 +287,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
       - name: Check cairo files format
         run: |
-          output=$(find . -type f -name "Scarb.toml" -execdir sh -c '
+          output=$(find . -type f -name "Scarb.toml" -not -path "*/snforge_std_deprecated/*" -execdir sh -c '
               echo "Running \"scarb fmt\" in directory: $PWD"
               scarb fmt --check
           ' \;)
@@ -328,7 +325,7 @@ jobs:
     name: Test Building Docs
     runs-on: ubuntu-latest
     env:
-      MDBOOK_VERSION: 0.4.31
+      MDBOOK_VERSION: 0.4.52
     steps:
       - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
         with:

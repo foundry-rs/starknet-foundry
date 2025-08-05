@@ -15,10 +15,10 @@ trait ICheatBlockHashCheckerLibCall<TContractState> {
 
 #[starknet::contract]
 mod CheatBlockHashCheckerLibCall {
-    use super::{ICheatBlockHashCheckerDispatcherTrait, ICheatBlockHashCheckerLibraryDispatcher};
     use core::starknet::SyscallResultTrait;
     use starknet::ClassHash;
     use starknet::syscalls::get_block_hash_syscall;
+    use super::{ICheatBlockHashCheckerDispatcherTrait, ICheatBlockHashCheckerLibraryDispatcher};
 
     #[storage]
     struct Storage {}

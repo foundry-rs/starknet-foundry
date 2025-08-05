@@ -6,13 +6,13 @@ use derive_more::Display;
 use forge_runner::CACHE_DIR;
 use forge_runner::debugging::TraceVerbosity;
 use forge_runner::forge_config::ForgeTrackedResource;
-use foundry_ui::UI;
 use foundry_ui::components::warning::WarningMessage;
+use foundry_ui::{Message, UI};
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{ScarbCommand, metadata::MetadataCommandExt};
-use scarb_ui::args::{FeaturesSpec, PackagesFilter};
+use scarb_ui::args::{FeaturesSpec, PackagesFilter, ProfileSpec};
 use semver::Version;
-use shared::auto_completions::{Completion, generate_completions};
+use shared::auto_completions::{Completions, generate_completions};
 use std::cell::RefCell;
 use std::ffi::OsString;
 use std::process::Command;
@@ -41,8 +41,11 @@ const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 9, 4);
 const MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN: Version = Version::new(2, 10, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 const MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS: Version = Version::new(2, 10, 0);
-// TODO(#3344) Set this to 0.44.0 after it has been released
+// TODO Set this to version from v2 macros release
 const MINIMAL_SNFORGE_STD_VERSION: Version = Version::new(0, 44, 0);
+// TODO Set this to version from v2 macros release
+const MINIMAL_SNFORGE_STD_DEPRECATED_VERSION: Version = Version::new(0, 44, 0);
+pub const MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT: Version = Version::new(2, 12, 0);
 
 #[derive(Parser, Debug)]
 #[command(
@@ -107,8 +110,10 @@ enum ForgeSubcommand {
     CleanCache {},
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
-    /// Generate completion script
-    Completion(Completion),
+    /// Generate completions script
+    // TODO(#3560): Remove the `completion` alias
+    #[command(alias = "completion")]
+    Completions(Completions),
 }
 
 #[derive(Parser, Debug)]
@@ -160,9 +165,6 @@ pub struct TestArgs {
     #[arg(short = 'x', long)]
     exit_first: bool,
 
-    #[command(flatten)]
-    packages_filter: PackagesFilter,
-
     /// Number of fuzzer runs
     #[arg(short = 'r', long)]
     fuzzer_runs: Option<NonZeroU32>,
@@ -205,10 +207,6 @@ pub struct TestArgs {
     #[arg(long)]
     max_n_steps: Option<u32>,
 
-    /// Specify features to enable
-    #[command(flatten)]
-    pub features: FeaturesSpec,
-
     /// Build contracts separately in the scarb starknet contract target
     #[arg(long)]
     no_optimization: bool,
@@ -220,6 +218,21 @@ pub struct TestArgs {
     /// Additional arguments for cairo-coverage or cairo-profiler
     #[arg(last = true)]
     additional_args: Vec<OsString>,
+
+    #[command(flatten)]
+    scarb_args: ScarbArgs,
+}
+
+#[derive(Parser, Debug)]
+pub struct ScarbArgs {
+    #[command(flatten)]
+    packages_filter: PackagesFilter,
+
+    #[command(flatten)]
+    features: FeaturesSpec,
+
+    #[command(flatten)]
+    profile: ProfileSpec,
 }
 
 #[derive(ValueEnum, Display, Debug, Clone)]
@@ -305,8 +318,19 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
             check_requirements(true, ForgeTrackedResource::default(), &ui)?;
             Ok(ExitStatus::Success)
         }
-        ForgeSubcommand::Completion(completion) => {
-            generate_completions(completion.shell, &mut Cli::command())?;
+        ForgeSubcommand::Completions(completions) => {
+            generate_completions(completions.shell, &mut Cli::command())?;
+
+            // TODO(#3560): Remove this warning when the `completion` alias is removed
+            if std::env::args().nth(1).as_deref() == Some("completion") {
+                let message = &WarningMessage::new(
+                    "Command `snforge completion` is deprecated and will be removed in the future. Please use `snforge completions` instead.",
+                );
+
+                // `#` is required since `snforge completions` generates a script and the output is used directly
+                ui.println(&format!("# {}", message.text()));
+            }
+
             Ok(ExitStatus::Success)
         }
     }
