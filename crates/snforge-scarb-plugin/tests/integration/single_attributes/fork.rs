@@ -1,14 +1,13 @@
-use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN};
-use cairo_lang_macro::{Diagnostic, TokenStream};
+use crate::utils::{assert_diagnostics, assert_output, empty_function};
+use cairo_lang_macro::{quote, Diagnostic};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::fork::fork;
 
 #[test]
 fn fails_without_block() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(r#"(url: "invalid url")"#.into());
+    let args = quote!((url: "invalid url"));
 
-    let result = fork(args, item);
+    let result = fork(args, empty_function());
 
     assert_diagnostics(
         &result,
@@ -28,10 +27,9 @@ fn fails_without_block() {
 
 #[test]
 fn fails_without_url() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new("(block_number: 23)".into());
+    let args = quote!((block_number: 23));
 
-    let result = fork(args, item);
+    let result = fork(args, empty_function());
 
     assert_diagnostics(
         &result,
@@ -49,10 +47,9 @@ fn fails_without_url() {
 
 #[test]
 fn fails_without_args() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new("()".into());
+    let args = quote!(());
 
-    let result = fork(args, item);
+    let result = fork(args, empty_function());
 
     assert_diagnostics(
         &result,
@@ -71,10 +68,9 @@ fn fails_without_args() {
 
 #[test]
 fn fails_with_invalid_url() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(r#"(url: "invalid url", block_number: 23)"#.into());
+    let args = quote!((url: "invalid url", block_number: 23));
 
-    let result = fork(args, item);
+    let result = fork(args, empty_function());
 
     assert_diagnostics(
         &result,
@@ -92,10 +88,9 @@ fn fails_with_invalid_url() {
 
 #[test]
 fn accepts_string() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(r#"("test")"#.into());
+    let args = quote!(("test"));
 
-    let result = fork(args, item);
+    let result = fork(args, empty_function());
 
     assert_diagnostics(&result, &[]);
 
@@ -121,10 +116,9 @@ fn accepts_string() {
 
 #[test]
 fn accepts_inline_config() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(r#"(url: "http://example.com", block_number: 23)"#.into());
+    let args = quote!((url: "http://example.com", block_number: 23));
 
-    let result = fork(args, item);
+    let result = fork(args, empty_function());
 
     assert_diagnostics(&result, &[]);
 
@@ -155,10 +149,9 @@ fn accepts_inline_config() {
 
 #[test]
 fn overriding_config_name_first() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(r#"("MAINNET", block_number: 23)"#.into());
+    let args = quote!(("MAINNET", block_number: 23));
 
-    let result = fork(args, item);
+    let result = fork(args, empty_function());
 
     assert_diagnostics(&result, &[]);
 
@@ -189,10 +182,9 @@ fn overriding_config_name_first() {
 
 #[test]
 fn overriding_config_name_second() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(r#"(block_number: 23, "MAINNET")"#.into());
+    let args = quote!((block_number: 23, "MAINNET"));
 
-    let result = fork(args, item);
+    let result = fork(args, empty_function());
 
     assert_diagnostics(&result, &[]);
 
@@ -223,13 +215,11 @@ fn overriding_config_name_second() {
 
 #[test]
 fn is_used_once() {
-    let item = TokenStream::new(formatdoc!(
-        "
-            #[fork]
-            {EMPTY_FN}
-        "
-    ));
-    let args = TokenStream::new(r#"("name")"#.into());
+    let item = quote!(
+        #[fork]
+        fn empty_fn() {}
+    );
+    let args = quote!(("name"));
 
     let result = fork(args, item);
 

@@ -1,6 +1,4 @@
-use sncast_std::{
-    declare, DeclareResult, ScriptCommandError, ProviderError, StarknetError, FeeSettingsTrait,
-};
+use sncast_std::{FeeSettingsTrait, declare};
 
 fn main() {
     let fee_settings = FeeSettingsTrait::estimate();

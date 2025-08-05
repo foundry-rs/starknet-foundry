@@ -13,10 +13,10 @@ trait ICheatBlockTimestampCheckerLibCall<TContractState> {
 
 #[starknet::contract]
 mod CheatBlockTimestampCheckerLibCall {
+    use starknet::ClassHash;
     use super::{
         ICheatBlockTimestampCheckerDispatcherTrait, ICheatBlockTimestampCheckerLibraryDispatcher,
     };
-    use starknet::ClassHash;
 
     #[storage]
     struct Storage {}

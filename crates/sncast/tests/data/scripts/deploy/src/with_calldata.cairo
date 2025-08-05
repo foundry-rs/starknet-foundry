@@ -1,5 +1,5 @@
-use sncast_std::{deploy, DeployResult, FeeSettingsTrait};
-use starknet::{ClassHash};
+use sncast_std::{FeeSettingsTrait, deploy};
+use starknet::ClassHash;
 
 fn main() {
     let fee_settings = FeeSettingsTrait::resource_bounds(

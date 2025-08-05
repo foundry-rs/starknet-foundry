@@ -1,8 +1,5 @@
-use sncast_std::{
-    get_nonce, deploy, DeployResult, ScriptCommandError, ProviderError, StarknetError,
-    FeeSettingsTrait,
-};
-use starknet::{ClassHash};
+use sncast_std::{FeeSettingsTrait, deploy, get_nonce};
+use starknet::ClassHash;
 
 fn main() {
     let fee_settings = FeeSettingsTrait::resource_bounds(

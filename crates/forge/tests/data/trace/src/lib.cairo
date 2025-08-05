@@ -20,8 +20,8 @@ pub trait Failing<TContractState> {
 pub mod SimpleContract {
     use core::array::ArrayTrait;
     use super::{
-        RecursiveCaller, RecursiveCallerDispatcher, RecursiveCallerDispatcherTrait, RecursiveCall,
-        Failing,
+        Failing, RecursiveCall, RecursiveCaller, RecursiveCallerDispatcher,
+        RecursiveCallerDispatcherTrait,
     };
 
 

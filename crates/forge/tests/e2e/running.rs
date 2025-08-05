@@ -1,10 +1,9 @@
 use super::common::runner::{get_current_branch, get_remote_url, setup_package, test_runner};
-use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
-use camino::Utf8PathBuf;
+use assert_fs::fixture::{FileWriteStr, PathChild};
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::{AsOutput, assert_stdout, assert_stdout_contains};
-use std::{fs, str::FromStr};
-use test_utils::tempdir_with_tool_versions;
+use std::fs;
+use test_utils::{get_snforge_std_entry, use_snforge_std_deprecated};
 use toml_edit::{DocumentMut, value};
 
 #[test]
@@ -54,13 +53,22 @@ fn simple_package() {
 
 #[test]
 fn simple_package_with_git_dependency() {
-    let temp = tempdir_with_tool_versions().unwrap();
+    let temp = setup_package("simple_package");
 
-    temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-        .unwrap();
     let remote_url = get_remote_url().to_lowercase();
     let branch = get_current_branch();
     let manifest_path = temp.child("Scarb.toml");
+
+    let snforge_std = if use_snforge_std_deprecated() {
+        format!(
+            r#"snforge_std_deprecated = {{ git = "https://github.com/{remote_url}", branch = "{branch}" }}"#
+        )
+    } else {
+        format!(
+            r#"snforge_std = {{ git = "https://github.com/{remote_url}", branch = "{branch}" }}"#
+        )
+    };
+
     manifest_path
         .write_str(&formatdoc!(
             r#"
@@ -72,10 +80,8 @@ fn simple_package_with_git_dependency() {
 
             [dependencies]
             starknet = "2.6.4"
-            snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
+            {snforge_std}
             "#,
-            remote_url,
-            branch
         ))
         .unwrap();
 
@@ -759,17 +765,12 @@ fn with_exit_first() {
 
             [dependencies]
             starknet = "2.4.0"
-            snforge_std = {{ path = "{}" }}
+            {}
 
             [tool.snforge]
             exit_first = true
             "#,
-            Utf8PathBuf::from_str("../../snforge_std")
-                .unwrap()
-                .canonicalize_utf8()
-                .unwrap()
-                .to_string()
-                .replace('\\', "/")
+            get_snforge_std_entry().unwrap()
         ))
         .unwrap();
 
@@ -917,6 +918,7 @@ fn should_panic() {
 }
 
 #[test]
+#[cfg_attr(feature = "skip_plugin_checks", ignore = "Plugin checks skipped")]
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
@@ -956,6 +958,11 @@ fn incompatible_snforge_std_version_warning() {
 
 #[test]
 fn incompatible_snforge_std_version_error() {
+    if use_snforge_std_deprecated() {
+        // Skip this test if deprecated is used
+        return;
+    }
+
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
 
@@ -1006,7 +1013,6 @@ fn detailed_resources_flag() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn detailed_resources_flag_sierra_gas() {
     let temp = setup_package("erc20_package");
     let output = test_runner(&temp)
@@ -1036,7 +1042,6 @@ fn detailed_resources_flag_sierra_gas() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "scarb_since_2_10"), ignore)]
 fn detailed_resources_mixed_resources() {
     let temp = setup_package("forking");
     let output = test_runner(&temp)
@@ -1068,31 +1073,7 @@ fn detailed_resources_mixed_resources() {
 
 #[test]
 fn catch_runtime_errors() {
-    let temp = setup_package("simple_package");
-
-    let expected_panic = "No such file or directory";
-
-    temp.child("tests/test.cairo")
-        .write_str(
-            formatdoc!(
-                r#"
-                use snforge_std::fs::{{FileTrait, read_txt}};
-
-                #[test]
-                #[should_panic(expected: "{}")]
-                fn catch_no_such_file() {{
-                    let file = FileTrait::new("no_way_this_file_exists");
-                    let content = read_txt(@file);
-
-                    assert!(false);
-                }}
-            "#,
-                expected_panic
-            )
-            .as_str(),
-        )
-        .unwrap();
-
+    let temp = setup_package("runtime_errors_package");
     let output = test_runner(&temp).assert();
 
     assert_stdout_contains(
@@ -1101,7 +1082,7 @@ fn catch_runtime_errors() {
             r"
                 [..]Compiling[..]
                 [..]Finished[..]
-                [PASS] simple_package_integrationtest::test::catch_no_such_file [..]
+                [PASS] runtime_errors_package_integrationtest::with_error::catch_no_such_file [..]
             "
         ),
     );
@@ -1246,5 +1227,33 @@ fn dispatchers() {
         Failures:
             dispatchers_integrationtest::test::test_unrecoverable_not_possible_to_handle
         "},
+    );
+}
+
+#[test]
+#[cfg_attr(not(feature = "interact-with-state"), ignore)]
+fn test_interact_with_state() {
+    let temp = setup_package("contract_state");
+    let output = test_runner(&temp).assert().code(0);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+    [..]Compiling[..]
+    [..]Finished[..]
+
+    Collected 8 test(s) from contract_state package
+    Running 0 test(s) from src/
+    Running 8 test(s) from tests/
+    [PASS] contract_state_integrationtest::test_storage_node::test_storage_node [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_state_return [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_state_internal_function [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_initialized_state [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_state [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_state_map [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_state_vec [..]
+    [PASS] contract_state_integrationtest::test_fork::test_fork_contract [..]
+    Tests: 8 passed, 0 failed, 0 ignored, 0 filtered out
+    "},
     );
 }

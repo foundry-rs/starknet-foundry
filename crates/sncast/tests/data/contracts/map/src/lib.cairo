@@ -7,9 +7,7 @@ trait IMap<TMapState> {
 
 #[starknet::contract]
 mod Map {
-    use starknet::{
-        storage::{StoragePointerWriteAccess, StorageMapReadAccess, StoragePathEntry, Map},
-    };
+    use starknet::storage::{Map, StorageMapReadAccess, StoragePathEntry, StoragePointerWriteAccess};
     #[storage]
     struct Storage {
         storage: Map<felt252, felt252>,

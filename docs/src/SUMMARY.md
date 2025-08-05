@@ -8,6 +8,7 @@
 * [First Steps with Starknet Foundry](getting-started/first-steps.md)
 * [Scarb](getting-started/scarb.md)
 * [Project Configuration](projects/configuration.md)
+* [`snforge` 0.47.0 Migration Guide](getting-started/0-47-0-migration-guide.md)
 
 ---
 
@@ -55,6 +56,7 @@
 * [Inspecting Transactions](starknet/tx-status.md)
 * [Verifying Contracts](starknet/verify.md)
 * [Calldata Transformation](starknet/calldata-transformation.md)
+* [Block Explorers](starknet/block_explorer.md)
 
 ---
 
@@ -74,7 +76,7 @@
     * [clean](appendix/snforge/clean.md)
     * [clean-cache](appendix/snforge/clean-cache.md)
     * [check-requirements](appendix/snforge/check-requirements.md)
-    * [completion](appendix/snforge/completion.md)
+    * [completions](appendix/snforge/completions.md)
 * [Cheatcodes Reference](appendix/cheatcodes.md)
     * [Cheating Globally](appendix/cheatcodes/global.md)
     * [CheatSpan](appendix/cheatcodes/cheat_span.md)
@@ -109,6 +111,7 @@
     * [generate_arg](appendix/cheatcodes/generate_arg.md)
     * [set_balance](appendix/cheatcodes/set_balance.md)
     * [Token](appendix/cheatcodes/token.md)
+    * [interact_with_state](appendix/cheatcodes/interact_with_state.md)
 * [`snforge` Library Reference](appendix/snforge-library.md)
     * [byte_array](appendix/snforge-library/byte_array.md)
     * [declare](appendix/snforge-library/declare.md)
@@ -139,7 +142,7 @@
         * [run](appendix/sncast/script/run.md)
     * [tx-status](appendix/sncast/tx-status.md)
     * [verify](appendix/sncast/verify.md)
-    * [completion](appendix/sncast/completion.md)
+    * [completions](appendix/sncast/completions.md)
     * [utils](appendix/sncast/utils/utils.md)
         * [serialize](appendix/sncast/utils/serialize.md)
 * [`sncast` Library Reference](appendix/sncast-library.md)

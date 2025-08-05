@@ -17,6 +17,7 @@ mod fuzzing;
 mod gas;
 mod generate_random_felt;
 mod get_class_hash;
+mod interact_with_state;
 mod l1_handler_executor;
 mod message_to_l1;
 mod mock_call;

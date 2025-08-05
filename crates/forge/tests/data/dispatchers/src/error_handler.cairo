@@ -8,10 +8,10 @@ pub trait IErrorHandler<TContractState> {
 #[feature("safe_dispatcher")]
 #[starknet::contract]
 pub mod ErrorHandler {
+    use core::panic_with_felt252;
     use starknet::ContractAddress;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use crate::failable::{IFailableContractSafeDispatcher, IFailableContractSafeDispatcherTrait};
-    use core::panic_with_felt252;
 
     #[storage]
     pub struct Storage {
@@ -56,11 +56,10 @@ pub mod ErrorHandler {
 
         fn call_unrecoverable(self: @ContractState) {
             let dispatcher = get_safe_dispatcher(self);
+            // Unreachable
 
-            match dispatcher.unrecoverable_error() {
-                // Unreachable
-                Result::Ok(_) => {},
-                Result::Err(_) => {},
+            if let Result::Ok(_) = dispatcher.unrecoverable_error() {
+                {}
             }
         }
     }

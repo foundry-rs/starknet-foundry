@@ -16,12 +16,12 @@ trait IForkingChecker<TContractState> {
 
 #[starknet::contract]
 mod ForkingChecker {
-    use super::{
-        IHelloStarknetDispatcherTrait, IHelloStarknetDispatcher, IHelloStarknetLibraryDispatcher,
-    };
-    use starknet::{ClassHash, ContractAddress};
     use core::option::OptionTrait;
-    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::storage::StoragePointerWriteAccess;
+    use starknet::{ClassHash, ContractAddress};
+    use super::{
+        IHelloStarknetDispatcher, IHelloStarknetDispatcherTrait, IHelloStarknetLibraryDispatcher,
+    };
 
     #[storage]
     struct Storage {

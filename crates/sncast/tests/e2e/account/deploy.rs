@@ -14,7 +14,7 @@ use shared::test_utils::output_assert::{AsOutput, assert_stderr_contains};
 use sncast::AccountType;
 use sncast::helpers::account::load_accounts;
 use sncast::helpers::constants::{
-    ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
+    BRAAVOS_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH, READY_CLASS_HASH,
 };
 use starknet::core::types::TransactionReceipt::DeployAccount;
 use std::fs;
@@ -23,7 +23,7 @@ use test_case::test_case;
 
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0, "oz"; "cairo_0_class_hash")]
 #[test_case(&OZ_CLASS_HASH.into_hex_string(), "oz"; "cairo_1_class_hash")]
-#[test_case(&ARGENT_CLASS_HASH.into_hex_string(), "argent"; "argent_class_hash")]
+#[test_case(&READY_CLASS_HASH.into_hex_string(), "ready"; "ready_class_hash")]
 #[test_case(&BRAAVOS_CLASS_HASH.into_hex_string(), "braavos"; "braavos_class_hash")]
 #[tokio::test]
 pub async fn test_happy_case(class_hash: &str, account_type: &str) {
@@ -43,7 +43,9 @@ pub async fn test_happy_case(class_hash: &str, account_type: &str) {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     let bdg = snapbox.assert();
 
     let hash = get_transaction_hash(&bdg.get_output().stdout);
@@ -79,7 +81,9 @@ pub async fn test_happy_case_max_fee() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     let bdg = snapbox.assert();
 
     let hash = get_transaction_hash(&bdg.get_output().stdout);
@@ -115,7 +119,9 @@ pub async fn test_happy_case_add_profile() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     let output = snapbox.assert();
 
     let hash = get_transaction_hash(&output.get_output().stdout);
@@ -171,7 +177,9 @@ pub async fn test_valid_class_hash() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         Success: Account deployed
@@ -201,7 +209,9 @@ pub async fn test_valid_no_max_fee() {
         "my_account",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         Success: Account deployed
@@ -253,7 +263,7 @@ pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &
 }
 
 #[test_case("oz"; "open_zeppelin_account")]
-#[test_case("argent"; "argent_account")]
+#[test_case("ready"; "ready_account")]
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 pub async fn test_happy_case_keystore(account_type: &str) {
@@ -297,7 +307,9 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
         Success: Account deployed
@@ -561,7 +573,9 @@ pub async fn test_deploy_keystore_other_args() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
         Success: Account deployed
 
@@ -590,7 +604,9 @@ pub async fn test_json_output_format() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r#"
         {"transaction_hash":"0x0[..]"}
         {"links":"transaction: https://sepolia.starkscan.co/tx/0x0[..]","title":"account deployment"}
