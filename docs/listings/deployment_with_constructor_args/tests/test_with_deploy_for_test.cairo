@@ -12,6 +12,7 @@ fn test_initial_cart_non_empty_with_deploy_for_test() {
 
     // 2. Create deployment parameters
     let deployment_params = DeploymentParams { salt: 0, deploy_from_zero: true };
+
     // 3. Create initial products
     let initial_products = array![
         Product { name: 'Bread', price: 5, quantity: 2 },

@@ -11,10 +11,3 @@ snforge_std = { path = "../../../snforge_std" }
 assert_macros = "2.12.0"
 
 [[target.starknet-contract]]
-sierra = true
-
-[scripts]
-test = "snforge test"
-
-[tool.scarb]
-allow-prebuilt-plugins = ["snforge_std"]
