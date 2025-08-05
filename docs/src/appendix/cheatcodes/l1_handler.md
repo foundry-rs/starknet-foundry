@@ -34,8 +34,6 @@ $ snforge test test_l1_handler
 ```shell
 Collected 1 test(s) from cheatcodes_reference package
 Running 1 test(s) from tests/
-L1 message received from: 0x123
-Numbers: [1, 2, 3]
 [PASS] cheatcodes_reference_integrationtest::test_l1_handler::test_l1_handler ([..])
 Running 0 test(s) from src/
 Tests: 1 passed, 0 failed, 0 ignored, [..] filtered out

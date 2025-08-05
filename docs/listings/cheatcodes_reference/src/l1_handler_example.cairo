@@ -5,7 +5,7 @@ mod L1HandlerExample {
 
     #[l1_handler]
     fn handle_l1_message(ref self: ContractState, from_address: felt252, numbers: Array<felt252>) {
-        println!("L1 message received from: 0x{:x}", from_address);
-        println!("Numbers: {:?}", numbers);
+        assert!(from_address == 0x123, "Unexpected address");
+        assert!(numbers.len() == 3, "Expected exactly 3 numbers");
     }
 }
