@@ -21,9 +21,9 @@ trait ICairo0Contract<TContractState> {
 #[starknet::contract]
 mod Cairo1Contract_v1 {
     use core::traits::Into;
-    use starknet::{get_contract_address, get_caller_address, ContractAddress};
-    use super::ICairo0ContractDispatcherTrait;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::{ContractAddress, get_caller_address, get_contract_address};
+    use super::ICairo0ContractDispatcherTrait;
 
     #[storage]
     struct Storage {

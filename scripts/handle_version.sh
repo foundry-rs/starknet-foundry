@@ -2,7 +2,9 @@
 
 get_version() {
   local overridden_version=$1
-  local default_version=$(grep "^version =" crates/snforge-scarb-plugin/Scarb.toml | cut -d '"' -f 2)
+  local plugin_path=$2
+  local default_version
+  default_version=$(grep "^version =" "$plugin_path" | cut -d '"' -f 2)
 
   if [ -z "$overridden_version" ]; then
     echo "$default_version"
