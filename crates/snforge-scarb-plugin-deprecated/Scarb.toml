@@ -1,6 +1,6 @@
 [package]
 name = "snforge_scarb_plugin_deprecated"
-version = "0.47.0"
+version = "0.48.0"
 edition = "2024_07"
 include = ["target/scarb/cairo-plugin/"]
 cairo-version = "<=2.11.4"

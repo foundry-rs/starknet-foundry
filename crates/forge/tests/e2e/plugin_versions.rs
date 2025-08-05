@@ -172,22 +172,13 @@ fn new_scarb_old_macros() {
         .output()
         .unwrap();
 
-    let output = test_runner(temp.join("abc")).assert().success();
+    let output = test_runner(temp.join("abc")).assert().failure();
     let current_package_version = env!("CARGO_PKG_VERSION");
 
     assert_stdout_contains(
         output,
         formatdoc! {r"
-            [WARNING] Package snforge_std version does not meet the recommended version requirement ^{current_package_version}, it might result in unexpected behaviour
-            [..]Compiling[..]
-            [..]Finished[..]
-
-            Collected 2 test(s) from abc package
-            Running 0 test(s) from src/
-            Running 2 test(s) from tests/
-            [PASS] abc_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value (l1_gas: ~[..], l1_data_gas: ~[..], l2_gas: ~[..])
-            [PASS] abc_integrationtest::test_contract::test_increase_balance (l1_gas: ~[..], l1_data_gas: ~[..], l2_gas: ~[..])
-            Tests: 2 passed, 0 failed, 0 ignored, 0 filtered out
+            [ERROR] Package snforge_std version does not meet the minimum required version >=0.48.0. Please upgrade snforge_std in Scarb.toml
         ", },
     );
 }
