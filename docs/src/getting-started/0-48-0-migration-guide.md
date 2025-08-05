@@ -1,6 +1,6 @@
-# `snforge` 0.47.0 Migration Guide
+# `snforge` 0.48.0 Migration Guide
 
-Starting from version 0.47.0, `snforge` will by default work only with Scarb versions 2.12 or newer.
+Starting from version 0.48.0, `snforge` will by default work only with Scarb versions 2.12 or newer.
 This is due to the migration to the Scarb V2 version of procedural macros, which are used to handle arguments like `#[test]`
 in `snforge`.
 Thanks to this migration, tools like the Cairo plugin for VSCode will start showing better, more descriptive
@@ -11,13 +11,13 @@ To continue using `snforge` you will need to perform different actions depending
 ## Scarb Versions >= 2.12.0
 
 For Scarb versions >= 2.12.0, we recommend upgrading your `snforge_std` dependency to the one matching your `snforge`
-installation (0.47.0 at the time of writing this doc).
+installation (0.48.0 at the time of writing this doc).
 
 In your `Scarb.toml` file, update the dependency:
 
 ```toml
 [dev-dependencies]
-snforge_std = "0.47.0"
+snforge_std = "0.48.0"
 ```
 
 No further action is required.
@@ -40,7 +40,7 @@ First, in your `Scarb.toml`, remove the `snforge_std` dependency and add `snforg
 ```diff
 [dev-dependencies]
 - snforge_std = "0.46.0"
-+ snforge_std_deprecated = "0.47.0"
++ snforge_std_deprecated = "0.48.0"
 ```
 
 Next, replace all kinds of imports in your code from `snforge_std` to `snforge_std_deprecated`:
