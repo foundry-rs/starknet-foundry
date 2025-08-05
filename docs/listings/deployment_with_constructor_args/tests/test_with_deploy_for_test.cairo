@@ -1,8 +1,8 @@
+use deployment_with_constructor_args::Product;
+use deployment_with_constructor_args::ShoppingCart::deploy_for_test;
 use snforge_std::{DeclareResult, DeclareResultTrait, declare};
 use starknet::deployment::DeploymentParams;
 use starknet::storage::StorableStoragePointerReadAccess;
-use deployment_with_constructor_args::Product;
-use deployment_with_constructor_args::ShoppingCart::deploy_for_test;
 
 #[test]
 fn test_initial_cart_non_empty_with_deploy_for_test() {

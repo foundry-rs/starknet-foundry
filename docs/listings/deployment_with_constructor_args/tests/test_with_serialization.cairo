@@ -1,6 +1,6 @@
+use deployment_with_constructor_args::Product;
 use snforge_std::{ContractClassTrait, DeclareResult, DeclareResultTrait, declare};
 use starknet::storage::StorableStoragePointerReadAccess;
-use deployment_with_constructor_args::Product;
 
 
 #[test]
