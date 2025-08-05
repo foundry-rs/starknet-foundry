@@ -170,7 +170,7 @@ pub async fn verify(
         Verifier::Walnut => {
             if test_files {
                 ui.println(&WarningMessage::new(
-                    "The --test-files option is ignored for Walnut verifier",
+                    "The `--test-files` option is ignored for Walnut verifier",
                 ));
             }
             let walnut = WalnutVerificationInterface::new(

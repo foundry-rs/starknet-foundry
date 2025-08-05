@@ -519,12 +519,11 @@ async fn test_test_files_flag_ignored_with_warning() {
         output,
         formatdoc!(
             r"
-        [WARNING] The --test-files option is ignored for Walnut verifier
-        {}Success: Verification completed
+        [WARNING] The `--test-files` option is ignored for Walnut verifier
+        Success: Verification completed
 
         {}
         ",
-            "",
             verifier_response
         ),
     );
