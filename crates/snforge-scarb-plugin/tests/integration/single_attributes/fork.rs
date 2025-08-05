@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, empty_function};
-use cairo_lang_macro::{quote, Diagnostic};
+use cairo_lang_macro::{Diagnostic, quote};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::fork::fork;
 

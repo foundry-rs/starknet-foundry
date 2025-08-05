@@ -1,11 +1,11 @@
 use crate::args::Arguments;
+use crate::attributes::AttributeInfo;
 use crate::attributes::internal_config_statement::InternalConfigStatementCollector;
 use crate::attributes::test::TestCollector;
-use crate::attributes::AttributeInfo;
 use crate::common::{into_proc_macro_result, with_parsed_values};
 use crate::format_ident;
-use crate::utils::{create_single_token, get_statements, SyntaxNodeUtils};
-use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
+use crate::utils::{SyntaxNodeUtils, create_single_token, get_statements};
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{FunctionWithBody, Param};
 use cairo_lang_syntax::node::helpers::QueryAttrs;

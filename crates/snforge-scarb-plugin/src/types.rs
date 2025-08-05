@@ -5,7 +5,7 @@ use crate::{
 };
 use cairo_lang_macro::{Diagnostic, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::{ast::Expr, Terminal};
+use cairo_lang_syntax::node::{Terminal, ast::Expr};
 use num_bigint::BigInt;
 use url::Url;
 
