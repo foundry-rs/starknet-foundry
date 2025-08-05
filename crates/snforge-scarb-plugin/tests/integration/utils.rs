@@ -1,5 +1,5 @@
 use cairo_lang_formatter::{CairoFormatter, FormatterConfig};
-use cairo_lang_macro::{quote, Diagnostic, ProcMacroResult, TokenStream};
+use cairo_lang_macro::{Diagnostic, ProcMacroResult, TokenStream, quote};
 use std::collections::HashSet;
 
 pub fn empty_function() -> TokenStream {

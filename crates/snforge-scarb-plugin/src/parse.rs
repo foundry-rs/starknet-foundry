@@ -1,12 +1,12 @@
 use crate::attributes::{AttributeInfo, ErrorExt};
 use crate::utils::create_single_token;
-use cairo_lang_macro::{quote, Diagnostic, TokenStream, TokenTree};
+use cairo_lang_macro::{Diagnostic, TokenStream, TokenTree, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::SyntaxFile;
 use cairo_lang_syntax::node::{
+    TypedSyntaxNode,
     ast::{FunctionWithBody, ModuleItem, OptionArgListParenthesized},
     helpers::QueryAttrs,
-    TypedSyntaxNode,
 };
 use cairo_lang_utils::Upcast;
 

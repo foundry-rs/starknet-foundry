@@ -1,4 +1,4 @@
-use super::{internal_config_statement::InternalConfigStatementCollector, AttributeInfo, ErrorExt};
+use super::{AttributeInfo, ErrorExt, internal_config_statement::InternalConfigStatementCollector};
 use crate::attributes::fuzzer::wrapper::FuzzerWrapperCollector;
 use crate::attributes::fuzzer::{FuzzerCollector, FuzzerConfigCollector};
 use crate::utils::create_single_token;
@@ -7,10 +7,10 @@ use crate::{
     common::{into_proc_macro_result, with_parsed_values},
     format_ident,
 };
-use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
-use cairo_lang_syntax::node::{ast::FunctionWithBody, Terminal, TypedSyntaxNode};
+use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode, ast::FunctionWithBody};
 use std::env::{self, VarError};
 use std::ops::Not;
 

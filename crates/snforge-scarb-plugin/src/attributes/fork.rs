@@ -7,7 +7,7 @@ use crate::{
     config_statement::extend_with_config_cheatcodes,
     types::ParseFromExpr,
 };
-use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, Severity, TokenStream};
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, Severity, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use url::Url;
 
