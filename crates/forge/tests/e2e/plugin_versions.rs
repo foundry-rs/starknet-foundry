@@ -173,7 +173,6 @@ fn new_scarb_old_macros() {
         .unwrap();
 
     let output = test_runner(temp.join("abc")).assert().failure();
-    let current_package_version = env!("CARGO_PKG_VERSION");
 
     assert_stdout_contains(
         output,
