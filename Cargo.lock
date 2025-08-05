@@ -2070,6 +2070,8 @@ name = "debugging"
 version = "1.0.0"
 dependencies = [
  "blockifier",
+ "cairo-lang-sierra",
+ "cairo-lang-starknet-classes",
  "cheatnet",
  "console",
  "data-transformer",

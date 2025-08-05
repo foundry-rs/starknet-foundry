@@ -11,6 +11,8 @@ paste.workspace = true
 console.workspace = true
 starknet-types-core.workspace = true
 starknet.workspace = true
+cairo-lang-sierra.workspace = true
+cairo-lang-starknet-classes.workspace = true
 cheatnet = { path = "../cheatnet" }
 data-transformer = { path = "../data-transformer" }
 serde_json.workspace = true
