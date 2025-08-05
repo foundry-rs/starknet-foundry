@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `snforge_std` now supports version 2 of scarb macros. Migration is required if using Scarb versions before `2.12.0`. See [migration guide](https://foundry-rs.github.io/starknet-foundry/getting-started/0-47-0-migration-guide.html).
+- `snforge_std` is now compatible with Scarb procedural macros V2. Migration is required if using Scarb versions before `2.12.0`. See [migration guide](https://foundry-rs.github.io/starknet-foundry/getting-started/0-47-0-migration-guide.html).
 
 #### Changed
 
