@@ -5,10 +5,10 @@ pub trait IContract<TContractState> {
 
 #[starknet::contract]
 pub mod Contract {
-    use starknet::storage::{
-        StoragePointerReadAccess, StorageMapReadAccess, StorageMapWriteAccess, Map,
-    };
     use starknet::ContractAddress;
+    use starknet::storage::{
+        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
+    };
 
     #[storage]
     pub struct Storage {

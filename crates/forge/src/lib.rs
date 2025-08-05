@@ -41,8 +41,11 @@ const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 9, 4);
 const MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN: Version = Version::new(2, 10, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 const MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS: Version = Version::new(2, 10, 0);
-// TODO(#3344) Set this to 0.44.0 after it has been released
+// TODO Set this to version from v2 macros release
 const MINIMAL_SNFORGE_STD_VERSION: Version = Version::new(0, 44, 0);
+// TODO Set this to version from v2 macros release
+const MINIMAL_SNFORGE_STD_DEPRECATED_VERSION: Version = Version::new(0, 44, 0);
+pub const MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT: Version = Version::new(2, 12, 0);
 
 #[derive(Parser, Debug)]
 #[command(

@@ -1,9 +1,9 @@
 // 0. Import necessary structs and traits
-use starknet::storage::{StorageMapReadAccess, StorageMapWriteAccess};
-use testing_contract_internals::contract::{Contract, IContractDispatcher, IContractDispatcherTrait};
-use testing_contract_internals::contract::Contract::InternalTrait;
-use snforge_std::{declare, DeclareResultTrait, ContractClassTrait, interact_with_state};
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare, interact_with_state};
 use starknet::ContractAddress;
+use starknet::storage::{StorageMapReadAccess, StorageMapWriteAccess};
+use testing_contract_internals::contract::Contract::InternalTrait;
+use testing_contract_internals::contract::{Contract, IContractDispatcher, IContractDispatcherTrait};
 
 fn deploy_contract() -> starknet::ContractAddress {
     let contract = declare("Contract").unwrap().contract_class();
