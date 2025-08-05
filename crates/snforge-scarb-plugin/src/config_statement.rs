@@ -4,11 +4,11 @@ use crate::{
     attributes::AttributeCollector,
     common::{into_proc_macro_result, with_parsed_values},
 };
-use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
+use cairo_lang_syntax::node::TypedSyntaxNode;
 use cairo_lang_syntax::node::ast::FunctionWithBody;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
-use cairo_lang_syntax::node::TypedSyntaxNode;
 
 pub fn extend_with_config_cheatcodes<Collector>(
     args: TokenStream,

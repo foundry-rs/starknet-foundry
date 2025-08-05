@@ -1,4 +1,4 @@
-use cairo_lang_macro::{quote, TokenStream};
+use cairo_lang_macro::{TokenStream, quote};
 
 pub trait CairoExpression {
     fn as_cairo_expression(&self) -> TokenStream;

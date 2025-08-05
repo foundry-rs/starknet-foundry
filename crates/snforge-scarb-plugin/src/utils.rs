@@ -1,9 +1,9 @@
-use cairo_lang_macro::{quote, Diagnostic, Severity, TextSpan, Token, TokenStream, TokenTree};
+use cairo_lang_macro::{Diagnostic, Severity, TextSpan, Token, TokenStream, TokenTree, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
+use cairo_lang_syntax::node::TypedSyntaxNode;
 use cairo_lang_syntax::node::ast::{Condition, Expr, FunctionWithBody, Statement};
 use cairo_lang_syntax::node::helpers::GetIdentifier;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
-use cairo_lang_syntax::node::TypedSyntaxNode;
 use indoc::formatdoc;
 
 pub fn higher_severity(a: Severity, b: Severity) -> Severity {

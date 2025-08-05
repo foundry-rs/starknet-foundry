@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, empty_function};
-use cairo_lang_macro::{quote, Diagnostic, TextSpan, Token, TokenStream, TokenTree};
+use cairo_lang_macro::{Diagnostic, TextSpan, Token, TokenStream, TokenTree, quote};
 use snforge_scarb_plugin::attributes::should_panic::should_panic;
 
 #[test]

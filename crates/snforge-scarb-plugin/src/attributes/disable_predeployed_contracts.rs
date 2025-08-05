@@ -3,7 +3,7 @@ use crate::{
     args::Arguments, attributes::AttributeCollector,
     config_statement::extend_with_config_cheatcodes,
 };
-use cairo_lang_macro::{quote, Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 
 pub struct PredeployedContractsCollector;

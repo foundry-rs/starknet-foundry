@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, empty_function};
-use cairo_lang_macro::{quote, Diagnostic};
+use cairo_lang_macro::{Diagnostic, quote};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::available_gas::available_gas;
 
@@ -32,9 +32,9 @@ fn works_with_empty() {
 
     assert_diagnostics(
         &result,
-        &[
-            Diagnostic::warn("#[available_gas] used with empty argument list. Either remove () or specify some arguments"),
-        ],
+        &[Diagnostic::warn(
+            "#[available_gas] used with empty argument list. Either remove () or specify some arguments",
+        )],
     );
 }
 
