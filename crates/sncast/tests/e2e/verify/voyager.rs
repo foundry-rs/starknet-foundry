@@ -551,16 +551,14 @@ async fn test_test_files_flag_includes_test_files() {
             "package_name": "map"
         })))
         .and(|req: &Request| {
-            if let Ok(body_str) = std::str::from_utf8(&req.body) {
-                if let Ok(body_json) = serde_json::from_str::<serde_json::Value>(body_str) {
-                    if let Some(files) = body_json.get("files") {
-                        if let Some(files_obj) = files.as_object() {
-                            // Verify that test files ARE present
-                            return files_obj.contains_key("src/test_helpers.cairo")
-                                && files_obj.contains_key("src/tests.cairo");
-                        }
-                    }
-                }
+            if let Ok(body_str) = std::str::from_utf8(&req.body)
+                && let Ok(body_json) = serde_json::from_str::<serde_json::Value>(body_str)
+                && let Some(files) = body_json.get("files")
+                && let Some(files_obj) = files.as_object()
+            {
+                // Verify that test files ARE present
+                return files_obj.contains_key("src/test_helpers.cairo")
+                    && files_obj.contains_key("src/tests.cairo");
             }
             false
         })
@@ -629,16 +627,14 @@ async fn test_without_test_files_flag_excludes_test_files() {
             "package_name": "map"
         })))
         .and(|req: &Request| {
-            if let Ok(body_str) = std::str::from_utf8(&req.body) {
-                if let Ok(body_json) = serde_json::from_str::<serde_json::Value>(body_str) {
-                    if let Some(files) = body_json.get("files") {
-                        if let Some(files_obj) = files.as_object() {
-                            // Verify that test files are NOT present
-                            return !files_obj.contains_key("src/test_helpers.cairo")
-                                && !files_obj.contains_key("src/tests.cairo");
-                        }
-                    }
-                }
+            if let Ok(body_str) = std::str::from_utf8(&req.body)
+                && let Ok(body_json) = serde_json::from_str::<serde_json::Value>(body_str)
+                && let Some(files) = body_json.get("files")
+                && let Some(files_obj) = files.as_object()
+            {
+                // Verify that test files are NOT present
+                return !files_obj.contains_key("src/test_helpers.cairo")
+                    && !files_obj.contains_key("src/tests.cairo");
             }
             false
         })
