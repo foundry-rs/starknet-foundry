@@ -27,7 +27,6 @@ pub mod ShoppingCart {
         }
     }
 
-
     #[abi(embed_v0)]
     impl ShoppingCartImpl of super::IShoppingCart<ContractState> {
         fn get_products(self: @ContractState) -> Array<Product> {
