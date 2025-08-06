@@ -7,9 +7,7 @@ pub trait IMyContract<TContractState> {
 
 #[starknet::contract]
 mod MyContract {
-    use component_macros::oz_ac_component::AccessControlComponent;
-    use component_macros::oz_ac_component::SRC5Component;
-
+    use component_macros::oz_ac_component::{AccessControlComponent, SRC5Component};
     use starknet::ContractAddress;
     use super::MINTER_ROLE;
 

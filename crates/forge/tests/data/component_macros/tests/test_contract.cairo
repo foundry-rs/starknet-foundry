@@ -1,13 +1,10 @@
-use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
-use core::result::ResultTrait;
+use component_macros::example::{IMyContractDispatcher, IMyContractDispatcherTrait};
 use core::option::OptionTrait;
+use core::result::ResultTrait;
 use core::traits::TryInto;
+use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
+use snforge_std::{ContractClassTrait, declare, start_cheat_caller_address};
 use starknet::ContractAddress;
-
-
-use snforge_std::{declare, ContractClassTrait, start_cheat_caller_address};
-
-use component_macros::example::{IMyContractDispatcherTrait, IMyContractDispatcher};
 
 
 #[test]
