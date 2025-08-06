@@ -1,4 +1,4 @@
-use snforge_std::fs::{FileTrait};
+use snforge_std::fs::FileTrait;
 
 #[test]
 fn file_trait_example() {
