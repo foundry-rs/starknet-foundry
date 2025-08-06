@@ -1,5 +1,5 @@
 use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
-use snforge_std::{declare, ContractClassTrait, L1HandlerTrait};
+use snforge_std::{ContractClassTrait, L1HandlerTrait, declare};
 
 #[test]
 fn test_l1_handler() {
