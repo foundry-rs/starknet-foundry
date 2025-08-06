@@ -8,6 +8,7 @@
 * [First Steps with Starknet Foundry](getting-started/first-steps.md)
 * [Scarb](getting-started/scarb.md)
 * [Project Configuration](projects/configuration.md)
+* [`snforge` 0.48.0 Migration Guide](getting-started/0-48-0-migration-guide.md)
 
 ---
 

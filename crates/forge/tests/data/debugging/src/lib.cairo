@@ -20,11 +20,10 @@ trait Failing<TContractState> {
 mod SimpleContract {
     use core::array::ArrayTrait;
     use core::traits::Into;
-    use starknet::ContractAddress;
-    use starknet::get_contract_address;
+    use starknet::{ContractAddress, get_contract_address};
     use super::{
-        RecursiveCaller, RecursiveCallerDispatcher, RecursiveCallerDispatcherTrait, RecursiveCall,
-        Failing,
+        Failing, RecursiveCall, RecursiveCaller, RecursiveCallerDispatcher,
+        RecursiveCallerDispatcherTrait,
     };
 
 
@@ -38,6 +37,7 @@ mod SimpleContract {
             self: @ContractState, calls: Array<RecursiveCall>,
         ) -> Array<RecursiveCall> {
             let mut i = 0;
+            #[cairofmt::skip]
             while i < calls.len() {
                 let serviced_call = calls.at(i);
                 RecursiveCallerDispatcher {

@@ -10,7 +10,7 @@ pub fn fib_fn(a: felt252, b: felt252, n: felt252) -> felt252 {
 
 #[cfg(test)]
 mod tests {
-    use super::{fib_fn, fob_fn, fab_fn};
+    use super::{fab_fn, fib_fn, fob_fn};
 
     #[test]
     fn test_fib() {
