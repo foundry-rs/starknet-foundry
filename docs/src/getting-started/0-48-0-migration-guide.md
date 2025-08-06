@@ -39,7 +39,7 @@ First, in your `Scarb.toml`, remove the `snforge_std` dependency and add `snforg
 
 ```diff
 [dev-dependencies]
-- snforge_std = "{{snforge_std_version}}"
+- snforge_std = "0.47.0"
 + snforge_std_deprecated = "{{snforge_std_version}}"
 ```
 
