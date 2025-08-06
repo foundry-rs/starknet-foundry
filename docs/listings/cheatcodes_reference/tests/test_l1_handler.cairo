@@ -11,7 +11,7 @@ fn test_l1_handler() {
     let l1_handler = L1HandlerTrait::new(contract_address, selector!("handle_l1_message"));
 
     // 3. Define Ethereum address of the message sender
-    let eth_address = 0x123;
+    let eth_address = 0x123456789012345678901234567890123456789;
 
     // 4. The payload to be sent to the L1 handler
     let payload = array![1, 2, 3];
