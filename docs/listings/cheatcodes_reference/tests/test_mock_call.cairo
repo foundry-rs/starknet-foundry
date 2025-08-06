@@ -8,7 +8,7 @@ fn test_mock_call() {
     // 1. Create calldata for the contract deployment
     let mut calldata = ArrayTrait::new();
 
-    // 2. Serialize intial products (in this case an empty array)
+    // 2. Serialize initial products (in this case an empty array)
     let initial_products: Array<Product> = array![];
     initial_products.serialize(ref calldata);
 
