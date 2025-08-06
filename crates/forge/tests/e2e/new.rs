@@ -9,6 +9,7 @@ use forge::Template;
 use forge::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use indoc::{formatdoc, indoc};
 use regex::Regex;
+use scarb_api::ScarbCommand;
 use shared::consts::FREE_RPC_PROVIDER_URL;
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::assert_matches;
@@ -19,7 +20,7 @@ use std::str::FromStr;
 use std::sync::LazyLock;
 use std::{env, fs, iter};
 use test_case::test_case;
-use test_utils::{get_local_snforge_std_absolute_path, tempdir_with_tool_versions};
+use test_utils::{tempdir_with_tool_versions, use_snforge_std_deprecated};
 use toml_edit::{DocumentMut, Formatted, InlineTable, Item, Value};
 
 static RE_NEWLINES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\n{3,}").unwrap());
@@ -112,20 +113,46 @@ fn create_new_project_dir_exists_and_empty() {
 fn init_new_project_from_scarb() {
     let temp = tempdir_with_tool_versions().unwrap();
 
-    SnapboxCommand::new("scarb")
-        .current_dir(&temp)
-        .args(["new", "test_name"])
-        .env("SCARB_INIT_TEST_RUNNER", "starknet-foundry")
-        .env(
-            "PATH",
-            append_to_path_var(snforge_test_bin_path().parent().unwrap()),
-        )
-        .assert()
-        .success();
+    SnapboxCommand::from_std(
+        ScarbCommand::new()
+            .current_dir(temp.path())
+            .args(["new", "test_name"])
+            .env("SCARB_INIT_TEST_RUNNER", "starknet-foundry")
+            .env(
+                "PATH",
+                append_to_path_var(snforge_test_bin_path().parent().unwrap()),
+            )
+            .command(),
+    )
+    .assert()
+    .success();
 
     validate_init(&temp.join("test_name"), true, &Template::BalanceContract);
 }
 
+#[test]
+#[cfg_attr(not(feature = "scarb_2_9_1"), ignore)]
+fn init_new_project_from_scarb_with_snforge_std_deprecated() {
+    let temp = tempdir_with_tool_versions().unwrap();
+    let tool_version_path = temp.join(".tool-versions");
+    fs::write(tool_version_path, "scarb 2.11.4").unwrap();
+
+    SnapboxCommand::from_std(
+        ScarbCommand::new()
+            .current_dir(temp.path())
+            .args(["new", "test_name"])
+            .env("SCARB_INIT_TEST_RUNNER", "starknet-foundry")
+            .env(
+                "PATH",
+                append_to_path_var(snforge_test_bin_path().parent().unwrap()),
+            )
+            .command(),
+    )
+    .assert()
+    .success();
+
+    validate_init(&temp.join("test_name"), true, &Template::BalanceContract);
+}
 pub fn append_to_path_var(path: &Path) -> OsString {
     let script_path = iter::once(path.to_path_buf());
     let os_path = env::var_os("PATH").unwrap();
@@ -148,21 +175,43 @@ fn validate_init(project_path: &PathBuf, validate_snforge_std: bool, template: &
         .as_table_mut()
         .unwrap();
 
-    let local_snforge_std = get_local_snforge_std_absolute_path()
-        .unwrap()
-        .to_str()
-        .unwrap()
-        .to_string();
+    if use_snforge_std_deprecated() {
+        let local_snforge_std_deprecated = Path::new("../../snforge_std_deprecated")
+            .canonicalize()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string();
 
-    let mut snforge_std = InlineTable::new();
-    snforge_std.insert("path", Value::String(Formatted::new(local_snforge_std)));
+        let mut snforge_std_deprecated = InlineTable::new();
+        snforge_std_deprecated.insert(
+            "path",
+            Value::String(Formatted::new(local_snforge_std_deprecated)),
+        );
 
-    dependencies.remove("snforge_std");
-    dependencies.insert("snforge_std", Item::Value(Value::InlineTable(snforge_std)));
+        dependencies.remove("snforge_std_deprecated");
+        dependencies.insert(
+            "snforge_std_deprecated",
+            Item::Value(Value::InlineTable(snforge_std_deprecated)),
+        );
+    } else {
+        let local_snforge_std = Path::new("../../snforge_std")
+            .canonicalize()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string();
 
-    std::fs::write(manifest_path, scarb_toml.to_string()).unwrap();
+        let mut snforge_std = InlineTable::new();
+        snforge_std.insert("path", Value::String(Formatted::new(local_snforge_std)));
 
-    let output = test_runner(&TempDir::new().unwrap())
+        dependencies.remove("snforge_std");
+        dependencies.insert("snforge_std", Item::Value(Value::InlineTable(snforge_std)));
+    }
+
+    fs::write(manifest_path, scarb_toml.to_string()).unwrap();
+
+    let output = test_runner(TempDir::new().unwrap())
         .current_dir(project_path)
         .assert()
         .success();
@@ -172,10 +221,12 @@ fn validate_init(project_path: &PathBuf, validate_snforge_std: bool, template: &
 }
 
 fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool) -> String {
-    let snforge_std_assert = if validate_snforge_std {
-        "\nsnforge_std = \"[..]\""
-    } else {
+    let snforge_std_assert = if !validate_snforge_std {
         ""
+    } else if use_snforge_std_deprecated() {
+        "\nsnforge_std_deprecated = \"[..]\""
+    } else {
+        "\nsnforge_std = \"[..]\""
     };
 
     let target_contract_entry = "[[target.starknet-contract]]\nsierra = true";
@@ -202,6 +253,12 @@ fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool
         Template::CairoProgram => ("", ""),
     };
 
+    let allow_prebuild_plugins_assert = if use_snforge_std_deprecated() {
+        r#"allow-prebuilt-plugins = ["snforge_std_deprecated"]"#
+    } else {
+        r#"allow-prebuilt-plugins = ["snforge_std"]"#
+    };
+
     let expected_manifest = formatdoc!(
         r#"
             [package]
@@ -223,7 +280,7 @@ fn get_expected_manifest_content(template: &Template, validate_snforge_std: bool
             test = "snforge test"
 
             [tool.scarb]
-            allow-prebuilt-plugins = ["snforge_std"]
+            {allow_prebuild_plugins_assert}
 
             {fork_config}
 

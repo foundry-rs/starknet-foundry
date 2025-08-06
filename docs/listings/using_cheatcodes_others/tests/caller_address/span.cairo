@@ -1,6 +1,5 @@
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, cheat_caller_address, CheatSpan};
+use snforge_std::{CheatSpan, ContractClassTrait, DeclareResultTrait, cheat_caller_address, declare};
 use starknet::ContractAddress;
-
 use using_cheatcodes_others::{
     ICheatcodeCheckerSafeDispatcher, ICheatcodeCheckerSafeDispatcherTrait,
 };

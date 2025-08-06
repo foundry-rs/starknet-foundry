@@ -3,9 +3,8 @@ use snforge_std::{
     EventSpyAssertionsTrait, // Add for assertions on the EventSpy
     Event // Import the base Event
 };
-
 use testing_events::contract::{
-    SpyEventsChecker, ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait,
+    ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait, SpyEventsChecker,
 };
 
 #[test]

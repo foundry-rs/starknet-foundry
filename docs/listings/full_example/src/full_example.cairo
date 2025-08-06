@@ -1,4 +1,4 @@
-use sncast_std::{declare, deploy, invoke, call, DeclareResultTrait, get_nonce, FeeSettingsTrait};
+use sncast_std::{DeclareResultTrait, FeeSettingsTrait, call, declare, deploy, get_nonce, invoke};
 
 fn main() {
     let fee_settings = FeeSettingsTrait::max_fee(999999999999999);

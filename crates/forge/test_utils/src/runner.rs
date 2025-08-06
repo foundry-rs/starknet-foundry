@@ -1,4 +1,7 @@
-use crate::{get_assert_macros_version, tempdir_with_tool_versions};
+use crate::{
+    get_assert_macros_version, get_std_name, get_std_path, tempdir_with_tool_versions,
+    use_snforge_std_deprecated,
+};
 use anyhow::{Context, Result, anyhow};
 use assert_fs::{
     TempDir,
@@ -26,6 +29,7 @@ use std::{
     process::{Command, Stdio},
     str::FromStr,
 };
+use walkdir::WalkDir;
 
 /// Represents a dependency of a Cairo project
 #[derive(Debug, Clone)]
@@ -111,6 +115,18 @@ impl Contract {
     }
 }
 
+pub fn replace_snforge_std_with_snforge_std_deprecated(dir: &Path) {
+    let temp_dir_files = WalkDir::new(dir);
+    for entry in temp_dir_files {
+        let entry = entry.unwrap();
+        if entry.path().is_file() {
+            let content = fs::read_to_string(entry.path()).unwrap();
+            let modified_content = content.replace("snforge_std", "snforge_std_deprecated");
+            fs::write(entry.path(), modified_content).unwrap();
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct TestCase {
     dir: TempDir,
@@ -128,31 +144,28 @@ impl<'a> TestCase {
         test_file.touch()?;
         test_file.write_str(test_code)?;
 
+        if use_snforge_std_deprecated() {
+            replace_snforge_std_with_snforge_std_deprecated(test_file.path());
+        }
+
         dir.child("src/lib.cairo").touch().unwrap();
 
-        let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
-            .unwrap()
-            .canonicalize_utf8()
-            .unwrap()
-            .to_string()
-            .replace('\\', "/");
-
+        let snforge_std_name = get_std_name();
+        let snforge_std_path = get_std_path().unwrap();
         let assert_macros_version = get_assert_macros_version()?.to_string();
 
         let scarb_toml_path = dir.child("Scarb.toml");
         scarb_toml_path.write_str(&formatdoc!(
             r#"
-                [package]
-                name = "test_package"
-                version = "0.1.0"
+            [package]
+            name = "test_package"
+            version = "0.1.0"
 
-                [dependencies]
-                starknet = "2.4.0"
-                snforge_std = {{ path = "{}" }}
-                assert_macros = "{}"
-                "#,
-            snforge_std_path,
-            assert_macros_version
+            [dependencies]
+            starknet = "2.4.0"
+            {snforge_std_name} = {{ path = "{snforge_std_path}" }}
+            assert_macros = "{assert_macros_version}"
+            "#
         ))?;
 
         Ok(Self {

@@ -1,4 +1,4 @@
-use sncast_std::{get_nonce, declare, FeeSettingsTrait};
+use sncast_std::{FeeSettingsTrait, declare, get_nonce};
 
 fn main() {
     let fee_settings = FeeSettingsTrait::resource_bounds(

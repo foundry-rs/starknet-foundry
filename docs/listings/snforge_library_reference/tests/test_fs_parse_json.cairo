@@ -1,7 +1,7 @@
-use snforge_std::fs::{FileTrait, FileParser};
 use core::array::ArrayTrait;
 use core::option::OptionTrait;
 use core::serde::Serde;
+use snforge_std::fs::{FileParser, FileTrait};
 
 #[derive(Debug, Serde, Drop, PartialEq)]
 struct Location {

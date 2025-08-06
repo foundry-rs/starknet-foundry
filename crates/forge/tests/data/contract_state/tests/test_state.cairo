@@ -124,20 +124,15 @@ fn test_interact_with_state_map() {
 fn test_interact_with_state_internal_function() {
     let contract_address = deploy_contract("HelloStarknetExtended", array!['Name']);
 
-    let get_owner = 
-        || -> (
-            ContractAddress, felt252,
-        ) {
-            interact_with_state(
-                contract_address,
-                || -> (
-                    ContractAddress, felt252,
-                ) {
-                    let mut state = HelloStarknetExtended::contract_state_for_testing();
-                    (state.owner.address.read(), state.owner.name.read())
-                },
-            )
-        };
+    let get_owner = || -> (ContractAddress, felt252) {
+        interact_with_state(
+            contract_address,
+            || -> (ContractAddress, felt252) {
+                let mut state = HelloStarknetExtended::contract_state_for_testing();
+                (state.owner.address.read(), state.owner.name.read())
+            },
+        )
+    };
     let (owner_address, owner_name) = get_owner();
     assert(owner_address == 0.try_into().unwrap(), 'Incorrect owner address');
     assert(owner_name == 'Name', 'Incorrect owner name');

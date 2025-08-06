@@ -5,8 +5,8 @@ trait IContract<TContractState> {
 
 #[starknet::contract]
 pub mod Contract {
-    use starknet::storage::{StorageMapReadAccess, StorageMapWriteAccess, Map};
     use starknet::ContractAddress;
+    use starknet::storage::{Map, StorageMapReadAccess, StorageMapWriteAccess};
 
     #[storage]
     pub struct Storage {
@@ -31,11 +31,11 @@ pub mod Contract {
 #[cfg(test)]
 mod tests {
     // 0. Import necessary structs and traits
-    use starknet::storage::{StorageMapReadAccess, StorageMapWriteAccess};
-    use super::{Contract, IContractDispatcher, IContractDispatcherTrait};
-    use super::Contract::InternalTrait;
-    use snforge_std::{declare, DeclareResultTrait, ContractClassTrait, interact_with_state};
+    use snforge_std::{ContractClassTrait, DeclareResultTrait, declare, interact_with_state};
     use starknet::ContractAddress;
+    use starknet::storage::{StorageMapReadAccess, StorageMapWriteAccess};
+    use super::Contract::InternalTrait;
+    use super::{Contract, IContractDispatcher, IContractDispatcherTrait};
 
     fn deploy_contract() -> starknet::ContractAddress {
         let contract = declare("Contract").unwrap().contract_class();
