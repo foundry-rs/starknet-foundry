@@ -1,5 +1,5 @@
-pub use super::cheatcodes::generate_arg::generate_arg;
 use core::fmt::Debug;
+pub use super::cheatcodes::generate_arg::generate_arg;
 
 const MAX_FELT: felt252 = 0x800000000000011000000000000000000000000000000000000000000000000;
 
@@ -19,8 +19,8 @@ impl FuzzableFelt of Fuzzable<felt252> {
 }
 
 mod nums {
-    use super::{Fuzzable, generate_arg, Debug};
     use core::num::traits::{Bounded, Zero};
+    use super::{Debug, Fuzzable, generate_arg};
 
     pub impl FuzzableNum<
         T, +Zero<T>, +Bounded<T>, +Drop<T>, +Serde<T>, +Into<T, felt252>, +Debug<T>,
@@ -78,7 +78,7 @@ pub impl FuzzableByteArray1000ASCII of Fuzzable<ByteArray> {
             let letter = Fuzzable::<u8>::generate() % 95;
             ba.append_byte(letter + 32);
             ba_len = ba_len - 1;
-        };
+        }
 
         ba
     }

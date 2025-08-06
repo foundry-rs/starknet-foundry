@@ -1,8 +1,9 @@
-use cairo_lang_macro::{Diagnostic, Severity};
-use cairo_lang_syntax::node::ast::{Condition, Expr, FunctionWithBody, Statement};
-use cairo_lang_syntax::node::db::SyntaxGroup;
-use cairo_lang_syntax::node::helpers::GetIdentifier;
+use cairo_lang_macro::{Diagnostic, Severity, TextSpan, Token, TokenStream, TokenTree, quote};
+use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::TypedSyntaxNode;
+use cairo_lang_syntax::node::ast::{Condition, Expr, FunctionWithBody, Statement};
+use cairo_lang_syntax::node::helpers::GetIdentifier;
+use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use indoc::formatdoc;
 
 pub fn higher_severity(a: Severity, b: Severity) -> Severity {
@@ -14,7 +15,7 @@ pub fn higher_severity(a: Severity, b: Severity) -> Severity {
 pub fn format_error_message(variants: &[Diagnostic]) -> String {
     let formatted_variants: Vec<String> = variants
         .iter()
-        .map(|variant| format!("- variant: {}", variant.message))
+        .map(|variant| format!("- variant: {}", variant.message()))
         .collect();
 
     formatdoc! {"
@@ -50,27 +51,39 @@ macro_rules! branch {
         if let Some(result) = result {
             Ok(result)
         } else {
-            Err(Diagnostic {
-                message: $crate::utils::format_error_message(&messages),
-                severity: messages.into_iter().fold(Severity::Warning, |acc, diagnostic| $crate::utils::higher_severity(acc, diagnostic.severity))
-            })
+            let severity = messages.clone().into_iter().fold(Severity::Warning, |acc, diagnostic| $crate::utils::higher_severity(acc, diagnostic.severity()));
+            let message = $crate::utils::format_error_message(&messages);
+            Err(Diagnostic::new(severity, message))
         }
     }};
 }
 
-pub trait TypedSyntaxNodeAsText {
-    fn as_text(&self, db: &dyn SyntaxGroup) -> String;
+pub fn create_single_token(content: impl AsRef<str>) -> TokenTree {
+    TokenTree::Ident(Token::new(content, TextSpan::call_site()))
 }
 
-impl<T: TypedSyntaxNode> TypedSyntaxNodeAsText for T {
-    fn as_text(&self, db: &dyn SyntaxGroup) -> String {
-        self.as_syntax_node().get_text(db)
+pub trait SyntaxNodeUtils {
+    fn to_token_stream(&self, db: &SimpleParserDatabase) -> TokenStream;
+}
+
+impl<T: TypedSyntaxNode> SyntaxNodeUtils for T {
+    fn to_token_stream(&self, db: &SimpleParserDatabase) -> TokenStream {
+        let syntax = self.as_syntax_node();
+        let syntax = SyntaxNodeWithDb::new(&syntax, db);
+        quote!(#syntax)
     }
 }
 
 // Gets test statements and content of `if` statement that checks if function is run in config mode
-pub fn get_statements(db: &dyn SyntaxGroup, func: &FunctionWithBody) -> (String, String) {
-    let statements = func.body(db).statements(db).elements(db);
+pub fn get_statements(
+    db: &SimpleParserDatabase,
+    func: &FunctionWithBody,
+) -> (TokenStream, TokenStream) {
+    let statements = func
+        .body(db)
+        .statements(db)
+        .elements(db)
+        .collect::<Vec<_>>();
 
     let if_content = statements.first().and_then(|stmt| {
         // first statement is `if`
@@ -81,7 +94,7 @@ pub fn get_statements(db: &dyn SyntaxGroup, func: &FunctionWithBody) -> (String,
             return None;
         };
         // its condition is function call
-        let Condition::Expr(expr) = if_expr.condition(db) else {
+        let Some(Condition::Expr(expr)) = if_expr.conditions(db).elements(db).next() else {
             return None;
         };
         let Expr::FunctionCall(expr) = expr.expr(db) else {
@@ -89,7 +102,7 @@ pub fn get_statements(db: &dyn SyntaxGroup, func: &FunctionWithBody) -> (String,
         };
 
         // this function is named "snforge_std::_internals::is_config_run"
-        let segments = expr.path(db).elements(db);
+        let segments: Vec<_> = expr.path(db).segments(db).elements(db).collect();
 
         let [snforge_std, cheatcode, is_config_run] = segments.as_slice() else {
             return None;
@@ -102,14 +115,16 @@ pub fn get_statements(db: &dyn SyntaxGroup, func: &FunctionWithBody) -> (String,
             return None;
         }
 
-        let statements = if_expr.if_block(db).statements(db).elements(db);
+        let statements: Vec<_> = if_expr.if_block(db).statements(db).elements(db).collect();
 
         // omit last one (`return;`) as it have to be inserted after all new statements
         Some(
             statements[..statements.len() - 1]
                 .iter()
-                .fold(String::new(), |acc, statement| {
-                    acc + "\n" + &statement.as_text(db)
+                .map(|stmt| stmt.to_token_stream(db))
+                .fold(TokenStream::empty(), |mut acc, token| {
+                    acc.extend(token);
+                    acc
                 }),
         )
     });
@@ -121,7 +136,23 @@ pub fn get_statements(db: &dyn SyntaxGroup, func: &FunctionWithBody) -> (String,
         &statements[..]
     }
     .iter()
-    .fold(String::new(), |acc, stmt| acc + &stmt.as_text(db));
+    .map(|stmt| stmt.to_token_stream(db))
+    .fold(TokenStream::empty(), |mut acc, token| {
+        acc.extend(token);
+        acc
+    });
 
-    (statements, if_content.unwrap_or_default())
+    (statements, if_content.unwrap_or_else(TokenStream::empty))
+}
+
+#[macro_export]
+macro_rules! format_ident {
+    ($name:literal $(,$formats:expr_2021),*) => {
+        {
+            use cairo_lang_macro::{TextSpan, Token, TokenTree};
+
+            let content = format!($name,$($formats),*);
+            TokenTree::Ident(Token::new(content, TextSpan::call_site()))
+        }
+    };
 }

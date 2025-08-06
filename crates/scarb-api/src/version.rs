@@ -3,6 +3,7 @@ use anyhow::{Context, Result};
 use regex::Regex;
 use semver::Version;
 use shared::command::CommandExt;
+use std::path::PathBuf;
 use std::str::from_utf8;
 
 pub struct ScarbVersionOutput {
@@ -10,14 +11,34 @@ pub struct ScarbVersionOutput {
     pub cairo: Version,
 }
 
-#[derive(Clone, Copy, Debug, Default)]
-pub struct VersionCommand;
+#[derive(Clone, Debug, Default)]
+pub struct VersionCommand {
+    current_dir: Option<PathBuf>,
+}
+
+impl VersionCommand {
+    #[must_use]
+    pub fn new() -> Self {
+        Self { current_dir: None }
+    }
+
+    /// Current directory of the `scarb --command` process.
+    #[must_use]
+    pub fn current_dir(mut self, path: impl Into<PathBuf>) -> Self {
+        self.current_dir = Some(path.into());
+        self
+    }
+}
 
 impl VersionCommand {
     pub fn run(self) -> Result<ScarbVersionOutput> {
-        let scarb_version = ScarbCommand::new()
-            .arg("--version")
-            .command()
+        let mut scarb_version_command = ScarbCommand::new().arg("--version").command();
+
+        if let Some(path) = &self.current_dir {
+            scarb_version_command.current_dir(path);
+        }
+
+        let scarb_version = scarb_version_command
             .output_checked()
             .context("Failed to execute `scarb --version`")?;
 
