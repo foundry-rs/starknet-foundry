@@ -24,8 +24,8 @@ pub mod SpySyscallEventsChecker {
     pub fn emit_one_event(ref self: ContractState, some_data: felt252) {
         self.emit(FirstEvent { some_data });
     }
-
-    use core::starknet::{SyscallResultTrait, syscalls::emit_event_syscall};
+    use core::starknet::SyscallResultTrait;
+    use core::starknet::syscalls::emit_event_syscall;
 
     #[external(v0)]
     pub fn emit_event_with_syscall(ref self: ContractState, some_key: felt252, some_data: felt252) {

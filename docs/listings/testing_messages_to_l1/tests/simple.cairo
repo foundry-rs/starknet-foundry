@@ -1,9 +1,8 @@
-use starknet::EthAddress;
 use snforge_std::{
-    declare, ContractClassTrait, DeclareResultTrait, spy_messages_to_l1,
-    MessageToL1SpyAssertionsTrait, MessageToL1,
+    ContractClassTrait, DeclareResultTrait, MessageToL1, MessageToL1SpyAssertionsTrait, declare,
+    spy_messages_to_l1,
 };
-
+use starknet::EthAddress;
 use testing_messages_to_l1::{IMessageSenderDispatcher, IMessageSenderDispatcherTrait};
 
 #[test]
