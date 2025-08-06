@@ -8,9 +8,9 @@ fn read_txt(file: @File) -> Array<felt252>;
 
 > ℹ️ **Info**
 >
-> Specific rules must be followed for snforge to correctly parse JSON and plain text files.
+> Specific rules must be followed for snforge to correctly parse plain text files.
 >
-> Read [file format rules](./file_format_rules.md) for more.
+> Read [file format rules](./file_format_rules.md#plain-text-files) for more.
 
 ## Example
 

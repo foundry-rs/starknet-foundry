@@ -10,11 +10,9 @@ fn read_txt_example() {
 
     let expected = array![
         'Hello Starknet!',
-        'Let\'s code in Cairo!',
-        // Below is serialized byte array "Example byte array"
+        'Let\'s code in Cairo!', // Below is serialized byte array "Example byte array"
         0,
-        6051711116678136165665715375637410673222009,
-        18,
+        6051711116678136165665715375637410673222009, 18,
     ];
     let mut i = 0;
 
