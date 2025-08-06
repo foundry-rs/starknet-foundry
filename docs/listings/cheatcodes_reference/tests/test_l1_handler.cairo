@@ -13,10 +13,12 @@ fn test_l1_handler() {
 
     let eth_address = 0x123; // Ethereum address of the message sender
 
-    // The payload to be sent to the L1 handler, serialized with `Serde`
-    // 3 is the number of array and 1, 2, 3 are the actual elements of the array
+    // The payload to be sent to the L1 handler
     let payload = array![3, 1, 2, 3];
+    let mut serialized_payload = array![];
+    payload.serialize(ref serialized_payload);
 
     // Execute the L1 handler with the Ethereum address and payload
-    l1_handler.execute(eth_address, payload.span()).unwrap();
+    // This will trigger the `handle_l1_message` function of the contract
+    l1_handler.execute(eth_address, serialized_payload.span()).unwrap();
 }

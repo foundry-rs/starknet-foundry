@@ -2,7 +2,15 @@
 
 > `fn new(target: ContractAddress, selector: felt252) -> L1Handler`
 
-Returns a structure referring to an L1 handler function.
+Returns an `L1Handler` structure which can be used to mock sending messages from L1 for the contract to handle in function marked with `#[l1_handler]`.
+
+```rust
+#[derive(Drop, Clone)]
+pub struct L1Handler {
+    target: ContractAddress,
+    selector: felt252,
+}
+```
 
 > `fn execute(self: L1Handler) -> SyscallResult<()>`
 
@@ -10,7 +18,7 @@ Mocks an L1 -> L2 message from Ethereum handled by the given L1 handler function
 
 ## Example
 
-Let's consider a very simple contract, which receives an L1 message with an array of numbers and prints them:
+Let's consider a very simple contract, which receives an L1 message with an array of numbers them:
 
 ```rust
 {{#include ../../../listings/cheatcodes_reference/src/l1_handler_example.cairo}}
