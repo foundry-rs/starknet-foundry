@@ -18,11 +18,6 @@ pub fn build_debugging_trace(
     fork_data: &ForkData,
 ) -> Option<debugging::Trace> {
     let components = trace_args.to_components()?;
-    let contracts_data_store = debugging::ContractsDataStore::new(contracts_data, fork_data);
-    Some(debugging::Trace::new(
-        call_trace,
-        &contracts_data_store,
-        &components,
-        test_name,
-    ))
+    let context = debugging::Context::new(contracts_data, fork_data, components);
+    Some(debugging::Trace::new(call_trace, &context, test_name))
 }
