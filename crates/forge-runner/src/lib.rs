@@ -67,17 +67,16 @@ pub fn maybe_save_trace_and_profile(
     if let AnyTestCaseSummary::Single(TestCaseSummary::Passed {
         name, trace_data, ..
     }) = result
+        && execution_data_to_save.is_vm_trace_needed()
     {
-        if execution_data_to_save.is_vm_trace_needed() {
-            let name = sanitize_filename::sanitize(name.replace("::", "_"));
-            let trace_path = save_trace_data(&name, trace_data)?;
-            if execution_data_to_save.profile {
-                // TODO(#3395): Use Ui spinner
-                let _spinner = Spinner::create_with_message("Running cairo-profiler");
-                run_profiler(&name, &trace_path, &execution_data_to_save.additional_args)?;
-            }
-            return Ok(Some(trace_path));
+        let name = sanitize_filename::sanitize(name.replace("::", "_"));
+        let trace_path = save_trace_data(&name, trace_data)?;
+        if execution_data_to_save.profile {
+            // TODO(#3395): Use Ui spinner
+            let _spinner = Spinner::create_with_message("Running cairo-profiler");
+            run_profiler(&name, &trace_path, &execution_data_to_save.additional_args)?;
         }
+        return Ok(Some(trace_path));
     }
     Ok(None)
 }
