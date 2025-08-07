@@ -113,10 +113,10 @@ impl CheatnetState {
             return Ok(BlockHash(StarkHash::from(block_hash)));
         }
 
-        if let Some((block_hash, except)) = self.global_block_hash.get(&block_number) {
-            if !except.contains(&contract_address) {
-                return Ok(BlockHash(StarkHash::from(*block_hash)));
-            }
+        if let Some((block_hash, except)) = self.global_block_hash.get(&block_number)
+            && !except.contains(&contract_address)
+        {
+            return Ok(BlockHash(StarkHash::from(*block_hash)));
         }
 
         Ok(BlockHash(

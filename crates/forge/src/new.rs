@@ -441,7 +441,7 @@ fn infer_name(name: Option<String>, path: &Utf8PathBuf) -> Result<String> {
     Ok(name)
 }
 
-fn get_template_dir(template: &Template) -> Result<Dir> {
+fn get_template_dir(template: &Template) -> Result<Dir<'_>> {
     let dir_name = match template {
         Template::CairoProgram => "cairo_program",
         Template::BalanceContract => "balance_contract",
