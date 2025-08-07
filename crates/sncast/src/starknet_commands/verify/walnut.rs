@@ -46,17 +46,16 @@ impl VerificationInterface<'_> for WalnutVerificationInterface {
         for entry in WalkDir::new(self.workspace_dir.clone()).follow_links(true) {
             let entry = entry?;
             let path = entry.path();
-            if path.is_file() {
-                if let Some(extension) = path.extension() {
-                    if extension == OsStr::new("cairo") || extension == OsStr::new("toml") {
-                        let relative_path = path.strip_prefix(self.workspace_dir.clone())?;
-                        let file_content = std::fs::read_to_string(path)?;
-                        file_data.insert(
-                            relative_path.to_string_lossy().into_owned(),
-                            serde_json::Value::String(file_content),
-                        );
-                    }
-                }
+            if path.is_file()
+                && let Some(extension) = path.extension()
+                && (extension == OsStr::new("cairo") || extension == OsStr::new("toml"))
+            {
+                let relative_path = path.strip_prefix(self.workspace_dir.clone())?;
+                let file_content = std::fs::read_to_string(path)?;
+                file_data.insert(
+                    relative_path.to_string_lossy().into_owned(),
+                    serde_json::Value::String(file_content),
+                );
             }
         }
 

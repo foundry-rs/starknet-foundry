@@ -79,33 +79,32 @@ pub fn execute_call_entry_point(
         .trace_data
         .enter_nested_call(entry_point.clone(), cheated_data);
 
-    if let Some(cheat_status) = get_mocked_function_cheat_status(entry_point, cheatnet_state) {
-        if let CheatStatus::Cheated(ret_data, _) = (*cheat_status).clone() {
-            cheat_status.decrement_cheat_span();
-            let ret_data_f252: Vec<Felt> =
-                ret_data.iter().map(|datum| Felt::from_(*datum)).collect();
-            cheatnet_state.trace_data.exit_nested_call(
-                ExecutionResources::default(),
-                u64::default(),
-                SyscallUsageMap::default(),
-                SyscallUsageMap::default(),
-                CallResult::Success {
-                    ret_data: ret_data_f252,
-                },
-                &[],
-                None,
-            );
-            let tracked_resource = *context
-                .tracked_resource_stack
-                .last()
-                .expect("Unexpected empty tracked resource.");
+    if let Some(cheat_status) = get_mocked_function_cheat_status(entry_point, cheatnet_state)
+        && let CheatStatus::Cheated(ret_data, _) = (*cheat_status).clone()
+    {
+        cheat_status.decrement_cheat_span();
+        let ret_data_f252: Vec<Felt> = ret_data.iter().map(|datum| Felt::from_(*datum)).collect();
+        cheatnet_state.trace_data.exit_nested_call(
+            ExecutionResources::default(),
+            u64::default(),
+            SyscallUsageMap::default(),
+            SyscallUsageMap::default(),
+            CallResult::Success {
+                ret_data: ret_data_f252,
+            },
+            &[],
+            None,
+        );
+        let tracked_resource = *context
+            .tracked_resource_stack
+            .last()
+            .expect("Unexpected empty tracked resource.");
 
-            return Ok(mocked_call_info(
-                entry_point.clone(),
-                ret_data.clone(),
-                tracked_resource,
-            ));
-        }
+        return Ok(mocked_call_info(
+            entry_point.clone(),
+            ret_data.clone(),
+            tracked_resource,
+        ));
     }
     // endregion
 
