@@ -8,7 +8,6 @@ use foundry_ui::styling;
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use serde_json::json;
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeclareTransactionResponse {
     pub class_hash: PaddedFelt,
@@ -34,13 +33,7 @@ impl Message for SncastMessage<DeclareTransactionResponse> {
     }
 
     fn json(&self) -> Value {
-        serde_json::to_value(&self.command_response).unwrap_or_else(|err| {
-            json!({
-                "error": "Failed to serialize response",
-                "command": self.command,
-                "details": err.to_string()
-            })
-        })
+        self.to_json()
     }
 }
 
@@ -64,13 +57,7 @@ impl Message for SncastMessage<AlreadyDeclaredResponse> {
     }
 
     fn json(&self) -> Value {
-        serde_json::to_value(&self.command_response).unwrap_or_else(|err| {
-            json!({
-                "error": "Failed to serialize response",
-                "command": self.command,
-                "details": err.to_string()
-            })
-        })
+        self.to_json()
     }
 }
 
@@ -105,13 +92,7 @@ impl Message for SncastMessage<DeclareResponse> {
     }
 
     fn json(&self) -> Value {
-        serde_json::to_value(&self.command_response).unwrap_or_else(|err| {
-            json!({
-                "error": "Failed to serialize response",
-                "command": self.command,
-                "details": err.to_string()
-            })
-        })
+        self.to_json()
     }
 }
 

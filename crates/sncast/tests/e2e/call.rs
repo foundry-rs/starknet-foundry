@@ -289,6 +289,6 @@ fn test_json_output_format() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
-        {"response":"0x0","response_raw":["0x0"]}
+        {"command":"call","response":"0x0","response_raw":["0x0"]}
     "#});
 }
