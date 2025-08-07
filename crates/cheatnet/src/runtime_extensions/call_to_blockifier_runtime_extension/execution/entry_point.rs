@@ -135,7 +135,7 @@ pub fn execute_call_entry_point(
         .set_class_hash_for_current_call(class_hash);
     // endregion
 
-    // Hack to prevent version 0 attack on argent accounts.
+    // Hack to prevent version 0 attack on ready (formerly argent) accounts.
     if context.tx_context.tx_info.version() == TransactionVersion(Felt::from(0_u8))
         && class_hash
             == TryFromHexStr::try_from_hex_str(FAULTY_CLASS_HASH)

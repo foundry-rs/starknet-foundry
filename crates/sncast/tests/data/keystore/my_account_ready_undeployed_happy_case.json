@@ -1,7 +1,7 @@
 {
   "version": 1,
   "variant": {
-    "type": "argent",
+    "type": "ready",
     "version": 1,
     "owner": "0xe2d3d7080bfc665e0060a06e8e95c3db3ff78a1fec4cc81ddc87e49a12e0a",
     "guardian": "0x0"
@@ -12,3 +12,4 @@
     "salt": "0x1924d8e7415bd440195fefa23a1ce71b106252109bdbc59e51afb9229f136f5"
   }
 }
+

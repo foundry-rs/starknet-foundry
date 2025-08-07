@@ -8,7 +8,6 @@ trait ISpyEventsLibCall<TContractState> {
 
 #[starknet::contract]
 mod SpyEventsLibCall {
-    use starknet::ContractAddress;
     use starknet::ClassHash;
 
     #[starknet::interface]

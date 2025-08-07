@@ -1,7 +1,4 @@
-use sncast_std::{
-    get_nonce, deploy, DeployResult, ScriptCommandError, ProviderError, StarknetError,
-    FeeSettingsTrait,
-};
+use sncast_std::{get_nonce, deploy, FeeSettingsTrait};
 use starknet::{ClassHash};
 
 fn main() {
@@ -14,7 +11,7 @@ fn main() {
         .try_into()
         .expect('Invalid class hash value');
 
-    let deploy_nonce = get_nonce('preconfirmed');
+    let deploy_nonce = get_nonce('pre_confirmed');
     deploy(
         class_hash,
         array![0x2, 0x2, 0x0],
@@ -29,7 +26,7 @@ fn main() {
         .try_into()
         .expect('Invalid class hash value');
 
-    let deploy_nonce = get_nonce('preconfirmed');
+    let deploy_nonce = get_nonce('pre_confirmed');
     let deploy_result = deploy(
         class_hash,
         array![0x2, 0x2, 0x0],

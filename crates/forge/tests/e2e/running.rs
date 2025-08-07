@@ -773,7 +773,11 @@ fn with_exit_first() {
         ))
         .unwrap();
 
-    let output = test_runner(&temp).assert().code(1);
+    let output = test_runner(&temp)
+        .args(["--max-n-steps", "10000000"])
+        .assert()
+        .code(1);
+
     assert_stdout_contains(
         output,
         indoc! {r"
@@ -801,7 +805,11 @@ fn with_exit_first() {
 fn with_exit_first_flag() {
     let temp = setup_package("exit_first");
 
-    let output = test_runner(&temp).arg("--exit-first").assert().code(1);
+    let output = test_runner(&temp)
+        .arg("--exit-first")
+        .args(["--max-n-steps", "10000000"])
+        .assert()
+        .code(1);
 
     assert_stdout_contains(
         output,
@@ -926,10 +934,12 @@ fn incompatible_snforge_std_version_warning() {
         .parse::<DocumentMut>()
         .unwrap();
     scarb_toml["dev-dependencies"]["snforge_std"] = value("0.45.0");
-    scarb_toml["dev-dependencies"]["snforge_scarb_plugin"] = value("0.45.0");
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
-    let output = test_runner(&temp).assert().failure();
+    let output = test_runner(&temp)
+        .args(["--max-n-steps", "10000000"])
+        .assert()
+        .failure();
 
     assert_stdout_contains(
         output,
@@ -938,19 +948,20 @@ fn incompatible_snforge_std_version_warning() {
         [..]Compiling[..]
         [..]Finished[..]
 
-        Collected 2 test(s) from steps package
-        Running 2 test(s) from src/
-        [PASS] steps::tests::steps_less_than_10000000 [..]
-        [FAIL] steps::tests::steps_more_than_10000000
+        Collected 3 test(s) from steps package
+        Running 3 test(s) from src/
+        [PASS] steps::tests::steps_less_than_10_000_000 [..]
+        [FAIL] steps::tests::steps_more_than_10_000_000
+        [FAIL] steps::tests::steps_more_than_100_000_000
 
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
-            Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps
 
-        Tests: 1 passed, 1 failed, 0 ignored, 0 filtered out
+        Tests: 1 passed, 2 failed, 0 ignored, 0 filtered out
 
         Failures:
-            steps::tests::steps_more_than_10000000
+            steps::tests::steps_more_than_10_000_000
+            steps::tests::steps_more_than_100_000_000
         "},
     );
 }
@@ -1247,5 +1258,33 @@ fn dispatchers() {
         Failures:
             dispatchers_integrationtest::test::test_unrecoverable_not_possible_to_handle
         "},
+    );
+}
+
+#[test]
+#[cfg_attr(not(feature = "interact-with-state"), ignore)]
+fn test_interact_with_state() {
+    let temp = setup_package("contract_state");
+    let output = test_runner(&temp).assert().code(0);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+    [..]Compiling[..]
+    [..]Finished[..]
+
+    Collected 8 test(s) from contract_state package
+    Running 0 test(s) from src/
+    Running 8 test(s) from tests/
+    [PASS] contract_state_integrationtest::test_storage_node::test_storage_node [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_state_return [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_state_internal_function [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_initialized_state [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_state [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_state_map [..]
+    [PASS] contract_state_integrationtest::test_state::test_interact_with_state_vec [..]
+    [PASS] contract_state_integrationtest::test_fork::test_fork_contract [..]
+    Tests: 8 passed, 0 failed, 0 ignored, 0 filtered out
+    "},
     );
 }

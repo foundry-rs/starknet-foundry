@@ -22,7 +22,7 @@ members = [
 exclude = ["crates/snforge-scarb-plugin"]
 
 [workspace.package]
-version = "0.46.0"
+version = "0.47.0"
 edition = "2024"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
@@ -63,7 +63,7 @@ rayon = "1.10"
 regex = "1.11.1"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-starknet = "0.17.0-rc.1"
+starknet = "0.17.0-rc.2"
 starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "a70f4ce" }
 tempfile = "3.20.0"
 thiserror = "2.0.12"
@@ -83,7 +83,7 @@ test-case = "3.3.1"
 scarb-metadata = "1.14.0"
 flatten-serde-json = "0.1.0"
 snapbox = "0.4.17"
-scarb-ui = "0.1.5"
+scarb-ui = "0.1.7"
 semver = "1.0.26"
 bimap = "0.6.3"
 primitive-types = "0.13.1"

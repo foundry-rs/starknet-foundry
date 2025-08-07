@@ -123,9 +123,9 @@ pub fn build_context(
     context
 }
 
-pub fn set_max_steps(entry_point_ctx: &mut EntryPointExecutionContext, max_n_steps: u32) {
+pub fn set_max_steps(entry_point_ctx: &mut EntryPointExecutionContext, max_n_steps: usize) {
     // override it to omit [`EntryPointExecutionContext::max_steps`] restrictions
-    entry_point_ctx.vm_run_resources = RunResources::new(max_n_steps as usize);
+    entry_point_ctx.vm_run_resources = RunResources::new(max_n_steps);
 }
 
 // We need to be copying those 1:1 for serialization (caching purposes)

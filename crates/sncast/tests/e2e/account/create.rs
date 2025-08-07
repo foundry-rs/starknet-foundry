@@ -8,18 +8,20 @@ use crate::helpers::env::set_create_keystore_password_env;
 use camino::Utf8PathBuf;
 use conversions::string::IntoHexStr;
 use serde_json::{json, to_string_pretty};
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::{
+    assert_stderr_contains, assert_stdout, assert_stdout_contains,
+};
 use snapbox::assert_matches;
 use sncast::AccountType;
 use sncast::helpers::constants::{
-    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH,
+    BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH, READY_CLASS_HASH,
 };
 use std::fs;
 use tempfile::tempdir;
 use test_case::test_case;
 
 #[test_case("oz"; "oz_account_type")]
-#[test_case("argent"; "argent_account_type")]
+#[test_case("ready"; "ready_account_type")]
 #[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case(account_type: &str) {
@@ -76,6 +78,72 @@ pub async fn test_happy_case(account_type: &str) {
                     "public_key": "0x[..]",
                     "salt": "0x1",
                     "type": get_formatted_account_type(account_type)
+                }
+            }
+        }
+    );
+
+    assert_matches(to_string_pretty(&expected).unwrap(), contents);
+}
+
+// TODO(#3556): Remove this test once we drop Argent account type
+#[tokio::test]
+pub async fn test_happy_case_argent_with_deprecation_warning() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--salt",
+        "0x1",
+        "--type",
+        "argent",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout(
+        output,
+        indoc! {r"
+        [WARNING] Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account create` is deprecated, please use `ready` instead.
+        
+        Success: Account created
+
+        Address: 0x0[..]
+        
+        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
+
+        After prefunding the account, run:
+        sncast --accounts-file accounts.json account deploy --url http://127.0.0.1:5055/rpc --name my_account
+
+        To see account creation details, visit:
+        account: [..]
+        "},
+    );
+
+    let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
+        .expect("Unable to read created file");
+
+    let expected = json!(
+        {
+            "alpha-sepolia": {
+                "my_account": {
+                    "address": "0x[..]",
+                    "class_hash": "0x[..]",
+                    "deployed": false,
+                    "legacy": false,
+                    "private_key": "0x[..]",
+                    "public_key": "0x[..]",
+                    "salt": "0x1",
+                    "type": "ready"
                 }
             }
         }
@@ -334,7 +402,7 @@ pub async fn test_account_already_exists() {
 }
 
 #[test_case("oz"; "oz_account_type")]
-#[test_case("argent"; "argent_account_type")]
+#[test_case("ready"; "ready_account_type")]
 #[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case_keystore(account_type: &str) {
@@ -379,6 +447,56 @@ pub async fn test_happy_case_keystore(account_type: &str) {
 
     assert_matches(
         get_keystore_account_pattern(account_type.parse().unwrap(), None),
+        contents,
+    );
+}
+
+// TODO(#3556): Remove this test once we drop Argent account type
+#[tokio::test]
+pub async fn test_happy_case_keystore_argent_with_deprecation_warning() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let keystore_file = "my_key.json";
+    let account_file = "my_account.json";
+    set_create_keystore_password_env();
+
+    let args = vec![
+        "--keystore",
+        keystore_file,
+        "--account",
+        account_file,
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--type",
+        "argent",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+
+    snapbox.assert().stdout_matches(formatdoc! {r"
+        [WARNING] Argent has rebranded as Ready. The `argent` option for the `--type` flag in `account create` is deprecated, please use `ready` instead.
+        
+        Success: Account created
+
+        Address: 0x0[..]
+        
+        Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee
+
+        After prefunding the account, run:
+        sncast --account {} --keystore {} account deploy --url {}
+
+        To see account creation details, visit:
+        account: [..]
+    ", account_file, keystore_file, URL});
+
+    assert!(temp_dir.path().join(keystore_file).exists());
+
+    let contents = fs::read_to_string(temp_dir.path().join(account_file))
+        .expect("Unable to read created file");
+
+    assert_matches(
+        get_keystore_account_pattern("argent".parse().unwrap(), None),
         contents,
     );
 }
@@ -732,11 +850,12 @@ fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&s
                 }
             )
         }
-        AccountType::Argent => {
+        AccountType::Argent | AccountType::Ready => {
             json!(
                 {
                     "version": 1,
                     "variant": {
+                        // TODO(#3556): Remove hardcoded "argent" and use format! with `AccountType::Ready`
                         "type": "argent",
                         "version": 1,
                         "owner": "0x[..]",
@@ -744,7 +863,7 @@ fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&s
                     },
                     "deployment": {
                         "status": "undeployed",
-                        "class_hash": class_hash.unwrap_or(&ARGENT_CLASS_HASH.into_hex_string()),
+                        "class_hash": class_hash.unwrap_or(&READY_CLASS_HASH.into_hex_string()),
                         "salt": "0x[..]",
                     }
                 }
@@ -784,42 +903,6 @@ fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&s
     to_string_pretty(&account_json).unwrap()
 }
 
-#[test_case("0x02c8c7e6fbcfb3e8e15a46648e8914c6aa1fc506fc1e7fb3d1e19630716174bc"; "braavos_v1_1_0")]
-#[test_case("0x041bf1e71792aecb9df3e9d04e1540091c5e13122a731e02bec588f71dc1a5c3"; "braavos_v1_0_0")]
-fn test_old_braavos_class_hashes_disabled(class_hash: &str) {
-    let temp_dir = tempdir().expect("Unable to create a temporary directory");
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "account",
-        "create",
-        "--url",
-        URL,
-        "--name",
-        "my_account",
-        "--salt",
-        "0x1",
-        "--class-hash",
-        class_hash,
-        "--type",
-        "braavos",
-    ];
-
-    let snapbox = runner(&args).current_dir(temp_dir.path());
-    let output = snapbox.assert().success();
-
-    assert_stderr_contains(
-        output,
-        indoc! {r"
-        Command: account create
-        Error: Using incompatible Braavos accounts is disabled because they don't work with starknet >= 0.13.4.
-            Visit this link to read more: https://community.starknet.io/t/starknet-devtools-for-0-13-5/115495#p-2359168-braavos-compatibility-issues-3
-        "},
-    );
-}
-
 #[tokio::test]
 pub async fn test_happy_case_deployment_fee_message() {
     let tempdir = tempdir().expect("Failed to create a temporary directory");
@@ -831,7 +914,7 @@ pub async fn test_happy_case_deployment_fee_message() {
 
     assert_stdout_contains(
         output,
-        "Account successfully created but it needs to be deployed. The estimated deployment fee is 0.000836288000000000 STRK. Prefund the account to cover deployment transaction fee",
+        "Account successfully created but it needs to be deployed. The estimated deployment fee is [..] STRK. Prefund the account to cover deployment transaction fee",
     );
 }
 
