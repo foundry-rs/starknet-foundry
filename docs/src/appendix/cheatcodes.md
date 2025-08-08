@@ -166,5 +166,5 @@
 >
 > ```toml
 > [dev-dependencies]
-> snforge_std = "0.33.0"
+> snforge_std = "{{snforge_std_version}}"
 > ```

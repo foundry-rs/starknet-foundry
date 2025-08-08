@@ -17,7 +17,7 @@ In your `Scarb.toml` file, update the dependency:
 
 ```toml
 [dev-dependencies]
-snforge_std = "0.48.0"
+snforge_std = "{{snforge_std_version}}"
 ```
 
 No further action is required.
@@ -40,7 +40,7 @@ First, in your `Scarb.toml`, remove the `snforge_std` dependency and add `snforg
 ```diff
 [dev-dependencies]
 - snforge_std = "0.47.0"
-+ snforge_std_deprecated = "0.48.0"
++ snforge_std_deprecated = "{{snforge_std_version}}"
 ```
 
 Next, replace all kinds of imports in your code from `snforge_std` to `snforge_std_deprecated`:
