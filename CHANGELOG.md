@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - If using a Scarb version before `2.10.0` or not using `allow-prebuild-plugins`, the minimal required rust version to run `snforge` is now `1.87.0`
 
+#### Added
+
+- `--trace-components` flag to allow selecting which components of the trace to do display. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#trace-components)
+
 ### Cast
 
 #### Added
