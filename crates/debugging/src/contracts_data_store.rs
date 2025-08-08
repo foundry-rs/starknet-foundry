@@ -1,5 +1,7 @@
 use crate::trace::types::{ContractName, Selector};
 use cairo_lang_sierra::program::ProgramArtifact;
+use cairo_lang_sierra_to_casm::compiler::CairoProgramDebugInfo;
+use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet_classes::contract_class::ContractClass;
 use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
@@ -8,6 +10,7 @@ use rayon::iter::ParallelIterator;
 use starknet::core::types::contract::{AbiEntry, SierraClass};
 use starknet_api::core::{ClassHash, EntryPointSelector};
 use std::collections::HashMap;
+use std::hash::Hash;
 
 /// Data structure containing information about contracts,
 /// including their ABI, names, selectors and programs that will be used to create a [`Trace`](crate::Trace).
@@ -16,6 +19,8 @@ pub struct ContractsDataStore {
     contract_names: HashMap<ClassHash, ContractName>,
     selectors: HashMap<EntryPointSelector, Selector>,
     programs: HashMap<ClassHash, ProgramArtifact>,
+    // FIXME(https://github.com/software-mansion/universal-sierra-compiler/issues/98): Use CASM debug info from USC once it provides it.
+    casm_debug_infos: HashMap<ClassHash, CairoProgramDebugInfo>,
 }
 
 impl ContractsDataStore {
@@ -46,7 +51,7 @@ impl ContractsDataStore {
             .chain(fork_data.abi.clone())
             .collect();
 
-        let programs = contracts_data
+        let program_data = contracts_data
             .contracts
             .par_iter()
             .map(|(_, contract_data)| {
@@ -65,15 +70,27 @@ impl ContractsDataStore {
                     debug_info,
                 };
 
-                (contract_data.class_hash, program_artifact)
+                let casm_debug_info = compile(ContractClass {
+                    // Debug info is unused in the compilation. This saves us a costly clone.
+                    sierra_program_debug_info: None,
+                    ..contract_class
+                });
+
+                (
+                    contract_data.class_hash,
+                    (program_artifact, casm_debug_info),
+                )
             })
-            .collect();
+            .collect::<Vec<_>>();
+
+        let (programs, casm_debug_infos) = split_maps(program_data);
 
         Self {
             abi,
             contract_names,
             selectors,
             programs,
+            casm_debug_infos,
         }
     }
 
@@ -99,4 +116,36 @@ impl ContractsDataStore {
     pub fn get_program_artifact(&self, class_hash: &ClassHash) -> Option<&ProgramArtifact> {
         self.programs.get(class_hash)
     }
+
+    /// Gets the [`CairoProgramDebugInfo`] for a given contract [`ClassHash`].
+    #[must_use]
+    pub fn get_casm_debug_info(&self, class_hash: &ClassHash) -> Option<&CairoProgramDebugInfo> {
+        self.casm_debug_infos.get(class_hash)
+    }
+}
+
+/// Compile the given [`ContractClass`] to `casm` and return [`CairoProgramDebugInfo`]
+fn compile(contract_class: ContractClass) -> CairoProgramDebugInfo {
+    let (_, casm_debug_info) =
+        CasmContractClass::from_contract_class_with_debug_info(contract_class, false, usize::MAX)
+            .expect("compilation should succeed");
+    casm_debug_info
+}
+
+/// Splits an iterator of `(K, (V1, V2))` into two `HashMaps`:
+/// `HashMap<K, V1>` and `HashMap<K, V2>`
+fn split_maps<K, V1, V2, I>(iter: I) -> (HashMap<K, V1>, HashMap<K, V2>)
+where
+    K: Copy + Eq + Hash,
+    I: IntoIterator<Item = (K, (V1, V2))>,
+{
+    let mut map1 = HashMap::new();
+    let mut map2 = HashMap::new();
+
+    for (key, (v1, v2)) in iter {
+        map1.insert(key, v1);
+        map2.insert(key, v2);
+    }
+
+    (map1, map2)
 }
