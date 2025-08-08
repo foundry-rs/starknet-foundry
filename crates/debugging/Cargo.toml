@@ -7,11 +7,11 @@ edition.workspace = true
 starknet_api.workspace = true
 blockifier.workspace = true
 ptree.workspace = true
+paste.workspace = true
 console.workspace = true
 starknet-types-core.workspace = true
 starknet.workspace = true
 cheatnet = { path = "../cheatnet" }
 data-transformer = { path = "../data-transformer" }
-thiserror.workspace = true
 serde_json.workspace = true
 rayon.workspace = true
