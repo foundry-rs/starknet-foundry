@@ -387,9 +387,14 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     }
                 };
 
-                let signing_key_bytes: [u8; 32] = signing_key_bytes.as_slice()[0..32].try_into().unwrap();
-                let x_coordinate_bytes: [u8; 32] = verifying_key_bytes.iter().as_slice()[1..33].try_into().unwrap();
-                let y_coordinate_bytes: [u8; 32] = verifying_key_bytes.iter().as_slice()[33..65].try_into().unwrap();
+                let signing_key_bytes: [u8; 32] =
+                    signing_key_bytes.as_slice()[0..32].try_into().unwrap();
+                let x_coordinate_bytes: [u8; 32] = verifying_key_bytes.iter().as_slice()[1..33]
+                    .try_into()
+                    .unwrap();
+                let y_coordinate_bytes: [u8; 32] = verifying_key_bytes.iter().as_slice()[33..65]
+                    .try_into()
+                    .unwrap();
 
                 Ok(CheatcodeHandlingResult::from_serializable((
                     CairoU256::from_bytes(&signing_key_bytes),
@@ -442,8 +447,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 };
 
                 let result = result.map(|(r_bytes, s_bytes)| {
-                    let r_bytes:[u8;32] = r_bytes.as_slice()[0..32].try_into().unwrap();
-                    let s_bytes:[u8;32] = s_bytes.as_slice()[33..65].try_into().unwrap();
+                    let r_bytes: [u8; 32] = r_bytes.as_slice()[0..32].try_into().unwrap();
+                    let s_bytes: [u8; 32] = s_bytes.as_slice()[33..65].try_into().unwrap();
                     (
                         CairoU256::from_bytes(&r_bytes),
                         CairoU256::from_bytes(&s_bytes),
