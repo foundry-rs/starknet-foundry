@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Added
+
+- `--test-files` flag to `verify` command to include test files under src/ for verification (only applies to voyager)
+
 #### Fixed
 
 - Block explorer links are now hidden by default when using [`starknet-devnet`](https://github.com/0xSpaceShard/starknet-devnet). Set `SNCAST_FORCE_SHOW_EXPLORER_LINKS=1` env variable to display them.
@@ -50,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- Braavos accounts with all class hashes are now supported 
+- Braavos accounts with all class hashes are now supported
 
 #### Deprecated
 
@@ -136,7 +140,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
-#### Added 
+#### Added
 
 - Displaying the path of the config file when adding a new profile
 
@@ -332,7 +336,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Rust is no longer required to use `snforge` if using Scarb >= 2.10.0 on supported platforms - precompiled `snforge_scarb_plugin` plugin binaries are now published to [package registry](https://scarbs.xyz) for new versions. 
+- Rust is no longer required to use `snforge` if using Scarb >= 2.10.0 on supported platforms - precompiled `snforge_scarb_plugin` plugin binaries are now published to [package registry](https://scarbs.xyz) for new versions.
 - Added a suggestion for using the `--max-n-steps` flag when the Cairo VM returns the error: `Could not reach the end of the program. RunResources has no remaining steps`.
 
 #### Fixed
