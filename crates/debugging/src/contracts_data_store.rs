@@ -1,4 +1,6 @@
 use crate::trace::types::{ContractName, Selector};
+use cairo_lang_sierra::program::ProgramArtifact;
+use cairo_lang_starknet_classes::contract_class::ContractClass;
 use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use rayon::iter::IntoParallelRefIterator;
@@ -8,11 +10,12 @@ use starknet_api::core::{ClassHash, EntryPointSelector};
 use std::collections::HashMap;
 
 /// Data structure containing information about contracts,
-/// including their ABI, names, and selectors that will be used to create a [`Trace`](crate::Trace).
+/// including their ABI, names, selectors and programs that will be used to create a [`Trace`](crate::Trace).
 pub struct ContractsDataStore {
     abi: HashMap<ClassHash, Vec<AbiEntry>>,
     contract_names: HashMap<ClassHash, ContractName>,
     selectors: HashMap<EntryPointSelector, Selector>,
+    programs: HashMap<ClassHash, ProgramArtifact>,
 }
 
 impl ContractsDataStore {
@@ -43,10 +46,34 @@ impl ContractsDataStore {
             .chain(fork_data.abi.clone())
             .collect();
 
+        let programs = contracts_data
+            .contracts
+            .par_iter()
+            .map(|(_, contract_data)| {
+                let contract_class =
+                    serde_json::from_str::<ContractClass>(&contract_data.artifacts.sierra)
+                        .expect("this should be valid `ContractClass`");
+
+                let program = contract_class
+                    .extract_sierra_program()
+                    .expect("extraction should succeed");
+
+                let debug_info = contract_class.sierra_program_debug_info;
+
+                let program_artifact = ProgramArtifact {
+                    program,
+                    debug_info,
+                };
+
+                (contract_data.class_hash, program_artifact)
+            })
+            .collect();
+
         Self {
             abi,
             contract_names,
             selectors,
+            programs,
         }
     }
 
@@ -65,5 +92,11 @@ impl ContractsDataStore {
     #[must_use]
     pub fn get_selector(&self, entry_point_selector: &EntryPointSelector) -> Option<&Selector> {
         self.selectors.get(entry_point_selector)
+    }
+
+    /// Gets the [`ProgramArtifact`] for a given contract [`ClassHash`].
+    #[must_use]
+    pub fn get_program_artifact(&self, class_hash: &ClassHash) -> Option<&ProgramArtifact> {
+        self.programs.get(class_hash)
     }
 }
