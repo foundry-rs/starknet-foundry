@@ -1,6 +1,5 @@
 use crate::debugging::component::Component;
 use clap::ValueEnum;
-use debugging::Components;
 use strum::VariantArray;
 
 /// Trace verbosity level.
@@ -15,16 +14,12 @@ pub enum TraceVerbosity {
 }
 
 impl TraceVerbosity {
-    /// Converts the [`TraceVerbosity`] to a [`Components`] that will be included in the trace.
+    /// Converts the [`TraceVerbosity`] to a vector of [`Component`].
     #[must_use]
-    pub fn to_components(&self) -> Components {
-        Components::new(
-            Component::VARIANTS
-                .iter()
-                .filter(|component| component.verbosity() <= *self)
-                .cloned()
-                .map(debugging::Component::from)
-                .collect(),
-        )
+    pub fn to_components_vec(&self) -> Vec<&Component> {
+        Component::VARIANTS
+            .iter()
+            .filter(|component| component.verbosity() <= *self)
+            .collect()
     }
 }
