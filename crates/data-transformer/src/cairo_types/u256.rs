@@ -15,7 +15,7 @@ pub struct CairoU256 {
 
 impl CairoU256 {
     #[must_use]
-    pub fn from_bytes(bytes: &[u8]) -> Self {
+    pub fn from_bytes(bytes: &[u8; 32]) -> Self {
         // Takes slice without explicit size because of cheatnet's specific usages (See Issue #2575)
         Self {
             low: u128::from_be_bytes(bytes[16..32].try_into().unwrap()),
@@ -85,35 +85,17 @@ mod tests {
         244, 192, 163, 138, 253, 42, 253, 125, 53, 127, 44,
     ];
 
-    const TOO_BIG_NUMBER_BYTES: [u8; 48] = [
-        222, 9, 69, 194, 71, 77, 155, 51, 51, 49, 35, 229, 62, 55, 169, 63, 93, 228, 186, 10, 219,
-        244, 192, 163, 138, 253, 42, 253, 125, 53, 127, 44, 21, 37, 21, 37, 21, 37, 21, 37, 21, 37,
-        21, 37, 21, 37, 21, 37,
-    ];
-
     const BIG_NUMBER_LIMBS: [u128; 2] = [
         124_805_820_680_284_125_994_760_982_863_763_832_620,
         295_136_760_614_571_572_862_546_075_274_463_127_871,
     ];
 
     #[test_case(&[0; 32], [0, 0] ; "zeros")]
-    #[test_case(&BIG_NUMBER_BYTES[..], BIG_NUMBER_LIMBS; "big")]
-    fn test_happy_case_from_bytes(bytes: &[u8], expected_limbs: [u128; 2]) {
+    #[test_case(&BIG_NUMBER_BYTES, BIG_NUMBER_LIMBS; "big")]
+    fn test_happy_case_from_bytes(bytes: &[u8; 32], expected_limbs: [u128; 2]) {
         let result = CairoU256::from_bytes(bytes);
 
         assert_eq!([result.low, result.high], expected_limbs);
-    }
-
-    #[should_panic(expected = "range end index 32 out of range for slice of length 4")]
-    #[test]
-    fn test_from_bytes_input_too_short() {
-        let _result = CairoU256::from_bytes(&[2, 1, 3, 7]);
-    }
-
-    #[test]
-    fn test_happy_case_from_bytes_longer_input() {
-        let result = CairoU256::from_bytes(&TOO_BIG_NUMBER_BYTES);
-        assert_eq!([result.low, result.high], BIG_NUMBER_LIMBS);
     }
 
     #[test_case("0x0", [0, 0] ; "zero_hex")]
