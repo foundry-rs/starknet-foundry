@@ -1,5 +1,9 @@
 use crate::trace::types::{ContractName, Selector};
-use cairo_lang_sierra::program::ProgramArtifact;
+use cairo_lang_sierra::program::{Program, ProgramArtifact};
+use cairo_lang_sierra_to_casm::compiler::{
+    CairoProgram, CairoProgramDebugInfo, SierraToCasmConfig,
+};
+use cairo_lang_sierra_to_casm::metadata::{MetadataComputationConfig, calc_metadata};
 use cairo_lang_starknet_classes::contract_class::ContractClass;
 use cheatnet::forking::data::ForkData;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
@@ -16,6 +20,8 @@ pub struct ContractsDataStore {
     contract_names: HashMap<ClassHash, ContractName>,
     selectors: HashMap<EntryPointSelector, Selector>,
     programs: HashMap<ClassHash, ProgramArtifact>,
+    // FIXME(https://github.com/software-mansion/universal-sierra-compiler/issues/98): Use CASM debug info from USC once it provides it.
+    casm_debug_infos: HashMap<ClassHash, CairoProgramDebugInfo>,
 }
 
 impl ContractsDataStore {
@@ -46,7 +52,7 @@ impl ContractsDataStore {
             .chain(fork_data.abi.clone())
             .collect();
 
-        let programs = contracts_data
+        let programs: HashMap<_, _> = contracts_data
             .contracts
             .par_iter()
             .map(|(_, contract_data)| {
@@ -69,11 +75,20 @@ impl ContractsDataStore {
             })
             .collect();
 
+        let casm_debug_infos = programs
+            .iter()
+            .map(|(class_hash, program_artifact)| {
+                let casm = compile(&program_artifact.program);
+                (*class_hash, casm.debug_info)
+            })
+            .collect();
+
         Self {
             abi,
             contract_names,
             selectors,
             programs,
+            casm_debug_infos,
         }
     }
 
@@ -99,4 +114,24 @@ impl ContractsDataStore {
     pub fn get_program_artifact(&self, class_hash: &ClassHash) -> Option<&ProgramArtifact> {
         self.programs.get(class_hash)
     }
+
+    /// Gets the [`CairoProgramDebugInfo`] for a given contract [`ClassHash`].
+    #[must_use]
+    pub fn get_casm_debug_info(&self, class_hash: &ClassHash) -> Option<&CairoProgramDebugInfo> {
+        self.casm_debug_infos.get(class_hash)
+    }
+}
+
+/// Compile the given [`Program`] to `casm`.
+fn compile(program: &Program) -> CairoProgram {
+    let metadata = calc_metadata(program, MetadataComputationConfig::default())
+        .expect("metadata calculation should not fail");
+
+    let config = SierraToCasmConfig {
+        gas_usage_check: false,
+        max_bytecode_size: usize::MAX,
+    };
+
+    cairo_lang_sierra_to_casm::compiler::compile(program, &metadata, config)
+        .expect("compilation should not fail")
 }
