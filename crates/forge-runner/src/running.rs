@@ -238,6 +238,8 @@ pub fn run_test_case(
         environment_variables: runtime_config.environment_variables,
         contracts_data: runtime_config.contracts_data,
         fuzzer_rng,
+        oracle_experiment_enabled: runtime_config.experimental_oracles,
+        oracle_hint_service: Default::default(),
     };
 
     let mut forge_runtime = ExtendedRuntime {

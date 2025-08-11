@@ -216,6 +216,10 @@ pub struct TestArgs {
     #[arg(last = true)]
     additional_args: Vec<OsString>,
 
+    /// Enable experimental oracles support.
+    #[arg(long, default_value_t = false, env = "SNFORGE_EXPERIMENTAL_ORACLES")]
+    pub experimental_oracles: bool,
+
     #[command(flatten)]
     scarb_args: ScarbArgs,
 }
