@@ -16,7 +16,7 @@ inputs = []
 "#;
 
 pub const UDC_ADDRESS: Felt =
-    felt!("0x041a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7766661ad02bf");
+    felt!("0x02ceed65a4bd731034c01113685c831b01c15d7d432f71afb1cf1634b53a2125");
 pub const OZ_CLASS_HASH: Felt =
     felt!("0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564"); // v1.0.0
 pub const ARGENT_CLASS_HASH: Felt =
