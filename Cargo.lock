@@ -2704,6 +2704,7 @@ dependencies = [
  "runtime",
  "sanitize-filename",
  "scarb-api",
+ "scarb-oracle-hint-service",
  "semver",
  "serde",
  "serde_json",
