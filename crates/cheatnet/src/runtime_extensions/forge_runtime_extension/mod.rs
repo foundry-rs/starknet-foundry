@@ -448,7 +448,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 let result = result.map(|(r_bytes, s_bytes)| {
                     let r_bytes: [u8; 32] = r_bytes.as_slice()[0..32].try_into().unwrap();
-                    let s_bytes: [u8; 32] = s_bytes.as_slice()[33..65].try_into().unwrap();
+                    let s_bytes: [u8; 32] = s_bytes.as_slice()[0..32].try_into().unwrap();
                     (
                         CairoU256::from_bytes(&r_bytes),
                         CairoU256::from_bytes(&s_bytes),
