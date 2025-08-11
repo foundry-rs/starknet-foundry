@@ -1,4 +1,5 @@
 use starknet_types_core::felt::Felt;
+use std::mem;
 use thiserror::Error;
 
 pub use cairo_serde_macros::CairoDeserialize;
@@ -35,6 +36,10 @@ impl<'a> BufferReader<'a> {
         };
         self.buffer = tail;
         Ok(*head)
+    }
+
+    pub fn read_remaining(&mut self) -> &'a [Felt] {
+        mem::take(&mut self.buffer)
     }
 
     pub fn read<T>(&mut self) -> BufferReadResult<T>
