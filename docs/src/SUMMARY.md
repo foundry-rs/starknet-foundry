@@ -8,6 +8,7 @@
 * [First Steps with Starknet Foundry](getting-started/first-steps.md)
 * [Scarb](getting-started/scarb.md)
 * [Project Configuration](projects/configuration.md)
+* [`snforge` 0.48.0 Migration Guide](getting-started/0-48-0-migration-guide.md)
 
 ---
 
@@ -55,6 +56,7 @@
 * [Inspecting Transactions](starknet/tx-status.md)
 * [Verifying Contracts](starknet/verify.md)
 * [Calldata Transformation](starknet/calldata-transformation.md)
+* [Block Explorers](starknet/block_explorer.md)
 
 ---
 
@@ -115,6 +117,11 @@
     * [contract_class](appendix/snforge-library/contract_class.md)
     * [get_call_trace](appendix/snforge-library/get_call_trace.md)
     * [fs](appendix/snforge-library/fs.md)
+        * [file format rules](appendix/snforge-library/fs/file_format_rules.md)
+        * [`File`](appendix/snforge-library/fs/file.md)
+        * [`FileParser`](appendix/snforge-library/fs/file_parser.md)
+        * [`read_txt`](appendix/snforge-library/fs/read_txt.md)
+        * [`read_json`](appendix/snforge-library/fs/read_json.md)
     * [env](appendix/snforge-library/env.md)
     * [signature](appendix/snforge-library/signature.md)
     * [fuzzable](appendix/snforge-library/fuzzable.md)

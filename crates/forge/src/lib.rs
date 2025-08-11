@@ -4,7 +4,7 @@ use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use derive_more::Display;
 use forge_runner::CACHE_DIR;
-use forge_runner::debugging::TraceVerbosity;
+use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::ForgeTrackedResource;
 use foundry_ui::components::warning::WarningMessage;
 use foundry_ui::{Message, UI};
@@ -35,14 +35,15 @@ mod warn;
 
 pub const CAIRO_EDITION: &str = "2024_07";
 
-const MINIMAL_RUST_VERSION: Version = Version::new(1, 80, 1);
+const MINIMAL_RUST_VERSION: Version = Version::new(1, 87, 0);
 const MINIMAL_SCARB_VERSION: Version = Version::new(2, 9, 1);
 const MINIMAL_RECOMMENDED_SCARB_VERSION: Version = Version::new(2, 9, 4);
 const MINIMAL_SCARB_VERSION_PREBUILT_PLUGIN: Version = Version::new(2, 10, 0);
 const MINIMAL_USC_VERSION: Version = Version::new(2, 0, 0);
 const MINIMAL_SCARB_VERSION_FOR_SIERRA_GAS: Version = Version::new(2, 10, 0);
-// TODO(#3344) Set this to 0.44.0 after it has been released
-const MINIMAL_SNFORGE_STD_VERSION: Version = Version::new(0, 44, 0);
+const MINIMAL_SNFORGE_STD_VERSION: Version = Version::new(0, 48, 0);
+const MINIMAL_SNFORGE_STD_DEPRECATED_VERSION: Version = Version::new(0, 48, 0);
+pub const MINIMAL_SCARB_VERSION_FOR_V2_MACROS_REQUIREMENT: Version = Version::new(2, 12, 0);
 
 #[derive(Parser, Debug)]
 #[command(
@@ -146,9 +147,8 @@ pub struct TestArgs {
     /// Name used to filter tests
     test_filter: Option<String>,
 
-    /// Trace verbosity level
-    #[arg(long)]
-    trace_verbosity: Option<TraceVerbosity>,
+    #[command(flatten)]
+    trace_args: TraceArgs,
 
     /// Use exact matches for `test_filter`
     #[arg(short, long)]

@@ -1,6 +1,5 @@
 //ANCHOR:first_half
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
-
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 use testing_smart_contracts_handling_errors::{
     IPanicContractDispatcher, IPanicContractDispatcherTrait,
 };

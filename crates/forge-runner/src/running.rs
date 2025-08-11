@@ -1,5 +1,5 @@
 use crate::backtrace::add_backtrace_footer;
-use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
+use crate::forge_config::{ForgeConfig, RuntimeConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
 use crate::test_case_summary::{Single, TestCaseSummary};
@@ -12,6 +12,7 @@ use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::cached_state::CachedState;
 use cairo_vm::Felt252;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
+use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::data::ForkData;
@@ -19,7 +20,6 @@ use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
-use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
     ForgeExtension, ForgeRuntime, add_resources_to_top_call, get_all_used_resources,
     update_top_call_l1_resources, update_top_call_resources, update_top_call_vm_trace,
@@ -51,7 +51,7 @@ mod setup;
 mod syscall_handler;
 pub mod with_config;
 
-use crate::debugging::{TraceVerbosity, build_debugging_trace};
+use crate::debugging::build_debugging_trace;
 pub use hints::hints_to_params;
 use setup::VmExecutionContext;
 pub use syscall_handler::has_segment_arena;
@@ -61,10 +61,9 @@ pub use syscall_handler::syscall_handler_offset;
 pub fn run_test(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
-    test_runner_config: Arc<TestRunnerConfig>,
+    forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
-    trace_verbosity: Option<TraceVerbosity>,
     ui: Arc<UI>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
@@ -77,7 +76,7 @@ pub fn run_test(
         let run_result = run_test_case(
             &case,
             &casm_program,
-            &RuntimeConfig::from(&test_runner_config),
+            &RuntimeConfig::from(&forge_config.test_runner_config),
             None,
         );
 
@@ -88,9 +87,8 @@ pub fn run_test(
         extract_test_case_summary(
             run_result,
             &case,
-            &test_runner_config.contracts_data,
+            &forge_config,
             &versioned_program_path,
-            trace_verbosity,
             &ui,
         )
     })
@@ -100,12 +98,11 @@ pub fn run_test(
 pub(crate) fn run_fuzz_test(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
-    test_runner_config: Arc<TestRunnerConfig>,
+    forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
     fuzzing_send: Sender<()>,
     rng: Arc<Mutex<StdRng>>,
-    trace_verbosity: Option<TraceVerbosity>,
     ui: Arc<UI>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
@@ -119,7 +116,7 @@ pub(crate) fn run_fuzz_test(
         let run_result = run_test_case(
             &case,
             &casm_program,
-            &Arc::new(RuntimeConfig::from(&test_runner_config)),
+            &RuntimeConfig::from(&forge_config.test_runner_config),
             Some(rng),
         );
 
@@ -133,9 +130,8 @@ pub(crate) fn run_fuzz_test(
         extract_test_case_summary(
             run_result,
             &case,
-            &test_runner_config.contracts_data,
+            &forge_config,
             &versioned_program_path,
-            trace_verbosity,
             &ui,
         )
     })
@@ -197,12 +193,9 @@ pub fn run_test_case(
     let tracked_resource = TrackedResource::from(runtime_config.tracked_resource);
     let mut context = build_context(&block_info, chain_id, &tracked_resource);
 
-    let max_n_steps = runtime_config
-        .max_n_steps
-        .map_or(usize::MAX, |n| n as usize);
-
-    set_max_steps(&mut context, max_n_steps);
-
+    if let Some(max_n_steps) = runtime_config.max_n_steps {
+        set_max_steps(&mut context, max_n_steps);
+    }
     let mut cached_state = CachedState::new(state_reader);
 
     let hints = hints_by_representation(&casm_program.assembled_cairo_program);
@@ -393,11 +386,12 @@ pub fn run_test_case(
 fn extract_test_case_summary(
     run_result: Result<RunResult>,
     case: &TestCaseWithResolvedConfig,
-    contracts_data: &ContractsData,
+    forge_config: &ForgeConfig,
     versioned_program_path: &Utf8Path,
-    trace_verbosity: Option<TraceVerbosity>,
     ui: &UI,
 ) -> TestCaseSummary<Single> {
+    let contracts_data = &forge_config.test_runner_config.contracts_data;
+    let trace_args = &forge_config.output_config.trace_args;
     match run_result {
         Ok(run_result) => match run_result {
             RunResult::Completed(run_completed) => TestCaseSummary::from_run_completed(
@@ -405,18 +399,24 @@ fn extract_test_case_summary(
                 case,
                 contracts_data,
                 versioned_program_path,
-                trace_verbosity,
+                trace_args,
                 ui,
             ),
             RunResult::Error(run_error) => {
-                let message = format!(
+                let mut message = format!(
                     "\n    {}\n",
                     run_error
                         .error
                         .to_string()
                         .replace(" Custom Hint Error: ", "\n    ")
                 );
-
+                if let CairoRunError::VirtualMachine(VirtualMachineError::UnfinishedExecution) =
+                    *run_error.error
+                {
+                    message.push_str(
+                        "\n    Suggestion: Consider using the flag `--max-n-steps` to increase allowed limit of steps",
+                    );
+                }
                 TestCaseSummary::Failed {
                     name: case.name.clone(),
                     msg: Some(message).map(|msg| {
@@ -427,7 +427,7 @@ fn extract_test_case_summary(
                     debugging_trace: build_debugging_trace(
                         &run_error.call_trace.borrow(),
                         contracts_data,
-                        trace_verbosity,
+                        trace_args,
                         case.name.clone(),
                         &run_error.fork_data,
                     ),

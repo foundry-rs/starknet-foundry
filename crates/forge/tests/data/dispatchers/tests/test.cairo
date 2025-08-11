@@ -2,7 +2,7 @@ use dispatchers::error_handler::{
     IErrorHandlerDispatcher, IErrorHandlerDispatcherTrait, IErrorHandlerSafeDispatcher,
     IErrorHandlerSafeDispatcherTrait,
 };
-use snforge_std::{declare, DeclareResultTrait, ContractClassTrait};
+use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 use starknet::ContractAddress;
 
 fn deploy_contracts() -> ContractAddress {

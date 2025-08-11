@@ -1,4 +1,4 @@
-use starknet::{ContractAddress, ClassHash, SyscallResult};
+use starknet::{ClassHash, ContractAddress, SyscallResult};
 use crate::byte_array::byte_array_as_felt_array;
 use crate::cheatcode::execute_cheatcode_and_deserialize;
 
@@ -123,9 +123,9 @@ pub fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
 
 fn _prepare_calldata(
     class_hash: @ClassHash, constructor_calldata: @Array::<felt252>,
-) -> Array::<felt252> {
+) -> Array<felt252> {
     let class_hash: felt252 = class_hash.clone().into();
-    let mut inputs: Array::<felt252> = array![class_hash];
+    let mut inputs: Array<felt252> = array![class_hash];
     constructor_calldata.serialize(ref inputs);
     inputs
 }

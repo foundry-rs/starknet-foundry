@@ -45,3 +45,5 @@ which.workspace = true
 sanitize-filename.workspace = true
 clap.workspace = true
 foundry-ui = { path = "../foundry-ui" }
+strum = "0.27"
+strum_macros = "0.27"

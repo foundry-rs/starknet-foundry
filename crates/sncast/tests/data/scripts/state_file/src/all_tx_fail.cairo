@@ -1,4 +1,4 @@
-use sncast_std::{declare, deploy, invoke, get_nonce, FeeSettingsTrait};
+use sncast_std::{FeeSettingsTrait, declare, deploy, get_nonce, invoke};
 use starknet::{ClassHash, ContractAddress};
 
 fn main() {
