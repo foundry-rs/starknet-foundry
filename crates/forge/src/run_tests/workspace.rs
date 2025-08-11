@@ -93,7 +93,6 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
 
     let workspace_root = &scarb_metadata.workspace.root;
     let cache_dir = workspace_root.join(CACHE_DIR);
-    let trace_verbosity = args.trace_verbosity;
     let packages_len = packages.len();
 
     for package in packages {
@@ -108,8 +107,7 @@ pub async fn run_for_workspace(args: TestArgs, ui: Arc<UI>) -> Result<ExitStatus
             &ui,
         )?;
 
-        let result =
-            run_for_package(args, &mut block_number_map, trace_verbosity, ui.clone()).await?;
+        let result = run_for_package(args, &mut block_number_map, ui.clone()).await?;
 
         let filtered = result.filtered();
         all_tests.extend(result.summaries());

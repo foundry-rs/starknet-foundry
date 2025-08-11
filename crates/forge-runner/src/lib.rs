@@ -1,6 +1,5 @@
 use crate::coverage_api::run_coverage;
-use crate::debugging::TraceVerbosity;
-use crate::forge_config::{ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
+use crate::forge_config::{ExecutionDataToSave, ForgeConfig};
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
 use anyhow::Result;
@@ -110,7 +109,6 @@ pub fn run_for_test_case(
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
-    trace_verbosity: Option<TraceVerbosity>,
     ui: &Arc<UI>,
 ) -> JoinHandle<Result<AnyTestCaseSummary>> {
     if case.config.fuzzer_config.is_none() {
@@ -119,10 +117,9 @@ pub fn run_for_test_case(
             let res = run_test(
                 case,
                 casm_program,
-                forge_config.test_runner_config.clone(),
+                forge_config,
                 versioned_program_path,
                 send,
-                trace_verbosity,
                 ui,
             )
             .await?;
@@ -134,10 +131,9 @@ pub fn run_for_test_case(
             let res = run_with_fuzzing(
                 case,
                 casm_program,
-                forge_config.test_runner_config.clone(),
+                forge_config.clone(),
                 versioned_program_path,
                 send,
-                trace_verbosity,
                 ui,
             )
             .await??;
@@ -149,13 +145,13 @@ pub fn run_for_test_case(
 fn run_with_fuzzing(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
-    test_runner_config: Arc<TestRunnerConfig>,
+    forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
-    trace_verbosity: Option<TraceVerbosity>,
     ui: Arc<UI>,
 ) -> JoinHandle<Result<TestCaseSummary<Fuzzing>>> {
     tokio::task::spawn(async move {
+        let test_runner_config = &forge_config.test_runner_config;
         if send.is_closed() {
             return Ok(TestCaseSummary::Interrupted {});
         }
@@ -182,12 +178,11 @@ fn run_with_fuzzing(
             tasks.push(run_fuzz_test(
                 case.clone(),
                 casm_program.clone(),
-                test_runner_config.clone(),
+                forge_config.clone(),
                 versioned_program_path.clone(),
                 send.clone(),
                 fuzzing_send.clone(),
                 rng.clone(),
-                trace_verbosity,
                 ui,
             ));
         }

@@ -2070,16 +2070,18 @@ name = "debugging"
 version = "1.0.0"
 dependencies = [
  "blockifier",
+ "cairo-lang-sierra",
+ "cairo-lang-starknet-classes",
  "cheatnet",
  "console",
  "data-transformer",
+ "paste",
  "ptree",
  "rayon",
  "serde_json",
  "starknet",
  "starknet-types-core",
  "starknet_api",
- "thiserror 2.0.12",
 ]
 
 [[package]]
@@ -2708,6 +2710,8 @@ dependencies = [
  "starknet",
  "starknet-types-core",
  "starknet_api",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "tokio",
  "toml_edit",
  "universal-sierra-compiler-api",
