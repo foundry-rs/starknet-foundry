@@ -16,7 +16,6 @@ pub struct CairoU256 {
 impl CairoU256 {
     #[must_use]
     pub fn from_bytes(bytes: &[u8; 32]) -> Self {
-        // Takes slice without explicit size because of cheatnet's specific usages (See Issue #2575)
         Self {
             low: u128::from_be_bytes(bytes[16..32].try_into().unwrap()),
             high: u128::from_be_bytes(bytes[0..16].try_into().unwrap()),
