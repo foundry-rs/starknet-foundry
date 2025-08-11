@@ -19,19 +19,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `snforge_std` is now compatible with Scarb procedural macros V2. Migration is required if using Scarb versions before
-  `2.12.0`.
-  See [migration guide](https://foundry-rs.github.io/starknet-foundry/getting-started/0-47-0-migration-guide.html).
+- `snforge_std` is now compatible with Scarb procedural macros V2. Migration is required if using Scarb versions before `2.12.0`. See [migration guide](https://foundry-rs.github.io/starknet-foundry/getting-started/0-47-0-migration-guide.html).
 
 #### Changed
 
-- If using a Scarb version before `2.10.0` or not using `allow-prebuild-plugins`, the minimal required rust version to
-  run `snforge` is now `1.87.0`
+- If using a Scarb version before `2.10.0` or not using `allow-prebuild-plugins`, the minimal required rust version to run `snforge` is now `1.87.0`
 
 #### Added
 
-- `--trace-components` flag to allow selecting which components of the trace to do display. Read
-  more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#trace-components)
+- `--trace-components` flag to allow selecting which components of the trace to do display. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#trace-components)
 
 ### Cast
 
@@ -41,9 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- Block explorer links are now hidden by default when using [
-  `starknet-devnet`](https://github.com/0xSpaceShard/starknet-devnet). Set `SNCAST_FORCE_SHOW_EXPLORER_LINKS=1` env
-  variable to display them.
+- Block explorer links are now hidden by default when using [`starknet-devnet`](https://github.com/0xSpaceShard/starknet-devnet). Set `SNCAST_FORCE_SHOW_EXPLORER_LINKS=1` env variable to display them.
 
 ## [0.47.0] - 2025-07-28
 
@@ -52,9 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `interact_with_state` cheatcode to enable effective use of `contract_state_for_testing` in snforge tests
-- Support for using [Scarb profiles](https://docs.swmansion.com/scarb/docs/reference/profiles.html) with `snforge test`,
-  allowing to pass the same profile flags as in Scarb (`--release`, `--dev`, `--profile`) to build artifacts using a
-  specific profile
+- Support for using [Scarb profiles](https://docs.swmansion.com/scarb/docs/reference/profiles.html) with `snforge test`, allowing to pass the same profile flags as in Scarb (`--release`, `--dev`, `--profile`) to build artifacts using a specific profile
 
 #### Deprecated
 
@@ -62,15 +54,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- Passing a cheatcode span of 0 was incorrectly treated as `CheatSpan::Indefinite`. This is now resolved by making
-  `CheatSpan::TargetCalls` accept `NonZero<usize>` instead of just `usize` in `snforge_std`.
+- Passing a cheatcode span of 0 was incorrectly treated as `CheatSpan::Indefinite`. This is now resolved by making `CheatSpan::TargetCalls` accept `NonZero<usize>` instead of just `usize` in `snforge_std`.
 
 ### Cast
 
 #### Added
 
-- `ready` option for `--type` flag in `account create` and `account import` commands (Argent wallet has rebranded as
-  Ready)
+- `ready` option for `--type` flag in `account create` and `account import` commands (Argent wallet has rebranded as Ready)
 
 #### Changed
 
@@ -107,8 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- Bug where `account create` raised an error if no `--name` was provided and the file specified by `--accounts-file` was
-  empty
+- Bug where `account create` raised an error if no `--name` was provided and the file specified by `--accounts-file` was empty
 
 #### Removed
 
@@ -119,26 +108,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Forge
 
 #### Added
-
 - ETH token is now pre-deployed by default in every test, and `Token::ETH` was added to `snforge_std`
 - `--skip` flag to allow excluding any test whose name contains the provided string
 
 #### Changed
-
-- Updated output format for `--exit-first` flag. Tests skipped due to preceding failures are no longer displayed in the
-  summary. Alternative information is shown when applicable.
+- Updated output format for `--exit-first` flag. Tests skipped due to preceding failures are no longer displayed in the summary. Alternative information is shown when applicable.
 - `storage address` was renamed to `contract address` in the output of `--trace-verbosity`
 
 #### Fixed
 
 - bug that caused `--trace-verbosity` to panic in fork tests
-- fixed a bug in tests where resources used in nested calls were counted multiple times, leading to overestimated gas
-  and resource usage
+- fixed a bug in tests where resources used in nested calls were counted multiple times, leading to overestimated gas and resource usage
 
 #### Removed
 
-- Windows support. For details on migration, see the
-  WSL [installation guide](https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#linux-and-macos).
+- Windows support. For details on migration, see the WSL [installation guide](https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#linux-and-macos).
 
 ### Cast
 
@@ -148,8 +132,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Removed
 
-- Windows support. For details on migration, see the
-  WSL [installation guide](https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#linux-and-macos).
+- Windows support. For details on migration, see the WSL [installation guide](https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#linux-and-macos).
 
 ## [0.44.0] - 2025-05-26
 
@@ -163,8 +146,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - "invalid syscall selector" error appearing when using arithmetic circuits
-- Bug that caused incorrect gas tracking for contracts using Sierra version less than `1.7.0` when `sierra-gas` was
-  passed as the `tracked-resource`
+- Bug that caused incorrect gas tracking for contracts using Sierra version less than `1.7.0` when `sierra-gas` was passed as the `tracked-resource`
 
 ### Cast
 
@@ -174,8 +156,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- OpenZeppelin account updated to
-  v1.0.0 [preset](https://docs.openzeppelin.com/contracts-cairo/1.0.0/api/account#AccountUpgradeable)
+- OpenZeppelin account updated to v1.0.0 [preset](https://docs.openzeppelin.com/contracts-cairo/1.0.0/api/account#AccountUpgradeable)
 - Restored support for Braavos accounts
 - Accounts created with `--type braavos` use updated v1.2.0 class hash
 - Output of `sncast account create` is now clearer; the estimated fee is displayed in both STRK and FRI.
@@ -195,11 +176,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `set_balance` cheatcode for setting an ERC20 token balance for specified contract address. The STRK token is now
-  pre-deployed in every test by default. This can be disabled by adding `#[disable_predeployed_contracts]` attribute to
-  test.
-- added option to display trace of contracts execution. Read
-  more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html)
+- `set_balance` cheatcode for setting an ERC20 token balance for specified contract address. The STRK token is now pre-deployed in every test by default. This can be disabled by adding `#[disable_predeployed_contracts]` attribute to test.
+- added option to display trace of contracts execution. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html)
 
 #### Changed
 
@@ -226,8 +204,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Minimal supported Scarb version is now `2.9.1`
-- Improved display of backtrace for contracts that panicked, when `panic-backtrace = true` in `Scarb.toml`. Without
-  using this feature, the backtrace may be less accurate than before.
+- Improved display of backtrace for contracts that panicked, when `panic-backtrace = true` in `Scarb.toml`. Without using this feature, the backtrace may be less accurate than before.
   As of this release, this feature is available only in `scarb nightly-2025-03-27`.
 
 #### Fixed
@@ -247,8 +224,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `--template` flag to `snforge new` command that allows selecting a template for the new project. Possible values are
-  `balance-contract` (default), `cairo-program` and `erc20-contract`
+- `--template` flag to `snforge new` command that allows selecting a template for the new project. Possible values are `balance-contract` (default), `cairo-program` and `erc20-contract`
 
 #### Fixed
 
@@ -275,8 +251,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `--l1-gas`, `--l1-gas-price`, `--l2-gas`, `--l2-gas-price`, `--l1-data-gas`, `--l1-data-gas-price` flags
-- methods for fee settings creation, in `FeeSettingsTrait`: `max_fee()`, `resource_bounds()` and `estimate()` (in
-  `sncast_std`)
+- methods for fee settings creation, in `FeeSettingsTrait`: `max_fee()`, `resource_bounds()` and `estimate()` (in `sncast_std`)
 
 #### Changed
 
@@ -284,8 +259,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - wrapped error for `ContractError` is now of type `ContractErrorData` (in `sncast_std`)
 - field `execution_error` in `TransactionExecutionErrorData` is now of type `ContractExecutionError` (in `sncast_std`)
 - Using Braavos accounts is temporarily disabled because they don't yet work with the RPC version supported by `sncast`
-- `sncast script init` command now initializes project with the `sncast_std` dependency from
-  the [registry](https://scarbs.xyz/packages/sncast_std)
+- `sncast script init` command now initializes project with the `sncast_std` dependency from the [registry](https://scarbs.xyz/packages/sncast_std)
 
 #### Removed
 
@@ -302,14 +276,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cheats for `get_block_hash_syscall`
 - new `--tracked-resource` flag, that will change currently tracked resource
   (`cairo-steps` for vm resources - default; `sierra-gas` for sierra gas consumed resources in cairo native)
-- Testing events api improvements. New `IsEmitted` trait. Implemented `Into<snforge_std::Event>` for `starknet::Event`
-  and `PartialEq` trait implementations for `snforge_std::Event` and `snforge_std::Events`.
+- Testing events api improvements. New `IsEmitted` trait. Implemented `Into<snforge_std::Event>` for `starknet::Event` and `PartialEq` trait implementations for `snforge_std::Event` and `snforge_std::Events`.
+
 
 #### Changed
-
 - gas is now reported using resource bounds triplet (l1_gas, l1_data_gas and l2_gas)
-- `available_gas` now accepts named arguments denoting resource bounds (eg
-  `#[available_gas(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)]`)
+- `available_gas` now accepts named arguments denoting resource bounds (eg `#[available_gas(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)]`)
 
 #### Fixed
 
@@ -327,8 +299,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- Issue with uploading `snforge_std` to scarbs package registry that prevented it from including package reexports
-  required in Scarb >= 2.11.0
+- Issue with uploading `snforge_std` to scarbs package registry that prevented it from including package reexports required in Scarb >= 2.11.0
 
 ## [0.38.2] - 2025-03-06
 
@@ -349,8 +320,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `snforge clean` command - used to manage and remove files generated by snforge. It supports cleaning the following
-  components: coverage, profile, cache, trace, all
+- `snforge clean` command - used to manage and remove files generated by snforge. It supports cleaning the following components: coverage, profile, cache, trace, all
 - `snforge new` now adds the `snfoundry_trace`, `coverage`, and `profile` directories to `.gitignore`.
 - Custom types can be used in fuzz testing by implementing the `Fuzzable` trait
 - Support for Cairo 2.10.0
@@ -358,8 +328,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - It is now required to include the `#[fuzzer]` attribute for fuzz tests to work
-- Scarb `2.8.5` is now the minimal recommended version. Using Starknet Foundry with versions below it is no longer
-  officially supported and may not work.
+- Scarb `2.8.5` is now the minimal recommended version. Using Starknet Foundry with versions below it is no longer officially supported and may not work.
 
 #### Deprecated
 
@@ -377,10 +346,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Rust is no longer required to use `snforge` if using Scarb >= 2.10.0 on supported platforms - precompiled
-  `snforge_scarb_plugin` plugin binaries are now published to [package registry](https://scarbs.xyz) for new versions.
-- Added a suggestion for using the `--max-n-steps` flag when the Cairo VM returns the error:
-  `Could not reach the end of the program. RunResources has no remaining steps`.
+- Rust is no longer required to use `snforge` if using Scarb >= 2.10.0 on supported platforms - precompiled `snforge_scarb_plugin` plugin binaries are now published to [package registry](https://scarbs.xyz) for new versions.
+- Added a suggestion for using the `--max-n-steps` flag when the Cairo VM returns the error: `Could not reach the end of the program. RunResources has no remaining steps`.
 
 #### Fixed
 
@@ -417,8 +384,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- When using `--max-fee` with transactions v3, calculated max gas and max gas unit price are automatically validated to
-  ensure they are greater than 0 after conversion
+- When using `--max-fee` with transactions v3, calculated max gas and max gas unit price are automatically validated to ensure they are greater than 0 after conversion
 - interactive interface that allows setting created or imported account as the default
 
 #### Changed
@@ -492,14 +458,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - You can skip `--name` flag when using `account import` - a default name will be generated.
-- Addresses outputted when calling `sncast account create`, `sncast deploy` and `sncast declare` are now padded to 64
-  characters length and prefixed with `0x0`
+- Addresses outputted when calling `sncast account create`, `sncast deploy` and `sncast declare` are now padded to 64 characters length and prefixed with `0x0`
 - Globally available configuration to store profiles to share between projects.
 
 #### Changed
 
-- Changed return type of `declare` in Cairo Deployment Scripts so it can handle already declared contracts without
-  failing
+- Changed return type of `declare` in Cairo Deployment Scripts so it can handle already declared contracts without failing
 - Allow using `show-config` command without providing rpc url
 
 ## [0.33.0] - 2024-11-04
@@ -509,15 +473,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - You can now use numbers without quotes as inputs for calls in multicall config file.
-- New `--arguments` flag to `call`, `invoke` and `deploy` for automatic conversion of Cairo expressions instead of
-  serialized form.
+- New `--arguments` flag to `call`, `invoke` and `deploy` for automatic conversion of Cairo expressions instead of serialized form.
 
 ### Forge
 
 #### Changed
 
-- You can now pass arguments to `cairo-profiler` and `cairo-coverage`. Everything after `--` will be passed to
-  underlying binary. E.g.
+- You can now pass arguments to `cairo-profiler` and `cairo-coverage`. Everything after `--` will be passed to underlying binary. E.g.
   `snforge test --build-profile -- --show-inlined-functions`
 - You can't use now `--coverage` and `--build-profile` flags at the same time. If you want to use both, you need to run
   `snforge test` twice with different flags.
@@ -529,8 +491,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Scarb features work with optimized compilation
 - Custom test targets are now supported with optimized compilation
-- Calling contract functions via safe-dispatcher now returns an `Err` when attempting to invoke a non-existent entry
-  point, instead of causing a panic.
+- Calling contract functions via safe-dispatcher now returns an `Err` when attempting to invoke a non-existent entry point, instead of causing a panic.
 
 ## [0.32.0] - 2024-10-16
 
@@ -541,13 +502,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Short option for `--accounts-file` flag has been removed.
 - Short option for `--contract-address` is now `-d` instead of `-a`.
 - `account add` is renamed to `account import`.
-- `account import` can be now used without specifying `--private-key` or `--private-key-file` flags. Instead private key
-  will be read interactively from the user.
+- `account import` can be now used without specifying `--private-key` or `--private-key-file` flags. Instead private key will be read interactively from the user.
 
 #### Fixed
-
-- `account delete` command: It is no longer necessary to provide the `--url` argument each time. Either the `--url` or
-  `--network` argument must be provided, but not both, as they are mutually exclusive.
+- `account delete` command: It is no longer necessary to provide the `--url` argument each time. Either the `--url` or `--network` argument must be provided, but not both, as they are mutually exclusive.
 
 ### Forge
 
@@ -561,35 +519,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- `declare` and `verify` commands now use the Scarb `release` profile instead of the `dev` profile as the default for
-  building artifacts
+- `declare` and `verify` commands now use the Scarb `release` profile instead of the `dev` profile as the default for building artifacts
 - StarkScan links now point to specific pages for transactions, contracts and classes.
 
 #### Fixed
 
 - Explorer links displayed upon committing transactions are now properly formatted
-- `sncast declare` no longer fails for flat contracts (i.e. CASM artifacts with `bytecode_segment_lengths` being a
-  number)
+- `sncast declare` no longer fails for flat contracts (i.e. CASM artifacts with `bytecode_segment_lengths` being a number)
 
 ### Forge
 
 #### Added
 
-- Project generated by `snforge` contains `assert_macros` dependency with version 0.1.0 for Scarb <= 2.8.0, otherwise
-  equal to Scarb
+- Project generated by `snforge` contains `assert_macros` dependency with version 0.1.0 for Scarb <= 2.8.0, otherwise equal to Scarb
 - Support for overriding fork configuration in test attribute with a different block ID, tag, or hash.
-- `--no-optimization` flag that can be used to build contracts using
-  the [starknet contract target](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#starknet-contract-target.
-  This is the default behavior when using Scarb < 2.8.3
+- `--no-optimization` flag that can be used to build contracts using the [starknet contract target](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#starknet-contract-target. This is the default behavior when using Scarb < 2.8.3
 
 #### Changed
 
-- For Scarb >= `2.8.3` contract artifacts are built as part of the test target now. This process speeds up the
-  compilation time, but the behavior of the contracts potentially may not be 100% consistent with the real networks. It
-  can be disabled using
-  the [--no-optimization flag](https://foundry-rs.github.io/starknet-foundry/appendix/snforge/test.html#--no-optimization)
-- `snforge` now validates if your project is setup to generate debug info needed for `cairo-coverage` when running
-  `--coverage` flag
+- For Scarb >= `2.8.3` contract artifacts are built as part of the test target now. This process speeds up the compilation time, but the behavior of the contracts potentially may not be 100% consistent with the real networks. It can be disabled using the [--no-optimization flag](https://foundry-rs.github.io/starknet-foundry/appendix/snforge/test.html#--no-optimization)
+- `snforge` now validates if your project is setup to generate debug info needed for `cairo-coverage` when running  `--coverage` flag
 
 ### `snforge_scarb_plugin`
 
@@ -604,9 +553,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - Derived `Debug` and `Clone` on `trace.cairo` items
-- `--coverage` flag to the `test` command. Saves trace data and then generates coverage report of test cases which pass
-  and are not fuzz tests. You need [cairo-coverage](https://github.com/software-mansion/cairo-coverage) installed on
-  your system.
+- `--coverage` flag to the `test` command. Saves trace data and then generates coverage report of test cases which pass and are not fuzz tests. You need [cairo-coverage](https://github.com/software-mansion/cairo-coverage) installed on your system.
 
 #### Fixed
 
@@ -621,8 +568,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Support for Scarb features in `snforge test` - flags the same as in Scarb. Read
-  more [here](https://docs.swmansion.com/scarb/docs/reference/conditional-compilation.html#features)
+- Support for Scarb features in `snforge test` - flags the same as in Scarb. Read more [here](https://docs.swmansion.com/scarb/docs/reference/conditional-compilation.html#features)
 
 #### Fixed
 
@@ -637,38 +583,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bumped Cairo version to `2.7.0`
 - Max steps in tests (configured by argument `--max-n-steps`) now defaults to 10 million
-  if not provided (changed from 4 million).
+if not provided (changed from 4 million).
 
 ### Cast
 
 #### Added
-
-- Commands that commit transactions now display links to block explorers. When in human-readable mode, `invoke`,
-  `declare`, `deploy`, `multicall run`, `account create` and `account deploy` will display additional information with
-  an url. A new key in Cast configuration - `block-explorer` determines which block explorer service the displayed link
-  leads to. Possible options are:` StarkScan`, `Voyager`, `ViewBlock`, `OkLink`, `NftScan`.
+- Commands that commit transactions now display links to block explorers. When in human-readable mode, `invoke`, `declare`, `deploy`, `multicall run`, `account create` and `account deploy` will display additional information with an url. A new key in Cast configuration - `block-explorer` determines which block explorer service the displayed link leads to. Possible options are:` StarkScan`, `Voyager`, `ViewBlock`, `OkLink`, `NftScan`.
 
 #### Changed
+- `account create` outputs hint about the type of the tokens required to prefund a newly created account with before deployment
 
-- `account create` outputs hint about the type of the tokens required to prefund a newly created account with before
-  deployment
-
-- `sncast` no longer expects `--url` as a common argument. It is now required specifically by commands that utilise it,
-  i.e. `account add`, `account create`, `account delete`, `account deploy`, `multicall run`, `script run`, `call`,
-  `declare`, `deploy`, `invoke`, `show-config`, `tx-status`.
-  Commands that do not require `--url` anymore: `account list`, `multicall new`, `script init`, `verify`
+- `sncast` no longer expects `--url` as a common argument. It is now required specifically by commands that utilise it, i.e. `account add`, `account create`, `account delete`, `account deploy`, `multicall run`, `script run`, `call`, `declare`, `deploy`, `invoke`, `show-config`, `tx-status`.
+Commands that do not require `--url` anymore: `account list`, `multicall new`, `script init`, `verify`
 
 ### Forge
 
 #### Changed
-
 - Fork tests now discover chain ID via provided RPC URL, defaulting to `SN_SEPOLIA`
-- `#[fork]` attribute parameters
-  format. [Read more here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/fork-testing.html)
+- `#[fork]` attribute parameters format. [Read more here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/fork-testing.html)
 - steps counting
 - Block tag changed name from `Latest`  to `latest`
-- `declare` cheatcode now returns
-  `Result<DeclareResult, Array<felt252>>` [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library/declare.html)
+- `declare` cheatcode now returns `Result<DeclareResult, Array<felt252>>` [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library/declare.html)
 
 ## [0.27.0] - 2024-07-24
 
@@ -676,40 +611,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `spy_messages_to_l1()` for listening in on messages to L1 sent by your
-  contracts. [Read more here](https://foundry-rs.github.io/starknet-foundry/testing/testing-messages-to-l1.html).
+- `spy_messages_to_l1()` for listening in on messages to L1 sent by your contracts. [Read more here](https://foundry-rs.github.io/starknet-foundry/testing/testing-messages-to-l1.html).
 
 #### Changed
 
-- Renamed global cheatcodes listed [here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes.html) -
-  cheatcode invocations affecting the global scope and working indefinitely, already marked with a `_global` suffix,
-  received a `start_` prefix
+- Renamed global cheatcodes listed [here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes.html) - cheatcode invocations affecting the global scope and working indefinitely, already marked with a `_global` suffix, received a `start_` prefix
 
 ### Cast
 
 #### Added
 
-- `verify` subcommand to verify contract (walnut APIs supported as of this
-  version). [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/verify.html)
+- `verify` subcommand to verify contract (walnut APIs supported as of this version). [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/verify.html)
 - support for v3 transactions on account deploy, deploy, declare, invoke
 - Newest class hash for OpenZeppelin account contracts
-- `account list` subcommand for listing all available
-  accounts [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/account/list.html)
+- `account list` subcommand for listing all available accounts [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/account/list.html)
 
 #### Changed
 
-- `multicall new` no longer prints generated template to stdout and now requires specifying output
-  path. [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/multicall/new.html)
+- `multicall new` no longer prints generated template to stdout and now requires specifying output path. [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/multicall/new.html)
 
 ## [0.26.0] - 2024-07-03
 
 ### Forge
 
 #### Changed
-
-- Updated event testing - read more [here](./docs/src/testing/testing-events.md) on how it now works
-  and [here](./docs/src/appendix/cheatcodes/spy_events.md)
-  about updated `spy_events` cheatcode
+- Updated event testing - read more [here](./docs/src/testing/testing-events.md) on how it now works and [here](./docs/src/appendix/cheatcodes/spy_events.md)
+about updated `spy_events` cheatcode
 
 ## [0.25.0] - 2024-06-12
 
@@ -717,13 +644,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- `SyscallResultStringErrorTrait::map_error_to_string` removed in favor of utility function (
-  `snforge_std::byte_array::try_deserialize_bytearray_error`)
+- `SyscallResultStringErrorTrait::map_error_to_string` removed in favor of utility function (`snforge_std::byte_array::try_deserialize_bytearray_error`)
 
 ### Cast
 
 #### Removed
-
 - `--class-hash` flag from `account deploy` command
 
 #### Added
@@ -757,8 +682,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `SignerTrait::sign` now returns `Result` instead of failing the test
 
-- `L1HandlerTrait::execute()` takes source address and payloads as
-  arguments [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/l1_handler.html)
+- `L1HandlerTrait::execute()` takes source address and payloads as arguments [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/l1_handler.html)
 
 - When calling to an address which does not exists, error is forwarded to cairo runtime instead of failing the test
 
@@ -773,22 +697,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - the tool now always compiles Sierra contract artifacts to CASM using
-  [`USC`](https://github.com/software-mansion/universal-sierra-compiler) - before it used to consume CASM artifacts
-  produced by Scarb if they were present. Setting up `casm = true` in `Scarb.toml` is no longer recommended - it may
-  slow
-  down the compilation.
-- The `replace_bytecode` cheatcode now returns `Result` with a possible `ReplaceBytecodeError`, since it may cause
-  unexpected errors down the line when not handled properly
+[`USC`](https://github.com/software-mansion/universal-sierra-compiler) - before it used to consume CASM artifacts
+produced by Scarb if they were present. Setting up `casm = true` in `Scarb.toml` is no longer recommended - it may slow
+down the compilation.
+- The `replace_bytecode` cheatcode now returns `Result` with a possible `ReplaceBytecodeError`, since it may cause unexpected errors down the line when not handled properly
 
 ### Cast
 
 #### Changed
 
 - the tool now always compiles Sierra contract artifacts to CASM using
-  [`USC`](https://github.com/software-mansion/universal-sierra-compiler) - before it used to consume CASM artifacts
-  produced by Scarb if they were present. Setting up `casm = true` in `Scarb.toml` is no longer recommended - it may
-  slow
-  down the compilation.
+[`USC`](https://github.com/software-mansion/universal-sierra-compiler) - before it used to consume CASM artifacts
+produced by Scarb if they were present. Setting up `casm = true` in `Scarb.toml` is no longer recommended - it may slow
+down the compilation.
 
 #### Fixed
 
@@ -800,15 +721,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- `deploy` / `deploy_at` now additionally return the constructor return data via
-  `SyscallResult<(ContractAddress, Span<felt252>)>`
+- `deploy` / `deploy_at` now additionally return the constructor return data via `SyscallResult<(ContractAddress, Span<felt252>)>`
 - `declare` returns `Result<ContractClass, Array<felt252>>` instead of `ContractClass`
 - `L1HandlerTrait::execute()` returns `SyscallResult<()>`
 - `SyscallResultStringErrorTrait::map_string_error` renamed to `SyscallResultStringErrorTrait::map_error_to_string`
 - `var` now supports `ByteArray` with double quoting, and returns `Array<felt252>` instead of a single `felt252`
 
 #### Removed
-
 - `snforge_std::RevertedTransaction`
 
 ## [0.21.0] - 2024-04-03
@@ -823,9 +742,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- sncast script idempotency feature - every action done by the script that alters the network state will be tracked in
-  state file,
-  and won't be replayed if previously succeeded
+- sncast script idempotency feature - every action done by the script that alters the network state will be tracked in state file,
+and won't be replayed if previously succeeded
 
 ## [0.20.1] - 2024-03-22
 
@@ -835,16 +753,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- variants of cheatcodes with `CheatSpan` (read
-  more [here](https://foundry-rs.github.io/starknet-foundry/testing/using-cheatcodes#setting-cheatcode-span))
-- Providing configuration data with env
-  variables [DOCS](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#environmental-variables)
+- variants of cheatcodes with `CheatSpan` (read more [here](https://foundry-rs.github.io/starknet-foundry/testing/using-cheatcodes#setting-cheatcode-span))
+- Providing configuration data with env variables [DOCS](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#environmental-variables)
 
 #### Fixed
 
 - Events emitted in cairo 0 contracts are now properly collected
-- `--build-profile` no longer fails silently (compatible with [
-  `cairo-profiler`](https://github.com/software-mansion/cairo-profiler) 0.2.0)
+- `--build-profile` no longer fails silently (compatible with [`cairo-profiler`](https://github.com/software-mansion/cairo-profiler) 0.2.0)
 
 #### Changed
 
@@ -858,37 +773,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - Support for OpenZeppelin Cairo 1 (or higher) accounts creation, deployment and usage
-- Providing configuration data with env
-  variables [DOCS](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#environmental-variables)
+- Providing configuration data with env variables [DOCS](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#environmental-variables)
 
 #### Changed
 
 - Supported RPC version is now 0.7.0
-- Default class hash in `account create` and `account deploy` has been changed
-  to [cairo2 class hash](https://starkscan.co/class/0x04c6d6cf894f8bc96bb9c525e6853e5483177841f7388f74a46cfda6f028c755)
+- Default class hash in `account create` and `account deploy` has been changed to [cairo2 class hash](https://starkscan.co/class/0x04c6d6cf894f8bc96bb9c525e6853e5483177841f7388f74a46cfda6f028c755)
 
 ## [0.19.0] - 2024-03-06
 
 ### Forge
 
-⚠️ This version requires installing
-external [universal-sierra-compiler (v2.0.0)](https://github.com/software-mansion/universal-sierra-compiler) ⚠️
+⚠️ This version requires installing external [universal-sierra-compiler (v2.0.0)](https://github.com/software-mansion/universal-sierra-compiler) ⚠️
 
 #### Added
 
-- [`replace_bytecode`](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/replace_bytecode.html)
-  cheatcode
+- [`replace_bytecode`](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/replace_bytecode.html) cheatcode
 - result of the call to the trace
-- added `--build-profile` flag to the `--test` command. Saves trace data and then builds profiles of test cases which
-  pass and are not fuzz tests. You need [cairo-profiler](https://github.com/software-mansion/cairo-profiler) installed
-  on your system.
+- added `--build-profile` flag to the `--test` command. Saves trace data and then builds profiles of test cases which pass and are not fuzz tests. You need [cairo-profiler](https://github.com/software-mansion/cairo-profiler) installed on your system.
 - dependency on the [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler)
-  binary, which will allow forge to be independent of sierra version
+binary, which will allow forge to be independent of sierra version
+
 
 #### Changed
 
-- `var()`, `read_txt()`, `read_json()`, `FileTrait::new()`, `declare()` now use regular strings (`ByteArray`) instead of
-  short strings (`felt252`)
+- `var()`, `read_txt()`, `read_json()`, `FileTrait::new()`, `declare()` now use regular strings (`ByteArray`) instead of short strings (`felt252`)
 - `start_mock_call()`, `stop_mock_call()`, `L1Handler` now use selector (`selector!()`) instead of names
 
 ### Cast
@@ -939,15 +848,13 @@ external [universal-sierra-compiler (v2.0.0)](https://github.com/software-mansio
 #### Changed
 
 - fixed a bug where a profile was passed to scarb even when it did not exist
-- error handling from inside deployment scripts is now possible (`declare`, `deploy`, `call`, `invoke` now return
-  `Result<T, ScriptCommandError>`)
+- error handling from inside deployment scripts is now possible (`declare`, `deploy`, `call`, `invoke` now return `Result<T, ScriptCommandError>`)
 
 ### Forge
 
 #### Added
 
-- `map_string_error` for use with dispatchers, which automatically converts string errors from the syscall result (read
-  more [here](https://foundry-rs.github.io/starknet-foundry/testing/contracts#handling-errors))
+- `map_string_error` for use with dispatchers, which automatically converts string errors from the syscall result (read more [here](https://foundry-rs.github.io/starknet-foundry/testing/contracts#handling-errors))
 
 ## [0.17.0] - 2024-02-07
 
@@ -974,27 +881,23 @@ external [universal-sierra-compiler (v2.0.0)](https://github.com/software-mansio
 
 #### Changed
 
-- sncast tool configuration is now moved away from `Scarb.toml` to `snfoundry.toml` file. This file must be present in
-  current or any parent directories in order to use profiles.
+- sncast tool configuration is now moved away from `Scarb.toml` to `snfoundry.toml` file. This file must be present in current or any parent directories in order to use profiles.
 
 #### Added
 
 - `--package` flag for `declare` and `script` subcommands, that specifies scarb package to work with
-- `Debug` and `Display` impls for script subcommand responses - use `print!`, `println!` macros instead of calling
-  `.print()`
+- `Debug` and `Display` impls for script subcommand responses - use `print!`, `println!` macros instead of calling `.print()`
 
 ## [0.16.0] - 2024-01-26
 
 ### Forge
 
 #### Added
-
 - Bump to cairo 2.5.0
 
 #### Changed
 
-- `SafeDispatcher`s usages need to be tagged with `#[feature("safe_dispatcher)]` (directly before usage),
-  see [the shamans post](https://community.starknet.io/t/cairo-v2-5-0-is-out/112807#safe-dispatchers-15)
+- `SafeDispatcher`s usages need to be tagged with `#[feature("safe_dispatcher)]` (directly before usage), see [the shamans post](https://community.starknet.io/t/cairo-v2-5-0-is-out/112807#safe-dispatchers-15)
 
 ## [0.15.0] - 2024-01-24
 
@@ -1074,8 +977,7 @@ external [universal-sierra-compiler (v2.0.0)](https://github.com/software-mansio
 #### Changed
 
 - Bump cairo to 2.4.0.
-- Migrated test compilation and collection to Scarb, snforge should now be compatible with every Scarb version >= 2.4.0
-  unless breaking changes happen
+- Migrated test compilation and collection to Scarb, snforge should now be compatible with every Scarb version >= 2.4.0 unless breaking changes happen
 
 ## [0.12.0] - 2023-12-06
 
@@ -1084,20 +986,17 @@ external [universal-sierra-compiler (v2.0.0)](https://github.com/software-mansio
 #### Added
 
 - print gas usage for each test
-- Support for test collector built-in in Scarb with the `--use-scarb-collector` flag. Requires at least
-  `nightly-2023-12-04` version of Scarb.
+- Support for test collector built-in in Scarb with the `--use-scarb-collector` flag. Requires at least `nightly-2023-12-04` version of Scarb.
 
 ### Cast
 
 #### Added
 
 - `--wait-timeout` to set timeout for waiting for tx on network using `--wait` flag (default 60s)
-- `--wait-retry-interval` to adjust the time between consecutive attempts to fetch tx from network using `--wait` flag (
-  default 5s)
+- `--wait-retry-interval` to adjust the time between consecutive attempts to fetch tx from network using `--wait` flag (default 5s)
 - allow setting nonce in declare, deploy and invoke (using `--nonce` and in deployment scripts)
 - add `get_nonce` function to cast_std
-- `--private-key-file` option to `account add` command that allows to provide a path to the file holding account private
-  key
+- `--private-key-file` option to `account add` command that allows to provide a path to the file holding account private key
 
 ## [0.11.0] - 2023-11-22
 
@@ -1105,18 +1004,13 @@ external [universal-sierra-compiler (v2.0.0)](https://github.com/software-mansio
 
 #### Added
 
-- `elect` cheatcode for mocking the sequencer address. Read
-  more [here](./docs/src/appendix/cheatcodes/sequencer_address/start_elect.md).
+- `elect` cheatcode for mocking the sequencer address. Read more [here](./docs/src/appendix/cheatcodes/sequencer_address/start_elect.md).
 - `--rerun-failed` option to run tests that failed during the last run.
 
 #### Changed
-
-- `start_warp` and `stop_warp` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read
-  more [here](./docs/src/appendix/cheatcodes/block_timestamp/start_warp.md).
-- `start_prank` and `stop_prank` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read
-  more [here](./docs/src/appendix/cheatcodes/caller_address/start_prank.md).
-- `start_roll` and `stop_roll` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read
-  more [here](./docs/src/appendix/cheatcodes/block_number/start_roll.md).
+- `start_warp` and `stop_warp` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/block_timestamp/start_warp.md).
+- `start_prank` and `stop_prank` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/caller_address/start_prank.md).
+- `start_roll` and `stop_roll` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/block_number/start_roll.md).
 
 PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 
@@ -1140,8 +1034,7 @@ PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 
 #### Removed
 
-- `available_gas` attribute, it didn't compute correctly gas usage. Contract functions execution cost would not be
-  included.
+- `available_gas` attribute, it didn't compute correctly gas usage. Contract functions execution cost would not be included.
 
 ## [0.10.1] - 2023-11-09
 
@@ -1192,18 +1085,17 @@ PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 
 #### Added
 
-- `#[ignore]` attribute together with `--ignored` and `include-ignored` flags - read
-  more [here](https://foundry-rs.github.io/starknet-foundry/testing/testing.html#ignoring-some-tests-unless-specifically-requested)
+- `#[ignore]` attribute together with `--ignored` and `include-ignored` flags - read more [here](https://foundry-rs.github.io/starknet-foundry/testing/testing.html#ignoring-some-tests-unless-specifically-requested)
 - support for `deploy_syscall` directly in the test code (alternative to `deploy`)
 - `snforge_std::signature` module for performing ecdsa signatures
 
 #### Changed
 
 - updated Cairo version to 2.3.0 - compatible Scarb version is 2.3.0:
-    - tests in `src` folder now have to be in a module annotated with `#[cfg(test)]`
+  - tests in `src` folder now have to be in a module annotated with `#[cfg(test)]`
 - `snforge_std::PrintTrait` will not convert values representing ASCII control characters to strings
 - separated `snforge` to subcommands: `snforge test`, `snforge init` and `snforge clean-cache`.
-  Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.html).
+Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.html).
 - `starknet::get_block_info` now returns correct block info in a forked block
 
 ### Cast
@@ -1237,15 +1129,12 @@ PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 ### Forge
 
 #### Fixed
-
 - incorrect caller address bug
 
 ## [0.8.1] - 2023-10-12
-
 ### Forge
 
 #### Fixed
-
 - significantly reduced ram usage
 
 ## [0.8.0] - 2023-10-11
@@ -1257,10 +1146,8 @@ PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 - `#[fuzzer(...)]` attribute allowing to specify a fuzzer configuration for a single test case
 - Support for `u8`, `u16`, `u32`, `u64`, `u128`, `u256` types to fuzzer
 - `--clean-cache` flag
-- Changed interface of `L1Handler.execute` and `L1Handler` (dropped `fee` parameter, added result handling with
-  `RevertedTransaction`)
-- Contract now has associated state, more about
-  it [here](https://foundry-rs.github.io/starknet-foundry/testing/testing_contract_internals.html)
+- Changed interface of `L1Handler.execute` and `L1Handler` (dropped `fee` parameter, added result handling with `RevertedTransaction`)
+- Contract now has associated state, more about it [here](https://foundry-rs.github.io/starknet-foundry/testing/testing_contract_internals.html)
 - cheatcodes (`prank`, `roll`, `warp`) now work on forked Cairo 0 contracts
 
 #### Changed
@@ -1268,15 +1155,14 @@ PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 - Spying events interface is updated to enable the use of events defined inside contracts in assertions
 - Test are executed in parallel
 - Fixed inconsistent pointers bug https://github.com/foundry-rs/starknet-foundry/issues/659
-- Fixed an issue where `deploy_at` would not trigger the
-  constructors https://github.com/foundry-rs/starknet-foundry/issues/805
+- Fixed an issue where `deploy_at` would not trigger the constructors https://github.com/foundry-rs/starknet-foundry/issues/805
 
 ### Cast
 
 #### Changed
 
 - dropped official support for cairo 1 compiled contracts. While they still should be working without any problems,
-  from now on the only officially supported cairo compiler version is 2
+from now on the only officially supported cairo compiler version is 2
 
 ## [0.7.1] - 2023-09-27
 
@@ -1287,7 +1173,6 @@ PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 - `var` library function for reading environmental variables
 
 #### Fixed
-
 - Using any concrete `block_id` when using forking mode, would lead to crashes
 
 ## [0.7.0] - 2023-09-27
@@ -1303,10 +1188,8 @@ PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 #### Changed
 
 - Tests are collected only from a package tree (`src/lib.cairo` as an entrypoint) and `tests` folder:
-    - If there is a `lib.cairo` file in `tests` folder, then it is treated as an entrypoint to the `tests` package from
-      which tests are collected
-    - Otherwise, all test files matching `tests/*.cairo` regex are treated as modules and added to a single virtual
-      `lib.cairo`, which is treated as described above
+  - If there is a `lib.cairo` file in `tests` folder, then it is treated as an entrypoint to the `tests` package from which tests are collected
+  - Otherwise, all test files matching `tests/*.cairo` regex are treated as modules and added to a single virtual `lib.cairo`, which is treated as described above
 
 ### Cast
 
@@ -1355,8 +1238,7 @@ PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 
 - support for `keccak_syscall` syscall. It can be used directly in cairo tests
 - `l1_handler_execute` cheatcode
-- support for `roll`ing/`warp`ing/`prank`ing the constructor logic (precalculate address, prank, assert pranked state in
-  constructor)
+- support for `roll`ing/`warp`ing/`prank`ing the constructor logic (precalculate address, prank, assert pranked state in constructor)
 - `spy_events` cheatcode
 - Functions `read_json` and `FileParser<T>::parse_json` to load data from json files and deserialize it
 
