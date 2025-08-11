@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Improved commands output readability with colors and simplified layout.
 - `sncast verify` no longer defaults to using walnut.
+- `sncast` uses now [new UDC](https://starkscan.co/contract/0x02ceed65a4bd731034c01113685c831b01c15d7d432f71afb1cf1634b53a2125) during deployment
 
 #### Fixed
 
