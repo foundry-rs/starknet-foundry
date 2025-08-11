@@ -73,7 +73,7 @@ pub async fn deploy(
 ) -> Result<DeployResponse, StarknetCommandError> {
     let salt = extract_or_generate_salt(salt);
 
-    // TODO(#3628): Use `ContractFactory::new` once new UDC addres is the default one in starknet-rs
+    // TODO(#3628): Use `ContractFactory::new` once new UDC address is the default one in starknet-rs
     let factory = ContractFactory::new_with_udc(class_hash, account, UDC_ADDRESS);
 
     let deployment = factory.deploy_v3(calldata.clone(), salt, unique);
