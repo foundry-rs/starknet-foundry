@@ -23,7 +23,7 @@ jobs:
       nightly_version: ${{ steps.version.outputs.nightly_version }}
       nightly_branch: ${{ steps.version.outputs.nightly_branch }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Configure Git for committing
         run: |
@@ -145,7 +145,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.SNFOUNDRY_NIGHTLIES_CONTENTS_WRITE }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.prepare.outputs.nightly_branch }}
 
@@ -213,7 +213,7 @@ jobs:
     if: always() && needs.prepare.result == 'success'
     needs: [ prepare, create-release ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Delete nightly branch
         run: |
           git push origin -d ${{ needs.prepare.outputs.nightly_branch }}
