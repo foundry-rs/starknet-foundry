@@ -28,13 +28,8 @@ use std::sync::Arc;
 #[derive(Args)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
 pub struct Declare {
-    /// Contract name
-    #[arg(short = 'c', long = "contract-name")]
-    pub contract: Option<String>,
-
-    /// Path to compiled contract
-    #[arg(short, long = "contract-path")]
-    pub path: Option<String>,
+    #[command(flatten)]
+    pub source: Source,
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
@@ -51,6 +46,18 @@ pub struct Declare {
     pub rpc: RpcArgs,
 }
 
+#[derive(Args)]
+#[group(required = true, multiple = false)]
+pub struct Source {
+    /// Contract name
+    #[arg(short = 'c', long = "contract-name")]
+    pub contract: Option<String>,
+
+    /// Path to compiled contract
+    #[arg(short, long = "contract-path")]
+    pub path: Option<String>,
+}
+
 pub async fn declare(
     declare: Declare,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
@@ -60,8 +67,8 @@ pub async fn declare(
     ui: &UI,
 ) -> Result<DeclareResponse, StarknetCommandError> {
     let contract_artifacts;
-    if declare.contract.is_some() {
-        let contract = declare.contract.unwrap();
+    if declare.source.contract.is_some() {
+        let contract = declare.source.contract.unwrap();
         contract_artifacts =
             artifacts
                 .get(&contract)
@@ -69,7 +76,7 @@ pub async fn declare(
                     data: ByteArray::from(contract.as_str()),
                 }))?;
     } else {
-        let path = declare.path.unwrap();
+        let path = declare.source.path.unwrap();
         contract_artifacts =
             artifacts
                 .get(&path)

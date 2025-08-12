@@ -1,4 +1,4 @@
-use crate::starknet_commands::declare::Declare;
+use crate::starknet_commands::declare::{Declare, Source};
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{WaitForTx, get_account};
 use anyhow::{Context, Result, anyhow};
@@ -128,8 +128,10 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let nonce = input_reader.read()?;
 
                 let declare = Declare {
-                    contract: Some(contract.clone()),
-                    path: None,
+                    source: Source {
+                        contract: Some(contract.clone()),
+                        path: None,
+                    },
                     fee_args,
                     nonce,
                     package: None,
