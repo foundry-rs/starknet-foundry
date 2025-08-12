@@ -89,8 +89,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
         {
             if !self.oracle_experiment_enabled {
                 return Err(anyhow!(
-                    "Oracles are experimental feature. \
-                    To enable, pass --experimental-oracles CLI flag."
+                    "Oracles are an experimental feature. \
+                    To enable them, pass `--experimental-oracles` CLI flag."
                 )
                 .into());
             }
