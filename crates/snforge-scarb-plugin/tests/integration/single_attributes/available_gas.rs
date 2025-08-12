@@ -1,14 +1,13 @@
-use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN};
-use cairo_lang_macro::{Diagnostic, TokenStream};
+use crate::utils::{assert_diagnostics, assert_output, empty_function};
+use cairo_lang_macro::{Diagnostic, quote};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::available_gas::available_gas;
 
 #[test]
 fn works_with_empty() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new("()".into());
+    let args = quote!(());
 
-    let result = available_gas(args, item);
+    let result = available_gas(args, empty_function());
 
     assert_output(
         &result,
@@ -33,18 +32,17 @@ fn works_with_empty() {
 
     assert_diagnostics(
         &result,
-        &[
-            Diagnostic::warn("#[available_gas] used with empty argument list. Either remove () or specify some arguments"),
-        ],
+        &[Diagnostic::warn(
+            "#[available_gas] used with empty argument list. Either remove () or specify some arguments",
+        )],
     );
 }
 
 #[test]
 fn fails_with_non_number_literal() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(r#"(l2_gas: "123")"#.into());
+    let args = quote!((l2_gas: "123"));
 
-    let result = available_gas(args, item);
+    let result = available_gas(args, empty_function());
 
     assert_diagnostics(
         &result,
@@ -61,10 +59,9 @@ fn fails_with_non_number_literal() {
 
 #[test]
 fn work_with_number_some_set() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new("(l1_gas: 123)".into());
+    let args = quote!((l1_gas: 123));
 
-    let result = available_gas(args, item);
+    let result = available_gas(args, empty_function());
 
     assert_diagnostics(&result, &[]);
 
@@ -95,10 +92,9 @@ fn work_with_number_some_set() {
 
 #[test]
 fn work_with_number_all_set() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new("(l1_gas: 1, l1_data_gas: 2, l2_gas: 3)".into());
+    let args = quote!((l1_gas: 1, l1_data_gas: 2, l2_gas: 3));
 
-    let result = available_gas(args, item);
+    let result = available_gas(args, empty_function());
 
     assert_diagnostics(&result, &[]);
 
@@ -122,17 +118,15 @@ fn work_with_number_all_set() {
 
                     return;
                 }
-            }
-        ",
+            }",
     );
 }
 
 #[test]
 fn is_used_once() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new("(l2_gas: 1, l2_gas: 3)".into());
+    let args = quote!((l2_gas: 1, l2_gas: 3));
 
-    let result = available_gas(args, item);
+    let result = available_gas(args, empty_function());
 
     assert_diagnostics(
         &result,
@@ -149,10 +143,9 @@ fn is_used_once() {
 
 #[test]
 fn works_with_unnamed_number() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new("(3)".into());
+    let args = quote!((3));
 
-    let result = available_gas(args, item);
+    let result = available_gas(args, empty_function());
 
     assert_output(
         &result,
@@ -174,10 +167,9 @@ fn works_with_unnamed_number() {
 // this was because u64 overflow, so now we test with u64::MAX + 1 to make sure it does not happen
 #[test]
 fn handles_number_overflow_unnamed() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new("(18446744073709551616)".into());
+    let args = quote!((18446744073709551616));
 
-    let result = available_gas(args, item);
+    let result = available_gas(args, empty_function());
 
     assert_diagnostics(
         &result,
@@ -194,10 +186,9 @@ fn handles_number_overflow_unnamed() {
 
 #[test]
 fn handles_number_overflow_l1() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new("(l1_gas: 18446744073709551616)".into());
+    let args = quote!((l1_gas: 18446744073709551616));
 
-    let result = available_gas(args, item);
+    let result = available_gas(args, empty_function());
 
     assert_diagnostics(
         &result,
@@ -214,10 +205,9 @@ fn handles_number_overflow_l1() {
 
 #[test]
 fn handles_number_overflow_l1_data() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new("(l1_data_gas: 18446744073709551616)".into());
+    let args = quote!((l1_data_gas: 18446744073709551616));
 
-    let result = available_gas(args, item);
+    let result = available_gas(args, empty_function());
 
     assert_diagnostics(
         &result,
@@ -234,10 +224,9 @@ fn handles_number_overflow_l1_data() {
 
 #[test]
 fn handles_number_overflow_l2() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new("(l2_gas: 18446744073709551616)".into());
+    let args = quote!((l2_gas: 18446744073709551616));
 
-    let result = available_gas(args, item);
+    let result = available_gas(args, empty_function());
 
     assert_diagnostics(
         &result,
@@ -254,10 +243,9 @@ fn handles_number_overflow_l2() {
 
 #[test]
 fn max_permissible_value() {
-    let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new("(l2_gas: 18446744073709551615)".into());
+    let args = quote!((l2_gas: 18446744073709551615));
 
-    let result = available_gas(args, item);
+    let result = available_gas(args, empty_function());
 
     assert_diagnostics(&result, &[]);
 

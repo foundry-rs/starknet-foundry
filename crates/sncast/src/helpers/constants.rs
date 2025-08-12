@@ -19,7 +19,7 @@ pub const UDC_ADDRESS: Felt =
     felt!("0x02ceed65a4bd731034c01113685c831b01c15d7d432f71afb1cf1634b53a2125");
 pub const OZ_CLASS_HASH: Felt =
     felt!("0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564"); // v1.0.0
-pub const ARGENT_CLASS_HASH: Felt =
+pub const READY_CLASS_HASH: Felt =
     felt!("0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f"); // v0.4.0
 
 pub const BRAAVOS_CLASS_HASH: Felt =
@@ -27,11 +27,6 @@ pub const BRAAVOS_CLASS_HASH: Felt =
 
 pub const BRAAVOS_BASE_ACCOUNT_CLASS_HASH: Felt =
     felt!("0x03d16c7a9a60b0593bd202f660a28c5d76e0403601d9ccc7e4fa253b6a70c201"); // v1.2.0
-
-pub const BRAAVOS_OLD_CLASS_HASHES: &[Felt] = &[
-    felt!("0x02c8c7e6fbcfb3e8e15a46648e8914c6aa1fc506fc1e7fb3d1e19630716174bc"),
-    felt!("0x041bf1e71792aecb9df3e9d04e1540091c5e13122a731e02bec588f71dc1a5c3"),
-];
 
 // used in wait_for_tx. Txs will be fetched every 5s with timeout of 300s - so 60 attempts
 pub const WAIT_TIMEOUT: u16 = 300;

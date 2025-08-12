@@ -35,7 +35,7 @@ impl Message for SncastMessage<TransactionStatusResponse> {
         let finality_status = match &self.command_response.finality_status {
             FinalityStatus::Received => "Received",
             FinalityStatus::Candidate => "Candidate",
-            FinalityStatus::PreConfirmed => "Pre-confirmed",
+            FinalityStatus::PreConfirmed => "Pre confirmed",
             FinalityStatus::AcceptedOnL2 => "Accepted on L2",
             FinalityStatus::AcceptedOnL1 => "Accepted on L1",
         };

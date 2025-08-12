@@ -6,6 +6,7 @@ use foundry_ui::UI;
 use shared::consts::RPC_URL_VERSION;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet::providers::{JsonRpcClient, jsonrpc::HttpTransport};
+use url::Url;
 
 #[derive(Args, Clone, Debug, Default)]
 #[group(required = false, multiple = false)]
@@ -31,20 +32,9 @@ impl RpcArgs {
             )
         }
 
-        let url = if let Some(network) = self.network {
-            let free_provider = FreeProvider::semi_random();
-            network.url(&free_provider)
-        } else {
-            let url = self.url.clone().or_else(|| {
-                if config.url.is_empty() {
-                    None
-                } else {
-                    Some(config.url.clone())
-                }
-            });
-
-            url.context("Either `--network` or `--url` must be provided")?
-        };
+        let url = self
+            .get_url(&config.url)
+            .context("Either `--network` or `--url` must be provided")?;
 
         assert!(!url.is_empty(), "url cannot be empty");
         let provider = get_provider(&url)?;
@@ -55,8 +45,27 @@ impl RpcArgs {
     }
 
     #[must_use]
-    pub fn get_url(&self, config: &CastConfig) -> String {
-        self.url.clone().unwrap_or_else(|| config.url.clone())
+    fn get_url(&self, config_url: &String) -> Option<String> {
+        if let Some(network) = self.network {
+            let free_provider = FreeProvider::semi_random();
+            Some(network.url(&free_provider))
+        } else {
+            self.url.clone().or_else(|| {
+                if config_url.is_empty() {
+                    None
+                } else {
+                    Some(config_url.to_string())
+                }
+            })
+        }
+    }
+
+    #[must_use]
+    pub fn is_localhost(&self, config_url: &String) -> bool {
+        self.get_url(config_url)
+            .and_then(|url_str| Url::parse(&url_str).ok())
+            .and_then(|url| url.host_str().map(str::to_string))
+            .is_some_and(|host| host == "localhost" || host == "127.0.0.1" || host == "::1")
     }
 }
 
@@ -97,7 +106,6 @@ mod tests {
     use starknet::providers::Provider;
 
     #[tokio::test]
-    #[ignore = "Restore once the nodes return RPC 0.9.0"]
     async fn test_mainnet_url_happy_case() {
         let provider = get_provider(&Network::free_mainnet_rpc(&FreeProvider::Blast)).unwrap();
         let spec_version = provider.spec_version().await.unwrap();
@@ -105,7 +113,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore = "Restore once the nodes return RPC 0.9.0"]
     async fn test_sepolia_url_happy_case() {
         let provider = get_provider(&Network::free_sepolia_rpc(&FreeProvider::Blast)).unwrap();
         let spec_version = provider.spec_version().await.unwrap();

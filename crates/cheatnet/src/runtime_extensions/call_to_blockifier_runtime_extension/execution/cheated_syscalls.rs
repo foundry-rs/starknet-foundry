@@ -8,7 +8,8 @@ use blockifier::execution::syscalls::hint_processor::{
 use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use blockifier::execution::syscalls::vm_syscall_utils::{
     CallContractRequest, DeployRequest, DeployResponse, EmptyRequest, GetBlockHashRequest,
-    GetBlockHashResponse, GetExecutionInfoResponse, LibraryCallRequest, SyscallResponse,
+    GetBlockHashResponse, GetExecutionInfoResponse, LibraryCallRequest, StorageReadRequest,
+    StorageReadResponse, StorageWriteRequest, StorageWriteResponse, SyscallResponse,
     SyscallSelector, WriteResponseResult,
 };
 use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
@@ -28,6 +29,8 @@ use blockifier::{
 };
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::vm_core::VirtualMachine;
+use conversions::string::TryFromHexStr;
+use runtime::starknet::constants::TEST_ADDRESS;
 use starknet_api::core::calculate_contract_address;
 use starknet_api::{
     contract_class::EntryPointType,
@@ -243,6 +246,90 @@ pub fn get_block_hash_syscall(
     )?;
 
     Ok(GetBlockHashResponse { block_hash })
+}
+
+#[expect(clippy::needless_pass_by_value, clippy::result_large_err)]
+pub fn storage_read(
+    request: StorageReadRequest,
+    _vm: &mut VirtualMachine,
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
+    _remaining_gas: &mut u64,
+) -> SyscallResult<StorageReadResponse> {
+    let original_storage_address = syscall_handler.base.call.storage_address;
+    maybe_modify_storage_address(syscall_handler, cheatnet_state)?;
+
+    let value = syscall_handler
+        .base
+        .storage_read(request.address)
+        .inspect_err(|_| {
+            // Restore state on error before bubbling up
+            syscall_handler.base.call.storage_address = original_storage_address;
+        })?;
+
+    // Restore the original storage_address
+    syscall_handler.base.call.storage_address = original_storage_address;
+
+    Ok(StorageReadResponse { value })
+}
+
+#[expect(clippy::needless_pass_by_value, clippy::result_large_err)]
+pub fn storage_write(
+    request: StorageWriteRequest,
+    _vm: &mut VirtualMachine,
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
+    _remaining_gas: &mut u64,
+) -> SyscallResult<StorageWriteResponse> {
+    let original_storage_address = syscall_handler.base.call.storage_address;
+    maybe_modify_storage_address(syscall_handler, cheatnet_state)?;
+
+    syscall_handler
+        .base
+        .storage_write(request.address, request.value)
+        .inspect_err(|_| {
+            // Restore state on error before bubbling up
+            syscall_handler.base.call.storage_address = original_storage_address;
+        })?;
+
+    // Restore the original storage_address
+    syscall_handler.base.call.storage_address = original_storage_address;
+
+    Ok(StorageWriteResponse {})
+}
+
+// This logic is used to modify the storage address to enable using `contract_state_for_testing`
+// inside `interact_with_state` closure cheatcode.
+fn maybe_modify_storage_address(
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
+) -> Result<(), StateError> {
+    let contract_address = syscall_handler.storage_address();
+    let test_address =
+        TryFromHexStr::try_from_hex_str(TEST_ADDRESS).expect("Failed to parse `TEST_ADDRESS`");
+
+    if contract_address != test_address {
+        return Ok(());
+    }
+
+    let cheated_data = cheatnet_state.get_cheated_data(contract_address);
+    if let Some(actual_address) = cheated_data.contract_address {
+        let class_hash = syscall_handler
+            .base
+            .state
+            .get_class_hash_at(actual_address)
+            .expect("`get_class_hash_at` should never fail");
+
+        if class_hash == ClassHash::default() {
+            return Err(StateError::StateReadError(format!(
+                "Failed to interact with contract state because no contract is deployed at address {actual_address}"
+            )));
+        }
+
+        syscall_handler.base.call.storage_address = actual_address;
+    }
+
+    Ok(())
 }
 
 #[derive(Debug)]

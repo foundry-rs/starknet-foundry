@@ -1,25 +1,26 @@
-use starknet::ContractAddress;
-use starknet::ResourcesBounds;
 use snforge_std::cheatcodes::CheatSpan;
+use starknet::{ContractAddress, ResourcesBounds};
 use crate::cheatcode::execute_cheatcode_and_deserialize;
 
-pub mod caller_address;
+pub mod account_contract_address;
+pub mod account_deployment_data;
 pub mod block_number;
 pub mod block_timestamp;
-pub mod sequencer_address;
-pub mod version;
-pub mod max_fee;
-pub mod signature;
-pub mod transaction_hash;
+pub mod caller_address;
 pub mod chain_id;
-pub mod nonce;
-pub mod resource_bounds;
-pub mod tip;
-pub mod paymaster_data;
-pub mod nonce_data_availability_mode;
+#[doc(hidden)]
+pub mod contract_address;
 pub mod fee_data_availability_mode;
-pub mod account_deployment_data;
-pub mod account_contract_address;
+pub mod max_fee;
+pub mod nonce;
+pub mod nonce_data_availability_mode;
+pub mod paymaster_data;
+pub mod resource_bounds;
+pub mod sequencer_address;
+pub mod signature;
+pub mod tip;
+pub mod transaction_hash;
+pub mod version;
 
 
 #[derive(Serde, Drop, Copy)]
@@ -123,6 +124,7 @@ struct ExecutionInfoMock {
     block_info: BlockInfoMock,
     tx_info: TxInfoMock,
     caller_address: Operation<ContractAddress>,
+    contract_address: Operation<ContractAddress>,
 }
 
 impl ExecutionInfoMockImpl of Default<ExecutionInfoMock> {
@@ -133,6 +135,7 @@ impl ExecutionInfoMockImpl of Default<ExecutionInfoMock> {
             block_info: Default::default(),
             tx_info: Default::default(),
             caller_address: Operation::Retain,
+            contract_address: Operation::Retain,
         }
     }
 }

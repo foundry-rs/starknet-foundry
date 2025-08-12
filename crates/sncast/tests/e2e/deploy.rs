@@ -40,7 +40,9 @@ async fn test_happy_case_human_readable() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
     assert_stdout_contains(
@@ -62,7 +64,7 @@ async fn test_happy_case_human_readable() {
 
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
-#[test_case(sncast::helpers::constants::ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
+#[test_case(sncast::helpers::constants::READY_CLASS_HASH, AccountType::Ready; "READY_CLASS_HASH")]
 #[test_case(sncast::helpers::constants::BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
 async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
@@ -374,7 +376,9 @@ async fn test_json_output_format() {
     ];
     let args = apply_test_resource_bounds_flags(args);
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args)
+        .env("SNCAST_FORCE_SHOW_EXPLORER_LINKS", "1")
+        .current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
     assert_stdout_contains(

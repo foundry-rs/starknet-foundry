@@ -48,7 +48,7 @@ pub struct Deploy {
 #[expect(clippy::too_many_arguments)]
 pub async fn deploy(
     provider: &JsonRpcClient<HttpTransport>,
-    accounts_file: Utf8PathBuf,
+    accounts_file: &Utf8PathBuf,
     deploy_args: &Deploy,
     chain_id: Felt,
     wait_config: WaitForTx,
@@ -74,7 +74,7 @@ pub async fn deploy(
             .name
             .clone()
             .ok_or_else(|| anyhow!("Required argument `--name` not provided"))?;
-        check_account_file_exists(&accounts_file)?;
+        check_account_file_exists(accounts_file)?;
         deploy_from_accounts_file(
             provider,
             accounts_file,
@@ -160,14 +160,14 @@ async fn deploy_from_keystore(
 
 async fn deploy_from_accounts_file(
     provider: &JsonRpcClient<HttpTransport>,
-    accounts_file: Utf8PathBuf,
+    accounts_file: &Utf8PathBuf,
     name: String,
     chain_id: Felt,
     fee_args: FeeArgs,
     wait_config: WaitForTx,
     ui: &UI,
 ) -> Result<InvokeResponse> {
-    let account_data = get_account_data_from_accounts_file(&name, chain_id, &accounts_file)?;
+    let account_data = get_account_data_from_accounts_file(&name, chain_id, accounts_file)?;
 
     let private_key = SigningKey::from_secret_scalar(account_data.private_key);
 
@@ -208,7 +208,7 @@ async fn get_deployment_result(
     ui: &UI,
 ) -> Result<InvokeResponse> {
     match account_type {
-        AccountType::Argent => {
+        AccountType::Argent | AccountType::Ready => {
             let factory = ArgentAccountFactory::new(
                 class_hash,
                 chain_id,
@@ -348,13 +348,13 @@ where
 }
 
 fn update_account_in_accounts_file(
-    accounts_file: Utf8PathBuf,
+    accounts_file: &Utf8PathBuf,
     account_name: &str,
     chain_id: Felt,
 ) -> Result<()> {
     let network_name = chain_id_to_network_name(chain_id);
 
-    let mut items = load_accounts(&accounts_file)?;
+    let mut items = load_accounts(accounts_file)?;
     items[&network_name][account_name]["deployed"] = serde_json::Value::from(true);
     std::fs::write(accounts_file, serde_json::to_string_pretty(&items).unwrap())
         .context("Failed to write to accounts file")?;
@@ -392,7 +392,7 @@ pub(crate) fn compute_account_address(
     chain_id: Felt,
 ) -> Felt {
     match account_type {
-        AccountType::Argent => get_contract_address(
+        AccountType::Argent | AccountType::Ready => get_contract_address(
             salt,
             class_hash,
             &[private_key.verifying_key().scalar(), Felt::ZERO],

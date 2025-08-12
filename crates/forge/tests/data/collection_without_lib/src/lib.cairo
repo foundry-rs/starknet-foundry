@@ -1,13 +1,12 @@
+pub mod fab;
 pub mod fib;
 pub mod fob;
-pub mod fab;
-
-use fob::fob_impl::fob_fn;
 use fib::fib_fn;
+use fob::fob_impl::fob_fn;
 
 #[cfg(test)]
 mod tests {
-    use super::{fob_fn, fib_fn};
+    use super::{fib_fn, fob_fn};
     #[test]
     fn test_simple() {
         assert(1 == 1, 1);

@@ -1,0 +1,3 @@
+'Hello Starknet!'
+'Let's code in Cairo!'
+"Example byte array"
