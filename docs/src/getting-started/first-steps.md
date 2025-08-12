@@ -73,7 +73,7 @@ Add the following line under `[dev-dependencies]` section in the `Scarb.toml` fi
 # ...
 
 [dev-dependencies]
-snforge_std = "0.33.0"
+snforge_std = "{{snforge_std_version}}"
 ```
 
 Make sure that the above version matches the installed `snforge` version. You can check the currently installed version with
