@@ -2288,17 +2288,6 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 [[package]]
 name = "docs"
 version = "0.48.0"
-dependencies = [
- "anyhow",
- "camino",
- "regex",
- "serde",
- "serde_json",
- "shell-words",
- "tempfile",
- "toml_edit",
- "walkdir",
-]
 
 [[package]]
 name = "downcast"
@@ -2736,7 +2725,6 @@ dependencies = [
  "console",
  "serde",
  "serde_json",
- "starknet-types-core",
 ]
 
 [[package]]
@@ -4251,7 +4239,6 @@ name = "packages_validation"
 version = "1.0.0"
 dependencies = [
  "camino",
- "project-root",
  "scarb-api",
  "test-case",
 ]

@@ -8,7 +8,6 @@ edition.workspace = true
 [dependencies]
 camino.workspace = true
 scarb-api = { path = "../../scarb-api" }
-project-root.workspace = true
 
 [dev-dependencies]
 test-case.workspace = true
