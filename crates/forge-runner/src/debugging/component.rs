@@ -19,6 +19,8 @@ pub enum Component {
     CallType,
     /// The result of the call, transformed for display.
     CallResult,
+    /// The function trace, will be only shown if the contract is not a fork.
+    FunctionTrace,
 }
 impl Component {
     /// Returns minimal [`TraceVerbosity`] for the component.
@@ -30,7 +32,8 @@ impl Component {
             Component::ContractAddress
             | Component::CallerAddress
             | Component::EntryPointType
-            | Component::CallType => TraceVerbosity::Detailed,
+            | Component::CallType
+            | Component::FunctionTrace => TraceVerbosity::Detailed,
         }
     }
 }
@@ -45,6 +48,7 @@ impl From<&Component> for debugging::Component {
             Component::CallerAddress => debugging::Component::CallerAddress,
             Component::CallType => debugging::Component::CallType,
             Component::CallResult => debugging::Component::CallResult,
+            Component::FunctionTrace => debugging::Component::FunctionTrace,
         }
     }
 }
