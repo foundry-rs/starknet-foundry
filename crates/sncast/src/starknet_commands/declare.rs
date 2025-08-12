@@ -30,7 +30,11 @@ use std::sync::Arc;
 pub struct Declare {
     /// Contract name
     #[arg(short = 'c', long = "contract-name")]
-    pub contract: String,
+    pub contract: Option<String>,
+
+    /// Path to compiled contract
+    #[arg(short, long = "contract-path")]
+    pub path: Option<String>,
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
@@ -55,12 +59,24 @@ pub async fn declare(
     skip_on_already_declared: bool,
     ui: &UI,
 ) -> Result<DeclareResponse, StarknetCommandError> {
-    let contract_artifacts =
-        artifacts
-            .get(&declare.contract)
-            .ok_or(StarknetCommandError::ContractArtifactsNotFound(ErrorData {
-                data: ByteArray::from(declare.contract.as_str()),
-            }))?;
+    let contract_artifacts;
+    if declare.contract.is_some() {
+        let contract = declare.contract.unwrap();
+        contract_artifacts =
+            artifacts
+                .get(&contract)
+                .ok_or(StarknetCommandError::ContractArtifactsNotFound(ErrorData {
+                    data: ByteArray::from(contract.as_str()),
+                }))?;
+    } else {
+        let path = declare.path.unwrap();
+        contract_artifacts =
+            artifacts
+                .get(&path)
+                .ok_or(StarknetCommandError::ContractArtifactsNotFound(ErrorData {
+                    data: ByteArray::from(path.as_str()),
+                }))?;
+    }
 
     let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
         .context("Failed to parse sierra artifact")?;

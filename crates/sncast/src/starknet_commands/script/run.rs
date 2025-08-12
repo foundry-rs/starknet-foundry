@@ -128,7 +128,8 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let nonce = input_reader.read()?;
 
                 let declare = Declare {
-                    contract: contract.clone(),
+                    contract: Some(contract.clone()),
+                    path: None,
                     fee_args,
                     nonce,
                     package: None,
