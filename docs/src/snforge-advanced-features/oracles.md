@@ -1,6 +1,6 @@
 # Oracles
 
-> ❗ **Warning**
+> ⚠️ **Warning**
 >
 > Oracles are an experimental feature.
 > To enable them, you must pass the `--experimental-oracles` flag to `snforge`.
