@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `--test-files` flag to `verify` command to include test files under src/ for verification (only applies to voyager)
 
+#### Changed
+
+- `sncast` uses now [new UDC](https://starkscan.co/contract/0x02ceed65a4bd731034c01113685c831b01c15d7d432f71afb1cf1634b53a2125) during deployment
+
 #### Fixed
 
 - Block explorer links are now hidden by default when using [`starknet-devnet`](https://github.com/0xSpaceShard/starknet-devnet). Set `SNCAST_FORCE_SHOW_EXPLORER_LINKS=1` env variable to display them.
