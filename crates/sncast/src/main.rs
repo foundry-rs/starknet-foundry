@@ -20,6 +20,7 @@ use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
+    load_artifacts,
 };
 use sncast::response::cast_message::SncastMessage;
 use sncast::response::command::CommandResponse;
@@ -246,17 +247,21 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             .await?;
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
-            let artifacts = build_and_load_artifacts(
-                &package_metadata,
-                &BuildConfig {
-                    scarb_toml_path: manifest_path,
-                    json: cli.json,
-                    profile: cli.profile.unwrap_or("release".to_string()),
-                },
-                false,
-                ui,
-            )
-            .expect("Failed to build contract");
+
+            let artifacts;
+            let build_config = BuildConfig {
+                scarb_toml_path: manifest_path,
+                json: cli.json,
+                profile: cli.profile.unwrap_or("release".to_string()),
+            };
+
+            if declare.source.contract.is_some() {
+                artifacts = build_and_load_artifacts(&package_metadata, &build_config, false, ui)
+                    .expect("Failed to build contract");
+            } else {
+                artifacts = load_artifacts(&package_metadata, &build_config, ui, "release")
+                    .expect("Failed to load artifacts");
+            }
 
             let result = starknet_commands::declare::declare(
                 declare,
