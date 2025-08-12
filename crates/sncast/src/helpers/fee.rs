@@ -34,9 +34,13 @@ pub struct FeeArgs {
     #[arg(long)]
     pub l1_data_gas_price: Option<u128>,
 
-    /// Tip for the transaction. If not provided, it will be set to 0.
-    #[arg(long)]
+    /// Tip for the transaction. Defaults to 0 unless `--estimate-tip` is used.
+    #[arg(long, conflicts_with = "estimate_tip")]
     pub tip: Option<u64>,
+
+    /// If passed, an estimated tip will be added to pay for the transaction.
+    #[arg(long)]
+    pub estimate_tip: bool,
 }
 
 impl From<ScriptFeeSettings> for FeeArgs {
@@ -59,6 +63,7 @@ impl From<ScriptFeeSettings> for FeeArgs {
             l1_data_gas,
             l1_data_gas_price,
             tip: Some(0),
+            estimate_tip: false,
         }
     }
 }
@@ -82,8 +87,11 @@ impl FeeArgs {
             let mut fee_settings = FeeSettings::try_from(fee_estimate.clone())
                 .expect("Failed to convert FeeEstimate to FeeSettings");
 
-            // If a tip is not provided, set it to 0
-            fee_settings.tip = Some(self.tip.unwrap_or(0));
+            fee_settings.tip = if self.estimate_tip {
+                None // If we leave it as None, the tip will be estimated before sending the transaction
+            } else {
+                Some(self.tip.unwrap_or(0))
+            };
 
             Ok(fee_settings)
         } else {
@@ -134,6 +142,12 @@ impl TryFrom<FeeEstimate> for FeeSettings {
 
 impl From<FeeArgs> for FeeSettings {
     fn from(fee_args: FeeArgs) -> FeeSettings {
+        let tip = if fee_args.estimate_tip {
+            None // If we leave it as None, the tip will be estimated before sending the transaction
+        } else {
+            Some(fee_args.tip.unwrap_or(0))
+        };
+
         FeeSettings {
             l1_gas: fee_args.l1_gas,
             l1_gas_price: fee_args.l1_gas_price,
@@ -141,7 +155,7 @@ impl From<FeeArgs> for FeeSettings {
             l2_gas_price: fee_args.l2_gas_price,
             l1_data_gas: fee_args.l1_data_gas,
             l1_data_gas_price: fee_args.l1_data_gas_price,
-            tip: Some(fee_args.tip.unwrap_or(0)),
+            tip,
         }
     }
 }
