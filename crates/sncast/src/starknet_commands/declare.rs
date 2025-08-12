@@ -54,7 +54,7 @@ pub struct Source {
     pub contract: Option<String>,
 
     /// Path to compiled contract
-    #[arg(short, long = "contract-path")]
+    #[arg(short, long = "compiled-contract-path")]
     pub path: Option<String>,
 }
 
