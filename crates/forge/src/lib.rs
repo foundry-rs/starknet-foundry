@@ -218,7 +218,7 @@ pub struct TestArgs {
 
     /// Enable experimental oracles support.
     #[arg(long, default_value_t = false, env = "SNFORGE_EXPERIMENTAL_ORACLES")]
-   experimental_oracles: bool,
+    experimental_oracles: bool,
 
     #[command(flatten)]
     scarb_args: ScarbArgs,
