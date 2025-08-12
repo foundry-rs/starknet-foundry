@@ -1,3 +1,4 @@
+use crate::trace::function::{FunctionNode, FunctionTrace, FunctionTraceError};
 use crate::trace::types::{
     CallerAddress, ContractAddress, ContractName, Selector, TestName, TransformedCallResult,
     TransformedCalldata,
@@ -17,7 +18,11 @@ pub trait NodeDisplay {
     fn display(&self) -> String {
         let tag = console::style(Self::TAG).magenta();
         let content = self.string_pretty();
-        format!("[{tag}] {content}")
+        if content.is_empty() {
+            format!("[{tag}]")
+        } else {
+            format!("[{tag}] {content}")
+        }
     }
 }
 
@@ -81,6 +86,27 @@ impl NodeDisplay for TransformedCallResult {
     const TAG: &'static str = "call result";
     fn string_pretty(&self) -> String {
         self.0.clone()
+    }
+}
+
+impl NodeDisplay for FunctionTrace {
+    const TAG: &'static str = "function call tree";
+    fn string_pretty(&self) -> String {
+        String::new()
+    }
+}
+
+impl NodeDisplay for FunctionTraceError {
+    const TAG: &'static str = "function trace error";
+    fn string_pretty(&self) -> String {
+        self.to_string()
+    }
+}
+
+impl NodeDisplay for FunctionNode {
+    const TAG: &'static str = "non inlined";
+    fn string_pretty(&self) -> String {
+        self.value.function_name().to_string()
     }
 }
 

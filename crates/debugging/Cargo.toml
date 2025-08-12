@@ -8,12 +8,14 @@ blockifier.workspace = true
 cairo-lang-sierra.workspace = true
 cairo-lang-sierra-to-casm.workspace = true
 cairo-lang-starknet-classes.workspace = true
+cairo-annotations.workspace = true
 cheatnet = { path = "../cheatnet" }
 console.workspace = true
 data-transformer = { path = "../data-transformer" }
 paste.workspace = true
 ptree.workspace = true
 rayon.workspace = true
+regex.workspace = true
 serde_json.workspace = true
 starknet-types-core.workspace = true
 starknet.workspace = true

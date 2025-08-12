@@ -1,3 +1,4 @@
+use crate::trace::function::{FunctionTrace, FunctionTraceError};
 use crate::trace::types::{
     CallerAddress, ContractAddress, ContractName, TransformedCallResult, TransformedCalldata,
 };
@@ -42,6 +43,8 @@ pub enum Component {
     CallType,
     /// The result of the call, transformed for display.
     CallResult,
+    /// The function trace, will be only collected if the contract is not a fork.
+    FunctionTrace,
 }
 
 macro_rules! impl_component_container {
@@ -58,7 +61,7 @@ macro_rules! impl_component_container {
                 "` that is computed only if `Component::", stringify!($variant),
                 "` is included in the [`Components`]."
             )]
-            #[derive(Debug, Clone)]
+            #[derive(Debug, Clone, Default)]
             pub struct [<$variant Container>] {
                 value: Option<$ty>,
             }
@@ -122,3 +125,4 @@ impl_component_container!(ContractAddress);
 impl_component_container!(CallerAddress);
 impl_component_container!(CallType);
 impl_component_container!(CallResult, TransformedCallResult);
+impl_component_container!(FunctionTrace, Result<FunctionTrace, FunctionTraceError>);
