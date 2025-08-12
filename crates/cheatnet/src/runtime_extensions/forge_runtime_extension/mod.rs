@@ -68,7 +68,7 @@ pub struct ForgeExtension<'a> {
     pub contracts_data: &'a ContractsData,
     pub fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
     /// Whether `--experimental-oracles` flag has been enabled.
-    pub oracle_experiment_enabled: bool,
+    pub experimental_oracles_enabled: bool,
     pub oracle_hint_service: OracleHintService,
 }
 
@@ -87,7 +87,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             .oracle_hint_service
             .accept_cheatcode(selector.as_bytes())
         {
-            if !self.oracle_experiment_enabled {
+            if !self.experimental_oracles_enabled {
                 return Err(anyhow!(
                     "Oracles are an experimental feature. \
                     To enable them, pass `--experimental-oracles` CLI flag."
