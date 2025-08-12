@@ -92,6 +92,7 @@ pub async fn deploy(
         l2_gas_price,
         l1_data_gas,
         l1_data_gas_price,
+        tip,
     } = fee_settings.expect("Failed to convert to fee settings");
 
     let deployment = apply_optional_fields!(
@@ -102,6 +103,7 @@ pub async fn deploy(
         l2_gas_price => DeploymentV3::l2_gas_price,
         l1_data_gas => DeploymentV3::l1_data_gas,
         l1_data_gas_price => DeploymentV3::l1_data_gas_price,
+        tip => DeploymentV3::tip,
         nonce => DeploymentV3::nonce
     );
     let result = deployment.send().await;

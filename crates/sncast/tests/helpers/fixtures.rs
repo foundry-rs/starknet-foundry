@@ -23,7 +23,7 @@ use sncast::{get_account, get_provider};
 use starknet::accounts::{
     Account, AccountFactory, ArgentAccountFactory, ExecutionV3, OpenZeppelinAccountFactory,
 };
-use starknet::core::types::{Call, InvokeTransactionResult, TransactionReceipt};
+use starknet::core::types::{Call, InvokeTransactionResult, Transaction, TransactionReceipt};
 use starknet::core::utils::get_contract_address;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::JsonRpcClient;
@@ -324,6 +324,38 @@ pub async fn get_transaction_receipt(tx_hash: Felt) -> TransactionReceipt {
         .expect("There is no `result` field in getTransactionReceipt response");
     serde_json::from_str(&result.to_string())
         .expect("Could not serialize result to `TransactionReceipt`")
+}
+
+pub async fn get_transaction_by_hash(tx_hash: Felt) -> Transaction {
+    let client = reqwest::Client::new();
+    let json = json!(
+        {
+            "jsonrpc": "2.0",
+            "method": "starknet_getTransactionByHash",
+            "params": {
+                "transaction_hash": format!("{tx_hash:#x}"),
+            },
+            "id": 0,
+        }
+    );
+    let resp: Value = serde_json::from_str(
+        &client
+            .post(URL)
+            .header("Content-Type", "application/json")
+            .body(json.to_string())
+            .send()
+            .await
+            .expect("Error occurred while getting transaction")
+            .text()
+            .await
+            .expect("Could not get response from getTransactionByHash"),
+    )
+    .expect("Could not serialize getTransactionByHash response");
+
+    let result = resp
+        .get("result")
+        .expect("There is no `result` field in getTransactionByHash response");
+    serde_json::from_str(&result.to_string()).expect("Could not serialize result to `Transaction`")
 }
 
 #[must_use]
