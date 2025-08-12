@@ -87,7 +87,13 @@ Maximum L1 data gas unit price for the `deploy` transaction. When not used, defa
 ## `--tip <TIP>`
 Optional.
 
-Tip for the transaction. When not used, defaults to 0.
+Tip for the transaction. When not used, defaults 0 to unless [`--estimate-tip`](#--estimate-tip-estimate_tip) is used.
+
+## `--estimate-tip <ESTIMATE_TIP>`
+Optional.
+Conflicts with: [`--tip`](#--tip-tip)
+
+If passed, an estimated tip will be added to pay for the transaction. The tip is estimated based on the current network conditions and added to the transaction fee.
 
 ## `--nonce, -n <NONCE>`
 Optional.

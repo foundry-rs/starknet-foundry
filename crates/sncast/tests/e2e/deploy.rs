@@ -104,6 +104,7 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     l2_gas:  None,
     l2_gas_price:  None,
     tip: None,
+    estimate_tip: false,
 }; "max_fee")]
 #[test_case(FeeArgs{
     max_fee: None,
@@ -114,6 +115,7 @@ async fn test_happy_case(class_hash: Felt, account_type: AccountType) {
     l2_gas: Some(1_000_000_000),
     l2_gas_price: Some(100_000_000_000_000_000_000),
     tip: Some(100_000),
+    estimate_tip: false,
 }; "resource_bounds")]
 #[tokio::test]
 async fn test_happy_case_different_fees(fee_args: FeeArgs) {
