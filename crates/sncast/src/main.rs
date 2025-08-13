@@ -255,7 +255,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 profile: cli.profile.unwrap_or("release".to_string()),
             };
 
-            if declare.source.contract.is_some() {
+            if !declare.skip_compile {
                 artifacts = build_and_load_artifacts(&package_metadata, &build_config, false, ui)
                     .expect("Failed to build contract");
             } else {
