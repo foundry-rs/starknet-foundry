@@ -28,8 +28,13 @@ use std::sync::Arc;
 #[derive(Args)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
 pub struct Declare {
-    #[command(flatten)]
-    pub source: Source,
+    /// Contract name
+    #[arg(short = 'c', long = "contract-name")]
+    pub contract: Option<String>,
+
+    /// If passed, compilation is skipped
+    #[arg(long)]
+    pub skip_compile: bool,
 
     #[command(flatten)]
     pub fee_args: FeeArgs,
@@ -44,18 +49,6 @@ pub struct Declare {
 
     #[command(flatten)]
     pub rpc: RpcArgs,
-}
-
-#[derive(Args)]
-#[group(required = true, multiple = false)]
-pub struct Source {
-    /// Contract name
-    #[arg(short = 'c', long = "contract-name")]
-    pub contract: Option<String>,
-
-    /// Path to compiled contract
-    #[arg(short, long = "compiled-contract-path")]
-    pub path: Option<String>,
 }
 
 pub async fn declare(
