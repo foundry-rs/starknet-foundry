@@ -5,7 +5,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 use blockifier::context::TransactionContext;
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::syscalls::hint_processor::{
-    SyscallExecutionError, SyscallHintProcessor,
+    INVALID_ARGUMENT, SyscallExecutionError, SyscallHintProcessor,
 };
 use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use blockifier::execution::syscalls::vm_syscall_utils::{
@@ -33,12 +33,15 @@ use blockifier::{
     execution::execution_utils::update_remaining_gas,
     execution::syscalls::hint_processor::create_retdata_segment,
 };
+use cairo_vm::Felt252;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::TEST_ADDRESS;
+use starknet_api::abi::abi_utils::selector_from_name;
 use starknet_api::core::EntryPointSelector;
 use starknet_api::transaction::TransactionHasher;
+use starknet_api::transaction::constants::EXECUTE_ENTRY_POINT_NAME;
 use starknet_api::transaction::fields::TransactionSignature;
 use starknet_api::{
     contract_class::EntryPointType,
@@ -281,7 +284,7 @@ pub fn meta_tx_v0_syscall(
     })
 }
 
-// TODO: Probably move it to more proper place 
+// TODO: Probably move it to more proper place
 // blockifier/src/execution/syscalls/syscall_base.rs:255 (meta_tx_v0)
 #[allow(clippy::result_large_err, clippy::too_many_arguments)]
 fn meta_tx_v0(
@@ -304,7 +307,7 @@ fn meta_tx_v0(
     }
     // endregion
 
-    // TODO: Check why this doesn't work
+    // TODO: Check why this doesn't work, maybe wrong import for `selector_from_name`
     // if entry_point_selector != selector_from_name(EXECUTE_ENTRY_POINT_NAME) {
     //     return Err(SyscallExecutionError::Revert {
     //         error_data: vec![Felt252::from_hex(INVALID_ARGUMENT).unwrap()],

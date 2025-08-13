@@ -37,17 +37,16 @@ fn meta_tx_v0_with_cheat_caller_address() {
                 let (meta_address, _) = meta_contract.deploy(@ArrayTrait::new()).unwrap();
                 let meta_dispatcher = IMetaTxV0TestDispatcher { contract_address: meta_address };
 
-                let old_caller = meta_dispatcher.get_caller_address();
+                let signature = ArrayTrait::new();
+
+                let old_caller = meta_dispatcher.execute_meta_tx_get_caller(meta_address, signature.span());
 
                 let cheated_address: ContractAddress = 123.try_into().unwrap();
                 start_cheat_caller_address(meta_address, cheated_address);
 
-                let signature = ArrayTrait::new();
-
                 let meta_result = meta_dispatcher.execute_meta_tx_get_caller(meta_address, signature.span());
 
                 assert(meta_result == 123, 'Should see cheated addr');
-                let new_caller = meta_dispatcher.get_caller_address();
 
                 stop_cheat_caller_address(meta_address);
 
