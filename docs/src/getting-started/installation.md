@@ -35,6 +35,11 @@ In this section, we will walk through the process of installing Starknet Foundry
 
 [Starkup](https://github.com/software-mansion/starkup) helps you install all the tools used to develop packages in Cairo and write contracts for Starknet, including Starknet Foundry.
 
+> ℹ️ **Info**
+>
+> When using starkup on Windows, please
+> use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install), as it only works on macOS and Linux.
+
 Run the following in your terminal, then follow the onscreen instructions:
 
 ```shell
