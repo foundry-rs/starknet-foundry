@@ -16,3 +16,4 @@ mod segment_arena_user;
 mod starknet;
 mod store_load;
 mod tracked_resources;
+mod meta_tx_v0;

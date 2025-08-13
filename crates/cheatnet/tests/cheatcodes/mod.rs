@@ -5,6 +5,7 @@ mod cheat_block_number;
 mod cheat_block_timestamp;
 mod cheat_caller_address;
 mod cheat_execution_info;
+mod meta_tx_v0;
 mod cheat_sequencer_address;
 mod declare;
 mod deploy;

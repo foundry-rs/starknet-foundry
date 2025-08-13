@@ -2,21 +2,27 @@ use super::calls::{execute_inner_call, execute_library_call};
 use super::execution_info::get_cheated_exec_info_ptr;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_constructor_entry_point;
+use blockifier::context::TransactionContext;
+use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::syscalls::hint_processor::{
     SyscallExecutionError, SyscallHintProcessor,
 };
 use blockifier::execution::syscalls::syscall_base::SyscallResult;
 use blockifier::execution::syscalls::vm_syscall_utils::{
     CallContractRequest, DeployRequest, DeployResponse, EmptyRequest, GetBlockHashRequest,
-    GetBlockHashResponse, GetExecutionInfoResponse, LibraryCallRequest, StorageReadRequest,
-    StorageReadResponse, StorageWriteRequest, StorageWriteResponse, SyscallResponse,
-    SyscallSelector, WriteResponseResult,
+    GetBlockHashResponse, GetExecutionInfoResponse, LibraryCallRequest, MetaTxV0Request,
+    MetaTxV0Response, StorageReadRequest, StorageReadResponse, StorageWriteRequest,
+    StorageWriteResponse, SyscallExecutorBaseError, SyscallRequest, SyscallResponse,
+    SyscallSelector, TryExtractRevert, WriteResponseResult,
 };
 use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
 use blockifier::execution::{
     execution_utils::ReadOnlySegment, syscalls::hint_processor::write_segment,
 };
 use blockifier::state::errors::StateError;
+use blockifier::transaction::objects::{
+    CommonAccountFields, DeprecatedTransactionInfo, TransactionInfo,
+};
 use blockifier::{
     execution::entry_point::{
         CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
@@ -31,12 +37,18 @@ use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::TEST_ADDRESS;
-use starknet_api::core::calculate_contract_address;
+use starknet_api::core::EntryPointSelector;
+use starknet_api::transaction::TransactionHasher;
+use starknet_api::transaction::fields::TransactionSignature;
 use starknet_api::{
     contract_class::EntryPointType,
-    core::{ClassHash, ContractAddress},
-    transaction::fields::Calldata,
+    core::{ClassHash, ContractAddress, Nonce, calculate_contract_address},
+    transaction::{
+        InvokeTransactionV0, TransactionVersion,
+        fields::{Calldata, Fee},
+    },
 };
+use std::sync::Arc;
 
 #[expect(clippy::result_large_err)]
 pub fn get_execution_info_syscall(
@@ -226,6 +238,157 @@ pub fn call_contract_syscall(
         segment: retdata_segment,
     })
     // endregion
+}
+
+// blockifier/src/execution/syscalls/hint_processor.rs:645 (meta_tx_v0)
+#[allow(clippy::result_large_err)]
+pub fn meta_tx_v0_syscall(
+    request: MetaTxV0Request,
+    vm: &mut VirtualMachine,
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
+    remaining_gas: &mut u64,
+) -> SyscallResult<MetaTxV0Response> {
+    println!(
+        "meta_tx_v0_syscall called with contract_address: {:?}, entry_point_selector: {:?}",
+        request.contract_address, request.entry_point_selector
+    );
+
+    // Increment the MetaTxV0 syscall's linear cost counter by the number of elements in the
+    // calldata.
+    syscall_handler.increment_linear_factor_by(
+        &SyscallSelector::MetaTxV0,
+        request.get_linear_factor_length(),
+    );
+
+    // region: Modified blockifier code
+    // Call the cheatcode-aware meta_tx_v0 implementation
+    let retdata_segment = meta_tx_v0(
+        syscall_handler,
+        vm,
+        cheatnet_state,
+        request.contract_address,
+        request.entry_point_selector,
+        request.calldata,
+        request.signature,
+        remaining_gas,
+    )?;
+    // endregion
+    println!("\nmeta_tx_v0_inner returned segment: {retdata_segment:?}",);
+
+    Ok(MetaTxV0Response {
+        segment: retdata_segment,
+    })
+}
+
+// TODO: Probably move it to more proper place 
+// blockifier/src/execution/syscalls/syscall_base.rs:255 (meta_tx_v0)
+#[allow(clippy::result_large_err, clippy::too_many_arguments)]
+fn meta_tx_v0(
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    vm: &mut VirtualMachine,
+    cheatnet_state: &mut CheatnetState,
+    contract_address: ContractAddress,
+    entry_point_selector: EntryPointSelector,
+    calldata: Calldata,
+    signature: TransactionSignature,
+    remaining_gas: &mut u64,
+) -> SyscallResult<ReadOnlySegment> {
+    //region: Modified blockifier code
+    if syscall_handler.base.context.execution_mode == ExecutionMode::Validate {
+        return Err(SyscallExecutorBaseError::InvalidSyscallInExecutionMode {
+            syscall_name: "meta_tx_v0".to_string(),
+            execution_mode: ExecutionMode::Validate,
+        }
+        .into());
+    }
+    // endregion
+
+    // TODO: Check why this doesn't work
+    // if entry_point_selector != selector_from_name(EXECUTE_ENTRY_POINT_NAME) {
+    //     return Err(SyscallExecutionError::Revert {
+    //         error_data: vec![Felt252::from_hex(INVALID_ARGUMENT).unwrap()],
+    //     });
+    // }
+
+    let mut entry_point = CallEntryPoint {
+        class_hash: None,
+        code_address: Some(contract_address),
+        entry_point_type: EntryPointType::External,
+        entry_point_selector,
+        calldata: calldata.clone(),
+        storage_address: contract_address,
+        caller_address: ContractAddress::default(),
+        call_type: CallType::Call,
+        // NOTE: this value might be overridden later on.
+        initial_gas: *remaining_gas,
+    };
+
+    let old_tx_context = syscall_handler.base.context.tx_context.clone();
+    let only_query = old_tx_context.tx_info.only_query();
+
+    // Compute meta-transaction hash.
+    let transaction_hash = InvokeTransactionV0 {
+        max_fee: Fee(0),
+        signature: signature.clone(),
+        contract_address,
+        entry_point_selector,
+        calldata,
+    }
+    .calculate_transaction_hash(
+        &old_tx_context.block_context.chain_info().chain_id,
+        &TransactionVersion::ZERO,
+    )?;
+
+    let class_hash = syscall_handler
+        .base
+        .state
+        .get_class_hash_at(contract_address)?;
+
+    // Replace `tx_context`.
+    let new_tx_info = TransactionInfo::Deprecated(DeprecatedTransactionInfo {
+        common_fields: CommonAccountFields {
+            transaction_hash,
+            version: TransactionVersion::ZERO,
+            signature,
+            nonce: Nonce(0.into()),
+            sender_address: contract_address,
+            only_query,
+        },
+        max_fee: Fee(0),
+    });
+    syscall_handler.base.context.tx_context = Arc::new(TransactionContext {
+        block_context: old_tx_context.block_context.clone(),
+        tx_info: new_tx_info,
+    });
+
+    // region: Modified blockifier code
+    // No error should be propagated until we restore the old `tx_context`.
+    let retdata_segment = execute_inner_call(
+        &mut entry_point,
+        vm,
+        syscall_handler,
+        cheatnet_state,
+        remaining_gas,
+    )
+    .map_err(|error| {
+        SyscallExecutionError::from_self_or_revert(error.try_extract_revert().map_original(
+            |error| {
+                // TODO(lior): Change to meta-tx specific error.
+                error.as_call_contract_execution_error(
+                    class_hash,
+                    contract_address,
+                    entry_point_selector,
+                )
+            },
+        ))
+    })?;
+    // endregion
+
+    // Restore the old `tx_context`.
+    syscall_handler.base.context.tx_context = old_tx_context;
+
+    Ok(retdata_segment)
 }
 
 #[expect(clippy::needless_pass_by_value, clippy::result_large_err)]

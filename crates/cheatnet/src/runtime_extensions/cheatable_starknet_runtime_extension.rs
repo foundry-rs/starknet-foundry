@@ -102,6 +102,14 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                     SyscallSelector::StorageWrite,
                 )
                 .map(|()| SyscallHandlingResult::Handled),
+            SyscallSelector::MetaTxV0 => self
+                .execute_syscall(
+                    syscall_handler,
+                    vm,
+                    cheated_syscalls::meta_tx_v0_syscall,
+                    SyscallSelector::MetaTxV0,
+                )
+                .map(|()| SyscallHandlingResult::Handled),
             _ => Ok(SyscallHandlingResult::Forwarded),
         }
     }
@@ -149,6 +157,7 @@ fn get_syscall_cost(
         SyscallSelector::GetBlockHash => gas_costs.syscalls.get_block_hash,
         SyscallSelector::StorageRead => gas_costs.syscalls.storage_read,
         SyscallSelector::StorageWrite => gas_costs.syscalls.storage_write,
+        SyscallSelector::MetaTxV0 => gas_costs.syscalls.meta_tx_v0,
         _ => unreachable!("Syscall has no associated cost"),
     }
 }
