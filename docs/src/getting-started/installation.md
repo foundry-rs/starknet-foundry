@@ -33,7 +33,7 @@ In this section, we will walk through the process of installing Starknet Foundry
 
 ## With Starkup
 
-[starkup](https://github.com/software-mansion/starkup) helps you install all the tools used to develop packages in Cairo and write contracts for Starknet, including Starknet Foundry.
+[Starkup](https://github.com/software-mansion/starkup) helps you install all the tools used to develop packages in Cairo and write contracts for Starknet, including Starknet Foundry.
 
 Run the following in your terminal, then follow the onscreen instructions:
 
