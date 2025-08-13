@@ -95,10 +95,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 .into());
             }
 
-            let input = input_reader.read_remaining();
             let output = self
                 .oracle_hint_service
-                .execute_cheatcode(oracle_selector, input);
+                .execute_cheatcode(oracle_selector, input_reader.into_remaining());
             return Ok(CheatcodeHandlingResult::Handled(output));
         }
 

@@ -38,8 +38,8 @@ impl<'a> BufferReader<'a> {
         Ok(*head)
     }
 
-    pub fn read_remaining(&mut self) -> &'a [Felt] {
-        mem::take(&mut self.buffer)
+    pub fn into_remaining(self) -> &'a [Felt] {
+        self.buffer
     }
 
     pub fn read<T>(&mut self) -> BufferReadResult<T>
