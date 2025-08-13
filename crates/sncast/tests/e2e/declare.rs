@@ -663,8 +663,10 @@ async fn test_deploy_skip_compile() {
 
     // Run `scarb build`
     let output = ScarbCommand::new()
-        .current_dir(tempdir.path())
+        .arg("--profile")
+        .arg("release")
         .arg("build")
+        .current_dir(tempdir.path())
         .command()
         .output()
         .unwrap();
