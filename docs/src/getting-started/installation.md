@@ -8,9 +8,9 @@ In this section, we will walk through the process of installing Starknet Foundry
 <!-- TOC -->
 
 * [Installation](#installation)
+    * [Contents](#contents)
     * [With Starkup](#with-starkup)
     * [Manual Installation](#manual-installation)
-      * [Contents](#contents)
       * [Requirements](#requirements)
       * [Linux and macOS](#linux-and-macos)
           * [Install asdf](#install-asdf)
