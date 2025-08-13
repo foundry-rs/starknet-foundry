@@ -1,5 +1,4 @@
 use starknet_types_core::felt::Felt;
-use std::mem;
 use thiserror::Error;
 
 pub use cairo_serde_macros::CairoDeserialize;
@@ -38,6 +37,7 @@ impl<'a> BufferReader<'a> {
         Ok(*head)
     }
 
+    #[must_use]
     pub fn into_remaining(self) -> &'a [Felt] {
         self.buffer
     }
