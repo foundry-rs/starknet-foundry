@@ -7,7 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.48.0] - 2025-08-05
+
 ### Forge
+
+#### Added
+
+- `snforge_std` is now compatible with Scarb procedural macros V2. Migration is required if using Scarb versions before `2.12.0`. See [migration guide](https://foundry-rs.github.io/starknet-foundry/getting-started/0-47-0-migration-guide.html).
+
+#### Changed
+
+- If using a Scarb version before `2.10.0` or not using `allow-prebuild-plugins`, the minimal required rust version to run `snforge` is now `1.87.0`
+
+#### Added
+
+- `--trace-components` flag to allow selecting which components of the trace to do display. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#trace-components)
+
+### Cast
+
+#### Added
+
+- `--test-files` flag to `verify` command to include test files under src/ for verification (only applies to voyager)
+
+#### Fixed
+
+- Block explorer links are now hidden by default when using [`starknet-devnet`](https://github.com/0xSpaceShard/starknet-devnet). Set `SNCAST_FORCE_SHOW_EXPLORER_LINKS=1` env variable to display them.
+
+## [0.47.0] - 2025-07-28
+
+### Forge
+
+#### Added
+
+- `interact_with_state` cheatcode to enable effective use of `contract_state_for_testing` in snforge tests
+- Support for using [Scarb profiles](https://docs.swmansion.com/scarb/docs/reference/profiles.html) with `snforge test`, allowing to pass the same profile flags as in Scarb (`--release`, `--dev`, `--profile`) to build artifacts using a specific profile
+
+#### Deprecated
+
+- The `snforge completion` command. Use `snforge completions` instead
 
 #### Fixed
 
@@ -25,11 +62,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- Braavos accounts with all class hashes are now supported 
+- Braavos accounts with all class hashes are now supported
 
 #### Deprecated
 
 - `argent` option for `--type` flag in `account create` and `account import` commands. Use `ready` instead
+- The `sncast completion` command. Use `sncast completions` instead
 
 ## [0.46.0] - 2025-07-09
 
@@ -110,7 +148,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
-#### Added 
+#### Added
 
 - Displaying the path of the config file when adding a new profile
 
@@ -306,7 +344,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Rust is no longer required to use `snforge` if using Scarb >= 2.10.0 on supported platforms - precompiled `snforge_scarb_plugin` plugin binaries are now published to [package registry](https://scarbs.xyz) for new versions. 
+- Rust is no longer required to use `snforge` if using Scarb >= 2.10.0 on supported platforms - precompiled `snforge_scarb_plugin` plugin binaries are now published to [package registry](https://scarbs.xyz) for new versions.
 - Added a suggestion for using the `--max-n-steps` flag when the Cairo VM returns the error: `Could not reach the end of the program. RunResources has no remaining steps`.
 
 #### Fixed

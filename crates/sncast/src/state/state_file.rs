@@ -116,10 +116,10 @@ impl ScriptTransactionEntries {
 
     #[must_use]
     pub fn get_success_output(&self, tx_id: &str) -> Option<ScriptTransactionOutput> {
-        if let Some(entry) = self.get(tx_id) {
-            if entry.status == ScriptTransactionStatus::Success {
-                return Some(entry.output.clone());
-            }
+        if let Some(entry) = self.get(tx_id)
+            && entry.status == ScriptTransactionStatus::Success
+        {
+            return Some(entry.output.clone());
         }
         None
     }

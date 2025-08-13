@@ -8,6 +8,30 @@ Passing a test filter will only run tests with
 an [absolute module tree path](https://book.cairo-lang.org/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html#paths-for-referring-to-an-item-in-the-module-tree)
 containing this filter.
 
+## `--trace-verbosity <TRACE_VERBOSITY>`
+
+Sets the level of detail shown in execution traces.
+
+Valid values:
+
+- `minimal`: Only test name, contract name, and selector
+- `standard`: Includes calldata and call result
+- `detailed`: Full trace, including nested calls, caller address, and panic reasons
+
+## `--trace-components <TRACE_COMPONENTS>...`
+
+Selects specific trace elements to include in the execution flow output.
+
+Available components:
+
+- `contract-name`
+- `entry-point-type`
+- `calldata`
+- `contract-address`
+- `caller-address`
+- `call-type`
+- `call-result`
+
 ## `-e`, `--exact`
 
 Will only run a test with a name exactly matching the test filter.
@@ -97,6 +121,15 @@ Set tracked resource for test execution. Impacts overall test gas cost. Valid va
 - `cairo-steps` (default): track cairo steps, uses vm `ExecutionResources` (steps, builtins, memory holes) to describe  resources consumed by the test.
 - `sierra-gas` (sierra 1.7.0+ is required): track sierra gas, uses cairo native `CallExecution` (sierra gas consumption) to describe computation resources consumed by the test.
 To learn more about fee calculation formula (and an impact of tracking sierra gas on it) please consult [starknet docs](https://docs.starknet.io/architecture-and-concepts/fees/#overall_fee)
+
+##  `-P`, `--profile` `<PROFILE>`
+Specify the profile to use by name.
+
+## `--release`
+Use Scarb release profile.
+
+## `--dev`
+Use Scarb dev profile.
 
 ## `-h`, `--help`
 

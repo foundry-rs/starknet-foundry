@@ -23,7 +23,6 @@ use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use configuration::load_package_config;
 use console::Style;
-use forge_runner::debugging::TraceVerbosity;
 use forge_runner::{
     forge_config::ForgeConfig,
     package_tests::{raw::TestTargetRaw, with_config_resolved::TestTargetWithResolvedConfig},
@@ -107,6 +106,7 @@ impl RunForPackageArgs {
             cache_dir.clone(),
             &forge_config_from_scarb,
             &args.additional_args,
+            args.trace_args.clone(),
         ));
 
         let test_filter = TestsFilter::from_flags(
@@ -164,7 +164,6 @@ pub async fn run_for_package(
         package_name,
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
-    trace_verbosity: Option<TraceVerbosity>,
     ui: Arc<UI>,
 ) -> Result<PackageTestResult> {
     let mut test_targets = test_package_with_config_resolved(
@@ -198,14 +197,8 @@ pub async fn run_for_package(
             test_target.test_cases.len(),
         ));
 
-        let summary = run_for_test_target(
-            test_target,
-            forge_config.clone(),
-            &tests_filter,
-            trace_verbosity,
-            ui,
-        )
-        .await?;
+        let summary =
+            run_for_test_target(test_target, forge_config.clone(), &tests_filter, ui).await?;
 
         match summary {
             TestTargetRunResult::Ok(summary) => {

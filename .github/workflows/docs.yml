@@ -30,7 +30,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      MDBOOK_VERSION: 0.4.31
+      MDBOOK_VERSION: 0.4.52
     steps:
       - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
         with:
@@ -44,6 +44,7 @@ jobs:
       - name: Install mdBook
         run: |
           cargo install --version ${MDBOOK_VERSION} mdbook
+          cargo install mdbook-variables
       - name: Install mdBook Link-Check
         run: |
           cargo install mdbook-linkcheck

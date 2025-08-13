@@ -7,7 +7,8 @@ trait ICheatTxInfoChecker<TContractState> {
 
 #[starknet::contract]
 mod CheatTxInfoChecker {
-    use starknet::{SyscallResultTrait, syscalls::get_execution_info_v2_syscall};
+    use starknet::SyscallResultTrait;
+    use starknet::syscalls::get_execution_info_v2_syscall;
 
     #[storage]
     struct Storage {}

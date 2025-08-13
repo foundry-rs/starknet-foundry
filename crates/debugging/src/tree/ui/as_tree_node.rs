@@ -27,7 +27,7 @@ impl AsTreeNode for ContractTrace {
 
 impl AsTreeNode for TraceInfo {
     fn as_tree_node(&self, parent: &mut Node) {
-        parent.leaf(&self.contract_name);
+        parent.leaf_optional(self.contract_name.as_option());
         parent.leaf_optional(self.entry_point_type.as_option());
         parent.leaf_optional(self.calldata.as_option());
         parent.leaf_optional(self.contract_address.as_option());

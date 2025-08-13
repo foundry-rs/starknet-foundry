@@ -43,7 +43,7 @@ fn is_present(line: &str, actual: &mut Vec<&str>) -> bool {
     false
 }
 
-fn assert_output_contains(output: &str, lines: &str) {
+fn assert_output_contains(output: &str, lines: &str, assert_prefix: Option<String>) {
     let asserted_lines = lines.lines();
     let mut actual_lines: Vec<&str> = output.lines().collect();
 
@@ -65,20 +65,32 @@ fn assert_output_contains(output: &str, lines: &str) {
         }
     }
 
-    assert!(contains, "Output does not match:\n\n{out}");
+    if let Some(assert_prefix) = assert_prefix {
+        assert!(contains, "{assert_prefix} Output does not match:\n\n{out}");
+    } else {
+        assert!(contains, "Output does not match:\n\n{out}");
+    }
 }
+
+#[expect(clippy::needless_pass_by_value)]
+pub fn case_assert_stdout_contains(case: String, output: impl AsOutput, lines: impl AsRef<str>) {
+    let stdout = output.as_stdout();
+
+    assert_output_contains(stdout, lines.as_ref(), Some(format!("Case {case}: ")));
+}
+
 #[expect(clippy::needless_pass_by_value)]
 pub fn assert_stdout_contains(output: impl AsOutput, lines: impl AsRef<str>) {
     let stdout = output.as_stdout();
 
-    assert_output_contains(stdout, lines.as_ref());
+    assert_output_contains(stdout, lines.as_ref(), None);
 }
 
 #[expect(clippy::needless_pass_by_value)]
 pub fn assert_stderr_contains(output: impl AsOutput, lines: impl AsRef<str>) {
     let stderr = output.as_stderr();
 
-    assert_output_contains(stderr, lines.as_ref());
+    assert_output_contains(stderr, lines.as_ref(), None);
 }
 
 fn assert_output(output: &str, lines: &str) {

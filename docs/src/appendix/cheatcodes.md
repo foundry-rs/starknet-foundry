@@ -15,6 +15,7 @@
 
 - [`CheatSpan`](cheatcodes/cheat_span.md) - enum for specifying the number of target calls for a cheat
 - [`Token`](cheatcodes/token.md) - enum for specifying ERC20 token for a cheat
+- [`interact_with_state`](cheatcodes/interact_with_state.md) - allows interacting with a contract's state in tests
 
 ## Execution Info
 
@@ -165,5 +166,5 @@
 >
 > ```toml
 > [dev-dependencies]
-> snforge_std = "0.33.0"
+> snforge_std = "{{snforge_std_version}}"
 > ```

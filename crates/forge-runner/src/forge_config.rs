@@ -1,3 +1,4 @@
+use crate::debugging::TraceArgs;
 use blockifier::execution::contract_class::TrackedResource;
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
@@ -29,6 +30,7 @@ pub struct TestRunnerConfig {
 
 #[derive(Debug, PartialEq)]
 pub struct OutputConfig {
+    pub trace_args: TraceArgs,
     pub detailed_resources: bool,
     pub execution_data_to_save: ExecutionDataToSave,
 }

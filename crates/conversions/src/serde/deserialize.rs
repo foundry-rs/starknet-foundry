@@ -17,25 +17,24 @@ pub type BufferReadResult<T> = Result<T, BufferReadError>;
 
 pub struct BufferReader<'a> {
     buffer: &'a [Felt],
-    idx: usize,
 }
 
 pub trait CairoDeserialize: Sized {
     fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self>;
 }
 
-impl BufferReader<'_> {
+impl<'a> BufferReader<'a> {
     #[must_use]
-    pub fn new<'a>(buffer: &'a [Felt]) -> BufferReader<'a> {
-        BufferReader::<'a> { buffer, idx: 0 }
+    pub fn new(buffer: &'a [Felt]) -> Self {
+        Self { buffer }
     }
 
     pub fn read_felt(&mut self) -> BufferReadResult<Felt> {
-        let felt = self.buffer.get(self.idx).copied();
-
-        self.idx += 1;
-
-        felt.ok_or(BufferReadError::EndOfBuffer)
+        let [head, tail @ ..] = self.buffer else {
+            return Err(BufferReadError::EndOfBuffer);
+        };
+        self.buffer = tail;
+        Ok(*head)
     }
 
     pub fn read<T>(&mut self) -> BufferReadResult<T>
