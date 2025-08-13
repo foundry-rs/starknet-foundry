@@ -254,6 +254,12 @@ test = "snforge test"
 
 Shell completions allow your terminal to suggest and automatically complete commands and options when you press `Tab`.
 
+> ⚠️ **Warning**
+>
+> Most users **DO NOT** need to install shell completions manually.
+> [Starkup](#install-via-starkup-installation-script) automatically set up shell completions for the supported shells.
+> However, if these installation methods do not support the target shell, or for any reason fail to set up completions, you can follow the instructions below to set them up manually.
+
 <details>
   <summary><strong>Bash</strong></summary>
 
