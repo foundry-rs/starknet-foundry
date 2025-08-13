@@ -32,10 +32,6 @@ pub struct Declare {
     #[arg(short = 'c', long = "contract-name")]
     pub contract: String,
 
-    /// If passed, compilation is skipped
-    #[arg(long)]
-    pub skip_compile: bool,
-
     #[command(flatten)]
     pub fee_args: FeeArgs,
 
@@ -49,6 +45,10 @@ pub struct Declare {
 
     #[command(flatten)]
     pub rpc: RpcArgs,
+
+    /// If passed, compilation is skipped
+    #[arg(long)]
+    pub skip_compile: bool,
 }
 
 pub async fn declare(
