@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Changed
+
+- The supported RPC version is now 0.9.0
+
 ## [0.48.0] - 2025-08-05
 
 ### Forge

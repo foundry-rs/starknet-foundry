@@ -162,7 +162,6 @@ pub enum ProviderError {
 
 #[derive(Drop, Serde, PartialEq, Debug)]
 pub enum TransactionError {
-    Rejected,
     Reverted: ErrorData,
 }
 
@@ -469,7 +468,8 @@ pub fn get_nonce(block_tag: felt252) -> felt252 {
 #[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub enum FinalityStatus {
     Received,
-    Rejected,
+    Candidate,
+    PreConfirmed,
     AcceptedOnL2,
     AcceptedOnL1,
 }
@@ -478,7 +478,8 @@ pub impl DisplayFinalityStatus of Display<FinalityStatus> {
     fn fmt(self: @FinalityStatus, ref f: Formatter) -> Result<(), Error> {
         let finality_status: ByteArray = match self {
             FinalityStatus::Received => "Received",
-            FinalityStatus::Rejected => "Rejected",
+            FinalityStatus::Candidate => "Candidate",
+            FinalityStatus::PreConfirmed => "PreConfirmed",
             FinalityStatus::AcceptedOnL2 => "AcceptedOnL2",
             FinalityStatus::AcceptedOnL1 => "AcceptedOnL1",
         };

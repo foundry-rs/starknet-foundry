@@ -13,7 +13,7 @@ fn main() {
         .try_into()
         .expect('Invalid class hash value');
 
-    let deploy_nonce = get_nonce('pending') + 100;
+    let deploy_nonce = get_nonce('pre_confirmed') + 100;
     let deploy_result = deploy(
         class_hash,
         array![0x2, 0x2, 0x0],
