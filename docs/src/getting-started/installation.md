@@ -9,13 +9,15 @@ In this section, we will walk through the process of installing Starknet Foundry
 
 * [Installation](#installation)
     * [Contents](#contents)
-    * [Requirements](#requirements)
-    * [Linux and macOS](#linux-and-macos)
-        * [Install asdf](#install-asdf)
-        * [Install Scarb version >= 2.8.5](#install-scarb-version--285)
-        * [(Optional for Scarb >= 2.10.0) Rust Installation](#optional-for-scarb--21001-rust-installation)
-        * [Install Starknet Foundry](#install-starknet-foundry)
-    * [Windows](#windows)
+    * [With Starkup](#with-starkup)
+    * [Manual Installation](#manual-installation)
+      * [Requirements](#requirements)
+      * [Linux and macOS](#linux-and-macos)
+          * [Install asdf](#install-asdf)
+          * [Install Scarb version >= 2.8.5](#install-scarb-version--285)
+          * [(Optional for Scarb >= 2.10.0) Rust Installation](#optional-for-scarb--21001-rust-installation)
+          * [Install Starknet Foundry](#install-starknet-foundry)
+      * [Windows](#windows)
     * [Common Errors](#common-errors)
         * [No Version Set (Linux and macOS Only)](#no-version-set-linux-and-macos-only)
         * [Invalid Rust Version](#invalid-rust-version)
@@ -29,7 +31,30 @@ In this section, we will walk through the process of installing Starknet Foundry
 
 <!-- TOC -->
 
-## Requirements
+## With Starkup
+
+[Starkup](https://github.com/software-mansion/starkup) helps you install all the tools used to develop packages in Cairo and write contracts for Starknet, including Starknet Foundry.
+
+> ℹ️ **Info**
+>
+> When using starkup on Windows, please
+> use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install), as it only works on macOS and Linux.
+
+Run the following in your terminal, then follow the onscreen instructions:
+
+```shell
+curl --proto '=https' --tlsv1.2 -sSf https://sh.starkup.sh | sh
+```
+
+To verify that Starknet Foundry was installed, open a new terminal and run
+
+```shell
+snforge --version
+```
+
+## Manual Installation
+
+### Requirements
 
 > 📝 **Note**
 >
@@ -55,14 +80,14 @@ all installed and added to your `PATH` environment variable.
 > `Universal-Sierra-Compiler` will be automatically installed if you use `asdf` or `snfoundryup`.
 > You can also create `UNIVERSAL_SIERRA_COMPILER` env var to make it visible for `snforge`.
 
-## Linux and macOS
+### Linux and macOS
 
 > ℹ️ **Info**
 >
 > If you already have installed Rust, Scarb and asdf simply run
 > `asdf plugin add starknet-foundry`
 
-### Install asdf
+#### Install asdf
 
 Follow the instructions from [asdf docs](https://asdf-vm.com/guide/getting-started.html#getting-started).
 
@@ -72,7 +97,7 @@ To verify that asdf was installed, run
 asdf --version
 ```
 
-### Install Scarb version >= 2.8.5
+#### Install Scarb version >= 2.8.5
 
 First, add Scarb plugin to asdf
 
@@ -100,7 +125,7 @@ scarb --version
 
 and verify that version is >= 2.8.5
 
-### (Optional for Scarb >= 2.10.0)[^note] Rust Installation
+#### (Optional for Scarb >= 2.10.0)[^note] Rust Installation
 
 > ℹ️️ **Info**
 >
@@ -127,7 +152,7 @@ and verify that version is >= 1.80.1
 
 See [Rust docs](https://doc.rust-lang.org/beta/book/ch01-01-installation.html#installation) for more details.
 
-### Install Starknet Foundry
+#### Install Starknet Foundry
 
 First, add Starknet Foundry plugin to asdf
 
@@ -159,7 +184,7 @@ or
 sncast --version
 ```
 
-## Windows
+### Windows
 
 > 🐧 **Info** - WSL (Windows Subsystem for Linux)
 >
@@ -233,6 +258,12 @@ test = "snforge test"
 ## Set up shell completions (optional)
 
 Shell completions allow your terminal to suggest and automatically complete commands and options when you press `Tab`.
+
+> ⚠️ **Warning**
+>
+> Most users **DO NOT** need to install shell completions manually.
+> [Starkup](#install-via-starkup-installation-script) automatically set up shell completions for the supported shells.
+> However, if these installation methods do not support the target shell, or for any reason fail to set up completions, you can follow the instructions below to set them up manually.
 
 <details>
   <summary><strong>Bash</strong></summary>
