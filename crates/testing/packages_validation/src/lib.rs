@@ -28,11 +28,4 @@ pub fn check_and_lint(package_path: &Utf8PathBuf) {
         lint_output.status.success(),
         "`scarb lint` failed in {package_path}"
     );
-
-    // TODO(#3212): Once out minimal supported scarb version is 2.12.0, we should
-    // check status instead of checking if stdout is not empty
-    assert!(
-        lint_output.stdout.is_empty(),
-        "`scarb lint` output should be empty"
-    );
 }
