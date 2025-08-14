@@ -1559,6 +1559,7 @@ dependencies = [
  "regex",
  "runtime",
  "scarb-api",
+ "scarb-oracle-hint-service",
  "serde",
  "serde_json",
  "shared",
@@ -2703,6 +2704,7 @@ dependencies = [
  "runtime",
  "sanitize-filename",
  "scarb-api",
+ "scarb-oracle-hint-service",
  "semver",
  "serde",
  "serde_json",
@@ -5386,6 +5388,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "scarb-oracle-hint-service"
+version = "1.0.0"
+source = "git+https://github.com/software-mansion/scarb?rev=210da8dfd0b370f0f1970b33a373f1a7afe6ae33#210da8dfd0b370f0f1970b33a373f1a7afe6ae33"
+dependencies = [
+ "anyhow",
+ "serde",
+ "serde_json",
+ "shell-words",
+ "starknet-core 0.14.0",
+ "tracing",
+]
+
+[[package]]
 name = "scarb-ui"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5956,8 +5971,8 @@ source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=a70f4ce#a70f4cef20
 dependencies = [
  "starknet-accounts",
  "starknet-contract",
- "starknet-core",
- "starknet-core-derive",
+ "starknet-core 0.13.0",
+ "starknet-core-derive 0.1.0 (git+https://github.com/xJonathanLEI/starknet-rs?rev=a70f4ce)",
  "starknet-crypto 0.7.4 (git+https://github.com/xJonathanLEI/starknet-rs?rev=a70f4ce)",
  "starknet-macros",
  "starknet-providers",
@@ -5971,7 +5986,7 @@ source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=a70f4ce#a70f4cef20
 dependencies = [
  "async-trait",
  "auto_impl",
- "starknet-core",
+ "starknet-core 0.13.0",
  "starknet-crypto 0.7.4 (git+https://github.com/xJonathanLEI/starknet-rs?rev=a70f4ce)",
  "starknet-providers",
  "starknet-signers",
@@ -5987,7 +6002,7 @@ dependencies = [
  "serde_json",
  "serde_with",
  "starknet-accounts",
- "starknet-core",
+ "starknet-core 0.13.0",
  "starknet-providers",
  "thiserror 1.0.69",
 ]
@@ -6009,9 +6024,43 @@ dependencies = [
  "serde_json_pythonic",
  "serde_with",
  "sha3",
- "starknet-core-derive",
+ "starknet-core-derive 0.1.0 (git+https://github.com/xJonathanLEI/starknet-rs?rev=a70f4ce)",
  "starknet-crypto 0.7.4 (git+https://github.com/xJonathanLEI/starknet-rs?rev=a70f4ce)",
  "starknet-types-core",
+]
+
+[[package]]
+name = "starknet-core"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc2091a08ebfc65c5a6b8bd2c66e32780739854b813af0b4348b6dbf3a887865"
+dependencies = [
+ "base64 0.21.7",
+ "crypto-bigint",
+ "flate2",
+ "foldhash",
+ "hex",
+ "indexmap 2.10.0",
+ "num-traits",
+ "serde",
+ "serde_json",
+ "serde_json_pythonic",
+ "serde_with",
+ "sha3",
+ "starknet-core-derive 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "starknet-crypto 0.7.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "starknet-types-core",
+]
+
+[[package]]
+name = "starknet-core-derive"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b08520b7d80eda7bf1a223e8db4f9bb5779a12846f15ebf8f8d76667eca7f5ad"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.104",
 ]
 
 [[package]]
@@ -6083,7 +6132,7 @@ name = "starknet-macros"
 version = "0.2.2"
 source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=a70f4ce#a70f4cef2032ea0ea839d615426e42a74993bf0b"
 dependencies = [
- "starknet-core",
+ "starknet-core 0.13.0",
  "syn 2.0.104",
 ]
 
@@ -6102,7 +6151,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
- "starknet-core",
+ "starknet-core 0.13.0",
  "thiserror 1.0.69",
  "url",
 ]
@@ -6118,7 +6167,7 @@ dependencies = [
  "eth-keystore",
  "getrandom 0.2.16",
  "rand 0.8.5",
- "starknet-core",
+ "starknet-core 0.13.0",
  "starknet-crypto 0.7.4 (git+https://github.com/xJonathanLEI/starknet-rs?rev=a70f4ce)",
  "thiserror 1.0.69",
 ]
