@@ -117,3 +117,6 @@ paste = "1.0.15"
 strum = "0.27"
 strum_macros = "0.27"
 scarb-oracle-hint-service = { git = "https://github.com/software-mansion/scarb", rev = "210da8dfd0b370f0f1970b33a373f1a7afe6ae33" }
+
+[patch.crates-io]
+cairo-annotations = { git = "https://github.com/software-mansion/cairo-annotations.git", branch = "szymczyk/l2-gas" }

@@ -4,9 +4,9 @@ use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
 use crate::test_case_summary::{Single, TestCaseSummary};
 use anyhow::{Result, bail};
-use blockifier::execution::call_info::CallInfo;
+use blockifier::execution::call_info::{CallInfo, OrderedEvent};
 use blockifier::execution::contract_class::TrackedResource;
-use blockifier::execution::entry_point::EntryPointExecutionContext;
+use blockifier::execution::entry_point::{CallEntryPoint, EntryPointExecutionContext};
 use blockifier::execution::entry_point_execution::{prepare_call_arguments, run_entry_point};
 use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::cached_state::CachedState;
@@ -25,7 +25,8 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
     update_top_call_l1_resources, update_top_call_resources, update_top_call_vm_trace,
 };
 use cheatnet::state::{
-    BlockInfoReader, CallTrace, CheatnetState, EncounteredErrors, ExtendedStateReader,
+    BlockInfoReader, CallTrace, CallTraceNode, CheatnetState, EncounteredErrors,
+    ExtendedStateReader,
 };
 use execution::finalize_execution;
 use foundry_ui::UI;
@@ -36,6 +37,7 @@ use runtime::{ExtendedRuntime, StarknetRuntime};
 use scarb_oracle_hint_service::OracleHintService;
 use starknet_api::execution_resources::GasVector;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::default::Default;
 use std::marker::PhantomData;
 use std::rc::Rc;
@@ -363,19 +365,22 @@ pub fn run_test_case(
         .unwrap_or_default();
 
     Ok(match result {
-        Ok(result) => RunResult::Completed(Box::new(RunCompleted {
-            status: if result.execution.failed {
-                RunStatus::Panic(result.execution.retdata.0)
-            } else {
-                RunStatus::Success(result.execution.retdata.0)
-            },
-            call_trace: call_trace_ref,
-            gas_used,
-            used_resources,
-            encountered_errors,
-            fuzzer_args,
-            fork_data,
-        })),
+        Ok(result) => {
+            collect_and_assign_events(&result, &call_trace_ref);
+            RunResult::Completed(Box::new(RunCompleted {
+                status: if result.execution.failed {
+                    RunStatus::Panic(result.execution.retdata.0)
+                } else {
+                    RunStatus::Success(result.execution.retdata.0)
+                },
+                call_trace: call_trace_ref,
+                gas_used,
+                used_resources,
+                encountered_errors,
+                fuzzer_args,
+                fork_data,
+            }))
+        }
         Err(error) => RunResult::Error(RunError {
             error: Box::new(error),
             call_trace: call_trace_ref,
@@ -479,4 +484,37 @@ fn get_call_trace_ref(runtime: &mut ForgeRuntime) -> Rc<RefCell<CallTrace>> {
         .trace_data
         .current_call_stack
         .top()
+}
+
+fn entry_point_key(ep: &CallEntryPoint) -> String {
+    format!("{ep:?}")
+}
+
+fn collect_events(call_info: &CallInfo, map: &mut HashMap<String, Vec<OrderedEvent>>) {
+    map.insert(
+        entry_point_key(&call_info.call),
+        call_info.execution.events.clone(),
+    );
+    for inner_info in &call_info.inner_calls {
+        collect_events(inner_info, map);
+    }
+}
+
+fn assign_events(trace_rc: &Rc<RefCell<CallTrace>>, map: &HashMap<String, Vec<OrderedEvent>>) {
+    let mut trace = trace_rc.borrow_mut();
+    if let Some(events) = map.get(&entry_point_key(&trace.entry_point)) {
+        trace.events.clone_from(events);
+    }
+
+    for nested_node in &trace.nested_calls {
+        if let CallTraceNode::EntryPointCall(nested_trace) = nested_node {
+            assign_events(nested_trace, map);
+        }
+    }
+}
+
+fn collect_and_assign_events(call_info: &CallInfo, trace_rc: &Rc<RefCell<CallTrace>>) {
+    let mut events_lookup = HashMap::new();
+    collect_events(call_info, &mut events_lookup);
+    assign_events(trace_rc, &events_lookup);
 }
