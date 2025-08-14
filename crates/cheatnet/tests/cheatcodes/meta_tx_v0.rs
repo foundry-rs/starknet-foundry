@@ -9,7 +9,7 @@ use super::test_environment::TestEnvironment;
 fn meta_tx_v0_with_cheat_caller_address() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatCallerAddressChecker", &[]);
+    let contract_address = test_env.deploy("CheatCallerAddressCheckerMetaTxV0", &[]);
 
     test_env
         .cheatnet_state
@@ -35,7 +35,7 @@ fn meta_tx_v0_with_cheat_caller_address() {
 fn meta_tx_v0_with_cheat_block_number() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatBlockNumberChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockNumberCheckerMetaTxV0", &[]);
 
     test_env
         .cheatnet_state
@@ -62,7 +62,7 @@ fn meta_tx_v0_with_cheat_block_number() {
 fn meta_tx_v0_with_cheat_block_timestamp() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatBlockTimestampChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockTimestampCheckerMetaTxV0", &[]);
 
     test_env
         .cheatnet_state
@@ -88,7 +88,7 @@ fn meta_tx_v0_with_cheat_block_timestamp() {
 fn meta_tx_v0_with_cheat_sequencer_address() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatSequencerAddressChecker", &[]);
+    let contract_address = test_env.deploy("CheatSequencerAddressCheckerMetaTxV0", &[]);
 
     test_env
         .cheatnet_state
@@ -114,9 +114,10 @@ fn meta_tx_v0_with_cheat_sequencer_address() {
 fn meta_tx_v0_with_cheat_block_hash() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("CheatBlockHashChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockHashCheckerMetaTxV0", &[]);
 
-    let block_number = 100_u64;
+    let block_number = 100;
+
     test_env
         .cheatnet_state
         .start_cheat_block_hash(contract_address, block_number, Felt::from(555));

@@ -252,11 +252,6 @@ pub fn meta_tx_v0_syscall(
     cheatnet_state: &mut CheatnetState,
     remaining_gas: &mut u64,
 ) -> SyscallResult<MetaTxV0Response> {
-    println!(
-        "meta_tx_v0_syscall called with contract_address: {:?}, entry_point_selector: {:?}",
-        request.contract_address, request.entry_point_selector
-    );
-
     // Increment the MetaTxV0 syscall's linear cost counter by the number of elements in the
     // calldata.
     syscall_handler.increment_linear_factor_by(
@@ -277,7 +272,6 @@ pub fn meta_tx_v0_syscall(
         remaining_gas,
     )?;
     // endregion
-    println!("\nmeta_tx_v0_inner returned segment: {retdata_segment:?}",);
 
     Ok(MetaTxV0Response {
         segment: retdata_segment,
@@ -307,12 +301,11 @@ fn meta_tx_v0(
     }
     // endregion
 
-    // TODO: Check why this doesn't work, maybe wrong import for `selector_from_name`
-    // if entry_point_selector != selector_from_name(EXECUTE_ENTRY_POINT_NAME) {
-    //     return Err(SyscallExecutionError::Revert {
-    //         error_data: vec![Felt252::from_hex(INVALID_ARGUMENT).unwrap()],
-    //     });
-    // }
+    if entry_point_selector != selector_from_name(EXECUTE_ENTRY_POINT_NAME) {
+        return Err(SyscallExecutionError::Revert {
+            error_data: vec![Felt252::from_hex(INVALID_ARGUMENT).unwrap()],
+        });
+    }
 
     let mut entry_point = CallEntryPoint {
         class_hash: None,
