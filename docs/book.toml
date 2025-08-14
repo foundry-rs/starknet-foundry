@@ -8,7 +8,7 @@ description = "Starknet Foundry is a toolchain for developing Starknet smart con
 
 [output.linkcheck]
 warning-policy = "error"
-follow-web-links = false
+follow-web-links = true
 traverse-parent-directories = false
 exclude = [
     "foundry-rs.github.io/starknet-foundry/snforge_std",
