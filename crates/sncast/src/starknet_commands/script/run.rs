@@ -129,6 +129,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
 
                 let declare = Declare {
                     contract: contract.clone(),
+                    skip_compile: false,
                     fee_args,
                     nonce,
                     package: None,

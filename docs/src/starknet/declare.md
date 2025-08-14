@@ -53,4 +53,29 @@ transaction: https://starkscan.co/search/[..]
 > 💡 **Info**
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
 
+### Declare from pre-compiled contract
+When an already compiled contract needs to be declared, we can skip the build step by passing the `--skip-compile` flag to the declare command.
 
+```shell
+$ sncast --account my_account \
+    declare \
+	--network sepolia \
+    --contract-name HelloSncast
+    --skip-compile
+```
+
+<details>
+<summary>Output:</summary>
+
+```shell
+Success: Declaration completed
+
+Contract Address: 0x0[..]
+Transaction Hash: 0x0[..]
+
+To see declaration details, visit:
+class: https://starkscan.co/search/[..]
+transaction: https://starkscan.co/search/[..]
+```
+</details>
+<br>

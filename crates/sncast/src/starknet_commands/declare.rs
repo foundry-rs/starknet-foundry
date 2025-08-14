@@ -45,6 +45,10 @@ pub struct Declare {
 
     #[command(flatten)]
     pub rpc: RpcArgs,
+
+    /// If passed, compilation is skipped
+    #[arg(long)]
+    pub skip_compile: bool,
 }
 
 pub async fn declare(

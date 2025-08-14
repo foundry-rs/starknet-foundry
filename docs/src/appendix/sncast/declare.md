@@ -71,3 +71,8 @@ Optional.
 Name of the package that should be used.
 
 If supplied, a contract from this package will be used. Required if more than one package exists in a workspace.
+
+## `--skip_compile`
+Optional.
+
+If supplied, build step is skipped. Declares precompiled contracts.
