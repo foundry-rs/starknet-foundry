@@ -94,6 +94,7 @@ pub fn execute_call_entry_point(
             },
             &[],
             None,
+            vec![],
         );
         let tracked_resource = *context
             .tracked_resource_stack
@@ -178,6 +179,14 @@ pub fn execute_call_entry_point(
         .pop()
         .expect("Unexpected empty tracked resource.");
 
+    let entrypoint_address = entry_point.code_address.unwrap_or_default();
+    let signature = cheatnet_state
+        .get_cheated_execution_info_for_contract(entrypoint_address)
+        .tx_info
+        .signature
+        .as_value()
+        .unwrap_or_default();
+
     // region: Modified blockifier code
     match evaluate_execution_result(
         result,
@@ -199,6 +208,7 @@ pub fn execute_call_entry_point(
                 context,
                 cheatnet_state,
                 vm_trace,
+                signature,
             );
             Ok(call_info)
         }
@@ -302,6 +312,7 @@ fn remove_syscall_resources_and_exit_non_error_call(
     context: &mut EntryPointExecutionContext,
     cheatnet_state: &mut CheatnetState,
     vm_trace: Option<Vec<RelocatedTraceEntry>>,
+    signature: Vec<Felt>,
 ) {
     let versioned_constants = context.tx_context.block_context.versioned_constants();
     // We don't want the syscall resources to pollute the results
@@ -341,6 +352,7 @@ fn remove_syscall_resources_and_exit_non_error_call(
         CallResult::from_non_error(call_info),
         &call_info.execution.l2_to_l1_messages,
         vm_trace,
+        signature,
     );
 }
 
@@ -362,6 +374,7 @@ fn exit_error_call(
         CallResult::from_err(error, &identifier),
         &[],
         vm_trace,
+        vec![],
     );
 }
 
