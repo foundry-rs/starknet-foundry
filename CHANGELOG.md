@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Fixed
+
+- A bug that caused `#[fuzzer]` attribute to fail when used with generic structs
+
 ## [0.48.0] - 2025-08-05
 
 ### Forge
@@ -136,7 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
-#### Added 
+#### Added
 
 - Displaying the path of the config file when adding a new profile
 
@@ -332,7 +338,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Rust is no longer required to use `snforge` if using Scarb >= 2.10.0 on supported platforms - precompiled `snforge_scarb_plugin` plugin binaries are now published to [package registry](https://scarbs.xyz) for new versions. 
+- Rust is no longer required to use `snforge` if using Scarb >= 2.10.0 on supported platforms - precompiled `snforge_scarb_plugin` plugin binaries are now published to [package registry](https://scarbs.xyz) for new versions.
 - Added a suggestion for using the `--max-n-steps` flag when the Cairo VM returns the error: `Could not reach the end of the program. RunResources has no remaining steps`.
 
 #### Fixed
