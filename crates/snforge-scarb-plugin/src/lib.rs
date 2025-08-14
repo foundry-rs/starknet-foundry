@@ -36,6 +36,21 @@ fn __fuzzer_wrapper(args: TokenStream, item: TokenStream) -> ProcMacroResult {
 }
 
 #[attribute_macro]
+fn param_test(args: TokenStream, item: TokenStream) -> ProcMacroResult {
+    attributes::test_case::param_test(args, item)
+}
+
+#[attribute_macro]
+fn test_case(args: TokenStream, item: TokenStream) -> ProcMacroResult {
+    attributes::test_case::test_case(args, item)
+}
+
+#[attribute_macro]
+fn __param_test_wrapper(args: TokenStream, item: TokenStream) -> ProcMacroResult {
+    attributes::test_case::wrapper::param_test_wrapper(args, item)
+}
+
+#[attribute_macro]
 fn test(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     test(args, item)
 }

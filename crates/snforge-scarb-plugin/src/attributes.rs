@@ -10,6 +10,7 @@ pub mod ignore;
 pub mod internal_config_statement;
 pub mod should_panic;
 pub mod test;
+pub mod test_case;
 
 pub trait AttributeInfo {
     const ATTR_NAME: &'static str;
