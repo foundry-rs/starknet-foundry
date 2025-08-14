@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
-#### Added
+#### Fixed
 
 - A bug that caused `#[fuzzer]` attribute to fail when used with generic structs
 
