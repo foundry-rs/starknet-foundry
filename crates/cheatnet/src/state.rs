@@ -568,6 +568,7 @@ impl TraceData {
         l2_to_l1_messages: &[OrderedL2ToL1Message],
         vm_trace: Option<Vec<RelocatedTraceEntry>>,
         signature: Vec<Felt>,
+        events: Vec<OrderedEvent>,
     ) {
         let CallStackElement {
             call_trace: last_call,
@@ -588,6 +589,7 @@ impl TraceData {
         last_call.result = result;
         last_call.vm_trace = vm_trace;
         last_call.signature = signature;
+        last_call.events = events;
     }
 
     pub fn add_deploy_without_constructor_node(&mut self) {
