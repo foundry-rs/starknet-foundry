@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A bug that caused `#[fuzzer]` attribute to fail when used with generic structs
 
+#### Removed
+
+- The `sncast completion` command. Use `sncast completions` instead
+- The `snforge completion` command. Use `snforge completions` instead
+
 ## [0.48.0] - 2025-08-05
 
 ### Forge

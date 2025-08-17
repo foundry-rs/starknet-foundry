@@ -109,8 +109,6 @@ enum ForgeSubcommand {
     /// Check if all `snforge` requirements are installed
     CheckRequirements,
     /// Generate completions script
-    // TODO(#3560): Remove the `completion` alias
-    #[command(alias = "completion")]
     Completions(Completions),
 }
 
@@ -321,16 +319,6 @@ pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
         }
         ForgeSubcommand::Completions(completions) => {
             generate_completions(completions.shell, &mut Cli::command())?;
-
-            // TODO(#3560): Remove this warning when the `completion` alias is removed
-            if std::env::args().nth(1).as_deref() == Some("completion") {
-                let message = &WarningMessage::new(
-                    "Command `snforge completion` is deprecated and will be removed in the future. Please use `snforge completions` instead.",
-                );
-
-                // `#` is required since `snforge completions` generates a script and the output is used directly
-                ui.println(&format!("# {}", message.text()));
-            }
 
             Ok(ExitStatus::Success)
         }

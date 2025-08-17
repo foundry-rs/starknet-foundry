@@ -146,8 +146,6 @@ enum Commands {
     Verify(Verify),
 
     /// Generate completions script
-    // TODO(#3560): Remove the `completion` alias
-    #[command(alias = "completion")]
     Completions(Completions),
 
     /// Utility commands
@@ -485,16 +483,6 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::Completions(completions) => {
             generate_completions(completions.shell, &mut Cli::command())?;
-
-            // TODO(#3560): Remove this warning when the `completion` alias is removed
-            if std::env::args().nth(1).as_deref() == Some("completion") {
-                let message = &WarningMessage::new(
-                    "Command `sncast completion` is deprecated and will be removed in the future. Please use `sncast completions` instead.",
-                );
-
-                // `#` is required since `sncast completion` generates a script and the output is used directly
-                ui.println(&format!("# {}", message.text()));
-            }
 
             Ok(())
         }
