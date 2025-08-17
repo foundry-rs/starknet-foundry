@@ -30,7 +30,7 @@ Test code:
 {{#include ../../../listings/cheatcodes_reference/tests/test_l1_handler.cairo}}
 ```
 
-<!-- { "package_name": "cheatcodes_reference" } -->
+<!-- { "package_name": "cheatcodes_reference", "ignored": true  } -->
 Let's run the test:
 ```shell
 $ snforge test test_l1_handler

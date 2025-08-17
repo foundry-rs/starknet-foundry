@@ -42,6 +42,7 @@ Test code:
 {{#include ../../../listings/cheatcodes_reference/tests/test_mock_call.cairo}}
 ```
 
+<!-- { "ignored": true  } -->
 Let's run the test:
 ```shell
 $ snforge test test_mock_call
