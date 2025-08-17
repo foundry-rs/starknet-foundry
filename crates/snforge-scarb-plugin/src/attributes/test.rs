@@ -1,6 +1,6 @@
 use super::{AttributeInfo, ErrorExt, internal_config_statement::InternalConfigStatementCollector};
-use crate::attributes::fuzzer::wrapper::FuzzerWrapperCollector;
-use crate::attributes::fuzzer::{FuzzerCollector, FuzzerConfigCollector};
+use crate::attributes::test_case::TestCaseCollector;
+use crate::common::no_fuzzer_attribute;
 use crate::utils::create_single_token;
 use crate::{
     args::Arguments,
@@ -9,10 +9,10 @@ use crate::{
 };
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream, quote};
 use cairo_lang_parser::utils::SimpleParserDatabase;
+use cairo_lang_syntax::node::helpers::QueryAttrs;
 use cairo_lang_syntax::node::with_db::SyntaxNodeWithDb;
 use cairo_lang_syntax::node::{Terminal, TypedSyntaxNode, ast::FunctionWithBody};
 use std::env::{self, VarError};
-use std::ops::Not;
 
 pub struct TestCollector;
 
@@ -38,6 +38,7 @@ fn test_internal(
 ) -> Result<TokenStream, Diagnostics> {
     args.assert_is_empty::<TestCollector>()?;
     ensure_parameters_only_with_fuzzer_attribute(db, func)?;
+    assert_no_test_case_attribute(db, func)?;
 
     let internal_config = create_single_token(InternalConfigStatementCollector::ATTR_NAME);
 
@@ -131,23 +132,16 @@ fn has_parameters(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
         != 0
 }
 
-fn no_fuzzer_attribute(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
-    const FUZZER_ATTRIBUTES: [&str; 3] = [
-        FuzzerCollector::ATTR_NAME,
-        FuzzerWrapperCollector::ATTR_NAME,
-        FuzzerConfigCollector::ATTR_NAME,
-    ];
-
-    func.attributes(db)
-        .elements(db)
-        .any(|attr| {
-            FUZZER_ATTRIBUTES.contains(
-                &attr
-                    .attr(db)
-                    .as_syntax_node()
-                    .get_text_without_trivia(db)
-                    .as_str(),
-            )
-        })
-        .not()
+fn assert_no_test_case_attribute(
+    db: &SimpleParserDatabase,
+    func: &FunctionWithBody,
+) -> Result<(), Diagnostic> {
+    let test_case_attr = func
+        .attributes(db)
+        .find_attr(db, TestCaseCollector::ATTR_NAME);
+    Ok(if test_case_attr.is_some() {
+        Err(TestCollector::error(
+            "#[test] attribute cannot be used with #[test_case(...)]",
+        ))?;
+    })
 }

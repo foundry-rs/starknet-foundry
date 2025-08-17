@@ -1,12 +1,17 @@
+use std::ops::Not;
+
 use crate::{
     args::Arguments,
     asserts::assert_is_used_once,
-    attributes::AttributeInfo,
+    attributes::{
+        AttributeInfo,
+        fuzzer::{FuzzerCollector, FuzzerConfigCollector, wrapper::FuzzerWrapperCollector},
+    },
     parse::{parse, parse_args},
 };
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_parser::utils::SimpleParserDatabase;
-use cairo_lang_syntax::node::ast::FunctionWithBody;
+use cairo_lang_syntax::node::{TypedSyntaxNode, ast::FunctionWithBody};
 use cairo_lang_utils::Upcast;
 
 #[expect(clippy::needless_pass_by_value)]
@@ -52,7 +57,7 @@ where
 
     let db = db.upcast();
 
-    assert_is_used_once::<Collector>(db, &func)?;
+    // TODO: Restore assert_is_used_once::<Collector>(db, &func)?; in functions which require this check.
 
     let (args_db, args) = parse_args(args);
     let args_db = args_db.upcast();
@@ -60,4 +65,25 @@ where
     let args = Arguments::new::<Collector>(args_db, args, warns);
 
     handler(db, &func, args_db, args, warns)
+}
+
+pub fn no_fuzzer_attribute(db: &SimpleParserDatabase, func: &FunctionWithBody) -> bool {
+    const FUZZER_ATTRIBUTES: [&str; 3] = [
+        FuzzerCollector::ATTR_NAME,
+        FuzzerWrapperCollector::ATTR_NAME,
+        FuzzerConfigCollector::ATTR_NAME,
+    ];
+
+    func.attributes(db)
+        .elements(db)
+        .any(|attr| {
+            FUZZER_ATTRIBUTES.contains(
+                &attr
+                    .attr(db)
+                    .as_syntax_node()
+                    .get_text_without_trivia(db)
+                    .as_str(),
+            )
+        })
+        .not()
 }
