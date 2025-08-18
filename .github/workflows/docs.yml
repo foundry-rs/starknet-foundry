@@ -44,6 +44,7 @@ jobs:
       - name: Install mdBook
         run: |
           cargo install --version ${MDBOOK_VERSION} mdbook
+          cargo install mdbook-variables
       - name: Install mdBook Link-Check
         run: |
           cargo install mdbook-linkcheck

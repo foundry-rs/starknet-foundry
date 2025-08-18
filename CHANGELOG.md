@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- `snforge` now supports [oracles](https://docs.swmansion.com/cairo-oracle/) with `--experimental-oracles` flag.
+- `--trace-components` flag to allow selecting which components of the trace to do display. Read more [here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/debugging.html#trace-components)
+
+### Cast
+
+#### Added
+
+- `--test-files` flag to `verify` command to include test files under src/ for verification (only applies to voyager)
+
 ## [0.48.1] - 2025-08-14
 
 ### Forge
@@ -58,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- Braavos accounts with all class hashes are now supported 
+- Braavos accounts with all class hashes are now supported
 
 #### Deprecated
 

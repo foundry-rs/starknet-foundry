@@ -1,5 +1,5 @@
 use crate::backtrace::add_backtrace_footer;
-use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
+use crate::forge_config::{ForgeConfig, RuntimeConfig};
 use crate::gas::calculate_used_gas;
 use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
 use crate::test_case_summary::{Single, TestCaseSummary};
@@ -20,7 +20,6 @@ use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
-use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
     ForgeExtension, ForgeRuntime, add_resources_to_top_call, get_all_used_resources,
     update_top_call_l1_resources, update_top_call_resources, update_top_call_vm_trace,
@@ -34,6 +33,7 @@ use hints::hints_by_representation;
 use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
+use scarb_oracle_hint_service::OracleHintService;
 use starknet_api::execution_resources::GasVector;
 use std::cell::RefCell;
 use std::default::Default;
@@ -52,7 +52,7 @@ mod setup;
 mod syscall_handler;
 pub mod with_config;
 
-use crate::debugging::{TraceVerbosity, build_debugging_trace};
+use crate::debugging::build_debugging_trace;
 pub use hints::hints_to_params;
 use setup::VmExecutionContext;
 pub use syscall_handler::has_segment_arena;
@@ -62,10 +62,9 @@ pub use syscall_handler::syscall_handler_offset;
 pub fn run_test(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
-    test_runner_config: Arc<TestRunnerConfig>,
+    forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
-    trace_verbosity: Option<TraceVerbosity>,
     ui: Arc<UI>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
@@ -78,7 +77,7 @@ pub fn run_test(
         let run_result = run_test_case(
             &case,
             &casm_program,
-            &RuntimeConfig::from(&test_runner_config),
+            &RuntimeConfig::from(&forge_config.test_runner_config),
             None,
         );
 
@@ -89,9 +88,8 @@ pub fn run_test(
         extract_test_case_summary(
             run_result,
             &case,
-            &test_runner_config.contracts_data,
+            &forge_config,
             &versioned_program_path,
-            trace_verbosity,
             &ui,
         )
     })
@@ -101,12 +99,11 @@ pub fn run_test(
 pub(crate) fn run_fuzz_test(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
-    test_runner_config: Arc<TestRunnerConfig>,
+    forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
     fuzzing_send: Sender<()>,
     rng: Arc<Mutex<StdRng>>,
-    trace_verbosity: Option<TraceVerbosity>,
     ui: Arc<UI>,
 ) -> JoinHandle<TestCaseSummary<Single>> {
     tokio::task::spawn_blocking(move || {
@@ -120,7 +117,7 @@ pub(crate) fn run_fuzz_test(
         let run_result = run_test_case(
             &case,
             &casm_program,
-            &Arc::new(RuntimeConfig::from(&test_runner_config)),
+            &RuntimeConfig::from(&forge_config.test_runner_config),
             Some(rng),
         );
 
@@ -134,9 +131,8 @@ pub(crate) fn run_fuzz_test(
         extract_test_case_summary(
             run_result,
             &case,
-            &test_runner_config.contracts_data,
+            &forge_config,
             &versioned_program_path,
-            trace_verbosity,
             &ui,
         )
     })
@@ -243,6 +239,8 @@ pub fn run_test_case(
         environment_variables: runtime_config.environment_variables,
         contracts_data: runtime_config.contracts_data,
         fuzzer_rng,
+        experimental_oracles_enabled: runtime_config.experimental_oracles,
+        oracle_hint_service: OracleHintService::default(),
     };
 
     let mut forge_runtime = ExtendedRuntime {
@@ -391,11 +389,12 @@ pub fn run_test_case(
 fn extract_test_case_summary(
     run_result: Result<RunResult>,
     case: &TestCaseWithResolvedConfig,
-    contracts_data: &ContractsData,
+    forge_config: &ForgeConfig,
     versioned_program_path: &Utf8Path,
-    trace_verbosity: Option<TraceVerbosity>,
     ui: &UI,
 ) -> TestCaseSummary<Single> {
+    let contracts_data = &forge_config.test_runner_config.contracts_data;
+    let trace_args = &forge_config.output_config.trace_args;
     match run_result {
         Ok(run_result) => match run_result {
             RunResult::Completed(run_completed) => TestCaseSummary::from_run_completed(
@@ -403,7 +402,7 @@ fn extract_test_case_summary(
                 case,
                 contracts_data,
                 versioned_program_path,
-                trace_verbosity,
+                trace_args,
                 ui,
             ),
             RunResult::Error(run_error) => {
@@ -431,7 +430,7 @@ fn extract_test_case_summary(
                     debugging_trace: build_debugging_trace(
                         &run_error.call_trace.borrow(),
                         contracts_data,
-                        trace_verbosity,
+                        trace_args,
                         case.name.clone(),
                         &run_error.fork_data,
                     ),

@@ -14,17 +14,68 @@ of the issue. To aid in debugging, `snforge` offers following features:
 > Currently, the flow of execution trace is only available at the contract level. In future versions, it will also be
 > available at the function level.
 
-You can inspect the flow of execution for your tests using the `--trace-verbosity` flag when running the `snforge test`
-command. This is useful for understanding how contracts are interacting with each other during your tests, especially in
-complex nested scenarios.
+You can inspect the flow of execution for your tests using the `--trace-verbosity` or `--trace-components`  flags when
+running the `snforge test` command. This is useful for understanding how contracts are interacting with each other
+during your tests, especially in complex nested scenarios.
+
+### Trace Components
+
+The `--trace-components` flag allows you to specify which components of the trace you want to see. You can choose from:
+
+- `contract-name`: the name of the contract being called
+- `entry-point-type`: the type of the entry point being called (e.g., `External`, `L1Handler`, etc.)
+- `calldata`: the calldata of the call, transformed for display
+- `contract-address`: the address of the contract being called
+- `caller-address`: the address of the caller contract
+- `call-type`: the type of the call (e.g., `Call`, `Delegate`, etc.)
+- `call-result`: the result of the call, transformed for display
+
+Example usage:
+
+<!-- { "package_name": "debugging" } -->
+```shell
+$ snforge test --trace-components contract-name call-result call-type
+```
+<details>
+<summary>Output:</summary>
+
+```shell
+[test name] trace_info_integrationtest::test_trace::test_debugging_trace_success
+├─ [selector] execute_calls
+│  ├─ [contract name] SimpleContract
+│  ├─ [call type] Call
+│  ├─ [call result] success: array![RecursiveCall { contract_address: ContractAddress([..]), payload: array![RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }, RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }] }, RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }]
+│  ├─ [selector] execute_calls
+│  │  ├─ [contract name] SimpleContract
+│  │  ├─ [call type] Call
+│  │  ├─ [call result] success: array![RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }, RecursiveCall { contract_address: ContractAddress([..]), payload: array![] }]
+│  │  ├─ [selector] execute_calls
+│  │  │  ├─ [contract name] SimpleContract
+│  │  │  ├─ [call type] Call
+│  │  │  └─ [call result] success: array![]
+│  │  └─ [selector] execute_calls
+│  │     ├─ [contract name] SimpleContract
+│  │     ├─ [call type] Call
+│  │     └─ [call result] success: array![]
+│  └─ [selector] execute_calls
+│     ├─ [contract name] SimpleContract
+│     ├─ [call type] Call
+│     └─ [call result] success: array![]
+└─ [selector] fail
+   ├─ [contract name] SimpleContract
+   ├─ [call type] Call
+   └─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
+```
+</details>
+<br>
 
 ### Verbosity Levels
 
 The `--trace-verbosity` flag accepts the following values:
 
-- **minimal**: Shows test name, contract name, and selector.
-- **standard**: Includes test name, contract name, selector, calldata, and call result.
-- **detailed**: Displays the entire trace, including internal calls, caller addresses, and panic reasons.
+- `minimal`: shows test name, contract name, and selector
+- `standard`: includes test name, contract name, selector, calldata, and call result
+- `detailed`: displays the entire trace, including internal calls, caller addresses, and panic reasons
 
 Example usage:
 
@@ -97,14 +148,14 @@ to have:
 
 > 📝 **Note**
 >
-> If you are using `scarb nightly-2025-03-27` or later there is a way to improve backtrace for panic in contracts if
+> If you are using scarb 2.12 or later there is a way to improve backtrace for panic in contracts if
 > you set `panic-backtrace = true`
 
 ```toml
 [profile.dev.cairo]
 unstable-add-statements-code-locations-debug-info = true
 unstable-add-statements-functions-debug-info = true
-panic-backtrace = true # only for scarb nightly-2025-03-27 or later
+panic-backtrace = true # only for scarb 2.12 or later
 ```
 
 > 📝 **Note**

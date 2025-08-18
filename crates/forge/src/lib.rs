@@ -4,7 +4,7 @@ use camino::Utf8PathBuf;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use derive_more::Display;
 use forge_runner::CACHE_DIR;
-use forge_runner::debugging::TraceVerbosity;
+use forge_runner::debugging::TraceArgs;
 use forge_runner::forge_config::ForgeTrackedResource;
 use foundry_ui::components::warning::WarningMessage;
 use foundry_ui::{Message, UI};
@@ -147,9 +147,8 @@ pub struct TestArgs {
     /// Name used to filter tests
     test_filter: Option<String>,
 
-    /// Trace verbosity level
-    #[arg(long)]
-    trace_verbosity: Option<TraceVerbosity>,
+    #[command(flatten)]
+    trace_args: TraceArgs,
 
     /// Use exact matches for `test_filter`
     #[arg(short, long)]
@@ -216,6 +215,10 @@ pub struct TestArgs {
     /// Additional arguments for cairo-coverage or cairo-profiler
     #[arg(last = true)]
     additional_args: Vec<OsString>,
+
+    /// Enable experimental oracles support.
+    #[arg(long, default_value_t = false, env = "SNFORGE_EXPERIMENTAL_ORACLES")]
+    experimental_oracles: bool,
 
     #[command(flatten)]
     scarb_args: ScarbArgs,
