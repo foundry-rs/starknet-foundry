@@ -344,3 +344,70 @@ fn meta_tx_v0_with_cheat_block_timestamp() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
 }
+
+#[test]
+fn meta_tx_v0_with_cheat_caller_address_span() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use array::ArrayTrait;
+            use option::OptionTrait;
+            use traits::TryInto;
+            use starknet::ContractAddress;
+            use starknet::Felt252TryIntoContractAddress;
+            use snforge_std::{
+                declare, ContractClassTrait, DeclareResultTrait, CheatSpan, cheat_caller_address
+            };
+
+            #[starknet::interface]
+            trait IMetaTxV0Test<TContractState> {
+                fn execute_meta_tx_get_caller(
+                    ref self: TContractState,
+                    target: starknet::ContractAddress,
+                    signature: Span<felt252>,
+                ) -> felt252;
+            }
+
+            #[test]
+            fn test_meta_tx_v0_with_cheat_caller_address_span() {
+                let checker_contract = declare("CheatCallerAddressCheckerMetaTxV0").unwrap().contract_class();
+                let (checker_address, _) = checker_contract.deploy(@ArrayTrait::new()).unwrap();
+
+                let meta_contract = declare("MetaTxV0Test").unwrap().contract_class();
+                let (meta_address, _) = meta_contract.deploy(@ArrayTrait::new()).unwrap();
+                let meta_dispatcher = IMetaTxV0TestDispatcher { contract_address: meta_address };
+
+                let signature = ArrayTrait::new();
+
+                let original_caller = meta_dispatcher.execute_meta_tx_get_caller(checker_address, signature.span());
+
+                let cheated_address: ContractAddress = 123.try_into().unwrap();
+                cheat_caller_address(checker_address, cheated_address, CheatSpan::TargetCalls(2));
+
+                let first_result = meta_dispatcher.execute_meta_tx_get_caller(checker_address, signature.span());
+                assert(first_result == 123, 'First call should be cheated');
+
+                let second_result = meta_dispatcher.execute_meta_tx_get_caller(checker_address, signature.span());
+                assert(second_result == 123, 'Second call should be cheated');
+
+                let third_result = meta_dispatcher.execute_meta_tx_get_caller(checker_address, signature.span());
+                assert(third_result == original_caller, 'Third call should revert back');
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "CheatCallerAddressCheckerMetaTxV0".to_string(),
+            Path::new("tests/data/contracts/meta_tx_v0_checkers.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "MetaTxV0Test".to_string(),
+            Path::new("tests/data/contracts/meta_tx_v0_test.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    assert_passed(&result);
+}

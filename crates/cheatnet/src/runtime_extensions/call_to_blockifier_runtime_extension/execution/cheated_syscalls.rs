@@ -278,7 +278,6 @@ pub fn meta_tx_v0_syscall(
     })
 }
 
-// TODO: Probably move it to more proper place
 // blockifier/src/execution/syscalls/syscall_base.rs:255 (meta_tx_v0)
 #[allow(clippy::result_large_err, clippy::too_many_arguments)]
 fn meta_tx_v0(
@@ -291,15 +290,15 @@ fn meta_tx_v0(
     signature: TransactionSignature,
     remaining_gas: &mut u64,
 ) -> SyscallResult<ReadOnlySegment> {
-    //region: Modified blockifier code
     if syscall_handler.base.context.execution_mode == ExecutionMode::Validate {
+        //region: Modified blockifier code
         return Err(SyscallExecutorBaseError::InvalidSyscallInExecutionMode {
             syscall_name: "meta_tx_v0".to_string(),
             execution_mode: ExecutionMode::Validate,
         }
         .into());
+        // endregion
     }
-    // endregion
 
     if entry_point_selector != selector_from_name(EXECUTE_ENTRY_POINT_NAME) {
         return Err(SyscallExecutionError::Revert {
