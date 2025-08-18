@@ -22,6 +22,10 @@ pub struct ClassHash {
     /// Specifies scarb package to be used
     #[arg(long)]
     pub package: Option<String>,
+
+    /// If passed, compilation is skipped
+    #[arg(long)]
+    pub skip_compile: bool,
 }
 
 pub async fn get_class_hash(
