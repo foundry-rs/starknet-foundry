@@ -23,7 +23,6 @@ mod CheatCallerAddressCheckerMetaTxV0 {
     }
 }
 
-// CheatBlockNumberCheckerMetaTxV0
 #[starknet::interface]
 trait ICheatBlockNumberCheckerMetaTxV0<TContractState> {
     fn __execute__(ref self: TContractState) -> felt252;
@@ -50,7 +49,6 @@ mod CheatBlockNumberCheckerMetaTxV0 {
     }
 }
 
-// CheatBlockTimestampCheckerMetaTxV0
 #[starknet::interface]
 trait ICheatBlockTimestampCheckerMetaTxV0<TContractState> {
     fn __execute__(ref self: TContractState) -> felt252;
@@ -77,7 +75,6 @@ mod CheatBlockTimestampCheckerMetaTxV0 {
     }
 }
 
-// CheatSequencerAddressCheckerMetaTxV0
 #[starknet::interface]
 trait ICheatSequencerAddressCheckerMetaTxV0<TContractState> {
     fn __execute__(ref self: TContractState) -> felt252;
@@ -104,7 +101,6 @@ mod CheatSequencerAddressCheckerMetaTxV0 {
     }
 }
 
-// CheatBlockHashCheckerMetaTxV0
 #[starknet::interface]
 trait ICheatBlockHashCheckerMetaTxV0<TContractState> {
     fn __execute__(ref self: TContractState, block_number: u64) -> felt252;
