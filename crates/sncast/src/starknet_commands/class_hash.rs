@@ -18,6 +18,10 @@ pub struct ClassHash {
     /// Contract name
     #[arg(short = 'c', long = "contract-name")]
     pub contract: String,
+
+    /// Specifies scarb package to be used
+    #[arg(long)]
+    pub package: Option<String>,
 }
 
 pub async fn get_class_hash(

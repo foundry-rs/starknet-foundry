@@ -1,3 +1,4 @@
+use crate::starknet_commands::class_hash::ClassHash;
 use crate::starknet_commands::deploy::DeployArguments;
 use crate::starknet_commands::multicall;
 use crate::starknet_commands::script::run_script_command;
@@ -123,6 +124,9 @@ enum Commands {
 
     /// Call a contract
     Call(Call),
+
+    /// Get contract class hash
+    ClassHash(ClassHash),
 
     /// Invoke a contract
     Invoke(Invoke),
@@ -366,6 +370,24 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             } else {
                 process_command_result("call", result, ui, None);
             }
+
+            Ok(())
+        }
+
+        Commands::ClassHash(class_hash) => {
+            let manifest_path = assert_manifest_path_exists()?;
+            let package_metadata = get_package_metadata(&manifest_path, &class_hash.package)?;
+            let artifacts = build_and_load_artifacts(
+                &package_metadata,
+                &BuildConfig {
+                    scarb_toml_path: manifest_path,
+                    json: cli.json,
+                    profile: cli.profile.unwrap_or("release".to_string()),
+                },
+                false,
+                ui,
+            )
+            .expect("Failed to build contract");
 
             Ok(())
         }
