@@ -28,7 +28,7 @@ pub struct ClassHash {
     pub skip_compile: bool,
 }
 
-pub async fn get_class_hash(
+pub fn get_class_hash(
     class_hash: ClassHash,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<ClassHashResponse, StarknetCommandError> {

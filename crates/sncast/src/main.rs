@@ -21,6 +21,7 @@ use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
+    load_artifacts,
 };
 use sncast::response::cast_message::SncastMessage;
 use sncast::response::command::CommandResponse;
@@ -374,20 +375,31 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
             Ok(())
         }
 
-        Commands::ClassHash(class_hash) => {
+        Commands::ClassHash(class_hash_command) => {
             let manifest_path = assert_manifest_path_exists()?;
-            let package_metadata = get_package_metadata(&manifest_path, &class_hash.package)?;
-            let artifacts = build_and_load_artifacts(
-                &package_metadata,
-                &BuildConfig {
-                    scarb_toml_path: manifest_path,
-                    json: cli.json,
-                    profile: cli.profile.unwrap_or("release".to_string()),
-                },
-                false,
-                ui,
-            )
-            .expect("Failed to build contract");
+            let package_metadata =
+                get_package_metadata(&manifest_path, &class_hash_command.package)?;
+            let artifacts;
+            let build_config = BuildConfig {
+                scarb_toml_path: manifest_path,
+                json: cli.json,
+                profile: cli.profile.unwrap_or("release".to_string()),
+            };
+
+            if !class_hash_command.skip_compile {
+                artifacts = build_and_load_artifacts(&package_metadata, &build_config, false, ui)
+                    .expect("Failed to build contract");
+            } else {
+                artifacts =
+                    load_artifacts(&package_metadata, &build_config, ui, &build_config.profile)
+                        .expect("Failed to load artifacts");
+            }
+
+            let result =
+                starknet_commands::class_hash::get_class_hash(class_hash_command, &artifacts)
+                    .map_err(handle_starknet_command_error);
+
+            process_command_result("class-hash", result, ui, None);
 
             Ok(())
         }
