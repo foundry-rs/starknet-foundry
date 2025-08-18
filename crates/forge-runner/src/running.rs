@@ -33,6 +33,7 @@ use hints::hints_by_representation;
 use rand::prelude::StdRng;
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
+use scarb_oracle_hint_service::OracleHintService;
 use starknet_api::execution_resources::GasVector;
 use std::cell::RefCell;
 use std::default::Default;
@@ -238,6 +239,8 @@ pub fn run_test_case(
         environment_variables: runtime_config.environment_variables,
         contracts_data: runtime_config.contracts_data,
         fuzzer_rng,
+        experimental_oracles_enabled: runtime_config.experimental_oracles,
+        oracle_hint_service: OracleHintService::default(),
     };
 
     let mut forge_runtime = ExtendedRuntime {
