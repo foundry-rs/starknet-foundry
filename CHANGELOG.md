@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- Support for `meta_tx_v0` syscall with cheatcode compatibility
+
 ## [0.48.0] - 2025-08-05
 
 ### Forge
