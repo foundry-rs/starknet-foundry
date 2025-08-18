@@ -49,6 +49,7 @@ pub async fn resolve_config(
         sierra_program_path: test_target.sierra_program_path,
         casm_program: test_target.casm_program,
         test_cases,
+        aot_executor: test_target.aot_executor,
     })
 }
 
@@ -183,6 +184,8 @@ mod tests {
                 },
             }],
             tests_location: TestTargetLocation::Lib,
+            #[allow(clippy::redundant_closure_call)]
+            aot_executor: (|| todo!())(),
         };
 
         assert!(

@@ -16,6 +16,7 @@ use cairo_lang_sierra::{
 };
 use cairo_lang_sierra_type_size::get_type_size_map;
 use cairo_lang_utils::unordered_hash_map::UnorderedHashMap;
+use cairo_native::executor::AotNativeExecutor;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use std::{collections::HashMap, sync::Arc};
@@ -78,12 +79,16 @@ pub fn test_target_with_config(
         })
         .collect::<Result<_>>()?;
 
+    let aot_executor = || todo!();
+    let aot_executor: AotNativeExecutor = aot_executor();
+
     Ok(TestTargetWithConfig {
         tests_location: test_target_raw.tests_location,
         test_cases,
         sierra_program: test_target_raw.sierra_program,
         sierra_program_path: test_target_raw.sierra_program_path.into(),
         casm_program,
+        aot_executor: Arc::new(aot_executor),
     })
 }
 

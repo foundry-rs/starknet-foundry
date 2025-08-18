@@ -10,6 +10,7 @@ use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::execution::entry_point_execution::{prepare_call_arguments, run_entry_point};
 use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::cached_state::CachedState;
+use cairo_native::executor::AotNativeExecutor;
 use cairo_vm::Felt252;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
@@ -61,7 +62,8 @@ pub use syscall_handler::syscall_handler_offset;
 #[must_use]
 pub fn run_test(
     case: Arc<TestCaseWithResolvedConfig>,
-    casm_program: Arc<AssembledProgramWithDebugInfo>,
+    _casm_program: Arc<AssembledProgramWithDebugInfo>,
+    aot_executor: Arc<AotNativeExecutor>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -74,9 +76,9 @@ pub fn run_test(
         if send.is_closed() {
             return TestCaseSummary::Interrupted {};
         }
-        let run_result = run_test_case(
+        let run_result = run_native_test_case(
             &case,
-            &casm_program,
+            &aot_executor,
             &RuntimeConfig::from(&forge_config.test_runner_config),
             None,
         );
@@ -98,7 +100,8 @@ pub fn run_test(
 #[expect(clippy::too_many_arguments)]
 pub(crate) fn run_fuzz_test(
     case: Arc<TestCaseWithResolvedConfig>,
-    casm_program: Arc<AssembledProgramWithDebugInfo>,
+    _casm_program: Arc<AssembledProgramWithDebugInfo>,
+    aot_executor: Arc<AotNativeExecutor>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -114,9 +117,9 @@ pub(crate) fn run_fuzz_test(
             return TestCaseSummary::Interrupted {};
         }
 
-        let run_result = run_test_case(
+        let run_result = run_native_test_case(
             &case,
-            &casm_program,
+            &aot_executor,
             &RuntimeConfig::from(&forge_config.test_runner_config),
             Some(rng),
         );
@@ -384,6 +387,15 @@ pub fn run_test_case(
             fork_data,
         }),
     })
+}
+
+pub fn run_native_test_case(
+    case: &TestCaseWithResolvedConfig,
+    aot_executor: &AotNativeExecutor,
+    runtime_config: &RuntimeConfig,
+    fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
+) -> Result<RunResult> {
+    todo!()
 }
 
 fn extract_test_case_summary(

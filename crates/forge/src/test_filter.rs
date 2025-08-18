@@ -251,6 +251,8 @@ mod tests {
                 },
             ],
             tests_location: TestTargetLocation::Lib,
+            #[allow(clippy::redundant_closure_call)]
+            aot_executor: (|| todo!())(),
         };
 
         let tests_filter = TestsFilter::from_flags(
@@ -486,6 +488,8 @@ mod tests {
             ),
             test_cases: vec![],
             tests_location: TestTargetLocation::Lib,
+            #[allow(clippy::redundant_closure_call)]
+            aot_executor: (|| todo!())(),
         };
 
         let tests_filter = TestsFilter::from_flags(
@@ -587,6 +591,8 @@ mod tests {
                 },
             ],
             tests_location: TestTargetLocation::Tests,
+            #[allow(clippy::redundant_closure_call)]
+            aot_executor: (|| todo!())(),
         };
 
         let tests_filter = TestsFilter::from_flags(
@@ -793,6 +799,8 @@ mod tests {
                 },
             ],
             tests_location: TestTargetLocation::Tests,
+            #[allow(clippy::redundant_closure_call)]
+            aot_executor: (|| todo!())(),
         };
 
         let tests_filter = TestsFilter::from_flags(
@@ -908,6 +916,8 @@ mod tests {
                 },
             ],
             tests_location: TestTargetLocation::Tests,
+            #[allow(clippy::redundant_closure_call)]
+            aot_executor: { (|| todo!())() },
         };
 
         let tests_filter = TestsFilter::from_flags(
