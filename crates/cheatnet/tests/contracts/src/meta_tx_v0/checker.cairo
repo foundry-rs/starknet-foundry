@@ -1,26 +1,11 @@
 #[starknet::interface]
 trait IMetaTxV0Test<TContractState> {
-    fn execute_meta_tx_get_caller(
+    fn execute_meta_tx_v0(
         self: @TContractState,
         target: starknet::ContractAddress,
         signature: Span<felt252>,
     ) -> felt252;
-    fn execute_meta_tx_get_block_number(
-        self: @TContractState,
-        target: starknet::ContractAddress,
-        signature: Span<felt252>,
-    ) -> felt252;
-    fn execute_meta_tx_get_block_timestamp(
-        self: @TContractState,
-        target: starknet::ContractAddress,
-        signature: Span<felt252>,
-    ) -> felt252;
-    fn execute_meta_tx_get_sequencer_address(
-        self: @TContractState,
-        target: starknet::ContractAddress,
-        signature: Span<felt252>,
-    ) -> felt252;
-    fn execute_meta_tx_get_block_hash(
+    fn execute_meta_tx_v0_get_block_hash(
         self: @TContractState,
         target: starknet::ContractAddress,
         block_number: u64,
@@ -40,21 +25,7 @@ mod MetaTxV0Test {
 
     #[abi(embed_v0)]
     impl IMetaTxV0Test of super::IMetaTxV0Test<ContractState> {
-        fn execute_meta_tx_get_caller(
-            self: @ContractState,
-            target: starknet::ContractAddress,
-            signature: Span<felt252>,
-        ) -> felt252 {
-            let selector = selector!("__execute__");
-            let calldata: Array<felt252> = array![];
-
-            let result = meta_tx_v0_syscall(target, selector, calldata.span(), signature)
-                .unwrap();
-
-            *result.at(0)
-        }
-
-        fn execute_meta_tx_get_block_number(
+        fn execute_meta_tx_v0(
             self: @ContractState,
             target: starknet::ContractAddress,
             signature: Span<felt252>,
@@ -68,35 +39,7 @@ mod MetaTxV0Test {
             *result.at(0)
         }
 
-        fn execute_meta_tx_get_block_timestamp(
-            self: @ContractState,
-            target: starknet::ContractAddress,
-            signature: Span<felt252>,
-        ) -> felt252 {
-            let selector = selector!("__execute__");
-            let calldata: Array<felt252> = array![];
-            
-            let result = meta_tx_v0_syscall(target, selector, calldata.span(), signature)
-                .unwrap();
-            
-            *result.at(0)
-        }
-
-        fn execute_meta_tx_get_sequencer_address(
-            self: @ContractState,
-            target: starknet::ContractAddress,
-            signature: Span<felt252>,
-        ) -> felt252 {
-            let selector = selector!("__execute__");
-            let calldata: Array<felt252> = array![];
-            
-            let result = meta_tx_v0_syscall(target, selector, calldata.span(), signature)
-                .unwrap();
-            
-            *result.at(0)
-        }
-
-        fn execute_meta_tx_get_block_hash(
+        fn execute_meta_tx_v0_get_block_hash(
             self: @ContractState,
             target: starknet::ContractAddress,
             block_number: u64,

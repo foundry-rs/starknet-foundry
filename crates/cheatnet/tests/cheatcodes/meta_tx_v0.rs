@@ -21,7 +21,7 @@ fn meta_tx_v0_with_cheat_caller_address() {
 
     let meta_result = test_env.call_contract(
         &meta_contract,
-        "execute_meta_tx_get_caller",
+        "execute_meta_tx_v0",
         &[contract_address.into_(), signature.len().into()]
             .into_iter()
             .chain(signature)
@@ -47,7 +47,7 @@ fn meta_tx_v0_with_cheat_block_number() {
 
     let meta_result = test_env.call_contract(
         &meta_contract,
-        "execute_meta_tx_get_block_number",
+        "execute_meta_tx_v0",
         &[contract_address.into_(), signature.len().into()]
             .into_iter()
             .chain(signature)
@@ -73,7 +73,7 @@ fn meta_tx_v0_with_cheat_block_timestamp() {
 
     let meta_result = test_env.call_contract(
         &meta_contract,
-        "execute_meta_tx_get_block_timestamp",
+        "execute_meta_tx_v0",
         &[contract_address.into_(), signature.len().into()]
             .into_iter()
             .chain(signature)
@@ -99,7 +99,7 @@ fn meta_tx_v0_with_cheat_sequencer_address() {
 
     let meta_result = test_env.call_contract(
         &meta_contract,
-        "execute_meta_tx_get_sequencer_address",
+        "execute_meta_tx_v0",
         &[contract_address.into_(), signature.len().into()]
             .into_iter()
             .chain(signature)
@@ -127,7 +127,7 @@ fn meta_tx_v0_with_cheat_block_hash() {
 
     let meta_result = test_env.call_contract(
         &meta_contract,
-        "execute_meta_tx_get_block_hash",
+        "execute_meta_tx_v0_get_block_hash",
         &[
             contract_address.into_(),
             block_number.into(),

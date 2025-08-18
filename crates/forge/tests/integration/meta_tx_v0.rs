@@ -23,7 +23,7 @@ fn meta_tx_v0_with_cheat_caller_address() {
 
             #[starknet::interface]
             trait IMetaTxV0Test<TContractState> {
-                fn execute_meta_tx_get_caller(
+                fn execute_meta_tx_v0(
                     ref self: TContractState,
                     target: starknet::ContractAddress,
                     signature: Span<felt252>,
@@ -41,18 +41,18 @@ fn meta_tx_v0_with_cheat_caller_address() {
 
                 let signature = ArrayTrait::new();
 
-                let old_caller = meta_dispatcher.execute_meta_tx_get_caller(checker_address, signature.span());
+                let old_caller = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
             
                 let cheated_address: ContractAddress = 123.try_into().unwrap();
                 start_cheat_caller_address(checker_address, cheated_address);
 
-                let meta_result = meta_dispatcher.execute_meta_tx_get_caller(checker_address, signature.span());
+                let meta_result = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
 
                 assert(meta_result == 123, 'Should see cheated addr');
 
                 stop_cheat_caller_address(checker_address);
 
-                let meta_result = meta_dispatcher.execute_meta_tx_get_caller(checker_address, signature.span());
+                let meta_result = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
 
                 assert(meta_result == old_caller, 'Caller should revert back');
             }
@@ -91,7 +91,7 @@ fn meta_tx_v0_with_cheat_block_number() {
 
             #[starknet::interface]
             trait IMetaTxV0Test<TContractState> {
-                fn execute_meta_tx_get_block_number(
+                fn execute_meta_tx_v0(
                     ref self: TContractState,
                     target: starknet::ContractAddress,
                     signature: Span<felt252>,
@@ -109,18 +109,18 @@ fn meta_tx_v0_with_cheat_block_number() {
 
                 let signature = ArrayTrait::new();
 
-                let old_block_number = meta_dispatcher.execute_meta_tx_get_block_number(checker_address, signature.span());
+                let old_block_number = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
 
                 let cheated_block_number = 999;
                 start_cheat_block_number(checker_address, cheated_block_number);
 
-                let meta_result = meta_dispatcher.execute_meta_tx_get_block_number(checker_address, signature.span());
+                let meta_result = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
 
                 assert(meta_result == 999, 'Should see cheated block');
 
                 stop_cheat_block_number(checker_address);
 
-                let new_block_number = meta_dispatcher.execute_meta_tx_get_block_number(checker_address, signature.span());
+                let new_block_number = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
                 assert(new_block_number == old_block_number, 'Block num should revert back');
             }
         "#
@@ -158,7 +158,7 @@ fn meta_tx_v0_with_cheat_block_hash() {
 
             #[starknet::interface]
             trait IMetaTxV0Test<TContractState> {
-                fn execute_meta_tx_get_block_hash(
+                fn execute_meta_tx_v0_get_block_hash(
                     ref self: TContractState,
                     target: starknet::ContractAddress,
                     block_number: u64,
@@ -178,18 +178,18 @@ fn meta_tx_v0_with_cheat_block_hash() {
                 let block_number = 100;
                 let signature = ArrayTrait::new();
 
-                let old_block_hash = meta_dispatcher.execute_meta_tx_get_block_hash(checker_address, block_number, signature.span());
+                let old_block_hash = meta_dispatcher.execute_meta_tx_v0_get_block_hash(checker_address, block_number, signature.span());
 
                 let cheated_hash = 555;
                 start_cheat_block_hash(checker_address, block_number, cheated_hash);
 
-                let meta_result = meta_dispatcher.execute_meta_tx_get_block_hash(checker_address, block_number, signature.span());
+                let meta_result = meta_dispatcher.execute_meta_tx_v0_get_block_hash(checker_address, block_number, signature.span());
 
                 assert(meta_result == 555, 'Should see cheated hash');
 
                 stop_cheat_block_hash(checker_address, block_number);
 
-                let new_block_hash = meta_dispatcher.execute_meta_tx_get_block_hash(checker_address, block_number, signature.span());
+                let new_block_hash = meta_dispatcher.execute_meta_tx_v0_get_block_hash(checker_address, block_number, signature.span());
                 assert(new_block_hash == old_block_hash, 'Block hash should revert back');
             }
         "#
@@ -228,7 +228,7 @@ fn meta_tx_v0_with_cheat_sequencer_address() {
 
             #[starknet::interface]
             trait IMetaTxV0Test<TContractState> {
-                fn execute_meta_tx_get_sequencer_address(
+                fn execute_meta_tx_v0(
                     ref self: TContractState,
                     target: starknet::ContractAddress,
                     signature: Span<felt252>,
@@ -246,18 +246,18 @@ fn meta_tx_v0_with_cheat_sequencer_address() {
 
                 let signature = ArrayTrait::new();
 
-                let old_sequencer = meta_dispatcher.execute_meta_tx_get_sequencer_address(checker_address, signature.span());
+                let old_sequencer = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
 
                 let cheated_address: ContractAddress = 777.try_into().unwrap();
                 start_cheat_sequencer_address(checker_address, cheated_address);
 
-                let meta_result = meta_dispatcher.execute_meta_tx_get_sequencer_address(checker_address, signature.span());
+                let meta_result = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
 
                 assert(meta_result == 777, 'Should see cheated seq');
 
                 stop_cheat_sequencer_address(checker_address);
 
-                let new_sequencer = meta_dispatcher.execute_meta_tx_get_sequencer_address(checker_address, signature.span());
+                let new_sequencer = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
                 assert(new_sequencer == old_sequencer, 'Seq addr should revert back');
             }
         "#
@@ -295,7 +295,7 @@ fn meta_tx_v0_with_cheat_block_timestamp() {
 
             #[starknet::interface]
             trait IMetaTxV0Test<TContractState> {
-                fn execute_meta_tx_get_block_timestamp(
+                fn execute_meta_tx_v0(
                     ref self: TContractState,
                     target: starknet::ContractAddress,
                     signature: Span<felt252>,
@@ -313,18 +313,18 @@ fn meta_tx_v0_with_cheat_block_timestamp() {
 
                 let signature = ArrayTrait::new();
 
-                let old_timestamp = meta_dispatcher.execute_meta_tx_get_block_timestamp(checker_address, signature.span());
+                let old_timestamp = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
 
                 let cheated_timestamp = 1234567890;
                 start_cheat_block_timestamp(checker_address, cheated_timestamp);
 
-                let meta_result = meta_dispatcher.execute_meta_tx_get_block_timestamp(checker_address, signature.span());
+                let meta_result = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
 
                 assert(meta_result == 1234567890, 'Should see cheated time');
 
                 stop_cheat_block_timestamp(checker_address);
 
-                let new_timestamp = meta_dispatcher.execute_meta_tx_get_block_timestamp(checker_address, signature.span());
+                let new_timestamp = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
                 assert(new_timestamp == old_timestamp, 'Timestamp should revert back');
             }
         "#
@@ -362,7 +362,7 @@ fn meta_tx_v0_with_cheat_caller_address_span() {
 
             #[starknet::interface]
             trait IMetaTxV0Test<TContractState> {
-                fn execute_meta_tx_get_caller(
+                fn execute_meta_tx_v0(
                     ref self: TContractState,
                     target: starknet::ContractAddress,
                     signature: Span<felt252>,
@@ -380,18 +380,18 @@ fn meta_tx_v0_with_cheat_caller_address_span() {
 
                 let signature = ArrayTrait::new();
 
-                let original_caller = meta_dispatcher.execute_meta_tx_get_caller(checker_address, signature.span());
+                let original_caller = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
 
                 let cheated_address: ContractAddress = 123.try_into().unwrap();
                 cheat_caller_address(checker_address, cheated_address, CheatSpan::TargetCalls(2));
 
-                let first_result = meta_dispatcher.execute_meta_tx_get_caller(checker_address, signature.span());
+                let first_result = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
                 assert(first_result == 123, 'First call should be cheated');
 
-                let second_result = meta_dispatcher.execute_meta_tx_get_caller(checker_address, signature.span());
+                let second_result = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
                 assert(second_result == 123, 'Second call should be cheated');
 
-                let third_result = meta_dispatcher.execute_meta_tx_get_caller(checker_address, signature.span());
+                let third_result = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
                 assert(third_result == original_caller, 'Third call should revert back');
             }
         "#
