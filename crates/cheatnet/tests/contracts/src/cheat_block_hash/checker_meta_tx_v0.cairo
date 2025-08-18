@@ -6,8 +6,8 @@ trait ICheatBlockHashCheckerMetaTxV0<TContractState> {
 
 #[starknet::contract(account)]
 mod CheatBlockHashCheckerMetaTxV0 {
-    use starknet::syscalls::get_block_hash_syscall;
     use starknet::SyscallResultTrait;
+    use starknet::syscalls::get_block_hash_syscall;
 
     #[storage]
     struct Storage {}

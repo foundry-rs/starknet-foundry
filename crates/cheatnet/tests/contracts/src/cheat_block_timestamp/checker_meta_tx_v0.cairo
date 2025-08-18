@@ -10,7 +10,9 @@ mod CheatBlockTimestampCheckerMetaTxV0 {
     struct Storage {}
 
     #[abi(embed_v0)]
-    impl ICheatBlockTimestampCheckerMetaTxV0 of super::ICheatBlockTimestampCheckerMetaTxV0<ContractState> {
+    impl ICheatBlockTimestampCheckerMetaTxV0 of super::ICheatBlockTimestampCheckerMetaTxV0<
+        ContractState,
+    > {
         fn __execute__(ref self: ContractState) -> felt252 {
             let block_timestamp = starknet::get_block_timestamp();
             block_timestamp.into()

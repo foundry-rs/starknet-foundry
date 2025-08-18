@@ -10,7 +10,9 @@ mod CheatCallerAddressCheckerMetaTxV0 {
     struct Storage {}
 
     #[abi(embed_v0)]
-    impl ICheatCallerAddressCheckerMetaTxV0 of super::ICheatCallerAddressCheckerMetaTxV0<ContractState> {
+    impl ICheatCallerAddressCheckerMetaTxV0 of super::ICheatCallerAddressCheckerMetaTxV0<
+        ContractState,
+    > {
         fn __execute__(ref self: ContractState) -> felt252 {
             starknet::get_caller_address().into()
         }
