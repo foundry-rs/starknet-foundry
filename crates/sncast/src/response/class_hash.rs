@@ -36,39 +36,8 @@ impl Message for SncastMessage<ClassHashGeneratedResponse> {
 }
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
-pub struct ContractNotFound {
-    contract: PaddedFelt,
-}
-
-impl CommandResponse for ContractNotFound {}
-
-impl Message for SncastMessage<ContractNotFound> {
-    fn text(&self) -> String {
-        styling::OutputBuilder::new()
-            .success_message("Contract class not found")
-            .blank_line()
-            .field(
-                "Class Name",
-                &self.command_response.contract.into_hex_string(),
-            )
-            .build()
-    }
-
-    fn json(&self) -> serde_json::Value {
-        serde_json::to_value(&self.command_response).unwrap_or_else(|err| {
-            json!({
-                "error": "Failed to serialize response",
-                "command": self.command,
-                "details": err.to_string()
-            })
-        })
-    }
-}
-
-#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 #[serde(tag = "status")]
 pub enum ClassHashResponse {
-    ContractNotFound(ContractNotFound),
     #[serde(untagged)]
     Success(ClassHashGeneratedResponse),
 }
@@ -78,11 +47,6 @@ impl CommandResponse for ClassHashResponse {}
 impl Message for SncastMessage<ClassHashResponse> {
     fn text(&self) -> String {
         match &self.command_response {
-            ClassHashResponse::ContractNotFound(response) => styling::OutputBuilder::new()
-                .success_message("Contract class not found")
-                .blank_line()
-                .field("Class Name", &response.contract.into_hex_string())
-                .build(),
             ClassHashResponse::Success(response) => styling::OutputBuilder::new()
                 .success_message("Class Hash generated")
                 .blank_line()
