@@ -259,7 +259,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                 artifacts = build_and_load_artifacts(&package_metadata, &build_config, false, ui)
                     .expect("Failed to build contract");
             } else {
-                artifacts = load_artifacts(&package_metadata, &build_config, ui, "release")
+                artifacts = load_artifacts(&package_metadata, &build_config, ui, &build_config.profile)
                     .expect("Failed to load artifacts");
             }
 
