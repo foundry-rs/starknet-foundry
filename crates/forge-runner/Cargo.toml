@@ -25,6 +25,7 @@ rand.workspace = true
 url.workspace = true
 blockifier.workspace = true
 cairo-vm.workspace = true
+cairo-native.workspace = true
 itertools.workspace = true
 indoc.workspace = true
 camino.workspace = true
