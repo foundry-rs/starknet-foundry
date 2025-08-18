@@ -308,6 +308,12 @@ jobs:
       - name: Check formatting
         run: cargo fmt --check
 
+      - run: cargo fmt --check
+        working-directory: crates/snforge-scarb-plugin
+
+      - run: cargo fmt --check
+        working-directory: crates/snforge-scarb-plugin-deprecated
+
   clippy:
     runs-on: ubuntu-latest
     env:
@@ -320,6 +326,12 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       - run: cargo lint
+
+      - run: cargo lint
+        working-directory: crates/snforge-scarb-plugin
+
+      - run: cargo lint
+        working-directory: crates/snforge-scarb-plugin-deprecated
 
   build-docs:
     name: Test Building Docs
