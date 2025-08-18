@@ -133,6 +133,7 @@ fn build_test_details(
     };
 
     TestDetails {
+        sierra_function_id: func.id.id,
         sierra_entry_point_statement_idx: func.entry_point.0,
         parameter_types: map_types(&func.signature.param_types),
         return_types: map_types(&func.signature.ret_types),

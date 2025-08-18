@@ -50,6 +50,7 @@ pub enum TestTargetLocation {
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct TestDetails {
+    pub sierra_function_id: u64,
     pub sierra_entry_point_statement_idx: usize,
     pub parameter_types: Vec<(GenericTypeId, i16)>,
     pub return_types: Vec<(GenericTypeId, i16)>,
