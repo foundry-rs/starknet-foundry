@@ -29,9 +29,9 @@ license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-blockifier = { version = "0.15.0-rc.2", features = ["testing", "tracing"]}
+blockifier = { path = "../sequencer/crates/blockifier", features = ["testing", "tracing", "cairo_native"]}
 bigdecimal = "0.4.8"
-starknet_api = "0.15.0-rc.2"
+starknet_api = { path = "../sequencer/crates/starknet_api" }
 cairo-lang-casm = { version = "2.12.0", features = ["serde"] }
 cairo-lang-sierra = "2.12.0"
 cairo-lang-utils = "2.12.0"
@@ -44,6 +44,7 @@ cairo-lang-test-plugin = "2.12.0"
 cairo-lang-starknet-classes = "2.12.0"
 cairo-lang-parser = "2.12.0"
 cairo-vm = "2.2.0"
+cairo-native = { path = "../cairo_native", features = ["with-cheatcode"] }
 cairo-annotations = "0.5.0"
 dirs = "6.0.0"
 dialoguer = "0.11.0"
