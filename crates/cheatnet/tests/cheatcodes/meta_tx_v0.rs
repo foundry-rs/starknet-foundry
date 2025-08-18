@@ -27,7 +27,7 @@ fn meta_tx_v0_with_cheat_caller_address() {
             .chain(signature)
             .collect::<Vec<_>>(),
     );
-    println!("RESULT = {meta_result:?}");
+
     assert_success(meta_result, &[Felt::from(123)]);
 }
 
@@ -53,7 +53,6 @@ fn meta_tx_v0_with_cheat_block_number() {
             .chain(signature)
             .collect::<Vec<_>>(),
     );
-    println!("RESULT = {meta_result:?}");
 
     assert_success(meta_result, &[Felt::from(999)]);
 }
@@ -138,8 +137,6 @@ fn meta_tx_v0_with_cheat_block_hash() {
         .chain(signature)
         .collect::<Vec<_>>(),
     );
-
-    println!("RESULT = {meta_result:?}");
 
     assert_success(meta_result, &[Felt::from(555)]);
 }

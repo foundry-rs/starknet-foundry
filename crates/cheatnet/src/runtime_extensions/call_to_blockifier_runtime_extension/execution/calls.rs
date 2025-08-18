@@ -41,7 +41,6 @@ pub fn execute_inner_call(
         syscall_handler.base.context,
         true,
     )?;
-    
     update_remaining_gas(remaining_gas, &call_info);
     // endregion
 
