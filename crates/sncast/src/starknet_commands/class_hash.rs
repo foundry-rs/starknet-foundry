@@ -9,7 +9,7 @@ use sncast::{
         errors::StarknetCommandError,
     },
 };
-use starknet::core::types::contract::{CompiledClass, SierraClass};
+use starknet::core::types::contract::SierraClass;
 use std::collections::HashMap;
 
 #[derive(Args)]
