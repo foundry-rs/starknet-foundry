@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - Support for `meta_tx_v0` syscall with cheatcode compatibility
+- `snforge` now supports [oracles](https://docs.swmansion.com/cairo-oracle/) with `--experimental-oracles` flag.
+
+#### Fixed
+
+- A bug that caused `#[fuzzer]` attribute to fail when used with generic structs
 
 ## [0.48.0] - 2025-08-05
 
