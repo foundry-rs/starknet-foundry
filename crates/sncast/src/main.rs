@@ -378,21 +378,18 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
         Commands::ClassHash(class_hash) => {
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &class_hash.package)?;
-            let artifacts;
-            let build_config = BuildConfig {
-                scarb_toml_path: manifest_path,
-                json: cli.json,
-                profile: cli.profile.unwrap_or("release".to_string()),
-            };
 
-            if !class_hash.skip_compile {
-                artifacts = build_and_load_artifacts(&package_metadata, &build_config, false, ui)
-                    .expect("Failed to build contract");
-            } else {
-                artifacts =
-                    load_artifacts(&package_metadata, &build_config, ui, &build_config.profile)
-                        .expect("Failed to load artifacts");
-            }
+            let artifacts = build_and_load_artifacts(
+                &package_metadata,
+                &BuildConfig {
+                    scarb_toml_path: manifest_path,
+                    json: cli.json,
+                    profile: cli.profile.unwrap_or("release".to_string()),
+                },
+                false,
+                ui,
+            )
+            .expect("Failed to build contract");
 
             let result = starknet_commands::class_hash::get_class_hash(class_hash, &artifacts)
                 .map_err(handle_starknet_command_error);

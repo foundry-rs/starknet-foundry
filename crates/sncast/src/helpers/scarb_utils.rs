@@ -163,15 +163,6 @@ pub fn build_and_load_artifacts(
     build(package, config, default_profile)
         .map_err(|e| anyhow!(format!("Failed to build using scarb; {e}")))?;
 
-    load_artifacts(package, config, ui, default_profile)
-}
-
-pub fn load_artifacts(
-    package: &PackageMetadata,
-    config: &BuildConfig,
-    ui: &UI,
-    default_profile: &str,
-) -> Result<HashMap<String, StarknetContractArtifacts>> {
     let metadata = get_scarb_metadata_with_deps(&config.scarb_toml_path)?;
     let target_dir = target_dir_for_workspace(&metadata);
 
