@@ -24,7 +24,10 @@ impl AttributeCollector for IgnoreCollector {
     ) -> Result<String, Diagnostics> {
         args.assert_is_empty::<Self>()?;
 
-        Ok("snforge_std_deprecated::_internals::config_types::IgnoreConfig { is_ignored: true }".to_string())
+        Ok(
+            "snforge_std_deprecated::_internals::config_types::IgnoreConfig { is_ignored: true }"
+                .to_string(),
+        )
     }
 }
 

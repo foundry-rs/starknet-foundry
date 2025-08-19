@@ -218,7 +218,7 @@ edition = "2023_11"
 starknet = "2.8.2"
 
 [dev-dependencies]
-snforge_std = "0.33.0"
+snforge_std = "{{snforge_std_version}}"
 starknet = ">=2.8.2"
 openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", branch = "cairo-2" }
 

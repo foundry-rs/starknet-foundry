@@ -393,7 +393,7 @@ fn works_with_fuzzer_config_wrapper() {
 
                     return;
                 }
-                let f: felt252 = snforge_std::fuzzable::Fuzzable::generate();
+                let f = snforge_std::fuzzable::Fuzzable::<felt252>::generate();
                 snforge_std::_internals::save_fuzzer_arg(@f);
                 empty_fn_return_wrapper_actual_body(f);
             }
