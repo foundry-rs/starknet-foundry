@@ -133,14 +133,23 @@ impl TestCaseFilter for TestsFilter {
 mod tests {
     use crate::shared_cache::FailedTestsCache;
     use crate::test_filter::TestsFilter;
+    use cairo_lang_sierra::extensions::core::CoreLibfunc;
+    use cairo_lang_sierra::extensions::core::CoreType;
     use cairo_lang_sierra::program::Program;
     use cairo_lang_sierra::program::ProgramArtifact;
+    use cairo_lang_sierra::program_registry::ProgramRegistry;
+    use cairo_native::context::NativeContext;
+    use cairo_native::executor::AotNativeExecutor;
+    use cairo_native::module_to_object;
+    use cairo_native::object_to_shared_lib;
     use forge_runner::expected_result::ExpectedTestResult;
     use forge_runner::package_tests::with_config_resolved::{
         TestCaseResolvedConfig, TestCaseWithResolvedConfig, TestTargetWithResolvedConfig,
     };
     use forge_runner::package_tests::{TestDetails, TestTargetLocation};
+    use libloading::Library;
     use std::sync::Arc;
+    use tempfile::NamedTempFile;
     use universal_sierra_compiler_api::{SierraType, compile_sierra};
 
     fn program_for_testing() -> ProgramArtifact {
@@ -153,6 +162,33 @@ mod tests {
             },
             debug_info: None,
         }
+    }
+
+    fn executor_for_testing() -> Arc<AotNativeExecutor> {
+        let native_context = NativeContext::new();
+        let mut native_module = native_context
+            .compile(&program_for_testing().program, true, None, None)
+            .unwrap();
+        let native_object = module_to_object(
+            native_module.module(),
+            cairo_native::OptLevel::Default,
+            None,
+        )
+        .unwrap();
+        let library_path = NamedTempFile::new()
+            .unwrap()
+            .into_temp_path()
+            .keep()
+            .unwrap();
+        object_to_shared_lib(&native_object, &library_path, None).unwrap();
+        let library = unsafe { Library::new(&library_path).unwrap() };
+        let native_executor = AotNativeExecutor::new(
+            library,
+            ProgramRegistry::<CoreType, CoreLibfunc>::new(&program_for_testing().program).unwrap(),
+            native_module.remove_metadata().unwrap_or_default(),
+            native_module.remove_metadata().unwrap_or_default(),
+        );
+        Arc::new(native_executor)
     }
 
     #[test]
@@ -251,8 +287,7 @@ mod tests {
                 },
             ],
             tests_location: TestTargetLocation::Lib,
-            #[allow(clippy::redundant_closure_call)]
-            aot_executor: (|| todo!())(),
+            aot_executor: executor_for_testing(),
         };
 
         let tests_filter = TestsFilter::from_flags(
@@ -488,8 +523,7 @@ mod tests {
             ),
             test_cases: vec![],
             tests_location: TestTargetLocation::Lib,
-            #[allow(clippy::redundant_closure_call)]
-            aot_executor: (|| todo!())(),
+            aot_executor: executor_for_testing(),
         };
 
         let tests_filter = TestsFilter::from_flags(
@@ -591,8 +625,7 @@ mod tests {
                 },
             ],
             tests_location: TestTargetLocation::Tests,
-            #[allow(clippy::redundant_closure_call)]
-            aot_executor: (|| todo!())(),
+            aot_executor: executor_for_testing(),
         };
 
         let tests_filter = TestsFilter::from_flags(
@@ -799,8 +832,7 @@ mod tests {
                 },
             ],
             tests_location: TestTargetLocation::Tests,
-            #[allow(clippy::redundant_closure_call)]
-            aot_executor: (|| todo!())(),
+            aot_executor: executor_for_testing(),
         };
 
         let tests_filter = TestsFilter::from_flags(
@@ -916,8 +948,7 @@ mod tests {
                 },
             ],
             tests_location: TestTargetLocation::Tests,
-            #[allow(clippy::redundant_closure_call)]
-            aot_executor: { (|| todo!())() },
+            aot_executor: executor_for_testing(),
         };
 
         let tests_filter = TestsFilter::from_flags(

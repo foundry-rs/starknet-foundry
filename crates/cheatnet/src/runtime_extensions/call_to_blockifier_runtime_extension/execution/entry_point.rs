@@ -172,7 +172,9 @@ pub fn execute_call_entry_point(
             cheatnet_state,
             context,
         ),
-        RunnableCompiledClass::V1Native(native_compiled_class_v1) => todo!(),
+        RunnableCompiledClass::V1Native(_) => {
+            todo!("execute inner call with Cairo Native")
+        }
     };
     context
         .tracked_resource_stack

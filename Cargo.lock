@@ -2843,6 +2843,7 @@ dependencies = [
  "include_dir",
  "indoc",
  "itertools 0.14.0",
+ "libloading",
  "num-bigint",
  "openssl",
  "packages_validation",
