@@ -40,6 +40,7 @@ use conversions::felt::{ToShortString, TryInferFormat};
 use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::CairoSerialize;
 use data_transformer::cairo_types::CairoU256;
+use k256::Secp256k1;
 use rand::prelude::StdRng;
 use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::{
@@ -384,6 +385,15 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let curve = curve.to_short_string().ok();
 
                 let (signing_key_bytes, x_coordinate_bytes, y_coordinate_bytes) = {
+                    let extract_coordinates_from_verifying_key =
+                        |verifying_key: Box<[u8]>| {
+                            let verifying_key = verifying_key.iter().as_slice();
+                            (
+                                verifying_key[1..33].try_into().unwrap(),
+                                verifying_key[33..65].try_into().unwrap(),
+                            )
+                        };
+
                     match curve.as_deref() {
                         Some("Secp256k1") => {
                             let signing_key = k256::ecdsa::SigningKey::random(
@@ -393,11 +403,12 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                                 .verifying_key()
                                 .to_encoded_point(false)
                                 .to_bytes();
-                            let verifying_key = verifying_key.iter().as_slice();
+                            let (x_coordinate, y_coordinate) =
+                                extract_coordinates_from_verifying_key(verifying_key);
                             (
                                 signing_key.to_bytes().as_slice()[0..32].try_into().unwrap(),
-                                verifying_key[1..33].try_into().unwrap(),
-                                verifying_key[33..65].try_into().unwrap(),
+                                x_coordinate,
+                                y_coordinate,
                             )
                         }
                         Some("Secp256r1") => {
@@ -408,11 +419,12 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                                 .verifying_key()
                                 .to_encoded_point(false)
                                 .to_bytes();
-                            let verifying_key = verifying_key.iter().as_slice();
+                            let (x_coordinate, y_coordinate) =
+                                extract_coordinates_from_verifying_key(verifying_key);
                             (
                                 signing_key.to_bytes().as_slice()[0..32].try_into().unwrap(),
-                                verifying_key[1..33].try_into().unwrap(),
-                                verifying_key[33..65].try_into().unwrap(),
+                                x_coordinate,
+                                y_coordinate,
                             )
                         }
                         _ => return Ok(CheatcodeHandlingResult::Forwarded),
