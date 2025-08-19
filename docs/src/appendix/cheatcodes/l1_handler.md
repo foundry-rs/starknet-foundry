@@ -32,7 +32,7 @@ Test code:
 
 Let's run the test:
 
-<!-- { "package_name": "cheatcodes_reference", "scarb": ">=2.11.4" } -->
+<!-- { "package_name": "cheatcodes_reference", "scarb_version": ">=2.11.4" } -->
 ```shell
 $ snforge test test_l1_handler
 ```
