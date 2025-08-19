@@ -1,7 +1,6 @@
 #[starknet::interface]
 trait ICheatCallerAddressCheckerMetaTxV0<TContractState> {
     fn __execute__(ref self: TContractState) -> felt252;
-    fn __validate__(ref self: TContractState) -> felt252;
 }
 
 #[starknet::contract(account)]
@@ -16,17 +15,12 @@ mod CheatCallerAddressCheckerMetaTxV0 {
         fn __execute__(ref self: ContractState) -> felt252 {
             starknet::get_caller_address().into()
         }
-
-        fn __validate__(ref self: ContractState) -> felt252 {
-            starknet::VALIDATED
-        }
     }
 }
 
 #[starknet::interface]
 trait ICheatBlockNumberCheckerMetaTxV0<TContractState> {
     fn __execute__(ref self: TContractState) -> felt252;
-    fn __validate__(ref self: TContractState) -> felt252;
 }
 
 #[starknet::contract(account)]
@@ -42,17 +36,12 @@ mod CheatBlockNumberCheckerMetaTxV0 {
             let block_number = starknet::get_block_number();
             block_number.into()
         }
-
-        fn __validate__(ref self: ContractState) -> felt252 {
-            starknet::VALIDATED
-        }
     }
 }
 
 #[starknet::interface]
 trait ICheatBlockTimestampCheckerMetaTxV0<TContractState> {
     fn __execute__(ref self: TContractState) -> felt252;
-    fn __validate__(ref self: TContractState) -> felt252;
 }
 
 #[starknet::contract(account)]
@@ -68,17 +57,12 @@ mod CheatBlockTimestampCheckerMetaTxV0 {
             let block_timestamp = starknet::get_block_timestamp();
             block_timestamp.into()
         }
-
-        fn __validate__(ref self: ContractState) -> felt252 {
-            starknet::VALIDATED
-        }
     }
 }
 
 #[starknet::interface]
 trait ICheatSequencerAddressCheckerMetaTxV0<TContractState> {
     fn __execute__(ref self: TContractState) -> felt252;
-    fn __validate__(ref self: TContractState) -> felt252;
 }
 
 #[starknet::contract(account)]
@@ -94,17 +78,12 @@ mod CheatSequencerAddressCheckerMetaTxV0 {
             let sequencer_address = starknet::get_block_info().unbox().sequencer_address;
             sequencer_address.into()
         }
-
-        fn __validate__(ref self: ContractState) -> felt252 {
-            starknet::VALIDATED
-        }
     }
 }
 
 #[starknet::interface]
 trait ICheatBlockHashCheckerMetaTxV0<TContractState> {
     fn __execute__(ref self: TContractState, block_number: u64) -> felt252;
-    fn __validate__(ref self: TContractState) -> felt252;
 }
 
 #[starknet::contract(account)]
@@ -121,10 +100,6 @@ mod CheatBlockHashCheckerMetaTxV0 {
             let block_hash = get_block_hash_syscall(block_number).unwrap_syscall();
 
             block_hash
-        }
-
-        fn __validate__(ref self: ContractState) -> felt252 {
-            starknet::VALIDATED
         }
     }
 }

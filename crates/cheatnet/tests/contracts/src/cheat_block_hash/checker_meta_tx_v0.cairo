@@ -1,7 +1,6 @@
 #[starknet::interface]
 trait ICheatBlockHashCheckerMetaTxV0<TContractState> {
     fn __execute__(ref self: TContractState, block_number: u64) -> felt252;
-    fn __validate__(ref self: TContractState) -> felt252;
 }
 
 #[starknet::contract(account)]
@@ -18,10 +17,6 @@ mod CheatBlockHashCheckerMetaTxV0 {
             let block_hash = get_block_hash_syscall(block_number).unwrap_syscall();
 
             block_hash
-        }
-
-        fn __validate__(ref self: ContractState) -> felt252 {
-            starknet::VALIDATED
         }
     }
 }

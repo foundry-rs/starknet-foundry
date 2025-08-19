@@ -1,7 +1,6 @@
 #[starknet::interface]
 trait ICheatSequencerAddressCheckerMetaTxV0<TContractState> {
     fn __execute__(ref self: TContractState) -> felt252;
-    fn __validate__(ref self: TContractState) -> felt252;
 }
 
 #[starknet::contract(account)]
@@ -16,10 +15,6 @@ mod CheatSequencerAddressCheckerMetaTxV0 {
         fn __execute__(ref self: ContractState) -> felt252 {
             let sequencer_address = starknet::get_block_info().unbox().sequencer_address;
             sequencer_address.into()
-        }
-
-        fn __validate__(ref self: ContractState) -> felt252 {
-            starknet::VALIDATED
         }
     }
 }
