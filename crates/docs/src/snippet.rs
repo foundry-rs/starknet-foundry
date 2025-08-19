@@ -61,7 +61,7 @@ pub struct SnippetConfig {
     pub package_name: Option<String>,
     pub ignored_output: bool,
     pub replace_network: bool,
-    pub scarb_version: Option<String>,
+    pub scarb_version: Option<VersionReq>,
 }
 
 #[derive(Deserialize)]
@@ -71,7 +71,7 @@ struct SnippetConfigProxy {
     package_name: Option<String>,
     ignored_output: bool,
     replace_network: bool,
-    scarb_version: Option<String>,
+    scarb_version: Option<VersionReq>,
 }
 
 impl Default for SnippetConfigProxy {
@@ -100,10 +100,7 @@ impl Default for SnippetConfig {
 
 impl SnippetConfig {
     fn check_scarb_compatibility(&mut self) {
-        if let Some(ref version_req_str) = self.scarb_version {
-            let scarb_version_req = VersionReq::parse(version_req_str)
-                .unwrap_or_else(|_| panic!("Invalid scarb_version format: {version_req_str}"));
-
+        if let Some(ref scarb_version_req) = self.scarb_version {
             let current_scarb_version = ScarbCommand::version()
                 .run()
                 .expect("Failed to get scarb version")
