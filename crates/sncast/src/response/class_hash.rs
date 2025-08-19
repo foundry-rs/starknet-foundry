@@ -15,7 +15,7 @@ impl CommandResponse for ClassHashGeneratedResponse {}
 impl Message for SncastMessage<ClassHashGeneratedResponse> {
     fn text(&self) -> String {
         styling::OutputBuilder::new()
-            .success_message("Class Hash generated")
+            .success_message("Class hash generated")
             .blank_line()
             .field(
                 "Class Hash",
@@ -48,7 +48,7 @@ impl Message for SncastMessage<ClassHashResponse> {
     fn text(&self) -> String {
         match &self.command_response {
             ClassHashResponse::Success(response) => styling::OutputBuilder::new()
-                .success_message("Class Hash generated")
+                .success_message("Class hash generated")
                 .blank_line()
                 .field("Class Hash", &response.class_hash.into_hex_string())
                 .build(),
