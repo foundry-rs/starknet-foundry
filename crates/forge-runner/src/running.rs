@@ -63,7 +63,7 @@ pub use syscall_handler::syscall_handler_offset;
 pub fn run_test(
     case: Arc<TestCaseWithResolvedConfig>,
     _casm_program: Arc<AssembledProgramWithDebugInfo>,
-    aot_executor: Arc<AotNativeExecutor>,
+    _aot_executor: Arc<AotNativeExecutor>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -76,12 +76,19 @@ pub fn run_test(
         if send.is_closed() {
             return TestCaseSummary::Interrupted {};
         }
+
         let run_result = run_native_test_case(
             &case,
-            &aot_executor,
+            &_aot_executor,
             &RuntimeConfig::from(&forge_config.test_runner_config),
             None,
         );
+        // let run_result = run_test_case(
+        //     &case,
+        //     &_casm_program,
+        //     &RuntimeConfig::from(&forge_config.test_runner_config),
+        //     None,
+        // );
 
         if send.is_closed() {
             return TestCaseSummary::Interrupted {};
