@@ -2295,6 +2295,8 @@ dependencies = [
  "anyhow",
  "camino",
  "regex",
+ "scarb-api",
+ "semver",
  "serde",
  "serde_json",
  "shell-words",
