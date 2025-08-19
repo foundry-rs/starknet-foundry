@@ -1,7 +1,7 @@
-use crate::contracts_data_store::ContractsDataStore;
+use crate::Context;
 use crate::trace::collect::Collector;
 use crate::trace::components::{
-    CallResultContainer, CallTypeContainer, CalldataContainer, CallerAddressContainer, Components,
+    CallResultContainer, CallTypeContainer, CalldataContainer, CallerAddressContainer,
     ContractAddressContainer, ContractNameContainer, EntryPointTypeContainer,
 };
 use crate::tree::TreeSerialize;
@@ -56,15 +56,10 @@ pub struct ContractAddress(pub ApiContractAddress);
 pub struct CallerAddress(pub ApiContractAddress);
 
 impl Trace {
-    /// Creates a new [`Trace`] from a given `cheatnet` [`CallTrace`], [`ContractsDataStore`], [`Verbosity`] and a test name.
+    /// Creates a new [`Trace`] from a given [`Context`] and a test name.
     #[must_use]
-    pub fn new(
-        call_trace: &CallTrace,
-        contracts_data_store: &ContractsDataStore,
-        components: &Components,
-        test_name: String,
-    ) -> Self {
-        Collector::new(call_trace, contracts_data_store, components).collect_trace(test_name)
+    pub fn new(call_trace: &CallTrace, context: &Context, test_name: String) -> Self {
+        Collector::new(call_trace, context).collect_trace(test_name)
     }
 }
 

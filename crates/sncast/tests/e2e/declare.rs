@@ -193,11 +193,6 @@ async fn test_happy_case_different_fees(fee_args: FeeArgs) {
         TransactionExecutionStatus::Succeeded
     );
 
-    assert_eq!(
-        receipt.execution_result.status(),
-        TransactionExecutionStatus::Succeeded
-    );
-
     let Transaction::Declare(DeclareTransaction::V3(tx)) = get_transaction_by_hash(hash).await
     else {
         panic!("Expected Declare V3 transaction")
