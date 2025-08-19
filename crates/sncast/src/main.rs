@@ -21,7 +21,6 @@ use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use sncast::helpers::output_format::output_format_from_json_flag;
 use sncast::helpers::scarb_utils::{
     BuildConfig, assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
-    load_artifacts,
 };
 use sncast::response::cast_message::SncastMessage;
 use sncast::response::command::CommandResponse;
