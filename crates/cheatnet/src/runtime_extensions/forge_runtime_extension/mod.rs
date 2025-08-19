@@ -361,40 +361,41 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let curve: Felt = input_reader.read()?;
                 let curve = curve.to_short_string().ok();
 
-                let (signing_key_bytes, verifying_key_bytes) = {
+                let (signing_key_bytes, x_coordinate_bytes, y_coordinate_bytes) = {
                     match curve.as_deref() {
                         Some("Secp256k1") => {
                             let signing_key = k256::ecdsa::SigningKey::random(
                                 &mut k256::elliptic_curve::rand_core::OsRng,
                             );
-                            let verifying_key = signing_key.verifying_key();
+                            let verifying_key = signing_key
+                                .verifying_key()
+                                .to_encoded_point(false)
+                                .to_bytes();
+                            let verifying_key = verifying_key.iter().as_slice();
                             (
-                                signing_key.to_bytes(),
-                                verifying_key.to_encoded_point(false).to_bytes(),
+                                signing_key.to_bytes().as_slice()[0..32].try_into().unwrap(),
+                                verifying_key[1..33].try_into().unwrap(),
+                                verifying_key[33..65].try_into().unwrap(),
                             )
                         }
                         Some("Secp256r1") => {
                             let signing_key = p256::ecdsa::SigningKey::random(
                                 &mut p256::elliptic_curve::rand_core::OsRng,
                             );
-                            let verifying_key = signing_key.verifying_key();
+                            let verifying_key = signing_key
+                                .verifying_key()
+                                .to_encoded_point(false)
+                                .to_bytes();
+                            let verifying_key = verifying_key.iter().as_slice();
                             (
-                                signing_key.to_bytes(),
-                                verifying_key.to_encoded_point(false).to_bytes(),
+                                signing_key.to_bytes().as_slice()[0..32].try_into().unwrap(),
+                                verifying_key[1..33].try_into().unwrap(),
+                                verifying_key[33..65].try_into().unwrap(),
                             )
                         }
                         _ => return Ok(CheatcodeHandlingResult::Forwarded),
                     }
                 };
-
-                let signing_key_bytes: [u8; 32] =
-                    signing_key_bytes.as_slice()[0..32].try_into().unwrap();
-                let x_coordinate_bytes: [u8; 32] = verifying_key_bytes.iter().as_slice()[1..33]
-                    .try_into()
-                    .unwrap();
-                let y_coordinate_bytes: [u8; 32] = verifying_key_bytes.iter().as_slice()[33..65]
-                    .try_into()
-                    .unwrap();
 
                 Ok(CheatcodeHandlingResult::from_serializable((
                     CairoU256::from_bytes(&signing_key_bytes),
