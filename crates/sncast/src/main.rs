@@ -377,8 +377,7 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
 
         Commands::ClassHash(class_hash) => {
             let manifest_path = assert_manifest_path_exists()?;
-            let package_metadata =
-                get_package_metadata(&manifest_path, &class_hash.package)?;
+            let package_metadata = get_package_metadata(&manifest_path, &class_hash.package)?;
             let artifacts;
             let build_config = BuildConfig {
                 scarb_toml_path: manifest_path,
@@ -395,9 +394,8 @@ async fn run_async_command(cli: Cli, config: CastConfig, ui: &UI) -> Result<()> 
                         .expect("Failed to load artifacts");
             }
 
-            let result =
-                starknet_commands::class_hash::get_class_hash(class_hash, &artifacts)
-                    .map_err(handle_starknet_command_error);
+            let result = starknet_commands::class_hash::get_class_hash(class_hash, &artifacts)
+                .map_err(handle_starknet_command_error);
 
             process_command_result("class-hash", result, ui, None);
 
