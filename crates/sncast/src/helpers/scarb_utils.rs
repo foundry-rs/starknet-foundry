@@ -152,8 +152,6 @@ pub fn build(
     cmd.run()
 }
 
-
-
 pub fn build_and_load_artifacts(
     package: &PackageMetadata,
     config: &BuildConfig,
