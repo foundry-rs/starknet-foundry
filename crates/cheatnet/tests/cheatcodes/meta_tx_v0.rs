@@ -140,3 +140,30 @@ fn meta_tx_v0_with_cheat_block_hash() {
 
     assert_success(meta_result, &[Felt::from(555)]);
 }
+
+#[test]
+fn meta_tx_v0_verify_tx_context_modification() {
+    let mut test_env = TestEnvironment::new();
+
+    let contract_address = test_env.deploy("TxInfoCheckerMetaTxV0", &[]);
+
+    // Call __execute__ directly, should return original version (3)
+    let direct_execute_result = test_env.call_contract(&contract_address, "__execute__", &[]);
+
+    let meta_contract = test_env.deploy("MetaTxV0Test", &[]);
+
+    let signature: Vec<Felt> = vec![];
+
+    let meta_result = test_env.call_contract(
+        &meta_contract,
+        "execute_meta_tx_v0",
+        &[contract_address.into_(), signature.len().into()]
+            .into_iter()
+            .chain(signature.clone())
+            .collect::<Vec<_>>(),
+    );
+
+    assert_success(meta_result, &[Felt::ZERO]);
+
+    assert_success(direct_execute_result, &[Felt::from(3_u32)]);
+}

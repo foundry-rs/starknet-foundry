@@ -411,3 +411,69 @@ fn meta_tx_v0_with_cheat_caller_address_span() {
     let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
     assert_passed(&result);
 }
+
+#[test]
+fn meta_tx_v0_verify_tx_context_modification() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use array::ArrayTrait;
+            use option::OptionTrait;
+            use traits::TryInto;
+            use starknet::ContractAddress;
+            use snforge_std::{
+                declare, ContractClassTrait, DeclareResultTrait
+            };
+
+            #[starknet::interface]
+            trait IMetaTxV0Test<TContractState> {
+                fn execute_meta_tx_v0(
+                    ref self: TContractState,
+                    target: starknet::ContractAddress,
+                    signature: Span<felt252>,
+                ) -> felt252;
+            }
+
+            #[starknet::interface]
+            trait ITxInfoCheckerMetaTxV0<TContractState> {
+                fn __execute__(ref self: TContractState) -> felt252;
+            }
+
+            #[test]
+            fn test_meta_tx_v0_verify_tx_context_modification() {
+                let checker_contract = declare("TxInfoCheckerMetaTxV0").unwrap().contract_class();
+                let (checker_address, _) = checker_contract.deploy(@ArrayTrait::new()).unwrap();
+                let checker_dispatcher = ITxInfoCheckerMetaTxV0Dispatcher { contract_address: checker_address };
+
+                let meta_contract = declare("MetaTxV0Test").unwrap().contract_class();
+                let (meta_address, _) = meta_contract.deploy(@ArrayTrait::new()).unwrap();
+                let meta_dispatcher = IMetaTxV0TestDispatcher { contract_address: meta_address };
+
+                let direct_version = checker_dispatcher.__execute__();
+
+                let mut signature = ArrayTrait::new();
+
+                let meta_version = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
+
+                assert(meta_version == 0, 'Meta tx version should be 0');
+
+                assert(direct_version == 3, 'Direct call version should be 3');
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "TxInfoCheckerMetaTxV0".to_string(),
+            Path::new("tests/data/contracts/meta_tx_v0_checkers.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "MetaTxV0Test".to_string(),
+            Path::new("tests/data/contracts/meta_tx_v0_test.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test, ForgeTrackedResource::CairoSteps);
+    assert_passed(&result);
+}
