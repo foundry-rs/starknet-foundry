@@ -40,7 +40,6 @@ use conversions::felt::{ToShortString, TryInferFormat};
 use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::CairoSerialize;
 use data_transformer::cairo_types::CairoU256;
-use k256::Secp256k1;
 use rand::prelude::StdRng;
 use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::{
