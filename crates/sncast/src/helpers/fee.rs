@@ -79,11 +79,9 @@ impl FeeArgs {
                 Felt::from(max_fee)
             );
 
-            let mut fee_settings = FeeSettings::try_from(fee_estimate.clone())
-                .expect("Failed to convert FeeEstimate to FeeSettings");
-
-            // If a tip is not provided, set it to 0
-            fee_settings.tip = Some(self.tip.unwrap_or(0));
+            let fee_settings = FeeSettings::try_from(fee_estimate.clone())
+                .expect("Failed to convert FeeEstimate to FeeSettings")
+                .update_tip(self.tip.unwrap_or(0)); // If a tip is not provided, set it to 0
 
             Ok(fee_settings)
         } else {
@@ -117,6 +115,16 @@ pub struct FeeSettings {
     pub tip: Option<u64>,
 }
 
+impl FeeSettings {
+    #[must_use]
+    pub fn update_tip(&self, tip: u64) -> FeeSettings {
+        FeeSettings {
+            tip: Some(tip),
+            ..*self
+        }
+    }
+}
+
 impl TryFrom<FeeEstimate> for FeeSettings {
     type Error = anyhow::Error;
     fn try_from(fee_estimate: FeeEstimate) -> Result<FeeSettings, anyhow::Error> {
@@ -127,7 +135,7 @@ impl TryFrom<FeeEstimate> for FeeSettings {
             l2_gas_price: Some(fee_estimate.l2_gas_price),
             l1_data_gas: Some(fee_estimate.l1_data_gas_consumed),
             l1_data_gas_price: Some(fee_estimate.l1_data_gas_price),
-            tip: Some(0),
+            tip: None,
         })
     }
 }
@@ -180,7 +188,7 @@ mod tests {
                 l2_gas_price: Some(4),
                 l1_data_gas: Some(5),
                 l1_data_gas_price: Some(6),
-                tip: Some(0),
+                tip: None,
             }
         );
     }

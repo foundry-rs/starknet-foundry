@@ -87,7 +87,7 @@ Maximum L1 data gas unit price for the `deploy` transaction. When not used, defa
 ## `--tip <TIP>`
 Optional.
 
-Tip for the transaction. When not used, defaults to 0.
+Tip for the transaction. When not provided, defaults to 0.
 
 ## `--nonce, -n <NONCE>`
 Optional.
