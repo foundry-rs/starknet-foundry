@@ -4,16 +4,18 @@ version = "1.0.0"
 edition.workspace = true
 
 [dependencies]
-starknet_api.workspace = true
 blockifier.workspace = true
-ptree.workspace = true
-paste.workspace = true
-console.workspace = true
-starknet-types-core.workspace = true
-starknet.workspace = true
 cairo-lang-sierra.workspace = true
+cairo-lang-sierra-to-casm.workspace = true
 cairo-lang-starknet-classes.workspace = true
 cheatnet = { path = "../cheatnet" }
+console.workspace = true
 data-transformer = { path = "../data-transformer" }
-serde_json.workspace = true
+paste.workspace = true
+ptree.workspace = true
 rayon.workspace = true
+serde_json.workspace = true
+starknet-types-core.workspace = true
+starknet.workspace = true
+starknet_api.workspace = true
+thiserror.workspace = true
