@@ -38,9 +38,13 @@ use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
 use conversions::felt::{ToShortString, TryInferFormat};
 use conversions::serde::deserialize::BufferReader;
-use conversions::serde::serialize::CairoSerialize;
+use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
 use data_transformer::cairo_types::CairoU256;
 use rand::prelude::StdRng;
+use runtime::native::{
+    InvalidCheatcodeExtension, NativeExtendedRuntime, NativeExtensionLogic,
+    NativeSyscallHandlingResult,
+};
 use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
@@ -564,6 +568,26 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             ))),
             _ => Ok(SyscallHandlingResult::Forwarded),
         }
+    }
+}
+
+impl<'a> NativeExtensionLogic for ForgeExtension<'a> {
+    type Runtime = &'a mut NativeExtendedRuntime<InvalidCheatcodeExtension<'a>>;
+
+    fn handle_cheatcode(
+        &mut self,
+        selector: Felt,
+        _input: &[Felt],
+    ) -> anyhow::Result<NativeSyscallHandlingResult<Vec<Felt>>> {
+        let selector_bytes = selector.to_bytes_be();
+        let selector = std::str::from_utf8(&selector_bytes)?.trim_start_matches('\0');
+
+        let result = match selector {
+            "is_config_mode" => false.serialize_to_vec(),
+            _ => return Ok(NativeSyscallHandlingResult::Forwarded),
+        };
+
+        Ok(NativeSyscallHandlingResult::Handled(result))
     }
 }
 
