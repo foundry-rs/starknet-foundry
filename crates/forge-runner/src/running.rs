@@ -9,15 +9,13 @@ use blockifier::execution::contract_class::TrackedResource;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::execution::entry_point_execution::{prepare_call_arguments, run_entry_point};
 use blockifier::execution::errors::EntryPointExecutionError;
-use blockifier::execution::execution_utils::ReadOnlySegments;
-use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::execution::native::syscall_handler::NativeSyscallHandler;
 use blockifier::state::cached_state::CachedState;
 use cairo_lang_sierra::ids::FunctionId;
 use cairo_native::Value;
 use cairo_native::execution_result::ContractExecutionResult;
 use cairo_native::executor::AotNativeExecutor;
 use cairo_vm::Felt252;
-use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use camino::{Utf8Path, Utf8PathBuf};
@@ -38,12 +36,12 @@ use execution::finalize_execution;
 use foundry_ui::UI;
 use hints::hints_by_representation;
 use rand::prelude::StdRng;
+use runtime::native::{InvalidCheatcodeExtension, NativeExtendedRuntime};
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use scarb_oracle_hint_service::OracleHintService;
 use starknet_api::execution_resources::GasVector;
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::default::Default;
 use std::marker::PhantomData;
 use std::rc::Rc;
@@ -413,8 +411,6 @@ pub fn run_native_test_case(
     let function_id = FunctionId::new(case.test_details.sierra_function_id);
     let call = build_test_entry_point();
 
-    // The state reader is currently unused, as it requires support of the
-    // custom syscall handler.
     let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(),
         fork_state_reader: get_fork_state_reader(
@@ -431,43 +427,18 @@ pub fn run_native_test_case(
     let tracked_resource = TrackedResource::from(runtime_config.tracked_resource);
     let mut context = build_context(&block_info, chain_id, &tracked_resource);
 
-    if let Some(max_n_steps) = runtime_config.max_n_steps {
-        set_max_steps(&mut context, max_n_steps);
-    }
     let mut cached_state = CachedState::new(state_reader);
 
-    let hints = HashMap::default();
-    let syscall_handler = SyscallHintProcessor::new(
-        &mut cached_state,
-        &mut context,
-        Relocatable::from((0, 0)),
-        call.clone(),
-        &hints,
-        ReadOnlySegments::default(),
-    );
+    let mut native_syscall_handler =
+        NativeSyscallHandler::new(call.clone(), &mut cached_state, &mut context);
 
-    let mut cheatnet_state = CheatnetState {
-        block_info,
-        ..Default::default()
-    };
-    cheatnet_state.trace_data.is_vm_trace_needed = runtime_config.is_vm_trace_needed;
-
-    let cheatable_runtime = ExtendedRuntime {
-        extension: CheatableStarknetRuntimeExtension {
-            cheatnet_state: &mut cheatnet_state,
-        },
-        extended_runtime: StarknetRuntime {
-            hint_handler: syscall_handler,
-            panic_traceback: None,
-        },
-    };
-
-    let call_to_blockifier_runtime = ExtendedRuntime {
-        extension: CallToBlockifierExtension {
+    let mut default_cheatcode_runtime = NativeExtendedRuntime {
+        extension: InvalidCheatcodeExtension {
             lifetime: &PhantomData,
         },
-        extended_runtime: cheatable_runtime,
+        runtime: &mut native_syscall_handler,
     };
+
     let forge_extension = ForgeExtension {
         environment_variables: runtime_config.environment_variables,
         contracts_data: runtime_config.contracts_data,
@@ -476,9 +447,9 @@ pub fn run_native_test_case(
         oracle_hint_service: OracleHintService::default(),
     };
 
-    let mut forge_runtime = ExtendedRuntime {
+    let mut forge_runtime = NativeExtendedRuntime {
         extension: forge_extension,
-        extended_runtime: call_to_blockifier_runtime,
+        runtime: &mut default_cheatcode_runtime,
     };
 
     // Tests don't have any input arguments. Fuzzing tests actually take the
@@ -506,34 +477,15 @@ pub fn run_native_test_case(
         Err(err) => Err(err),
     };
 
-    let encountered_errors = forge_runtime
-        .extended_runtime
-        .extended_runtime
-        .extension
-        .cheatnet_state
-        .encountered_errors
-        .clone();
+    // TODO: Take these values from the Forge runtime.
+    let encountered_errors = Default::default();
+    let call_trace_ref = CheatnetState::default().trace_data.current_call_stack.top();
+    let fuzzer_args = Default::default();
 
-    let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
-    update_top_call_resources(&mut forge_runtime, tracked_resource);
-    update_top_call_l1_resources(&mut forge_runtime);
-
-    let fuzzer_args = forge_runtime
-        .extended_runtime
-        .extended_runtime
-        .extension
-        .cheatnet_state
-        .fuzzer_args
-        .clone();
-
-    let transaction_context = get_context(&forge_runtime).tx_context.clone();
-    let used_resources =
-        get_all_used_resources(forge_runtime, &transaction_context, tracked_resource);
-    let gas_used = calculate_used_gas(
-        &transaction_context,
-        &mut cached_state,
-        used_resources.clone(),
-    )?;
+    // TODO: Compute resource usage properly.
+    // It should be the same as when using the Cairo VM.
+    let used_resources = Default::default();
+    let gas_used = Default::default();
 
     let fork_data = cached_state
         .state
