@@ -433,6 +433,18 @@ pub fn run_native_test_case(
         syscall_handler: NativeSyscallHandler::new(call.clone(), &mut cached_state, &mut context),
     };
 
+    let mut cheatnet_state = CheatnetState {
+        block_info,
+        ..Default::default()
+    };
+
+    let mut cheatable_starknet_runtime = NativeExtendedRuntime {
+        extension: CheatableStarknetRuntimeExtension {
+            cheatnet_state: &mut cheatnet_state,
+        },
+        runtime: starknet_runtime,
+    };
+
     let mut forge_runtime = NativeExtendedRuntime {
         extension: ForgeExtension {
             environment_variables: runtime_config.environment_variables,
@@ -441,7 +453,7 @@ pub fn run_native_test_case(
             experimental_oracles_enabled: runtime_config.experimental_oracles,
             oracle_hint_service: OracleHintService::default(),
         },
-        runtime: starknet_runtime,
+        runtime: &mut cheatable_starknet_runtime,
     };
 
     // Tests don't have any input arguments. Fuzzing tests actually take the

@@ -24,6 +24,7 @@ use cairo_vm::{
         vm_core::VirtualMachine,
     },
 };
+use runtime::native::{NativeExtensionLogic, NativeStarknetRuntime};
 use runtime::{ExtendedRuntime, ExtensionLogic, StarknetRuntime, SyscallHandlingResult};
 use starknet_types_core::felt::Felt;
 
@@ -126,6 +127,10 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
             _ => {}
         }
     }
+}
+
+impl<'a> NativeExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
+    type Runtime = NativeStarknetRuntime<'a>;
 }
 
 pub fn felt_from_ptr_immutable(

@@ -41,7 +41,7 @@ use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
 use data_transformer::cairo_types::CairoU256;
 use rand::prelude::StdRng;
-use runtime::native::{NativeExtensionLogic, NativeStarknetRuntime, NativeSyscallHandlingResult};
+use runtime::native::{NativeExtendedRuntime, NativeExtensionLogic, NativeSyscallHandlingResult};
 use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
@@ -56,6 +56,8 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
+
+use super::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 
 pub mod cheatcodes;
 pub mod contracts_data;
@@ -569,7 +571,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 }
 
 impl<'a> NativeExtensionLogic for ForgeExtension<'a> {
-    type Runtime = NativeStarknetRuntime<'a>;
+    type Runtime = &'a mut NativeExtendedRuntime<CheatableStarknetRuntimeExtension<'a>>;
 
     fn handle_cheatcode(
         &mut self,
