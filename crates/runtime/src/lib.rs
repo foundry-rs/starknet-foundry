@@ -6,6 +6,7 @@ use blockifier::state::errors::StateError;
 use cairo_lang_casm::hints::{ExternalHint, Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
 use cairo_lang_utils::bigint::BigIntAsHex;
+use cairo_native::starknet::StarknetSyscallHandler;
 use cairo_vm::hint_processor::hint_processor_definition::{
     HintProcessor, HintProcessorLogic, HintReference,
 };
@@ -189,6 +190,236 @@ impl HintProcessorLogic for StarknetRuntime<'_> {
     }
 }
 
+impl<'a> StarknetSyscallHandler for StarknetRuntime<'a> {
+    fn get_block_hash(
+        &mut self,
+        _block_number: u64,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Felt> {
+        todo!()
+    }
+
+    fn get_execution_info(
+        &mut self,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::ExecutionInfo> {
+        todo!()
+    }
+
+    fn get_execution_info_v2(
+        &mut self,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::ExecutionInfoV2> {
+        todo!()
+    }
+
+    fn deploy(
+        &mut self,
+        _class_hash: Felt,
+        _contract_address_salt: Felt,
+        _calldata: &[Felt],
+        _deploy_from_zero: bool,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<(Felt, Vec<Felt>)> {
+        todo!()
+    }
+
+    fn replace_class(
+        &mut self,
+        _class_hash: Felt,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<()> {
+        todo!()
+    }
+
+    fn library_call(
+        &mut self,
+        _class_hash: Felt,
+        _function_selector: Felt,
+        _calldata: &[Felt],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Vec<Felt>> {
+        todo!()
+    }
+
+    fn call_contract(
+        &mut self,
+        _address: Felt,
+        _entry_point_selector: Felt,
+        _calldata: &[Felt],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Vec<Felt>> {
+        todo!()
+    }
+
+    fn storage_read(
+        &mut self,
+        _address_domain: u32,
+        _address: Felt,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Felt> {
+        todo!()
+    }
+
+    fn storage_write(
+        &mut self,
+        _address_domain: u32,
+        _address: Felt,
+        _value: Felt,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<()> {
+        todo!()
+    }
+
+    fn emit_event(
+        &mut self,
+        _keys: &[Felt],
+        _data: &[Felt],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<()> {
+        todo!()
+    }
+
+    fn send_message_to_l1(
+        &mut self,
+        _to_address: Felt,
+        _payload: &[Felt],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<()> {
+        todo!()
+    }
+
+    fn keccak(
+        &mut self,
+        _input: &[u64],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::U256> {
+        todo!()
+    }
+
+    fn secp256k1_new(
+        &mut self,
+        _x: cairo_native::starknet::U256,
+        _y: cairo_native::starknet::U256,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Option<cairo_native::starknet::Secp256k1Point>> {
+        todo!()
+    }
+
+    fn secp256k1_add(
+        &mut self,
+        _p0: cairo_native::starknet::Secp256k1Point,
+        _p1: cairo_native::starknet::Secp256k1Point,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::Secp256k1Point> {
+        todo!()
+    }
+
+    fn secp256k1_mul(
+        &mut self,
+        _p: cairo_native::starknet::Secp256k1Point,
+        _m: cairo_native::starknet::U256,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::Secp256k1Point> {
+        todo!()
+    }
+
+    fn secp256k1_get_point_from_x(
+        &mut self,
+        _x: cairo_native::starknet::U256,
+        _y_parity: bool,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Option<cairo_native::starknet::Secp256k1Point>> {
+        todo!()
+    }
+
+    fn secp256k1_get_xy(
+        &mut self,
+        _p: cairo_native::starknet::Secp256k1Point,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<(
+        cairo_native::starknet::U256,
+        cairo_native::starknet::U256,
+    )> {
+        todo!()
+    }
+
+    fn secp256r1_new(
+        &mut self,
+        _x: cairo_native::starknet::U256,
+        _y: cairo_native::starknet::U256,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Option<cairo_native::starknet::Secp256r1Point>> {
+        todo!()
+    }
+
+    fn secp256r1_add(
+        &mut self,
+        _p0: cairo_native::starknet::Secp256r1Point,
+        _p1: cairo_native::starknet::Secp256r1Point,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::Secp256r1Point> {
+        todo!()
+    }
+
+    fn secp256r1_mul(
+        &mut self,
+        _p: cairo_native::starknet::Secp256r1Point,
+        _m: cairo_native::starknet::U256,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::Secp256r1Point> {
+        todo!()
+    }
+
+    fn secp256r1_get_point_from_x(
+        &mut self,
+        _x: cairo_native::starknet::U256,
+        _y_parity: bool,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Option<cairo_native::starknet::Secp256r1Point>> {
+        todo!()
+    }
+
+    fn secp256r1_get_xy(
+        &mut self,
+        _p: cairo_native::starknet::Secp256r1Point,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<(
+        cairo_native::starknet::U256,
+        cairo_native::starknet::U256,
+    )> {
+        todo!()
+    }
+
+    fn sha256_process_block(
+        &mut self,
+        _state: &mut [u32; 8],
+        _block: &[u32; 16],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<()> {
+        todo!()
+    }
+
+    fn get_class_hash_at(
+        &mut self,
+        _contract_address: Felt,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Felt> {
+        todo!()
+    }
+
+    fn meta_tx_v0(
+        &mut self,
+        _address: Felt,
+        _entry_point_selector: Felt,
+        _calldata: &[Felt],
+        _signature: &[Felt],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Vec<Felt>> {
+        todo!()
+    }
+}
+
 pub struct ExtendedRuntime<Extension: ExtensionLogic> {
     pub extension: Extension,
     pub extended_runtime: <Extension as ExtensionLogic>::Runtime,
@@ -244,6 +475,465 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
         self.extended_runtime
             .compile_hint(hint_code, ap_tracking_data, reference_ids, references)
+    }
+}
+
+impl<Extension: ExtensionLogic> StarknetSyscallHandler for &mut ExtendedRuntime<Extension> {
+    fn get_block_hash(
+        &mut self,
+        _block_number: u64,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Felt> {
+        todo!()
+    }
+
+    fn get_execution_info(
+        &mut self,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::ExecutionInfo> {
+        todo!()
+    }
+
+    fn get_execution_info_v2(
+        &mut self,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::ExecutionInfoV2> {
+        todo!()
+    }
+
+    fn deploy(
+        &mut self,
+        _class_hash: Felt,
+        _contract_address_salt: Felt,
+        _calldata: &[Felt],
+        _deploy_from_zero: bool,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<(Felt, Vec<Felt>)> {
+        todo!()
+    }
+
+    fn replace_class(
+        &mut self,
+        _class_hash: Felt,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<()> {
+        todo!()
+    }
+
+    fn library_call(
+        &mut self,
+        _class_hash: Felt,
+        _function_selector: Felt,
+        _calldata: &[Felt],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Vec<Felt>> {
+        todo!()
+    }
+
+    fn call_contract(
+        &mut self,
+        _address: Felt,
+        _entry_point_selector: Felt,
+        _calldata: &[Felt],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Vec<Felt>> {
+        todo!()
+    }
+
+    fn storage_read(
+        &mut self,
+        _address_domain: u32,
+        _address: Felt,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Felt> {
+        todo!()
+    }
+
+    fn storage_write(
+        &mut self,
+        _address_domain: u32,
+        _address: Felt,
+        _value: Felt,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<()> {
+        todo!()
+    }
+
+    fn emit_event(
+        &mut self,
+        _keys: &[Felt],
+        _data: &[Felt],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<()> {
+        todo!()
+    }
+
+    fn send_message_to_l1(
+        &mut self,
+        _to_address: Felt,
+        _payload: &[Felt],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<()> {
+        todo!()
+    }
+
+    fn keccak(
+        &mut self,
+        _input: &[u64],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::U256> {
+        todo!()
+    }
+
+    fn secp256k1_new(
+        &mut self,
+        _x: cairo_native::starknet::U256,
+        _y: cairo_native::starknet::U256,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Option<cairo_native::starknet::Secp256k1Point>> {
+        todo!()
+    }
+
+    fn secp256k1_add(
+        &mut self,
+        _p0: cairo_native::starknet::Secp256k1Point,
+        _p1: cairo_native::starknet::Secp256k1Point,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::Secp256k1Point> {
+        todo!()
+    }
+
+    fn secp256k1_mul(
+        &mut self,
+        _p: cairo_native::starknet::Secp256k1Point,
+        _m: cairo_native::starknet::U256,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::Secp256k1Point> {
+        todo!()
+    }
+
+    fn secp256k1_get_point_from_x(
+        &mut self,
+        _x: cairo_native::starknet::U256,
+        _y_parity: bool,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Option<cairo_native::starknet::Secp256k1Point>> {
+        todo!()
+    }
+
+    fn secp256k1_get_xy(
+        &mut self,
+        _p: cairo_native::starknet::Secp256k1Point,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<(
+        cairo_native::starknet::U256,
+        cairo_native::starknet::U256,
+    )> {
+        todo!()
+    }
+
+    fn secp256r1_new(
+        &mut self,
+        _x: cairo_native::starknet::U256,
+        _y: cairo_native::starknet::U256,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Option<cairo_native::starknet::Secp256r1Point>> {
+        todo!()
+    }
+
+    fn secp256r1_add(
+        &mut self,
+        _p0: cairo_native::starknet::Secp256r1Point,
+        _p1: cairo_native::starknet::Secp256r1Point,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::Secp256r1Point> {
+        todo!()
+    }
+
+    fn secp256r1_mul(
+        &mut self,
+        _p: cairo_native::starknet::Secp256r1Point,
+        _m: cairo_native::starknet::U256,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::Secp256r1Point> {
+        todo!()
+    }
+
+    fn secp256r1_get_point_from_x(
+        &mut self,
+        _x: cairo_native::starknet::U256,
+        _y_parity: bool,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Option<cairo_native::starknet::Secp256r1Point>> {
+        todo!()
+    }
+
+    fn secp256r1_get_xy(
+        &mut self,
+        _p: cairo_native::starknet::Secp256r1Point,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<(
+        cairo_native::starknet::U256,
+        cairo_native::starknet::U256,
+    )> {
+        todo!()
+    }
+
+    fn sha256_process_block(
+        &mut self,
+        _state: &mut [u32; 8],
+        _block: &[u32; 16],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<()> {
+        todo!()
+    }
+
+    fn get_class_hash_at(
+        &mut self,
+        _contract_address: Felt,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Felt> {
+        todo!()
+    }
+
+    fn meta_tx_v0(
+        &mut self,
+        _address: Felt,
+        _entry_point_selector: Felt,
+        _calldata: &[Felt],
+        _signature: &[Felt],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Vec<Felt>> {
+        todo!()
+    }
+}
+impl<Extension: ExtensionLogic> StarknetSyscallHandler for ExtendedRuntime<Extension> {
+    fn get_block_hash(
+        &mut self,
+        _block_number: u64,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Felt> {
+        todo!()
+    }
+
+    fn get_execution_info(
+        &mut self,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::ExecutionInfo> {
+        todo!()
+    }
+
+    fn get_execution_info_v2(
+        &mut self,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::ExecutionInfoV2> {
+        todo!()
+    }
+
+    fn deploy(
+        &mut self,
+        _class_hash: Felt,
+        _contract_address_salt: Felt,
+        _calldata: &[Felt],
+        _deploy_from_zero: bool,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<(Felt, Vec<Felt>)> {
+        todo!()
+    }
+
+    fn replace_class(
+        &mut self,
+        _class_hash: Felt,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<()> {
+        todo!()
+    }
+
+    fn library_call(
+        &mut self,
+        _class_hash: Felt,
+        _function_selector: Felt,
+        _calldata: &[Felt],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Vec<Felt>> {
+        todo!()
+    }
+
+    fn call_contract(
+        &mut self,
+        _address: Felt,
+        _entry_point_selector: Felt,
+        _calldata: &[Felt],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Vec<Felt>> {
+        todo!()
+    }
+
+    fn storage_read(
+        &mut self,
+        _address_domain: u32,
+        _address: Felt,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Felt> {
+        todo!()
+    }
+
+    fn storage_write(
+        &mut self,
+        _address_domain: u32,
+        _address: Felt,
+        _value: Felt,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<()> {
+        todo!()
+    }
+
+    fn emit_event(
+        &mut self,
+        _keys: &[Felt],
+        _data: &[Felt],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<()> {
+        todo!()
+    }
+
+    fn send_message_to_l1(
+        &mut self,
+        _to_address: Felt,
+        _payload: &[Felt],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<()> {
+        todo!()
+    }
+
+    fn keccak(
+        &mut self,
+        _input: &[u64],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::U256> {
+        todo!()
+    }
+
+    fn secp256k1_new(
+        &mut self,
+        _x: cairo_native::starknet::U256,
+        _y: cairo_native::starknet::U256,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Option<cairo_native::starknet::Secp256k1Point>> {
+        todo!()
+    }
+
+    fn secp256k1_add(
+        &mut self,
+        _p0: cairo_native::starknet::Secp256k1Point,
+        _p1: cairo_native::starknet::Secp256k1Point,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::Secp256k1Point> {
+        todo!()
+    }
+
+    fn secp256k1_mul(
+        &mut self,
+        _p: cairo_native::starknet::Secp256k1Point,
+        _m: cairo_native::starknet::U256,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::Secp256k1Point> {
+        todo!()
+    }
+
+    fn secp256k1_get_point_from_x(
+        &mut self,
+        _x: cairo_native::starknet::U256,
+        _y_parity: bool,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Option<cairo_native::starknet::Secp256k1Point>> {
+        todo!()
+    }
+
+    fn secp256k1_get_xy(
+        &mut self,
+        _p: cairo_native::starknet::Secp256k1Point,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<(
+        cairo_native::starknet::U256,
+        cairo_native::starknet::U256,
+    )> {
+        todo!()
+    }
+
+    fn secp256r1_new(
+        &mut self,
+        _x: cairo_native::starknet::U256,
+        _y: cairo_native::starknet::U256,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Option<cairo_native::starknet::Secp256r1Point>> {
+        todo!()
+    }
+
+    fn secp256r1_add(
+        &mut self,
+        _p0: cairo_native::starknet::Secp256r1Point,
+        _p1: cairo_native::starknet::Secp256r1Point,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::Secp256r1Point> {
+        todo!()
+    }
+
+    fn secp256r1_mul(
+        &mut self,
+        _p: cairo_native::starknet::Secp256r1Point,
+        _m: cairo_native::starknet::U256,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<cairo_native::starknet::Secp256r1Point> {
+        todo!()
+    }
+
+    fn secp256r1_get_point_from_x(
+        &mut self,
+        _x: cairo_native::starknet::U256,
+        _y_parity: bool,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Option<cairo_native::starknet::Secp256r1Point>> {
+        todo!()
+    }
+
+    fn secp256r1_get_xy(
+        &mut self,
+        _p: cairo_native::starknet::Secp256r1Point,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<(
+        cairo_native::starknet::U256,
+        cairo_native::starknet::U256,
+    )> {
+        todo!()
+    }
+
+    fn sha256_process_block(
+        &mut self,
+        _state: &mut [u32; 8],
+        _block: &[u32; 16],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<()> {
+        todo!()
+    }
+
+    fn get_class_hash_at(
+        &mut self,
+        _contract_address: Felt,
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Felt> {
+        todo!()
+    }
+
+    fn meta_tx_v0(
+        &mut self,
+        _address: Felt,
+        _entry_point_selector: Felt,
+        _calldata: &[Felt],
+        _signature: &[Felt],
+        _remaining_gas: &mut u64,
+    ) -> cairo_native::starknet::SyscallResult<Vec<Felt>> {
+        todo!()
     }
 }
 
@@ -400,7 +1090,7 @@ impl CheatcodeHandlingResult {
 }
 
 pub trait ExtensionLogic {
-    type Runtime: HintProcessor + SyscallPtrAccess + SignalPropagator;
+    type Runtime: HintProcessor + SyscallPtrAccess + SignalPropagator + StarknetSyscallHandler;
 
     fn override_system_call(
         &mut self,
