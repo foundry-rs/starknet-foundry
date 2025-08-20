@@ -108,6 +108,7 @@ impl RunForPackageArgs {
             &args.additional_args,
             args.trace_args.clone(),
             args.experimental_oracles,
+            args.use_native,
         ));
 
         let test_filter = TestsFilter::from_flags(

@@ -27,6 +27,7 @@ pub struct TestRunnerConfig {
     pub environment_variables: HashMap<String, String>,
     pub tracked_resource: ForgeTrackedResource,
     pub experimental_oracles: bool,
+    pub use_native: bool,
 }
 
 #[derive(Debug, PartialEq)]

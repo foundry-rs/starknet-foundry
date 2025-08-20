@@ -220,6 +220,9 @@ pub struct TestArgs {
     #[arg(long, default_value_t = false, env = "SNFORGE_EXPERIMENTAL_ORACLES")]
     experimental_oracles: bool,
 
+    #[arg(long, default_value_t = false)]
+    use_native: bool,
+
     #[command(flatten)]
     scarb_args: ScarbArgs,
 }
@@ -274,7 +277,6 @@ pub enum ExitStatus {
 
 pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
     let cli = Cli::parse();
-
     match cli.subcommand {
         ForgeSubcommand::Init { name } => {
             init::init(name.as_str(), &ui)?;

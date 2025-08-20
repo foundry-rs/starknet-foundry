@@ -29,6 +29,7 @@ pub fn combine_configs(
     additional_args: &[OsString],
     trace_args: TraceArgs,
     experimental_oracles: bool,
+    use_native: bool,
 ) -> ForgeConfig {
     let execution_data_to_save = ExecutionDataToSave::from_flags(
         save_trace_data || forge_config_from_scarb.save_trace_data,
@@ -53,6 +54,7 @@ pub fn combine_configs(
             tracked_resource,
             environment_variables: env::vars().collect(),
             experimental_oracles,
+            use_native,
         }),
         output_config: Arc::new(OutputConfig {
             trace_args,
@@ -84,6 +86,7 @@ mod tests {
             &[],
             TraceArgs::default(),
             false,
+            false,
         );
         let config2 = combine_configs(
             false,
@@ -100,6 +103,7 @@ mod tests {
             &ForgeConfigFromScarb::default(),
             &[],
             TraceArgs::default(),
+            false,
             false,
         );
 
@@ -129,6 +133,7 @@ mod tests {
             &[],
             TraceArgs::default(),
             false,
+            false,
         );
         assert_eq!(
             config,
@@ -144,6 +149,7 @@ mod tests {
                     contracts_data: ContractsData::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
                     experimental_oracles: false,
+                    use_native: false
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: false,
@@ -185,6 +191,7 @@ mod tests {
             &[],
             TraceArgs::default(),
             false,
+            false,
         );
         assert_eq!(
             config,
@@ -200,6 +207,7 @@ mod tests {
                     contracts_data: ContractsData::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
                     experimental_oracles: false,
+                    use_native: false
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: true,
@@ -245,6 +253,7 @@ mod tests {
             &[],
             TraceArgs::default(),
             false,
+            false,
         );
 
         assert_eq!(
@@ -261,6 +270,7 @@ mod tests {
                     contracts_data: ContractsData::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
                     experimental_oracles: false,
+                    use_native: false
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: true,
