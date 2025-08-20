@@ -48,7 +48,7 @@ fn meta_tx_v0_with_cheat_caller_address() {
 
                 let meta_result = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
 
-                assert(meta_result == 123, 'Should see cheated addr');
+                assert(meta_result == cheated_address.into(), 'Should see cheated addr');
 
                 stop_cheat_caller_address(checker_address);
 
@@ -116,7 +116,7 @@ fn meta_tx_v0_with_cheat_block_number() {
 
                 let meta_result = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
 
-                assert(meta_result == 999, 'Should see cheated block');
+                assert(meta_result == cheated_block_number.into(), 'Should see cheated block');
 
                 stop_cheat_block_number(checker_address);
 
@@ -185,7 +185,7 @@ fn meta_tx_v0_with_cheat_block_hash() {
 
                 let meta_result = meta_dispatcher.execute_meta_tx_v0_get_block_hash(checker_address, block_number, signature.span());
 
-                assert(meta_result == 555, 'Should see cheated hash');
+                assert(meta_result == cheated_hash, 'Should see cheated hash');
 
                 stop_cheat_block_hash(checker_address, block_number);
 
@@ -253,7 +253,7 @@ fn meta_tx_v0_with_cheat_sequencer_address() {
 
                 let meta_result = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
 
-                assert(meta_result == 777, 'Should see cheated seq');
+                assert(meta_result == cheated_address.into(), 'Should see cheated seq');
 
                 stop_cheat_sequencer_address(checker_address);
 
@@ -320,7 +320,7 @@ fn meta_tx_v0_with_cheat_block_timestamp() {
 
                 let meta_result = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
 
-                assert(meta_result == 1234567890, 'Should see cheated time');
+                assert(meta_result == cheated_timestamp.into(), 'Should see cheated time');
 
                 stop_cheat_block_timestamp(checker_address);
 
@@ -386,10 +386,10 @@ fn meta_tx_v0_with_cheat_caller_address_span() {
                 cheat_caller_address(checker_address, cheated_address, CheatSpan::TargetCalls(2));
 
                 let first_result = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
-                assert(first_result == 123, 'First call should be cheated');
+                assert(first_result == cheated_address.into(), 'First call should be cheated');
 
                 let second_result = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
-                assert(second_result == 123, 'Second call should be cheated');
+                assert(second_result == cheated_address.into(), 'Second call should be cheated');
 
                 let third_result = meta_dispatcher.execute_meta_tx_v0(checker_address, signature.span());
                 assert(third_result == original_caller, 'Third call should revert back');

@@ -17,7 +17,7 @@ fn meta_tx_v0_with_cheat_caller_address() {
 
     let meta_contract = test_env.deploy("MetaTxV0Test", &[]);
 
-    let signature: Vec<Felt> = vec![];
+    let signature = vec![];
 
     let meta_result = test_env.call_contract(
         &meta_contract,
@@ -43,7 +43,7 @@ fn meta_tx_v0_with_cheat_block_number() {
 
     let meta_contract = test_env.deploy("MetaTxV0Test", &[]);
 
-    let signature: Vec<Felt> = vec![];
+    let signature = vec![];
 
     let meta_result = test_env.call_contract(
         &meta_contract,
@@ -69,7 +69,7 @@ fn meta_tx_v0_with_cheat_block_timestamp() {
 
     let meta_contract = test_env.deploy("MetaTxV0Test", &[]);
 
-    let signature: Vec<Felt> = vec![];
+    let signature = vec![];
 
     let meta_result = test_env.call_contract(
         &meta_contract,
@@ -95,7 +95,7 @@ fn meta_tx_v0_with_cheat_sequencer_address() {
 
     let meta_contract = test_env.deploy("MetaTxV0Test", &[]);
 
-    let signature: Vec<Felt> = vec![];
+    let signature = vec![];
 
     let meta_result = test_env.call_contract(
         &meta_contract,
@@ -123,7 +123,7 @@ fn meta_tx_v0_with_cheat_block_hash() {
 
     let meta_contract = test_env.deploy("MetaTxV0Test", &[]);
 
-    let signature: Vec<Felt> = vec![];
+    let signature = vec![];
 
     let meta_result = test_env.call_contract(
         &meta_contract,
@@ -152,7 +152,7 @@ fn meta_tx_v0_verify_tx_context_modification() {
 
     let meta_contract = test_env.deploy("MetaTxV0Test", &[]);
 
-    let signature: Vec<Felt> = vec![];
+    let signature = vec![];
 
     let meta_result = test_env.call_contract(
         &meta_contract,

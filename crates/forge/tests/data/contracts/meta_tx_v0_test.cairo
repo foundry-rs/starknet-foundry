@@ -18,16 +18,13 @@ mod MetaTxV0Test {
     #[storage]
     struct Storage {}
 
-    #[constructor]
-    fn constructor(ref self: ContractState) {}
-
     #[abi(embed_v0)]
     impl IMetaTxV0Test of super::IMetaTxV0Test<ContractState> {
         fn execute_meta_tx_v0(
             ref self: ContractState, target: starknet::ContractAddress, signature: Span<felt252>,
         ) -> felt252 {
             let selector = selector!("__execute__");
-            let calldata: Array<felt252> = array![];
+            let calldata = array![];
 
             let result = meta_tx_v0_syscall(target, selector, calldata.span(), signature).unwrap();
 
@@ -41,7 +38,7 @@ mod MetaTxV0Test {
             signature: Span<felt252>,
         ) -> felt252 {
             let selector = selector!("__execute__");
-            let calldata: Array<felt252> = array![block_number.into()];
+            let calldata = array![block_number.into()];
 
             let result = meta_tx_v0_syscall(target, selector, calldata.span(), signature).unwrap();
 
