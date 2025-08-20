@@ -575,6 +575,7 @@ impl<'a> NativeExtensionLogic for ForgeExtension<'a> {
         &mut self,
         selector: Felt,
         _input: &[Felt],
+        _runtime: &mut Self::Runtime,
     ) -> anyhow::Result<NativeSyscallHandlingResult<Vec<Felt>>> {
         let selector_bytes = selector.to_bytes_be();
         let selector = std::str::from_utf8(&selector_bytes)?.trim_start_matches('\0');

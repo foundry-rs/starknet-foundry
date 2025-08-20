@@ -27,6 +27,7 @@ pub trait NativeExtensionLogic {
         &mut self,
         _selector: Felt252,
         _input: &[Felt252],
+        _runtime: &mut Self::Runtime,
     ) -> anyhow::Result<NativeSyscallHandlingResult<Vec<Felt252>>> {
         Ok(NativeSyscallHandlingResult::Forwarded)
     }
@@ -35,6 +36,7 @@ pub trait NativeExtensionLogic {
         &mut self,
         _block_number: u64,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<Felt252>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -42,6 +44,7 @@ pub trait NativeExtensionLogic {
     fn handle_get_execution_info(
         &mut self,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<ExecutionInfo>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -49,6 +52,7 @@ pub trait NativeExtensionLogic {
     fn handle_get_execution_info_v2(
         &mut self,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<ExecutionInfoV2>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -60,6 +64,7 @@ pub trait NativeExtensionLogic {
         _calldata: &[Felt252],
         _deploy_from_zero: bool,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<(Felt252, Vec<Felt252>)>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -68,6 +73,7 @@ pub trait NativeExtensionLogic {
         &mut self,
         _class_hash: Felt252,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<()>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -78,6 +84,7 @@ pub trait NativeExtensionLogic {
         _function_selector: Felt252,
         _calldata: &[Felt252],
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<Vec<Felt252>>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -88,6 +95,7 @@ pub trait NativeExtensionLogic {
         _entry_point_selector: Felt252,
         _calldata: &[Felt252],
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<Vec<Felt252>>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -97,6 +105,7 @@ pub trait NativeExtensionLogic {
         _address_domain: u32,
         _address: Felt252,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<Felt252>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -107,6 +116,7 @@ pub trait NativeExtensionLogic {
         _address: Felt252,
         _value: Felt252,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<()>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -116,6 +126,7 @@ pub trait NativeExtensionLogic {
         _keys: &[Felt252],
         _data: &[Felt252],
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<()>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -125,6 +136,7 @@ pub trait NativeExtensionLogic {
         _to_address: Felt252,
         _payload: &[Felt252],
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<()>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -133,6 +145,7 @@ pub trait NativeExtensionLogic {
         &mut self,
         _input: &[u64],
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<U256>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -142,6 +155,7 @@ pub trait NativeExtensionLogic {
         _x: U256,
         _y: U256,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<Option<Secp256k1Point>>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -151,6 +165,7 @@ pub trait NativeExtensionLogic {
         _p0: Secp256k1Point,
         _p1: Secp256k1Point,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<Secp256k1Point>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -160,6 +175,7 @@ pub trait NativeExtensionLogic {
         _p: Secp256k1Point,
         _m: U256,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<Secp256k1Point>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -169,6 +185,7 @@ pub trait NativeExtensionLogic {
         _x: U256,
         _y_parity: bool,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<Option<Secp256k1Point>>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -177,6 +194,7 @@ pub trait NativeExtensionLogic {
         &mut self,
         _p: Secp256k1Point,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<(U256, U256)>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -186,6 +204,7 @@ pub trait NativeExtensionLogic {
         _x: U256,
         _y: U256,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<Option<Secp256r1Point>>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -195,6 +214,7 @@ pub trait NativeExtensionLogic {
         _p0: Secp256r1Point,
         _p1: Secp256r1Point,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<Secp256r1Point>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -204,6 +224,7 @@ pub trait NativeExtensionLogic {
         _p: Secp256r1Point,
         _m: U256,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<Secp256r1Point>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -213,6 +234,7 @@ pub trait NativeExtensionLogic {
         _x: U256,
         _y_parity: bool,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<Option<Secp256r1Point>>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -221,6 +243,7 @@ pub trait NativeExtensionLogic {
         &mut self,
         _p: Secp256r1Point,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<(U256, U256)>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -230,6 +253,7 @@ pub trait NativeExtensionLogic {
         _state: &mut [u32; 8],
         _block: &[u32; 16],
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<()>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -238,6 +262,7 @@ pub trait NativeExtensionLogic {
         &mut self,
         _contract_address: Felt252,
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<Felt252>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -249,6 +274,7 @@ pub trait NativeExtensionLogic {
         _calldata: &[Felt252],
         _signature: &[Felt252],
         _remaining_gas: &mut u64,
+        _runtime: &mut Self::Runtime,
     ) -> NativeSyscallHandlingResult<SyscallResult<Vec<Felt252>>> {
         NativeSyscallHandlingResult::Forwarded
     }
@@ -256,7 +282,10 @@ pub trait NativeExtensionLogic {
 
 impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRuntime<E> {
     fn cheatcode(&mut self, selector: Felt252, input: &[Felt252]) -> Vec<Felt252> {
-        match self.extension.handle_cheatcode(selector, input) {
+        match self
+            .extension
+            .handle_cheatcode(selector, input, &mut self.runtime)
+        {
             Ok(NativeSyscallHandlingResult::Handled(result)) => Ok(RawFeltVec::new(result)),
             Ok(NativeSyscallHandlingResult::Forwarded) => {
                 return self.runtime.cheatcode(selector, input);
@@ -273,7 +302,7 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
     ) -> SyscallResult<Felt252> {
         match self
             .extension
-            .handle_get_block_hash(block_number, remaining_gas)
+            .handle_get_block_hash(block_number, remaining_gas, &mut self.runtime)
         {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime.get_block_hash(block_number, remaining_gas)
@@ -283,7 +312,10 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
     }
 
     fn get_execution_info(&mut self, remaining_gas: &mut u64) -> SyscallResult<ExecutionInfo> {
-        match self.extension.handle_get_execution_info(remaining_gas) {
+        match self
+            .extension
+            .handle_get_execution_info(remaining_gas, &mut self.runtime)
+        {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime.get_execution_info(remaining_gas)
             }
@@ -292,7 +324,10 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
     }
 
     fn get_execution_info_v2(&mut self, remaining_gas: &mut u64) -> SyscallResult<ExecutionInfoV2> {
-        match self.extension.handle_get_execution_info_v2(remaining_gas) {
+        match self
+            .extension
+            .handle_get_execution_info_v2(remaining_gas, &mut self.runtime)
+        {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime.get_execution_info_v2(remaining_gas)
             }
@@ -314,6 +349,7 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
             calldata,
             deploy_from_zero,
             remaining_gas,
+            &mut self.runtime,
         ) {
             NativeSyscallHandlingResult::Forwarded => self.runtime.deploy(
                 class_hash,
@@ -329,7 +365,7 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
     fn replace_class(&mut self, class_hash: Felt252, remaining_gas: &mut u64) -> SyscallResult<()> {
         match self
             .extension
-            .handle_replace_class(class_hash, remaining_gas)
+            .handle_replace_class(class_hash, remaining_gas, &mut self.runtime)
         {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime.replace_class(class_hash, remaining_gas)
@@ -350,6 +386,7 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
             function_selector,
             calldata,
             remaining_gas,
+            &mut self.runtime,
         ) {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime
@@ -371,6 +408,7 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
             entry_point_selector,
             calldata,
             remaining_gas,
+            &mut self.runtime,
         ) {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime
@@ -386,10 +424,12 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
         address: Felt252,
         remaining_gas: &mut u64,
     ) -> SyscallResult<Felt252> {
-        match self
-            .extension
-            .handle_storage_read(address_domain, address, remaining_gas)
-        {
+        match self.extension.handle_storage_read(
+            address_domain,
+            address,
+            remaining_gas,
+            &mut self.runtime,
+        ) {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime
                     .storage_read(address_domain, address, remaining_gas)
@@ -405,10 +445,13 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
         value: Felt252,
         remaining_gas: &mut u64,
     ) -> SyscallResult<()> {
-        match self
-            .extension
-            .handle_storage_write(address_domain, address, value, remaining_gas)
-        {
+        match self.extension.handle_storage_write(
+            address_domain,
+            address,
+            value,
+            remaining_gas,
+            &mut self.runtime,
+        ) {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime
                     .storage_write(address_domain, address, value, remaining_gas)
@@ -423,7 +466,10 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
         data: &[Felt252],
         remaining_gas: &mut u64,
     ) -> SyscallResult<()> {
-        match self.extension.handle_emit_event(keys, data, remaining_gas) {
+        match self
+            .extension
+            .handle_emit_event(keys, data, remaining_gas, &mut self.runtime)
+        {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime.emit_event(keys, data, remaining_gas)
             }
@@ -437,10 +483,12 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
         payload: &[Felt252],
         remaining_gas: &mut u64,
     ) -> SyscallResult<()> {
-        match self
-            .extension
-            .handle_send_message_to_l1(to_address, payload, remaining_gas)
-        {
+        match self.extension.handle_send_message_to_l1(
+            to_address,
+            payload,
+            remaining_gas,
+            &mut self.runtime,
+        ) {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime
                     .send_message_to_l1(to_address, payload, remaining_gas)
@@ -450,7 +498,10 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
     }
 
     fn keccak(&mut self, input: &[u64], remaining_gas: &mut u64) -> SyscallResult<U256> {
-        match self.extension.handle_keccak(input, remaining_gas) {
+        match self
+            .extension
+            .handle_keccak(input, remaining_gas, &mut self.runtime)
+        {
             NativeSyscallHandlingResult::Forwarded => self.runtime.keccak(input, remaining_gas),
             NativeSyscallHandlingResult::Handled(result) => result,
         }
@@ -462,7 +513,10 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
         y: U256,
         remaining_gas: &mut u64,
     ) -> SyscallResult<Option<Secp256k1Point>> {
-        match self.extension.handle_secp256k1_new(x, y, remaining_gas) {
+        match self
+            .extension
+            .handle_secp256k1_new(x, y, remaining_gas, &mut self.runtime)
+        {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime.secp256k1_new(x, y, remaining_gas)
             }
@@ -476,7 +530,10 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
         p1: Secp256k1Point,
         remaining_gas: &mut u64,
     ) -> SyscallResult<Secp256k1Point> {
-        match self.extension.handle_secp256k1_add(p0, p1, remaining_gas) {
+        match self
+            .extension
+            .handle_secp256k1_add(p0, p1, remaining_gas, &mut self.runtime)
+        {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime.secp256k1_add(p0, p1, remaining_gas)
             }
@@ -490,7 +547,10 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
         m: U256,
         remaining_gas: &mut u64,
     ) -> SyscallResult<Secp256k1Point> {
-        match self.extension.handle_secp256k1_mul(p, m, remaining_gas) {
+        match self
+            .extension
+            .handle_secp256k1_mul(p, m, remaining_gas, &mut self.runtime)
+        {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime.secp256k1_mul(p, m, remaining_gas)
             }
@@ -504,10 +564,12 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
         y_parity: bool,
         remaining_gas: &mut u64,
     ) -> SyscallResult<Option<Secp256k1Point>> {
-        match self
-            .extension
-            .handle_secp256k1_get_point_from_x(x, y_parity, remaining_gas)
-        {
+        match self.extension.handle_secp256k1_get_point_from_x(
+            x,
+            y_parity,
+            remaining_gas,
+            &mut self.runtime,
+        ) {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime
                     .secp256k1_get_point_from_x(x, y_parity, remaining_gas)
@@ -521,7 +583,10 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
         p: Secp256k1Point,
         remaining_gas: &mut u64,
     ) -> SyscallResult<(U256, U256)> {
-        match self.extension.handle_secp256k1_get_xy(p, remaining_gas) {
+        match self
+            .extension
+            .handle_secp256k1_get_xy(p, remaining_gas, &mut self.runtime)
+        {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime.secp256k1_get_xy(p, remaining_gas)
             }
@@ -535,7 +600,10 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
         y: U256,
         remaining_gas: &mut u64,
     ) -> SyscallResult<Option<Secp256r1Point>> {
-        match self.extension.handle_secp256r1_new(x, y, remaining_gas) {
+        match self
+            .extension
+            .handle_secp256r1_new(x, y, remaining_gas, &mut self.runtime)
+        {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime.secp256r1_new(x, y, remaining_gas)
             }
@@ -549,7 +617,10 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
         p1: Secp256r1Point,
         remaining_gas: &mut u64,
     ) -> SyscallResult<Secp256r1Point> {
-        match self.extension.handle_secp256r1_add(p0, p1, remaining_gas) {
+        match self
+            .extension
+            .handle_secp256r1_add(p0, p1, remaining_gas, &mut self.runtime)
+        {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime.secp256r1_add(p0, p1, remaining_gas)
             }
@@ -563,7 +634,10 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
         m: U256,
         remaining_gas: &mut u64,
     ) -> SyscallResult<Secp256r1Point> {
-        match self.extension.handle_secp256r1_mul(p, m, remaining_gas) {
+        match self
+            .extension
+            .handle_secp256r1_mul(p, m, remaining_gas, &mut self.runtime)
+        {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime.secp256r1_mul(p, m, remaining_gas)
             }
@@ -577,10 +651,12 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
         y_parity: bool,
         remaining_gas: &mut u64,
     ) -> SyscallResult<Option<Secp256r1Point>> {
-        match self
-            .extension
-            .handle_secp256r1_get_point_from_x(x, y_parity, remaining_gas)
-        {
+        match self.extension.handle_secp256r1_get_point_from_x(
+            x,
+            y_parity,
+            remaining_gas,
+            &mut self.runtime,
+        ) {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime
                     .secp256r1_get_point_from_x(x, y_parity, remaining_gas)
@@ -594,7 +670,10 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
         p: Secp256r1Point,
         remaining_gas: &mut u64,
     ) -> SyscallResult<(U256, U256)> {
-        match self.extension.handle_secp256r1_get_xy(p, remaining_gas) {
+        match self
+            .extension
+            .handle_secp256r1_get_xy(p, remaining_gas, &mut self.runtime)
+        {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime.secp256r1_get_xy(p, remaining_gas)
             }
@@ -608,10 +687,12 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
         block: &[u32; 16],
         remaining_gas: &mut u64,
     ) -> SyscallResult<()> {
-        match self
-            .extension
-            .handle_sha256_process_block(state, block, remaining_gas)
-        {
+        match self.extension.handle_sha256_process_block(
+            state,
+            block,
+            remaining_gas,
+            &mut self.runtime,
+        ) {
             NativeSyscallHandlingResult::Forwarded => {
                 self.runtime
                     .sha256_process_block(state, block, remaining_gas)
@@ -625,10 +706,11 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
         contract_address: Felt252,
         remaining_gas: &mut u64,
     ) -> SyscallResult<Felt252> {
-        match self
-            .extension
-            .handle_get_class_hash_at(contract_address, remaining_gas)
-        {
+        match self.extension.handle_get_class_hash_at(
+            contract_address,
+            remaining_gas,
+            &mut self.runtime,
+        ) {
             NativeSyscallHandlingResult::Forwarded => self
                 .runtime
                 .get_class_hash_at(contract_address, remaining_gas),
@@ -650,6 +732,7 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
             calldata,
             signature,
             remaining_gas,
+            &mut self.runtime,
         ) {
             NativeSyscallHandlingResult::Forwarded => self.runtime.meta_tx_v0(
                 address,
