@@ -42,7 +42,6 @@ cairo-lang-casm.workspace = true
 itertools.workspace = true
 starknet-types-core.workspace = true
 cairo-vm.workspace = true
-cairo-native.workspace = true
 blockifier.workspace = true
 semver.workspace = true
 sha3.workspace = true

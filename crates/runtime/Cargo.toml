@@ -17,7 +17,6 @@ starknet_api.workspace = true
 starknet.workspace = true
 blockifier.workspace = true
 cairo-vm.workspace = true
-cairo-native.workspace = true
 serde_json.workspace = true
 serde.workspace = true
 thiserror.workspace = true
