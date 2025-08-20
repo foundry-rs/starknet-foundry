@@ -260,7 +260,6 @@ pub fn meta_tx_v0_syscall(
     );
 
     // region: Modified blockifier code
-    // Call the cheatcode-aware meta_tx_v0 implementation
     let retdata_segment = meta_tx_v0(
         syscall_handler,
         vm,
@@ -369,7 +368,6 @@ fn meta_tx_v0(
     .map_err(|error| {
         SyscallExecutionError::from_self_or_revert(error.try_extract_revert().map_original(
             |error| {
-                // TODO(lior): Change to meta-tx specific error.
                 error.as_call_contract_execution_error(
                     class_hash,
                     contract_address,

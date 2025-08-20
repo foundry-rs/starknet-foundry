@@ -1,5 +1,5 @@
 #[starknet::interface]
-trait ICheatCallerAddressCheckerMetaTxV0<TContractState> {
+trait ICheckerMetaTxV0<TContractState> {
     fn __execute__(ref self: TContractState) -> felt252;
 }
 
@@ -9,81 +9,11 @@ mod CheatCallerAddressCheckerMetaTxV0 {
     struct Storage {}
 
     #[abi(embed_v0)]
-    impl ICheatCallerAddressCheckerMetaTxV0 of super::ICheatCallerAddressCheckerMetaTxV0<
-        ContractState,
-    > {
+    impl ICheckerMetaTxV0 of super::ICheckerMetaTxV0<ContractState> {
         fn __execute__(ref self: ContractState) -> felt252 {
             starknet::get_caller_address().into()
         }
     }
-}
-
-#[starknet::interface]
-trait ICheatBlockNumberCheckerMetaTxV0<TContractState> {
-    fn __execute__(ref self: TContractState) -> felt252;
-}
-
-#[starknet::contract(account)]
-mod CheatBlockNumberCheckerMetaTxV0 {
-    #[storage]
-    struct Storage {}
-
-    #[abi(embed_v0)]
-    impl ICheatBlockNumberCheckerMetaTxV0 of super::ICheatBlockNumberCheckerMetaTxV0<
-        ContractState,
-    > {
-        fn __execute__(ref self: ContractState) -> felt252 {
-            let block_number = starknet::get_block_number();
-            block_number.into()
-        }
-    }
-}
-
-#[starknet::interface]
-trait ICheatBlockTimestampCheckerMetaTxV0<TContractState> {
-    fn __execute__(ref self: TContractState) -> felt252;
-}
-
-#[starknet::contract(account)]
-mod CheatBlockTimestampCheckerMetaTxV0 {
-    #[storage]
-    struct Storage {}
-
-    #[abi(embed_v0)]
-    impl ICheatBlockTimestampCheckerMetaTxV0 of super::ICheatBlockTimestampCheckerMetaTxV0<
-        ContractState,
-    > {
-        fn __execute__(ref self: ContractState) -> felt252 {
-            let block_timestamp = starknet::get_block_timestamp();
-            block_timestamp.into()
-        }
-    }
-}
-
-#[starknet::interface]
-trait ICheatSequencerAddressCheckerMetaTxV0<TContractState> {
-    fn __execute__(ref self: TContractState) -> felt252;
-}
-
-#[starknet::contract(account)]
-mod CheatSequencerAddressCheckerMetaTxV0 {
-    #[storage]
-    struct Storage {}
-
-    #[abi(embed_v0)]
-    impl ICheatSequencerAddressCheckerMetaTxV0 of super::ICheatSequencerAddressCheckerMetaTxV0<
-        ContractState,
-    > {
-        fn __execute__(ref self: ContractState) -> felt252 {
-            let sequencer_address = starknet::get_block_info().unbox().sequencer_address;
-            sequencer_address.into()
-        }
-    }
-}
-
-#[starknet::interface]
-trait ITxInfoCheckerMetaTxV0<TContractState> {
-    fn __execute__(ref self: TContractState) -> felt252;
 }
 
 #[starknet::contract(account)]
@@ -94,7 +24,7 @@ mod TxInfoCheckerMetaTxV0 {
     struct Storage {}
 
     #[abi(embed_v0)]
-    impl ITxInfoCheckerMetaTxV0 of super::ITxInfoCheckerMetaTxV0<ContractState> {
+    impl ITxInfoCheckerMetaTxV0 of super::ICheckerMetaTxV0<ContractState> {
         fn __execute__(ref self: ContractState) -> felt252 {
             let execution_info = get_execution_info().unbox();
             let tx_info = execution_info.tx_info.unbox();
