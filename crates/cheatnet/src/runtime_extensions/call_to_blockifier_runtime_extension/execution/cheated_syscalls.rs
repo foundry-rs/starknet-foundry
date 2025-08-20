@@ -12,8 +12,8 @@ use blockifier::execution::syscalls::vm_syscall_utils::{
     CallContractRequest, DeployRequest, DeployResponse, EmptyRequest, GetBlockHashRequest,
     GetBlockHashResponse, GetExecutionInfoResponse, LibraryCallRequest, MetaTxV0Request,
     MetaTxV0Response, StorageReadRequest, StorageReadResponse, StorageWriteRequest,
-    StorageWriteResponse, SyscallExecutorBaseError, SyscallRequest, SyscallResponse,
-    SyscallSelector, TryExtractRevert, WriteResponseResult,
+    StorageWriteResponse, SyscallExecutorBaseError, SyscallResponse, SyscallSelector,
+    TryExtractRevert, WriteResponseResult,
 };
 use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
 use blockifier::execution::{
@@ -40,9 +40,9 @@ use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::TEST_ADDRESS;
 use starknet_api::abi::abi_utils::selector_from_name;
 use starknet_api::core::EntryPointSelector;
-use starknet_api::transaction::TransactionHasher;
 use starknet_api::transaction::constants::EXECUTE_ENTRY_POINT_NAME;
 use starknet_api::transaction::fields::TransactionSignature;
+use starknet_api::transaction::{TransactionHasher, TransactionOptions, signed_tx_version};
 use starknet_api::{
     contract_class::EntryPointType,
     core::{ClassHash, ContractAddress, Nonce, calculate_contract_address},
@@ -243,7 +243,7 @@ pub fn call_contract_syscall(
     // endregion
 }
 
-// blockifier/src/execution/syscalls/hint_processor.rs:645 (meta_tx_v0)
+// blockifier/src/execution/syscalls/hint_processor.rs:637 (meta_tx_v0)
 #[allow(clippy::result_large_err)]
 pub fn meta_tx_v0_syscall(
     request: MetaTxV0Request,
@@ -252,20 +252,16 @@ pub fn meta_tx_v0_syscall(
     cheatnet_state: &mut CheatnetState,
     remaining_gas: &mut u64,
 ) -> SyscallResult<MetaTxV0Response> {
-    // Increment the MetaTxV0 syscall's linear cost counter by the number of elements in the
-    // calldata.
-    syscall_handler.increment_linear_factor_by(
-        &SyscallSelector::MetaTxV0,
-        request.get_linear_factor_length(),
-    );
+    let storage_address = request.contract_address;
+    let selector = request.entry_point_selector;
 
     // region: Modified blockifier code
     let retdata_segment = meta_tx_v0(
         syscall_handler,
         vm,
         cheatnet_state,
-        request.contract_address,
-        request.entry_point_selector,
+        storage_address,
+        selector,
         request.calldata,
         request.signature,
         remaining_gas,
@@ -277,7 +273,7 @@ pub fn meta_tx_v0_syscall(
     })
 }
 
-// blockifier/src/execution/syscalls/syscall_base.rs:255 (meta_tx_v0)
+// blockifier/src/execution/syscalls/syscall_base.rs:278 (meta_tx_v0)
 #[allow(clippy::result_large_err, clippy::too_many_arguments)]
 fn meta_tx_v0(
     syscall_handler: &mut SyscallHintProcessor<'_>,
@@ -289,6 +285,8 @@ fn meta_tx_v0(
     signature: TransactionSignature,
     remaining_gas: &mut u64,
 ) -> SyscallResult<ReadOnlySegment> {
+    syscall_handler.increment_linear_factor_by(&SyscallSelector::MetaTxV0, calldata.0.len());
+
     if syscall_handler.base.context.execution_mode == ExecutionMode::Validate {
         //region: Modified blockifier code
         return Err(SyscallExecutorBaseError::InvalidSyscallInExecutionMode {
@@ -330,8 +328,17 @@ fn meta_tx_v0(
         calldata,
     }
     .calculate_transaction_hash(
-        &old_tx_context.block_context.chain_info().chain_id,
-        &TransactionVersion::ZERO,
+        &syscall_handler
+            .base
+            .context
+            .tx_context
+            .block_context
+            .chain_info()
+            .chain_id,
+        &signed_tx_version(
+            &TransactionVersion::ZERO,
+            &TransactionOptions { only_query },
+        ),
     )?;
 
     let class_hash = syscall_handler
