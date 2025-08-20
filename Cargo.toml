@@ -45,7 +45,6 @@ cairo-lang-starknet-classes = "2.12.0"
 cairo-lang-parser = "2.12.0"
 cairo-vm = "2.2.0"
 cairo-native = { git = "https://github.com/lambdaclass/cairo_native.git", rev = "5bf88591687b3f3596ac592357b029cfb1ab79b2", features = ["with-cheatcode"] }
-libloading = "0.8.6"
 cairo-annotations = "0.5.0"
 dirs = "6.0.0"
 dialoguer = "0.11.0"

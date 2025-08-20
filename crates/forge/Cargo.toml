@@ -44,7 +44,6 @@ scarb-ui.workspace = true
 semver.workspace = true
 cairo-vm.workspace = true
 cairo-native.workspace = true
-libloading.workspace = true
 # openssl is being used, please do not remove it!
 openssl.workspace = true
 toml_edit.workspace = true

@@ -16,14 +16,10 @@ use cairo_lang_sierra::{
 };
 use cairo_lang_sierra_type_size::get_type_size_map;
 use cairo_lang_utils::unordered_hash_map::UnorderedHashMap;
-use cairo_native::{
-    context::NativeContext, executor::AotNativeExecutor, module_to_object, object_to_shared_lib,
-};
-use libloading::Library;
+use cairo_native::{context::NativeContext, executor::AotNativeExecutor};
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use std::{collections::HashMap, sync::Arc};
-use tempfile::NamedTempFile;
 use universal_sierra_compiler_api::{SierraType, compile_sierra_at_path};
 
 pub fn test_target_with_config(
@@ -85,25 +81,11 @@ pub fn test_target_with_config(
 
     let aot_executor = {
         let native_context = NativeContext::new();
-        let mut native_module = native_context
+        let native_module = native_context
             .compile(&test_target_raw.sierra_program.program, true, None, None)
             .context("failed to compile sierra program to native module")?;
-        let native_object = module_to_object(
-            native_module.module(),
-            cairo_native::OptLevel::Default,
-            None,
-        )
-        .context("failed to compile native module to object")?;
-        let library_path = NamedTempFile::new()?.into_temp_path().keep()?;
-        object_to_shared_lib(&native_object, &library_path, None)?;
-        let library = unsafe { Library::new(&library_path)? };
-
-        AotNativeExecutor::new(
-            library,
-            ProgramRegistry::<CoreType, CoreLibfunc>::new(&test_target_raw.sierra_program.program)?,
-            native_module.remove_metadata().unwrap_or_default(),
-            native_module.remove_metadata().unwrap_or_default(),
-        )
+        AotNativeExecutor::from_native_module(native_module, cairo_native::OptLevel::Default)
+            .context("failed to create executor")?
     };
 
     Ok(TestTargetWithConfig {
