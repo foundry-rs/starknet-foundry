@@ -10,6 +10,7 @@ use cairo_lang_sierra::extensions::range_check::{RangeCheck96Type, RangeCheckTyp
 use cairo_lang_sierra::extensions::segment_arena::SegmentArenaType;
 use cairo_lang_sierra::ids::GenericTypeId;
 use cairo_lang_sierra::program::ProgramArtifact;
+use cairo_native::executor::AotNativeExecutor;
 use cairo_vm::serde::deserialize_program::ReferenceManager;
 use cairo_vm::types::builtin_name::BuiltinName;
 use cairo_vm::types::program::Program;
@@ -49,6 +50,7 @@ pub enum TestTargetLocation {
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct TestDetails {
+    pub sierra_function_id: u64,
     pub sierra_entry_point_statement_idx: usize,
     pub parameter_types: Vec<(GenericTypeId, i16)>,
     pub return_types: Vec<(GenericTypeId, i16)>,
@@ -103,6 +105,7 @@ pub struct TestTarget<C> {
     pub sierra_program: ProgramArtifact,
     pub sierra_program_path: Arc<Utf8PathBuf>,
     pub casm_program: Arc<AssembledProgramWithDebugInfo>,
+    pub aot_executor: Arc<AotNativeExecutor>,
     pub test_cases: Vec<TestCase<C>>,
 }
 

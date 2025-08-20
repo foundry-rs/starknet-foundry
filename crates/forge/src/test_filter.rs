@@ -135,6 +135,8 @@ mod tests {
     use crate::test_filter::TestsFilter;
     use cairo_lang_sierra::program::Program;
     use cairo_lang_sierra::program::ProgramArtifact;
+    use cairo_native::context::NativeContext;
+    use cairo_native::executor::AotNativeExecutor;
     use forge_runner::expected_result::ExpectedTestResult;
     use forge_runner::package_tests::with_config_resolved::{
         TestCaseResolvedConfig, TestCaseWithResolvedConfig, TestTargetWithResolvedConfig,
@@ -153,6 +155,17 @@ mod tests {
             },
             debug_info: None,
         }
+    }
+
+    fn executor_for_testing() -> Arc<AotNativeExecutor> {
+        let native_context = NativeContext::new();
+        let native_module = native_context
+            .compile(&program_for_testing().program, true, None, None)
+            .unwrap();
+        let native_executor =
+            AotNativeExecutor::from_native_module(native_module, cairo_native::OptLevel::Default)
+                .unwrap();
+        Arc::new(native_executor)
     }
 
     #[test]
@@ -251,6 +264,7 @@ mod tests {
                 },
             ],
             tests_location: TestTargetLocation::Lib,
+            aot_executor: executor_for_testing(),
         };
 
         let tests_filter = TestsFilter::from_flags(
@@ -486,6 +500,7 @@ mod tests {
             ),
             test_cases: vec![],
             tests_location: TestTargetLocation::Lib,
+            aot_executor: executor_for_testing(),
         };
 
         let tests_filter = TestsFilter::from_flags(
@@ -587,6 +602,7 @@ mod tests {
                 },
             ],
             tests_location: TestTargetLocation::Tests,
+            aot_executor: executor_for_testing(),
         };
 
         let tests_filter = TestsFilter::from_flags(
@@ -793,6 +809,7 @@ mod tests {
                 },
             ],
             tests_location: TestTargetLocation::Tests,
+            aot_executor: executor_for_testing(),
         };
 
         let tests_filter = TestsFilter::from_flags(
@@ -908,6 +925,7 @@ mod tests {
                 },
             ],
             tests_location: TestTargetLocation::Tests,
+            aot_executor: executor_for_testing(),
         };
 
         let tests_filter = TestsFilter::from_flags(

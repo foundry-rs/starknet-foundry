@@ -10,11 +10,16 @@ use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::execution::entry_point_execution::{prepare_call_arguments, run_entry_point};
 use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::cached_state::CachedState;
+use cairo_lang_sierra::ids::FunctionId;
+use cairo_native::Value;
+use cairo_native::execution_result::ContractExecutionResult;
+use cairo_native::executor::AotNativeExecutor;
+use cairo_native::starknet_stub::StubSyscallHandler;
 use cairo_vm::Felt252;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use camino::{Utf8Path, Utf8PathBuf};
-use cheatnet::constants as cheatnet_constants;
+use cheatnet::constants::{self as cheatnet_constants, build_test_entry_point};
 use cheatnet::forking::data::ForkData;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
@@ -61,7 +66,8 @@ pub use syscall_handler::syscall_handler_offset;
 #[must_use]
 pub fn run_test(
     case: Arc<TestCaseWithResolvedConfig>,
-    casm_program: Arc<AssembledProgramWithDebugInfo>,
+    _casm_program: Arc<AssembledProgramWithDebugInfo>,
+    _aot_executor: Arc<AotNativeExecutor>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -74,12 +80,19 @@ pub fn run_test(
         if send.is_closed() {
             return TestCaseSummary::Interrupted {};
         }
-        let run_result = run_test_case(
+
+        let run_result = run_native_test_case(
             &case,
-            &casm_program,
+            &_aot_executor,
             &RuntimeConfig::from(&forge_config.test_runner_config),
             None,
         );
+        // let run_result = run_test_case(
+        //     &case,
+        //     &_casm_program,
+        //     &RuntimeConfig::from(&forge_config.test_runner_config),
+        //     None,
+        // );
 
         if send.is_closed() {
             return TestCaseSummary::Interrupted {};
@@ -98,7 +111,8 @@ pub fn run_test(
 #[expect(clippy::too_many_arguments)]
 pub(crate) fn run_fuzz_test(
     case: Arc<TestCaseWithResolvedConfig>,
-    casm_program: Arc<AssembledProgramWithDebugInfo>,
+    _casm_program: Arc<AssembledProgramWithDebugInfo>,
+    aot_executor: Arc<AotNativeExecutor>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -114,9 +128,9 @@ pub(crate) fn run_fuzz_test(
             return TestCaseSummary::Interrupted {};
         }
 
-        let run_result = run_test_case(
+        let run_result = run_native_test_case(
             &case,
-            &casm_program,
+            &aot_executor,
             &RuntimeConfig::from(&forge_config.test_runner_config),
             Some(rng),
         );
@@ -383,6 +397,114 @@ pub fn run_test_case(
             fuzzer_args,
             fork_data,
         }),
+    })
+}
+
+/// Executes the given test case with Cairo Native.
+pub fn run_native_test_case(
+    case: &TestCaseWithResolvedConfig,
+    aot_executor: &AotNativeExecutor,
+    runtime_config: &RuntimeConfig,
+    fuzzer_rng: Option<Arc<Mutex<StdRng>>>,
+) -> Result<RunResult> {
+    let function_id = FunctionId::new(case.test_details.sierra_function_id);
+    let call = build_test_entry_point();
+
+    // The state reader is currently unused, as it requires support of the
+    // custom syscall handler.
+    let mut state_reader = ExtendedStateReader {
+        dict_state_reader: cheatnet_constants::build_testing_state(),
+        fork_state_reader: get_fork_state_reader(
+            runtime_config.cache_dir,
+            case.config.fork_config.as_ref(),
+        )?,
+    };
+    if !case.config.disable_predeployed_contracts {
+        state_reader.predeploy_contracts();
+    }
+
+    // The cheatnet state is currently unused, as it requires support of a
+    // custom syscall handler
+    let block_info = state_reader.get_block_info()?;
+    let mut cheatnet_state = CheatnetState {
+        block_info,
+        ..Default::default()
+    };
+
+    // TODO: Implement a proper syscall handler like `run_test_case`.
+    // Tracking issue: https://github.com/lambdaclass/starknet-foundry/issues/3.
+    let mut syscall_handler = StubSyscallHandler::default();
+
+    // To implement fuzzing we need support of the syscall handler.
+    // Currently the argument is unused.
+    _ = fuzzer_rng;
+
+    // Tests don't have any input arguments. Fuzzing tests actually take the
+    // arguments through cheatcode syscalls.
+    let args = vec![Value::Struct {
+        fields: vec![Value::Array(vec![])],
+        debug_name: None,
+    }];
+
+    // NOTE: We are using the AotNativeExecutor as its more generic, but in
+    // this context we are actually using it more like a contract executor. Consider
+    // unifying both executors and provide a more general API for executing Native.
+    let result = match aot_executor.invoke_dynamic_with_syscall_handler(
+        &function_id,
+        &args,
+        Some(call.initial_gas),
+        &mut syscall_handler,
+    ) {
+        Ok(result) => ContractExecutionResult::from_execution_result(result),
+        Err(err) => Err(err),
+    };
+
+    let call_trace = cheatnet_state.trace_data.current_call_stack.top();
+    let encountered_errors = cheatnet_state.encountered_errors;
+    let fuzzer_args = cheatnet_state.fuzzer_args;
+
+    // TODO: Compute resource usage properly.
+    // It should be the same as when using the Cairo VM.
+    let used_resources = UsedResources::default();
+    let gas_used = GasVector::default();
+
+    let fork_data = state_reader
+        .fork_state_reader
+        .map(|fork_state_reader| ForkData::new(&fork_state_reader.compiled_contract_class_map()))
+        .unwrap_or_default();
+
+    Ok(match result {
+        Ok(result) => RunResult::Completed(Box::new(RunCompleted {
+            status: {
+                if !result.failure_flag {
+                    RunStatus::Success(result.return_values)
+                } else {
+                    RunStatus::Panic(result.return_values)
+                }
+            },
+            call_trace,
+            gas_used,
+            used_resources,
+            encountered_errors,
+            fuzzer_args,
+            fork_data,
+        })),
+        Err(err) => {
+            // TODO: We are reusing a virtual machine error as a quick
+            // workaround. We should instead define a generic error type that
+            // supports both Cairo VM and Cairo Native errors.
+            let error = Box::new(CairoRunError::VirtualMachine(VirtualMachineError::Other(
+                err.into(),
+            )));
+
+            RunResult::Error(RunError {
+                error,
+                call_trace,
+                encountered_errors,
+                fuzzer_args,
+                fork_data,
+            })
+        }
     })
 }
 

@@ -49,6 +49,7 @@ pub async fn resolve_config(
         sierra_program_path: test_target.sierra_program_path,
         casm_program: test_target.casm_program,
         test_cases,
+        aot_executor: test_target.aot_executor,
     })
 }
 
@@ -128,6 +129,8 @@ mod tests {
     use super::*;
     use cairo_lang_sierra::program::ProgramArtifact;
     use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
+    use cairo_native::context::NativeContext;
+    use cairo_native::executor::AotNativeExecutor;
     use forge_runner::package_tests::TestTargetLocation;
     use forge_runner::package_tests::with_config::{TestCaseConfig, TestCaseWithConfig};
     use forge_runner::{expected_result::ExpectedTestResult, package_tests::TestDetails};
@@ -145,6 +148,17 @@ mod tests {
             },
             debug_info: None,
         }
+    }
+
+    fn executor_for_testing() -> Arc<AotNativeExecutor> {
+        let native_context = NativeContext::new();
+        let native_module = native_context
+            .compile(&program_for_testing().program, true, None, None)
+            .unwrap();
+        let native_executor =
+            AotNativeExecutor::from_native_module(native_module, cairo_native::OptLevel::Default)
+                .unwrap();
+        Arc::new(native_executor)
     }
 
     #[tokio::test]
@@ -170,6 +184,7 @@ mod tests {
                     disable_predeployed_contracts: false,
                 },
                 test_details: TestDetails {
+                    sierra_function_id: 100,
                     sierra_entry_point_statement_idx: 100,
                     parameter_types: vec![
                         (GenericTypeId("RangeCheck".into()), 1),
@@ -183,6 +198,7 @@ mod tests {
                 },
             }],
             tests_location: TestTargetLocation::Lib,
+            aot_executor: executor_for_testing(),
         };
 
         assert!(

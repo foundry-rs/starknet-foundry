@@ -7,7 +7,7 @@ use crate::{
     },
     running::config_run::run_config_pass,
 };
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use cairo_lang_sierra::{
     extensions::core::{CoreLibfunc, CoreType},
     ids::ConcreteTypeId,
@@ -16,6 +16,7 @@ use cairo_lang_sierra::{
 };
 use cairo_lang_sierra_type_size::get_type_size_map;
 use cairo_lang_utils::unordered_hash_map::UnorderedHashMap;
+use cairo_native::{context::NativeContext, executor::AotNativeExecutor};
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use std::{collections::HashMap, sync::Arc};
@@ -78,12 +79,22 @@ pub fn test_target_with_config(
         })
         .collect::<Result<_>>()?;
 
+    let aot_executor = {
+        let native_context = NativeContext::new();
+        let native_module = native_context
+            .compile(&test_target_raw.sierra_program.program, true, None, None)
+            .context("failed to compile sierra program to native module")?;
+        AotNativeExecutor::from_native_module(native_module, cairo_native::OptLevel::Default)
+            .context("failed to create executor")?
+    };
+
     Ok(TestTargetWithConfig {
         tests_location: test_target_raw.tests_location,
         test_cases,
         sierra_program: test_target_raw.sierra_program,
         sierra_program_path: test_target_raw.sierra_program_path.into(),
         casm_program,
+        aot_executor: Arc::new(aot_executor),
     })
 }
 
@@ -104,6 +115,7 @@ fn build_test_details(
     };
 
     TestDetails {
+        sierra_function_id: func.id.id,
         sierra_entry_point_statement_idx: func.entry_point.0,
         parameter_types: map_types(&func.signature.param_types),
         return_types: map_types(&func.signature.ret_types),

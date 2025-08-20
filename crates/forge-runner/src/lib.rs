@@ -5,6 +5,7 @@ use crate::test_case_summary::TestCaseSummary;
 use anyhow::Result;
 use build_trace_data::save_trace_data;
 use cairo_lang_sierra::program::{ConcreteTypeLongId, Function, TypeDeclaration};
+use cairo_native::executor::AotNativeExecutor;
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_config_extension::config::RawFuzzerConfig;
 use foundry_ui::UI;
@@ -106,6 +107,7 @@ pub fn maybe_generate_coverage(
 pub fn run_for_test_case(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
+    aot_executor: Arc<AotNativeExecutor>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -117,6 +119,7 @@ pub fn run_for_test_case(
             let res = run_test(
                 case,
                 casm_program,
+                aot_executor,
                 forge_config,
                 versioned_program_path,
                 send,
@@ -131,6 +134,7 @@ pub fn run_for_test_case(
             let res = run_with_fuzzing(
                 case,
                 casm_program,
+                aot_executor,
                 forge_config.clone(),
                 versioned_program_path,
                 send,
@@ -145,6 +149,7 @@ pub fn run_for_test_case(
 fn run_with_fuzzing(
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
+    aot_executor: Arc<AotNativeExecutor>,
     forge_config: Arc<ForgeConfig>,
     versioned_program_path: Arc<Utf8PathBuf>,
     send: Sender<()>,
@@ -178,6 +183,7 @@ fn run_with_fuzzing(
             tasks.push(run_fuzz_test(
                 case.clone(),
                 casm_program.clone(),
+                aot_executor.clone(),
                 forge_config.clone(),
                 versioned_program_path.clone(),
                 send.clone(),
