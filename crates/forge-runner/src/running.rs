@@ -36,7 +36,7 @@ use execution::finalize_execution;
 use foundry_ui::UI;
 use hints::hints_by_representation;
 use rand::prelude::StdRng;
-use runtime::native::{InvalidCheatcodeExtension, NativeExtendedRuntime};
+use runtime::native::{NativeExtendedRuntime, NativeStarknetRuntime};
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use scarb_oracle_hint_service::OracleHintService;
@@ -429,27 +429,19 @@ pub fn run_native_test_case(
 
     let mut cached_state = CachedState::new(state_reader);
 
-    let mut native_syscall_handler =
-        NativeSyscallHandler::new(call.clone(), &mut cached_state, &mut context);
-
-    let mut default_cheatcode_runtime = NativeExtendedRuntime {
-        extension: InvalidCheatcodeExtension {
-            lifetime: &PhantomData,
-        },
-        runtime: &mut native_syscall_handler,
-    };
-
-    let forge_extension = ForgeExtension {
-        environment_variables: runtime_config.environment_variables,
-        contracts_data: runtime_config.contracts_data,
-        fuzzer_rng,
-        experimental_oracles_enabled: runtime_config.experimental_oracles,
-        oracle_hint_service: OracleHintService::default(),
+    let starknet_runtime = NativeStarknetRuntime {
+        syscall_handler: NativeSyscallHandler::new(call.clone(), &mut cached_state, &mut context),
     };
 
     let mut forge_runtime = NativeExtendedRuntime {
-        extension: forge_extension,
-        runtime: &mut default_cheatcode_runtime,
+        extension: ForgeExtension {
+            environment_variables: runtime_config.environment_variables,
+            contracts_data: runtime_config.contracts_data,
+            fuzzer_rng,
+            experimental_oracles_enabled: runtime_config.experimental_oracles,
+            oracle_hint_service: OracleHintService::default(),
+        },
+        runtime: starknet_runtime,
     };
 
     // Tests don't have any input arguments. Fuzzing tests actually take the

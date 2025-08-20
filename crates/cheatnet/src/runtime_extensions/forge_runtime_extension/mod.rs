@@ -41,10 +41,7 @@ use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
 use data_transformer::cairo_types::CairoU256;
 use rand::prelude::StdRng;
-use runtime::native::{
-    InvalidCheatcodeExtension, NativeExtendedRuntime, NativeExtensionLogic,
-    NativeSyscallHandlingResult,
-};
+use runtime::native::{NativeExtensionLogic, NativeStarknetRuntime, NativeSyscallHandlingResult};
 use runtime::starknet::constants::TEST_CONTRACT_CLASS_HASH;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
@@ -572,7 +569,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 }
 
 impl<'a> NativeExtensionLogic for ForgeExtension<'a> {
-    type Runtime = &'a mut NativeExtendedRuntime<InvalidCheatcodeExtension<'a>>;
+    type Runtime = NativeStarknetRuntime<'a>;
 
     fn handle_cheatcode(
         &mut self,

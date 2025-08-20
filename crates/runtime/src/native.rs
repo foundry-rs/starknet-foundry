@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use anyhow::anyhow;
 use blockifier::execution::native::syscall_handler::NativeSyscallHandler;
 use cairo_native::starknet::{
@@ -665,21 +663,248 @@ impl<E: NativeExtensionLogic> StarknetSyscallHandler for &mut NativeExtendedRunt
     }
 }
 
-/// Extends blockifier syscall handler to avoid panicking if a cheatcode is not defined
-pub struct InvalidCheatcodeExtension<'a> {
-    pub lifetime: &'a PhantomData<()>,
+pub struct NativeStarknetRuntime<'a> {
+    pub syscall_handler: NativeSyscallHandler<'a>,
 }
 
-impl<'a> NativeExtensionLogic for InvalidCheatcodeExtension<'a> {
-    type Runtime = &'a mut NativeSyscallHandler<'a>;
-
-    fn handle_cheatcode(
+impl<'a> StarknetSyscallHandler for NativeStarknetRuntime<'a> {
+    fn get_block_hash(
         &mut self,
-        selector: Felt252,
-        _input: &[Felt252],
-    ) -> anyhow::Result<NativeSyscallHandlingResult<Vec<Felt252>>> {
-        let selector_bytes = selector.to_bytes_be();
-        let selector = std::str::from_utf8(&selector_bytes)?.trim_start_matches('\0');
-        Err(anyhow!("invalid selector: {}", selector))
+        block_number: u64,
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<Felt252> {
+        (&mut self.syscall_handler).get_block_hash(block_number, remaining_gas)
+    }
+
+    fn get_execution_info(&mut self, remaining_gas: &mut u64) -> SyscallResult<ExecutionInfo> {
+        (&mut self.syscall_handler).get_execution_info(remaining_gas)
+    }
+
+    fn get_execution_info_v2(&mut self, remaining_gas: &mut u64) -> SyscallResult<ExecutionInfoV2> {
+        (&mut self.syscall_handler).get_execution_info_v2(remaining_gas)
+    }
+
+    fn deploy(
+        &mut self,
+        class_hash: Felt252,
+        contract_address_salt: Felt252,
+        calldata: &[Felt252],
+        deploy_from_zero: bool,
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<(Felt252, Vec<Felt252>)> {
+        (&mut self.syscall_handler).deploy(
+            class_hash,
+            contract_address_salt,
+            calldata,
+            deploy_from_zero,
+            remaining_gas,
+        )
+    }
+
+    fn replace_class(&mut self, class_hash: Felt252, remaining_gas: &mut u64) -> SyscallResult<()> {
+        (&mut self.syscall_handler).replace_class(class_hash, remaining_gas)
+    }
+
+    fn library_call(
+        &mut self,
+        class_hash: Felt252,
+        function_selector: Felt252,
+        calldata: &[Felt252],
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<Vec<Felt252>> {
+        (&mut self.syscall_handler).library_call(
+            class_hash,
+            function_selector,
+            calldata,
+            remaining_gas,
+        )
+    }
+
+    fn call_contract(
+        &mut self,
+        address: Felt252,
+        entry_point_selector: Felt252,
+        calldata: &[Felt252],
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<Vec<Felt252>> {
+        (&mut self.syscall_handler).call_contract(
+            address,
+            entry_point_selector,
+            calldata,
+            remaining_gas,
+        )
+    }
+
+    fn storage_read(
+        &mut self,
+        address_domain: u32,
+        address: Felt252,
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<Felt252> {
+        (&mut self.syscall_handler).storage_read(address_domain, address, remaining_gas)
+    }
+
+    fn storage_write(
+        &mut self,
+        address_domain: u32,
+        address: Felt252,
+        value: Felt252,
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<()> {
+        (&mut self.syscall_handler).storage_write(address_domain, address, value, remaining_gas)
+    }
+
+    fn emit_event(
+        &mut self,
+        keys: &[Felt252],
+        data: &[Felt252],
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<()> {
+        (&mut self.syscall_handler).emit_event(keys, data, remaining_gas)
+    }
+
+    fn send_message_to_l1(
+        &mut self,
+        to_address: Felt252,
+        payload: &[Felt252],
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<()> {
+        (&mut self.syscall_handler).send_message_to_l1(to_address, payload, remaining_gas)
+    }
+
+    fn keccak(&mut self, input: &[u64], remaining_gas: &mut u64) -> SyscallResult<U256> {
+        (&mut self.syscall_handler).keccak(input, remaining_gas)
+    }
+
+    fn secp256k1_new(
+        &mut self,
+        x: U256,
+        y: U256,
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<Option<Secp256k1Point>> {
+        (&mut self.syscall_handler).secp256k1_new(x, y, remaining_gas)
+    }
+
+    fn secp256k1_add(
+        &mut self,
+        p0: Secp256k1Point,
+        p1: Secp256k1Point,
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<Secp256k1Point> {
+        (&mut self.syscall_handler).secp256k1_add(p0, p1, remaining_gas)
+    }
+
+    fn secp256k1_mul(
+        &mut self,
+        p: Secp256k1Point,
+        m: U256,
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<Secp256k1Point> {
+        (&mut self.syscall_handler).secp256k1_mul(p, m, remaining_gas)
+    }
+
+    fn secp256k1_get_point_from_x(
+        &mut self,
+        x: U256,
+        y_parity: bool,
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<Option<Secp256k1Point>> {
+        (&mut self.syscall_handler).secp256k1_get_point_from_x(x, y_parity, remaining_gas)
+    }
+
+    fn secp256k1_get_xy(
+        &mut self,
+        p: Secp256k1Point,
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<(U256, U256)> {
+        (&mut self.syscall_handler).secp256k1_get_xy(p, remaining_gas)
+    }
+
+    fn secp256r1_new(
+        &mut self,
+        x: U256,
+        y: U256,
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<Option<Secp256r1Point>> {
+        (&mut self.syscall_handler).secp256r1_new(x, y, remaining_gas)
+    }
+
+    fn secp256r1_add(
+        &mut self,
+        p0: Secp256r1Point,
+        p1: Secp256r1Point,
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<Secp256r1Point> {
+        (&mut self.syscall_handler).secp256r1_add(p0, p1, remaining_gas)
+    }
+
+    fn secp256r1_mul(
+        &mut self,
+        p: Secp256r1Point,
+        m: U256,
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<Secp256r1Point> {
+        (&mut self.syscall_handler).secp256r1_mul(p, m, remaining_gas)
+    }
+
+    fn secp256r1_get_point_from_x(
+        &mut self,
+        x: U256,
+        y_parity: bool,
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<Option<Secp256r1Point>> {
+        (&mut self.syscall_handler).secp256r1_get_point_from_x(x, y_parity, remaining_gas)
+    }
+
+    fn secp256r1_get_xy(
+        &mut self,
+        p: Secp256r1Point,
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<(U256, U256)> {
+        (&mut self.syscall_handler).secp256r1_get_xy(p, remaining_gas)
+    }
+
+    fn sha256_process_block(
+        &mut self,
+        state: &mut [u32; 8],
+        block: &[u32; 16],
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<()> {
+        (&mut self.syscall_handler).sha256_process_block(state, block, remaining_gas)
+    }
+
+    fn get_class_hash_at(
+        &mut self,
+        contract_address: Felt252,
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<Felt252> {
+        (&mut self.syscall_handler).get_class_hash_at(contract_address, remaining_gas)
+    }
+
+    fn meta_tx_v0(
+        &mut self,
+        address: Felt252,
+        entry_point_selector: Felt252,
+        calldata: &[Felt252],
+        signature: &[Felt252],
+        remaining_gas: &mut u64,
+    ) -> SyscallResult<Vec<Felt252>> {
+        (&mut self.syscall_handler).meta_tx_v0(
+            address,
+            entry_point_selector,
+            calldata,
+            signature,
+            remaining_gas,
+        )
+    }
+
+    fn cheatcode(&mut self, selector: Felt252, input: &[Felt252]) -> Vec<Felt252> {
+        fn cheatcode(selector: Felt252, _input: &[Felt252]) -> anyhow::Result<Vec<Felt252>> {
+            let selector_bytes = selector.to_bytes_be();
+            let selector = std::str::from_utf8(&selector_bytes)?.trim_start_matches('\0');
+            Err(anyhow!("invalid selector: {}", selector))
+        }
+
+        cheatcode(selector, input).serialize_to_vec()
     }
 }
