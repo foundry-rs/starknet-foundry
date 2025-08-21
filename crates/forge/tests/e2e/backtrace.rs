@@ -160,12 +160,12 @@ fn test_wrong_scarb_toml_configuration() {
     assert_stdout_contains(
         output,
         indoc! {
-           "Failure data:
-            Got an exception while executing a hint: Requested contract address 0x0000000000000000000000000000000000000000000000000000000000000123 is not deployed.
-            failed to create backtrace: perhaps the contract was compiled without the following entry in Scarb.toml under [profile.dev.cairo]:
-            unstable-add-statements-code-locations-debug-info = true
+           "[ERROR] Scarb.toml must have the following Cairo compiler configuration to run backtrace:
 
-            or scarb version is less than 2.8.0"
+            [profile.dev.cairo]
+            unstable-add-statements-functions-debug-info = true
+            unstable-add-statements-code-locations-debug-info = true
+            ... other entries ..."
         },
     );
 }
