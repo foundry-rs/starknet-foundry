@@ -79,6 +79,7 @@ pub fn run_test_case(
                     tracked_resource,
                     environment_variables: test.env().clone(),
                     experimental_oracles: false,
+                    use_native: false,
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: false,
