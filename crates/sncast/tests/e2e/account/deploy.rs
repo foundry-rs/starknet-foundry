@@ -609,6 +609,6 @@ pub async fn test_json_output_format() {
         .current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r#"
         {"transaction_hash":"0x0[..]"}
-        {"links":"transaction: https://sepolia.starkscan.co/tx/0x0[..]","title":"account deployment"}
+        {"command":"account deploy","links":"transaction: https://sepolia.starkscan.co/tx/0x0[..]","title":"account deployment"}
     "#});
 }

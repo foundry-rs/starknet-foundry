@@ -178,7 +178,7 @@ async fn test_happy_case_json() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
-        {"calldata":["0x24","0x60"]}
+        {"command":"utils serialize","calldata":["0x24","0x60"]}
     "#});
 }
 
