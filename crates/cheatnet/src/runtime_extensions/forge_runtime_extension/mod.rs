@@ -38,6 +38,7 @@ use conversions::IntoConv;
 use conversions::byte_array::ByteArray;
 use conversions::felt::{ToShortString, TryInferFormat};
 use conversions::serde::deserialize::BufferReader;
+use conversions::serde::serialize::raw::RawFeltVec;
 use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
 use data_transformer::cairo_types::CairoU256;
 use rand::prelude::StdRng;
@@ -570,14 +571,12 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
     }
 }
 
-impl<'a> NativeExtensionLogic for ForgeExtension<'a> {
-    type Runtime = &'a mut NativeExtendedRuntime<CallToBlockifierExtension<'a>>;
-
-    fn handle_cheatcode(
+impl<'a> ForgeExtension<'a> {
+    fn try_handle_cheatcode(
         &mut self,
         selector: Felt,
         _input: &[Felt],
-        _runtime: &mut Self::Runtime,
+        _runtime: &mut <Self as NativeExtensionLogic>::Runtime,
     ) -> anyhow::Result<NativeSyscallHandlingResult<Vec<Felt>>> {
         let selector_bytes = selector.to_bytes_be();
         let selector = std::str::from_utf8(&selector_bytes)?.trim_start_matches('\0');
@@ -588,6 +587,27 @@ impl<'a> NativeExtensionLogic for ForgeExtension<'a> {
         };
 
         Ok(NativeSyscallHandlingResult::Handled(result))
+    }
+}
+
+impl<'a> NativeExtensionLogic for ForgeExtension<'a> {
+    type Runtime = &'a mut NativeExtendedRuntime<CallToBlockifierExtension<'a>>;
+
+    fn handle_cheatcode(
+        &mut self,
+        selector: Felt,
+        input: &[Felt],
+        runtime: &mut Self::Runtime,
+    ) -> NativeSyscallHandlingResult<Vec<Felt>> {
+        match self.try_handle_cheatcode(selector, input, runtime) {
+            Ok(NativeSyscallHandlingResult::Forwarded) => NativeSyscallHandlingResult::Forwarded,
+            Ok(NativeSyscallHandlingResult::Handled(result)) => {
+                NativeSyscallHandlingResult::Handled(
+                    Ok::<_, ()>(RawFeltVec::new(result)).serialize_to_vec(),
+                )
+            }
+            Err(err) => NativeSyscallHandlingResult::Handled(Err::<(), _>(err).serialize_to_vec()),
+        }
     }
 }
 
