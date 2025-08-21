@@ -80,6 +80,10 @@ Control when colored output is used. Valid values:
 - `always`: always display colors.
 - `never`: never display colors.
 
+## `--use-native`
+
+When used, it makes snforge to use Cairo Native instead of the VM to run the tests. 
+
 ## `--detailed-resources`
 
 Display additional info about used resources for passed tests.

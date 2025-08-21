@@ -220,6 +220,7 @@ pub struct TestArgs {
     #[arg(long, default_value_t = false, env = "SNFORGE_EXPERIMENTAL_ORACLES")]
     experimental_oracles: bool,
 
+    /// Run tests with Native.
     #[arg(long, default_value_t = false)]
     use_native: bool,
 
