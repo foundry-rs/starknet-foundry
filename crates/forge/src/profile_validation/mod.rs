@@ -1,7 +1,10 @@
+mod backtrace;
 mod coverage;
 
 use crate::TestArgs;
+use crate::profile_validation::backtrace::check_backtrace_compatibility;
 use crate::profile_validation::coverage::check_coverage_compatibility;
+use forge_runner::backtrace::is_backtrace_enabled;
 use scarb_metadata::Metadata;
 use std::fs;
 use toml_edit::{DocumentMut, Table};
@@ -13,6 +16,9 @@ pub fn check_profile_compatibility(
 ) -> anyhow::Result<()> {
     if test_args.coverage {
         check_coverage_compatibility(scarb_metadata)?;
+    }
+    if is_backtrace_enabled() {
+        check_backtrace_compatibility(scarb_metadata)?;
     }
     Ok(())
 }
