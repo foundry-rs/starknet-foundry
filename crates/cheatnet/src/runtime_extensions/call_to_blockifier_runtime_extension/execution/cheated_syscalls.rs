@@ -289,11 +289,9 @@ fn meta_tx_v0(
 
     if syscall_handler.base.context.execution_mode == ExecutionMode::Validate {
         //region: Modified blockifier code
-        return Err(SyscallExecutorBaseError::InvalidSyscallInExecutionMode {
-            syscall_name: "meta_tx_v0".to_string(),
-            execution_mode: ExecutionMode::Validate,
-        }
-        .into());
+        unreachable!(
+            "`ExecutionMode::Validate` should never occur as execution mode is hardcoded to `Execute`"
+        );
         // endregion
     }
 
