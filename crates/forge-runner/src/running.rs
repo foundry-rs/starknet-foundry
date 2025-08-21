@@ -488,10 +488,30 @@ pub fn run_native_test_case(
         Err(err) => Err(err),
     };
 
-    // TODO: Take these values from the Forge runtime.
-    let encountered_errors = Default::default();
-    let call_trace_ref = CheatnetState::default().trace_data.current_call_stack.top();
-    let fuzzer_args = Default::default();
+    let encountered_errors = forge_runtime
+        .runtime
+        .runtime
+        .extension
+        .cheatnet_state
+        .encountered_errors
+        .clone();
+
+    let call_trace_ref = forge_runtime
+        .runtime
+        .runtime
+        .extension
+        .cheatnet_state
+        .trace_data
+        .current_call_stack
+        .top();
+
+    let fuzzer_args = forge_runtime
+        .runtime
+        .runtime
+        .extension
+        .cheatnet_state
+        .fuzzer_args
+        .clone();
 
     // TODO: Compute resource usage properly.
     // It should be the same as when using the Cairo VM.
