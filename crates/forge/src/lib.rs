@@ -277,6 +277,7 @@ pub enum ExitStatus {
 
 pub fn main_execution(ui: Arc<UI>) -> Result<ExitStatus> {
     let cli = Cli::parse();
+
     match cli.subcommand {
         ForgeSubcommand::Init { name } => {
             init::init(name.as_str(), &ui)?;
