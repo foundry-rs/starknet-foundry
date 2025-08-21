@@ -143,6 +143,7 @@ fn test_output(trace_message_fn: fn(&str) -> String) -> String {
     }
 }
 
+#[expect(clippy::too_many_lines)]
 fn detailed_debugging_trace_message(test_name: &str) -> String {
     formatdoc! {r"
         [test name] trace_info_integrationtest::test_trace::test_debugging_trace_{test_name}
@@ -154,6 +155,40 @@ fn detailed_debugging_trace_message(test_name: &str) -> String {
         │  ├─ [caller address] [..]
         │  ├─ [call type] Call
         │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  ├─ [function call tree]
+        │  │  └─ [non inlined] trace_info::SimpleContract::__wrapper__RecursiveCallerImpl__execute_calls
+        │  │     ├─ [non inlined] core::array::ArraySerde::deserialize
+        │  │     │  └─ [non inlined] core::array::deserialize_array_helper
+        │  │     │     └─ [non inlined] trace_info::RecursiveCallSerde::deserialize
+        │  │     │        └─ [non inlined] core::array::ArraySerde::deserialize
+        │  │     │           └─ [non inlined] core::array::deserialize_array_helper
+        │  │     │              └─ [non inlined] trace_info::RecursiveCallSerde::deserialize
+        │  │     │                 └─ [non inlined] core::array::ArraySerde::deserialize
+        │  │     │                    └─ [non inlined] core::array::deserialize_array_helper
+        │  │     ├─ [non inlined] trace_info::SimpleContract::RecursiveCallerImpl::execute_calls[182-514]
+        │  │     │  ├─ [non inlined] core::array::ArrayTCloneImpl::clone
+        │  │     │  │  └─ [non inlined] core::array::ArrayTCloneImpl::clone[120-295]
+        │  │     │  │     └─ [non inlined] trace_info::RecursiveCallClone::clone
+        │  │     │  │        └─ [non inlined] core::array::ArrayTCloneImpl::clone
+        │  │     │  │           └─ [non inlined] core::array::ArrayTCloneImpl::clone[120-295]
+        │  │     │  ├─ [non inlined] core::array::ArraySerde::serialize
+        │  │     │  │  └─ [non inlined] core::array::serialize_array_helper
+        │  │     │  │     └─ [non inlined] trace_info::RecursiveCallSerde::serialize
+        │  │     │  │        └─ [non inlined] core::array::ArraySerde::serialize
+        │  │     │  │           └─ [non inlined] core::array::serialize_array_helper
+        │  │     │  └─ [non inlined] core::array::ArraySerde::deserialize
+        │  │     │     └─ [non inlined] core::array::deserialize_array_helper
+        │  │     │        └─ [non inlined] trace_info::RecursiveCallSerde::deserialize
+        │  │     │           └─ [non inlined] core::array::ArraySerde::deserialize
+        │  │     │              └─ [non inlined] core::array::deserialize_array_helper
+        │  │     └─ [non inlined] core::array::ArraySerde::serialize
+        │  │        └─ [non inlined] core::array::serialize_array_helper
+        │  │           └─ [non inlined] trace_info::RecursiveCallSerde::serialize
+        │  │              └─ [non inlined] core::array::ArraySerde::serialize
+        │  │                 └─ [non inlined] core::array::serialize_array_helper
+        │  │                    └─ [non inlined] trace_info::RecursiveCallSerde::serialize
+        │  │                       └─ [non inlined] core::array::ArraySerde::serialize
+        │  │                          └─ [non inlined] core::array::serialize_array_helper
         │  ├─ [selector] execute_calls
         │  │  ├─ [contract name] SimpleContract
         │  │  ├─ [entry point type] External
@@ -162,6 +197,25 @@ fn detailed_debugging_trace_message(test_name: &str) -> String {
         │  │  ├─ [caller address] [..]
         │  │  ├─ [call type] Call
         │  │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  │  ├─ [function call tree]
+        │  │  │  └─ [non inlined] trace_info::SimpleContract::__wrapper__RecursiveCallerImpl__execute_calls
+        │  │  │     ├─ [non inlined] core::array::ArraySerde::deserialize
+        │  │  │     │  └─ [non inlined] core::array::deserialize_array_helper
+        │  │  │     │     └─ [non inlined] trace_info::RecursiveCallSerde::deserialize
+        │  │  │     │        └─ [non inlined] core::array::ArraySerde::deserialize
+        │  │  │     │           └─ [non inlined] core::array::deserialize_array_helper
+        │  │  │     ├─ [non inlined] trace_info::SimpleContract::RecursiveCallerImpl::execute_calls[182-514]
+        │  │  │     │  ├─ [non inlined] core::array::ArrayTCloneImpl::clone
+        │  │  │     │  │  └─ [non inlined] core::array::ArrayTCloneImpl::clone[120-295]
+        │  │  │     │  ├─ [non inlined] core::array::ArraySerde::serialize
+        │  │  │     │  │  └─ [non inlined] core::array::serialize_array_helper
+        │  │  │     │  └─ [non inlined] core::array::ArraySerde::deserialize
+        │  │  │     │     └─ [non inlined] core::array::deserialize_array_helper
+        │  │  │     └─ [non inlined] core::array::ArraySerde::serialize
+        │  │  │        └─ [non inlined] core::array::serialize_array_helper
+        │  │  │           └─ [non inlined] trace_info::RecursiveCallSerde::serialize
+        │  │  │              └─ [non inlined] core::array::ArraySerde::serialize
+        │  │  │                 └─ [non inlined] core::array::serialize_array_helper
         │  │  ├─ [selector] execute_calls
         │  │  │  ├─ [contract name] SimpleContract
         │  │  │  ├─ [entry point type] External
@@ -169,7 +223,14 @@ fn detailed_debugging_trace_message(test_name: &str) -> String {
         │  │  │  ├─ [contract address] [..]
         │  │  │  ├─ [caller address] [..]
         │  │  │  ├─ [call type] Call
-        │  │  │  └─ [call result] success: array![]
+        │  │  │  ├─ [call result] success: array![]
+        │  │  │  └─ [function call tree]
+        │  │  │     └─ [non inlined] trace_info::SimpleContract::__wrapper__RecursiveCallerImpl__execute_calls
+        │  │  │        ├─ [non inlined] core::array::ArraySerde::deserialize
+        │  │  │        │  └─ [non inlined] core::array::deserialize_array_helper
+        │  │  │        ├─ [non inlined] trace_info::SimpleContract::RecursiveCallerImpl::execute_calls[182-514]
+        │  │  │        └─ [non inlined] core::array::ArraySerde::serialize
+        │  │  │           └─ [non inlined] core::array::serialize_array_helper
         │  │  └─ [selector] execute_calls
         │  │     ├─ [contract name] SimpleContract
         │  │     ├─ [entry point type] External
@@ -177,7 +238,14 @@ fn detailed_debugging_trace_message(test_name: &str) -> String {
         │  │     ├─ [contract address] [..]
         │  │     ├─ [caller address] [..]
         │  │     ├─ [call type] Call
-        │  │     └─ [call result] success: array![]
+        │  │     ├─ [call result] success: array![]
+        │  │     └─ [function call tree]
+        │  │        └─ [non inlined] trace_info::SimpleContract::__wrapper__RecursiveCallerImpl__execute_calls
+        │  │           ├─ [non inlined] core::array::ArraySerde::deserialize
+        │  │           │  └─ [non inlined] core::array::deserialize_array_helper
+        │  │           ├─ [non inlined] trace_info::SimpleContract::RecursiveCallerImpl::execute_calls[182-514]
+        │  │           └─ [non inlined] core::array::ArraySerde::serialize
+        │  │              └─ [non inlined] core::array::serialize_array_helper
         │  └─ [selector] execute_calls
         │     ├─ [contract name] SimpleContract
         │     ├─ [entry point type] External
@@ -185,7 +253,14 @@ fn detailed_debugging_trace_message(test_name: &str) -> String {
         │     ├─ [contract address] [..]
         │     ├─ [caller address] [..]
         │     ├─ [call type] Call
-        │     └─ [call result] success: array![]
+        │     ├─ [call result] success: array![]
+        │     └─ [function call tree]
+        │        └─ [non inlined] trace_info::SimpleContract::__wrapper__RecursiveCallerImpl__execute_calls
+        │           ├─ [non inlined] core::array::ArraySerde::deserialize
+        │           │  └─ [non inlined] core::array::deserialize_array_helper
+        │           ├─ [non inlined] trace_info::SimpleContract::RecursiveCallerImpl::execute_calls[182-514]
+        │           └─ [non inlined] core::array::ArraySerde::serialize
+        │              └─ [non inlined] core::array::serialize_array_helper
         └─ [selector] fail
            ├─ [contract name] SimpleContract
            ├─ [entry point type] External
@@ -193,7 +268,10 @@ fn detailed_debugging_trace_message(test_name: &str) -> String {
            ├─ [contract address] [..]
            ├─ [caller address] [..]
            ├─ [call type] Call
-           └─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
+           ├─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
+           └─ [function call tree]
+              └─ [non inlined] trace_info::SimpleContract::__wrapper__FailingImpl__fail
+                 └─ [non inlined] core::array::deserialize_array_helper
         "}
 }
 
@@ -208,6 +286,7 @@ fn detailed_debugging_trace_message_fork(test_name: &str) -> String {
         │  ├─ [caller address] [..]
         │  ├─ [call type] Call
         │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  ├─ [function trace error] function trace is not supported for forked contracts
         │  ├─ [selector] execute_calls
         │  │  ├─ [contract name] forked contract
         │  │  ├─ [entry point type] External
@@ -216,6 +295,7 @@ fn detailed_debugging_trace_message_fork(test_name: &str) -> String {
         │  │  ├─ [caller address] [..]
         │  │  ├─ [call type] Call
         │  │  ├─ [call result] success: array![RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}, RecursiveCall {{ contract_address: ContractAddress([..]), payload: array![] }}]
+        │  │  ├─ [function trace error] function trace is not supported for forked contracts
         │  │  ├─ [selector] execute_calls
         │  │  │  ├─ [contract name] forked contract
         │  │  │  ├─ [entry point type] External
@@ -223,7 +303,8 @@ fn detailed_debugging_trace_message_fork(test_name: &str) -> String {
         │  │  │  ├─ [contract address] [..]
         │  │  │  ├─ [caller address] [..]
         │  │  │  ├─ [call type] Call
-        │  │  │  └─ [call result] success: array![]
+        │  │  │  ├─ [call result] success: array![]
+        │  │  │  └─ [function trace error] function trace is not supported for forked contracts
         │  │  └─ [selector] execute_calls
         │  │     ├─ [contract name] forked contract
         │  │     ├─ [entry point type] External
@@ -231,7 +312,8 @@ fn detailed_debugging_trace_message_fork(test_name: &str) -> String {
         │  │     ├─ [contract address] [..]
         │  │     ├─ [caller address] [..]
         │  │     ├─ [call type] Call
-        │  │     └─ [call result] success: array![]
+        │  │     ├─ [call result] success: array![]
+        │  │     └─ [function trace error] function trace is not supported for forked contracts
         │  └─ [selector] execute_calls
         │     ├─ [contract name] forked contract
         │     ├─ [entry point type] External
@@ -239,7 +321,8 @@ fn detailed_debugging_trace_message_fork(test_name: &str) -> String {
         │     ├─ [contract address] [..]
         │     ├─ [caller address] [..]
         │     ├─ [call type] Call
-        │     └─ [call result] success: array![]
+        │     ├─ [call result] success: array![]
+        │     └─ [function trace error] function trace is not supported for forked contracts
         └─ [selector] fail
            ├─ [contract name] forked contract
            ├─ [entry point type] External
@@ -247,7 +330,8 @@ fn detailed_debugging_trace_message_fork(test_name: &str) -> String {
            ├─ [contract address] [..]
            ├─ [caller address] [..]
            ├─ [call type] Call
-           └─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
+           ├─ [call result] panic: (0x1, 0x2, 0x3, 0x4, 0x5)
+           └─ [function trace error] function trace is not supported for forked contracts
         "}
 }
 
