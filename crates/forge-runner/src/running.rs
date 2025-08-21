@@ -445,6 +445,13 @@ pub fn run_native_test_case(
         runtime: starknet_runtime,
     };
 
+    let mut call_to_blockifier_runtime = NativeExtendedRuntime {
+        extension: CallToBlockifierExtension {
+            lifetime: &PhantomData,
+        },
+        runtime: &mut cheatable_starknet_runtime,
+    };
+
     let mut forge_runtime = NativeExtendedRuntime {
         extension: ForgeExtension {
             environment_variables: runtime_config.environment_variables,
@@ -453,7 +460,7 @@ pub fn run_native_test_case(
             experimental_oracles_enabled: runtime_config.experimental_oracles,
             oracle_hint_service: OracleHintService::default(),
         },
-        runtime: &mut cheatable_starknet_runtime,
+        runtime: &mut call_to_blockifier_runtime,
     };
 
     // Tests don't have any input arguments. Fuzzing tests actually take the

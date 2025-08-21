@@ -13,6 +13,7 @@ use blockifier::execution::{
 };
 use cairo_vm::types::relocatable::MaybeRelocatable;
 use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
+use runtime::native::{NativeExtendedRuntime, NativeExtensionLogic};
 use runtime::{ExtendedRuntime, ExtensionLogic, SyscallHandlingResult, SyscallPtrAccess};
 use starknet_api::contract_class::EntryPointType;
 use starknet_api::core::ContractAddress;
@@ -27,7 +28,9 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::{
     rpc::{CallFailure, CallResult},
 };
 
-use super::cheatable_starknet_runtime_extension::CheatableStarknetRuntime;
+use super::cheatable_starknet_runtime_extension::{
+    CheatableStarknetRuntime, CheatableStarknetRuntimeExtension,
+};
 use conversions::string::TryFromHexStr;
 use runtime::starknet::constants::TEST_ADDRESS;
 
@@ -79,6 +82,10 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
             _ => Ok(SyscallHandlingResult::Forwarded),
         }
     }
+}
+
+impl<'a> NativeExtensionLogic for CallToBlockifierExtension<'a> {
+    type Runtime = &'a mut NativeExtendedRuntime<CheatableStarknetRuntimeExtension<'a>>;
 }
 
 trait ExecuteCall

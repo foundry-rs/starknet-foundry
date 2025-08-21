@@ -57,7 +57,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
-use super::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
+use super::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 
 pub mod cheatcodes;
 pub mod contracts_data;
@@ -571,7 +571,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 }
 
 impl<'a> NativeExtensionLogic for ForgeExtension<'a> {
-    type Runtime = &'a mut NativeExtendedRuntime<CheatableStarknetRuntimeExtension<'a>>;
+    type Runtime = &'a mut NativeExtendedRuntime<CallToBlockifierExtension<'a>>;
 
     fn handle_cheatcode(
         &mut self,
